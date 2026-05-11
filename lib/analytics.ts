@@ -1,4 +1,7 @@
-import { track } from "@vercel/analytics";
+"use client";
+
+import { useOpenPanel } from "@openpanel/nextjs";
+import { useCallback } from "react";
 
 export type PreviewSurface =
   | "hero"
@@ -12,7 +15,7 @@ export type CtaId =
   | "final_cta"
   | "github_header";
 
-type EventMap = {
+type AnalyticsEvents = {
   install_command_copied: {
     component: string;
     package_manager: "pnpm" | "npm" | "yarn" | "bun" | "prompt";
@@ -46,9 +49,17 @@ type EventMap = {
   };
 };
 
-export function trackEvent<K extends keyof EventMap>(
-  name: K,
-  properties: EventMap[K],
-) {
-  track(name, properties as Record<string, string>);
+export function useTrackEvent() {
+  const op = useOpenPanel();
+  return useCallback(
+    <E extends keyof AnalyticsEvents>(
+      event: E,
+      ...args: AnalyticsEvents[E] extends Record<string, never>
+        ? []
+        : [AnalyticsEvents[E]]
+    ) => {
+      op.track(event, args[0] as Record<string, unknown> | undefined);
+    },
+    [op],
+  );
 }

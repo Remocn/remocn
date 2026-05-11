@@ -5,7 +5,7 @@ import { Pause, Play } from "lucide-react";
 import { motion } from "motion/react";
 import { useCallback, useRef, useState } from "react";
 import { PEACH, SECTION, SPRING_SOFT } from "@/config/landing";
-import { trackEvent } from "@/lib/analytics";
+import { useTrackEvent } from "@/lib/analytics";
 import registry from "@/registry/__index__";
 import { FadeUp } from "../fade-up";
 
@@ -16,6 +16,7 @@ export function LandingCodeShowcase() {
     `${entry.config.compositionWidth} / ${entry.config.compositionHeight}`;
   const playerRef = useRef<PlayerRef>(null);
   const [playing, setPlaying] = useState(true);
+  const trackEvent = useTrackEvent();
 
   const togglePlay = useCallback(() => {
     const p = playerRef.current;
@@ -36,7 +37,7 @@ export function LandingCodeShowcase() {
         trigger: "click",
       });
     }
-  }, []);
+  }, [trackEvent]);
 
   return (
     <section id="showcase" className="relative py-20 sm:py-32">

@@ -8,7 +8,7 @@ import { useCallback, useRef, useState } from "react";
 import Dither from "@/components/Dither";
 import { Button } from "@/components/ui/button";
 import { SECTION, SPRING_BOUNCE, SPRING_SOFT } from "@/config/landing";
-import { trackEvent } from "@/lib/analytics";
+import { useTrackEvent } from "@/lib/analytics";
 import registry from "@/registry/__index__";
 import { FadeUp } from "../fade-up";
 
@@ -16,6 +16,7 @@ export function Hero() {
   const heroEntry = registry["browser-flow"];
   const playerRef = useRef<PlayerRef>(null);
   const [playing, setPlaying] = useState(true);
+  const trackEvent = useTrackEvent();
 
   const togglePlay = useCallback(() => {
     const p = playerRef.current;
@@ -36,7 +37,7 @@ export function Hero() {
         trigger: "click",
       });
     }
-  }, []);
+  }, [trackEvent]);
 
   const aspectRatio = heroEntry
     ? `${heroEntry.config.compositionWidth} / ${heroEntry.config.compositionHeight}`

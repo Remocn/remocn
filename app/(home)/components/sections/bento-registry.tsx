@@ -7,7 +7,7 @@ import Link from "next/link";
 import { type CSSProperties, useCallback, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { SECTION, SPRING_SOFT } from "@/config/landing";
-import { trackEvent } from "@/lib/analytics";
+import { useTrackEvent } from "@/lib/analytics";
 import registry from "@/registry/__index__";
 import { FadeUp } from "../fade-up";
 
@@ -28,6 +28,7 @@ function BentoCard({
   const playerRef = useRef<PlayerRef>(null);
   const [playing, setPlaying] = useState(false);
   const hoverTracked = useRef(false);
+  const trackEvent = useTrackEvent();
 
   const handleEnter = () => {
     playerRef.current?.play();
@@ -61,7 +62,7 @@ function BentoCard({
         trigger: "click",
       });
     }
-  }, [name]);
+  }, [name, trackEvent]);
 
   return (
     // biome-ignore lint/a11y/noStaticElementInteractions: hover-to-play is decorative video preview
@@ -131,6 +132,7 @@ function BentoCard({
 export function BentoRegistry() {
   const gridRef = useRef<HTMLDivElement>(null);
   const grid2Ref = useRef<HTMLDivElement>(null);
+  const trackEvent = useTrackEvent();
 
   const handleMove = (
     e: React.MouseEvent<HTMLDivElement>,

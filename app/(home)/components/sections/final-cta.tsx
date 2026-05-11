@@ -12,13 +12,14 @@ import {
   SPRING_BOUNCE,
   SPRING_SOFT,
 } from "@/config/landing";
-import { trackEvent } from "@/lib/analytics";
+import { useTrackEvent } from "@/lib/analytics";
 import { FadeUp } from "../fade-up";
 
 export function FinalCTA() {
   const ref = useRef<HTMLHeadingElement>(null);
   const inView = useInView(ref, { once: true, amount: 0.4 });
   const reduced = useReducedMotion();
+  const trackEvent = useTrackEvent();
 
   return (
     <section className="relative overflow-hidden py-24 sm:py-40">

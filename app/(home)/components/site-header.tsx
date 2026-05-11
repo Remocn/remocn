@@ -12,14 +12,9 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { type NavLink, SECTION } from "@/config/landing";
-import { trackEvent } from "@/lib/analytics";
+import { useTrackEvent } from "@/lib/analytics";
 
 const GITHUB_URL = "https://github.com/kapishdima/remocn";
-const trackGitHubClick = () =>
-  trackEvent("cta_clicked", {
-    cta: "github_header",
-    destination: GITHUB_URL,
-  });
 
 const GitHubIcon = ({ className }: { className?: string }) => (
   <svg
@@ -36,6 +31,12 @@ const GitHubIcon = ({ className }: { className?: string }) => (
 
 export function SiteHeader({ navLinks }: { navLinks: NavLink[] }) {
   const [open, setOpen] = useState(false);
+  const trackEvent = useTrackEvent();
+  const trackGitHubClick = () =>
+    trackEvent("cta_clicked", {
+      cta: "github_header",
+      destination: GITHUB_URL,
+    });
 
   return (
     <header className="fixed inset-x-0 top-0 z-40 border-b border-white/[0.05] bg-[#141318]/60 backdrop-blur-2xl">

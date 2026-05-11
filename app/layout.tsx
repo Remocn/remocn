@@ -3,8 +3,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Manrope, Outfit } from "next/font/google";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import "./globals.css";
+import { OpenPanelComponent } from "@openpanel/nextjs";
 import { cn } from "@/lib/utils";
-import { Analytics } from "@vercel/analytics/next";
 
 const inter = Manrope({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -65,7 +65,13 @@ export default function RootLayout({
             {children}
           </RootProvider>
         </NuqsAdapter>
-        <Analytics />
+        <OpenPanelComponent
+          clientId={process.env.NEXT_PUBLIC_OPENPANEL_CLIENT_ID as string}
+          apiUrl={process.env.NEXT_PUBLIC_OPENPANEL_API_URL}
+          trackScreenViews
+          trackAttributes
+          trackOutgoingLinks
+        />
       </body>
     </html>
   );

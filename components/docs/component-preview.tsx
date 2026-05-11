@@ -12,7 +12,7 @@ import {
 } from "nuqs";
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { trackEvent } from "@/lib/analytics";
+import { useTrackEvent } from "@/lib/analytics";
 import {
   type ComponentConfig,
   type ControlConfig,
@@ -77,6 +77,7 @@ function Preview({
   config: ComponentConfig;
   Component: React.ComponentType<any>;
 }) {
+  const trackEvent = useTrackEvent();
   const { parsers, urlKeys } = useMemo(
     () => buildParsers(name, config.controls),
     [name, config.controls],
@@ -115,7 +116,7 @@ function Preview({
 
   useEffect(() => {
     trackEvent("docs_component_viewed", { component: name });
-  }, [name]);
+  }, [name, trackEvent]);
 
   const customizeTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(
     new Map(),

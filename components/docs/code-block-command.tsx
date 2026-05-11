@@ -5,7 +5,7 @@ import { useAtom } from "jotai";
 import { atomWithStorage } from "jotai/utils";
 import { TerminalIcon, TextAlignStartIcon } from "lucide-react";
 import { useMemo } from "react";
-import { trackEvent } from "@/lib/analytics";
+import { useTrackEvent } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 import { CopyButton } from "./copy-button";
 
@@ -38,6 +38,7 @@ export function CodeBlockCommand({
   component,
 }: CodeBlockCommandProps) {
   const [packageManager, setPackageManager] = usePackageManager();
+  const trackEvent = useTrackEvent();
 
   const tabs = useMemo(
     () => ({ prompt, pnpm, yarn, npm, bun }),
