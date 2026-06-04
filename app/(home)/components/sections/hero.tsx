@@ -109,63 +109,65 @@ export function Hero() {
         </div>
       </div>
 
-      <FadeUp delay={0.24} className="relative mt-10 w-full sm:mt-12">
-        <motion.div
-          className="relative flex justify-center px-4 sm:px-6"
-          initial={{ y: 40, opacity: 0 }}
-          whileInView={{ y: 0, opacity: 1 }}
-          viewport={{ once: true, amount: 0.2 }}
-          transition={{ ...SPRING_BOUNCE, delay: 0.05 }}
-        >
-          <div
-            className="group surface-card relative w-full max-w-5xl overflow-hidden rounded-2xl shadow-2xl shadow-black/5 sm:rounded-3xl dark:shadow-black/40"
-            style={{ aspectRatio }}
+      <div className={SECTION}>
+        <FadeUp delay={0.24} className="relative mt-10 w-full sm:mt-12">
+          <motion.div
+            className="relative"
+            initial={{ y: 40, opacity: 0 }}
+            whileInView={{ y: 0, opacity: 1 }}
+            viewport={{ once: true, amount: 0.2 }}
+            transition={{ ...SPRING_BOUNCE, delay: 0.05 }}
           >
-            {heroEntry ? (
-              <Player
-                ref={playerRef}
-                component={heroEntry.Component}
-                inputProps={{
-                  code: HERO_CODE,
-                  title: "LaunchScene.tsx",
-                  width: 860,
-                  height: 480,
-                  // Scene backdrop behind the glass card — the abstract texture
-                  // with a dark wash so the code stays legible through the glass.
-                  background:
-                    "linear-gradient(rgba(5,5,8,0.5), rgba(5,5,8,0.62)), url(/bg.jpg) center / cover no-repeat",
-                }}
-                durationInFrames={heroEntry.config.durationInFrames}
-                fps={heroEntry.config.fps}
-                compositionWidth={heroEntry.config.compositionWidth}
-                compositionHeight={heroEntry.config.compositionHeight}
-                style={{ width: "100%", height: "100%", display: "block" }}
-                autoPlay
-                loop
-                acknowledgeRemotionLicense
-              />
-            ) : null}
-            <button
-              type="button"
-              onClick={togglePlay}
-              aria-label={playing ? "Pause preview" : "Play preview"}
-              className="absolute inset-0 flex items-center justify-center bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+            <div
+              className="group surface-card relative w-full overflow-hidden rounded-2xl shadow-2xl shadow-black/5 sm:rounded-3xl dark:shadow-black/40"
+              style={{ aspectRatio }}
             >
-              <span
-                aria-hidden
-                data-show={!playing}
-                className="pointer-events-none flex size-14 items-center justify-center rounded-full bg-background/70 text-foreground opacity-0 backdrop-blur-md transition-opacity duration-200 group-hover:opacity-100 motion-reduce:transition-none data-[show=true]:opacity-100"
+              {heroEntry ? (
+                <Player
+                  ref={playerRef}
+                  component={heroEntry.Component}
+                  inputProps={{
+                    code: HERO_CODE,
+                    title: "LaunchScene.tsx",
+                    width: 860,
+                    height: 480,
+                    // Scene backdrop behind the glass card — the abstract texture
+                    // with a dark wash so the code stays legible through the glass.
+                    background:
+                      "linear-gradient(rgba(5,5,8,0.5), rgba(5,5,8,0.62)), url(/bg.jpg) center / cover no-repeat",
+                  }}
+                  durationInFrames={heroEntry.config.durationInFrames}
+                  fps={heroEntry.config.fps}
+                  compositionWidth={heroEntry.config.compositionWidth}
+                  compositionHeight={heroEntry.config.compositionHeight}
+                  style={{ width: "100%", height: "100%", display: "block" }}
+                  autoPlay
+                  loop
+                  acknowledgeRemotionLicense
+                />
+              ) : null}
+              <button
+                type="button"
+                onClick={togglePlay}
+                aria-label={playing ? "Pause preview" : "Play preview"}
+                className="absolute inset-0 flex items-center justify-center bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
               >
-                {playing ? (
-                  <Pause className="size-5" />
-                ) : (
-                  <Play className="size-5 translate-x-0.5" />
-                )}
-              </span>
-            </button>
-          </div>
-        </motion.div>
-      </FadeUp>
+                <span
+                  aria-hidden
+                  data-show={!playing}
+                  className="pointer-events-none flex size-14 items-center justify-center rounded-full bg-background/70 text-foreground opacity-0 backdrop-blur-md transition-opacity duration-200 group-hover:opacity-100 motion-reduce:transition-none data-[show=true]:opacity-100"
+                >
+                  {playing ? (
+                    <Pause className="size-5" />
+                  ) : (
+                    <Play className="size-5 translate-x-0.5" />
+                  )}
+                </span>
+              </button>
+            </div>
+          </motion.div>
+        </FadeUp>
+      </div>
     </section>
   );
 }

@@ -61,12 +61,19 @@ function BentoCard({
   description,
   className = "",
   inputProps,
+  featured = false,
 }: {
   name: string;
   title: string;
   description: string;
   className?: string;
   inputProps?: Record<string, unknown>;
+  /**
+   * Large 2×2 card: the preview grows to fill the extra height (inside a dark
+   * frame that blends the letterbox) and the footer stays compact, instead of
+   * a fixed 16/9 preview leaving a tall empty gap above the install pill.
+   */
+  featured?: boolean;
 }) {
   const entry = registry[name];
 
@@ -89,7 +96,17 @@ function BentoCard({
         }}
       />
 
-      <div className="relative aspect-[16/9] w-full overflow-hidden bg-muted">
+      <div
+        className={cn(
+          "relative w-full overflow-hidden",
+          // Featured: media grows to fill the tall 2×2 card (md+). The frame
+          // matches the ai-generation-canvas composition background (#0a0a0a)
+          // so the Player's letterbox bars blend seamlessly in both themes.
+          featured
+            ? "aspect-[16/9] bg-[#0a0a0a] md:aspect-auto md:min-h-0 md:flex-1"
+            : "aspect-[16/9] bg-muted",
+        )}
+      >
         {entry ? (
           <Player
             component={entry.Component}
@@ -105,14 +122,19 @@ function BentoCard({
           />
         ) : null}
       </div>
-      <div className="relative flex flex-1 flex-col border-t border-border p-5 sm:p-6">
+      <div
+        className={cn(
+          "relative flex flex-col border-t border-border p-5 sm:p-6",
+          featured ? "flex-none" : "flex-1",
+        )}
+      >
         <h3 className="text-base font-semibold tracking-tight text-foreground">
           {title}
         </h3>
         <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
           {description}
         </p>
-        <div className="mt-auto">
+        <div className={featured ? undefined : "mt-auto"}>
           <InstallPill name={name} />
         </div>
       </div>
@@ -178,6 +200,7 @@ export function BentoRegistry() {
               title="AI Generation Canvas"
               description="From prompt to UI in a single composition"
               className="md:col-span-2 md:row-span-2"
+              featured
             />
             <BentoCard
               name="shimmer-sweep"

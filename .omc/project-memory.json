@@ -200,8 +200,14 @@
   "hotPaths": [
     {
       "path": "app/(home)/components/sections/hero.tsx",
-      "accessCount": 19,
-      "lastAccessed": 1780583543244,
+      "accessCount": 25,
+      "lastAccessed": 1780588628123,
+      "type": "file"
+    },
+    {
+      "path": "app/(home)/components/sections/bento-registry.tsx",
+      "accessCount": 22,
+      "lastAccessed": 1780589328413,
       "type": "file"
     },
     {
@@ -211,21 +217,15 @@
       "type": "file"
     },
     {
-      "path": "app/(home)/components/sections/bento-registry.tsx",
-      "accessCount": 13,
-      "lastAccessed": 1780587374195,
-      "type": "file"
-    },
-    {
       "path": "app/(home)/components/sections/works-with.tsx",
-      "accessCount": 12,
-      "lastAccessed": 1780586986695,
+      "accessCount": 13,
+      "lastAccessed": 1780588275135,
       "type": "file"
     },
     {
       "path": "app/globals.css",
-      "accessCount": 11,
-      "lastAccessed": 1780584350297,
+      "accessCount": 13,
+      "lastAccessed": 1780589254971,
       "type": "file"
     },
     {
@@ -247,6 +247,12 @@
       "type": "file"
     },
     {
+      "path": "app/(home)/components/section-heading.tsx",
+      "accessCount": 8,
+      "lastAccessed": 1780588267029,
+      "type": "file"
+    },
+    {
       "path": "app/layout.tsx",
       "accessCount": 7,
       "lastAccessed": 1780581441600,
@@ -256,12 +262,6 @@
       "path": "lib/analytics.ts",
       "accessCount": 7,
       "lastAccessed": 1780585298196,
-      "type": "file"
-    },
-    {
-      "path": "app/(home)/components/section-heading.tsx",
-      "accessCount": 7,
-      "lastAccessed": 1780586985769,
       "type": "file"
     },
     {
@@ -290,8 +290,8 @@
     },
     {
       "path": "app/(home)/components/sections/final-cta.tsx",
-      "accessCount": 5,
-      "lastAccessed": 1780580668253,
+      "accessCount": 6,
+      "lastAccessed": 1780588267813,
       "type": "file"
     },
     {
@@ -308,8 +308,8 @@
     },
     {
       "path": "app/(home)/components/sections/landing-partners.tsx",
-      "accessCount": 4,
-      "lastAccessed": 1780580566687,
+      "accessCount": 5,
+      "lastAccessed": 1780588267419,
       "type": "file"
     },
     {
@@ -355,6 +355,12 @@
       "type": "file"
     },
     {
+      "path": "app/(home)/components/sections/get-started.tsx",
+      "accessCount": 3,
+      "lastAccessed": 1780588274946,
+      "type": "file"
+    },
+    {
       "path": "app/(home)/components/sections/use-cases.tsx",
       "accessCount": 2,
       "lastAccessed": 1780579600308,
@@ -382,12 +388,6 @@
       "path": "components/docs/code-block-command.tsx",
       "accessCount": 2,
       "lastAccessed": 1780580513810,
-      "type": "file"
-    },
-    {
-      "path": "app/(home)/components/sections/get-started.tsx",
-      "accessCount": 2,
-      "lastAccessed": 1780580514644,
       "type": "file"
     },
     {
