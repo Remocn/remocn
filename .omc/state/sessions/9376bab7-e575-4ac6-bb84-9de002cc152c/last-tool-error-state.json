@@ -1,7 +1,0 @@
-{
-  "tool_name": "mcp__plugin_oh-my-claudecode_t__lsp_diagnostics",
-  "tool_input_preview": "{\"file\":\"/Users/dev_wandry/projects/opensource/remocn/config/landing.ts\"}",
-  "error": "Language server 'typescript-language-server' not found.\nInstall with: npm install -g typescript-language-server typescript",
-  "timestamp": "2026-06-04T15:24:21.808Z",
-  "retry_count": 3
-}

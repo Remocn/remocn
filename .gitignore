@@ -42,3 +42,5 @@ next-env.d.ts
 
 # fumadocs generated source
 .source/
+
+.omc

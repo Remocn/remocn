@@ -1,7 +1,0 @@
-{
-  "tool_name": "Bash",
-  "tool_input_preview": "{\"command\":\"ls /Users/dev_wandry/projects/opensource/remocn/apps/web/app/\",\"description\":\"List app directory to find correct path\"}",
-  "error": "Exit code 1\nls: /Users/dev_wandry/projects/opensource/remocn/apps/web/app/: No such file or directory",
-  "timestamp": "2026-06-04T14:37:34.942Z",
-  "retry_count": 6
-}
