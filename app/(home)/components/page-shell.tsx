@@ -2,10 +2,7 @@ import type { ReactNode } from "react";
 
 export function PageShell({ children }: { children: ReactNode }) {
   return (
-    <div
-      className="relative min-h-screen overflow-hidden bg-black font-sans text-[#EDEDED] antialiased"
-      style={{ colorScheme: "dark" }}
-    >
+    <div className="page-shell relative flex min-h-screen flex-col bg-background font-sans text-foreground antialiased">
       {children}
     </div>
   );

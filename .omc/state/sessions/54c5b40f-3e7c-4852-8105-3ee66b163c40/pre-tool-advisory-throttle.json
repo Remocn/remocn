@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "entries": {
+    "445ed27a3872b681d98190bae61ccb84954e1bc4e140df5370be958dee776b3a": {
+      "last_emitted_at_ms": 1780581499415,
+      "message": "Verify changes work after editing. Test functionality before marking complete."
+    },
+    "1bb6914bc42b891c26d46c8ae2fd4f44071f59862e89dc550f4c82877b700216": {
+      "last_emitted_at_ms": 1780581416800,
+      "message": "The boulder never stops. Continue until all tasks complete."
+    },
+    "466399dafa2d20f60587180bad0a07358eb7f2bce724df0ff682f038ad33f5ad": {
+      "last_emitted_at_ms": 1780581329901,
+      "message": "Read multiple files in parallel when possible for faster analysis."
+    },
+    "79a93d4a2f8f50b95f852280616242fee1855dc99a3c75211917f55e72e95fae": {
+      "last_emitted_at_ms": 1780581317700,
+      "message": "Use parallel execution for independent tasks. Use run_in_background for long operations (npm install, builds, tests)."
+    },
+    "f5edeff29160e4db6e25616c6435df0d326d7f82607d96a84afbedf169ff761a": {
+      "last_emitted_at_ms": 1780581313434,
+      "message": "Spawning agent: oh-my-claudecode:architect (sonnet) | Task: Verify container + header changes"
+    },
+    "97d822f3bbc98de9ff7636c9b79e4d4294c5de3c0268b48ca3d2034272f0a597": {
+      "last_emitted_at_ms": 1780580492654,
+      "message": "Spawning agent: oh-my-claudecode:code-reviewer (inherit) | Task: Review landing redesign"
+    },
+    "b615400e29e9b176428dc913cc97e5b6a9ad0b4e8cc25e02e8a04f97837c504d": {
+      "last_emitted_at_ms": 1780579423599,
+      "message": "Spawning agent: Explore (inherit) | Task: Explore landing page structure"
+    }
+  },
+  "updated_at": "2026-06-04T13:58:19.415Z"
+}

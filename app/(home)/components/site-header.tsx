@@ -1,9 +1,10 @@
 "use client";
 
-import { Menu } from "lucide-react";
+import { Menu, Star } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
 import {
   Sheet,
   SheetContent,
@@ -11,8 +12,11 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { type NavLink, SECTION } from "@/config/landing";
+import { type NavLink } from "@/config/landing";
 import { useTrackEvent } from "@/lib/analytics";
+import { formatStars } from "@/lib/github";
+import { cn } from "@/lib/utils";
+import { ThemeToggle } from "./theme-toggle";
 
 const GITHUB_URL = "https://github.com/kapishdima/remocn";
 
@@ -29,8 +33,42 @@ const GitHubIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
-export function SiteHeader({ navLinks }: { navLinks: NavLink[] }) {
+function GitHubStars({
+  stars,
+  onClick,
+}: {
+  stars: number | null;
+  onClick?: () => void;
+}) {
+  return (
+    <Link
+      href={GITHUB_URL}
+      target="_blank"
+      rel="noreferrer"
+      onClick={onClick}
+      className="inline-flex h-9 items-center gap-2 rounded-full border border-border px-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+    >
+      <GitHubIcon className="size-4" />
+      <span className="hidden sm:inline">Star</span>
+      {stars !== null && (
+        <span className="inline-flex items-center gap-1 tabular-nums text-foreground">
+          <Star className="size-3.5 fill-current" />
+          {formatStars(stars)}
+        </span>
+      )}
+    </Link>
+  );
+}
+
+export function SiteHeader({
+  navLinks,
+  githubStars = null,
+}: {
+  navLinks: NavLink[];
+  githubStars?: number | null;
+}) {
   const [open, setOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const trackEvent = useTrackEvent();
   const trackGitHubClick = () =>
     trackEvent("cta_clicked", {
@@ -38,12 +76,36 @@ export function SiteHeader({ navLinks }: { navLinks: NavLink[] }) {
       destination: GITHUB_URL,
     });
 
+  // Collapse the full-width bar into a floating, container-width pill on scroll.
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   return (
-    <header className="fixed inset-x-0 top-0 z-40 border-b border-white/[0.05] bg-[#141318]/60 backdrop-blur-2xl">
-      <div className={`flex h-16 items-center justify-between ${SECTION}`}>
+    <header
+      className={cn(
+        "sticky inset-x-0 top-0 z-40 border-b transition-[background-color,border-color,padding] duration-300",
+        scrolled
+          ? "border-transparent bg-transparent py-3"
+          : "border-border bg-background/70 backdrop-blur-xl",
+      )}
+    >
+      {/* Inner bar uses the page `container`, so when scrolled it becomes a
+          floating pill exactly the width of the page content. */}
+      <div
+        className={cn(
+          "container flex items-center justify-between border transition-all duration-300",
+          scrolled
+            ? "h-14 rounded-2xl border-border bg-background/80 shadow-lg shadow-black/5 backdrop-blur-xl dark:shadow-black/30"
+            : "h-16 border-transparent",
+        )}
+      >
         <Link
           href="/"
-          className="flex items-center gap-2 font-[var(--font-display)] text-lg font-semibold -tracking-wide text-[#EDEDED] focus-visible:outline-none"
+          className="flex items-center gap-2 text-lg font-semibold tracking-tight text-foreground focus-visible:outline-none"
         >
           <Image
             src="/logo.svg"
@@ -51,78 +113,83 @@ export function SiteHeader({ navLinks }: { navLinks: NavLink[] }) {
             width={24}
             height={24}
             priority
+            className="rounded-md"
           />
           remocn
         </Link>
 
         {/* Desktop nav */}
-        <nav className="hidden sm:flex items-center gap-7 text-sm text-[#8B8A91]">
+        <nav className="hidden items-center gap-1 sm:flex">
           {navLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}
-              className="transition-colors hover:text-white focus-visible:text-white focus-visible:outline-none"
+              className="rounded-full px-3 py-2 text-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:text-foreground focus-visible:outline-none"
             >
               {link.label}
             </Link>
           ))}
-          <Link
-            href={GITHUB_URL}
-            target="_blank"
-            onClick={trackGitHubClick}
-            className="flex items-center gap-1.5 transition-colors hover:text-white focus-visible:text-white focus-visible:outline-none"
-          >
-            <GitHubIcon className="size-4" />
-            GitHub
-          </Link>
         </nav>
 
-        {/* Mobile nav trigger */}
-        <Sheet open={open} onOpenChange={setOpen}>
-          <SheetTrigger
-            render={
-              <button
-                type="button"
-                aria-label="Open menu"
-                className="sm:hidden inline-flex size-11 items-center justify-center rounded-md text-[#EDEDED] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
-              />
-            }
-          >
-            <Menu className="size-5" aria-hidden="true" />
-          </SheetTrigger>
-          <SheetContent
-            side="right"
-            className="border-white/[0.06] bg-[#141318]/95 text-[#EDEDED] backdrop-blur-2xl"
-          >
-            <SheetHeader>
-              <SheetTitle className="text-[#EDEDED]">Menu</SheetTitle>
-            </SheetHeader>
-            <nav className="flex flex-col px-6 pb-6 text-base">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  onClick={() => setOpen(false)}
-                  className="py-3 text-[#EDEDED]/90 transition-colors hover:text-white focus-visible:text-white focus-visible:outline-none"
+        <div className="flex items-center gap-2">
+          <div className="hidden sm:block">
+            <GitHubStars stars={githubStars} onClick={trackGitHubClick} />
+          </div>
+          <ThemeToggle />
+
+          {/* Mobile nav trigger */}
+          <Sheet open={open} onOpenChange={setOpen}>
+            <SheetTrigger
+              render={
+                <button
+                  type="button"
+                  aria-label="Open menu"
+                  className="inline-flex size-9 items-center justify-center rounded-full border border-border text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 sm:hidden"
+                />
+              }
+            >
+              <Menu className="size-4" aria-hidden="true" />
+            </SheetTrigger>
+            <SheetContent side="right" className="bg-background">
+              <SheetHeader>
+                <SheetTitle>Menu</SheetTitle>
+              </SheetHeader>
+              <nav className="flex flex-col px-6 pb-6 text-base">
+                {navLinks.map((link) => (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    onClick={() => setOpen(false)}
+                    className="py-3 text-foreground/90 transition-colors hover:text-foreground focus-visible:text-foreground focus-visible:outline-none"
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+                <div className="mt-4">
+                  <GitHubStars
+                    stars={githubStars}
+                    onClick={() => {
+                      setOpen(false);
+                      trackGitHubClick();
+                    }}
+                  />
+                </div>
+                <Button
+                  size="lg"
+                  className="mt-4 h-11 w-full rounded-full"
+                  render={
+                    <Link
+                      href="/docs/getting-started/introduction"
+                      onClick={() => setOpen(false)}
+                    />
+                  }
                 >
-                  {link.label}
-                </Link>
-              ))}
-              <Link
-                href={GITHUB_URL}
-                target="_blank"
-                onClick={() => {
-                  setOpen(false);
-                  trackGitHubClick();
-                }}
-                className="mt-2 inline-flex items-center gap-2 py-3 text-[#EDEDED]/90 transition-colors hover:text-white focus-visible:text-white focus-visible:outline-none"
-              >
-                <GitHubIcon className="size-4" />
-                GitHub
-              </Link>
-            </nav>
-          </SheetContent>
-        </Sheet>
+                  Get started
+                </Button>
+              </nav>
+            </SheetContent>
+          </Sheet>
+        </div>
       </div>
     </header>
   );

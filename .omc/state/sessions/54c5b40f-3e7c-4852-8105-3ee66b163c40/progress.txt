@@ -1,0 +1,20 @@
+# Ralph progress — container class + scroll-shrinking header
+
+## US-001: scoped `container` class (DONE)
+- app/globals.css: added `.page-shell .container { width:100%; max-width:72rem; margin-inline:auto; padding-inline:1rem }` + `@media(min-width:640px){ padding-inline:1.5rem }`.
+  - SCOPED under `.page-shell` on purpose: fumadocs uses the bare `container` utility internally (toc, theme-switch). A global `.container` override would break the docs layout. Scoping keeps docs untouched while our pages get the 72rem width.
+- config/landing.ts: `SECTION = "container"` (was the utility string `mx-auto w-full max-w-6xl px-4 sm:px-6`). All 13 consumers now emit the class.
+- app/(home)/components/page-shell.tsx: root div now carries `page-shell` (wraps both home and /sponsors).
+
+## US-002: header shrinks to container width on scroll (DONE)
+- app/(home)/components/site-header.tsx:
+  - Added `scrolled` state + passive scroll listener in useEffect (threshold 8px, cleaned up on unmount, synced once on mount → no hydration mismatch).
+  - Two-layer pattern: `<header>` is the full-width background bar at top (bg-background/70 + border-b + blur). On scroll it goes transparent + py-3 (gap). The inner `.container` div is transparent at top, and on scroll becomes a floating pill (border, bg-background/80, rounded-2xl, shadow-lg, blur) — exactly container width (72rem) because it carries the `container` class.
+  - Border kept on both states (transparent when off) so width/height don't jump.
+  - Height animates h-16 → h-14; everything via `transition-[...] duration-300`.
+  - Removed now-unused SECTION import; added cn + useEffect.
+
+## Learnings / patterns
+- `.page-shell .container` (specificity 0,2,0) beats Tailwind's `.container` utility (0,1,0) inside our pages; docs unaffected.
+- Project convention (per CLAUDE memory): never run build/dev — user verifies. Used grep + manual review; no TS language server installed.
+- base-ui Button uses `render={<Link/>}` (not children) — established earlier in the redesign.

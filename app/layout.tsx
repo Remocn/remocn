@@ -25,11 +25,11 @@ const outfit = Outfit({
 
 export const metadata: Metadata = {
   title: {
-    default: "Remocn - Greate demo one command",
+    default: "remocn — Cinematic video components for React",
     template: "%s · remocn",
   },
   description:
-    "Production-ready Remotion animations, transitions and backgrounds. Install with shadcn CLI",
+    "Production-ready Remotion animations, transitions and backgrounds. Install with the shadcn CLI and own the code.",
 };
 
 export default function RootLayout({
@@ -42,7 +42,6 @@ export default function RootLayout({
       lang="en"
       suppressHydrationWarning
       className={cn(
-        "dark",
         "h-full",
         "antialiased",
         geistSans.variable,
@@ -51,15 +50,13 @@ export default function RootLayout({
         "font-sans",
         inter.variable,
       )}
-      style={{ colorScheme: "dark" }}
     >
       <body className="min-h-full flex flex-col">
         <NuqsAdapter>
           <RootProvider
             theme={{
-              defaultTheme: "dark",
-              forcedTheme: "dark",
-              enableSystem: false,
+              defaultTheme: "system",
+              enableSystem: true,
             }}
           >
             {children}

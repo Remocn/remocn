@@ -1,0 +1,30 @@
+{
+  "title": "Container class + scroll-shrinking header",
+  "task": "Extract the page width wrapper into a reusable `container` class applied across the page, and make the header shrink in width to the container size on scroll.",
+  "stories": [
+    {
+      "id": "US-001",
+      "title": "Introduce a scoped `container` class and use it page-wide",
+      "passes": true,
+      "acceptanceCriteria": [
+        "globals.css defines a `.container` rule scoped under `.page-shell` so it does NOT override Tailwind/fumadocs `container` utility used in docs layout",
+        "The `.container` rule sets width:100%, max-width:72rem (== max-w-6xl), margin-inline:auto, padding-inline:1rem with 1.5rem at >=640px (== px-4 sm:px-6)",
+        "PageShell root element carries the `page-shell` class",
+        "config/landing.ts SECTION constant equals \"container\" so every section/header/footer consumes the class",
+        "No section visually changes width (still centered at 72rem with the same horizontal padding)"
+      ]
+    },
+    {
+      "id": "US-002",
+      "title": "Header shrinks to container width on scroll",
+      "passes": true,
+      "acceptanceCriteria": [
+        "At scroll position 0 the header background+border spans the full viewport width with content aligned to the container",
+        "After scrolling (> ~8px) the visible header bar shrinks to the container width (72rem), centered, as a floating bar with border, shadow, rounding and a small top gap",
+        "The transition between the two states is animated (CSS transition) and reversible when scrolling back to top",
+        "Scroll state is tracked with a passive scroll listener that is cleaned up on unmount; no hydration mismatch",
+        "Works on both home and /sponsors pages and in light + dark themes"
+      ]
+    }
+  ]
+}

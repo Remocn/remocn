@@ -8,6 +8,7 @@ import { PEACH, SECTION, SPRING_SOFT } from "@/config/landing";
 import { useTrackEvent } from "@/lib/analytics";
 import registry from "@/registry/__index__";
 import { FadeUp } from "../fade-up";
+import { SectionHeading } from "../section-heading";
 
 export function LandingCodeShowcase() {
   const entry = registry["landing-code-showcase"];
@@ -41,33 +42,21 @@ export function LandingCodeShowcase() {
 
   return (
     <section id="showcase" className="relative py-20 sm:py-32">
-      {/* Header sits inside the standard SECTION width for readable copy */}
       <div className={SECTION}>
-        <FadeUp>
-          <div className="mb-12 sm:mb-16 max-w-2xl">
-            <h2 className="text-3xl sm:text-4xl font-semibold  -tracking-wide text-[#EDEDED] md:text-5xl">
-              Type a prop
-              <span className="text-[#8B8A91]"> ship a frame</span>
-            </h2>
-            <p className="mt-4 text-[#8B8A91]">
-              Every component is just React. Watch the preview react to your
-              code in real time
-            </p>
-          </div>
-        </FadeUp>
+        <SectionHeading
+          eyebrow="It's just React"
+          title="Type a prop, ship a frame"
+          lead="Every component is plain React driven by the Remotion API. Change a value and the preview reacts in real time — no timeline scrubbing."
+        />
       </div>
 
-      {/* Showcase block breaks out of the section width so the player has
-          room for the wide composition. */}
-      <div className="mx-auto w-full max-w-[100rem] px-4 sm:px-6">
+      {/* Break out of the section width so the wide composition has room. */}
+      <div className="mx-auto mt-12 w-full max-w-[100rem] px-4 sm:mt-16 sm:px-6">
         <FadeUp delay={0.1}>
           <motion.div
             whileHover={{ y: -4 }}
             transition={SPRING_SOFT}
-            className="group relative overflow-hidden rounded-2xl sm:rounded-3xl border border-white/6 bg-white/2 backdrop-blur-2xl"
-            style={{
-              boxShadow: `0 30px 80px -30px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05)`,
-            }}
+            className="surface-card group relative overflow-hidden rounded-2xl shadow-2xl shadow-black/5 sm:rounded-3xl dark:shadow-black/40"
           >
             <div className="w-full" style={{ aspectRatio }}>
               {entry ? (
@@ -90,12 +79,12 @@ export function LandingCodeShowcase() {
               type="button"
               onClick={togglePlay}
               aria-label={playing ? "Pause preview" : "Play preview"}
-              className="absolute inset-0 flex items-center justify-center bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
+              className="absolute inset-0 flex items-center justify-center bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
             >
               <span
                 aria-hidden
                 data-show={!playing}
-                className="pointer-events-none flex size-14 items-center justify-center rounded-full bg-black/50 text-white opacity-0 backdrop-blur-md transition-opacity duration-200 group-hover:opacity-100 motion-reduce:transition-none data-[show=true]:opacity-100"
+                className="pointer-events-none flex size-14 items-center justify-center rounded-full bg-background/70 text-foreground opacity-0 backdrop-blur-md transition-opacity duration-200 group-hover:opacity-100 motion-reduce:transition-none data-[show=true]:opacity-100"
               >
                 {playing ? (
                   <Pause className="size-5" />

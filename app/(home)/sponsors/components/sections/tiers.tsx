@@ -5,6 +5,7 @@ import { motion } from "motion/react";
 import Link from "next/link";
 import { type CSSProperties, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { SECTION, SPRING_BOUNCE, SPRING_SOFT } from "@/config/landing";
 import { type BillingMode, type Tier, tiers } from "@/config/sponsors";
@@ -24,7 +25,7 @@ function BillingToggle({
   ];
 
   return (
-    <div className="inline-flex rounded-full border border-white/10 bg-white/[0.04] p-1 backdrop-blur-xl">
+    <div className="inline-flex rounded-full border border-border bg-card p-1">
       {options.map((opt) => {
         const active = opt.id === value;
         return (
@@ -34,13 +35,15 @@ function BillingToggle({
             onClick={() => onChange(opt.id)}
             className={cn(
               "relative rounded-full px-5 py-2 text-sm font-medium transition-colors focus-visible:outline-none",
-              active ? "text-[#141318]" : "text-[#8B8A91] hover:text-white",
+              active
+                ? "text-background"
+                : "text-muted-foreground hover:text-foreground",
             )}
           >
             {active && (
               <motion.div
                 layoutId="billing-thumb"
-                className="absolute inset-0 rounded-full bg-white"
+                className="absolute inset-0 rounded-full bg-foreground"
                 transition={SPRING_SOFT}
               />
             )}
@@ -67,10 +70,10 @@ function TierCard({
     <motion.article
       whileHover={{ y: -4 }}
       transition={SPRING_BOUNCE}
-      className="group relative flex h-full flex-col overflow-hidden rounded-3xl border border-white/[0.06] bg-white/[0.03] p-8 backdrop-blur-2xl"
-      style={{
-        boxShadow: `0 20px 50px -20px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.06)`,
-      }}
+      className={cn(
+        "surface-card group relative flex h-full flex-col overflow-hidden rounded-3xl p-8 shadow-xl shadow-black/5 dark:shadow-black/30",
+        tier.highlighted && "ring-1 ring-foreground/15",
+      )}
     >
       {/* Spotlight overlay (driven by parent --mx/--my) */}
       <div
@@ -83,10 +86,10 @@ function TierCard({
 
       <div className="relative flex items-start justify-between gap-3">
         <div>
-          <span className="font-mono text-[11px] text-[#666]">
+          <span className="font-mono text-xs text-muted-foreground">
             {tier.tagline}
           </span>
-          <h3 className="mt-2 font-[var(--font-display)] text-2xl font-semibold -tracking-wide text-[#EDEDED]">
+          <h3 className="mt-2 text-2xl font-semibold tracking-tight text-foreground">
             {tier.name}
           </h3>
         </div>
@@ -101,20 +104,20 @@ function TierCard({
           transition={SPRING_SOFT}
           className="flex items-baseline gap-2"
         >
-          <span className="font-[var(--font-display)] text-5xl font-semibold -tracking-wide text-[#EDEDED]">
+          <span className="text-5xl font-semibold tracking-tight text-foreground">
             ${tier.price}
           </span>
-          <span className="text-sm text-[#8B8A91]">{priceSuffix}</span>
+          <span className="text-sm text-muted-foreground">{priceSuffix}</span>
         </motion.div>
       </div>
 
-      <Separator className="relative my-6 bg-white/[0.04]" />
+      <Separator className="relative my-6 bg-border" />
 
       <ul className="relative flex flex-col gap-3">
         {tier.perks.map((perk) => (
           <li
             key={perk}
-            className="flex items-start gap-3 text-sm text-[#C8C7CC]"
+            className="flex items-start gap-3 text-sm text-muted-foreground"
           >
             <Check
               className="mt-[3px] size-3.5 shrink-0"
@@ -127,14 +130,15 @@ function TierCard({
       </ul>
 
       <div className="relative mt-8 pt-2">
-        <Link
-          href={checkoutUrl}
-          target="_blank"
-          className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full border border-white/10 bg-white/[0.04] text-sm font-medium text-[#EDEDED] backdrop-blur-xl transition-colors hover:border-white/20 hover:bg-white/[0.08] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/30"
+        <Button
+          variant={tier.highlighted ? "default" : "outline"}
+          size="lg"
+          className="h-11 w-full gap-2 rounded-full"
+          render={<Link href={checkoutUrl} target="_blank" rel="noreferrer" />}
         >
           Become a {tier.name}
           <ArrowRight className="size-4" aria-hidden="true" />
-        </Link>
+        </Button>
       </div>
     </motion.article>
   );
@@ -153,7 +157,7 @@ export function Tiers() {
   };
 
   return (
-    <section id="tiers" className="relative py-24">
+    <section id="tiers" className="relative py-20 sm:py-24">
       <div className={SECTION}>
         <FadeUp>
           <div className="mb-10 flex justify-center">

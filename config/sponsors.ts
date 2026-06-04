@@ -17,8 +17,8 @@ export type Sponsor = {
 
 export const sponsors: Sponsor[] = [
   {
-    id: "efferd",
-    name: "Efferd",
+    id: "shadcnblocks",
+    name: "Shadcnblocks.com",
     logoUrl: "/sponsors/shadcnblocks.svg",
     website: "https://shadcnblocks.com/?utm_source=remocn&utm_medium=sponsor&utm_campaign=remocn_sponsors_page",
     tier: "partner",

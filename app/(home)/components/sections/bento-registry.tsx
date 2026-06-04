@@ -10,6 +10,7 @@ import { SECTION, SPRING_SOFT } from "@/config/landing";
 import { useTrackEvent } from "@/lib/analytics";
 import registry from "@/registry/__index__";
 import { FadeUp } from "../fade-up";
+import { SectionHeading } from "../section-heading";
 
 function BentoCard({
   name,
@@ -71,22 +72,19 @@ function BentoCard({
       onMouseLeave={handleLeave}
       whileHover={{ y: -4 }}
       transition={SPRING_SOFT}
-      className={`group relative flex flex-col overflow-hidden rounded-2xl sm:rounded-3xl border border-white/[0.06] bg-white/[0.03] backdrop-blur-2xl ${className}`}
-      style={{
-        boxShadow: `0 20px 50px -20px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.06)`,
-      }}
+      className={`surface-card group relative flex flex-col overflow-hidden rounded-2xl shadow-xl shadow-black/5 sm:rounded-3xl dark:shadow-black/30 ${className}`}
     >
-      {/* Spotlight overlay (driven by parent --mx/--my) */}
+      {/* Spotlight overlay (driven by parent --mx/--my) — theme-aware. */}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
         style={{
           background:
-            "radial-gradient(500px circle at var(--mx) var(--my), rgba(255,255,255,0.07), transparent 40%)",
+            "radial-gradient(500px circle at var(--mx) var(--my), color-mix(in oklab, var(--color-foreground) 8%, transparent), transparent 40%)",
         }}
       />
 
-      <div className="relative aspect-[16/9] w-full overflow-hidden bg-[#0A090E]">
+      <div className="relative aspect-[16/9] w-full overflow-hidden bg-muted">
         {entry ? (
           <Player
             ref={playerRef}
@@ -105,11 +103,11 @@ function BentoCard({
           type="button"
           onClick={togglePlay}
           aria-label={playing ? "Pause preview" : "Play preview"}
-          className="absolute inset-0 flex items-center justify-center bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 sm:hidden"
+          className="absolute inset-0 flex items-center justify-center bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 sm:hidden"
         >
           <span
             aria-hidden
-            className="pointer-events-none flex size-12 items-center justify-center rounded-full bg-black/50 text-white backdrop-blur-md"
+            className="pointer-events-none flex size-12 items-center justify-center rounded-full bg-background/70 text-foreground backdrop-blur-md"
           >
             {playing ? (
               <Pause className="size-4" />
@@ -119,11 +117,13 @@ function BentoCard({
           </span>
         </button>
       </div>
-      <div className="relative flex-1 p-5 sm:p-6">
-        <h3 className="font-[var(--font-display)] text-base font-medium text-[#EDEDED]">
+      <div className="relative flex-1 border-t border-border p-5 sm:p-6">
+        <h3 className="text-base font-semibold tracking-tight text-foreground">
           {title}
         </h3>
-        <p className="mt-1 text-sm text-[#8B8A91]">{description}</p>
+        <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
+          {description}
+        </p>
       </div>
     </motion.div>
   );
@@ -147,46 +147,34 @@ export function BentoRegistry() {
   return (
     <section id="components" className="relative py-20 sm:py-32">
       <div className={SECTION}>
-        <FadeUp>
-          <div className="mb-12 sm:mb-16 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
-            <div className="max-w-2xl">
-              <h2 className="text-3xl sm:text-4xl font-semibold -tracking-wide text-[#EDEDED] md:text-5xl">
-                A registry of motion
-              </h2>
-              <p className="mt-4 text-[#8B8A91]">
-                Transitions, primitives, text reveals — production-ready and
-                hover to play
-              </p>
-            </div>
-            <motion.div
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
-              transition={SPRING_SOFT}
-            >
-              <Button
-                variant="outline"
-                size="lg"
-                className="h-11 rounded-full border-white/10 bg-white/4 px-5 text-[#EDEDED] backdrop-blur-xl hover:border-white/20 hover:bg-white/6 hover:text-[#EDEDED]"
-              >
+        <SectionHeading
+          eyebrow="The registry"
+          title="A registry of motion"
+          lead="Transitions, primitives and text reveals — production-ready and hover to play."
+          action={
+            <Button
+              variant="outline"
+              size="lg"
+              className="h-11 gap-2 rounded-full px-5"
+              render={
                 <Link
-                  href="/docs/getting-started/introduction"
-                  className="inline-flex items-center gap-2"
+                  href="/docs/components"
                   onClick={() =>
                     trackEvent("cta_clicked", {
                       cta: "bento_browse",
-                      destination: "/docs/getting-started/introduction",
+                      destination: "/docs/components",
                     })
                   }
-                >
-                  Browse components
-                  <ArrowRight className="size-4" aria-hidden="true" />
-                </Link>
-              </Button>
-            </motion.div>
-          </div>
-        </FadeUp>
+                />
+              }
+            >
+              Browse all
+              <ArrowRight className="size-4" aria-hidden="true" />
+            </Button>
+          }
+        />
 
-        <FadeUp delay={0.1}>
+        <FadeUp delay={0.1} className="mt-12 sm:mt-16">
           {/* biome-ignore lint/a11y/noStaticElementInteractions: spotlight cursor tracking is purely visual */}
           <div
             ref={gridRef}
@@ -219,7 +207,7 @@ export function BentoRegistry() {
           <div
             ref={grid2Ref}
             onMouseMove={(e) => handleMove(e, grid2Ref.current)}
-            className="mt-4 sm:mt-6 grid gap-4 sm:gap-6 md:grid-cols-2"
+            className="mt-4 grid gap-4 sm:mt-6 sm:gap-6 md:grid-cols-2"
             style={{ "--mx": "50%", "--my": "50%" } as CSSProperties}
           >
             <BentoCard
