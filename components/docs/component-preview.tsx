@@ -37,7 +37,7 @@ export function ComponentPreview({ name }: { name: string }) {
   return (
     <Suspense
       fallback={
-        <div className="not-prose mb-6 aspect-video w-full animate-pulse rounded-2xl bg-muted" />
+        <div className="not-prose mb-6 aspect-[1.9/1] w-full animate-pulse rounded-2xl bg-muted" />
       }
     >
       <Preview name={name} config={entry.config} Component={entry.Component} />
@@ -253,6 +253,11 @@ function PreviewStage({
   return (
     <div
       ref={frameRef}
+      // Slightly shorter than 16:9 so the player takes a touch less vertical
+      // space. Compositions are a strict 1280×720 (16:9), so the Player letterboxes
+      // the small delta against the surface-card background while staying full-width
+      // and aligned with the tabs/customize panel. The Suspense fallback above uses
+      // the same ratio to keep zero layout shift.
       className="surface-card aspect-video w-full overflow-hidden rounded-2xl"
     >
       {mounted ? (
