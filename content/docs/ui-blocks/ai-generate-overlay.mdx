@@ -1,6 +1,6 @@
 ---
 title: AI Generate Overlay
-description: A "thinking" overlay for AI-driven UI — source image blurs out under a shimmering dot grid while a glassy pill pulses, then the new image fades in on top.
+description: A "thinking" overlay for AI-driven UI, where the source image blurs out under a shimmering dot grid while a glassy pill pulses, then the new image fades in on top
 ---
 
 <ComponentPreview name="ai-generate-overlay" />
@@ -47,25 +47,25 @@ export const RemotionRoot = () => (
       name: "maxBlur",
       type: "number",
       default: "20",
-      description: "Peak blur radius in pixels applied to the source image.",
+      description: "Peak blur radius in pixels applied to the source image",
     },
     {
       name: "blurStartFrame",
       type: "number",
       default: "20",
-      description: "Frame at which the blur ramp and dot grid begin.",
+      description: "Frame at which the blur ramp and dot grid begin",
     },
     {
       name: "blurPeakFrame",
       type: "number",
       default: "40",
-      description: "Frame at which the blur reaches `maxBlur` and the dot grid is fully on.",
+      description: "Frame at which the blur reaches `maxBlur` and the dot grid is fully on",
     },
     {
       name: "revealStartFrame",
       type: "number",
       default: "110",
-      description: "Frame at which the spring-driven generated-image fade-in fires.",
+      description: "Frame at which the spring-driven generated-image fade-in fires",
     },
     {
       name: "pillText",
@@ -77,13 +77,13 @@ export const RemotionRoot = () => (
       name: "accent",
       type: "string",
       default: "\"#a78bfa\"",
-      description: "Accent color used for the pill's status dot and glow shadow.",
+      description: "Accent color used for the pill's status dot and glow shadow",
     },
     {
       name: "background",
       type: "string",
       default: "\"#050505\"",
-      description: "Page background visible behind both image layers.",
+      description: "Page background visible behind both image layers",
     },
     {
       name: "sourceImageBg",
@@ -95,36 +95,36 @@ export const RemotionRoot = () => (
       name: "generatedImageBg",
       type: "string",
       default: "cool radial+linear",
-      description: "CSS background for the generated image layer that fades in.",
+      description: "CSS background for the generated image layer that fades in",
     },
     {
       name: "dotColor",
       type: "string",
       default: "\"#ffffff\"",
-      description: "Fill color of the SVG dot grid.",
+      description: "Fill color of the SVG dot grid",
     },
     {
       name: "dotSize",
       type: "number",
       default: "1.2",
-      description: "Radius of each dot in the grid.",
+      description: "Radius of each dot in the grid",
     },
     {
       name: "dotSpacing",
       type: "number",
       default: "20",
-      description: "Pattern tile size — controls the spacing between dots.",
+      description: "Pattern tile size that controls the spacing between dots",
     },
     {
       name: "speed",
       type: "number",
       default: "1",
-      description: "Playback speed multiplier for all timing values.",
+      description: "Playback speed multiplier for all timing values",
     },
     {
       name: "className",
       type: "string",
-      description: "Optional className passed to the root container.",
+      description: "Optional className passed to the root container",
     },
   ]}
 />

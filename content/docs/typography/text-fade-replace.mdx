@@ -1,6 +1,6 @@
 ---
 title: Text Fade Replace
-description: Cross-fade between two strings on the same line without layout shift.
+description: Cross-fade between two strings on the same line without layout shift
 ---
 
 <ComponentPreview name="text-fade-replace" />
@@ -40,36 +40,36 @@ export const RemotionRoot = () => (
       name: "from",
       type: "string",
       required: true,
-      description: "Initial text shown at the start of the composition.",
+      description: "Initial text shown at the start of the composition",
     },
     {
       name: "to",
       type: "string",
       required: true,
-      description: "Replacement text shown at the end of the composition.",
+      description: "Replacement text shown at the end of the composition",
     },
     {
       name: "fontSize",
       type: "number",
       default: "48",
-      description: "Font size in pixels.",
+      description: "Font size in pixels",
     },
     {
       name: "fontWeight",
       type: "number",
       default: "600",
-      description: "CSS font-weight.",
+      description: "CSS font-weight",
     },
     {
       name: "color",
       type: "string",
       default: "\"#171717\"",
-      description: "Text color for both strings.",
+      description: "Text color for both strings",
     },
     {
       name: "className",
       type: "string",
-      description: "Optional className passed to both spans.",
+      description: "Optional className passed to both spans",
     },
   ]}
 />
@@ -105,46 +105,46 @@ import { StrikethroughReplace } from "@/components/remocn/strikethrough-replace"
       name: "from",
       type: "string",
       required: true,
-      description: "Original text that gets struck through.",
+      description: "Original text that gets struck through",
     },
     {
       name: "to",
       type: "string",
       required: true,
-      description: "Replacement text that fades in.",
+      description: "Replacement text that fades in",
     },
     {
       name: "lineColor",
       type: "string",
       default: "\"#ff5e3a\"",
-      description: "Color of the strikethrough bar.",
+      description: "Color of the strikethrough bar",
     },
     {
       name: "fontSize",
       type: "number",
       default: "48",
-      description: "Font size in pixels.",
+      description: "Font size in pixels",
     },
     {
       name: "fontWeight",
       type: "number",
       default: "600",
-      description: "CSS font-weight.",
+      description: "CSS font-weight",
     },
     {
       name: "color",
       type: "string",
       default: "\"#171717\"",
-      description: "Text color for both strings.",
+      description: "Text color for both strings",
     },
     {
       name: "className",
       type: "string",
-      description: "Optional className passed to the underlying spans.",
+      description: "Optional className passed to the underlying spans",
     },
   ]}
 />
 
 <Note title="Three phases">
-  The animation runs in three phases tied to `durationInFrames`: draw the strike line (0–40%), cross-fade to the new text (40–60%), then hold (60–100%).
+  The animation runs in three phases tied to `durationInFrames`: draw the strike line (0-40%), cross-fade to the new text (40-60%), then hold (60-100%).
 </Note>

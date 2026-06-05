@@ -1,23 +1,14 @@
-import Image from "next/image";
 import type { BaseLayoutProps } from "fumadocs-ui/layouts/shared";
 
+// The custom `SiteHeader` (mounted in `app/docs/layout.tsx`) owns the only top
+// bar, and `DocsLayout` is passed `nav={{ enabled: false }}`. So this no longer
+// supplies a Fumadocs `nav.title` / `links` / `githubUrl` — doing so would only
+// feed a second, suppressed header. Theme + i18n remain Fumadocs' job via
+// `RootProvider`, untouched here.
 export function baseOptions(): BaseLayoutProps {
   return {
     nav: {
-      title: (
-        <span className="flex items-center gap-2 font-semibold tracking-tight">
-          <Image src="/logo.svg" alt="remocn logo" width={20} height={20} />
-          remocn
-        </span>
-      ),
+      enabled: false,
     },
-    githubUrl: "https://github.com/remocn/remocn",
-    links: [
-      {
-        text: "Documentation",
-        url: "/docs/getting-started/introduction",
-        active: "nested-url",
-      },
-    ],
   };
 }

@@ -183,18 +183,46 @@
   backdrop-filter: blur(12px);
 }
 
-/* Match fumadocs MDX code blocks (```tsx ... ```) to the CodeBlockCommand look */
+/* ── Code / Shiki surfaces (F3) ──────────────────────────────────────
+   MDX code blocks (```tsx … ```) resolve to the `muted` token, matching
+   the CodeBlockCommand look. No hardcoded editor hex, no border, no
+   ambient shadow — the slab reads as a calm surface in both themes. */
 .prose figure.shiki {
   background-color: var(--muted) !important;
   border-width: 0 !important;
   box-shadow: none !important;
+  border-radius: var(--radius-xl);
 }
 .prose figure.shiki pre,
 .prose figure.shiki [class*="bg-"] {
   background-color: transparent !important;
 }
+/* Larger, more readable code. Fumadocs sets `text-sm` (14px) on the
+   `figure.shiki` (components/codeblock.js), which the inner `pre`/`code`
+   inherit. Bumping font-size on the pre lifts the whole block; line-height
+   is loosened to keep the taller text comfortable. */
+.prose figure.shiki pre {
+  font-size: 0.9375rem;
+  line-height: 1.7;
+}
+/* Inline `code` inside prose — token-driven chip, not a default slab. */
+.prose :not(pre) > code {
+  background-color: color-mix(in oklab, var(--muted) 70%, transparent);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.125rem 0.375rem;
+  font-size: 0.875em;
+  font-weight: 500;
+}
+.prose :not(pre) > code::before,
+.prose :not(pre) > code::after {
+  content: none;
+}
 
-/* Docs prose vertical rhythm — explicit so headings group with following content */
+/* ── Docs prose (C2/C3/A3) ───────────────────────────────────────────
+   Explicit heading rhythm so a heading groups with the content beneath
+   it. h2–h4 stay in the sans/heading scale; only the doc-title H1 gets
+   the reserved display treatment. */
 .prose h2 {
   @apply mt-16 mb-4 text-3xl font-semibold tracking-tight;
 }
@@ -209,18 +237,190 @@
   @apply mt-8 mb-2 text-base font-semibold tracking-tight;
 }
 
-/* Reading paragraphs cap — keep prose readable while interactive blocks stay wide */
-.prose p,
-.prose ul,
-.prose ol {
-  @apply max-w-3xl;
+/* Links (B4): foreground-weighted, underline reveals on hover via the
+   token border — accent color only on hover, never default-blue.
+   Guarded with :not(:where([class~="not-prose"] *)) so the prose link
+   treatment (notably the hover underline) does NOT leak into interactive
+   .not-prose blocks like the component card grid. The :where() keeps the
+   guard at zero specificity, so these stay equivalent to `.prose a`. */
+.prose a:not(:where([class~="not-prose"] *)) {
+  color: var(--foreground);
+  font-weight: 500;
+  text-decoration: none;
+  text-underline-offset: 0.2em;
+  text-decoration-color: color-mix(in oklab, var(--foreground) 35%, transparent);
+  transition: text-decoration-color 150ms ease, color 150ms ease;
+}
+.prose a:not(:where([class~="not-prose"] *)):hover {
+  text-decoration: underline;
+  text-decoration-color: color-mix(in oklab, var(--foreground) 60%, transparent);
+}
+.prose a:not(:where([class~="not-prose"] *)):focus-visible {
+  outline: none;
+  border-radius: var(--radius-sm);
+  box-shadow: 0 0 0 2px color-mix(in oklab, var(--ring) 60%, transparent);
 }
 
-/* Sidebar tightening — fumadocs sidebar typography */
-#nd-sidebar a {
+/* Tables — token hairlines, muted header row, no zebra slop. */
+.prose table {
+  font-size: 0.875rem;
+}
+.prose thead {
+  border-bottom: 1px solid var(--border);
+}
+.prose th {
+  font-weight: 600;
+  color: var(--foreground);
+}
+.prose tbody tr {
+  border-bottom: 1px solid var(--border);
+}
+.prose td,
+.prose th {
+  padding: 0.5rem 0.75rem;
+}
+
+/* Reading measure (A2/C4): cap prose text at ~68ch while interactive
+   `.not-prose` blocks (preview stage, install, props table) stay full
+   content width — never clamp the centerpieces. */
+.prose p,
+.prose ul,
+.prose ol,
+.prose blockquote {
+  @apply max-w-3xl;
+}
+.prose .not-prose,
+.prose .not-prose p,
+.prose .not-prose ul,
+.prose .not-prose ol {
+  max-width: none;
+}
+
+/* Blockquote — soft left hairline, not a heavy bar. */
+.prose blockquote {
+  border-inline-start: 2px solid var(--border);
+  color: var(--muted-foreground);
+  font-style: normal;
+}
+
+/* ── Sidebar de-template (E2/E3/E6) ──────────────────────────────────
+   Override Fumadocs' default sidebar look via #nd-sidebar selectors.
+   We do NOT override fd-* tokens with literal colors — these rules
+   restyle layout/behaviour and resolve color through our oklch tokens.
+   Applies to both the desktop rail and the mobile drawer (#nd-sidebar
+   plus the drawer's sidebar root). */
+#nd-sidebar a,
+#nd-sidebar-mobile a {
   font-size: 0.8125rem;
   letter-spacing: -0.01em;
 }
-#nd-sidebar [data-active="true"] {
+
+/* Category section headers (SidebarSeparator) — small uppercase muted
+   labels. The Separator renders as a bare <p> inside the page-tree, so
+   scoping to #nd-sidebar p reliably targets the section labels without
+   touching the nav links (which are <a>). */
+#nd-sidebar p,
+#nd-sidebar-mobile p {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--muted-foreground);
+}
+
+/* Nav items: comfortable-compact rows (~34px), readable resting state.
+   Items resolve to the foreground (white) token so the menu is legible;
+   only the category headers stay subtle/muted for hierarchy. Hover is a
+   COLOR transition only — no background slab grow, no underline animation
+   (E6). We neutralise Fumadocs' hover:bg-*. */
+#nd-sidebar a[data-active],
+#nd-sidebar-mobile a[data-active] {
+  padding-block: 0.375rem;
+  color: var(--foreground);
+  transition: color 150ms ease;
+}
+#nd-sidebar a[data-active]:hover,
+#nd-sidebar-mobile a[data-active]:hover {
+  color: var(--foreground);
+  background-color: transparent;
+}
+
+/* Active item (E3): not color-only. Subtle accent fill + a left hairline
+   indicator drawn from the foreground token + medium weight. */
+#nd-sidebar a[data-active="true"],
+#nd-sidebar-mobile a[data-active="true"] {
+  position: relative;
   font-weight: 500;
+  color: var(--foreground);
+  background-color: color-mix(in oklab, var(--accent) 80%, transparent);
+}
+#nd-sidebar a[data-active="true"]:hover,
+#nd-sidebar-mobile a[data-active="true"]:hover {
+  background-color: color-mix(in oklab, var(--accent) 80%, transparent);
+}
+#nd-sidebar a[data-active="true"]::before,
+#nd-sidebar-mobile a[data-active="true"]::before {
+  content: "";
+  position: absolute;
+  inset-inline-start: 0;
+  inset-block: 0.3rem;
+  width: 2px;
+  border-radius: 1px;
+  background-color: var(--foreground);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #nd-sidebar a[data-active],
+  #nd-sidebar-mobile a[data-active] {
+    transition: none;
+  }
+}
+
+/* ── Non-collapsible category title (SidebarFolderLink) ──────────────
+   Each category folder has an index page, so with collapsible:false the
+   title renders as SidebarFolderLink — an <a> that carries the `w-full`
+   class (slots/sidebar.js). Nav items (SidebarItem) do NOT get `w-full`,
+   so `a.w-full` targets ONLY the category headers. (The earlier
+   `div.relative` selector was wrong: the only relative <div> is the
+   SidebarFolderContent wrapper, which contains every item — styling it
+   uppercased and disabled all links.) The title stays navigable to its
+   category index; it just reads as a quiet uppercase section label. */
+#nd-sidebar a.w-full,
+#nd-sidebar-mobile a.w-full {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--muted-foreground);
+  /* Generous gap above each category so the groups read as distinct
+     sections. NOTE: each title is the first child of its own folder
+     wrapper, so `:first-child` would match every title — we deliberately
+     don't special-case the first one; the sidebar's own top padding
+     handles the top edge. */
+  margin-top: 2.5rem;
+}
+/* Subtle hover only — it's a heading that also links to the overview. */
+#nd-sidebar a.w-full:hover,
+#nd-sidebar-mobile a.w-full:hover {
+  color: var(--foreground);
+  background-color: transparent;
+}
+
+/* ── Sidebar scroll viewport bottom padding ──────────────────────────
+   The scroll area is the Radix viewport (`[data-radix-scroll-area-viewport]`,
+   from fumadocs-ui ScrollViewport). It ships only `p-4` (1rem) at the bottom
+   and a 12px bottom mask fade (layouts/docs/slots/sidebar.js), so the last
+   nav items sit under the fade and can't be scrolled fully into view. The
+   id+attribute selector outranks the `.p-4` utility, so this longhand wins
+   over the shorthand's bottom value without touching the other sides. */
+#nd-sidebar [data-radix-scroll-area-viewport],
+#nd-sidebar-mobile [data-radix-scroll-area-viewport] {
+  padding-bottom: 2rem;
+}
+
+/* ── Default-Fumadocs visual tells, neutralised ──────────────────────
+   Anything that could leak a stock accent / off-token colour is pinned
+   back to our oklch tokens via the fd-* bridge (no literal overrides). */
+#nd-sidebar [data-active="true"] svg {
+  color: var(--foreground);
 }

@@ -1,18 +1,16 @@
 {
   "title": "Transitions",
+  "collapsible": false,
   "pages": [
     "index",
-    "---Camera & Scale---",
     "zoom-through-transition",
     "device-mockup-zoom",
     "morphing-modal",
     "image-expand-to-fullscreen",
-    "---Spatial Wipes---",
     "directional-wipe",
     "swipe-transition-wipe",
     "spatial-push",
     "frosted-glass-wipe",
-    "---Stylized---",
     "grid-pixelate-wipe",
     "chromatic-aberration-wipe"
   ]

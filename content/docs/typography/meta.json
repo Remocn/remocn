@@ -1,24 +1,20 @@
 {
   "title": "Typography",
+  "collapsible": false,
   "pages": [
     "index",
-    "---Reveals---",
     "blur-reveal",
     "staggered-fade-up",
     "masked-slide-reveal",
     "tracking-in",
-    "---Highlights---",
     "inline-highlight",
     "marker-highlight",
     "shimmer-sweep",
-    "---Dynamic Text---",
     "typewriter",
     "text-fade-replace",
     "slot-machine-roll",
-    "---Hero & Display---",
     "infinite-marquee",
     "perspective-marquee",
-    "---Tech & Glitch---",
     "matrix-decode",
     "rgb-glitch-text"
   ]

@@ -1,6 +1,6 @@
 ---
 title: Grid Pixelate Wipe
-description: Dissolve from one scene to the next through a deterministic grid of mask cells.
+description: Dissolve from one scene to the next through a deterministic grid of mask cells
 ---
 
 <ComponentPreview name="grid-pixelate-wipe" />
@@ -51,42 +51,42 @@ export const RemotionRoot = () => (
       name: "cols",
       type: "number",
       default: "12",
-      description: "Number of mask grid columns.",
+      description: "Number of mask grid columns",
     },
     {
       name: "rows",
       type: "number",
       default: "7",
-      description: "Number of mask grid rows.",
+      description: "Number of mask grid rows",
     },
     {
       name: "pattern",
       type: '"wave" | "diagonal" | "spiral"',
       default: '"wave"',
-      description: "Deterministic function used to compute per-cell delay.",
+      description: "Deterministic function used to compute per-cell delay",
     },
     {
       name: "transitionStart",
       type: "number",
       default: "durationInFrames * 0.4",
-      description: "Frame at which the dissolve begins.",
+      description: "Frame at which the dissolve begins",
     },
     {
       name: "transitionDuration",
       type: "number",
       default: "30",
-      description: "Total length of the dissolve in frames.",
+      description: "Total length of the dissolve in frames",
     },
     {
       name: "cellFadeFrames",
       type: "number",
       default: "4",
-      description: "How many frames a single cell takes to fade out.",
+      description: "How many frames a single cell takes to fade out",
     },
     {
       name: "className",
       type: "string",
-      description: "Optional className for the outer container.",
+      description: "Optional className for the outer container",
     },
   ]}
 />

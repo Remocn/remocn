@@ -49,6 +49,17 @@ export const SPONSORS_NAV: NavLink[] = [
   { href: "/docs/getting-started/introduction", label: "Docs" },
 ];
 
+// Docs reuses the global header but lives off-route, so section links must be
+// root-absolute (`/#components`) — bare hash anchors would resolve to
+// `/docs/<slug>#components` and scroll to nothing.
+export const DOCS_NAV: NavLink[] = [
+  { href: "/#components", label: "Components", smOnly: true },
+  { href: "/#showcase", label: "Showcase", smOnly: true },
+  { href: "/#get-started", label: "Get started", smOnly: true },
+  { href: "/sponsors", label: "Sponsors", smOnly: true },
+  { href: "/docs/getting-started/introduction", label: "Docs" },
+];
+
 export const FOOTER_NAV: NavLink[] = [
   { href: "/docs/getting-started/introduction", label: "Docs" },
   { href: GITHUB_URL, label: "GitHub" },

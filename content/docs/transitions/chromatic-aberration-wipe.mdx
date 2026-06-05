@@ -1,6 +1,6 @@
 ---
 title: Chromatic Aberration Wipe
-description: An ultra-fast slide transition with an RGB glitch on the peak frames.
+description: An ultra-fast slide transition with an RGB glitch on the peak frames
 ---
 
 <ComponentPreview name="chromatic-aberration-wipe" />
@@ -51,34 +51,34 @@ export const RemotionRoot = () => (
       name: "direction",
       type: '"left" | "right"',
       default: '"left"',
-      description: "Direction the outgoing scene slides toward.",
+      description: "Direction the outgoing scene slides toward",
     },
     {
       name: "transitionStart",
       type: "number",
       default: "durationInFrames * 0.4",
-      description: "Frame at which the wipe begins.",
+      description: "Frame at which the wipe begins",
     },
     {
       name: "transitionDuration",
       type: "number",
       default: "7",
-      description: "Length of the wipe in frames. Keep it short (5–8) for the glitch to land.",
+      description: "Length of the wipe in frames. Keep it short (5-8) for the glitch to land.",
     },
     {
       name: "aberrationOffset",
       type: "number",
       default: "8",
-      description: "Horizontal offset in pixels for the red and cyan drop shadows during the peak frames.",
+      description: "Horizontal offset in pixels for the red and cyan drop shadows during the peak frames",
     },
     {
       name: "className",
       type: "string",
-      description: "Optional className for the outer container.",
+      description: "Optional className for the outer container",
     },
   ]}
 />
 
 <Warning title="Less is more">
-  The chromatic aberration should only flash for 3–5 frames at peak speed. Any longer and the viewer starts consciously reading the red and cyan fringes — which kills the illusion of raw velocity. Trust the subconscious; pull the filter the moment the slide decelerates.
+  The chromatic aberration should only flash for 3-5 frames at peak speed. Any longer and the viewer starts consciously reading the red and cyan fringes, which kills the illusion of raw velocity. Trust the subconscious; pull the filter the moment the slide decelerates.
 </Warning>

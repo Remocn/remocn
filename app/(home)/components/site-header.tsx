@@ -63,9 +63,26 @@ function GitHubStars({
 export function SiteHeader({
   navLinks,
   githubStars = null,
+  sticky = true,
+  fluid = false,
 }: {
   navLinks: NavLink[];
   githubStars?: number | null;
+  /**
+   * Landing variant (default) is sticky and collapses into a floating pill on
+   * scroll. Docs passes `sticky={false}` for a static, full-width bar with no
+   * scroll listener and no pill morph.
+   */
+  sticky?: boolean;
+  /**
+   * Contained (default) keeps the inner bar centered at `max-w-6xl` to match
+   * the landing content column. `fluid` drops the max-width so the bar spans
+   * the full viewport — used in docs so the logo aligns to the left edge of the
+   * full-bleed sidebar instead of floating inward. Intended for the static
+   * (`sticky={false}`) docs variant; the sticky pill relies on the contained
+   * width, so don't combine `fluid` with the sticky landing variant.
+   */
+  fluid?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -77,30 +94,51 @@ export function SiteHeader({
     });
 
   // Collapse the full-width bar into a floating, container-width pill on scroll.
+  // Only the sticky (landing) variant listens to scroll; the static docs
+  // variant never morphs, so the listener is not attached there.
   useEffect(() => {
+    if (!sticky) return;
     const onScroll = () => setScrolled(window.scrollY > 8);
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+  }, [sticky]);
+
+  // `scrolled` can only be true in the sticky variant; guard so the static
+  // path never picks up the pill classes even if state lingers.
+  const isPill = sticky && scrolled;
 
   return (
     <header
       className={cn(
-        "sticky inset-x-0 top-0 z-40  transition-[background-color,border-color,padding] duration-300",
-        scrolled
-          ? "border-transparent bg-transparent py-3"
-          : "border-border bg-background/70 backdrop-blur-xl",
+        "z-40",
+        sticky
+          ? cn(
+              "sticky inset-x-0 top-0 transition-[background-color,border-color,padding] duration-300",
+              isPill
+                ? "border-transparent bg-transparent py-3"
+                : "border-border bg-background/70 backdrop-blur-xl",
+            )
+          : "relative h-16 w-full border-b border-border bg-background/70 backdrop-blur-xl",
       )}
     >
       {/* Inner bar matches the page content width (same utilities as SECTION),
-          so when scrolled it becomes a floating pill exactly that width. */}
+          so when scrolled it becomes a floating pill exactly that width.
+          In the static docs variant it stays a fixed-height, borderless bar.
+          `fluid` drops the max-width/centering so the bar spans the full
+          viewport and the logo lands at the sidebar's left edge. */}
       <div
         className={cn(
-          "mx-auto flex w-full max-w-6xl items-center justify-between border px-4 transition-all duration-300 sm:px-6",
-          scrolled
-            ? "h-14 rounded-2xl border-border bg-background/80 shadow-lg shadow-black/5 backdrop-blur-xl dark:shadow-black/30"
-            : "h-16 border-transparent",
+          "flex w-full items-center justify-between px-4 sm:px-6",
+          fluid ? "" : "mx-auto max-w-6xl",
+          sticky
+            ? cn(
+                "border transition-all duration-300",
+                isPill
+                  ? "h-14 rounded-2xl border-border bg-background/80 shadow-lg shadow-black/5 backdrop-blur-xl dark:shadow-black/30"
+                  : "h-16 border-transparent",
+              )
+            : "h-16",
         )}
       >
         <Link

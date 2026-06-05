@@ -25,20 +25,17 @@ export default async function Page(props: {
       tableOfContent={{ enabled: false }}
       tableOfContentPopover={{ enabled: false }}
       footer={{ enabled: true }}
-      editOnGithub={{
-        owner: "remocn",
-        repo: "remocn",
-        sha: "main",
-        path: `content/docs/${(params.slug ?? []).join("/") || "index"}.mdx`,
-      }}
     >
-      <DocsTitle className="text-5xl font-bold tracking-tighter md:text-6xl lg:text-7xl">
+      <DocsTitle
+        style={{ fontFamily: "var(--font-display)" }}
+        className="text-4xl font-semibold tracking-tight text-balance md:text-5xl lg:text-6xl"
+      >
         {data.title}
       </DocsTitle>
-      <DocsDescription className="mt-0 max-w-3xl text-balance text-lg text-muted-foreground md:text-xl">
+      <DocsDescription className="mt-3 mb-0 max-w-3xl text-balance text-lg text-muted-foreground md:text-xl">
         {data.description}
       </DocsDescription>
-      <DocsBody>
+      <DocsBody className="mt-8">
         <MDX components={getMDXComponents()} />
       </DocsBody>
     </DocsPage>

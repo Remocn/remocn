@@ -1,12 +1,11 @@
 {
   "title": "Core Primitives",
+  "collapsible": false,
   "pages": [
     "index",
-    "---Animations---",
     "spring-pop-in",
     "pulsing-indicator",
     "success-confetti",
-    "---Interactions---",
     "cursor-flow",
     "brush-stroke-simulator",
     "bounding-box-selector",

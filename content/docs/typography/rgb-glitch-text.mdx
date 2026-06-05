@@ -1,6 +1,6 @@
 ---
 title: RGB Glitch Text
-description: Three RGB-offset text copies jitter for a few frames to create a chromatic aberration glitch.
+description: Three RGB-offset text copies jitter for a few frames to create a chromatic aberration glitch
 ---
 
 <ComponentPreview name="rgb-glitch-text" />
@@ -40,60 +40,60 @@ export const RemotionRoot = () => (
       name: "text",
       type: "string",
       required: true,
-      description: "The text to display and glitch.",
+      description: "The text to display and glitch",
     },
     {
       name: "fontSize",
       type: "number",
       default: "96",
-      description: "Font size in pixels.",
+      description: "Font size in pixels",
     },
     {
       name: "color",
       type: "string",
       default: "\"#171717\"",
-      description: "Base text color (visible at all times).",
+      description: "Base text color (visible at all times)",
     },
     {
       name: "fontWeight",
       type: "number",
       default: "700",
-      description: "CSS font-weight.",
+      description: "CSS font-weight",
     },
     {
       name: "glitchAt",
       type: "number",
       default: "20",
-      description: "Frame at which the glitch starts.",
+      description: "Frame at which the glitch starts",
     },
     {
       name: "glitchDuration",
       type: "number",
       default: "8",
-      description: "Duration of the glitch window in frames.",
+      description: "Duration of the glitch window in frames",
     },
     {
       name: "intensity",
       type: "number",
       default: "6",
-      description: "Maximum offset (in pixels) for the RGB copies.",
+      description: "Maximum offset (in pixels) for the RGB copies",
     },
     {
       name: "seed",
       type: "string",
       default: "\"glitch\"",
-      description: "Seed used by `random()` so the jitter stays deterministic.",
+      description: "Seed used by `random()` so the jitter stays deterministic",
     },
     {
       name: "speed",
       type: "number",
       default: "1",
-      description: "Playback speed multiplier (1 = normal, 2 = twice as fast).",
+      description: "Playback speed multiplier (1 = normal, 2 = twice as fast)",
     },
     {
       name: "className",
       type: "string",
-      description: "Optional className passed to the inline-block wrapper.",
+      description: "Optional className passed to the inline-block wrapper",
     },
   ]}
 />

@@ -1,21 +1,18 @@
 {
   "title": "Compositions",
+  "collapsible": false,
   "pages": [
     "index",
-    "---Hero & Outro---",
     "hero-device-assemble",
     "ecosystem-constellation",
     "infinite-bento-pan",
-    "---Product Showcases---",
     "browser-flow",
     "ai-generation-canvas",
     "live-code-compilation",
     "terminal-to-browser-deploy",
-    "---App States & Journeys---",
     "dashboard-populate",
     "pipeline-journey",
     "pricing-tier-focus",
-    "---Use Case Templates---",
     "product-launch-trailer",
     "changelog-bite",
     "visual-docs-snippet"

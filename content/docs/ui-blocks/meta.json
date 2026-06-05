@@ -1,22 +1,18 @@
 {
   "title": "UI Blocks",
+  "collapsible": false,
   "pages": [
     "index",
-    "---Code & CLI---",
     "glass-code-block",
     "terminal-simulator",
     "code-accordion",
     "code-diff-wipe",
-    "---Layouts---",
     "staggered-bento-grid",
     "dynamic-split-screen",
-    "---Overlays & Panels---",
     "ai-generate-overlay",
     "tool-menu-slide-in",
-    "---Data & System---",
     "animated-line-chart",
     "animated-bar-chart",
-    "---Workflows---",
     "drag-and-drop-flow"
   ]
 }
