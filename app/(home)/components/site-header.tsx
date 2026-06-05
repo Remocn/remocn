@@ -93,11 +93,11 @@ export function SiteHeader({
           : "border-border bg-background/70 backdrop-blur-xl",
       )}
     >
-      {/* Inner bar uses the page `container`, so when scrolled it becomes a
-          floating pill exactly the width of the page content. */}
+      {/* Inner bar matches the page content width (same utilities as SECTION),
+          so when scrolled it becomes a floating pill exactly that width. */}
       <div
         className={cn(
-          "container flex items-center justify-between border transition-all duration-300",
+          "mx-auto flex w-full max-w-6xl items-center justify-between border px-4 transition-all duration-300 sm:px-6",
           scrolled
             ? "h-14 rounded-2xl border-border bg-background/80 shadow-lg shadow-black/5 backdrop-blur-xl dark:shadow-black/30"
             : "h-16 border-transparent",

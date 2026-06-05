@@ -4,9 +4,12 @@ export const PEACH = "#FFB38E";
 export const LAVENDER = "#D4B3FF";
 export const MINT = "#A1EEBD";
 
-// Page width wrapper. Implemented as the scoped `.page-shell .container`
-// CSS class (see app/globals.css) so it stays a single source of truth.
-export const SECTION = "container";
+// Page width wrapper — single source of truth for the landing/sponsors content
+// width. Plain Tailwind utilities (not the `container` class) so it can't be
+// overridden by the configured `.container` utility, which has wider max-widths
+// and no centering/padding (that collision left-shifted the whole page).
+// Equivalent to: max-w-6xl (72rem), centered, px-4 / sm:px-6.
+export const SECTION = "mx-auto w-full max-w-6xl px-4 sm:px-6";
 
 export const GITHUB_URL = "https://github.com/kapishdima/remocn";
 

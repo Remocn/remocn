@@ -140,23 +140,12 @@
 
 /* ── Landing primitives ─────────────────────────────────────────────
    Theme-aware surfaces and decorative backgrounds for app/(home).
-   Everything derives from design tokens so light/dark stay unified. */
+   Everything derives from design tokens so light/dark stay unified.
 
-/* Page width container — single source of truth for the landing/sponsors
-   content width. Scoped under `.page-shell` (applied only on the home/sponsors
-   PageShell, never on the docs tree) so it can't override the precompiled
-   Tailwind/fumadocs `.container` utility that ships in the docs preset CSS. */
-.page-shell .container {
-  width: 100%;
-  max-width: 72rem; /* == max-w-6xl */
-  margin-inline: auto;
-  padding-inline: 1rem; /* == px-4 */
-}
-@media (min-width: 640px) {
-  .page-shell .container {
-    padding-inline: 1.5rem; /* == sm:px-6 */
-  }
-}
+   NOTE: page width is handled by plain utilities in `config/landing.ts`
+   (SECTION) — NOT by overriding the `.container` class. Overriding the
+   configured `.container` utility from an unlayered rule was fragile and
+   left-shifted the whole landing when the cascade flipped. */
 
 /* Subtle dotted grid — fades toward the edges. Used behind the hero. */
 .bg-grid-fade {
