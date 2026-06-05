@@ -1,5 +1,6 @@
 {
   "title": "Core Primitives",
+  "collapsible": false,
   "pages": [
     "index",
     "---Animations---",

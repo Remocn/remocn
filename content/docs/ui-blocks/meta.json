@@ -1,5 +1,6 @@
 {
   "title": "UI Blocks",
+  "collapsible": false,
   "pages": [
     "index",
     "---Code & CLI---",

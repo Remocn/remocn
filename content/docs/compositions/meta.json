@@ -1,5 +1,6 @@
 {
   "title": "Compositions",
+  "collapsible": false,
   "pages": [
     "index",
     "---Hero & Outro---",

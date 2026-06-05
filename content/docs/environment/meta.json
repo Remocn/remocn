@@ -1,5 +1,6 @@
 {
   "title": "Environment & Lighting",
+  "collapsible": false,
   "pages": [
     "index",
     "---Backgrounds---",

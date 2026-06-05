@@ -362,6 +362,35 @@
   }
 }
 
+/* ── Non-collapsible category title (SidebarFolderLink) ──────────────
+   Each category folder has an index page, so with collapsible:false the
+   title renders as SidebarFolderLink — an <a> that carries the `w-full`
+   class (slots/sidebar.js). Nav items (SidebarItem) do NOT get `w-full`,
+   so `a.w-full` targets ONLY the category headers. (The earlier
+   `div.relative` selector was wrong: the only relative <div> is the
+   SidebarFolderContent wrapper, which contains every item — styling it
+   uppercased and disabled all links.) The title stays navigable to its
+   category index; it just reads as a quiet uppercase section label. */
+#nd-sidebar a.w-full,
+#nd-sidebar-mobile a.w-full {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--muted-foreground);
+  /* Consistent gap above each category. NOTE: each title is the first
+     child of its own folder wrapper, so `:first-child` would match every
+     title — we deliberately don't special-case the first one; the
+     sidebar's own top padding handles the top edge. */
+  margin-top: 1.25rem;
+}
+/* Subtle hover only — it's a heading that also links to the overview. */
+#nd-sidebar a.w-full:hover,
+#nd-sidebar-mobile a.w-full:hover {
+  color: var(--foreground);
+  background-color: transparent;
+}
+
 /* ── Default-Fumadocs visual tells, neutralised ──────────────────────
    Anything that could leak a stock accent / off-token colour is pinned
    back to our oklch tokens via the fd-* bridge (no literal overrides). */

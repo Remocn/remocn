@@ -1,5 +1,6 @@
 {
   "title": "Transitions",
+  "collapsible": false,
   "pages": [
     "index",
     "---Camera & Scale---",

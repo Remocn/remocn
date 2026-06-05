@@ -1,5 +1,6 @@
 {
   "title": "Typography",
+  "collapsible": false,
   "pages": [
     "index",
     "---Reveals---",
