@@ -5,6 +5,7 @@ import { NuqsAdapter } from "nuqs/adapters/next/app";
 import "./globals.css";
 import { OpenPanelComponent } from "@openpanel/nextjs";
 import { cn } from "@/lib/utils";
+import { ThemeShortcut } from "./theme-shortcut";
 
 const inter = Manrope({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -59,6 +60,7 @@ export default function RootLayout({
               enableSystem: true,
             }}
           >
+            <ThemeShortcut />
             {children}
           </RootProvider>
         </NuqsAdapter>
