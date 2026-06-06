@@ -9,6 +9,7 @@
     "lint": "biome check",
     "format": "biome format --write",
     "registry:build": "shadcn build",
+    "remotion:browser": "bun scripts/ensure-browser.mts",
     "bundle:remotion": "bun scripts/bundle-remotion.mts",
     "postinstall": "fumadocs-mdx"
   },

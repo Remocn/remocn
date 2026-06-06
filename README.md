@@ -58,7 +58,7 @@ Remotion entry pre-bundled. Two deploy paths on Coolify:
 **Nixpacks (Coolify default build pack)** — `nixpacks.toml` declares the Chromium
 apt packages so Nixpacks installs them. Set the Coolify commands in the UI:
 
-- Build: `bun install && bun run build && bunx remotion browser ensure && bun run bundle:remotion`
+- Build: `bun install && bun run build && bun run remotion:browser && bun run bundle:remotion`
 - Start: `bun run start`
 
 Under Nixpacks the `Dockerfile` is **not** used.

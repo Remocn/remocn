@@ -44,7 +44,9 @@ COPY . .
 RUN bun run build
 
 # Bake the Chrome Headless Shell into the image (no slow runtime download).
-RUN bunx remotion browser ensure
+# Uses @remotion/renderer's ensureBrowser() — the `remotion` pkg has no CLI bin
+# (that's @remotion/cli, which we don't install), so `bunx remotion ...` fails.
+RUN bun run remotion:browser
 
 # Pre-bundle the Remotion entry → .remotion-bundle/ (serveUrl ready at boot).
 RUN bun run bundle:remotion
