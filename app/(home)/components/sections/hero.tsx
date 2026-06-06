@@ -5,6 +5,7 @@ import { ArrowRight, Pause, Play } from "lucide-react";
 import { motion } from "motion/react";
 import Link from "next/link";
 import { useCallback, useRef, useState } from "react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { INSTALL_COMMAND, SPRING_BOUNCE } from "@/config/site";
 import { useTrackEvent } from "@/lib/analytics";
@@ -54,7 +55,31 @@ export function Hero() {
 
       <div className="section">
         <div className="flex flex-col items-center text-center">
-          <FadeUp delay={0.06}>
+          <FadeUp delay={0.06} className="flex flex-col items-center">
+            <Badge
+              variant="outline"
+              className="mb-5 h-7 gap-1.5 rounded-full px-3 text-xs"
+              render={
+                <Link
+                  href="/stars"
+                  onClick={() =>
+                    trackEvent("cta_clicked", {
+                      cta: "hero_stars_badge",
+                      destination: "/stars",
+                    })
+                  }
+                />
+              }
+            >
+              <span className="font-semibold text-foreground">New</span>
+              <span aria-hidden className="text-muted-foreground/60">
+                ·
+              </span>
+              <span className="text-muted-foreground">
+                Turn your repo&rsquo;s stars into a video
+              </span>
+              <ArrowRight className="size-3" aria-hidden="true" />
+            </Badge>
             <h1 className="max-w-3xl text-balance text-3xl font-semibold leading-[1.1] tracking-tight text-foreground sm:text-4xl md:text-5xl">
               Cinematic video components,
               <br className="hidden sm:block" /> now copy-pasteable

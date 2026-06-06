@@ -45,6 +45,8 @@ import { EcosystemConstellation } from "@/registry/remocn/ecosystem-constellatio
 import { ecosystemConstellationConfig } from "@/registry/remocn/ecosystem-constellation/config";
 import { FrostedGlassWipe } from "@/registry/remocn/frosted-glass-wipe";
 import { frostedGlassWipeConfig } from "@/registry/remocn/frosted-glass-wipe/config";
+import { GitHubStars } from "@/registry/remocn/github-stars";
+import { githubStarsConfig } from "@/registry/remocn/github-stars/config";
 import { GlassCodeBlock } from "@/registry/remocn/glass-code-block";
 import { glassCodeBlockConfig } from "@/registry/remocn/glass-code-block/config";
 import { GridPixelateWipe } from "@/registry/remocn/grid-pixelate-wipe";
@@ -341,12 +343,29 @@ const registry: Record<string, RegistryEntry> = {
     Component: VisualDocsSnippet,
     config: visualDocsSnippetConfig,
   },
+  "github-stars": { Component: GitHubStars, config: githubStarsConfig },
 };
 
 // Append the shared controls (e.g. `speed`) to every component config so
 // every animation in the customizer exposes the same baseline knobs.
 for (const { config } of Object.values(registry)) {
   config.controls = { ...config.controls, ...SHARED_CONTROLS };
+}
+
+// github-stars must land its count-up exactly on the final frame. A speed < 1
+// would stop the shared progress driver short (the count never reaches the
+// total), so this component intentionally deviates from SHARED_CONTROLS and
+// caps `speed` at a minimum of 1. Reassigning the existing key keeps its order.
+const githubStars = registry["github-stars"];
+if (githubStars) {
+  githubStars.config.controls.speed = {
+    type: "number",
+    default: 1,
+    min: 1,
+    max: 4,
+    step: 0.25,
+    label: "Speed",
+  };
 }
 
 export default registry;
