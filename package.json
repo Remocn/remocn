@@ -19,6 +19,7 @@
     "@react-three/fiber": "^9.3.0",
     "@react-three/postprocessing": "^3.0.4",
     "@remotion/bundler": "4.0.473",
+    "@remotion/google-fonts": "4.0.473",
     "@remotion/player": "4.0.473",
     "@remotion/renderer": "4.0.473",
     "class-variance-authority": "^0.7.1",

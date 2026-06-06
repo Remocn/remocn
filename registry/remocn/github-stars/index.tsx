@@ -3,6 +3,8 @@
 import { format, parseISO } from "date-fns";
 import type React from "react";
 import { useState } from "react";
+import { loadFont as loadSans } from "@remotion/google-fonts/Manrope";
+import { loadFont as loadMono } from "@remotion/google-fonts/JetBrainsMono";
 import {
   AbsoluteFill,
   Easing,
@@ -577,8 +579,15 @@ export const SAMPLE_STARGAZERS: Stargazer[] = [
   },
 ];
 
-const FONT_FAMILY =
-  "var(--font-geist-sans), -apple-system, BlinkMacSystemFont, sans-serif";
+// Load fonts INSIDE the composition (via @remotion/google-fonts, which waits for
+// the font with delayRender before rendering frames). Server renders run in a
+// bare headless Chromium with no app CSS / `--font-*` vars, so without this the
+// MP4 falls back to the default sans-serif. Manrope for UI text, JetBrains Mono
+// for the numeric star counter (odometer).
+const { fontFamily: SANS_FAMILY } = loadSans();
+const { fontFamily: MONO_FAMILY } = loadMono();
+
+const FONT_FAMILY = SANS_FAMILY;
 
 interface Theme {
   bg: string;
@@ -897,7 +906,7 @@ function Odometer({
         fontSize,
         fontWeight: 800,
         color,
-        fontFamily: FONT_FAMILY,
+        fontFamily: MONO_FAMILY,
         fontVariantNumeric: "tabular-nums",
         letterSpacing: "-0.03em",
         lineHeight: 1,
@@ -1030,7 +1039,7 @@ function Row({
             alignItems: "center",
             gap: 8,
             color: theme.fgMuted,
-            fontFamily: FONT_FAMILY,
+            fontFamily: MONO_FAMILY,
             fontSize: 18,
             fontVariantNumeric: "tabular-nums",
             flexShrink: 0,
