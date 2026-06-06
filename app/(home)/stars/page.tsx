@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { StarsTool } from "./components/stars-tool";
+import { Suspense } from "react";
 
 export const metadata: Metadata = {
   title: "GitHub Stars Video Generator",
@@ -15,5 +16,9 @@ export const metadata: Metadata = {
 // The (home) layout already wraps pages in PageShell + SiteHeader + SiteFooter,
 // so this server shell only supplies metadata and mounts the client tool.
 export default function StarsPage() {
-  return <StarsTool />;
+  return (
+    <Suspense>
+      <StarsTool />
+    </Suspense>
+  );
 }
