@@ -99,14 +99,11 @@ export function useStarsTool() {
   );
 
   const handleDownload = useCallback(() => {
-    if (!entry || !data || !inputProps) return;
-    void mp4.download({
-      entry,
-      inputProps,
-      orientation,
-      filename: `${data.owner}-${data.repo}-stars.mp4`,
-    });
-  }, [entry, data, inputProps, orientation, mp4]);
+    if (!inputProps) return;
+    // inputProps already carry orientation/accent/speed/theme — they are the
+    // exact POST body the render API expects; the server names the file.
+    void mp4.download(inputProps);
+  }, [inputProps, mp4]);
 
   return {
     status: stargazers.status,
@@ -137,7 +134,6 @@ export function useStarsTool() {
             onToggleCustomizer: customizer.toggleCustomizer,
             customValues: customizer.values,
             onCustomChange: customizer.onChange,
-            supportsExport: mp4.supportsExport,
             exporting: mp4.exporting,
             exportProgress: mp4.progress,
             onDownload: handleDownload,

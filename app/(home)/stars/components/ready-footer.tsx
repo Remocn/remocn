@@ -8,14 +8,12 @@ import { ExportControls } from "./export-controls";
 /** Footer row: install advert + docs link on the left, reset + export on the right. */
 export function ReadyFooter({
   onReset,
-  supportsExport,
   exporting,
   exportProgress,
   onDownload,
   onCancelExport,
 }: {
   onReset: () => void;
-  supportsExport: boolean;
   exporting: boolean;
   exportProgress: number;
   onDownload: () => void;
@@ -47,7 +45,6 @@ export function ReadyFooter({
           Change repository
         </Button>
         <ExportControls
-          supportsExport={supportsExport}
           exporting={exporting}
           exportProgress={exportProgress}
           onDownload={onDownload}

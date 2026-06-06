@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { parseRepoInput } from "@/lib/parse-repo";
 import { messageForApiError } from "../lib/api-errors";
 import { fetchStargazers, StargazersApiError } from "../lib/api";
+import { preloadAvatars } from "../lib/preload-avatars";
 import type { StarsStatus, StargazersPayload } from "../lib/types";
 
 /**
@@ -41,6 +42,11 @@ export function useStargazers() {
       }
 
       setData(json);
+      // Warm the avatar cache while the generating animation is still on screen,
+      // so the Player mounts ready-to-play (autoPlay won't stall on un-cached
+      // remote <Img>s). Bounded + non-blocking on failures; skip if cancelled.
+      await preloadAvatars(json.stargazers.map((s) => s.avatarUrl));
+      if (controller.signal.aborted) return;
       setStatus("ready");
     } catch (err) {
       // Cancel (AbortController) returns to idle silently.

@@ -45,12 +45,23 @@ export class StargazersError extends Error {
  * stargazers). GitHub won't list stargazers past ~page 400 (~40k stars); beyond
  * that the newest are unreachable → `truncated: true`.
  */
-const SAMPLE_PAGES = 12;
+const SAMPLE_PAGES = 8;
 const GITHUB_MAX_LISTABLE_PAGES = 400;
 const PER_PAGE = 100;
-const CONCURRENCY = 6;
-/** Keyframe cap kept in lockstep with the component's `downsampleStargazers`. */
-const KEYFRAME_CAP = 60;
+// High enough to fetch every sampled page in a single parallel round.
+const CONCURRENCY = 8;
+/**
+ * Keyframe cap — how many avatars the clip animates. Fewer avatars = far less
+ * image loading + decoding in BOTH the Player preview and the MP4 render, which
+ * is the dominant cost here. Kept ≤ the component's own downsample cap.
+ */
+const KEYFRAME_CAP = 40;
+/**
+ * GitHub avatars honor an `s=<px>` size query. Requesting ~120px (retina-safe for
+ * the ~60px on-screen size) downloads ~5KB instead of the default ~50-100KB+
+ * image — the single biggest win for preview load time and render speed.
+ */
+const AVATAR_SIZE = 120;
 const API_BASE = "https://api.github.com";
 
 // `parseRepoInput` lives in a client-safe module so the `/stars` client tool can
@@ -103,12 +114,19 @@ type RawStargazer = {
   user?: { login?: string; avatar_url?: string } | null;
 };
 
+/** Append GitHub's `s=` size query for a much smaller avatar download. */
+function withAvatarSize(url: string): string {
+  return url.includes("?")
+    ? `${url}&s=${AVATAR_SIZE}`
+    : `${url}?s=${AVATAR_SIZE}`;
+}
+
 function mapEntry(raw: RawStargazer): Stargazer | null {
   const user = raw?.user;
   if (!user?.login || !user.avatar_url || !raw.starred_at) return null;
   return {
     login: user.login,
-    avatarUrl: user.avatar_url,
+    avatarUrl: withAvatarSize(user.avatar_url),
     starredAt: raw.starred_at,
   };
 }

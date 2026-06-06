@@ -1,0 +1,18 @@
+# Keep the build context small + force a clean build inside the image.
+node_modules
+.next
+.git
+.omc
+.claude
+
+# Generated inside the Docker build (RUN bun run bundle:remotion) — never copy a
+# local/stale bundle in.
+.remotion-bundle
+
+# Local env + misc
+.env*
+*.tsbuildinfo
+.DS_Store
+coverage
+.vercel
+.source

@@ -25,7 +25,6 @@ export function ReadyView({
   onToggleCustomizer,
   customValues,
   onCustomChange,
-  supportsExport,
   exporting,
   exportProgress,
   onDownload,
@@ -44,7 +43,6 @@ export function ReadyView({
   onToggleCustomizer: () => void;
   customValues: Record<string, unknown>;
   onCustomChange: (key: string, value: unknown) => void;
-  supportsExport: boolean;
   exporting: boolean;
   exportProgress: number;
   onDownload: () => void;
@@ -97,7 +95,6 @@ export function ReadyView({
 
         <ReadyFooter
           onReset={onReset}
-          supportsExport={supportsExport}
           exporting={exporting}
           exportProgress={exportProgress}
           onDownload={onDownload}

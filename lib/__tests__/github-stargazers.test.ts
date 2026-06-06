@@ -178,7 +178,8 @@ describe("fetchStargazers", () => {
     expect(result.stargazers).toHaveLength(1);
     expect(result.stargazers[0]).toEqual<Stargazer>({
       login: "alice",
-      avatarUrl: "https://avatars.githubusercontent.com/u/1?login=alice",
+      // avatar URL gets a small `s=` size query appended for fast loading.
+      avatarUrl: "https://avatars.githubusercontent.com/u/1?login=alice&s=120",
       starredAt: "2021-01-01T00:00:00Z",
     });
   });

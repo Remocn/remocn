@@ -48,6 +48,31 @@ bun run registry:build   # rebuild the shadcn registry JSON
 bun run lint             # biome check
 ```
 
+## Self-hosting (server-side MP4 render)
+
+The `/stars` live generator renders MP4s server-side with `@remotion/renderer`
+(headless Chromium), so export works in every browser. Either way, headless
+Chromium needs its system libraries, the Chrome Headless Shell baked in, and the
+Remotion entry pre-bundled. Two deploy paths on Coolify:
+
+**Nixpacks (Coolify default build pack)** — `nixpacks.toml` declares the Chromium
+apt packages so Nixpacks installs them. Set the Coolify commands in the UI:
+
+- Build: `bun install && bun run build && bunx remotion browser ensure && bun run bundle:remotion`
+- Start: `bun run start`
+
+Under Nixpacks the `Dockerfile` is **not** used.
+
+**Dockerfile build pack** — switch the resource's build pack to Dockerfile and the
+included `Dockerfile` (Debian + Chromium libs) handles everything: it bakes in the
+Chrome Headless Shell and the pre-bundled Remotion entry. No separate build/start
+commands needed.
+
+Sized for a Hetzner CPX42. Configure the render via env vars — see `.env.example`
+(`RENDER_WORK_DIR`, `RENDER_MAX_CONCURRENT`, `REMOTION_CONCURRENCY`,
+`RENDER_TIMEOUT_MS`, and the per-IP rate-limit knobs). Run `bun install` after
+pulling dependency changes so `bun.lock` matches before building.
+
 ## Tech stack
 
 - [Remotion](https://www.remotion.dev/) 4.0 + `@remotion/player` for in-browser previews

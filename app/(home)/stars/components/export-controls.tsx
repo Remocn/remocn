@@ -1,22 +1,15 @@
 import { Download, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 
-/** Download MP4 button with the exporting (progress + cancel) and unsupported
- *  (muted + tooltip) variants. */
+/** Download MP4 button; while a server render runs it becomes a progress bar +
+ *  cancel. Server renders for every browser, so there's no unsupported state. */
 export function ExportControls({
-  supportsExport,
   exporting,
   exportProgress,
   onDownload,
   onCancelExport,
 }: {
-  supportsExport: boolean;
   exporting: boolean;
   exportProgress: number;
   onDownload: () => void;
@@ -42,34 +35,10 @@ export function ExportControls({
     );
   }
 
-  if (supportsExport) {
-    return (
-      <Button size="lg" onClick={onDownload} className="gap-2 rounded-full">
-        <Download className="size-4" aria-hidden="true" />
-        Download MP4
-      </Button>
-    );
-  }
-
   return (
-    <Tooltip>
-      <TooltipTrigger
-        render={
-          // Not the native `disabled` attribute — a disabled button
-          // suppresses hover/click, hiding the tooltip and the info toast.
-          // Style it muted and let onDownload surface the Chrome/Edge hint.
-          <Button
-            size="lg"
-            aria-disabled
-            onClick={onDownload}
-            className="gap-2 rounded-full opacity-50"
-          >
-            <Download className="size-4" aria-hidden="true" />
-            Download MP4
-          </Button>
-        }
-      />
-      <TooltipContent>MP4 export needs Chrome or Edge</TooltipContent>
-    </Tooltip>
+    <Button size="lg" onClick={onDownload} className="gap-2 rounded-full">
+      <Download className="size-4" aria-hidden="true" />
+      Download MP4
+    </Button>
   );
 }

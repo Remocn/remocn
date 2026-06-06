@@ -16,7 +16,7 @@ export function PlayerFrame({
   orientation: Orientation;
   reduced: boolean;
 }) {
-  const { ref, playing, togglePlay } = usePlayerControls(!reduced);
+  const { ref, playing, togglePlay } = usePlayerControls(true);
   const { width, height } = dims(orientation);
 
   return (
@@ -50,7 +50,6 @@ export function PlayerFrame({
             compositionWidth={width}
             compositionHeight={height}
             style={{ width: "100%", height: "100%", display: "block" }}
-            autoPlay={!reduced}
             loop
             acknowledgeRemotionLicense
           />
