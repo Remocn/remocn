@@ -1,4 +1,4 @@
-import { LAVENDER, MINT, PEACH } from "@/config/landing";
+import { LAVENDER, MINT, PEACH } from "@/config/site";
 
 // ---------------------------------------------------------------------------
 // Hero code block

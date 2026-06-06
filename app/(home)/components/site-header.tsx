@@ -1,4 +1,4 @@
-import { NAV_LINKS } from "@/config/landing";
+import { NAV_LINKS } from "@/config/site";
 import { NavDesktop } from "./header-nav";
 import { HeaderActions, HeaderLogo } from "./header-parts";
 import { StickyHeaderShell } from "./sticky-header-shell";

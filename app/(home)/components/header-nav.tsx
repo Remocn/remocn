@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRef, useState } from "react";
 import { SlidingHighlight } from "@/components/sliding-highlight";
 import { SheetClose } from "@/components/ui/sheet";
-import type { NavLink } from "@/config/landing";
+import type { NavLink } from "@/config/site";
 import { cn } from "@/lib/utils";
 
 /**

@@ -3,7 +3,7 @@ import {
   HeaderLogo,
 } from "@/app/(home)/components/header-parts";
 import { NavDesktop } from "@/app/(home)/components/header-nav";
-import { NAV_LINKS } from "@/config/landing";
+import { NAV_LINKS } from "@/config/site";
 
 /**
  * Static, content-aligned header for the docs. Unlike `SiteHeader` it never

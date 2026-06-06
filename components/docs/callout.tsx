@@ -1,6 +1,6 @@
 import { AlertTriangleIcon, InfoIcon } from "lucide-react";
 import type { ReactNode } from "react";
-import { MINT, PEACH } from "@/config/landing";
+import { MINT, PEACH } from "@/config/site";
 import { cn } from "@/lib/utils";
 
 function CalloutBase({
@@ -35,7 +35,9 @@ function CalloutBase({
         className="mt-0.5 shrink-0 text-muted-foreground"
         style={
           accent
-            ? { color: `color-mix(in oklab, ${accent} 72%, var(--color-foreground))` }
+            ? {
+                color: `color-mix(in oklab, ${accent} 72%, var(--color-foreground))`,
+              }
             : undefined
         }
       >
@@ -57,7 +59,11 @@ export function Note({
   children: ReactNode;
 }) {
   return (
-    <CalloutBase icon={<InfoIcon className="size-4" />} title={title} accent={MINT}>
+    <CalloutBase
+      icon={<InfoIcon className="size-4" />}
+      title={title}
+      accent={MINT}
+    >
       {children}
     </CalloutBase>
   );

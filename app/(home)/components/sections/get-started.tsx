@@ -1,7 +1,6 @@
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { CodeBlockCommand } from "@/components/docs/code-block-command";
-import { SECTION } from "@/config/landing";
 import { convertNpmCommand } from "@/lib/convert-npm-command";
 import {
   ADD,
@@ -106,7 +105,7 @@ function FeaturedStep({ step, delay }: { step: Step; delay: number }) {
 export function GetStarted() {
   return (
     <section id="get-started" className="relative py-20 sm:py-20">
-      <div className={SECTION}>
+      <div className="section">
         <SectionHeading
           eyebrow="Get started"
           title="Ship your first frame in minutes"

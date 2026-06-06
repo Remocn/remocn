@@ -142,10 +142,17 @@
    Theme-aware surfaces and decorative backgrounds for app/(home).
    Everything derives from design tokens so light/dark stay unified.
 
-   NOTE: page width is handled by plain utilities in `config/landing.ts`
-   (SECTION) — NOT by overriding the `.container` class. Overriding the
-   configured `.container` utility from an unlayered rule was fragile and
-   left-shifted the whole landing when the cascade flipped. */
+   NOTE: page width is the `.section` class below — NOT an override of the
+   `.container` utility. Overriding the configured `.container` from an
+   unlayered rule was fragile and left-shifted the whole landing when the
+   cascade flipped. */
+
+/* Page content width wrapper — single source of truth for the landing/sponsors
+   content column: centered, max-w-6xl, responsive padding. Applied as
+   `className="section"`. */
+.section {
+  @apply mx-auto w-full max-w-6xl px-4 sm:px-6;
+}
 
 /* Subtle dotted grid — fades toward the edges. Used behind the hero. */
 .bg-grid-fade {

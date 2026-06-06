@@ -7,7 +7,7 @@ import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { SECTION, SPRING_BOUNCE, SPRING_SOFT } from "@/config/landing";
+import { SPRING_BOUNCE, SPRING_SOFT } from "@/config/site";
 import { type BillingMode, type Tier, tiers } from "@/config/sponsors";
 import { cn } from "@/lib/utils";
 import { SpotlightSurface } from "@/components/spotlight-surface";
@@ -151,7 +151,7 @@ export function Tiers() {
 
   return (
     <section id="tiers" className="relative py-20 sm:py-24">
-      <div className={SECTION}>
+      <div className="section">
         <FadeUp>
           <div className="mb-10 flex justify-center">
             <BillingToggle value={billingMode} onChange={setBillingMode} />

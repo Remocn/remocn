@@ -6,7 +6,7 @@ import { motion } from "motion/react";
 import Link from "next/link";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { SECTION, SPRING_SOFT } from "@/config/landing";
+import { SPRING_SOFT } from "@/config/site";
 import { useTrackEvent } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 import registry from "@/registry/__index__";
@@ -149,7 +149,7 @@ export function BentoRegistry() {
 
   return (
     <section id="components" className="relative py-20 sm:py-20">
-      <div className={SECTION}>
+      <div className="section">
         <SectionHeading
           eyebrow="The registry"
           title="A registry of motion"

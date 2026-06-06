@@ -10,7 +10,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { NAV_LINKS } from "@/config/landing";
+import { NAV_LINKS } from "@/config/site";
 import { cn } from "@/lib/utils";
 import { NavMobile } from "./header-nav";
 import { ThemeToggle } from "./theme-toggle";

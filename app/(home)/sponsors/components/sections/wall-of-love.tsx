@@ -1,7 +1,6 @@
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { SECTION } from "@/config/landing";
 import { type Sponsor, sponsors } from "@/config/sponsors";
 import { cn } from "@/lib/utils";
 import { FadeUp } from "../../../components/fade-up";
@@ -75,7 +74,7 @@ export function WallOfLove() {
 
   return (
     <section id="wall-of-love" className="relative py-20 sm:py-28">
-      <div className={SECTION}>
+      <div className="section">
         <SectionHeading
           eyebrow="Wall of love"
           title="The people keeping remocn alive"

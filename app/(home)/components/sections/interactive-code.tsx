@@ -10,7 +10,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { SECTION, SPRING_SOFT } from "@/config/landing";
+import { SPRING_SOFT } from "@/config/site";
 import { useTrackEvent } from "@/lib/analytics";
 import { TYPEWRITER_DEFAULTS } from "@/lib/config/snippets";
 import registry from "@/registry/__index__";
@@ -295,7 +295,7 @@ export function InteractiveCode() {
 
   return (
     <section id="showcase" className="relative py-20 sm:py-20">
-      <div className={SECTION}>
+      <div className="section">
         <SectionHeading
           eyebrow="It's just props"
           title="Tweak it live"
