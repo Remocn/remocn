@@ -4,10 +4,7 @@
   "pages": [
     "index",
     "spring-pop-in",
-    "pulsing-indicator",
     "success-confetti",
-    "cursor-flow",
-    "brush-stroke-simulator",
     "bounding-box-selector",
     "toast-notification"
   ]

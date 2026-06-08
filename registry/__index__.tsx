@@ -1,8 +1,6 @@
 import type React from "react";
 import { type ComponentConfig, SHARED_CONTROLS } from "@/lib/customizer-config";
 
-import { AIGenerateOverlay } from "@/registry/remocn/ai-generate-overlay";
-import { aiGenerateOverlayConfig } from "@/registry/remocn/ai-generate-overlay/config";
 import { AIGenerationCanvas } from "@/registry/remocn/ai-generation-canvas";
 import { aiGenerationCanvasConfig } from "@/registry/remocn/ai-generation-canvas/config";
 import { AnimatedBarChart } from "@/registry/remocn/animated-bar-chart";
@@ -15,10 +13,6 @@ import { BoundingBoxSelector } from "@/registry/remocn/bounding-box-selector";
 import { boundingBoxSelectorConfig } from "@/registry/remocn/bounding-box-selector/config";
 import { BrowserFlow } from "@/registry/remocn/browser-flow";
 import { browserFlowConfig } from "@/registry/remocn/browser-flow/config";
-import { BrushStrokeSimulator } from "@/registry/remocn/brush-stroke-simulator";
-import { brushStrokeSimulatorConfig } from "@/registry/remocn/brush-stroke-simulator/config";
-import { ChangelogBite } from "@/registry/remocn/changelog-bite";
-import { changelogBiteConfig } from "@/registry/remocn/changelog-bite/config";
 import { ChatToPreviewLayout } from "@/registry/remocn/chat-to-preview-layout";
 import { chatToPreviewLayoutConfig } from "@/registry/remocn/chat-to-preview-layout/config";
 import { ChromaticAberrationWipe } from "@/registry/remocn/chromatic-aberration-wipe";
@@ -27,8 +21,6 @@ import { CodeAccordion } from "@/registry/remocn/code-accordion";
 import { codeAccordionConfig } from "@/registry/remocn/code-accordion/config";
 import { CodeDiffWipe } from "@/registry/remocn/code-diff-wipe";
 import { codeDiffWipeConfig } from "@/registry/remocn/code-diff-wipe/config";
-import { CursorFlow } from "@/registry/remocn/cursor-flow";
-import { cursorFlowConfig } from "@/registry/remocn/cursor-flow/config";
 import { DashboardPopulate } from "@/registry/remocn/dashboard-populate";
 import { dashboardPopulateConfig } from "@/registry/remocn/dashboard-populate/config";
 import { DataFlowPipes } from "@/registry/remocn/data-flow-pipes";
@@ -75,20 +67,12 @@ import { MatrixDecode } from "@/registry/remocn/matrix-decode";
 import { matrixDecodeConfig } from "@/registry/remocn/matrix-decode/config";
 import { MeshGradientBg } from "@/registry/remocn/mesh-gradient-bg";
 import { meshGradientBgConfig } from "@/registry/remocn/mesh-gradient-bg/config";
-import { MorphingModal } from "@/registry/remocn/morphing-modal";
-import { morphingModalConfig } from "@/registry/remocn/morphing-modal/config";
 import { PerspectiveMarquee } from "@/registry/remocn/perspective-marquee";
 import { perspectiveMarqueeConfig } from "@/registry/remocn/perspective-marquee/config";
-import { PipelineJourney } from "@/registry/remocn/pipeline-journey";
-import { pipelineJourneyConfig } from "@/registry/remocn/pipeline-journey/config";
 import { PricingTierFocus } from "@/registry/remocn/pricing-tier-focus";
 import { pricingTierFocusConfig } from "@/registry/remocn/pricing-tier-focus/config";
-import { ProductLaunchTrailer } from "@/registry/remocn/product-launch-trailer";
-import { productLaunchTrailerConfig } from "@/registry/remocn/product-launch-trailer/config";
 import { ProgressSteps } from "@/registry/remocn/progress-steps";
 import { progressStepsConfig } from "@/registry/remocn/progress-steps/config";
-import { PulsingIndicator } from "@/registry/remocn/pulsing-indicator";
-import { pulsingIndicatorConfig } from "@/registry/remocn/pulsing-indicator/config";
 import { RGBGlitchText } from "@/registry/remocn/rgb-glitch-text";
 import { rgbGlitchTextConfig } from "@/registry/remocn/rgb-glitch-text/config";
 import { ShimmerSweep } from "@/registry/remocn/shimmer-sweep";
@@ -103,22 +87,16 @@ import { SpotlightCard } from "@/registry/remocn/spotlight-card";
 import { spotlightCardConfig } from "@/registry/remocn/spotlight-card/config";
 import { SpringPopIn } from "@/registry/remocn/spring-pop-in";
 import { springPopInConfig } from "@/registry/remocn/spring-pop-in/config";
-import { StaggeredBentoGrid } from "@/registry/remocn/staggered-bento-grid";
-import { staggeredBentoGridConfig } from "@/registry/remocn/staggered-bento-grid/config";
 import { StaggeredFadeUp } from "@/registry/remocn/staggered-fade-up";
 import { staggeredFadeUpConfig } from "@/registry/remocn/staggered-fade-up/config";
 import { StrikethroughReplace } from "@/registry/remocn/strikethrough-replace";
 import { strikethroughReplaceConfig } from "@/registry/remocn/strikethrough-replace/config";
 import { SuccessConfetti } from "@/registry/remocn/success-confetti";
 import { successConfettiConfig } from "@/registry/remocn/success-confetti/config";
-import { SwipeTransitionWipe } from "@/registry/remocn/swipe-transition-wipe";
-import { swipeTransitionWipeConfig } from "@/registry/remocn/swipe-transition-wipe/config";
 import { TerminalSimulator } from "@/registry/remocn/terminal-simulator";
 import { terminalSimulatorConfig } from "@/registry/remocn/terminal-simulator/config";
 import { TerminalToBrowserDeploy } from "@/registry/remocn/terminal-to-browser-deploy";
 import { terminalToBrowserDeployConfig } from "@/registry/remocn/terminal-to-browser-deploy/config";
-import { TextFadeReplace } from "@/registry/remocn/text-fade-replace";
-import { textFadeReplaceConfig } from "@/registry/remocn/text-fade-replace/config";
 import { ToastNotification } from "@/registry/remocn/toast-notification";
 import { toastNotificationConfig } from "@/registry/remocn/toast-notification/config";
 import { ToolMenuSlideIn } from "@/registry/remocn/tool-menu-slide-in";
@@ -127,8 +105,6 @@ import { TrackingIn } from "@/registry/remocn/tracking-in";
 import { trackingInConfig } from "@/registry/remocn/tracking-in/config";
 import { Typewriter } from "@/registry/remocn/typewriter";
 import { typewriterConfig } from "@/registry/remocn/typewriter/config";
-import { VisualDocsSnippet } from "@/registry/remocn/visual-docs-snippet";
-import { visualDocsSnippetConfig } from "@/registry/remocn/visual-docs-snippet/config";
 import { ZoomThroughTransition } from "@/registry/remocn/zoom-through-transition";
 import { zoomThroughTransitionConfig } from "@/registry/remocn/zoom-through-transition/config";
 
@@ -143,10 +119,6 @@ const registry: Record<string, RegistryEntry> = {
   "inline-highlight": {
     Component: InlineHighlight,
     config: inlineHighlightConfig,
-  },
-  "text-fade-replace": {
-    Component: TextFadeReplace,
-    config: textFadeReplaceConfig,
   },
   "strikethrough-replace": {
     Component: StrikethroughReplace,
@@ -186,9 +158,7 @@ const registry: Record<string, RegistryEntry> = {
     config: glassCodeBlockConfig,
   },
   "code-accordion": { Component: CodeAccordion, config: codeAccordionConfig },
-  "cursor-flow": { Component: CursorFlow, config: cursorFlowConfig },
   "data-flow-pipes": { Component: DataFlowPipes, config: dataFlowPipesConfig },
-  "morphing-modal": { Component: MorphingModal, config: morphingModalConfig },
   "mesh-gradient-bg": {
     Component: MeshGradientBg,
     config: meshGradientBgConfig,
@@ -198,10 +168,6 @@ const registry: Record<string, RegistryEntry> = {
   "simulated-cursor": {
     Component: SimulatedCursor,
     config: simulatedCursorConfig,
-  },
-  "pulsing-indicator": {
-    Component: PulsingIndicator,
-    config: pulsingIndicatorConfig,
   },
   "directional-wipe": {
     Component: DirectionalWipe,
@@ -214,10 +180,6 @@ const registry: Record<string, RegistryEntry> = {
   "zoom-through-transition": {
     Component: ZoomThroughTransition,
     config: zoomThroughTransitionConfig,
-  },
-  "staggered-bento-grid": {
-    Component: StaggeredBentoGrid,
-    config: staggeredBentoGridConfig,
   },
   "chat-to-preview-layout": {
     Component: ChatToPreviewLayout,
@@ -290,10 +252,6 @@ const registry: Record<string, RegistryEntry> = {
     Component: LandingCodeShowcase,
     config: landingCodeShowcaseConfig,
   },
-  "pipeline-journey": {
-    Component: PipelineJourney,
-    config: pipelineJourneyConfig,
-  },
   "dashboard-populate": {
     Component: DashboardPopulate,
     config: dashboardPopulateConfig,
@@ -311,14 +269,6 @@ const registry: Record<string, RegistryEntry> = {
     Component: InfiniteBentoPan,
     config: infiniteBentoPanConfig,
   },
-  "brush-stroke-simulator": {
-    Component: BrushStrokeSimulator,
-    config: brushStrokeSimulatorConfig,
-  },
-  "ai-generate-overlay": {
-    Component: AIGenerateOverlay,
-    config: aiGenerateOverlayConfig,
-  },
   "tool-menu-slide-in": {
     Component: ToolMenuSlideIn,
     config: toolMenuSlideInConfig,
@@ -326,22 +276,6 @@ const registry: Record<string, RegistryEntry> = {
   "image-expand-to-fullscreen": {
     Component: ImageExpandToFullscreen,
     config: imageExpandToFullscreenConfig,
-  },
-  "swipe-transition-wipe": {
-    Component: SwipeTransitionWipe,
-    config: swipeTransitionWipeConfig,
-  },
-  "product-launch-trailer": {
-    Component: ProductLaunchTrailer,
-    config: productLaunchTrailerConfig,
-  },
-  "changelog-bite": {
-    Component: ChangelogBite,
-    config: changelogBiteConfig,
-  },
-  "visual-docs-snippet": {
-    Component: VisualDocsSnippet,
-    config: visualDocsSnippetConfig,
   },
   "github-stars": { Component: GitHubStars, config: githubStarsConfig },
 };

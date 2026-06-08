@@ -46,20 +46,6 @@
       ]
     },
     {
-      "name": "text-fade-replace",
-      "type": "registry:component",
-      "title": "Text Fade Replace",
-      "description": "Cross-fades between two strings on the same line without layout shift.",
-      "dependencies": ["remotion"],
-      "files": [
-        {
-          "path": "registry/remocn/text-fade-replace/index.tsx",
-          "type": "registry:component",
-          "target": "components/remocn/text-fade-replace.tsx"
-        }
-      ]
-    },
-    {
       "name": "strikethrough-replace",
       "type": "registry:component",
       "title": "Strikethrough Replace",
@@ -256,20 +242,6 @@
       ]
     },
     {
-      "name": "pulsing-indicator",
-      "type": "registry:component",
-      "title": "Pulsing Indicator",
-      "description": "Continuous pulsing dot with ping ring for loading or live states.",
-      "dependencies": ["remotion"],
-      "files": [
-        {
-          "path": "registry/remocn/pulsing-indicator/index.tsx",
-          "type": "registry:component",
-          "target": "components/remocn/pulsing-indicator.tsx"
-        }
-      ]
-    },
-    {
       "name": "directional-wipe",
       "type": "registry:component",
       "title": "Directional Wipe",
@@ -308,20 +280,6 @@
           "path": "registry/remocn/zoom-through-transition/index.tsx",
           "type": "registry:component",
           "target": "components/remocn/zoom-through-transition.tsx"
-        }
-      ]
-    },
-    {
-      "name": "staggered-bento-grid",
-      "type": "registry:component",
-      "title": "Staggered Bento Grid",
-      "description": "Cards pop into a bento grid one after another with a spring.",
-      "dependencies": ["remotion"],
-      "files": [
-        {
-          "path": "registry/remocn/staggered-bento-grid/index.tsx",
-          "type": "registry:component",
-          "target": "components/remocn/staggered-bento-grid.tsx"
         }
       ]
     },
@@ -452,20 +410,6 @@
       ]
     },
     {
-      "name": "morphing-modal",
-      "type": "registry:component",
-      "title": "Morphing Modal",
-      "description": "A bento card lifts off the grid and blooms into a full-screen modal driven by a single heavy spring.",
-      "dependencies": ["remotion"],
-      "files": [
-        {
-          "path": "registry/remocn/morphing-modal/index.tsx",
-          "type": "registry:component",
-          "target": "components/remocn/morphing-modal.tsx"
-        }
-      ]
-    },
-    {
       "name": "data-flow-pipes",
       "type": "registry:component",
       "title": "Data Flow Pipes",
@@ -476,20 +420,6 @@
           "path": "registry/remocn/data-flow-pipes/index.tsx",
           "type": "registry:component",
           "target": "components/remocn/data-flow-pipes.tsx"
-        }
-      ]
-    },
-    {
-      "name": "cursor-flow",
-      "type": "registry:component",
-      "title": "Cursor Flow",
-      "description": "A realistic mouse that arcs along cubic Bezier paths, pauses, and clicks targets that dip in response.",
-      "dependencies": ["remotion"],
-      "files": [
-        {
-          "path": "registry/remocn/cursor-flow/index.tsx",
-          "type": "registry:component",
-          "target": "components/remocn/cursor-flow.tsx"
         }
       ]
     },
@@ -704,20 +634,6 @@
       ]
     },
     {
-      "name": "pipeline-journey",
-      "type": "registry:component",
-      "title": "Pipeline Journey",
-      "description": "A Kanban ticket arcs across columns triggering landings and a final confetti burst.",
-      "dependencies": ["remotion"],
-      "files": [
-        {
-          "path": "registry/remocn/pipeline-journey/index.tsx",
-          "type": "registry:component",
-          "target": "components/remocn/pipeline-journey.tsx"
-        }
-      ]
-    },
-    {
       "name": "dashboard-populate",
       "type": "registry:component",
       "title": "Dashboard Populate",
@@ -788,34 +704,6 @@
       ]
     },
     {
-      "name": "brush-stroke-simulator",
-      "type": "registry:component",
-      "title": "Brush Stroke Simulator",
-      "description": "A simulated finger brushes across an image, revealing a pixelated layer along its bezier path.",
-      "dependencies": ["remotion"],
-      "files": [
-        {
-          "path": "registry/remocn/brush-stroke-simulator/index.tsx",
-          "type": "registry:component",
-          "target": "components/remocn/brush-stroke-simulator.tsx"
-        }
-      ]
-    },
-    {
-      "name": "ai-generate-overlay",
-      "type": "registry:component",
-      "title": "AI Generate Overlay",
-      "description": "Source image blurs under a shimmering dot grid and a pulsing 'Generating…' pill before a new image fades in.",
-      "dependencies": ["remotion"],
-      "files": [
-        {
-          "path": "registry/remocn/ai-generate-overlay/index.tsx",
-          "type": "registry:component",
-          "target": "components/remocn/ai-generate-overlay.tsx"
-        }
-      ]
-    },
-    {
       "name": "tool-menu-slide-in",
       "type": "registry:component",
       "title": "Tool Menu Slide In",
@@ -840,62 +728,6 @@
           "path": "registry/remocn/image-expand-to-fullscreen/index.tsx",
           "type": "registry:component",
           "target": "components/remocn/image-expand-to-fullscreen.tsx"
-        }
-      ]
-    },
-    {
-      "name": "swipe-transition-wipe",
-      "type": "registry:component",
-      "title": "Swipe Transition Wipe",
-      "description": "Two scenes laid out side-by-side flick across the screen with a parallax background and a darkening outgoing layer.",
-      "dependencies": ["remotion"],
-      "files": [
-        {
-          "path": "registry/remocn/swipe-transition-wipe/index.tsx",
-          "type": "registry:component",
-          "target": "components/remocn/swipe-transition-wipe.tsx"
-        }
-      ]
-    },
-    {
-      "name": "product-launch-trailer",
-      "type": "registry:component",
-      "title": "Product Launch Trailer",
-      "description": "Cinematic Product Hunt teaser: pulsing logo, zoom-through transition, 3D bento fly-over, and a confetti version drop.",
-      "dependencies": ["remotion"],
-      "files": [
-        {
-          "path": "registry/remocn/product-launch-trailer/index.tsx",
-          "type": "registry:component",
-          "target": "components/remocn/product-launch-trailer.tsx"
-        }
-      ]
-    },
-    {
-      "name": "changelog-bite",
-      "type": "registry:component",
-      "title": "Changelog Bite",
-      "description": "Seamlessly looping square card showing a before/after diff with a frosted glass wipe and a pulsing New pill.",
-      "dependencies": ["remotion"],
-      "files": [
-        {
-          "path": "registry/remocn/changelog-bite/index.tsx",
-          "type": "registry:component",
-          "target": "components/remocn/changelog-bite.tsx"
-        }
-      ]
-    },
-    {
-      "name": "visual-docs-snippet",
-      "type": "registry:component",
-      "title": "Visual Docs Snippet",
-      "description": "Calm tutorial flow: a virtual cursor arcs to a button, clicks, and a bounding box plus tooltip explain what just happened.",
-      "dependencies": ["remotion"],
-      "files": [
-        {
-          "path": "registry/remocn/visual-docs-snippet/index.tsx",
-          "type": "registry:component",
-          "target": "components/remocn/visual-docs-snippet.tsx"
         }
       ]
     },
