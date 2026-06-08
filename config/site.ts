@@ -34,6 +34,15 @@ export const NAV_LINKS: NavLink[] = [
   { href: "/docs/getting-started/introduction", label: "Docs" },
 ];
 
+/**
+ * Docs whose sidebar menu item should carry the animated "NEW" badge. Keyed by
+ * the page's docs URL (the Fumadocs page-tree `item.url`). Add a path here to
+ * tag another menu item — no component changes needed. See `withNewBadges`.
+ */
+export const NEW_BADGE_PATHS = new Set<string>([
+  "/docs/social/github-stars",
+]);
+
 export const FOOTER_NAV: NavLink[] = [
   { href: "/docs/getting-started/introduction", label: "Docs" },
   { href: GITHUB_URL, label: "GitHub" },

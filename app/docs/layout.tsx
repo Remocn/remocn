@@ -2,6 +2,7 @@ import { DocsLayout } from "fumadocs-ui/layouts/docs";
 import type { ReactNode } from "react";
 import { DocsHeader } from "@/components/docs/docs-header";
 import { baseOptions } from "@/lib/layout.shared";
+import { withNewBadges } from "@/lib/with-new-badges";
 import { source } from "@/source";
 
 export default async function Layout({ children }: { children: ReactNode }) {
@@ -12,7 +13,10 @@ export default async function Layout({ children }: { children: ReactNode }) {
           sidebar, nav starting at the article column's left edge. */}
       <DocsHeader />
       <DocsLayout
-        tree={source.pageTree}
+        // Decorate the shared page tree with the animated "NEW" sidebar badge
+        // for pages listed in `NEW_BADGE_PATHS` (immutable copy — see
+        // `withNewBadges`). Everything else passes through untouched.
+        tree={withNewBadges(source.pageTree)}
         {...baseOptions()}
         // Suppress the Fumadocs default top nav so there is no double header —
         // `SiteHeader` above is the single top bar. Verified against

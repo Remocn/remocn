@@ -84,6 +84,12 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+
+  /* "NEW" sidebar badge — editable accent. Theme-agnostic for now (same value
+     in light/dark); recolor the badge by changing --badge-new-bg here. The fg
+     stays dark so the label reads on the light-lime background. */
+  --badge-new-bg: rgb(195, 232, 141);
+  --badge-new-fg: oklch(0.205 0 0);
 }
 
 .dark {
@@ -119,6 +125,10 @@
   --sidebar-accent-foreground: oklch(0.95 0 0);
   --sidebar-border: oklch(1 0 0 / 6%);
   --sidebar-ring: oklch(1 0 0 / 20%);
+
+  /* Badge keeps the same lime accent in dark mode — see :root for the knob. */
+  --badge-new-bg: rgb(195, 232, 141);
+  --badge-new-fg: oklch(0.205 0 0);
 }
 
 @layer base {
