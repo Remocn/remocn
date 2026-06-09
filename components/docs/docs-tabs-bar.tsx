@@ -14,13 +14,14 @@ import { DocsTabs } from "@/components/docs/docs-tabs";
  * the sidebar content's left edge. `items-stretch` lets the tabs fill the bar's
  * height so the active underline lands on its bottom border.
  *
- * The 1400px literal mirrors fumadocs-ui 16.7's docs-grid width, kept in sync
- * with `DocsHeader` (Tailwind JIT can't read JS constants).
+ * The 97rem literal mirrors fumadocs-ui 16.7's docs-grid default
+ * (`var(--fd-layout-width, 97rem)`), so this bar shares the same centered block
+ * as the docs content and `DocsHeader` (Tailwind JIT can't read JS constants).
  */
 export function DocsTabsBar() {
   return (
     <div className="sticky top-0 z-30 h-11 w-full border-b border-border bg-background/70 backdrop-blur-xl">
-      <div className="mx-auto flex h-11 w-full max-w-(--fd-layout-width) items-stretch px-4 [--fd-layout-width:1400px]">
+      <div className="mx-auto flex h-11 w-full max-w-(--fd-layout-width) items-stretch px-4 [--fd-layout-width:97rem]">
         <DocsTabs className="-ml-3" />
       </div>
     </div>

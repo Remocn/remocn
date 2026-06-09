@@ -21,15 +21,15 @@ import { baseOptions } from "@/lib/layout.shared";
  * are suppressed. The decorative grid scopes a dotted backdrop to the content
  * column for visual continuity with the landing hero.
  *
- * `containerProps` pins two layout vars on the DocsLayout grid:
- * - `--fd-layout-width: 1400px` matches the chrome's width (DocsHeader/DocsTabsBar
- *   use 1400; the grid otherwise falls back to 97rem). Unifying them makes the
- *   sidebar's left edge coincide with the chrome's, so the tab bar's tabs line up
- *   exactly with the sidebar at every viewport width.
- * - `--fd-banner-height: 2.75rem` is the sticky `DocsTabsBar` height. fumadocs
- *   derives `--fd-docs-row-1: var(--fd-banner-height, 0px)` and sticks the sidebar/
- *   TOC at `top-(--fd-docs-row-1)`, dropping them just below the pinned tab bar
- *   instead of letting the bar overlap the sidebar top.
+ * `containerProps` sets `--fd-banner-height` to the sticky `DocsTabsBar` height
+ * (h-11 = 2.75rem). fumadocs derives `--fd-docs-row-1: var(--fd-banner-height, 0px)`
+ * and sticks the sidebar/TOC at `top-(--fd-docs-row-1)`, dropping them just below
+ * the pinned tab bar instead of letting the bar overlap the sidebar top.
+ *
+ * The grid's own `--fd-layout-width` is left at the fumadocs default (97rem) — the
+ * chrome (DocsHeader/DocsTabsBar) is pinned to the same 97rem so everything shares
+ * one centered block. (Forcing a narrower 1400px here only enlarged the side
+ * gutters, pushing the sidebar inward.)
  */
 export function DocsShell({
   componentsTree,
@@ -54,9 +54,7 @@ export function DocsShell({
       searchToggle={{ enabled: true }}
       themeSwitch={{ enabled: false }}
       sidebar={{ collapsible: false }}
-      containerProps={{
-        className: "[--fd-layout-width:1400px] [--fd-banner-height:2.75rem]",
-      }}
+      containerProps={{ className: "[--fd-banner-height:2.75rem]" }}
     >
       <div className="relative isolate">
         <div
