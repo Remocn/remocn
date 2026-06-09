@@ -109,6 +109,8 @@ import { Accordion } from "@/registry/remocn-ui/accordion";
 import { accordionConfig } from "@/registry/remocn-ui/accordion/config";
 import { AlertDialog } from "@/registry/remocn-ui/alert-dialog";
 import { alertDialogConfig } from "@/registry/remocn-ui/alert-dialog/config";
+import { Dialog } from "@/registry/remocn-ui/dialog";
+import { dialogConfig } from "@/registry/remocn-ui/dialog/config";
 import { Button } from "@/registry/remocn-ui/button";
 import { buttonConfig } from "@/registry/remocn-ui/button/config";
 import { Checkbox } from "@/registry/remocn-ui/checkbox";
@@ -305,6 +307,7 @@ const registry: Record<string, RegistryEntry> = {
   "button": { Component: Button, config: buttonConfig },
   "accordion": { Component: Accordion, config: accordionConfig },
   "alert-dialog": { Component: AlertDialog, config: alertDialogConfig },
+  "dialog": { Component: Dialog, config: dialogConfig },
   "checkbox": { Component: Checkbox, config: checkboxConfig },
   "input": { Component: Input, config: inputConfig },
   "radio": { Component: Radio, config: radioConfig },

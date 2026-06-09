@@ -8,6 +8,7 @@ import {
   AlertDialogExampleScene,
   alertDialogExampleCode,
 } from "./alert-dialog-example";
+import { DialogExampleScene, dialogExampleCode } from "./dialog-example";
 import { ButtonExampleScene, buttonExampleCode } from "./button-example";
 import {
   CheckboxExampleScene,
@@ -52,6 +53,15 @@ export const examples: Record<string, ExampleEntry> = {
   "alert-dialog-example": {
     Component: AlertDialogExampleScene,
     code: alertDialogExampleCode,
+    // Dialog closes at 92 + dur 12 = 104; a short settle then loop.
+    durationInFrames: 120,
+    fps: FPS,
+    width: W,
+    height: H,
+  },
+  "dialog-example": {
+    Component: DialogExampleScene,
+    code: dialogExampleCode,
     // Dialog closes at 92 + dur 12 = 104; a short settle then loop.
     durationInFrames: 120,
     fps: FPS,
