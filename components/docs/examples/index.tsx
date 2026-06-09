@@ -15,6 +15,7 @@ import {
 } from "./checkbox-example";
 import { RadioExampleScene, radioExampleCode } from "./radio-example";
 import { SwitchExampleScene, switchExampleCode } from "./switch-example";
+import { InputExampleScene, inputExampleCode } from "./input-example";
 
 export interface ExampleEntry {
   Component: ComponentType;
@@ -72,6 +73,14 @@ export const examples: Record<string, ExampleEntry> = {
     Component: SwitchExampleScene,
     code: switchExampleCode,
     durationInFrames: 100,
+    fps: FPS,
+    width: W,
+    height: H,
+  },
+  "input-example": {
+    Component: InputExampleScene,
+    code: inputExampleCode,
+    durationInFrames: 120,
     fps: FPS,
     width: W,
     height: H,
