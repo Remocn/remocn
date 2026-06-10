@@ -1,0 +1,223 @@
+---
+title: Context Menu
+description: A right-click menu panel that opens at the cursor point with no built-in trigger
+---
+
+<ComponentPreview name="context-menu" />
+
+A state atom representing a context menu panel. Its appearance (`opened`, `closed`) is a pure function of the `state` prop. Pass a state directly or drive it from the Remotion timeline via `useCurrentState`. The component reads no frame — only the state value you give it. Unlike `DropdownMenu`, there is no built-in trigger — the context menu opens at the cursor click point and the **caller** positions it there. The panel grows from its top-left corner (the click point) with opacity, scale, and vertical lift.
+
+## Installation
+
+<InstallBlock name="context-menu" />
+
+<Note>
+Installing `context-menu` automatically installs the shared `remocn-ui` core (`lib/remocn-ui/`) and the `dropdown-menu-item` atom via `registryDependencies` (`["remocn-ui", "dropdown-menu-item"]`). You do not need to install them separately. The panel rows reuse the DropdownMenuItem atom.
+</Note>
+
+## Example
+
+<LiveExample name="context-menu-example" />
+
+## States
+
+`ContextMenuState` is:
+
+```ts
+type ContextMenuState =
+  | "opened"  // opacity 1, scale 1, translateY 0 — panel fully visible
+  | "closed"  // opacity 0, scale 0.95, translateY -4px — panel hidden
+```
+
+`closed` is the default. The panel grows from its top-left corner (`transformOrigin: "top left"`), which corresponds to the cursor's right-click point. `opened` reveals the panel; `closed` hides it.
+
+## Snap usage
+
+Pass `state` directly — the component snaps instantly to that visual. Useful for static previews or when you drive state from your own logic:
+
+```tsx
+import { ContextMenu } from "@/components/remocn/context-menu";
+
+export const Scene = () => (
+  <div style={{ position: "relative", width: "100%", height: "100%" }}>
+    {/* Position the menu at the right-click point */}
+    <div style={{ position: "absolute", left: 400, top: 280 }}>
+      <ContextMenu state="opened" />
+    </div>
+  </div>
+);
+```
+
+To drive state from the timeline, use `useCurrentState`:
+
+```tsx
+import { useCurrentState } from "@/lib/remocn-ui";
+import { ContextMenu } from "@/components/remocn/context-menu";
+
+export const Scene = () => {
+  const state = useCurrentState(
+    [
+      { at: 44, state: "opened" },
+      { at: 92, state: "closed" },
+    ],
+    "closed",
+  );
+
+  return (
+    <div style={{ position: "relative", width: "100%", height: "100%" }}>
+      <div style={{ position: "absolute", left: 400, top: 280 }}>
+        <ContextMenu state={state} />
+      </div>
+    </div>
+  );
+};
+```
+
+Each `at` is a **Sequence-local authored frame**. State persists between steps. See [Concepts](/docs/ui/concepts) for the full `useCurrentState` API.
+
+## Smooth transitions
+
+State changes via `state` snap with no cross-fade. For an animated open/close, use `useContextMenuTransition` from the copied `use-context-menu-transition.ts` file. It reads the frame, interpolates between state presets, and returns a resolved `ContextMenuStyle` — pass it to the `style` prop:
+
+```tsx
+import { ContextMenu } from "@/components/remocn/context-menu";
+import { useContextMenuTransition } from "@/components/remocn/use-context-menu-transition";
+
+export const Scene = () => {
+  const style = useContextMenuTransition([
+    { at: 44, state: "opened", duration: 10 },
+    { at: 92, state: "closed", duration: 10 },
+  ]);
+
+  return (
+    <div style={{ position: "relative", width: "100%", height: "100%" }}>
+      <div style={{ position: "absolute", left: 400, top: 280 }}>
+        <ContextMenu style={style} />
+      </div>
+    </div>
+  );
+};
+```
+
+The `duration` field on each step overrides the file's `DEFAULT_DURATION` (= `10`) for that specific transition. To globally tune timing and easing, edit `use-context-menu-transition.ts` directly in your project — that file is yours (shadcn "own your code" philosophy).
+
+`style` takes precedence over `state` when both are provided.
+
+## Positioning at the click point
+
+The context menu has no built-in trigger and no `x`/`y` props. It renders inside a transparent `div` whose `transformOrigin` is `"top left"` — so the panel grows from whatever corner the caller places it at. Use an absolute wrapper positioned at the cursor's right-click coordinates:
+
+```tsx
+import { Cursor } from "@/components/remocn/cursor";
+import { useCursorPath } from "@/components/remocn/use-cursor-path";
+import { ContextMenu } from "@/components/remocn/context-menu";
+import { useContextMenuTransition } from "@/components/remocn/use-context-menu-transition";
+
+const CLICK_X = 400;
+const CLICK_Y = 280;
+
+export const Scene = () => {
+  const cursorStyle = useCursorPath([
+    { at: 0,  x: 80,      y: 60      },
+    { at: 30, x: CLICK_X, y: CLICK_Y, duration: 26 },
+    { at: 42, x: CLICK_X, y: CLICK_Y, click: true, duration: 0 },
+  ]);
+
+  const menuStyle = useContextMenuTransition([
+    { at: 44, state: "opened", duration: 10 },
+    { at: 92, state: "closed", duration: 10 },
+  ]);
+
+  return (
+    <div style={{ position: "relative", width: "100%", height: "100%" }}>
+      {/* Menu top-left corner = cursor click point */}
+      <div style={{ position: "absolute", left: CLICK_X, top: CLICK_Y }}>
+        <ContextMenu style={menuStyle} />
+      </div>
+      <Cursor style={cursorStyle} variant="pointer" />
+    </div>
+  );
+};
+```
+
+The `click: true` waypoint on the cursor fires a ripple at that frame — schedule the menu's `opened` step 1–2 frames after to let the ripple lead the reveal.
+
+## Items
+
+The panel renders a column of **DropdownMenuItem** rows — one per action. The row atom, its states (`idle`, `hover`, `press`), and the `useDropdownMenuItemTransition` hook are documented under [DropdownMenu](/docs/ui/components/dropdown-menu#items). When you install `context-menu`, the `dropdown-menu-item` atom is automatically pulled in via `registryDependencies` — no separate install needed.
+
+The `ContextMenu` container derives each row's state from `highlightedIndex` and `pressedIndex`, or you can override a row's visual with `itemStyles`:
+
+```tsx
+import { useDropdownMenuItemTransition } from "@/components/remocn/use-dropdown-menu-item-transition";
+import { useCurrentState } from "@/lib/remocn-ui";
+
+const rowState = useCurrentState(
+  [
+    { at: 60, state: "hover" },
+    { at: 72, state: "press" },
+    { at: 82, state: "idle"  },
+  ],
+  "idle",
+);
+const rowStyle = useDropdownMenuItemTransition([{ at: 0, state: rowState }]);
+
+<ContextMenu style={menuStyle} itemStyles={[undefined, rowStyle, undefined, undefined]} />
+```
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "state",
+      type: "\"opened\" | \"closed\"",
+      default: "\"closed\"",
+      description: "Current visual state (snap path). State changes snap — no automatic cross-fade.",
+    },
+    {
+      name: "style",
+      type: "ContextMenuStyle",
+      description: "Resolved animated visual (smooth path). Pass an interpolated ContextMenuStyle from useContextMenuTransition. Takes precedence over state when provided.",
+    },
+    {
+      name: "items",
+      type: "string[]",
+      default: "[\"Back\", \"Reload\", \"Save As…\", \"Inspect\"]",
+      description: "Array of action labels rendered as DropdownMenuItem rows.",
+    },
+    {
+      name: "highlightedIndex",
+      type: "number",
+      default: "-1",
+      description: "Index of the row under the pointer (hover state). -1 for none.",
+    },
+    {
+      name: "pressedIndex",
+      type: "number",
+      default: "-1",
+      description: "Index of the row being pressed (press state). -1 for none.",
+    },
+    {
+      name: "itemStyles",
+      type: "(DropdownMenuItemStyle | undefined)[]",
+      description: "Per-row resolved visual override (smooth path). When present it wins over the index-to-state derivation. Drive individual rows with useDropdownMenuItemTransition.",
+    },
+    {
+      name: "theme",
+      type: "Partial<RemocnTheme>",
+      description: "Per-component theme override. Merges with the active RemocnUIProvider theme and the mode defaults. Must be concrete oklch/hex/rgb values — not CSS custom properties.",
+    },
+    {
+      name: "mode",
+      type: "\"light\" | \"dark\"",
+      default: "\"light\"",
+      description: "Sets the base palette. Overrides the mode on RemocnUIProvider when both are present.",
+    },
+    {
+      name: "className",
+      type: "string",
+      description: "Optional className applied to the panel wrapper element.",
+    },
+  ]}
+/>

@@ -159,6 +159,8 @@ import { Combobox } from "@/registry/remocn-ui/combobox";
 import { comboboxConfig } from "@/registry/remocn-ui/combobox/config";
 import { PopoverPreview } from "@/registry/remocn-ui/popover/preview";
 import { popoverConfig } from "@/registry/remocn-ui/popover/config";
+import { ContextMenuPreview } from "@/registry/remocn-ui/context-menu/preview";
+import { contextMenuConfig } from "@/registry/remocn-ui/context-menu/config";
 import { ZoomThroughTransition } from "@/registry/remocn/zoom-through-transition";
 import { zoomThroughTransitionConfig } from "@/registry/remocn/zoom-through-transition/config";
 
@@ -387,6 +389,10 @@ const registry: Record<string, RegistryEntry> = {
   // popover's customizer Component is the preview-only PopoverPreview wrapper: a
   // bare card has no backdrop and would not center as the composition root.
   "popover": { Component: PopoverPreview, config: popoverConfig },
+  // context-menu's customizer Component is the preview-only ContextMenuPreview
+  // wrapper: a bare panel (transparent, caller-positioned) would sit top-left,
+  // so the wrapper centers it on a stage.
+  "context-menu": { Component: ContextMenuPreview, config: contextMenuConfig },
   "spinner": { Component: Spinner, config: spinnerConfig },
 };
 

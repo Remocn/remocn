@@ -52,6 +52,10 @@ import {
   PopoverExampleScene,
   popoverExampleCode,
 } from "./popover-example";
+import {
+  ContextMenuExampleScene,
+  contextMenuExampleCode,
+} from "./context-menu-example";
 
 export interface ExampleEntry {
   Component: ComponentType;
@@ -253,6 +257,16 @@ export const examples: Record<string, ExampleEntry> = {
     code: popoverExampleCode,
     // Popover closes at 100 + dur 10 = 110; cursor parks at 110; short settle then loop.
     durationInFrames: 130,
+    fps: FPS,
+    width: W,
+    height: H,
+  },
+  "context-menu-example": {
+    Component: ContextMenuExampleScene,
+    code: contextMenuExampleCode,
+    // Cursor selects row 1, menu closes at 102, cursor leaves (arrives 104+20=124);
+    // a short settle then loop.
+    durationInFrames: 135,
     fps: FPS,
     width: W,
     height: H,
