@@ -531,6 +531,26 @@
           "target": "components/remocn/use-slider-transition.ts"
         }
       ]
+    },
+    {
+      "name": "combobox",
+      "type": "registry:component",
+      "title": "UI Combobox",
+      "description": "A combobox whose opened/closed state is a pure function of the timeline; the panel fade/scale/lift are keyframed presets like select. The trigger reuses the Input presets (typed query + caret reveal via an injected inputStyle), the list is filtered by a pure case-insensitive substring on the visible query prefix, and rows reuse the SelectItem row.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["remocn-ui", "input", "select-item"],
+      "files": [
+        {
+          "path": "combobox/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/combobox.tsx"
+        },
+        {
+          "path": "combobox/use-combobox-transition.ts",
+          "type": "registry:component",
+          "target": "components/remocn/use-combobox-transition.ts"
+        }
+      ]
     }
   ]
 }

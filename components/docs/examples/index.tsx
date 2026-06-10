@@ -44,6 +44,10 @@ import {
   SliderExampleScene,
   sliderExampleCode,
 } from "./slider-example";
+import {
+  ComboboxExampleScene,
+  comboboxExampleCode,
+} from "./combobox-example";
 
 export interface ExampleEntry {
   Component: ComponentType;
@@ -226,6 +230,15 @@ export const examples: Record<string, ExampleEntry> = {
     Component: SliderExampleScene,
     code: sliderExampleCode,
     // Drag completes at 100; thumb releases at 108; a short settle then loop.
+    durationInFrames: 120,
+    fps: FPS,
+    width: W,
+    height: H,
+  },
+  "combobox-example": {
+    Component: ComboboxExampleScene,
+    code: comboboxExampleCode,
+    // Panel closes at 100 + dur 12 = 112; a short settle then loop.
     durationInFrames: 120,
     fps: FPS,
     width: W,

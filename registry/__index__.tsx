@@ -155,6 +155,8 @@ import { SkeletonPreview } from "@/registry/remocn-ui/skeleton/preview";
 import { skeletonConfig } from "@/registry/remocn-ui/skeleton/config";
 import { SliderPreview } from "@/registry/remocn-ui/slider/preview";
 import { sliderConfig } from "@/registry/remocn-ui/slider/config";
+import { Combobox } from "@/registry/remocn-ui/combobox";
+import { comboboxConfig } from "@/registry/remocn-ui/combobox/config";
 import { ZoomThroughTransition } from "@/registry/remocn/zoom-through-transition";
 import { zoomThroughTransitionConfig } from "@/registry/remocn/zoom-through-transition/config";
 
@@ -377,6 +379,9 @@ const registry: Record<string, RegistryEntry> = {
   // slider's customizer Component is the preview-only SliderPreview wrapper: a
   // bare inline bar would sit top-left, so the wrapper centers it on a stage.
   "slider": { Component: SliderPreview, config: sliderConfig },
+  // combobox registers RAW (no preview wrapper): like select it paints its own
+  // opaque inset:0 wrapper, so the customizer mounts it directly and it centers.
+  "combobox": { Component: Combobox, config: comboboxConfig },
   "spinner": { Component: Spinner, config: spinnerConfig },
 };
 

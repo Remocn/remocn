@@ -1,5 +1,5 @@
 {
   "title": "Components",
   "collapsible": false,
-  "pages": ["accordion", "alert-dialog", "button", "checkbox", "command-menu", "cursor", "dialog", "drawer", "sheet", "dropdown-menu", "input", "progress", "radio", "select", "skeleton", "slider", "spinner", "switch", "tabs", "toast", "tooltip"]
+  "pages": ["accordion", "alert-dialog", "button", "checkbox", "combobox", "command-menu", "cursor", "dialog", "drawer", "sheet", "dropdown-menu", "input", "progress", "radio", "select", "skeleton", "slider", "spinner", "switch", "tabs", "toast", "tooltip"]
 }
