@@ -1,0 +1,217 @@
+---
+title: Skeleton
+description: A shimmer placeholder that crossfades to real content when loaded
+---
+
+<ComponentPreview name="skeleton" />
+
+A state atom that crossfades between a shimmer placeholder and real content. Its appearance (`loading`, `loaded`) is a pure function of the `state` prop. Pass a state directly or drive it from the Remotion timeline via `useCurrentState`. The component reads no frame — only the animated `SkeletonBlock` motion atom inside the placeholder does. The two opacity layers always sum to 1 so the crossfade never dims the bounding box.
+
+## Installation
+
+<InstallBlock name="skeleton" />
+
+<Note>
+Installing `skeleton` automatically installs the shared `remocn-ui` core (`lib/remocn-ui/`) and the `skeleton-block` motion atom via `registryDependencies` (`["remocn-ui", "skeleton-block"]`). You do not need to install them separately. `skeleton` (the state atom), `use-skeleton-transition` (the hook), and `skeleton-block` (the shimmer renderer) are all copied into your project.
+</Note>
+
+## Example
+
+<LiveExample name="skeleton-example" />
+
+## States
+
+`SkeletonState` is:
+
+```ts
+type SkeletonState =
+  | "loading"  // skeletonOpacity 1, contentOpacity 0 — placeholder visible, content hidden
+  | "loaded"   // skeletonOpacity 0, contentOpacity 1 — placeholder hidden, content visible
+```
+
+`loading` is the default. The two opacities always sum to 1: the crossfade is a complementary pair so the box never dims mid-transition. The placeholder is an absolute overlay positioned over the real content — the box dimensions are set by the children, not the placeholder, so no layout jump occurs on crossfade.
+
+## Snap usage
+
+Pass `state` directly — the component snaps instantly to that visual. Useful for static previews or when you drive state from your own logic:
+
+```tsx
+import { Skeleton } from "@/components/remocn/skeleton";
+
+export const Scene = () => (
+  <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+    <Skeleton state="loading" layout="card" />
+  </div>
+);
+```
+
+To drive state from the timeline, use `useCurrentState`:
+
+```tsx
+import { useCurrentState } from "@/lib/remocn-ui";
+import { Skeleton } from "@/components/remocn/skeleton";
+
+export const Scene = () => {
+  const state = useCurrentState(
+    [
+      { at: 45, state: "loaded" },
+    ],
+    "loading",
+  );
+
+  return (
+    <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <Skeleton state={state} layout="card">
+        <div>Real content here</div>
+      </Skeleton>
+    </div>
+  );
+};
+```
+
+Each `at` is a **Sequence-local authored frame**. State persists between steps: `loaded` at frame 45 keeps the content visible for the rest of the composition. See [Concepts](/docs/ui/concepts) for the full `useCurrentState` API.
+
+## Smooth transitions
+
+State changes via `state` snap with no cross-fade. For an animated shimmer-to-content reveal, use `useSkeletonTransition` from the copied `use-skeleton-transition.ts` file. It reads the frame, interpolates between state presets, and returns a resolved `SkeletonStyle` — pass it to the `style` prop:
+
+```tsx
+import { Skeleton } from "@/components/remocn/skeleton";
+import { useSkeletonTransition } from "@/components/remocn/use-skeleton-transition";
+
+export const Scene = () => {
+  const style = useSkeletonTransition([
+    { at: 45, state: "loaded", duration: 16 },
+  ]);
+
+  return (
+    <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <Skeleton style={style} layout="card">
+        <div>Real content here</div>
+      </Skeleton>
+    </div>
+  );
+};
+```
+
+The `duration` field on each step overrides the file's `DEFAULT_DURATION` (= `12`) for that specific transition. To globally tune timing and easing, edit `use-skeleton-transition.ts` directly in your project — that file is yours (shadcn "own your code" philosophy).
+
+`style` takes precedence over `state` when both are provided.
+
+## Layout presets
+
+When no `placeholder` prop is given, `Skeleton` renders a built-in placeholder assembled from `SkeletonBlock` atoms. The `layout` prop selects the preset:
+
+```ts
+type SkeletonLayout =
+  | "lines"  // three stacked rows: 260px, 240px, 160px wide — generic text block
+  | "card"   // 48×48 circle avatar + two lines (180px, 120px) — profile or list item
+```
+
+```tsx
+<Skeleton state="loading" layout="lines" />
+<Skeleton state="loading" layout="card" />
+```
+
+For a custom placeholder, pass a `placeholder` prop — any `ReactNode` of `SkeletonBlock` atoms arranged however you like. The `placeholder` prop overrides `layout` when present:
+
+```tsx
+import { SkeletonBlock } from "@/components/remocn/skeleton-block";
+
+<Skeleton style={skeletonStyle} placeholder={
+  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+    <SkeletonBlock width={300} height={20} />
+    <SkeletonBlock width={200} height={14} />
+  </div>
+}>
+  <div>Real content</div>
+</Skeleton>
+```
+
+## Shimmer block
+
+The `SkeletonBlock` motion atom is the building block behind every shimmer effect. It reads `useCurrentFrame()` directly — it is the only file in this component allowed to do so — and drives a diagonal highlight gradient sweep that loops seamlessly every 60 frames at `speed = 1`.
+
+<ComponentPreview name="skeleton-block" />
+
+```tsx
+import { SkeletonBlock } from "@/components/remocn/skeleton-block";
+
+// A pill-shaped shimmer rectangle
+<SkeletonBlock width={240} height={16} radius={8} />
+
+// A circular avatar placeholder
+<SkeletonBlock width={48} height={48} radius={24} />
+
+// Double speed sweep
+<SkeletonBlock width={180} height={14} speed={2} />
+```
+
+`SkeletonBlock` props:
+
+| Prop | Type | Default | Description |
+|---|---|---|---|
+| `width` | `number \| string` | `120` | Block width in px (or any CSS length string). |
+| `height` | `number` | `16` | Block height in px. |
+| `radius` | `number` | `6` | Corner radius in px. |
+| `speed` | `number` | `1` | Playhead scale — a full sweep takes `60 / speed` frames. |
+| `baseColor` | `string` | `theme.muted` | Resting block color. |
+| `highlightColor` | `string` | `theme.accent` | Moving highlight band color. |
+| `className` | `string` | — | Optional className applied to the div. |
+
+When you install `skeleton`, `skeleton-block` is automatically pulled in via `registryDependencies` — no separate install needed.
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "state",
+      type: "\"loading\" | \"loaded\"",
+      default: "\"loading\"",
+      description: "Current visual state (snap path). State changes snap — no automatic cross-fade.",
+    },
+    {
+      name: "style",
+      type: "SkeletonStyle",
+      description: "Resolved animated visual (smooth path). Pass an interpolated SkeletonStyle from useSkeletonTransition. Takes precedence over state when provided.",
+    },
+    {
+      name: "children",
+      type: "ReactNode",
+      description: "The real content. Sits in normal flow and defines the box size. Revealed when contentOpacity reaches 1.",
+    },
+    {
+      name: "placeholder",
+      type: "ReactNode",
+      description: "Custom placeholder layer (arbitrary SkeletonBlock arrangement). Overrides layout when present.",
+    },
+    {
+      name: "layout",
+      type: "\"lines\" | \"card\"",
+      default: "\"lines\"",
+      description: "Built-in placeholder preset when no placeholder prop is given. lines renders three stacked rows; card renders a circle avatar with two lines.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      description: "Playhead scale forwarded to the built-in placeholder SkeletonBlocks. Higher values make the shimmer sweep faster.",
+    },
+    {
+      name: "theme",
+      type: "Partial<RemocnTheme>",
+      description: "Per-component theme override. Merges with the active RemocnUIProvider theme and the mode defaults. Must be concrete oklch/hex/rgb values — not CSS custom properties.",
+    },
+    {
+      name: "mode",
+      type: "\"light\" | \"dark\"",
+      default: "\"light\"",
+      description: "Sets the base palette. Overrides the mode on RemocnUIProvider when both are present.",
+    },
+    {
+      name: "className",
+      type: "string",
+      description: "Optional className applied to the outer wrapper element.",
+    },
+  ]}
+/>

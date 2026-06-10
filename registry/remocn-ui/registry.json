@@ -476,6 +476,41 @@
           "target": "components/remocn/use-progress-transition.ts"
         }
       ]
+    },
+    {
+      "name": "skeleton-block",
+      "type": "registry:component",
+      "title": "UI Skeleton Block",
+      "description": "A shimmer placeholder block — a motion atom (spinner pattern). A directional highlight gradient sweeps across deterministically from useCurrentFrame() and loops seamlessly. Configurable width/height/radius/speed and base/highlight colors.",
+      "dependencies": ["remotion"],
+      "registryDependencies": [],
+      "files": [
+        {
+          "path": "skeleton-block/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/skeleton-block.tsx"
+        }
+      ]
+    },
+    {
+      "name": "skeleton",
+      "type": "registry:component",
+      "title": "UI Skeleton",
+      "description": "A skeleton→content crossfade whose loading/loaded state is a pure function of the timeline. The Skeleton renderer is pure (reads no frame); only the composed SkeletonBlock shimmer reads it. SkeletonStyle opacities sum to 1 so the box never dims; real children sit in normal flow and the placeholder (a lines/card layout or a custom node) is an absolute overlay.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["remocn-ui", "skeleton-block"],
+      "files": [
+        {
+          "path": "skeleton/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/skeleton.tsx"
+        },
+        {
+          "path": "skeleton/use-skeleton-transition.ts",
+          "type": "registry:component",
+          "target": "components/remocn/use-skeleton-transition.ts"
+        }
+      ]
     }
   ]
 }

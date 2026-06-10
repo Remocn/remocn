@@ -36,6 +36,10 @@ import {
   ProgressExampleScene,
   progressExampleCode,
 } from "./progress-example";
+import {
+  SkeletonExampleScene,
+  skeletonExampleCode,
+} from "./skeleton-example";
 
 export interface ExampleEntry {
   Component: ComponentType;
@@ -200,6 +204,16 @@ export const examples: Record<string, ExampleEntry> = {
     code: progressExampleCode,
     // Fill completes at 130 + dur 30 = 160; a short settle then loop.
     durationInFrames: 160,
+    fps: FPS,
+    width: W,
+    height: H,
+  },
+  "skeleton-example": {
+    Component: SkeletonExampleScene,
+    code: skeletonExampleCode,
+    // ~3 shimmer cycles (180), crossfade completes at 180 + 16 = 196; a short
+    // settle on the revealed content then loop.
+    durationInFrames: 220,
     fps: FPS,
     width: W,
     height: H,

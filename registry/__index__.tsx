@@ -149,6 +149,10 @@ import { TooltipPreview } from "@/registry/remocn-ui/tooltip/preview";
 import { tooltipConfig } from "@/registry/remocn-ui/tooltip/config";
 import { ProgressPreview } from "@/registry/remocn-ui/progress/preview";
 import { progressConfig } from "@/registry/remocn-ui/progress/config";
+import { SkeletonBlockPreview } from "@/registry/remocn-ui/skeleton-block/preview";
+import { skeletonBlockConfig } from "@/registry/remocn-ui/skeleton-block/config";
+import { SkeletonPreview } from "@/registry/remocn-ui/skeleton/preview";
+import { skeletonConfig } from "@/registry/remocn-ui/skeleton/config";
 import { ZoomThroughTransition } from "@/registry/remocn/zoom-through-transition";
 import { zoomThroughTransitionConfig } from "@/registry/remocn/zoom-through-transition/config";
 
@@ -360,6 +364,14 @@ const registry: Record<string, RegistryEntry> = {
   // progress's customizer Component is the preview-only ProgressPreview wrapper:
   // a bare inline bar would sit top-left, so the wrapper centers it on a stage.
   "progress": { Component: ProgressPreview, config: progressConfig },
+  // skeleton-block is the shimmer motion atom; its preview centers the bare block
+  // on a stage. skeleton is the state atom whose preview supplies demo content +
+  // placeholder for the loading↔loaded crossfade.
+  "skeleton-block": {
+    Component: SkeletonBlockPreview,
+    config: skeletonBlockConfig,
+  },
+  "skeleton": { Component: SkeletonPreview, config: skeletonConfig },
   "spinner": { Component: Spinner, config: spinnerConfig },
 };
 
