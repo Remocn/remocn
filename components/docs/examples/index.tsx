@@ -48,6 +48,10 @@ import {
   ComboboxExampleScene,
   comboboxExampleCode,
 } from "./combobox-example";
+import {
+  PopoverExampleScene,
+  popoverExampleCode,
+} from "./popover-example";
 
 export interface ExampleEntry {
   Component: ComponentType;
@@ -240,6 +244,15 @@ export const examples: Record<string, ExampleEntry> = {
     code: comboboxExampleCode,
     // Panel closes at 100 + dur 12 = 112; a short settle then loop.
     durationInFrames: 120,
+    fps: FPS,
+    width: W,
+    height: H,
+  },
+  "popover-example": {
+    Component: PopoverExampleScene,
+    code: popoverExampleCode,
+    // Popover closes at 100 + dur 10 = 110; cursor parks at 110; short settle then loop.
+    durationInFrames: 130,
     fps: FPS,
     width: W,
     height: H,

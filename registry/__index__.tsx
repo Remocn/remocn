@@ -157,6 +157,8 @@ import { SliderPreview } from "@/registry/remocn-ui/slider/preview";
 import { sliderConfig } from "@/registry/remocn-ui/slider/config";
 import { Combobox } from "@/registry/remocn-ui/combobox";
 import { comboboxConfig } from "@/registry/remocn-ui/combobox/config";
+import { PopoverPreview } from "@/registry/remocn-ui/popover/preview";
+import { popoverConfig } from "@/registry/remocn-ui/popover/config";
 import { ZoomThroughTransition } from "@/registry/remocn/zoom-through-transition";
 import { zoomThroughTransitionConfig } from "@/registry/remocn/zoom-through-transition/config";
 
@@ -382,6 +384,9 @@ const registry: Record<string, RegistryEntry> = {
   // combobox registers RAW (no preview wrapper): like select it paints its own
   // opaque inset:0 wrapper, so the customizer mounts it directly and it centers.
   "combobox": { Component: Combobox, config: comboboxConfig },
+  // popover's customizer Component is the preview-only PopoverPreview wrapper: a
+  // bare card has no backdrop and would not center as the composition root.
+  "popover": { Component: PopoverPreview, config: popoverConfig },
   "spinner": { Component: Spinner, config: spinnerConfig },
 };
 

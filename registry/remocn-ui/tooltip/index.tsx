@@ -61,7 +61,7 @@ export function tooltipStyle(state: TooltipState): TooltipStyle {
     case "visible":
       return { opacity: 1, scale: 1, translate: 0 };
     default:
-      return { opacity: 0, scale: 0.96, translate: 90 };
+      return { opacity: 0, scale: 0.96, translate: 4 };
   }
 }
 
