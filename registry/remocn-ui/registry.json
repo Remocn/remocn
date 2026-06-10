@@ -436,6 +436,26 @@
           "target": "components/remocn/use-command-menu-transition.ts"
         }
       ]
+    },
+    {
+      "name": "tooltip",
+      "type": "registry:component",
+      "title": "UI Tooltip",
+      "description": "A tooltip whose hidden/visible state is a pure function of the timeline. The Tooltip renderer is a pure function of a TooltipStyle (opacity, scale, translate); useTooltipTransition eases both the show and the hide. The static `side` prop sets the enter translate axis and the arrow placement.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["remocn-ui"],
+      "files": [
+        {
+          "path": "tooltip/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/tooltip.tsx"
+        },
+        {
+          "path": "tooltip/use-tooltip-transition.ts",
+          "type": "registry:component",
+          "target": "components/remocn/use-tooltip-transition.ts"
+        }
+      ]
     }
   ]
 }

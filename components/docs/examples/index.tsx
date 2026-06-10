@@ -31,6 +31,7 @@ import {
   CommandMenuExampleScene,
   commandMenuExampleCode,
 } from "./command-menu-example";
+import { TooltipExampleScene, tooltipExampleCode } from "./tooltip-example";
 
 export interface ExampleEntry {
   Component: ComponentType;
@@ -177,6 +178,15 @@ export const examples: Record<string, ExampleEntry> = {
     code: commandMenuExampleCode,
     // Panel closes at 108 + dur 12 = 120; a short settle then loop.
     durationInFrames: 130,
+    fps: FPS,
+    width: W,
+    height: H,
+  },
+  "tooltip-example": {
+    Component: TooltipExampleScene,
+    code: tooltipExampleCode,
+    // Tooltip hides at 100 + dur 8 = 108; cursor parks at 110; a short settle then loop.
+    durationInFrames: 120,
     fps: FPS,
     width: W,
     height: H,

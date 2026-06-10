@@ -145,6 +145,8 @@ import { CommandMenuItem } from "@/registry/remocn-ui/command-menu-item";
 import { commandMenuItemConfig } from "@/registry/remocn-ui/command-menu-item/config";
 import { CommandMenu } from "@/registry/remocn-ui/command-menu";
 import { commandMenuConfig } from "@/registry/remocn-ui/command-menu/config";
+import { TooltipPreview } from "@/registry/remocn-ui/tooltip/preview";
+import { tooltipConfig } from "@/registry/remocn-ui/tooltip/config";
 import { ZoomThroughTransition } from "@/registry/remocn/zoom-through-transition";
 import { zoomThroughTransitionConfig } from "@/registry/remocn/zoom-through-transition/config";
 
@@ -350,6 +352,9 @@ const registry: Record<string, RegistryEntry> = {
   // command-menu needs NO preview wrapper: like dialog it renders an intrinsic
   // inset:0 backdrop + centered panel, so the customizer mounts it directly.
   "command-menu": { Component: CommandMenu, config: commandMenuConfig },
+  // tooltip's customizer Component is the preview-only TooltipPreview wrapper: a
+  // bare bubble has no backdrop and would not center as the composition root.
+  "tooltip": { Component: TooltipPreview, config: tooltipConfig },
   "spinner": { Component: Spinner, config: spinnerConfig },
 };
 
