@@ -147,6 +147,8 @@ import { CommandMenu } from "@/registry/remocn-ui/command-menu";
 import { commandMenuConfig } from "@/registry/remocn-ui/command-menu/config";
 import { TooltipPreview } from "@/registry/remocn-ui/tooltip/preview";
 import { tooltipConfig } from "@/registry/remocn-ui/tooltip/config";
+import { ProgressPreview } from "@/registry/remocn-ui/progress/preview";
+import { progressConfig } from "@/registry/remocn-ui/progress/config";
 import { ZoomThroughTransition } from "@/registry/remocn/zoom-through-transition";
 import { zoomThroughTransitionConfig } from "@/registry/remocn/zoom-through-transition/config";
 
@@ -355,6 +357,9 @@ const registry: Record<string, RegistryEntry> = {
   // tooltip's customizer Component is the preview-only TooltipPreview wrapper: a
   // bare bubble has no backdrop and would not center as the composition root.
   "tooltip": { Component: TooltipPreview, config: tooltipConfig },
+  // progress's customizer Component is the preview-only ProgressPreview wrapper:
+  // a bare inline bar would sit top-left, so the wrapper centers it on a stage.
+  "progress": { Component: ProgressPreview, config: progressConfig },
   "spinner": { Component: Spinner, config: spinnerConfig },
 };
 

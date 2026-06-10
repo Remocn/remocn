@@ -120,7 +120,7 @@ export const Scene = () => {
         <div
           style={{
             position: "absolute",
-            bottom: "calc(100% + 24px)",
+            bottom: "calc(100% + 32px)",
             left: "50%",
             transform: "translateX(-50%)",
           }}

@@ -32,6 +32,10 @@ import {
   commandMenuExampleCode,
 } from "./command-menu-example";
 import { TooltipExampleScene, tooltipExampleCode } from "./tooltip-example";
+import {
+  ProgressExampleScene,
+  progressExampleCode,
+} from "./progress-example";
 
 export interface ExampleEntry {
   Component: ComponentType;
@@ -187,6 +191,15 @@ export const examples: Record<string, ExampleEntry> = {
     code: tooltipExampleCode,
     // Tooltip hides at 100 + dur 8 = 108; cursor parks at 110; a short settle then loop.
     durationInFrames: 120,
+    fps: FPS,
+    width: W,
+    height: H,
+  },
+  "progress-example": {
+    Component: ProgressExampleScene,
+    code: progressExampleCode,
+    // Fill completes at 130 + dur 30 = 160; a short settle then loop.
+    durationInFrames: 160,
     fps: FPS,
     width: W,
     height: H,

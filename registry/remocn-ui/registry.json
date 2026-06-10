@@ -456,6 +456,26 @@
           "target": "components/remocn/use-tooltip-transition.ts"
         }
       ]
+    },
+    {
+      "name": "progress",
+      "type": "registry:component",
+      "title": "UI Progress",
+      "description": "A progress bar whose fill is a pure function of a numeric value channel (value-channel deviation). The Progress renderer takes a clamped 0–100 value; useProgressTransition reads the frame and eases the fill between value steps. Muted track + primary indicator, optional floored percentage label.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["remocn-ui"],
+      "files": [
+        {
+          "path": "progress/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/progress.tsx"
+        },
+        {
+          "path": "progress/use-progress-transition.ts",
+          "type": "registry:component",
+          "target": "components/remocn/use-progress-transition.ts"
+        }
+      ]
     }
   ]
 }
