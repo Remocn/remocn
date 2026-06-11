@@ -71,6 +71,7 @@ import {
   toggleGroupExampleCode,
   toggleGroupExampleControls,
 } from "./examples/toggle-group-example";
+import { blurInExampleCode, blurInExampleControls } from "./examples/blur-in-example";
 
 /**
  * Per-component honored-key allowlist + code template, co-located with each
@@ -131,6 +132,7 @@ const UI_SCENE_META: Record<string, UiSceneMeta> = {
     controls: toggleGroupExampleControls,
     code: toggleGroupExampleCode,
   },
+  "blur-in": { controls: blurInExampleControls, code: blurInExampleCode },
 };
 
 /**

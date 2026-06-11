@@ -35,6 +35,7 @@
       "@/components/remocn/use-select-transition": ["./registry/remocn-ui/select/use-select-transition.ts"],
       "@/components/remocn/use-select-item-transition": ["./registry/remocn-ui/select-item/use-select-item-transition.ts"],
       "@/components/remocn/use-slider-transition": ["./registry/remocn-ui/slider/use-slider-transition.ts"],
+      "@/components/remocn/use-blur-in-transition": ["./registry/remocn-ui/blur-in/use-blur-in-transition.ts"],
       "@/components/remocn/*": ["./registry/remocn-ui/*/index.tsx"],
       "@/*": ["./*"]
     }

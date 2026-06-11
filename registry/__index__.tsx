@@ -121,6 +121,8 @@ import { Checkbox } from "@/registry/remocn-ui/checkbox";
 import { checkboxConfig } from "@/registry/remocn-ui/checkbox/config";
 import { Input } from "@/registry/remocn-ui/input";
 import { inputConfig } from "@/registry/remocn-ui/input/config";
+import { BlurInPreview } from "@/registry/remocn-ui/blur-in/preview";
+import { blurInConfig } from "@/registry/remocn-ui/blur-in/config";
 import { Radio } from "@/registry/remocn-ui/radio";
 import { radioConfig } from "@/registry/remocn-ui/radio/config";
 import { Spinner } from "@/registry/remocn-ui/spinner";
@@ -348,6 +350,10 @@ const registry: Record<string, RegistryEntry> = {
   "drawer": { Component: Drawer, config: drawerConfig },
   "checkbox": { Component: Checkbox, config: checkboxConfig },
   "input": { Component: Input, config: inputConfig },
+  // blur-in WRAPS a single child, so the customizer Component is the
+  // preview-only BlurInPreview wrapper (it supplies a fixed sample card and
+  // centers it on a stage); the shipped BlurIn is a pure child-wrapper.
+  "blur-in": { Component: BlurInPreview, config: blurInConfig },
   "radio": { Component: Radio, config: radioConfig },
   "switch": { Component: Switch, config: switchConfig },
   "select": { Component: Select, config: selectConfig },

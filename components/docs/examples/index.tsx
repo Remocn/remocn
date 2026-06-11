@@ -68,6 +68,7 @@ import {
   ResizableExampleScene,
   resizableExampleCode,
 } from "./resizable-example";
+import { BlurInExampleScene, blurInExampleCode } from "./blur-in-example";
 
 export interface ExampleEntry {
   Component: ComponentType;
@@ -313,6 +314,15 @@ export const examples: Record<string, ExampleEntry> = {
     code: resizableExampleCode,
     // Sweep right→left→center ends at 176; handle idle at 184+8=192; settle then loop.
     durationInFrames: 205,
+    fps: FPS,
+    width: W,
+    height: H,
+  },
+  "blur-in-example": {
+    Component: BlurInExampleScene,
+    code: blurInExampleCode,
+    // Reveal completes at 8 + dur 18 = 26; a short settle then loop.
+    durationInFrames: 40,
     fps: FPS,
     width: W,
     height: H,
