@@ -148,3 +148,100 @@ The `duration` field on each step overrides the file's `DEFAULT_DURATION` for th
     },
   ]}
 />
+
+## Field — composing labeled inputs
+
+`Field` is a small static layout family for building labeled form rows, modeled on
+[shadcn's Field](https://ui.shadcn.com/docs/components/radix/field). It reads no
+frame and holds no state — colors come from the resolved theme — so it composes
+cleanly inside Remotion scenes (it is what the `signup-flow` block uses to lay out
+its form). It ships as its own registry item.
+
+<InstallBlock name="field" />
+
+### Structure
+
+- **`FieldGroup`** — stacks multiple `Field`s in a column with uniform vertical rhythm (`gap`, default 16).
+- **`Field`** — one field: label + control + optional description, stacked (`gap`, default 6).
+- **`FieldLabel`** — the label (foreground, medium weight, single line).
+- **`FieldControl`** — a relative, fixed-height slot (`height`, default 40) for a control. remocn-ui controls (`Input`, `Button`) render `position:absolute; inset:0`, so they go **inside** `FieldControl`, which it fills.
+- **`FieldDescription`** — muted helper text under a control, or a centered footer line (`align="center"`).
+
+### Usage
+
+```tsx
+import { Input } from "@/components/remocn/input";
+import { useInputTransition } from "@/components/remocn/use-input-transition";
+import {
+  Field,
+  FieldControl,
+  FieldDescription,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/remocn/field";
+
+export const Scene = () => {
+  const style = useInputTransition([
+    { at: 10, state: "active", duration: 6 },
+    { at: 12, state: "typing", duration: 24 },
+  ]);
+
+  return (
+    <FieldGroup>
+      <Field>
+        <FieldLabel>Email</FieldLabel>
+        <FieldControl>
+          <Input placeholder="m@example.com" value="m@example.com" style={style} />
+        </FieldControl>
+        <FieldDescription>We'll use this to contact you.</FieldDescription>
+      </Field>
+    </FieldGroup>
+  );
+};
+```
+
+### Props
+
+<PropsTable
+  rows={[
+    {
+      name: "FieldGroup.gap",
+      type: "number",
+      default: "16",
+      description: "Vertical space (px) between stacked fields.",
+    },
+    {
+      name: "Field.gap",
+      type: "number",
+      default: "6",
+      description: "Vertical space (px) between the label, control, and description.",
+    },
+    {
+      name: "FieldControl.height",
+      type: "number",
+      default: "40",
+      description: "Slot height (px); the absolute control fills it. Match it to the control's size.",
+    },
+    {
+      name: "FieldDescription.align",
+      type: "\"start\" | \"center\"",
+      default: "\"start\"",
+      description: "Text alignment within the field column (use center for a footer line).",
+    },
+    {
+      name: "mode",
+      type: "\"light\" | \"dark\"",
+      description: "Color mode for FieldLabel / FieldDescription text (forwarded to useRemocnTheme).",
+    },
+    {
+      name: "theme",
+      type: "Partial<RemocnTheme>",
+      description: "Theme override for FieldLabel / FieldDescription colors. Concrete oklch/hex/rgb values.",
+    },
+    {
+      name: "style",
+      type: "CSSProperties",
+      description: "Optional inline-style passthrough merged last on any Field part.",
+    },
+  ]}
+/>

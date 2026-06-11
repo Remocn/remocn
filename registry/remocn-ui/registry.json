@@ -258,6 +258,21 @@
       ]
     },
     {
+      "name": "field",
+      "type": "registry:component",
+      "title": "UI Field",
+      "description": "A static layout family for composing labeled form controls, modeled on shadcn's Field: FieldGroup ▸ Field ▸ FieldLabel / FieldControl / FieldDescription. Reads no frame and holds no state — colors come from the resolved theme. FieldControl is a relative fixed-height slot for the absolute remocn-ui controls (Input, Button).",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["remocn-ui"],
+      "files": [
+        {
+          "path": "field/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/field.tsx"
+        }
+      ]
+    },
+    {
       "name": "select-item",
       "type": "registry:component",
       "title": "UI Select Item",
@@ -656,9 +671,9 @@
       "name": "signup-flow",
       "type": "registry:component",
       "title": "UI Signup Flow",
-      "description": "A cursor-driven signup composition: the pointer clicks the email field, the value types in, the agree box checks, the Create button runs idle → press → loading → success, and a success toast slides in. A pure orchestrator — every channel comes from a composed primitive's transition hook.",
+      "description": "A signup card composition: a real shadcn-style card (header, labeled Full Name / Email / Password / Confirm fields, primary + Google-outline buttons, sign-in footer) whose cursor fills each field top-to-bottom, then clicks Create account (hover → press → loading → success) as a success toast slides in. A pure orchestrator — every channel comes from a composed primitive's transition hook.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["remocn-ui", "cursor", "input", "checkbox", "button", "toast"],
+      "registryDependencies": ["remocn-ui", "cursor", "input", "button", "toast", "field"],
       "files": [
         {
           "path": "signup-flow/index.tsx",

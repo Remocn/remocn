@@ -1,53 +1,84 @@
 ---
 title: SignupFlow
-description: Cursor-driven account creation with email input, agreement, and success feedback
+description: A cursor-driven signup card — labeled fields fill top-to-bottom, then submit with success feedback
 ---
 
 <BlockPreview name="signup-flow" />
 
-A composition scene demonstrating cursor-driven account creation. The user enters an email, agrees to terms, clicks create, and receives a success confirmation via toast. Each step is driven by primitives orchestrated on a shared timeline.
+A composition scene that renders a real shadcn-style signup card — header, labeled Full Name / Email / Password / Confirm Password fields, a primary "Create account" button, a "Sign up with Google" outline button, and a sign-in footer. The cursor fills each field top-to-bottom, then submits and receives a success confirmation via toast. Each step is driven by primitives orchestrated on a shared timeline.
 
 ## Installation
 
 <InstallBlock name="signup-flow" />
 
 <Note>
-Installing `signup-flow` automatically installs the shared `remocn-ui` core and all composed primitives via `registryDependencies`: cursor, input, checkbox, button, and toast. You do not need to install them separately.
+Installing `signup-flow` automatically installs the shared `remocn-ui` core and all composed primitives via `registryDependencies`: cursor, input, button, and toast. You do not need to install them separately.
 </Note>
 
 ## Composed primitives
 
 - **Cursor** — animated pointer with click ripples
-- **Input** — text reveal animation with active state
-- **Checkbox** — animated checkmark on agreement
-- **Button** — hover/press/loading/success state progression
+- **Input** — text reveal animation with active/typing states (one per field)
+- **Button** — hover/press/loading/success progression (primary) and a static outline button
 - **Toast** — success message auto-dismiss
+
+The card chrome (surface, header, field labels, descriptions, and footer) is static layout drawn from the resolved theme. The card surface uses `theme.background` so the Input and Button atoms blend into it in both light and dark; the stage sits on `theme.muted` so the card lifts off the page via tone, border, and shadow.
 
 ## Timeline narrative
 
-The scene opens with the cursor parked in the top-left corner. At frame 30, the cursor moves to the email input and clicks, triggering the input to become active and begin revealing the pre-filled email address letter-by-letter. At frame 80, the cursor arrives at the checkbox and clicks again, drawing the checkmark with a +2-frame offset. The cursor then moves to the create button at frame 95, triggering hover and press states in sequence. At frame 110, the button enters the loading state (showing a spinner), and by frame 150 it transitions to success (checkmark icon). Simultaneously at frame 150, the success toast appears and auto-dismisses at frame 210.
+The scene opens with the cursor parked in the top-left. It clicks the Full Name field at frame 18 (the field focuses and types in), then Email at 52, Password at 96, and Confirm Password at 134 — each cursor-click frame matches that field's `active` frame, and each field's typed value reveals before the cursor moves on. At frame 176 the cursor reaches the Create account button (hover), which presses at 186, enters loading (spinner) at 192, and resolves to success at 234. Simultaneously at 234 the success toast slides in, auto-dismissing at 300.
 
 ## Props
 
 <PropsTable
   rows={[
     {
+      name: "title",
+      type: "string",
+      default: "\"Create an account\"",
+      description: "Card title.",
+    },
+    {
+      name: "description",
+      type: "string",
+      default: "\"Enter your information below to create your account\"",
+      description: "Card description under the title.",
+    },
+    {
+      name: "fullName",
+      type: "string",
+      default: "\"John Doe\"",
+      description: "Value typed into the Full Name field.",
+    },
+    {
       name: "email",
       type: "string",
-      default: "\"jane@acme.com\"",
-      description: "Email address to be revealed during input animation.",
+      default: "\"m@example.com\"",
+      description: "Value typed into the Email field.",
     },
     {
-      name: "agreeLabel",
+      name: "password",
       type: "string",
-      default: "\"I agree to the terms\"",
-      description: "Text label for the checkbox.",
+      default: "\"••••••••\"",
+      description: "Masked value typed into the Password and Confirm fields.",
     },
     {
-      name: "buttonLabel",
+      name: "createLabel",
       type: "string",
       default: "\"Create account\"",
-      description: "Text displayed on the create button.",
+      description: "Primary submit button label.",
+    },
+    {
+      name: "googleLabel",
+      type: "string",
+      default: "\"Sign up with Google\"",
+      description: "Outline (social) button label.",
+    },
+    {
+      name: "signinText",
+      type: "string",
+      default: "\"Already have an account?\"",
+      description: "Footer prompt shown before the Sign in link.",
     },
     {
       name: "toastTitle",

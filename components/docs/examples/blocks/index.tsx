@@ -51,8 +51,8 @@ export const blockExamples: Record<string, BlockExampleEntry> = {
   "signup-flow": {
     Component: SignupFlowExampleScene,
     code: signupFlowExampleCode,
-    // Toast dismiss 210 + ~20 settle (US-B001).
-    durationInFrames: 230,
+    // Toast dismiss 300 + 14 + ~16 settle (signup card fill → submit → toast).
+    durationInFrames: 330,
     fps: FPS,
     width: W,
     height: H,

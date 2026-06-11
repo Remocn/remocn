@@ -3,15 +3,15 @@
 import { SignupFlow } from "@/registry/remocn-ui/signup-flow";
 
 /**
- * Fixed lifecycle demo for the `signup-flow` block: a cursor clicks the email
- * field, the value types in, the "agree" box checks, the Create button runs
- * idle → press → loading → success, and a success toast slides in. The block is
- * a pure orchestrator — every channel comes from a composed primitive's hook.
+ * Fixed lifecycle demo for the `signup-flow` block: a signup card whose cursor
+ * fills each labeled field top-to-bottom (Full Name → Email → Password →
+ * Confirm), then clicks "Create account" (hover → press → loading → success),
+ * and a success toast slides in. The block is a pure orchestrator — every
+ * channel comes from a composed primitive's hook.
  *
- * Timeline (US-B001 beat table): cursor click 30 ≡ input active 30; typing
- * 30→70; checkbox 82; button hover 95 ≡ cursor click 95 → press 104 → loading
- * 110 → success 150 ≡ toast enter 150; toast dismiss 210. durationInFrames 230
- * (210 + ~20 settle).
+ * Timeline: cursor click ≡ field active at 18 / 52 / 96 / 134; Create hover 176
+ * ≡ cursor click 176 → press 186 → loading 192 → success 234 ≡ toast enter 234;
+ * toast dismiss 300. durationInFrames 330 (314 + ~16 settle).
  */
 export const SignupFlowExampleScene = () => <SignupFlow />;
 
