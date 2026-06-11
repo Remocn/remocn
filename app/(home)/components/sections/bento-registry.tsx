@@ -1,10 +1,10 @@
 "use client";
 
-import { Player } from "@remotion/player";
+import { Player, type PlayerRef } from "@remotion/player";
 import { ArrowRight, Check, Copy } from "lucide-react";
 import { motion } from "motion/react";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { SPRING_SOFT } from "@/config/site";
 import { useTrackEvent } from "@/lib/analytics";
@@ -78,6 +78,29 @@ function BentoCard({
   featured?: boolean;
 }) {
   const entry = registry[name];
+  const playerRef = useRef<PlayerRef>(null);
+
+  // Reliable autoplay — `<Player autoPlay>` mounts a tick before its imperative
+  // handle is ready (worse under Strict Mode's dev double-mount) and silently
+  // stalls; mount paused and drive play() via the ref on the next animation
+  // frame with a one-shot retry. Mirrors PreviewStage / use-player-controls.ts.
+  useEffect(() => {
+    if (!entry) return;
+    let raf1 = 0;
+    let raf2 = 0;
+    raf1 = requestAnimationFrame(() => {
+      playerRef.current?.play();
+      raf2 = requestAnimationFrame(() => {
+        if (playerRef.current && !playerRef.current.isPlaying()) {
+          playerRef.current.play();
+        }
+      });
+    });
+    return () => {
+      if (raf1) cancelAnimationFrame(raf1);
+      if (raf2) cancelAnimationFrame(raf2);
+    };
+  }, [entry]);
 
   return (
     <motion.div
@@ -111,6 +134,7 @@ function BentoCard({
       >
         {entry ? (
           <Player
+            ref={playerRef}
             component={entry.Component}
             inputProps={inputProps ?? {}}
             durationInFrames={entry.config.durationInFrames}
@@ -118,7 +142,6 @@ function BentoCard({
             compositionWidth={entry.config.compositionWidth}
             compositionHeight={entry.config.compositionHeight}
             style={{ width: "100%", height: "100%" }}
-            autoPlay
             loop
             acknowledgeRemotionLicense
           />

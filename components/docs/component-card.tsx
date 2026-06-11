@@ -1,6 +1,6 @@
 "use client";
 
-import { Player, Thumbnail } from "@remotion/player";
+import { Player, type PlayerRef, Thumbnail } from "@remotion/player";
 import Link from "next/link";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import { getDefaults } from "@/lib/customizer-config";
@@ -31,6 +31,7 @@ function PreviewPlaceholder() {
 function CardPreview({ item }: { item: CardItem }) {
   const reducedMotion = usePrefersReducedMotion();
   const ref = useRef<HTMLDivElement>(null);
+  const playerRef = useRef<PlayerRef>(null);
   const [inView, setInView] = useState(false);
 
   useEffect(() => {
@@ -52,6 +53,29 @@ function CardPreview({ item }: { item: CardItem }) {
 
   const slug = slugFromHref(item.href);
   const entry = slug ? registry[slug] : undefined;
+  const showPlayer =
+    item.status === "stable" && !!entry && inView && !reducedMotion;
+
+  // Same reliable-autoplay shim as PreviewStage: `<Player autoPlay>` mounts a
+  // tick before its imperative handle is ready and silently fails to start, so
+  // we drive play() via the ref once the player is shown, retrying once.
+  useEffect(() => {
+    if (!showPlayer) return;
+    let raf1 = 0;
+    let raf2 = 0;
+    raf1 = requestAnimationFrame(() => {
+      playerRef.current?.play();
+      raf2 = requestAnimationFrame(() => {
+        if (playerRef.current && !playerRef.current.isPlaying()) {
+          playerRef.current.play();
+        }
+      });
+    });
+    return () => {
+      if (raf1) cancelAnimationFrame(raf1);
+      if (raf2) cancelAnimationFrame(raf2);
+    };
+  }, [showPlayer]);
 
   let content: ReactNode;
   if (item.status !== "stable" || !entry || !inView) {
@@ -62,6 +86,7 @@ function CardPreview({ item }: { item: CardItem }) {
     const playing = !reducedMotion;
     content = playing ? (
       <Player
+        ref={playerRef}
         component={Component}
         inputProps={inputProps}
         durationInFrames={config.durationInFrames}
@@ -71,7 +96,6 @@ function CardPreview({ item }: { item: CardItem }) {
         style={{ width: "100%", height: "100%" }}
         controls={false}
         loop
-        autoPlay
         acknowledgeRemotionLicense
       />
     ) : (

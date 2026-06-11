@@ -1,6 +1,6 @@
 "use client";
 
-import { Player } from "@remotion/player";
+import { Player, type PlayerRef } from "@remotion/player";
 import { PlayIcon } from "lucide-react";
 import {
   parseAsBoolean,
@@ -81,6 +81,7 @@ export function PreviewStage({
 }) {
   const [mounted, setMounted] = useState(false);
   const frameRef = useRef<HTMLDivElement>(null);
+  const playerRef = useRef<PlayerRef>(null);
   const reducedMotion = usePrefersReducedMotion();
 
   useEffect(() => {
@@ -98,6 +99,30 @@ export function PreviewStage({
     );
     observer.observe(el);
     return () => observer.disconnect();
+  }, [mounted]);
+
+  // Reliable autoplay. The `<Player autoPlay>` prop mounts a tick before its
+  // imperative handle is ready (worse under Strict Mode's dev double-mount), so
+  // it shows the "playing" UI but the frame loop never starts — the preview
+  // looks frozen until a manual pause/play. Instead the Player mounts paused and
+  // we drive play() via the ref on the next animation frame, retrying once if
+  // the first call didn't take. Mirrors stars/hooks/use-player-controls.ts.
+  useEffect(() => {
+    if (!mounted) return;
+    let raf1 = 0;
+    let raf2 = 0;
+    raf1 = requestAnimationFrame(() => {
+      playerRef.current?.play();
+      raf2 = requestAnimationFrame(() => {
+        if (playerRef.current && !playerRef.current.isPlaying()) {
+          playerRef.current.play();
+        }
+      });
+    });
+    return () => {
+      if (raf1) cancelAnimationFrame(raf1);
+      if (raf2) cancelAnimationFrame(raf2);
+    };
   }, [mounted]);
 
   return (
@@ -118,6 +143,7 @@ export function PreviewStage({
           )}
         >
           <Player
+            ref={playerRef}
             component={Component}
             inputProps={inputProps}
             durationInFrames={durationInFrames}
@@ -127,7 +153,6 @@ export function PreviewStage({
             style={{ width: "100%", height: "100%" }}
             controls
             loop
-            autoPlay
             acknowledgeRemotionLicense
           />
         </div>
