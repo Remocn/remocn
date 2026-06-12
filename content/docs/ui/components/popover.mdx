@@ -1,0 +1,199 @@
+---
+title: Popover
+description: A floating card that appears beside an anchor with arbitrary content
+---
+
+<UiComponentPreview name="popover" />
+
+A state atom whose appearance (`closed`, `opened`) is a pure function of the `state` prop. Pass a state directly or drive it from the Remotion timeline via `useCurrentState`. The component reads no frame — only the state value you give it. The card fades in at 0.97 scale, slides 6 px toward the anchor, and rests fully visible; `closed` reverses the motion. Placement is the caller's responsibility — the popover renders inline and the caller wraps it in an absolutely-positioned anchor div.
+
+The hover-card pattern (a rich profile card that appears on hover) is this component driven by hover timing: use `usePopoverTransition` with steps that match when a `Cursor` arrives at and leaves the anchor.
+
+## Installation
+
+<InstallBlock name="popover" />
+
+<Note>
+Installing `popover` automatically installs the shared `remocn-ui` core (`lib/remocn-ui/`) via `registryDependencies` (`["remocn-ui"]`). You do not need to install it separately. Both `popover` (the renderer) and `use-popover-transition` (the hook) are copied into your project.
+</Note>
+
+## States
+
+`PopoverState` is:
+
+```ts
+type PopoverState =
+  | "closed"  // opacity 0, scale 0.97, translate 6px away from anchor
+  | "opened"  // opacity 1, scale 1, translate 0
+```
+
+`closed` is the default. The `translate` magnitude (6 px when closed, 0 when opened) is resolved by the component into an axis offset based on `side` — a `"top"` popover slides upward when closed, a `"bottom"` popover slides downward, and so on. (Same `offsetFor` convention as the Tooltip primitive.)
+
+## Snap usage
+
+Pass `state` directly — the component snaps instantly to that visual. Useful for static previews or when you drive state from your own logic:
+
+```tsx
+import { Popover } from "@/components/remocn/popover";
+
+export const Scene = () => (
+  <div style={{ position: "relative", width: "100%", height: "100%" }}>
+    <div style={{ position: "absolute", left: "50%", top: "40%", transform: "translate(-50%, -100%)" }}>
+      <Popover state="opened" title="Alex Smith" description="Product designer. Building in public." />
+    </div>
+  </div>
+);
+```
+
+To drive state from the timeline, use `useCurrentState`:
+
+```tsx
+import { useCurrentState } from "@/lib/remocn-ui";
+import { Popover } from "@/components/remocn/popover";
+
+export const Scene = () => {
+  const state = useCurrentState(
+    [
+      { at: 36, state: "opened" },
+      { at: 100, state: "closed" },
+    ],
+    "closed",
+  );
+
+  return (
+    <div style={{ position: "relative", width: "100%", height: "100%" }}>
+      <div style={{ position: "absolute", left: "50%", top: "40%", transform: "translate(-50%, -100%)" }}>
+        <Popover state={state} title="Alex Smith" description="Product designer. Building in public." />
+      </div>
+    </div>
+  );
+};
+```
+
+Each `at` is a **Sequence-local authored frame**. State persists between steps: `opened` at frame 36 keeps the card on-screen until `closed` fires at frame 100. See [Concepts](/docs/ui/concepts) for the full `useCurrentState` API.
+
+## Smooth transitions
+
+State changes via `state` snap with no cross-fade. For an animated show/hide, use `usePopoverTransition` from the copied `use-popover-transition.ts` file. It reads the frame, interpolates between state presets, and returns a resolved `PopoverStyle` — pass it to the `style` prop:
+
+```tsx
+import { Popover } from "@/components/remocn/popover";
+import { usePopoverTransition } from "@/components/remocn/use-popover-transition";
+
+export const Scene = () => {
+  const style = usePopoverTransition([
+    { at: 36,  state: "opened", duration: 10 },
+    { at: 100, state: "closed", duration: 10 },
+  ]);
+
+  return (
+    <div style={{ position: "relative", width: "100%", height: "100%" }}>
+      <div style={{ position: "absolute", left: "50%", top: "40%", transform: "translate(-50%, -100%)" }}>
+        <Popover style={style} title="Alex Smith" description="Product designer. Building in public." />
+      </div>
+    </div>
+  );
+};
+```
+
+The `duration` field on each step overrides the file's `DEFAULT_DURATION` (= `10`) for that specific transition. To globally tune timing and easing, edit `use-popover-transition.ts` directly in your project — that file is yours (shadcn "own your code" philosophy).
+
+`style` takes precedence over `state` when both are provided.
+
+## Sides
+
+The `side` prop controls which direction the card slides in from when it appears. It is a static prop — it does not animate.
+
+```ts
+type PopoverSide =
+  | "top"     // card above anchor, enters sliding up 6px
+  | "bottom"  // card below anchor, enters sliding down 6px  (default)
+  | "left"    // card left of anchor, enters sliding left 6px
+  | "right"   // card right of anchor, enters sliding right 6px
+```
+
+Placement is the caller's responsibility. The popover renders inline — wrap it in an absolutely-positioned div that positions the card relative to its anchor. For a `"top"` popover:
+
+```tsx
+<div style={{ position: "relative", display: "inline-block" }}>
+  {/* Anchor element */}
+  <div>@alexsmith</div>
+
+  {/* Popover positioned above the anchor, centered horizontally */}
+  <div
+    style={{
+      position: "absolute",
+      bottom: "calc(100% + 12px)",
+      left: "50%",
+      transform: "translateX(-50%)",
+    }}
+  >
+    <Popover style={popoverStyle} side="top" width={240}>
+      {/* hover-card content */}
+    </Popover>
+  </div>
+</div>
+```
+
+For `"bottom"`, use `top: "calc(100% + 12px)"` instead. For `"left"` / `"right"`, use `right: "calc(100% + 12px)"` / `left: "calc(100% + 12px)"` and adjust vertical alignment to `top: "50%"` with `translateY(-50%)`.
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "state",
+      type: "\"closed\" | \"opened\"",
+      default: "\"closed\"",
+      description: "Current visual state (snap path). State changes snap — no automatic cross-fade.",
+    },
+    {
+      name: "style",
+      type: "PopoverStyle",
+      description: "Resolved animated visual (smooth path). Pass an interpolated PopoverStyle from usePopoverTransition. Takes precedence over state when provided.",
+    },
+    {
+      name: "children",
+      type: "ReactNode",
+      description: "Arbitrary content rendered inside the card. Covers the hover-card scenario — pass an avatar, name, bio, or any layout. Rendered after title/description when both are given.",
+    },
+    {
+      name: "title",
+      type: "string",
+      description: "Card heading rendered at 15px/500 weight. Optional — omit for content-only cards.",
+    },
+    {
+      name: "description",
+      type: "string",
+      description: "Body copy rendered at 13px in muted-foreground color below the title. Optional.",
+    },
+    {
+      name: "side",
+      type: "\"top\" | \"bottom\" | \"left\" | \"right\"",
+      default: "\"bottom\"",
+      description: "Which side of the anchor the card sits on. Sets the enter-slide direction. Static — not animated.",
+    },
+    {
+      name: "width",
+      type: "number",
+      default: "288",
+      description: "Card width in px.",
+    },
+    {
+      name: "theme",
+      type: "Partial<RemocnTheme>",
+      description: "Per-component theme override. Merges with the active RemocnUIProvider theme and the mode defaults. Must be concrete oklch/hex/rgb values — not CSS custom properties.",
+    },
+    {
+      name: "mode",
+      type: "\"light\" | \"dark\"",
+      default: "\"light\"",
+      description: "Sets the base palette. Overrides the mode on RemocnUIProvider when both are present.",
+    },
+    {
+      name: "className",
+      type: "string",
+      description: "Optional className applied to the outer wrapper element.",
+    },
+  ]}
+/>

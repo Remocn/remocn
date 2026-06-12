@@ -1,0 +1,191 @@
+---
+title: Blur In
+description: A wrapper that reveals a single child with blur, opacity, and a directional offset
+---
+
+<UiComponentPreview name="blur-in" />
+
+A state atom that wraps a **single child** and reveals it with blur + opacity + a directional offset. Its appearance (`hidden`, `revealed`) is a pure function of the `state` prop. Pass a state directly or drive it from the Remotion timeline via `useCurrentState`. The component reads no frame — only the state value you give it.
+
+Unlike the other remocn-ui atoms, `blur-in` is **theme-independent**: it carries no colors and has no `theme`/`mode`/`primary` props. Its only inputs are the motion knobs — `blur`, `direction`, and `distance`.
+
+## Installation
+
+<InstallBlock name="blur-in" />
+
+<Note>
+Installing `blur-in` automatically installs the shared `remocn-ui` core (`lib/remocn-ui/`) via `registryDependencies`. You do not need to install it separately.
+</Note>
+
+## States
+
+`BlurInState` is:
+
+```ts
+type BlurInState =
+  | "hidden"    // blurred, transparent, offset `distance` px opposite `direction`
+  | "revealed"  // sharp, fully opaque, no offset (settled in place)
+```
+
+`hidden` is the entrance pose: the child is blurred by `blur` px, fully transparent, and starts `distance` px on the **opposite** side of `direction` — so as it reveals it travels INTO `direction` and settles in place. For example `direction="up"` starts the child below and slides it up. `revealed` is the settled pose: zero blur, full opacity, no offset.
+
+## Snap usage (simple path)
+
+Pass `state` directly — the component snaps instantly to that visual:
+
+```tsx
+import { BlurIn } from "@/components/remocn/blur-in";
+
+export const Scene = () => (
+  <BlurIn state="revealed" direction="up">
+    <YourElement />
+  </BlurIn>
+);
+```
+
+To drive state from the timeline, use `useCurrentState`:
+
+```tsx
+import { useCurrentState } from "@/lib/remocn-ui";
+import { BlurIn } from "@/components/remocn/blur-in";
+
+export const Scene = () => {
+  const state = useCurrentState(
+    [
+      { at: 0, state: "hidden" },
+      { at: 8, state: "revealed" },
+    ],
+    "hidden",
+  );
+
+  return (
+    <BlurIn state={state}>
+      <YourElement />
+    </BlurIn>
+  );
+};
+```
+
+Each `at` is a **Sequence-local authored frame**. State persists between steps. See [Concepts](/docs/ui/concepts) for the full `useCurrentState` API.
+
+## Smooth transitions (opt-in)
+
+State changes via `state` snap with no cross-fade. For an animated reveal, use `useBlurInTransition` from the copied `use-blur-in-transition.ts` file. It reads the frame, interpolates between the `hidden` and `revealed` presets, and returns a resolved `BlurInStyle` — pass it to the `style` prop:
+
+```tsx
+import { BlurIn } from "@/components/remocn/blur-in";
+import { useBlurInTransition } from "@/components/remocn/use-blur-in-transition";
+
+export const Scene = () => {
+  const style = useBlurInTransition([
+    { at: 0, state: "hidden" },
+    { at: 8, state: "revealed", duration: 18 },
+  ]);
+
+  return (
+    <BlurIn style={style}>
+      <YourElement />
+    </BlurIn>
+  );
+};
+```
+
+The `duration` field on each step overrides the file's `DEFAULT_DURATION` for that specific transition. To globally tune timing and easing, edit `use-blur-in-transition.ts` directly in your project — that file is yours (shadcn "own your code" philosophy).
+
+`style` takes precedence over `state` when both are provided.
+
+## Direction and distance
+
+`direction` is the way the child travels **into place**: `up` starts below, `down` starts above, `left` starts to the right, `right` starts to the left. Pass it to `useBlurInTransition` (or the `direction` prop on the snap path) to choose the entrance vector.
+
+Set `distance={0}` to disable the slide entirely — the child then reveals with blur + opacity only, in place.
+
+The `direction`, `blur`, and `distance` knobs are the whole "context". There is **no theme** here: `blur-in` is purely a motion wrapper, so it composes around any element regardless of palette.
+
+## Staggering multiple elements
+
+`BlurIn` wraps a **single child**. To stagger a row or column, wrap each element in its own `BlurIn` and offset the `at` of each timeline:
+
+```tsx
+import { BlurIn } from "@/components/remocn/blur-in";
+import { useBlurInTransition } from "@/components/remocn/use-blur-in-transition";
+
+// One wrapper per element — the hook must be called at the top level of a
+// component, never inside a `.map()` callback (Rules of Hooks).
+const BlurInItem = ({ label, delay }: { label: string; delay: number }) => {
+  const style = useBlurInTransition([
+    { at: delay, state: "hidden" },
+    { at: delay + 4, state: "revealed", duration: 18 },
+  ]);
+  return (
+    <BlurIn style={style}>
+      <div className="rounded-xl border px-6 py-4">{label}</div>
+    </BlurIn>
+  );
+};
+
+export const Scene = () => {
+  const items = ["One", "Two", "Three"];
+  return (
+    <div style={{ display: "flex", gap: 16 }}>
+      {items.map((label, i) => (
+        <BlurInItem key={label} label={label} delay={i * 6} />
+      ))}
+    </div>
+  );
+};
+```
+
+Each child gets its own `useBlurInTransition`, staggered by its index.
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "state",
+      type: "\"hidden\" | \"revealed\"",
+      default: "\"hidden\"",
+      description: "Current visual state (snap path). State changes snap — no automatic cross-fade.",
+    },
+    {
+      name: "style",
+      type: "BlurInStyle",
+      description: "Resolved animated visual (smooth path). Pass an interpolated BlurInStyle from useBlurInTransition. Takes precedence over state when provided.",
+    },
+    {
+      name: "children",
+      type: "ReactNode",
+      description: "The single element revealed by the blur / opacity / offset.",
+    },
+    {
+      name: "blur",
+      type: "number",
+      default: "8",
+      description: "Hidden-state blur radius in px. 0 = no blur.",
+    },
+    {
+      name: "direction",
+      type: "\"up\" | \"down\" | \"left\" | \"right\"",
+      default: "\"up\"",
+      description: "Direction the child travels INTO place. up starts below, down above, left from the right, right from the left.",
+    },
+    {
+      name: "distance",
+      type: "number",
+      default: "12",
+      description: "Hidden-state offset distance in px. Set to 0 to disable the slide (blur + opacity only).",
+    },
+    {
+      name: "display",
+      type: "CSSProperties[\"display\"]",
+      default: "\"inline-block\"",
+      description: "CSS display for the wrapper. inline-block sizes the wrapper to the child by default.",
+    },
+    {
+      name: "className",
+      type: "string",
+      description: "Optional className passed to the wrapper element.",
+    },
+  ]}
+/>

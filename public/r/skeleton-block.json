@@ -1,0 +1,21 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "skeleton-block",
+  "title": "UI Skeleton Block",
+  "description": "A shimmer placeholder block — a motion atom (spinner pattern). A directional highlight gradient sweeps across deterministically from useCurrentFrame() and loops seamlessly. Configurable width/height/radius/speed and base/highlight colors.",
+  "dependencies": [
+    "remotion"
+  ],
+  "registryDependencies": [
+    "@remocn/remocn-ui"
+  ],
+  "files": [
+    {
+      "path": "registry/remocn-ui/skeleton-block/index.tsx",
+      "content": "\"use client\";\n\nimport { useCurrentFrame } from \"remotion\";\nimport { mixOklch, useRemocnTheme } from \"@/lib/remocn-ui\";\n\nexport interface SkeletonBlockProps {\n  width?: number | string;\n  height?: number;\n  radius?: number;\n  speed?: number;\n  baseColor?: string;\n  highlightColor?: string;\n  flexShrink?: number;\n  className?: string;\n}\n\nconst SWEEP_FRAMES = 60;\n\nexport function SkeletonBlock({\n  width = 120,\n  height = 16,\n  radius = 6,\n  speed = 1,\n  baseColor,\n  highlightColor,\n  flexShrink,\n  className,\n}: SkeletonBlockProps) {\n  const theme = useRemocnTheme();\n  const base = baseColor ?? theme.muted;\n  const highlight = highlightColor ?? mixOklch(base, theme.foreground, 0.13);\n\n  const frame = useCurrentFrame() * speed;\n  const progress = (frame % SWEEP_FRAMES) / SWEEP_FRAMES;\n  const positionX = 100 - progress * 200;\n\n  return (\n    <div\n      className={className}\n      style={{\n        width,\n        height,\n        flexShrink,\n        borderRadius: radius,\n        background: `linear-gradient(90deg, ${base} 20%, ${highlight} 50%, ${base} 80%)`,\n        backgroundSize: \"200% 100%\",\n        backgroundPosition: `${positionX}% 0`,\n      }}\n    />\n  );\n}\n",
+      "type": "registry:component",
+      "target": "components/remocn/skeleton-block.tsx"
+    }
+  ],
+  "type": "registry:component"
+}

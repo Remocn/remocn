@@ -1,0 +1,146 @@
+---
+title: Toggle Group
+description: A segmented control whose active value slides a thumb indicator between segments
+---
+
+<UiComponentPreview name="toggle-group" />
+
+A state atom representing a segmented button control — a row of labeled segments with a sliding thumb indicator that moves to the active one. Its appearance (which segment is active) is a pure function of the `state` prop. Pass a state directly or drive it from the Remotion timeline via `useCurrentState`. The component reads no frame — only the state value you give it.
+
+## Installation
+
+<InstallBlock name="toggle-group" />
+
+<Note>
+Installing `toggle-group` automatically installs the shared `remocn-ui` core (`lib/remocn-ui/`) via `registryDependencies`. You do not need to install it separately.
+</Note>
+
+## States
+
+`ToggleGroupState` is:
+
+```ts
+type ToggleGroupState = string;
+```
+
+The `state` is the active segment's value — one of the strings in the `items` array. When the state changes, the thumb indicator slides to that segment and the active label brightens.
+
+## Snap usage
+
+Pass `state` directly — the component snaps instantly to that visual. Useful for static previews or when you drive state from your own logic:
+
+```tsx
+import { ToggleGroup } from "@/components/remocn/toggle-group";
+
+export const Scene = () => (
+  <ToggleGroup
+    state="Yearly"
+    items={[{ value: "Monthly", label: "Monthly" }, { value: "Yearly", label: "Yearly" }]}
+  />
+);
+```
+
+To drive state from the timeline, use `useCurrentState`:
+
+```tsx
+import { useCurrentState } from "@/lib/remocn-ui";
+import { ToggleGroup } from "@/components/remocn/toggle-group";
+
+export const Scene = () => {
+  const state = useCurrentState(
+    [
+      { at: 46, state: "Yearly" },
+      { at: 92, state: "Monthly" },
+    ],
+    "Monthly",
+  );
+
+  return (
+    <ToggleGroup
+      state={state}
+      items={[{ value: "Monthly", label: "Monthly" }, { value: "Yearly", label: "Yearly" }]}
+    />
+  );
+};
+```
+
+Each `at` is a **Sequence-local authored frame**. State persists between steps: `Yearly` at frame 46 keeps that segment active until `Monthly` fires at frame 92. See [Concepts](/docs/ui/concepts) for the full `useCurrentState` API.
+
+## Smooth transitions
+
+State changes via `state` snap with no animation. For a smoothly sliding thumb, use `useToggleGroupTransition` from the copied `use-toggle-group-transition.ts` file. It reads the frame, interpolates between state presets, and returns a resolved `ToggleGroupStyle` — pass it to the `style` prop:
+
+```tsx
+import { ToggleGroup } from "@/components/remocn/toggle-group";
+import { useToggleGroupTransition } from "@/components/remocn/use-toggle-group-transition";
+
+export const Scene = () => {
+  const style = useToggleGroupTransition([
+    { at: 46, state: "Yearly",  duration: 14 },
+    { at: 92, state: "Monthly", duration: 14 },
+  ]);
+
+  return <ToggleGroup style={style} />;
+};
+```
+
+The `duration` field on each step overrides the file's `DEFAULT_DURATION` for that specific transition. To globally tune timing and easing, edit `use-toggle-group-transition.ts` directly in your project — that file is yours (shadcn "own your code" philosophy).
+
+`style` takes precedence over `state` when both are provided.
+
+## Sliding thumb and size variants
+
+The only animated field in `ToggleGroupStyle` is `indicatorOffset` — a float index (0, 1, 2…) representing where the thumb sits. The `useToggleGroupTransition` hook interpolates this value so the thumb slides smoothly between segments. The same `indicatorOffset` drives the per-label color blend, so labels crossfade from muted to active as the thumb arrives.
+
+The `size` prop sets the overall scale of the control:
+
+| `size` | Use case |
+|---|---|
+| `"default"` | Standard — pricing toggles, view switches |
+| `"sm"` | Compact toolbar toggles |
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "state",
+      type: "string",
+      default: "first item",
+      description: "Current visual state (snap path). One of the values in items. State changes snap — no automatic animation.",
+    },
+    {
+      name: "style",
+      type: "ToggleGroupStyle",
+      description: "Resolved animated visual (smooth path). Pass an interpolated ToggleGroupStyle from useToggleGroupTransition. Takes precedence over state when provided.",
+    },
+    {
+      name: "items",
+      type: "ToggleGroupItem[]",
+      default: "[{ value: \"Monthly\", label: \"Monthly\" }, { value: \"Yearly\", label: \"Yearly\" }]",
+      description: "Segment definitions. Each item has a value (state key), a label (display text), and an optional icon node. The active state is one of the item values.",
+    },
+    {
+      name: "size",
+      type: "\"default\" | \"sm\"",
+      default: "\"default\"",
+      description: "Overall scale of the control — affects height, font size, and padding.",
+    },
+    {
+      name: "theme",
+      type: "Partial<RemocnTheme>",
+      description: "Per-component theme override. Merges with the active RemocnUIProvider theme and the mode defaults. Must be concrete oklch/hex/rgb values — not CSS custom properties.",
+    },
+    {
+      name: "mode",
+      type: "\"light\" | \"dark\"",
+      default: "\"light\"",
+      description: "Sets the base palette. Overrides the mode on RemocnUIProvider when both are present.",
+    },
+    {
+      name: "className",
+      type: "string",
+      description: "Optional className passed to the toggle-group element.",
+    },
+  ]}
+/>

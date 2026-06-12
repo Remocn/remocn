@@ -1,11 +1,12 @@
 "use client";
 
-import { Player } from "@remotion/player";
+import { Player, type PlayerRef } from "@remotion/player";
 import { motion } from "motion/react";
 import {
   type KeyboardEvent,
   type PointerEvent,
   useCallback,
+  useEffect,
   useMemo,
   useRef,
   useState,
@@ -253,6 +254,29 @@ function ToggleBool({
 
 export function InteractiveCode() {
   const entry = registry[COMPONENT];
+  const playerRef = useRef<PlayerRef>(null);
+
+  // Reliable autoplay — `<Player autoPlay>` mounts a tick before its imperative
+  // handle is ready (worse under Strict Mode's dev double-mount) and silently
+  // stalls; mount paused and drive play() via the ref on the next animation
+  // frame with a one-shot retry. Mirrors PreviewStage / use-player-controls.ts.
+  useEffect(() => {
+    if (!entry) return;
+    let raf1 = 0;
+    let raf2 = 0;
+    raf1 = requestAnimationFrame(() => {
+      playerRef.current?.play();
+      raf2 = requestAnimationFrame(() => {
+        if (playerRef.current && !playerRef.current.isPlaying()) {
+          playerRef.current.play();
+        }
+      });
+    });
+    return () => {
+      if (raf1) cancelAnimationFrame(raf1);
+      if (raf2) cancelAnimationFrame(raf2);
+    };
+  }, [entry]);
 
   const [text, setText] = useState(TYPEWRITER_DEFAULTS.text);
   const [fontSize, setFontSize] = useState(TYPEWRITER_DEFAULTS.fontSize);
@@ -357,6 +381,7 @@ export function InteractiveCode() {
               <div className="w-full" style={{ aspectRatio }}>
                 {entry ? (
                   <Player
+                    ref={playerRef}
                     component={entry.Component}
                     inputProps={inputProps}
                     durationInFrames={entry.config.durationInFrames}
@@ -364,7 +389,6 @@ export function InteractiveCode() {
                     compositionWidth={entry.config.compositionWidth}
                     compositionHeight={entry.config.compositionHeight}
                     style={{ width: "100%", height: "100%", display: "block" }}
-                    autoPlay
                     loop
                     acknowledgeRemotionLicense
                   />

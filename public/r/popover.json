@@ -1,0 +1,27 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "popover",
+  "title": "UI Popover",
+  "description": "A popover/hover-card whose opened/closed state is a pure function of the timeline. The Popover renderer is a pure function of a PopoverStyle (opacity, scale, translate); usePopoverTransition eases both the open and the close. The static `side` prop sets the enter translate axis; renders title + description and/or arbitrary children in a popover card.",
+  "dependencies": [
+    "remotion"
+  ],
+  "registryDependencies": [
+    "@remocn/remocn-ui"
+  ],
+  "files": [
+    {
+      "path": "registry/remocn-ui/popover/index.tsx",
+      "content": "\"use client\";\n\nimport type { ReactNode } from \"react\";\nimport { type RemocnTheme, useRemocnTheme } from \"@/lib/remocn-ui\";\n\nexport type PopoverState = \"opened\" | \"closed\";\n\nexport type PopoverSide = \"top\" | \"bottom\" | \"left\" | \"right\";\n\nexport interface PopoverProps {\n  state?: PopoverState;\n  style?: PopoverStyle;\n  title?: string;\n  description?: string;\n  children?: ReactNode;\n  side?: PopoverSide;\n  width?: number;\n  theme?: Partial<RemocnTheme>;\n  mode?: \"light\" | \"dark\";\n  className?: string;\n}\n\nexport interface PopoverStyle {\n  opacity: number;\n  scale: number;\n  translate: number;\n}\n\nexport function popoverStyle(state: PopoverState): PopoverStyle {\n  switch (state) {\n    case \"opened\":\n      return { opacity: 1, scale: 1, translate: 0 };\n    default:\n      return { opacity: 0, scale: 0.97, translate: 6 };\n  }\n}\n\nfunction offsetFor(side: PopoverSide, translate: number): { x: number; y: number } {\n  switch (side) {\n    case \"bottom\":\n      return { x: 0, y: -translate };\n    case \"left\":\n      return { x: translate, y: 0 };\n    case \"right\":\n      return { x: -translate, y: 0 };\n    default:\n      return { x: 0, y: translate };\n  }\n}\n\nexport function Popover({\n  state = \"closed\",\n  style,\n  title,\n  description,\n  children,\n  side = \"bottom\",\n  width = 288,\n  theme: themeOverride,\n  mode,\n  className,\n}: PopoverProps) {\n  const theme = useRemocnTheme(themeOverride, mode);\n  const v = style ?? popoverStyle(state);\n  const { x, y } = offsetFor(side, v.translate);\n\n  const hasHeader = title !== undefined || description !== undefined;\n\n  return (\n    <div\n      className={className}\n      style={{\n        display: \"inline-flex\",\n        opacity: v.opacity,\n        transform: `translate(${x}px, ${y}px) scale(${v.scale})`,\n        transformOrigin: \"center\",\n        fontFamily:\n          \"var(--font-geist-sans), -apple-system, BlinkMacSystemFont, sans-serif\",\n      }}\n    >\n      <div\n        style={{\n          width,\n          boxSizing: \"border-box\",\n          display: \"flex\",\n          flexDirection: \"column\",\n          gap: 8,\n          padding: 16,\n          background: theme.popover,\n          color: theme.popoverForeground,\n          border: `1px solid ${theme.border}`,\n          borderRadius: theme.radius,\n          boxShadow: \"0 8px 24px -8px rgba(0,0,0,0.2)\",\n          textAlign: \"left\",\n        }}\n      >\n        {title !== undefined && (\n          <div\n            style={{\n              fontSize: 15,\n              fontWeight: 500,\n              letterSpacing: \"-0.01em\",\n              lineHeight: 1.3,\n            }}\n          >\n            {title}\n          </div>\n        )}\n        {description !== undefined && (\n          <div\n            style={{\n              fontSize: 13,\n              lineHeight: 1.5,\n              color: theme.mutedForeground,\n            }}\n          >\n            {description}\n          </div>\n        )}\n        {}\n        {children !== undefined && (\n          <div style={{ marginTop: hasHeader ? 4 : 0 }}>{children}</div>\n        )}\n      </div>\n    </div>\n  );\n}\n",
+      "type": "registry:component",
+      "target": "components/remocn/popover.tsx"
+    },
+    {
+      "path": "registry/remocn-ui/popover/use-popover-transition.ts",
+      "content": "\"use client\";\n\nimport { easings, type Step, useStateTransition } from \"@/lib/remocn-ui\";\nimport {\n  popoverStyle,\n  type PopoverState,\n  type PopoverStyle,\n} from \"@/components/remocn/popover\";\n\nexport const DEFAULT_DURATION = 10;\n\nexport function tweenPopoverStyle(\n  a: PopoverStyle,\n  b: PopoverStyle,\n  t: number,\n): PopoverStyle {\n  return {\n    opacity: a.opacity + (b.opacity - a.opacity) * t,\n    scale: a.scale + (b.scale - a.scale) * t,\n    translate: a.translate + (b.translate - a.translate) * t,\n  };\n}\n\nexport interface PopoverTransitionOptions {\n  mode?: \"light\" | \"dark\";\n  speed?: number;\n  defaultDuration?: number;\n}\n\nexport function usePopoverTransition(\n  steps: Step<PopoverState>[],\n  opts: PopoverTransitionOptions = {},\n): PopoverStyle {\n  const { speed = 1, defaultDuration = DEFAULT_DURATION } = opts;\n  const { from, to, progress } = useStateTransition(\n    steps,\n    \"closed\",\n    speed,\n    defaultDuration,\n  );\n  const t = easings.out(progress);\n  return tweenPopoverStyle(popoverStyle(from), popoverStyle(to), t);\n}\n",
+      "type": "registry:component",
+      "target": "components/remocn/use-popover-transition.ts"
+    }
+  ],
+  "type": "registry:component"
+}

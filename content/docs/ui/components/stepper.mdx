@@ -1,0 +1,138 @@
+---
+title: Stepper
+description: A multi-step progress indicator that advances along a scripted numeric position timeline
+---
+
+<UiComponentPreview name="stepper" />
+
+A value-channel atom whose active position (`0`–`n-1`) is a pure function of the `activeIndex` prop or an interpolated `StepperStyle` from `useStepperTransition`. The component reads no frame — only the position you give it. This is the **value-channel** variant of the primitive pattern: instead of a string-state timeline it drives a continuous numeric position channel, the same deviation used by the Progress primitive.
+
+As `position` advances, each circle fills from muted to primary, the checkmark draws in, and the connector between steps fills — all derived purely from the single float `position` value.
+
+## Installation
+
+<InstallBlock name="stepper" />
+
+<Note>
+Installing `stepper` automatically installs the shared `remocn-ui` core (`lib/remocn-ui/`) via `registryDependencies` (`["remocn-ui"]`). You do not need to install it separately. Both `stepper` (the renderer) and `use-stepper-transition` (the hook) are copied into your project.
+</Note>
+
+## Step position
+
+Instead of a string-state timeline, `useStepperTransition` takes an array of `StepperStep` objects that describe a scripted index path:
+
+```ts
+interface StepperStep {
+  at: number;        // LOCAL (Sequence-relative) authored frame the stepper finishes reaching index
+  index: number;     // Target active-step index (0..n-1)
+  duration?: number; // Frames the move INTO this index takes. Omitted → DEFAULT_DURATION (24)
+  easing?: EasingName; // Override easing for the move into this index. Default "out"
+}
+```
+
+`at` is the **arrival frame** — the frame when the stepper finishes reaching `index`. The move itself runs over `[at - duration, at)`. Before the first arrival, the stepper holds at the first step's index.
+
+### Numeric-channel deviation
+
+`Stepper` differs from state atoms (Button, Tabs, etc.) in one key way: there is no string `state` union and no `useCurrentState` snap path. The stepper's visual is always numeric — a continuous float `position` — so `useStepperTransition` folds the index path directly into a `StepperStyle`. The snap equivalent is simply passing a fixed `activeIndex` prop.
+
+### Completed, active, and future derivation
+
+Every circle and connector is a pure function of `position`:
+
+- **Completed** step `i`: `position >= i + 1` — the circle fills to primary, the checkmark draws fully in.
+- **Active** step `i`: `Math.floor(position) === i` and not yet completed — the circle is transitioning, the check is drawing in.
+- **Future** step `i`: `position < i` — the circle stays muted, no check.
+- **Connector** between steps `i` and `i+1`: fills `clamp(position - i, 0, 1)` of primary color.
+
+A lerp of the single `position` value advances all circles and connectors smoothly without jumps.
+
+## Snap usage
+
+Pass `activeIndex` directly — the component snaps instantly to that step. Useful for static previews or when you drive state from your own logic:
+
+```tsx
+import { Stepper } from "@/components/remocn/stepper";
+
+export const Scene = () => (
+  <div style={{ position: "relative", width: "100%", height: "100%" }}>
+    <Stepper activeIndex={1} />
+  </div>
+);
+```
+
+## Smooth transitions
+
+Position changes via `activeIndex` snap with no tween. For animated step advances, use `useStepperTransition` from the copied `use-stepper-transition.ts` file. It reads the frame, interpolates between index steps, and returns a resolved `StepperStyle` — pass it to the `style` prop:
+
+```tsx
+import { Stepper } from "@/components/remocn/stepper";
+import { useStepperTransition } from "@/components/remocn/use-stepper-transition";
+
+export const Scene = () => {
+  const style = useStepperTransition([
+    { at: 50,  index: 1, duration: 24 },
+    { at: 110, index: 2, duration: 24 },
+  ]);
+
+  return (
+    <div style={{ position: "relative", width: "100%", height: "100%" }}>
+      <Stepper style={style} />
+    </div>
+  );
+};
+```
+
+The `duration` field on each step overrides the file's `DEFAULT_DURATION` (= `24`) for that specific move. The default easing per step is `"out"` — the indicator decelerates as it nears the target index. To globally tune timing and easing, edit `use-stepper-transition.ts` directly in your project — that file is yours (shadcn "own your code" philosophy).
+
+`style` takes precedence over `activeIndex` when both are provided.
+
+## Orientation
+
+Only `"horizontal"` is implemented in this release. Passing `orientation="vertical"` is accepted but falls back to horizontal — vertical layout is planned for a future wave.
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "steps",
+      type: "string[]",
+      default: "[\"Account\", \"Plan\", \"Done\"]",
+      description: "Step labels. Their count determines the total number of steps.",
+    },
+    {
+      name: "activeIndex",
+      type: "number",
+      default: "0",
+      description: "Active step index 0..n-1 (snap path). May be a float but is typically an integer. Ignored when style is provided.",
+    },
+    {
+      name: "style",
+      type: "StepperStyle",
+      description: "Resolved animated visual (smooth path). Pass an interpolated StepperStyle from useStepperTransition. Takes precedence over activeIndex when provided.",
+    },
+    {
+      name: "orientation",
+      type: "\"horizontal\" | \"vertical\"",
+      default: "\"horizontal\"",
+      description: "Layout orientation. Only horizontal is implemented this release — vertical falls back to horizontal.",
+    },
+    {
+      name: "theme",
+      type: "Partial<RemocnTheme>",
+      description: "Per-component theme override. Merges with the active RemocnUIProvider theme and the mode defaults. Must be concrete oklch/hex/rgb values — not CSS custom properties.",
+    },
+    {
+      name: "mode",
+      type: "\"light\" | \"dark\"",
+      default: "\"light\"",
+      description: "Sets the base palette. Overrides the mode on RemocnUIProvider when both are present.",
+    },
+    {
+      name: "className",
+      type: "string",
+      description: "Optional className applied to the outer wrapper element.",
+    },
+  ]}
+/>

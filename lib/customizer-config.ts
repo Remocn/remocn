@@ -29,6 +29,13 @@ export interface ComponentConfig {
    * Pascal-case component name used in the generated JSX snippet.
    */
   componentName: string;
+  /**
+   * Optional custom code-snippet generator. When present, the preview's
+   * `generateCode` delegates to it instead of the default prop serializer
+   * (used by the ui-tier primitives to emit a `steps={[…]}` literal and omit
+   * preview-only props). Components without it keep the default path.
+   */
+  snippet?: (values: Record<string, unknown>) => string;
 }
 
 export const FPS = 30;

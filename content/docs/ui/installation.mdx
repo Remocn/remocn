@@ -1,0 +1,35 @@
+---
+title: Installation
+description: Add remocn-ui primitives to an existing Remotion project via the shadcn CLI
+---
+
+## Prerequisites
+
+Remotion must already be set up in your project. remocn-ui does not bootstrap Remotion — it only adds components on top of an existing Remotion setup.
+
+## Install a component
+
+Use the standard shadcn CLI. The shared `remocn-ui` core installs automatically as a `registryDependencies` entry — you do not need to install it separately.
+
+```bash
+npx shadcn add @remocn/button
+```
+
+This writes two things into your project:
+
+- `components/remocn/button.tsx` — the component and its transition hook
+- `lib/remocn-ui/` — the shared core library used by every component in this tier
+
+## Registry dependencies
+
+Some components declare additional `registryDependencies`. For example, a composition that includes a loading indicator will pull in `@remocn/spinner` automatically when you install it. The shadcn CLI resolves and installs the full dependency graph in one command — you only need to name the top-level component you want.
+
+## What gets written
+
+| Path | Contents |
+|---|---|
+| `components/remocn/<name>.tsx` | The state atom component |
+| `components/remocn/use-<name>-transition.ts` | The transition hook for smooth motion (edit `DEFAULT_DURATION` and easing here) |
+| `lib/remocn-ui/` | Shared core — timeline hooks, theme, color utilities, motion helpers, types |
+
+All files are copied into your project. You own the code — edit any file freely to suit your video.

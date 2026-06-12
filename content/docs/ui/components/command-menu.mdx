@@ -1,0 +1,246 @@
+---
+title: Command Menu
+description: A keyboard-driven command palette with backdrop, typing animation, and row selection
+---
+
+<UiComponentPreview name="command-menu" />
+
+A state atom representing a command palette panel. Its appearance (`opened`, `closed`) is a pure function of the `state` prop. Pass a state directly or drive it from the Remotion timeline via `useCurrentState`. The component reads no frame — only the state value you give it. The panel zooms in from 0.96 scale with a backdrop dim and fades fully in on open; reverses on close.
+
+## Installation
+
+<InstallBlock name="command-menu" />
+
+<Note>
+Installing `command-menu` automatically installs the shared `remocn-ui` core (`lib/remocn-ui/`) and the `command-menu-item` atom via `registryDependencies` (`["remocn-ui", "command-menu-item"]`). You do not need to install either separately.
+</Note>
+
+## States
+
+`CommandMenuState` is:
+
+```ts
+type CommandMenuState =
+  | "opened"  // backdrop opaque, panel opacity 1, scale 1, translateY 0
+  | "closed"  // backdrop transparent, panel opacity 0, scale 0.96, translateY 8px
+```
+
+`opened` reveals the full panel with backdrop dim. `closed` hides the panel and clears the backdrop.
+
+## Snap usage
+
+Pass `state` directly — the component snaps instantly to that visual. Useful for static previews or when you drive state from your own logic:
+
+```tsx
+import { CommandMenu } from "@/components/remocn/command-menu";
+
+export const Scene = () => (
+  <div style={{ position: "relative", width: "100%", height: "100%" }}>
+    <CommandMenu state="opened" query="set" />
+  </div>
+);
+```
+
+To drive state from the timeline, use `useCurrentState`:
+
+```tsx
+import { useCurrentState } from "@/lib/remocn-ui";
+import { CommandMenu } from "@/components/remocn/command-menu";
+
+export const Scene = () => {
+  const state = useCurrentState(
+    [
+      { at: 16, state: "opened" },
+      { at: 96, state: "closed" },
+    ],
+    "closed",
+  );
+
+  return (
+    <div style={{ position: "relative", width: "100%", height: "100%" }}>
+      <CommandMenu state={state} />
+    </div>
+  );
+};
+```
+
+Each `at` is a **Sequence-local authored frame**. State persists between steps: `opened` at frame 16 keeps the panel visible until `closed` fires at frame 96. See [Concepts](/docs/ui/concepts) for the full `useCurrentState` API.
+
+## Smooth transitions
+
+State changes via `state` snap with no cross-fade. For an animated open/close, use `useCommandMenuTransition` from the copied `use-command-menu-transition.ts` file. It reads the frame, interpolates between state presets, and returns a resolved `CommandMenuStyle` — pass it to the `style` prop:
+
+```tsx
+import { CommandMenu } from "@/components/remocn/command-menu";
+import { useCommandMenuTransition } from "@/components/remocn/use-command-menu-transition";
+
+export const Scene = () => {
+  const style = useCommandMenuTransition([
+    { at: 16, state: "opened", duration: 16 },
+    { at: 96, state: "closed", duration: 12 },
+  ]);
+
+  return (
+    <div style={{ position: "relative", width: "100%", height: "100%" }}>
+      <CommandMenu style={style} />
+    </div>
+  );
+};
+```
+
+The `duration` field on each step overrides the file's `DEFAULT_DURATION` (= `12`) for that specific transition. To globally tune timing and easing, edit `use-command-menu-transition.ts` directly in your project — that file is yours (shadcn "own your code" philosophy).
+
+`style` takes precedence over `state` when both are provided.
+
+## Typing and filtering
+
+The `query` prop holds the full search string. The `revealCount` prop controls how many characters of `query` are currently shown — the panel filters the item list against the visible prefix and shows an empty state when nothing matches.
+
+Use `revealCount` from `@/lib/remocn-ui` to compute the reveal from the timeline frame:
+
+```tsx
+import { useCurrentFrame } from "remotion";
+import { revealCount } from "@/lib/remocn-ui";
+import { CommandMenu } from "@/components/remocn/command-menu";
+import { useCommandMenuTransition } from "@/components/remocn/use-command-menu-transition";
+
+const QUERY = "settings";
+
+export const Scene = () => {
+  const frame = useCurrentFrame();
+
+  const panelStyle = useCommandMenuTransition([
+    { at: 16, state: "opened", duration: 16 },
+    { at: 108, state: "closed", duration: 12 },
+  ]);
+
+  // 8 chars at 4 chars/sec @ 30 fps = 60 frames total typing window.
+  const revealed = revealCount(
+    Math.max(0, frame - 20), // typing starts at frame 20
+    30,                       // fps
+    QUERY.length,             // total characters
+    4,                        // chars per second
+  );
+
+  return (
+    <div style={{ position: "relative", width: "100%", height: "100%" }}>
+      <CommandMenu style={panelStyle} query={QUERY} revealCount={revealed} />
+    </div>
+  );
+};
+```
+
+`revealCount(localFrame, fps, len, cps)` is a pure function — it returns the number of characters to show given the elapsed local frame, fps, total query length, and typing speed in chars per second. Import it from `@/lib/remocn-ui`.
+
+When `revealCount` is omitted, the full `query` is shown immediately. When the visible prefix is empty, all items are shown. The pure filter is exported as `filterCommandItems(items, query, revealCount)` if you need it in your own logic.
+
+## Items
+
+The panel renders a column of **CommandMenuItem** rows — one per filtered entry. Each row has four states reflecting the user's interaction:
+
+`CommandMenuItemState` is:
+
+```ts
+type CommandMenuItemState =
+  | "idle"     // popover background, muted icon, normal label
+  | "hover"    // accent background, foreground icon, normal label
+  | "press"    // darker accent background, foreground icon, scale 0.98
+  | "selected" // accent background, accent-foreground label, foreground icon
+```
+
+`idle` rests on the popover background. `hover` brightens to the accent color. `press` darkens slightly and shrinks to 0.98 scale. `selected` locks the accent background with an accent-foreground label.
+
+Preview a single CommandMenuItem:
+
+<ComponentPreview name="command-menu-item" />
+
+When you install `command-menu`, the `command-menu-item` atom is automatically pulled in via `registryDependencies` — no separate install needed. The `CommandMenu` container derives each row's state from the `selectedIndex`, `highlightedIndex`, and `pressedIndex` props (indexed into the **filtered** list), or you can override a row's visual with `itemStyles`.
+
+To animate a row's state transition, drive it with `useCommandMenuItemTransition`:
+
+```tsx
+import { useCommandMenuItemTransition } from "@/components/remocn/use-command-menu-item-transition";
+
+const itemStyle = useCommandMenuItemTransition([
+  { at: 84, state: "hover",    duration: 8 },
+  { at: 92, state: "press",    duration: 6 },
+  { at: 100, state: "selected", duration: 8 },
+]);
+
+// Pass to CommandMenu via itemStyles (indexed into the filtered list):
+<CommandMenu style={panelStyle} itemStyles={[itemStyle]} />
+```
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "state",
+      type: "\"opened\" | \"closed\"",
+      default: "\"closed\"",
+      description: "Current visual state (snap path). State changes snap — no automatic cross-fade.",
+    },
+    {
+      name: "style",
+      type: "CommandMenuStyle",
+      description: "Resolved animated visual (smooth path). Pass an interpolated CommandMenuStyle from useCommandMenuTransition. Takes precedence over state when provided.",
+    },
+    {
+      name: "query",
+      type: "string",
+      default: "\"\"",
+      description: "Full search query text. The visible prefix is query.slice(0, revealCount). The item list is filtered against this prefix.",
+    },
+    {
+      name: "revealCount",
+      type: "number",
+      description: "Number of query characters revealed so far. Omitted means the whole query is shown immediately. Use the revealCount() helper from @/lib/remocn-ui to compute this from the frame.",
+    },
+    {
+      name: "items",
+      type: "CommandMenuEntry[]",
+      default: "[Profile, Settings, New File, Search docs]",
+      description: "The full list of command rows before filtering. Each entry has label (required), optional icon (search/settings/user/file), and optional shortcut string.",
+    },
+    {
+      name: "selectedIndex",
+      type: "number",
+      default: "-1",
+      description: "Index into the FILTERED list of the persisted selection. -1 for none.",
+    },
+    {
+      name: "highlightedIndex",
+      type: "number",
+      default: "-1",
+      description: "Index into the FILTERED list of the hovered row. -1 for none.",
+    },
+    {
+      name: "pressedIndex",
+      type: "number",
+      default: "-1",
+      description: "Index into the FILTERED list of the pressed row. -1 for none.",
+    },
+    {
+      name: "itemStyles",
+      type: "(CommandMenuItemStyle | undefined)[]",
+      description: "Per-row resolved visual override (smooth path), indexed into the FILTERED list. When present it wins over the index-to-state derivation. Used by the live example to animate a single row.",
+    },
+    {
+      name: "theme",
+      type: "Partial<RemocnTheme>",
+      description: "Per-component theme override. Merges with the active RemocnUIProvider theme and the mode defaults. Must be concrete oklch/hex/rgb values — not CSS custom properties.",
+    },
+    {
+      name: "mode",
+      type: "\"light\" | \"dark\"",
+      default: "\"light\"",
+      description: "Sets the base palette. Overrides the mode on RemocnUIProvider when both are present.",
+    },
+    {
+      name: "className",
+      type: "string",
+      description: "Optional className applied to the panel element.",
+    },
+  ]}
+/>

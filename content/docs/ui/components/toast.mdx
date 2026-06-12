@@ -1,0 +1,166 @@
+---
+title: Toast
+description: A notification that slides in from below, holds, then auto-dismisses
+---
+
+<UiComponentPreview name="toast" />
+
+A state atom whose appearance (`hidden`, `visible`) is a pure function of the `state` prop. Pass a state directly or drive it from the Remotion timeline via `useCurrentState`. The component reads no frame — only the state value you give it. The toast enters from 16 px below at 0.97 scale, fades and scales up to rest, then reverses on dismiss.
+
+## Installation
+
+<InstallBlock name="toast" />
+
+<Note>
+Installing `toast` automatically installs the shared `remocn-ui` core (`lib/remocn-ui/`) via `registryDependencies` (`["remocn-ui"]`). You do not need to install it separately. Both `toast` (the renderer) and `use-toast-transition` (the hook) are copied into your project.
+</Note>
+
+## States
+
+`ToastState` is:
+
+```ts
+type ToastState =
+  | "hidden"   // opacity 0, translateY 16px, scale 0.97 — off-screen resting position
+  | "visible"  // opacity 1, translateY 0, scale 1 — fully on-screen
+```
+
+`hidden` is the default. The toast enters from 16 px below the rest position so it appears to slide up from the bottom of the canvas. `visible` brings it to full opacity and 1:1 scale.
+
+## Snap usage
+
+Pass `state` directly — the component snaps instantly to that visual. Useful for static previews or when you drive state from your own logic:
+
+```tsx
+import { Toast } from "@/components/remocn/toast";
+
+export const Scene = () => (
+  <div style={{ position: "relative", width: "100%", height: "100%" }}>
+    <div style={{ position: "absolute", right: 24, bottom: 24 }}>
+      <Toast state="visible" title="Changes saved" variant="success" />
+    </div>
+  </div>
+);
+```
+
+To drive state from the timeline, use `useCurrentState`:
+
+```tsx
+import { useCurrentState } from "@/lib/remocn-ui";
+import { Toast } from "@/components/remocn/toast";
+
+export const Scene = () => {
+  const state = useCurrentState(
+    [
+      { at: 30, state: "visible" },
+      { at: 90, state: "hidden"  },
+    ],
+    "hidden",
+  );
+
+  return (
+    <div style={{ position: "relative", width: "100%", height: "100%" }}>
+      <div style={{ position: "absolute", right: 24, bottom: 24 }}>
+        <Toast state={state} title="Changes saved" variant="success" />
+      </div>
+    </div>
+  );
+};
+```
+
+Each `at` is a **Sequence-local authored frame**. State persists between steps: `visible` at frame 30 keeps the toast on-screen until `hidden` fires at frame 90. See [Concepts](/docs/ui/concepts) for the full `useCurrentState` API.
+
+## Smooth transitions
+
+State changes via `state` snap with no cross-fade. For animated enter and dismiss, use `useToastTransition` from the copied `use-toast-transition.ts` file. It reads the frame, interpolates between state presets, and returns a resolved `ToastStyle` — pass it to the `style` prop:
+
+```tsx
+import { Toast } from "@/components/remocn/toast";
+import { useToastTransition } from "@/components/remocn/use-toast-transition";
+
+export const Scene = () => {
+  const style = useToastTransition([
+    { at: 30,  state: "visible", duration: 12 },
+    { at: 90,  state: "hidden",  duration: 12 },
+  ]);
+
+  return (
+    <div style={{ position: "relative", width: "100%", height: "100%" }}>
+      <div style={{ position: "absolute", right: 24, bottom: 24 }}>
+        <Toast style={style} title="Changes saved" variant="success" />
+      </div>
+    </div>
+  );
+};
+```
+
+The `duration` field on each step overrides the file's `DEFAULT_DURATION` (= `12`) for that specific transition. To globally tune timing and easing, edit `use-toast-transition.ts` directly in your project — that file is yours (shadcn "own your code" philosophy).
+
+`style` takes precedence over `state` when both are provided.
+
+## Variants
+
+The `variant` prop changes the leading icon and its color. The body layout (title, optional description) is the same across all variants.
+
+```ts
+type ToastVariant =
+  | "default"  // neutral info dot — muted-foreground color
+  | "success"  // circled checkmark — green (oklch 0.6 0.17 150)
+  | "error"    // circled exclamation — theme.destructive color
+```
+
+```tsx
+<Toast state="visible" title="All good"        variant="success" />
+<Toast state="visible" title="Something failed" variant="error"   />
+<Toast state="visible" title="Heads up"         variant="default" />
+```
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "title",
+      type: "string",
+      description: "Primary message text. Always visible.",
+    },
+    {
+      name: "description",
+      type: "string",
+      description: "Secondary detail text rendered below the title. When omitted the icon and title are vertically centered.",
+    },
+    {
+      name: "variant",
+      type: "\"default\" | \"success\" | \"error\"",
+      default: "\"default\"",
+      description: "Changes the leading icon and its color. default shows a neutral info dot.",
+    },
+    {
+      name: "state",
+      type: "\"hidden\" | \"visible\"",
+      default: "\"hidden\"",
+      description: "Current visual state (snap path). State changes snap — no automatic cross-fade.",
+    },
+    {
+      name: "style",
+      type: "ToastStyle",
+      description: "Resolved animated visual (smooth path). Pass an interpolated ToastStyle from useToastTransition. Takes precedence over state when provided.",
+    },
+    {
+      name: "theme",
+      type: "Partial<RemocnTheme>",
+      description: "Per-component theme override. Merges with the active RemocnUIProvider theme and the mode defaults. Must be concrete oklch/hex/rgb values — not CSS custom properties.",
+    },
+    {
+      name: "mode",
+      type: "\"light\" | \"dark\"",
+      default: "\"light\"",
+      description: "Sets the base palette. Overrides the mode on RemocnUIProvider when both are present.",
+    },
+    {
+      name: "className",
+      type: "string",
+      description: "Optional className applied to the toast wrapper element.",
+    },
+  ]}
+/>

@@ -1,0 +1,138 @@
+---
+title: Drawer
+description: A bottom panel whose opened/closed state is a pure function of the timeline
+---
+
+<UiComponentPreview name="drawer" />
+
+A state atom whose appearance (closed, opened) is a pure function of the `state` prop. Pass a state directly or drive it from the Remotion timeline via `useCurrentState`. The component reads no frame — only the state value you give it. The wrapper is transparent by design: Drawer is a modal layer meant to compose over another scene, so it does not paint an opaque background. The panel is anchored to the bottom edge and slides up into view: it has rounded top corners, a drag-handle pill at the top, and no close (X) button — the handle stands in for the dismiss affordance.
+
+## Installation
+
+<InstallBlock name="drawer" />
+
+<Note>
+Installing `drawer` automatically installs the shared `remocn-ui` core (`lib/remocn-ui/`) via `registryDependencies` (`["remocn-ui"]`). You do not need to install it separately. If you want to pair Drawer with the Button as its trigger in the canonical lifecycle example, install `button` separately.
+</Note>
+
+## States
+
+`DrawerState` is:
+
+```ts
+type DrawerState =
+  | "opened"  // backdrop dims to 50% black, panel slides up from the bottom edge and fades in
+  | "closed"  // panel hidden off-screen below the bottom edge, backdrop clear (overlay opacity 0, panel opacity 0)
+```
+
+`opened` reveals the backdrop dim (scales up to `MAX_OVERLAY_ALPHA = 0.5`) and slides the panel up from off-screen — its `panelTranslateY` animates from `DRAWER_HEIGHT` (= `320`, fully below the bottom edge) to `0` (resting) while fading in. `closed` hides the backdrop and parks the panel below the bottom edge.
+
+## Snap usage
+
+Pass `state` directly — the component snaps instantly to that visual. Useful for static previews or when you drive state from your own logic:
+
+```tsx
+import { Drawer } from "@/components/remocn/drawer";
+
+export const Scene = () => <Drawer state="opened" />;
+```
+
+To drive state from the timeline, use `useCurrentState`:
+
+```tsx
+import { useCurrentState } from "@/lib/remocn-ui";
+import { Drawer } from "@/components/remocn/drawer";
+
+export const Scene = () => {
+  const state = useCurrentState(
+    [
+      { at: 32, state: "opened" },
+      { at: 92, state: "closed" },
+    ],
+    "closed",
+  );
+
+  return <Drawer title="Edit profile" state={state} />;
+};
+```
+
+Each `at` is a **Sequence-local authored frame**. State persists between steps: `opened` at frame 32 keeps the drawer visible until `closed` fires at frame 92. See [Concepts](/docs/ui/concepts) for the full `useCurrentState` API.
+
+## Smooth transitions
+
+State changes via `state` snap with no cross-fade. For animated transitions, use `useDrawerTransition` from the copied `use-drawer-transition.ts` file. It reads the frame, interpolates between state presets, and returns a resolved `DrawerStyle` — pass it to the `style` prop:
+
+```tsx
+import { Drawer } from "@/components/remocn/drawer";
+import { useDrawerTransition } from "@/components/remocn/use-drawer-transition";
+
+export const Scene = () => {
+  const style = useDrawerTransition([
+    { at: 32, state: "opened", duration: 16 },
+    { at: 92, state: "closed", duration: 12 },
+  ]);
+  return <Drawer title="Edit profile" style={style} />;
+};
+```
+
+The `duration` field on each step overrides the file's `DEFAULT_DURATION` (= `12`) for that specific transition. To globally tune timing and easing, edit `use-drawer-transition.ts` directly in your project — that file is yours (shadcn "own your code" philosophy).
+
+`style` takes precedence over `state` when both are provided.
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "state",
+      type: "\"opened\" | \"closed\"",
+      default: "\"closed\"",
+      description: "Current visual state (snap path). State changes snap — no automatic cross-fade.",
+    },
+    {
+      name: "style",
+      type: "DrawerStyle",
+      description: "Resolved animated visual (smooth path). Pass an interpolated DrawerStyle from useDrawerTransition. Takes precedence over state when provided.",
+    },
+    {
+      name: "title",
+      type: "string",
+      default: "\"Edit profile\"",
+      description: "Headline of the drawer panel.",
+    },
+    {
+      name: "description",
+      type: "string",
+      default: "\"Make changes to your profile here. Click save when you're done.\"",
+      description: "Body copy displayed under the title.",
+    },
+    {
+      name: "actionLabel",
+      type: "string",
+      default: "\"Save changes\"",
+      description: "Label of the confirming (primary) action button.",
+    },
+    {
+      name: "cancelLabel",
+      type: "string",
+      default: "\"Cancel\"",
+      description: "Label of the dismissing action button.",
+    },
+    {
+      name: "theme",
+      type: "Partial<RemocnTheme>",
+      description: "Per-component theme override. Merges with the active RemocnUIProvider theme and the mode defaults. Must be concrete oklch/hex/rgb values — not CSS custom properties.",
+    },
+    {
+      name: "mode",
+      type: "\"light\" | \"dark\"",
+      default: "\"light\"",
+      description: "Sets the base palette. Overrides the mode on RemocnUIProvider when both are present.",
+    },
+    {
+      name: "className",
+      type: "string",
+      description: "Optional className applied to the panel element.",
+    },
+  ]}
+/>

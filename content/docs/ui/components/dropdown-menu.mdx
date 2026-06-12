@@ -1,0 +1,175 @@
+---
+title: DropdownMenu
+description: A dropdown menu container with opened/closed states and action rows
+---
+
+<UiComponentPreview name="dropdown-menu" />
+
+A state atom representing a complete dropdown menu: a trigger button and a panel of actionable items. Its appearance (opened, closed) is a pure function of the `state` prop. Pass a state directly or drive it from the Remotion timeline via `useCurrentState`. The component reads no frame — only the state value you give it. The panel reveals below the trigger with opacity, scale, and vertical translation animations.
+
+## Installation
+
+<InstallBlock name="dropdown-menu" />
+
+<Note>
+Installing `dropdown-menu` automatically installs the shared `remocn-ui` core (`lib/remocn-ui/`), the `button` primitive, and the `dropdown-menu-item` atom via `registryDependencies` (`["remocn-ui", "button", "dropdown-menu-item"]`). You do not need to install them separately. The trigger reuses the Button `outline` variant, and the panel renders a column of DropdownMenuItem rows.
+</Note>
+
+## States
+
+`DropdownMenuState` is:
+
+```ts
+type DropdownMenuState =
+  | "opened"  // panel visible, opacity 1, scale 1, translateY 0, chevron rotated 180°
+  | "closed"  // panel hidden, opacity 0, scale 0.96, translateY -4px, chevron at 0°
+```
+
+`opened` reveals the panel with the trigger chevron pointing up (rotated 180°). `closed` hides the panel and returns the chevron to its downward point.
+
+## Snap usage
+
+Pass `state` directly — the component snaps instantly to that visual. Useful for static previews or when you drive state from your own logic:
+
+```tsx
+import { DropdownMenu } from "@/components/remocn/dropdown-menu";
+
+export const Scene = () => (
+  <DropdownMenu
+    state="opened"
+    label="More"
+    items={["Profile", "Settings", "Log out"]}
+  />
+);
+```
+
+To drive state from the timeline, use `useCurrentState`:
+
+```tsx
+import { useCurrentState } from "@/lib/remocn-ui";
+import { DropdownMenu } from "@/components/remocn/dropdown-menu";
+
+export const Scene = () => {
+  const state = useCurrentState(
+    [
+      { at: 32, state: "opened" },
+      { at: 92, state: "closed" },
+    ],
+    "closed",
+  );
+
+  return <DropdownMenu state={state} />;
+};
+```
+
+Each `at` is a **Sequence-local authored frame**. State persists between steps: `opened` at frame 32 keeps the panel visible until `closed` fires at frame 92. See [Concepts](/docs/ui/concepts) for the full `useCurrentState` API.
+
+## Smooth transitions
+
+State changes via `state` snap with no cross-fade. For animated transitions, use `useDropdownMenuTransition` from the copied `use-dropdown-menu-transition.ts` file. It reads the frame, interpolates between state presets, and returns a resolved `DropdownMenuStyle` — pass it to the `style` prop:
+
+```tsx
+import { DropdownMenu } from "@/components/remocn/dropdown-menu";
+import { useDropdownMenuTransition } from "@/components/remocn/use-dropdown-menu-transition";
+
+export const Scene = () => {
+  const style = useDropdownMenuTransition([
+    { at: 32, state: "opened", duration: 16 },
+    { at: 92, state: "closed", duration: 12 },
+  ]);
+  return <DropdownMenu style={style} />;
+};
+```
+
+The `duration` field on each step overrides the file's `DEFAULT_DURATION` (= `12`) for that specific transition. To globally tune timing and easing, edit `use-dropdown-menu-transition.ts` directly in your project — that file is yours (shadcn "own your code" philosophy).
+
+`style` takes precedence over `state` when both are provided.
+
+## Items
+
+The panel renders a column of **DropdownMenuItem** rows — one per action. Each row has three states reflecting the user's interaction with that item:
+
+`DropdownMenuItemState` is:
+
+```ts
+type DropdownMenuItemState =
+  | "idle"   // neutral popover background, popover-foreground label
+  | "hover"  // accent background, popover-foreground label
+  | "press"  // darker accent background, popover-foreground label, scale 0.98
+```
+
+`idle` shows the default popover background. `hover` brightens to accent. `press` darkens and shrinks to 0.98 scale. Unlike SelectItem, DropdownMenuItem has no `selected` state — menu items are stateless after interaction.
+
+Preview a single DropdownMenuItem:
+
+<ComponentPreview name="dropdown-menu-item" />
+
+When you install `dropdown-menu`, the `dropdown-menu-item` atom is automatically pulled in via `registryDependencies` — no separate install needed. The `DropdownMenu` container derives each row's state from the `highlightedIndex` and `pressedIndex` props, or you can override a row's visual with `itemStyles`.
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "state",
+      type: "\"opened\" | \"closed\"",
+      default: "\"closed\"",
+      description: "Current visual state (snap path). State changes snap — no automatic cross-fade.",
+    },
+    {
+      name: "style",
+      type: "DropdownMenuStyle",
+      description: "Resolved animated visual (smooth path). Pass an interpolated DropdownMenuStyle from useDropdownMenuTransition. Takes precedence over state when provided.",
+    },
+    {
+      name: "label",
+      type: "string",
+      default: "\"Options\"",
+      description: "Trigger button text.",
+    },
+    {
+      name: "triggerStyle",
+      type: "ButtonStyle",
+      description: "Resolved Button visual for the trigger (smooth path). Drive it with useButtonTransition for a hover/press click animation. Defaults to the resting Button outline look.",
+    },
+    {
+      name: "items",
+      type: "string[]",
+      default: "[\"Profile\", \"Billing\", \"Settings\", \"Log out\"]",
+      description: "Array of action labels rendered in the panel.",
+    },
+    {
+      name: "highlightedIndex",
+      type: "number",
+      default: "-1",
+      description: "Index of the row under the pointer or currently highlighted (hover state). -1 for none.",
+    },
+    {
+      name: "pressedIndex",
+      type: "number",
+      default: "-1",
+      description: "Index of the row being pressed (press state). -1 for none.",
+    },
+    {
+      name: "itemStyles",
+      type: "(DropdownMenuItemStyle | undefined)[]",
+      description: "Per-item resolved visual override (smooth path). When an entry is present it wins over the index→state derivation. Used by the live example to animate a single row.",
+    },
+    {
+      name: "theme",
+      type: "Partial<RemocnTheme>",
+      description: "Per-component theme override. Merges with the active RemocnUIProvider theme and the mode defaults. Must be concrete oklch/hex/rgb values — not CSS custom properties.",
+    },
+    {
+      name: "mode",
+      type: "\"light\" | \"dark\"",
+      default: "\"light\"",
+      description: "Sets the base palette. Overrides the mode on RemocnUIProvider when both are present.",
+    },
+    {
+      name: "className",
+      type: "string",
+      description: "Optional className applied to the wrapper element.",
+    },
+  ]}
+/>

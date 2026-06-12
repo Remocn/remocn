@@ -1,0 +1,138 @@
+---
+title: Accordion
+description: An accordion panel whose open/closed state is a pure function of the timeline
+---
+
+<UiComponentPreview name="accordion" />
+
+A state atom whose appearance (closed, opened) is a pure function of the `state` prop. Pass a state directly or drive it from the Remotion timeline via `useCurrentState`. The component reads no frame — only the state value you give it.
+
+## Installation
+
+<InstallBlock name="accordion" />
+
+<Note>
+Installing `accordion` automatically installs the shared `remocn-ui` core (`lib/remocn-ui/`) via `registryDependencies`. You do not need to install it separately.
+</Note>
+
+## States
+
+`AccordionState` is:
+
+```ts
+type AccordionState =
+  | "closed"  // panel collapsed, chevron points down
+  | "opened"  // panel revealed, chevron rotated 180° (points up), item background fills
+```
+
+`opened` fills the item background with `bg-muted/50` (for the `default` variant) and rotates the chevron 180° to point upward. `closed` collapses the panel and resets the chevron.
+
+## Snap usage
+
+Pass `state` directly — the component snaps instantly to that visual. Useful for static previews or when you drive state from your own logic:
+
+```tsx
+import { Accordion } from "@/components/remocn/accordion";
+
+export const Scene = () => <Accordion state="opened" />;
+```
+
+To drive state from the timeline, use `useCurrentState`:
+
+```tsx
+import { useCurrentState } from "@/lib/remocn-ui";
+import { Accordion } from "@/components/remocn/accordion";
+
+export const Scene = () => {
+  const state = useCurrentState(
+    [
+      { at: 18, state: "opened" },
+      { at: 78, state: "closed" },
+    ],
+    "closed",
+  );
+
+  return <Accordion title="Is it accessible?" state={state} />;
+};
+```
+
+Each `at` is a **Sequence-local authored frame**. State persists between steps: `opened` at frame 18 keeps the panel revealed until `closed` fires at frame 78. See [Concepts](/docs/ui/concepts) for the full `useCurrentState` API.
+
+## Smooth transitions
+
+State changes via `state` snap with no cross-fade. For animated transitions, use `useAccordionTransition` from the copied `use-accordion-transition.ts` file. It reads the frame, interpolates between state presets, and returns a resolved `AccordionStyle` — pass it to the `style` prop:
+
+```tsx
+import { Accordion } from "@/components/remocn/accordion";
+import { useAccordionTransition } from "@/components/remocn/use-accordion-transition";
+
+export const Scene = () => {
+  const style = useAccordionTransition([
+    { at: 18, state: "opened", duration: 16 },
+    { at: 78, state: "closed", duration: 12 },
+  ]);
+  return <Accordion title="Is it accessible?" style={style} />;
+};
+```
+
+The `duration` field on each step overrides the file's `DEFAULT_DURATION` for that specific transition. To globally tune timing and easing, edit `use-accordion-transition.ts` directly in your project — that file is yours (shadcn "own your code" philosophy).
+
+`style` takes precedence over `state` when both are provided.
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "state",
+      type: "\"opened\" | \"closed\"",
+      default: "\"closed\"",
+      description: "Current visual state (snap path). State changes snap — no automatic cross-fade.",
+    },
+    {
+      name: "style",
+      type: "AccordionStyle",
+      description: "Resolved animated visual (smooth path). Pass an interpolated AccordionStyle from useAccordionTransition. Takes precedence over state when provided.",
+    },
+    {
+      name: "title",
+      type: "string",
+      default: "\"Is it accessible?\"",
+      description: "Accordion item trigger label.",
+    },
+    {
+      name: "content",
+      type: "string",
+      default: "\"Yes. It adheres to the WAI-ARIA design pattern.\"",
+      description: "Accordion panel body text, revealed when opened.",
+    },
+    {
+      name: "contentHeight",
+      type: "number",
+      default: "64",
+      description: "Authored panel height in px. Required because Remotion cannot measure auto height — set this to match the rendered height of your content.",
+    },
+    {
+      name: "variant",
+      type: "\"default\" | \"ghost\"",
+      default: "\"default\"",
+      description: "Visual variant. default fills the item background when opened; ghost has no fill.",
+    },
+    {
+      name: "theme",
+      type: "Partial<RemocnTheme>",
+      description: "Per-component theme override. Merges with the active RemocnUIProvider theme and the mode defaults. Must be concrete oklch/hex/rgb values — not CSS custom properties.",
+    },
+    {
+      name: "mode",
+      type: "\"light\" | \"dark\"",
+      default: "\"light\"",
+      description: "Sets the base palette. Overrides the mode on RemocnUIProvider when both are present.",
+    },
+    {
+      name: "className",
+      type: "string",
+      description: "Optional className passed to the accordion item element.",
+    },
+  ]}
+/>

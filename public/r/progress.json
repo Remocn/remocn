@@ -1,0 +1,27 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "progress",
+  "title": "UI Progress",
+  "description": "A progress bar whose fill is a pure function of a numeric value channel (value-channel deviation). The Progress renderer takes a clamped 0–100 value; useProgressTransition reads the frame and eases the fill between value steps. Muted track + primary indicator, optional floored percentage label.",
+  "dependencies": [
+    "remotion"
+  ],
+  "registryDependencies": [
+    "@remocn/remocn-ui"
+  ],
+  "files": [
+    {
+      "path": "registry/remocn-ui/progress/index.tsx",
+      "content": "\"use client\";\n\nimport { clamp01, type RemocnTheme, useRemocnTheme } from \"@/lib/remocn-ui\";\n\nexport interface ProgressStyle {\n  value: number;\n}\n\nexport interface ProgressProps {\n  value?: number;\n  style?: ProgressStyle;\n  width?: number;\n  showLabel?: boolean;\n  theme?: Partial<RemocnTheme>;\n  mode?: \"light\" | \"dark\";\n  className?: string;\n}\n\nconst TRACK_HEIGHT = 12;\n\nfunction clampValue(value: number): number {\n  return clamp01(value / 100) * 100;\n}\n\nexport function Progress({\n  value = 0,\n  style,\n  width = 320,\n  showLabel = false,\n  theme: themeOverride,\n  mode,\n  className,\n}: ProgressProps) {\n  const theme = useRemocnTheme(themeOverride, mode);\n  const v = clampValue(style ? style.value : value);\n\n  const track = theme.muted;\n  const indicator = theme.primary;\n\n  return (\n    <div\n      className={className}\n      style={{\n        display: \"inline-flex\",\n        alignItems: \"center\",\n        gap: 12,\n        fontFamily:\n          \"var(--font-geist-sans), -apple-system, BlinkMacSystemFont, sans-serif\",\n      }}\n    >\n      {}\n      <div\n        style={{\n          position: \"relative\",\n          width,\n          height: TRACK_HEIGHT,\n          borderRadius: TRACK_HEIGHT / 2,\n          background: track,\n          overflow: \"hidden\",\n        }}\n      >\n        <div\n          style={{\n            position: \"absolute\",\n            left: 0,\n            top: 0,\n            bottom: 0,\n            width: `${v}%`,\n            borderRadius: TRACK_HEIGHT / 2,\n            background: indicator,\n          }}\n        />\n      </div>\n      {showLabel && (\n        <span\n          style={{\n            fontSize: 14,\n            fontWeight: 500,\n            fontVariantNumeric: \"tabular-nums\",\n            color: theme.mutedForeground,\n            minWidth: \"3ch\",\n            textAlign: \"right\",\n          }}\n        >\n          {Math.floor(v)}%\n        </span>\n      )}\n    </div>\n  );\n}\n",
+      "type": "registry:component",
+      "target": "components/remocn/progress.tsx"
+    },
+    {
+      "path": "registry/remocn-ui/progress/use-progress-transition.ts",
+      "content": "\"use client\";\n\nimport { useCurrentFrame } from \"remotion\";\nimport { clamp01, type EasingName, easings } from \"@/lib/remocn-ui\";\nimport type { ProgressStyle } from \"@/components/remocn/progress\";\n\nexport interface ProgressStep {\n  at: number;\n  value: number;\n  duration?: number;\n  easing?: EasingName;\n}\n\nexport const DEFAULT_DURATION = 24;\n\nexport interface ProgressTransitionOptions {\n  speed?: number;\n  defaultDuration?: number;\n}\n\nexport function tweenProgressStyle(\n  a: ProgressStyle,\n  b: ProgressStyle,\n  t: number,\n): ProgressStyle {\n  return { value: a.value + (b.value - a.value) * t };\n}\n\nexport function useProgressTransition(\n  steps: ProgressStep[],\n  opts: ProgressTransitionOptions = {},\n): ProgressStyle {\n  const { speed = 1 } = opts;\n  const raw = useCurrentFrame() * speed;\n  return progressValueAt(steps, raw, opts);\n}\n\nexport function progressValueAt(\n  steps: ProgressStep[],\n  raw: number,\n  opts: ProgressTransitionOptions = {},\n): ProgressStyle {\n  const { defaultDuration = DEFAULT_DURATION } = opts;\n\n  if (steps.length === 0) return { value: 0 };\n\n  const first = steps[0];\n\n  if (raw <= first.at) return { value: first.value };\n\n  let toIndex = steps.length - 1;\n  for (let i = 1; i < steps.length; i++) {\n    if (steps[i].at > raw) {\n      toIndex = i;\n      break;\n    }\n  }\n  const pastLast = raw >= steps[steps.length - 1].at;\n  const to = pastLast ? steps[steps.length - 1] : steps[toIndex];\n  const from = pastLast ? steps[steps.length - 1] : steps[toIndex - 1];\n\n  const dur = to.duration ?? defaultDuration;\n  const ease = easings[to.easing ?? \"out\"];\n  const start = to.at - dur;\n  const t = pastLast || dur <= 0 ? 1 : ease(clamp01((raw - start) / dur));\n  const value = from.value + (to.value - from.value) * t;\n\n  return { value };\n}\n",
+      "type": "registry:component",
+      "target": "components/remocn/use-progress-transition.ts"
+    }
+  ],
+  "type": "registry:component"
+}

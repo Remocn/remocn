@@ -105,6 +105,70 @@ import { TrackingIn } from "@/registry/remocn/tracking-in";
 import { trackingInConfig } from "@/registry/remocn/tracking-in/config";
 import { Typewriter } from "@/registry/remocn/typewriter";
 import { typewriterConfig } from "@/registry/remocn/typewriter/config";
+import { Accordion } from "@/registry/remocn-ui/accordion";
+import { accordionConfig } from "@/registry/remocn-ui/accordion/config";
+import { AlertDialog } from "@/registry/remocn-ui/alert-dialog";
+import { alertDialogConfig } from "@/registry/remocn-ui/alert-dialog/config";
+import { Dialog } from "@/registry/remocn-ui/dialog";
+import { dialogConfig } from "@/registry/remocn-ui/dialog/config";
+import { Drawer } from "@/registry/remocn-ui/drawer";
+import { drawerConfig } from "@/registry/remocn-ui/drawer/config";
+import { Sheet } from "@/registry/remocn-ui/sheet";
+import { sheetConfig } from "@/registry/remocn-ui/sheet/config";
+import { Button } from "@/registry/remocn-ui/button";
+import { buttonConfig } from "@/registry/remocn-ui/button/config";
+import { Checkbox } from "@/registry/remocn-ui/checkbox";
+import { checkboxConfig } from "@/registry/remocn-ui/checkbox/config";
+import { Input } from "@/registry/remocn-ui/input";
+import { inputConfig } from "@/registry/remocn-ui/input/config";
+import { BlurInPreview } from "@/registry/remocn-ui/blur-in/preview";
+import { blurInConfig } from "@/registry/remocn-ui/blur-in/config";
+import { Radio } from "@/registry/remocn-ui/radio";
+import { radioConfig } from "@/registry/remocn-ui/radio/config";
+import { Spinner } from "@/registry/remocn-ui/spinner";
+import { spinnerConfig } from "@/registry/remocn-ui/spinner/config";
+import { Switch } from "@/registry/remocn-ui/switch";
+import { switchConfig } from "@/registry/remocn-ui/switch/config";
+import { Select } from "@/registry/remocn-ui/select";
+import { selectConfig } from "@/registry/remocn-ui/select/config";
+import { SelectItem } from "@/registry/remocn-ui/select-item";
+import { selectItemConfig } from "@/registry/remocn-ui/select-item/config";
+import { DropdownMenu } from "@/registry/remocn-ui/dropdown-menu";
+import { dropdownMenuConfig } from "@/registry/remocn-ui/dropdown-menu/config";
+import { DropdownMenuItem } from "@/registry/remocn-ui/dropdown-menu-item";
+import { dropdownMenuItemConfig } from "@/registry/remocn-ui/dropdown-menu-item/config";
+import { Tabs } from "@/registry/remocn-ui/tabs";
+import { tabsConfig } from "@/registry/remocn-ui/tabs/config";
+import { CursorPreview } from "@/registry/remocn-ui/cursor/preview";
+import { cursorConfig } from "@/registry/remocn-ui/cursor/config";
+import { ToastPreview } from "@/registry/remocn-ui/toast/preview";
+import { toastConfig } from "@/registry/remocn-ui/toast/config";
+import { CommandMenuItem } from "@/registry/remocn-ui/command-menu-item";
+import { commandMenuItemConfig } from "@/registry/remocn-ui/command-menu-item/config";
+import { CommandMenu } from "@/registry/remocn-ui/command-menu";
+import { commandMenuConfig } from "@/registry/remocn-ui/command-menu/config";
+import { TooltipPreview } from "@/registry/remocn-ui/tooltip/preview";
+import { tooltipConfig } from "@/registry/remocn-ui/tooltip/config";
+import { ProgressPreview } from "@/registry/remocn-ui/progress/preview";
+import { progressConfig } from "@/registry/remocn-ui/progress/config";
+import { SkeletonBlockPreview } from "@/registry/remocn-ui/skeleton-block/preview";
+import { skeletonBlockConfig } from "@/registry/remocn-ui/skeleton-block/config";
+import { SkeletonPreview } from "@/registry/remocn-ui/skeleton/preview";
+import { skeletonConfig } from "@/registry/remocn-ui/skeleton/config";
+import { SliderPreview } from "@/registry/remocn-ui/slider/preview";
+import { sliderConfig } from "@/registry/remocn-ui/slider/config";
+import { Combobox } from "@/registry/remocn-ui/combobox";
+import { comboboxConfig } from "@/registry/remocn-ui/combobox/config";
+import { PopoverPreview } from "@/registry/remocn-ui/popover/preview";
+import { popoverConfig } from "@/registry/remocn-ui/popover/config";
+import { ContextMenuPreview } from "@/registry/remocn-ui/context-menu/preview";
+import { contextMenuConfig } from "@/registry/remocn-ui/context-menu/config";
+import { ToggleGroup } from "@/registry/remocn-ui/toggle-group";
+import { toggleGroupConfig } from "@/registry/remocn-ui/toggle-group/config";
+import { StepperPreview } from "@/registry/remocn-ui/stepper/preview";
+import { stepperConfig } from "@/registry/remocn-ui/stepper/config";
+import { Resizable } from "@/registry/remocn-ui/resizable";
+import { resizableConfig } from "@/registry/remocn-ui/resizable/config";
 import { ZoomThroughTransition } from "@/registry/remocn/zoom-through-transition";
 import { zoomThroughTransitionConfig } from "@/registry/remocn/zoom-through-transition/config";
 
@@ -278,6 +342,79 @@ const registry: Record<string, RegistryEntry> = {
     config: imageExpandToFullscreenConfig,
   },
   "github-stars": { Component: GitHubStars, config: githubStarsConfig },
+  "button": { Component: Button, config: buttonConfig },
+  "accordion": { Component: Accordion, config: accordionConfig },
+  "alert-dialog": { Component: AlertDialog, config: alertDialogConfig },
+  "dialog": { Component: Dialog, config: dialogConfig },
+  "sheet": { Component: Sheet, config: sheetConfig },
+  "drawer": { Component: Drawer, config: drawerConfig },
+  "checkbox": { Component: Checkbox, config: checkboxConfig },
+  "input": { Component: Input, config: inputConfig },
+  // blur-in WRAPS a single child, so the customizer Component is the
+  // preview-only BlurInPreview wrapper (it supplies a fixed sample card and
+  // centers it on a stage); the shipped BlurIn is a pure child-wrapper.
+  "blur-in": { Component: BlurInPreview, config: blurInConfig },
+  "radio": { Component: Radio, config: radioConfig },
+  "switch": { Component: Switch, config: switchConfig },
+  "select": { Component: Select, config: selectConfig },
+  "select-item": { Component: SelectItem, config: selectItemConfig },
+  "dropdown-menu": { Component: DropdownMenu, config: dropdownMenuConfig },
+  "dropdown-menu-item": {
+    Component: DropdownMenuItem,
+    config: dropdownMenuItemConfig,
+  },
+  "tabs": { Component: Tabs, config: tabsConfig },
+  // cursor's customizer Component is the preview-only CursorPreview wrapper (it
+  // runs a fixed demo path through useCursorPath); the shipped Cursor is pure.
+  "cursor": { Component: CursorPreview, config: cursorConfig },
+  // toast's customizer Component is the preview-only ToastPreview wrapper (it
+  // centers the toast on a theme-background stage); the shipped Toast is a
+  // placement-agnostic card the caller positions.
+  "toast": { Component: ToastPreview, config: toastConfig },
+  "command-menu-item": {
+    Component: CommandMenuItem,
+    config: commandMenuItemConfig,
+  },
+  // command-menu needs NO preview wrapper: like dialog it renders an intrinsic
+  // inset:0 backdrop + centered panel, so the customizer mounts it directly.
+  "command-menu": { Component: CommandMenu, config: commandMenuConfig },
+  // tooltip's customizer Component is the preview-only TooltipPreview wrapper: a
+  // bare bubble has no backdrop and would not center as the composition root.
+  "tooltip": { Component: TooltipPreview, config: tooltipConfig },
+  // progress's customizer Component is the preview-only ProgressPreview wrapper:
+  // a bare inline bar would sit top-left, so the wrapper centers it on a stage.
+  "progress": { Component: ProgressPreview, config: progressConfig },
+  // skeleton-block is the shimmer motion atom; its preview centers the bare block
+  // on a stage. skeleton is the state atom whose preview supplies demo content +
+  // placeholder for the loading↔loaded crossfade.
+  "skeleton-block": {
+    Component: SkeletonBlockPreview,
+    config: skeletonBlockConfig,
+  },
+  "skeleton": { Component: SkeletonPreview, config: skeletonConfig },
+  // slider's customizer Component is the preview-only SliderPreview wrapper: a
+  // bare inline bar would sit top-left, so the wrapper centers it on a stage.
+  "slider": { Component: SliderPreview, config: sliderConfig },
+  // combobox registers RAW (no preview wrapper): like select it paints its own
+  // opaque inset:0 wrapper, so the customizer mounts it directly and it centers.
+  "combobox": { Component: Combobox, config: comboboxConfig },
+  // popover's customizer Component is the preview-only PopoverPreview wrapper: a
+  // bare card has no backdrop and would not center as the composition root.
+  "popover": { Component: PopoverPreview, config: popoverConfig },
+  // context-menu's customizer Component is the preview-only ContextMenuPreview
+  // wrapper: a bare panel (transparent, caller-positioned) would sit top-left,
+  // so the wrapper centers it on a stage.
+  "context-menu": { Component: ContextMenuPreview, config: contextMenuConfig },
+  // toggle-group registers RAW (no preview wrapper): like tabs it paints its own
+  // opaque inset:0 centered stage, so the customizer mounts it directly.
+  "toggle-group": { Component: ToggleGroup, config: toggleGroupConfig },
+  // stepper's customizer Component is the preview-only StepperPreview wrapper: a
+  // bare wide horizontal element would sit top-left, so the wrapper centers it.
+  "stepper": { Component: StepperPreview, config: stepperConfig },
+  // resizable registers RAW (no preview wrapper): its index.tsx already paints
+  // an opaque inset:0 stage that centers the fixed-size bordered box, like tabs.
+  "resizable": { Component: Resizable, config: resizableConfig },
+  "spinner": { Component: Spinner, config: spinnerConfig },
 };
 
 // Append the shared controls (e.g. `speed`) to every component config so

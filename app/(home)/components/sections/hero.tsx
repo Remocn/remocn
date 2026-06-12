@@ -4,7 +4,7 @@ import { Player, type PlayerRef } from "@remotion/player";
 import { ArrowRight, Pause, Play } from "lucide-react";
 import { motion } from "motion/react";
 import Link from "next/link";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { INSTALL_COMMAND, SPRING_BOUNCE } from "@/config/site";
@@ -41,6 +41,28 @@ export function Hero() {
     }
   }, [trackEvent]);
 
+  // Reliable autoplay — `<Player autoPlay>` mounts a tick before its imperative
+  // handle is ready (worse under Strict Mode's dev double-mount) and silently
+  // stalls (Pause UI, frozen frame). Mount paused and drive play() via the ref
+  // on the next animation frame with a one-shot retry. Mirrors PreviewStage /
+  // stars/hooks/use-player-controls.ts.
+  useEffect(() => {
+    let raf1 = 0;
+    let raf2 = 0;
+    raf1 = requestAnimationFrame(() => {
+      playerRef.current?.play();
+      raf2 = requestAnimationFrame(() => {
+        if (playerRef.current && !playerRef.current.isPlaying()) {
+          playerRef.current.play();
+        }
+      });
+    });
+    return () => {
+      if (raf1) cancelAnimationFrame(raf1);
+      if (raf2) cancelAnimationFrame(raf2);
+    };
+  }, []);
+
   const aspectRatio = heroEntry
     ? `${heroEntry.config.compositionWidth} / ${heroEntry.config.compositionHeight}`
     : "16 / 9";
@@ -61,11 +83,11 @@ export function Hero() {
               className="mb-5 h-7 gap-1.5 rounded-full px-3 text-xs"
               render={
                 <Link
-                  href="/stars"
+                  href="/docs/ui"
                   onClick={() =>
                     trackEvent("cta_clicked", {
-                      cta: "hero_stars_badge",
-                      destination: "/stars",
+                      cta: "hero_ui_badge",
+                      destination: "/docs/ui",
                     })
                   }
                 />
@@ -76,7 +98,7 @@ export function Hero() {
                 ·
               </span>
               <span className="text-muted-foreground">
-                Turn your repo&rsquo;s stars into a video
+                Introducing <span className="text-foreground">remocn/ui</span>
               </span>
               <ArrowRight className="size-3" aria-hidden="true" />
             </Badge>
@@ -151,7 +173,6 @@ export function Hero() {
                   compositionWidth={heroEntry.config.compositionWidth}
                   compositionHeight={heroEntry.config.compositionHeight}
                   style={{ width: "100%", height: "100%", display: "block" }}
-                  autoPlay
                   loop
                   acknowledgeRemotionLicense
                 />

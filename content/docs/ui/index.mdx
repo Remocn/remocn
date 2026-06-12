@@ -1,0 +1,19 @@
+---
+title: Introduction
+description: shadcn-style primitives scripted on the Remotion timeline
+---
+
+The `ui` tier brings familiar shadcn components — Button, Input, Checkbox, Switch, Spinner — into Remotion video. Instead of responding to mouse events, their interactions are **scripted on the timeline**: you declare what state a component is in and when, and it renders that state as a deterministic pure function of `useCurrentFrame()`.
+
+No `useState`. No event handlers. No CSS transitions. Every pixel is a function of the current frame — which is exactly what Remotion's headless per-frame renderer requires.
+
+## What makes this different from regular shadcn
+
+In a browser, a button enters its loading state because the user clicked. In a video, it enters that state because you authored `{ at: 35, state: "loading" }`. The component looks identical; the wiring is completely different.
+
+This also means you get things that are impossible in a real UI: scrub backward through a form fill, play a button click at half speed, or loop a checkbox toggle indefinitely — all without any special setup.
+
+## Where to go next
+
+- [Concepts](/docs/ui/concepts) — the mental model: two kinds of atom, timeline hooks, states, theming, and core exports.
+- [Installation](/docs/ui/installation) — add your first component to a Remotion project.

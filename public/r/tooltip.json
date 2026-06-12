@@ -1,0 +1,27 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "tooltip",
+  "title": "UI Tooltip",
+  "description": "A tooltip whose hidden/visible state is a pure function of the timeline. The Tooltip renderer is a pure function of a TooltipStyle (opacity, scale, translate); useTooltipTransition eases both the show and the hide. The static `side` prop sets the enter translate axis and the arrow placement.",
+  "dependencies": [
+    "remotion"
+  ],
+  "registryDependencies": [
+    "@remocn/remocn-ui"
+  ],
+  "files": [
+    {
+      "path": "registry/remocn-ui/tooltip/index.tsx",
+      "content": "\"use client\";\n\nimport { type RemocnTheme, useRemocnTheme } from \"@/lib/remocn-ui\";\n\nexport type TooltipState = \"hidden\" | \"visible\";\n\nexport type TooltipSide = \"top\" | \"bottom\" | \"left\" | \"right\";\n\nexport interface TooltipProps {\n  state?: TooltipState;\n  style?: TooltipStyle;\n  label: string;\n  side?: TooltipSide;\n  theme?: Partial<RemocnTheme>;\n  mode?: \"light\" | \"dark\";\n  className?: string;\n}\n\nconst ARROW = 10;\n\nexport interface TooltipStyle {\n  opacity: number;\n  scale: number;\n  translate: number;\n}\n\nexport function tooltipStyle(state: TooltipState): TooltipStyle {\n  switch (state) {\n    case \"visible\":\n      return { opacity: 1, scale: 1, translate: 0 };\n    default:\n      return { opacity: 0, scale: 0.96, translate: 4 };\n  }\n}\n\nfunction offsetFor(\n  side: TooltipSide,\n  translate: number,\n): {\n  x: number;\n  y: number;\n} {\n  switch (side) {\n    case \"bottom\":\n      return { x: 0, y: -translate };\n    case \"left\":\n      return { x: translate, y: 0 };\n    case \"right\":\n      return { x: -translate, y: 0 };\n    default:\n      return { x: 0, y: translate };\n  }\n}\n\nexport function Tooltip({\n  state = \"hidden\",\n  style,\n  label,\n  side = \"top\",\n  theme: themeOverride,\n  mode,\n  className,\n}: TooltipProps) {\n  const theme = useRemocnTheme(themeOverride, mode);\n  const v = style ?? tooltipStyle(state);\n\n  const bg = theme.foreground;\n  const fg = theme.background;\n  const { x, y } = offsetFor(side, v.translate);\n\n  const arrowStyle: React.CSSProperties = {\n    position: \"absolute\",\n    width: ARROW,\n    height: ARROW,\n    background: bg,\n    borderRadius: 2,\n    transform: \"rotate(45deg)\",\n    ...(side === \"top\" && {\n      bottom: -ARROW / 2,\n      left: \"50%\",\n      marginLeft: -ARROW / 2,\n    }),\n    ...(side === \"bottom\" && {\n      top: -ARROW / 2,\n      left: \"50%\",\n      marginLeft: -ARROW / 2,\n    }),\n    ...(side === \"left\" && {\n      right: -ARROW / 2,\n      top: \"50%\",\n      marginTop: -ARROW / 2,\n    }),\n    ...(side === \"right\" && {\n      left: -ARROW / 2,\n      top: \"50%\",\n      marginTop: -ARROW / 2,\n    }),\n  };\n\n  return (\n    <div\n      className={className}\n      style={{\n        position: \"relative\",\n        display: \"inline-flex\",\n        alignItems: \"center\",\n        opacity: v.opacity,\n        transform: `translate(${x}px, ${y}px) scale(${v.scale})`,\n        transformOrigin: \"center\",\n        fontFamily:\n          \"var(--font-geist-sans), -apple-system, BlinkMacSystemFont, sans-serif\",\n      }}\n    >\n      <div\n        style={{\n          position: \"relative\",\n          padding: \"6px 12px\",\n          background: bg,\n          color: fg,\n          fontSize: 12,\n          fontWeight: 500,\n          lineHeight: 1.3,\n          letterSpacing: \"-0.005em\",\n          borderRadius: theme.radius + 4,\n          whiteSpace: \"nowrap\",\n          boxShadow: \"0 4px 12px -4px rgba(0,0,0,0.25)\",\n        }}\n      >\n        {label}\n        {}\n        <span style={arrowStyle} />\n      </div>\n    </div>\n  );\n}\n",
+      "type": "registry:component",
+      "target": "components/remocn/tooltip.tsx"
+    },
+    {
+      "path": "registry/remocn-ui/tooltip/use-tooltip-transition.ts",
+      "content": "\"use client\";\n\nimport {\n  easings,\n  type Step,\n  useStateTransition,\n} from \"@/lib/remocn-ui\";\nimport {\n  tooltipStyle,\n  type TooltipState,\n  type TooltipStyle,\n} from \"@/components/remocn/tooltip\";\n\nexport const DEFAULT_DURATION = 8;\n\nexport function tweenTooltipStyle(\n  a: TooltipStyle,\n  b: TooltipStyle,\n  t: number,\n): TooltipStyle {\n  return {\n    opacity: a.opacity + (b.opacity - a.opacity) * t,\n    scale: a.scale + (b.scale - a.scale) * t,\n    translate: a.translate + (b.translate - a.translate) * t,\n  };\n}\n\nexport interface TooltipTransitionOptions {\n  mode?: \"light\" | \"dark\";\n  speed?: number;\n  defaultDuration?: number;\n}\n\nexport function useTooltipTransition(\n  steps: Step<TooltipState>[],\n  opts: TooltipTransitionOptions = {},\n): TooltipStyle {\n  const { speed = 1, defaultDuration = DEFAULT_DURATION } = opts;\n  const { from, to, progress } = useStateTransition(\n    steps,\n    \"hidden\",\n    speed,\n    defaultDuration,\n  );\n  const t = easings.out(progress);\n  return tweenTooltipStyle(tooltipStyle(from), tooltipStyle(to), t);\n}\n",
+      "type": "registry:component",
+      "target": "components/remocn/use-tooltip-transition.ts"
+    }
+  ],
+  "type": "registry:component"
+}
