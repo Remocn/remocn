@@ -59,6 +59,15 @@ export const sponsors: Sponsor[] = [
   },
 ].filter(sponsor => !sponsor.isPaste);
 
+/**
+ * The current "gold" sponsors — our highest tier is `partner`, so gold maps to
+ * the partner-tier entries. Returns an empty array when none are active, in
+ * which case the banner falls back to a "Your logo here" placeholder.
+ */
+export function getGoldSponsors(): Sponsor[] {
+  return sponsors.filter((sponsor) => sponsor.tier === "partner");
+}
+
 export type BillingMode = "monthly" | "one-time";
 
 export type Tier = {
