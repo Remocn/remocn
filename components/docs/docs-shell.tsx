@@ -56,13 +56,11 @@ export function DocsShell({
       sidebar={{ collapsible: false }}
       containerProps={{ className: "[--fd-banner-height:2.75rem]" }}
     >
-      <div className="relative isolate">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[360px] bg-grid-fade"
-        />
-        {children}
-      </div>
+      <div
+        aria-hidden
+        className="pointer-events-none -z-10 h-[360px] w-full self-start [grid-area:main] bg-grid-fade"
+      />
+      {children}
     </DocsLayout>
   );
 }

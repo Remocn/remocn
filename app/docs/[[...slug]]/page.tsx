@@ -5,6 +5,7 @@ import {
   DocsTitle,
 } from "fumadocs-ui/page";
 import { notFound } from "next/navigation";
+import { DocsAdRail } from "@/components/docs/docs-ad-rail";
 import { getMDXComponents } from "@/mdx-components";
 import { source } from "@/source";
 
@@ -20,9 +21,8 @@ export default async function Page(props: {
 
   return (
     <DocsPage
-      full
       breadcrumb={{ enabled: false }}
-      tableOfContent={{ enabled: false }}
+      tableOfContent={{ enabled: true, component: <DocsAdRail /> }}
       tableOfContentPopover={{ enabled: false }}
       footer={{ enabled: true }}
     >

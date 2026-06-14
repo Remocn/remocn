@@ -59,6 +59,10 @@ export const sponsors: Sponsor[] = [
   },
 ].filter(sponsor => !sponsor.isPaste);
 
+export function getGoldSponsors(): Sponsor[] {
+  return sponsors.filter((sponsor) => sponsor.tier === "partner");
+}
+
 export type BillingMode = "monthly" | "one-time";
 
 export type Tier = {

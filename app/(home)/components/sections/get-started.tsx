@@ -1,4 +1,3 @@
-import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { CodeBlockCommand } from "@/components/docs/code-block-command";
 import { convertNpmCommand } from "@/lib/convert-npm-command";
@@ -120,18 +119,6 @@ export function GetStarted() {
           </div>
           <FeaturedStep step={ADD} delay={0.08} />
         </div>
-
-        {/* <FadeUp delay={0.1}>
-          <div className="mt-8 flex justify-center">
-            <Link
-              href="/docs/getting-started/installation"
-              className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:text-foreground focus-visible:outline-none"
-            >
-              Read the full installation guide
-              <ArrowRight className="size-4" aria-hidden="true" />
-            </Link>
-          </div>
-        </FadeUp> */}
       </div>
     </section>
   );
