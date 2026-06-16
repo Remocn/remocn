@@ -21,11 +21,7 @@ export function StarsButton({
       {...props}
     >
       <Sparkles className="size-4 text-muted-foreground transition-colors group-hover:text-foreground" />
-      <ShimmeringText
-        text="Animate your stars"
-        duration={1.4}
-        className="[--color:var(--muted-foreground)] [--shimmering-color:var(--foreground)]"
-      />
+      <ShimmeringText text="Animate your stars" duration={1.4} />
     </Link>
   );
 }

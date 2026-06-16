@@ -244,22 +244,6 @@
       "type": "registry:component"
     },
     {
-      "name": "spring-pop-in",
-      "title": "Spring Pop In",
-      "description": "Elastic spring-driven scale-in wrapper for any child element.",
-      "dependencies": [
-        "remotion"
-      ],
-      "files": [
-        {
-          "path": "registry/remocn/spring-pop-in/index.tsx",
-          "type": "registry:component",
-          "target": "components/remocn/spring-pop-in.tsx"
-        }
-      ],
-      "type": "registry:component"
-    },
-    {
       "name": "simulated-cursor",
       "title": "Simulated Cursor",
       "description": "Animated mouse cursor moving between waypoints with click ripple feedback.",
@@ -340,22 +324,6 @@
       "type": "registry:component"
     },
     {
-      "name": "bounding-box-selector",
-      "title": "Bounding Box Selector",
-      "description": "Figma-style selection rectangle appears around any element.",
-      "dependencies": [
-        "remotion"
-      ],
-      "files": [
-        {
-          "path": "registry/remocn/bounding-box-selector/index.tsx",
-          "type": "registry:component",
-          "target": "components/remocn/bounding-box-selector.tsx"
-        }
-      ],
-      "type": "registry:component"
-    },
-    {
       "name": "animated-line-chart",
       "title": "Animated Line Chart",
       "description": "Line chart whose SVG path draws on from left to right with a leading dot.",
@@ -415,22 +383,6 @@
           "path": "registry/remocn/code-diff-wipe/index.tsx",
           "type": "registry:component",
           "target": "components/remocn/code-diff-wipe.tsx"
-        }
-      ],
-      "type": "registry:component"
-    },
-    {
-      "name": "toast-notification",
-      "title": "Toast Notification",
-      "description": "System-style toast pops in, holds, then slides out.",
-      "dependencies": [
-        "remotion"
-      ],
-      "files": [
-        {
-          "path": "registry/remocn/toast-notification/index.tsx",
-          "type": "registry:component",
-          "target": "components/remocn/toast-notification.tsx"
         }
       ],
       "type": "registry:component"
@@ -548,22 +500,6 @@
       "type": "registry:component"
     },
     {
-      "name": "success-confetti",
-      "title": "Success Confetti",
-      "description": "Deterministic seeded confetti burst with optional headline.",
-      "dependencies": [
-        "remotion"
-      ],
-      "files": [
-        {
-          "path": "registry/remocn/success-confetti/index.tsx",
-          "type": "registry:component",
-          "target": "components/remocn/success-confetti.tsx"
-        }
-      ],
-      "type": "registry:component"
-    },
-    {
       "name": "frosted-glass-wipe",
       "title": "Frosted Glass Wipe",
       "description": "Elegant scene transition through a sliding pane of frosted glass.",
@@ -575,22 +511,6 @@
           "path": "registry/remocn/frosted-glass-wipe/index.tsx",
           "type": "registry:component",
           "target": "components/remocn/frosted-glass-wipe.tsx"
-        }
-      ],
-      "type": "registry:component"
-    },
-    {
-      "name": "kinetic-type-mask",
-      "title": "Kinetic Type Mask",
-      "description": "Use giant typography as a window into the next scene.",
-      "dependencies": [
-        "remotion"
-      ],
-      "files": [
-        {
-          "path": "registry/remocn/kinetic-type-mask/index.tsx",
-          "type": "registry:component",
-          "target": "components/remocn/kinetic-type-mask.tsx"
         }
       ],
       "type": "registry:component"

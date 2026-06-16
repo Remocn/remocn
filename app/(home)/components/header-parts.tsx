@@ -47,7 +47,6 @@ export function HeaderActions() {
       </div>
       <ThemeToggle />
 
-      {/* Mobile nav trigger */}
       <Sheet>
         <SheetTrigger
           render={

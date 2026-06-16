@@ -9,8 +9,6 @@ import { AnimatedLineChart } from "@/registry/remocn/animated-line-chart";
 import { animatedLineChartConfig } from "@/registry/remocn/animated-line-chart/config";
 import { BlurReveal } from "@/registry/remocn/blur-reveal";
 import { blurRevealConfig } from "@/registry/remocn/blur-reveal/config";
-import { BoundingBoxSelector } from "@/registry/remocn/bounding-box-selector";
-import { boundingBoxSelectorConfig } from "@/registry/remocn/bounding-box-selector/config";
 import { BrowserFlow } from "@/registry/remocn/browser-flow";
 import { browserFlowConfig } from "@/registry/remocn/browser-flow/config";
 import { ChatToPreviewLayout } from "@/registry/remocn/chat-to-preview-layout";
@@ -53,8 +51,6 @@ import { InfiniteMarquee } from "@/registry/remocn/infinite-marquee";
 import { infiniteMarqueeConfig } from "@/registry/remocn/infinite-marquee/config";
 import { InlineHighlight } from "@/registry/remocn/inline-highlight";
 import { inlineHighlightConfig } from "@/registry/remocn/inline-highlight/config";
-import { KineticTypeMask } from "@/registry/remocn/kinetic-type-mask";
-import { kineticTypeMaskConfig } from "@/registry/remocn/kinetic-type-mask/config";
 import { LandingCodeShowcase } from "@/registry/remocn/landing-code-showcase";
 import { landingCodeShowcaseConfig } from "@/registry/remocn/landing-code-showcase/config";
 import { LiveCodeCompilation } from "@/registry/remocn/live-code-compilation";
@@ -85,20 +81,14 @@ import { SpatialPush } from "@/registry/remocn/spatial-push";
 import { spatialPushConfig } from "@/registry/remocn/spatial-push/config";
 import { SpotlightCard } from "@/registry/remocn/spotlight-card";
 import { spotlightCardConfig } from "@/registry/remocn/spotlight-card/config";
-import { SpringPopIn } from "@/registry/remocn/spring-pop-in";
-import { springPopInConfig } from "@/registry/remocn/spring-pop-in/config";
 import { StaggeredFadeUp } from "@/registry/remocn/staggered-fade-up";
 import { staggeredFadeUpConfig } from "@/registry/remocn/staggered-fade-up/config";
 import { StrikethroughReplace } from "@/registry/remocn/strikethrough-replace";
 import { strikethroughReplaceConfig } from "@/registry/remocn/strikethrough-replace/config";
-import { SuccessConfetti } from "@/registry/remocn/success-confetti";
-import { successConfettiConfig } from "@/registry/remocn/success-confetti/config";
 import { TerminalSimulator } from "@/registry/remocn/terminal-simulator";
 import { terminalSimulatorConfig } from "@/registry/remocn/terminal-simulator/config";
 import { TerminalToBrowserDeploy } from "@/registry/remocn/terminal-to-browser-deploy";
 import { terminalToBrowserDeployConfig } from "@/registry/remocn/terminal-to-browser-deploy/config";
-import { ToastNotification } from "@/registry/remocn/toast-notification";
-import { toastNotificationConfig } from "@/registry/remocn/toast-notification/config";
 import { ToolMenuSlideIn } from "@/registry/remocn/tool-menu-slide-in";
 import { toolMenuSlideInConfig } from "@/registry/remocn/tool-menu-slide-in/config";
 import { TrackingIn } from "@/registry/remocn/tracking-in";
@@ -228,7 +218,6 @@ const registry: Record<string, RegistryEntry> = {
     config: meshGradientBgConfig,
   },
   "dynamic-grid": { Component: DynamicGrid, config: dynamicGridConfig },
-  "spring-pop-in": { Component: SpringPopIn, config: springPopInConfig },
   "simulated-cursor": {
     Component: SimulatedCursor,
     config: simulatedCursorConfig,
@@ -249,10 +238,6 @@ const registry: Record<string, RegistryEntry> = {
     Component: ChatToPreviewLayout,
     config: chatToPreviewLayoutConfig,
   },
-  "bounding-box-selector": {
-    Component: BoundingBoxSelector,
-    config: boundingBoxSelectorConfig,
-  },
   "animated-line-chart": {
     Component: AnimatedLineChart,
     config: animatedLineChartConfig,
@@ -266,26 +251,14 @@ const registry: Record<string, RegistryEntry> = {
     config: terminalSimulatorConfig,
   },
   "code-diff-wipe": { Component: CodeDiffWipe, config: codeDiffWipeConfig },
-  "toast-notification": {
-    Component: ToastNotification,
-    config: toastNotificationConfig,
-  },
   "drag-and-drop-flow": {
     Component: DragAndDropFlow,
     config: dragAndDropFlowConfig,
   },
   "progress-steps": { Component: ProgressSteps, config: progressStepsConfig },
-  "success-confetti": {
-    Component: SuccessConfetti,
-    config: successConfettiConfig,
-  },
   "frosted-glass-wipe": {
     Component: FrostedGlassWipe,
     config: frostedGlassWipeConfig,
-  },
-  "kinetic-type-mask": {
-    Component: KineticTypeMask,
-    config: kineticTypeMaskConfig,
   },
   "spatial-push": { Component: SpatialPush, config: spatialPushConfig },
   "grid-pixelate-wipe": {
