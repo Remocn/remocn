@@ -214,20 +214,6 @@
       ]
     },
     {
-      "name": "spring-pop-in",
-      "type": "registry:component",
-      "title": "Spring Pop In",
-      "description": "Elastic spring-driven scale-in wrapper for any child element.",
-      "dependencies": ["remotion"],
-      "files": [
-        {
-          "path": "spring-pop-in/index.tsx",
-          "type": "registry:component",
-          "target": "components/remocn/spring-pop-in.tsx"
-        }
-      ]
-    },
-    {
       "name": "simulated-cursor",
       "type": "registry:component",
       "title": "Simulated Cursor",
@@ -298,20 +284,6 @@
       ]
     },
     {
-      "name": "bounding-box-selector",
-      "type": "registry:component",
-      "title": "Bounding Box Selector",
-      "description": "Figma-style selection rectangle appears around any element.",
-      "dependencies": ["remotion"],
-      "files": [
-        {
-          "path": "bounding-box-selector/index.tsx",
-          "type": "registry:component",
-          "target": "components/remocn/bounding-box-selector.tsx"
-        }
-      ]
-    },
-    {
       "name": "animated-line-chart",
       "type": "registry:component",
       "title": "Animated Line Chart",
@@ -364,20 +336,6 @@
           "path": "code-diff-wipe/index.tsx",
           "type": "registry:component",
           "target": "components/remocn/code-diff-wipe.tsx"
-        }
-      ]
-    },
-    {
-      "name": "toast-notification",
-      "type": "registry:component",
-      "title": "Toast Notification",
-      "description": "System-style toast pops in, holds, then slides out.",
-      "dependencies": ["remotion"],
-      "files": [
-        {
-          "path": "toast-notification/index.tsx",
-          "type": "registry:component",
-          "target": "components/remocn/toast-notification.tsx"
         }
       ]
     },
@@ -476,20 +434,6 @@
           "path": "perspective-marquee/index.tsx",
           "type": "registry:component",
           "target": "components/remocn/perspective-marquee.tsx"
-        }
-      ]
-    },
-    {
-      "name": "success-confetti",
-      "type": "registry:component",
-      "title": "Success Confetti",
-      "description": "Deterministic seeded confetti burst with optional headline.",
-      "dependencies": ["remotion"],
-      "files": [
-        {
-          "path": "success-confetti/index.tsx",
-          "type": "registry:component",
-          "target": "components/remocn/success-confetti.tsx"
         }
       ]
     },
