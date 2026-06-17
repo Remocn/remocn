@@ -1,0 +1,112 @@
+---
+title: v0
+description: Animated Vercel v0 composer that types a prompt and morphs the mic button into a send button
+---
+
+<ComponentPreview name="v0" />
+
+## Installation
+
+<InstallBlock name="v0" />
+
+<Note>
+  Installing `v0` pulls the `caret` primitive and the `remocn-ui` core lib (which provides the shared `useTypewriter` hook) via `registryDependencies`, plus the `Inter` font via `@remotion/google-fonts` automatically. No additional install needed.
+</Note>
+
+## Usage
+
+Standalone in a Remotion `<Composition>` — renders immediately after install:
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { V0 } from "@/components/remocn/v0";
+
+const V0Scene = () => (
+  <V0
+    greeting="What do you want to create?"
+    placeholder="Ask v0 to build…"
+    prompt="a landing page for my SaaS with pricing and testimonials"
+    modelName="v0 Max"
+    projectName="Project"
+    theme="dark"
+    background="surface"
+    speed={1}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="V0"
+    component={V0Scene}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Timeline: heading + box ease in (0–16), default state with blinking caret holds (16–42), the prompt types in from frame 42, the white mic button morphs into a send button the instant text appears, then holds to the end.
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "greeting",
+      type: "string",
+      default: "\"What do you want to create?\"",
+      description: "Bold heading above the box",
+    },
+    {
+      name: "placeholder",
+      type: "string",
+      default: "\"Ask v0 to build…\"",
+      description: "Muted placeholder before typing",
+    },
+    {
+      name: "prompt",
+      type: "string",
+      default: "\"a landing page for my SaaS with pricing and testimonials\"",
+      description: "The text that types in character-by-character",
+    },
+    {
+      name: "modelName",
+      type: "string",
+      default: "\"v0 Max\"",
+      description: "Model chip label in the toolbar",
+    },
+    {
+      name: "projectName",
+      type: "string",
+      default: "\"Project\"",
+      description: "Project selector label",
+    },
+    {
+      name: "theme",
+      type: "\"light\" | \"dark\"",
+      default: "\"dark\"",
+      description: "Dark or light color theme",
+    },
+    {
+      name: "background",
+      type: "\"surface\" | \"transparent\"",
+      default: "\"surface\"",
+      description: "Page background fill or transparent",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Animation speed multiplier (minimum 1 so the prompt finishes typing)",
+    },
+  ]}
+/>
+
+## Notes
+
+- **Dark by default:** Defaults to the dark v0 look.
+- **Button morph:** The mic-to-send morph is gated purely on text presence — the moment the prompt has any characters, the send button appears.
+- **Offline-friendly:** No network requests or images are used, so the preview works offline and MP4 export requires no CORS setup.
+- **Shared hook:** Reuses the `useTypewriter` hook and the `caret` primitive shared with the other chat components.

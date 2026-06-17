@@ -1,0 +1,50 @@
+---
+title: AI
+description: Animated AI tool interfaces — chat composers and CLI welcome screens that type a prompt
+---
+
+Recreations of the interfaces people open every day to talk to AI — chat composers and coding-agent CLIs. Each one types a prompt on the timeline and shares the same `useTypewriter` hook and `caret` primitive.
+
+## Chat composers
+
+<ComponentCardGrid
+  items={[
+    {
+      name: "ClaudeChat",
+      description: "Claude chat input — types a prompt and the waveform button morphs into a send button",
+      status: "stable",
+      href: "/docs/ai/claude-chat",
+    },
+    {
+      name: "ChatGPT",
+      description: "ChatGPT composer — types a prompt, morphs the voice button to send, and fades the suggestion chips",
+      status: "stable",
+      href: "/docs/ai/chat-gpt",
+    },
+    {
+      name: "v0",
+      description: "Vercel v0 composer — types into the dark textarea and morphs the mic button into a send button",
+      status: "stable",
+      href: "/docs/ai/v0",
+    },
+  ]}
+/>
+
+## Coding agents
+
+<ComponentCardGrid
+  items={[
+    {
+      name: "ClaudeCode",
+      description: "Claude Code CLI welcome screen — types a command into the terminal prompt with a block cursor",
+      status: "stable",
+      href: "/docs/ai/claude-code",
+    },
+    {
+      name: "OpenCode",
+      description: "OpenCode TUI welcome screen — types a query into the input below the wordmark",
+      status: "stable",
+      href: "/docs/ai/opencode",
+    },
+  ]}
+/>

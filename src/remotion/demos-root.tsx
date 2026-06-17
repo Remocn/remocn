@@ -1,6 +1,7 @@
 import type { ComponentType } from "react";
 import { loadFont } from "@remotion/google-fonts/Geist";
 import { AbsoluteFill, Composition, Loop, registerRoot } from "remotion";
+import { aiExamples } from "@/components/docs/examples/ai";
 import { examples } from "@/components/docs/examples";
 import { blockExamples } from "@/components/docs/examples/blocks";
 
@@ -9,7 +10,7 @@ import { blockExamples } from "@/components/docs/examples/blocks";
  * the composition `blockExamples` (keyed `<name>-flow`). Key namespaces don't
  * overlap, and both records share the timing/scene shape this root consumes.
  */
-const ALL_SCENES = { ...examples, ...blockExamples };
+const ALL_SCENES = { ...examples, ...blockExamples, ...aiExamples };
 
 /**
  * Demos bundle root. Auto-declares one Remotion composition per docs example

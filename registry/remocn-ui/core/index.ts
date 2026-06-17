@@ -3,9 +3,12 @@ export {
   clamp01,
   framesFor,
   revealCount,
+  revealedText,
   useCurrentState,
   useStateTransition,
+  useTypewriter,
 } from "./timeline";
+export type { TypewriterOptions, TypewriterState } from "./timeline";
 export {
   mixOklch,
   oklchToRgb,

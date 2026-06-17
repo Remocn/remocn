@@ -23,6 +23,7 @@
       "title": "Typewriter",
       "description": "Character-by-character text reveal with a deterministic blinking cursor.",
       "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/remocn-ui", "@remocn/caret"],
       "files": [
         {
           "path": "typewriter/index.tsx",
@@ -702,6 +703,81 @@
           "path": "x-followers-overview/index.tsx",
           "type": "registry:component",
           "target": "components/remocn/x-followers-overview.tsx"
+        }
+      ]
+    },
+    {
+      "name": "claude-chat",
+      "type": "registry:component",
+      "title": "Claude Chat",
+      "description": "Animated Claude chat input — types a prompt character-by-character and the waveform button morphs into a terracotta send button the moment text appears. Warm light/dark themes.",
+      "dependencies": ["remotion", "@remotion/google-fonts"],
+      "registryDependencies": ["@remocn/caret", "@remocn/remocn-ui"],
+      "files": [
+        {
+          "path": "claude-chat/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/claude-chat.tsx"
+        }
+      ]
+    },
+    {
+      "name": "chat-gpt",
+      "type": "registry:component",
+      "title": "ChatGPT",
+      "description": "Animated ChatGPT composer — types a prompt into the pill input, the blue voice button morphs into a send button, and the suggestion chips fade out. Light/dark themes.",
+      "dependencies": ["remotion", "@remotion/google-fonts"],
+      "registryDependencies": ["@remocn/caret", "@remocn/remocn-ui"],
+      "files": [
+        {
+          "path": "chat-gpt/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/chat-gpt.tsx"
+        }
+      ]
+    },
+    {
+      "name": "v0",
+      "type": "registry:component",
+      "title": "v0",
+      "description": "Animated Vercel v0 composer — types a prompt into the dark textarea and the mic button morphs into a send button. Dark/light themes.",
+      "dependencies": ["remotion", "@remotion/google-fonts"],
+      "registryDependencies": ["@remocn/caret", "@remocn/remocn-ui"],
+      "files": [
+        {
+          "path": "v0/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/v0.tsx"
+        }
+      ]
+    },
+    {
+      "name": "claude-code",
+      "type": "registry:component",
+      "title": "Claude Code",
+      "description": "Animated Claude Code CLI welcome screen — terminal window with a dashed welcome box, recent activity and what's new panels, and a prompt line that types a command with a block cursor. Dark/light themes.",
+      "dependencies": ["remotion", "@remotion/google-fonts"],
+      "registryDependencies": ["@remocn/caret", "@remocn/remocn-ui"],
+      "files": [
+        {
+          "path": "claude-code/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/claude-code.tsx"
+        }
+      ]
+    },
+    {
+      "name": "opencode",
+      "type": "registry:component",
+      "title": "OpenCode",
+      "description": "Animated OpenCode TUI welcome screen — two-tone wordmark, an input box with a blue accent bar that types a query, a model status line, and command hints. Dark/light themes.",
+      "dependencies": ["remotion", "@remotion/google-fonts"],
+      "registryDependencies": ["@remocn/caret", "@remocn/remocn-ui"],
+      "files": [
+        {
+          "path": "opencode/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/opencode.tsx"
         }
       ]
     },

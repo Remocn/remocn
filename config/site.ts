@@ -44,6 +44,11 @@ export const NEW_BADGE_PATHS = new Set<string>([
   "/docs/social/x-follow-card",
   "/docs/social/x-followers-overview",
   "/docs/effects/confetti",
+  "/docs/ai/claude-chat",
+  "/docs/ai/chat-gpt",
+  "/docs/ai/v0",
+  "/docs/ai/claude-code",
+  "/docs/ai/opencode",
 ]);
 
 export const FOOTER_NAV: NavLink[] = [

@@ -56,6 +56,34 @@ describe("revealCount (typewriter math)", () => {
   });
 });
 
+function revealedText(full: string, count: number): string {
+  const c = Math.max(0, Math.min(full.length, Math.floor(count)));
+  return full.slice(0, c);
+}
+
+describe("revealedText", () => {
+  it("returns an empty string for a count of 0 or less", () => {
+    expect(revealedText("hello", 0)).toBe("");
+    expect(revealedText("hello", -5)).toBe("");
+  });
+
+  it("returns the full string once count reaches the length", () => {
+    expect(revealedText("hello", 5)).toBe("hello");
+  });
+
+  it("clamps a count beyond the length to the full string", () => {
+    expect(revealedText("hello", 99)).toBe("hello");
+  });
+
+  it("returns the leading slice for a mid-flight count", () => {
+    expect(revealedText("hello", 3)).toBe("hel");
+  });
+
+  it("floors a fractional count", () => {
+    expect(revealedText("hello", 2.9)).toBe("he");
+  });
+});
+
 interface Step<S extends string = string> {
   at: number;
   state: S;

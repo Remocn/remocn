@@ -26,6 +26,10 @@
       "dependencies": [
         "remotion"
       ],
+      "registryDependencies": [
+        "@remocn/remocn-ui",
+        "@remocn/caret"
+      ],
       "files": [
         {
           "path": "registry/remocn/typewriter/index.tsx",
@@ -774,6 +778,167 @@
       "type": "registry:component"
     },
     {
+      "name": "x-follow-card",
+      "title": "X Follow Card",
+      "description": "Animated X profile follow card — spring bounce-in, staggered blur-in, a synthetic cursor that clicks Follow and flips it to Following. Light/dark, horizontal or vertical.",
+      "dependencies": [
+        "remotion",
+        "@remotion/google-fonts"
+      ],
+      "registryDependencies": [
+        "@remocn/cursor"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn/x-follow-card/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/x-follow-card.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "x-followers-overview",
+      "title": "X Followers Overview",
+      "description": "X follow notifications cycle through as 3D flipping text — '<name> followed you · 7h' — then the total follower count pops in with a confetti burst. Hardcoded sample list (X API ready). Light/dark, horizontal or vertical.",
+      "dependencies": [
+        "remotion",
+        "@remotion/google-fonts"
+      ],
+      "registryDependencies": [
+        "@remocn/confetti"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn/x-followers-overview/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/x-followers-overview.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "claude-chat",
+      "title": "Claude Chat",
+      "description": "Animated Claude chat input — types a prompt character-by-character and the waveform button morphs into a terracotta send button the moment text appears. Warm light/dark themes.",
+      "dependencies": [
+        "remotion",
+        "@remotion/google-fonts"
+      ],
+      "registryDependencies": [
+        "@remocn/caret",
+        "@remocn/remocn-ui"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn/claude-chat/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/claude-chat.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "chat-gpt",
+      "title": "ChatGPT",
+      "description": "Animated ChatGPT composer — types a prompt into the pill input, the blue voice button morphs into a send button, and the suggestion chips fade out. Light/dark themes.",
+      "dependencies": [
+        "remotion",
+        "@remotion/google-fonts"
+      ],
+      "registryDependencies": [
+        "@remocn/caret",
+        "@remocn/remocn-ui"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn/chat-gpt/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/chat-gpt.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "v0",
+      "title": "v0",
+      "description": "Animated Vercel v0 composer — types a prompt into the dark textarea and the mic button morphs into a send button. Dark/light themes.",
+      "dependencies": [
+        "remotion",
+        "@remotion/google-fonts"
+      ],
+      "registryDependencies": [
+        "@remocn/caret",
+        "@remocn/remocn-ui"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn/v0/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/v0.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "claude-code",
+      "title": "Claude Code",
+      "description": "Animated Claude Code CLI welcome screen — terminal window with a dashed welcome box, recent activity and what's new panels, and a prompt line that types a command with a block cursor. Dark/light themes.",
+      "dependencies": [
+        "remotion",
+        "@remotion/google-fonts"
+      ],
+      "registryDependencies": [
+        "@remocn/caret",
+        "@remocn/remocn-ui"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn/claude-code/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/claude-code.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "opencode",
+      "title": "OpenCode",
+      "description": "Animated OpenCode TUI welcome screen — two-tone wordmark, an input box with a blue accent bar that types a query, a model status line, and command hints. Dark/light themes.",
+      "dependencies": [
+        "remotion",
+        "@remotion/google-fonts"
+      ],
+      "registryDependencies": [
+        "@remocn/caret",
+        "@remocn/remocn-ui"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn/opencode/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/opencode.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "confetti",
+      "title": "Confetti",
+      "description": "Deterministic confetti burst for Remotion — seeded particles with gravity, spin, and flutter so every render is identical. Fire it on any frame as a celebratory overlay.",
+      "dependencies": [
+        "remotion"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn/confetti/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/confetti.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
       "name": "remocn-ui",
       "title": "remocn UI Core",
       "description": "Shared timeline-fold hook, theme context, and color math for remocn UI primitives.",
@@ -828,6 +993,23 @@
           "path": "registry/remocn-ui/spinner/index.tsx",
           "type": "registry:component",
           "target": "components/remocn/spinner.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "caret",
+      "title": "UI Caret",
+      "description": "A blinking text caret — a controlled vertical bar, or a pure motion atom that blinks deterministically from useCurrentFrame.",
+      "dependencies": [
+        "remotion"
+      ],
+      "registryDependencies": [],
+      "files": [
+        {
+          "path": "registry/remocn-ui/caret/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/caret.tsx"
         }
       ],
       "type": "registry:component"
@@ -1057,7 +1239,8 @@
         "remotion"
       ],
       "registryDependencies": [
-        "@remocn/remocn-ui"
+        "@remocn/remocn-ui",
+        "@remocn/caret"
       ],
       "files": [
         {
