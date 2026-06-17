@@ -1,6 +1,12 @@
 "use client";
 
-import { mixOklch, type RemocnTheme, useRemocnTheme } from "@/lib/remocn-ui";
+import {
+  mixOklch,
+  type RemocnTheme,
+  revealedText,
+  useRemocnTheme,
+} from "@/lib/remocn-ui";
+import { Caret } from "@/components/remocn/caret";
 
 export type InputState =
   | "idle"
@@ -162,7 +168,7 @@ export function Input({
   const sizeStyle = SIZE_STYLES[size];
   const ctx = inputStyleContext(theme);
   const v = style ?? inputStyle(state, ctx);
-  const revealed = value.slice(0, Math.round(value.length * v.valueReveal));
+  const revealed = revealedText(value, Math.round(value.length * v.valueReveal));
 
   return (
     <div
@@ -212,16 +218,12 @@ export function Input({
           <span style={{ whiteSpace: "nowrap", color: ctx.foreground }}>
             {revealed}
           </span>
-          <span
-            style={{
-              flexShrink: 0,
-              width: 2,
-              height: Math.round(sizeStyle.fontSize * 1.1),
-              borderRadius: 1,
-              background: ctx.foreground,
-              opacity: v.caretOpacity,
-              marginLeft: revealed.length > 0 ? 4 : 0,
-            }}
+          <Caret
+            color={ctx.foreground}
+            height={Math.round(sizeStyle.fontSize * 1.1)}
+            radius={1}
+            opacity={v.caretOpacity}
+            marginLeft={revealed.length > 0 ? 4 : 0}
           />
         </div>
       </div>

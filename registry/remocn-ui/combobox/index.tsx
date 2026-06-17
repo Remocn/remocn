@@ -1,6 +1,6 @@
 "use client";
 
-import { type RemocnTheme, useRemocnTheme } from "@/lib/remocn-ui";
+import { type RemocnTheme, revealedText, useRemocnTheme } from "@/lib/remocn-ui";
 import {
   inputStyle,
   inputStyleContext,
@@ -43,7 +43,7 @@ export function filterComboboxItems(
   revealCount?: number,
 ): string[] {
   const visible = (
-    revealCount === undefined ? query : query.slice(0, revealCount)
+    revealCount === undefined ? query : revealedText(query, revealCount)
   )
     .trim()
     .toLowerCase();
@@ -122,7 +122,7 @@ export function Combobox({
   const v = style ?? comboboxStyle(state, ctx);
 
   const visibleQuery =
-    revealCount === undefined ? query : query.slice(0, revealCount);
+    revealCount === undefined ? query : revealedText(query, revealCount);
   const filtered = filterComboboxItems(items, query, revealCount);
 
   const trigger: InputStyle =

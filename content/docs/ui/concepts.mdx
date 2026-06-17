@@ -63,6 +63,27 @@ interface Step<S extends string = string> {
 }
 ```
 
+### `useTypewriter` — typed text reveal
+
+`useTypewriter` is the shared typewriter driver. It reads the frame and reveals a string character-by-character at a fixed rate, returning the revealed slice plus status flags. It composes `revealCount` (count math) and `revealedText` (the pure slice), so every surface that types text uses one source of truth.
+
+```ts
+function useTypewriter(
+  full: string,
+  options?: { cps?: number; speed?: number; startFrame?: number },
+): { text: string; count: number; done: boolean; typing: boolean }
+```
+
+- `cps` — characters per second (default `20`). `speed` scales the playhead; `startFrame` delays the start.
+- `typing` is `true` only while characters are still appearing; pair it with the `caret` primitive so the cursor stays solid mid-type and blinks otherwise:
+
+```tsx
+const tw = useTypewriter(text, { cps: 22, speed, startFrame: 42 });
+<span>{tw.text}<Caret blink={!tw.typing} speed={speed} /></span>
+```
+
+Components that already receive a controlled count (`combobox`, `command-menu`) or reveal by state-transition progress (`input`) call `revealedText(full, count)` directly instead of the hook, so they share the same slice without taking on a frame timer.
+
 `duration` is consumed by `useStateTransition` (and transition hooks). `useCurrentState` ignores it — snap resolution has no concept of transition length.
 
 ## States snap by default
@@ -152,7 +173,7 @@ Installing any component in this tier also installs `lib/remocn-ui/` with these 
 
 | Module | Key exports |
 |---|---|
-| `timeline.ts` | `useCurrentState`, `useStateTransition`, `framesFor`, `revealCount` |
+| `timeline.ts` | `useCurrentState`, `useStateTransition`, `useTypewriter`, `framesFor`, `revealCount`, `revealedText` |
 | `theme.ts` | `RemocnUIProvider`, `useRemocnTheme`, `defaultLightTheme`, `defaultDarkTheme` |
 | `color.ts` | `mixOklch`, `parseColor`, `oklchToRgb`, `rgbToOklch`, `toCss` |
 | `motion.ts` | `easings`, `springs` |

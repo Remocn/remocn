@@ -101,6 +101,8 @@ import { XFollowersOverview } from "@/registry/remocn/x-followers-overview";
 import { xFollowersOverviewConfig } from "@/registry/remocn/x-followers-overview/config";
 import { Confetti } from "@/registry/remocn/confetti";
 import { confettiConfig } from "@/registry/remocn/confetti/config";
+import { ClaudeChat } from "@/registry/remocn/claude-chat";
+import { claudeChatConfig } from "@/registry/remocn/claude-chat/config";
 import { Accordion } from "@/registry/remocn-ui/accordion";
 import { accordionConfig } from "@/registry/remocn-ui/accordion/config";
 import { AlertDialog } from "@/registry/remocn-ui/alert-dialog";
@@ -123,6 +125,8 @@ import { Radio } from "@/registry/remocn-ui/radio";
 import { radioConfig } from "@/registry/remocn-ui/radio/config";
 import { Spinner } from "@/registry/remocn-ui/spinner";
 import { spinnerConfig } from "@/registry/remocn-ui/spinner/config";
+import { CaretPreview } from "@/registry/remocn-ui/caret/preview";
+import { caretConfig } from "@/registry/remocn-ui/caret/config";
 import { Switch } from "@/registry/remocn-ui/switch";
 import { switchConfig } from "@/registry/remocn-ui/switch/config";
 import { Select } from "@/registry/remocn-ui/select";
@@ -327,6 +331,7 @@ const registry: Record<string, RegistryEntry> = {
     config: xFollowersOverviewConfig,
   },
   "confetti": { Component: Confetti, config: confettiConfig },
+  "claude-chat": { Component: ClaudeChat, config: claudeChatConfig },
   "button": { Component: Button, config: buttonConfig },
   "accordion": { Component: Accordion, config: accordionConfig },
   "alert-dialog": { Component: AlertDialog, config: alertDialogConfig },
@@ -400,6 +405,7 @@ const registry: Record<string, RegistryEntry> = {
   // an opaque inset:0 stage that centers the fixed-size bordered box, like tabs.
   "resizable": { Component: Resizable, config: resizableConfig },
   "spinner": { Component: Spinner, config: spinnerConfig },
+  "caret": { Component: CaretPreview, config: caretConfig },
 };
 
 // Append the shared controls (e.g. `speed`) to every component config so
@@ -442,6 +448,18 @@ if (xFollowCard) {
 const xFollowersOverview = registry["x-followers-overview"];
 if (xFollowersOverview) {
   xFollowersOverview.config.controls.speed = {
+    type: "number",
+    default: 1,
+    min: 1,
+    max: 4,
+    step: 0.25,
+    label: "Speed",
+  };
+}
+
+const claudeChat = registry["claude-chat"];
+if (claudeChat) {
+  claudeChat.config.controls.speed = {
     type: "number",
     default: 1,
     min: 1,

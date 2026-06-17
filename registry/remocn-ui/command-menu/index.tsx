@@ -1,6 +1,6 @@
 "use client";
 
-import { type RemocnTheme, useRemocnTheme } from "@/lib/remocn-ui";
+import { type RemocnTheme, revealedText, useRemocnTheme } from "@/lib/remocn-ui";
 import {
   CommandMenuItemRow,
   commandMenuItemStyle,
@@ -44,7 +44,7 @@ export function filterCommandItems(
   revealCount?: number,
 ): CommandMenuEntry[] {
   const visible = (
-    revealCount === undefined ? query : query.slice(0, revealCount)
+    revealCount === undefined ? query : revealedText(query, revealCount)
   )
     .trim()
     .toLowerCase();
@@ -145,7 +145,7 @@ export function CommandMenu({
   const v = style ?? commandMenuStyle(state, ctx);
 
   const visibleQuery =
-    revealCount === undefined ? query : query.slice(0, revealCount);
+    revealCount === undefined ? query : revealedText(query, revealCount);
   const filtered = filterCommandItems(items, query, revealCount);
 
   return (

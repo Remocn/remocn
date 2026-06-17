@@ -1,4 +1,4 @@
-import { useCurrentFrame } from "remotion";
+import { useCurrentFrame, useVideoConfig } from "remotion";
 import type { Step } from "./types";
 
 export function framesFor(d: number | { seconds: number }, fps: number): number {
@@ -18,6 +18,41 @@ export function revealCount(
 
 export function clamp01(t: number): number {
   return Math.max(0, Math.min(1, t));
+}
+
+export function revealedText(full: string, count: number): string {
+  const c = Math.max(0, Math.min(full.length, Math.floor(count)));
+  return full.slice(0, c);
+}
+
+export interface TypewriterOptions {
+  cps?: number;
+  speed?: number;
+  startFrame?: number;
+}
+
+export interface TypewriterState {
+  text: string;
+  count: number;
+  done: boolean;
+  typing: boolean;
+}
+
+export function useTypewriter(
+  full: string,
+  options: TypewriterOptions = {},
+): TypewriterState {
+  const { cps = 20, speed = 1, startFrame = 0 } = options;
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const local = frame * speed - startFrame;
+  const count = local <= 0 ? 0 : revealCount(local, fps, full.length, cps);
+  return {
+    text: revealedText(full, count),
+    count,
+    done: count >= full.length,
+    typing: count > 0 && count < full.length,
+  };
 }
 
 export function useCurrentState<S extends string>(

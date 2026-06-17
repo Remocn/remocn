@@ -1,0 +1,119 @@
+---
+title: Claude Chat
+description: Animated Claude chat input that types a prompt and morphs the waveform button into a send button
+---
+
+<ComponentPreview name="claude-chat" />
+
+## Installation
+
+<InstallBlock name="claude-chat" />
+
+<Note>
+  Installing `claude-chat` pulls the `Inter` and `Fraunces` fonts via `@remotion/google-fonts` automatically. No additional install needed.
+</Note>
+
+## Usage
+
+Standalone in a Remotion `<Composition>` — renders immediately after install:
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { ClaudeChat } from "@/components/remocn/claude-chat";
+
+const ClaudeChatScene = () => (
+  <ClaudeChat
+    greeting="Back at it, Dima"
+    placeholder="Try: draft an email · summarize a doc · plan your week"
+    prompt="Draft a launch tweet for our new release"
+    modelName="Opus 4.8"
+    modelTier="Max"
+    accentColor="#D97757"
+    theme="light"
+    background="surface"
+    speed={1}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="ClaudeChat"
+    component={ClaudeChatScene}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Timeline: card + greeting ease in (0–16), default state with blinking caret holds (16–42), the prompt types in from frame 42, and the waveform button morphs into the terracotta send button the instant text appears, then holds to the end.
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "greeting",
+      type: "string",
+      default: "\"Back at it, Dima\"",
+      description: "Serif greeting headline shown above the input",
+    },
+    {
+      name: "placeholder",
+      type: "string",
+      default: "\"Try: draft an email · summarize a doc · plan your week\"",
+      description: "Muted placeholder shown before typing begins",
+    },
+    {
+      name: "prompt",
+      type: "string",
+      default: "\"Draft a launch tweet for our new release\"",
+      description: "The text that types in character-by-character",
+    },
+    {
+      name: "modelName",
+      type: "string",
+      default: "\"Opus 4.8\"",
+      description: "Model label in the toolbar",
+    },
+    {
+      name: "modelTier",
+      type: "string",
+      default: "\"Max\"",
+      description: "Tier label shown next to the model name",
+    },
+    {
+      name: "accentColor",
+      type: "string",
+      default: "\"#D97757\"",
+      description: "Terracotta accent used for the sunburst and send button",
+    },
+    {
+      name: "theme",
+      type: "\"light\" | \"dark\"",
+      default: "\"light\"",
+      description: "Warm light or dark color theme",
+    },
+    {
+      name: "background",
+      type: "\"surface\" | \"transparent\"",
+      default: "\"surface\"",
+      description: "Page background fill or transparent",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Animation speed multiplier (minimum 1 so the prompt finishes typing)",
+    },
+  ]}
+/>
+
+## Notes
+
+- **Button morph:** The waveform-to-send morph is gated purely on text presence — the moment the prompt has any characters, the terracotta send button appears.
+- **Static mic:** The microphone button stays static throughout the animation.
+- **Offline-friendly:** No network requests or images are used, so the preview works offline and MP4 export requires no CORS setup.
+- **Serif greeting:** The greeting headline uses the `Fraunces` serif typeface.
