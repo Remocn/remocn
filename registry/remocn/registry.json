@@ -752,6 +752,21 @@
       ]
     },
     {
+      "name": "claude-code",
+      "type": "registry:component",
+      "title": "Claude Code",
+      "description": "Animated Claude Code CLI welcome screen — terminal window with a dashed welcome box, recent activity and what's new panels, and a prompt line that types a command with a block cursor. Dark/light themes.",
+      "dependencies": ["remotion", "@remotion/google-fonts"],
+      "registryDependencies": ["@remocn/caret", "@remocn/remocn-ui"],
+      "files": [
+        {
+          "path": "claude-code/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/claude-code.tsx"
+        }
+      ]
+    },
+    {
       "name": "confetti",
       "type": "registry:component",
       "title": "Confetti",

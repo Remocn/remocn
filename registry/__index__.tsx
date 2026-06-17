@@ -105,6 +105,8 @@ import { ChatGpt } from "@/registry/remocn/chat-gpt";
 import { chatGptConfig } from "@/registry/remocn/chat-gpt/config";
 import { V0 } from "@/registry/remocn/v0";
 import { v0Config } from "@/registry/remocn/v0/config";
+import { ClaudeCode } from "@/registry/remocn/claude-code";
+import { claudeCodeConfig } from "@/registry/remocn/claude-code/config";
 import { ClaudeChat } from "@/registry/remocn/claude-chat";
 import { claudeChatConfig } from "@/registry/remocn/claude-chat/config";
 import { Accordion } from "@/registry/remocn-ui/accordion";
@@ -338,6 +340,7 @@ const registry: Record<string, RegistryEntry> = {
   "claude-chat": { Component: ClaudeChat, config: claudeChatConfig },
   "chat-gpt": { Component: ChatGpt, config: chatGptConfig },
   "v0": { Component: V0, config: v0Config },
+  "claude-code": { Component: ClaudeCode, config: claudeCodeConfig },
   "button": { Component: Button, config: buttonConfig },
   "accordion": { Component: Accordion, config: accordionConfig },
   "alert-dialog": { Component: AlertDialog, config: alertDialogConfig },
@@ -490,6 +493,18 @@ if (chatGpt) {
 const v0 = registry["v0"];
 if (v0) {
   v0.config.controls.speed = {
+    type: "number",
+    default: 1,
+    min: 1,
+    max: 4,
+    step: 0.25,
+    label: "Speed",
+  };
+}
+
+const claudeCode = registry["claude-code"];
+if (claudeCode) {
+  claudeCode.config.controls.speed = {
     type: "number",
     default: 1,
     min: 1,

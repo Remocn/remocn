@@ -1,0 +1,126 @@
+---
+title: Claude Code
+description: Animated Claude Code CLI welcome screen that types a command into the terminal prompt
+---
+
+<ComponentPreview name="claude-code" />
+
+## Installation
+
+<InstallBlock name="claude-code" />
+
+<Note>
+  Installing `claude-code` pulls the `caret` primitive and the `remocn-ui` core lib (which provides the shared `useTypewriter` hook) via `registryDependencies`, plus the `JetBrains Mono` font via `@remotion/google-fonts` automatically. No additional install needed.
+</Note>
+
+## Usage
+
+Standalone in a Remotion `<Composition>` — renders immediately after install:
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { ClaudeCode } from "@/components/remocn/claude-code";
+
+const ClaudeCodeScene = () => (
+  <ClaudeCode
+    title="Claude Code v2.0.0"
+    userName="Meaghan"
+    model="Sonnet 4.5 • Max 20x"
+    cwd="/users/meaghan/code/apps"
+    placeholder='Try "edit <filepath> to ..."'
+    prompt="edit src/theme.ts to add a dark mode toggle"
+    accentColor="#D97757"
+    theme="dark"
+    background="surface"
+    speed={1}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="ClaudeCode"
+    component={ClaudeCodeScene}
+    durationInFrames={160}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Timeline: terminal window + welcome box ease in (0–20), default state with the block cursor blinking at the prompt holds (20–48), the command types into the prompt from frame 48, then holds to the end.
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "title",
+      type: "string",
+      default: "\"Claude Code v2.0.0\"",
+      description: "Box title on the top border",
+    },
+    {
+      name: "userName",
+      type: "string",
+      default: "\"Meaghan\"",
+      description: "Name in the welcome line",
+    },
+    {
+      name: "model",
+      type: "string",
+      default: "\"Sonnet 4.5 • Max 20x\"",
+      description: "Model line in the left column",
+    },
+    {
+      name: "cwd",
+      type: "string",
+      default: "\"/users/meaghan/code/apps\"",
+      description: "Working directory line",
+    },
+    {
+      name: "placeholder",
+      type: "string",
+      default: 'Try "edit <filepath> to ..."',
+      description: "Muted prompt placeholder before typing",
+    },
+    {
+      name: "prompt",
+      type: "string",
+      default: "\"edit src/theme.ts to add a dark mode toggle\"",
+      description: "The command that types in character-by-character",
+    },
+    {
+      name: "accentColor",
+      type: "string",
+      default: "\"#D97757\"",
+      description: "Terracotta accent for the dashed borders and headings",
+    },
+    {
+      name: "theme",
+      type: "\"light\" | \"dark\"",
+      default: "\"dark\"",
+      description: "Dark or light terminal theme",
+    },
+    {
+      name: "background",
+      type: "\"surface\" | \"transparent\"",
+      default: "\"surface\"",
+      description: "Page background fill or transparent",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Animation speed multiplier (minimum 1 so the command finishes typing)",
+    },
+  ]}
+/>
+
+## Notes
+
+- **Sample data:** The Recent activity and What's new lists use built-in sample data.
+- **Dark by default:** Defaults to the dark terminal look.
+- **Offline-friendly:** No network requests or images are used, so the preview works offline and MP4 export requires no CORS setup.
+- **Shared hook:** Reuses the `useTypewriter` hook and the `caret` primitive (rendered as a block cursor) shared with the other chat components.
