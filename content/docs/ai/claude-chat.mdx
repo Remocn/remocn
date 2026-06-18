@@ -50,6 +50,37 @@ export const RemotionRoot = () => (
 
 Timeline: card + greeting ease in (0–16), default state with blinking caret holds (16–42), the prompt types in from frame 42, and the waveform button morphs into the terracotta send button the instant text appears, then holds to the end.
 
+### With Backdrop
+
+Pair with `Backdrop` to add a full-frame fill and a polished content frame around the card — pass `background="transparent"` so `ClaudeChat` does not render its own background:
+
+```tsx
+import { Composition } from "remotion";
+import { ClaudeChat } from "@/components/remocn/claude-chat";
+import { Backdrop } from "@/components/remocn/backdrop";
+
+const ClaudeChatScene = () => (
+  <Backdrop fill={{ type: "gradient", value: "linear-gradient(135deg, #f5f0eb, #ede8e3)" }}>
+    <ClaudeChat
+      greeting="Back at it, Dima"
+      prompt="Draft a launch tweet for our new release"
+      background="transparent"
+    />
+  </Backdrop>
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="ClaudeChat"
+    component={ClaudeChatScene}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
 ## Props
 
 <PropsTable

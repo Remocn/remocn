@@ -43,7 +43,7 @@ export function DeviceMockupZoom({
   device = "laptop",
   frameColor = "#1f1f1f",
   screenColor = "#0a0a0a",
-  background = "#fafafa",
+  background = "transparent",
   speed = 1,
   className,
 }: DeviceMockupZoomProps) {

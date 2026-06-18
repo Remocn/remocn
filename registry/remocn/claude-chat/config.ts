@@ -26,7 +26,7 @@ export const claudeChatConfig: ComponentConfig = {
     },
     background: {
       type: "select",
-      default: "surface",
+      default: "transparent",
       options: ["surface", "transparent"],
       label: "Background",
     },
@@ -35,4 +35,5 @@ export const claudeChatConfig: ComponentConfig = {
   fps: FPS,
   compositionWidth: W,
   compositionHeight: H,
+  previewBackdrop: { type: "color", value: "#F5F4EF" },
 };

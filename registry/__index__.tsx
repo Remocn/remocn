@@ -179,6 +179,8 @@ import { Resizable } from "@/registry/remocn-ui/resizable";
 import { resizableConfig } from "@/registry/remocn-ui/resizable/config";
 import { ZoomThroughTransition } from "@/registry/remocn/zoom-through-transition";
 import { zoomThroughTransitionConfig } from "@/registry/remocn/zoom-through-transition/config";
+import { BackdropDemo } from "@/components/docs/examples/backdrop-demo";
+import { backdropConfig } from "@/registry/remocn/backdrop/config";
 
 export interface RegistryEntry {
   Component: React.ComponentType<any>;
@@ -339,6 +341,7 @@ const registry: Record<string, RegistryEntry> = {
     config: xFollowersOverviewConfig,
   },
   "confetti": { Component: Confetti, config: confettiConfig },
+  "backdrop": { Component: BackdropDemo, config: backdropConfig },
   "claude-chat": { Component: ClaudeChat, config: claudeChatConfig },
   "chat-gpt": { Component: ChatGpt, config: chatGptConfig },
   "v0": { Component: V0, config: v0Config },
@@ -424,6 +427,11 @@ const registry: Record<string, RegistryEntry> = {
 // every animation in the customizer exposes the same baseline knobs.
 for (const { config } of Object.values(registry)) {
   config.controls = { ...config.controls, ...SHARED_CONTROLS };
+}
+
+const backdrop = registry["backdrop"];
+if (backdrop) {
+  delete backdrop.config.controls.speed;
 }
 
 // github-stars must land its count-up exactly on the final frame. A speed < 1

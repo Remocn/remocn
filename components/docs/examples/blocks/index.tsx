@@ -20,6 +20,16 @@ import {
   SettingsToggleFlowExampleScene,
   settingsToggleFlowExampleCode,
 } from "../settings-toggle-flow-example";
+import {
+  BackdropColorScene,
+  BackdropGradientScene,
+  BackdropImageScene,
+  BackdropLiveScene,
+  backdropColorCode,
+  backdropGradientCode,
+  backdropImageCode,
+  backdropLiveCode,
+} from "../backdrop-variants";
 
 /**
  * Blocks scene registry — parallel to the ui-tier `examples` map
@@ -97,6 +107,38 @@ export const blockExamples: Record<string, BlockExampleEntry> = {
     width: W,
     height: H,
   },
+  "backdrop-color": {
+    Component: BackdropColorScene,
+    code: backdropColorCode,
+    durationInFrames: 90,
+    fps: FPS,
+    width: W,
+    height: H,
+  },
+  "backdrop-gradient": {
+    Component: BackdropGradientScene,
+    code: backdropGradientCode,
+    durationInFrames: 90,
+    fps: FPS,
+    width: W,
+    height: H,
+  },
+  "backdrop-image": {
+    Component: BackdropImageScene,
+    code: backdropImageCode,
+    durationInFrames: 90,
+    fps: FPS,
+    width: W,
+    height: H,
+  },
+  "backdrop-live": {
+    Component: BackdropLiveScene,
+    code: backdropLiveCode,
+    durationInFrames: 150,
+    fps: FPS,
+    width: W,
+    height: H,
+  },
 };
 
 /**
@@ -115,6 +157,10 @@ export const BLOCK_SCENE_META: Record<
   "checkout-flow": { code: checkoutFlowExampleCode },
   "onboarding-stepper-flow": { code: onboardingStepperFlowExampleCode },
   "settings-toggle-flow": { code: settingsToggleFlowExampleCode },
+  "backdrop-color": { code: backdropColorCode },
+  "backdrop-gradient": { code: backdropGradientCode },
+  "backdrop-image": { code: backdropImageCode },
+  "backdrop-live": { code: backdropLiveCode },
 };
 
 // Re-export so block entries can reference the shared timing constants without

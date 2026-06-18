@@ -8,7 +8,9 @@
       "type": "registry:component",
       "title": "Blur Reveal",
       "description": "Text fades in from a heavy blur into sharp focus.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "blur-reveal/index.tsx",
@@ -22,8 +24,13 @@
       "type": "registry:component",
       "title": "Typewriter",
       "description": "Character-by-character text reveal with a deterministic blinking cursor.",
-      "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/remocn-ui", "@remocn/caret"],
+      "dependencies": [
+        "remotion"
+      ],
+      "registryDependencies": [
+        "@remocn/remocn-ui",
+        "@remocn/caret"
+      ],
       "files": [
         {
           "path": "typewriter/index.tsx",
@@ -37,7 +44,9 @@
       "type": "registry:component",
       "title": "Inline Highlight",
       "description": "Animates one word inside a sentence from a base color to a brand color.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "inline-highlight/index.tsx",
@@ -51,7 +60,9 @@
       "type": "registry:component",
       "title": "Strikethrough Replace",
       "description": "Draws a strike line across old text then reveals new text in its place.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "strikethrough-replace/index.tsx",
@@ -65,7 +76,9 @@
       "type": "registry:component",
       "title": "Staggered Fade Up",
       "description": "Words fade in and slide up one after another with a configurable delay.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "staggered-fade-up/index.tsx",
@@ -79,7 +92,9 @@
       "type": "registry:component",
       "title": "Masked Slide Reveal",
       "description": "Words slide up out of an invisible horizontal mask, one after another.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "masked-slide-reveal/index.tsx",
@@ -93,7 +108,9 @@
       "type": "registry:component",
       "title": "Tracking In",
       "description": "Letter-spacing collapses and blur clears with a springy motion.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "tracking-in/index.tsx",
@@ -107,7 +124,9 @@
       "type": "registry:component",
       "title": "Shimmer Sweep",
       "description": "Light shine sweeps across muted text via background-clip:text.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "shimmer-sweep/index.tsx",
@@ -121,7 +140,9 @@
       "type": "registry:component",
       "title": "Marker Highlight",
       "description": "Colored marker block draws behind a phrase as the text color shifts.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "marker-highlight/index.tsx",
@@ -135,7 +156,9 @@
       "type": "registry:component",
       "title": "Slot Machine Roll",
       "description": "Vertical reel scrolls characters from one value to another.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "slot-machine-roll/index.tsx",
@@ -149,7 +172,9 @@
       "type": "registry:component",
       "title": "Matrix Decode",
       "description": "Random scramble resolves left-to-right into the target text.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "matrix-decode/index.tsx",
@@ -163,7 +188,9 @@
       "type": "registry:component",
       "title": "RGB Glitch Text",
       "description": "Three RGB-offset text copies jitter for a brief glitch window.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "rgb-glitch-text/index.tsx",
@@ -177,7 +204,9 @@
       "type": "registry:component",
       "title": "Infinite Marquee",
       "description": "Seamlessly looping horizontal text strip with optional stroke style.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "infinite-marquee/index.tsx",
@@ -191,7 +220,9 @@
       "type": "registry:component",
       "title": "Mesh Gradient Background",
       "description": "Living gradient with amorphous color blobs slowly drifting across the frame.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "mesh-gradient-bg/index.tsx",
@@ -205,7 +236,9 @@
       "type": "registry:component",
       "title": "Dynamic Grid",
       "description": "Subtle moving grid background with configurable cell size and direction.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "dynamic-grid/index.tsx",
@@ -219,7 +252,9 @@
       "type": "registry:component",
       "title": "Simulated Cursor",
       "description": "Animated mouse cursor moving between waypoints with click ripple feedback.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "simulated-cursor/index.tsx",
@@ -233,7 +268,9 @@
       "type": "registry:component",
       "title": "Directional Wipe",
       "description": "Slide one scene in while pushing the other out.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "directional-wipe/index.tsx",
@@ -247,7 +284,9 @@
       "type": "registry:component",
       "title": "Device Mockup Zoom",
       "description": "Pull back from a UI to reveal it inside a device frame.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "device-mockup-zoom/index.tsx",
@@ -261,7 +300,9 @@
       "type": "registry:component",
       "title": "Zoom Through Transition",
       "description": "Aggressively scale into the center of an element.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "zoom-through-transition/index.tsx",
@@ -275,7 +316,9 @@
       "type": "registry:component",
       "title": "Chat to Preview Layout",
       "description": "Two-column layout where chat shrinks and preview expands.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "chat-to-preview-layout/index.tsx",
@@ -289,7 +332,9 @@
       "type": "registry:component",
       "title": "Animated Line Chart",
       "description": "Line chart whose SVG path draws on from left to right with a leading dot.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "animated-line-chart/index.tsx",
@@ -303,7 +348,9 @@
       "type": "registry:component",
       "title": "Animated Bar Chart",
       "description": "Bars spring up from the baseline in a staggered cascade.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "animated-bar-chart/index.tsx",
@@ -317,7 +364,9 @@
       "type": "registry:component",
       "title": "Terminal Simulator",
       "description": "Terminal window that types out commands and rolls old lines off the top.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "terminal-simulator/index.tsx",
@@ -331,7 +380,9 @@
       "type": "registry:component",
       "title": "Code Diff Wipe",
       "description": "Before/after code reveal via clip-path wipe with a handle marker.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "code-diff-wipe/index.tsx",
@@ -345,7 +396,9 @@
       "type": "registry:component",
       "title": "Drag and Drop Flow",
       "description": "Simulated file drag into a dropzone followed by upload progress.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "drag-and-drop-flow/index.tsx",
@@ -359,7 +412,9 @@
       "type": "registry:component",
       "title": "Progress Steps",
       "description": "Multi-step pipeline with sequentially activating nodes and filling lines.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "progress-steps/index.tsx",
@@ -373,7 +428,9 @@
       "type": "registry:component",
       "title": "Data Flow Pipes",
       "description": "Glowing data packets travel along SVG bezier pipes between system nodes, leaving fading trails.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "data-flow-pipes/index.tsx",
@@ -387,7 +444,9 @@
       "type": "registry:component",
       "title": "Code Accordion",
       "description": "A code window that springs a range of lines closed and replaces them with a \"N lines collapsed\" placeholder.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "code-accordion/index.tsx",
@@ -401,7 +460,9 @@
       "type": "registry:component",
       "title": "Glass Code Block",
       "description": "A premium frosted-glass code editor window with a regex tokenizer and line-by-line stagger reveal.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "glass-code-block/index.tsx",
@@ -415,7 +476,9 @@
       "type": "registry:component",
       "title": "Spotlight Card",
       "description": "A card with a moonlight-cool radial spotlight that follows a synthetic cursor and lights up its microborder.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "spotlight-card/index.tsx",
@@ -429,7 +492,9 @@
       "type": "registry:component",
       "title": "Perspective Marquee",
       "description": "A 3D-tilted infinite marquee with depth-of-field blur on items rolling toward the horizon.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "perspective-marquee/index.tsx",
@@ -443,7 +508,9 @@
       "type": "registry:component",
       "title": "Frosted Glass Wipe",
       "description": "Elegant scene transition through a sliding pane of frosted glass.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "frosted-glass-wipe/index.tsx",
@@ -457,7 +524,9 @@
       "type": "registry:component",
       "title": "Spatial Push",
       "description": "A new scene physically presses the old one back into the frame.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "spatial-push/index.tsx",
@@ -471,7 +540,9 @@
       "type": "registry:component",
       "title": "Grid Pixelate Wipe",
       "description": "Dissolve from one scene to the next through a deterministic grid of mask cells.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "grid-pixelate-wipe/index.tsx",
@@ -485,7 +556,9 @@
       "type": "registry:component",
       "title": "Chromatic Aberration Wipe",
       "description": "An ultra-fast slide transition with an RGB glitch on the peak frames.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "chromatic-aberration-wipe/index.tsx",
@@ -499,7 +572,9 @@
       "type": "registry:component",
       "title": "Hero Device Assemble",
       "description": "Floating device layers spring together into a laptop or phone mockup, then the screen wakes with a shimmer.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "hero-device-assemble/index.tsx",
@@ -513,7 +588,9 @@
       "type": "registry:component",
       "title": "Ecosystem Constellation",
       "description": "A central logo orbited by integration satellites with pulsing data lines.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "ecosystem-constellation/index.tsx",
@@ -527,7 +604,9 @@
       "type": "registry:component",
       "title": "AI Generation Canvas",
       "description": "A prompt input transforms into a header, then a skeleton dashboard flips into populated cards.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "ai-generation-canvas/index.tsx",
@@ -541,7 +620,9 @@
       "type": "registry:component",
       "title": "Live Code Compilation",
       "description": "Split-screen where typed code on the left snaps a live UI preview on the right, HMR-style.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "live-code-compilation/index.tsx",
@@ -555,7 +636,9 @@
       "type": "registry:component",
       "title": "Landing Code Showcase",
       "description": "Magical split-screen: code types itself on the left while the preview reactively re-renders on the right with sparks and tactile bounce.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "landing-code-showcase/index.tsx",
@@ -569,7 +652,9 @@
       "type": "registry:component",
       "title": "Dashboard Populate",
       "description": "An empty dashboard cascades to life with KPI count-ups, bar bounces, line traces, and a donut fill.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "dashboard-populate/index.tsx",
@@ -583,7 +668,9 @@
       "type": "registry:component",
       "title": "Terminal to Browser Deploy",
       "description": "A CLI deploy completes, the terminal blurs back, and a browser window springs from the deploy URL.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "terminal-to-browser-deploy/index.tsx",
@@ -597,7 +684,9 @@
       "type": "registry:component",
       "title": "Browser Flow",
       "description": "Full Safari/Chrome simulation: typed URL, progress bar, page render, scroll, and a virtual cursor click.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "browser-flow/index.tsx",
@@ -611,7 +700,9 @@
       "type": "registry:component",
       "title": "Pricing Tier Focus",
       "description": "Three pricing cards where the focused tier rises and brightens while siblings dim and blur.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "pricing-tier-focus/index.tsx",
@@ -625,7 +716,9 @@
       "type": "registry:component",
       "title": "Infinite Bento Pan",
       "description": "A camera diagonally drifts across an oversized bento grid behind a soft vignette.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "infinite-bento-pan/index.tsx",
@@ -639,7 +732,9 @@
       "type": "registry:component",
       "title": "Tool Menu Slide In",
       "description": "A glass tool palette whips up from below the editor canvas while its icons pop in with a stagger.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "tool-menu-slide-in/index.tsx",
@@ -653,7 +748,9 @@
       "type": "registry:component",
       "title": "Image Expand To Fullscreen",
       "description": "An image lifts out of a feed post and morphs into a fullscreen editor with toolbars sliding in.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "image-expand-to-fullscreen/index.tsx",
@@ -667,7 +764,11 @@
       "type": "registry:component",
       "title": "GitHub Stars",
       "description": "Inertial fly-through of a repo's stargazers with a synced count-up odometer that locks on the total. Horizontal 16:9 or vertical 9:16.",
-      "dependencies": ["remotion", "date-fns", "@remotion/google-fonts"],
+      "dependencies": [
+        "remotion",
+        "date-fns",
+        "@remotion/google-fonts"
+      ],
       "files": [
         {
           "path": "github-stars/index.tsx",
@@ -681,8 +782,13 @@
       "type": "registry:component",
       "title": "X Follow Card",
       "description": "Animated X profile follow card — spring bounce-in, staggered blur-in, a synthetic cursor that clicks Follow and flips it to Following. Light/dark, horizontal or vertical.",
-      "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/cursor"],
+      "dependencies": [
+        "remotion",
+        "@remotion/google-fonts"
+      ],
+      "registryDependencies": [
+        "@remocn/cursor"
+      ],
       "files": [
         {
           "path": "x-follow-card/index.tsx",
@@ -696,8 +802,13 @@
       "type": "registry:component",
       "title": "X Followers Overview",
       "description": "X follow notifications cycle through as 3D flipping text — '<name> followed you · 7h' — then the total follower count pops in with a confetti burst. Hardcoded sample list (X API ready). Light/dark, horizontal or vertical.",
-      "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/confetti"],
+      "dependencies": [
+        "remotion",
+        "@remotion/google-fonts"
+      ],
+      "registryDependencies": [
+        "@remocn/confetti"
+      ],
       "files": [
         {
           "path": "x-followers-overview/index.tsx",
@@ -711,8 +822,14 @@
       "type": "registry:component",
       "title": "Claude Chat",
       "description": "Animated Claude chat input — types a prompt character-by-character and the waveform button morphs into a terracotta send button the moment text appears. Warm light/dark themes.",
-      "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/caret", "@remocn/remocn-ui"],
+      "dependencies": [
+        "remotion",
+        "@remotion/google-fonts"
+      ],
+      "registryDependencies": [
+        "@remocn/caret",
+        "@remocn/remocn-ui"
+      ],
       "files": [
         {
           "path": "claude-chat/index.tsx",
@@ -726,8 +843,14 @@
       "type": "registry:component",
       "title": "ChatGPT",
       "description": "Animated ChatGPT composer — types a prompt into the pill input, the blue voice button morphs into a send button, and the suggestion chips fade out. Light/dark themes.",
-      "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/caret", "@remocn/remocn-ui"],
+      "dependencies": [
+        "remotion",
+        "@remotion/google-fonts"
+      ],
+      "registryDependencies": [
+        "@remocn/caret",
+        "@remocn/remocn-ui"
+      ],
       "files": [
         {
           "path": "chat-gpt/index.tsx",
@@ -741,8 +864,14 @@
       "type": "registry:component",
       "title": "v0",
       "description": "Animated Vercel v0 composer — types a prompt into the dark textarea and the mic button morphs into a send button. Dark/light themes.",
-      "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/caret", "@remocn/remocn-ui"],
+      "dependencies": [
+        "remotion",
+        "@remotion/google-fonts"
+      ],
+      "registryDependencies": [
+        "@remocn/caret",
+        "@remocn/remocn-ui"
+      ],
       "files": [
         {
           "path": "v0/index.tsx",
@@ -756,8 +885,14 @@
       "type": "registry:component",
       "title": "Claude Code",
       "description": "Animated Claude Code CLI welcome screen — terminal window with a dashed welcome box, recent activity and what's new panels, and a prompt line that types a command with a block cursor. Dark/light themes.",
-      "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/caret", "@remocn/remocn-ui"],
+      "dependencies": [
+        "remotion",
+        "@remotion/google-fonts"
+      ],
+      "registryDependencies": [
+        "@remocn/caret",
+        "@remocn/remocn-ui"
+      ],
       "files": [
         {
           "path": "claude-code/index.tsx",
@@ -771,8 +906,14 @@
       "type": "registry:component",
       "title": "OpenCode",
       "description": "Animated OpenCode TUI welcome screen — two-tone wordmark, an input box with a blue accent bar that types a query, a model status line, and command hints. Dark/light themes.",
-      "dependencies": ["remotion", "@remotion/google-fonts"],
-      "registryDependencies": ["@remocn/caret", "@remocn/remocn-ui"],
+      "dependencies": [
+        "remotion",
+        "@remotion/google-fonts"
+      ],
+      "registryDependencies": [
+        "@remocn/caret",
+        "@remocn/remocn-ui"
+      ],
       "files": [
         {
           "path": "opencode/index.tsx",
@@ -786,12 +927,30 @@
       "type": "registry:component",
       "title": "Confetti",
       "description": "Deterministic confetti burst for Remotion — seeded particles with gravity, spin, and flutter so every render is identical. Fire it on any frame as a celebratory overlay.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "confetti/index.tsx",
           "type": "registry:component",
           "target": "components/remocn/confetti.tsx"
+        }
+      ]
+    },
+    {
+      "name": "backdrop",
+      "type": "registry:component",
+      "title": "Backdrop",
+      "description": "Configurable full-frame background (color / gradient / image / live component) with Screen Studio-style padding and a rounded, shadowed content frame.",
+      "dependencies": [
+        "remotion"
+      ],
+      "files": [
+        {
+          "path": "backdrop/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/backdrop.tsx"
         }
       ]
     }

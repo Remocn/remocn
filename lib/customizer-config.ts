@@ -1,3 +1,5 @@
+import type { BackdropFill } from "@/registry/remocn/backdrop";
+
 export type ControlType =
   | { type: "text"; default: string; label: string }
   | {
@@ -36,6 +38,7 @@ export interface ComponentConfig {
    * preview-only props). Components without it keep the default path.
    */
   snippet?: (values: Record<string, unknown>) => string;
+  previewBackdrop?: BackdropFill;
 }
 
 export const FPS = 30;

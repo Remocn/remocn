@@ -229,7 +229,7 @@ export function ClaudeChat({
   modelTier = "Max",
   accentColor = "#D97757",
   theme = "light",
-  background = "surface",
+  background = "transparent",
   speed = 1,
 }: ClaudeChatProps) {
   const frame = useCurrentFrame();
