@@ -63,20 +63,21 @@ function BentoCard({
   title,
   description,
   className = "",
+  previewClassName,
   inputProps,
   featured = false,
+  compositionWidth,
+  compositionHeight,
 }: {
   name: string;
   title: string;
   description: string;
   className?: string;
+  previewClassName?: string;
   inputProps?: Record<string, unknown>;
-  /**
-   * Large 2×2 card: the preview grows to fill the extra height (inside a dark
-   * frame that blends the letterbox) and the footer stays compact, instead of
-   * a fixed 16/9 preview leaving a tall empty gap above the install pill.
-   */
   featured?: boolean;
+  compositionWidth?: number;
+  compositionHeight?: number;
 }) {
   const entry = registry[name];
   const playerRef = useRef<PlayerRef>(null);
@@ -105,12 +106,10 @@ function BentoCard({
       <div
         className={cn(
           "relative w-full overflow-hidden",
-          // Featured: media grows to fill the tall 2×2 card (md+). The frame
-          // matches the ai-generation-canvas composition background (#0a0a0a)
-          // so the Player's letterbox bars blend seamlessly in both themes.
           featured
-            ? "aspect-[16/9] bg-[#0a0a0a] md:aspect-auto md:min-h-0 md:flex-1"
-            : "aspect-[16/9] bg-muted",
+            ? "aspect-[16/9] md:aspect-auto md:min-h-0 md:flex-1"
+            : "aspect-[16/9]",
+          previewClassName ?? "bg-muted",
         )}
       >
         {entry ? (
@@ -120,8 +119,10 @@ function BentoCard({
             inputProps={inputProps ?? {}}
             durationInFrames={entry.config.durationInFrames}
             fps={entry.config.fps}
-            compositionWidth={entry.config.compositionWidth}
-            compositionHeight={entry.config.compositionHeight}
+            compositionWidth={compositionWidth ?? entry.config.compositionWidth}
+            compositionHeight={
+              compositionHeight ?? entry.config.compositionHeight
+            }
             style={{ width: "100%", height: "100%" }}
             loop
             initiallyMuted
@@ -183,14 +184,35 @@ export function BentoRegistry() {
         />
 
         <FadeUp delay={0.1} className="mt-12 sm:mt-16">
-          <SpotlightSurface className="grid gap-4 sm:gap-6 md:grid-cols-3 md:grid-rows-2">
+          <SpotlightSurface className="grid gap-4 sm:gap-6 md:grid-cols-3">
             <BentoCard
-              name="ai-generation-canvas"
-              title="AI Generation Canvas"
-              description="From prompt to UI in a single composition"
-              className="md:col-span-2 md:row-span-2"
+              name="claude-code"
+              title="Claude Code"
+              description="A live agent session — typed prompt and all"
+              className="md:col-span-2"
+              previewClassName="bg-[#0a0a0a]"
+              inputProps={{ theme: "dark", background: "transparent" }}
+            />
+            <BentoCard
+              name="x-follow-card"
+              title="X Follow Card"
+              description="A profile card that follows itself on cue"
+              className="md:col-span-1"
+              previewClassName="bg-[#0a0a0a]"
+              inputProps={{
+                orientation: "vertical",
+                theme: "dark",
+                background: "transparent",
+              }}
+              compositionWidth={720}
+              compositionHeight={1280}
               featured
             />
+          </SpotlightSurface>
+        </FadeUp>
+
+        <FadeUp delay={0.18}>
+          <SpotlightSurface className="mt-4 grid gap-4 sm:mt-6 sm:gap-6 md:grid-cols-3">
             <BentoCard
               name="shimmer-sweep"
               title="Shimmer Sweep"
@@ -198,24 +220,14 @@ export function BentoRegistry() {
               inputProps={{ text: "Generating" }}
             />
             <BentoCard
-              name="ecosystem-constellation"
-              title="Ecosystem Constellation"
-              description="Orbits of integration logos around your brand"
+              name="x-followers-overview"
+              title="X Followers"
+              description="Names cycle, then the total lands with confetti"
             />
-          </SpotlightSurface>
-        </FadeUp>
-
-        <FadeUp delay={0.18}>
-          <SpotlightSurface className="mt-4 grid gap-4 sm:mt-6 sm:gap-6 md:grid-cols-2">
             <BentoCard
               name="grid-pixelate-wipe"
               title="Grid Pixelate Wipe"
               description="The screen breaks into squares and reassembles into a new scene"
-            />
-            <BentoCard
-              name="frosted-glass-wipe"
-              title="Frosted Glass Wipe"
-              description="An elegant transition through a sheet of glass"
             />
           </SpotlightSurface>
         </FadeUp>
