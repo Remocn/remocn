@@ -26,7 +26,6 @@ export interface InputProps {
   size?: InputSize;
   theme?: Partial<RemocnTheme>;
   primary?: string;
-  mode?: "light" | "dark";
   fullWidth?: boolean;
   className?: string;
 }
@@ -156,13 +155,12 @@ export function Input({
   size = "default",
   theme: themeOverride,
   primary,
-  mode,
   fullWidth = false,
   className,
 }: InputProps) {
   const theme = useRemocnTheme(
     { ...themeOverride, ...(primary ? { primary } : {}) },
-    mode,
+    "light",
   );
 
   const sizeStyle = SIZE_STYLES[size];
@@ -178,7 +176,7 @@ export function Input({
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        background: theme.background,
+        background: "transparent",
         fontFamily:
           "var(--font-geist-sans), -apple-system, BlinkMacSystemFont, sans-serif",
       }}

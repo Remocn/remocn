@@ -18,7 +18,6 @@ export interface CursorProps {
   variant?: CursorVariant;
   size?: number;
   theme?: Partial<RemocnTheme>;
-  mode?: "light" | "dark";
   rippleColor?: string;
   className?: string;
 }
@@ -47,11 +46,10 @@ export function Cursor({
   variant = "arrow",
   size = 28,
   theme: themeOverride,
-  mode,
   rippleColor,
   className,
 }: CursorProps) {
-  const theme = useRemocnTheme(themeOverride, mode);
+  const theme = useRemocnTheme(themeOverride, "light");
   const v = style ?? REST;
 
   const press = v.pressScale ?? 1;

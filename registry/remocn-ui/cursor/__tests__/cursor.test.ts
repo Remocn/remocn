@@ -18,7 +18,6 @@ function pathAt(waypoints: CursorWaypoint[], raw: number, speed = 1) {
 type SnippetValues = {
   variant?: string;
   size?: number;
-  mode?: string;
   rippleColor?: string;
 };
 
@@ -528,22 +527,6 @@ describe("cursorConfig.controls: size", () => {
   });
 });
 
-describe("cursorConfig.controls: mode", () => {
-  it("mode is a select control", () => {
-    expect(cursorConfig.controls.mode.type).toBe("select");
-  });
-
-  it("mode options are ['light', 'dark']", () => {
-    const ctrl = cursorConfig.controls.mode;
-    if (ctrl.type !== "select") throw new Error("expected select");
-    expect(ctrl.options).toEqual(["light", "dark"]);
-  });
-
-  it("mode default is 'light'", () => {
-    expect(cursorConfig.controls.mode.default).toBe("light");
-  });
-});
-
 describe("cursorConfig.controls: rippleColor", () => {
   it("rippleColor is a color control", () => {
     expect(cursorConfig.controls.rippleColor.type).toBe("color");
@@ -584,7 +567,7 @@ describe("cursorConfig.snippet: structural invariants", () => {
 });
 
 describe("cursorConfig.snippet: default props are omitted", () => {
-  const allDefaults = snippet({ variant: "arrow", size: 28, mode: "light" });
+  const allDefaults = snippet({ variant: "arrow", size: 28 });
 
   it("omits variant when it equals 'arrow'", () => {
     expect(allDefaults).not.toContain("variant=");
@@ -592,10 +575,6 @@ describe("cursorConfig.snippet: default props are omitted", () => {
 
   it("omits size when it equals 28", () => {
     expect(allDefaults).not.toContain("size=");
-  });
-
-  it("omits mode when it equals 'light'", () => {
-    expect(allDefaults).not.toContain("mode=");
   });
 });
 
@@ -608,10 +587,6 @@ describe("cursorConfig.snippet: non-default props are emitted", () => {
     expect(snippet({ size: 32 })).toContain("size={32}");
   });
 
-  it("emits mode='dark' when non-default", () => {
-    expect(snippet({ mode: "dark" })).toContain('mode="dark"');
-  });
-
   it("does NOT emit variant for the default 'arrow' even when explicitly passed", () => {
     expect(snippet({ variant: "arrow" })).not.toContain("variant=");
   });
@@ -621,6 +596,6 @@ describe("cursorConfig.snippet: snippet always includes style={style} prop", () 
   it("includes style={style} in every variant", () => {
     expect(snippet({})).toContain("style={style}");
     expect(snippet({ variant: "pointer" })).toContain("style={style}");
-    expect(snippet({ mode: "dark", size: 40 })).toContain("style={style}");
+    expect(snippet({ size: 40 })).toContain("style={style}");
   });
 });

@@ -107,7 +107,7 @@ export const ContextMenuExampleScene = (p: ContextMenuExampleProps = {}) => {
         />
       </div>
 
-      <Cursor style={cursorStyle} variant="pointer" mode={p.mode ?? "light"} />
+      <Cursor style={cursorStyle} variant="pointer" />
     </div>
   );
 };

@@ -47,7 +47,7 @@ export const ResizableExampleScene = (p: ResizableExampleProps = {}) => {
         direction={p.direction ?? "horizontal"}
         mode={p.mode ?? "light"}
       />
-      <Cursor style={cursorStyle} variant="pointer" mode={p.mode ?? "light"} />
+      <Cursor style={cursorStyle} variant="pointer" />
     </div>
   );
 };

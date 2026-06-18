@@ -14,7 +14,6 @@ const VALID_STATES: readonly TabsState[] = ["Account", "Password", "Settings"];
 type SnippetValues = {
   state?: string;
   variant?: string;
-  mode?: string;
 };
 
 const snippet = (values: SnippetValues): string =>
@@ -106,15 +105,10 @@ describe("tabsConfig.snippet: default props are omitted", () => {
   const allDefaults = snippet({
     state: "Account",
     variant: "pill",
-    mode: "light",
   });
 
   it("omits variant when it equals the default 'pill'", () => {
     expect(allDefaults).not.toContain("variant=");
-  });
-
-  it("omits mode when it equals the default 'light'", () => {
-    expect(allDefaults).not.toContain("mode=");
   });
 });
 
@@ -122,11 +116,6 @@ describe("tabsConfig.snippet: non-default props are emitted", () => {
   it("emits a non-default variant='underline'", () => {
     expect(snippet({ state: "Account", variant: "underline" }))
       .toContain('variant="underline"');
-  });
-
-  it("emits a non-default mode='dark'", () => {
-    expect(snippet({ state: "Account", mode: "dark" }))
-      .toContain('mode="dark"');
   });
 });
 

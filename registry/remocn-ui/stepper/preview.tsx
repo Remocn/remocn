@@ -1,18 +1,14 @@
 "use client";
 
-import { useRemocnTheme } from "@/lib/remocn-ui";
 import { Stepper } from "@/registry/remocn-ui/stepper";
 
 export interface StepperPreviewProps {
   activeIndex?: number;
-  mode?: "light" | "dark";
 }
 
 const DEMO_STEPS = ["Account", "Plan", "Done"];
 
-export function StepperPreview({ activeIndex = 1, mode }: StepperPreviewProps) {
-  const theme = useRemocnTheme(undefined, mode);
-
+export function StepperPreview({ activeIndex = 1 }: StepperPreviewProps) {
   return (
     <div
       style={{
@@ -21,10 +17,10 @@ export function StepperPreview({ activeIndex = 1, mode }: StepperPreviewProps) {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        background: theme.background,
+        background: "transparent",
       }}
     >
-      <Stepper steps={DEMO_STEPS} activeIndex={activeIndex} mode={mode} />
+      <Stepper steps={DEMO_STEPS} activeIndex={activeIndex} />
     </div>
   );
 }

@@ -12,14 +12,13 @@ const BTN_X = 620; // cursor tip target X (the pointer hotspot lands here)
 const BTN_Y = 360; // cursor tip target Y
 
 export const toastExampleControls = [
-  "title", "description", "variant", "mode",
+  "title", "description", "variant",
 ] as const;
 
 export interface ToastExampleProps {
   title?: string;
   description?: string;
   variant?: "default" | "success" | "error";
-  mode?: "light" | "dark";
 }
 
 export const ToastExampleScene = (p: ToastExampleProps = {}) => {
@@ -32,24 +31,18 @@ export const ToastExampleScene = (p: ToastExampleProps = {}) => {
 
   // Button: idle → hover (cursor on button) → press → idle after click.
   // The click lands at 68; press starts just before so the dip is visible.
-  const buttonStyle = useButtonTransition(
-    [
-      { at: 40, state: "hover", duration: 16 },
-      { at: 62, state: "press", duration: 8 },
-      { at: 76, state: "idle", duration: 10 },
-    ],
-    { mode: p.mode },
-  );
+  const buttonStyle = useButtonTransition([
+    { at: 40, state: "hover", duration: 16 },
+    { at: 62, state: "press", duration: 8 },
+    { at: 76, state: "idle", duration: 10 },
+  ]);
 
   // Toast: slides in from below right after the click, holds ~60 frames, then
   // auto-dismisses. DEFAULT_DURATION is 12; explicit durations here are clear.
-  const toastStyle = useToastTransition(
-    [
-      { at: 84, state: "visible", duration: 12 },
-      { at: 144, state: "hidden", duration: 12 },
-    ],
-    { mode: p.mode },
-  );
+  const toastStyle = useToastTransition([
+    { at: 84, state: "visible", duration: 12 },
+    { at: 144, state: "hidden", duration: 12 },
+  ]);
 
   return (
     <div style={{ position: "relative", width: "100%", height: "100%" }}>
@@ -63,7 +56,7 @@ export const ToastExampleScene = (p: ToastExampleProps = {}) => {
           transform: "translate(-50%, -50%)",
         }}
       >
-        <Button label="Show toast" style={buttonStyle} mode={p.mode ?? "light"} />
+        <Button label="Show toast" style={buttonStyle} mode="light" />
       </div>
 
       {/* Toast anchored bottom-right, 24px from edges */}
@@ -78,7 +71,6 @@ export const ToastExampleScene = (p: ToastExampleProps = {}) => {
           title={p.title ?? "Changes saved"}
           description={p.description ?? "Your profile has been updated."}
           variant={p.variant ?? "success"}
-          mode={p.mode ?? "light"}
           style={toastStyle}
         />
       </div>
@@ -94,7 +86,6 @@ export const toastExampleCode = (
   const title = values.title as string | undefined;
   const description = values.description as string | undefined;
   const variant = values.variant as string | undefined;
-  const mode = values.mode as string | undefined;
 
   const toastProps: string[] = [];
   if (title !== undefined && title !== "Changes saved")
@@ -106,14 +97,7 @@ export const toastExampleCode = (
     toastProps.push(`description="${description}"`);
   if (variant !== undefined && variant !== "success")
     toastProps.push(`variant="${variant}"`);
-  if (mode !== undefined && mode !== "light") toastProps.push(`mode="${mode}"`);
 
-  const btnModeStr =
-    mode !== undefined && mode !== "light" ? ` mode="${mode}"` : "";
-
-  const hookOpts: string[] = [];
-  if (mode !== undefined && mode !== "light") hookOpts.push(`mode: "${mode}"`);
-  const optsStr = hookOpts.length ? `, { ${hookOpts.join(", ")} }` : "";
   const toastPropsStr = toastProps.length
     ? `\n          ${toastProps.join("\n          ")}\n        `
     : "";
@@ -141,13 +125,13 @@ export const Scene = () => {
     { at: 40, state: "hover",   duration: 16 },
     { at: 62, state: "press",   duration: 8  },
     { at: 76, state: "idle",    duration: 10 },
-  ]${optsStr});
+  ]);
 
   // Toast slides in after the click, holds ~60 frames, then auto-dismisses.
   const toastStyle = useToastTransition([
     { at: 84,  state: "visible", duration: 12 },
     { at: 144, state: "hidden",  duration: 12 },
-  ]${optsStr});
+  ]);
 
   return (
     <div style={{ position: "relative", width: "100%", height: "100%" }}>
@@ -159,7 +143,7 @@ export const Scene = () => {
           transform: "translate(-50%, -50%)",
         }}
       >
-        <Button label="Show toast" style={buttonStyle}${btnModeStr} />
+        <Button label="Show toast" style={buttonStyle} />
       </div>
 
       <div style={{ position: "absolute", right: 24, bottom: 24 }}>

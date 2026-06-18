@@ -105,6 +105,7 @@ export const examples: Record<string, ExampleEntry> = {
     fps: FPS,
     width: W,
     height: H,
+    previewBackdrop: { type: "color", value: "oklch(1 0 0)" },
   },
   "alert-dialog-example": {
     Component: AlertDialogExampleScene,
@@ -149,6 +150,7 @@ export const examples: Record<string, ExampleEntry> = {
     fps: FPS,
     width: W,
     height: H,
+    previewBackdrop: { type: "color", value: "oklch(1 0 0)" },
   },
   "radio-example": {
     Component: RadioExampleScene,
@@ -157,6 +159,7 @@ export const examples: Record<string, ExampleEntry> = {
     fps: FPS,
     width: W,
     height: H,
+    previewBackdrop: { type: "color", value: "oklch(1 0 0)" },
   },
   "switch-example": {
     Component: SwitchExampleScene,
@@ -174,6 +177,7 @@ export const examples: Record<string, ExampleEntry> = {
     fps: FPS,
     width: W,
     height: H,
+    previewBackdrop: { type: "color", value: "oklch(1 0 0)" },
   },
   "select-example": {
     Component: SelectExampleScene,
@@ -201,6 +205,7 @@ export const examples: Record<string, ExampleEntry> = {
     fps: FPS,
     width: W,
     height: H,
+    previewBackdrop: { type: "color", value: "oklch(1 0 0)" },
   },
   "cursor-example": {
     Component: CursorExampleScene,
@@ -210,6 +215,7 @@ export const examples: Record<string, ExampleEntry> = {
     fps: FPS,
     width: W,
     height: H,
+    previewBackdrop: { type: "color", value: "oklch(1 0 0)" },
   },
   "toast-example": {
     Component: ToastExampleScene,
@@ -219,6 +225,7 @@ export const examples: Record<string, ExampleEntry> = {
     fps: FPS,
     width: W,
     height: H,
+    previewBackdrop: { type: "color", value: "oklch(1 0 0)" },
   },
   "command-menu-example": {
     Component: CommandMenuExampleScene,
@@ -258,6 +265,7 @@ export const examples: Record<string, ExampleEntry> = {
     fps: FPS,
     width: W,
     height: H,
+    previewBackdrop: { type: "color", value: "oklch(1 0 0)" },
   },
   "slider-example": {
     Component: SliderExampleScene,
@@ -267,6 +275,7 @@ export const examples: Record<string, ExampleEntry> = {
     fps: FPS,
     width: W,
     height: H,
+    previewBackdrop: { type: "color", value: "oklch(1 0 0)" },
   },
   "combobox-example": {
     Component: ComboboxExampleScene,
@@ -313,6 +322,7 @@ export const examples: Record<string, ExampleEntry> = {
     fps: FPS,
     width: W,
     height: H,
+    previewBackdrop: { type: "color", value: "oklch(1 0 0)" },
   },
   "resizable-example": {
     Component: ResizableExampleScene,

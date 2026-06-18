@@ -87,7 +87,7 @@ export function OnboardingStepperFlow({
       <div
         style={{ position: "absolute", left: 0, right: 0, top: 96, height: 100 }}
       >
-        <Stepper style={stepperStyle} steps={steps} mode={mode} theme={theme} />
+        <Stepper style={stepperStyle} steps={steps} theme={theme} />
       </div>
 
       {}
@@ -116,7 +116,6 @@ export function OnboardingStepperFlow({
           <Radio
             style={planStyle}
             label={plans[1] ?? "Pro"}
-            mode={mode}
             theme={theme}
           />
         </div>

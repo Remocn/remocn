@@ -147,7 +147,6 @@ export function AiPromptFlow({
       >
         <Skeleton
           style={skeletonStyle}
-          mode={mode}
           theme={theme}
           placeholder={
             <div
@@ -196,7 +195,6 @@ export function AiPromptFlow({
           title={toastTitle}
           variant="success"
           style={toastStyle}
-          mode={mode}
           theme={theme}
         />
       </div>

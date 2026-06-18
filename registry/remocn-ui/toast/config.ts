@@ -26,23 +26,17 @@ export const toastConfig: ComponentConfig = {
       options: ["hidden", "visible"],
       label: "State",
     },
-    mode: {
-      type: "select",
-      default: "light",
-      options: ["light", "dark"],
-      label: "Mode",
-    },
   },
   durationInFrames: 120,
   fps: FPS,
   compositionWidth: W,
   compositionHeight: H,
+  previewBackdrop: { type: "color", value: "oklch(1 0 0)" },
   snippet: (values) => {
     const state = (values.state as ToastState) ?? "visible";
     const title = values.title as string | undefined;
     const description = values.description as string | undefined;
     const variant = values.variant as string | undefined;
-    const mode = values.mode as string | undefined;
 
     const props: string[] = [
       `  state="${state}"`,
@@ -52,8 +46,6 @@ export const toastConfig: ComponentConfig = {
       props.push(`  description="${description}"`);
     if (variant !== undefined && variant !== "default")
       props.push(`  variant="${variant}"`);
-    if (mode !== undefined && mode !== "light")
-      props.push(`  mode="${mode}"`);
 
     return `import { Toast } from "@/components/remocn/toast";
 

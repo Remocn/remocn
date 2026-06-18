@@ -22,7 +22,6 @@ type SnippetValues = {
   title?: string;
   description?: string;
   variant?: string;
-  mode?: string;
 };
 const snippet = (values: SnippetValues): string =>
   toastConfig.snippet(values as Record<string, unknown>);
@@ -437,22 +436,6 @@ describe("toastConfig.controls: variant", () => {
   });
 });
 
-describe("toastConfig.controls: mode", () => {
-  it("mode is a select control", () => {
-    expect(toastConfig.controls.mode.type).toBe("select");
-  });
-
-  it("mode options are ['light', 'dark']", () => {
-    const ctrl = toastConfig.controls.mode;
-    if (ctrl.type !== "select") throw new Error("expected select");
-    expect(ctrl.options).toEqual(["light", "dark"]);
-  });
-
-  it("mode default is 'light'", () => {
-    expect(toastConfig.controls.mode.default).toBe("light");
-  });
-});
-
 describe("toastConfig.controls: title and description", () => {
   it("title is a text control", () => {
     expect(toastConfig.controls.title.type).toBe("text");
@@ -514,11 +497,6 @@ describe("toastConfig.snippet: default props are omitted", () => {
     expect(out).not.toContain("variant=");
   });
 
-  it("omits mode when it equals the default 'light'", () => {
-    const out = snippet({ state: "visible", mode: "light" });
-    expect(out).not.toContain("mode=");
-  });
-
   it("omits description when it equals the default description", () => {
     const out = snippet({
       state: "visible",
@@ -538,12 +516,6 @@ describe("toastConfig.snippet: non-default props are emitted", () => {
   it("emits variant='error' when non-default", () => {
     expect(snippet({ state: "visible", variant: "error" })).toContain(
       'variant="error"',
-    );
-  });
-
-  it("emits mode='dark' when non-default", () => {
-    expect(snippet({ state: "visible", mode: "dark" })).toContain(
-      'mode="dark"',
     );
   });
 

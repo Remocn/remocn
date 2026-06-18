@@ -43,7 +43,7 @@ export const ToggleGroupExampleScene = (p: ToggleGroupExampleProps = {}) => {
     <div style={{ position: "relative", width: "100%", height: "100%" }}>
       {/* ToggleGroup renders position:absolute;inset:0 — it centers itself. */}
       <ToggleGroup style={toggleStyle} mode={p.mode ?? "light"} />
-      <Cursor style={cursorStyle} variant="pointer" mode={p.mode ?? "light"} />
+      <Cursor style={cursorStyle} variant="pointer" />
     </div>
   );
 };

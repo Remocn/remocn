@@ -13,7 +13,6 @@ export interface ToastProps {
   description?: string;
   variant?: ToastVariant;
   theme?: Partial<RemocnTheme>;
-  mode?: "light" | "dark";
   className?: string;
 }
 
@@ -98,10 +97,9 @@ export function Toast({
   description,
   variant = "default",
   theme: themeOverride,
-  mode,
   className,
 }: ToastProps) {
-  const theme = useRemocnTheme(themeOverride, mode);
+  const theme = useRemocnTheme(themeOverride, "light");
   const ctx = toastStyleContext(variant, theme);
   const v = style ?? toastStyle(state);
 

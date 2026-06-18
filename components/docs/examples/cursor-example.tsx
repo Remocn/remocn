@@ -12,14 +12,12 @@ export interface CursorExampleProps {
   variant?: "arrow" | "pointer";
   size?: number;
   rippleColor?: string;
-  mode?: "light" | "dark";
 }
 
 export const cursorExampleControls = [
   "variant",
   "size",
   "rippleColor",
-  "mode",
 ] as const;
 
 export const CursorExampleScene = (p: CursorExampleProps = {}) => {
@@ -29,15 +27,12 @@ export const CursorExampleScene = (p: CursorExampleProps = {}) => {
     { at: 72, x: BTN_X, y: BTN_Y, click: true, duration: 0 },
   ]);
 
-  const buttonStyle = useButtonTransition(
-    [
-      { at: 40, state: "hover", duration: 16 },
-      { at: 68, state: "press", duration: 8 },
-      { at: 76, state: "loading", duration: 6 },
-      { at: 108, state: "success", duration: 16 },
-    ],
-    { mode: p.mode },
-  );
+  const buttonStyle = useButtonTransition([
+    { at: 40, state: "hover", duration: 16 },
+    { at: 68, state: "press", duration: 8 },
+    { at: 76, state: "loading", duration: 6 },
+    { at: 108, state: "success", duration: 16 },
+  ]);
 
   return (
     <div style={{ position: "relative", width: "100%", height: "100%" }}>
@@ -49,14 +44,13 @@ export const CursorExampleScene = (p: CursorExampleProps = {}) => {
           transform: "translate(-50%, -50%)",
         }}
       >
-        <Button label="Continue" style={buttonStyle} mode={p.mode ?? "light"} />
+        <Button label="Continue" style={buttonStyle} />
       </div>
       <Cursor
         style={cursorStyle}
         variant={p.variant ?? "arrow"}
         size={p.size ?? 28}
         rippleColor={p.rippleColor}
-        mode={p.mode ?? "light"}
       />
     </div>
   );
@@ -68,10 +62,6 @@ export const cursorExampleCode = (
   const variant = values.variant as string | undefined;
   const size = values.size as number | undefined;
   const rippleColor = values.rippleColor as string | undefined;
-  const mode = values.mode as string | undefined;
-
-  // Button trigger keeps just `mode`; the <Cursor> shows the full honored set.
-  const modeStr = mode !== undefined && mode !== "light" ? ` mode="${mode}"` : "";
 
   const cursorProps: string[] = [];
   if (variant !== undefined && variant !== "arrow")
@@ -79,12 +69,7 @@ export const cursorExampleCode = (
   if (size !== undefined && size !== 28) cursorProps.push(`size={${size}}`);
   if (rippleColor !== undefined && rippleColor !== "#171717")
     cursorProps.push(`rippleColor="${rippleColor}"`);
-  if (mode !== undefined && mode !== "light") cursorProps.push(`mode="${mode}"`);
   const cursorPropsStr = cursorProps.length ? ` ${cursorProps.join(" ")}` : "";
-
-  const hookOpts: string[] = [];
-  if (mode !== undefined && mode !== "light") hookOpts.push(`mode: "${mode}"`);
-  const optsStr = hookOpts.length ? `, { ${hookOpts.join(", ")} }` : "";
 
   return `import { Cursor } from "@/components/remocn/cursor";
 import { useCursorPath } from "@/components/remocn/use-cursor-path";
@@ -109,7 +94,7 @@ export const Scene = () => {
     { at: 68, state: "press", duration: 8 },
     { at: 76, state: "loading", duration: 6 },
     { at: 108, state: "success", duration: 16 },
-  ]${optsStr});
+  ]);
 
   return (
     <div style={{ position: "relative", width: "100%", height: "100%" }}>
@@ -121,7 +106,7 @@ export const Scene = () => {
           transform: "translate(-50%, -50%)",
         }}
       >
-        <Button label="Continue" style={buttonStyle}${modeStr} />
+        <Button label="Continue" style={buttonStyle} />
       </div>
       <Cursor style={cursorStyle}${cursorPropsStr} />
     </div>

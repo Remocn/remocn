@@ -296,12 +296,11 @@ export function SignupFlow({
           title={toastTitle}
           variant="success"
           style={toastStyle}
-          mode={mode}
           theme={theme}
         />
       </div>
 
-      <Cursor style={cursorStyle} variant="pointer" mode={mode} theme={theme} />
+      <Cursor style={cursorStyle} variant="pointer" theme={theme} />
     </div>
   );
 }

@@ -11,28 +11,21 @@ export const cursorConfig: ComponentConfig = {
       label: "Variant",
     },
     size: { type: "number", default: 28, min: 16, max: 64, step: 2, label: "Size" },
-    mode: {
-      type: "select",
-      default: "light",
-      options: ["light", "dark"],
-      label: "Mode",
-    },
     rippleColor: { type: "color", default: "#171717", label: "Ripple" },
   },
   durationInFrames: 120,
   fps: FPS,
   compositionWidth: W,
   compositionHeight: H,
+  previewBackdrop: { type: "color", value: "oklch(1 0 0)" },
   snippet: (values) => {
     const variant = values.variant as string | undefined;
     const size = values.size as number | undefined;
-    const mode = values.mode as string | undefined;
 
     const props: string[] = ["  style={style}"];
     if (variant !== undefined && variant !== "arrow")
       props.push(`  variant="${variant}"`);
     if (size !== undefined && size !== 28) props.push(`  size={${size}}`);
-    if (mode !== undefined && mode !== "light") props.push(`  mode="${mode}"`);
 
     return `import { Cursor } from "@/components/remocn/cursor";
 import { useCursorPath } from "@/components/remocn/use-cursor-path";

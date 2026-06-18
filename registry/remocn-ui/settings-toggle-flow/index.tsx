@@ -312,7 +312,7 @@ export function SettingsToggleFlow({
           ...reveal(enterVolume),
         }}
       >
-        <Slider style={sliderStyle} width={SLIDER_W} mode={mode} theme={theme} />
+        <Slider style={sliderStyle} width={SLIDER_W} theme={theme} />
       </div>
 
       {}
@@ -370,12 +370,11 @@ export function SettingsToggleFlow({
           style={toastStyle}
           title={toastTitle}
           variant="success"
-          mode={mode}
           theme={theme}
         />
       </div>
 
-      <Cursor style={cursorStyle} variant="pointer" mode={mode} theme={theme} />
+      <Cursor style={cursorStyle} variant="pointer" theme={theme} />
     </div>
   );
 }

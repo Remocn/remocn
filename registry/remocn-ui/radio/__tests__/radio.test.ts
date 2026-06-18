@@ -15,7 +15,6 @@ type SnippetValues = {
   state?: string;
   label?: string;
   size?: string;
-  mode?: string;
   primary?: string;
 };
 
@@ -110,7 +109,6 @@ describe("radioConfig.snippet: default props are omitted", () => {
     state: "checked",
     label: "",
     size: "default",
-    mode: "light",
     primary: "#171717",
   });
 
@@ -120,10 +118,6 @@ describe("radioConfig.snippet: default props are omitted", () => {
 
   it("omits size when it equals the default 'default'", () => {
     expect(allDefaults).not.toContain("size=");
-  });
-
-  it("omits mode when it equals the default 'light'", () => {
-    expect(allDefaults).not.toContain("mode=");
   });
 
   it("omits primary when it equals the default '#171717'", () => {
@@ -138,10 +132,6 @@ describe("radioConfig.snippet: non-default props are emitted", () => {
 
   it("emits a non-default size", () => {
     expect(snippet({ state: "checked", size: "lg" })).toContain('size="lg"');
-  });
-
-  it("emits a non-default mode", () => {
-    expect(snippet({ state: "checked", mode: "dark" })).toContain('mode="dark"');
   });
 
   it("emits a non-default primary color", () => {

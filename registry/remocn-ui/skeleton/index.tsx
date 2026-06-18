@@ -16,7 +16,6 @@ export interface SkeletonProps {
   layout?: SkeletonLayout;
   speed?: number;
   theme?: Partial<RemocnTheme>;
-  mode?: "light" | "dark";
   className?: string;
 }
 
@@ -79,10 +78,9 @@ export function Skeleton({
   layout = "lines",
   speed,
   theme: themeOverride,
-  mode,
   className,
 }: SkeletonProps) {
-  const theme = useRemocnTheme(themeOverride, mode);
+  const theme = useRemocnTheme(themeOverride, "light");
   const v = style ?? skeletonStyle(state);
 
   const placeholderLayer = placeholder ?? (

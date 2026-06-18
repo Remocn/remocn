@@ -14,23 +14,16 @@ export const stepperConfig: ComponentConfig = {
       step: 1,
       label: "Active Index",
     },
-    mode: {
-      type: "select",
-      default: "light",
-      options: ["light", "dark"],
-      label: "Mode",
-    },
   },
   durationInFrames: 120,
   fps: FPS,
   compositionWidth: W,
   compositionHeight: H,
+  previewBackdrop: { type: "color", value: "oklch(1 0 0)" },
   snippet: (values) => {
     const activeIndex = values.activeIndex as number | undefined;
-    const mode = values.mode as string | undefined;
 
     const props: string[] = [`  activeIndex={${activeIndex ?? 0}}`];
-    if (mode !== undefined && mode !== "light") props.push(`  mode="${mode}"`);
 
     const stepsLiteral = JSON.stringify(DEFAULT_STEPS);
     return `import { Stepper } from "@/components/remocn/stepper";

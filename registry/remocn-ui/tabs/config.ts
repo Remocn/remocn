@@ -17,27 +17,19 @@ export const tabsConfig: ComponentConfig = {
       options: ["pill", "underline"],
       label: "Variant",
     },
-    mode: {
-      type: "select",
-      default: "light",
-      options: ["light", "dark"],
-      label: "Mode",
-    },
   },
   durationInFrames: 120,
   fps: FPS,
   compositionWidth: W,
   compositionHeight: H,
+  previewBackdrop: { type: "color", value: "oklch(1 0 0)" },
   snippet: (values) => {
     const state = (values.state as TabsState) ?? "Account";
     const variant = values.variant as string | undefined;
-    const mode = values.mode as string | undefined;
 
     const props: string[] = [`  state="${state}"`];
     if (variant !== undefined && variant !== "pill")
       props.push(`  variant="${variant}"`);
-    if (mode !== undefined && mode !== "light")
-      props.push(`  mode="${mode}"`);
 
     return `import { Tabs } from "@/components/remocn/tabs";
 

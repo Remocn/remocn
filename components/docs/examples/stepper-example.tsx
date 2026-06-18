@@ -5,10 +5,9 @@ import { useStepperTransition } from "@/registry/remocn-ui/stepper/use-stepper-t
 
 export interface StepperExampleProps {
   steps?: string[];
-  mode?: "light" | "dark";
 }
 
-export const stepperExampleControls = ["steps", "mode"] as const;
+export const stepperExampleControls = ["steps"] as const;
 
 export const StepperExampleScene = (p: StepperExampleProps = {}) => {
   // Advance through 3 steps: "Account" (0) → "Plan" (1) → "Done" (2).
@@ -26,7 +25,6 @@ export const StepperExampleScene = (p: StepperExampleProps = {}) => {
       <Stepper
         style={stepperStyle}
         steps={p.steps ?? ["Account", "Plan", "Done"]}
-        mode={p.mode ?? "light"}
       />
     </div>
   );
@@ -36,11 +34,9 @@ export const stepperExampleCode = (
   values: Record<string, unknown> = {},
 ): string => {
   const steps = values.steps as string[] | undefined;
-  const mode = values.mode as string | undefined;
 
   const props: string[] = [];
   if (steps !== undefined) props.push(`steps={${JSON.stringify(steps)}}`);
-  if (mode !== undefined && mode !== "light") props.push(`mode="${mode}"`);
   const extraProps = props.length ? `\n        ${props.join("\n        ")}\n        ` : "";
 
   return `import { Stepper } from "@/components/remocn/stepper";

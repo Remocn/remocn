@@ -10,7 +10,6 @@ import {
 export interface SkeletonPreviewProps {
   layout?: SkeletonLayout;
   state?: SkeletonState;
-  mode?: "light" | "dark";
   speed?: number;
 }
 
@@ -73,10 +72,9 @@ function DemoContent({
 export function SkeletonPreview({
   layout = "card",
   state = "loading",
-  mode,
   speed,
 }: SkeletonPreviewProps) {
-  const theme = useRemocnTheme(undefined, mode);
+  const theme = useRemocnTheme(undefined, "light");
 
   return (
     <div
@@ -86,10 +84,10 @@ export function SkeletonPreview({
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        background: theme.background,
+        background: "transparent",
       }}
     >
-      <Skeleton layout={layout} state={state} mode={mode} speed={speed}>
+      <Skeleton layout={layout} state={state} speed={speed}>
         <DemoContent layout={layout} theme={theme} />
       </Skeleton>
     </div>

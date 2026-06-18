@@ -669,7 +669,6 @@ function CursorLayer({
     >
       <Cursor
         variant="pointer"
-        mode="light"
         rippleColor={accent}
         style={style}
       />

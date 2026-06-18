@@ -21,7 +21,6 @@ type SnippetValues = {
   thumbState?: string;
   width?: number;
   showValue?: boolean;
-  mode?: string;
 };
 const snippet = (values: SnippetValues): string =>
   sliderConfig.snippet(values as Record<string, unknown>);
@@ -448,15 +447,6 @@ describe("sliderConfig.controls: showValue", () => {
   });
 });
 
-describe("sliderConfig.controls: mode", () => {
-  it("mode is a select with options ['light','dark'] and default 'light'", () => {
-    const ctrl = sliderConfig.controls.mode;
-    if (ctrl.type !== "select") throw new Error("expected select");
-    expect(ctrl.options).toEqual(["light", "dark"]);
-    expect(ctrl.default).toBe("light");
-  });
-});
-
 describe("sliderConfig.snippet: import line", () => {
   it("includes 'import { Slider }' from the correct path", () => {
     const out = snippet({ value: 40 });
@@ -490,10 +480,6 @@ describe("sliderConfig.snippet: default props are omitted", () => {
     const out = snippet({ value: 40, width: 320 });
     expect(out).not.toContain("width=");
   });
-  it("omits mode when it equals the default 'light'", () => {
-    const out = snippet({ value: 40, mode: "light" });
-    expect(out).not.toContain("mode=");
-  });
   it("omits showValue when it is false", () => {
     const out = snippet({ value: 40, showValue: false });
     expect(out).not.toContain("showValue");
@@ -512,9 +498,6 @@ describe("sliderConfig.snippet: non-default props are emitted", () => {
   });
   it("emits width={480} when non-default", () => {
     expect(snippet({ value: 40, width: 480 })).toContain("width={480}");
-  });
-  it("emits mode='dark' when non-default", () => {
-    expect(snippet({ value: 40, mode: "dark" })).toContain('mode="dark"');
   });
   it("emits showValue (boolean shorthand) when true", () => {
     const out = snippet({ value: 40, showValue: true });

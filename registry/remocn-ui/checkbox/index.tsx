@@ -13,7 +13,6 @@ export interface CheckboxProps {
   size?: CheckboxSize;
   theme?: Partial<RemocnTheme>;
   primary?: string;
-  mode?: "light" | "dark";
   align?: "start" | "center" | "end";
   className?: string;
 }
@@ -94,13 +93,12 @@ export function Checkbox({
   size = "default",
   theme: themeOverride,
   primary,
-  mode,
   align = "center",
   className,
 }: CheckboxProps) {
   const theme = useRemocnTheme(
     { ...themeOverride, ...(primary ? { primary } : {}) },
-    mode,
+    "light",
   );
 
   const sizeStyle = SIZE_STYLES[size];
@@ -116,7 +114,7 @@ export function Checkbox({
         display: "flex",
         alignItems: "center",
         justifyContent: justify(align),
-        background: theme.background,
+        background: "transparent",
         fontFamily:
           "var(--font-geist-sans), -apple-system, BlinkMacSystemFont, sans-serif",
       }}
