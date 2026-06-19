@@ -57,7 +57,6 @@ export interface CheckoutFlowProps {
   termsLabel?: string;
   payLabel?: string;
   toastTitle?: string;
-  mode?: "light" | "dark";
   theme?: Partial<RemocnTheme>;
 }
 
@@ -70,11 +69,10 @@ export function CheckoutFlow({
   termsLabel = "I accept the terms and conditions",
   payLabel = "Pay $49",
   toastTitle = "Payment successful",
-  mode = "light",
   theme,
 }: CheckoutFlowProps) {
-  const resolved = useRemocnTheme(theme, mode);
-  const opts = { mode, theme };
+  const resolved = useRemocnTheme(theme);
+  const opts = { theme };
 
   const cardEnter = useBlurInTransition(
     [{ at: 0, state: "revealed", duration: 18 }],
@@ -138,7 +136,7 @@ export function CheckoutFlow({
       { at: 224, state: "visible", duration: 14 },
       { at: 286, state: "hidden", duration: 14 },
     ],
-    { mode },
+    {},
   );
 
   return (
@@ -147,7 +145,7 @@ export function CheckoutFlow({
         position: "relative",
         width: "100%",
         height: "100%",
-        background: resolved.muted,
+        background: "transparent",
         fontFamily:
           "var(--font-geist-sans), -apple-system, BlinkMacSystemFont, sans-serif",
       }}

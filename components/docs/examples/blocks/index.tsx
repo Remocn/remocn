@@ -1,5 +1,6 @@
 import type { ComponentType } from "react";
 import { FPS, H, W } from "@/lib/customizer-config";
+import type { BackdropFill } from "@/registry/remocn/backdrop";
 import {
   SignupFlowExampleScene,
   signupFlowExampleCode,
@@ -55,6 +56,7 @@ export interface BlockExampleEntry {
   fps: number;
   width: number;
   height: number;
+  previewBackdrop?: BackdropFill;
 }
 
 export const blockExamples: Record<string, BlockExampleEntry> = {
@@ -67,6 +69,7 @@ export const blockExamples: Record<string, BlockExampleEntry> = {
     fps: FPS,
     width: W,
     height: H,
+    previewBackdrop: { type: "color", value: "oklch(0.97 0 0)" },
   },
   "ai-prompt-flow": {
     Component: AiPromptFlowExampleScene,
@@ -76,6 +79,7 @@ export const blockExamples: Record<string, BlockExampleEntry> = {
     fps: FPS,
     width: W,
     height: H,
+    previewBackdrop: { type: "color", value: "oklch(1 0 0)" },
   },
   "checkout-flow": {
     Component: CheckoutFlowExampleScene,
@@ -86,6 +90,7 @@ export const blockExamples: Record<string, BlockExampleEntry> = {
     fps: FPS,
     width: W,
     height: H,
+    previewBackdrop: { type: "color", value: "oklch(0.97 0 0)" },
   },
   "onboarding-stepper-flow": {
     Component: OnboardingStepperFlowExampleScene,
@@ -95,6 +100,7 @@ export const blockExamples: Record<string, BlockExampleEntry> = {
     fps: FPS,
     width: W,
     height: H,
+    previewBackdrop: { type: "color", value: "oklch(1 0 0)" },
   },
   "settings-toggle-flow": {
     Component: SettingsToggleFlowExampleScene,
@@ -106,6 +112,7 @@ export const blockExamples: Record<string, BlockExampleEntry> = {
     fps: FPS,
     width: W,
     height: H,
+    previewBackdrop: { type: "color", value: "oklch(0.97 0 0)" },
   },
   "backdrop-color": {
     Component: BackdropColorScene,

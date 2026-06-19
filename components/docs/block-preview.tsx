@@ -44,6 +44,7 @@ export function BlockPreview({ name }: { name: string }) {
         fps={entry.fps}
         compositionWidth={entry.width}
         compositionHeight={entry.height}
+        previewBackdrop={entry.previewBackdrop}
       />
 
       <div className="surface-card overflow-hidden rounded-2xl [&_pre]:!rounded-none [&_pre]:!border-0 [&_pre]:!bg-transparent">

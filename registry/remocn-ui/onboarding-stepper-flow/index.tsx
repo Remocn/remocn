@@ -25,7 +25,6 @@ export interface OnboardingStepperFlowProps {
   plans?: string[];
   nextLabel?: string;
   finishLabel?: string;
-  mode?: "light" | "dark";
   theme?: Partial<RemocnTheme>;
 }
 
@@ -35,10 +34,9 @@ export function OnboardingStepperFlow({
   plans = DEFAULT_PLANS,
   nextLabel = "Next",
   finishLabel = "Finish",
-  mode = "light",
   theme,
 }: OnboardingStepperFlowProps) {
-  const opts = { mode, theme };
+  const opts = { theme };
 
   const stepperStyle = useStepperTransition([
     { at: 0, index: 0 },
