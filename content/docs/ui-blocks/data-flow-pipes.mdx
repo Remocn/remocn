@@ -42,6 +42,29 @@ export const RemotionRoot = () => (
 );
 ```
 
+### With Backdrop
+
+Renders transparent — supply the background via `Backdrop`:
+
+```tsx
+import { Backdrop } from "@/components/remocn/backdrop";
+import { DataFlowPipes } from "@/components/remocn/data-flow-pipes";
+
+<Backdrop fill={{ type: "color", value: "#050505" }}>
+  <DataFlowPipes
+    nodes={[
+      { id: "client", x: 140, y: 360, label: "Client" },
+      { id: "api", x: 460, y: 200, label: "API" },
+      { id: "db", x: 820, y: 360, label: "Database" },
+    ]}
+    edges={[
+      { from: "client", to: "api", startFrame: 0 },
+      { from: "api", to: "db", startFrame: 18 },
+    ]}
+  />
+</Backdrop>
+```
+
 ## Props
 
 <PropsTable
@@ -79,12 +102,6 @@ export const RemotionRoot = () => (
       type: "number",
       default: "36",
       description: "Frames a single pulse takes to traverse its edge",
-    },
-    {
-      name: "background",
-      type: "string",
-      default: "\"#050505\"",
-      description: "Page background color",
     },
     {
       name: "nodeColor",

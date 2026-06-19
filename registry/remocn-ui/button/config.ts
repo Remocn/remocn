@@ -24,24 +24,18 @@ export const buttonConfig: ComponentConfig = {
       options: ["idle", "hover", "press", "loading", "success"],
       label: "State",
     },
-    mode: {
-      type: "select",
-      default: "light",
-      options: ["light", "dark"],
-      label: "Mode",
-    },
     primary: { type: "color", default: "#171717", label: "Primary" },
   },
   durationInFrames: 120,
   fps: FPS,
   compositionWidth: W,
   compositionHeight: H,
+  previewBackdrop: { type: "color", value: "oklch(1 0 0)" },
   snippet: (values) => {
     const state = (values.state as ButtonState) ?? "loading";
     const label = values.label as string | undefined;
     const variant = values.variant as string | undefined;
     const size = values.size as string | undefined;
-    const mode = values.mode as string | undefined;
     const primary = values.primary as string | undefined;
 
     const props: string[] = [`  state="${state}"`];
@@ -51,8 +45,6 @@ export const buttonConfig: ComponentConfig = {
       props.push(`  variant="${variant}"`);
     if (size !== undefined && size !== "default")
       props.push(`  size="${size}"`);
-    if (mode !== undefined && mode !== "light")
-      props.push(`  mode="${mode}"`);
     if (primary !== undefined && primary !== "#171717")
       props.push(`  primary="${primary}"`);
 

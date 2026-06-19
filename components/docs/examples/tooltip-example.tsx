@@ -15,13 +15,10 @@ const BTN_Y = 360;
 const AWAY_X = 200;
 const AWAY_Y = 200;
 
-export const tooltipExampleControls = [
-  "label", "mode",
-] as const;
+export const tooltipExampleControls = ["label"] as const;
 
 export interface TooltipExampleProps {
   label?: string;
-  mode?: "light" | "dark";
 }
 
 export const TooltipExampleScene = (p: TooltipExampleProps = {}) => {
@@ -34,22 +31,16 @@ export const TooltipExampleScene = (p: TooltipExampleProps = {}) => {
   ]);
 
   // Button: idle → hover as cursor arrives, back to idle as cursor leaves.
-  const buttonStyle = useButtonTransition(
-    [
-      { at: 28, state: "hover", duration: 8 },
-      { at: 100, state: "idle", duration: 8 },
-    ],
-    { mode: p.mode },
-  );
+  const buttonStyle = useButtonTransition([
+    { at: 28, state: "hover", duration: 8 },
+    { at: 100, state: "idle", duration: 8 },
+  ]);
 
   // Tooltip: fades in shortly after cursor arrives, fades out as cursor leaves.
-  const tooltipStyle = useTooltipTransition(
-    [
-      { at: 36, state: "visible", duration: 8 },
-      { at: 100, state: "hidden", duration: 8 },
-    ],
-    { mode: p.mode },
-  );
+  const tooltipStyle = useTooltipTransition([
+    { at: 36, state: "visible", duration: 8 },
+    { at: 100, state: "hidden", duration: 8 },
+  ]);
 
   return (
     <div style={{ position: "relative", width: "100%", height: "100%" }}>
@@ -63,7 +54,7 @@ export const TooltipExampleScene = (p: TooltipExampleProps = {}) => {
           transform: "translate(-50%, -50%)",
         }}
       >
-        <Button label="Hover me" style={buttonStyle} mode={p.mode ?? "light"} />
+        <Button label="Hover me" style={buttonStyle} />
 
         {/* Tooltip is anchored relative to the button: centered above it. */}
         <div
@@ -77,7 +68,6 @@ export const TooltipExampleScene = (p: TooltipExampleProps = {}) => {
           <Tooltip
             label={p.label ?? "Add to library"}
             side="top"
-            mode={p.mode ?? "light"}
             style={tooltipStyle}
           />
         </div>
@@ -92,15 +82,8 @@ export const tooltipExampleCode = (
   values: Record<string, unknown> = {},
 ): string => {
   const label = values.label as string | undefined;
-  const mode = values.mode as string | undefined;
 
   const labelStr = label ?? "Add to library";
-  const hookOpts: string[] = [];
-  if (mode !== undefined && mode !== "light") hookOpts.push(`mode: "${mode}"`);
-  const optsStr = hookOpts.length ? `, { ${hookOpts.join(", ")} }` : "";
-
-  const modeStr =
-    mode !== undefined && mode !== "light" ? ` mode="${mode}"` : "";
 
   return `import { Cursor } from "@/components/remocn/cursor";
 import { useCursorPath } from "@/components/remocn/use-cursor-path";
@@ -127,7 +110,7 @@ export const Scene = () => {
     [
       { at: 28,  state: "hover", duration: 8 },
       { at: 100, state: "idle",  duration: 8 },
-    ]${optsStr},
+    ],
   );
 
   // Tooltip fades in shortly after hover, then fades out as cursor leaves.
@@ -135,7 +118,7 @@ export const Scene = () => {
     [
       { at: 36,  state: "visible", duration: 8 },
       { at: 100, state: "hidden",  duration: 8 },
-    ]${optsStr},
+    ],
   );
 
   return (
@@ -148,7 +131,7 @@ export const Scene = () => {
           transform: "translate(-50%, -50%)",
         }}
       >
-        <Button label="Hover me" style={buttonStyle}${modeStr} />
+        <Button label="Hover me" style={buttonStyle} />
 
         {/* Tooltip sits above the button; the caller owns the anchor position. */}
         <div
@@ -159,7 +142,7 @@ export const Scene = () => {
             transform: "translateX(-50%)",
           }}
         >
-          <Tooltip label="${labelStr}" side="top"${modeStr} style={tooltipStyle} />
+          <Tooltip label="${labelStr}" side="top" style={tooltipStyle} />
         </div>
       </div>
 

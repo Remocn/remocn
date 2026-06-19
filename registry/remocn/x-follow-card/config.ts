@@ -23,18 +23,6 @@ export const xFollowCardConfig: ComponentConfig = {
     joined: { type: "text", default: "January 2024", label: "Joined" },
     verified: { type: "boolean", default: true, label: "Verified" },
     accentColor: { type: "color", default: "#1d9bf0", label: "Accent" },
-    theme: {
-      type: "select",
-      default: "light",
-      options: ["light", "dark"],
-      label: "Theme",
-    },
-    background: {
-      type: "select",
-      default: "surface",
-      options: ["surface", "transparent"],
-      label: "Background",
-    },
     orientation: {
       type: "select",
       default: "horizontal",
@@ -46,4 +34,5 @@ export const xFollowCardConfig: ComponentConfig = {
   fps: FPS,
   compositionWidth: W,
   compositionHeight: H,
+  previewBackdrop: { type: "color", value: "#f5f7f9" },
 };

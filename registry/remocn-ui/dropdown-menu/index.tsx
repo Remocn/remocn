@@ -82,7 +82,6 @@ export interface DropdownMenuProps {
   itemStyles?: (DropdownMenuItemStyle | undefined)[];
   triggerStyle?: ButtonStyle;
   theme?: Partial<RemocnTheme>;
-  mode?: "light" | "dark";
   className?: string;
 }
 
@@ -96,10 +95,9 @@ export function DropdownMenu({
   itemStyles,
   triggerStyle,
   theme: themeOverride,
-  mode,
   className,
 }: DropdownMenuProps) {
-  const theme = useRemocnTheme(themeOverride, mode);
+  const theme = useRemocnTheme(themeOverride, "light");
 
   const ctx = dropdownMenuStyleContext(theme);
   const v = style ?? dropdownMenuStyle(state, ctx);
@@ -116,7 +114,7 @@ export function DropdownMenu({
         alignItems: "flex-start",
         justifyContent: "center",
         paddingTop: 220,
-        background: theme.background,
+        background: "transparent",
         fontFamily:
           "var(--font-geist-sans), -apple-system, BlinkMacSystemFont, sans-serif",
       }}
@@ -201,7 +199,6 @@ export function DropdownMenu({
                 label={item}
                 width={WIDTH - 8}
                 theme={themeOverride}
-                mode={mode}
               />
             );
           })}

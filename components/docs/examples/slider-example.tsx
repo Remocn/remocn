@@ -12,11 +12,10 @@ const THUMB_START_X = 544; // canvas x at value 20
 const THUMB_END_X   = 736; // canvas x at value 80
 const THUMB_Y       = 360; // canvas y of track center
 
-export const sliderExampleControls = ["showValue", "mode"] as const;
+export const sliderExampleControls = ["showValue"] as const;
 
 export interface SliderExampleProps {
   showValue?: boolean;
-  mode?: "light" | "dark";
 }
 
 export const SliderExampleScene = (p: SliderExampleProps = {}) => {
@@ -50,9 +49,9 @@ export const SliderExampleScene = (p: SliderExampleProps = {}) => {
           transform: "translate(-50%, -50%)",
         }}
       >
-        <Slider style={sliderStyle} width={320} showValue={p.showValue ?? true} mode={p.mode ?? "light"} />
+        <Slider style={sliderStyle} width={320} showValue={p.showValue ?? true} />
       </div>
-      <Cursor style={cursorStyle} variant="pointer" mode={p.mode ?? "light"} />
+      <Cursor style={cursorStyle} variant="pointer" />
     </div>
   );
 };
@@ -61,15 +60,12 @@ export const sliderExampleCode = (
   values: Record<string, unknown> = {},
 ): string => {
   const showValue = values.showValue as boolean | undefined;
-  const mode = values.mode as string | undefined;
 
   const props: string[] = [];
   if (showValue !== undefined && showValue !== true)
     props.push(`showValue={${showValue}}`);
-  if (mode !== undefined && mode !== "light") props.push(`mode="${mode}"`);
 
   const sliderPropsStr = props.length ? ` ${props.join(" ")}` : "";
-  const cursorModeStr = mode !== undefined && mode !== "light" ? ` mode="${mode}"` : "";
   return `import { Cursor } from "@/components/remocn/cursor";
 import { useCursorPath } from "@/components/remocn/use-cursor-path";
 import { Slider } from "@/components/remocn/slider";
@@ -115,7 +111,7 @@ export const Scene = () => {
       >
         <Slider style={sliderStyle} width={320}${sliderPropsStr} />
       </div>
-      <Cursor style={cursorStyle} variant="pointer"${cursorModeStr} />
+      <Cursor style={cursorStyle} variant="pointer" />
     </div>
   );
 };`;

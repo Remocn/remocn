@@ -16,7 +16,6 @@ type SnippetValues = {
   title?: string;
   content?: string;
   variant?: string;
-  mode?: string;
 };
 
 const snippet = (values: SnippetValues): string =>
@@ -129,7 +128,6 @@ describe("accordionConfig.snippet: default props are omitted", () => {
     title: "Is it accessible?",
     content: "Yes. It adheres to the WAI-ARIA design pattern.",
     variant: "default",
-    mode: "light",
   });
 
   it("omits title when it equals the default 'Is it accessible?'", () => {
@@ -144,9 +142,6 @@ describe("accordionConfig.snippet: default props are omitted", () => {
     expect(allDefaults).not.toContain("variant=");
   });
 
-  it("omits mode when it equals the default 'light'", () => {
-    expect(allDefaults).not.toContain("mode=");
-  });
 });
 
 describe("accordionConfig.snippet: non-default props are emitted", () => {
@@ -163,11 +158,6 @@ describe("accordionConfig.snippet: non-default props are emitted", () => {
   it("emits a non-default variant", () => {
     expect(snippet({ state: "opened", variant: "ghost" }))
       .toContain('variant="ghost"');
-  });
-
-  it("emits a non-default mode", () => {
-    expect(snippet({ state: "opened", mode: "dark" }))
-      .toContain('mode="dark"');
   });
 });
 

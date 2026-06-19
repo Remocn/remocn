@@ -10,7 +10,6 @@ export interface SelectItemProps {
   label?: string;
   width?: number;
   theme?: Partial<RemocnTheme>;
-  mode?: "light" | "dark";
   className?: string;
 }
 
@@ -148,10 +147,9 @@ export function SelectItem({
   label = "Banana",
   width = ROW_WIDTH,
   theme: themeOverride,
-  mode,
   className,
 }: SelectItemProps) {
-  const theme = useRemocnTheme(themeOverride, mode);
+  const theme = useRemocnTheme(themeOverride, "light");
   const ctx = selectItemStyleContext(theme);
 
   return (
@@ -163,7 +161,7 @@ export function SelectItem({
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        background: theme.background,
+        background: "transparent",
         fontFamily:
           "var(--font-geist-sans), -apple-system, BlinkMacSystemFont, sans-serif",
       }}

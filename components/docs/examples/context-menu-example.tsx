@@ -18,10 +18,9 @@ const ROW1_Y = CLICK_Y + 60;
 
 export interface ContextMenuExampleProps {
   items?: string[];
-  mode?: "light" | "dark";
 }
 
-export const contextMenuExampleControls = ["items", "mode"] as const;
+export const contextMenuExampleControls = ["items"] as const;
 
 export const ContextMenuExampleScene = (p: ContextMenuExampleProps = {}) => {
   // Cursor: park → ease to card → right-click → move DOWN onto row 1 → click it → leave.
@@ -35,13 +34,10 @@ export const ContextMenuExampleScene = (p: ContextMenuExampleProps = {}) => {
   ]);
 
   // Menu: opens just after the right-click, closes after the row interaction.
-  const menuStyle = useContextMenuTransition(
-    [
-      { at: 44,  state: "opened", duration: 10 },
-      { at: 92,  state: "closed", duration: 10 },
-    ],
-    { mode: p.mode },
-  );
+  const menuStyle = useContextMenuTransition([
+    { at: 44,  state: "opened", duration: 10 },
+    { at: 92,  state: "closed", duration: 10 },
+  ]);
 
   // Row 1 ("Reload"): idle → hover → press → idle.
   const rowState = useCurrentState(
@@ -52,7 +48,7 @@ export const ContextMenuExampleScene = (p: ContextMenuExampleProps = {}) => {
     ],
     "idle",
   );
-  const rowStyle = useDropdownMenuItemTransition([{ at: 0, state: rowState }], { mode: p.mode });
+  const rowStyle = useDropdownMenuItemTransition([{ at: 0, state: rowState }]);
 
   const items = p.items ?? ["Back", "Reload", "Save As…", "Inspect"];
 
@@ -103,11 +99,10 @@ export const ContextMenuExampleScene = (p: ContextMenuExampleProps = {}) => {
           style={menuStyle}
           items={items}
           itemStyles={[undefined, rowStyle, undefined, undefined]}
-          mode={p.mode ?? "light"}
         />
       </div>
 
-      <Cursor style={cursorStyle} variant="pointer" mode={p.mode ?? "light"} />
+      <Cursor style={cursorStyle} variant="pointer" />
     </div>
   );
 };
@@ -116,17 +111,10 @@ export const contextMenuExampleCode = (
   values: Record<string, unknown> = {},
 ): string => {
   const items = values.items as string[] | undefined;
-  const mode = values.mode as string | undefined;
 
   const props: string[] = [];
   if (items !== undefined) props.push(`items={${JSON.stringify(items)}}`);
-  if (mode !== undefined && mode !== "light") props.push(`mode="${mode}"`);
   const extraProps = props.length ? `\n          ${props.join("\n          ")}` : "";
-  const modeStr = mode !== undefined && mode !== "light" ? ` mode="${mode}"` : "";
-
-  const hookOpts: string[] = [];
-  if (mode !== undefined && mode !== "light") hookOpts.push(`mode: "${mode}"`);
-  const optsStr = hookOpts.length ? `, { ${hookOpts.join(", ")} }` : "";
 
   return `import { Cursor } from "@/components/remocn/cursor";
 import { useCursorPath } from "@/components/remocn/use-cursor-path";
@@ -154,12 +142,10 @@ export const Scene = () => {
   ]);
 
   // Menu opens at the click point, closes after the row interaction.
-  const menuStyle = useContextMenuTransition(
-    [
-      { at: 44,  state: "opened", duration: 10 },
-      { at: 92,  state: "closed", duration: 10 },
-    ]${optsStr},
-  );
+  const menuStyle = useContextMenuTransition([
+    { at: 44,  state: "opened", duration: 10 },
+    { at: 92,  state: "closed", duration: 10 },
+  ]);
 
   // Animate row 1 ("Reload"): idle → hover → press → idle.
   const rowState = useCurrentState(
@@ -170,7 +156,7 @@ export const Scene = () => {
     ],
     "idle",
   );
-  const rowStyle = useDropdownMenuItemTransition([{ at: 0, state: rowState }]${optsStr});
+  const rowStyle = useDropdownMenuItemTransition([{ at: 0, state: rowState }]);
 
   return (
     <div style={{ position: "relative", width: "100%", height: "100%" }}>
@@ -199,7 +185,7 @@ export const Scene = () => {
         />
       </div>
 
-      <Cursor style={cursorStyle} variant="pointer"${modeStr} />
+      <Cursor style={cursorStyle} variant="pointer" />
     </div>
   );
 };`;

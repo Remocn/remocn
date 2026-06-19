@@ -25,7 +25,6 @@ export interface OnboardingStepperFlowProps {
   plans?: string[];
   nextLabel?: string;
   finishLabel?: string;
-  mode?: "light" | "dark";
   theme?: Partial<RemocnTheme>;
 }
 
@@ -35,10 +34,9 @@ export function OnboardingStepperFlow({
   plans = DEFAULT_PLANS,
   nextLabel = "Next",
   finishLabel = "Finish",
-  mode = "light",
   theme,
 }: OnboardingStepperFlowProps) {
-  const opts = { mode, theme };
+  const opts = { theme };
 
   const stepperStyle = useStepperTransition([
     { at: 0, index: 0 },
@@ -87,7 +85,7 @@ export function OnboardingStepperFlow({
       <div
         style={{ position: "absolute", left: 0, right: 0, top: 96, height: 100 }}
       >
-        <Stepper style={stepperStyle} steps={steps} mode={mode} theme={theme} />
+        <Stepper style={stepperStyle} steps={steps} theme={theme} />
       </div>
 
       {}
@@ -106,7 +104,6 @@ export function OnboardingStepperFlow({
             style={nameStyle}
             placeholder={name}
             value={name}
-            mode={mode}
             theme={theme}
           />
         </div>
@@ -116,7 +113,6 @@ export function OnboardingStepperFlow({
           <Radio
             style={planStyle}
             label={plans[1] ?? "Pro"}
-            mode={mode}
             theme={theme}
           />
         </div>
@@ -126,7 +122,6 @@ export function OnboardingStepperFlow({
           <Switch
             style={settingsStyle}
             label="Email notifications"
-            mode={mode}
             theme={theme}
           />
         </div>
@@ -136,7 +131,7 @@ export function OnboardingStepperFlow({
       <div
         style={{ position: "absolute", left: 0, right: 0, top: NAV_TOP, height: 64 }}
       >
-        <Button label={navLabel} style={navStyle} mode={mode} theme={theme} />
+        <Button label={navLabel} style={navStyle} theme={theme} />
       </div>
     </div>
   );

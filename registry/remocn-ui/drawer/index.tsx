@@ -12,7 +12,6 @@ export interface DrawerProps {
   actionLabel?: string;
   cancelLabel?: string;
   theme?: Partial<RemocnTheme>;
-  mode?: "light" | "dark";
   className?: string;
 }
 
@@ -77,10 +76,9 @@ export function Drawer({
   actionLabel = "Save changes",
   cancelLabel = "Cancel",
   theme: themeOverride,
-  mode,
   className,
 }: DrawerProps) {
-  const theme = useRemocnTheme(themeOverride, mode);
+  const theme = useRemocnTheme(themeOverride, "light");
 
   const ctx = drawerStyleContext(theme);
   const v = style ?? drawerStyle(state, ctx);

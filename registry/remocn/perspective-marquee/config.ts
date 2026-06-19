@@ -58,10 +58,10 @@ export const perspectiveMarqueeConfig: ComponentConfig = {
       label: "Perspective",
     },
     fadeColor: { type: "color", default: "#050505", label: "Fade color" },
-    background: { type: "color", default: "#050505", label: "Background" },
   },
   durationInFrames: 240,
   fps: FPS,
   compositionWidth: W,
   compositionHeight: H,
+  previewBackdrop: { type: "color", value: "#050505" },
 };

@@ -9,15 +9,11 @@ import { usePopoverTransition } from "@/registry/remocn-ui/popover/use-popover-t
 const CHIP_X = 640;
 const CHIP_Y = 360;
 
-export const popoverExampleControls = [
-  "mode",
-] as const;
+export const popoverExampleControls = [] as const;
 
-export interface PopoverExampleProps {
-  mode?: "light" | "dark";
-}
+export interface PopoverExampleProps {}
 
-export const PopoverExampleScene = (p: PopoverExampleProps = {}) => {
+export const PopoverExampleScene = (_p: PopoverExampleProps = {}) => {
   // Cursor: park top-left → ease onto the chip → hover → leave.
   const cursorStyle = useCursorPath([
     { at: 0,   x: 80,     y: 60     },
@@ -26,13 +22,10 @@ export const PopoverExampleScene = (p: PopoverExampleProps = {}) => {
   ]);
 
   // Hover-card popover: opens shortly after the cursor arrives, closes as it leaves.
-  const popoverStyle = usePopoverTransition(
-    [
-      { at: 36,  state: "opened", duration: 10 },
-      { at: 100, state: "closed", duration: 10 },
-    ],
-    { mode: p.mode },
-  );
+  const popoverStyle = usePopoverTransition([
+    { at: 36,  state: "opened", duration: 10 },
+    { at: 100, state: "closed", duration: 10 },
+  ]);
 
   return (
     <div style={{ position: "relative", width: "100%", height: "100%" }}>
@@ -79,7 +72,6 @@ export const PopoverExampleScene = (p: PopoverExampleProps = {}) => {
             style={popoverStyle}
             side="top"
             width={240}
-            mode={p.mode ?? "light"}
           >
             {/* Hover-card content: avatar + name + bio */}
             <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
@@ -136,17 +128,8 @@ export const PopoverExampleScene = (p: PopoverExampleProps = {}) => {
 };
 
 export const popoverExampleCode = (
-  values: Record<string, unknown> = {},
+  _values: Record<string, unknown> = {},
 ): string => {
-  const mode = values.mode as string | undefined;
-
-  const hookOpts: string[] = [];
-  if (mode !== undefined && mode !== "light") hookOpts.push(`mode: "${mode}"`);
-  const optsStr = hookOpts.length ? `, { ${hookOpts.join(", ")} }` : "";
-
-  const modeStr =
-    mode !== undefined && mode !== "light" ? ` mode="${mode}"` : "";
-
   return `import { Cursor } from "@/components/remocn/cursor";
 import { useCursorPath } from "@/components/remocn/use-cursor-path";
 import { Popover } from "@/components/remocn/popover";
@@ -164,12 +147,10 @@ export const Scene = () => {
   ]);
 
   // Hover-card opens shortly after the cursor arrives, closes as it leaves.
-  const popoverStyle = usePopoverTransition(
-    [
-      { at: 36,  state: "opened", duration: 10 },
-      { at: 100, state: "closed", duration: 10 },
-    ]${optsStr},
-  );
+  const popoverStyle = usePopoverTransition([
+    { at: 36,  state: "opened", duration: 10 },
+    { at: 100, state: "closed", duration: 10 },
+  ]);
 
   return (
     <div style={{ position: "relative", width: "100%", height: "100%" }}>
@@ -207,7 +188,7 @@ export const Scene = () => {
             transform: "translateX(-50%)",
           }}
         >
-          <Popover style={popoverStyle} side="top" width={240}${modeStr}>
+          <Popover style={popoverStyle} side="top" width={240}>
             <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
               <div
                 style={{

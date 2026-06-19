@@ -77,7 +77,6 @@ export interface SettingsToggleFlowProps {
   selectItems?: string[];
   saveLabel?: string;
   toastTitle?: string;
-  mode?: "light" | "dark";
   theme?: Partial<RemocnTheme>;
 }
 
@@ -88,11 +87,10 @@ export function SettingsToggleFlow({
   selectItems = DEFAULT_SELECT_ITEMS,
   saveLabel = "Save settings",
   toastTitle = "Settings saved",
-  mode = "light",
   theme,
 }: SettingsToggleFlowProps) {
-  const resolved = useRemocnTheme(theme, mode);
-  const opts = { mode, theme };
+  const resolved = useRemocnTheme(theme);
+  const opts = { theme };
 
   const lastItem = selectItems.length - 1;
   const ITEM_CY =
@@ -192,7 +190,7 @@ export function SettingsToggleFlow({
       { at: 196 + DEMO, state: "visible", duration: 12 },
       { at: 256 + DEMO, state: "hidden", duration: 12 },
     ],
-    { mode },
+    {},
   );
 
   const rowLabelStyle = {
@@ -208,7 +206,7 @@ export function SettingsToggleFlow({
         position: "relative",
         width: "100%",
         height: "100%",
-        background: resolved.muted,
+        background: "transparent",
         fontFamily:
           "var(--font-geist-sans), -apple-system, BlinkMacSystemFont, sans-serif",
       }}
@@ -289,7 +287,7 @@ export function SettingsToggleFlow({
           ...reveal(enterSwitch),
         }}
       >
-        <Switch style={switchStyle} mode={mode} theme={theme} />
+        <Switch style={switchStyle} theme={theme} />
       </div>
 
       {}
@@ -312,7 +310,7 @@ export function SettingsToggleFlow({
           ...reveal(enterVolume),
         }}
       >
-        <Slider style={sliderStyle} width={SLIDER_W} mode={mode} theme={theme} />
+        <Slider style={sliderStyle} width={SLIDER_W} theme={theme} />
       </div>
 
       {}
@@ -345,7 +343,6 @@ export function SettingsToggleFlow({
           itemStyles={selectItems.map((_, i) =>
             i === selectItems.length - 1 ? itemStyle : undefined,
           )}
-          mode={mode}
           theme={theme}
         />
       </div>
@@ -361,7 +358,7 @@ export function SettingsToggleFlow({
           ...reveal(enterSave),
         }}
       >
-        <Button label={saveLabel} style={saveStyle} mode={mode} theme={theme} />
+        <Button label={saveLabel} style={saveStyle} theme={theme} />
       </div>
 
       {}
@@ -370,12 +367,11 @@ export function SettingsToggleFlow({
           style={toastStyle}
           title={toastTitle}
           variant="success"
-          mode={mode}
           theme={theme}
         />
       </div>
 
-      <Cursor style={cursorStyle} variant="pointer" mode={mode} theme={theme} />
+      <Cursor style={cursorStyle} variant="pointer" theme={theme} />
     </div>
   );
 }

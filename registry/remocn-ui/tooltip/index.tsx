@@ -12,7 +12,6 @@ export interface TooltipProps {
   label: string;
   side?: TooltipSide;
   theme?: Partial<RemocnTheme>;
-  mode?: "light" | "dark";
   className?: string;
 }
 
@@ -58,10 +57,9 @@ export function Tooltip({
   label,
   side = "top",
   theme: themeOverride,
-  mode,
   className,
 }: TooltipProps) {
-  const theme = useRemocnTheme(themeOverride, mode);
+  const theme = useRemocnTheme(themeOverride, "light");
   const v = style ?? tooltipStyle(state);
 
   const bg = theme.foreground;

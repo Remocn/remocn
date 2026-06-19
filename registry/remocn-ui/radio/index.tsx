@@ -13,7 +13,6 @@ export interface RadioProps {
   size?: RadioSize;
   theme?: Partial<RemocnTheme>;
   primary?: string;
-  mode?: "light" | "dark";
   className?: string;
 }
 
@@ -73,12 +72,11 @@ export function Radio({
   size = "default",
   theme: themeOverride,
   primary,
-  mode,
   className,
 }: RadioProps) {
   const theme = useRemocnTheme(
     { ...themeOverride, ...(primary ? { primary } : {}) },
-    mode,
+    "light",
   );
 
   const sizeStyle = SIZE_STYLES[size];
@@ -94,7 +92,7 @@ export function Radio({
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        background: theme.background,
+        background: "transparent",
         fontFamily:
           "var(--font-geist-sans), -apple-system, BlinkMacSystemFont, sans-serif",
       }}

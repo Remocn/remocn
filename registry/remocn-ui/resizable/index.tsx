@@ -25,7 +25,6 @@ export interface ResizableProps {
   width?: number;
   height?: number;
   theme?: Partial<RemocnTheme>;
-  mode?: "light" | "dark";
   className?: string;
 }
 
@@ -118,10 +117,9 @@ export function Resizable({
   width = 440,
   height = 240,
   theme: themeOverride,
-  mode,
   className,
 }: ResizableProps) {
-  const theme = useRemocnTheme(themeOverride, mode);
+  const theme = useRemocnTheme(themeOverride, "light");
   const ctx = resizableStyleContext(theme);
 
   const v = style ?? resizableStyle(ratio, handleState);
@@ -140,7 +138,7 @@ export function Resizable({
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        background: theme.background,
+        background: "transparent",
         fontFamily:
           "var(--font-geist-sans), -apple-system, BlinkMacSystemFont, sans-serif",
       }}

@@ -21,21 +21,10 @@ export const v0Config: ComponentConfig = {
     },
     modelName: { type: "text", default: "v0 Max", label: "Model" },
     projectName: { type: "text", default: "Project", label: "Project" },
-    theme: {
-      type: "select",
-      default: "dark",
-      options: ["light", "dark"],
-      label: "Theme",
-    },
-    background: {
-      type: "select",
-      default: "surface",
-      options: ["surface", "transparent"],
-      label: "Background",
-    },
   },
   durationInFrames: 150,
   fps: FPS,
   compositionWidth: W,
   compositionHeight: H,
+  previewBackdrop: { type: "color", value: "#000000" },
 };

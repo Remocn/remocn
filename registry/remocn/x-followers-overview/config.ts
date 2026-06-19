@@ -15,18 +15,6 @@ export const xFollowersOverviewConfig: ComponentConfig = {
     handle: { type: "text", default: "remocn", label: "Handle" },
     avatarUrl: { type: "text", default: "/logo.svg", label: "Avatar URL" },
     accentColor: { type: "color", default: "#1d9bf0", label: "Accent" },
-    theme: {
-      type: "select",
-      default: "light",
-      options: ["light", "dark"],
-      label: "Theme",
-    },
-    background: {
-      type: "select",
-      default: "surface",
-      options: ["surface", "transparent"],
-      label: "Background",
-    },
     orientation: {
       type: "select",
       default: "horizontal",
@@ -40,4 +28,5 @@ export const xFollowersOverviewConfig: ComponentConfig = {
   fps: FPS,
   compositionWidth: W,
   compositionHeight: H,
+  previewBackdrop: { type: "color", value: "#ffffff" },
 };

@@ -30,7 +30,6 @@ export interface CommandMenuProps {
   pressedIndex?: number;
   itemStyles?: (CommandMenuItemStyle | undefined)[];
   theme?: Partial<RemocnTheme>;
-  mode?: "light" | "dark";
   className?: string;
 }
 
@@ -137,10 +136,9 @@ export function CommandMenu({
   pressedIndex = -1,
   itemStyles,
   theme: themeOverride,
-  mode,
   className,
 }: CommandMenuProps) {
-  const theme = useRemocnTheme(themeOverride, mode);
+  const theme = useRemocnTheme(themeOverride, "light");
   const ctx = commandMenuStyleContext(theme);
   const v = style ?? commandMenuStyle(state, ctx);
 

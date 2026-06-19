@@ -18,8 +18,6 @@ export interface ChatGptProps {
   placeholder?: string;
   prompt?: string;
   accentColor?: string;
-  theme?: "light" | "dark";
-  background?: "surface" | "transparent";
   speed?: number;
 }
 
@@ -285,13 +283,11 @@ export function ChatGpt({
   placeholder = "Ask anything",
   prompt = "Make a sunset over a calm ocean",
   accentColor = "#2F6FED",
-  theme = "light",
-  background = "surface",
   speed = 1,
 }: ChatGptProps) {
   const frame = useCurrentFrame();
   const { width, height, fps } = useVideoConfig();
-  const t = THEMES[theme] ?? THEMES.light;
+  const t = THEMES.light;
 
   const refW = 1280;
   const refH = 720;
@@ -311,7 +307,6 @@ export function ChatGpt({
   const pillFade = fadeUpAt(frame * speed, [10, 26]);
   const chipsFade = fadeUpAt(frame * speed, [16, 32]);
 
-  const pageBg = background === "transparent" ? "transparent" : t.page;
 
   const pillWidth = 820;
   const pillLeft = (refW - pillWidth) / 2;
@@ -323,7 +318,7 @@ export function ChatGpt({
   const chipsShift = chipsFade.translateY + 8 * morph;
 
   return (
-    <AbsoluteFill style={{ background: pageBg }}>
+    <AbsoluteFill style={{ background: "transparent" }}>
       <div
         style={{
           position: "absolute",
@@ -362,10 +357,7 @@ export function ChatGpt({
             background: t.inputBg,
             border: `1px solid ${t.inputBorder}`,
             borderRadius: 32,
-            boxShadow:
-              theme === "light"
-                ? "0 8px 30px -14px rgba(13,13,13,0.14)"
-                : "0 8px 30px -14px rgba(0,0,0,0.5)",
+            boxShadow: "0 8px 30px -14px rgba(13,13,13,0.14)",
             opacity: pillFade.opacity,
             transform: `translateY(${pillFade.translateY + intro.translateY * 0.6}px) scale(${intro.scale})`,
             transformOrigin: "center top",

@@ -29,7 +29,6 @@ export const glassCodeBlockConfig: ComponentConfig = {
       step: 1,
       label: "Font size",
     },
-    background: { type: "color", default: "#0a0a0a", label: "Background" },
     glassColor: {
       type: "text",
       default: "rgba(10, 10, 10, 0.6)",
@@ -53,4 +52,5 @@ export const glassCodeBlockConfig: ComponentConfig = {
   fps: FPS,
   compositionWidth: W,
   compositionHeight: H,
+  previewBackdrop: { type: "color", value: "#0a0a0a" },
 };

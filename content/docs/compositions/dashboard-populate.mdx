@@ -32,6 +32,19 @@ export const RemotionRoot = () => (
 );
 ```
 
+### With Backdrop
+
+Renders its scene transparent — supply the background via `Backdrop`:
+
+```tsx
+import { Backdrop } from "@/components/remocn/backdrop";
+import { DashboardPopulate } from "@/components/remocn/dashboard-populate";
+
+<Backdrop fill={{ type: "color", value: "#09090b" }}>
+  <DashboardPopulate accentColor="#22c55e" kpiTarget={128400} />
+</Backdrop>
+```
+
 ## Props
 
 <PropsTable

@@ -17,7 +17,6 @@ export interface SliderProps {
   width?: number;
   showValue?: boolean;
   theme?: Partial<RemocnTheme>;
-  mode?: "light" | "dark";
   className?: string;
 }
 
@@ -72,10 +71,9 @@ export function Slider({
   width = 320,
   showValue = false,
   theme: themeOverride,
-  mode,
   className,
 }: SliderProps) {
-  const theme = useRemocnTheme(themeOverride, mode);
+  const theme = useRemocnTheme(themeOverride, "light");
   const ctx = sliderStyleContext(theme);
 
   const thumb = sliderThumbStyle(thumbState);

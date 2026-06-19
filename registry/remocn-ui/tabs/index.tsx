@@ -14,7 +14,6 @@ export interface TabsProps {
   contentHeight?: number;
   variant?: TabsVariant;
   theme?: Partial<RemocnTheme>;
-  mode?: "light" | "dark";
   className?: string;
 }
 
@@ -75,10 +74,9 @@ export function Tabs({
   contentHeight = 72,
   variant = "pill",
   theme: themeOverride,
-  mode,
   className,
 }: TabsProps) {
-  const theme = useRemocnTheme(themeOverride, mode);
+  const theme = useRemocnTheme(themeOverride, "light");
 
   const ctx = tabsStyleContext(items, variant, theme);
   const v = style ?? tabsStyle(state, ctx);
@@ -99,7 +97,7 @@ export function Tabs({
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        background: theme.background,
+        background: "transparent",
         fontFamily:
           "var(--font-geist-sans), -apple-system, BlinkMacSystemFont, sans-serif",
       }}

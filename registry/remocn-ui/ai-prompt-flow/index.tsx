@@ -16,7 +16,6 @@ export interface AiPromptFlowProps {
   buttonLabel?: string;
   answerLines?: string[];
   toastTitle?: string;
-  mode?: "light" | "dark";
   theme?: Partial<RemocnTheme>;
 }
 
@@ -46,11 +45,10 @@ export function AiPromptFlow({
   buttonLabel = "Generate",
   answerLines = DEFAULT_ANSWER,
   toastTitle = "Response ready",
-  mode = "light",
   theme,
 }: AiPromptFlowProps) {
-  const resolved = useRemocnTheme(theme, mode);
-  const opts = { mode, theme };
+  const resolved = useRemocnTheme(theme);
+  const opts = { theme };
 
   const inputStyle = useInputTransition(
     [
@@ -74,7 +72,7 @@ export function AiPromptFlow({
       { at: 64, state: "loading", duration: 1 },
       { at: 150, state: "loaded", duration: 16 },
     ],
-    { mode },
+    {},
   );
 
   const panelOpacity = buttonStyle.spinnerOpacity;
@@ -84,7 +82,7 @@ export function AiPromptFlow({
       { at: 160, state: "visible", duration: 14 },
       { at: 220, state: "hidden", duration: 14 },
     ],
-    { mode },
+    {},
   );
 
   return (
@@ -93,7 +91,7 @@ export function AiPromptFlow({
         position: "relative",
         width: "100%",
         height: "100%",
-        background: resolved.background,
+        background: "transparent",
       }}
     >
       {}
@@ -110,7 +108,6 @@ export function AiPromptFlow({
           placeholder="Ask anything…"
           value={prompt}
           style={inputStyle}
-          mode={mode}
           theme={theme}
         />
       </div>
@@ -128,7 +125,6 @@ export function AiPromptFlow({
         <Button
           label={buttonLabel}
           style={buttonStyle}
-          mode={mode}
           theme={theme}
         />
       </div>
@@ -147,7 +143,6 @@ export function AiPromptFlow({
       >
         <Skeleton
           style={skeletonStyle}
-          mode={mode}
           theme={theme}
           placeholder={
             <div
@@ -196,7 +191,6 @@ export function AiPromptFlow({
           title={toastTitle}
           variant="success"
           style={toastStyle}
-          mode={mode}
           theme={theme}
         />
       </div>

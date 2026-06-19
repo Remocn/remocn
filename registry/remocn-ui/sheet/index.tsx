@@ -12,7 +12,6 @@ export interface SheetProps {
   actionLabel?: string;
   cancelLabel?: string;
   theme?: Partial<RemocnTheme>;
-  mode?: "light" | "dark";
   className?: string;
 }
 
@@ -77,10 +76,9 @@ export function Sheet({
   actionLabel = "Save changes",
   cancelLabel = "Cancel",
   theme: themeOverride,
-  mode,
   className,
 }: SheetProps) {
-  const theme = useRemocnTheme(themeOverride, mode);
+  const theme = useRemocnTheme(themeOverride, "light");
 
   const ctx = sheetStyleContext(theme);
   const v = style ?? sheetStyle(state, ctx);

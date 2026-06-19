@@ -23,23 +23,17 @@ export const accordionConfig: ComponentConfig = {
       options: ["opened", "closed"],
       label: "State",
     },
-    mode: {
-      type: "select",
-      default: "light",
-      options: ["light", "dark"],
-      label: "Mode",
-    },
   },
   durationInFrames: 120,
   fps: FPS,
   compositionWidth: W,
   compositionHeight: H,
+  previewBackdrop: { type: "color", value: "oklch(1 0 0)" },
   snippet: (values) => {
     const state = (values.state as AccordionState) ?? "opened";
     const title = values.title as string | undefined;
     const content = values.content as string | undefined;
     const variant = values.variant as string | undefined;
-    const mode = values.mode as string | undefined;
 
     const props: string[] = [`  state="${state}"`];
     if (title !== undefined && title !== "Is it accessible?")
@@ -51,8 +45,6 @@ export const accordionConfig: ComponentConfig = {
       props.push(`  content="${content}"`);
     if (variant !== undefined && variant !== "default")
       props.push(`  variant="${variant}"`);
-    if (mode !== undefined && mode !== "light")
-      props.push(`  mode="${mode}"`);
 
     return `import { Accordion } from "@/components/remocn/accordion";
 

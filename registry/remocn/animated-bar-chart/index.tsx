@@ -8,7 +8,6 @@ export interface AnimatedBarChartProps {
   width?: number;
   height?: number;
   barColor?: string;
-  background?: string;
   gap?: number;
   staggerFrames?: number;
   speed?: number;
@@ -21,7 +20,6 @@ export function AnimatedBarChart({
   width = 1000,
   height = 500,
   barColor = "#0ea5e9",
-  background = "#0a0a0a",
   gap = 16,
   staggerFrames = 6,
   speed = 1,
@@ -47,7 +45,6 @@ export function AnimatedBarChart({
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        background,
         fontFamily:
           "var(--font-geist-sans), -apple-system, BlinkMacSystemFont, sans-serif",
       }}

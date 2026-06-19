@@ -1,5 +1,6 @@
 import type { ComponentType } from "react";
 import { FPS, H, W } from "@/lib/customizer-config";
+import type { BackdropFill } from "@/registry/remocn/backdrop";
 import {
   SignupFlowExampleScene,
   signupFlowExampleCode,
@@ -20,6 +21,16 @@ import {
   SettingsToggleFlowExampleScene,
   settingsToggleFlowExampleCode,
 } from "../settings-toggle-flow-example";
+import {
+  BackdropColorScene,
+  BackdropGradientScene,
+  BackdropImageScene,
+  BackdropLiveScene,
+  backdropColorCode,
+  backdropGradientCode,
+  backdropImageCode,
+  backdropLiveCode,
+} from "../backdrop-variants";
 
 /**
  * Blocks scene registry — parallel to the ui-tier `examples` map
@@ -45,6 +56,7 @@ export interface BlockExampleEntry {
   fps: number;
   width: number;
   height: number;
+  previewBackdrop?: BackdropFill;
 }
 
 export const blockExamples: Record<string, BlockExampleEntry> = {
@@ -57,6 +69,7 @@ export const blockExamples: Record<string, BlockExampleEntry> = {
     fps: FPS,
     width: W,
     height: H,
+    previewBackdrop: { type: "color", value: "oklch(0.97 0 0)" },
   },
   "ai-prompt-flow": {
     Component: AiPromptFlowExampleScene,
@@ -66,6 +79,7 @@ export const blockExamples: Record<string, BlockExampleEntry> = {
     fps: FPS,
     width: W,
     height: H,
+    previewBackdrop: { type: "color", value: "oklch(1 0 0)" },
   },
   "checkout-flow": {
     Component: CheckoutFlowExampleScene,
@@ -76,6 +90,7 @@ export const blockExamples: Record<string, BlockExampleEntry> = {
     fps: FPS,
     width: W,
     height: H,
+    previewBackdrop: { type: "color", value: "oklch(0.97 0 0)" },
   },
   "onboarding-stepper-flow": {
     Component: OnboardingStepperFlowExampleScene,
@@ -85,6 +100,7 @@ export const blockExamples: Record<string, BlockExampleEntry> = {
     fps: FPS,
     width: W,
     height: H,
+    previewBackdrop: { type: "color", value: "oklch(1 0 0)" },
   },
   "settings-toggle-flow": {
     Component: SettingsToggleFlowExampleScene,
@@ -93,6 +109,39 @@ export const blockExamples: Record<string, BlockExampleEntry> = {
     // 44): switch 68 → select 99/124 → slider 149–202 → Save click 224 → toast
     // 240–300 dismiss + ~20 settle.
     durationInFrames: 320,
+    fps: FPS,
+    width: W,
+    height: H,
+    previewBackdrop: { type: "color", value: "oklch(0.97 0 0)" },
+  },
+  "backdrop-color": {
+    Component: BackdropColorScene,
+    code: backdropColorCode,
+    durationInFrames: 90,
+    fps: FPS,
+    width: W,
+    height: H,
+  },
+  "backdrop-gradient": {
+    Component: BackdropGradientScene,
+    code: backdropGradientCode,
+    durationInFrames: 90,
+    fps: FPS,
+    width: W,
+    height: H,
+  },
+  "backdrop-image": {
+    Component: BackdropImageScene,
+    code: backdropImageCode,
+    durationInFrames: 90,
+    fps: FPS,
+    width: W,
+    height: H,
+  },
+  "backdrop-live": {
+    Component: BackdropLiveScene,
+    code: backdropLiveCode,
+    durationInFrames: 150,
     fps: FPS,
     width: W,
     height: H,
@@ -115,6 +164,10 @@ export const BLOCK_SCENE_META: Record<
   "checkout-flow": { code: checkoutFlowExampleCode },
   "onboarding-stepper-flow": { code: onboardingStepperFlowExampleCode },
   "settings-toggle-flow": { code: settingsToggleFlowExampleCode },
+  "backdrop-color": { code: backdropColorCode },
+  "backdrop-gradient": { code: backdropGradientCode },
+  "backdrop-image": { code: backdropImageCode },
+  "backdrop-live": { code: backdropLiveCode },
 };
 
 // Re-export so block entries can reference the shared timing constants without

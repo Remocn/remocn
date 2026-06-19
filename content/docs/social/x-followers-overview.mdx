@@ -33,7 +33,6 @@ const XFollowersOverviewScene = () => (
     handle="remocn"
     avatarUrl="/logo.svg"
     accentColor="#1d9bf0"
-    theme="light"
     orientation="horizontal"
     speed={1}
   />
@@ -52,6 +51,24 @@ export const RemotionRoot = () => (
 ```
 
 Each follow notification — `<name> followed you · <time>` — is centered, and only the username flips into view on a 3D `rotateX` carousel while the rest of the line stays put. After the list is exhausted, the notifications fade and the total follower count pops in with a spring overshoot, blur, and a centered confetti burst. In sync with the count, the avatar slides in from the left and the handle from the right, just above it.
+
+### With Backdrop
+
+Renders transparent and single-theme — supply the background via `Backdrop`; edit the copied file to re-theme:
+
+```tsx
+import { Backdrop } from "@/components/remocn/backdrop";
+import { XFollowersOverview } from "@/components/remocn/x-followers-overview";
+
+<Backdrop fill={{ type: "color", value: "#ffffff" }}>
+  <XFollowersOverview
+    totalFollowers={1709}
+    handle="remocn"
+    accentColor="#1d9bf0"
+    orientation="horizontal"
+  />
+</Backdrop>
+```
 
 ## Props
 
@@ -86,18 +103,6 @@ Each follow notification — `<name> followed you · <time>` — is centered, an
       type: "string",
       default: "\"#1d9bf0\"",
       description: "X brand blue — used for the verified badge",
-    },
-    {
-      name: "theme",
-      type: "\"light\" | \"dark\"",
-      default: "\"light\"",
-      description: "Color theme for the background and text",
-    },
-    {
-      name: "background",
-      type: "\"surface\" | \"transparent\"",
-      default: "\"surface\"",
-      description: "Background — surface renders the theme color; transparent shows nothing behind the text",
     },
     {
       name: "orientation",

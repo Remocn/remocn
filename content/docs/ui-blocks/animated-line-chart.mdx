@@ -35,6 +35,19 @@ export const RemotionRoot = () => (
 );
 ```
 
+### With Backdrop
+
+Renders transparent — supply the background via `Backdrop`:
+
+```tsx
+import { Backdrop } from "@/components/remocn/backdrop";
+import { AnimatedLineChart } from "@/components/remocn/animated-line-chart";
+
+<Backdrop fill={{ type: "color", value: "#0a0a0a" }}>
+  <AnimatedLineChart data={[12, 19, 8, 15, 22, 18, 28, 25, 32]} strokeColor="#22c55e" />
+</Backdrop>
+```
+
 ## Props
 
 <PropsTable
@@ -68,12 +81,6 @@ export const RemotionRoot = () => (
       type: "number",
       default: "4",
       description: "Line stroke width in pixels",
-    },
-    {
-      name: "background",
-      type: "string",
-      default: "\"#0a0a0a\"",
-      description: "Outer background color",
     },
     {
       name: "gridColor",

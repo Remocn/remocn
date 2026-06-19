@@ -29,8 +29,6 @@ export interface XFollowCardProps {
   joined?: string;
   verified?: boolean;
   accentColor?: string;
-  theme?: "light" | "dark";
-  background?: "surface" | "transparent";
   orientation?: "horizontal" | "vertical";
   speed?: number;
 }
@@ -671,7 +669,6 @@ function CursorLayer({
     >
       <Cursor
         variant="pointer"
-        mode={theme}
         rippleColor={accent}
         style={style}
       />
@@ -690,14 +687,12 @@ export function XFollowCard({
   joined = "January 2024",
   verified = true,
   accentColor = "#1d9bf0",
-  theme = "light",
-  background = "surface",
   orientation = "horizontal",
   speed = 1,
 }: XFollowCardProps) {
   const frame = useCurrentFrame();
   const { width, height, fps } = useVideoConfig();
-  const t = THEMES[theme] ?? THEMES.light;
+  const t = THEMES.light;
   const isVertical = orientation === "vertical";
 
   const refW = isVertical ? 720 : 1280;
@@ -741,10 +736,9 @@ export function XFollowCard({
     };
   };
 
-  const pageBg = background === "transparent" ? "transparent" : t.page;
 
   return (
-    <AbsoluteFill style={{ background: pageBg }}>
+    <AbsoluteFill style={{ background: "transparent" }}>
       <div
         style={{
           position: "absolute",
@@ -767,10 +761,7 @@ export function XFollowCard({
             overflow: "hidden",
             transform: `translateY(${bounce.translateY}px) scale(${bounce.scale})`,
             transformOrigin: "center top",
-            boxShadow:
-              theme === "light"
-                ? "0 12px 40px -16px rgba(15,20,25,0.18)"
-                : "0 12px 40px -16px rgba(0,0,0,0.6)",
+            boxShadow: "0 12px 40px -16px rgba(15,20,25,0.18)",
           }}
         >
           <div style={groupStyle(0)}>
@@ -874,7 +865,7 @@ export function XFollowCard({
           </div>
         </div>
 
-        <CursorLayer theme={theme} accent={accentColor} style={cursorStyle} />
+        <CursorLayer theme="light" accent={accentColor} style={cursorStyle} />
       </div>
     </AbsoluteFill>
   );

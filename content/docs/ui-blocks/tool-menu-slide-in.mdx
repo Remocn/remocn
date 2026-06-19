@@ -37,6 +37,19 @@ export const RemotionRoot = () => (
 );
 ```
 
+### With Backdrop
+
+Renders transparent — supply the background via `Backdrop`:
+
+```tsx
+import { Backdrop } from "@/components/remocn/backdrop";
+import { ToolMenuSlideIn } from "@/components/remocn/tool-menu-slide-in";
+
+<Backdrop fill={{ type: "color", value: "#070708" }}>
+  <ToolMenuSlideIn panelStartFrame={18} iconStagger={4} iconCount={5} accent="#a78bfa" />
+</Backdrop>
+```
+
 ## Props
 
 <PropsTable
@@ -70,12 +83,6 @@ export const RemotionRoot = () => (
       type: "string",
       default: "\"rgba(18, 18, 22, 0.72)\"",
       description: "Frosted-glass fill of the menu pill",
-    },
-    {
-      name: "background",
-      type: "string",
-      default: "\"#070708\"",
-      description: "Background color of the editor canvas",
     },
     {
       name: "iconBg",

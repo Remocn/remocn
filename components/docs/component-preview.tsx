@@ -124,6 +124,7 @@ function Preview({
             fps={config.fps}
             compositionWidth={config.compositionWidth}
             compositionHeight={config.compositionHeight}
+            previewBackdrop={config.previewBackdrop}
           />
         </TabsContent>
 

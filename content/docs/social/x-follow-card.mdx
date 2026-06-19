@@ -27,7 +27,6 @@ const XFollowCardScene = () => (
     name="Co-Lab"
     handle="co-lab"
     accentColor="#1d9bf0"
-    theme="light"
     orientation="horizontal"
     speed={1}
   />
@@ -46,6 +45,19 @@ export const RemotionRoot = () => (
 ```
 
 Timeline: card bounces in (0–25), layers blur in staggered (20–70), cursor travels to the Follow button (75–110), clicks and transitions to "Following" (110), then holds (130–165).
+
+### With Backdrop
+
+Renders transparent and single-theme — supply the background via `Backdrop`; edit the copied file to re-theme:
+
+```tsx
+import { Backdrop } from "@/components/remocn/backdrop";
+import { XFollowCard } from "@/components/remocn/x-follow-card";
+
+<Backdrop fill={{ type: "color", value: "#f5f7f9" }}>
+  <XFollowCard name="Co-Lab" handle="co-lab" accentColor="#1d9bf0" orientation="horizontal" />
+</Backdrop>
+```
 
 ## Props
 
@@ -110,18 +122,6 @@ Timeline: card bounces in (0–25), layers blur in staggered (20–70), cursor t
       type: "string",
       default: "\"#1d9bf0\"",
       description: "X brand blue — used for button fill, badge, and cursor ripple",
-    },
-    {
-      name: "theme",
-      type: "\"light\" | \"dark\"",
-      default: "\"light\"",
-      description: "Color theme for the card background and text",
-    },
-    {
-      name: "background",
-      type: "\"surface\" | \"transparent\"",
-      default: "\"surface\"",
-      description: "Card background — surface renders white (light) or dark gray (dark); transparent shows no background",
     },
     {
       name: "orientation",

@@ -8,7 +8,9 @@ import {
   parseAsString,
   parseAsStringLiteral,
 } from "nuqs";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import type { BackdropFill } from "@/registry/remocn/backdrop";
+import { Backdrop } from "@/registry/remocn/backdrop";
 import type { ControlConfig } from "@/lib/customizer-config";
 import { usePrefersReducedMotion } from "@/lib/use-prefers-reduced-motion";
 import { cn } from "@/lib/utils";
@@ -70,6 +72,7 @@ export function PreviewStage({
   fps,
   compositionWidth,
   compositionHeight,
+  previewBackdrop,
 }: {
   name: string;
   Component: React.ComponentType<any>;
@@ -78,6 +81,7 @@ export function PreviewStage({
   fps: number;
   compositionWidth: number;
   compositionHeight: number;
+  previewBackdrop?: BackdropFill;
 }) {
   const [mounted, setMounted] = useState(false);
   const frameRef = useRef<HTMLDivElement>(null);
@@ -125,6 +129,16 @@ export function PreviewStage({
     };
   }, [mounted]);
 
+  const Composition = useMemo(() => {
+    if (!previewBackdrop) return Component;
+    const Wrapped = (p: Record<string, unknown>) => (
+      <Backdrop fill={previewBackdrop} padding={0} radius={0} shadow="">
+        <Component {...p} />
+      </Backdrop>
+    );
+    return Wrapped;
+  }, [Component, previewBackdrop]);
+
   return (
     <div
       ref={frameRef}
@@ -144,7 +158,7 @@ export function PreviewStage({
         >
           <Player
             ref={playerRef}
-            component={Component}
+            component={Composition}
             inputProps={inputProps}
             durationInFrames={durationInFrames}
             fps={fps}

@@ -1,5 +1,6 @@
 import type { ComponentType } from "react";
 import { FPS, H, W } from "@/lib/customizer-config";
+import type { BackdropFill } from "@/registry/remocn/backdrop";
 import {
   AccordionExampleScene,
   accordionExampleCode,
@@ -84,6 +85,7 @@ export interface ExampleEntry {
   fps: number;
   width: number;
   height: number;
+  previewBackdrop?: BackdropFill;
 }
 
 export const examples: Record<string, ExampleEntry> = {
@@ -94,6 +96,7 @@ export const examples: Record<string, ExampleEntry> = {
     fps: FPS,
     width: W,
     height: H,
+    previewBackdrop: { type: "color", value: "oklch(1 0 0)" },
   },
   "accordion-example": {
     Component: AccordionExampleScene,
@@ -103,6 +106,7 @@ export const examples: Record<string, ExampleEntry> = {
     fps: FPS,
     width: W,
     height: H,
+    previewBackdrop: { type: "color", value: "oklch(1 0 0)" },
   },
   "alert-dialog-example": {
     Component: AlertDialogExampleScene,
@@ -112,6 +116,7 @@ export const examples: Record<string, ExampleEntry> = {
     fps: FPS,
     width: W,
     height: H,
+    previewBackdrop: { type: "color", value: "oklch(1 0 0)" },
   },
   "dialog-example": {
     Component: DialogExampleScene,
@@ -121,6 +126,7 @@ export const examples: Record<string, ExampleEntry> = {
     fps: FPS,
     width: W,
     height: H,
+    previewBackdrop: { type: "color", value: "oklch(1 0 0)" },
   },
   "sheet-example": {
     Component: SheetExampleScene,
@@ -130,6 +136,7 @@ export const examples: Record<string, ExampleEntry> = {
     fps: FPS,
     width: W,
     height: H,
+    previewBackdrop: { type: "color", value: "oklch(1 0 0)" },
   },
   "drawer-example": {
     Component: DrawerExampleScene,
@@ -139,6 +146,7 @@ export const examples: Record<string, ExampleEntry> = {
     fps: FPS,
     width: W,
     height: H,
+    previewBackdrop: { type: "color", value: "oklch(1 0 0)" },
   },
   "checkbox-example": {
     Component: CheckboxExampleScene,
@@ -147,6 +155,7 @@ export const examples: Record<string, ExampleEntry> = {
     fps: FPS,
     width: W,
     height: H,
+    previewBackdrop: { type: "color", value: "oklch(1 0 0)" },
   },
   "radio-example": {
     Component: RadioExampleScene,
@@ -155,6 +164,7 @@ export const examples: Record<string, ExampleEntry> = {
     fps: FPS,
     width: W,
     height: H,
+    previewBackdrop: { type: "color", value: "oklch(1 0 0)" },
   },
   "switch-example": {
     Component: SwitchExampleScene,
@@ -163,6 +173,7 @@ export const examples: Record<string, ExampleEntry> = {
     fps: FPS,
     width: W,
     height: H,
+    previewBackdrop: { type: "color", value: "oklch(1 0 0)" },
   },
   "input-example": {
     Component: InputExampleScene,
@@ -171,6 +182,7 @@ export const examples: Record<string, ExampleEntry> = {
     fps: FPS,
     width: W,
     height: H,
+    previewBackdrop: { type: "color", value: "oklch(1 0 0)" },
   },
   "select-example": {
     Component: SelectExampleScene,
@@ -180,6 +192,7 @@ export const examples: Record<string, ExampleEntry> = {
     fps: FPS,
     width: W,
     height: H,
+    previewBackdrop: { type: "color", value: "oklch(1 0 0)" },
   },
   "dropdown-menu-example": {
     Component: DropdownMenuExampleScene,
@@ -189,6 +202,7 @@ export const examples: Record<string, ExampleEntry> = {
     fps: FPS,
     width: W,
     height: H,
+    previewBackdrop: { type: "color", value: "oklch(1 0 0)" },
   },
   "tabs-example": {
     Component: TabsExampleScene,
@@ -198,6 +212,7 @@ export const examples: Record<string, ExampleEntry> = {
     fps: FPS,
     width: W,
     height: H,
+    previewBackdrop: { type: "color", value: "oklch(1 0 0)" },
   },
   "cursor-example": {
     Component: CursorExampleScene,
@@ -207,6 +222,7 @@ export const examples: Record<string, ExampleEntry> = {
     fps: FPS,
     width: W,
     height: H,
+    previewBackdrop: { type: "color", value: "oklch(1 0 0)" },
   },
   "toast-example": {
     Component: ToastExampleScene,
@@ -216,6 +232,7 @@ export const examples: Record<string, ExampleEntry> = {
     fps: FPS,
     width: W,
     height: H,
+    previewBackdrop: { type: "color", value: "oklch(1 0 0)" },
   },
   "command-menu-example": {
     Component: CommandMenuExampleScene,
@@ -225,6 +242,7 @@ export const examples: Record<string, ExampleEntry> = {
     fps: FPS,
     width: W,
     height: H,
+    previewBackdrop: { type: "color", value: "oklch(1 0 0)" },
   },
   "tooltip-example": {
     Component: TooltipExampleScene,
@@ -234,6 +252,7 @@ export const examples: Record<string, ExampleEntry> = {
     fps: FPS,
     width: W,
     height: H,
+    previewBackdrop: { type: "color", value: "oklch(1 0 0)" },
   },
   "progress-example": {
     Component: ProgressExampleScene,
@@ -243,6 +262,7 @@ export const examples: Record<string, ExampleEntry> = {
     fps: FPS,
     width: W,
     height: H,
+    previewBackdrop: { type: "color", value: "oklch(1 0 0)" },
   },
   "skeleton-example": {
     Component: SkeletonExampleScene,
@@ -253,6 +273,7 @@ export const examples: Record<string, ExampleEntry> = {
     fps: FPS,
     width: W,
     height: H,
+    previewBackdrop: { type: "color", value: "oklch(1 0 0)" },
   },
   "slider-example": {
     Component: SliderExampleScene,
@@ -262,6 +283,7 @@ export const examples: Record<string, ExampleEntry> = {
     fps: FPS,
     width: W,
     height: H,
+    previewBackdrop: { type: "color", value: "oklch(1 0 0)" },
   },
   "combobox-example": {
     Component: ComboboxExampleScene,
@@ -271,6 +293,7 @@ export const examples: Record<string, ExampleEntry> = {
     fps: FPS,
     width: W,
     height: H,
+    previewBackdrop: { type: "color", value: "oklch(1 0 0)" },
   },
   "popover-example": {
     Component: PopoverExampleScene,
@@ -280,6 +303,7 @@ export const examples: Record<string, ExampleEntry> = {
     fps: FPS,
     width: W,
     height: H,
+    previewBackdrop: { type: "color", value: "oklch(1 0 0)" },
   },
   "context-menu-example": {
     Component: ContextMenuExampleScene,
@@ -290,6 +314,7 @@ export const examples: Record<string, ExampleEntry> = {
     fps: FPS,
     width: W,
     height: H,
+    previewBackdrop: { type: "color", value: "oklch(1 0 0)" },
   },
   "toggle-group-example": {
     Component: ToggleGroupExampleScene,
@@ -299,6 +324,7 @@ export const examples: Record<string, ExampleEntry> = {
     fps: FPS,
     width: W,
     height: H,
+    previewBackdrop: { type: "color", value: "oklch(1 0 0)" },
   },
   "stepper-example": {
     Component: StepperExampleScene,
@@ -308,6 +334,7 @@ export const examples: Record<string, ExampleEntry> = {
     fps: FPS,
     width: W,
     height: H,
+    previewBackdrop: { type: "color", value: "oklch(1 0 0)" },
   },
   "resizable-example": {
     Component: ResizableExampleScene,
@@ -317,6 +344,7 @@ export const examples: Record<string, ExampleEntry> = {
     fps: FPS,
     width: W,
     height: H,
+    previewBackdrop: { type: "color", value: "oklch(1 0 0)" },
   },
   "blur-in-example": {
     Component: BlurInExampleScene,

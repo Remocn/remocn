@@ -32,7 +32,6 @@ type SnippetValues = {
   revealCount?: number;
   selectedIndex?: number;
   highlightedIndex?: number;
-  mode?: string;
 };
 const snippet = (values: SnippetValues): string =>
   commandMenuConfig.snippet(values as Record<string, unknown>);
@@ -594,16 +593,6 @@ describe("commandMenuConfig.controls: selectedIndex and highlightedIndex", () =>
   });
 });
 
-describe("commandMenuConfig.controls: mode", () => {
-  it("mode is a select control", () => {
-    expect(commandMenuConfig.controls.mode.type).toBe("select");
-  });
-
-  it("mode default is 'light'", () => {
-    expect(commandMenuConfig.controls.mode.default).toBe("light");
-  });
-});
-
 describe("commandMenuConfig.snippet: import line", () => {
   it("includes 'import { CommandMenu }' from the correct path", () => {
     const out = snippet({ state: "opened" });
@@ -645,9 +634,6 @@ describe("commandMenuConfig.snippet: default props are omitted", () => {
     expect(snippet({ state: "opened", highlightedIndex: -1 })).not.toContain("highlightedIndex=");
   });
 
-  it("omits mode when it equals 'light'", () => {
-    expect(snippet({ state: "opened", mode: "light" })).not.toContain("mode=");
-  });
 });
 
 describe("commandMenuConfig.snippet: non-default props are emitted", () => {
@@ -667,9 +653,6 @@ describe("commandMenuConfig.snippet: non-default props are emitted", () => {
     expect(snippet({ state: "opened", highlightedIndex: 0 })).toContain("highlightedIndex={0}");
   });
 
-  it("emits mode='dark' when non-default", () => {
-    expect(snippet({ state: "opened", mode: "dark" })).toContain('mode="dark"');
-  });
 });
 
 describe("commandMenuConfig.snippet: state options round-trip", () => {

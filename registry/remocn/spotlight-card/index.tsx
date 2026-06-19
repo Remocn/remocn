@@ -10,7 +10,6 @@ export interface SpotlightCardProps {
   cardHeight?: number;
   glowSize?: number;
   glowOpacity?: number;
-  background?: string;
   cardColor?: string;
   textColor?: string;
   mutedColor?: string;
@@ -46,7 +45,6 @@ export function SpotlightCard({
   cardHeight = 320,
   glowSize = 600,
   glowOpacity = 0.08,
-  background = "#050505",
   cardColor = "#0a0a0a",
   textColor = "#fafafa",
   mutedColor = "#71717a",
@@ -80,7 +78,6 @@ export function SpotlightCard({
       style={{
         position: "absolute",
         inset: 0,
-        background,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",

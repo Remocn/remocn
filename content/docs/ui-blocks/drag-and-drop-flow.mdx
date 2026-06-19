@@ -36,6 +36,19 @@ export const RemotionRoot = () => (
 );
 ```
 
+### With Backdrop
+
+Renders transparent — supply the background via `Backdrop`:
+
+```tsx
+import { Backdrop } from "@/components/remocn/backdrop";
+import { DragAndDropFlow } from "@/components/remocn/drag-and-drop-flow";
+
+<Backdrop fill={{ type: "color", value: "#fafafa" }}>
+  <DragAndDropFlow accent="#0ea5e9" dropzoneLabel="Drop file to upload" fileName="design.fig" />
+</Backdrop>
+```
+
 ## Props
 
 <PropsTable
@@ -57,12 +70,6 @@ export const RemotionRoot = () => (
       type: "string",
       default: "\"design.fig\"",
       description: "File name shown above the progress bar",
-    },
-    {
-      name: "background",
-      type: "string",
-      default: "\"#fafafa\"",
-      description: "Frame background color",
     },
     {
       name: "className",

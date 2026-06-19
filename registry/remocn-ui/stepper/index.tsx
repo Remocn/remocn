@@ -14,7 +14,6 @@ export interface StepperProps {
   style?: StepperStyle;
   orientation?: StepperOrientation;
   theme?: Partial<RemocnTheme>;
-  mode?: "light" | "dark";
   className?: string;
 }
 
@@ -68,10 +67,9 @@ export function Stepper({
   style,
   orientation: _orientation = "horizontal",
   theme: themeOverride,
-  mode,
   className,
 }: StepperProps) {
-  const theme = useRemocnTheme(themeOverride, mode);
+  const theme = useRemocnTheme(themeOverride, "light");
   const ctx = stepperStyleContext(theme);
   const v = style ?? stepperStyle(activeIndex);
   const position = v.position;
@@ -85,7 +83,7 @@ export function Stepper({
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        background: theme.background,
+        background: "transparent",
         fontFamily:
           "var(--font-geist-sans), -apple-system, BlinkMacSystemFont, sans-serif",
       }}

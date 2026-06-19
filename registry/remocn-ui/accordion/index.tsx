@@ -14,7 +14,6 @@ export interface AccordionProps {
   contentHeight?: number;
   variant?: AccordionVariant;
   theme?: Partial<RemocnTheme>;
-  mode?: "light" | "dark";
   className?: string;
 }
 
@@ -107,10 +106,9 @@ export function Accordion({
   contentHeight = 64,
   variant = "default",
   theme: themeOverride,
-  mode,
   className,
 }: AccordionProps) {
-  const theme = useRemocnTheme(themeOverride, mode);
+  const theme = useRemocnTheme(themeOverride, "light");
 
   const ctx = accordionStyleContext(variant, theme);
   const v = style ?? accordionStyle(state, ctx);
@@ -123,7 +121,7 @@ export function Accordion({
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        background: theme.background,
+        background: "transparent",
         fontFamily:
           "var(--font-geist-sans), -apple-system, BlinkMacSystemFont, sans-serif",
       }}

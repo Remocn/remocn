@@ -1,6 +1,5 @@
 "use client";
 
-import { useRemocnTheme } from "@/lib/remocn-ui";
 import {
   Tooltip,
   type TooltipSide,
@@ -11,17 +10,13 @@ export interface TooltipPreviewProps {
   label?: string;
   side?: TooltipSide;
   state?: TooltipState;
-  mode?: "light" | "dark";
 }
 
 export function TooltipPreview({
   label = "Add to library",
   side = "top",
   state = "visible",
-  mode,
 }: TooltipPreviewProps) {
-  const theme = useRemocnTheme(undefined, mode);
-
   return (
     <div
       style={{
@@ -30,10 +25,10 @@ export function TooltipPreview({
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        background: theme.background,
+        background: "transparent",
       }}
     >
-      <Tooltip label={label} side={side} state={state} mode={mode} />
+      <Tooltip label={label} side={side} state={state} />
     </div>
   );
 }

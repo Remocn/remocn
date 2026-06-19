@@ -13,13 +13,11 @@ const MONTHLY_X = 596;
 const YEARLY_X  = 684;
 const TOGGLE_Y  = 360;
 
-export interface ToggleGroupExampleProps {
-  mode?: "light" | "dark";
-}
+export interface ToggleGroupExampleProps {}
 
-export const toggleGroupExampleControls = ["mode"] as const;
+export const toggleGroupExampleControls = [] as const;
 
-export const ToggleGroupExampleScene = (p: ToggleGroupExampleProps = {}) => {
+export const ToggleGroupExampleScene = (_p: ToggleGroupExampleProps = {}) => {
   // Cursor: park → ease to "Yearly" → click → ease to "Monthly" → click.
   const cursorStyle = useCursorPath([
     { at: 0,  x: 80,        y: 60        },
@@ -30,33 +28,23 @@ export const ToggleGroupExampleScene = (p: ToggleGroupExampleProps = {}) => {
   ]);
 
   // Toggle: starts on "Monthly", slides to "Yearly" on first click, back on second.
-  // Forward mode so the animated track/segment colors track the theme.
-  const toggleStyle = useToggleGroupTransition(
-    [
-      { at: 46, state: "Yearly",  duration: 14 },
-      { at: 92, state: "Monthly", duration: 14 },
-    ],
-    { mode: p.mode },
-  );
+  const toggleStyle = useToggleGroupTransition([
+    { at: 46, state: "Yearly",  duration: 14 },
+    { at: 92, state: "Monthly", duration: 14 },
+  ]);
 
   return (
     <div style={{ position: "relative", width: "100%", height: "100%" }}>
       {/* ToggleGroup renders position:absolute;inset:0 — it centers itself. */}
-      <ToggleGroup style={toggleStyle} mode={p.mode ?? "light"} />
-      <Cursor style={cursorStyle} variant="pointer" mode={p.mode ?? "light"} />
+      <ToggleGroup style={toggleStyle} />
+      <Cursor style={cursorStyle} variant="pointer" />
     </div>
   );
 };
 
 export const toggleGroupExampleCode = (
-  values: Record<string, unknown> = {},
+  _values: Record<string, unknown> = {},
 ): string => {
-  const mode = values.mode as string | undefined;
-
-  const modeStr = mode !== undefined && mode !== "light" ? ` mode="${mode}"` : "";
-  const hookOptsStr =
-    mode !== undefined && mode !== "light" ? `, { mode: "${mode}" }` : "";
-
   return `import { Cursor } from "@/components/remocn/cursor";
 import { useCursorPath } from "@/components/remocn/use-cursor-path";
 import { ToggleGroup } from "@/components/remocn/toggle-group";
@@ -82,12 +70,12 @@ export const Scene = () => {
   const toggleStyle = useToggleGroupTransition([
     { at: 46, state: "Yearly",  duration: 14 },
     { at: 92, state: "Monthly", duration: 14 },
-  ]${hookOptsStr});
+  ]);
 
   return (
     <div style={{ position: "relative", width: "100%", height: "100%" }}>
-      <ToggleGroup style={toggleStyle}${modeStr} />
-      <Cursor style={cursorStyle} variant="pointer"${modeStr} />
+      <ToggleGroup style={toggleStyle} />
+      <Cursor style={cursorStyle} variant="pointer" />
     </div>
   );
 };`;

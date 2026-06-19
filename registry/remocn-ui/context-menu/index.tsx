@@ -20,7 +20,6 @@ export interface ContextMenuProps {
   pressedIndex?: number;
   itemStyles?: (DropdownMenuItemStyle | undefined)[];
   theme?: Partial<RemocnTheme>;
-  mode?: "light" | "dark";
   className?: string;
 }
 
@@ -80,10 +79,9 @@ export function ContextMenu({
   pressedIndex = -1,
   itemStyles,
   theme: themeOverride,
-  mode,
   className,
 }: ContextMenuProps) {
-  const theme = useRemocnTheme(themeOverride, mode);
+  const theme = useRemocnTheme(themeOverride, "light");
   const ctx = contextMenuStyleContext(theme);
   const v = style ?? contextMenuStyle(state, ctx);
 
@@ -123,7 +121,6 @@ export function ContextMenu({
             label={item}
             width={WIDTH - 8}
             theme={themeOverride}
-            mode={mode}
           />
         );
       })}

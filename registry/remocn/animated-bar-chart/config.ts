@@ -5,7 +5,6 @@ export const animatedBarChartConfig: ComponentConfig = {
   importPath: "@/components/remocn/animated-bar-chart",
   controls: {
     barColor: { type: "color", default: "#0ea5e9", label: "Bar color" },
-    background: { type: "color", default: "#0a0a0a", label: "Background" },
     gap: {
       type: "number",
       default: 16,
@@ -27,4 +26,5 @@ export const animatedBarChartConfig: ComponentConfig = {
   fps: FPS,
   compositionWidth: W,
   compositionHeight: H,
+  previewBackdrop: { type: "color", value: "#0a0a0a" },
 };

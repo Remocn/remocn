@@ -19,21 +19,10 @@ export const claudeCodeConfig: ComponentConfig = {
       label: "Prompt",
     },
     accentColor: { type: "color", default: "#D97757", label: "Accent" },
-    theme: {
-      type: "select",
-      default: "dark",
-      options: ["light", "dark"],
-      label: "Theme",
-    },
-    background: {
-      type: "select",
-      default: "surface",
-      options: ["surface", "transparent"],
-      label: "Background",
-    },
   },
   durationInFrames: 160,
   fps: FPS,
   compositionWidth: W,
   compositionHeight: H,
+  previewBackdrop: { type: "color", value: "#2B2A28" },
 };

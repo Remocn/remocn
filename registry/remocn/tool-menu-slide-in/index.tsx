@@ -14,7 +14,6 @@ export interface ToolMenuSlideInProps {
   iconCount?: number;
   accent?: string;
   panelColor?: string;
-  background?: string;
   iconBg?: string;
   speed?: number;
   className?: string;
@@ -32,7 +31,6 @@ export function ToolMenuSlideIn({
   iconCount = 5,
   accent = "#a78bfa",
   panelColor = "rgba(18, 18, 22, 0.72)",
-  background = "#070708",
   iconBg = "rgba(255,255,255,0.06)",
   speed = 1,
   className,
@@ -72,7 +70,6 @@ export function ToolMenuSlideIn({
         position: "absolute",
         inset: 0,
         overflow: "hidden",
-        background,
         fontFamily: FONT_FAMILY,
         // subtle dot grid for editor-canvas feel
         backgroundImage:

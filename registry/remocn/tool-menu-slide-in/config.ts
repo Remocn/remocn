@@ -34,11 +34,11 @@ export const toolMenuSlideInConfig: ComponentConfig = {
       default: "#12121299",
       label: "Panel color",
     },
-    background: { type: "color", default: "#070708", label: "Background" },
     iconBg: { type: "color", default: "#ffffff10", label: "Icon background" },
   },
   durationInFrames: 180,
   fps: FPS,
   compositionWidth: W,
   compositionHeight: H,
+  previewBackdrop: { type: "color", value: "#070708" },
 };

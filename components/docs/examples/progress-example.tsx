@@ -3,11 +3,10 @@
 import { Progress } from "@/registry/remocn-ui/progress";
 import { useProgressTransition } from "@/registry/remocn-ui/progress/use-progress-transition";
 
-export const progressExampleControls = ["showLabel", "mode"] as const;
+export const progressExampleControls = ["showLabel"] as const;
 
 export interface ProgressExampleProps {
   showLabel?: boolean;
-  mode?: "light" | "dark";
 }
 
 export const ProgressExampleScene = (p: ProgressExampleProps = {}) => {
@@ -29,7 +28,7 @@ export const ProgressExampleScene = (p: ProgressExampleProps = {}) => {
         justifyContent: "center",
       }}
     >
-      <Progress style={progressStyle} showLabel={p.showLabel ?? true} width={320} mode={p.mode ?? "light"} />
+      <Progress style={progressStyle} showLabel={p.showLabel ?? true} width={320} />
     </div>
   );
 };
@@ -38,12 +37,10 @@ export const progressExampleCode = (
   values: Record<string, unknown> = {},
 ): string => {
   const showLabel = values.showLabel as boolean | undefined;
-  const mode = values.mode as string | undefined;
 
   const props: string[] = [];
   if (showLabel !== undefined && showLabel !== true)
     props.push(`showLabel={${showLabel}}`);
-  if (mode !== undefined && mode !== "light") props.push(`mode="${mode}"`);
 
   const propsStr = props.length ? ` ${props.join(" ")}` : "";
   return `import { Progress } from "@/components/remocn/progress";

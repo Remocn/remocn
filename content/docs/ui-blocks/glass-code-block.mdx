@@ -35,6 +35,19 @@ export const RemotionRoot = () => (
 );
 ```
 
+### With Backdrop
+
+Renders transparent — supply the background via `Backdrop`:
+
+```tsx
+import { Backdrop } from "@/components/remocn/backdrop";
+import { GlassCodeBlock } from "@/components/remocn/glass-code-block";
+
+<Backdrop fill={{ type: "color", value: "#0a0a0a" }}>
+  <GlassCodeBlock title="hero.tsx" code={`export function Hero() {\n  return <h1>Hello</h1>;\n}`} />
+</Backdrop>
+```
+
 ## Props
 
 <PropsTable
@@ -67,12 +80,6 @@ export const RemotionRoot = () => (
       type: "number",
       default: "16",
       description: "Code font size in pixels",
-    },
-    {
-      name: "background",
-      type: "string",
-      default: "\"#0a0a0a\"",
-      description: "Background color around the window",
     },
     {
       name: "glassColor",

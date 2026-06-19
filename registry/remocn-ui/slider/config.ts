@@ -21,30 +21,23 @@ export const sliderConfig: ComponentConfig = {
       label: "Width",
     },
     showValue: { type: "boolean", default: true, label: "Show Value" },
-    mode: {
-      type: "select",
-      default: "light",
-      options: ["light", "dark"],
-      label: "Mode",
-    },
   },
   durationInFrames: 120,
   fps: FPS,
   compositionWidth: W,
   compositionHeight: H,
+  previewBackdrop: { type: "color", value: "oklch(1 0 0)" },
   snippet: (values) => {
     const value = values.value as number | undefined;
     const thumbState = values.thumbState as SliderThumbState | undefined;
     const width = values.width as number | undefined;
     const showValue = values.showValue as boolean | undefined;
-    const mode = values.mode as string | undefined;
 
     const props: string[] = [`  value={${value ?? 0}}`];
     if (thumbState !== undefined && thumbState !== "idle")
       props.push(`  thumbState="${thumbState}"`);
     if (width !== undefined && width !== 320) props.push(`  width={${width}}`);
     if (showValue) props.push(`  showValue`);
-    if (mode !== undefined && mode !== "light") props.push(`  mode="${mode}"`);
 
     return `import { Slider } from "@/components/remocn/slider";
 

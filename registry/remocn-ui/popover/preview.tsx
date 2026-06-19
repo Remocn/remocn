@@ -1,6 +1,5 @@
 "use client";
 
-import { useRemocnTheme } from "@/lib/remocn-ui";
 import {
   Popover,
   type PopoverSide,
@@ -13,7 +12,6 @@ export interface PopoverPreviewProps {
   side?: PopoverSide;
   width?: number;
   state?: PopoverState;
-  mode?: "light" | "dark";
 }
 
 export function PopoverPreview({
@@ -22,10 +20,7 @@ export function PopoverPreview({
   side = "bottom",
   width = 288,
   state = "opened",
-  mode,
 }: PopoverPreviewProps) {
-  const theme = useRemocnTheme(undefined, mode);
-
   return (
     <div
       style={{
@@ -34,7 +29,7 @@ export function PopoverPreview({
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        background: theme.background,
+        background: "transparent",
       }}
     >
       <Popover
@@ -43,7 +38,6 @@ export function PopoverPreview({
         side={side}
         width={width}
         state={state}
-        mode={mode}
       />
     </div>
   );

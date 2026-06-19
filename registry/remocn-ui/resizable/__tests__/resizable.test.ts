@@ -25,7 +25,6 @@ type SnippetValues = {
   ratio?: number;
   handleState?: string;
   direction?: string;
-  mode?: string;
 };
 const snippet = (values: SnippetValues): string =>
   resizableConfig.snippet(values as Record<string, unknown>);
@@ -607,15 +606,6 @@ describe("resizableConfig.controls: direction", () => {
   });
 });
 
-describe("resizableConfig.controls: mode", () => {
-  it("mode is a select with options ['light','dark'] and default 'light'", () => {
-    const ctrl = resizableConfig.controls.mode;
-    if (ctrl.type !== "select") throw new Error("expected select");
-    expect(ctrl.options).toEqual(["light", "dark"]);
-    expect(ctrl.default).toBe("light");
-  });
-});
-
 describe("resizableConfig.snippet: import line", () => {
   it("includes 'import { Resizable }' from the correct path", () => {
     const out = snippet({ ratio: 0.5 });
@@ -649,10 +639,6 @@ describe("resizableConfig.snippet: default props are omitted", () => {
     const out = snippet({ ratio: 0.5, direction: "horizontal" });
     expect(out).not.toContain("direction=");
   });
-  it("omits mode when it equals the default 'light'", () => {
-    const out = snippet({ ratio: 0.5, mode: "light" });
-    expect(out).not.toContain("mode=");
-  });
 });
 
 describe("resizableConfig.snippet: non-default props are emitted", () => {
@@ -670,9 +656,6 @@ describe("resizableConfig.snippet: non-default props are emitted", () => {
     expect(snippet({ ratio: 0.5, direction: "vertical" })).toContain(
       'direction="vertical"',
     );
-  });
-  it("emits mode='dark' when non-default", () => {
-    expect(snippet({ ratio: 0.5, mode: "dark" })).toContain('mode="dark"');
   });
 });
 

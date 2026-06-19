@@ -8,7 +8,6 @@ export interface ChatToPreviewLayoutProps {
   preview?: ReactNode;
   startChatRatio?: number;
   endChatRatio?: number;
-  background?: string;
   speed?: number;
   className?: string;
 }
@@ -163,7 +162,6 @@ export function ChatToPreviewLayout({
   preview,
   startChatRatio = 0.5,
   endChatRatio = 0.25,
-  background = "#0a0a0a",
   speed = 1,
   className,
 }: ChatToPreviewLayoutProps) {
@@ -218,7 +216,6 @@ export function ChatToPreviewLayout({
       style={{
         position: "absolute",
         inset: 0,
-        background,
         padding: 32,
         display: "flex",
         gap: 16,

@@ -19,7 +19,6 @@ const VALID_LAYOUTS: readonly SkeletonLayout[] = ["lines", "card"];
 type SnippetValues = {
   state?: string;
   layout?: string;
-  mode?: string;
 };
 const snippet = (values: SnippetValues): string =>
   skeletonConfig.snippet(values as Record<string, unknown>);
@@ -409,22 +408,6 @@ describe("skeletonConfig.controls: layout", () => {
   });
 });
 
-describe("skeletonConfig.controls: mode", () => {
-  it("mode is a select control", () => {
-    expect(skeletonConfig.controls.mode.type).toBe("select");
-  });
-
-  it("mode options are ['light', 'dark']", () => {
-    const ctrl = skeletonConfig.controls.mode;
-    if (ctrl.type !== "select") throw new Error("expected select");
-    expect(ctrl.options).toEqual(["light", "dark"]);
-  });
-
-  it("mode default is 'light'", () => {
-    expect(skeletonConfig.controls.mode.default).toBe("light");
-  });
-});
-
 describe("skeletonConfig.snippet: import line", () => {
   it("includes 'import { Skeleton }' from the correct path", () => {
     const out = snippet({ state: "loading" });
@@ -458,22 +441,12 @@ describe("skeletonConfig.snippet: default props are omitted", () => {
     expect(out).not.toContain("layout=");
   });
 
-  it("omits mode when it equals the default 'light'", () => {
-    const out = snippet({ state: "loading", mode: "light" });
-    expect(out).not.toContain("mode=");
-  });
 });
 
 describe("skeletonConfig.snippet: non-default props are emitted", () => {
   it("emits layout='card' when non-default", () => {
     expect(snippet({ state: "loading", layout: "card" })).toContain(
       'layout="card"',
-    );
-  });
-
-  it("emits mode='dark' when non-default", () => {
-    expect(snippet({ state: "loading", mode: "dark" })).toContain(
-      'mode="dark"',
     );
   });
 });

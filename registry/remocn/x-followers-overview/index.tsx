@@ -26,9 +26,7 @@ export interface XFollowersOverviewProps {
   handle?: string;
   avatarUrl?: string;
   accentColor?: string;
-  theme?: "light" | "dark";
   orientation?: "horizontal" | "vertical";
-  background?: "surface" | "transparent";
   speed?: number;
 }
 
@@ -251,14 +249,12 @@ export function XFollowersOverview({
   handle = "remocn",
   avatarUrl = "/logo.svg",
   accentColor = "#1d9bf0",
-  theme = "light",
   orientation = "horizontal",
-  background = "surface",
   speed = 1,
 }: XFollowersOverviewProps) {
   const frame = useCurrentFrame();
   const { durationInFrames, width, height, fps } = useVideoConfig();
-  const t = THEMES[theme] ?? THEMES.light;
+  const t = THEMES.light;
   const isVertical = orientation === "vertical";
 
   const refW = isVertical ? 720 : 1280;
@@ -356,10 +352,9 @@ export function XFollowersOverview({
     "#a855f7",
   ];
 
-  const pageBg = background === "transparent" ? "transparent" : t.bg;
 
   return (
-    <AbsoluteFill style={{ background: pageBg }}>
+    <AbsoluteFill style={{ background: "transparent" }}>
       <div
         style={{
           position: "absolute",

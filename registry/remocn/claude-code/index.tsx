@@ -21,8 +21,6 @@ export interface ClaudeCodeProps {
   placeholder?: string;
   prompt?: string;
   accentColor?: string;
-  theme?: "light" | "dark";
-  background?: "surface" | "transparent";
   speed?: number;
 }
 
@@ -122,13 +120,11 @@ export function ClaudeCode({
   placeholder = 'Try "edit <filepath> to ..."',
   prompt = "edit src/theme.ts to add a dark mode toggle",
   accentColor = "#D97757",
-  theme = "dark",
-  background = "surface",
   speed = 1,
 }: ClaudeCodeProps) {
   const frame = useCurrentFrame();
   const { width, height, fps } = useVideoConfig();
-  const t = THEMES[theme] ?? THEMES.dark;
+  const t = THEMES.dark;
 
   const refW = 1280;
   const refH = 720;
@@ -146,7 +142,6 @@ export function ClaudeCode({
   const rightFade = fadeUpAt(frame * speed, [12, 30]);
   const promptFade = fadeUpAt(frame * speed, [18, 36]);
 
-  const pageBg = background === "transparent" ? "transparent" : t.page;
   const border = accentColor;
 
   const winLeft = 90;
@@ -156,7 +151,7 @@ export function ClaudeCode({
   const barHeight = 40;
 
   return (
-    <AbsoluteFill style={{ background: pageBg }}>
+    <AbsoluteFill style={{ background: "transparent" }}>
       <div
         style={{
           position: "absolute",
@@ -177,10 +172,7 @@ export function ClaudeCode({
             background: t.windowBody,
             borderRadius: 12,
             overflow: "hidden",
-            boxShadow:
-              theme === "light"
-                ? "0 24px 60px -20px rgba(31,30,29,0.28)"
-                : "0 24px 60px -20px rgba(0,0,0,0.6)",
+            boxShadow: "0 24px 60px -20px rgba(0,0,0,0.6)",
             opacity: intro.scale,
             transform: `translateY(${intro.translateY}px) scale(${intro.scale})`,
             transformOrigin: "center top",

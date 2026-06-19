@@ -23,7 +23,6 @@ export interface DataFlowPipesProps {
   pulseColor?: string;
   pulseLength?: number;
   pulseDuration?: number;
-  background?: string;
   nodeColor?: string;
   textColor?: string;
   speed?: number;
@@ -110,7 +109,6 @@ export function DataFlowPipes({
   pulseColor = "#22d3ee",
   pulseLength = 60,
   pulseDuration = 36,
-  background = "#050505",
   nodeColor = "#0a0a0a",
   textColor = "#fafafa",
   speed = 1,
@@ -125,7 +123,6 @@ export function DataFlowPipes({
       style={{
         position: "absolute",
         inset: 0,
-        background,
         fontFamily: FONT_FAMILY,
       }}
     >

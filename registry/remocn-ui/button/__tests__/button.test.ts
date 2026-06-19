@@ -18,7 +18,6 @@ type SnippetValues = {
   label?: string;
   variant?: string;
   size?: string;
-  mode?: string;
   primary?: string;
 };
 
@@ -138,7 +137,6 @@ describe("buttonConfig.snippet: default props are omitted", () => {
     label: "Continue",
     variant: "default",
     size: "default",
-    mode: "light",
     primary: "#171717",
   });
 
@@ -152,10 +150,6 @@ describe("buttonConfig.snippet: default props are omitted", () => {
 
   it("omits size when it equals the default 'default'", () => {
     expect(allDefaults).not.toContain("size=");
-  });
-
-  it("omits mode when it equals the default 'light'", () => {
-    expect(allDefaults).not.toContain("mode=");
   });
 
   it("omits primary when it equals the default '#171717'", () => {
@@ -174,10 +168,6 @@ describe("buttonConfig.snippet: non-default props are emitted", () => {
 
   it("emits a non-default size", () => {
     expect(snippet({ state: "success", size: "lg" })).toContain('size="lg"');
-  });
-
-  it("emits a non-default mode", () => {
-    expect(snippet({ state: "success", mode: "dark" })).toContain('mode="dark"');
   });
 
   it("emits a non-default primary color", () => {

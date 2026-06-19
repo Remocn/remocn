@@ -36,6 +36,19 @@ export const RemotionRoot = () => (
 );
 ```
 
+### With Backdrop
+
+Renders transparent — supply the background via `Backdrop`:
+
+```tsx
+import { Backdrop } from "@/components/remocn/backdrop";
+import { CodeAccordion } from "@/components/remocn/code-accordion";
+
+<Backdrop fill={{ type: "color", value: "#050505" }}>
+  <CodeAccordion lines={fileContents.split("\n")} collapseRange={[3, 14]} collapseAt={30} />
+</Backdrop>
+```
+
 ## Props
 
 <PropsTable
@@ -74,12 +87,6 @@ export const RemotionRoot = () => (
       type: "number",
       default: "720",
       description: "Window width in pixels",
-    },
-    {
-      name: "background",
-      type: "string",
-      default: "\"#050505\"",
-      description: "Page background color",
     },
     {
       name: "cardColor",

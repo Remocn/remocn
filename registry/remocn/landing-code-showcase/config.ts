@@ -16,4 +16,5 @@ export const landingCodeShowcaseConfig: ComponentConfig = {
   fps: FPS,
   compositionWidth: 2080,
   compositionHeight: 900,
+  previewBackdrop: { type: "color", value: "#0A090E" },
 };

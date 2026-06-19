@@ -31,8 +31,6 @@ const ClaudeCodeScene = () => (
     placeholder='Try "edit <filepath> to ..."'
     prompt="edit src/theme.ts to add a dark mode toggle"
     accentColor="#D97757"
-    theme="dark"
-    background="surface"
     speed={1}
   />
 );
@@ -50,6 +48,22 @@ export const RemotionRoot = () => (
 ```
 
 Timeline: terminal window + welcome box ease in (0–20), default state with the block cursor blinking at the prompt holds (20–48), the command types into the prompt from frame 48, then holds to the end.
+
+### With Backdrop
+
+Renders transparent and single-theme — supply the background via `Backdrop`; edit the copied file to re-theme:
+
+```tsx
+import { Backdrop } from "@/components/remocn/backdrop";
+import { ClaudeCode } from "@/components/remocn/claude-code";
+
+<Backdrop fill={{ type: "color", value: "#2B2A28" }}>
+  <ClaudeCode
+    prompt="edit src/theme.ts to add a dark mode toggle"
+    accentColor="#D97757"
+  />
+</Backdrop>
+```
 
 ## Props
 
@@ -96,18 +110,6 @@ Timeline: terminal window + welcome box ease in (0–20), default state with the
       type: "string",
       default: "\"#D97757\"",
       description: "Terracotta accent for the dashed borders and headings",
-    },
-    {
-      name: "theme",
-      type: "\"light\" | \"dark\"",
-      default: "\"dark\"",
-      description: "Dark or light terminal theme",
-    },
-    {
-      name: "background",
-      type: "\"surface\" | \"transparent\"",
-      default: "\"surface\"",
-      description: "Page background fill or transparent",
     },
     {
       name: "speed",

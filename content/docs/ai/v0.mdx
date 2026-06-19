@@ -29,8 +29,6 @@ const V0Scene = () => (
     prompt="a landing page for my SaaS with pricing and testimonials"
     modelName="v0 Max"
     projectName="Project"
-    theme="dark"
-    background="surface"
     speed={1}
   />
 );
@@ -48,6 +46,23 @@ export const RemotionRoot = () => (
 ```
 
 Timeline: heading + box ease in (0–16), default state with blinking caret holds (16–42), the prompt types in from frame 42, the white mic button morphs into a send button the instant text appears, then holds to the end.
+
+### With Backdrop
+
+Renders transparent and single-theme — supply the background via `Backdrop`; edit the copied file to re-theme:
+
+```tsx
+import { Backdrop } from "@/components/remocn/backdrop";
+import { V0 } from "@/components/remocn/v0";
+
+<Backdrop fill={{ type: "color", value: "#000000" }}>
+  <V0
+    greeting="What do you want to create?"
+    prompt="a landing page for my SaaS with pricing and testimonials"
+    modelName="v0 Max"
+  />
+</Backdrop>
+```
 
 ## Props
 
@@ -82,18 +97,6 @@ Timeline: heading + box ease in (0–16), default state with blinking caret hold
       type: "string",
       default: "\"Project\"",
       description: "Project selector label",
-    },
-    {
-      name: "theme",
-      type: "\"light\" | \"dark\"",
-      default: "\"dark\"",
-      description: "Dark or light color theme",
-    },
-    {
-      name: "background",
-      type: "\"surface\" | \"transparent\"",
-      default: "\"surface\"",
-      description: "Page background fill or transparent",
     },
     {
       name: "speed",

@@ -26,7 +26,6 @@ type SnippetValues = {
   label?: string;
   icon?: string;
   shortcut?: string;
-  mode?: string;
 };
 const snippet = (values: SnippetValues): string =>
   commandMenuItemConfig.snippet(values as Record<string, unknown>);
@@ -399,22 +398,6 @@ describe("commandMenuItemConfig.controls: label and shortcut", () => {
   });
 });
 
-describe("commandMenuItemConfig.controls: mode", () => {
-  it("mode is a select control", () => {
-    expect(commandMenuItemConfig.controls.mode.type).toBe("select");
-  });
-
-  it("mode options are ['light','dark']", () => {
-    const ctrl = commandMenuItemConfig.controls.mode;
-    if (ctrl.type !== "select") throw new Error("expected select");
-    expect(ctrl.options).toEqual(["light", "dark"]);
-  });
-
-  it("mode default is 'light'", () => {
-    expect(commandMenuItemConfig.controls.mode.default).toBe("light");
-  });
-});
-
 describe("commandMenuItemConfig.snippet: import line", () => {
   it("includes 'import { CommandMenuItem }' from the correct path", () => {
     const out = snippet({ state: "selected" });
@@ -448,10 +431,6 @@ describe("commandMenuItemConfig.snippet: default props are omitted", () => {
     expect(snippet({ state: "selected", icon: "settings" })).not.toContain("icon=");
   });
 
-  it("omits mode when it equals the default 'light'", () => {
-    expect(snippet({ state: "selected", mode: "light" })).not.toContain("mode=");
-  });
-
   it("omits shortcut when it is an empty string", () => {
     expect(snippet({ state: "selected", shortcut: "" })).not.toContain("shortcut=");
   });
@@ -472,10 +451,6 @@ describe("commandMenuItemConfig.snippet: non-default props are emitted", () => {
 
   it("emits icon='file' when non-default", () => {
     expect(snippet({ state: "selected", icon: "file" })).toContain('icon="file"');
-  });
-
-  it("emits mode='dark' when non-default", () => {
-    expect(snippet({ state: "selected", mode: "dark" })).toContain('mode="dark"');
   });
 
   it("emits shortcut when non-empty", () => {

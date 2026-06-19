@@ -12,7 +12,6 @@ export interface CommandMenuItemProps {
   shortcut?: string;
   width?: number;
   theme?: Partial<RemocnTheme>;
-  mode?: "light" | "dark";
   className?: string;
 }
 
@@ -219,10 +218,9 @@ export function CommandMenuItem({
   shortcut,
   width = ROW_WIDTH,
   theme: themeOverride,
-  mode,
   className,
 }: CommandMenuItemProps) {
-  const theme = useRemocnTheme(themeOverride, mode);
+  const theme = useRemocnTheme(themeOverride, "light");
   const ctx = commandMenuItemStyleContext(theme);
 
   return (
@@ -234,7 +232,7 @@ export function CommandMenuItem({
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        background: theme.background,
+        background: "transparent",
         fontFamily:
           "var(--font-geist-sans), -apple-system, BlinkMacSystemFont, sans-serif",
       }}

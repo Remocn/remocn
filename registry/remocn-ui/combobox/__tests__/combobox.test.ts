@@ -28,7 +28,6 @@ type SnippetValues = {
   placeholder?: string;
   selectedIndex?: number;
   highlightedIndex?: number;
-  mode?: string;
 };
 const snippet = (values: SnippetValues): string =>
   comboboxConfig.snippet(values as Record<string, unknown>);
@@ -505,16 +504,6 @@ describe("comboboxConfig.controls: selectedIndex and highlightedIndex", () => {
   });
 });
 
-describe("comboboxConfig.controls: mode", () => {
-  it("mode is a select control", () => {
-    expect(comboboxConfig.controls.mode.type).toBe("select");
-  });
-
-  it("mode default is 'light'", () => {
-    expect(comboboxConfig.controls.mode.default).toBe("light");
-  });
-});
-
 describe("comboboxConfig.snippet: import line", () => {
   it("includes 'import { Combobox }' from the correct path", () => {
     const out = snippet({ state: "opened" });
@@ -562,9 +551,6 @@ describe("comboboxConfig.snippet: default props are omitted", () => {
     expect(snippet({ state: "opened", highlightedIndex: -1 })).not.toContain("highlightedIndex=");
   });
 
-  it("omits mode when it equals 'light'", () => {
-    expect(snippet({ state: "opened", mode: "light" })).not.toContain("mode=");
-  });
 });
 
 describe("comboboxConfig.snippet: non-default props are emitted", () => {
@@ -588,9 +574,6 @@ describe("comboboxConfig.snippet: non-default props are emitted", () => {
     expect(snippet({ state: "opened", highlightedIndex: 0 })).toContain("highlightedIndex={0}");
   });
 
-  it("emits mode='dark' when non-default", () => {
-    expect(snippet({ state: "opened", mode: "dark" })).toContain('mode="dark"');
-  });
 });
 
 describe("comboboxConfig.snippet: state options round-trip", () => {

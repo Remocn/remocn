@@ -16,7 +16,6 @@ export interface PopoverProps {
   side?: PopoverSide;
   width?: number;
   theme?: Partial<RemocnTheme>;
-  mode?: "light" | "dark";
   className?: string;
 }
 
@@ -57,10 +56,9 @@ export function Popover({
   side = "bottom",
   width = 288,
   theme: themeOverride,
-  mode,
   className,
 }: PopoverProps) {
-  const theme = useRemocnTheme(themeOverride, mode);
+  const theme = useRemocnTheme(themeOverride, "light");
   const v = style ?? popoverStyle(state);
   const { x, y } = offsetFor(side, v.translate);
 

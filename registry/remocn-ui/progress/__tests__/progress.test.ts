@@ -13,7 +13,6 @@ type SnippetValues = {
   value?: number;
   width?: number;
   showLabel?: boolean;
-  mode?: string;
 };
 const snippet = (values: SnippetValues): string =>
   progressConfig.snippet(values as Record<string, unknown>);
@@ -296,22 +295,6 @@ describe("progressConfig.controls: showLabel", () => {
   });
 });
 
-describe("progressConfig.controls: mode", () => {
-  it("mode is a select control", () => {
-    expect(progressConfig.controls.mode.type).toBe("select");
-  });
-
-  it("mode options are ['light', 'dark']", () => {
-    const ctrl = progressConfig.controls.mode;
-    if (ctrl.type !== "select") throw new Error("expected select");
-    expect(ctrl.options).toEqual(["light", "dark"]);
-  });
-
-  it("mode default is 'light'", () => {
-    expect(progressConfig.controls.mode.default).toBe("light");
-  });
-});
-
 describe("progressConfig.snippet: import line", () => {
   it("includes 'import { Progress }' from the correct path", () => {
     const out = snippet({ value: 50 });
@@ -359,11 +342,6 @@ describe("progressConfig.snippet: default props are omitted", () => {
     expect(out).not.toContain("width=");
   });
 
-  it("omits mode when it equals the default 'light'", () => {
-    const out = snippet({ value: 50, mode: "light" });
-    expect(out).not.toContain("mode=");
-  });
-
   it("omits showLabel when it is false", () => {
     const out = snippet({ value: 50, showLabel: false });
     expect(out).not.toContain("showLabel");
@@ -382,10 +360,6 @@ describe("progressConfig.snippet: non-default props are emitted", () => {
 
   it("emits width={200} when non-default", () => {
     expect(snippet({ value: 50, width: 200 })).toContain("width={200}");
-  });
-
-  it("emits mode='dark' when non-default", () => {
-    expect(snippet({ value: 50, mode: "dark" })).toContain('mode="dark"');
   });
 
   it("emits showLabel (boolean shorthand) when true", () => {

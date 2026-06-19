@@ -9,7 +9,6 @@ export interface CodeAccordionProps {
   title?: string;
   fontSize?: number;
   width?: number;
-  background?: string;
   cardColor?: string;
   textColor?: string;
   mutedColor?: string;
@@ -49,7 +48,6 @@ export function CodeAccordion({
   title = "process-orders.ts",
   fontSize = 16,
   width = 720,
-  background = "#050505",
   cardColor = "#0a0a0a",
   textColor = "#e4e4e7",
   mutedColor = "#52525b",
@@ -97,7 +95,6 @@ export function CodeAccordion({
       style={{
         position: "absolute",
         inset: 0,
-        background,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",

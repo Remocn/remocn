@@ -19,8 +19,6 @@ export interface V0Props {
   prompt?: string;
   modelName?: string;
   projectName?: string;
-  theme?: "light" | "dark";
-  background?: "surface" | "transparent";
   speed?: number;
 }
 
@@ -203,13 +201,11 @@ export function V0({
   prompt = "a landing page for my SaaS with pricing and testimonials",
   modelName = "v0 Max",
   projectName = "Project",
-  theme = "dark",
-  background = "surface",
   speed = 1,
 }: V0Props) {
   const frame = useCurrentFrame();
   const { width, height, fps } = useVideoConfig();
-  const t = THEMES[theme] ?? THEMES.dark;
+  const t = THEMES.dark;
 
   const refW = 1280;
   const refH = 720;
@@ -228,7 +224,6 @@ export function V0({
   const headingFade = fadeUpAt(frame * speed, [4, 20]);
   const boxFade = fadeUpAt(frame * speed, [10, 26]);
 
-  const pageBg = background === "transparent" ? "transparent" : t.page;
 
   const boxWidth = 880;
   const boxLeft = (refW - boxWidth) / 2;
@@ -237,7 +232,7 @@ export function V0({
   const btnSize = 40;
 
   return (
-    <AbsoluteFill style={{ background: pageBg }}>
+    <AbsoluteFill style={{ background: "transparent" }}>
       <div
         style={{
           position: "absolute",
@@ -276,10 +271,7 @@ export function V0({
             background: t.boxBg,
             border: `1px solid ${t.boxBorder}`,
             borderRadius: 16,
-            boxShadow:
-              theme === "light"
-                ? "0 8px 30px -14px rgba(13,13,13,0.12)"
-                : "0 8px 40px -16px rgba(0,0,0,0.8)",
+            boxShadow: "0 8px 40px -16px rgba(0,0,0,0.8)",
             opacity: boxFade.opacity,
             transform: `translateY(${boxFade.translateY + intro.translateY * 0.6}px) scale(${intro.scale})`,
             transformOrigin: "center top",

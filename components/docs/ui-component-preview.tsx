@@ -297,6 +297,7 @@ function UiPreview({
             fps={exampleEntry.fps}
             compositionWidth={exampleEntry.width}
             compositionHeight={exampleEntry.height}
+            previewBackdrop={exampleEntry.previewBackdrop}
           />
         </TabsContent>
 

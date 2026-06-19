@@ -30,8 +30,6 @@ const ClaudeChatScene = () => (
     modelName="Opus 4.8"
     modelTier="Max"
     accentColor="#D97757"
-    theme="light"
-    background="surface"
     speed={1}
   />
 );
@@ -49,6 +47,36 @@ export const RemotionRoot = () => (
 ```
 
 Timeline: card + greeting ease in (0–16), default state with blinking caret holds (16–42), the prompt types in from frame 42, and the waveform button morphs into the terracotta send button the instant text appears, then holds to the end.
+
+### With Backdrop
+
+The component renders transparent by default — supply the background via `Backdrop`. It ships single-theme; edit the copied file to re-theme colors.
+
+```tsx
+import { Composition } from "remotion";
+import { ClaudeChat } from "@/components/remocn/claude-chat";
+import { Backdrop } from "@/components/remocn/backdrop";
+
+const ClaudeChatScene = () => (
+  <Backdrop fill={{ type: "gradient", value: "linear-gradient(135deg, #f5f0eb, #ede8e3)" }}>
+    <ClaudeChat
+      greeting="Back at it, Dima"
+      prompt="Draft a launch tweet for our new release"
+    />
+  </Backdrop>
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="ClaudeChat"
+    component={ClaudeChatScene}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
 
 ## Props
 
@@ -89,18 +117,6 @@ Timeline: card + greeting ease in (0–16), default state with blinking caret ho
       type: "string",
       default: "\"#D97757\"",
       description: "Terracotta accent used for the sunburst and send button",
-    },
-    {
-      name: "theme",
-      type: "\"light\" | \"dark\"",
-      default: "\"light\"",
-      description: "Warm light or dark color theme",
-    },
-    {
-      name: "background",
-      type: "\"surface\" | \"transparent\"",
-      default: "\"surface\"",
-      description: "Page background fill or transparent",
     },
     {
       name: "speed",

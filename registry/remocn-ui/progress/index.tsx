@@ -12,7 +12,6 @@ export interface ProgressProps {
   width?: number;
   showLabel?: boolean;
   theme?: Partial<RemocnTheme>;
-  mode?: "light" | "dark";
   className?: string;
 }
 
@@ -28,10 +27,9 @@ export function Progress({
   width = 320,
   showLabel = false,
   theme: themeOverride,
-  mode,
   className,
 }: ProgressProps) {
-  const theme = useRemocnTheme(themeOverride, mode);
+  const theme = useRemocnTheme(themeOverride, "light");
   const v = clampValue(style ? style.value : value);
 
   const track = theme.muted;

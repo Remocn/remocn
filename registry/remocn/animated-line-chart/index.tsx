@@ -8,7 +8,6 @@ export interface AnimatedLineChartProps {
   height?: number;
   strokeColor?: string;
   strokeWidth?: number;
-  background?: string;
   gridColor?: string;
   showDot?: boolean;
   speed?: number;
@@ -21,7 +20,6 @@ export function AnimatedLineChart({
   height = 500,
   strokeColor = "#22c55e",
   strokeWidth = 4,
-  background = "#0a0a0a",
   gridColor = "#27272a",
   showDot = true,
   speed = 1,
@@ -99,7 +97,6 @@ export function AnimatedLineChart({
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        background,
         fontFamily:
           "var(--font-geist-sans), -apple-system, BlinkMacSystemFont, sans-serif",
       }}

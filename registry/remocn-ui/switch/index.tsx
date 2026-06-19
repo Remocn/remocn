@@ -13,7 +13,6 @@ export interface SwitchProps {
   size?: SwitchSize;
   theme?: Partial<RemocnTheme>;
   primary?: string;
-  mode?: "light" | "dark";
   className?: string;
 }
 
@@ -70,12 +69,11 @@ export function Switch({
   size = "default",
   theme: themeOverride,
   primary,
-  mode,
   className,
 }: SwitchProps) {
   const theme = useRemocnTheme(
     { ...themeOverride, ...(primary ? { primary } : {}) },
-    mode,
+    "light",
   );
 
   const sizeStyle = SIZE_STYLES[size];
@@ -92,7 +90,7 @@ export function Switch({
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        background: theme.background,
+        background: "transparent",
         fontFamily:
           "var(--font-geist-sans), -apple-system, BlinkMacSystemFont, sans-serif",
       }}

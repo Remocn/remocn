@@ -20,8 +20,6 @@ export interface OpenCodeProps {
   modelName?: string;
   provider?: string;
   accentColor?: string;
-  theme?: "light" | "dark";
-  background?: "surface" | "transparent";
   speed?: number;
 }
 
@@ -95,13 +93,11 @@ export function OpenCode({
   modelName = "Kimi K2.5",
   provider = "Moonshot AI",
   accentColor = "#2B7FFF",
-  theme = "dark",
-  background = "surface",
   speed = 1,
 }: OpenCodeProps) {
   const frame = useCurrentFrame();
   const { width, height, fps } = useVideoConfig();
-  const t = THEMES[theme] ?? THEMES.dark;
+  const t = THEMES.dark;
 
   const refW = 1280;
   const refH = 720;
@@ -118,12 +114,11 @@ export function OpenCode({
   const boxFade = fadeUpAt(frame * speed, [12, 30]);
   const hintsFade = fadeUpAt(frame * speed, [20, 38]);
 
-  const pageBg = background === "transparent" ? "transparent" : t.page;
 
   const boxWidth = 1000;
 
   return (
-    <AbsoluteFill style={{ background: pageBg }}>
+    <AbsoluteFill style={{ background: "transparent" }}>
       <div
         style={{
           position: "absolute",

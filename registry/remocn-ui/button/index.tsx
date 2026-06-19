@@ -22,7 +22,6 @@ export interface ButtonProps {
   size?: ButtonSize;
   theme?: Partial<RemocnTheme>;
   primary?: string;
-  mode?: "light" | "dark";
   speed?: number;
   align?: "start" | "center" | "end";
   className?: string;
@@ -188,14 +187,13 @@ export function Button({
   size = "default",
   theme: themeOverride,
   primary,
-  mode,
   speed = 1,
   align = "center",
   className,
 }: ButtonProps) {
   const theme = useRemocnTheme(
     { ...themeOverride, ...(primary ? { primary } : {}) },
-    mode,
+    "light",
   );
 
   const sizeStyle = SIZE_STYLES[size];
@@ -213,7 +211,7 @@ export function Button({
         display: "flex",
         alignItems: "center",
         justifyContent: justify(align),
-        background: theme.background,
+        background: "transparent",
         fontFamily:
           "var(--font-geist-sans), -apple-system, BlinkMacSystemFont, sans-serif",
       }}

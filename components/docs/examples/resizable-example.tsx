@@ -13,10 +13,9 @@ const HANDLE_Y = 360;
 
 export interface ResizableExampleProps {
   direction?: ResizableDirection;
-  mode?: "light" | "dark";
 }
 
-export const resizableExampleControls = ["direction", "mode"] as const;
+export const resizableExampleControls = ["direction"] as const;
 
 export const ResizableExampleScene = (p: ResizableExampleProps = {}) => {
   const cursorStyle = useCursorPath([
@@ -45,9 +44,8 @@ export const ResizableExampleScene = (p: ResizableExampleProps = {}) => {
       <Resizable
         style={resizableStyle}
         direction={p.direction ?? "horizontal"}
-        mode={p.mode ?? "light"}
       />
-      <Cursor style={cursorStyle} variant="pointer" mode={p.mode ?? "light"} />
+      <Cursor style={cursorStyle} variant="pointer" />
     </div>
   );
 };
@@ -56,13 +54,10 @@ export const resizableExampleCode = (
   values: Record<string, unknown> = {},
 ): string => {
   const direction = values.direction as string | undefined;
-  const mode = values.mode as string | undefined;
 
   const props: string[] = [];
   if (direction !== undefined && direction !== "horizontal") props.push(`direction="${direction}"`);
-  if (mode !== undefined && mode !== "light") props.push(`mode="${mode}"`);
   const resizableExtraProps = props.length ? `\n      ${props.join("\n      ")}\n      ` : "";
-  const modeStr = mode !== undefined && mode !== "light" ? ` mode="${mode}"` : "";
 
   return `import { Cursor } from "@/components/remocn/cursor";
 import { useCursorPath } from "@/components/remocn/use-cursor-path";
@@ -100,7 +95,7 @@ export const Scene = () => {
   return (
     <div style={{ position: "relative", width: "100%", height: "100%" }}>
       <Resizable${resizableExtraProps}style={resizableStyle} />
-      <Cursor style={cursorStyle} variant="pointer"${modeStr} />
+      <Cursor style={cursorStyle} variant="pointer" />
     </div>
   );
 };`;

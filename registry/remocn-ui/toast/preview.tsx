@@ -1,6 +1,5 @@
 "use client";
 
-import { useRemocnTheme } from "@/lib/remocn-ui";
 import {
   Toast,
   type ToastState,
@@ -12,7 +11,6 @@ export interface ToastPreviewProps {
   description?: string;
   variant?: ToastVariant;
   state?: ToastState;
-  mode?: "light" | "dark";
 }
 
 export function ToastPreview({
@@ -20,10 +18,7 @@ export function ToastPreview({
   description = "Your profile has been updated.",
   variant = "success",
   state = "visible",
-  mode,
 }: ToastPreviewProps) {
-  const theme = useRemocnTheme(undefined, mode);
-
   return (
     <div
       style={{
@@ -32,7 +27,7 @@ export function ToastPreview({
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        background: theme.background,
+        background: "transparent",
       }}
     >
       <Toast
@@ -40,7 +35,6 @@ export function ToastPreview({
         description={description}
         variant={variant}
         state={state}
-        mode={mode}
       />
     </div>
   );

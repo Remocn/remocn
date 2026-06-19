@@ -22,7 +22,6 @@ type SnippetValues = {
   description?: string;
   side?: string;
   width?: number;
-  mode?: string;
 };
 const snippet = (values: SnippetValues): string =>
   popoverConfig.snippet(values as Record<string, unknown>);
@@ -423,16 +422,6 @@ describe("popoverConfig.controls: width", () => {
   });
 });
 
-describe("popoverConfig.controls: mode", () => {
-  it("mode is a select control", () => {
-    expect(popoverConfig.controls.mode.type).toBe("select");
-  });
-
-  it("mode default is 'light'", () => {
-    expect(popoverConfig.controls.mode.default).toBe("light");
-  });
-});
-
 describe("popoverConfig.snippet: import line", () => {
   it("includes 'import { Popover }' from the correct path", () => {
     const out = snippet({ state: "opened" });
@@ -473,10 +462,6 @@ describe("popoverConfig.snippet: default props are omitted", () => {
   it("omits width when it equals the default 288", () => {
     expect(snippet({ state: "opened", width: 288 })).not.toContain("width=");
   });
-
-  it("omits mode when it equals the default 'light'", () => {
-    expect(snippet({ state: "opened", mode: "light" })).not.toContain("mode=");
-  });
 });
 
 describe("popoverConfig.snippet: non-default props are emitted", () => {
@@ -504,10 +489,6 @@ describe("popoverConfig.snippet: non-default props are emitted", () => {
 
   it("emits width when non-default", () => {
     expect(snippet({ state: "opened", width: 320 })).toContain("width={320}");
-  });
-
-  it("emits mode='dark' when non-default", () => {
-    expect(snippet({ state: "opened", mode: "dark" })).toContain('mode="dark"');
   });
 });
 

@@ -50,7 +50,6 @@ export interface DropdownMenuItemRowProps {
   label?: string;
   width?: number;
   theme?: Partial<RemocnTheme>;
-  mode?: "light" | "dark";
 }
 
 export function DropdownMenuItemRow({
@@ -59,9 +58,8 @@ export function DropdownMenuItemRow({
   label = "Profile",
   width = ROW_WIDTH,
   theme: themeOverride,
-  mode,
 }: DropdownMenuItemRowProps) {
-  const theme = useRemocnTheme(themeOverride, mode);
+  const theme = useRemocnTheme(themeOverride, "light");
   const ctx = dropdownMenuItemStyleContext(theme);
   const v = style ?? dropdownMenuItemStyle(state, ctx);
 
@@ -96,11 +94,8 @@ export function DropdownMenuItem({
   label = "Profile",
   width = ROW_WIDTH,
   theme: themeOverride,
-  mode,
   className,
 }: DropdownMenuItemProps) {
-  const theme = useRemocnTheme(themeOverride, mode);
-
   return (
     <div
       className={className}
@@ -110,7 +105,7 @@ export function DropdownMenuItem({
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        background: theme.background,
+        background: "transparent",
         fontFamily:
           "var(--font-geist-sans), -apple-system, BlinkMacSystemFont, sans-serif",
       }}
@@ -121,7 +116,6 @@ export function DropdownMenuItem({
         label={label}
         width={width}
         theme={themeOverride}
-        mode={mode}
       />
     </div>
   );

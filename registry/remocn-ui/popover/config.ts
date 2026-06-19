@@ -34,24 +34,18 @@ export const popoverConfig: ComponentConfig = {
       options: ["opened", "closed"],
       label: "State",
     },
-    mode: {
-      type: "select",
-      default: "light",
-      options: ["light", "dark"],
-      label: "Mode",
-    },
   },
   durationInFrames: 120,
   fps: FPS,
   compositionWidth: W,
   compositionHeight: H,
+  previewBackdrop: { type: "color", value: "oklch(1 0 0)" },
   snippet: (values) => {
     const state = (values.state as PopoverState) ?? "opened";
     const title = values.title as string | undefined;
     const description = values.description as string | undefined;
     const side = values.side as string | undefined;
     const width = values.width as number | undefined;
-    const mode = values.mode as string | undefined;
 
     const props: string[] = [`  state="${state}"`];
     if (title !== undefined && title !== "")
@@ -62,8 +56,6 @@ export const popoverConfig: ComponentConfig = {
       props.push(`  side="${side}"`);
     if (width !== undefined && width !== 288)
       props.push(`  width={${width}}`);
-    if (mode !== undefined && mode !== "light")
-      props.push(`  mode="${mode}"`);
 
     return `import { Popover } from "@/components/remocn/popover";
 

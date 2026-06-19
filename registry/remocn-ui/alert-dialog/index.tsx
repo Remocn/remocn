@@ -12,7 +12,6 @@ export interface AlertDialogProps {
   actionLabel?: string;
   cancelLabel?: string;
   theme?: Partial<RemocnTheme>;
-  mode?: "light" | "dark";
   className?: string;
 }
 
@@ -82,10 +81,9 @@ export function AlertDialog({
   actionLabel = "Delete",
   cancelLabel = "Cancel",
   theme: themeOverride,
-  mode,
   className,
 }: AlertDialogProps) {
-  const theme = useRemocnTheme(themeOverride, mode);
+  const theme = useRemocnTheme(themeOverride, "light");
 
   const ctx = alertDialogStyleContext(theme);
   const v = style ?? alertDialogStyle(state, ctx);

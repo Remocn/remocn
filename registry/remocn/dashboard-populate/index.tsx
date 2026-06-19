@@ -144,7 +144,7 @@ export function DashboardPopulate({
       style={{
         position: "absolute",
         inset: 0,
-        background: "#09090b",
+        background: "transparent",
         fontFamily: FONT_FAMILY,
         color: "white",
         padding: 64,

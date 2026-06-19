@@ -29,7 +29,6 @@ export interface SelectProps {
   pressedIndex?: number;
   itemStyles?: (SelectItemStyle | undefined)[];
   theme?: Partial<RemocnTheme>;
-  mode?: "light" | "dark";
   className?: string;
 }
 
@@ -109,10 +108,9 @@ export function Select({
   pressedIndex = -1,
   itemStyles,
   theme: themeOverride,
-  mode,
   className,
 }: SelectProps) {
-  const theme = useRemocnTheme(themeOverride, mode);
+  const theme = useRemocnTheme(themeOverride, "light");
   const ctx = selectStyleContext(theme);
   const v = style ?? selectStyle(state, ctx);
 
@@ -128,7 +126,7 @@ export function Select({
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        background: theme.background,
+        background: "transparent",
         fontFamily:
           "var(--font-geist-sans), -apple-system, BlinkMacSystemFont, sans-serif",
       }}

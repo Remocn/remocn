@@ -27,4 +27,8 @@ export const ecosystemConstellationConfig: ComponentConfig = {
   fps: FPS,
   compositionWidth: W,
   compositionHeight: H,
+  previewBackdrop: {
+    type: "gradient",
+    value: "radial-gradient(ellipse at center, #14101e 0%, #05030a 75%)",
+  },
 };

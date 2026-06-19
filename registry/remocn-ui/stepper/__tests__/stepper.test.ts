@@ -17,7 +17,6 @@ import { defaultLightTheme, easings } from "@/lib/remocn-ui";
 
 type SnippetValues = {
   activeIndex?: number;
-  mode?: string;
 };
 const snippet = (values: SnippetValues): string =>
   stepperConfig.snippet(values as Record<string, unknown>);
@@ -430,22 +429,6 @@ describe("stepperConfig.controls.activeIndex", () => {
   });
 });
 
-describe("stepperConfig.controls.mode", () => {
-  it("is a select control", () => {
-    expect(stepperConfig.controls.mode.type).toBe("select");
-  });
-
-  it("options are ['light', 'dark']", () => {
-    const ctrl = stepperConfig.controls.mode;
-    if (ctrl.type !== "select") throw new Error("expected select");
-    expect(ctrl.options).toEqual(["light", "dark"]);
-  });
-
-  it("defaults to 'light'", () => {
-    expect(stepperConfig.controls.mode.default).toBe("light");
-  });
-});
-
 describe("stepperConfig.snippet: import line", () => {
   it("includes 'import { Stepper }' from the correct path", () => {
     const out = snippet({ activeIndex: 1 });
@@ -500,22 +483,6 @@ describe("stepperConfig.snippet: steps inline literal always emitted", () => {
       const out = snippet({ activeIndex: i });
       expect(out).toContain("steps={");
     }
-  });
-});
-
-describe("stepperConfig.snippet: default mode is omitted", () => {
-  it("omits mode when it equals the default 'light'", () => {
-    expect(snippet({ activeIndex: 1, mode: "light" })).not.toContain("mode=");
-  });
-
-  it("omits mode when not provided", () => {
-    expect(snippet({ activeIndex: 1 })).not.toContain("mode=");
-  });
-});
-
-describe("stepperConfig.snippet: non-default mode is emitted", () => {
-  it("emits mode=\"dark\" when non-default", () => {
-    expect(snippet({ activeIndex: 1, mode: "dark" })).toContain('mode="dark"');
   });
 });
 

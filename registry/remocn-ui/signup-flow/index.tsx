@@ -29,7 +29,6 @@ export interface SignupFlowProps {
   googleLabel?: string;
   signinText?: string;
   toastTitle?: string;
-  mode?: "light" | "dark";
   theme?: Partial<RemocnTheme>;
 }
 
@@ -53,11 +52,10 @@ export function SignupFlow({
   password = "••••••••",
   createLabel = "Create account",
   toastTitle = "Account created",
-  mode = "light",
   theme,
 }: SignupFlowProps) {
-  const resolved = useRemocnTheme(theme, mode);
-  const opts = { mode, theme };
+  const resolved = useRemocnTheme(theme);
+  const opts = { theme };
 
   const cardEnter = useBlurInTransition(
     [{ at: 0, state: "revealed", duration: 18 }],
@@ -141,7 +139,7 @@ export function SignupFlow({
       { at: 234 + DEMO, state: "visible", duration: 14 },
       { at: 300 + DEMO, state: "hidden", duration: 14 },
     ],
-    { mode },
+    {},
   );
 
   return (
@@ -150,7 +148,7 @@ export function SignupFlow({
         position: "relative",
         width: "100%",
         height: "100%",
-        background: resolved.muted,
+        background: "transparent",
         fontFamily:
           "var(--font-geist-sans), -apple-system, BlinkMacSystemFont, sans-serif",
       }}
@@ -204,7 +202,7 @@ export function SignupFlow({
         <FieldGroup gap={16}>
           <BlurIn display="block" style={enterName}>
             <Field>
-              <FieldLabel mode={mode} theme={theme}>
+              <FieldLabel theme={theme}>
                 Full Name
               </FieldLabel>
               <FieldControl>
@@ -212,7 +210,6 @@ export function SignupFlow({
                   placeholder={fullName}
                   value={fullName}
                   style={nameStyle}
-                  mode={mode}
                   theme={theme}
                 />
               </FieldControl>
@@ -221,7 +218,7 @@ export function SignupFlow({
 
           <BlurIn display="block" style={enterEmail}>
             <Field>
-              <FieldLabel mode={mode} theme={theme}>
+              <FieldLabel theme={theme}>
                 Email
               </FieldLabel>
               <FieldControl>
@@ -229,11 +226,10 @@ export function SignupFlow({
                   placeholder={email}
                   value={email}
                   style={emailStyle}
-                  mode={mode}
                   theme={theme}
                 />
               </FieldControl>
-              <FieldDescription mode={mode} theme={theme}>
+              <FieldDescription theme={theme}>
                 We'll use this to contact you.
               </FieldDescription>
             </Field>
@@ -241,7 +237,7 @@ export function SignupFlow({
 
           <BlurIn display="block" style={enterPass}>
             <Field>
-              <FieldLabel mode={mode} theme={theme}>
+              <FieldLabel theme={theme}>
                 Password
               </FieldLabel>
               <FieldControl>
@@ -249,11 +245,10 @@ export function SignupFlow({
                   placeholder={password}
                   value={password}
                   style={passStyle}
-                  mode={mode}
                   theme={theme}
                 />
               </FieldControl>
-              <FieldDescription mode={mode} theme={theme}>
+              <FieldDescription theme={theme}>
                 Must be at least 8 characters long.
               </FieldDescription>
             </Field>
@@ -261,7 +256,7 @@ export function SignupFlow({
 
           <BlurIn display="block" style={enterConfirm}>
             <Field>
-              <FieldLabel mode={mode} theme={theme}>
+              <FieldLabel theme={theme}>
                 Confirm Password
               </FieldLabel>
               <FieldControl>
@@ -269,7 +264,6 @@ export function SignupFlow({
                   placeholder={password}
                   value={password}
                   style={confirmStyle}
-                  mode={mode}
                   theme={theme}
                 />
               </FieldControl>
@@ -283,7 +277,6 @@ export function SignupFlow({
               <Button
                 label={createLabel}
                 style={buttonStyle}
-                mode={mode}
                 theme={theme}
               />
             </FieldControl>
@@ -296,12 +289,11 @@ export function SignupFlow({
           title={toastTitle}
           variant="success"
           style={toastStyle}
-          mode={mode}
           theme={theme}
         />
       </div>
 
-      <Cursor style={cursorStyle} variant="pointer" mode={mode} theme={theme} />
+      <Cursor style={cursorStyle} variant="pointer" theme={theme} />
     </div>
   );
 }

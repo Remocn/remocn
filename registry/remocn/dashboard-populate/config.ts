@@ -22,4 +22,5 @@ export const dashboardPopulateConfig: ComponentConfig = {
   fps: FPS,
   compositionWidth: W,
   compositionHeight: H,
+  previewBackdrop: { type: "color", value: "#09090b" },
 };

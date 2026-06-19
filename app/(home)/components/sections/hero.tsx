@@ -11,9 +11,25 @@ import { INSTALL_COMMAND, SPRING_BOUNCE } from "@/config/site";
 import { useTrackEvent } from "@/lib/analytics";
 import { HERO_CODE } from "@/lib/config/snippets";
 import registry from "@/registry/__index__";
+import { Backdrop } from "@/registry/remocn/backdrop";
 import { FadeUp } from "../fade-up";
 import { InstallCommand } from "../install-command";
 import { useAutoplay } from "../use-autoplay";
+
+const GlassCodeBlock = registry["glass-code-block"]?.Component;
+
+function HeroComposition(props: Record<string, unknown>) {
+  return (
+    <Backdrop
+      fill={{ type: "image", src: "/hero.png" }}
+      padding={0}
+      radius={0}
+      shadow=""
+    >
+      {GlassCodeBlock ? <GlassCodeBlock {...props} /> : null}
+    </Backdrop>
+  );
+}
 
 export function Hero() {
   const heroEntry = registry["glass-code-block"];
@@ -138,16 +154,12 @@ export function Hero() {
               {heroEntry ? (
                 <Player
                   ref={playerRef}
-                  component={heroEntry.Component}
+                  component={HeroComposition}
                   inputProps={{
                     code: HERO_CODE,
                     title: "LaunchScene.tsx",
                     width: 860,
                     height: 480,
-                    // Scene backdrop behind the glass card — the abstract texture
-                    // with a dark wash so the code stays legible through the glass.
-                    background:
-                      "linear-gradient(rgba(5,5,8,0.5), rgba(5,5,8,0.62)), url(/bg.jpg) center / cover no-repeat",
                   }}
                   durationInFrames={heroEntry.config.durationInFrames}
                   fps={heroEntry.config.fps}

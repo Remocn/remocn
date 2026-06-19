@@ -16,7 +16,6 @@ type SnippetValues = {
   label?: string;
   selectedIndex?: number;
   highlightedIndex?: number;
-  mode?: string;
 };
 
 const snippet = (values: SnippetValues): string =>
@@ -99,7 +98,6 @@ describe("selectConfig.snippet: default props are omitted", () => {
     label: "Select a fruit",
     selectedIndex: -1,
     highlightedIndex: -1,
-    mode: "light",
   });
 
   it("omits label when it equals the default 'Select a fruit'", () => {
@@ -114,9 +112,6 @@ describe("selectConfig.snippet: default props are omitted", () => {
     expect(allDefaults).not.toContain("highlightedIndex=");
   });
 
-  it("omits mode when it equals the default 'light'", () => {
-    expect(allDefaults).not.toContain("mode=");
-  });
 });
 
 describe("selectConfig.snippet: non-default props are emitted", () => {
@@ -133,11 +128,6 @@ describe("selectConfig.snippet: non-default props are emitted", () => {
   it("emits a non-default highlightedIndex", () => {
     expect(snippet({ state: "opened", highlightedIndex: 1 }))
       .toContain("highlightedIndex={1}");
-  });
-
-  it("emits a non-default mode", () => {
-    expect(snippet({ state: "opened", mode: "dark" }))
-      .toContain('mode="dark"');
   });
 });
 

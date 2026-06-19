@@ -28,8 +28,6 @@ const ChatGptScene = () => (
     placeholder="Ask anything"
     prompt="Make a sunset over a calm ocean"
     accentColor="#2F6FED"
-    theme="light"
-    background="surface"
     speed={1}
   />
 );
@@ -47,6 +45,23 @@ export const RemotionRoot = () => (
 ```
 
 Timeline: heading + pill + chips ease in (0–16), default state with blinking caret holds (16–42), the prompt types in from frame 42, the blue voice button morphs into the send button the instant text appears, and the suggestion chips fade out, then holds to the end.
+
+### With Backdrop
+
+Renders transparent and single-theme — supply the background via `Backdrop`; edit the copied file to re-theme:
+
+```tsx
+import { Backdrop } from "@/components/remocn/backdrop";
+import { ChatGpt } from "@/components/remocn/chat-gpt";
+
+<Backdrop fill={{ type: "color", value: "#FFFFFF" }}>
+  <ChatGpt
+    greeting="What's on your mind today?"
+    prompt="Make a sunset over a calm ocean"
+    accentColor="#2F6FED"
+  />
+</Backdrop>
+```
 
 ## Props
 
@@ -75,18 +90,6 @@ Timeline: heading + pill + chips ease in (0–16), default state with blinking c
       type: "string",
       default: "\"#2F6FED\"",
       description: "Blue voice-button color",
-    },
-    {
-      name: "theme",
-      type: "\"light\" | \"dark\"",
-      default: "\"light\"",
-      description: "Light or dark color theme",
-    },
-    {
-      name: "background",
-      type: "\"surface\" | \"transparent\"",
-      default: "\"surface\"",
-      description: "Page background fill or transparent",
     },
     {
       name: "speed",

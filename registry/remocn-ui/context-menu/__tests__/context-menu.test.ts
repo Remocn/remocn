@@ -21,7 +21,6 @@ const ctx = contextMenuStyleContext(defaultLightTheme);
 type SnippetValues = {
   state?: string;
   highlightedIndex?: number;
-  mode?: string;
 };
 const snippet = (values: SnippetValues): string =>
   contextMenuConfig.snippet(values as Record<string, unknown>);
@@ -405,16 +404,6 @@ describe("contextMenuConfig.controls: highlightedIndex", () => {
   });
 });
 
-describe("contextMenuConfig.controls: mode", () => {
-  it("mode is a select control", () => {
-    expect(contextMenuConfig.controls.mode.type).toBe("select");
-  });
-
-  it("mode default is 'light'", () => {
-    expect(contextMenuConfig.controls.mode.default).toBe("light");
-  });
-});
-
 describe("contextMenuConfig.snippet: import line", () => {
   it("includes 'import { ContextMenu }' from the correct path", () => {
     const out = snippet({ state: "opened" });
@@ -450,10 +439,6 @@ describe("contextMenuConfig.snippet: default props are omitted", () => {
   it("omits highlightedIndex when it equals -1 (no highlight)", () => {
     expect(snippet({ state: "opened", highlightedIndex: -1 })).not.toContain("highlightedIndex=");
   });
-
-  it("omits mode when it equals 'light'", () => {
-    expect(snippet({ state: "opened", mode: "light" })).not.toContain("mode=");
-  });
 });
 
 describe("contextMenuConfig.snippet: non-default props are emitted", () => {
@@ -463,10 +448,6 @@ describe("contextMenuConfig.snippet: non-default props are emitted", () => {
 
   it("emits highlightedIndex=0 when first row is highlighted", () => {
     expect(snippet({ state: "opened", highlightedIndex: 0 })).toContain("highlightedIndex={0}");
-  });
-
-  it("emits mode='dark' when non-default", () => {
-    expect(snippet({ state: "opened", mode: "dark" })).toContain('mode="dark"');
   });
 });
 

@@ -14,7 +14,6 @@ const VALID_STATES: readonly DropdownMenuItemState[] = ["idle", "hover", "press"
 type SnippetValues = {
   state?: string;
   label?: string;
-  mode?: string;
 };
 
 const snippet = (values: SnippetValues): string =>
@@ -99,15 +98,10 @@ describe("dropdownMenuItemConfig.snippet: default props are omitted", () => {
   const allDefaults = snippet({
     state: "hover",
     label: "Profile",
-    mode: "light",
   });
 
   it("omits label when it equals the default 'Profile'", () => {
     expect(allDefaults).not.toContain("label=");
-  });
-
-  it("omits mode when it equals the default 'light'", () => {
-    expect(allDefaults).not.toContain("mode=");
   });
 });
 
@@ -115,11 +109,6 @@ describe("dropdownMenuItemConfig.snippet: non-default props are emitted", () => 
   it("emits a non-default label", () => {
     expect(snippet({ state: "hover", label: "Settings" }))
       .toContain('label="Settings"');
-  });
-
-  it("emits a non-default mode", () => {
-    expect(snippet({ state: "hover", mode: "dark" }))
-      .toContain('mode="dark"');
   });
 });
 

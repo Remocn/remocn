@@ -22,24 +22,18 @@ export const alertDialogConfig: ComponentConfig = {
       options: ["opened", "closed"],
       label: "State",
     },
-    mode: {
-      type: "select",
-      default: "light",
-      options: ["light", "dark"],
-      label: "Mode",
-    },
   },
   durationInFrames: 120,
   fps: FPS,
   compositionWidth: W,
   compositionHeight: H,
+  previewBackdrop: { type: "color", value: "oklch(1 0 0)" },
   snippet: (values) => {
     const state = (values.state as AlertDialogState) ?? "opened";
     const title = values.title as string | undefined;
     const description = values.description as string | undefined;
     const actionLabel = values.actionLabel as string | undefined;
     const cancelLabel = values.cancelLabel as string | undefined;
-    const mode = values.mode as string | undefined;
 
     const props: string[] = [`  state="${state}"`];
     if (title !== undefined && title !== "Delete account?")
@@ -50,8 +44,6 @@ export const alertDialogConfig: ComponentConfig = {
       props.push(`  actionLabel="${actionLabel}"`);
     if (cancelLabel !== undefined && cancelLabel !== "Cancel")
       props.push(`  cancelLabel="${cancelLabel}"`);
-    if (mode !== undefined && mode !== "light")
-      props.push(`  mode="${mode}"`);
 
     return `import { AlertDialog } from "@/components/remocn/alert-dialog";
 

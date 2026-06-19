@@ -36,6 +36,23 @@ export const RemotionRoot = () => (
 );
 ```
 
+### With Backdrop
+
+Renders transparent — supply the background via `Backdrop`:
+
+```tsx
+import { Backdrop } from "@/components/remocn/backdrop";
+import { ProgressSteps } from "@/components/remocn/progress-steps";
+
+<Backdrop fill={{ type: "color", value: "#0a0a0a" }}>
+  <ProgressSteps
+    steps={[{ label: "Connect" }, { label: "Process" }, { label: "Deploy" }]}
+    orientation="horizontal"
+    stepDuration={30}
+  />
+</Backdrop>
+```
+
 ## Props
 
 <PropsTable
@@ -63,12 +80,6 @@ export const RemotionRoot = () => (
       type: "string",
       default: "\"#27272a\"",
       description: "Fill color used before a step is activated",
-    },
-    {
-      name: "background",
-      type: "string",
-      default: "\"#0a0a0a\"",
-      description: "Frame background color",
     },
     {
       name: "textColor",

@@ -21,7 +21,6 @@ const DEFAULT_ITEMS: ToggleGroupItem[] = [
 type SnippetValues = {
   state?: string;
   size?: string;
-  mode?: string;
 };
 
 const snippet = (values: SnippetValues): string =>
@@ -348,22 +347,6 @@ describe("toggleGroupConfig.controls.size", () => {
   });
 });
 
-describe("toggleGroupConfig.controls.mode", () => {
-  it("is a select control", () => {
-    expect(toggleGroupConfig.controls.mode.type).toBe("select");
-  });
-
-  it("defaults to 'light'", () => {
-    expect(toggleGroupConfig.controls.mode.default).toBe("light");
-  });
-
-  it("has exactly the two mode options in order", () => {
-    const control = toggleGroupConfig.controls.mode;
-    if (control.type !== "select") throw new Error("mode control must be a select");
-    expect(control.options).toEqual(["light", "dark"]);
-  });
-});
-
 describe("toggleGroupConfig.snippet: import line", () => {
   it("includes `import { ToggleGroup }` from the correct path", () => {
     const out = snippet({ state: "Monthly" });
@@ -401,20 +384,16 @@ describe("toggleGroupConfig.snippet: items inline literal always emitted", () =>
   });
 
   it("emits items even when all defaults are set", () => {
-    const out = snippet({ state: "Monthly", size: "default", mode: "light" });
+    const out = snippet({ state: "Monthly", size: "default" });
     expect(out).toContain("items={[");
   });
 });
 
 describe("toggleGroupConfig.snippet: default props are omitted", () => {
-  const allDefaults = snippet({ state: "Monthly", size: "default", mode: "light" });
+  const allDefaults = snippet({ state: "Monthly", size: "default" });
 
   it("omits size when it equals the default 'default'", () => {
     expect(allDefaults).not.toContain("size=");
-  });
-
-  it("omits mode when it equals the default 'light'", () => {
-    expect(allDefaults).not.toContain("mode=");
   });
 });
 
@@ -423,14 +402,9 @@ describe("toggleGroupConfig.snippet: non-default props are emitted", () => {
     expect(snippet({ state: "Monthly", size: "sm" })).toContain('size="sm"');
   });
 
-  it("emits mode=\"dark\" when mode is non-default", () => {
-    expect(snippet({ state: "Monthly", mode: "dark" })).toContain('mode="dark"');
-  });
-
-  it("emits both size and mode when both are non-default", () => {
-    const out = snippet({ state: "Yearly", size: "sm", mode: "dark" });
+  it("emits size when non-default alongside a non-default state", () => {
+    const out = snippet({ state: "Yearly", size: "sm" });
     expect(out).toContain('size="sm"');
-    expect(out).toContain('mode="dark"');
   });
 });
 

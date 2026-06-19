@@ -21,8 +21,6 @@ export interface ClaudeChatProps {
   modelName?: string;
   modelTier?: string;
   accentColor?: string;
-  theme?: "light" | "dark";
-  background?: "surface" | "transparent";
   speed?: number;
 }
 
@@ -228,13 +226,11 @@ export function ClaudeChat({
   modelName = "Opus 4.8",
   modelTier = "Max",
   accentColor = "#D97757",
-  theme = "light",
-  background = "surface",
   speed = 1,
 }: ClaudeChatProps) {
   const frame = useCurrentFrame();
   const { width, height, fps } = useVideoConfig();
-  const t = THEMES[theme] ?? THEMES.light;
+  const t = THEMES.light;
 
   const refW = 1280;
   const refH = 720;
@@ -252,15 +248,13 @@ export function ClaudeChat({
   const intro = introBounceIn(frame * speed, fps);
   const cardFade = fadeUpAt(frame * speed, [6, 22]);
 
-  const pageBg = background === "transparent" ? "transparent" : t.page;
-
   const cardWidth = 860;
   const cardLeft = (refW - cardWidth) / 2;
   const iconBtnSize = 36;
   const morphSize = 40;
 
   return (
-    <AbsoluteFill style={{ background: pageBg }}>
+    <AbsoluteFill style={{ background: "transparent" }}>
       <div
         style={{
           position: "absolute",
@@ -280,10 +274,7 @@ export function ClaudeChat({
             background: t.cardBg,
             border: `1px solid ${t.cardBorder}`,
             borderRadius: 24,
-            boxShadow:
-              theme === "light"
-                ? "0 8px 30px -12px rgba(31,30,29,0.12)"
-                : "0 8px 30px -12px rgba(0,0,0,0.5)",
+            boxShadow: "0 8px 30px -12px rgba(31,30,29,0.12)",
             opacity: cardFade.opacity,
             transform: `translateY(${cardFade.translateY + intro.translateY}px) scale(${intro.scale})`,
             transformOrigin: "center top",

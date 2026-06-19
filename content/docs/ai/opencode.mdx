@@ -30,8 +30,6 @@ const OpenCodeScene = () => (
     modelName="Kimi K2.5"
     provider="Moonshot AI"
     accentColor="#2B7FFF"
-    theme="dark"
-    background="surface"
     speed={1}
   />
 );
@@ -49,6 +47,22 @@ export const RemotionRoot = () => (
 ```
 
 Timeline: wordmark + input box + hints ease in (0–18), default state with the block cursor blinking holds (18–48), the query types into the input from frame 48, then holds to the end.
+
+### With Backdrop
+
+Renders transparent and single-theme — supply the background via `Backdrop`; edit the copied file to re-theme:
+
+```tsx
+import { Backdrop } from "@/components/remocn/backdrop";
+import { OpenCode } from "@/components/remocn/opencode";
+
+<Backdrop fill={{ type: "color", value: "#000000" }}>
+  <OpenCode
+    query="What is the tech stack of this project?"
+    accentColor="#2B7FFF"
+  />
+</Backdrop>
+```
 
 ## Props
 
@@ -89,18 +103,6 @@ Timeline: wordmark + input box + hints ease in (0–18), default state with the 
       type: "string",
       default: "\"#2B7FFF\"",
       description: "Blue accent bar and agent label color",
-    },
-    {
-      name: "theme",
-      type: "\"light\" | \"dark\"",
-      default: "\"dark\"",
-      description: "Dark or light theme",
-    },
-    {
-      name: "background",
-      type: "\"surface\" | \"transparent\"",
-      default: "\"surface\"",
-      description: "Page background fill or transparent",
     },
     {
       name: "speed",

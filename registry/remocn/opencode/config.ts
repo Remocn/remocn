@@ -18,21 +18,10 @@ export const opencodeConfig: ComponentConfig = {
     modelName: { type: "text", default: "Kimi K2.5", label: "Model" },
     provider: { type: "text", default: "Moonshot AI", label: "Provider" },
     accentColor: { type: "color", default: "#2B7FFF", label: "Accent" },
-    theme: {
-      type: "select",
-      default: "dark",
-      options: ["light", "dark"],
-      label: "Theme",
-    },
-    background: {
-      type: "select",
-      default: "surface",
-      options: ["surface", "transparent"],
-      label: "Background",
-    },
   },
   durationInFrames: 150,
   fps: FPS,
   compositionWidth: W,
   compositionHeight: H,
+  previewBackdrop: { type: "color", value: "#000000" },
 };

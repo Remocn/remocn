@@ -14,7 +14,6 @@ const VALID_STATES: readonly SelectItemState[] = ["idle", "hover", "press", "sel
 type SnippetValues = {
   state?: string;
   label?: string;
-  mode?: string;
 };
 
 const snippet = (values: SnippetValues): string =>
@@ -103,15 +102,10 @@ describe("selectItemConfig.snippet: default props are omitted", () => {
   const allDefaults = snippet({
     state: "selected",
     label: "Banana",
-    mode: "light",
   });
 
   it("omits label when it equals the default 'Banana'", () => {
     expect(allDefaults).not.toContain("label=");
-  });
-
-  it("omits mode when it equals the default 'light'", () => {
-    expect(allDefaults).not.toContain("mode=");
   });
 });
 
@@ -119,11 +113,6 @@ describe("selectItemConfig.snippet: non-default props are emitted", () => {
   it("emits a non-default label", () => {
     expect(snippet({ state: "selected", label: "Mango" }))
       .toContain('label="Mango"');
-  });
-
-  it("emits a non-default mode", () => {
-    expect(snippet({ state: "selected", mode: "dark" }))
-      .toContain('mode="dark"');
   });
 });
 

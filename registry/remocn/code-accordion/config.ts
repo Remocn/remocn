@@ -29,7 +29,6 @@ export const codeAccordionConfig: ComponentConfig = {
       step: 10,
       label: "Width",
     },
-    background: { type: "color", default: "#050505", label: "Background" },
     cardColor: { type: "color", default: "#0a0a0a", label: "Card color" },
     textColor: { type: "color", default: "#e4e4e7", label: "Text color" },
     mutedColor: { type: "color", default: "#52525b", label: "Muted color" },
@@ -38,4 +37,5 @@ export const codeAccordionConfig: ComponentConfig = {
   fps: FPS,
   compositionWidth: W,
   compositionHeight: H,
+  previewBackdrop: { type: "color", value: "#050505" },
 };

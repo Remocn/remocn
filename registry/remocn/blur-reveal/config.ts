@@ -39,4 +39,5 @@ export const blurRevealConfig: ComponentConfig = {
   fps: FPS,
   compositionWidth: W,
   compositionHeight: H,
+  previewBackdrop: { type: "color", value: "#ffffff" },
 };

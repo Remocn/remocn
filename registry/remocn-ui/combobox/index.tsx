@@ -31,7 +31,6 @@ export interface ComboboxProps {
   itemStyles?: (SelectItemStyle | undefined)[];
   inputStyle?: InputStyle;
   theme?: Partial<RemocnTheme>;
-  mode?: "light" | "dark";
   className?: string;
 }
 
@@ -114,10 +113,9 @@ export function Combobox({
   itemStyles,
   inputStyle: inputStyleOverride,
   theme: themeOverride,
-  mode,
   className,
 }: ComboboxProps) {
-  const theme = useRemocnTheme(themeOverride, mode);
+  const theme = useRemocnTheme(themeOverride, "light");
   const ctx = comboboxStyleContext(theme);
   const v = style ?? comboboxStyle(state, ctx);
 
@@ -140,7 +138,7 @@ export function Combobox({
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        background: theme.background,
+        background: "transparent",
         fontFamily:
           "var(--font-geist-sans), -apple-system, BlinkMacSystemFont, sans-serif",
       }}

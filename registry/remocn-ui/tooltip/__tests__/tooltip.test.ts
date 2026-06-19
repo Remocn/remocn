@@ -20,7 +20,6 @@ type SnippetValues = {
   state?: string;
   label?: string;
   side?: string;
-  mode?: string;
 };
 const snippet = (values: SnippetValues): string =>
   tooltipConfig.snippet(values as Record<string, unknown>);
@@ -388,22 +387,6 @@ describe("tooltipConfig.controls: side", () => {
   });
 });
 
-describe("tooltipConfig.controls: mode", () => {
-  it("mode is a select control", () => {
-    expect(tooltipConfig.controls.mode.type).toBe("select");
-  });
-
-  it("mode options are ['light', 'dark']", () => {
-    const ctrl = tooltipConfig.controls.mode;
-    if (ctrl.type !== "select") throw new Error("expected select");
-    expect(ctrl.options).toEqual(["light", "dark"]);
-  });
-
-  it("mode default is 'light'", () => {
-    expect(tooltipConfig.controls.mode.default).toBe("light");
-  });
-});
-
 describe("tooltipConfig.controls: label", () => {
   it("label is a text control", () => {
     expect(tooltipConfig.controls.label.type).toBe("text");
@@ -464,11 +447,6 @@ describe("tooltipConfig.snippet: default props are omitted", () => {
     const out = snippet({ state: "visible", side: "top" });
     expect(out).not.toContain("side=");
   });
-
-  it("omits mode when it equals the default 'light'", () => {
-    const out = snippet({ state: "visible", mode: "light" });
-    expect(out).not.toContain("mode=");
-  });
 });
 
 describe("tooltipConfig.snippet: non-default props are emitted", () => {
@@ -487,12 +465,6 @@ describe("tooltipConfig.snippet: non-default props are emitted", () => {
   it("emits side='right' when non-default", () => {
     expect(snippet({ state: "visible", side: "right" })).toContain(
       'side="right"',
-    );
-  });
-
-  it("emits mode='dark' when non-default", () => {
-    expect(snippet({ state: "visible", mode: "dark" })).toContain(
-      'mode="dark"',
     );
   });
 });

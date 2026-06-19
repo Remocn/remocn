@@ -36,6 +36,19 @@ export const RemotionRoot = () => (
 );
 ```
 
+### With Backdrop
+
+Renders its scene transparent — supply the background via `Backdrop`:
+
+```tsx
+import { Backdrop } from "@/components/remocn/backdrop";
+import { EcosystemConstellation } from "@/components/remocn/ecosystem-constellation";
+
+<Backdrop fill={{ type: "gradient", value: "radial-gradient(ellipse at center, #14101e 0%, #05030a 75%)" }}>
+  <EcosystemConstellation satelliteCount={6} centerLabel="V" accentColor="#a855f7" />
+</Backdrop>
+```
+
 ## Props
 
 <PropsTable

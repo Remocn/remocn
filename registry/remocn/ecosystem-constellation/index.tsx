@@ -221,8 +221,7 @@ export function EcosystemConstellation({
         position: "absolute",
         inset: 0,
         overflow: "hidden",
-        background:
-          "radial-gradient(ellipse at center, #14101e 0%, #05030a 75%)",
+        background: "transparent",
         fontFamily: FONT_FAMILY,
       }}
     >

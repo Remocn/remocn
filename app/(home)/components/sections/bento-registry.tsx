@@ -4,12 +4,13 @@ import { Player, type PlayerRef } from "@remotion/player";
 import { ArrowRight, Check, Copy } from "lucide-react";
 import { motion } from "motion/react";
 import Link from "next/link";
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { SPRING_SOFT } from "@/config/site";
 import { useTrackEvent } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 import registry from "@/registry/__index__";
+import { Backdrop, type BackdropFill } from "@/registry/remocn/backdrop";
 import { SpotlightSurface } from "@/components/spotlight-surface";
 import { FadeUp } from "../fade-up";
 import { SectionHeading } from "../section-heading";
@@ -68,6 +69,7 @@ function BentoCard({
   featured = false,
   compositionWidth,
   compositionHeight,
+  backdrop,
 }: {
   name: string;
   title: string;
@@ -78,11 +80,24 @@ function BentoCard({
   featured?: boolean;
   compositionWidth?: number;
   compositionHeight?: number;
+  backdrop?: BackdropFill;
 }) {
   const entry = registry[name];
   const playerRef = useRef<PlayerRef>(null);
 
   useAutoplay(playerRef, Boolean(entry));
+
+  const Composition = useMemo(() => {
+    const Inner = entry?.Component;
+    if (!Inner || !backdrop) return Inner;
+    return function BackdroppedComposition(props: Record<string, unknown>) {
+      return (
+        <Backdrop fill={backdrop} padding={0} radius={0} shadow="">
+          <Inner {...props} />
+        </Backdrop>
+      );
+    };
+  }, [entry, backdrop]);
 
   return (
     <motion.div
@@ -115,7 +130,7 @@ function BentoCard({
         {entry ? (
           <Player
             ref={playerRef}
-            component={entry.Component}
+            component={Composition ?? entry.Component}
             inputProps={inputProps ?? {}}
             durationInFrames={entry.config.durationInFrames}
             fps={entry.config.fps}
@@ -223,6 +238,7 @@ export function BentoRegistry() {
               name="x-followers-overview"
               title="X Followers"
               description="Names cycle, then the total lands with confetti"
+              backdrop={{ type: "color", value: "#ffffff" }}
             />
             <BentoCard
               name="grid-pixelate-wipe"

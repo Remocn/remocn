@@ -7,7 +7,6 @@ export interface CursorPreviewProps {
   variant?: CursorVariant;
   size?: number;
   rippleColor?: string;
-  mode?: "light" | "dark";
   speed?: number;
 }
 
@@ -15,7 +14,6 @@ export function CursorPreview({
   variant = "arrow",
   size = 28,
   rippleColor,
-  mode,
   speed = 1,
 }: CursorPreviewProps) {
   const style = useCursorPath(
@@ -33,7 +31,7 @@ export function CursorPreview({
       style={{
         position: "absolute",
         inset: 0,
-        background: mode === "dark" ? "#0a0a0a" : "#ffffff",
+        background: "transparent",
       }}
     >
       <Cursor
@@ -41,7 +39,6 @@ export function CursorPreview({
         variant={variant}
         size={size}
         rippleColor={rippleColor}
-        mode={mode}
       />
     </div>
   );

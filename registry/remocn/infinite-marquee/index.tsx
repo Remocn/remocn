@@ -10,7 +10,6 @@ export interface InfiniteMarqueeProps {
   pixelsPerFrame?: number;
   stroke?: boolean;
   strokeColor?: string;
-  background?: string;
   speed?: number;
   className?: string;
 }
@@ -23,7 +22,6 @@ export function InfiniteMarquee({
   pixelsPerFrame = 4,
   stroke = false,
   strokeColor = "#171717",
-  background = "#fafafa",
   speed = 1,
   className,
 }: InfiniteMarqueeProps) {
@@ -51,7 +49,6 @@ export function InfiniteMarquee({
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        background,
       }}
     >
       <div

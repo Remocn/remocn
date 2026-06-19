@@ -12,27 +12,19 @@ export const selectItemConfig: ComponentConfig = {
       options: ["idle", "hover", "press", "selected"],
       label: "State",
     },
-    mode: {
-      type: "select",
-      default: "light",
-      options: ["light", "dark"],
-      label: "Mode",
-    },
   },
   durationInFrames: 120,
   fps: FPS,
   compositionWidth: W,
   compositionHeight: H,
+  previewBackdrop: { type: "color", value: "oklch(1 0 0)" },
   snippet: (values) => {
     const state = (values.state as SelectItemState) ?? "selected";
     const label = values.label as string | undefined;
-    const mode = values.mode as string | undefined;
 
     const props: string[] = [`  state="${state}"`];
     if (label !== undefined && label !== "Banana")
       props.push(`  label="${label}"`);
-    if (mode !== undefined && mode !== "light")
-      props.push(`  mode="${mode}"`);
 
     return `import { SelectItem } from "@/components/remocn/select-item";
 

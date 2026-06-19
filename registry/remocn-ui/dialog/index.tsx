@@ -12,7 +12,6 @@ export interface DialogProps {
   actionLabel?: string;
   cancelLabel?: string;
   theme?: Partial<RemocnTheme>;
-  mode?: "light" | "dark";
   className?: string;
 }
 
@@ -80,10 +79,9 @@ export function Dialog({
   actionLabel = "Save changes",
   cancelLabel = "Cancel",
   theme: themeOverride,
-  mode,
   className,
 }: DialogProps) {
-  const theme = useRemocnTheme(themeOverride, mode);
+  const theme = useRemocnTheme(themeOverride, "light");
 
   const ctx = dialogStyleContext(theme);
   const v = style ?? dialogStyle(state, ctx);

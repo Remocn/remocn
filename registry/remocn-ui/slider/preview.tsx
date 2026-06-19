@@ -1,6 +1,5 @@
 "use client";
 
-import { useRemocnTheme } from "@/lib/remocn-ui";
 import { Slider, type SliderThumbState } from "@/registry/remocn-ui/slider";
 
 export interface SliderPreviewProps {
@@ -8,7 +7,6 @@ export interface SliderPreviewProps {
   thumbState?: SliderThumbState;
   width?: number;
   showValue?: boolean;
-  mode?: "light" | "dark";
 }
 
 export function SliderPreview({
@@ -16,10 +14,7 @@ export function SliderPreview({
   thumbState = "idle",
   width = 320,
   showValue = true,
-  mode,
 }: SliderPreviewProps) {
-  const theme = useRemocnTheme(undefined, mode);
-
   return (
     <div
       style={{
@@ -28,7 +23,7 @@ export function SliderPreview({
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        background: theme.background,
+        background: "transparent",
       }}
     >
       <Slider
@@ -36,7 +31,6 @@ export function SliderPreview({
         thumbState={thumbState}
         width={width}
         showValue={showValue}
-        mode={mode}
       />
     </div>
   );

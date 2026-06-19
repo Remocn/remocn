@@ -19,23 +19,17 @@ export const commandMenuItemConfig: ComponentConfig = {
       options: ["idle", "hover", "press", "selected"],
       label: "State",
     },
-    mode: {
-      type: "select",
-      default: "light",
-      options: ["light", "dark"],
-      label: "Mode",
-    },
   },
   durationInFrames: 120,
   fps: FPS,
   compositionWidth: W,
   compositionHeight: H,
+  previewBackdrop: { type: "color", value: "oklch(1 0 0)" },
   snippet: (values) => {
     const state = (values.state as CommandMenuItemState) ?? "selected";
     const label = values.label as string | undefined;
     const icon = values.icon as string | undefined;
     const shortcut = values.shortcut as string | undefined;
-    const mode = values.mode as string | undefined;
 
     const props: string[] = [`  state="${state}"`];
     if (label !== undefined && label !== "Settings")
@@ -44,8 +38,6 @@ export const commandMenuItemConfig: ComponentConfig = {
       props.push(`  icon="${icon}"`);
     if (shortcut !== undefined && shortcut !== "")
       props.push(`  shortcut="${shortcut}"`);
-    if (mode !== undefined && mode !== "light")
-      props.push(`  mode="${mode}"`);
 
     return `import { CommandMenuItem } from "@/components/remocn/command-menu-item";
 

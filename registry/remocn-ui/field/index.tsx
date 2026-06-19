@@ -33,13 +33,12 @@ export function Field({ children, gap = 6, style }: FieldProps) {
 
 export interface FieldLabelProps {
   children: ReactNode;
-  mode?: "light" | "dark";
   theme?: Partial<RemocnTheme>;
   style?: CSSProperties;
 }
 
-export function FieldLabel({ children, mode, theme, style }: FieldLabelProps) {
-  const t = useRemocnTheme(theme, mode);
+export function FieldLabel({ children, theme, style }: FieldLabelProps) {
+  const t = useRemocnTheme(theme, "light");
   return (
     <div
       style={{
@@ -59,7 +58,6 @@ export function FieldLabel({ children, mode, theme, style }: FieldLabelProps) {
 export interface FieldDescriptionProps {
   children: ReactNode;
   align?: "start" | "center";
-  mode?: "light" | "dark";
   theme?: Partial<RemocnTheme>;
   style?: CSSProperties;
 }
@@ -67,11 +65,10 @@ export interface FieldDescriptionProps {
 export function FieldDescription({
   children,
   align = "start",
-  mode,
   theme,
   style,
 }: FieldDescriptionProps) {
-  const t = useRemocnTheme(theme, mode);
+  const t = useRemocnTheme(theme, "light");
   return (
     <div
       style={{

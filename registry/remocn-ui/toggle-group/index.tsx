@@ -19,7 +19,6 @@ export interface ToggleGroupProps {
   items?: ToggleGroupItem[];
   size?: ToggleGroupSize;
   theme?: Partial<RemocnTheme>;
-  mode?: "light" | "dark";
   align?: "start" | "center" | "end";
   className?: string;
 }
@@ -86,11 +85,10 @@ export function ToggleGroup({
   items = DEFAULT_ITEMS,
   size = "default",
   theme: themeOverride,
-  mode,
   align = "center",
   className,
 }: ToggleGroupProps) {
-  const theme = useRemocnTheme(themeOverride, mode);
+  const theme = useRemocnTheme(themeOverride, "light");
   const ctx = toggleGroupStyleContext(items, theme);
   const v = style ?? toggleGroupStyle(state, ctx);
 
@@ -108,7 +106,7 @@ export function ToggleGroup({
         display: "flex",
         alignItems: "center",
         justifyContent: justify(align),
-        background: theme.background,
+        background: "transparent",
         fontFamily:
           "var(--font-geist-sans), -apple-system, BlinkMacSystemFont, sans-serif",
       }}

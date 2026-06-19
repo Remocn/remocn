@@ -6,11 +6,10 @@ import { useDropdownMenuItemTransition } from "@/registry/remocn-ui/dropdown-men
 import { useButtonTransition } from "@/registry/remocn-ui/button/use-button-transition";
 import { useCurrentState } from "@/lib/remocn-ui";
 
-export const dropdownMenuExampleControls = ["label", "mode"] as const;
+export const dropdownMenuExampleControls = ["label"] as const;
 
 export interface DropdownMenuExampleProps {
   label?: string;
-  mode?: "light" | "dark";
 }
 
 export const DropdownMenuExampleScene = (p: DropdownMenuExampleProps = {}) => {
@@ -21,16 +20,13 @@ export const DropdownMenuExampleScene = (p: DropdownMenuExampleProps = {}) => {
       { at: 14, state: "hover" },
       { at: 26, state: "press" },
     ],
-    { variant: "outline", mode: p.mode },
+    { variant: "outline" },
   );
   // The menu opens just after the "click", then closes near the end.
-  const menu = useDropdownMenuTransition(
-    [
-      { at: 32, state: "opened", duration: 16 },
-      { at: 96, state: "closed", duration: 12 },
-    ],
-    { mode: p.mode },
-  );
+  const menu = useDropdownMenuTransition([
+    { at: 32, state: "opened", duration: 16 },
+    { at: 96, state: "closed", duration: 12 },
+  ]);
   // One row walks hover → press while the panel is open (no persistent
   // selection — a menu commits the action and dismisses).
   const rowState = useCurrentState(
@@ -41,14 +37,13 @@ export const DropdownMenuExampleScene = (p: DropdownMenuExampleProps = {}) => {
     ],
     "idle",
   );
-  const row = useDropdownMenuItemTransition([{ at: 0, state: rowState }], { mode: p.mode });
+  const row = useDropdownMenuItemTransition([{ at: 0, state: rowState }]);
   return (
     <DropdownMenu
       style={menu}
       label={p.label ?? "Options"}
       triggerStyle={triggerStyle}
       itemStyles={[undefined, row, undefined, undefined]}
-      mode={p.mode ?? "light"}
     />
   );
 };
@@ -57,19 +52,10 @@ export const dropdownMenuExampleCode = (
   values: Record<string, unknown> = {},
 ): string => {
   const label = values.label as string | undefined;
-  const mode = values.mode as string | undefined;
 
   const props: string[] = [];
   if (label !== undefined && label !== "Options") props.push(`label="${label}"`);
-  if (mode !== undefined && mode !== "light") props.push(`mode="${mode}"`);
   const extraProps = props.length ? `\n      ${props.join("\n      ")}` : "";
-
-  const hookOpts: string[] = [];
-  if (mode !== undefined && mode !== "light") hookOpts.push(`mode: "${mode}"`);
-  const optsStr = hookOpts.length ? `, { ${hookOpts.join(", ")} }` : "";
-  const triggerOptsStr = hookOpts.length
-    ? `, { variant: "outline", ${hookOpts.join(", ")} }`
-    : `, { variant: "outline" }`;
 
   return `import { DropdownMenu } from "@/components/remocn/dropdown-menu";
 import { useDropdownMenuTransition } from "@/components/remocn/use-dropdown-menu-transition";
@@ -82,14 +68,13 @@ export const Scene = () => {
     [
       { at: 14, state: "hover" },
       { at: 26, state: "press" },
-    ]${triggerOptsStr},
+    ],
+    { variant: "outline" },
   );
-  const menu = useDropdownMenuTransition(
-    [
-      { at: 32, state: "opened", duration: 16 },
-      { at: 96, state: "closed", duration: 12 },
-    ]${optsStr},
-  );
+  const menu = useDropdownMenuTransition([
+    { at: 32, state: "opened", duration: 16 },
+    { at: 96, state: "closed", duration: 12 },
+  ]);
   const rowState = useCurrentState(
     [
       { at: 52, state: "hover" },
@@ -98,7 +83,7 @@ export const Scene = () => {
     ],
     "idle",
   );
-  const row = useDropdownMenuItemTransition([{ at: 0, state: rowState }]${optsStr});
+  const row = useDropdownMenuItemTransition([{ at: 0, state: rowState }]);
 
   return (
     <DropdownMenu${extraProps}

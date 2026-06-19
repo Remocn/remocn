@@ -17,7 +17,6 @@ type SnippetValues = {
   description?: string;
   actionLabel?: string;
   cancelLabel?: string;
-  mode?: string;
 };
 
 const snippet = (values: SnippetValues): string =>
@@ -109,7 +108,6 @@ describe("sheetConfig.snippet: default props are omitted", () => {
     description: "Make changes to your profile here. Click save when you're done.",
     actionLabel: "Save changes",
     cancelLabel: "Cancel",
-    mode: "light",
   });
 
   it("omits title when it equals the default 'Edit profile'", () => {
@@ -126,10 +124,6 @@ describe("sheetConfig.snippet: default props are omitted", () => {
 
   it("omits cancelLabel when it equals the default 'Cancel'", () => {
     expect(allDefaults).not.toContain("cancelLabel=");
-  });
-
-  it("omits mode when it equals the default 'light'", () => {
-    expect(allDefaults).not.toContain("mode=");
   });
 });
 
@@ -152,11 +146,6 @@ describe("sheetConfig.snippet: non-default props are emitted", () => {
   it("emits a non-default cancelLabel", () => {
     expect(snippet({ state: "opened", cancelLabel: "Go back" }))
       .toContain('cancelLabel="Go back"');
-  });
-
-  it("emits a non-default mode", () => {
-    expect(snippet({ state: "opened", mode: "dark" }))
-      .toContain('mode="dark"');
   });
 });
 

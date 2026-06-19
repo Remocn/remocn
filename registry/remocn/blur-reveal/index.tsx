@@ -43,7 +43,7 @@ export function BlurReveal({
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        background: "white",
+        background: "transparent",
       }}
     >
       <span

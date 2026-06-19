@@ -36,6 +36,19 @@ export const RemotionRoot = () => (
 );
 ```
 
+### With Backdrop
+
+Renders its scene transparent — supply the background via `Backdrop`:
+
+```tsx
+import { Backdrop } from "@/components/remocn/backdrop";
+import { HeroDeviceAssemble } from "@/components/remocn/hero-device-assemble";
+
+<Backdrop fill={{ type: "gradient", value: "radial-gradient(ellipse at center, #1a1a22 0%, #050507 70%)" }}>
+  <HeroDeviceAssemble device="laptop" accentColor="#22c55e" assembleStart={0} />
+</Backdrop>
+```
+
 ## Props
 
 <PropsTable
