@@ -46,7 +46,13 @@ export async function GET(request: NextRequest) {
       signal: request.signal,
     });
 
-    return NextResponse.json({ owner, repo, totalStars, truncated, stargazers });
+    return NextResponse.json({
+      owner,
+      repo,
+      totalStars,
+      truncated,
+      stargazers,
+    });
   } catch (err) {
     if (err instanceof StargazersError) {
       return NextResponse.json(

@@ -208,7 +208,7 @@ describe("computeScrollProgress", () => {
 });
 
 describe("maxScrollOvershoot / elastic peak", () => {
-  it("peaks at ≈1.0657 near t≈0.63 (frame≈189 at dur=300)", () => {
+  it("peaks at ≈1.0183 near t≈0.72 (frame≈217 at dur=300)", () => {
     const dur = 300;
     let max = -Infinity;
     let maxFrame = -1;
@@ -219,9 +219,9 @@ describe("maxScrollOvershoot / elastic peak", () => {
         maxFrame = f;
       }
     }
-    expect(max).toBeCloseTo(1.0657, 3);
-    expect(maxFrame).toBeGreaterThanOrEqual(185);
-    expect(maxFrame).toBeLessThanOrEqual(193);
+    expect(max).toBeCloseTo(1.0183, 3);
+    expect(maxFrame).toBeGreaterThanOrEqual(213);
+    expect(maxFrame).toBeLessThanOrEqual(221);
   });
 });
 

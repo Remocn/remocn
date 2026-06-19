@@ -38,7 +38,7 @@ export const githubStarsConfig: ComponentConfig = {
     // `speed` is appended from SHARED_CONTROLS in registry/__index__.tsx.
     // `stargazers` is an array → not a control; preview uses SAMPLE_STARGAZERS.
   },
-  durationInFrames: 300,
+  durationInFrames: 120,
   fps: FPS,
   compositionWidth: W,
   compositionHeight: H,

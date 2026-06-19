@@ -250,7 +250,9 @@ export async function fetchStargazers({
     );
   }
   if (!repoRes.ok) throw errorForResponse(repoRes, "repo");
-  const repoData = (await repoRes.json()) as { stargazers_count?: number };
+  const repoData = (await repoRes.json()) as {
+    stargazers_count?: number;
+  };
   const totalStars =
     typeof repoData.stargazers_count === "number"
       ? repoData.stargazers_count
