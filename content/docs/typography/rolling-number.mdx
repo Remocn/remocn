@@ -1,0 +1,106 @@
+---
+title: Rolling Number
+description: Odometer where every place rolls at its own speed, new places rising into view, settling exactly on the target value
+---
+
+<ComponentPreview name="rolling-number" />
+
+## Installation
+
+<InstallBlock name="rolling-number" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { RollingNumber } from "@/components/remocn/rolling-number";
+
+const RollingNumberScene = () => (
+  <RollingNumber from={0} to={24813} fontSize={120} />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="RollingNumber"
+    component={RollingNumberScene}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "from",
+      type: "number",
+      default: "0",
+      description: "Starting value. Direction is inferred from whether to is greater or less than from.",
+    },
+    {
+      name: "to",
+      type: "number",
+      default: "24813",
+      description: "Target value the number settles on, landing pixel-exact on every place.",
+    },
+    {
+      name: "fontSize",
+      type: "number",
+      default: "120",
+      description: "Font size in pixels",
+    },
+    {
+      name: "color",
+      type: "string",
+      default: "\"#171717\"",
+      description: "Text color",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Multiplier for animation speed",
+    },
+  ]}
+/>
+
+Every place rolls at once, each travelling roughly ten times as far as the place to its left, so the ones spin fastest and the highest place barely turns. As the number grows past each power of ten, the new leading place rises gently into view rather than popping in, and the whole number settles pixel-exact on the target. All values must be integers and non-negative.
+
+## Count Up
+
+Rolls upward from 0 to 24813:
+
+```tsx
+import { Backdrop } from "@/components/remocn/backdrop";
+import { RollingNumber } from "@/components/remocn/rolling-number";
+
+<Backdrop fill={{ type: "color", value: "#ffffff" }}>
+  <RollingNumber from={0} to={24813} fontSize={120} />
+</Backdrop>
+```
+
+## Count Down
+
+Rolls downward from 24813 to 0:
+
+```tsx
+import { Backdrop } from "@/components/remocn/backdrop";
+import { RollingNumber } from "@/components/remocn/rolling-number";
+
+<Backdrop fill={{ type: "color", value: "#ffffff" }}>
+  <RollingNumber from={24813} to={0} fontSize={120} />
+</Backdrop>
+```
+
+## With Confetti
+
+Pair it with [Confetti](/docs/effects/confetti) to celebrate the moment the number lands — fire the burst on the frame the count settles (`durationInFrames × 0.8`):
+
+<BlockPreview name="rolling-number-confetti" />
+
+`Confetti` is a separate component — add it with `npx shadcn add @remocn/confetti`. Both render as full-canvas overlays, so the burst layers cleanly over the number. Keep `startFrame` equal to `durationInFrames × 0.8` (where the count settles): this 210-frame composition settles at frame 168, leaving the 42-frame `lifetime` room to play out before it loops.

@@ -31,6 +31,10 @@ import {
   backdropImageCode,
   backdropLiveCode,
 } from "../backdrop-variants";
+import {
+  RollingNumberConfettiExampleScene,
+  rollingNumberConfettiExampleCode,
+} from "../rolling-number-confetti-example";
 
 /**
  * Blocks scene registry — parallel to the ui-tier `examples` map
@@ -146,6 +150,15 @@ export const blockExamples: Record<string, BlockExampleEntry> = {
     width: W,
     height: H,
   },
+  "rolling-number-confetti": {
+    Component: RollingNumberConfettiExampleScene,
+    code: rollingNumberConfettiExampleCode,
+    durationInFrames: 210,
+    fps: FPS,
+    width: W,
+    height: H,
+    previewBackdrop: { type: "color", value: "#ffffff" },
+  },
 };
 
 /**
@@ -168,6 +181,7 @@ export const BLOCK_SCENE_META: Record<
   "backdrop-gradient": { code: backdropGradientCode },
   "backdrop-image": { code: backdropImageCode },
   "backdrop-live": { code: backdropLiveCode },
+  "rolling-number-confetti": { code: rollingNumberConfettiExampleCode },
 };
 
 // Re-export so block entries can reference the shared timing constants without

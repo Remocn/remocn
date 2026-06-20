@@ -73,6 +73,8 @@ import { ProgressSteps } from "@/registry/remocn/progress-steps";
 import { progressStepsConfig } from "@/registry/remocn/progress-steps/config";
 import { RGBGlitchText } from "@/registry/remocn/rgb-glitch-text";
 import { rgbGlitchTextConfig } from "@/registry/remocn/rgb-glitch-text/config";
+import { RollingNumber } from "@/registry/remocn/rolling-number";
+import { rollingNumberConfig } from "@/registry/remocn/rolling-number/config";
 import { ShimmerSweep } from "@/registry/remocn/shimmer-sweep";
 import { shimmerSweepConfig } from "@/registry/remocn/shimmer-sweep/config";
 import { SimulatedCursor } from "@/registry/remocn/simulated-cursor";
@@ -338,6 +340,7 @@ const registry: Record<string, RegistryEntry> = {
   },
   "github-stars": { Component: GitHubStars, config: githubStarsConfig },
   "number-wheel": { Component: NumberWheel, config: numberWheelConfig },
+  "rolling-number": { Component: RollingNumber, config: rollingNumberConfig },
   "x-follow-card": { Component: XFollowCard, config: xFollowCardConfig },
   "x-followers-overview": {
     Component: XFollowersOverview,
@@ -456,6 +459,18 @@ if (githubStars) {
 const numberWheel = registry["number-wheel"];
 if (numberWheel) {
   numberWheel.config.controls.speed = {
+    type: "number",
+    default: 1,
+    min: 1,
+    max: 4,
+    step: 0.25,
+    label: "Speed",
+  };
+}
+
+const rollingNumber = registry["rolling-number"];
+if (rollingNumber) {
+  rollingNumber.config.controls.speed = {
     type: "number",
     default: 1,
     min: 1,

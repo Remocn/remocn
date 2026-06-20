@@ -11,6 +11,7 @@
         "@react-three/postprocessing": "^3.0.4",
         "@remotion/bundler": "4.0.473",
         "@remotion/google-fonts": "4.0.473",
+        "@remotion/motion-blur": "4.0.473",
         "@remotion/player": "4.0.473",
         "@remotion/renderer": "4.0.473",
         "class-variance-authority": "^0.7.1",
@@ -447,6 +448,8 @@
     "@remotion/media-parser": ["@remotion/media-parser@4.0.473", "", {}, "sha512-jajhgumDSdnM/CUb3lZgae7D2pfioz9rczc6tLaRNP28IG3d2foQ0jP8INfCdMsOszCD0wKw4RHe0m5GKRxhTg=="],
 
     "@remotion/media-utils": ["@remotion/media-utils@4.0.473", "", { "dependencies": { "mediabunny": "1.45.0", "remotion": "4.0.473" }, "peerDependencies": { "react": ">=16.8.0", "react-dom": ">=16.8.0" } }, "sha512-f4Ip10pkawlUBTunE++DZ6J/TrPtKalkxoTx7qQGBlhz3BcWRK7AbEGouZtcAmkLFVxq80hpH/1cBFOMF6FVfA=="],
+
+    "@remotion/motion-blur": ["@remotion/motion-blur@4.0.473", "", { "dependencies": { "remotion": "4.0.473" }, "peerDependencies": { "react": ">=16.8.0", "react-dom": ">=16.8.0" } }, "sha512-SmeTVJT0sYrpKvaWKTEfgAdQRGaR/LqbHWMe9bQhtSQasBxwZ44v9m8d5u6chZ90SCYYI99WL4TaZleqjzaCiQ=="],
 
     "@remotion/player": ["@remotion/player@4.0.473", "", { "dependencies": { "remotion": "4.0.473" }, "peerDependencies": { "react": ">=16.8.0", "react-dom": ">=16.8.0" } }, "sha512-giJ8cIQEdVxftpcX4m+9jWYCbIvpcdKRGVUc3ownxYEsJ30WUSP2+TuQ6aqqLXFAfwhY/SdBVLfopylh3BgMXA=="],
 

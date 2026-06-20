@@ -798,6 +798,23 @@
       ]
     },
     {
+      "name": "rolling-number",
+      "type": "registry:component",
+      "title": "Rolling Number",
+      "description": "Odometer where every place rolls at its own speed, new places rising into view, settling exactly on the target value.",
+      "dependencies": [
+        "remotion",
+        "@remotion/google-fonts"
+      ],
+      "files": [
+        {
+          "path": "rolling-number/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/rolling-number.tsx"
+        }
+      ]
+    },
+    {
       "name": "x-follow-card",
       "type": "registry:component",
       "title": "X Follow Card",
