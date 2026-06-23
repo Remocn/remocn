@@ -25,6 +25,8 @@ import { BlurOutUp } from "@/registry/remocn/blur-out-up";
 import { blurOutUpConfig } from "@/registry/remocn/blur-out-up/config";
 import { FocusBlurResolve } from "@/registry/remocn/focus-blur-resolve";
 import { focusBlurResolveConfig } from "@/registry/remocn/focus-blur-resolve/config";
+import { LineByLineSlide } from "@/registry/remocn/line-by-line-slide";
+import { lineByLineSlideConfig } from "@/registry/remocn/line-by-line-slide/config";
 import { BrowserFlow } from "@/registry/remocn/browser-flow";
 import { browserFlowConfig } from "@/registry/remocn/browser-flow/config";
 import { ChatToPreviewLayout } from "@/registry/remocn/chat-to-preview-layout";
@@ -217,6 +219,7 @@ const registry: Record<string, RegistryEntry> = {
   "scale-down-fade": { Component: ScaleDownFade, config: scaleDownFadeConfig },
   "blur-out-up": { Component: BlurOutUp, config: blurOutUpConfig },
   "focus-blur-resolve": { Component: FocusBlurResolve, config: focusBlurResolveConfig },
+  "line-by-line-slide": { Component: LineByLineSlide, config: lineByLineSlideConfig },
   typewriter: { Component: Typewriter, config: typewriterConfig },
   "inline-highlight": {
     Component: InlineHighlight,

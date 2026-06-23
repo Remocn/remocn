@@ -148,6 +148,22 @@
       ]
     },
     {
+      "name": "line-by-line-slide",
+      "type": "registry:component",
+      "title": "Line-by-Line Slide",
+      "description": "Each line enters from the left with a staggered slide and exits to the right for a flowing paragraph reveal.",
+      "dependencies": [
+        "remotion"
+      ],
+      "files": [
+        {
+          "path": "line-by-line-slide/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/line-by-line-slide.tsx"
+        }
+      ]
+    },
+    {
       "name": "typewriter",
       "type": "registry:component",
       "title": "Typewriter",

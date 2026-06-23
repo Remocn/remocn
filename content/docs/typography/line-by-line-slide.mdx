@@ -1,0 +1,106 @@
+---
+title: Line-by-Line Slide
+description: Each line slides in from the left with a staggered flow then exits to the right
+---
+
+<ComponentPreview name="line-by-line-slide" />
+
+## Installation
+
+<InstallBlock name="line-by-line-slide" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { LineByLineSlide } from "@/components/remocn/line-by-line-slide";
+
+const LineByLineSlideScene = () => (
+  <LineByLineSlide text={"Think different.\nDo more."} distance={48} />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="LineByLineSlide"
+    component={LineByLineSlideScene}
+    durationInFrames={90}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The text is split on newline characters into individual lines. Each line slides in from the left, holds steady in the middle of the composition, then slides out to the right—so the duration should leave room for the staggered entry and exit animations.
+
+### With Backdrop
+
+The component renders transparent — supply the background via `Backdrop`. It ships single-theme; edit the copied file to re-theme colors.
+
+Pair with `Backdrop` to place the text inside a full-frame fill with a rounded, shadowed content frame:
+
+```tsx
+import { Composition } from "remotion";
+import { LineByLineSlide } from "@/components/remocn/line-by-line-slide";
+import { Backdrop } from "@/components/remocn/backdrop";
+
+const LineByLineSlideScene = () => (
+  <Backdrop fill={{ type: "color", value: "#ffffff" }}>
+    <LineByLineSlide text={"Think different.\nDo more."} distance={48} />
+  </Backdrop>
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="LineByLineSlide"
+    component={LineByLineSlideScene}
+    durationInFrames={90}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "text",
+      type: "string",
+      required: true,
+      description: "The text to animate. Split on newline characters into lines.",
+    },
+    {
+      name: "distance",
+      type: "number",
+      default: "48",
+      description: "Horizontal slide distance in pixels each line travels.",
+    },
+    {
+      name: "fontSize",
+      type: "number",
+      default: "72",
+      description: "Font size in pixels",
+    },
+    {
+      name: "fontWeight",
+      type: "number",
+      default: "600",
+      description: "CSS font-weight",
+    },
+    {
+      name: "color",
+      type: "string",
+      default: "\"#171717\"",
+      description: "Text color (any valid CSS color)",
+    },
+    {
+      name: "className",
+      type: "string",
+      description: "Optional className passed to the underlying span",
+    },
+  ]}
+/>
