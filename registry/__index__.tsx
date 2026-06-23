@@ -21,6 +21,8 @@ import { MicroScaleFade } from "@/registry/remocn/micro-scale-fade";
 import { microScaleFadeConfig } from "@/registry/remocn/micro-scale-fade/config";
 import { ScaleDownFade } from "@/registry/remocn/scale-down-fade";
 import { scaleDownFadeConfig } from "@/registry/remocn/scale-down-fade/config";
+import { BlurOutUp } from "@/registry/remocn/blur-out-up";
+import { blurOutUpConfig } from "@/registry/remocn/blur-out-up/config";
 import { BrowserFlow } from "@/registry/remocn/browser-flow";
 import { browserFlowConfig } from "@/registry/remocn/browser-flow/config";
 import { ChatToPreviewLayout } from "@/registry/remocn/chat-to-preview-layout";
@@ -211,6 +213,7 @@ const registry: Record<string, RegistryEntry> = {
   "spring-scale-in": { Component: SpringScaleIn, config: springScaleInConfig },
   "micro-scale-fade": { Component: MicroScaleFade, config: microScaleFadeConfig },
   "scale-down-fade": { Component: ScaleDownFade, config: scaleDownFadeConfig },
+  "blur-out-up": { Component: BlurOutUp, config: blurOutUpConfig },
   typewriter: { Component: Typewriter, config: typewriterConfig },
   "inline-highlight": {
     Component: InlineHighlight,

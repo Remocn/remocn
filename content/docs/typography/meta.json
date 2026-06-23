@@ -10,6 +10,7 @@
     "spring-scale-in",
     "micro-scale-fade",
     "scale-down-fade",
+    "blur-out-up",
     "staggered-fade-up",
     "masked-slide-reveal",
     "tracking-in",

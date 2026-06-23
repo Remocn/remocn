@@ -116,6 +116,22 @@
       ]
     },
     {
+      "name": "blur-out-up",
+      "type": "registry:component",
+      "title": "Blur Out Up",
+      "description": "Words arrive clean and depart upward with increasing blur for airy exits.",
+      "dependencies": [
+        "remotion"
+      ],
+      "files": [
+        {
+          "path": "blur-out-up/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/blur-out-up.tsx"
+        }
+      ]
+    },
+    {
       "name": "typewriter",
       "type": "registry:component",
       "title": "Typewriter",
