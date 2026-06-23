@@ -20,6 +20,22 @@
       ]
     },
     {
+      "name": "per-character-rise",
+      "type": "registry:component",
+      "title": "Per Character Rise",
+      "description": "Letters slide up from below with no blur — crisp, deliberate, kinetic.",
+      "dependencies": [
+        "remotion"
+      ],
+      "files": [
+        {
+          "path": "per-character-rise/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/per-character-rise.tsx"
+        }
+      ]
+    },
+    {
       "name": "typewriter",
       "type": "registry:component",
       "title": "Typewriter",

@@ -4,6 +4,7 @@
   "pages": [
     "index",
     "soft-blur-in",
+    "per-character-rise",
     "staggered-fade-up",
     "masked-slide-reveal",
     "tracking-in",
