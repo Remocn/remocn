@@ -15,6 +15,7 @@
     "line-by-line-slide",
     "per-word-crossfade",
     "fade-through",
+    "shared-axis-y",
     "staggered-fade-up",
     "mask-reveal-up",
     "tracking-in",

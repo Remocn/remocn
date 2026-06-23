@@ -31,6 +31,8 @@ import { PerWordCrossfade } from "@/registry/remocn/per-word-crossfade";
 import { perWordCrossfadeConfig } from "@/registry/remocn/per-word-crossfade/config";
 import { FadeThrough } from "@/registry/remocn/fade-through";
 import { fadeThroughConfig } from "@/registry/remocn/fade-through/config";
+import { SharedAxisY } from "@/registry/remocn/shared-axis-y";
+import { sharedAxisYConfig } from "@/registry/remocn/shared-axis-y/config";
 import { BrowserFlow } from "@/registry/remocn/browser-flow";
 import { browserFlowConfig } from "@/registry/remocn/browser-flow/config";
 import { ChatToPreviewLayout } from "@/registry/remocn/chat-to-preview-layout";
@@ -226,6 +228,7 @@ const registry: Record<string, RegistryEntry> = {
   "line-by-line-slide": { Component: LineByLineSlide, config: lineByLineSlideConfig },
   "per-word-crossfade": { Component: PerWordCrossfade, config: perWordCrossfadeConfig },
   "fade-through": { Component: FadeThrough, config: fadeThroughConfig },
+  "shared-axis-y": { Component: SharedAxisY, config: sharedAxisYConfig },
   typewriter: { Component: Typewriter, config: typewriterConfig },
   "inline-highlight": {
     Component: InlineHighlight,

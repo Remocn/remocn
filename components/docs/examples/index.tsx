@@ -75,6 +75,10 @@ import {
   fadeThroughExampleCode,
 } from "./fade-through-example";
 import {
+  SharedAxisYExampleScene,
+  sharedAxisYExampleCode,
+} from "./shared-axis-y-example";
+import {
   PerWordCrossfadeExampleScene,
   perWordCrossfadeExampleCode,
 } from "./per-word-crossfade-example";
@@ -366,6 +370,16 @@ export const examples: Record<string, ExampleEntry> = {
   "fade-through-example": {
     Component: FadeThroughExampleScene,
     code: fadeThroughExampleCode,
+    // Two chained A→B transitions, 90 frames each.
+    durationInFrames: 180,
+    fps: FPS,
+    width: W,
+    height: H,
+    previewBackdrop: { type: "color", value: "#ffffff" },
+  },
+  "shared-axis-y-example": {
+    Component: SharedAxisYExampleScene,
+    code: sharedAxisYExampleCode,
     // Two chained A→B transitions, 90 frames each.
     durationInFrames: 180,
     fps: FPS,

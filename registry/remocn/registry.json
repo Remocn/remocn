@@ -196,6 +196,22 @@
       ]
     },
     {
+      "name": "shared-axis-y",
+      "type": "registry:component",
+      "title": "Shared Axis Y",
+      "description": "Per-word hard-cut transition with staircase timing for sharp editorial swaps.",
+      "dependencies": [
+        "remotion"
+      ],
+      "files": [
+        {
+          "path": "shared-axis-y/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/shared-axis-y.tsx"
+        }
+      ]
+    },
+    {
       "name": "typewriter",
       "type": "registry:component",
       "title": "Typewriter",
