@@ -100,6 +100,22 @@
       ]
     },
     {
+      "name": "scale-down-fade",
+      "type": "registry:component",
+      "title": "Scale Down Fade",
+      "description": "Subtle premium settle-in with a restrained scale-down fade on exit.",
+      "dependencies": [
+        "remotion"
+      ],
+      "files": [
+        {
+          "path": "scale-down-fade/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/scale-down-fade.tsx"
+        }
+      ]
+    },
+    {
       "name": "typewriter",
       "type": "registry:component",
       "title": "Typewriter",
