@@ -244,6 +244,22 @@
       ]
     },
     {
+      "name": "kinetic-center-build",
+      "type": "registry:component",
+      "title": "Kinetic Center Build",
+      "description": "A word appears in the center; each new word enters from the right and pushes the line until the full phrase locks centered.",
+      "dependencies": [
+        "remotion"
+      ],
+      "files": [
+        {
+          "path": "kinetic-center-build/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/kinetic-center-build.tsx"
+        }
+      ]
+    },
+    {
       "name": "typewriter",
       "type": "registry:component",
       "title": "Typewriter",
