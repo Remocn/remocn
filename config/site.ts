@@ -40,18 +40,26 @@ export const NAV_LINKS: NavLink[] = [
  * tag another menu item — no component changes needed. See `withNewBadges`.
  */
 export const NEW_BADGE_PATHS = new Set<string>([
-  "/docs/social/github-stars",
-  "/docs/social/x-follow-card",
-  "/docs/social/x-followers-overview",
-  "/docs/effects/confetti",
-  "/docs/ai/claude-chat",
-  "/docs/ai/chat-gpt",
-  "/docs/ai/v0",
-  "/docs/ai/claude-code",
-  "/docs/ai/opencode",
-  "/docs/layout/backdrop",
   "/docs/typography/number-wheel",
   "/docs/typography/rolling-number",
+  "/docs/typography/soft-blur-in",
+  "/docs/typography/per-character-rise",
+  "/docs/typography/bottom-up-letters",
+  "/docs/typography/top-down-letters",
+  "/docs/typography/spring-scale-in",
+  "/docs/typography/micro-scale-fade",
+  "/docs/typography/scale-down-fade",
+  "/docs/typography/blur-out-up",
+  "/docs/typography/focus-blur-resolve",
+  "/docs/typography/line-by-line-slide",
+  "/docs/typography/mask-reveal-up",
+  "/docs/typography/per-word-crossfade",
+  "/docs/typography/fade-through",
+  "/docs/typography/shared-axis-y",
+  "/docs/typography/shared-axis-z",
+  "/docs/typography/short-slide-right",
+  "/docs/typography/kinetic-center-build",
+  "/docs/typography/short-slide-down",
 ]);
 
 export const FOOTER_NAV: NavLink[] = [
