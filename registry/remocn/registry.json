@@ -212,6 +212,22 @@
       ]
     },
     {
+      "name": "shared-axis-z",
+      "type": "registry:component",
+      "title": "Shared Axis Z",
+      "description": "Scale-based shared-axis transition for focus shifts and context depth.",
+      "dependencies": [
+        "remotion"
+      ],
+      "files": [
+        {
+          "path": "shared-axis-z/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/shared-axis-z.tsx"
+        }
+      ]
+    },
+    {
       "name": "typewriter",
       "type": "registry:component",
       "title": "Typewriter",

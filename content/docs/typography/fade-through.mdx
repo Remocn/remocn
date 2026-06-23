@@ -18,10 +18,10 @@ import { FadeThrough } from "@/components/remocn/fade-through";
 
 const FadeThroughScene = () => (
   <>
-    <Sequence durationInFrames={90}>
+    <Sequence durationInFrames={40}>
       <FadeThrough fromText="Calm transitions." toText="Fade through content." />
     </Sequence>
-    <Sequence from={90} durationInFrames={90}>
+    <Sequence from={40} durationInFrames={40}>
       <FadeThrough fromText="Fade through content." toText="Focus shifts smoothly." />
     </Sequence>
   </>
@@ -31,7 +31,7 @@ export const RemotionRoot = () => (
   <Composition
     id="FadeThrough"
     component={FadeThroughScene}
-    durationInFrames={180}
+    durationInFrames={80}
     fps={30}
     width={1280}
     height={720}
@@ -43,7 +43,7 @@ Chaining two instances in back-to-back `Sequence`s walks through a full phrase c
 
 ### Chained example
 
-This is the two-`Sequence` chain above rendered on a 180-frame timeline:
+This is the two-`Sequence` chain above rendered on an 80-frame timeline:
 
 <ComponentExample name="fade-through" />
 

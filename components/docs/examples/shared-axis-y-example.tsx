@@ -5,10 +5,10 @@ import { SharedAxisY } from "@/registry/remocn/shared-axis-y";
 
 export const SharedAxisYExampleScene = () => (
   <>
-    <Sequence durationInFrames={90}>
+    <Sequence durationInFrames={40}>
       <SharedAxisY fromText="Layered navigation." toText="Hierarchy made clear." />
     </Sequence>
-    <Sequence from={90} durationInFrames={90}>
+    <Sequence from={40} durationInFrames={40}>
       <SharedAxisY
         fromText="Hierarchy made clear."
         toText="Depth with restraint."
@@ -23,10 +23,10 @@ import { SharedAxisY } from "@/components/remocn/shared-axis-y";
 
 const SharedAxisYScene = () => (
   <>
-    <Sequence durationInFrames={90}>
+    <Sequence durationInFrames={40}>
       <SharedAxisY fromText="Layered navigation." toText="Hierarchy made clear." />
     </Sequence>
-    <Sequence from={90} durationInFrames={90}>
+    <Sequence from={40} durationInFrames={40}>
       <SharedAxisY fromText="Hierarchy made clear." toText="Depth with restraint." />
     </Sequence>
   </>
@@ -36,7 +36,7 @@ export const RemotionRoot = () => (
   <Composition
     id="SharedAxisY"
     component={SharedAxisYScene}
-    durationInFrames={180}
+    durationInFrames={80}
     fps={30}
     width={1280}
     height={720}

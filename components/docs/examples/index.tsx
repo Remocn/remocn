@@ -79,6 +79,10 @@ import {
   sharedAxisYExampleCode,
 } from "./shared-axis-y-example";
 import {
+  SharedAxisZExampleScene,
+  sharedAxisZExampleCode,
+} from "./shared-axis-z-example";
+import {
   PerWordCrossfadeExampleScene,
   perWordCrossfadeExampleCode,
 } from "./per-word-crossfade-example";
@@ -370,8 +374,8 @@ export const examples: Record<string, ExampleEntry> = {
   "fade-through-example": {
     Component: FadeThroughExampleScene,
     code: fadeThroughExampleCode,
-    // Two chained A→B transitions, 90 frames each.
-    durationInFrames: 180,
+    // Two chained A→B transitions, 40 frames each — tight delay for a dynamic feel.
+    durationInFrames: 80,
     fps: FPS,
     width: W,
     height: H,
@@ -380,8 +384,18 @@ export const examples: Record<string, ExampleEntry> = {
   "shared-axis-y-example": {
     Component: SharedAxisYExampleScene,
     code: sharedAxisYExampleCode,
-    // Two chained A→B transitions, 90 frames each.
-    durationInFrames: 180,
+    // Two chained A→B transitions, 40 frames each — tight delay for a dynamic feel.
+    durationInFrames: 80,
+    fps: FPS,
+    width: W,
+    height: H,
+    previewBackdrop: { type: "color", value: "#ffffff" },
+  },
+  "shared-axis-z-example": {
+    Component: SharedAxisZExampleScene,
+    code: sharedAxisZExampleCode,
+    // Two chained A→B transitions, 40 frames each — tight delay for a dynamic feel.
+    durationInFrames: 80,
     fps: FPS,
     width: W,
     height: H,
@@ -390,8 +404,8 @@ export const examples: Record<string, ExampleEntry> = {
   "per-word-crossfade-example": {
     Component: PerWordCrossfadeExampleScene,
     code: perWordCrossfadeExampleCode,
-    // Two chained A→B transitions, 90 frames each.
-    durationInFrames: 180,
+    // Two chained A→B transitions, 50 frames each — slower enter needs a touch more room.
+    durationInFrames: 100,
     fps: FPS,
     width: W,
     height: H,

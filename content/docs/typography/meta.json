@@ -16,6 +16,7 @@
     "per-word-crossfade",
     "fade-through",
     "shared-axis-y",
+    "shared-axis-z",
     "staggered-fade-up",
     "mask-reveal-up",
     "tracking-in",
