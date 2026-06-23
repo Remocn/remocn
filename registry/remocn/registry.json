@@ -132,6 +132,22 @@
       ]
     },
     {
+      "name": "focus-blur-resolve",
+      "type": "registry:component",
+      "title": "Focus Blur Resolve",
+      "description": "A premium focus pull from heavy blur to crisp text, then a soft blur-out exit.",
+      "dependencies": [
+        "remotion"
+      ],
+      "files": [
+        {
+          "path": "focus-blur-resolve/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/focus-blur-resolve.tsx"
+        }
+      ]
+    },
+    {
       "name": "typewriter",
       "type": "registry:component",
       "title": "Typewriter",

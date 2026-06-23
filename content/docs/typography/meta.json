@@ -11,6 +11,7 @@
     "micro-scale-fade",
     "scale-down-fade",
     "blur-out-up",
+    "focus-blur-resolve",
     "staggered-fade-up",
     "masked-slide-reveal",
     "tracking-in",
