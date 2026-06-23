@@ -6,18 +6,18 @@ import {
   W,
 } from "@/lib/customizer-config";
 
-export const maskedSlideRevealConfig: ComponentConfig = {
-  componentName: "MaskedSlideReveal",
-  importPath: "@/components/remocn/masked-slide-reveal",
+export const maskRevealUpConfig: ComponentConfig = {
+  componentName: "MaskRevealUp",
+  importPath: "@/components/remocn/mask-reveal-up",
   controls: {
-    text: { type: "text", default: "Reveal from the mask", label: "Text" },
-    staggerDelay: {
+    text: { type: "text", default: "Designed to move.\nBuilt to focus.", label: "Text" },
+    distance: {
       type: "number",
-      default: 3,
+      default: 30,
       min: 0,
-      max: 30,
+      max: 120,
       step: 1,
-      label: "Stagger delay",
+      label: "Distance",
     },
     fontSize: {
       type: "number",
@@ -30,7 +30,7 @@ export const maskedSlideRevealConfig: ComponentConfig = {
     color: { type: "color", default: "#171717", label: "Color" },
     fontWeight: {
       type: "select",
-      default: "700",
+      default: "600",
       options: FONT_WEIGHT_OPTIONS,
       label: "Font weight",
     },
@@ -39,4 +39,5 @@ export const maskedSlideRevealConfig: ComponentConfig = {
   fps: FPS,
   compositionWidth: W,
   compositionHeight: H,
+  previewBackdrop: { type: "color", value: "#ffffff" },
 };

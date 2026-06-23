@@ -75,8 +75,8 @@ import { LiveCodeCompilation } from "@/registry/remocn/live-code-compilation";
 import { liveCodeCompilationConfig } from "@/registry/remocn/live-code-compilation/config";
 import { MarkerHighlight } from "@/registry/remocn/marker-highlight";
 import { markerHighlightConfig } from "@/registry/remocn/marker-highlight/config";
-import { MaskedSlideReveal } from "@/registry/remocn/masked-slide-reveal";
-import { maskedSlideRevealConfig } from "@/registry/remocn/masked-slide-reveal/config";
+import { MaskRevealUp } from "@/registry/remocn/mask-reveal-up";
+import { maskRevealUpConfig } from "@/registry/remocn/mask-reveal-up/config";
 import { MatrixDecode } from "@/registry/remocn/matrix-decode";
 import { matrixDecodeConfig } from "@/registry/remocn/matrix-decode/config";
 import { MeshGradientBg } from "@/registry/remocn/mesh-gradient-bg";
@@ -233,9 +233,9 @@ const registry: Record<string, RegistryEntry> = {
     Component: StaggeredFadeUp,
     config: staggeredFadeUpConfig,
   },
-  "masked-slide-reveal": {
-    Component: MaskedSlideReveal,
-    config: maskedSlideRevealConfig,
+  "mask-reveal-up": {
+    Component: MaskRevealUp,
+    config: maskRevealUpConfig,
   },
   "tracking-in": { Component: TrackingIn, config: trackingInConfig },
   "shimmer-sweep": { Component: ShimmerSweep, config: shimmerSweepConfig },

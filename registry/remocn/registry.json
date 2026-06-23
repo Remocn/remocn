@@ -232,18 +232,18 @@
       ]
     },
     {
-      "name": "masked-slide-reveal",
+      "name": "mask-reveal-up",
       "type": "registry:component",
-      "title": "Masked Slide Reveal",
-      "description": "Words slide up out of an invisible horizontal mask, one after another.",
+      "title": "Mask Reveal Up",
+      "description": "Lines reveal upward with a soft masked feel and compact stagger.",
       "dependencies": [
         "remotion"
       ],
       "files": [
         {
-          "path": "masked-slide-reveal/index.tsx",
+          "path": "mask-reveal-up/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/masked-slide-reveal.tsx"
+          "target": "components/remocn/mask-reveal-up.tsx"
         }
       ]
     },
