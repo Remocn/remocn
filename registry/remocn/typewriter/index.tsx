@@ -18,7 +18,7 @@ export interface TypewriterProps {
 export function Typewriter({
   text,
   cursor = true,
-  charsPerSecond = 20,
+  charsPerSecond = 22,
   speed = 1,
   fontSize = 48,
   color = "#171717",
