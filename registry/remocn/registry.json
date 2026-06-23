@@ -52,6 +52,22 @@
       ]
     },
     {
+      "name": "top-down-letters",
+      "type": "registry:component",
+      "title": "Top-Down Letters",
+      "description": "Letters descend from above in a pronounced staircase, one symbol at a time, with zero blur.",
+      "dependencies": [
+        "remotion"
+      ],
+      "files": [
+        {
+          "path": "top-down-letters/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/top-down-letters.tsx"
+        }
+      ]
+    },
+    {
       "name": "typewriter",
       "type": "registry:component",
       "title": "Typewriter",
