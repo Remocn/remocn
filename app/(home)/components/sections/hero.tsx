@@ -7,13 +7,13 @@ import Link from "next/link";
 import { useCallback, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { INSTALL_COMMAND, SPRING_BOUNCE } from "@/config/site";
+import { SPRING_BOUNCE } from "@/config/site";
 import { useTrackEvent } from "@/lib/analytics";
 import { HERO_CODE } from "@/lib/config/snippets";
 import registry from "@/registry/__index__";
 import { Backdrop } from "@/registry/remocn/backdrop";
 import { FadeUp } from "../fade-up";
-import { InstallCommand } from "../install-command";
+import { InstallAll } from "../install-all";
 import { useAutoplay } from "../use-autoplay";
 
 const GlassCodeBlock = registry["glass-code-block"]?.Component;
@@ -132,7 +132,7 @@ export function Hero() {
                 Browse components
                 <ArrowRight className="size-4" aria-hidden="true" />
               </Button>
-              <InstallCommand command={INSTALL_COMMAND} />
+              <InstallAll />
             </div>
           </FadeUp>
         </div>

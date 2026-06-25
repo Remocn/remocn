@@ -7,6 +7,7 @@ import { ComponentPreview } from "@/components/docs/component-preview";
 import { UiComponentPreview } from "@/components/docs/ui-component-preview";
 import { BlockPreview } from "@/components/docs/block-preview";
 import { Dependencies } from "@/components/docs/dependencies";
+import { InstallAll } from "@/components/docs/install-all";
 import { InstallBlock } from "@/components/docs/install-block";
 import { PropsTable } from "@/components/docs/props-table";
 
@@ -39,6 +40,7 @@ export function getMDXComponents(components?: MDXComponents): MDXComponents {
     UiComponentPreview,
     BlockPreview,
     InstallBlock,
+    InstallAll,
     PropsTable,
     Note,
     Warning,
