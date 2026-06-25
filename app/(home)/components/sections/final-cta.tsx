@@ -10,9 +10,8 @@ import {
   LAVENDER,
   MINT,
   PEACH,
-  SECTION,
   SPRING_BOUNCE,
-} from "@/config/landing";
+} from "@/config/site";
 import { useTrackEvent } from "@/lib/analytics";
 import { FadeUp } from "../fade-up";
 
@@ -24,7 +23,7 @@ export function FinalCTA() {
 
   return (
     <section className="relative py-20 sm:py-28">
-      <div className={SECTION}>
+      <div className="section">
         <div className="surface-card relative overflow-hidden rounded-3xl px-6 py-16 text-center sm:px-12 sm:py-20">
           {/* Restrained accent wash — low opacity so it reads in both themes. */}
           <div
@@ -38,7 +37,9 @@ export function FinalCTA() {
           <motion.h2
             ref={ref}
             className="mx-auto max-w-2xl text-balance text-3xl font-semibold tracking-tight text-foreground sm:text-4xl md:text-5xl"
-            initial={reduced ? false : { opacity: 0, y: 24, filter: "blur(10px)" }}
+            initial={
+              reduced ? false : { opacity: 0, y: 24, filter: "blur(10px)" }
+            }
             animate={
               inView
                 ? { opacity: 1, y: 0, filter: "blur(0px)" }

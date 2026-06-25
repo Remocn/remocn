@@ -32,6 +32,19 @@ export const RemotionRoot = () => (
 );
 ```
 
+### With Backdrop
+
+Renders its scene transparent — supply the background via `Backdrop`:
+
+```tsx
+import { Backdrop } from "@/components/remocn/backdrop";
+import { InfiniteBentoPan } from "@/components/remocn/infinite-bento-pan";
+
+<Backdrop fill={{ type: "color", value: "#050505" }}>
+  <InfiniteBentoPan panSpeed={1} accentColor="#7c3aed" />
+</Backdrop>
+```
+
 ## Props
 
 <PropsTable

@@ -11,10 +11,10 @@ export const dragAndDropFlowConfig: ComponentConfig = {
       label: "Dropzone label",
     },
     fileName: { type: "text", default: "design.fig", label: "File name" },
-    background: { type: "color", default: "#fafafa", label: "Background" },
   },
   durationInFrames: 150,
   fps: FPS,
   compositionWidth: W,
   compositionHeight: H,
+  previewBackdrop: { type: "color", value: "#fafafa" },
 };

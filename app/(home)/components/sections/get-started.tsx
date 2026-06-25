@@ -1,66 +1,18 @@
-import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { CodeBlockCommand } from "@/components/docs/code-block-command";
-import { LAVENDER, MINT, PEACH, SECTION } from "@/config/landing";
 import { convertNpmCommand } from "@/lib/convert-npm-command";
+import { cn } from "@/lib/utils";
+import {
+  ADD,
+  INIT,
+  RENDER,
+  SAMPLE_COMPONENTS,
+  START,
+  type Step,
+} from "@/lib/config/snippets";
 import { FadeUp } from "../fade-up";
 import { SectionHeading } from "../section-heading";
 import { Tok, TypewriterCodeBlock } from "../typewriter-code-block";
-
-type Step = {
-  n: number;
-  title: string;
-  description: string;
-  command: string;
-  component?: string;
-  /** Pastel accent that differentiates this step from its neighbours. */
-  accent: string;
-};
-
-const START: Step = {
-  n: 1,
-  title: "Start with Remotion",
-  description:
-    "Already have a Remotion project? Skip ahead. Otherwise scaffold one in seconds.",
-  command: "npx create-video@latest",
-  accent: PEACH,
-};
-
-const INIT: Step = {
-  n: 2,
-  title: "Set up shadcn",
-  description:
-    "Run the shadcn init once so the CLI knows where to drop component files in your project.",
-  command: "npx shadcn@latest init",
-  accent: MINT,
-};
-
-const ADD: Step = {
-  n: 3,
-  title: "Add a component",
-  description:
-    "Pull any primitive or composition straight into your project with the shadcn CLI — the code lands in your repo, yours to tweak.",
-  command: "npx shadcn@latest add remocn/blur-reveal",
-  component: "blur-reveal",
-  accent: LAVENDER,
-};
-
-const RENDER: Step = {
-  n: 4,
-  title: "Render your video",
-  description:
-    "Drop the component into a composition and export an mp4 — no editor required.",
-  command: "npx remotion render",
-  accent: PEACH,
-};
-
-/** A taste of what `remocn/<name>` pulls in — fills the featured card. */
-const SAMPLE_COMPONENTS = [
-  "blur-reveal",
-  "shimmer-sweep",
-  "frosted-glass-wipe",
-  "grid-pixelate-wipe",
-];
 
 function StepBadge({ n, accent }: { n: number; accent: string }) {
   return (
@@ -76,9 +28,17 @@ function StepBadge({ n, accent }: { n: number; accent: string }) {
   );
 }
 
-function CompactStep({ step, delay }: { step: Step; delay: number }) {
+function CompactStep({
+  step,
+  delay,
+  className,
+}: {
+  step: Step;
+  delay: number;
+  className?: string;
+}) {
   return (
-    <FadeUp delay={delay} className="min-w-0">
+    <FadeUp delay={delay} className={cn("min-w-0", className)}>
       <div className="surface-card flex min-w-0 flex-col gap-4 rounded-2xl p-5 sm:p-4">
         <div className="flex items-center gap-3">
           <StepBadge n={step.n} accent={step.accent} />
@@ -99,9 +59,17 @@ function CompactStep({ step, delay }: { step: Step; delay: number }) {
   );
 }
 
-function FeaturedStep({ step, delay }: { step: Step; delay: number }) {
+function FeaturedStep({
+  step,
+  delay,
+  className,
+}: {
+  step: Step;
+  delay: number;
+  className?: string;
+}) {
   return (
-    <FadeUp delay={delay} className="min-w-0">
+    <FadeUp delay={delay} className={cn("min-w-0", className)}>
       <div className="surface-card flex min-w-0 flex-col gap-5 rounded-2xl p-6 sm:rounded-3xl sm:p-6">
         <div className="flex items-center gap-3">
           <StepBadge n={step.n} accent={step.accent} />
@@ -153,33 +121,35 @@ function FeaturedStep({ step, delay }: { step: Step; delay: number }) {
 export function GetStarted() {
   return (
     <section id="get-started" className="relative py-20 sm:py-20">
-      <div className={SECTION}>
+      <div className="section">
         <SectionHeading
           eyebrow="Get started"
           title="Ship your first frame in minutes"
           lead="If you know shadcn/ui, you already know remocn. Three commands and you're rendering — the code lands in your repo, yours to tweak."
         />
 
-        <div className="mt-12 grid items-start gap-4 sm:mt-16 sm:gap-6 md:grid-cols-2">
-          <div className="flex min-w-0 flex-col gap-4 sm:gap-6.5">
-            <CompactStep step={START} delay={0} />
-            <CompactStep step={INIT} delay={0.08} />
-            <CompactStep step={RENDER} delay={0.16} />
-          </div>
-          <FeaturedStep step={ADD} delay={0.08} />
+        <div className="mt-12 grid items-start gap-4 sm:mt-16 sm:gap-6 md:grid-cols-2 md:gap-x-6 md:gap-y-6.5">
+          <CompactStep
+            step={START}
+            delay={0}
+            className="md:col-start-1 md:row-start-1"
+          />
+          <CompactStep
+            step={INIT}
+            delay={0.08}
+            className="md:col-start-1 md:row-start-2"
+          />
+          <FeaturedStep
+            step={ADD}
+            delay={0.16}
+            className="md:col-start-2 md:row-start-1 md:row-span-3"
+          />
+          <CompactStep
+            step={RENDER}
+            delay={0.24}
+            className="md:col-start-1 md:row-start-3"
+          />
         </div>
-
-        {/* <FadeUp delay={0.1}>
-          <div className="mt-8 flex justify-center">
-            <Link
-              href="/docs/getting-started/installation"
-              className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:text-foreground focus-visible:outline-none"
-            >
-              Read the full installation guide
-              <ArrowRight className="size-4" aria-hidden="true" />
-            </Link>
-          </div>
-        </FadeUp> */}
       </div>
     </section>
   );

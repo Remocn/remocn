@@ -2,7 +2,7 @@
 
 import { motion, useInView, useReducedMotion } from "motion/react";
 import { type ReactNode, useRef } from "react";
-import { SPRING_BOUNCE } from "@/config/landing";
+import { SPRING_BOUNCE } from "@/config/site";
 
 export function FadeUp({
   children,

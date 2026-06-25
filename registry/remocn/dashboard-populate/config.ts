@@ -10,7 +10,7 @@ export const dashboardPopulateConfig: ComponentConfig = {
       label: "Accent color",
     },
     kpiTarget: {
-      type: "number",
+      type: "number-input",
       default: 128400,
       min: 1000,
       max: 1000000,
@@ -22,4 +22,5 @@ export const dashboardPopulateConfig: ComponentConfig = {
   fps: FPS,
   compositionWidth: W,
   compositionHeight: H,
+  previewBackdrop: { type: "color", value: "#09090b" },
 };

@@ -1,0 +1,138 @@
+---
+title: Tabs
+description: A tabs widget whose active-tab state is a pure function of the timeline
+---
+
+<UiComponentPreview name="tabs" />
+
+A state atom whose appearance (which tab is active) is a pure function of the `state` prop. Pass a state directly or drive it from the Remotion timeline via `useCurrentState`. The component reads no frame — only the state value you give it.
+
+## Installation
+
+<InstallBlock name="tabs" />
+
+<Note>
+Installing `tabs` automatically installs the shared `remocn-ui` core (`lib/remocn-ui/`) via `registryDependencies`. You do not need to install it separately.
+</Note>
+
+## States
+
+`TabsState` is:
+
+```ts
+type TabsState = string;
+```
+
+The `state` is the active tab's value — one of the strings in the `items` array. When the state changes, the active label brightens, the indicator (pill or underline) slides to that tab, and the matching panel crossfades in.
+
+## Snap usage
+
+Pass `state` directly — the component snaps instantly to that visual. Useful for static previews or when you drive state from your own logic:
+
+```tsx
+import { Tabs } from "@/components/remocn/tabs";
+
+export const Scene = () => <Tabs state="Password" />;
+```
+
+To drive state from the timeline, use `useCurrentState`:
+
+```tsx
+import { useCurrentState } from "@/lib/remocn-ui";
+import { Tabs } from "@/components/remocn/tabs";
+
+export const Scene = () => {
+  const state = useCurrentState(
+    [
+      { at: 18, state: "Account" },
+      { at: 58, state: "Password" },
+      { at: 94, state: "Settings" },
+    ],
+    "Account",
+  );
+
+  return <Tabs state={state} />;
+};
+```
+
+Each `at` is a **Sequence-local authored frame**. State persists between steps: `Account` at frame 18 keeps that tab active until `Password` fires at frame 58. See [Concepts](/docs/ui/concepts) for the full `useCurrentState` API.
+
+## Smooth transitions
+
+State changes via `state` snap with no cross-fade. For animated transitions, use `useTabsTransition` from the copied `use-tabs-transition.ts` file. It reads the frame, interpolates between state presets, and returns a resolved `TabsStyle` — pass it to the `style` prop:
+
+```tsx
+import { Tabs } from "@/components/remocn/tabs";
+import { useTabsTransition } from "@/components/remocn/use-tabs-transition";
+
+export const Scene = () => {
+  const style = useTabsTransition([
+    { at: 18, state: "Account", duration: 16 },
+    { at: 58, state: "Password", duration: 18 },
+    { at: 94, state: "Settings", duration: 12 },
+  ]);
+  return <Tabs style={style} />;
+};
+```
+
+The `duration` field on each step overrides the file's `DEFAULT_DURATION` for that specific transition. To globally tune timing and easing, edit `use-tabs-transition.ts` directly in your project — that file is yours (shadcn "own your code" philosophy).
+
+`style` takes precedence over `state` when both are provided.
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "state",
+      type: "string",
+      default: "\"Account\"",
+      description: "Current visual state (snap path). One of the values in items. State changes snap — no automatic cross-fade.",
+    },
+    {
+      name: "style",
+      type: "TabsStyle",
+      description: "Resolved animated visual (smooth path). Pass an interpolated TabsStyle from useTabsTransition. Takes precedence over state when provided.",
+    },
+    {
+      name: "items",
+      type: "string[]",
+      default: "[\"Account\", \"Password\", \"Settings\"]",
+      description: "Tab labels (and values). The active state is one of these strings.",
+    },
+    {
+      name: "contents",
+      type: "string[]",
+      default: "Parallel strings for each tab",
+      description: "Panel body text per tab — parallel to items. Displayed with opacity crossfade.",
+    },
+    {
+      name: "contentHeight",
+      type: "number",
+      default: "72",
+      description: "Authored panel height in px. Required because Remotion cannot measure auto height — set this to match the rendered height of your content.",
+    },
+    {
+      name: "variant",
+      type: "\"pill\" | \"underline\"",
+      default: "\"pill\"",
+      description: "Visual variant. pill wraps the indicator in a muted track; underline runs a bar along the bottom.",
+    },
+    {
+      name: "theme",
+      type: "Partial<RemocnTheme>",
+      description: "Per-component theme override. Merges with the active RemocnUIProvider theme and the mode defaults. Must be concrete oklch/hex/rgb values — not CSS custom properties.",
+    },
+    {
+      name: "mode",
+      type: "\"light\" | \"dark\"",
+      default: "\"light\"",
+      description: "Sets the base palette. Overrides the mode on RemocnUIProvider when both are present.",
+    },
+    {
+      name: "className",
+      type: "string",
+      description: "Optional className passed to the tabs element.",
+    },
+  ]}
+/>

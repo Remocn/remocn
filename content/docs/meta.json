@@ -2,11 +2,15 @@
   "title": "Documentation",
   "pages": [
     "getting-started",
+    "layout",
     "typography",
-    "primitives",
+    "ui",
     "environment",
     "ui-blocks",
+    "ai",
     "transitions",
+    "social",
+    "effects",
     "compositions"
   ]
 }

@@ -1,0 +1,19 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "spinner",
+  "title": "UI Spinner",
+  "description": "A deterministic spinning arc that loops on the Remotion frame — a pure motion atom with no state.",
+  "dependencies": [
+    "remotion"
+  ],
+  "registryDependencies": [],
+  "files": [
+    {
+      "path": "registry/remocn-ui/spinner/index.tsx",
+      "content": "\"use client\";\n\nimport { useCurrentFrame } from \"remotion\";\n\nexport interface SpinnerProps {\n  size?: number;\n  color?: string;\n  speed?: number;\n  strokeWidth?: number;\n  className?: string;\n}\n\nexport function Spinner({\n  size = 20,\n  color = \"currentColor\",\n  speed = 1,\n  strokeWidth = 2.5,\n  className,\n}: SpinnerProps) {\n  const rotation = useCurrentFrame() * speed * 6;\n\n  return (\n    <svg\n      className={className}\n      width={size}\n      height={size}\n      viewBox=\"0 0 24 24\"\n      fill=\"none\"\n      style={{ transform: `rotate(${rotation}deg)` }}\n    >\n      <circle\n        cx=\"12\"\n        cy=\"12\"\n        r=\"9\"\n        stroke={color}\n        strokeWidth={strokeWidth}\n        strokeLinecap=\"round\"\n        strokeDasharray=\"44\"\n        strokeDashoffset=\"33\"\n      />\n    </svg>\n  );\n}\n",
+      "type": "registry:component",
+      "target": "components/remocn/spinner.tsx"
+    }
+  ],
+  "type": "registry:component"
+}

@@ -17,21 +17,21 @@ Pick the defaults: remocn components are framework-agnostic and only need the pa
 
 ## 2. Add a component
 
-<InstallBlock name="blur-reveal" />
+<InstallBlock name="soft-blur-in" />
 
-This copies `blur-reveal.tsx` into `components/remocn/` (or wherever your `components.json` points).
+This copies `soft-blur-in.tsx` into `components/remocn/` (or wherever your `components.json` points).
 
 ## 3. Use it in a Remotion composition
 
 ```tsx
 import { Composition } from "remotion";
-import { BlurReveal } from "@/components/remocn/blur-reveal";
+import { SoftBlurIn } from "@/components/remocn/soft-blur-in";
 
 export const RemotionRoot = () => (
   <Composition
     id="HelloWorld"
-    component={BlurReveal}
-    durationInFrames={90}
+    component={SoftBlurIn}
+    durationInFrames={60}
     fps={30}
     width={1280}
     height={720}

@@ -1,4 +1,4 @@
-import { LAVENDER, MINT, PEACH } from "@/config/landing";
+import { LAVENDER, MINT, PEACH } from "@/config/site";
 
 export type SponsorTier = "partner" | "builder" | "supporter";
 
@@ -58,6 +58,10 @@ export const sponsors: Sponsor[] = [
     isPaste: true,
   },
 ].filter(sponsor => !sponsor.isPaste);
+
+export function getGoldSponsors(): Sponsor[] {
+  return sponsors.filter((sponsor) => sponsor.tier === "partner");
+}
 
 export type BillingMode = "monthly" | "one-time";
 

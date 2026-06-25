@@ -19,6 +19,26 @@
       }
     ],
     "paths": {
+      "@/lib/remocn-ui": ["./registry/remocn-ui/core/index.ts"],
+      "@/lib/remocn-ui/*": ["./registry/remocn-ui/core/*"],
+      "@/components/remocn/use-cursor-path": ["./registry/remocn-ui/cursor/use-cursor-path.ts"],
+      "@/components/remocn/use-button-transition": ["./registry/remocn-ui/button/use-button-transition.ts"],
+      "@/components/remocn/use-input-transition": ["./registry/remocn-ui/input/use-input-transition.ts"],
+      "@/components/remocn/use-checkbox-transition": ["./registry/remocn-ui/checkbox/use-checkbox-transition.ts"],
+      "@/components/remocn/use-toast-transition": ["./registry/remocn-ui/toast/use-toast-transition.ts"],
+      "@/components/remocn/use-skeleton-transition": ["./registry/remocn-ui/skeleton/use-skeleton-transition.ts"],
+      "@/components/remocn/use-toggle-group-transition": ["./registry/remocn-ui/toggle-group/use-toggle-group-transition.ts"],
+      "@/components/remocn/use-dialog-transition": ["./registry/remocn-ui/dialog/use-dialog-transition.ts"],
+      "@/components/remocn/use-radio-transition": ["./registry/remocn-ui/radio/use-radio-transition.ts"],
+      "@/components/remocn/use-stepper-transition": ["./registry/remocn-ui/stepper/use-stepper-transition.ts"],
+      "@/components/remocn/use-switch-transition": ["./registry/remocn-ui/switch/use-switch-transition.ts"],
+      "@/components/remocn/use-select-transition": ["./registry/remocn-ui/select/use-select-transition.ts"],
+      "@/components/remocn/use-select-item-transition": ["./registry/remocn-ui/select-item/use-select-item-transition.ts"],
+      "@/components/remocn/use-slider-transition": ["./registry/remocn-ui/slider/use-slider-transition.ts"],
+      "@/components/remocn/use-blur-in-transition": ["./registry/remocn-ui/blur-in/use-blur-in-transition.ts"],
+      "@/components/remocn/confetti": ["./registry/remocn/confetti/index.tsx"],
+      "@/components/remocn/number-wheel": ["./registry/remocn/number-wheel/index.tsx"],
+      "@/components/remocn/*": ["./registry/remocn-ui/*/index.tsx"],
       "@/*": ["./*"]
     }
   },

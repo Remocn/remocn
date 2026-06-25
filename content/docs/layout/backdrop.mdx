@@ -1,0 +1,194 @@
+---
+title: Backdrop
+description: Full-frame fill with an optional rounded, shadowed content frame — accepts a color, gradient, image, or any React element as a live animated background
+---
+
+<ComponentPreview name="backdrop" />
+
+## Installation
+
+<InstallBlock name="backdrop" />
+
+## Usage
+
+Solid color fill with a content frame:
+
+```tsx
+import { Backdrop } from "@/components/remocn/backdrop";
+
+<Backdrop fill={{ type: "color", value: "#0f0f0f" }}>
+  <YourScene />
+</Backdrop>
+```
+
+Gradient fill:
+
+```tsx
+import { Backdrop } from "@/components/remocn/backdrop";
+
+<Backdrop fill={{ type: "gradient", value: "linear-gradient(135deg, #6366f1, #a855f7)" }}>
+  <YourScene />
+</Backdrop>
+```
+
+Image fill using Remotion's `<Img>` (CORS-safe for MP4 export):
+
+```tsx
+import { Backdrop } from "@/components/remocn/backdrop";
+
+<Backdrop fill={{ type: "image", src: "https://example.com/bg.jpg", fit: "cover" }}>
+  <YourScene />
+</Backdrop>
+```
+
+Live animated React element as the fill:
+
+```tsx
+import { Backdrop } from "@/components/remocn/backdrop";
+import { MeshGradientBg } from "@/components/remocn/mesh-gradient-bg";
+
+<Backdrop fill={<MeshGradientBg />}>
+  <YourScene />
+</Backdrop>
+```
+
+Custom padding, radius, and shadow:
+
+```tsx
+import { Backdrop } from "@/components/remocn/backdrop";
+
+<Backdrop
+  fill={{ type: "color", value: "#18181b" }}
+  padding={6}
+  radius={2}
+  shadow="0 32px 80px rgba(0,0,0,0.6)"
+>
+  <YourScene />
+</Backdrop>
+```
+
+Disable shadow:
+
+```tsx
+import { Backdrop } from "@/components/remocn/backdrop";
+
+<Backdrop fill={{ type: "color", value: "#fff" }} shadow="">
+  <YourScene />
+</Backdrop>
+```
+
+## Fill variants
+
+Each `fill` type renders differently — pick the one that fits your scene.
+
+### Color
+
+<BlockPreview name="backdrop-color" />
+
+### Gradient
+
+<BlockPreview name="backdrop-gradient" />
+
+### Image
+
+<BlockPreview name="backdrop-image" />
+
+### Live background
+
+Any React element as fill, e.g. `<MeshGradientBg />`.
+
+<BlockPreview name="backdrop-live" />
+
+## Background only
+
+When no children are passed, the content frame is not rendered — the fill covers the full composition bleed with no inset, rounding, or shadow.
+
+```tsx
+import { Backdrop } from "@/components/remocn/backdrop";
+
+// full-bleed fill, no frame
+<Backdrop fill={{ type: "gradient", value: "linear-gradient(135deg, #6366f1, #a855f7)" }} />
+
+// or a live animated background as the fill
+<Backdrop fill={<MeshGradientBg />} />
+```
+
+To render content edge-to-edge without any decorative frame, pass children but zero out padding, radius, and shadow:
+
+```tsx
+import { Backdrop } from "@/components/remocn/backdrop";
+
+<Backdrop
+  fill={{ type: "image", src: "/bg.jpg" }}
+  padding={0}
+  radius={0}
+  shadow=""
+>
+  <YourScene />
+</Backdrop>
+```
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "fill",
+      type: "BackdropFill | ReactNode",
+      default: "undefined",
+      description: "The background layer. Pass a BackdropFill object ({ type: \"color\" | \"gradient\" | \"image\", ... }) for static fills, or any React element (e.g. <MeshGradientBg />) to render a live animated background.",
+    },
+    {
+      name: "padding",
+      type: "number",
+      default: "4",
+      description: "Inset of the content frame as a percentage of the composition width. Scales automatically across 720p, 1080p, and 4K.",
+    },
+    {
+      name: "radius",
+      type: "number",
+      default: "1",
+      description: "Corner radius of the content frame as a percentage of the composition width. Scales automatically across resolutions.",
+    },
+    {
+      name: "shadow",
+      type: "string",
+      default: "\"0 20px 60px rgba(0,0,0,0.4)\"",
+      description: "CSS box-shadow applied to the content frame. Pass an empty string to disable the shadow.",
+    },
+    {
+      name: "children",
+      type: "ReactNode",
+      default: "undefined",
+      description: "Content rendered inside the rounded, shadowed frame. When omitted, only the fill is shown full-bleed.",
+    },
+    {
+      name: "className",
+      type: "string",
+      default: "undefined",
+      description: "Additional class names applied to the outer full-frame container.",
+    },
+  ]}
+/>
+
+### BackdropFill shape
+
+<PropsTable
+  rows={[
+    {
+      name: "type: \"color\"",
+      type: "{ type: \"color\"; value: string }",
+      description: "Solid CSS color value (hex, hsl, oklch, etc.) applied as the background.",
+    },
+    {
+      name: "type: \"gradient\"",
+      type: "{ type: \"gradient\"; value: string }",
+      description: "Any CSS gradient string (linear-gradient, radial-gradient, conic-gradient) applied as the background.",
+    },
+    {
+      name: "type: \"image\"",
+      type: "{ type: \"image\"; src: string; fit?: \"cover\" | \"contain\" }",
+      description: "Image rendered via Remotion's <Img> (CORS-safe for MP4 export). fit defaults to \"cover\".",
+    },
+  ]}
+/>

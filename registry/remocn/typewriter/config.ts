@@ -18,7 +18,7 @@ export const typewriterConfig: ComponentConfig = {
     cursor: { type: "boolean", default: true, label: "Show cursor" },
     charsPerSecond: {
       type: "number",
-      default: 20,
+      default: 22,
       min: 4,
       max: 60,
       step: 1,

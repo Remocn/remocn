@@ -1,0 +1,226 @@
+---
+title: Resizable
+description: A two-panel split container whose divider ratio and handle state are driven by a scripted dual-channel timeline
+---
+
+<UiComponentPreview name="resizable" />
+
+A dual-channel value atom whose panel split ratio (`0`–`1`) and handle appearance (`idle`, `hover`, `press`) are a pure function of the props it receives. The component reads no frame. This is a **dual-channel** variant of the value-channel pattern: `useResizableTransition` drives a numeric ratio channel and a handle-state channel independently through one `ResizableStyle`, so cursor-synced drag scenes compose naturally — the same pattern as the Slider primitive.
+
+## Installation
+
+<InstallBlock name="resizable" />
+
+<Note>
+Installing `resizable` automatically installs the shared `remocn-ui` core (`lib/remocn-ui/`) via `registryDependencies` (`["remocn-ui"]`). You do not need to install it separately. Both `resizable` (the renderer) and `use-resizable-transition` (the hook) are copied into your project.
+</Note>
+
+## Ratio & handle
+
+`useResizableTransition` takes an array of `ResizableStep` objects. Each step can advance the **ratio channel**, the **handle channel**, or both in the same keyframe:
+
+```ts
+interface ResizableStep {
+  at: number;                          // LOCAL (Sequence-relative) authored frame this keyframe is reached
+  ratio?: number;                      // Target first-panel fraction 0–1 (moves the ratio channel)
+  handleState?: ResizableHandleState;  // Target handle visual (moves the handle channel)
+  duration?: number;                   // Frames the move INTO this step takes. Omitted → DEFAULT_DURATION (18)
+  easing?: EasingName;                 // Override easing. Default "out"
+}
+```
+
+`ResizableHandleState` presets:
+
+```ts
+type ResizableHandleState =
+  | "idle"   // handleScale 1, handleRingOpacity 0 — resting
+  | "hover"  // handleScale 1.15, handleRingOpacity 1 — pointer over handle
+  | "press"  // handleScale 1.25, handleRingOpacity 1 — handle held down
+```
+
+### Dual-channel deviation
+
+`Resizable` extends the value-channel pattern (like `Progress`) with a second channel: the handle visual. The two channels are folded independently — ratio-bearing steps only affect the split; handle-bearing steps only affect the grip scale and grab ring. A single step may carry both fields to advance both channels at the same frame.
+
+### Min/max clamp
+
+The ratio is clamped to `[minRatio, maxRatio]` (defaults: `0.15`–`0.85`) inside the renderer. Steps may specify values outside this range — the clamp applies at render time, not in the hook.
+
+## Snap usage
+
+Pass `ratio` and `handleState` directly — the component snaps instantly to that visual. Useful for static previews:
+
+```tsx
+import { Resizable } from "@/components/remocn/resizable";
+
+export const Scene = () => (
+  <div style={{ position: "relative", width: "100%", height: "100%" }}>
+    <Resizable ratio={0.65} handleState="hover" />
+  </div>
+);
+```
+
+## Smooth transitions
+
+Ratio and handle changes via the snap props are instant. For an animated drag interaction, use `useResizableTransition` from the copied `use-resizable-transition.ts` file. It reads the frame, folds the two channels independently, and returns a resolved `ResizableStyle` — pass it to the `style` prop:
+
+```tsx
+import { Resizable } from "@/components/remocn/resizable";
+import { useResizableTransition } from "@/components/remocn/use-resizable-transition";
+
+export const Scene = () => {
+  const style = useResizableTransition([
+    { at: 0,   ratio: 0.5, handleState: "idle"  },
+    { at: 32,  handleState: "hover", duration: 8  },
+    { at: 46,  handleState: "press", duration: 4  },
+    { at: 44,  ratio: 0.5 },
+    { at: 100, ratio: 0.7, duration: 56 },
+    { at: 108, handleState: "idle",  duration: 8  },
+  ]);
+
+  return (
+    <div style={{ position: "relative", width: "100%", height: "100%" }}>
+      <Resizable style={style} />
+    </div>
+  );
+};
+```
+
+The `duration` field on each step overrides the file's `DEFAULT_DURATION` (= `18`) for that specific move. To globally tune timing and easing, edit `use-resizable-transition.ts` directly in your project — that file is yours (shadcn "own your code" philosophy).
+
+`style` takes precedence over `ratio` and `handleState` when provided.
+
+### Frame-syncing with Cursor
+
+To animate a cursor dragging the divider, keep the cursor's `x` position and the ratio step on the **same frame budget with the same easing**. `useCursorPath` uses `inOut` easing by default — set `easing: "inOut"` on the ratio drag step so the divider tracks the cursor exactly:
+
+```tsx
+import { Cursor } from "@/components/remocn/cursor";
+import { useCursorPath } from "@/components/remocn/use-cursor-path";
+import { Resizable } from "@/components/remocn/resizable";
+import { useResizableTransition } from "@/components/remocn/use-resizable-transition";
+
+// Widget default: 440×240px, centered on a 1280×720 canvas.
+// Divider at ratio 0.50 → canvas x = 420 + 440 × 0.50 = 640.
+// Divider at ratio 0.70 → canvas x = 420 + 440 × 0.70 = 728.
+const HANDLE_START_X = 640;
+const HANDLE_END_X   = 728;
+const HANDLE_Y       = 360;
+
+export const Scene = () => {
+  const cursorStyle = useCursorPath([
+    { at: 0,   x: 80,             y: 60       },
+    { at: 32,  x: HANDLE_START_X, y: HANDLE_Y, duration: 28 },
+    { at: 44,  x: HANDLE_START_X, y: HANDLE_Y, press: true, duration: 0 },
+    { at: 100, x: HANDLE_END_X,   y: HANDLE_Y, press: true, duration: 56 },
+    { at: 108, x: HANDLE_END_X,   y: HANDLE_Y, duration: 0 },
+  ]);
+
+  const resizableStyle = useResizableTransition([
+    { at: 0,   ratio: 0.5, handleState: "idle"  },
+    { at: 32,  handleState: "hover", duration: 8  },
+    { at: 46,  handleState: "press", duration: 4  },
+    { at: 44,  ratio: 0.5 },
+    // easing inOut matches the cursor's default travel easing.
+    { at: 100, ratio: 0.7, duration: 56, easing: "inOut" },
+    { at: 108, handleState: "idle",  duration: 8  },
+  ]);
+
+  return (
+    <div style={{ position: "relative", width: "100%", height: "100%" }}>
+      <Resizable style={resizableStyle} />
+      <Cursor style={cursorStyle} variant="pointer" />
+    </div>
+  );
+};
+```
+
+The cursor's drag frames (`at: 44` → `at: 100`, duration 56) match the ratio-channel move exactly. The handle-state transitions (`hover` at 32, `press` at 46, `idle` at 108) are independent — they run on their own mini-durations without disturbing the ratio easing.
+
+## Direction
+
+Both `"horizontal"` (default) and `"vertical"` are implemented. Horizontal splits the container width between panels; vertical splits the height. The grip pill rotates automatically — vertical for a horizontal split, horizontal for a vertical split.
+
+```tsx
+<Resizable style={style} direction="vertical" />
+```
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "first",
+      type: "ReactNode",
+      description: "First panel content. Defaults to a muted placeholder card labeled \"Panel one\".",
+    },
+    {
+      name: "second",
+      type: "ReactNode",
+      description: "Second panel content. Defaults to a muted placeholder card labeled \"Panel two\".",
+    },
+    {
+      name: "direction",
+      type: "\"horizontal\" | \"vertical\"",
+      default: "\"horizontal\"",
+      description: "Split axis. Horizontal divides width; vertical divides height.",
+    },
+    {
+      name: "ratio",
+      type: "number",
+      default: "0.5",
+      description: "First-panel fraction 0–1 (snap path). Clamped to [minRatio, maxRatio]. Ignored when style is provided.",
+    },
+    {
+      name: "handleState",
+      type: "\"idle\" | \"hover\" | \"press\"",
+      default: "\"idle\"",
+      description: "Handle visual state (snap path). Sets handleScale and handleRingOpacity from the preset. Ignored when style is provided.",
+    },
+    {
+      name: "style",
+      type: "ResizableStyle",
+      description: "Resolved animated visual (smooth path). Pass an interpolated ResizableStyle from useResizableTransition. Takes precedence over ratio and handleState when provided.",
+    },
+    {
+      name: "minRatio",
+      type: "number",
+      default: "0.15",
+      description: "Minimum first-panel fraction. The renderer clamps ratio to this floor.",
+    },
+    {
+      name: "maxRatio",
+      type: "number",
+      default: "0.85",
+      description: "Maximum first-panel fraction. The renderer clamps ratio to this ceiling.",
+    },
+    {
+      name: "width",
+      type: "number",
+      default: "440",
+      description: "Container width in px.",
+    },
+    {
+      name: "height",
+      type: "number",
+      default: "240",
+      description: "Container height in px.",
+    },
+    {
+      name: "theme",
+      type: "Partial<RemocnTheme>",
+      description: "Per-component theme override. Merges with the active RemocnUIProvider theme and the mode defaults. Must be concrete oklch/hex/rgb values — not CSS custom properties.",
+    },
+    {
+      name: "mode",
+      type: "\"light\" | \"dark\"",
+      default: "\"light\"",
+      description: "Sets the base palette. Overrides the mode on RemocnUIProvider when both are present.",
+    },
+    {
+      name: "className",
+      type: "string",
+      description: "Optional className applied to the outer wrapper element.",
+    },
+  ]}
+/>

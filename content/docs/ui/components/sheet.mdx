@@ -1,0 +1,138 @@
+---
+title: Sheet
+description: A side panel whose opened/closed state is a pure function of the timeline
+---
+
+<UiComponentPreview name="sheet" />
+
+A state atom whose appearance (closed, opened) is a pure function of the `state` prop. Pass a state directly or drive it from the Remotion timeline via `useCurrentState`. The component reads no frame — only the state value you give it. The wrapper is transparent by design: Sheet is a modal layer meant to compose over another scene, so it does not paint an opaque background. Unlike Dialog (a centered popup that zooms in), Sheet is a right-edge side panel: a full-height flush panel anchored to the right that slides in horizontally, with a close (X) button in its top-right corner.
+
+## Installation
+
+<InstallBlock name="sheet" />
+
+<Note>
+Installing `sheet` automatically installs the shared `remocn-ui` core (`lib/remocn-ui/`) via `registryDependencies` (`["remocn-ui"]`). You do not need to install it separately. If you want to pair Sheet with the Button as its trigger in the canonical lifecycle example, install `button` separately.
+</Note>
+
+## States
+
+`SheetState` is:
+
+```ts
+type SheetState =
+  | "opened"  // backdrop dims to 50% black, panel slides in from the right (translateX 400 → 0) and fades in
+  | "closed"  // panel parked off-screen to the right, backdrop clear (overlay opacity 0, panel opacity 0, translateX 400)
+```
+
+`opened` reveals the backdrop dim (scales up to `MAX_OVERLAY_ALPHA = 0.5`) and slides the full-height panel in from the right edge — its `translateX` animates from `SHEET_WIDTH` (400 px, fully off-screen) to `0` (resting against the right edge) while it fades in. `closed` hides the backdrop and parks the panel off-screen.
+
+## Snap usage
+
+Pass `state` directly — the component snaps instantly to that visual. Useful for static previews or when you drive state from your own logic:
+
+```tsx
+import { Sheet } from "@/components/remocn/sheet";
+
+export const Scene = () => <Sheet state="opened" />;
+```
+
+To drive state from the timeline, use `useCurrentState`:
+
+```tsx
+import { useCurrentState } from "@/lib/remocn-ui";
+import { Sheet } from "@/components/remocn/sheet";
+
+export const Scene = () => {
+  const state = useCurrentState(
+    [
+      { at: 32, state: "opened" },
+      { at: 92, state: "closed" },
+    ],
+    "closed",
+  );
+
+  return <Sheet title="Edit profile" state={state} />;
+};
+```
+
+Each `at` is a **Sequence-local authored frame**. State persists between steps: `opened` at frame 32 keeps the sheet visible until `closed` fires at frame 92. See [Concepts](/docs/ui/concepts) for the full `useCurrentState` API.
+
+## Smooth transitions
+
+State changes via `state` snap with no cross-fade. For animated transitions, use `useSheetTransition` from the copied `use-sheet-transition.ts` file. It reads the frame, interpolates between state presets, and returns a resolved `SheetStyle` — pass it to the `style` prop:
+
+```tsx
+import { Sheet } from "@/components/remocn/sheet";
+import { useSheetTransition } from "@/components/remocn/use-sheet-transition";
+
+export const Scene = () => {
+  const style = useSheetTransition([
+    { at: 32, state: "opened", duration: 16 },
+    { at: 92, state: "closed", duration: 12 },
+  ]);
+  return <Sheet title="Edit profile" style={style} />;
+};
+```
+
+The `duration` field on each step overrides the file's `DEFAULT_DURATION` (= `12`) for that specific transition. To globally tune timing and easing, edit `use-sheet-transition.ts` directly in your project — that file is yours (shadcn "own your code" philosophy).
+
+`style` takes precedence over `state` when both are provided.
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "state",
+      type: "\"opened\" | \"closed\"",
+      default: "\"closed\"",
+      description: "Current visual state (snap path). State changes snap — no automatic cross-fade.",
+    },
+    {
+      name: "style",
+      type: "SheetStyle",
+      description: "Resolved animated visual (smooth path). Pass an interpolated SheetStyle from useSheetTransition. Takes precedence over state when provided.",
+    },
+    {
+      name: "title",
+      type: "string",
+      default: "\"Edit profile\"",
+      description: "Headline of the sheet panel.",
+    },
+    {
+      name: "description",
+      type: "string",
+      default: "\"Make changes to your profile here. Click save when you're done.\"",
+      description: "Body copy displayed under the title.",
+    },
+    {
+      name: "actionLabel",
+      type: "string",
+      default: "\"Save changes\"",
+      description: "Label of the confirming (primary) action button.",
+    },
+    {
+      name: "cancelLabel",
+      type: "string",
+      default: "\"Cancel\"",
+      description: "Label of the dismissing action button.",
+    },
+    {
+      name: "theme",
+      type: "Partial<RemocnTheme>",
+      description: "Per-component theme override. Merges with the active RemocnUIProvider theme and the mode defaults. Must be concrete oklch/hex/rgb values — not CSS custom properties.",
+    },
+    {
+      name: "mode",
+      type: "\"light\" | \"dark\"",
+      default: "\"light\"",
+      description: "Sets the base palette. Overrides the mode on RemocnUIProvider when both are present.",
+    },
+    {
+      name: "className",
+      type: "string",
+      description: "Optional className applied to the panel element.",
+    },
+  ]}
+/>

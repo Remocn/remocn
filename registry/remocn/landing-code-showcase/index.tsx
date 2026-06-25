@@ -363,10 +363,8 @@ function CodeEditor({
 
 /** Warm pastel canvas — the dark stage every scene sits on */
 function PastelStage({
-  background = STAGE_BG,
   children,
 }: {
-  background?: string;
   children: ReactNode;
 }) {
   return (
@@ -374,7 +372,6 @@ function PastelStage({
       style={{
         position: "absolute",
         inset: 0,
-        background,
         overflow: "hidden",
       }}
     >

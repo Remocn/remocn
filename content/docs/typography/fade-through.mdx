@@ -1,0 +1,122 @@
+---
+title: Fade Through
+description: Old text fades out as new fades in with a soft delay, Material-style
+---
+
+<ComponentPreview name="fade-through" />
+
+## Installation
+
+<InstallBlock name="fade-through" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition, Sequence } from "remotion";
+import { FadeThrough } from "@/components/remocn/fade-through";
+
+const FadeThroughScene = () => (
+  <>
+    <Sequence durationInFrames={40}>
+      <FadeThrough fromText="Calm transitions." toText="Fade through content." />
+    </Sequence>
+    <Sequence from={40} durationInFrames={40}>
+      <FadeThrough fromText="Fade through content." toText="Focus shifts smoothly." />
+    </Sequence>
+  </>
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="FadeThrough"
+    component={FadeThroughScene}
+    durationInFrames={80}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Chaining two instances in back-to-back `Sequence`s walks through a full phrase chain — the second transition reuses the first's `toText` as its `fromText`, so the text flows A → B → C. The component transitions from one phrase to another with a Material-style fade-through. The old phrase fades and lifts away, then the new phrase fades up into the same slot with a soft scale and blur settle—no directional meaning, good for same-level content swaps.
+
+### Chained example
+
+This is the two-`Sequence` chain above rendered on an 80-frame timeline:
+
+<ComponentExample name="fade-through" />
+
+### With Backdrop
+
+The component renders transparent — supply the background via `Backdrop`. It ships single-theme; edit the copied file to re-theme colors.
+
+Pair with `Backdrop` to place the text inside a full-frame fill with a rounded, shadowed content frame:
+
+```tsx
+import { Composition } from "remotion";
+import { FadeThrough } from "@/components/remocn/fade-through";
+import { Backdrop } from "@/components/remocn/backdrop";
+
+const FadeThroughScene = () => (
+  <Backdrop fill={{ type: "color", value: "#ffffff" }}>
+    <FadeThrough
+      fromText="Calm transitions."
+      toText="Fade through content."
+    />
+  </Backdrop>
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="FadeThrough"
+    component={FadeThroughScene}
+    durationInFrames={90}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "fromText",
+      type: "string",
+      required: true,
+      description: "The outgoing phrase, shown first then fades out.",
+    },
+    {
+      name: "toText",
+      type: "string",
+      required: true,
+      description: "The incoming phrase that fades through to replace it.",
+    },
+    {
+      name: "fontSize",
+      type: "number",
+      default: "72",
+      description: "Font size in pixels",
+    },
+    {
+      name: "fontWeight",
+      type: "number",
+      default: "600",
+      description: "CSS font-weight",
+    },
+    {
+      name: "color",
+      type: "string",
+      default: "\"#171717\"",
+      description: "Text color (any valid CSS color)",
+    },
+    {
+      name: "className",
+      type: "string",
+      description: "Optional className passed to the wrapper",
+    },
+  ]}
+/>

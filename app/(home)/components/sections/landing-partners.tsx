@@ -1,6 +1,5 @@
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
-import { SECTION } from "@/config/landing";
 import { type Sponsor, sponsors } from "@/config/sponsors";
 import { cn } from "@/lib/utils";
 import { FadeUp } from "../fade-up";
@@ -35,7 +34,7 @@ export function LandingPartners() {
 
   return (
     <section id="partners" className="relative py-20 sm:py-20">
-      <div className={SECTION}>
+      <div className="section">
         <SectionHeading
           align="center"
           eyebrow="Sponsors"

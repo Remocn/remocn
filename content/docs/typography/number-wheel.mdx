@@ -1,0 +1,98 @@
+---
+title: Number Wheel
+description: Odometer that rolls a number from one value to another with direction inferred from the values
+---
+
+<ComponentPreview name="number-wheel" />
+
+## Installation
+
+<InstallBlock name="number-wheel" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { NumberWheel } from "@/components/remocn/number-wheel";
+
+const NumberWheelScene = () => (
+  <NumberWheel from={0} to={24813} fontSize={120} />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="NumberWheel"
+    component={NumberWheelScene}
+    durationInFrames={112}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "from",
+      type: "number",
+      default: "0",
+      description: "Starting value. Direction is inferred from whether to is greater or less than from.",
+    },
+    {
+      name: "to",
+      type: "number",
+      default: "24813",
+      description: "Target value the wheel settles on. If greater than from, counts up; if less, counts down.",
+    },
+    {
+      name: "fontSize",
+      type: "number",
+      default: "120",
+      description: "Font size in pixels",
+    },
+    {
+      name: "color",
+      type: "string",
+      default: "\"#171717\"",
+      description: "Text color",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Multiplier for animation speed",
+    },
+  ]}
+/>
+
+Direction is determined by the relationship between `from` and `to` — no separate direction prop is needed. All values must be integers and non-negative.
+
+## Count Up
+
+Rolls upward from 0 to 24813:
+
+```tsx
+import { Backdrop } from "@/components/remocn/backdrop";
+import { NumberWheel } from "@/components/remocn/number-wheel";
+
+<Backdrop fill={{ type: "color", value: "#ffffff" }}>
+  <NumberWheel from={0} to={24813} fontSize={120} />
+</Backdrop>
+```
+
+## Count Down
+
+Rolls downward from 24813 to 0:
+
+```tsx
+import { Backdrop } from "@/components/remocn/backdrop";
+import { NumberWheel } from "@/components/remocn/number-wheel";
+
+<Backdrop fill={{ type: "color", value: "#ffffff" }}>
+  <NumberWheel from={24813} to={0} fontSize={120} />
+</Backdrop>
+```

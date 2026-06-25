@@ -1,0 +1,179 @@
+---
+title: Tooltip
+description: A small floating label that appears above an anchor on hover
+---
+
+<UiComponentPreview name="tooltip" />
+
+A state atom whose appearance (`hidden`, `visible`) is a pure function of the `state` prop. Pass a state directly or drive it from the Remotion timeline via `useCurrentState`. The component reads no frame — only the state value you give it. The tooltip fades in at 0.96 scale, slides 4 px toward the anchor, and rests fully visible; `hidden` reverses the motion. Placement is the caller's responsibility — the tooltip renders inline and the caller wraps it in an absolutely-positioned anchor div.
+
+## Installation
+
+<InstallBlock name="tooltip" />
+
+<Note>
+Installing `tooltip` automatically installs the shared `remocn-ui` core (`lib/remocn-ui/`) via `registryDependencies` (`["remocn-ui"]`). You do not need to install it separately. Both `tooltip` (the renderer) and `use-tooltip-transition` (the hook) are copied into your project.
+</Note>
+
+## States
+
+`TooltipState` is:
+
+```ts
+type TooltipState =
+  | "hidden"   // opacity 0, scale 0.96, translate 4px away from anchor
+  | "visible"  // opacity 1, scale 1, translate 0
+```
+
+`hidden` is the default. The `translate` magnitude (4 px when hidden, 0 when visible) is resolved by the component into an axis offset based on `side` — a `"top"` tooltip slides upward when hidden, a `"bottom"` tooltip slides downward, and so on.
+
+## Snap usage
+
+Pass `state` directly — the component snaps instantly to that visual. Useful for static previews or when you drive state from your own logic:
+
+```tsx
+import { Tooltip } from "@/components/remocn/tooltip";
+
+export const Scene = () => (
+  <div style={{ position: "relative", width: "100%", height: "100%" }}>
+    <div style={{ position: "absolute", left: "50%", top: "40%", transform: "translate(-50%, -100%)" }}>
+      <Tooltip state="visible" label="Keyboard shortcut ⌘K" side="top" />
+    </div>
+  </div>
+);
+```
+
+To drive state from the timeline, use `useCurrentState`:
+
+```tsx
+import { useCurrentState } from "@/lib/remocn-ui";
+import { Tooltip } from "@/components/remocn/tooltip";
+
+export const Scene = () => {
+  const state = useCurrentState(
+    [
+      { at: 30, state: "visible" },
+      { at: 90, state: "hidden"  },
+    ],
+    "hidden",
+  );
+
+  return (
+    <div style={{ position: "relative", width: "100%", height: "100%" }}>
+      <div style={{ position: "absolute", left: "50%", top: "40%", transform: "translate(-50%, -100%)" }}>
+        <Tooltip state={state} label="Keyboard shortcut ⌘K" side="top" />
+      </div>
+    </div>
+  );
+};
+```
+
+Each `at` is a **Sequence-local authored frame**. State persists between steps: `visible` at frame 30 keeps the tooltip on-screen until `hidden` fires at frame 90. See [Concepts](/docs/ui/concepts) for the full `useCurrentState` API.
+
+## Smooth transitions
+
+State changes via `state` snap with no cross-fade. For an animated show/hide, use `useTooltipTransition` from the copied `use-tooltip-transition.ts` file. It reads the frame, interpolates between state presets, and returns a resolved `TooltipStyle` — pass it to the `style` prop:
+
+```tsx
+import { Tooltip } from "@/components/remocn/tooltip";
+import { useTooltipTransition } from "@/components/remocn/use-tooltip-transition";
+
+export const Scene = () => {
+  const style = useTooltipTransition([
+    { at: 30, state: "visible", duration: 8 },
+    { at: 90, state: "hidden",  duration: 8 },
+  ]);
+
+  return (
+    <div style={{ position: "relative", width: "100%", height: "100%" }}>
+      <div style={{ position: "absolute", left: "50%", top: "40%", transform: "translate(-50%, -100%)" }}>
+        <Tooltip style={style} label="Keyboard shortcut ⌘K" side="top" />
+      </div>
+    </div>
+  );
+};
+```
+
+The `duration` field on each step overrides the file's `DEFAULT_DURATION` (= `8`) for that specific transition. To globally tune timing and easing, edit `use-tooltip-transition.ts` directly in your project — that file is yours (shadcn "own your code" philosophy).
+
+`style` takes precedence over `state` when both are provided.
+
+## Sides
+
+The `side` prop controls two things: which direction the bubble slides in from when it appears, and which edge of the bubble the arrow points from. It is a static prop — it does not animate.
+
+```ts
+type TooltipSide =
+  | "top"     // bubble above anchor, arrow on bottom edge, enters sliding up 4px
+  | "bottom"  // bubble below anchor, arrow on top edge, enters sliding down 4px
+  | "left"    // bubble left of anchor, arrow on right edge, enters sliding left 4px
+  | "right"   // bubble right of anchor, arrow on left edge, enters sliding right 4px
+```
+
+Placement is the caller's responsibility. The tooltip renders inline — wrap it in an absolutely-positioned div that positions the bubble relative to its anchor. For a `"top"` tooltip:
+
+```tsx
+{/* Anchor element */}
+<div style={{ position: "relative", display: "inline-block" }}>
+  <Button label="Hover me" style={buttonStyle} />
+
+  {/* Tooltip positioned above the anchor, centered horizontally */}
+  <div
+    style={{
+      position: "absolute",
+      bottom: "calc(100% + 12px)",
+      left: "50%",
+      transform: "translateX(-50%)",
+    }}
+  >
+    <Tooltip style={tooltipStyle} label="Keyboard shortcut ⌘K" side="top" />
+  </div>
+</div>
+```
+
+For `"bottom"`, use `top: "calc(100% + 12px)"` instead. For `"left"` / `"right"`, use `right: "calc(100% + 12px)"` / `left: "calc(100% + 12px)"` and adjust vertical alignment to `top: "50%"` with `translateY(-50%)`.
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "label",
+      type: "string",
+      description: "The tooltip text. Rendered as a single line (whitespace-nowrap).",
+    },
+    {
+      name: "side",
+      type: "\"top\" | \"bottom\" | \"left\" | \"right\"",
+      default: "\"top\"",
+      description: "Which side of the anchor the tooltip sits on. Sets the enter-slide direction and which edge the arrow points from. Static — not animated.",
+    },
+    {
+      name: "state",
+      type: "\"hidden\" | \"visible\"",
+      default: "\"hidden\"",
+      description: "Current visual state (snap path). State changes snap — no automatic cross-fade.",
+    },
+    {
+      name: "style",
+      type: "TooltipStyle",
+      description: "Resolved animated visual (smooth path). Pass an interpolated TooltipStyle from useTooltipTransition. Takes precedence over state when provided.",
+    },
+    {
+      name: "theme",
+      type: "Partial<RemocnTheme>",
+      description: "Per-component theme override. Merges with the active RemocnUIProvider theme and the mode defaults. Must be concrete oklch/hex/rgb values — not CSS custom properties.",
+    },
+    {
+      name: "mode",
+      type: "\"light\" | \"dark\"",
+      default: "\"light\"",
+      description: "Sets the base palette. Overrides the mode on RemocnUIProvider when both are present.",
+    },
+    {
+      name: "className",
+      type: "string",
+      description: "Optional className applied to the outer wrapper element.",
+    },
+  ]}
+/>

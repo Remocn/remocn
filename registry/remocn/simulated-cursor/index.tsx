@@ -13,7 +13,6 @@ export interface SimulatedCursorProps {
   points?: CursorPoint[];
   color?: string;
   size?: number;
-  background?: string;
   speed?: number;
   className?: string;
 }
@@ -28,7 +27,6 @@ export function SimulatedCursor({
   points = DEFAULT_POINTS,
   color = "#ffffff",
   size = 32,
-  background = "#0a0a0a",
   speed = 1,
   className,
 }: SimulatedCursorProps) {
@@ -128,7 +126,6 @@ export function SimulatedCursor({
       style={{
         position: "absolute",
         inset: 0,
-        background,
         overflow: "hidden",
       }}
     >

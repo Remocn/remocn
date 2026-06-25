@@ -1,0 +1,127 @@
+---
+title: X Followers Overview
+description: X follow notifications flip through in 3D, then the total follower count blurs in
+---
+
+<ComponentPreview name="x-followers-overview" />
+
+## Installation
+
+<InstallBlock name="x-followers-overview" />
+
+<Note>
+  Installing `x-followers-overview` automatically pulls the `confetti` effect as a dependency via `registryDependencies`. No additional install needed.
+</Note>
+
+## Usage
+
+Standalone in a Remotion `<Composition>` — uses a sample notification list so the video renders immediately after install:
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { XFollowersOverview } from "@/components/remocn/x-followers-overview";
+
+const XFollowersOverviewScene = () => (
+  <XFollowersOverview
+    notifications={[
+      { name: "Andre Vitorio", verified: true, time: "7h" },
+      { name: "Sarah Chen", verified: true, time: "9h" },
+      { name: "marcus", verified: false, time: "11h" },
+    ]}
+    totalFollowers={1709}
+    handle="remocn"
+    avatarUrl="/logo.svg"
+    accentColor="#1d9bf0"
+    orientation="horizontal"
+    speed={1}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="XFollowersOverview"
+    component={XFollowersOverviewScene}
+    durationInFrames={360}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Each follow notification — `<name> followed you · <time>` — is centered, and only the username flips into view on a 3D `rotateX` carousel while the rest of the line stays put. After the list is exhausted, the notifications fade and the total follower count pops in with a spring overshoot, blur, and a centered confetti burst. In sync with the count, the avatar slides in from the left and the handle from the right, just above it.
+
+### With Backdrop
+
+Renders transparent and single-theme — supply the background via `Backdrop`; edit the copied file to re-theme:
+
+```tsx
+import { Backdrop } from "@/components/remocn/backdrop";
+import { XFollowersOverview } from "@/components/remocn/x-followers-overview";
+
+<Backdrop fill={{ type: "color", value: "#ffffff" }}>
+  <XFollowersOverview
+    totalFollowers={1709}
+    handle="remocn"
+    accentColor="#1d9bf0"
+    orientation="horizontal"
+  />
+</Backdrop>
+```
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "notifications",
+      type: "FollowerNotification[]",
+      default: "SAMPLE_FOLLOWERS",
+      description: "List of follow notifications to cycle through — each is { name, verified, time }. Defaults to a hardcoded sample (swap for X API data)",
+    },
+    {
+      name: "totalFollowers",
+      type: "number",
+      default: "1709",
+      description: "Total follower count revealed after the notifications finish",
+    },
+    {
+      name: "handle",
+      type: "string",
+      default: "\"remocn\"",
+      description: "X username (without the @) shown in the reveal, blurring in from the right",
+    },
+    {
+      name: "avatarUrl",
+      type: "string",
+      default: "\"/logo.svg\"",
+      description: "Profile picture shown in the reveal, blurring in from the left — falls back to the handle initial",
+    },
+    {
+      name: "accentColor",
+      type: "string",
+      default: "\"#1d9bf0\"",
+      description: "X brand blue — used for the verified badge",
+    },
+    {
+      name: "orientation",
+      type: "\"horizontal\" | \"vertical\"",
+      default: "\"horizontal\"",
+      description: "Layout orientation — horizontal is 1280×720 (16:9), vertical is 720×1280 (9:16) letterboxed",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Animation speed multiplier — minimum 1 so the timeline always reaches the reveal",
+    },
+  ]}
+/>
+
+## Notes
+
+- **Offline rendering:** The notification list is plain data and the composition makes no network requests, so the preview works offline and MP4 export needs no CORS setup.
+- **3D flip:** Only the username flips on a `rotateX` carousel under CSS `perspective`; the line is centered via an invisible spacer sized to the active name, so it never drifts as names swap.
+- **Reveal:** The total count uses Manrope with `tabular-nums` and pops in with a spring overshoot + blur, accompanied by a `confetti` burst.
+- **X API ready:** `notifications` defaults to `SAMPLE_FOLLOWERS`; pass live follower data in the same `{ name, verified, time }` shape to drive it from the X API.

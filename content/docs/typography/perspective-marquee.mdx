@@ -36,6 +36,19 @@ export const RemotionRoot = () => (
 );
 ```
 
+### With Backdrop
+
+Renders transparent — supply the background via `Backdrop`:
+
+```tsx
+import { Backdrop } from "@/components/remocn/backdrop";
+import { PerspectiveMarquee } from "@/components/remocn/perspective-marquee";
+
+<Backdrop fill={{ type: "color", value: "#050505" }}>
+  <PerspectiveMarquee items={["Vercel", "Linear", "Stripe", "Figma"]} rotateY={-28} pixelsPerFrame={2} />
+</Backdrop>
+```
+
 ## Props
 
 <PropsTable
@@ -93,12 +106,6 @@ export const RemotionRoot = () => (
       type: "string",
       default: "\"#050505\"",
       description: "Color used in the edge vignette gradients",
-    },
-    {
-      name: "background",
-      type: "string",
-      default: "\"#050505\"",
-      description: "Root container background color",
     },
     {
       name: "speed",

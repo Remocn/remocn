@@ -1,0 +1,122 @@
+---
+title: Shared Axis Y
+description: Per-word hard-cut staircase transition for sharp editorial phrase swaps
+---
+
+<ComponentPreview name="shared-axis-y" />
+
+## Installation
+
+<InstallBlock name="shared-axis-y" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition, Sequence } from "remotion";
+import { SharedAxisY } from "@/components/remocn/shared-axis-y";
+
+const SharedAxisYScene = () => (
+  <>
+    <Sequence durationInFrames={40}>
+      <SharedAxisY fromText="Layered navigation." toText="Hierarchy made clear." />
+    </Sequence>
+    <Sequence from={40} durationInFrames={40}>
+      <SharedAxisY fromText="Hierarchy made clear." toText="Depth with restraint." />
+    </Sequence>
+  </>
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="SharedAxisY"
+    component={SharedAxisYScene}
+    durationInFrames={80}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Each word in the outgoing phrase snaps off in a hard cut, then the incoming phrase's words snap on in a staircase pattern—no fade or motion, just a sharp editorial swap. Chaining two instances in back-to-back `Sequence`s walks through a full phrase chain—the second transition reuses the first's `toText` as its `fromText`, so the text flows A → B → C.
+
+### Chained example
+
+This is the two-`Sequence` chain above rendered on an 80-frame timeline:
+
+<ComponentExample name="shared-axis-y" />
+
+### With Backdrop
+
+The component renders transparent — supply the background via `Backdrop`. It ships single-theme; edit the copied file to re-theme colors.
+
+Pair with `Backdrop` to place the text inside a full-frame fill with a rounded, shadowed content frame:
+
+```tsx
+import { Composition } from "remotion";
+import { SharedAxisY } from "@/components/remocn/shared-axis-y";
+import { Backdrop } from "@/components/remocn/backdrop";
+
+const SharedAxisYScene = () => (
+  <Backdrop fill={{ type: "color", value: "#ffffff" }}>
+    <SharedAxisY
+      fromText="Layered navigation."
+      toText="Hierarchy made clear."
+    />
+  </Backdrop>
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="SharedAxisY"
+    component={SharedAxisYScene}
+    durationInFrames={90}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "fromText",
+      type: "string",
+      required: true,
+      description: "The outgoing phrase, shown first then hard-cuts off word by word.",
+    },
+    {
+      name: "toText",
+      type: "string",
+      required: true,
+      description: "The incoming phrase that snaps in word by word.",
+    },
+    {
+      name: "fontSize",
+      type: "number",
+      default: "72",
+      description: "Font size in pixels",
+    },
+    {
+      name: "fontWeight",
+      type: "number",
+      default: "600",
+      description: "CSS font-weight",
+    },
+    {
+      name: "color",
+      type: "string",
+      default: "\"#171717\"",
+      description: "Text color (any valid CSS color)",
+    },
+    {
+      name: "className",
+      type: "string",
+      description: "Optional className passed to the wrapper",
+    },
+  ]}
+/>

@@ -43,7 +43,6 @@ export const spotlightCardConfig: ComponentConfig = {
       step: 0.01,
       label: "Glow opacity",
     },
-    background: { type: "color", default: "#050505", label: "Background" },
     cardColor: { type: "color", default: "#0a0a0a", label: "Card color" },
     textColor: { type: "color", default: "#fafafa", label: "Text color" },
     mutedColor: { type: "color", default: "#71717a", label: "Muted color" },
@@ -52,4 +51,5 @@ export const spotlightCardConfig: ComponentConfig = {
   fps: FPS,
   compositionWidth: W,
   compositionHeight: H,
+  previewBackdrop: { type: "color", value: "#050505" },
 };

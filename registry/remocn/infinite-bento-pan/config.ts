@@ -22,4 +22,5 @@ export const infiniteBentoPanConfig: ComponentConfig = {
   fps: FPS,
   compositionWidth: W,
   compositionHeight: H,
+  previewBackdrop: { type: "color", value: "#050505" },
 };

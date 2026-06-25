@@ -1,0 +1,138 @@
+---
+title: Dialog
+description: A modal dialog whose opened/closed state is a pure function of the timeline
+---
+
+<UiComponentPreview name="dialog" />
+
+A state atom whose appearance (closed, opened) is a pure function of the `state` prop. Pass a state directly or drive it from the Remotion timeline via `useCurrentState`. The component reads no frame — only the state value you give it. The wrapper is transparent by design: Dialog is a modal layer meant to compose over another scene, so it does not paint an opaque background. Unlike AlertDialog, Dialog is a generic (non-destructive) modal — its primary action uses the theme `primary` color, and it renders a close (X) button in the top-right corner of the popup card.
+
+## Installation
+
+<InstallBlock name="dialog" />
+
+<Note>
+Installing `dialog` automatically installs the shared `remocn-ui` core (`lib/remocn-ui/`) via `registryDependencies` (`["remocn-ui"]`). You do not need to install it separately. If you want to pair Dialog with the Button as its trigger in the canonical lifecycle example, install `button` separately.
+</Note>
+
+## States
+
+`DialogState` is:
+
+```ts
+type DialogState =
+  | "opened"  // backdrop dims to 50% black, popup fades in and zooms from 0.95 → 1
+  | "closed"  // panel hidden, backdrop clear (overlay opacity 0, popup opacity 0, scale 0.95)
+```
+
+`opened` reveals the backdrop dim (scales up to `MAX_OVERLAY_ALPHA = 0.5`) and fades the popup card in while zooming it from `0.95` to `1` and lifting it 8 px upward. `closed` hides the backdrop and the popup entirely.
+
+## Snap usage
+
+Pass `state` directly — the component snaps instantly to that visual. Useful for static previews or when you drive state from your own logic:
+
+```tsx
+import { Dialog } from "@/components/remocn/dialog";
+
+export const Scene = () => <Dialog state="opened" />;
+```
+
+To drive state from the timeline, use `useCurrentState`:
+
+```tsx
+import { useCurrentState } from "@/lib/remocn-ui";
+import { Dialog } from "@/components/remocn/dialog";
+
+export const Scene = () => {
+  const state = useCurrentState(
+    [
+      { at: 32, state: "opened" },
+      { at: 92, state: "closed" },
+    ],
+    "closed",
+  );
+
+  return <Dialog title="Edit profile" state={state} />;
+};
+```
+
+Each `at` is a **Sequence-local authored frame**. State persists between steps: `opened` at frame 32 keeps the dialog visible until `closed` fires at frame 92. See [Concepts](/docs/ui/concepts) for the full `useCurrentState` API.
+
+## Smooth transitions
+
+State changes via `state` snap with no cross-fade. For animated transitions, use `useDialogTransition` from the copied `use-dialog-transition.ts` file. It reads the frame, interpolates between state presets, and returns a resolved `DialogStyle` — pass it to the `style` prop:
+
+```tsx
+import { Dialog } from "@/components/remocn/dialog";
+import { useDialogTransition } from "@/components/remocn/use-dialog-transition";
+
+export const Scene = () => {
+  const style = useDialogTransition([
+    { at: 32, state: "opened", duration: 16 },
+    { at: 92, state: "closed", duration: 12 },
+  ]);
+  return <Dialog title="Edit profile" style={style} />;
+};
+```
+
+The `duration` field on each step overrides the file's `DEFAULT_DURATION` (= `12`) for that specific transition. To globally tune timing and easing, edit `use-dialog-transition.ts` directly in your project — that file is yours (shadcn "own your code" philosophy).
+
+`style` takes precedence over `state` when both are provided.
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "state",
+      type: "\"opened\" | \"closed\"",
+      default: "\"closed\"",
+      description: "Current visual state (snap path). State changes snap — no automatic cross-fade.",
+    },
+    {
+      name: "style",
+      type: "DialogStyle",
+      description: "Resolved animated visual (smooth path). Pass an interpolated DialogStyle from useDialogTransition. Takes precedence over state when provided.",
+    },
+    {
+      name: "title",
+      type: "string",
+      default: "\"Edit profile\"",
+      description: "Headline of the dialog popup.",
+    },
+    {
+      name: "description",
+      type: "string",
+      default: "\"Make changes to your profile here. Click save when you're done.\"",
+      description: "Body copy displayed under the title.",
+    },
+    {
+      name: "actionLabel",
+      type: "string",
+      default: "\"Save changes\"",
+      description: "Label of the confirming (primary) action button.",
+    },
+    {
+      name: "cancelLabel",
+      type: "string",
+      default: "\"Cancel\"",
+      description: "Label of the dismissing action button.",
+    },
+    {
+      name: "theme",
+      type: "Partial<RemocnTheme>",
+      description: "Per-component theme override. Merges with the active RemocnUIProvider theme and the mode defaults. Must be concrete oklch/hex/rgb values — not CSS custom properties.",
+    },
+    {
+      name: "mode",
+      type: "\"light\" | \"dark\"",
+      default: "\"light\"",
+      description: "Sets the base palette. Overrides the mode on RemocnUIProvider when both are present.",
+    },
+    {
+      name: "className",
+      type: "string",
+      description: "Optional className applied to the popup card element.",
+    },
+  ]}
+/>

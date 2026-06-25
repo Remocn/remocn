@@ -8,7 +8,6 @@ export interface DeviceMockupZoomProps {
   device?: "laptop" | "phone";
   frameColor?: string;
   screenColor?: string;
-  background?: string;
   speed?: number;
   className?: string;
 }
@@ -43,7 +42,6 @@ export function DeviceMockupZoom({
   device = "laptop",
   frameColor = "#1f1f1f",
   screenColor = "#0a0a0a",
-  background = "#fafafa",
   speed = 1,
   className,
 }: DeviceMockupZoomProps) {
@@ -63,7 +61,6 @@ export function DeviceMockupZoom({
       style={{
         position: "absolute",
         inset: 0,
-        background,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",

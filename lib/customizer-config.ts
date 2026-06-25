@@ -1,7 +1,17 @@
+import type { BackdropFill } from "@/registry/remocn/backdrop";
+
 export type ControlType =
   | { type: "text"; default: string; label: string }
   | {
       type: "number";
+      default: number;
+      min: number;
+      max: number;
+      step: number;
+      label: string;
+    }
+  | {
+      type: "number-input";
       default: number;
       min: number;
       max: number;
@@ -22,13 +32,21 @@ export interface ComponentConfig {
   compositionHeight: number;
   /**
    * Import statement shown in the generated code snippet.
-   * Example: `import { BlurReveal } from "@/components/remocn/blur-reveal";`
+   * Example: `import { SoftBlurIn } from "@/components/remocn/soft-blur-in";`
    */
   importPath: string;
   /**
    * Pascal-case component name used in the generated JSX snippet.
    */
   componentName: string;
+  /**
+   * Optional custom code-snippet generator. When present, the preview's
+   * `generateCode` delegates to it instead of the default prop serializer
+   * (used by the ui-tier primitives to emit a `steps={[…]}` literal and omit
+   * preview-only props). Components without it keep the default path.
+   */
+  snippet?: (values: Record<string, unknown>) => string;
+  previewBackdrop?: BackdropFill;
 }
 
 export const FPS = 30;

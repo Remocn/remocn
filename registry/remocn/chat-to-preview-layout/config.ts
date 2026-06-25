@@ -20,10 +20,10 @@ export const chatToPreviewLayoutConfig: ComponentConfig = {
       step: 0.05,
       label: "End chat ratio",
     },
-    background: { type: "color", default: "#0a0a0a", label: "Background" },
   },
   durationInFrames: 120,
   fps: FPS,
   compositionWidth: W,
   compositionHeight: H,
+  previewBackdrop: { type: "color", value: "#0a0a0a" },
 };

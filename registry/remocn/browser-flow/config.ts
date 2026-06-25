@@ -14,4 +14,8 @@ export const browserFlowConfig: ComponentConfig = {
   fps: FPS,
   compositionWidth: W,
   compositionHeight: H,
+  previewBackdrop: {
+    type: "gradient",
+    value: "radial-gradient(ellipse at center, #11141c 0%, #050505 75%)",
+  },
 };

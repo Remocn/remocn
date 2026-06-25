@@ -36,10 +36,10 @@ export const infiniteMarqueeConfig: ComponentConfig = {
     },
     stroke: { type: "boolean", default: false, label: "Stroke" },
     strokeColor: { type: "color", default: "#171717", label: "Stroke color" },
-    background: { type: "color", default: "#fafafa", label: "Background" },
   },
   durationInFrames: 180,
   fps: FPS,
   compositionWidth: W,
   compositionHeight: H,
+  previewBackdrop: { type: "color", value: "#fafafa" },
 };

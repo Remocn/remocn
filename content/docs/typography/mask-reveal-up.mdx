@@ -1,0 +1,106 @@
+---
+title: Mask Reveal Up
+description: Lines reveal upward with a soft masked feel and compact stagger
+---
+
+<ComponentPreview name="mask-reveal-up" />
+
+## Installation
+
+<InstallBlock name="mask-reveal-up" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { MaskRevealUp } from "@/components/remocn/mask-reveal-up";
+
+const MaskRevealUpScene = () => (
+  <MaskRevealUp text={"Designed to move.\nBuilt to focus."} distance={30} />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="MaskRevealUp"
+    component={MaskRevealUpScene}
+    durationInFrames={90}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The text is split on newline characters into individual lines. Each line rises upward from below, holding steady in the middle of the composition with a soft blur mask, then rises further and blurs out—so the duration should leave room for the staggered entry and exit animations.
+
+### With Backdrop
+
+The component renders transparent — supply the background via `Backdrop`. It ships single-theme; edit the copied file to re-theme colors.
+
+Pair with `Backdrop` to place the text inside a full-frame fill with a rounded, shadowed content frame:
+
+```tsx
+import { Composition } from "remotion";
+import { MaskRevealUp } from "@/components/remocn/mask-reveal-up";
+import { Backdrop } from "@/components/remocn/backdrop";
+
+const MaskRevealUpScene = () => (
+  <Backdrop fill={{ type: "color", value: "#ffffff" }}>
+    <MaskRevealUp text={"Designed to move.\nBuilt to focus."} distance={30} />
+  </Backdrop>
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="MaskRevealUp"
+    component={MaskRevealUpScene}
+    durationInFrames={90}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "text",
+      type: "string",
+      required: true,
+      description: "The text to animate. Split on newline characters into lines.",
+    },
+    {
+      name: "distance",
+      type: "number",
+      default: "30",
+      description: "Vertical distance in pixels each line rises from on enter.",
+    },
+    {
+      name: "fontSize",
+      type: "number",
+      default: "72",
+      description: "Font size in pixels",
+    },
+    {
+      name: "fontWeight",
+      type: "number",
+      default: "600",
+      description: "CSS font-weight",
+    },
+    {
+      name: "color",
+      type: "string",
+      default: "\"#171717\"",
+      description: "Text color (any valid CSS color)",
+    },
+    {
+      name: "className",
+      type: "string",
+      description: "Optional className passed to the underlying span",
+    },
+  ]}
+/>

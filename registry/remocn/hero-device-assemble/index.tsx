@@ -252,8 +252,7 @@ export function HeroDeviceAssemble({
         position: "absolute",
         inset: 0,
         overflow: "hidden",
-        background:
-          "radial-gradient(ellipse at center, #1a1a22 0%, #050507 70%)",
+        background: "transparent",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",

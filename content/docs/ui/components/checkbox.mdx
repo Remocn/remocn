@@ -1,0 +1,131 @@
+---
+title: Checkbox
+description: A checkbox whose checked/unchecked state is a pure function of the timeline
+---
+
+<UiComponentPreview name="checkbox" />
+
+A state atom whose appearance (checked, unchecked) is a pure function of the `state` prop. Pass a state directly or drive it from the Remotion timeline via `useCurrentState`. The component reads no frame — only the state value you give it.
+
+## Installation
+
+<InstallBlock name="checkbox" />
+
+<Note>
+Installing `checkbox` automatically installs the shared `remocn-ui` core (`lib/remocn-ui/`) via `registryDependencies`. You do not need to install it separately.
+</Note>
+
+## States
+
+`CheckboxState` is:
+
+```ts
+type CheckboxState =
+  | "unchecked"  // empty box, border = theme.border, no checkmark
+  | "checked"    // box fills with primary, border = primary, checkmark draws on
+```
+
+`checked` fills the box background with `primary`, sets the border to `primary`, and draws the checkmark with opacity, scale, and stroke animations. `unchecked` renders an empty box with the theme border color.
+
+## Snap usage
+
+Pass `state` directly — the component snaps instantly to that visual. Useful for static previews or when you drive state from your own logic:
+
+```tsx
+import { Checkbox } from "@/components/remocn/checkbox";
+
+export const Scene = () => <Checkbox state="checked" />;
+```
+
+To drive state from the timeline, use `useCurrentState`:
+
+```tsx
+import { useCurrentState } from "@/lib/remocn-ui";
+import { Checkbox } from "@/components/remocn/checkbox";
+
+export const Scene = () => {
+  const state = useCurrentState(
+    [
+      { at: 18, state: "checked" },
+      { at: 78, state: "unchecked" },
+    ],
+    "unchecked",
+  );
+
+  return <Checkbox label="Accept terms" state={state} />;
+};
+```
+
+Each `at` is a **Sequence-local authored frame**. State persists between steps: `checked` at frame 18 keeps the box checked until `unchecked` fires at frame 78. See [Concepts](/docs/ui/concepts) for the full `useCurrentState` API.
+
+## Smooth transitions
+
+State changes via `state` snap with no cross-fade. For animated transitions, use `useCheckboxTransition` from the copied `use-checkbox-transition.ts` file. It reads the frame, interpolates between state presets, and returns a resolved `CheckboxStyle` — pass it to the `style` prop:
+
+```tsx
+import { Checkbox } from "@/components/remocn/checkbox";
+import { useCheckboxTransition } from "@/components/remocn/use-checkbox-transition";
+
+export const Scene = () => {
+  const style = useCheckboxTransition([
+    { at: 18, state: "checked", duration: 14 },
+    { at: 78, state: "unchecked", duration: 12 },
+  ]);
+  return <Checkbox label="Accept terms" style={style} />;
+};
+```
+
+The `duration` field on each step overrides the file's `DEFAULT_DURATION` for that specific transition. To globally tune timing and easing, edit `use-checkbox-transition.ts` directly in your project — that file is yours (shadcn "own your code" philosophy).
+
+`style` takes precedence over `state` when both are provided.
+
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "state",
+      type: "\"unchecked\" | \"checked\"",
+      default: "\"unchecked\"",
+      description: "Current visual state (snap path). State changes snap — no automatic cross-fade.",
+    },
+    {
+      name: "style",
+      type: "CheckboxStyle",
+      description: "Resolved animated visual (smooth path). Pass an interpolated CheckboxStyle from useCheckboxTransition. Takes precedence over state when provided.",
+    },
+    {
+      name: "label",
+      type: "string",
+      description: "Optional text label rendered next to the box. Omit for a bare checkbox.",
+    },
+    {
+      name: "size",
+      type: "\"sm\" | \"default\" | \"lg\"",
+      default: "\"default\"",
+      description: "Box and label size preset.",
+    },
+    {
+      name: "theme",
+      type: "Partial<RemocnTheme>",
+      description: "Per-component theme override. Merges with the active RemocnUIProvider theme and the mode defaults. Must be concrete oklch/hex/rgb values — not CSS custom properties.",
+    },
+    {
+      name: "primary",
+      type: "string",
+      description: "Convenience override for the primary theme token — merged into theme.",
+    },
+    {
+      name: "mode",
+      type: "\"light\" | \"dark\"",
+      default: "\"light\"",
+      description: "Sets the base palette. Overrides the mode on RemocnUIProvider when both are present.",
+    },
+    {
+      name: "className",
+      type: "string",
+      description: "Optional className passed to the checkbox element.",
+    },
+  ]}
+/>

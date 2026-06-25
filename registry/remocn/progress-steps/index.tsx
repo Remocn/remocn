@@ -13,7 +13,6 @@ export interface ProgressStepsProps {
   orientation?: "horizontal" | "vertical";
   activeColor?: string;
   inactiveColor?: string;
-  background?: string;
   textColor?: string;
   stepDuration?: number;
   speed?: number;
@@ -25,7 +24,6 @@ export function ProgressSteps({
   orientation = "horizontal",
   activeColor = "#22c55e",
   inactiveColor = "#27272a",
-  background = "#0a0a0a",
   textColor = "white",
   stepDuration = 30,
   speed = 1,
@@ -45,7 +43,6 @@ export function ProgressSteps({
       style={{
         position: "absolute",
         inset: 0,
-        background,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",

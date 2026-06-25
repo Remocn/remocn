@@ -1,0 +1,781 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry.json",
+  "name": "remocn-ui",
+  "homepage": "https://remocn.dev",
+  "items": [
+    {
+      "name": "remocn-ui",
+      "type": "registry:lib",
+      "title": "remocn UI Core",
+      "description": "Shared timeline-fold hook, theme context, and color math for remocn UI primitives.",
+      "dependencies": ["remotion", "culori"],
+      "files": [
+        {
+          "path": "core/timeline.ts",
+          "type": "registry:lib",
+          "target": "lib/remocn-ui/timeline.ts"
+        },
+        {
+          "path": "core/theme.ts",
+          "type": "registry:lib",
+          "target": "lib/remocn-ui/theme.ts"
+        },
+        {
+          "path": "core/color.ts",
+          "type": "registry:lib",
+          "target": "lib/remocn-ui/color.ts"
+        },
+        {
+          "path": "core/motion.ts",
+          "type": "registry:lib",
+          "target": "lib/remocn-ui/motion.ts"
+        },
+        {
+          "path": "core/types.ts",
+          "type": "registry:lib",
+          "target": "lib/remocn-ui/types.ts"
+        },
+        {
+          "path": "core/index.ts",
+          "type": "registry:lib",
+          "target": "lib/remocn-ui/index.ts"
+        }
+      ]
+    },
+    {
+      "name": "spinner",
+      "type": "registry:component",
+      "title": "UI Spinner",
+      "description": "A deterministic spinning arc that loops on the Remotion frame — a pure motion atom with no state.",
+      "dependencies": ["remotion"],
+      "registryDependencies": [],
+      "files": [
+        {
+          "path": "spinner/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/spinner.tsx"
+        }
+      ]
+    },
+    {
+      "name": "caret",
+      "type": "registry:component",
+      "title": "UI Caret",
+      "description": "A blinking text caret — a controlled vertical bar, or a pure motion atom that blinks deterministically from useCurrentFrame.",
+      "dependencies": ["remotion"],
+      "registryDependencies": [],
+      "files": [
+        {
+          "path": "caret/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/caret.tsx"
+        }
+      ]
+    },
+    {
+      "name": "button",
+      "type": "registry:component",
+      "title": "UI Button",
+      "description": "A button whose idle/hover/press/loading/success state is a pure function of the timeline; the loading state composes the Spinner motion atom.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/remocn-ui", "@remocn/spinner"],
+      "files": [
+        {
+          "path": "button/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/button.tsx"
+        },
+        {
+          "path": "button/use-button-transition.ts",
+          "type": "registry:component",
+          "target": "components/remocn/use-button-transition.ts"
+        }
+      ]
+    },
+    {
+      "name": "accordion",
+      "type": "registry:component",
+      "title": "UI Accordion",
+      "description": "A disclosure whose opened/closed state is a pure function of the timeline; the panel reveal, chevron, and background are keyframed presets.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/remocn-ui"],
+      "files": [
+        {
+          "path": "accordion/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/accordion.tsx"
+        },
+        {
+          "path": "accordion/use-accordion-transition.ts",
+          "type": "registry:component",
+          "target": "components/remocn/use-accordion-transition.ts"
+        }
+      ]
+    },
+    {
+      "name": "alert-dialog",
+      "type": "registry:component",
+      "title": "UI Alert Dialog",
+      "description": "A modal alert dialog whose opened/closed state is a pure function of the timeline; the backdrop dim and popup zoom are keyframed presets. Self-contained — pair it with the Button as a trigger (see the example).",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/remocn-ui"],
+      "files": [
+        {
+          "path": "alert-dialog/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/alert-dialog.tsx"
+        },
+        {
+          "path": "alert-dialog/use-alert-dialog-transition.ts",
+          "type": "registry:component",
+          "target": "components/remocn/use-alert-dialog-transition.ts"
+        }
+      ]
+    },
+    {
+      "name": "dialog",
+      "type": "registry:component",
+      "title": "UI Dialog",
+      "description": "A modal dialog whose opened/closed state is a pure function of the timeline; the backdrop dim and popup zoom are keyframed presets, with a close button and a primary action. Self-contained — pair it with the Button as a trigger (see the example).",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/remocn-ui"],
+      "files": [
+        {
+          "path": "dialog/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/dialog.tsx"
+        },
+        {
+          "path": "dialog/use-dialog-transition.ts",
+          "type": "registry:component",
+          "target": "components/remocn/use-dialog-transition.ts"
+        }
+      ]
+    },
+    {
+      "name": "sheet",
+      "type": "registry:component",
+      "title": "UI Sheet",
+      "description": "A side panel whose opened/closed state is a pure function of the timeline; the backdrop dim and right-edge slide-in are keyframed presets, with a close button and a primary action. Self-contained — pair it with the Button as a trigger (see the example).",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/remocn-ui"],
+      "files": [
+        {
+          "path": "sheet/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/sheet.tsx"
+        },
+        {
+          "path": "sheet/use-sheet-transition.ts",
+          "type": "registry:component",
+          "target": "components/remocn/use-sheet-transition.ts"
+        }
+      ]
+    },
+    {
+      "name": "drawer",
+      "type": "registry:component",
+      "title": "UI Drawer",
+      "description": "A bottom panel whose opened/closed state is a pure function of the timeline; the backdrop dim and bottom-edge slide-up are keyframed presets, with a drag handle and a primary action. Self-contained — pair it with the Button as a trigger (see the example).",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/remocn-ui"],
+      "files": [
+        {
+          "path": "drawer/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/drawer.tsx"
+        },
+        {
+          "path": "drawer/use-drawer-transition.ts",
+          "type": "registry:component",
+          "target": "components/remocn/use-drawer-transition.ts"
+        }
+      ]
+    },
+    {
+      "name": "checkbox",
+      "type": "registry:component",
+      "title": "UI Checkbox",
+      "description": "A checkbox whose checked/unchecked state is a pure function of the timeline; the box fill, border, and checkmark draw are keyframed presets.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/remocn-ui"],
+      "files": [
+        {
+          "path": "checkbox/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/checkbox.tsx"
+        },
+        {
+          "path": "checkbox/use-checkbox-transition.ts",
+          "type": "registry:component",
+          "target": "components/remocn/use-checkbox-transition.ts"
+        }
+      ]
+    },
+    {
+      "name": "radio",
+      "type": "registry:component",
+      "title": "UI Radio",
+      "description": "A radio whose checked/unchecked state is a pure function of the timeline; the ring border and inner dot pop are keyframed presets.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/remocn-ui"],
+      "files": [
+        {
+          "path": "radio/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/radio.tsx"
+        },
+        {
+          "path": "radio/use-radio-transition.ts",
+          "type": "registry:component",
+          "target": "components/remocn/use-radio-transition.ts"
+        }
+      ]
+    },
+    {
+      "name": "switch",
+      "type": "registry:component",
+      "title": "UI Switch",
+      "description": "A switch whose checked/unchecked state is a pure function of the timeline; the track fill and sliding thumb are keyframed presets.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/remocn-ui"],
+      "files": [
+        {
+          "path": "switch/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/switch.tsx"
+        },
+        {
+          "path": "switch/use-switch-transition.ts",
+          "type": "registry:component",
+          "target": "components/remocn/use-switch-transition.ts"
+        }
+      ]
+    },
+    {
+      "name": "input",
+      "type": "registry:component",
+      "title": "UI Input",
+      "description": "A text input whose idle/hover/active/typing/invalid state is a pure function of the timeline; the focus ring, border, caret, and value reveal are keyframed presets.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/remocn-ui", "@remocn/caret"],
+      "files": [
+        {
+          "path": "input/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/input.tsx"
+        },
+        {
+          "path": "input/use-input-transition.ts",
+          "type": "registry:component",
+          "target": "components/remocn/use-input-transition.ts"
+        }
+      ]
+    },
+    {
+      "name": "blur-in",
+      "type": "registry:component",
+      "title": "UI Blur In",
+      "description": "A wrapper that reveals a single child with blur + opacity + a directional offset; a pure state atom, theme-independent — its context is a motion config (blur/distance/axis), not a theme.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/remocn-ui"],
+      "files": [
+        {
+          "path": "blur-in/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/blur-in.tsx"
+        },
+        {
+          "path": "blur-in/use-blur-in-transition.ts",
+          "type": "registry:component",
+          "target": "components/remocn/use-blur-in-transition.ts"
+        }
+      ]
+    },
+    {
+      "name": "field",
+      "type": "registry:component",
+      "title": "UI Field",
+      "description": "A static layout family for composing labeled form controls, modeled on shadcn's Field: FieldGroup ▸ Field ▸ FieldLabel / FieldControl / FieldDescription. Reads no frame and holds no state — colors come from the resolved theme. FieldControl is a relative fixed-height slot for the absolute remocn-ui controls (Input, Button).",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/remocn-ui"],
+      "files": [
+        {
+          "path": "field/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/field.tsx"
+        }
+      ]
+    },
+    {
+      "name": "select-item",
+      "type": "registry:component",
+      "title": "UI Select Item",
+      "description": "A select option row whose idle/hover/press/selected state is a pure function of the timeline; the row background, label color, and check icon are keyframed presets. Composed inside the Select panel.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/remocn-ui"],
+      "files": [
+        {
+          "path": "select-item/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/select-item.tsx"
+        },
+        {
+          "path": "select-item/use-select-item-transition.ts",
+          "type": "registry:component",
+          "target": "components/remocn/use-select-item-transition.ts"
+        }
+      ]
+    },
+    {
+      "name": "select",
+      "type": "registry:component",
+      "title": "UI Select",
+      "description": "A select whose opened/closed state is a pure function of the timeline; the trigger reuses the Button primitive and the reveal panel composes SelectItem rows. The panel fade, scale, lift, and chevron are keyframed presets.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/remocn-ui", "@remocn/button", "@remocn/select-item"],
+      "files": [
+        {
+          "path": "select/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/select.tsx"
+        },
+        {
+          "path": "select/use-select-transition.ts",
+          "type": "registry:component",
+          "target": "components/remocn/use-select-transition.ts"
+        }
+      ]
+    },
+    {
+      "name": "dropdown-menu-item",
+      "type": "registry:component",
+      "title": "UI Dropdown Menu Item",
+      "description": "A dropdown menu action row whose idle/hover/press state is a pure function of the timeline; the row background and label color are keyframed presets. Composed inside the DropdownMenu panel.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/remocn-ui"],
+      "files": [
+        {
+          "path": "dropdown-menu-item/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/dropdown-menu-item.tsx"
+        },
+        {
+          "path": "dropdown-menu-item/use-dropdown-menu-item-transition.ts",
+          "type": "registry:component",
+          "target": "components/remocn/use-dropdown-menu-item-transition.ts"
+        }
+      ]
+    },
+    {
+      "name": "tabs",
+      "type": "registry:component",
+      "title": "UI Tabs",
+      "description": "A tabs widget whose active-tab state is a pure function of the timeline; the sliding indicator, label colors, and panel crossfade are keyframed/derived presets.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/remocn-ui"],
+      "files": [
+        {
+          "path": "tabs/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/tabs.tsx"
+        },
+        {
+          "path": "tabs/use-tabs-transition.ts",
+          "type": "registry:component",
+          "target": "components/remocn/use-tabs-transition.ts"
+        }
+      ]
+    },
+    {
+      "name": "dropdown-menu",
+      "type": "registry:component",
+      "title": "UI Dropdown Menu",
+      "description": "A dropdown menu whose opened/closed state is a pure function of the timeline; the trigger reuses the Button primitive and the reveal panel composes DropdownMenuItem rows. The panel fade, scale, lift, and chevron are keyframed presets.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/remocn-ui", "@remocn/button", "@remocn/dropdown-menu-item"],
+      "files": [
+        {
+          "path": "dropdown-menu/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/dropdown-menu.tsx"
+        },
+        {
+          "path": "dropdown-menu/use-dropdown-menu-transition.ts",
+          "type": "registry:component",
+          "target": "components/remocn/use-dropdown-menu-transition.ts"
+        }
+      ]
+    },
+    {
+      "name": "cursor",
+      "type": "registry:component",
+      "title": "UI Cursor",
+      "description": "An animated cursor that moves between waypoints, clicks (ripple), and drags. The Cursor renderer is a pure function of a numeric CursorStyle channel; useCursorPath reads the frame and eases the path, ripple, and press phases.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/remocn-ui"],
+      "files": [
+        {
+          "path": "cursor/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/cursor.tsx"
+        },
+        {
+          "path": "cursor/use-cursor-path.ts",
+          "type": "registry:component",
+          "target": "components/remocn/use-cursor-path.ts"
+        }
+      ]
+    },
+    {
+      "name": "toast",
+      "type": "registry:component",
+      "title": "UI Toast",
+      "description": "A toast notification whose hidden/visible state is a pure function of the timeline. The Toast renderer is a pure function of a ToastStyle (opacity, translateY, scale); useToastTransition eases both the slide-in enter and the auto-dismiss exit. Variants default/success/error change the leading icon and its color.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/remocn-ui"],
+      "files": [
+        {
+          "path": "toast/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/toast.tsx"
+        },
+        {
+          "path": "toast/use-toast-transition.ts",
+          "type": "registry:component",
+          "target": "components/remocn/use-toast-transition.ts"
+        }
+      ]
+    },
+    {
+      "name": "command-menu-item",
+      "type": "registry:component",
+      "title": "UI Command Menu Item",
+      "description": "A command-palette row whose idle/hover/press/selected state is a pure function of the timeline. Leading icon + label + trailing shortcut kbd. Exports an inline CommandMenuItemRow (reused by CommandMenu) and a standalone CommandMenuItem atom; the row background, label color, and icon color are keyframed presets.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/remocn-ui"],
+      "files": [
+        {
+          "path": "command-menu-item/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/command-menu-item.tsx"
+        },
+        {
+          "path": "command-menu-item/use-command-menu-item-transition.ts",
+          "type": "registry:component",
+          "target": "components/remocn/use-command-menu-item-transition.ts"
+        }
+      ]
+    },
+    {
+      "name": "command-menu",
+      "type": "registry:component",
+      "title": "UI Command Menu",
+      "description": "A ⌘K command palette whose opened/closed state is a pure function of the timeline; the panel zoom + backdrop dim are dialog-like keyframed presets. The search row reveals the typed query, the list is filtered by a pure case-insensitive substring on the visible query prefix, and rows reuse the CommandMenuItem row.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/remocn-ui", "@remocn/command-menu-item"],
+      "files": [
+        {
+          "path": "command-menu/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/command-menu.tsx"
+        },
+        {
+          "path": "command-menu/use-command-menu-transition.ts",
+          "type": "registry:component",
+          "target": "components/remocn/use-command-menu-transition.ts"
+        }
+      ]
+    },
+    {
+      "name": "tooltip",
+      "type": "registry:component",
+      "title": "UI Tooltip",
+      "description": "A tooltip whose hidden/visible state is a pure function of the timeline. The Tooltip renderer is a pure function of a TooltipStyle (opacity, scale, translate); useTooltipTransition eases both the show and the hide. The static `side` prop sets the enter translate axis and the arrow placement.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/remocn-ui"],
+      "files": [
+        {
+          "path": "tooltip/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/tooltip.tsx"
+        },
+        {
+          "path": "tooltip/use-tooltip-transition.ts",
+          "type": "registry:component",
+          "target": "components/remocn/use-tooltip-transition.ts"
+        }
+      ]
+    },
+    {
+      "name": "progress",
+      "type": "registry:component",
+      "title": "UI Progress",
+      "description": "A progress bar whose fill is a pure function of a numeric value channel (value-channel deviation). The Progress renderer takes a clamped 0–100 value; useProgressTransition reads the frame and eases the fill between value steps. Muted track + primary indicator, optional floored percentage label.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/remocn-ui"],
+      "files": [
+        {
+          "path": "progress/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/progress.tsx"
+        },
+        {
+          "path": "progress/use-progress-transition.ts",
+          "type": "registry:component",
+          "target": "components/remocn/use-progress-transition.ts"
+        }
+      ]
+    },
+    {
+      "name": "skeleton-block",
+      "type": "registry:component",
+      "title": "UI Skeleton Block",
+      "description": "A shimmer placeholder block — a motion atom (spinner pattern). A directional highlight gradient sweeps across deterministically from useCurrentFrame() and loops seamlessly. Configurable width/height/radius/speed and base/highlight colors.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/remocn-ui"],
+      "files": [
+        {
+          "path": "skeleton-block/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/skeleton-block.tsx"
+        }
+      ]
+    },
+    {
+      "name": "skeleton",
+      "type": "registry:component",
+      "title": "UI Skeleton",
+      "description": "A skeleton→content crossfade whose loading/loaded state is a pure function of the timeline. The Skeleton renderer is pure (reads no frame); only the composed SkeletonBlock shimmer reads it. SkeletonStyle opacities sum to 1 so the box never dims; real children sit in normal flow and the placeholder (a lines/card layout or a custom node) is an absolute overlay.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/remocn-ui", "@remocn/skeleton-block"],
+      "files": [
+        {
+          "path": "skeleton/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/skeleton.tsx"
+        },
+        {
+          "path": "skeleton/use-skeleton-transition.ts",
+          "type": "registry:component",
+          "target": "components/remocn/use-skeleton-transition.ts"
+        }
+      ]
+    },
+    {
+      "name": "slider",
+      "type": "registry:component",
+      "title": "UI Slider",
+      "description": "A slider whose fill is a numeric value channel plus a thumb idle/hover/press channel (dual-channel value-channel deviation). The Slider renderer is pure (clamped 0–100 value, thumb scale, grab-ring opacity); useSliderTransition reads the frame and eases both channels — value as a numeric lerp, the thumb visual from its state presets. Muted track + primary range + bordered thumb with a derived grab ring.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/remocn-ui"],
+      "files": [
+        {
+          "path": "slider/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/slider.tsx"
+        },
+        {
+          "path": "slider/use-slider-transition.ts",
+          "type": "registry:component",
+          "target": "components/remocn/use-slider-transition.ts"
+        }
+      ]
+    },
+    {
+      "name": "combobox",
+      "type": "registry:component",
+      "title": "UI Combobox",
+      "description": "A combobox whose opened/closed state is a pure function of the timeline; the panel fade/scale/lift are keyframed presets like select. The trigger reuses the Input presets (typed query + caret reveal via an injected inputStyle), the list is filtered by a pure case-insensitive substring on the visible query prefix, and rows reuse the SelectItem row.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/remocn-ui", "@remocn/input", "@remocn/select-item"],
+      "files": [
+        {
+          "path": "combobox/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/combobox.tsx"
+        },
+        {
+          "path": "combobox/use-combobox-transition.ts",
+          "type": "registry:component",
+          "target": "components/remocn/use-combobox-transition.ts"
+        }
+      ]
+    },
+    {
+      "name": "popover",
+      "type": "registry:component",
+      "title": "UI Popover",
+      "description": "A popover/hover-card whose opened/closed state is a pure function of the timeline. The Popover renderer is a pure function of a PopoverStyle (opacity, scale, translate); usePopoverTransition eases both the open and the close. The static `side` prop sets the enter translate axis; renders title + description and/or arbitrary children in a popover card.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/remocn-ui"],
+      "files": [
+        {
+          "path": "popover/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/popover.tsx"
+        },
+        {
+          "path": "popover/use-popover-transition.ts",
+          "type": "registry:component",
+          "target": "components/remocn/use-popover-transition.ts"
+        }
+      ]
+    },
+    {
+      "name": "context-menu",
+      "type": "registry:component",
+      "title": "UI Context Menu",
+      "description": "A right-click context menu whose opened/closed state is a pure function of the timeline; the panel scales from its top-left corner (the click point) with a fade + lift. No trigger — the caller positions it. Rows reuse the DropdownMenuItem row; items are plain string labels.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/remocn-ui", "@remocn/dropdown-menu-item"],
+      "files": [
+        {
+          "path": "context-menu/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/context-menu.tsx"
+        },
+        {
+          "path": "context-menu/use-context-menu-transition.ts",
+          "type": "registry:component",
+          "target": "components/remocn/use-context-menu-transition.ts"
+        }
+      ]
+    },
+    {
+      "name": "toggle-group",
+      "type": "registry:component",
+      "title": "UI Toggle Group",
+      "description": "A segmented control whose active value is a pure function of the timeline; a raised thumb SLIDES between segments (position + width derived from a float indicator offset, no jumps) and the labels crossfade color via mixOklch. The tabs precedent without content panels.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/remocn-ui"],
+      "files": [
+        {
+          "path": "toggle-group/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/toggle-group.tsx"
+        },
+        {
+          "path": "toggle-group/use-toggle-group-transition.ts",
+          "type": "registry:component",
+          "target": "components/remocn/use-toggle-group-transition.ts"
+        }
+      ]
+    },
+    {
+      "name": "stepper",
+      "type": "registry:component",
+      "title": "UI Stepper",
+      "description": "A horizontal onboarding stepper whose progress is a pure function of a continuous step index (value-channel deviation). Every circle (fill, number, stroke-dash check) and connector (primary fill fraction) derives purely from the float position; useStepperTransition reads the frame and eases position between step indices.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/remocn-ui"],
+      "files": [
+        {
+          "path": "stepper/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/stepper.tsx"
+        },
+        {
+          "path": "stepper/use-stepper-transition.ts",
+          "type": "registry:component",
+          "target": "components/remocn/use-stepper-transition.ts"
+        }
+      ]
+    },
+    {
+      "name": "resizable",
+      "type": "registry:component",
+      "title": "UI Resizable",
+      "description": "Two panels split by a draggable handle, where the split ratio is a numeric channel plus a handle idle/hover/press channel (dual-channel value-channel deviation). The Resizable renderer is pure (clamped 0–1 ratio, handle scale, grab-ring opacity); useResizableTransition reads the frame and eases both channels — ratio as a numeric lerp, the handle visual from its state presets. Horizontal and vertical splits; 1px divider + centered grip pill with a derived grab ring.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/remocn-ui"],
+      "files": [
+        {
+          "path": "resizable/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/resizable.tsx"
+        },
+        {
+          "path": "resizable/use-resizable-transition.ts",
+          "type": "registry:component",
+          "target": "components/remocn/use-resizable-transition.ts"
+        }
+      ]
+    },
+    {
+      "name": "signup-flow",
+      "type": "registry:component",
+      "title": "UI Signup Flow",
+      "description": "A signup card composition: a real shadcn-style card (header, labeled Full Name / Email / Password / Confirm fields, primary + Google-outline buttons, sign-in footer) whose cursor fills each field top-to-bottom, then clicks Create account (hover → press → loading → success) as a success toast slides in. A pure orchestrator — every channel comes from a composed primitive's transition hook.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/remocn-ui", "@remocn/cursor", "@remocn/input", "@remocn/button", "@remocn/toast", "@remocn/field", "@remocn/blur-in"],
+      "files": [
+        {
+          "path": "signup-flow/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/signup-flow.tsx"
+        }
+      ]
+    },
+    {
+      "name": "ai-prompt-flow",
+      "type": "registry:component",
+      "title": "UI AI Prompt Flow",
+      "description": "An AI prompt composition: a prompt types into the field, the Generate button runs hover → press → loading, a skeleton shimmer reveals, then crossfades into the generated answer, and a ready toast slides in. A pure orchestrator — the shimmer is owned by the skeleton-block motion atom; every other channel comes from a composed primitive's hook.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/remocn-ui", "@remocn/input", "@remocn/button", "@remocn/skeleton", "@remocn/skeleton-block", "@remocn/toast"],
+      "files": [
+        {
+          "path": "ai-prompt-flow/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/ai-prompt-flow.tsx"
+        }
+      ]
+    },
+    {
+      "name": "checkout-flow",
+      "type": "registry:component",
+      "title": "UI Checkout Flow",
+      "description": "A cursor-driven checkout card: the card and its fields blur-in, then the pointer flips a billing-cycle toggle, types a card number, ticks the terms checkbox, and presses Pay through to success, ending in a toast. A pure orchestrator — every channel comes from a composed primitive's transition hook.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/remocn-ui", "@remocn/toggle-group", "@remocn/input", "@remocn/checkbox", "@remocn/button", "@remocn/field", "@remocn/blur-in", "@remocn/cursor", "@remocn/toast"],
+      "files": [
+        {
+          "path": "checkout-flow/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/checkout-flow.tsx"
+        }
+      ]
+    },
+    {
+      "name": "onboarding-stepper-flow",
+      "type": "registry:component",
+      "title": "UI Onboarding Stepper Flow",
+      "description": "A multi-step onboarding composition: a horizontal stepper advances through panels of input, radio, and switch fields, finishing on a Finish button that runs to success. Panel crossfade derives linearly from the stepper's exposed position channel; every other channel comes from a composed primitive's hook.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/remocn-ui", "@remocn/stepper", "@remocn/input", "@remocn/radio", "@remocn/switch", "@remocn/button"],
+      "files": [
+        {
+          "path": "onboarding-stepper-flow/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/onboarding-stepper-flow.tsx"
+        }
+      ]
+    },
+    {
+      "name": "settings-toggle-flow",
+      "type": "registry:component",
+      "title": "UI Settings Toggle Flow",
+      "description": "A two-column settings card: the card and its controls blur-in, then the cursor flips a switch, opens a select, drags a labeled slider, and clicks Save, ending in a saved toast. A pure orchestrator — every channel comes from a composed primitive's transition hook.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/remocn-ui", "@remocn/switch", "@remocn/select", "@remocn/slider", "@remocn/button", "@remocn/blur-in", "@remocn/cursor", "@remocn/toast"],
+      "files": [
+        {
+          "path": "settings-toggle-flow/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/settings-toggle-flow.tsx"
+        }
+      ]
+    }
+  ]
+}

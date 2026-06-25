@@ -1,0 +1,19 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "caret",
+  "title": "UI Caret",
+  "description": "A blinking text caret — a controlled vertical bar, or a pure motion atom that blinks deterministically from useCurrentFrame.",
+  "dependencies": [
+    "remotion"
+  ],
+  "registryDependencies": [],
+  "files": [
+    {
+      "path": "registry/remocn-ui/caret/index.tsx",
+      "content": "\"use client\";\n\nimport type { CSSProperties } from \"react\";\nimport { useCurrentFrame, useVideoConfig } from \"remotion\";\n\nexport interface CaretProps {\n  color?: string;\n  width?: number;\n  height?: number;\n  radius?: number;\n  opacity?: number;\n  blink?: boolean;\n  blinkPerSecond?: number;\n  speed?: number;\n  marginLeft?: number;\n  className?: string;\n  style?: CSSProperties;\n}\n\nexport function caretBlinkOpacity(\n  frame: number,\n  opts: { fps: number; blinkPerSecond: number; speed: number },\n): number {\n  const cycles = opts.blinkPerSecond <= 0 ? 1 : opts.blinkPerSecond;\n  const halfPeriod = opts.fps / cycles / 2;\n  if (halfPeriod <= 0) return 1;\n  return Math.floor((frame * opts.speed) / halfPeriod) % 2 === 0 ? 1 : 0;\n}\n\nexport function Caret({\n  color = \"currentColor\",\n  width = 2,\n  height = 18,\n  radius = 1,\n  opacity,\n  blink = false,\n  blinkPerSecond = 1,\n  speed = 1,\n  marginLeft = 0,\n  className,\n  style,\n}: CaretProps) {\n  const frame = useCurrentFrame();\n  const { fps } = useVideoConfig();\n\n  const resolvedOpacity =\n    opacity !== undefined\n      ? opacity\n      : blink\n        ? caretBlinkOpacity(frame, { fps, blinkPerSecond, speed })\n        : 1;\n\n  return (\n    <span\n      className={className}\n      style={{\n        display: \"inline-block\",\n        flexShrink: 0,\n        width,\n        height,\n        borderRadius: radius,\n        background: color,\n        opacity: resolvedOpacity,\n        marginLeft,\n        ...style,\n      }}\n    />\n  );\n}\n",
+      "type": "registry:component",
+      "target": "components/remocn/caret.tsx"
+    }
+  ],
+  "type": "registry:component"
+}

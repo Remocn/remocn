@@ -1,0 +1,80 @@
+---
+title: Spinner
+description: A deterministic spinning arc — pure function of the Remotion frame
+---
+
+<ComponentPreview name="spinner" />
+
+A **motion atom**: a looping animation that is a pure function of `useCurrentFrame()`. No states, no props to sequence — just a spinning arc that advances deterministically with the timeline. Safe in Remotion's headless per-frame renderer (no `Date`, `Math.random`, or `requestAnimationFrame`).
+
+## Installation
+
+<InstallBlock name="spinner" />
+
+<Note>
+`spinner` is also installed automatically when you install `button`, via `registryDependencies`.
+</Note>
+
+## Usage
+
+Minimal — inherits color from the surrounding text:
+
+```tsx
+import { Spinner } from "@/components/remocn/spinner";
+
+export const Scene = () => <Spinner />;
+```
+
+Sized and colored explicitly:
+
+```tsx
+import { Spinner } from "@/components/remocn/spinner";
+
+export const Scene = () => (
+  <Spinner size={32} color="oklch(0.55 0.2 250)" speed={1.5} />
+);
+```
+
+## How rotation works
+
+```
+rotation (deg) = frame × speed × 6
+```
+
+At 30 fps with `speed=1`, one full rotation takes 20 frames (2 frames per 12°). Increase `speed` to spin faster without changing the composition fps.
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "size",
+      type: "number",
+      default: "20",
+      description: "Width and height of the SVG in px.",
+    },
+    {
+      name: "color",
+      type: "string",
+      default: "\"currentColor\"",
+      description: "Stroke color. Defaults to currentColor so it inherits the surrounding text color.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Scales the playhead. rotation = frame × speed × 6 (deg). speed=2 spins twice as fast.",
+    },
+    {
+      name: "strokeWidth",
+      type: "number",
+      default: "2.5",
+      description: "Arc stroke width in viewBox units (viewBox is 0 0 24 24).",
+    },
+    {
+      name: "className",
+      type: "string",
+      description: "Optional className passed to the SVG element.",
+    },
+  ]}
+/>

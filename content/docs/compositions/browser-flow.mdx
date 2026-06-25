@@ -32,6 +32,19 @@ export const RemotionRoot = () => (
 );
 ```
 
+### With Backdrop
+
+Renders transparent — supply the background via `Backdrop`:
+
+```tsx
+import { Backdrop } from "@/components/remocn/backdrop";
+import { BrowserFlow } from "@/components/remocn/browser-flow";
+
+<Backdrop fill={{ type: "gradient", value: "radial-gradient(ellipse at center, #11141c 0%, #050505 75%)" }}>
+  <BrowserFlow url="remocn.dev" />
+</Backdrop>
+```
+
 ## Props
 
 <PropsTable

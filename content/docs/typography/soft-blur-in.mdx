@@ -1,0 +1,104 @@
+---
+title: Soft Blur In
+description: Per-character fade-in with a gentle blur and upward motion
+---
+
+<ComponentPreview name="soft-blur-in" />
+
+## Installation
+
+<InstallBlock name="soft-blur-in" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { SoftBlurIn } from "@/components/remocn/soft-blur-in";
+
+const SoftBlurInScene = () => (
+  <SoftBlurIn text="Think different." blur={12} fontSize={72} />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="SoftBlurIn"
+    component={SoftBlurInScene}
+    durationInFrames={60}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+### With Backdrop
+
+The component renders transparent — supply the background via `Backdrop`. It ships single-theme; edit the copied file to re-theme colors.
+
+Pair with `Backdrop` to place the text inside a full-frame fill with a rounded, shadowed content frame:
+
+```tsx
+import { Composition } from "remotion";
+import { SoftBlurIn } from "@/components/remocn/soft-blur-in";
+import { Backdrop } from "@/components/remocn/backdrop";
+
+const SoftBlurInScene = () => (
+  <Backdrop fill={{ type: "color", value: "#ffffff" }}>
+    <SoftBlurIn text="Think different." blur={12} fontSize={72} />
+  </Backdrop>
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="SoftBlurIn"
+    component={SoftBlurInScene}
+    durationInFrames={60}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "text",
+      type: "string",
+      required: true,
+      description: "The text to reveal",
+    },
+    {
+      name: "blur",
+      type: "number",
+      default: "12",
+      description: "Initial blur radius in pixels. Animates down to 0 per character.",
+    },
+    {
+      name: "fontSize",
+      type: "number",
+      default: "72",
+      description: "Font size in pixels",
+    },
+    {
+      name: "fontWeight",
+      type: "number",
+      default: "600",
+      description: "CSS font-weight",
+    },
+    {
+      name: "color",
+      type: "string",
+      default: "\"#171717\"",
+      description: "Text color (any valid CSS color)",
+    },
+    {
+      name: "className",
+      type: "string",
+      description: "Optional className passed to the underlying span",
+    },
+  ]}
+/>

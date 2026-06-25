@@ -1,0 +1,91 @@
+---
+title: CheckoutFlow
+description: A cursor-driven checkout card with a pricing toggle, card input, terms checkbox, and payment confirmation
+---
+
+<BlockPreview name="checkout-flow" />
+
+A composition scene rendered as a real checkout card. The card and its fields blur-in in sequence, then a cursor flips the billing toggle monthly → yearly, types the card number, ticks the terms checkbox, and presses Pay through loading to success — finishing with a success toast. A pure orchestrator: every animated channel comes from a composed primitive's transition hook.
+
+## Installation
+
+<InstallBlock name="checkout-flow" />
+
+<Note>
+Installing `checkout-flow` automatically installs the shared `remocn-ui` core and all composed primitives via `registryDependencies`: toggle-group, input, checkbox, button, field, blur-in, cursor, and toast. You do not need to install them separately.
+</Note>
+
+## Composed primitives
+
+- **Blur-in** — staggered reveal of the card, header, and each field
+- **Toggle-group** — segmented control for plan selection
+- **Input** — card number reveal, then a static filled (blur) resting state
+- **Checkbox** — terms acceptance with a draw-on checkmark
+- **Button** — primary Pay action with hover/press/loading/success states
+- **Field** — labeled layout slots for the controls
+- **Cursor** — animated pointer with click ripples
+- **Toast** — payment confirmation message
+
+## Timeline narrative
+
+The card surface fades in place (frames 0–18), then the header and each field blur-in staggered, all settling by frame 58. At frame 64 the cursor clicks the Yearly segment and the toggle thumb slides to it. At frame 96 the cursor focuses the card-number field, which types in from frame 100 to 140, then settles to its static filled state as the cursor leaves at 150 — the same frame the terms checkbox is clicked and ticks. At frame 180 the cursor presses Pay: hover → press → loading (186) → success (224). The success toast slides in at frame 224 and auto-dismisses at frame 286.
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "title",
+      type: "string",
+      default: "\"Upgrade your plan\"",
+      description: "Card title shown in the header.",
+    },
+    {
+      name: "description",
+      type: "string",
+      default: "\"Complete your purchase to unlock every feature.\"",
+      description: "Supporting line under the title.",
+    },
+    {
+      name: "plans",
+      type: "{value: string; label: string}[]",
+      default: "[{value:\"monthly\",label:\"Monthly\"},{value:\"yearly\",label:\"Yearly\"}]",
+      description: "Array of pricing plan options for the toggle-group. The first is the resting selection.",
+    },
+    {
+      name: "cardLabel",
+      type: "string",
+      default: "\"Card number\"",
+      description: "Label rendered above the card-number input.",
+    },
+    {
+      name: "cardPlaceholder",
+      type: "string",
+      default: "\"4242 4242 4242 4242\"",
+      description: "Card number value revealed by the typing input.",
+    },
+    {
+      name: "termsLabel",
+      type: "string",
+      default: "\"I accept the terms and conditions\"",
+      description: "Text shown beside the terms checkbox.",
+    },
+    {
+      name: "payLabel",
+      type: "string",
+      default: "\"Pay $49\"",
+      description: "Text displayed on the primary Pay button.",
+    },
+    {
+      name: "toastTitle",
+      type: "string",
+      default: "\"Payment successful\"",
+      description: "Success message shown in the toast.",
+    },
+    {
+      name: "theme",
+      type: "RemocnTheme",
+      description: "Optional theme override (concrete oklch/hex/rgb values).",
+    },
+  ]}
+/>

@@ -3,13 +3,14 @@
 import { ArrowRight, Check } from "lucide-react";
 import { motion } from "motion/react";
 import Link from "next/link";
-import { type CSSProperties, useRef, useState } from "react";
+import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { SECTION, SPRING_BOUNCE, SPRING_SOFT } from "@/config/landing";
+import { SPRING_BOUNCE, SPRING_SOFT } from "@/config/site";
 import { type BillingMode, type Tier, tiers } from "@/config/sponsors";
 import { cn } from "@/lib/utils";
+import { SpotlightSurface } from "@/components/spotlight-surface";
 import { FadeUp } from "../../../components/fade-up";
 
 function BillingToggle({
@@ -29,8 +30,9 @@ function BillingToggle({
       {options.map((opt) => {
         const active = opt.id === value;
         return (
-          <button
+          <Button
             key={opt.id}
+            variant="ghost"
             type="button"
             onClick={() => onChange(opt.id)}
             className={cn(
@@ -48,7 +50,7 @@ function BillingToggle({
               />
             )}
             <span className="relative">{opt.label}</span>
-          </button>
+          </Button>
         );
       })}
     </div>
@@ -146,19 +148,10 @@ function TierCard({
 
 export function Tiers() {
   const [billingMode, setBillingMode] = useState<BillingMode>("monthly");
-  const gridRef = useRef<HTMLDivElement>(null);
-
-  const handleMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const target = gridRef.current;
-    if (!target) return;
-    const rect = target.getBoundingClientRect();
-    target.style.setProperty("--mx", `${e.clientX - rect.left}px`);
-    target.style.setProperty("--my", `${e.clientY - rect.top}px`);
-  };
 
   return (
     <section id="tiers" className="relative py-20 sm:py-24">
-      <div className={SECTION}>
+      <div className="section">
         <FadeUp>
           <div className="mb-10 flex justify-center">
             <BillingToggle value={billingMode} onChange={setBillingMode} />
@@ -166,19 +159,13 @@ export function Tiers() {
         </FadeUp>
 
         <FadeUp delay={0.1}>
-          {/* biome-ignore lint/a11y/noStaticElementInteractions: spotlight cursor tracking is purely visual */}
-          <div
-            ref={gridRef}
-            onMouseMove={handleMove}
-            className="grid gap-6 md:grid-cols-3"
-            style={{ "--mx": "50%", "--my": "50%" } as CSSProperties}
-          >
+          <SpotlightSurface className="grid gap-6 md:grid-cols-3">
             {tiers.map((tier, i) => (
               <FadeUp key={tier.id} delay={i * 0.08}>
                 <TierCard tier={tier} billingMode={billingMode} />
               </FadeUp>
             ))}
-          </div>
+          </SpotlightSurface>
         </FadeUp>
       </div>
     </section>

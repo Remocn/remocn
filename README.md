@@ -2,30 +2,11 @@
   <img src="./public/hero.png" alt="remocn — shadcn registry for Remotion" />
 </p>
 
-# remocn
+![GitHub Health](https://shieldcn.dev/group/github/stars/kapishdima/remocn+github/forks/kapishdima/remocn+badge/%E2%9D%A4%EF%B8%8F%20Sponsor-this%20project-FF69B4.svg?variant=secondary)
 
-> A shadcn registry of production-ready animations, transitions, backgrounds, and scenes for [Remotion](https://www.remotion.dev/).
+# Remocn
 
 remocn is a copy-paste component library for building videos in Remotion. Instead of writing every fade, wipe, and kinetic title from scratch, you `npx shadcn add` a polished primitive into your project and own the code. Built for solo builders and small teams who need a product demo video shipped today, not next week.
-
-## Why remocn
-
-- **Remotion has no batteries-included component library** You either build every animation from scratch or copy snippets from blog posts. remocn gives you a curated registry of primitives and full scenes that just work.
-- **Polished motion is hard** Easing curves, spring physics, transition timing — remocn ships components that already feel right, so you can focus on storytelling instead of tuning `interpolate()` calls.
-- **You own the code** Components are copied into your repo (shadcn philosophy). No runtime dependency, no version lock-in, no black box — tweak anything you want.
-- **Solo builders need demo videos fast** Compose a launch trailer, changelog clip, or feature walkthrough from prebuilt blocks in an afternoon.
-
-## What's inside
-
-64+ components across five categories:
-
-- **Text animations** — Blur Reveal, Typewriter, Shimmer Sweep, Tracking In, Slot Machine Roll, Matrix Decode, RGB Glitch Text, Kinetic Type Mask, Marker Highlight, Infinite Marquee, and more
-- **Backgrounds & visual primitives** — Mesh Gradient Background, Dynamic Grid, Spring Pop In, Pulsing Indicator
-- **Transitions & wipes** — Chromatic Aberration Wipe, Frosted Glass Wipe, Directional Wipe, Grid Pixelate, Spatial Push, Zoom Through Transition
-- **UI blocks** — Glass Code Block, Terminal Simulator, Browser Flow, Toast Notification, Animated Charts, Code Diff Wipe, Device Mockup Zoom, Simulated Cursor, Morphing Modal, Progress Steps
-- **Full compositions** — Product Launch Trailer, Hero Device Assemble, Changelog Bite, Pricing Tier Focus, Landing Code Showcase, Terminal to Browser Deploy, Live Code Compilation
-
-Browse the full catalog with interactive previews at [remocn.dev](https://remocn.dev).
 
 ## Installation
 
@@ -35,27 +16,24 @@ Remotion is a prerequisite — set up a Remotion project first if you don't have
 npx shadcn@latest add @remocn/blur-reveal
 ```
 
-The component lands in `components/remocn/blur-reveal.tsx` and is yours to edit.
+## Why remocn
 
-## Local development
+- **Remotion has no batteries-included component library** You either build every animation from scratch or copy snippets from blog posts. remocn gives you a curated registry of primitives and full scenes that just work.
+- **Polished motion is hard** Easing curves, spring physics, transition timing - remocn ships components that already feel right, so you can focus on storytelling instead of tuning `interpolate()` calls.
+- **You own the code** Components are copied into your repo (shadcn philosophy). No runtime dependency, no version lock-in, no black box - tweak anything you want.
+- **Solo builders need demo videos fast** Compose a launch trailer, changelog clip, or feature walkthrough from prebuilt blocks in an afternoon.
 
-This repo is a single Next.js app that hosts both the landing page / docs and the registry endpoint at `/r/[name]`.
+## What's inside
 
-```bash
-bun install              # install dependencies
-bun dev                  # run the site locally
-bun run registry:build   # rebuild the shadcn registry JSON
-bun run lint             # biome check
-```
+110+ components, split between scene-ready animations and timeline-driven UI primitives:
 
-## Tech stack
+- **Typography** — Soft Blur In, Per Character Rise, Tracking In, Typewriter, Shimmer Sweep, Marker Highlight, Slot Machine Roll, Matrix Decode, RGB Glitch Text, Number Wheel, Rolling Number, Infinite & Perspective Marquee, and 30+ more text effects
+- **Transitions & wipes** — Zoom Through, Device Mockup Zoom, Image Expand to Fullscreen, Directional Wipe, Spatial Push, Frosted Glass Wipe, Grid Pixelate Wipe, Chromatic Aberration Wipe
+- **Environment & effects** — Mesh Gradient Background, Dynamic Grid, Spotlight Card, Confetti, Backdrop
+- **UI blocks** — Glass Code Block, Terminal Simulator, Code Accordion, Code Diff Wipe, Tool Menu Slide In, Animated Line & Bar Charts, Drag and Drop Flow
+- **AI scenes** — Claude Chat, ChatGPT, v0, Claude Code, OpenCode
+- **Social** — GitHub Stars, X Follow Card, X Followers Overview
+- **Compositions** — Hero Device Assemble, Ecosystem Constellation, Infinite Bento Pan, Browser Flow, AI Generation Canvas, Live Code Compilation, Terminal to Browser Deploy, Dashboard Populate, Pricing Tier Focus
+- **UI primitives** (`remocn-ui`) — timeline-driven, shadcn-style atoms: Button, Accordion, Dialog, Drawer, Sheet, Select, Dropdown Menu, Command Menu, Tabs, Tooltip, Toast, Popover, Slider, Stepper, Resizable, and full flows (Signup, Checkout, Settings Toggle)
 
-- [Remotion](https://www.remotion.dev/) 4.0 + `@remotion/player` for in-browser previews
-- [Next.js](https://nextjs.org/) 16 + React 19
-- [Tailwind CSS](https://tailwindcss.com/) 4
-- [Fumadocs](https://fumadocs.vercel.app/) for documentation
-- [shadcn](https://ui.shadcn.com/) registry format
-
-## License
-
-MIT. Open core — primitives and base compositions are free forever. Premium blocks and a video builder are on the roadmap.
+Browse the full catalog with interactive previews at [remocn.dev](https://remocn.dev)

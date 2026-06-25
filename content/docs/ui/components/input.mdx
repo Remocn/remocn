@@ -1,0 +1,242 @@
+---
+title: Input
+description: An input field whose visual state is a pure function of the timeline
+---
+
+<UiComponentPreview name="input" />
+
+A state atom whose appearance (idle, hover, active, typing, blur, invalid) is a pure function of the `state` prop. Pass a state directly or drive it from the Remotion timeline via `useCurrentState`. The component reads no frame — only the state value you give it.
+
+## Installation
+
+<InstallBlock name="input" />
+
+<Note>
+Installing `input` automatically installs the shared `remocn-ui` core (`lib/remocn-ui/`) via `registryDependencies`. You do not need to install it separately.
+</Note>
+
+## States
+
+`InputState` is:
+
+```ts
+type InputState =
+  | "idle"     // resting, theme border, no ring, placeholder shown, no caret
+  | "hover"    // border darkens slightly, subtle muted bg wash, no ring
+  | "active"   // focused, focus ring appears, border = ring, caret visible, placeholder still shown
+  | "typing"   // focused, value text reveals (typewriter), caret at end, placeholder faded out
+  | "blur"     // filled but unfocused: value fully shown + static, no ring, no caret, resting border
+  | "invalid"  // destructive border + destructive ring, value shown, no caret
+```
+
+`hover` subtly lifts the visual weight with a darkened border and a wash of the muted background. `active` shows the focus ring and caret but the field is still empty (placeholder visible). `typing` animates the value text reveal and fades out the placeholder. `blur` is the filled-but-unfocused resting state — the value stays fully shown and static (a `typing → blur` transition never un-types the value), but the focus ring and caret are gone and the border relaxes to its idle tone. `invalid` uses the destructive color tokens for both border and ring.
+
+## Snap usage (simple path)
+
+Pass `state` directly — the component snaps instantly to that visual. Useful for static previews or when you drive state from your own logic:
+
+```tsx
+import { Input } from "@/components/remocn/input";
+
+export const Scene = () => <Input state="typing" />;
+```
+
+To drive state from the timeline, use `useCurrentState`:
+
+```tsx
+import { useCurrentState } from "@/lib/remocn-ui";
+import { Input } from "@/components/remocn/input";
+
+export const Scene = () => {
+  const state = useCurrentState(
+    [
+      { at: 10, state: "hover" },
+      { at: 24, state: "active" },
+      { at: 40, state: "typing" },
+      { at: 78, state: "invalid" },
+    ],
+    "idle",
+  );
+
+  return <Input state={state} />;
+};
+```
+
+Each `at` is a **Sequence-local authored frame**. State persists between steps: `hover` at frame 10 keeps the input lifted until `active` fires at frame 24. See [Concepts](/docs/ui/concepts) for the full `useCurrentState` API.
+
+## Smooth transitions (opt-in)
+
+State changes via `state` snap with no cross-fade. For animated transitions, use `useInputTransition` from the copied `use-input-transition.ts` file. It reads the frame, interpolates between state presets, and returns a resolved `InputStyle` — pass it to the `style` prop:
+
+```tsx
+import { Input } from "@/components/remocn/input";
+import { useInputTransition } from "@/components/remocn/use-input-transition";
+
+export const Scene = () => {
+  const style = useInputTransition([
+    { at: 10, state: "hover", duration: 8 },
+    { at: 24, state: "active", duration: 10 },
+    { at: 40, state: "typing", duration: 22 },
+    { at: 78, state: "invalid", duration: 12 },
+  ]);
+  return <Input style={style} />;
+};
+```
+
+The `duration` field on each step overrides the file's `DEFAULT_DURATION` for that specific transition. To globally tune timing and easing, edit `use-input-transition.ts` directly in your project — that file is yours (shadcn "own your code" philosophy).
+
+`style` takes precedence over `state` when both are provided.
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "state",
+      type: "\"idle\" | \"hover\" | \"active\" | \"typing\" | \"blur\" | \"invalid\"",
+      default: "\"idle\"",
+      description: "Current visual state (snap path). State changes snap — no automatic cross-fade.",
+    },
+    {
+      name: "style",
+      type: "InputStyle",
+      description: "Resolved animated visual (smooth path). Pass an interpolated InputStyle from useInputTransition. Takes precedence over state when provided.",
+    },
+    {
+      name: "placeholder",
+      type: "string",
+      default: "\"you@example.com\"",
+      description: "Placeholder text shown while the field is empty (idle/hover/active).",
+    },
+    {
+      name: "value",
+      type: "string",
+      default: "\"remotion@remocn.dev\"",
+      description: "The typed value revealed in the typing/invalid states. Reveals character-by-character (typewriter); the caret sits a fixed 4px after the last visible glyph.",
+    },
+    {
+      name: "size",
+      type: "\"sm\" | \"default\" | \"lg\"",
+      default: "\"default\"",
+      description: "Field height and padding preset. sm=36px, default=40px, lg=48px.",
+    },
+    {
+      name: "theme",
+      type: "Partial<RemocnTheme>",
+      description: "Per-component theme override. Merges with the active RemocnUIProvider theme and the mode defaults. Must be concrete oklch/hex/rgb values — not CSS custom properties.",
+    },
+    {
+      name: "mode",
+      type: "\"light\" | \"dark\"",
+      default: "\"light\"",
+      description: "Sets the base palette. Overrides the mode on RemocnUIProvider when both are present.",
+    },
+    {
+      name: "primary",
+      type: "string",
+      description: "Convenience override for the primary theme token. Merged into theme — saves a theme object for single-token changes.",
+    },
+    {
+      name: "className",
+      type: "string",
+      description: "Optional className passed to the input wrapper element.",
+    },
+  ]}
+/>
+
+## Field — composing labeled inputs
+
+`Field` is a small static layout family for building labeled form rows, modeled on
+[shadcn's Field](https://ui.shadcn.com/docs/components/radix/field). It reads no
+frame and holds no state — colors come from the resolved theme — so it composes
+cleanly inside Remotion scenes (it is what the `signup-flow` block uses to lay out
+its form). It ships as its own registry item.
+
+<InstallBlock name="field" />
+
+### Structure
+
+- **`FieldGroup`** — stacks multiple `Field`s in a column with uniform vertical rhythm (`gap`, default 16).
+- **`Field`** — one field: label + control + optional description, stacked (`gap`, default 6).
+- **`FieldLabel`** — the label (foreground, medium weight, single line).
+- **`FieldControl`** — a relative, fixed-height slot (`height`, default 40) for a control. remocn-ui controls (`Input`, `Button`) render `position:absolute; inset:0`, so they go **inside** `FieldControl`, which it fills.
+- **`FieldDescription`** — muted helper text under a control, or a centered footer line (`align="center"`).
+
+### Usage
+
+```tsx
+import { Input } from "@/components/remocn/input";
+import { useInputTransition } from "@/components/remocn/use-input-transition";
+import {
+  Field,
+  FieldControl,
+  FieldDescription,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/remocn/field";
+
+export const Scene = () => {
+  const style = useInputTransition([
+    { at: 10, state: "active", duration: 6 },
+    { at: 12, state: "typing", duration: 24 },
+  ]);
+
+  return (
+    <FieldGroup>
+      <Field>
+        <FieldLabel>Email</FieldLabel>
+        <FieldControl>
+          <Input placeholder="m@example.com" value="m@example.com" style={style} />
+        </FieldControl>
+        <FieldDescription>We'll use this to contact you.</FieldDescription>
+      </Field>
+    </FieldGroup>
+  );
+};
+```
+
+### Props
+
+<PropsTable
+  rows={[
+    {
+      name: "FieldGroup.gap",
+      type: "number",
+      default: "16",
+      description: "Vertical space (px) between stacked fields.",
+    },
+    {
+      name: "Field.gap",
+      type: "number",
+      default: "6",
+      description: "Vertical space (px) between the label, control, and description.",
+    },
+    {
+      name: "FieldControl.height",
+      type: "number",
+      default: "40",
+      description: "Slot height (px); the absolute control fills it. Match it to the control's size.",
+    },
+    {
+      name: "FieldDescription.align",
+      type: "\"start\" | \"center\"",
+      default: "\"start\"",
+      description: "Text alignment within the field column (use center for a footer line).",
+    },
+    {
+      name: "mode",
+      type: "\"light\" | \"dark\"",
+      description: "Color mode for FieldLabel / FieldDescription text (forwarded to useRemocnTheme).",
+    },
+    {
+      name: "theme",
+      type: "Partial<RemocnTheme>",
+      description: "Theme override for FieldLabel / FieldDescription colors. Concrete oklch/hex/rgb values.",
+    },
+    {
+      name: "style",
+      type: "CSSProperties",
+      description: "Optional inline-style passthrough merged last on any Field part.",
+    },
+  ]}
+/>

@@ -32,6 +32,19 @@ export const RemotionRoot = () => (
 );
 ```
 
+### With Backdrop
+
+Renders transparent — supply the background via `Backdrop`:
+
+```tsx
+import { Backdrop } from "@/components/remocn/backdrop";
+import { SpotlightCard } from "@/components/remocn/spotlight-card";
+
+<Backdrop fill={{ type: "color", value: "#050505" }}>
+  <SpotlightCard title="Your feature" body="Two-line description goes here." />
+</Backdrop>
+```
+
 ## Props
 
 <PropsTable
@@ -71,12 +84,6 @@ export const RemotionRoot = () => (
       type: "number",
       default: "0.08",
       description: "Maximum alpha of the surface glow. Keep this low to stay lunar.",
-    },
-    {
-      name: "background",
-      type: "string",
-      default: "\"#050505\"",
-      description: "Page background color around the card",
     },
     {
       name: "cardColor",

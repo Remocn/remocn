@@ -8,7 +8,6 @@ export interface GlassCodeBlockProps {
   width?: number;
   height?: number;
   fontSize?: number;
-  background?: string;
   glassColor?: string;
   staggerFrames?: number;
   showTrafficLights?: boolean;
@@ -99,7 +98,6 @@ export function GlassCodeBlock({
   width = 760,
   height = 460,
   fontSize = 16,
-  background = "#0a0a0a",
   glassColor = "rgba(10, 10, 10, 0.6)",
   staggerFrames = 4,
   showTrafficLights = true,
@@ -114,7 +112,6 @@ export function GlassCodeBlock({
       style={{
         position: "absolute",
         inset: 0,
-        background,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",

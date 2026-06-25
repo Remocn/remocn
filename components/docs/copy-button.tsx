@@ -2,6 +2,7 @@
 
 import { Check, Copy } from "lucide-react";
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 export function CopyButton({
@@ -16,8 +17,9 @@ export function CopyButton({
   const [copied, setCopied] = useState(false);
 
   return (
-    <button
-      type="button"
+    <Button
+      variant="outline"
+      size="icon-xs"
       aria-label="Copy to clipboard"
       onClick={() => {
         navigator.clipboard.writeText(value);
@@ -26,11 +28,11 @@ export function CopyButton({
         setTimeout(() => setCopied(false), 1500);
       }}
       className={cn(
-        "inline-flex size-7 items-center justify-center rounded-md border border-fd-border bg-fd-background text-fd-muted-foreground transition-colors hover:bg-fd-accent hover:text-fd-accent-foreground",
+        "border-fd-border bg-fd-background text-fd-muted-foreground hover:bg-fd-accent hover:text-fd-accent-foreground",
         className,
       )}
     >
       {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
-    </button>
+    </Button>
   );
 }

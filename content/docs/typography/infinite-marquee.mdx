@@ -32,6 +32,19 @@ export const RemotionRoot = () => (
 );
 ```
 
+### With Backdrop
+
+Renders transparent — supply the background via `Backdrop`:
+
+```tsx
+import { Backdrop } from "@/components/remocn/backdrop";
+import { InfiniteMarquee } from "@/components/remocn/infinite-marquee";
+
+<Backdrop fill={{ type: "color", value: "#fafafa" }}>
+  <InfiniteMarquee text="ship · build · animate · " pixelsPerFrame={4} stroke />
+</Backdrop>
+```
+
 ## Props
 
 <PropsTable
@@ -77,12 +90,6 @@ export const RemotionRoot = () => (
       type: "string",
       default: "\"#171717\"",
       description: "Stroke color used when `stroke` is true",
-    },
-    {
-      name: "background",
-      type: "string",
-      default: "\"#fafafa\"",
-      description: "Background color of the root container",
     },
     {
       name: "speed",

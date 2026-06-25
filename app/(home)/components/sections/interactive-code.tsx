@@ -1,6 +1,6 @@
 "use client";
 
-import { Player } from "@remotion/player";
+import { Player, type PlayerRef } from "@remotion/player";
 import { motion } from "motion/react";
 import {
   type KeyboardEvent,
@@ -10,22 +10,16 @@ import {
   useRef,
   useState,
 } from "react";
-import { SECTION, SPRING_SOFT } from "@/config/landing";
+import { SPRING_SOFT } from "@/config/site";
 import { useTrackEvent } from "@/lib/analytics";
+import { TYPEWRITER_DEFAULTS } from "@/lib/config/snippets";
 import registry from "@/registry/__index__";
 import { FadeUp } from "../fade-up";
 import { SectionHeading } from "../section-heading";
 import { SYNTAX_DARK, TypewriterCodeBlock } from "../typewriter-code-block";
+import { useAutoplay } from "../use-autoplay";
 
 const COMPONENT = "typewriter";
-
-const DEFAULTS = {
-  text: "Ship it in React",
-  fontSize: 104,
-  color: "#171717",
-  fontWeight: 700,
-  cursor: true,
-};
 
 const CHIP =
   "rounded-[5px] bg-white/[0.07] px-1 align-baseline outline-none ring-1 ring-transparent transition-colors hover:bg-white/[0.12] focus-visible:bg-white/[0.12] focus-visible:ring-white/30";
@@ -260,12 +254,15 @@ function ToggleBool({
 
 export function InteractiveCode() {
   const entry = registry[COMPONENT];
+  const playerRef = useRef<PlayerRef>(null);
 
-  const [text, setText] = useState(DEFAULTS.text);
-  const [fontSize, setFontSize] = useState(DEFAULTS.fontSize);
-  const [color, setColor] = useState(DEFAULTS.color);
-  const [fontWeight, setFontWeight] = useState(DEFAULTS.fontWeight);
-  const [cursor, setCursor] = useState(DEFAULTS.cursor);
+  useAutoplay(playerRef, Boolean(entry));
+
+  const [text, setText] = useState(TYPEWRITER_DEFAULTS.text);
+  const [fontSize, setFontSize] = useState(TYPEWRITER_DEFAULTS.fontSize);
+  const [color, setColor] = useState(TYPEWRITER_DEFAULTS.color);
+  const [fontWeight, setFontWeight] = useState(TYPEWRITER_DEFAULTS.fontWeight);
+  const [cursor, setCursor] = useState(TYPEWRITER_DEFAULTS.cursor);
 
   const trackEvent = useTrackEvent();
   const timers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
@@ -302,7 +299,7 @@ export function InteractiveCode() {
 
   return (
     <section id="showcase" className="relative py-20 sm:py-20">
-      <div className={SECTION}>
+      <div className="section">
         <SectionHeading
           eyebrow="It's just props"
           title="Tweak it live"
@@ -364,6 +361,7 @@ export function InteractiveCode() {
               <div className="w-full" style={{ aspectRatio }}>
                 {entry ? (
                   <Player
+                    ref={playerRef}
                     component={entry.Component}
                     inputProps={inputProps}
                     durationInFrames={entry.config.durationInFrames}
@@ -371,8 +369,8 @@ export function InteractiveCode() {
                     compositionWidth={entry.config.compositionWidth}
                     compositionHeight={entry.config.compositionHeight}
                     style={{ width: "100%", height: "100%", display: "block" }}
-                    autoPlay
                     loop
+                    initiallyMuted
                     acknowledgeRemotionLicense
                   />
                 ) : null}

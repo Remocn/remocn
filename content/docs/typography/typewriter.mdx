@@ -17,7 +17,7 @@ import { Composition } from "remotion";
 import { Typewriter } from "@/components/remocn/typewriter";
 
 const TypewriterScene = () => (
-  <Typewriter text="Hello, world" speed={20} fontSize={72} />
+  <Typewriter text="Hello, world" charsPerSecond={22} fontSize={72} />
 );
 
 export const RemotionRoot = () => (
@@ -49,9 +49,9 @@ export const RemotionRoot = () => (
       description: "Whether to render the blinking cursor at the end",
     },
     {
-      name: "speed",
+      name: "charsPerSecond",
       type: "number",
-      default: "20",
+      default: "22",
       description: "Typing speed in characters per second",
     },
     {

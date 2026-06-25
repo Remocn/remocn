@@ -1,0 +1,182 @@
+---
+title: Concepts
+description: The mental model behind remocn-ui primitives — atoms, timeline hooks, theming, and core exports
+---
+
+## Two kinds of atom
+
+### State atoms
+
+**State atoms** (Button, Input, Checkbox, Switch) are pure visual functions of `(state | style, theme)`. They read no frame, hold no internal clock, and snap instantly between named states. The component accepts either a `state` (named preset, snap path) or a `style` (resolved, interpolated visual, smooth path) — but never reads the frame itself. The state or style value comes from outside: a direct prop, `useCurrentState`, or a transition hook (see below).
+
+**Purity boundary:** `useCurrentFrame()` is never called inside a state atom. Frame resolution happens in the caller — either in `useCurrentState`, `useStateTransition`, or a component's transition hook like `useButtonTransition`. This keeps every state atom safe as a pure renderer.
+
+### Motion atoms
+
+**Motion atoms** (Spinner) loop on `useCurrentFrame()` with no discrete states. They are pure functions of the frame and safe in Remotion's headless renderer — no `Date`, no `Math.random`, no `requestAnimationFrame`. Spinner is the first motion atom in this tier.
+
+## Timeline hooks
+
+### `useCurrentState` — snap resolution
+
+`useCurrentState` resolves the current state as a **latest-step-wins fold**: it scans the steps array and returns the `state` of the last step whose `at` is at or before the current effective frame.
+
+```ts
+function useCurrentState<S extends string>(
+  steps: Step<S>[],
+  defaultState: S,
+  speed?: number,
+): S
+```
+
+- `defaultState` is returned before the first step fires.
+- `speed` scales the playhead: `effectiveFrame = currentFrame * speed`. A step at `{ at: 30 }` with `speed: 2` activates at render frame 15.
+- `at` values are always **Sequence-local authored frames** — if the component sits inside `<Sequence from={30}>`, Remotion shifts the playhead automatically.
+
+### `useStateTransition` — smooth resolution
+
+`useStateTransition` is the lower-level resolver used by transition hooks. It returns the `from` state, the `to` state, and a `progress` value (0 → 1) over the transition window. Transition hooks call this and blend the visuals; you generally do not call it directly.
+
+```ts
+function useStateTransition<S extends string>(
+  steps: Step<S>[],
+  defaultState: S,
+  speed?: number,
+  defaultDuration?: number,
+): { from: S; to: S; progress: number }
+```
+
+- `defaultDuration` — frames to animate into a step that omits `duration`. Defaults to `8`.
+- `progress` ramps from 0 to 1 over `[step.at, step.at + duration)`, then holds at 1.
+- Ties on `at` resolve later-array-wins (same as `useCurrentState`).
+
+### `Step`
+
+```ts
+interface Step<S extends string = string> {
+  /** Sequence-local frame at which this state becomes active. */
+  at: number;
+  /** The state value to enter at this frame. */
+  state: S;
+  /** Frames to animate the transition INTO this state. Omitted → caller's defaultDuration. */
+  duration?: number;
+}
+```
+
+### `useTypewriter` — typed text reveal
+
+`useTypewriter` is the shared typewriter driver. It reads the frame and reveals a string character-by-character at a fixed rate, returning the revealed slice plus status flags. It composes `revealCount` (count math) and `revealedText` (the pure slice), so every surface that types text uses one source of truth.
+
+```ts
+function useTypewriter(
+  full: string,
+  options?: { cps?: number; speed?: number; startFrame?: number },
+): { text: string; count: number; done: boolean; typing: boolean }
+```
+
+- `cps` — characters per second (default `20`). `speed` scales the playhead; `startFrame` delays the start.
+- `typing` is `true` only while characters are still appearing; pair it with the `caret` primitive so the cursor stays solid mid-type and blinks otherwise:
+
+```tsx
+const tw = useTypewriter(text, { cps: 22, speed, startFrame: 42 });
+<span>{tw.text}<Caret blink={!tw.typing} speed={speed} /></span>
+```
+
+Components that already receive a controlled count (`combobox`, `command-menu`) or reveal by state-transition progress (`input`) call `revealedText(full, count)` directly instead of the hook, so they share the same slice without taking on a frame timer.
+
+`duration` is consumed by `useStateTransition` (and transition hooks). `useCurrentState` ignores it — snap resolution has no concept of transition length.
+
+## States snap by default
+
+State atoms snap instantly between named states — no automatic cross-fade or enter-tween. Snap is the default and cheapest path: author `{ at: N, state: "hover" }` and the atom jumps straight to that visual at frame N.
+
+## Smooth transitions — opt-in via transition hooks
+
+Each state atom ships a **transition file** (e.g. `use-button-transition.ts`) that is copied into your project alongside the component. That file:
+
+- owns `DEFAULT_DURATION` and easing
+- exports a `use<Name>Transition(steps, opts?) → <Name>Style` hook
+- calls `useStateTransition` internally and interpolates between state presets
+
+To get smooth motion, call the hook in your composition and feed the result to the component's `style` prop:
+
+```tsx
+import { Button } from "@/components/remocn/button";
+import { useButtonTransition } from "@/components/remocn/use-button-transition";
+
+export const Scene = () => {
+  const style = useButtonTransition([
+    { at: 12, state: "hover" },
+    { at: 30, state: "press" },
+    { at: 48, state: "loading", duration: 6 },
+  ]);
+  return <Button label="Continue" style={style} />;
+};
+```
+
+To tune timing globally, edit `DEFAULT_DURATION` in your copied `use-button-transition.ts`. To tune a single transition, add `duration` to that step — it overrides the file default for that transition only. To tune easing, edit the `easings.out(progress)` call in the same file.
+
+## Theming
+
+The `ui` tier uses a JS theme object with stock shadcn token names. Values are concrete oklch strings — not CSS custom properties.
+
+```ts
+import type { RemocnTheme } from "@/lib/remocn-ui";
+
+// All tokens match shadcn's default neutral palette out of the box
+const myTheme: Partial<RemocnTheme> = {
+  primary: "oklch(0.55 0.2 250)",       // override just what you need
+  radius: 6,
+};
+```
+
+### `RemocnUIProvider`
+
+Wrap your composition (or a subtree) in `RemocnUIProvider` to set a theme and/or mode for all nested `ui` primitives:
+
+```tsx
+import { RemocnUIProvider } from "@/lib/remocn-ui";
+
+export const Scene = () => (
+  <RemocnUIProvider mode="dark" theme={{ primary: "oklch(0.6 0.22 260)" }}>
+    <Button state={buttonState} label="Continue" />
+    <UICheckbox label="Remember me" state={checkState} />
+  </RemocnUIProvider>
+);
+```
+
+Token resolution order (highest wins): per-component `theme` prop > `RemocnUIProvider` theme > `defaultLightTheme` / `defaultDarkTheme` per `mode`. The `mode` prop on a component wins over `RemocnUIProvider`'s `mode`.
+
+Available exports from `lib/remocn-ui`:
+
+| Export | Type | Description |
+|---|---|---|
+| `RemocnUIProvider` | Component | Context provider for theme and mode |
+| `useRemocnTheme` | Hook | Resolves the active theme inside a component |
+| `defaultLightTheme` | `RemocnTheme` | Stock shadcn neutral light palette |
+| `defaultDarkTheme` | `RemocnTheme` | Stock shadcn neutral dark palette |
+| `RemocnTheme` | Interface | Full token shape with `radius: number` |
+
+### Animated colors require concrete JS values
+
+<Warning>
+CSS custom properties (`var(--primary)`) work for **static** styling only. Remotion's headless per-frame renderer cannot resolve `var(...)` for JS interpolation. If you pass `var(--primary)` as an animated token, `parseColor` will warn in dev mode and fall back to the JS default theme value — not your CSS override.
+
+To override an animated color, pass a concrete oklch, hex, or rgb value via the `theme` prop or `RemocnUIProvider`. Static colors (borders, backgrounds that never animate) can safely use `var()` in `style` props.
+</Warning>
+
+A project whose `:root` overrides `--primary` will see static elements pick up the CSS variable correctly, but state-dependent visuals (hover background, press darkening) will use the JS theme default. The defaults match stock shadcn, so unless you have custom colors, you will not notice the difference — but if you do have custom colors, supply them through the JS theme.
+
+## Core library exports
+
+Installing any component in this tier also installs `lib/remocn-ui/` with these modules:
+
+| Module | Key exports |
+|---|---|
+| `timeline.ts` | `useCurrentState`, `useStateTransition`, `useTypewriter`, `framesFor`, `revealCount`, `revealedText` |
+| `theme.ts` | `RemocnUIProvider`, `useRemocnTheme`, `defaultLightTheme`, `defaultDarkTheme` |
+| `color.ts` | `mixOklch`, `parseColor`, `oklchToRgb`, `rgbToOklch`, `toCss` |
+| `motion.ts` | `easings`, `springs` |
+| `types.ts` | `Step` (with optional `duration`) |
+
+You can import from `@/lib/remocn-ui` (the barrel) or from the individual module paths.

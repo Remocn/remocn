@@ -1,0 +1,108 @@
+---
+title: ChatGPT
+description: Animated ChatGPT composer that types a prompt and morphs the voice button into a send button
+---
+
+<ComponentPreview name="chat-gpt" />
+
+## Installation
+
+<InstallBlock name="chat-gpt" />
+
+<Note>
+  Installing `chat-gpt` pulls the `caret` primitive and the `remocn-ui` core lib (which provides the shared `useTypewriter` hook) via `registryDependencies`, plus the `Inter` font via `@remotion/google-fonts` automatically. No additional install needed.
+</Note>
+
+## Usage
+
+Standalone in a Remotion `<Composition>` — renders immediately after install:
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { ChatGpt } from "@/components/remocn/chat-gpt";
+
+const ChatGptScene = () => (
+  <ChatGpt
+    greeting="What's on your mind today?"
+    placeholder="Ask anything"
+    prompt="Make a sunset over a calm ocean"
+    accentColor="#2F6FED"
+    speed={1}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="ChatGpt"
+    component={ChatGptScene}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Timeline: heading + pill + chips ease in (0–16), default state with blinking caret holds (16–42), the prompt types in from frame 42, the blue voice button morphs into the send button the instant text appears, and the suggestion chips fade out, then holds to the end.
+
+### With Backdrop
+
+Renders transparent and single-theme — supply the background via `Backdrop`; edit the copied file to re-theme:
+
+```tsx
+import { Backdrop } from "@/components/remocn/backdrop";
+import { ChatGpt } from "@/components/remocn/chat-gpt";
+
+<Backdrop fill={{ type: "color", value: "#FFFFFF" }}>
+  <ChatGpt
+    greeting="What's on your mind today?"
+    prompt="Make a sunset over a calm ocean"
+    accentColor="#2F6FED"
+  />
+</Backdrop>
+```
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "greeting",
+      type: "string",
+      default: "\"What's on your mind today?\"",
+      description: "Sans heading above the input",
+    },
+    {
+      name: "placeholder",
+      type: "string",
+      default: "\"Ask anything\"",
+      description: "Muted placeholder before typing",
+    },
+    {
+      name: "prompt",
+      type: "string",
+      default: "\"Make a sunset over a calm ocean\"",
+      description: "The text that types in character-by-character",
+    },
+    {
+      name: "accentColor",
+      type: "string",
+      default: "\"#2F6FED\"",
+      description: "Blue voice-button color",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Animation speed multiplier (minimum 1 so the prompt finishes typing)",
+    },
+  ]}
+/>
+
+## Notes
+
+- **Button morph:** The voice-to-send morph is gated purely on text presence — the moment the prompt has any characters, the send button appears.
+- **Suggestion chips:** The three suggestion chips fade out once typing starts.
+- **Offline-friendly:** No network requests or images are used, so the preview works offline and MP4 export requires no CORS setup.
+- **Shared hook:** Reuses the `useTypewriter` hook and the `caret` primitive shared with the other chat components.

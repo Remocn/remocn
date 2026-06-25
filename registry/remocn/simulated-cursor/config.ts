@@ -13,10 +13,10 @@ export const simulatedCursorConfig: ComponentConfig = {
       step: 1,
       label: "Size",
     },
-    background: { type: "color", default: "#0a0a0a", label: "Background" },
   },
   durationInFrames: 150,
   fps: FPS,
   compositionWidth: W,
   compositionHeight: H,
+  previewBackdrop: { type: "color", value: "#0a0a0a" },
 };

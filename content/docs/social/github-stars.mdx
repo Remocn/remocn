@@ -1,0 +1,162 @@
+---
+title: GitHub Stars
+description: Stargazer list fly-through with a synced odometer counter — renders standalone from sample data or accepts live stargazer props
+---
+
+<ComponentPreview name="github-stars" />
+
+<Note title="Live generator">
+  Want to see it with your own repo before installing? Head to [/stars](/stars), paste any GitHub repo URL, preview the animation, and download an MP4 — it's the live demo of this component.
+</Note>
+
+## Installation
+
+<InstallBlock name="github-stars" />
+
+## Usage
+
+Standalone in a Remotion `<Composition>` — uses the built-in sample stargazers so the video renders immediately after install:
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { GitHubStars } from "@/components/remocn/github-stars";
+
+const GitHubStarsScene = () => (
+  <GitHubStars
+    repo="remotion-dev/remotion"
+    totalStars={24813}
+    accentColor="#f5a623"
+    orientation="horizontal"
+    speed={1}
+    theme="light"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="GitHubStars"
+    component={GitHubStarsScene}
+    durationInFrames={120}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+### With live data
+
+Pass fetched stargazers to replace the built-in sample data. Each entry in `stargazers` drives one row in the fly-through:
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { GitHubStars } from "@/components/remocn/github-stars";
+
+// Shape returned by your fetch (e.g. from /api/stargazers)
+const stargazers = [
+  {
+    login: "octocat",
+    avatarUrl: "https://avatars.githubusercontent.com/u/583231",
+    starredAt: "2021-03-15T10:00:00Z",
+  },
+  // … more entries
+];
+
+const GitHubStarsScene = () => (
+  <GitHubStars
+    repo="remotion-dev/remotion"
+    totalStars={24813}
+    stargazers={stargazers}
+    orientation="horizontal"
+    accentColor="#f5a623"
+    speed={1}
+    theme="light"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="GitHubStars"
+    component={GitHubStarsScene}
+    durationInFrames={120}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "repo",
+      type: "string",
+      default: "\"remotion-dev/remotion\"",
+      description: "Repository shown in the heading (owner/name format)",
+    },
+    {
+      name: "totalStars",
+      type: "number",
+      default: "24813",
+      description: "Total star count the odometer counts up to",
+    },
+    {
+      name: "stargazers",
+      type: "Stargazer[]",
+      default: "SAMPLE_STARGAZERS",
+      description: "Array of stargazer objects that populate the fly-through list. Falls back to built-in sample data when omitted.",
+    },
+    {
+      name: "orientation",
+      type: "\"horizontal\" | \"vertical\"",
+      default: "\"horizontal\"",
+      description: "Layout orientation — horizontal is 1280x720 (16:9), vertical is 720x1280 (9:16)",
+    },
+    {
+      name: "accentColor",
+      type: "string",
+      default: "\"#f5a623\"",
+      description: "Accent color used for the star icon and counter highlight",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Multiplier for the overall animation speed — higher values compress the fly-through",
+    },
+    {
+      name: "theme",
+      type: "\"light\" | \"dark\"",
+      default: "\"light\"",
+      description: "Color theme for the composition background and text",
+    },
+  ]}
+/>
+
+### Stargazer shape
+
+Each item in the `stargazers` array must conform to this shape:
+
+<PropsTable
+  rows={[
+    {
+      name: "login",
+      type: "string",
+      description: "GitHub username displayed in the list row",
+    },
+    {
+      name: "avatarUrl",
+      type: "string",
+      description: "Full URL to the user's GitHub avatar (must be CORS-accessible for MP4 export)",
+    },
+    {
+      name: "starredAt",
+      type: "string",
+      description: "ISO 8601 timestamp of when the user starred the repo (e.g. \"2021-03-15T10:00:00Z\")",
+    },
+  ]}
+/>

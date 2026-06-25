@@ -12,7 +12,6 @@ export interface PerspectiveMarqueeProps {
   rotateX?: number;
   perspective?: number;
   fadeColor?: string;
-  background?: string;
   speed?: number;
   className?: string;
 }
@@ -41,7 +40,6 @@ export function PerspectiveMarquee({
   rotateX = 8,
   perspective = 1200,
   fadeColor = "#050505",
-  background = "#050505",
   speed = 1,
   className,
 }: PerspectiveMarqueeProps) {
@@ -65,7 +63,6 @@ export function PerspectiveMarquee({
       style={{
         position: "absolute",
         inset: 0,
-        background,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",

@@ -4,900 +4,2219 @@
   "homepage": "https://remocn.dev",
   "items": [
     {
-      "name": "blur-reveal",
-      "type": "registry:component",
-      "title": "Blur Reveal",
-      "description": "Text fades in from a heavy blur into sharp focus.",
-      "dependencies": ["remotion"],
+      "name": "soft-blur-in",
+      "title": "Soft Blur In",
+      "description": "Per-character fade-in with a gentle blur and upward motion. Apple's signature hero-title reveal.",
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
-          "path": "registry/remocn/blur-reveal/index.tsx",
+          "path": "registry/remocn/soft-blur-in/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/blur-reveal.tsx"
+          "target": "components/remocn/soft-blur-in.tsx"
         }
-      ]
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "per-character-rise",
+      "title": "Per Character Rise",
+      "description": "Letters slide up from below with no blur — crisp, deliberate, kinetic.",
+      "dependencies": [
+        "remotion"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn/per-character-rise/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/per-character-rise.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "bottom-up-letters",
+      "title": "Bottom-Up Letters",
+      "description": "Letters rise from below in a pronounced staircase, one symbol at a time, with zero blur.",
+      "dependencies": [
+        "remotion"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn/bottom-up-letters/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/bottom-up-letters.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "top-down-letters",
+      "title": "Top-Down Letters",
+      "description": "Letters descend from above in a pronounced staircase, one symbol at a time, with zero blur.",
+      "dependencies": [
+        "remotion"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn/top-down-letters/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/top-down-letters.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "spring-scale-in",
+      "title": "Spring Scale In",
+      "description": "Words pop in with a soft overshoot scale, like a physical spring settling into place.",
+      "dependencies": [
+        "remotion"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn/spring-scale-in/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/spring-scale-in.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "micro-scale-fade",
+      "title": "Micro Scale Fade",
+      "description": "A calm, tiny scale pop used as subtle premium polish for labels and headings.",
+      "dependencies": [
+        "remotion"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn/micro-scale-fade/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/micro-scale-fade.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "scale-down-fade",
+      "title": "Scale Down Fade",
+      "description": "Subtle premium settle-in with a restrained scale-down fade on exit.",
+      "dependencies": [
+        "remotion"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn/scale-down-fade/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/scale-down-fade.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "blur-out-up",
+      "title": "Blur Out Up",
+      "description": "Words arrive clean and depart upward with increasing blur for airy exits.",
+      "dependencies": [
+        "remotion"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn/blur-out-up/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/blur-out-up.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "focus-blur-resolve",
+      "title": "Focus Blur Resolve",
+      "description": "A premium focus pull from heavy blur to crisp text, then a soft blur-out exit.",
+      "dependencies": [
+        "remotion"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn/focus-blur-resolve/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/focus-blur-resolve.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "line-by-line-slide",
+      "title": "Line-by-Line Slide",
+      "description": "Each line enters from the left with a staggered slide and exits to the right for a flowing paragraph reveal.",
+      "dependencies": [
+        "remotion"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn/line-by-line-slide/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/line-by-line-slide.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "per-word-crossfade",
+      "title": "Per-Word Crossfade",
+      "description": "Words gently fade into place one after another, with a short vertical drift for a calm keynote rhythm.",
+      "dependencies": [
+        "remotion"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn/per-word-crossfade/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/per-word-crossfade.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "fade-through",
+      "title": "Fade Through",
+      "description": "A Material-style content transition: old fades out, new fades in with a soft delay.",
+      "dependencies": [
+        "remotion"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn/fade-through/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/fade-through.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "shared-axis-y",
+      "title": "Shared Axis Y",
+      "description": "Per-word hard-cut transition with staircase timing for sharp editorial swaps.",
+      "dependencies": [
+        "remotion"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn/shared-axis-y/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/shared-axis-y.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "shared-axis-z",
+      "title": "Shared Axis Z",
+      "description": "Scale-based shared-axis transition for focus shifts and context depth.",
+      "dependencies": [
+        "remotion"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn/shared-axis-z/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/shared-axis-z.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "short-slide-right",
+      "title": "Short Slide Right",
+      "description": "The whole phrase glides in from the left as one compact move while words reveal in sequence through opacity.",
+      "dependencies": [
+        "remotion"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn/short-slide-right/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/short-slide-right.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "kinetic-center-build",
+      "title": "Kinetic Center Build",
+      "description": "A word appears in the center; each new word enters from the right and pushes the line until the full phrase locks centered.",
+      "dependencies": [
+        "remotion"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn/kinetic-center-build/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/kinetic-center-build.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "short-slide-down",
+      "title": "Short Slide Down",
+      "description": "Each new word drops in from above into its own line and pushes the stack downward until a centered three-line composition locks in place.",
+      "dependencies": [
+        "remotion"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn/short-slide-down/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/short-slide-down.tsx"
+        }
+      ],
+      "type": "registry:component"
     },
     {
       "name": "typewriter",
-      "type": "registry:component",
       "title": "Typewriter",
       "description": "Character-by-character text reveal with a deterministic blinking cursor.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
+      "registryDependencies": [
+        "@remocn/remocn-ui",
+        "@remocn/caret"
+      ],
       "files": [
         {
           "path": "registry/remocn/typewriter/index.tsx",
           "type": "registry:component",
           "target": "components/remocn/typewriter.tsx"
         }
-      ]
+      ],
+      "type": "registry:component"
     },
     {
       "name": "inline-highlight",
-      "type": "registry:component",
       "title": "Inline Highlight",
       "description": "Animates one word inside a sentence from a base color to a brand color.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "registry/remocn/inline-highlight/index.tsx",
           "type": "registry:component",
           "target": "components/remocn/inline-highlight.tsx"
         }
-      ]
-    },
-    {
-      "name": "text-fade-replace",
-      "type": "registry:component",
-      "title": "Text Fade Replace",
-      "description": "Cross-fades between two strings on the same line without layout shift.",
-      "dependencies": ["remotion"],
-      "files": [
-        {
-          "path": "registry/remocn/text-fade-replace/index.tsx",
-          "type": "registry:component",
-          "target": "components/remocn/text-fade-replace.tsx"
-        }
-      ]
+      ],
+      "type": "registry:component"
     },
     {
       "name": "strikethrough-replace",
-      "type": "registry:component",
       "title": "Strikethrough Replace",
       "description": "Draws a strike line across old text then reveals new text in its place.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "registry/remocn/strikethrough-replace/index.tsx",
           "type": "registry:component",
           "target": "components/remocn/strikethrough-replace.tsx"
         }
-      ]
+      ],
+      "type": "registry:component"
     },
     {
       "name": "staggered-fade-up",
-      "type": "registry:component",
       "title": "Staggered Fade Up",
       "description": "Words fade in and slide up one after another with a configurable delay.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "registry/remocn/staggered-fade-up/index.tsx",
           "type": "registry:component",
           "target": "components/remocn/staggered-fade-up.tsx"
         }
-      ]
+      ],
+      "type": "registry:component"
     },
     {
-      "name": "masked-slide-reveal",
-      "type": "registry:component",
-      "title": "Masked Slide Reveal",
-      "description": "Words slide up out of an invisible horizontal mask, one after another.",
-      "dependencies": ["remotion"],
+      "name": "mask-reveal-up",
+      "title": "Mask Reveal Up",
+      "description": "Lines reveal upward with a soft masked feel and compact stagger.",
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
-          "path": "registry/remocn/masked-slide-reveal/index.tsx",
+          "path": "registry/remocn/mask-reveal-up/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/masked-slide-reveal.tsx"
+          "target": "components/remocn/mask-reveal-up.tsx"
         }
-      ]
+      ],
+      "type": "registry:component"
     },
     {
       "name": "tracking-in",
-      "type": "registry:component",
       "title": "Tracking In",
       "description": "Letter-spacing collapses and blur clears with a springy motion.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "registry/remocn/tracking-in/index.tsx",
           "type": "registry:component",
           "target": "components/remocn/tracking-in.tsx"
         }
-      ]
+      ],
+      "type": "registry:component"
     },
     {
       "name": "shimmer-sweep",
-      "type": "registry:component",
       "title": "Shimmer Sweep",
       "description": "Light shine sweeps across muted text via background-clip:text.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "registry/remocn/shimmer-sweep/index.tsx",
           "type": "registry:component",
           "target": "components/remocn/shimmer-sweep.tsx"
         }
-      ]
+      ],
+      "type": "registry:component"
     },
     {
       "name": "marker-highlight",
-      "type": "registry:component",
       "title": "Marker Highlight",
       "description": "Colored marker block draws behind a phrase as the text color shifts.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "registry/remocn/marker-highlight/index.tsx",
           "type": "registry:component",
           "target": "components/remocn/marker-highlight.tsx"
         }
-      ]
+      ],
+      "type": "registry:component"
     },
     {
       "name": "slot-machine-roll",
-      "type": "registry:component",
       "title": "Slot Machine Roll",
       "description": "Vertical reel scrolls characters from one value to another.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "registry/remocn/slot-machine-roll/index.tsx",
           "type": "registry:component",
           "target": "components/remocn/slot-machine-roll.tsx"
         }
-      ]
+      ],
+      "type": "registry:component"
     },
     {
       "name": "matrix-decode",
-      "type": "registry:component",
       "title": "Matrix Decode",
       "description": "Random scramble resolves left-to-right into the target text.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "registry/remocn/matrix-decode/index.tsx",
           "type": "registry:component",
           "target": "components/remocn/matrix-decode.tsx"
         }
-      ]
+      ],
+      "type": "registry:component"
     },
     {
       "name": "rgb-glitch-text",
-      "type": "registry:component",
       "title": "RGB Glitch Text",
       "description": "Three RGB-offset text copies jitter for a brief glitch window.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "registry/remocn/rgb-glitch-text/index.tsx",
           "type": "registry:component",
           "target": "components/remocn/rgb-glitch-text.tsx"
         }
-      ]
+      ],
+      "type": "registry:component"
     },
     {
       "name": "infinite-marquee",
-      "type": "registry:component",
       "title": "Infinite Marquee",
       "description": "Seamlessly looping horizontal text strip with optional stroke style.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "registry/remocn/infinite-marquee/index.tsx",
           "type": "registry:component",
           "target": "components/remocn/infinite-marquee.tsx"
         }
-      ]
+      ],
+      "type": "registry:component"
     },
     {
       "name": "mesh-gradient-bg",
-      "type": "registry:component",
       "title": "Mesh Gradient Background",
       "description": "Living gradient with amorphous color blobs slowly drifting across the frame.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "registry/remocn/mesh-gradient-bg/index.tsx",
           "type": "registry:component",
           "target": "components/remocn/mesh-gradient-bg.tsx"
         }
-      ]
+      ],
+      "type": "registry:component"
     },
     {
       "name": "dynamic-grid",
-      "type": "registry:component",
       "title": "Dynamic Grid",
       "description": "Subtle moving grid background with configurable cell size and direction.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "registry/remocn/dynamic-grid/index.tsx",
           "type": "registry:component",
           "target": "components/remocn/dynamic-grid.tsx"
         }
-      ]
-    },
-    {
-      "name": "spring-pop-in",
-      "type": "registry:component",
-      "title": "Spring Pop In",
-      "description": "Elastic spring-driven scale-in wrapper for any child element.",
-      "dependencies": ["remotion"],
-      "files": [
-        {
-          "path": "registry/remocn/spring-pop-in/index.tsx",
-          "type": "registry:component",
-          "target": "components/remocn/spring-pop-in.tsx"
-        }
-      ]
+      ],
+      "type": "registry:component"
     },
     {
       "name": "simulated-cursor",
-      "type": "registry:component",
       "title": "Simulated Cursor",
       "description": "Animated mouse cursor moving between waypoints with click ripple feedback.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "registry/remocn/simulated-cursor/index.tsx",
           "type": "registry:component",
           "target": "components/remocn/simulated-cursor.tsx"
         }
-      ]
-    },
-    {
-      "name": "pulsing-indicator",
-      "type": "registry:component",
-      "title": "Pulsing Indicator",
-      "description": "Continuous pulsing dot with ping ring for loading or live states.",
-      "dependencies": ["remotion"],
-      "files": [
-        {
-          "path": "registry/remocn/pulsing-indicator/index.tsx",
-          "type": "registry:component",
-          "target": "components/remocn/pulsing-indicator.tsx"
-        }
-      ]
+      ],
+      "type": "registry:component"
     },
     {
       "name": "directional-wipe",
-      "type": "registry:component",
       "title": "Directional Wipe",
       "description": "Slide one scene in while pushing the other out.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "registry/remocn/directional-wipe/index.tsx",
           "type": "registry:component",
           "target": "components/remocn/directional-wipe.tsx"
         }
-      ]
+      ],
+      "type": "registry:component"
     },
     {
       "name": "device-mockup-zoom",
-      "type": "registry:component",
       "title": "Device Mockup Zoom",
       "description": "Pull back from a UI to reveal it inside a device frame.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "registry/remocn/device-mockup-zoom/index.tsx",
           "type": "registry:component",
           "target": "components/remocn/device-mockup-zoom.tsx"
         }
-      ]
+      ],
+      "type": "registry:component"
     },
     {
       "name": "zoom-through-transition",
-      "type": "registry:component",
       "title": "Zoom Through Transition",
       "description": "Aggressively scale into the center of an element.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "registry/remocn/zoom-through-transition/index.tsx",
           "type": "registry:component",
           "target": "components/remocn/zoom-through-transition.tsx"
         }
-      ]
-    },
-    {
-      "name": "staggered-bento-grid",
-      "type": "registry:component",
-      "title": "Staggered Bento Grid",
-      "description": "Cards pop into a bento grid one after another with a spring.",
-      "dependencies": ["remotion"],
-      "files": [
-        {
-          "path": "registry/remocn/staggered-bento-grid/index.tsx",
-          "type": "registry:component",
-          "target": "components/remocn/staggered-bento-grid.tsx"
-        }
-      ]
+      ],
+      "type": "registry:component"
     },
     {
       "name": "chat-to-preview-layout",
-      "type": "registry:component",
       "title": "Chat to Preview Layout",
       "description": "Two-column layout where chat shrinks and preview expands.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "registry/remocn/chat-to-preview-layout/index.tsx",
           "type": "registry:component",
           "target": "components/remocn/chat-to-preview-layout.tsx"
         }
-      ]
-    },
-    {
-      "name": "bounding-box-selector",
-      "type": "registry:component",
-      "title": "Bounding Box Selector",
-      "description": "Figma-style selection rectangle appears around any element.",
-      "dependencies": ["remotion"],
-      "files": [
-        {
-          "path": "registry/remocn/bounding-box-selector/index.tsx",
-          "type": "registry:component",
-          "target": "components/remocn/bounding-box-selector.tsx"
-        }
-      ]
+      ],
+      "type": "registry:component"
     },
     {
       "name": "animated-line-chart",
-      "type": "registry:component",
       "title": "Animated Line Chart",
       "description": "Line chart whose SVG path draws on from left to right with a leading dot.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "registry/remocn/animated-line-chart/index.tsx",
           "type": "registry:component",
           "target": "components/remocn/animated-line-chart.tsx"
         }
-      ]
+      ],
+      "type": "registry:component"
     },
     {
       "name": "animated-bar-chart",
-      "type": "registry:component",
       "title": "Animated Bar Chart",
       "description": "Bars spring up from the baseline in a staggered cascade.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "registry/remocn/animated-bar-chart/index.tsx",
           "type": "registry:component",
           "target": "components/remocn/animated-bar-chart.tsx"
         }
-      ]
+      ],
+      "type": "registry:component"
     },
     {
       "name": "terminal-simulator",
-      "type": "registry:component",
       "title": "Terminal Simulator",
       "description": "Terminal window that types out commands and rolls old lines off the top.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "registry/remocn/terminal-simulator/index.tsx",
           "type": "registry:component",
           "target": "components/remocn/terminal-simulator.tsx"
         }
-      ]
+      ],
+      "type": "registry:component"
     },
     {
       "name": "code-diff-wipe",
-      "type": "registry:component",
       "title": "Code Diff Wipe",
       "description": "Before/after code reveal via clip-path wipe with a handle marker.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "registry/remocn/code-diff-wipe/index.tsx",
           "type": "registry:component",
           "target": "components/remocn/code-diff-wipe.tsx"
         }
-      ]
-    },
-    {
-      "name": "toast-notification",
-      "type": "registry:component",
-      "title": "Toast Notification",
-      "description": "System-style toast pops in, holds, then slides out.",
-      "dependencies": ["remotion"],
-      "files": [
-        {
-          "path": "registry/remocn/toast-notification/index.tsx",
-          "type": "registry:component",
-          "target": "components/remocn/toast-notification.tsx"
-        }
-      ]
+      ],
+      "type": "registry:component"
     },
     {
       "name": "drag-and-drop-flow",
-      "type": "registry:component",
       "title": "Drag and Drop Flow",
       "description": "Simulated file drag into a dropzone followed by upload progress.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "registry/remocn/drag-and-drop-flow/index.tsx",
           "type": "registry:component",
           "target": "components/remocn/drag-and-drop-flow.tsx"
         }
-      ]
+      ],
+      "type": "registry:component"
     },
     {
       "name": "progress-steps",
-      "type": "registry:component",
       "title": "Progress Steps",
       "description": "Multi-step pipeline with sequentially activating nodes and filling lines.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "registry/remocn/progress-steps/index.tsx",
           "type": "registry:component",
           "target": "components/remocn/progress-steps.tsx"
         }
-      ]
-    },
-    {
-      "name": "morphing-modal",
-      "type": "registry:component",
-      "title": "Morphing Modal",
-      "description": "A bento card lifts off the grid and blooms into a full-screen modal driven by a single heavy spring.",
-      "dependencies": ["remotion"],
-      "files": [
-        {
-          "path": "registry/remocn/morphing-modal/index.tsx",
-          "type": "registry:component",
-          "target": "components/remocn/morphing-modal.tsx"
-        }
-      ]
+      ],
+      "type": "registry:component"
     },
     {
       "name": "data-flow-pipes",
-      "type": "registry:component",
       "title": "Data Flow Pipes",
       "description": "Glowing data packets travel along SVG bezier pipes between system nodes, leaving fading trails.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "registry/remocn/data-flow-pipes/index.tsx",
           "type": "registry:component",
           "target": "components/remocn/data-flow-pipes.tsx"
         }
-      ]
-    },
-    {
-      "name": "cursor-flow",
-      "type": "registry:component",
-      "title": "Cursor Flow",
-      "description": "A realistic mouse that arcs along cubic Bezier paths, pauses, and clicks targets that dip in response.",
-      "dependencies": ["remotion"],
-      "files": [
-        {
-          "path": "registry/remocn/cursor-flow/index.tsx",
-          "type": "registry:component",
-          "target": "components/remocn/cursor-flow.tsx"
-        }
-      ]
+      ],
+      "type": "registry:component"
     },
     {
       "name": "code-accordion",
-      "type": "registry:component",
       "title": "Code Accordion",
       "description": "A code window that springs a range of lines closed and replaces them with a \"N lines collapsed\" placeholder.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "registry/remocn/code-accordion/index.tsx",
           "type": "registry:component",
           "target": "components/remocn/code-accordion.tsx"
         }
-      ]
+      ],
+      "type": "registry:component"
     },
     {
       "name": "glass-code-block",
-      "type": "registry:component",
       "title": "Glass Code Block",
       "description": "A premium frosted-glass code editor window with a regex tokenizer and line-by-line stagger reveal.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "registry/remocn/glass-code-block/index.tsx",
           "type": "registry:component",
           "target": "components/remocn/glass-code-block.tsx"
         }
-      ]
+      ],
+      "type": "registry:component"
     },
     {
       "name": "spotlight-card",
-      "type": "registry:component",
       "title": "Spotlight Card",
       "description": "A card with a moonlight-cool radial spotlight that follows a synthetic cursor and lights up its microborder.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "registry/remocn/spotlight-card/index.tsx",
           "type": "registry:component",
           "target": "components/remocn/spotlight-card.tsx"
         }
-      ]
+      ],
+      "type": "registry:component"
     },
     {
       "name": "perspective-marquee",
-      "type": "registry:component",
       "title": "Perspective Marquee",
       "description": "A 3D-tilted infinite marquee with depth-of-field blur on items rolling toward the horizon.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "registry/remocn/perspective-marquee/index.tsx",
           "type": "registry:component",
           "target": "components/remocn/perspective-marquee.tsx"
         }
-      ]
-    },
-    {
-      "name": "success-confetti",
-      "type": "registry:component",
-      "title": "Success Confetti",
-      "description": "Deterministic seeded confetti burst with optional headline.",
-      "dependencies": ["remotion"],
-      "files": [
-        {
-          "path": "registry/remocn/success-confetti/index.tsx",
-          "type": "registry:component",
-          "target": "components/remocn/success-confetti.tsx"
-        }
-      ]
+      ],
+      "type": "registry:component"
     },
     {
       "name": "frosted-glass-wipe",
-      "type": "registry:component",
       "title": "Frosted Glass Wipe",
       "description": "Elegant scene transition through a sliding pane of frosted glass.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "registry/remocn/frosted-glass-wipe/index.tsx",
           "type": "registry:component",
           "target": "components/remocn/frosted-glass-wipe.tsx"
         }
-      ]
-    },
-    {
-      "name": "kinetic-type-mask",
-      "type": "registry:component",
-      "title": "Kinetic Type Mask",
-      "description": "Use giant typography as a window into the next scene.",
-      "dependencies": ["remotion"],
-      "files": [
-        {
-          "path": "registry/remocn/kinetic-type-mask/index.tsx",
-          "type": "registry:component",
-          "target": "components/remocn/kinetic-type-mask.tsx"
-        }
-      ]
+      ],
+      "type": "registry:component"
     },
     {
       "name": "spatial-push",
-      "type": "registry:component",
       "title": "Spatial Push",
       "description": "A new scene physically presses the old one back into the frame.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "registry/remocn/spatial-push/index.tsx",
           "type": "registry:component",
           "target": "components/remocn/spatial-push.tsx"
         }
-      ]
+      ],
+      "type": "registry:component"
     },
     {
       "name": "grid-pixelate-wipe",
-      "type": "registry:component",
       "title": "Grid Pixelate Wipe",
       "description": "Dissolve from one scene to the next through a deterministic grid of mask cells.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "registry/remocn/grid-pixelate-wipe/index.tsx",
           "type": "registry:component",
           "target": "components/remocn/grid-pixelate-wipe.tsx"
         }
-      ]
+      ],
+      "type": "registry:component"
     },
     {
       "name": "chromatic-aberration-wipe",
-      "type": "registry:component",
       "title": "Chromatic Aberration Wipe",
       "description": "An ultra-fast slide transition with an RGB glitch on the peak frames.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "registry/remocn/chromatic-aberration-wipe/index.tsx",
           "type": "registry:component",
           "target": "components/remocn/chromatic-aberration-wipe.tsx"
         }
-      ]
+      ],
+      "type": "registry:component"
     },
     {
       "name": "hero-device-assemble",
-      "type": "registry:component",
       "title": "Hero Device Assemble",
       "description": "Floating device layers spring together into a laptop or phone mockup, then the screen wakes with a shimmer.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "registry/remocn/hero-device-assemble/index.tsx",
           "type": "registry:component",
           "target": "components/remocn/hero-device-assemble.tsx"
         }
-      ]
+      ],
+      "type": "registry:component"
     },
     {
       "name": "ecosystem-constellation",
-      "type": "registry:component",
       "title": "Ecosystem Constellation",
       "description": "A central logo orbited by integration satellites with pulsing data lines.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "registry/remocn/ecosystem-constellation/index.tsx",
           "type": "registry:component",
           "target": "components/remocn/ecosystem-constellation.tsx"
         }
-      ]
+      ],
+      "type": "registry:component"
     },
     {
       "name": "ai-generation-canvas",
-      "type": "registry:component",
       "title": "AI Generation Canvas",
       "description": "A prompt input transforms into a header, then a skeleton dashboard flips into populated cards.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "registry/remocn/ai-generation-canvas/index.tsx",
           "type": "registry:component",
           "target": "components/remocn/ai-generation-canvas.tsx"
         }
-      ]
+      ],
+      "type": "registry:component"
     },
     {
       "name": "live-code-compilation",
-      "type": "registry:component",
       "title": "Live Code Compilation",
       "description": "Split-screen where typed code on the left snaps a live UI preview on the right, HMR-style.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "registry/remocn/live-code-compilation/index.tsx",
           "type": "registry:component",
           "target": "components/remocn/live-code-compilation.tsx"
         }
-      ]
+      ],
+      "type": "registry:component"
     },
     {
       "name": "landing-code-showcase",
-      "type": "registry:component",
       "title": "Landing Code Showcase",
       "description": "Magical split-screen: code types itself on the left while the preview reactively re-renders on the right with sparks and tactile bounce.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "registry/remocn/landing-code-showcase/index.tsx",
           "type": "registry:component",
           "target": "components/remocn/landing-code-showcase.tsx"
         }
-      ]
-    },
-    {
-      "name": "pipeline-journey",
-      "type": "registry:component",
-      "title": "Pipeline Journey",
-      "description": "A Kanban ticket arcs across columns triggering landings and a final confetti burst.",
-      "dependencies": ["remotion"],
-      "files": [
-        {
-          "path": "registry/remocn/pipeline-journey/index.tsx",
-          "type": "registry:component",
-          "target": "components/remocn/pipeline-journey.tsx"
-        }
-      ]
+      ],
+      "type": "registry:component"
     },
     {
       "name": "dashboard-populate",
-      "type": "registry:component",
       "title": "Dashboard Populate",
       "description": "An empty dashboard cascades to life with KPI count-ups, bar bounces, line traces, and a donut fill.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "registry/remocn/dashboard-populate/index.tsx",
           "type": "registry:component",
           "target": "components/remocn/dashboard-populate.tsx"
         }
-      ]
+      ],
+      "type": "registry:component"
     },
     {
       "name": "terminal-to-browser-deploy",
-      "type": "registry:component",
       "title": "Terminal to Browser Deploy",
       "description": "A CLI deploy completes, the terminal blurs back, and a browser window springs from the deploy URL.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "registry/remocn/terminal-to-browser-deploy/index.tsx",
           "type": "registry:component",
           "target": "components/remocn/terminal-to-browser-deploy.tsx"
         }
-      ]
+      ],
+      "type": "registry:component"
     },
     {
       "name": "browser-flow",
-      "type": "registry:component",
       "title": "Browser Flow",
       "description": "Full Safari/Chrome simulation: typed URL, progress bar, page render, scroll, and a virtual cursor click.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "registry/remocn/browser-flow/index.tsx",
           "type": "registry:component",
           "target": "components/remocn/browser-flow.tsx"
         }
-      ]
+      ],
+      "type": "registry:component"
     },
     {
       "name": "pricing-tier-focus",
-      "type": "registry:component",
       "title": "Pricing Tier Focus",
       "description": "Three pricing cards where the focused tier rises and brightens while siblings dim and blur.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "registry/remocn/pricing-tier-focus/index.tsx",
           "type": "registry:component",
           "target": "components/remocn/pricing-tier-focus.tsx"
         }
-      ]
+      ],
+      "type": "registry:component"
     },
     {
       "name": "infinite-bento-pan",
-      "type": "registry:component",
       "title": "Infinite Bento Pan",
       "description": "A camera diagonally drifts across an oversized bento grid behind a soft vignette.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "registry/remocn/infinite-bento-pan/index.tsx",
           "type": "registry:component",
           "target": "components/remocn/infinite-bento-pan.tsx"
         }
-      ]
-    },
-    {
-      "name": "brush-stroke-simulator",
-      "type": "registry:component",
-      "title": "Brush Stroke Simulator",
-      "description": "A simulated finger brushes across an image, revealing a pixelated layer along its bezier path.",
-      "dependencies": ["remotion"],
-      "files": [
-        {
-          "path": "registry/remocn/brush-stroke-simulator/index.tsx",
-          "type": "registry:component",
-          "target": "components/remocn/brush-stroke-simulator.tsx"
-        }
-      ]
-    },
-    {
-      "name": "ai-generate-overlay",
-      "type": "registry:component",
-      "title": "AI Generate Overlay",
-      "description": "Source image blurs under a shimmering dot grid and a pulsing 'Generating…' pill before a new image fades in.",
-      "dependencies": ["remotion"],
-      "files": [
-        {
-          "path": "registry/remocn/ai-generate-overlay/index.tsx",
-          "type": "registry:component",
-          "target": "components/remocn/ai-generate-overlay.tsx"
-        }
-      ]
+      ],
+      "type": "registry:component"
     },
     {
       "name": "tool-menu-slide-in",
-      "type": "registry:component",
       "title": "Tool Menu Slide In",
       "description": "A glass tool palette whips up from below the editor canvas while its icons pop in with a stagger.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "registry/remocn/tool-menu-slide-in/index.tsx",
           "type": "registry:component",
           "target": "components/remocn/tool-menu-slide-in.tsx"
         }
-      ]
+      ],
+      "type": "registry:component"
     },
     {
       "name": "image-expand-to-fullscreen",
-      "type": "registry:component",
       "title": "Image Expand To Fullscreen",
       "description": "An image lifts out of a feed post and morphs into a fullscreen editor with toolbars sliding in.",
-      "dependencies": ["remotion"],
+      "dependencies": [
+        "remotion"
+      ],
       "files": [
         {
           "path": "registry/remocn/image-expand-to-fullscreen/index.tsx",
           "type": "registry:component",
           "target": "components/remocn/image-expand-to-fullscreen.tsx"
         }
-      ]
+      ],
+      "type": "registry:component"
     },
     {
-      "name": "swipe-transition-wipe",
-      "type": "registry:component",
-      "title": "Swipe Transition Wipe",
-      "description": "Two scenes laid out side-by-side flick across the screen with a parallax background and a darkening outgoing layer.",
-      "dependencies": ["remotion"],
+      "name": "github-stars",
+      "title": "GitHub Stars",
+      "description": "Inertial fly-through of a repo's stargazers with a synced count-up odometer that locks on the total. Horizontal 16:9 or vertical 9:16.",
+      "dependencies": [
+        "remotion",
+        "date-fns",
+        "@remotion/google-fonts"
+      ],
+      "registryDependencies": [
+        "@remocn/number-wheel"
+      ],
       "files": [
         {
-          "path": "registry/remocn/swipe-transition-wipe/index.tsx",
+          "path": "registry/remocn/github-stars/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/swipe-transition-wipe.tsx"
+          "target": "components/remocn/github-stars.tsx"
         }
-      ]
+      ],
+      "type": "registry:component"
     },
     {
-      "name": "product-launch-trailer",
-      "type": "registry:component",
-      "title": "Product Launch Trailer",
-      "description": "Cinematic Product Hunt teaser: pulsing logo, zoom-through transition, 3D bento fly-over, and a confetti version drop.",
-      "dependencies": ["remotion"],
+      "name": "number-wheel",
+      "title": "Number Wheel",
+      "description": "Mechanical odometer that rolls an integer up or down to its target, direction inferred from the values.",
+      "dependencies": [
+        "remotion",
+        "@remotion/google-fonts"
+      ],
       "files": [
         {
-          "path": "registry/remocn/product-launch-trailer/index.tsx",
+          "path": "registry/remocn/number-wheel/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/product-launch-trailer.tsx"
+          "target": "components/remocn/number-wheel.tsx"
         }
-      ]
+      ],
+      "type": "registry:component"
     },
     {
-      "name": "changelog-bite",
-      "type": "registry:component",
-      "title": "Changelog Bite",
-      "description": "Seamlessly looping square card showing a before/after diff with a frosted glass wipe and a pulsing New pill.",
-      "dependencies": ["remotion"],
+      "name": "rolling-number",
+      "title": "Rolling Number",
+      "description": "Odometer where every place rolls at its own speed, new places rising into view, settling exactly on the target value.",
+      "dependencies": [
+        "remotion",
+        "@remotion/google-fonts"
+      ],
       "files": [
         {
-          "path": "registry/remocn/changelog-bite/index.tsx",
+          "path": "registry/remocn/rolling-number/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/changelog-bite.tsx"
+          "target": "components/remocn/rolling-number.tsx"
         }
-      ]
+      ],
+      "type": "registry:component"
     },
     {
-      "name": "visual-docs-snippet",
-      "type": "registry:component",
-      "title": "Visual Docs Snippet",
-      "description": "Calm tutorial flow: a virtual cursor arcs to a button, clicks, and a bounding box plus tooltip explain what just happened.",
-      "dependencies": ["remotion"],
+      "name": "x-follow-card",
+      "title": "X Follow Card",
+      "description": "Animated X profile follow card — spring bounce-in, staggered blur-in, a synthetic cursor that clicks Follow and flips it to Following. Light/dark, horizontal or vertical.",
+      "dependencies": [
+        "remotion",
+        "@remotion/google-fonts"
+      ],
+      "registryDependencies": [
+        "@remocn/cursor"
+      ],
       "files": [
         {
-          "path": "registry/remocn/visual-docs-snippet/index.tsx",
+          "path": "registry/remocn/x-follow-card/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/visual-docs-snippet.tsx"
+          "target": "components/remocn/x-follow-card.tsx"
         }
-      ]
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "x-followers-overview",
+      "title": "X Followers Overview",
+      "description": "X follow notifications cycle through as 3D flipping text — '<name> followed you · 7h' — then the total follower count pops in with a confetti burst. Hardcoded sample list (X API ready). Light/dark, horizontal or vertical.",
+      "dependencies": [
+        "remotion",
+        "@remotion/google-fonts"
+      ],
+      "registryDependencies": [
+        "@remocn/confetti"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn/x-followers-overview/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/x-followers-overview.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "claude-chat",
+      "title": "Claude Chat",
+      "description": "Animated Claude chat input — types a prompt character-by-character and the waveform button morphs into a terracotta send button the moment text appears. Warm light/dark themes.",
+      "dependencies": [
+        "remotion",
+        "@remotion/google-fonts"
+      ],
+      "registryDependencies": [
+        "@remocn/caret",
+        "@remocn/remocn-ui"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn/claude-chat/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/claude-chat.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "chat-gpt",
+      "title": "ChatGPT",
+      "description": "Animated ChatGPT composer — types a prompt into the pill input, the blue voice button morphs into a send button, and the suggestion chips fade out. Light/dark themes.",
+      "dependencies": [
+        "remotion",
+        "@remotion/google-fonts"
+      ],
+      "registryDependencies": [
+        "@remocn/caret",
+        "@remocn/remocn-ui"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn/chat-gpt/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/chat-gpt.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "v0",
+      "title": "v0",
+      "description": "Animated Vercel v0 composer — types a prompt into the dark textarea and the mic button morphs into a send button. Dark/light themes.",
+      "dependencies": [
+        "remotion",
+        "@remotion/google-fonts"
+      ],
+      "registryDependencies": [
+        "@remocn/caret",
+        "@remocn/remocn-ui"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn/v0/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/v0.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "claude-code",
+      "title": "Claude Code",
+      "description": "Animated Claude Code CLI welcome screen — terminal window with a dashed welcome box, recent activity and what's new panels, and a prompt line that types a command with a block cursor. Dark/light themes.",
+      "dependencies": [
+        "remotion",
+        "@remotion/google-fonts"
+      ],
+      "registryDependencies": [
+        "@remocn/caret",
+        "@remocn/remocn-ui"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn/claude-code/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/claude-code.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "opencode",
+      "title": "OpenCode",
+      "description": "Animated OpenCode TUI welcome screen — two-tone wordmark, an input box with a blue accent bar that types a query, a model status line, and command hints. Dark/light themes.",
+      "dependencies": [
+        "remotion",
+        "@remotion/google-fonts"
+      ],
+      "registryDependencies": [
+        "@remocn/caret",
+        "@remocn/remocn-ui"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn/opencode/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/opencode.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "confetti",
+      "title": "Confetti",
+      "description": "Deterministic confetti burst for Remotion — seeded particles with gravity, spin, and flutter so every render is identical. Fire it on any frame as a celebratory overlay.",
+      "dependencies": [
+        "remotion"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn/confetti/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/confetti.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "backdrop",
+      "title": "Backdrop",
+      "description": "Configurable full-frame background (color / gradient / image / live component) with Screen Studio-style padding and a rounded, shadowed content frame.",
+      "dependencies": [
+        "remotion"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn/backdrop/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/backdrop.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "remocn-ui",
+      "title": "remocn UI Core",
+      "description": "Shared timeline-fold hook, theme context, and color math for remocn UI primitives.",
+      "dependencies": [
+        "remotion",
+        "culori"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn-ui/core/timeline.ts",
+          "type": "registry:lib",
+          "target": "lib/remocn-ui/timeline.ts"
+        },
+        {
+          "path": "registry/remocn-ui/core/theme.ts",
+          "type": "registry:lib",
+          "target": "lib/remocn-ui/theme.ts"
+        },
+        {
+          "path": "registry/remocn-ui/core/color.ts",
+          "type": "registry:lib",
+          "target": "lib/remocn-ui/color.ts"
+        },
+        {
+          "path": "registry/remocn-ui/core/motion.ts",
+          "type": "registry:lib",
+          "target": "lib/remocn-ui/motion.ts"
+        },
+        {
+          "path": "registry/remocn-ui/core/types.ts",
+          "type": "registry:lib",
+          "target": "lib/remocn-ui/types.ts"
+        },
+        {
+          "path": "registry/remocn-ui/core/index.ts",
+          "type": "registry:lib",
+          "target": "lib/remocn-ui/index.ts"
+        }
+      ],
+      "type": "registry:lib"
+    },
+    {
+      "name": "spinner",
+      "title": "UI Spinner",
+      "description": "A deterministic spinning arc that loops on the Remotion frame — a pure motion atom with no state.",
+      "dependencies": [
+        "remotion"
+      ],
+      "registryDependencies": [],
+      "files": [
+        {
+          "path": "registry/remocn-ui/spinner/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/spinner.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "caret",
+      "title": "UI Caret",
+      "description": "A blinking text caret — a controlled vertical bar, or a pure motion atom that blinks deterministically from useCurrentFrame.",
+      "dependencies": [
+        "remotion"
+      ],
+      "registryDependencies": [],
+      "files": [
+        {
+          "path": "registry/remocn-ui/caret/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/caret.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "button",
+      "title": "UI Button",
+      "description": "A button whose idle/hover/press/loading/success state is a pure function of the timeline; the loading state composes the Spinner motion atom.",
+      "dependencies": [
+        "remotion"
+      ],
+      "registryDependencies": [
+        "@remocn/remocn-ui",
+        "@remocn/spinner"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn-ui/button/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/button.tsx"
+        },
+        {
+          "path": "registry/remocn-ui/button/use-button-transition.ts",
+          "type": "registry:component",
+          "target": "components/remocn/use-button-transition.ts"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "accordion",
+      "title": "UI Accordion",
+      "description": "A disclosure whose opened/closed state is a pure function of the timeline; the panel reveal, chevron, and background are keyframed presets.",
+      "dependencies": [
+        "remotion"
+      ],
+      "registryDependencies": [
+        "@remocn/remocn-ui"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn-ui/accordion/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/accordion.tsx"
+        },
+        {
+          "path": "registry/remocn-ui/accordion/use-accordion-transition.ts",
+          "type": "registry:component",
+          "target": "components/remocn/use-accordion-transition.ts"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "alert-dialog",
+      "title": "UI Alert Dialog",
+      "description": "A modal alert dialog whose opened/closed state is a pure function of the timeline; the backdrop dim and popup zoom are keyframed presets. Self-contained — pair it with the Button as a trigger (see the example).",
+      "dependencies": [
+        "remotion"
+      ],
+      "registryDependencies": [
+        "@remocn/remocn-ui"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn-ui/alert-dialog/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/alert-dialog.tsx"
+        },
+        {
+          "path": "registry/remocn-ui/alert-dialog/use-alert-dialog-transition.ts",
+          "type": "registry:component",
+          "target": "components/remocn/use-alert-dialog-transition.ts"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "dialog",
+      "title": "UI Dialog",
+      "description": "A modal dialog whose opened/closed state is a pure function of the timeline; the backdrop dim and popup zoom are keyframed presets, with a close button and a primary action. Self-contained — pair it with the Button as a trigger (see the example).",
+      "dependencies": [
+        "remotion"
+      ],
+      "registryDependencies": [
+        "@remocn/remocn-ui"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn-ui/dialog/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/dialog.tsx"
+        },
+        {
+          "path": "registry/remocn-ui/dialog/use-dialog-transition.ts",
+          "type": "registry:component",
+          "target": "components/remocn/use-dialog-transition.ts"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "sheet",
+      "title": "UI Sheet",
+      "description": "A side panel whose opened/closed state is a pure function of the timeline; the backdrop dim and right-edge slide-in are keyframed presets, with a close button and a primary action. Self-contained — pair it with the Button as a trigger (see the example).",
+      "dependencies": [
+        "remotion"
+      ],
+      "registryDependencies": [
+        "@remocn/remocn-ui"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn-ui/sheet/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/sheet.tsx"
+        },
+        {
+          "path": "registry/remocn-ui/sheet/use-sheet-transition.ts",
+          "type": "registry:component",
+          "target": "components/remocn/use-sheet-transition.ts"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "drawer",
+      "title": "UI Drawer",
+      "description": "A bottom panel whose opened/closed state is a pure function of the timeline; the backdrop dim and bottom-edge slide-up are keyframed presets, with a drag handle and a primary action. Self-contained — pair it with the Button as a trigger (see the example).",
+      "dependencies": [
+        "remotion"
+      ],
+      "registryDependencies": [
+        "@remocn/remocn-ui"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn-ui/drawer/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/drawer.tsx"
+        },
+        {
+          "path": "registry/remocn-ui/drawer/use-drawer-transition.ts",
+          "type": "registry:component",
+          "target": "components/remocn/use-drawer-transition.ts"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "checkbox",
+      "title": "UI Checkbox",
+      "description": "A checkbox whose checked/unchecked state is a pure function of the timeline; the box fill, border, and checkmark draw are keyframed presets.",
+      "dependencies": [
+        "remotion"
+      ],
+      "registryDependencies": [
+        "@remocn/remocn-ui"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn-ui/checkbox/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/checkbox.tsx"
+        },
+        {
+          "path": "registry/remocn-ui/checkbox/use-checkbox-transition.ts",
+          "type": "registry:component",
+          "target": "components/remocn/use-checkbox-transition.ts"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "radio",
+      "title": "UI Radio",
+      "description": "A radio whose checked/unchecked state is a pure function of the timeline; the ring border and inner dot pop are keyframed presets.",
+      "dependencies": [
+        "remotion"
+      ],
+      "registryDependencies": [
+        "@remocn/remocn-ui"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn-ui/radio/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/radio.tsx"
+        },
+        {
+          "path": "registry/remocn-ui/radio/use-radio-transition.ts",
+          "type": "registry:component",
+          "target": "components/remocn/use-radio-transition.ts"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "switch",
+      "title": "UI Switch",
+      "description": "A switch whose checked/unchecked state is a pure function of the timeline; the track fill and sliding thumb are keyframed presets.",
+      "dependencies": [
+        "remotion"
+      ],
+      "registryDependencies": [
+        "@remocn/remocn-ui"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn-ui/switch/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/switch.tsx"
+        },
+        {
+          "path": "registry/remocn-ui/switch/use-switch-transition.ts",
+          "type": "registry:component",
+          "target": "components/remocn/use-switch-transition.ts"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "input",
+      "title": "UI Input",
+      "description": "A text input whose idle/hover/active/typing/invalid state is a pure function of the timeline; the focus ring, border, caret, and value reveal are keyframed presets.",
+      "dependencies": [
+        "remotion"
+      ],
+      "registryDependencies": [
+        "@remocn/remocn-ui",
+        "@remocn/caret"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn-ui/input/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/input.tsx"
+        },
+        {
+          "path": "registry/remocn-ui/input/use-input-transition.ts",
+          "type": "registry:component",
+          "target": "components/remocn/use-input-transition.ts"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "blur-in",
+      "title": "UI Blur In",
+      "description": "A wrapper that reveals a single child with blur + opacity + a directional offset; a pure state atom, theme-independent — its context is a motion config (blur/distance/axis), not a theme.",
+      "dependencies": [
+        "remotion"
+      ],
+      "registryDependencies": [
+        "@remocn/remocn-ui"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn-ui/blur-in/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/blur-in.tsx"
+        },
+        {
+          "path": "registry/remocn-ui/blur-in/use-blur-in-transition.ts",
+          "type": "registry:component",
+          "target": "components/remocn/use-blur-in-transition.ts"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "field",
+      "title": "UI Field",
+      "description": "A static layout family for composing labeled form controls, modeled on shadcn's Field: FieldGroup ▸ Field ▸ FieldLabel / FieldControl / FieldDescription. Reads no frame and holds no state — colors come from the resolved theme. FieldControl is a relative fixed-height slot for the absolute remocn-ui controls (Input, Button).",
+      "dependencies": [
+        "remotion"
+      ],
+      "registryDependencies": [
+        "@remocn/remocn-ui"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn-ui/field/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/field.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "select-item",
+      "title": "UI Select Item",
+      "description": "A select option row whose idle/hover/press/selected state is a pure function of the timeline; the row background, label color, and check icon are keyframed presets. Composed inside the Select panel.",
+      "dependencies": [
+        "remotion"
+      ],
+      "registryDependencies": [
+        "@remocn/remocn-ui"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn-ui/select-item/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/select-item.tsx"
+        },
+        {
+          "path": "registry/remocn-ui/select-item/use-select-item-transition.ts",
+          "type": "registry:component",
+          "target": "components/remocn/use-select-item-transition.ts"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "select",
+      "title": "UI Select",
+      "description": "A select whose opened/closed state is a pure function of the timeline; the trigger reuses the Button primitive and the reveal panel composes SelectItem rows. The panel fade, scale, lift, and chevron are keyframed presets.",
+      "dependencies": [
+        "remotion"
+      ],
+      "registryDependencies": [
+        "@remocn/remocn-ui",
+        "@remocn/button",
+        "@remocn/select-item"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn-ui/select/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/select.tsx"
+        },
+        {
+          "path": "registry/remocn-ui/select/use-select-transition.ts",
+          "type": "registry:component",
+          "target": "components/remocn/use-select-transition.ts"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "dropdown-menu-item",
+      "title": "UI Dropdown Menu Item",
+      "description": "A dropdown menu action row whose idle/hover/press state is a pure function of the timeline; the row background and label color are keyframed presets. Composed inside the DropdownMenu panel.",
+      "dependencies": [
+        "remotion"
+      ],
+      "registryDependencies": [
+        "@remocn/remocn-ui"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn-ui/dropdown-menu-item/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/dropdown-menu-item.tsx"
+        },
+        {
+          "path": "registry/remocn-ui/dropdown-menu-item/use-dropdown-menu-item-transition.ts",
+          "type": "registry:component",
+          "target": "components/remocn/use-dropdown-menu-item-transition.ts"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "tabs",
+      "title": "UI Tabs",
+      "description": "A tabs widget whose active-tab state is a pure function of the timeline; the sliding indicator, label colors, and panel crossfade are keyframed/derived presets.",
+      "dependencies": [
+        "remotion"
+      ],
+      "registryDependencies": [
+        "@remocn/remocn-ui"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn-ui/tabs/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/tabs.tsx"
+        },
+        {
+          "path": "registry/remocn-ui/tabs/use-tabs-transition.ts",
+          "type": "registry:component",
+          "target": "components/remocn/use-tabs-transition.ts"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "dropdown-menu",
+      "title": "UI Dropdown Menu",
+      "description": "A dropdown menu whose opened/closed state is a pure function of the timeline; the trigger reuses the Button primitive and the reveal panel composes DropdownMenuItem rows. The panel fade, scale, lift, and chevron are keyframed presets.",
+      "dependencies": [
+        "remotion"
+      ],
+      "registryDependencies": [
+        "@remocn/remocn-ui",
+        "@remocn/button",
+        "@remocn/dropdown-menu-item"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn-ui/dropdown-menu/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/dropdown-menu.tsx"
+        },
+        {
+          "path": "registry/remocn-ui/dropdown-menu/use-dropdown-menu-transition.ts",
+          "type": "registry:component",
+          "target": "components/remocn/use-dropdown-menu-transition.ts"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "cursor",
+      "title": "UI Cursor",
+      "description": "An animated cursor that moves between waypoints, clicks (ripple), and drags. The Cursor renderer is a pure function of a numeric CursorStyle channel; useCursorPath reads the frame and eases the path, ripple, and press phases.",
+      "dependencies": [
+        "remotion"
+      ],
+      "registryDependencies": [
+        "@remocn/remocn-ui"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn-ui/cursor/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/cursor.tsx"
+        },
+        {
+          "path": "registry/remocn-ui/cursor/use-cursor-path.ts",
+          "type": "registry:component",
+          "target": "components/remocn/use-cursor-path.ts"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "toast",
+      "title": "UI Toast",
+      "description": "A toast notification whose hidden/visible state is a pure function of the timeline. The Toast renderer is a pure function of a ToastStyle (opacity, translateY, scale); useToastTransition eases both the slide-in enter and the auto-dismiss exit. Variants default/success/error change the leading icon and its color.",
+      "dependencies": [
+        "remotion"
+      ],
+      "registryDependencies": [
+        "@remocn/remocn-ui"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn-ui/toast/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/toast.tsx"
+        },
+        {
+          "path": "registry/remocn-ui/toast/use-toast-transition.ts",
+          "type": "registry:component",
+          "target": "components/remocn/use-toast-transition.ts"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "command-menu-item",
+      "title": "UI Command Menu Item",
+      "description": "A command-palette row whose idle/hover/press/selected state is a pure function of the timeline. Leading icon + label + trailing shortcut kbd. Exports an inline CommandMenuItemRow (reused by CommandMenu) and a standalone CommandMenuItem atom; the row background, label color, and icon color are keyframed presets.",
+      "dependencies": [
+        "remotion"
+      ],
+      "registryDependencies": [
+        "@remocn/remocn-ui"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn-ui/command-menu-item/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/command-menu-item.tsx"
+        },
+        {
+          "path": "registry/remocn-ui/command-menu-item/use-command-menu-item-transition.ts",
+          "type": "registry:component",
+          "target": "components/remocn/use-command-menu-item-transition.ts"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "command-menu",
+      "title": "UI Command Menu",
+      "description": "A ⌘K command palette whose opened/closed state is a pure function of the timeline; the panel zoom + backdrop dim are dialog-like keyframed presets. The search row reveals the typed query, the list is filtered by a pure case-insensitive substring on the visible query prefix, and rows reuse the CommandMenuItem row.",
+      "dependencies": [
+        "remotion"
+      ],
+      "registryDependencies": [
+        "@remocn/remocn-ui",
+        "@remocn/command-menu-item"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn-ui/command-menu/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/command-menu.tsx"
+        },
+        {
+          "path": "registry/remocn-ui/command-menu/use-command-menu-transition.ts",
+          "type": "registry:component",
+          "target": "components/remocn/use-command-menu-transition.ts"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "tooltip",
+      "title": "UI Tooltip",
+      "description": "A tooltip whose hidden/visible state is a pure function of the timeline. The Tooltip renderer is a pure function of a TooltipStyle (opacity, scale, translate); useTooltipTransition eases both the show and the hide. The static `side` prop sets the enter translate axis and the arrow placement.",
+      "dependencies": [
+        "remotion"
+      ],
+      "registryDependencies": [
+        "@remocn/remocn-ui"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn-ui/tooltip/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/tooltip.tsx"
+        },
+        {
+          "path": "registry/remocn-ui/tooltip/use-tooltip-transition.ts",
+          "type": "registry:component",
+          "target": "components/remocn/use-tooltip-transition.ts"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "progress",
+      "title": "UI Progress",
+      "description": "A progress bar whose fill is a pure function of a numeric value channel (value-channel deviation). The Progress renderer takes a clamped 0–100 value; useProgressTransition reads the frame and eases the fill between value steps. Muted track + primary indicator, optional floored percentage label.",
+      "dependencies": [
+        "remotion"
+      ],
+      "registryDependencies": [
+        "@remocn/remocn-ui"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn-ui/progress/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/progress.tsx"
+        },
+        {
+          "path": "registry/remocn-ui/progress/use-progress-transition.ts",
+          "type": "registry:component",
+          "target": "components/remocn/use-progress-transition.ts"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "skeleton-block",
+      "title": "UI Skeleton Block",
+      "description": "A shimmer placeholder block — a motion atom (spinner pattern). A directional highlight gradient sweeps across deterministically from useCurrentFrame() and loops seamlessly. Configurable width/height/radius/speed and base/highlight colors.",
+      "dependencies": [
+        "remotion"
+      ],
+      "registryDependencies": [
+        "@remocn/remocn-ui"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn-ui/skeleton-block/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/skeleton-block.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "skeleton",
+      "title": "UI Skeleton",
+      "description": "A skeleton→content crossfade whose loading/loaded state is a pure function of the timeline. The Skeleton renderer is pure (reads no frame); only the composed SkeletonBlock shimmer reads it. SkeletonStyle opacities sum to 1 so the box never dims; real children sit in normal flow and the placeholder (a lines/card layout or a custom node) is an absolute overlay.",
+      "dependencies": [
+        "remotion"
+      ],
+      "registryDependencies": [
+        "@remocn/remocn-ui",
+        "@remocn/skeleton-block"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn-ui/skeleton/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/skeleton.tsx"
+        },
+        {
+          "path": "registry/remocn-ui/skeleton/use-skeleton-transition.ts",
+          "type": "registry:component",
+          "target": "components/remocn/use-skeleton-transition.ts"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "slider",
+      "title": "UI Slider",
+      "description": "A slider whose fill is a numeric value channel plus a thumb idle/hover/press channel (dual-channel value-channel deviation). The Slider renderer is pure (clamped 0–100 value, thumb scale, grab-ring opacity); useSliderTransition reads the frame and eases both channels — value as a numeric lerp, the thumb visual from its state presets. Muted track + primary range + bordered thumb with a derived grab ring.",
+      "dependencies": [
+        "remotion"
+      ],
+      "registryDependencies": [
+        "@remocn/remocn-ui"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn-ui/slider/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/slider.tsx"
+        },
+        {
+          "path": "registry/remocn-ui/slider/use-slider-transition.ts",
+          "type": "registry:component",
+          "target": "components/remocn/use-slider-transition.ts"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "combobox",
+      "title": "UI Combobox",
+      "description": "A combobox whose opened/closed state is a pure function of the timeline; the panel fade/scale/lift are keyframed presets like select. The trigger reuses the Input presets (typed query + caret reveal via an injected inputStyle), the list is filtered by a pure case-insensitive substring on the visible query prefix, and rows reuse the SelectItem row.",
+      "dependencies": [
+        "remotion"
+      ],
+      "registryDependencies": [
+        "@remocn/remocn-ui",
+        "@remocn/input",
+        "@remocn/select-item"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn-ui/combobox/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/combobox.tsx"
+        },
+        {
+          "path": "registry/remocn-ui/combobox/use-combobox-transition.ts",
+          "type": "registry:component",
+          "target": "components/remocn/use-combobox-transition.ts"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "popover",
+      "title": "UI Popover",
+      "description": "A popover/hover-card whose opened/closed state is a pure function of the timeline. The Popover renderer is a pure function of a PopoverStyle (opacity, scale, translate); usePopoverTransition eases both the open and the close. The static `side` prop sets the enter translate axis; renders title + description and/or arbitrary children in a popover card.",
+      "dependencies": [
+        "remotion"
+      ],
+      "registryDependencies": [
+        "@remocn/remocn-ui"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn-ui/popover/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/popover.tsx"
+        },
+        {
+          "path": "registry/remocn-ui/popover/use-popover-transition.ts",
+          "type": "registry:component",
+          "target": "components/remocn/use-popover-transition.ts"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "context-menu",
+      "title": "UI Context Menu",
+      "description": "A right-click context menu whose opened/closed state is a pure function of the timeline; the panel scales from its top-left corner (the click point) with a fade + lift. No trigger — the caller positions it. Rows reuse the DropdownMenuItem row; items are plain string labels.",
+      "dependencies": [
+        "remotion"
+      ],
+      "registryDependencies": [
+        "@remocn/remocn-ui",
+        "@remocn/dropdown-menu-item"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn-ui/context-menu/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/context-menu.tsx"
+        },
+        {
+          "path": "registry/remocn-ui/context-menu/use-context-menu-transition.ts",
+          "type": "registry:component",
+          "target": "components/remocn/use-context-menu-transition.ts"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "toggle-group",
+      "title": "UI Toggle Group",
+      "description": "A segmented control whose active value is a pure function of the timeline; a raised thumb SLIDES between segments (position + width derived from a float indicator offset, no jumps) and the labels crossfade color via mixOklch. The tabs precedent without content panels.",
+      "dependencies": [
+        "remotion"
+      ],
+      "registryDependencies": [
+        "@remocn/remocn-ui"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn-ui/toggle-group/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/toggle-group.tsx"
+        },
+        {
+          "path": "registry/remocn-ui/toggle-group/use-toggle-group-transition.ts",
+          "type": "registry:component",
+          "target": "components/remocn/use-toggle-group-transition.ts"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "stepper",
+      "title": "UI Stepper",
+      "description": "A horizontal onboarding stepper whose progress is a pure function of a continuous step index (value-channel deviation). Every circle (fill, number, stroke-dash check) and connector (primary fill fraction) derives purely from the float position; useStepperTransition reads the frame and eases position between step indices.",
+      "dependencies": [
+        "remotion"
+      ],
+      "registryDependencies": [
+        "@remocn/remocn-ui"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn-ui/stepper/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/stepper.tsx"
+        },
+        {
+          "path": "registry/remocn-ui/stepper/use-stepper-transition.ts",
+          "type": "registry:component",
+          "target": "components/remocn/use-stepper-transition.ts"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "resizable",
+      "title": "UI Resizable",
+      "description": "Two panels split by a draggable handle, where the split ratio is a numeric channel plus a handle idle/hover/press channel (dual-channel value-channel deviation). The Resizable renderer is pure (clamped 0–1 ratio, handle scale, grab-ring opacity); useResizableTransition reads the frame and eases both channels — ratio as a numeric lerp, the handle visual from its state presets. Horizontal and vertical splits; 1px divider + centered grip pill with a derived grab ring.",
+      "dependencies": [
+        "remotion"
+      ],
+      "registryDependencies": [
+        "@remocn/remocn-ui"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn-ui/resizable/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/resizable.tsx"
+        },
+        {
+          "path": "registry/remocn-ui/resizable/use-resizable-transition.ts",
+          "type": "registry:component",
+          "target": "components/remocn/use-resizable-transition.ts"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "signup-flow",
+      "title": "UI Signup Flow",
+      "description": "A signup card composition: a real shadcn-style card (header, labeled Full Name / Email / Password / Confirm fields, primary + Google-outline buttons, sign-in footer) whose cursor fills each field top-to-bottom, then clicks Create account (hover → press → loading → success) as a success toast slides in. A pure orchestrator — every channel comes from a composed primitive's transition hook.",
+      "dependencies": [
+        "remotion"
+      ],
+      "registryDependencies": [
+        "@remocn/remocn-ui",
+        "@remocn/cursor",
+        "@remocn/input",
+        "@remocn/button",
+        "@remocn/toast",
+        "@remocn/field",
+        "@remocn/blur-in"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn-ui/signup-flow/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/signup-flow.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "ai-prompt-flow",
+      "title": "UI AI Prompt Flow",
+      "description": "An AI prompt composition: a prompt types into the field, the Generate button runs hover → press → loading, a skeleton shimmer reveals, then crossfades into the generated answer, and a ready toast slides in. A pure orchestrator — the shimmer is owned by the skeleton-block motion atom; every other channel comes from a composed primitive's hook.",
+      "dependencies": [
+        "remotion"
+      ],
+      "registryDependencies": [
+        "@remocn/remocn-ui",
+        "@remocn/input",
+        "@remocn/button",
+        "@remocn/skeleton",
+        "@remocn/skeleton-block",
+        "@remocn/toast"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn-ui/ai-prompt-flow/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/ai-prompt-flow.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "checkout-flow",
+      "title": "UI Checkout Flow",
+      "description": "A cursor-driven checkout card: the card and its fields blur-in, then the pointer flips a billing-cycle toggle, types a card number, ticks the terms checkbox, and presses Pay through to success, ending in a toast. A pure orchestrator — every channel comes from a composed primitive's transition hook.",
+      "dependencies": [
+        "remotion"
+      ],
+      "registryDependencies": [
+        "@remocn/remocn-ui",
+        "@remocn/toggle-group",
+        "@remocn/input",
+        "@remocn/checkbox",
+        "@remocn/button",
+        "@remocn/field",
+        "@remocn/blur-in",
+        "@remocn/cursor",
+        "@remocn/toast"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn-ui/checkout-flow/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/checkout-flow.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "onboarding-stepper-flow",
+      "title": "UI Onboarding Stepper Flow",
+      "description": "A multi-step onboarding composition: a horizontal stepper advances through panels of input, radio, and switch fields, finishing on a Finish button that runs to success. Panel crossfade derives linearly from the stepper's exposed position channel; every other channel comes from a composed primitive's hook.",
+      "dependencies": [
+        "remotion"
+      ],
+      "registryDependencies": [
+        "@remocn/remocn-ui",
+        "@remocn/stepper",
+        "@remocn/input",
+        "@remocn/radio",
+        "@remocn/switch",
+        "@remocn/button"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn-ui/onboarding-stepper-flow/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/onboarding-stepper-flow.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "settings-toggle-flow",
+      "title": "UI Settings Toggle Flow",
+      "description": "A two-column settings card: the card and its controls blur-in, then the cursor flips a switch, opens a select, drags a labeled slider, and clicks Save, ending in a saved toast. A pure orchestrator — every channel comes from a composed primitive's transition hook.",
+      "dependencies": [
+        "remotion"
+      ],
+      "registryDependencies": [
+        "@remocn/remocn-ui",
+        "@remocn/switch",
+        "@remocn/select",
+        "@remocn/slider",
+        "@remocn/button",
+        "@remocn/blur-in",
+        "@remocn/cursor",
+        "@remocn/toast"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn-ui/settings-toggle-flow/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/settings-toggle-flow.tsx"
+        }
+      ],
+      "type": "registry:component"
     }
   ]
 }

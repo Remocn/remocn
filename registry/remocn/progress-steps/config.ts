@@ -16,7 +16,6 @@ export const progressStepsConfig: ComponentConfig = {
       default: "#27272a",
       label: "Inactive color",
     },
-    background: { type: "color", default: "#0a0a0a", label: "Background" },
     textColor: { type: "color", default: "#ffffff", label: "Text color" },
     stepDuration: {
       type: "number",
@@ -31,4 +30,5 @@ export const progressStepsConfig: ComponentConfig = {
   fps: FPS,
   compositionWidth: W,
   compositionHeight: H,
+  previewBackdrop: { type: "color", value: "#0a0a0a" },
 };

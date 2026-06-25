@@ -448,7 +448,7 @@ export function InfiniteBentoPan({
       style={{
         position: "absolute",
         inset: 0,
-        background: "#050505",
+        background: "transparent",
         overflow: "hidden",
         fontFamily: FONT_FAMILY,
       }}

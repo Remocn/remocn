@@ -1,17 +1,20 @@
 "use client";
 
-import { Player } from "@remotion/player";
+import { Player, type PlayerRef } from "@remotion/player";
 import { ArrowRight, Check, Copy } from "lucide-react";
 import { motion } from "motion/react";
 import Link from "next/link";
-import { type CSSProperties, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { SECTION, SPRING_SOFT } from "@/config/landing";
+import { SPRING_SOFT } from "@/config/site";
 import { useTrackEvent } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 import registry from "@/registry/__index__";
+import { Backdrop, type BackdropFill } from "@/registry/remocn/backdrop";
+import { SpotlightSurface } from "@/components/spotlight-surface";
 import { FadeUp } from "../fade-up";
 import { SectionHeading } from "../section-heading";
+import { useAutoplay } from "../use-autoplay";
 
 /** Copyable `npx shadcn add` pill shown in each card footer. */
 function InstallPill({ name }: { name: string }) {
@@ -31,11 +34,12 @@ function InstallPill({ name }: { name: string }) {
   };
 
   return (
-    <button
+    <Button
+      variant="outline"
       type="button"
       onClick={copy}
       aria-label={`Copy install command for ${name}`}
-      className="mt-4 flex w-full items-center gap-2.5 rounded-xl border border-border bg-muted/40 px-3 py-2 font-mono text-xs text-muted-foreground transition-colors hover:border-foreground/20 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+      className="mt-4 flex w-full items-center gap-2.5 rounded-xl border-border bg-muted/40 px-3 py-2 font-mono text-xs text-muted-foreground transition-colors hover:border-foreground/20 hover:text-foreground focus-visible:ring-ring/40"
     >
       <span aria-hidden className="select-none text-muted-foreground/50">
         $
@@ -51,7 +55,7 @@ function InstallPill({ name }: { name: string }) {
           <Copy className="size-3.5" />
         )}
       </span>
-    </button>
+    </Button>
   );
 }
 
@@ -60,22 +64,40 @@ function BentoCard({
   title,
   description,
   className = "",
+  previewClassName,
   inputProps,
   featured = false,
+  compositionWidth,
+  compositionHeight,
+  backdrop,
 }: {
   name: string;
   title: string;
   description: string;
   className?: string;
+  previewClassName?: string;
   inputProps?: Record<string, unknown>;
-  /**
-   * Large 2×2 card: the preview grows to fill the extra height (inside a dark
-   * frame that blends the letterbox) and the footer stays compact, instead of
-   * a fixed 16/9 preview leaving a tall empty gap above the install pill.
-   */
   featured?: boolean;
+  compositionWidth?: number;
+  compositionHeight?: number;
+  backdrop?: BackdropFill;
 }) {
   const entry = registry[name];
+  const playerRef = useRef<PlayerRef>(null);
+
+  useAutoplay(playerRef, Boolean(entry));
+
+  const Composition = useMemo(() => {
+    const Inner = entry?.Component;
+    if (!Inner || !backdrop) return Inner;
+    return function BackdroppedComposition(props: Record<string, unknown>) {
+      return (
+        <Backdrop fill={backdrop} padding={0} radius={0} shadow="">
+          <Inner {...props} />
+        </Backdrop>
+      );
+    };
+  }, [entry, backdrop]);
 
   return (
     <motion.div
@@ -99,25 +121,26 @@ function BentoCard({
       <div
         className={cn(
           "relative w-full overflow-hidden",
-          // Featured: media grows to fill the tall 2×2 card (md+). The frame
-          // matches the ai-generation-canvas composition background (#0a0a0a)
-          // so the Player's letterbox bars blend seamlessly in both themes.
           featured
-            ? "aspect-[16/9] bg-[#0a0a0a] md:aspect-auto md:min-h-0 md:flex-1"
-            : "aspect-[16/9] bg-muted",
+            ? "aspect-[16/9] md:aspect-auto md:min-h-0 md:flex-1"
+            : "aspect-[16/9]",
+          previewClassName ?? "bg-muted",
         )}
       >
         {entry ? (
           <Player
-            component={entry.Component}
+            ref={playerRef}
+            component={Composition ?? entry.Component}
             inputProps={inputProps ?? {}}
             durationInFrames={entry.config.durationInFrames}
             fps={entry.config.fps}
-            compositionWidth={entry.config.compositionWidth}
-            compositionHeight={entry.config.compositionHeight}
+            compositionWidth={compositionWidth ?? entry.config.compositionWidth}
+            compositionHeight={
+              compositionHeight ?? entry.config.compositionHeight
+            }
             style={{ width: "100%", height: "100%" }}
-            autoPlay
             loop
+            initiallyMuted
             acknowledgeRemotionLicense
           />
         ) : null}
@@ -143,23 +166,11 @@ function BentoCard({
 }
 
 export function BentoRegistry() {
-  const gridRef = useRef<HTMLDivElement>(null);
-  const grid2Ref = useRef<HTMLDivElement>(null);
   const trackEvent = useTrackEvent();
-
-  const handleMove = (
-    e: React.MouseEvent<HTMLDivElement>,
-    target: HTMLDivElement | null,
-  ) => {
-    if (!target) return;
-    const rect = target.getBoundingClientRect();
-    target.style.setProperty("--mx", `${e.clientX - rect.left}px`);
-    target.style.setProperty("--my", `${e.clientY - rect.top}px`);
-  };
 
   return (
     <section id="components" className="relative py-20 sm:py-20">
-      <div className={SECTION}>
+      <div className="section">
         <SectionHeading
           eyebrow="The registry"
           title="A registry of motion"
@@ -188,20 +199,35 @@ export function BentoRegistry() {
         />
 
         <FadeUp delay={0.1} className="mt-12 sm:mt-16">
-          {/* biome-ignore lint/a11y/noStaticElementInteractions: spotlight cursor tracking is purely visual */}
-          <div
-            ref={gridRef}
-            onMouseMove={(e) => handleMove(e, gridRef.current)}
-            className="grid gap-4 sm:gap-6 md:grid-cols-3 md:grid-rows-2"
-            style={{ "--mx": "50%", "--my": "50%" } as CSSProperties}
-          >
+          <SpotlightSurface className="grid gap-4 sm:gap-6 md:grid-cols-3">
             <BentoCard
-              name="ai-generation-canvas"
-              title="AI Generation Canvas"
-              description="From prompt to UI in a single composition"
-              className="md:col-span-2 md:row-span-2"
+              name="claude-code"
+              title="Claude Code"
+              description="A live agent session — typed prompt and all"
+              className="md:col-span-2"
+              previewClassName="bg-[#0a0a0a]"
+              inputProps={{ theme: "dark", background: "transparent" }}
+            />
+            <BentoCard
+              name="x-follow-card"
+              title="X Follow Card"
+              description="A profile card that follows itself on cue"
+              className="md:col-span-1"
+              previewClassName="bg-[#0a0a0a]"
+              inputProps={{
+                orientation: "vertical",
+                theme: "dark",
+                background: "transparent",
+              }}
+              compositionWidth={720}
+              compositionHeight={1280}
               featured
             />
+          </SpotlightSurface>
+        </FadeUp>
+
+        <FadeUp delay={0.18}>
+          <SpotlightSurface className="mt-4 grid gap-4 sm:mt-6 sm:gap-6 md:grid-cols-3">
             <BentoCard
               name="shimmer-sweep"
               title="Shimmer Sweep"
@@ -209,32 +235,17 @@ export function BentoRegistry() {
               inputProps={{ text: "Generating" }}
             />
             <BentoCard
-              name="ecosystem-constellation"
-              title="Ecosystem Constellation"
-              description="Orbits of integration logos around your brand"
+              name="x-followers-overview"
+              title="X Followers"
+              description="Names cycle, then the total lands with confetti"
+              backdrop={{ type: "color", value: "#ffffff" }}
             />
-          </div>
-        </FadeUp>
-
-        <FadeUp delay={0.18}>
-          {/* biome-ignore lint/a11y/noStaticElementInteractions: spotlight cursor tracking is purely visual */}
-          <div
-            ref={grid2Ref}
-            onMouseMove={(e) => handleMove(e, grid2Ref.current)}
-            className="mt-4 grid gap-4 sm:mt-6 sm:gap-6 md:grid-cols-2"
-            style={{ "--mx": "50%", "--my": "50%" } as CSSProperties}
-          >
             <BentoCard
               name="grid-pixelate-wipe"
               title="Grid Pixelate Wipe"
               description="The screen breaks into squares and reassembles into a new scene"
             />
-            <BentoCard
-              name="frosted-glass-wipe"
-              title="Frosted Glass Wipe"
-              description="An elegant transition through a sheet of glass"
-            />
-          </div>
+          </SpotlightSurface>
         </FadeUp>
       </div>
     </section>

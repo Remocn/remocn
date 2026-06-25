@@ -1,0 +1,116 @@
+---
+title: Confetti
+description: Deterministic confetti burst for Remotion — seeded particles with gravity, spin, and flutter
+---
+
+<ComponentPreview name="confetti" />
+
+## Installation
+
+<InstallBlock name="confetti" />
+
+## Usage
+
+Confetti is an overlay — render it on top of any scene and set `startFrame` to the frame the burst should fire:
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { Confetti } from "@/components/remocn/confetti";
+
+const ConfettiScene = () => (
+  <Confetti
+    startFrame={0}
+    originX={0.5}
+    originY={0.5}
+    particleCount={160}
+    seed={1}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="Confetti"
+    component={ConfettiScene}
+    durationInFrames={90}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Every piece is generated from a seeded PRNG, so a given `seed` renders an identical burst on every machine — required for deterministic Remotion output and headless MP4 export. Particles launch radially from the origin, fall under `gravity`, and flutter as they spin.
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "particleCount",
+      type: "number",
+      default: "140",
+      description: "Number of confetti pieces",
+    },
+    {
+      name: "colors",
+      type: "string[]",
+      default: "6 brand colors",
+      description: "Palette each piece is drawn from",
+    },
+    {
+      name: "originX",
+      type: "number",
+      default: "0.5",
+      description: "Burst origin X as a 0..1 fraction of the canvas",
+    },
+    {
+      name: "originY",
+      type: "number",
+      default: "0.5",
+      description: "Burst origin Y as a 0..1 fraction of the canvas",
+    },
+    {
+      name: "startFrame",
+      type: "number",
+      default: "0",
+      description: "Frame the burst fires on",
+    },
+    {
+      name: "lifetime",
+      type: "number",
+      default: "90",
+      description: "How long the burst lives, in frames",
+    },
+    {
+      name: "power",
+      type: "number",
+      default: "17",
+      description: "Initial launch speed (px/frame at the 720px reference height)",
+    },
+    {
+      name: "gravity",
+      type: "number",
+      default: "0.45",
+      description: "Downward acceleration (px/frame² at the 720px reference height)",
+    },
+    {
+      name: "size",
+      type: "number",
+      default: "13",
+      description: "Base piece size in reference px",
+    },
+    {
+      name: "seed",
+      type: "number",
+      default: "1",
+      description: "PRNG seed — the same seed renders an identical burst every time",
+    },
+  ]}
+/>
+
+## Notes
+
+- **Deterministic:** Particles come from a `mulberry32` seeded PRNG, never `Math.random()`, so renders are frame-stable and reproducible.
+- **Overlay:** The component is a transparent, `pointer-events: none` `AbsoluteFill` — layer it over any composition.
+- **Used by:** `x-followers-overview` fires this on the follower-count reveal.

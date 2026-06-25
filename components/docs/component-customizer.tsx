@@ -2,6 +2,7 @@
 
 import { Select as SelectPrimitive } from "@base-ui/react/select";
 import { ChevronDownIcon } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { ElasticSlider } from "@/components/ui/elastic-slider";
 import { Label } from "@/components/ui/label";
 import { SelectContent, SelectItem } from "@/components/ui/select";
@@ -68,6 +69,63 @@ function SelectPill({
   );
 }
 
+function NumberInputPill({
+  id,
+  ctrl,
+  value,
+  onChange,
+}: {
+  id: string;
+  ctrl: Extract<ControlType, { type: "number-input" }>;
+  value: number;
+  onChange: (value: number) => void;
+}) {
+  const [draft, setDraft] = useState(String(value));
+  const committed = useRef(value);
+
+  useEffect(() => {
+    if (value !== committed.current) {
+      committed.current = value;
+      setDraft(String(value));
+    }
+  }, [value]);
+
+  const commit = (raw: string) => {
+    if (raw === "" || raw === "-") return;
+    const n = Number(raw);
+    if (Number.isNaN(n)) return;
+    const clamped = Math.min(ctrl.max, Math.max(ctrl.min, n));
+    committed.current = clamped;
+    onChange(clamped);
+  };
+
+  return (
+    <div className={PILL}>
+      <Label
+        htmlFor={id}
+        className="shrink-0 font-medium text-muted-foreground"
+      >
+        {ctrl.label}
+      </Label>
+      <input
+        id={id}
+        type="number"
+        inputMode="numeric"
+        min={ctrl.min}
+        max={ctrl.max}
+        step={ctrl.step}
+        value={draft}
+        onChange={(e) => {
+          setDraft(e.target.value);
+          commit(e.target.value);
+        }}
+        onBlur={() => setDraft(String(committed.current))}
+        className="min-w-0 flex-1 bg-transparent text-right font-mono text-sm font-medium text-foreground outline-none placeholder:text-muted-foreground/50 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+      />
+    </div>
+  );
+}
+
 function Control({
   id,
   ctrl,
@@ -91,6 +149,16 @@ function Control({
           step={ctrl.step}
           formatValue={formatNumber}
           className="[--elastic-slider-height:--spacing(11)] [--elastic-slider-radius:0.75rem]"
+        />
+      );
+
+    case "number-input":
+      return (
+        <NumberInputPill
+          id={id}
+          ctrl={ctrl}
+          value={value as number}
+          onChange={onChange}
         />
       );
 

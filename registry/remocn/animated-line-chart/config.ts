@@ -13,7 +13,6 @@ export const animatedLineChartConfig: ComponentConfig = {
       step: 1,
       label: "Stroke width",
     },
-    background: { type: "color", default: "#0a0a0a", label: "Background" },
     gridColor: { type: "color", default: "#27272a", label: "Grid color" },
     showDot: { type: "boolean", default: true, label: "Show leading dot" },
   },
@@ -21,4 +20,5 @@ export const animatedLineChartConfig: ComponentConfig = {
   fps: FPS,
   compositionWidth: W,
   compositionHeight: H,
+  previewBackdrop: { type: "color", value: "#0a0a0a" },
 };

@@ -1,0 +1,113 @@
+---
+title: Caret
+description: A blinking text caret — a pure motion atom or a fully controlled bar
+---
+
+<ComponentPreview name="caret" />
+
+A **text caret**: a thin vertical bar you can drive two ways. Pass a controlled `opacity` and it renders exactly that (let the surrounding component decide when the caret shows), or set `blink` and it blinks deterministically from `useCurrentFrame()`. Safe in Remotion's headless per-frame renderer (no `Date`, `Math.random`, or `requestAnimationFrame`).
+
+It is the shared caret behind the `input` primitive and the `claude-chat` composition.
+
+## Installation
+
+<InstallBlock name="caret" />
+
+## Usage
+
+Controlled — the consumer decides visibility (e.g. a typing state machine):
+
+```tsx
+import { Caret } from "@/components/remocn/caret";
+
+export const Scene = () => (
+  <Caret color="#1F1E1D" height={24} opacity={typing ? 1 : 0} />
+);
+```
+
+Standalone blink — a self-animating caret:
+
+```tsx
+import { Caret } from "@/components/remocn/caret";
+
+export const Scene = () => <Caret blink blinkPerSecond={1} height={28} />;
+```
+
+## How blink works
+
+```
+visible = floor(frame × speed / halfPeriod) is even
+halfPeriod = fps / blinkPerSecond / 2
+```
+
+When `opacity` is provided it always wins; otherwise `blink` drives the bar, and with neither the caret stays solid.
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "color",
+      type: "string",
+      default: "\"currentColor\"",
+      description: "Bar fill color. Defaults to currentColor so it inherits the surrounding text color.",
+    },
+    {
+      name: "width",
+      type: "number",
+      default: "2",
+      description: "Bar width in px.",
+    },
+    {
+      name: "height",
+      type: "number",
+      default: "18",
+      description: "Bar height in px.",
+    },
+    {
+      name: "radius",
+      type: "number",
+      default: "1",
+      description: "Corner radius in px.",
+    },
+    {
+      name: "opacity",
+      type: "number",
+      description: "Controlled opacity. When set, it overrides blink and renders exactly this value.",
+    },
+    {
+      name: "blink",
+      type: "boolean",
+      default: "false",
+      description: "When true and opacity is unset, the caret blinks on the timeline.",
+    },
+    {
+      name: "blinkPerSecond",
+      type: "number",
+      default: "1",
+      description: "Full on/off blink cycles per second.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Scales the playhead used for blinking. speed=2 blinks twice as fast.",
+    },
+    {
+      name: "marginLeft",
+      type: "number",
+      default: "0",
+      description: "Left gap in px, useful to space the caret after revealed text.",
+    },
+    {
+      name: "className",
+      type: "string",
+      description: "Optional className passed to the span.",
+    },
+    {
+      name: "style",
+      type: "CSSProperties",
+      description: "Optional style overrides merged last (e.g. vertical alignment offsets).",
+    },
+  ]}
+/>

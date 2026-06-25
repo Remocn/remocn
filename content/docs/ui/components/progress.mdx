@@ -1,0 +1,132 @@
+---
+title: Progress
+description: A progress bar that fills along a scripted numeric value timeline
+---
+
+<UiComponentPreview name="progress" />
+
+A value-channel atom whose fill (`0`–`100`) is a pure function of the `value` prop or an interpolated `ProgressStyle` from `useProgressTransition`. The component reads no frame — only the value you give it. This is the **value-channel** variant of the primitive pattern: instead of a string-state timeline it drives a numeric fill channel directly, the same deviation used by the Cursor primitive.
+
+## Installation
+
+<InstallBlock name="progress" />
+
+<Note>
+Installing `progress` automatically installs the shared `remocn-ui` core (`lib/remocn-ui/`) via `registryDependencies` (`["remocn-ui"]`). You do not need to install it separately. Both `progress` (the renderer) and `use-progress-transition` (the hook) are copied into your project.
+</Note>
+
+## Value steps
+
+Instead of a string-state timeline, `useProgressTransition` takes an array of `ProgressStep` objects that describe a scripted fill path:
+
+```ts
+interface ProgressStep {
+  at: number;        // LOCAL (Sequence-relative) authored frame the bar finishes reaching `value`
+  value: number;     // Target fill percentage 0–100
+  duration?: number; // Frames the move INTO this value takes. Omitted → DEFAULT_DURATION (24)
+  easing?: EasingName; // Override easing for the move into this value. Default "out"
+}
+```
+
+`at` is the **arrival frame** — the frame when the bar finishes its fill. The move itself runs over `[at - duration, at)`. Before the first arrival, the bar holds at the first step's value.
+
+### Numeric-channel deviation
+
+`Progress` differs from state atoms (Button, Toast, etc.) in one key way: there is no string `state` union and no `useCurrentState` snap path. The bar's visual is always numeric — a fill percentage — so `useProgressTransition` folds the value path directly into a `ProgressStyle`. The snap equivalent is simply passing a fixed `value` prop.
+
+To model a pause or stall, add two steps at the same value with a gap between their `at` frames. The bar reaches the stall value and holds until the next step fires:
+
+```ts
+useProgressTransition([
+  { at: 0,   value: 0  },
+  { at: 40,  value: 62,  duration: 36 }, // fills to 62, arrives frame 40
+  { at: 130, value: 100, duration: 30 }, // resumes after ~60-frame stall
+]);
+```
+
+## Snap usage
+
+Pass `value` directly — the component snaps instantly to that fill. Useful for static previews or when you drive value from your own logic:
+
+```tsx
+import { Progress } from "@/components/remocn/progress";
+
+export const Scene = () => (
+  <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+    <Progress value={62} showLabel width={320} />
+  </div>
+);
+```
+
+## Smooth transitions
+
+Fill changes via `value` snap with no tween. For an animated fill, use `useProgressTransition` from the copied `use-progress-transition.ts` file. It reads the frame, interpolates between value steps, and returns a resolved `ProgressStyle` — pass it to the `style` prop:
+
+```tsx
+import { Progress } from "@/components/remocn/progress";
+import { useProgressTransition } from "@/components/remocn/use-progress-transition";
+
+export const Scene = () => {
+  const style = useProgressTransition([
+    { at: 0,   value: 0   },
+    { at: 40,  value: 62,  duration: 36 },
+    { at: 130, value: 100, duration: 30 },
+  ]);
+
+  return (
+    <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <Progress style={style} showLabel width={320} />
+    </div>
+  );
+};
+```
+
+The `duration` field on each step overrides the file's `DEFAULT_DURATION` (= `24`) for that specific move. The default easing per step is `"out"` — the bar decelerates as it nears the target value. To globally tune timing and easing, edit `use-progress-transition.ts` directly in your project — that file is yours (shadcn "own your code" philosophy).
+
+`style` takes precedence over `value` when both are provided.
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "value",
+      type: "number",
+      default: "0",
+      description: "Fill percentage 0–100 (snap path). Clamped to [0, 100]. Ignored when style is provided.",
+    },
+    {
+      name: "style",
+      type: "ProgressStyle",
+      description: "Resolved animated visual (smooth path). Pass an interpolated ProgressStyle from useProgressTransition. Takes precedence over value when provided.",
+    },
+    {
+      name: "width",
+      type: "number",
+      default: "320",
+      description: "Track width in px.",
+    },
+    {
+      name: "showLabel",
+      type: "boolean",
+      default: "false",
+      description: "When true, renders the floored fill percentage to the right of the track in tabular-nums.",
+    },
+    {
+      name: "theme",
+      type: "Partial<RemocnTheme>",
+      description: "Per-component theme override. Merges with the active RemocnUIProvider theme and the mode defaults. Must be concrete oklch/hex/rgb values — not CSS custom properties.",
+    },
+    {
+      name: "mode",
+      type: "\"light\" | \"dark\"",
+      default: "\"light\"",
+      description: "Sets the base palette. Overrides the mode on RemocnUIProvider when both are present.",
+    },
+    {
+      name: "className",
+      type: "string",
+      description: "Optional className applied to the outer wrapper element.",
+    },
+  ]}
+/>

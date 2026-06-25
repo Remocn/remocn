@@ -1,0 +1,172 @@
+---
+title: Cursor
+description: An animated cursor that follows a scripted path with click ripple and press effects
+---
+
+<UiComponentPreview name="cursor" />
+
+A motion atom that renders an animated cursor as a pure function of the `CursorStyle` it receives. The cursor reads no frame itself — the single time source is `useCursorPath` on the caller's side, which folds a path of waypoints into a resolved position, ripple, and press-dip visual. This is the **value-channel** variant of the primitive pattern: instead of a string-state timeline it drives numeric position channels directly.
+
+## Installation
+
+<InstallBlock name="cursor" />
+
+<Note>
+Installing `cursor` automatically installs the shared `remocn-ui` core (`lib/remocn-ui/`) via `registryDependencies` (`["remocn-ui"]`). You do not need to install it separately. Both `cursor` (the renderer) and `use-cursor-path` (the hook) are copied into your project.
+</Note>
+
+## Waypoints
+
+Instead of a string-state timeline, `useCursorPath` takes an array of `CursorWaypoint` objects that describe a scripted path:
+
+```ts
+interface CursorWaypoint {
+  at: number;        // LOCAL (Sequence-relative) authored frame the cursor finishes arriving here
+  x: number;        // Tip X in px, relative to the absolute wrapper's parent
+  y: number;        // Tip Y in px, relative to the absolute wrapper's parent
+  duration?: number; // Frames the move INTO this waypoint takes. Omitted → DEFAULT_DURATION (24)
+  click?: boolean;   // Fire a click on arrival: ripple (~16 frames) + brief press dip
+  press?: boolean;   // Hold the pressed look from this waypoint until the next one (drag)
+  easing?: EasingName; // Override easing for the move into this waypoint. Default "inOut"
+}
+```
+
+`at` is the **arrival frame** — the frame when the cursor finishes its move. The move itself runs over `[at - duration, at)`. Before the first waypoint arrives, the cursor parks at the first waypoint's position.
+
+### Numeric-channel deviation
+
+`Cursor` differs from state atoms (Button, Input, etc.) in one key way: there is no string `state` union and no `useCurrentState` snap path. The cursor's visual is always numeric — a position plus ripple and press scalars — so `useCursorPath` folds the waypoint path directly into a `CursorStyle` value, analogous to how `useButtonTransition` returns a `ButtonStyle`. The snap equivalent is simply parking the cursor at a fixed position without calling the hook.
+
+## Snap usage
+
+Park the cursor at a fixed position without the hook:
+
+```tsx
+import { Cursor } from "@/components/remocn/cursor";
+
+export const Scene = () => (
+  <div style={{ position: "relative", width: "100%", height: "100%" }}>
+    <Cursor
+      style={{ x: 200, y: 150, scale: 1, rippleOpacity: 0, rippleScale: 0 }}
+      variant="pointer"
+    />
+  </div>
+);
+```
+
+## Smooth path usage
+
+Drive the cursor along a scripted path with `useCursorPath`:
+
+```tsx
+import { Cursor } from "@/components/remocn/cursor";
+import { useCursorPath } from "@/components/remocn/use-cursor-path";
+
+export const Scene = () => {
+  const style = useCursorPath([
+    { at: 0,  x: 80,  y: 60  },
+    { at: 40, x: 280, y: 160, duration: 28 },
+    { at: 72, x: 280, y: 160, click: true, duration: 0 },
+  ]);
+
+  return (
+    <div style={{ position: "relative", width: "100%", height: "100%" }}>
+      <Cursor style={style} variant="pointer" />
+    </div>
+  );
+};
+```
+
+Each `at` is a **Sequence-local authored frame**. The cursor eases from each waypoint's position to the next. A `click: true` waypoint fires a 16-frame ripple and a brief press dip starting at its `at` frame.
+
+### Frame-syncing with other components
+
+The power of the waypoint model is composing the cursor timeline with the state timelines of other components. When a `click` waypoint fires at frame 72, schedule a Button's `press` step to start a few frames earlier (around 68) so the button begins pressing just before the click lands:
+
+```tsx
+import { Cursor } from "@/components/remocn/cursor";
+import { useCursorPath } from "@/components/remocn/use-cursor-path";
+import { Button } from "@/components/remocn/button";
+import { useButtonTransition } from "@/components/remocn/use-button-transition";
+
+export const Scene = () => {
+  const cursorStyle = useCursorPath([
+    { at: 0,  x: 80,  y: 60  },
+    { at: 40, x: 280, y: 160, duration: 28 },
+    { at: 72, x: 280, y: 160, click: true, duration: 0 },
+  ]);
+
+  const buttonStyle = useButtonTransition([
+    { at: 40, state: "hover",   duration: 16 },
+    { at: 68, state: "press",   duration: 8  },
+    { at: 76, state: "loading", duration: 6  },
+    { at: 108, state: "success", duration: 16 },
+  ]);
+
+  return (
+    <div style={{ position: "relative", width: "100%", height: "100%" }}>
+      <div style={{ position: "absolute", left: "50%", top: "50%", transform: "translate(-50%, -50%)" }}>
+        <Button label="Continue" style={buttonStyle} />
+      </div>
+      <Cursor style={cursorStyle} variant="pointer" />
+    </div>
+  );
+};
+```
+
+### Drag / held press
+
+Set `press: true` on a waypoint to hold the pressed look from that waypoint's arrival until the next waypoint arrives. Useful for simulating a drag gesture:
+
+```tsx
+const style = useCursorPath([
+  { at: 0,  x: 100, y: 100 },
+  { at: 30, x: 200, y: 100, press: true },  // hold press from here…
+  { at: 60, x: 300, y: 100 },               // …until cursor reaches here
+]);
+```
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "style",
+      type: "CursorStyle",
+      description: "Resolved animated visual. Feed it an interpolated CursorStyle from useCursorPath. When omitted the cursor parks at origin with no ripple.",
+    },
+    {
+      name: "variant",
+      type: "\"arrow\" | \"pointer\"",
+      default: "\"arrow\"",
+      description: "macOS arrow cursor or hand pointer. Static choice — not animated between waypoints.",
+    },
+    {
+      name: "size",
+      type: "number",
+      default: "28",
+      description: "Rendered cursor height in px. The SVG scales uniformly to this height.",
+    },
+    {
+      name: "rippleColor",
+      type: "string",
+      description: "Color of the click ripple ring. Defaults to theme.primary.",
+    },
+    {
+      name: "theme",
+      type: "Partial<RemocnTheme>",
+      description: "Per-component theme override. Must be concrete oklch/hex/rgb values — not CSS custom properties.",
+    },
+    {
+      name: "mode",
+      type: "\"light\" | \"dark\"",
+      default: "\"light\"",
+      description: "Sets the base palette. Overrides the mode on RemocnUIProvider when both are present.",
+    },
+    {
+      name: "className",
+      type: "string",
+      description: "Optional className applied to the absolute wrapper div.",
+    },
+  ]}
+/>

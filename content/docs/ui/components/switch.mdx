@@ -1,0 +1,130 @@
+---
+title: Switch
+description: A switch whose checked/unchecked state is a pure function of the timeline
+---
+
+<UiComponentPreview name="switch" />
+
+A state atom whose appearance (checked, unchecked) is a pure function of the `state` prop. Pass a state directly or drive it from the Remotion timeline via `useCurrentState`. The component reads no frame — only the state value you give it.
+
+## Installation
+
+<InstallBlock name="switch" />
+
+<Note>
+Installing `switch` automatically installs the shared `remocn-ui` core (`lib/remocn-ui/`) via `registryDependencies`. You do not need to install it separately.
+</Note>
+
+## States
+
+`SwitchState` is:
+
+```ts
+type SwitchState =
+  | "unchecked"  // track = theme.input, thumb at left
+  | "checked"    // track fills primary, thumb slides to the right
+```
+
+`checked` fills the track with `primary` and slides the thumb to the right edge. `unchecked` renders an inactive track with the theme input color and positions the thumb at the left.
+
+## Snap usage
+
+Pass `state` directly — the component snaps instantly to that visual. Useful for static previews or when you drive state from your own logic:
+
+```tsx
+import { Switch } from "@/components/remocn/switch";
+
+export const Scene = () => <Switch state="checked" />;
+```
+
+To drive state from the timeline, use `useCurrentState`:
+
+```tsx
+import { useCurrentState } from "@/lib/remocn-ui";
+import { Switch } from "@/components/remocn/switch";
+
+export const Scene = () => {
+  const state = useCurrentState(
+    [
+      { at: 18, state: "checked" },
+      { at: 78, state: "unchecked" },
+    ],
+    "unchecked",
+  );
+
+  return <Switch label="Enable notifications" state={state} />;
+};
+```
+
+Each `at` is a **Sequence-local authored frame**. State persists between steps: `checked` at frame 18 keeps the switch on until `unchecked` fires at frame 78. See [Concepts](/docs/ui/concepts) for the full `useCurrentState` API.
+
+## Smooth transitions
+
+State changes via `state` snap with no cross-fade. For animated transitions, use `useSwitchTransition` from the copied `use-switch-transition.ts` file. It reads the frame, interpolates between state presets, and returns a resolved `SwitchStyle` — pass it to the `style` prop:
+
+```tsx
+import { Switch } from "@/components/remocn/switch";
+import { useSwitchTransition } from "@/components/remocn/use-switch-transition";
+
+export const Scene = () => {
+  const style = useSwitchTransition([
+    { at: 18, state: "checked", duration: 14 },
+    { at: 78, state: "unchecked", duration: 12 },
+  ]);
+  return <Switch label="Enable notifications" style={style} />;
+};
+```
+
+The `duration` field on each step overrides the file's `DEFAULT_DURATION` for that specific transition. To globally tune timing and easing, edit `use-switch-transition.ts` directly in your project — that file is yours (shadcn "own your code" philosophy).
+
+`style` takes precedence over `state` when both are provided.
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "state",
+      type: "\"unchecked\" | \"checked\"",
+      default: "\"unchecked\"",
+      description: "Current visual state (snap path). State changes snap — no automatic cross-fade.",
+    },
+    {
+      name: "style",
+      type: "SwitchStyle",
+      description: "Resolved animated visual (smooth path). Pass an interpolated SwitchStyle from useSwitchTransition. Takes precedence over state when provided.",
+    },
+    {
+      name: "label",
+      type: "string",
+      description: "Optional text label rendered next to the track. Omit for a bare switch.",
+    },
+    {
+      name: "size",
+      type: "\"sm\" | \"default\" | \"lg\"",
+      default: "\"default\"",
+      description: "Track and label size preset.",
+    },
+    {
+      name: "theme",
+      type: "Partial<RemocnTheme>",
+      description: "Per-component theme override. Merges with the active RemocnUIProvider theme and the mode defaults. Must be concrete oklch/hex/rgb values — not CSS custom properties.",
+    },
+    {
+      name: "primary",
+      type: "string",
+      description: "Convenience override for the primary theme token — merged into theme.",
+    },
+    {
+      name: "mode",
+      type: "\"light\" | \"dark\"",
+      default: "\"light\"",
+      description: "Sets the base palette. Overrides the mode on RemocnUIProvider when both are present.",
+    },
+    {
+      name: "className",
+      type: "string",
+      description: "Optional className passed to the switch element.",
+    },
+  ]}
+/>

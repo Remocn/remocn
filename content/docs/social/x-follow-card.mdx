@@ -1,0 +1,145 @@
+---
+title: X Follow Card
+description: Animated X profile follow card with spring bounce-in, staggered blur-in, and cursor-driven Follow transition
+---
+
+<ComponentPreview name="x-follow-card" />
+
+## Installation
+
+<InstallBlock name="x-follow-card" />
+
+<Note>
+  Installing `x-follow-card` automatically pulls the `cursor` primitive as a dependency via `registryDependencies`. No additional install needed.
+</Note>
+
+## Usage
+
+Standalone in a Remotion `<Composition>` — uses sample profile data so the video renders immediately after install:
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { XFollowCard } from "@/components/remocn/x-follow-card";
+
+const XFollowCardScene = () => (
+  <XFollowCard
+    name="Co-Lab"
+    handle="co-lab"
+    accentColor="#1d9bf0"
+    orientation="horizontal"
+    speed={1}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="XFollowCard"
+    component={XFollowCardScene}
+    durationInFrames={165}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Timeline: card bounces in (0–25), layers blur in staggered (20–70), cursor travels to the Follow button (75–110), clicks and transitions to "Following" (110), then holds (130–165).
+
+### With Backdrop
+
+Renders transparent and single-theme — supply the background via `Backdrop`; edit the copied file to re-theme:
+
+```tsx
+import { Backdrop } from "@/components/remocn/backdrop";
+import { XFollowCard } from "@/components/remocn/x-follow-card";
+
+<Backdrop fill={{ type: "color", value: "#f5f7f9" }}>
+  <XFollowCard name="Co-Lab" handle="co-lab" accentColor="#1d9bf0" orientation="horizontal" />
+</Backdrop>
+```
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "name",
+      type: "string",
+      default: "\"Dmitri K\"",
+      description: "Display name shown above the handle",
+    },
+    {
+      name: "handle",
+      type: "string",
+      default: "\"kapishdima\"",
+      description: "X username (without the @)",
+    },
+    {
+      name: "bio",
+      type: "string",
+      default: "\"Building video tools with Remotion\"",
+      description: "Multi-line profile description",
+    },
+    {
+      name: "location",
+      type: "string",
+      default: "\"Earth\"",
+      description: "Location shown in meta row (optional)",
+    },
+    {
+      name: "website",
+      type: "string",
+      default: "\"remocn.dev\"",
+      description: "Website URL shown in meta row (optional)",
+    },
+    {
+      name: "joined",
+      type: "string",
+      default: "\"Joined January 2023\"",
+      description: "Account creation date shown in meta row",
+    },
+    {
+      name: "avatarUrl",
+      type: "string",
+      default: "\"\"",
+      description: "Profile picture URL — defaults to gradient fallback if empty",
+    },
+    {
+      name: "coverUrl",
+      type: "string",
+      default: "\"\"",
+      description: "Header image URL — defaults to accent-color gradient if empty",
+    },
+    {
+      name: "verified",
+      type: "boolean",
+      default: "true",
+      description: "Whether to show X verification badge next to name",
+    },
+    {
+      name: "accentColor",
+      type: "string",
+      default: "\"#1d9bf0\"",
+      description: "X brand blue — used for button fill, badge, and cursor ripple",
+    },
+    {
+      name: "orientation",
+      type: "\"horizontal\" | \"vertical\"",
+      default: "\"horizontal\"",
+      description: "Layout orientation — horizontal is 1280×720 (16:9), vertical is 720×1280 (9:16) letterboxed",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Animation speed multiplier — minimum 1 (prevents click frame loss)",
+    },
+  ]}
+/>
+
+## Notes
+
+- **Offline rendering:** avatarUrl and coverUrl default to empty strings, which render gradient fallbacks. No network requests are made, so the preview works offline and MP4 export requires no CORS setup.
+- **Sample post:** The hardcoded post at the bottom shows a representative engagement example. In v1, post content is not customizable.
+- **Button state:** The Follow button transitions from solid accent-color to "Following" (white bg, gray border, black text) when the cursor clicks at frame ~110.

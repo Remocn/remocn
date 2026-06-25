@@ -1,0 +1,120 @@
+---
+title: OpenCode
+description: Animated OpenCode TUI welcome screen that types a query into the input
+---
+
+<ComponentPreview name="opencode" />
+
+## Installation
+
+<InstallBlock name="opencode" />
+
+<Note>
+  Installing `opencode` pulls the `caret` primitive and the `remocn-ui` core lib (which provides the shared `useTypewriter` hook) via `registryDependencies`, plus the `JetBrains Mono` font via `@remotion/google-fonts` automatically. No additional install needed.
+</Note>
+
+## Usage
+
+Standalone in a Remotion `<Composition>` — renders immediately after install:
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { OpenCode } from "@/components/remocn/opencode";
+
+const OpenCodeScene = () => (
+  <OpenCode
+    placeholder="Ask anything... "
+    query="What is the tech stack of this project?"
+    agentName="Build"
+    modelName="Kimi K2.5"
+    provider="Moonshot AI"
+    accentColor="#2B7FFF"
+    speed={1}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="OpenCode"
+    component={OpenCodeScene}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Timeline: wordmark + input box + hints ease in (0–18), default state with the block cursor blinking holds (18–48), the query types into the input from frame 48, then holds to the end.
+
+### With Backdrop
+
+Renders transparent and single-theme — supply the background via `Backdrop`; edit the copied file to re-theme:
+
+```tsx
+import { Backdrop } from "@/components/remocn/backdrop";
+import { OpenCode } from "@/components/remocn/opencode";
+
+<Backdrop fill={{ type: "color", value: "#000000" }}>
+  <OpenCode
+    query="What is the tech stack of this project?"
+    accentColor="#2B7FFF"
+  />
+</Backdrop>
+```
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "placeholder",
+      type: "string",
+      default: "\"Ask anything... \"",
+      description: "Muted prompt prefix before the query",
+    },
+    {
+      name: "query",
+      type: "string",
+      default: '"What is the tech stack of this project?"',
+      description: "The text that types in character-by-character",
+    },
+    {
+      name: "agentName",
+      type: "string",
+      default: "\"Build\"",
+      description: "Agent label in the status line shown in the accent color",
+    },
+    {
+      name: "modelName",
+      type: "string",
+      default: "\"Kimi K2.5\"",
+      description: "Model name in the status line",
+    },
+    {
+      name: "provider",
+      type: "string",
+      default: "\"Moonshot AI\"",
+      description: "Provider name in the status line",
+    },
+    {
+      name: "accentColor",
+      type: "string",
+      default: "\"#2B7FFF\"",
+      description: "Blue accent bar and agent label color",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Animation speed multiplier (minimum 1 so the query finishes typing)",
+    },
+  ]}
+/>
+
+## Notes
+
+- **Dark by default:** Defaults to the dark OpenCode look.
+- **Offline-friendly:** No network requests or images are used, so the preview works offline and MP4 export requires no CORS setup.
+- **Shared hook:** Reuses the `useTypewriter` hook and the `caret` primitive (rendered as a block cursor) shared with the other terminal and chat components.

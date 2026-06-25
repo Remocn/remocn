@@ -10,10 +10,64 @@ Every way text can move, fade, glitch, or stretch across the screen. From quiet 
 <ComponentCardGrid
   items={[
     {
-      name: "BlurReveal",
-      description: "Text fades in from a heavy blur into sharp focus",
+      name: "SoftBlurIn",
+      description: "Per-character fade-in with a gentle blur and upward motion",
       status: "stable",
-      href: "/docs/typography/blur-reveal",
+      href: "/docs/typography/soft-blur-in",
+    },
+    {
+      name: "PerCharacterRise",
+      description: "Letters slide up from below with no blur — crisp and kinetic",
+      status: "stable",
+      href: "/docs/typography/per-character-rise",
+    },
+    {
+      name: "BottomUpLetters",
+      description: "Letters rise from below in a pronounced staircase, one symbol at a time",
+      status: "stable",
+      href: "/docs/typography/bottom-up-letters",
+    },
+    {
+      name: "TopDownLetters",
+      description: "Letters descend from above in a pronounced staircase, one symbol at a time",
+      status: "stable",
+      href: "/docs/typography/top-down-letters",
+    },
+    {
+      name: "SpringScaleIn",
+      description: "Words pop in with a soft overshoot scale, like a spring settling",
+      status: "stable",
+      href: "/docs/typography/spring-scale-in",
+    },
+    {
+      name: "MicroScaleFade",
+      description: "A calm, tiny scale pop for subtle premium polish",
+      status: "stable",
+      href: "/docs/typography/micro-scale-fade",
+    },
+    {
+      name: "ScaleDownFade",
+      description: "Subtle premium settle-in with a restrained scale-down fade on exit",
+      status: "stable",
+      href: "/docs/typography/scale-down-fade",
+    },
+    {
+      name: "BlurOutUp",
+      description: "Words arrive clean and depart upward with increasing blur",
+      status: "stable",
+      href: "/docs/typography/blur-out-up",
+    },
+    {
+      name: "FocusBlurResolve",
+      description: "A premium focus pull from heavy blur to crisp text, then a soft blur-out exit",
+      status: "stable",
+      href: "/docs/typography/focus-blur-resolve",
+    },
+    {
+      name: "LineByLineSlide",
+      description: "Each line slides in from the left with a staggered flow",
+      status: "stable",
+      href: "/docs/typography/line-by-line-slide",
     },
     {
       name: "StaggeredFadeUp",
@@ -22,10 +76,10 @@ Every way text can move, fade, glitch, or stretch across the screen. From quiet 
       href: "/docs/typography/staggered-fade-up",
     },
     {
-      name: "MaskedSlideReveal",
-      description: "Lines grow out from behind an invisible horizontal mask",
+      name: "MaskRevealUp",
+      description: "Lines reveal upward with a soft masked feel and compact stagger",
       status: "stable",
-      href: "/docs/typography/masked-slide-reveal",
+      href: "/docs/typography/mask-reveal-up",
     },
     {
       name: "TrackingIn",
@@ -72,12 +126,6 @@ Every way text can move, fade, glitch, or stretch across the screen. From quiet 
       href: "/docs/typography/typewriter",
     },
     {
-      name: "TextFadeReplace",
-      description: "Cross-fades between two strings on the same line. Includes a Strikethrough variant.",
-      status: "stable",
-      href: "/docs/typography/text-fade-replace",
-    },
-    {
       name: "SlotMachineRoll",
       description: "Numbers and characters roll into place like a casino reel",
       status: "stable",
@@ -120,6 +168,66 @@ Every way text can move, fade, glitch, or stretch across the screen. From quiet 
       description: "Three-channel RGB split with a brief horizontal jitter",
       status: "stable",
       href: "/docs/typography/rgb-glitch-text",
+    },
+  ]}
+/>
+
+## Text Transitions
+
+Swap one phrase for another with motion.
+
+<ComponentCardGrid
+  items={[
+    {
+      name: "PerWordCrossfade",
+      description: "One phrase fades out as the next fades in, word by word",
+      status: "stable",
+      href: "/docs/typography/per-word-crossfade",
+    },
+    {
+      name: "FadeThrough",
+      description: "Old text fades out as new fades in, Material-style",
+      status: "stable",
+      href: "/docs/typography/fade-through",
+    },
+    {
+      name: "SharedAxisY",
+      description: "Per-word hard-cut staircase for sharp editorial swaps",
+      status: "stable",
+      href: "/docs/typography/shared-axis-y",
+    },
+    {
+      name: "SharedAxisZ",
+      description: "Scale-based depth transition for focus shifts",
+      status: "stable",
+      href: "/docs/typography/shared-axis-z",
+    },
+  ]}
+/>
+
+## Kinetic
+
+Word-by-word builds with motion and momentum.
+
+<ComponentCardGrid
+  items={[
+    {
+      name: "ShortSlideRight",
+      description: "The whole phrase glides in from the left while words reveal in sequence",
+      status: "stable",
+      href: "/docs/typography/short-slide-right",
+    },
+    {
+      name: "KineticCenterBuild",
+      description: "Words enter from the right and push the line until the phrase locks centered",
+      status: "stable",
+      href: "/docs/typography/kinetic-center-build",
+    },
+    {
+      name: "ShortSlideDown",
+      description: "Words drop in from above and stack into a centered composition",
+      status: "stable",
+      href: "/docs/typography/short-slide-down",
     },
   ]}
 />

@@ -1,0 +1,138 @@
+---
+title: AlertDialog
+description: A modal alert dialog whose opened/closed state is a pure function of the timeline
+---
+
+<UiComponentPreview name="alert-dialog" />
+
+A state atom whose appearance (closed, opened) is a pure function of the `state` prop. Pass a state directly or drive it from the Remotion timeline via `useCurrentState`. The component reads no frame — only the state value you give it. The wrapper is transparent by design: AlertDialog is a modal layer meant to compose over another scene, so it does not paint an opaque background.
+
+## Installation
+
+<InstallBlock name="alert-dialog" />
+
+<Note>
+Installing `alert-dialog` automatically installs the shared `remocn-ui` core (`lib/remocn-ui/`) and the `button` primitive via `registryDependencies` (`["remocn-ui", "button"]`). You do not need to install them separately — the dialog pairs with the Button as its trigger in the canonical lifecycle example.
+</Note>
+
+## States
+
+`AlertDialogState` is:
+
+```ts
+type AlertDialogState =
+  | "opened"  // backdrop dims to 50% black, popup fades in and zooms from 0.95 → 1
+  | "closed"  // panel hidden, backdrop clear (overlay opacity 0, popup opacity 0, scale 0.95)
+```
+
+`opened` reveals the backdrop dim (scales up to `MAX_OVERLAY_ALPHA = 0.5`) and fades the popup card in while zooming it from `0.95` to `1` and lifting it 8 px upward. `closed` hides the backdrop and the popup entirely.
+
+## Snap usage
+
+Pass `state` directly — the component snaps instantly to that visual. Useful for static previews or when you drive state from your own logic:
+
+```tsx
+import { AlertDialog } from "@/components/remocn/alert-dialog";
+
+export const Scene = () => <AlertDialog state="opened" />;
+```
+
+To drive state from the timeline, use `useCurrentState`:
+
+```tsx
+import { useCurrentState } from "@/lib/remocn-ui";
+import { AlertDialog } from "@/components/remocn/alert-dialog";
+
+export const Scene = () => {
+  const state = useCurrentState(
+    [
+      { at: 32, state: "opened" },
+      { at: 92, state: "closed" },
+    ],
+    "closed",
+  );
+
+  return <AlertDialog title="Delete account?" state={state} />;
+};
+```
+
+Each `at` is a **Sequence-local authored frame**. State persists between steps: `opened` at frame 32 keeps the dialog visible until `closed` fires at frame 92. See [Concepts](/docs/ui/concepts) for the full `useCurrentState` API.
+
+## Smooth transitions
+
+State changes via `state` snap with no cross-fade. For animated transitions, use `useAlertDialogTransition` from the copied `use-alert-dialog-transition.ts` file. It reads the frame, interpolates between state presets, and returns a resolved `AlertDialogStyle` — pass it to the `style` prop:
+
+```tsx
+import { AlertDialog } from "@/components/remocn/alert-dialog";
+import { useAlertDialogTransition } from "@/components/remocn/use-alert-dialog-transition";
+
+export const Scene = () => {
+  const style = useAlertDialogTransition([
+    { at: 32, state: "opened", duration: 16 },
+    { at: 92, state: "closed", duration: 12 },
+  ]);
+  return <AlertDialog title="Delete account?" style={style} />;
+};
+```
+
+The `duration` field on each step overrides the file's `DEFAULT_DURATION` (= `12`) for that specific transition. To globally tune timing and easing, edit `use-alert-dialog-transition.ts` directly in your project — that file is yours (shadcn "own your code" philosophy).
+
+`style` takes precedence over `state` when both are provided.
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "state",
+      type: "\"opened\" | \"closed\"",
+      default: "\"closed\"",
+      description: "Current visual state (snap path). State changes snap — no automatic cross-fade.",
+    },
+    {
+      name: "style",
+      type: "AlertDialogStyle",
+      description: "Resolved animated visual (smooth path). Pass an interpolated AlertDialogStyle from useAlertDialogTransition. Takes precedence over state when provided.",
+    },
+    {
+      name: "title",
+      type: "string",
+      default: "\"Delete account?\"",
+      description: "Headline of the alert dialog popup.",
+    },
+    {
+      name: "description",
+      type: "string",
+      default: "\"This action cannot be undone. This will permanently remove your data from our servers.\"",
+      description: "Body copy displayed under the title.",
+    },
+    {
+      name: "actionLabel",
+      type: "string",
+      default: "\"Delete\"",
+      description: "Label of the confirming (destructive) action button.",
+    },
+    {
+      name: "cancelLabel",
+      type: "string",
+      default: "\"Cancel\"",
+      description: "Label of the dismissing action button.",
+    },
+    {
+      name: "theme",
+      type: "Partial<RemocnTheme>",
+      description: "Per-component theme override. Merges with the active RemocnUIProvider theme and the mode defaults. Must be concrete oklch/hex/rgb values — not CSS custom properties.",
+    },
+    {
+      name: "mode",
+      type: "\"light\" | \"dark\"",
+      default: "\"light\"",
+      description: "Sets the base palette. Overrides the mode on RemocnUIProvider when both are present.",
+    },
+    {
+      name: "className",
+      type: "string",
+      description: "Optional className applied to the popup card element.",
+    },
+  ]}
+/>

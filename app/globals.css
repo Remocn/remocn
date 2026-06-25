@@ -49,6 +49,15 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+  --animate-marquee: marquee var(--marquee-duration, 48s) linear infinite;
+  @keyframes marquee {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
 }
 
 :root {
@@ -84,6 +93,12 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+
+  /* "NEW" sidebar badge — editable accent. Theme-agnostic for now (same value
+     in light/dark); recolor the badge by changing --badge-new-bg here. The fg
+     stays dark so the label reads on the light-lime background. */
+  --badge-new-bg: rgb(195, 232, 141);
+  --badge-new-fg: oklch(0.205 0 0);
 }
 
 .dark {
@@ -119,6 +134,10 @@
   --sidebar-accent-foreground: oklch(0.95 0 0);
   --sidebar-border: oklch(1 0 0 / 6%);
   --sidebar-ring: oklch(1 0 0 / 20%);
+
+  /* Badge keeps the same lime accent in dark mode — see :root for the knob. */
+  --badge-new-bg: rgb(195, 232, 141);
+  --badge-new-fg: oklch(0.205 0 0);
 }
 
 @layer base {
@@ -142,10 +161,17 @@
    Theme-aware surfaces and decorative backgrounds for app/(home).
    Everything derives from design tokens so light/dark stay unified.
 
-   NOTE: page width is handled by plain utilities in `config/landing.ts`
-   (SECTION) — NOT by overriding the `.container` class. Overriding the
-   configured `.container` utility from an unlayered rule was fragile and
-   left-shifted the whole landing when the cascade flipped. */
+   NOTE: page width is the `.section` class below — NOT an override of the
+   `.container` utility. Overriding the configured `.container` from an
+   unlayered rule was fragile and left-shifted the whole landing when the
+   cascade flipped. */
+
+/* Page content width wrapper — single source of truth for the landing/sponsors
+   content column: centered, max-w-6xl, responsive padding. Applied as
+   `className="section"`. */
+.section {
+  @apply mx-auto w-full max-w-6xl px-4 sm:px-6;
+}
 
 /* Subtle dotted grid — fades toward the edges. Used behind the hero. */
 .bg-grid-fade {
@@ -181,6 +207,25 @@
   background-color: color-mix(in oklab, var(--color-card) 92%, transparent);
   border: 1px solid var(--color-border);
   backdrop-filter: blur(12px);
+}
+
+/* Horizontal fade at both edges — used to dissolve marquee tracks into the
+   page instead of clipping them on a hard line. */
+.marquee-edge-fade {
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent,
+    black 12%,
+    black 88%,
+    transparent
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    black 12%,
+    black 88%,
+    transparent
+  );
 }
 
 /* ── Code / Shiki surfaces (F3) ──────────────────────────────────────

@@ -1,0 +1,188 @@
+---
+title: Slider
+description: A range slider with a draggable thumb driven by a scripted value and thumb-state timeline
+---
+
+<UiComponentPreview name="slider" />
+
+A dual-channel value atom whose fill (`0`–`100`) and thumb appearance (`idle`, `hover`, `press`) are a pure function of the props it receives. The component reads no frame. This is a **dual-channel** variant of the value-channel pattern: `useSliderTransition` drives a numeric fill channel and a thumb-state channel independently through one `SliderStyle`, so cursor-synced drag scenes compose naturally.
+
+## Installation
+
+<InstallBlock name="slider" />
+
+<Note>
+Installing `slider` automatically installs the shared `remocn-ui` core (`lib/remocn-ui/`) via `registryDependencies` (`["remocn-ui"]`). You do not need to install it separately. Both `slider` (the renderer) and `use-slider-transition` (the hook) are copied into your project.
+</Note>
+
+## Value & thumb
+
+`useSliderTransition` takes an array of `SliderStep` objects. Each step can advance the **value channel**, the **thumb channel**, or both in the same keyframe:
+
+```ts
+interface SliderStep {
+  at: number;                    // LOCAL (Sequence-relative) authored frame this keyframe is reached
+  value?: number;                // Target fill percentage 0–100 (moves the value channel)
+  thumbState?: SliderThumbState; // Target thumb visual (moves the thumb channel)
+  duration?: number;             // Frames the move INTO this step takes. Omitted → DEFAULT_DURATION (18)
+  easing?: EasingName;           // Override easing. Default "out"
+}
+```
+
+`SliderThumbState` presets:
+
+```ts
+type SliderThumbState =
+  | "idle"   // thumbScale 1, ringOpacity 0 — resting
+  | "hover"  // thumbScale 1.1, ringOpacity 1 — pointer over thumb
+  | "press"  // thumbScale 1.15, ringOpacity 1 — thumb held down
+```
+
+### Dual-channel deviation
+
+`Slider` extends the value-channel pattern (like `Progress`) with a second channel: the thumb visual. The two channels are folded independently — value-bearing steps only affect the fill; thumb-bearing steps only affect the thumb scale and grab ring. A single step may carry both fields to advance both channels at the same frame. This lets you compose a cursor drag scene by keeping cursor `x` and slider `value` on the same frame budget without coupling the thumb-state transitions to the fill easing.
+
+## Snap usage
+
+Pass `value` and `thumbState` directly — the component snaps instantly to that visual. Useful for static previews:
+
+```tsx
+import { Slider } from "@/components/remocn/slider";
+
+export const Scene = () => (
+  <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+    <Slider value={60} thumbState="hover" width={320} showValue />
+  </div>
+);
+```
+
+## Smooth transitions
+
+Value and thumb changes via the snap props are instant. For animated fill and thumb interactions, use `useSliderTransition` from the copied `use-slider-transition.ts` file. It reads the frame, folds the two channels independently, and returns a resolved `SliderStyle` — pass it to the `style` prop:
+
+```tsx
+import { Slider } from "@/components/remocn/slider";
+import { useSliderTransition } from "@/components/remocn/use-slider-transition";
+
+export const Scene = () => {
+  const style = useSliderTransition([
+    { at: 0,   value: 20, thumbState: "idle"  },
+    { at: 30,  thumbState: "hover", duration: 8  },
+    { at: 44,  thumbState: "press", duration: 6  },
+    { at: 44,  value: 20 },
+    { at: 100, value: 80, duration: 56 },
+    { at: 108, thumbState: "idle",  duration: 8  },
+  ]);
+
+  return (
+    <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <Slider style={style} width={320} showValue />
+    </div>
+  );
+};
+```
+
+The `duration` field on each step overrides the file's `DEFAULT_DURATION` (= `18`) for that specific move. To globally tune timing and easing, edit `use-slider-transition.ts` directly in your project — that file is yours (shadcn "own your code" philosophy).
+
+`style` takes precedence over `value` and `thumbState` when provided.
+
+### Frame-syncing with Cursor
+
+To animate a cursor dragging the thumb, keep the cursor's `x` position and the slider's `value` steps on the same frame budget. The cursor travels from the thumb's starting canvas position to its ending position over the same number of frames that `value` eases from its start to its target:
+
+```tsx
+import { Cursor } from "@/components/remocn/cursor";
+import { useCursorPath } from "@/components/remocn/use-cursor-path";
+import { Slider } from "@/components/remocn/slider";
+import { useSliderTransition } from "@/components/remocn/use-slider-transition";
+
+// Track is 320px wide, centered on a 1280×720 canvas.
+// Track left edge: (1280 - 320) / 2 = 480px.
+// Value 20% → thumb at canvas x = 480 + 0.20 × 320 = 544.
+// Value 80% → thumb at canvas x = 480 + 0.80 × 320 = 736.
+const THUMB_START_X = 544;
+const THUMB_END_X   = 736;
+const THUMB_Y       = 360;
+
+export const Scene = () => {
+  const cursorStyle = useCursorPath([
+    { at: 0,   x: 80,            y: 60      },
+    { at: 30,  x: THUMB_START_X, y: THUMB_Y, duration: 26 },
+    { at: 44,  x: THUMB_START_X, y: THUMB_Y, press: true,  duration: 0 },
+    { at: 100, x: THUMB_END_X,   y: THUMB_Y, press: true,  duration: 56 },
+    { at: 108, x: THUMB_END_X,   y: THUMB_Y, duration: 0 },
+  ]);
+
+  const sliderStyle = useSliderTransition([
+    { at: 0,   value: 20, thumbState: "idle"  },
+    { at: 30,  thumbState: "hover", duration: 8  },
+    { at: 44,  thumbState: "press", duration: 6  },
+    { at: 44,  value: 20 },
+    { at: 100, value: 80,           duration: 56 },
+    { at: 108, thumbState: "idle",  duration: 8  },
+  ]);
+
+  return (
+    <div style={{ position: "relative", width: "100%", height: "100%" }}>
+      <div style={{ position: "absolute", left: "50%", top: "50%", transform: "translate(-50%, -50%)" }}>
+        <Slider style={sliderStyle} width={320} showValue />
+      </div>
+      <Cursor style={cursorStyle} variant="pointer" />
+    </div>
+  );
+};
+```
+
+The cursor's drag frames (`at: 44` → `at: 100`, duration 56) match the value-channel move exactly. The thumb-state transitions (`hover` at 30, `press` at 44, `idle` at 108) are independent — they run on their own mini-durations without disturbing the fill easing.
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "value",
+      type: "number",
+      default: "0",
+      description: "Fill percentage 0–100 (snap path). Clamped to [0, 100]. Ignored when style is provided.",
+    },
+    {
+      name: "thumbState",
+      type: "\"idle\" | \"hover\" | \"press\"",
+      default: "\"idle\"",
+      description: "Thumb visual state (snap path). Sets thumbScale and ringOpacity from the preset. Ignored when style is provided.",
+    },
+    {
+      name: "style",
+      type: "SliderStyle",
+      description: "Resolved animated visual (smooth path). Pass an interpolated SliderStyle from useSliderTransition. Takes precedence over value and thumbState when provided.",
+    },
+    {
+      name: "width",
+      type: "number",
+      default: "320",
+      description: "Track width in px.",
+    },
+    {
+      name: "showValue",
+      type: "boolean",
+      default: "false",
+      description: "When true, renders the rounded current value above the thumb.",
+    },
+    {
+      name: "theme",
+      type: "Partial<RemocnTheme>",
+      description: "Per-component theme override. Merges with the active RemocnUIProvider theme and the mode defaults. Must be concrete oklch/hex/rgb values — not CSS custom properties.",
+    },
+    {
+      name: "mode",
+      type: "\"light\" | \"dark\"",
+      default: "\"light\"",
+      description: "Sets the base palette. Overrides the mode on RemocnUIProvider when both are present.",
+    },
+    {
+      name: "className",
+      type: "string",
+      description: "Optional className applied to the outer wrapper element.",
+    },
+  ]}
+/>

@@ -1,0 +1,18 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "backdrop",
+  "title": "Backdrop",
+  "description": "Configurable full-frame background (color / gradient / image / live component) with Screen Studio-style padding and a rounded, shadowed content frame.",
+  "dependencies": [
+    "remotion"
+  ],
+  "files": [
+    {
+      "path": "registry/remocn/backdrop/index.tsx",
+      "content": "\"use client\";\n\nimport { isValidElement, type ReactNode } from \"react\";\nimport { AbsoluteFill, Img, useVideoConfig } from \"remotion\";\n\nexport type BackdropFill =\n  | { type: \"color\"; value: string }\n  | { type: \"gradient\"; value: string }\n  | { type: \"image\"; src: string; fit?: \"cover\" | \"contain\" };\n\nexport interface BackdropProps {\n  fill?: BackdropFill | ReactNode;\n  padding?: number;\n  radius?: number;\n  shadow?: string;\n  children?: ReactNode;\n  className?: string;\n}\n\nconst DEFAULT_FILL: BackdropFill = { type: \"color\", value: \"#0a0a0a\" };\n\nfunction FillLayer({ fill }: { fill: BackdropFill }) {\n  if (fill.type === \"image\") {\n    return (\n      <AbsoluteFill>\n        <Img\n          src={fill.src}\n          style={{\n            width: \"100%\",\n            height: \"100%\",\n            objectFit: fill.fit ?? \"cover\",\n          }}\n        />\n      </AbsoluteFill>\n    );\n  }\n\n  return <AbsoluteFill style={{ background: fill.value }} />;\n}\n\nexport function Backdrop({\n  fill,\n  padding = 4,\n  radius = 1,\n  shadow = \"0 20px 60px rgba(0,0,0,0.4)\",\n  children,\n  className,\n}: BackdropProps) {\n  const { width } = useVideoConfig();\n\n  const paddingPx = (padding / 100) * width;\n  const radiusPx = (radius / 100) * width;\n\n  const fillLayer = isValidElement(fill) ? (\n    <AbsoluteFill>{fill}</AbsoluteFill>\n  ) : (\n    <FillLayer fill={(fill as BackdropFill | undefined) ?? DEFAULT_FILL} />\n  );\n\n  return (\n    <AbsoluteFill className={className}>\n      {fillLayer}\n      {children != null && (\n        <div\n          style={{\n            position: \"absolute\",\n            inset: paddingPx,\n            overflow: \"hidden\",\n            borderRadius: radiusPx,\n            display: \"flex\",\n            ...(shadow === \"\" ? {} : { boxShadow: shadow }),\n          }}\n        >\n          <div style={{ width: \"100%\", height: \"100%\" }}>{children}</div>\n        </div>\n      )}\n    </AbsoluteFill>\n  );\n}\n",
+      "type": "registry:component",
+      "target": "components/remocn/backdrop.tsx"
+    }
+  ],
+  "type": "registry:component"
+}

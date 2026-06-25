@@ -22,7 +22,6 @@ export const dataFlowPipesConfig: ComponentConfig = {
       step: 1,
       label: "Pulse duration",
     },
-    background: { type: "color", default: "#050505", label: "Background" },
     nodeColor: { type: "color", default: "#0a0a0a", label: "Node color" },
     textColor: { type: "color", default: "#fafafa", label: "Text color" },
   },
@@ -30,4 +29,5 @@ export const dataFlowPipesConfig: ComponentConfig = {
   fps: FPS,
   compositionWidth: W,
   compositionHeight: H,
+  previewBackdrop: { type: "color", value: "#050505" },
 };

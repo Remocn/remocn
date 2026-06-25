@@ -12,7 +12,6 @@ export interface DragAndDropFlowProps {
   accent?: string;
   dropzoneLabel?: string;
   fileName?: string;
-  background?: string;
   speed?: number;
   className?: string;
 }
@@ -67,7 +66,6 @@ export function DragAndDropFlow({
   accent = "#0ea5e9",
   dropzoneLabel = "Drop file to upload",
   fileName = "design.fig",
-  background = "#fafafa",
   speed = 1,
   className,
 }: DragAndDropFlowProps) {
@@ -128,7 +126,6 @@ export function DragAndDropFlow({
       style={{
         position: "absolute",
         inset: 0,
-        background,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",

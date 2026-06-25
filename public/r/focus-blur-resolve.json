@@ -1,0 +1,18 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "focus-blur-resolve",
+  "title": "Focus Blur Resolve",
+  "description": "A premium focus pull from heavy blur to crisp text, then a soft blur-out exit.",
+  "dependencies": [
+    "remotion"
+  ],
+  "files": [
+    {
+      "path": "registry/remocn/focus-blur-resolve/index.tsx",
+      "content": "\"use client\";\n\nimport { Easing, interpolate, useCurrentFrame, useVideoConfig } from \"remotion\";\n\nexport interface FocusBlurResolveProps {\n  text: string;\n  blur?: number;\n  fontSize?: number;\n  color?: string;\n  fontWeight?: number;\n  speed?: number;\n  className?: string;\n}\n\nexport function FocusBlurResolve({\n  text,\n  blur = 14,\n  fontSize = 72,\n  color = \"#171717\",\n  fontWeight = 600,\n  speed = 1,\n  className,\n}: FocusBlurResolveProps) {\n  const frame = useCurrentFrame() * speed;\n  const { durationInFrames } = useVideoConfig();\n\n  const enterDur = 23;\n  const exitDur = 16;\n  const exitStart = Math.max(enterDur, durationInFrames - exitDur);\n\n  const enterEasing = Easing.bezier(0.22, 1, 0.36, 1);\n  const exitEasing = Easing.bezier(0.64, 0, 0.78, 0);\n\n  const enterP = interpolate(frame, [0, enterDur], [0, 1], {\n    extrapolateLeft: \"clamp\",\n    extrapolateRight: \"clamp\",\n    easing: enterEasing,\n  });\n\n  const exitP = interpolate(frame, [exitStart, durationInFrames], [0, 1], {\n    extrapolateLeft: \"clamp\",\n    extrapolateRight: \"clamp\",\n    easing: exitEasing,\n  });\n\n  const opacity = enterP * (1 - exitP);\n\n  const yEnter = interpolate(frame, [0, enterDur], [14, 0], {\n    extrapolateLeft: \"clamp\",\n    extrapolateRight: \"clamp\",\n    easing: enterEasing,\n  });\n\n  const yExit = interpolate(frame, [exitStart, durationInFrames], [0, -10], {\n    extrapolateLeft: \"clamp\",\n    extrapolateRight: \"clamp\",\n    easing: exitEasing,\n  });\n\n  const y = yEnter + yExit;\n\n  const blurEnter = interpolate(frame, [0, enterDur], [blur, 0], {\n    extrapolateLeft: \"clamp\",\n    extrapolateRight: \"clamp\",\n    easing: enterEasing,\n  });\n\n  const blurExit = interpolate(frame, [exitStart, durationInFrames], [0, 10], {\n    extrapolateLeft: \"clamp\",\n    extrapolateRight: \"clamp\",\n    easing: exitEasing,\n  });\n\n  const blurVal = blurEnter + blurExit;\n\n  const scale = interpolate(frame, [0, enterDur], [1.01, 1], {\n    extrapolateLeft: \"clamp\",\n    extrapolateRight: \"clamp\",\n    easing: enterEasing,\n  });\n\n  return (\n    <div\n      style={{\n        position: \"absolute\",\n        inset: 0,\n        display: \"flex\",\n        alignItems: \"center\",\n        justifyContent: \"center\",\n        background: \"transparent\",\n      }}\n    >\n      <span\n        className={className}\n        style={{\n          fontSize,\n          fontWeight,\n          color,\n          letterSpacing: \"-0.03em\",\n          fontFamily:\n            \"var(--font-geist-sans), -apple-system, BlinkMacSystemFont, sans-serif\",\n          display: \"inline-block\",\n          transformOrigin: \"50% 50%\",\n          opacity,\n          transform: `translateY(${y}px) scale(${scale})`,\n          filter: `blur(${blurVal}px)`,\n        }}\n      >\n        {text}\n      </span>\n    </div>\n  );\n}\n",
+      "type": "registry:component",
+      "target": "components/remocn/focus-blur-resolve.tsx"
+    }
+  ],
+  "type": "registry:component"
+}

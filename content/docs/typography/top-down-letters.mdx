@@ -1,0 +1,110 @@
+---
+title: Top-Down Letters
+description: Letters descend from above in a pronounced staircase, one symbol at a time
+---
+
+<ComponentPreview name="top-down-letters" />
+
+## Installation
+
+<InstallBlock name="top-down-letters" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { TopDownLetters } from "@/components/remocn/top-down-letters";
+
+const TopDownLettersScene = () => (
+  <TopDownLetters text="Signal" staggerDelay={3} distance={46} />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="TopDownLetters"
+    component={TopDownLettersScene}
+    durationInFrames={60}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+### With Backdrop
+
+The component renders transparent — supply the background via `Backdrop`. It ships single-theme; edit the copied file to re-theme colors.
+
+Pair with `Backdrop` to place the text inside a full-frame fill with a rounded, shadowed content frame:
+
+```tsx
+import { Composition } from "remotion";
+import { TopDownLetters } from "@/components/remocn/top-down-letters";
+import { Backdrop } from "@/components/remocn/backdrop";
+
+const TopDownLettersScene = () => (
+  <Backdrop fill={{ type: "color", value: "#ffffff" }}>
+    <TopDownLetters text="Signal" staggerDelay={3} distance={46} />
+  </Backdrop>
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="TopDownLetters"
+    component={TopDownLettersScene}
+    durationInFrames={60}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "text",
+      type: "string",
+      required: true,
+      description: "The text to reveal",
+    },
+    {
+      name: "staggerDelay",
+      type: "number",
+      default: "3",
+      description: "Per-character delay in frames. Larger values make the staircase more pronounced.",
+    },
+    {
+      name: "distance",
+      type: "number",
+      default: "46",
+      description: "Vertical travel in pixels each letter descends from above. Animates to 0.",
+    },
+    {
+      name: "fontSize",
+      type: "number",
+      default: "72",
+      description: "Font size in pixels",
+    },
+    {
+      name: "fontWeight",
+      type: "number",
+      default: "600",
+      description: "CSS font-weight",
+    },
+    {
+      name: "color",
+      type: "string",
+      default: "\"#171717\"",
+      description: "Text color (any valid CSS color)",
+    },
+    {
+      name: "className",
+      type: "string",
+      description: "Optional className passed to the underlying span",
+    },
+  ]}
+/>

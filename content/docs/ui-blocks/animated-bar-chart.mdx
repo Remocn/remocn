@@ -35,6 +35,19 @@ export const RemotionRoot = () => (
 );
 ```
 
+### With Backdrop
+
+Renders transparent — supply the background via `Backdrop`:
+
+```tsx
+import { Backdrop } from "@/components/remocn/backdrop";
+import { AnimatedBarChart } from "@/components/remocn/animated-bar-chart";
+
+<Backdrop fill={{ type: "color", value: "#0a0a0a" }}>
+  <AnimatedBarChart data={[35, 60, 45, 80, 55, 70, 90, 65]} barColor="#0ea5e9" />
+</Backdrop>
+```
+
 ## Props
 
 <PropsTable
@@ -67,12 +80,6 @@ export const RemotionRoot = () => (
       type: "string",
       default: "\"#0ea5e9\"",
       description: "Fill color used for every bar",
-    },
-    {
-      name: "background",
-      type: "string",
-      default: "\"#0a0a0a\"",
-      description: "Outer background color",
     },
     {
       name: "gap",

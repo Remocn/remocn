@@ -6,16 +6,7 @@ export interface BrowserFlowProps {
   url?: string;
   speed?: number;
   className?: string;
-  /**
-   * CSS background for the scene behind the browser window. Accepts any
-   * `background` shorthand value (color, gradient, `url(...)`, or a layered
-   * combination). Defaults to the dark radial gradient.
-   */
-  background?: string;
 }
-
-const DEFAULT_BACKGROUND =
-  "radial-gradient(ellipse at center, #11141c 0%, #050505 75%)";
 
 const FONT_FAMILY =
   "var(--font-geist-sans), -apple-system, BlinkMacSystemFont, sans-serif";
@@ -63,7 +54,6 @@ export function BrowserFlow({
   url = "remocn.dev",
   speed = 1,
   className,
-  background = DEFAULT_BACKGROUND,
 }: BrowserFlowProps) {
   const frame = useCurrentFrame() * speed;
   const { fps } = useVideoConfig();
@@ -180,7 +170,6 @@ export function BrowserFlow({
         position: "absolute",
         inset: 0,
         overflow: "hidden",
-        background,
         fontFamily: FONT_FAMILY,
       }}
     >
