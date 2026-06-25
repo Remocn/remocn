@@ -1,5 +1,5 @@
 {
   "title": "Getting Started",
   "collapsible": false,
-  "pages": ["introduction", "installation"]
+  "pages": ["introduction", "installation", "agent-skill"]
 }

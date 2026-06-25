@@ -1,0 +1,62 @@
+---
+title: Agent Skill
+description: Install the remocn agent skill with skills.sh so your AI generates better Remotion videos
+---
+
+remocn ships an **agent skill** — a knowledge pack that teaches AI coding agents (Claude Code and
+friends) how to build videos with remocn: the full component catalog with props and durations,
+design defaults, motion-design principles, and common anti-patterns.
+
+Once installed, your agent picks the right components, budgets the timeline correctly, and styles
+your additions to match the library — without you pasting context every time.
+
+## Install with skills.sh
+
+The skill lives in the [`skills/`](https://github.com/kapishdima/remocn/tree/main/skills) folder of
+the remocn repo. Install it with the [`skills`](https://skills.sh) CLI:
+
+```bash
+npx skills add kapishdima/remocn
+```
+
+This finds the `remocn` skill and installs it into your agent (for Claude Code:
+`.claude/skills/remocn/`). The CLI is interactive — pick the skill and target agent when prompted.
+
+### Common flags
+
+```bash
+# Install straight to the remocn skill, no prompts
+npx skills add kapishdima/remocn --skill remocn --yes
+
+# Install globally (available in every project)
+npx skills add kapishdima/remocn --skill remocn -g
+
+# Target a specific agent
+npx skills add kapishdima/remocn -a claude-code
+
+# Just list what's available in the repo
+npx skills add kapishdima/remocn --list
+```
+
+### Use without installing
+
+To try it for a single session without writing files:
+
+```bash
+npx skills use kapishdima/remocn@remocn | claude
+```
+
+## What's inside
+
+| File | Contents |
+|---|---|
+| `SKILL.md` | Install flow, the two tiers, categories, patterns, design defaults |
+| `references/components.md` | Every component — props, defaults, dependencies, duration & vibe |
+| `references/design.md` | Anti-slop design defaults + tokens (palette, fonts, canvas) |
+| `references/motion-principles.md` | The 12 motion principles adapted to remocn |
+| `references/anti-patterns.md` | Common generation mistakes and their fixes |
+
+## Prerequisites
+
+- An AI agent that loads skills (e.g. Claude Code).
+- A Remotion project with remocn — see [Installation](/docs/getting-started/installation).
