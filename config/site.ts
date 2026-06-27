@@ -72,6 +72,11 @@ export const NEW_BADGE_PATHS = new Set<string>([
   "/docs/typography/short-slide-right",
   "/docs/typography/kinetic-center-build",
   "/docs/typography/short-slide-down",
+  "/docs/ui/components/message-bubble",
+  "/docs/ui/components/typing-indicator",
+  "/docs/ui/blocks/chat-flow",
+  "/docs/ui/blocks/telegram-chat-flow",
+  "/docs/ui/blocks/imessage-chat-flow",
 ]);
 
 export const FOOTER_NAV: NavLink[] = [
