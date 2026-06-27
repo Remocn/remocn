@@ -80,11 +80,11 @@ export function Hero() {
               className="mb-5 h-7 gap-1.5 rounded-full px-3 text-xs"
               render={
                 <Link
-                  href="/docs/typography"
+                  href="/docs/ui/blocks/telegram-chat-flow"
                   onClick={() =>
                     trackEvent("cta_clicked", {
                       cta: "hero_ui_badge",
-                      destination: "/docs/typography",
+                      destination: "/docs/ui/blocks/telegram-chat-flow",
                     })
                   }
                 />
@@ -95,7 +95,7 @@ export function Hero() {
                 ·
               </span>
               <span className="text-muted-foreground">
-                Introducing <span className="text-foreground">Typography</span>
+                Introducing <span className="text-foreground">Chat</span>
               </span>
               <ArrowRight className="size-3" aria-hidden="true" />
             </Badge>
