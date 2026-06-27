@@ -1,0 +1,60 @@
+---
+title: iMessage Chat Flow
+description: iMessage-styled conversation with gray incoming and blue outgoing bubbles, typing indicator, Delivered label, and tapback reactions
+---
+
+<BlockPreview name="imessage-chat-flow" />
+
+An iMessage-skinned composition scene — a tailed-bubble message thread, a native-feeling composer bar, and a contact header with FaceTime video icon. Outgoing messages type into the composer then send as blue tailed bubbles with a "Delivered" label underneath; incoming replies are preceded by a gray typing bubble (three bouncing dots) that swaps to the reply text; tapback reaction badges pop in at the top outer corner of their parent bubble.
+
+## Installation
+
+<InstallBlock name="imessage-chat-flow" />
+
+<Note>
+Installing `imessage-chat-flow` automatically installs the shared `remocn-ui` core and all composed primitives via `registryDependencies`: `caret`, and `typing-indicator`. You do not need to install them separately. The block also pulls `lucide-react` for chrome icons (back chevron, FaceTime video button, composer apps-plus, and up-arrow send button).
+</Note>
+
+## Composed primitives
+
+- **Caret** — blinking caret inside the composer text field; outgoing text reveals character by character before sending
+- **TypingIndicator** — three bouncing dots rendered inside a gray incoming bubble before the reply text arrives
+
+The block is otherwise self-contained: it owns its tailed bubble layout (gray `#e9e9eb` for incoming, iMessage blue for outgoing), the "Delivered" delivery label under the last outgoing bubble, tapback reaction badges at the top outer corner of each bubble, the composer bar (apps-plus icon + text field + circular up-arrow send button), and the contact header with avatar, display name, and lucide-react chrome icons.
+
+## Timeline narrative
+
+The scene opens with a focused iMessage composer. The first outgoing message types into the input field, then sends — a blue tailed bubble enters from below and settles into the thread with a "Delivered" label underneath. A gray typing bubble with three bouncing dots appears on the incoming side; after a beat the dots swap to the reply text and the tapback reaction badge pops in at the top outer corner. Subsequent outgoing messages follow the same pattern — typing, sending, Delivered — each reply preceded by the typing bubble. The composer returns to idle at the end.
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "messages",
+      type: "ImessageMessage[]",
+      description: "Array of messages to animate. Each item has {from: 'me' | 'them', text: string, reaction?: string}. Defaults to the built-in demo script.",
+    },
+    {
+      name: "contact",
+      type: "{ name: string; avatar?: string }",
+      description: "Display name and optional avatar URL shown in the contact header.",
+    },
+    {
+      name: "accentColor",
+      type: "string",
+      description: "Override for the outgoing bubble color and send button. Defaults to iMessage blue. Accepts any concrete color value (oklch, hex, rgb).",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Multiplier on the overall animation speed. Values above 1 speed up the whole conversation; below 1 slow it down.",
+    },
+    {
+      name: "theme",
+      type: "RemocnTheme",
+      description: "Optional theme override (concrete oklch/hex/rgb values).",
+    },
+  ]}
+/>

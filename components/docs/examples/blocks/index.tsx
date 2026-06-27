@@ -26,6 +26,14 @@ import {
   chatFlowExampleCode,
 } from "../chat-flow-example";
 import {
+  TelegramChatFlowExampleScene,
+  telegramChatFlowExampleCode,
+} from "../telegram-chat-flow-example";
+import {
+  ImessageChatFlowExampleScene,
+  imessageChatFlowExampleCode,
+} from "../imessage-chat-flow-example";
+import {
   BackdropColorScene,
   BackdropGradientScene,
   BackdropImageScene,
@@ -98,6 +106,29 @@ export const blockExamples: Record<string, BlockExampleEntry> = {
     width: 432,
     height: 768,
     previewBackdrop: { type: "color", value: "oklch(1 0 0)" },
+  },
+  "telegram-chat-flow": {
+    Component: TelegramChatFlowExampleScene,
+    code: telegramChatFlowExampleCode,
+    // Same 3-message schedule as chat-flow: ~314 + ~28 tail then loop.
+    durationInFrames: 360,
+    fps: FPS,
+    width: 432,
+    height: 768,
+    previewBackdrop: {
+      type: "gradient",
+      value: "linear-gradient(180deg, #cfe0ec 0%, #a7c6e0 100%)",
+    },
+  },
+  "imessage-chat-flow": {
+    Component: ImessageChatFlowExampleScene,
+    code: imessageChatFlowExampleCode,
+    // Same 3-message schedule: ~314 + ~28 tail then loop.
+    durationInFrames: 360,
+    fps: FPS,
+    width: 432,
+    height: 768,
+    previewBackdrop: { type: "color", value: "#ffffff" },
   },
   "checkout-flow": {
     Component: CheckoutFlowExampleScene,
@@ -189,6 +220,8 @@ export const BLOCK_SCENE_META: Record<
   "signup-flow": { code: signupFlowExampleCode },
   "ai-prompt-flow": { code: aiPromptFlowExampleCode },
   "chat-flow": { code: chatFlowExampleCode },
+  "telegram-chat-flow": { code: telegramChatFlowExampleCode },
+  "imessage-chat-flow": { code: imessageChatFlowExampleCode },
   "checkout-flow": { code: checkoutFlowExampleCode },
   "onboarding-stepper-flow": { code: onboardingStepperFlowExampleCode },
   "settings-toggle-flow": { code: settingsToggleFlowExampleCode },

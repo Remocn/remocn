@@ -826,6 +826,36 @@
           "target": "components/remocn/chat-flow.tsx"
         }
       ]
+    },
+    {
+      "name": "telegram-chat-flow",
+      "type": "registry:component",
+      "title": "UI Telegram Chat Flow",
+      "description": "A Telegram-styled messaging composition: tailed bubbles (white incoming, blue outgoing) with in-bubble timestamps and delivery checks, a header that flips to 'typing…' while the other side replies, reaction chips, and a Telegram composer that types the outgoing message before sending. Self-contained — it owns its timeline and only composes the caret primitive.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/remocn-ui", "@remocn/caret"],
+      "files": [
+        {
+          "path": "telegram-chat-flow/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/telegram-chat-flow.tsx"
+        }
+      ]
+    },
+    {
+      "name": "imessage-chat-flow",
+      "type": "registry:component",
+      "title": "UI iMessage Chat Flow",
+      "description": "An iMessage-styled messaging composition: gray incoming and blue outgoing bubbles with tails, an in-thread typing bubble with dots, a Delivered label, and tapback-style reaction badges. The composer types the outgoing message before sending. Chrome icons come from lucide-react; self-contained otherwise, composing the caret and typing-indicator primitives.",
+      "dependencies": ["remotion", "lucide-react"],
+      "registryDependencies": ["@remocn/remocn-ui", "@remocn/caret", "@remocn/typing-indicator"],
+      "files": [
+        {
+          "path": "imessage-chat-flow/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/imessage-chat-flow.tsx"
+        }
+      ]
     }
   ]
 }

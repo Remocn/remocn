@@ -1,0 +1,59 @@
+---
+title: Telegram Chat Flow
+description: Telegram-styled conversation with tailed bubbles, delivery checks, typing status, and reaction chips
+---
+
+<BlockPreview name="telegram-chat-flow" />
+
+A Telegram-skinned composition scene — a tailed-bubble message thread, a Telegram-style composer pill, and a contact header that flips to "typing…" while the other side replies. Outgoing messages type into the composer then send with blue double-check delivery marks; incoming replies are preceded by a "typing…" status in the header before the bubble arrives; reaction chips pop in after each message lands.
+
+## Installation
+
+<InstallBlock name="telegram-chat-flow" />
+
+<Note>
+Installing `telegram-chat-flow` automatically installs the shared `remocn-ui` core and all composed primitives via `registryDependencies`: `caret`. You do not need to install them separately.
+</Note>
+
+## Composed primitives
+
+- **Caret** — blinking caret inside the Telegram composer pill; outgoing text reveals character by character before sending
+
+The block is otherwise self-contained: it owns its tailed bubble layout, in-bubble timestamps, delivery-check marks, reaction chips, the composer pill (emoji + text field + attach icon + blue circular send button), and the contact header with avatar and typing-status logic.
+
+## Timeline narrative
+
+The scene opens with a focused Telegram composer. The first outgoing message types into the input pill, then sends — a blue tailed bubble enters from below and settles into the thread, its timestamp and double-check marks visible inside the bubble. The contact header switches to "typing…"; after a beat the reply bubble arrives (white, left-tailed) and a reaction chip pops in beneath it. The second outgoing message follows the same pattern, sending with delivery checks and its own reaction. The composer returns to idle.
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "messages",
+      type: "TelegramMessage[]",
+      description: "Array of messages to animate. Each item has {from: 'me' | 'them', text: string, reaction?: string, time?: string}. Defaults to the built-in demo script.",
+    },
+    {
+      name: "contact",
+      type: "{ name: string; avatar?: string }",
+      description: "Display name and optional avatar URL shown in the contact header.",
+    },
+    {
+      name: "accentColor",
+      type: "string",
+      description: "Override for the outgoing bubble color and send button. Defaults to Telegram blue. Accepts any concrete color value (oklch, hex, rgb).",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Multiplier on the overall animation speed. Values above 1 speed up the whole conversation; below 1 slow it down.",
+    },
+    {
+      name: "theme",
+      type: "RemocnTheme",
+      description: "Optional theme override (concrete oklch/hex/rgb values).",
+    },
+  ]}
+/>
