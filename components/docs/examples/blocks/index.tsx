@@ -22,6 +22,10 @@ import {
   settingsToggleFlowExampleCode,
 } from "../settings-toggle-flow-example";
 import {
+  ChatFlowExampleScene,
+  chatFlowExampleCode,
+} from "../chat-flow-example";
+import {
   BackdropColorScene,
   BackdropGradientScene,
   BackdropImageScene,
@@ -83,6 +87,16 @@ export const blockExamples: Record<string, BlockExampleEntry> = {
     fps: FPS,
     width: W,
     height: H,
+    previewBackdrop: { type: "color", value: "oklch(1 0 0)" },
+  },
+  "chat-flow": {
+    Component: ChatFlowExampleScene,
+    code: chatFlowExampleCode,
+    // 3 default messages: last reaction pop ~314 + ~28 tail then loop.
+    durationInFrames: 360,
+    fps: FPS,
+    width: 432,
+    height: 768,
     previewBackdrop: { type: "color", value: "oklch(1 0 0)" },
   },
   "checkout-flow": {
@@ -174,6 +188,7 @@ export const BLOCK_SCENE_META: Record<
 > = {
   "signup-flow": { code: signupFlowExampleCode },
   "ai-prompt-flow": { code: aiPromptFlowExampleCode },
+  "chat-flow": { code: chatFlowExampleCode },
   "checkout-flow": { code: checkoutFlowExampleCode },
   "onboarding-stepper-flow": { code: onboardingStepperFlowExampleCode },
   "settings-toggle-flow": { code: settingsToggleFlowExampleCode },

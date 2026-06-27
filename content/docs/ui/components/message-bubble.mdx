@@ -1,0 +1,143 @@
+---
+title: Message Bubble
+description: A state-driven speech bubble with incoming and outgoing variants and an optional reaction badge
+---
+
+<UiComponentPreview name="message-bubble" />
+
+A state atom whose appearance (`hidden`, `visible`) is a pure function of the `state` prop. The bubble enters from 12 px below at 0.94 scale, fades and scales up to rest. Incoming bubbles align to the left on `theme.muted`; outgoing bubbles align to the right on `theme.primary`. An optional reaction emoji badge pops in via the `reactionStyle` channel.
+
+## Installation
+
+<InstallBlock name="message-bubble" />
+
+<Note>
+Installing `message-bubble` automatically installs the shared `remocn-ui` core (`lib/remocn-ui/`) via `registryDependencies` (`["remocn-ui"]`). You do not need to install it separately. Both `message-bubble` (the renderer) and `use-message-bubble-transition` (the hook) are copied into your project.
+</Note>
+
+## States
+
+`MessageBubbleState` is:
+
+```ts
+type MessageBubbleState =
+  | "hidden"
+  | "visible"
+```
+
+`hidden` rests at opacity 0, translateY 12 px, and scale 0.94. `visible` brings the bubble to full opacity, translateY 0, and scale 1.
+
+## Smooth transitions
+
+For animated enter, use `useMessageBubbleTransition` from the copied `use-message-bubble-transition.ts` file. It reads the frame, interpolates between state presets, and returns a resolved `MessageBubbleStyle` — pass it to the `style` prop:
+
+```tsx
+import { MessageBubble } from "@/components/remocn/message-bubble";
+import { useMessageBubbleTransition } from "@/components/remocn/use-message-bubble-transition";
+
+export const Scene = () => {
+  const style = useMessageBubbleTransition([
+    { at: 20, state: "visible", duration: 14 },
+    { at: 80, state: "hidden",  duration: 14 },
+  ]);
+
+  return (
+    <div style={{ position: "relative", width: "100%", height: "100%" }}>
+      <MessageBubble style={style} variant="incoming">Hey — ready for the demo?</MessageBubble>
+    </div>
+  );
+};
+```
+
+The `duration` field overrides the file's `DEFAULT_DURATION` (= `14`) for that specific transition. To globally tune timing and easing, edit `use-message-bubble-transition.ts` directly in your project — that file is yours (shadcn "own your code" philosophy).
+
+`style` takes precedence over `state` when both are provided.
+
+## Variants
+
+The `variant` prop sets the color and alignment of the bubble.
+
+```ts
+type MessageBubbleVariant =
+  | "incoming"
+  | "outgoing"
+```
+
+`incoming` uses `theme.muted` as the background and `theme.foreground` as text, aligned to the left. `outgoing` uses `theme.primary` as the background and `theme.primaryForeground` as text, aligned to the right.
+
+```tsx
+<MessageBubble variant="incoming">Hey — ready for the demo?</MessageBubble>
+<MessageBubble variant="outgoing">Yep, pushing it live now</MessageBubble>
+```
+
+## Reactions
+
+Pass a reaction emoji string to the `reaction` prop to render an emoji badge anchored to the bottom corner of the bubble. Drive the badge's animated entrance via the `reactionStyle` channel — a separate style object that controls the badge opacity and scale independently from the bubble body.
+
+```tsx
+<MessageBubble
+  variant="incoming"
+  state="visible"
+  reaction="🔥"
+  reactionStyle={{ opacity: 1, scale: 1 }}
+>
+  Yep, pushing it live now
+</MessageBubble>
+```
+
+When `reaction` is omitted no badge is rendered.
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "state",
+      type: "\"hidden\" | \"visible\"",
+      default: "\"hidden\"",
+      description: "Current visual state (snap path). State changes snap — no automatic cross-fade.",
+    },
+    {
+      name: "style",
+      type: "MessageBubbleStyle",
+      description: "Resolved animated visual (smooth path). Pass an interpolated MessageBubbleStyle from useMessageBubbleTransition. Takes precedence over state when provided.",
+    },
+    {
+      name: "variant",
+      type: "\"incoming\" | \"outgoing\"",
+      default: "\"incoming\"",
+      description: "Sets the bubble color and alignment. incoming uses theme.muted and left-aligns; outgoing uses theme.primary and right-aligns.",
+    },
+    {
+      name: "children",
+      type: "React.ReactNode",
+      description: "The message text or content rendered inside the bubble.",
+    },
+    {
+      name: "reaction",
+      type: "string",
+      description: "Optional emoji string rendered as a badge anchored to the bottom corner of the bubble.",
+    },
+    {
+      name: "reactionStyle",
+      type: "MessageBubbleStyle",
+      description: "Animated style for the reaction badge. Controls opacity and scale independently from the bubble body.",
+    },
+    {
+      name: "maxWidth",
+      type: "number",
+      default: "460",
+      description: "Maximum width of the bubble in pixels.",
+    },
+    {
+      name: "theme",
+      type: "Partial<RemocnTheme>",
+      description: "Per-component theme override. Merges with the active RemocnUIProvider theme and the mode defaults. Must be concrete oklch/hex/rgb values — not CSS custom properties.",
+    },
+    {
+      name: "className",
+      type: "string",
+      description: "Optional className applied to the bubble wrapper element.",
+    },
+  ]}
+/>

@@ -1,0 +1,61 @@
+---
+title: Chat Flow
+description: A messaging conversation that types outgoing messages, shows typing indicators, and pops in incoming replies with reactions
+---
+
+<BlockPreview name="chat-flow" />
+
+A composition scene that renders a full chat conversation — a contact header, a message thread, and a composer input. Outgoing messages type themselves into the input field then send; incoming replies are preceded by a typing indicator that swaps to the reply bubble; reaction emojis pop in after each reply lands.
+
+## Installation
+
+<InstallBlock name="chat-flow" />
+
+<Note>
+Installing `chat-flow` automatically installs the shared `remocn-ui` core and all composed primitives via `registryDependencies`: `caret`, `message-bubble`, and `typing-indicator`. You do not need to install them separately.
+</Note>
+
+## Composed primitives
+
+- **MessageBubble** — state-driven speech bubble with incoming/outgoing variants and optional reaction badges, styled to match the shadcn `Bubble`
+- **TypingIndicator** — bouncing dots that play inside an incoming bubble before the reply text appears
+- **Caret** — blinking caret in the composer; the outgoing message reveals character by character into a shadcn-style textarea before sending
+
+The layout is a mobile-width column — a contact header, the message thread, and a textarea composer with a `+` action and a send button.
+
+## Timeline narrative
+
+The scene opens with the composer focused. The first outgoing message ("Hey — ready for the demo?") types into the input, then sends — the bubble enters from below and settles into the thread. The contact's typing indicator appears inside an incoming bubble; after a beat the indicator swaps to the reply text ("Yep, pushing it live now") and the 🔥 reaction badge pops in. The second outgoing message types and sends ("Perfect, sending the link over"), and its 👍 reaction badge follows. `chatFlowDuration` returns the total frame count for the default script at a given speed; `chatFlowSchedule` exposes the per-message frame offsets for synchronisation with other scene elements.
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "messages",
+      type: "ChatMessage[]",
+      description: "Array of messages to animate. Each item has {from: 'me' | 'them', text: string, reaction?: string}. Defaults to the built-in three-message demo script.",
+    },
+    {
+      name: "contact",
+      type: "{ name: string; avatar?: string }",
+      description: "Display name and optional avatar URL shown in the contact header above the thread.",
+    },
+    {
+      name: "accentColor",
+      type: "string",
+      description: "Override for the outgoing bubble color. Accepts any concrete color value (oklch, hex, rgb).",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Multiplier on the overall animation speed. Values above 1 speed up the whole conversation; below 1 slow it down.",
+    },
+    {
+      name: "theme",
+      type: "RemocnTheme",
+      description: "Optional theme override (concrete oklch/hex/rgb values).",
+    },
+  ]}
+/>

@@ -29,6 +29,14 @@ import { TabsExampleScene, tabsExampleCode } from "./tabs-example";
 import { CursorExampleScene, cursorExampleCode } from "./cursor-example";
 import { ToastExampleScene, toastExampleCode } from "./toast-example";
 import {
+  MessageBubbleExampleScene,
+  messageBubbleExampleCode,
+} from "./message-bubble-example";
+import {
+  TypingIndicatorExampleScene,
+  typingIndicatorExampleCode,
+} from "./typing-indicator-example";
+import {
   CommandMenuExampleScene,
   commandMenuExampleCode,
 } from "./command-menu-example";
@@ -245,6 +253,26 @@ export const examples: Record<string, ExampleEntry> = {
     code: toastExampleCode,
     // Toast dismiss completes at 144 + dur 12 = 156; a short settle then loop.
     durationInFrames: 170,
+    fps: FPS,
+    width: W,
+    height: H,
+    previewBackdrop: { type: "color", value: "oklch(1 0 0)" },
+  },
+  "message-bubble-example": {
+    Component: MessageBubbleExampleScene,
+    code: messageBubbleExampleCode,
+    // Bubble reveal 16 + reaction pop ~44 + settle, then loop.
+    durationInFrames: 90,
+    fps: FPS,
+    width: W,
+    height: H,
+    previewBackdrop: { type: "color", value: "oklch(1 0 0)" },
+  },
+  "typing-indicator-example": {
+    Component: TypingIndicatorExampleScene,
+    code: typingIndicatorExampleCode,
+    // Continuous loop; one bounce cycle is ~27 frames at 1.1 cps.
+    durationInFrames: 90,
     fps: FPS,
     width: W,
     height: H,

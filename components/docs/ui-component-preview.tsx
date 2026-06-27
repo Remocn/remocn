@@ -15,6 +15,14 @@ import { type ExampleEntry, examples } from "./examples";
 import { buttonExampleCode, buttonExampleControls } from "./examples/button-example";
 import { inputExampleCode, inputExampleControls } from "./examples/input-example";
 import { toastExampleCode, toastExampleControls } from "./examples/toast-example";
+import {
+  messageBubbleExampleCode,
+  messageBubbleExampleControls,
+} from "./examples/message-bubble-example";
+import {
+  typingIndicatorExampleCode,
+  typingIndicatorExampleControls,
+} from "./examples/typing-indicator-example";
 import { popoverExampleCode, popoverExampleControls } from "./examples/popover-example";
 import {
   accordionExampleCode,
@@ -94,6 +102,14 @@ const UI_SCENE_META: Record<string, UiSceneMeta> = {
   button: { controls: buttonExampleControls, code: buttonExampleCode },
   input: { controls: inputExampleControls, code: inputExampleCode },
   toast: { controls: toastExampleControls, code: toastExampleCode },
+  "message-bubble": {
+    controls: messageBubbleExampleControls,
+    code: messageBubbleExampleCode,
+  },
+  "typing-indicator": {
+    controls: typingIndicatorExampleControls,
+    code: typingIndicatorExampleCode,
+  },
   popover: { controls: popoverExampleControls, code: popoverExampleCode },
   accordion: { controls: accordionExampleControls, code: accordionExampleCode },
   tooltip: { controls: tooltipExampleControls, code: tooltipExampleCode },

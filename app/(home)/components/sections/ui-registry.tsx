@@ -63,6 +63,8 @@ const PRIMITIVE_CHIPS = [
   "slider",
   "tooltip",
   "stepper",
+  "message-bubble",
+  "typing-indicator",
 ];
 
 function ScenePlayer({ entry }: { entry: SceneEntry | undefined }) {

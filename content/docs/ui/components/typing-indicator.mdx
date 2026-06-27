@@ -1,0 +1,89 @@
+---
+title: Typing Indicator
+description: A motion atom that renders N bouncing dots driven directly by useCurrentFrame
+---
+
+<UiComponentPreview name="typing-indicator" />
+
+A motion atom that reads `useCurrentFrame` directly and produces N dots bouncing with staggered sine offsets. No state prop — the animation runs continuously as long as the component is mounted on the timeline. Drop it into any bubble or container to signal that a message is being composed.
+
+## Installation
+
+<InstallBlock name="typing-indicator" />
+
+<Note>
+`typing-indicator` is a motion atom — it reads the Remotion frame internally. Installing it pulls the shared `remocn-ui` core (`lib/remocn-ui/`) via `registryDependencies` (`["remocn-ui"]`). You do not need to install the core separately.
+</Note>
+
+## Usage
+
+Place `TypingIndicator` inside a `MessageBubble` (or any container) to show the typing state before a reply bubble enters:
+
+```tsx
+import { MessageBubble } from "@/components/remocn/message-bubble";
+import { TypingIndicator } from "@/components/remocn/typing-indicator";
+
+export const Scene = () => (
+  <div style={{ position: "relative", width: "100%", height: "100%" }}>
+    <MessageBubble variant="incoming" state="visible">
+      <TypingIndicator />
+    </MessageBubble>
+  </div>
+);
+```
+
+The helper `typingDotOffset(frame, index, opts)` is exported for cases where you want to drive individual dot positions from your own layout.
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "dotCount",
+      type: "number",
+      default: "3",
+      description: "Number of bouncing dots to render.",
+    },
+    {
+      name: "color",
+      type: "string",
+      default: "\"currentColor\"",
+      description: "Fill color of the dots. Inherits the parent text color by default.",
+    },
+    {
+      name: "size",
+      type: "number",
+      default: "8",
+      description: "Diameter of each dot in pixels.",
+    },
+    {
+      name: "gap",
+      type: "number",
+      default: "5",
+      description: "Horizontal gap between dots in pixels.",
+    },
+    {
+      name: "amplitude",
+      type: "number",
+      default: "5",
+      description: "Vertical bounce amplitude in pixels.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Multiplier on the overall animation speed. Values above 1 speed up; below 1 slow down.",
+    },
+    {
+      name: "cyclesPerSecond",
+      type: "number",
+      default: "1.1",
+      description: "Number of full bounce cycles per second.",
+    },
+    {
+      name: "className",
+      type: "string",
+      description: "Optional className applied to the dots container element.",
+    },
+  ]}
+/>

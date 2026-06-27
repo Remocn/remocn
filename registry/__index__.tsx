@@ -193,6 +193,10 @@ import { CursorPreview } from "@/registry/remocn-ui/cursor/preview";
 import { cursorConfig } from "@/registry/remocn-ui/cursor/config";
 import { ToastPreview } from "@/registry/remocn-ui/toast/preview";
 import { toastConfig } from "@/registry/remocn-ui/toast/config";
+import { MessageBubblePreview } from "@/registry/remocn-ui/message-bubble/preview";
+import { messageBubbleConfig } from "@/registry/remocn-ui/message-bubble/config";
+import { TypingIndicatorPreview } from "@/registry/remocn-ui/typing-indicator/preview";
+import { typingIndicatorConfig } from "@/registry/remocn-ui/typing-indicator/config";
 import { CommandMenuItem } from "@/registry/remocn-ui/command-menu-item";
 import { commandMenuItemConfig } from "@/registry/remocn-ui/command-menu-item/config";
 import { CommandMenu } from "@/registry/remocn-ui/command-menu";
@@ -445,6 +449,14 @@ const registry: Record<string, RegistryEntry> = {
   // centers the toast on a theme-background stage); the shipped Toast is a
   // placement-agnostic card the caller positions.
   "toast": { Component: ToastPreview, config: toastConfig },
+  "message-bubble": {
+    Component: MessageBubblePreview,
+    config: messageBubbleConfig,
+  },
+  "typing-indicator": {
+    Component: TypingIndicatorPreview,
+    config: typingIndicatorConfig,
+  },
   "command-menu-item": {
     Component: CommandMenuItem,
     config: commandMenuItemConfig,

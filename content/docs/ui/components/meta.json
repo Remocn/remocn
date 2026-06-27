@@ -1,5 +1,5 @@
 {
   "title": "Components",
   "collapsible": false,
-  "pages": ["accordion", "alert-dialog", "blur-in", "button", "caret", "checkbox", "combobox", "command-menu", "context-menu", "cursor", "dialog", "drawer", "sheet", "dropdown-menu", "input", "popover", "progress", "radio", "resizable", "select", "skeleton", "slider", "spinner", "stepper", "switch", "tabs", "toast", "toggle-group", "tooltip"]
+  "pages": ["accordion", "alert-dialog", "blur-in", "button", "caret", "checkbox", "combobox", "command-menu", "context-menu", "cursor", "dialog", "drawer", "sheet", "dropdown-menu", "input", "message-bubble", "popover", "progress", "radio", "resizable", "select", "skeleton", "slider", "spinner", "stepper", "switch", "tabs", "toast", "toggle-group", "tooltip", "typing-indicator"]
 }
