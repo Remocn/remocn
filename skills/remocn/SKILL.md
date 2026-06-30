@@ -157,19 +157,25 @@ load fonts before render) live in the `remotion-best-practices` skill.
 
 ## Composing a video
 
-Typical product demo:
+Don't dump components — compose one story. When asked to build a full video ("make a product demo",
+"changelog video", "intro for my landing"):
 
-1. **Background**: `mesh-gradient-bg` or `dynamic-grid`.
-2. **Title reveal**: `blur-out-up`, `staggered-fade-up`, or `tracking-in`.
-3. **Show the product**: `browser-flow`, `terminal-simulator`, or `glass-code-block`.
-4. **Transition between scenes**: `frosted-glass-wipe`, `spatial-push`, or `directional-wipe`.
-5. **End with impact**: `confetti`, a social card, or a CTA beat.
-
-Pick each beat's component from `references/components/index.md` — match the `vibe` tag to the brand
-and budget each `<Sequence durationInFrames>` around the component's natural length.
+1. **Decide the strategy** — ready template vs compose from components vs build a new component. See
+   `references/anatomy.md` §1.
+2. **Follow the beats** — a product demo is Hook → Positioning → Product reveal → Features → Proof →
+   CTA (last two optional). See `references/anatomy.md` §2.
+3. **Use the recipe** — `references/archetypes.md` has the per-archetype build: content contract
+   (infer → ask → placeholder), duration variants, beat→component slots, and a worked
+   `<TransitionSeries>` skeleton.
+4. **Pick each beat's component** from `references/components/index.md`; match the `vibe` tag to the
+   brand and budget each `<Sequence durationInFrames>` around its natural length.
+5. **Check the quality bar** — one accent, sentence-case kinetic type, real content, no glow halos, no
+   feature-list enumeration, no `mesh-gradient-bg`. See `references/anatomy.md` §3.
 
 ## Reference
 
+- `references/anatomy.md` — composing a full video: strategy (template/compose/new), the product-demo beats, and the good-vs-slop quality bar.
+- `references/archetypes.md` — per-archetype build recipes (currently product-demo): content contract, duration variants, beat→slot map, worked `<TransitionSeries>` skeleton.
 - `references/components/index.md` — router table (all components, grouped by category, with `Use for` / `Avoid for`). Open `references/components/<name>.md` for one component's full props, example, and use / don't-use notes.
 - `references/design.md` — anti-slop design defaults (do/avoid) + design tokens (palette, fonts, canvas).
 - `references/motion-principles.md` — motion-design principles adapted to remocn + Remotion.
