@@ -1,0 +1,183 @@
+---
+title: Product Demo
+description: A full 45s product-demo clip — serif type acts, an orbiting app-icon cloud, product UIs, animated task cards, a focus chart, integrations, metric cards, and testimonials
+---
+
+<ComponentPreview name="a1-product-demo" />
+
+A complete 1920x1080 product demo built as one seek-safe Remotion timeline (1356 frames at 30fps). Twelve acts play back to back over a warm cream canvas with serif display type and a yellow accent. A typed `ProductDemo` config path is also exported for building your own scene sequence.
+
+## Installation
+
+<InstallBlock name="a1-product-demo" />
+
+## Usage
+
+Render the built-in example straight away — it ships the default `Switchboard` config:
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import {
+  A1ProductDemo,
+  DEFAULT_PRODUCT_DEMO_CONFIG,
+  getProductDemoDuration,
+} from "@/components/remocn/a1-product-demo";
+
+const ProductDemoScene = () => (
+  <A1ProductDemo accentColor="#6366F1" background="dynamic-grid" theme="dark" />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="ProductDemo"
+    component={ProductDemoScene}
+    durationInFrames={getProductDemoDuration(DEFAULT_PRODUCT_DEMO_CONFIG)}
+    fps={30}
+    width={1920}
+    height={1080}
+  />
+);
+```
+
+### With your own config
+
+Drive the template from a typed, serializable config. Add as many `feature-frame` scenes as you need — sides alternate, transitions adapt, and `getProductDemoDuration` keeps the composition length correct.
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import {
+  A1ProductDemo,
+  getProductDemoDuration,
+  type ProductDemoConfig,
+} from "@/components/remocn/a1-product-demo";
+
+const config: ProductDemoConfig = {
+  meta: { fps: 30, width: 1920, height: 1080 },
+  theme: {
+    accent: "#6366F1",
+    background: "#0B0B0F",
+    foreground: "#FAFAFA",
+    muted: "rgba(250,250,250,0.55)",
+    fontFamily: "Geist",
+  },
+  scenes: [
+    {
+      type: "product-hero",
+      durationInFrames: 150,
+      content: { name: "Switchboard", pitch: "One inbox for every channel" },
+    },
+    {
+      type: "feature-frame",
+      durationInFrames: 180,
+      content: { title: "Unified inbox", bullet: "Email, chat and SMS in one stream", side: "left" },
+    },
+    {
+      type: "feature-frame",
+      durationInFrames: 180,
+      content: { title: "Auto routing", bullet: "Every message reaches the right person", side: "right" },
+    },
+    {
+      type: "cta-scene",
+      durationInFrames: 120,
+      content: { line: "Try it free", domain: "switchboard.app" },
+    },
+  ],
+};
+
+const ProductDemoScene = () => <A1ProductDemo config={config} />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="ProductDemo"
+    component={ProductDemoScene}
+    durationInFrames={getProductDemoDuration(config)}
+    fps={30}
+    width={1920}
+    height={1080}
+  />
+);
+```
+
+## Chapters
+
+The clip runs 1356 frames at 30fps (45.2s). Scrub the preview to each act:
+
+<PropsTable
+  rows={[
+    { name: "Problem hook", type: "0 to 165", description: "Your team has tasks everywhere, projects scattered, Meet Flowith" },
+    { name: "Positioning", type: "165 to 285", description: "AI-Powered Work Operating System resolves to the Flowith lockup" },
+    { name: "Icon cloud", type: "285 to 435", description: "App icons orbit Flowith has all your, then resolve to in one place" },
+    { name: "AI planning", type: "435 to 555", description: "A day-timeline planning UI cranes in" },
+    { name: "Workflow", type: "555 to 645", description: "A stage-by-stage workflow node graph with a yellow AI Layer" },
+    { name: "Features swap", type: "645 to 720", description: "Features designed to simplify, organize, facilitate your workflow" },
+    { name: "Task cards", type: "720 to 870", description: "A task checklist wires into animated task detail cards" },
+    { name: "Focus chart", type: "870 to 975", description: "A Focus Time 4h 25m bar-chart card" },
+    { name: "Integrations", type: "975 to 1050", description: "App integration icons pop in" },
+    { name: "Metric cards", type: "1050 to 1140", description: "Three green gradient metric cards rise in" },
+    { name: "Social proof", type: "1140 to 1260", description: "Join 12,000+ people with three testimonial cards" },
+    { name: "Logo outro", type: "1260 to 1356", description: "The Flowith lockup holds" },
+  ]}
+/>
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "config",
+      type: "ProductDemoConfig",
+      default: "DEFAULT_PRODUCT_DEMO_CONFIG",
+      description: "Typed scene config { meta, theme, scenes[] }. Falls back to the built-in Switchboard example.",
+    },
+    {
+      name: "accentColor",
+      type: "string",
+      default: "\"#6366F1\"",
+      description: "Accent used on the feature marker and CTA domain — overrides config.theme.accent",
+    },
+    {
+      name: "background",
+      type: "\"dynamic-grid\" | \"solid\"",
+      default: "\"dynamic-grid\"",
+      description: "Background on the hero and CTA beats. Feature beats always use a solid surface so the snapshot reads cleanly.",
+    },
+    {
+      name: "theme",
+      type: "\"light\" | \"dark\"",
+      default: "\"dark\"",
+      description: "Resolves the background, foreground, and muted tokens",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Multiplier for the per-scene animation timing",
+    },
+  ]}
+/>
+
+### Scene shape
+
+Each entry in `config.scenes` is one of three typed scenes:
+
+<PropsTable
+  rows={[
+    {
+      name: "product-hero",
+      type: "{ name, pitch, entrance? }",
+      description: "Hero wordmark + one-line pitch. entrance is kinetic-center-build (default) or per-character-rise.",
+    },
+    {
+      name: "feature-frame",
+      type: "{ title, bullet, side }",
+      description: "Editorial split. side is left or right and mirrors the layout between beats.",
+    },
+    {
+      name: "cta-scene",
+      type: "{ line, domain }",
+      description: "Closing call-to-action line and domain",
+    },
+  ]}
+/>

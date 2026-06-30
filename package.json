@@ -23,6 +23,7 @@
     "@remotion/google-fonts": "4.0.473",
     "@remotion/player": "4.0.473",
     "@remotion/renderer": "4.0.473",
+    "@remotion/transitions": "4.0.473",
     "@shadcn/react": "^0.1.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

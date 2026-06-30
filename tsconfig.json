@@ -85,6 +85,33 @@
       "@/components/remocn/blur-out-up": [
         "./registry/remocn/blur-out-up/index.tsx",
       ],
+      "@/components/remocn/kinetic-center-build": [
+        "./registry/remocn/kinetic-center-build/index.tsx",
+      ],
+      "@/components/remocn/per-character-rise": [
+        "./registry/remocn/per-character-rise/index.tsx",
+      ],
+      "@/components/remocn/per-word-crossfade": [
+        "./registry/remocn/per-word-crossfade/index.tsx",
+      ],
+      "@/components/remocn/staggered-fade-up": [
+        "./registry/remocn/staggered-fade-up/index.tsx",
+      ],
+      "@/components/remocn/marker-highlight": [
+        "./registry/remocn/marker-highlight/index.tsx",
+      ],
+      "@/components/remocn/micro-scale-fade": [
+        "./registry/remocn/micro-scale-fade/index.tsx",
+      ],
+      "@/components/remocn/mask-reveal-up": [
+        "./registry/remocn/mask-reveal-up/index.tsx",
+      ],
+      "@/components/remocn/tracking-in": [
+        "./registry/remocn/tracking-in/index.tsx",
+      ],
+      "@/components/remocn/dynamic-grid": [
+        "./registry/remocn/dynamic-grid/index.tsx",
+      ],
       "@/components/remocn/*": ["./registry/remocn-ui/*/index.tsx"],
       "@/*": ["./*"],
     },

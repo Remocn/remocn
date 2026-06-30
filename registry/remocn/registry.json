@@ -1096,6 +1096,123 @@
       ]
     },
     {
+      "name": "a1-product-demo",
+      "type": "registry:component",
+      "title": "Product Demo",
+      "description": "Full 45s product demo (Flowith): serif type acts, an orbiting app-icon cloud, AI planning and workflow UIs, animated task cards, a focus-time chart, integrations, green metric cards, and testimonials, stitched as one 1920x1080 clip.",
+      "dependencies": [
+        "remotion",
+        "@remotion/transitions"
+      ],
+      "registryDependencies": [
+        "@remocn/soft-blur-in",
+        "@remocn/mask-reveal-up",
+        "@remocn/dynamic-grid"
+      ],
+      "files": [
+        {
+          "path": "a1-product-demo/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/a1-product-demo/index.tsx"
+        },
+        {
+          "path": "a1-product-demo/flowith-demo.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/a1-product-demo/flowith-demo.tsx"
+        },
+        {
+          "path": "a1-product-demo/acts/problem-hook.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/a1-product-demo/acts/problem-hook.tsx"
+        },
+        {
+          "path": "a1-product-demo/acts/positioning.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/a1-product-demo/acts/positioning.tsx"
+        },
+        {
+          "path": "a1-product-demo/acts/icon-cloud.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/a1-product-demo/acts/icon-cloud.tsx"
+        },
+        {
+          "path": "a1-product-demo/acts/ai-planning.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/a1-product-demo/acts/ai-planning.tsx"
+        },
+        {
+          "path": "a1-product-demo/acts/workflow-auto.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/a1-product-demo/acts/workflow-auto.tsx"
+        },
+        {
+          "path": "a1-product-demo/acts/features-swap.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/a1-product-demo/acts/features-swap.tsx"
+        },
+        {
+          "path": "a1-product-demo/acts/task-mgmt.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/a1-product-demo/acts/task-mgmt.tsx"
+        },
+        {
+          "path": "a1-product-demo/acts/focus-analytics.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/a1-product-demo/acts/focus-analytics.tsx"
+        },
+        {
+          "path": "a1-product-demo/acts/integrations.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/a1-product-demo/acts/integrations.tsx"
+        },
+        {
+          "path": "a1-product-demo/acts/metrics-cards.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/a1-product-demo/acts/metrics-cards.tsx"
+        },
+        {
+          "path": "a1-product-demo/acts/social-proof.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/a1-product-demo/acts/social-proof.tsx"
+        },
+        {
+          "path": "a1-product-demo/acts/logo-outro.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/a1-product-demo/acts/logo-outro.tsx"
+        },
+        {
+          "path": "a1-product-demo/foundation.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/a1-product-demo/foundation.tsx"
+        },
+        {
+          "path": "a1-product-demo/duration.ts",
+          "type": "registry:component",
+          "target": "components/remocn/a1-product-demo/duration.ts"
+        },
+        {
+          "path": "a1-product-demo/product-hero.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/a1-product-demo/product-hero.tsx"
+        },
+        {
+          "path": "a1-product-demo/feature-frame.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/a1-product-demo/feature-frame.tsx"
+        },
+        {
+          "path": "a1-product-demo/ui-snapshot-card.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/a1-product-demo/ui-snapshot-card.tsx"
+        },
+        {
+          "path": "a1-product-demo/example.ts",
+          "type": "registry:component",
+          "target": "components/remocn/a1-product-demo/example.ts"
+        }
+      ]
+    },
+    {
       "name": "number-wheel",
       "type": "registry:component",
       "title": "Number Wheel",

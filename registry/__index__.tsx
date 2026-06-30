@@ -71,6 +71,8 @@ import { GitHubSponsors } from "@/registry/remocn/github-sponsors";
 import { githubSponsorsConfig } from "@/registry/remocn/github-sponsors/config";
 import { GitHubStars } from "@/registry/remocn/github-stars";
 import { githubStarsConfig } from "@/registry/remocn/github-stars/config";
+import { A1ProductDemo } from "@/registry/remocn/a1-product-demo";
+import { a1ProductDemoConfig } from "@/registry/remocn/a1-product-demo/config";
 import { LogoEnter } from "@/registry/remocn/logo-enter";
 import { logoEnterConfig } from "@/registry/remocn/logo-enter/config";
 import { GlassCodeBlock } from "@/registry/remocn/glass-code-block";
@@ -411,6 +413,7 @@ const registry: Record<string, RegistryEntry> = {
     config: githubSponsorsConfig,
   },
   "github-stars": { Component: GitHubStars, config: githubStarsConfig },
+  "a1-product-demo": { Component: A1ProductDemo, config: a1ProductDemoConfig },
   "logo-enter": { Component: LogoEnter, config: logoEnterConfig },
   "number-wheel": { Component: NumberWheel, config: numberWheelConfig },
   "rolling-number": { Component: RollingNumber, config: rollingNumberConfig },
@@ -654,6 +657,18 @@ if (claudeCode) {
 const opencode = registry["opencode"];
 if (opencode) {
   opencode.config.controls.speed = {
+    type: "number",
+    default: 1,
+    min: 1,
+    max: 4,
+    step: 0.25,
+    label: "Speed",
+  };
+}
+
+const a1ProductDemo = registry["a1-product-demo"];
+if (a1ProductDemo) {
+  a1ProductDemo.config.controls.speed = {
     type: "number",
     default: 1,
     min: 1,
