@@ -85,6 +85,8 @@ import { ShaderGrainGradient } from "@/registry/remocn/shader-grain-gradient";
 import { shaderGrainGradientConfig } from "@/registry/remocn/shader-grain-gradient/config";
 import { ShaderMeshGradient } from "@/registry/remocn/shader-mesh-gradient";
 import { shaderMeshGradientConfig } from "@/registry/remocn/shader-mesh-gradient/config";
+import { ShaderSwirl } from "@/registry/remocn/shader-swirl";
+import { shaderSwirlConfig } from "@/registry/remocn/shader-swirl/config";
 import { ShaderWarp } from "@/registry/remocn/shader-warp";
 import { shaderWarpConfig } from "@/registry/remocn/shader-warp/config";
 import { NumberWheel } from "@/registry/remocn/number-wheel";
@@ -325,6 +327,10 @@ const registry: Record<string, RegistryEntry> = {
   "shader-warp": {
     Component: ShaderWarp,
     config: shaderWarpConfig,
+  },
+  "shader-swirl": {
+    Component: ShaderSwirl,
+    config: shaderSwirlConfig,
   },
   "dynamic-grid": { Component: DynamicGrid, config: dynamicGridConfig },
   "simulated-cursor": {

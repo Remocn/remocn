@@ -5,6 +5,7 @@
     "index",
     "shader-mesh-gradient",
     "shader-grain-gradient",
-    "shader-warp"
+    "shader-warp",
+    "shader-swirl"
   ]
 }

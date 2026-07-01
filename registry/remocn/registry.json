@@ -536,6 +536,22 @@
       ]
     },
     {
+      "name": "shader-swirl",
+      "type": "registry:component",
+      "title": "Shader Swirl",
+      "description": "Concentric bands swirling around a center point.",
+      "dependencies": [
+        "@paper-design/shaders-react"
+      ],
+      "files": [
+        {
+          "path": "shader-swirl/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/shader-swirl.tsx"
+        }
+      ]
+    },
+    {
       "name": "dynamic-grid",
       "type": "registry:component",
       "title": "Dynamic Grid",

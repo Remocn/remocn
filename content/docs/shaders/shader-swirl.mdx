@@ -1,0 +1,37 @@
+---
+title: Shader Swirl
+description: Concentric bands swirling around a center point
+---
+
+<ComponentPreview name="shader-swirl" />
+
+## Installation
+
+<InstallBlock name="shader-swirl" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { ShaderSwirl } from "@/components/remocn/shader-swirl";
+
+const ShaderSwirlScene = () => (
+  <ShaderSwirl speed={1} bandCount={4} twist={0.1} />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="ShaderSwirl"
+    component={ShaderSwirlScene}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+## Credits
+
+Shader by [paper-design/shaders](https://github.com/paper-design/shaders) (Apache-2.0).
