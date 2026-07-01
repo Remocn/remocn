@@ -23,7 +23,11 @@ export const DOCS_TABS: DocsTab[] = [
     href: "/docs/getting-started/introduction",
   },
   { id: "primitives", label: "Primitives", href: "/docs/ui" },
-  { id: "shaders", label: "Shaders", href: "/docs/shaders" },
+  {
+    id: "shaders",
+    label: "Shaders",
+    href: "/docs/shaders/getting-started/introduction",
+  },
 ];
 
 /** URL prefix that backs the Primitives tab (the remocn-ui section). */
@@ -62,13 +66,20 @@ function isPrimitivesNode(node: Node): boolean {
   );
 }
 
+/** True if the node (or any descendant) is a shaders page — folders now nest. */
+function hasShadersDescendant(node: Node): boolean {
+  if (node.type === "page") return node.url.startsWith(`${SHADERS_PREFIX}/`);
+  if (node.type === "folder") {
+    if (node.index?.url === SHADERS_PREFIX) return true;
+    return node.children.some(hasShadersDescendant);
+  }
+  return false;
+}
+
 function isShadersNode(node: Node): boolean {
   if (node.type !== "folder") return false;
   if (node.index?.url === SHADERS_PREFIX) return true;
-  return node.children.some(
-    (child) =>
-      child.type === "page" && child.url.startsWith(`${SHADERS_PREFIX}/`),
-  );
+  return node.children.some(hasShadersDescendant);
 }
 
 /**

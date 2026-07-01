@@ -1,0 +1,34 @@
+---
+title: Introduction
+description: WebGL shader backdrops wrapped for Remotion and driven per-frame for deterministic renders
+---
+
+Shaders are GPU-rendered animated backgrounds for your Remotion scenes. Each one wraps a shader from [paper-design/shaders](https://github.com/paper-design/shaders) and adapts it to the way Remotion renders video — headless, frame by frame, the same output on every pass.
+
+Drop one behind your content as a full-bleed backdrop, tune a few controls, and reach for the raw shader parameters when you want full control.
+
+## Why a dedicated wrapper
+
+A shader animates against a wall-clock timer. Remotion does not — it renders frame N in isolation, often out of order and across parallel workers, and expects the exact same pixels every time it asks for that frame.
+
+Each component bridges the two: instead of letting the shader run on its own clock, it freezes the shader (`speed={0}`) and drives its `frame` uniform from `useCurrentFrame()`. The motion becomes a pure function of the timeline, so scrubbing, looping, and multi-pass renders all stay deterministic.
+
+The wrapper also gates the first paint with `delayRender()`/`continueRender()` so WebGL is initialised before Remotion captures a frame, and forces the canvas to fill the whole composition (`fit="cover"` with the exact `width`/`height`) so there are no black margins.
+
+## Using a shader
+
+```tsx
+import { AbsoluteFill } from "remotion";
+import { ShaderMeshGradient } from "@/components/remocn/shader-mesh-gradient";
+
+export const Scene = () => (
+  <AbsoluteFill>
+    <ShaderMeshGradient speed={1} />
+    <AbsoluteFill>{/* your content on top */}</AbsoluteFill>
+  </AbsoluteFill>
+);
+```
+
+Every component exposes a `speed` control plus a handful of shader-specific ones, and forwards any remaining paper-design prop through, so nothing is locked away. Defaults are deliberately muted — pick your own palette when you want the shader to lead.
+
+Browse the individual shaders in the sidebar to preview each one and grab its install command.

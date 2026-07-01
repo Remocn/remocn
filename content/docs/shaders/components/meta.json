@@ -1,0 +1,24 @@
+{
+  "title": "Shaders",
+  "collapsible": false,
+  "pages": [
+    "shader-mesh-gradient",
+    "shader-grain-gradient",
+    "shader-warp",
+    "shader-swirl",
+    "shader-water",
+    "shader-spiral",
+    "shader-liquid-metal",
+    "shader-color-panels",
+    "shader-neuro-noise",
+    "shader-perlin-noise",
+    "shader-simplex-noise",
+    "shader-voronoi",
+    "shader-dot-orbit",
+    "shader-dithering",
+    "shader-god-rays",
+    "shader-smoke-ring",
+    "shader-metaballs",
+    "shader-pulsing-border"
+  ]
+}
