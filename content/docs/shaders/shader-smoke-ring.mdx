@@ -1,0 +1,37 @@
+---
+title: Shader Smoke Ring
+description: Soft smoke ring curling and dissipating in place
+---
+
+<ComponentPreview name="shader-smoke-ring" />
+
+## Installation
+
+<InstallBlock name="shader-smoke-ring" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { ShaderSmokeRing } from "@/components/remocn/shader-smoke-ring";
+
+const ShaderSmokeRingScene = () => (
+  <ShaderSmokeRing speed={1} radius={0.25} thickness={0.65} />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="ShaderSmokeRing"
+    component={ShaderSmokeRingScene}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+## Credits
+
+Shader by [paper-design/shaders](https://github.com/paper-design/shaders) (Apache-2.0).

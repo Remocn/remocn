@@ -17,6 +17,7 @@
     "shader-voronoi",
     "shader-dot-orbit",
     "shader-dithering",
-    "shader-god-rays"
+    "shader-god-rays",
+    "shader-smoke-ring"
   ]
 }

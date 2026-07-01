@@ -91,6 +91,8 @@ import { ShaderDotOrbit } from "@/registry/remocn/shader-dot-orbit";
 import { shaderDotOrbitConfig } from "@/registry/remocn/shader-dot-orbit/config";
 import { ShaderGodRays } from "@/registry/remocn/shader-god-rays";
 import { shaderGodRaysConfig } from "@/registry/remocn/shader-god-rays/config";
+import { ShaderSmokeRing } from "@/registry/remocn/shader-smoke-ring";
+import { shaderSmokeRingConfig } from "@/registry/remocn/shader-smoke-ring/config";
 import { ShaderLiquidMetal } from "@/registry/remocn/shader-liquid-metal";
 import { shaderLiquidMetalConfig } from "@/registry/remocn/shader-liquid-metal/config";
 import { ShaderMeshGradient } from "@/registry/remocn/shader-mesh-gradient";
@@ -397,6 +399,10 @@ const registry: Record<string, RegistryEntry> = {
   "shader-god-rays": {
     Component: ShaderGodRays,
     config: shaderGodRaysConfig,
+  },
+  "shader-smoke-ring": {
+    Component: ShaderSmokeRing,
+    config: shaderSmokeRingConfig,
   },
   "dynamic-grid": { Component: DynamicGrid, config: dynamicGridConfig },
   "simulated-cursor": {

@@ -728,6 +728,22 @@
       ]
     },
     {
+      "name": "shader-smoke-ring",
+      "type": "registry:component",
+      "title": "Shader Smoke Ring",
+      "description": "Soft smoke ring curling and dissipating in place.",
+      "dependencies": [
+        "@paper-design/shaders-react"
+      ],
+      "files": [
+        {
+          "path": "shader-smoke-ring/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/shader-smoke-ring.tsx"
+        }
+      ]
+    },
+    {
       "name": "dynamic-grid",
       "type": "registry:component",
       "title": "Dynamic Grid",
