@@ -45,7 +45,7 @@ Transitions: Intro → Beat #1 `shared-axis-y` (linearTiming, 18f). Between stat
 
 ## Notes
 
-- **Background stays static throughout.** A single `dynamic-grid` at opacity 0.06 spans every beat including the RecapWall — the same "dashboard" canvas persists, giving continuity to the sequence.
+- **One continuous background across every beat.** A single backdrop — a `dynamic-grid` at opacity 0.06, or a slow, muted shader (`shader-mesh-gradient`, `shader-neuro-noise`) at low `speed` — spans every beat including the RecapWall, giving continuity. If it moves, keep it muted and gentle so the stats stay the focus.
 - **Alignment alternates left/right.** Left on odd beats, right on even. Compositional variety without introducing a new visual language per beat.
 - **Each beat must advance.** Never repeat the same metric. If two stats are closely related (revenue + MRR), pick one or combine into a single `slot-machine-roll` beat.
 - **Stagger compresses beat by beat.** 24f label stagger on Beat #1, tightening to 10f by the finale — the cadence accelerates, building urgency without changing any component.

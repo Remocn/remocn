@@ -40,7 +40,7 @@ Transitions: kicker→name `fade-through` (linear, 12f); name→payoff `shared-a
 ## Notes
 
 - **One feature only.** This archetype spotlights a single capability. For multiple features use changelog or a repeating per-feature series; enumeration is the primary slop failure mode here.
-- **Background is `spotlight-card` throughout.** The light animates from center to behind the feature name over 24f — that motion is the visual payoff, replacing any decorative effect. No glow blobs, no radial halos behind type.
+- **Background: `spotlight-card` or a slow muted shader.** `spotlight-card`'s light animates from center to behind the feature name over 24f — that motion is the visual payoff. A slow, muted shader backdrop (`shader-warp`, `shader-mesh-gradient`) at low `speed` is the alternative when you want ambient motion instead of a tracked light. Either way keep it restrained and muted so it never fights the type — still no glow blobs or radial halos behind text.
 - **Accent on one word.** The `inline-highlight` on `highlightWord` is the sole accent touch; kicker and feature name stay in the neutral theme color.
 - **Keep the feature name short.** `per-character-rise` at 4f stagger over more than ~12 characters runs long and loses energy. Names over three words should be shortened or split to two display lines.
 - **All copy in English.** `benefitLine` and `kickerLabel` must be real English content, never lorem; `highlightWord` must be a genuine content word that repays the accent.

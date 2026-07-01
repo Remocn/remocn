@@ -43,7 +43,7 @@ Transitions: `fade-through` (`linearTiming(15)`) between each quote scene; intro
 
 ## Notes
 
-- **Background: `spotlight-card` on a solid dark base.** The moving soft light tracks the active card, giving depth without a glow blob or radial halo behind the quote text. Never use `mesh-gradient-bg`.
+- **Background: `spotlight-card` or a slow muted shader on a solid dark base.** `spotlight-card`'s soft light tracks the active card for depth; a slow, muted shader (`shader-water`, `shader-mesh-gradient`) at low `speed` is the alternative for ambient motion. Keep it muted and gentle behind the quote text — no glow blob or radial halo, and never `mesh-gradient-bg`.
 - **One accent only.** Apply it to the `rolling-number` payoff and optionally to one emphasized word per quote via `inline-highlight`. Everything else is neutral mono.
 - **No glow halos behind quote text.** Depth is conveyed by the peek-card scale/opacity stack (0.94 / 0.5) — that is sufficient.
 - **Real quotes, specific attribution.** "Marcus L., Head of Growth at Loom" beats "User, Company". If avatars are unavailable, render initials in a neutral mono circle — never use stock headshots.

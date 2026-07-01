@@ -52,7 +52,7 @@ For the long Q&A variant: `kinetic-center-build` (question line), `per-word-cros
 ## Notes
 
 - **One accent only.** The accent touches exactly three elements: the peak star count, the terminal checkmark, and the CTA button. Tagline, contributor heading, and output lines stay neutral.
-- **Background is `dynamic-grid` throughout.** Low opacity (~0.06), no motion competing with content. CTA beat adds `spotlight-card` behind the button — a structured editorial card, not a glow blob.
+- **Background: `dynamic-grid` or a slow muted shader throughout.** A static `dynamic-grid` (~0.06) or a slow, muted shader (`shader-neuro-noise`, `shader-mesh-gradient`) at low `speed` — kept low so it never competes with content. CTA beat adds `spotlight-card` behind the button — a structured editorial card, not a glow blob.
 - **Star count is the number payoff.** `github-stars` exists for exactly this beat — it provides the stargazer fly-through plus the odometer. A bare `rolling-number` on its own misses the moment.
 - **Contributors must feel like people arriving, not a grid being filled.** The diagonal wave entrance (stagger by index) creates a sense of community assembling. Cap visible tiles at 24; fold the rest into a "+N" chip rather than shrinking avatar size.
 - **Terminal output: 2–3 lines max.** Command line, one confirmation output (`✓ added 1 package in 2s`), and the checkmark. A wall of npm install output is slop — `terminal-simulator` can render more, but don't.

@@ -63,5 +63,5 @@ columns: [
 - **`spotlight-card` is motivated light, not a glow.** The light shifts toward the recommended column during RecommendFocus to justify the visual emphasis. Do not add a radial gradient or blur halo behind the column.
 - **`slot-machine-roll` for prices.** It handles the `$` prefix and `/mo` suffix natively — pass `prefix="$"` and `suffix="/mo"` rather than formatting the string by hand. Use `rolling-number` only for pure large integers with no currency symbol.
 - **Three tiers is the canonical count.** If the user has two or four, adjust the stagger timing accordingly; do not force a third empty column.
-- **Background stays dark.** `spotlight-card` defaults are tuned for dark backgrounds — keep the canvas dark so the light reads. A solid `#09090b` or `backdrop` with theme `dark` works; avoid light or colorful fills.
+- **Background stays dark.** `spotlight-card`, a solid `#09090b` / `backdrop` theme `dark`, or a slow, muted shader (`shader-warp`, `shader-mesh-gradient`) at low `speed` all work — keep the canvas dark so the recommended-column emphasis reads. If the background moves, keep it muted and gentle; avoid light, colorful, or fast fills.
 - **CTA is calm, not celebratory.** `shimmer-sweep` runs once — no loop, no bounce, no confetti. The energy peaks at PriceLand; the CTA is a composed close.

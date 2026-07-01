@@ -49,7 +49,7 @@ The two new components are reusable across the entire H family: `logo-sting` is 
 - **One accent, mono otherwise.** The accent touches the active character or the mark outline only — never the whole wordmark, never the background. Gradient text is slop.
 - **No glow halo.** No radial-gradient blobs, no blur clouds behind the mark, no drop-shadow rings. The mark earns attention through motion alone.
 - **`logo-enter` is wrong here.** The catalog `logo-enter` renders a multi-chip cluster of brand logos arriving together. A single product mark needs the new `logo-sting`.
-- **Background stays static.** Low-opacity `dynamic-grid` (≈0.05) or a solid `backdrop` color — no animated background competing with the mark reveal.
+- **Background can move — keep it restrained.** A slow, muted shader (`shader-mesh-gradient`, `shader-warp`) at low `speed`, a low-opacity `dynamic-grid` (≈0.05), or a solid `backdrop` color. If it moves, keep it muted and gentle so it never competes with the mark reveal.
 - **Hold generously.** 30–45f of static lockup lets the editor cut cleanly. If the bumper will be dropped into many different videos, lean toward 45f.
 - **Brackets only for series bumpers.** Add `bumper-frame` for YouTube series, courses, or weekly update intros/outros. A one-off product sting uses `logo-sting` alone — no frame chrome.
 - **Outro mirrors intro.** In `bumper-frame` `mode='outro'`: wordmark enters with `mask-reveal-up` instead of `kinetic-center-build`; CTA line uses `short-slide-down`; brackets hold throughout as the brand signature rather than animating in fresh.

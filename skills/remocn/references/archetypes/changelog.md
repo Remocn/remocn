@@ -45,8 +45,10 @@ fold the rest into "+M more" rather than shrinking type.
 
 ## Notes
 
-- **Background stays static.** A low-opacity `dynamic-grid` (≈0.06) with no motion, or a solid theme
-  fill — the list is the focus; don't animate the backdrop under reading text.
+- **Background can move — keep it restrained.** A slow, muted shader (`shader-mesh-gradient`,
+  `shader-neuro-noise`, `shader-perlin-noise`) at low `speed`, a low-opacity `dynamic-grid` (≈0.06),
+  or a solid theme fill all work. The list is the focus — if the backdrop moves, keep it muted and
+  gentle so it never competes with the reading text.
 - One accent only; the tag colors (green/amber/blue) are semantic, not decoration — keep them muted.
 - Real change text from the repo, never `Scene A` / lorem. All copy English.
 - This is a list archetype — guard against the slop trap of enumerating forever: cap rows, keep it ~9s.
