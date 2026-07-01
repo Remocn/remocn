@@ -12,6 +12,7 @@
     "shader-liquid-metal",
     "shader-color-panels",
     "shader-neuro-noise",
-    "shader-perlin-noise"
+    "shader-perlin-noise",
+    "shader-simplex-noise"
   ]
 }

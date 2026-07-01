@@ -1,0 +1,37 @@
+---
+title: Shader Simplex Noise
+description: Simplex noise flow field, smoother than Perlin
+---
+
+<ComponentPreview name="shader-simplex-noise" />
+
+## Installation
+
+<InstallBlock name="shader-simplex-noise" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { ShaderSimplexNoise } from "@/components/remocn/shader-simplex-noise";
+
+const ShaderSimplexNoiseScene = () => (
+  <ShaderSimplexNoise speed={1} stepsPerColor={2} softness={0.1} />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="ShaderSimplexNoise"
+    component={ShaderSimplexNoiseScene}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+## Credits
+
+Shader by [paper-design/shaders](https://github.com/paper-design/shaders) (Apache-2.0).

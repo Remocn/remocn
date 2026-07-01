@@ -648,6 +648,22 @@
       ]
     },
     {
+      "name": "shader-simplex-noise",
+      "type": "registry:component",
+      "title": "Shader Simplex Noise",
+      "description": "Simplex noise flow field, smoother than Perlin.",
+      "dependencies": [
+        "@paper-design/shaders-react"
+      ],
+      "files": [
+        {
+          "path": "shader-simplex-noise/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/shader-simplex-noise.tsx"
+        }
+      ]
+    },
+    {
       "name": "dynamic-grid",
       "type": "registry:component",
       "title": "Dynamic Grid",
