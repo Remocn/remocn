@@ -85,6 +85,8 @@ import { ShaderGrainGradient } from "@/registry/remocn/shader-grain-gradient";
 import { shaderGrainGradientConfig } from "@/registry/remocn/shader-grain-gradient/config";
 import { ShaderColorPanels } from "@/registry/remocn/shader-color-panels";
 import { shaderColorPanelsConfig } from "@/registry/remocn/shader-color-panels/config";
+import { ShaderDotOrbit } from "@/registry/remocn/shader-dot-orbit";
+import { shaderDotOrbitConfig } from "@/registry/remocn/shader-dot-orbit/config";
 import { ShaderLiquidMetal } from "@/registry/remocn/shader-liquid-metal";
 import { shaderLiquidMetalConfig } from "@/registry/remocn/shader-liquid-metal/config";
 import { ShaderMeshGradient } from "@/registry/remocn/shader-mesh-gradient";
@@ -379,6 +381,10 @@ const registry: Record<string, RegistryEntry> = {
   "shader-voronoi": {
     Component: ShaderVoronoi,
     config: shaderVoronoiConfig,
+  },
+  "shader-dot-orbit": {
+    Component: ShaderDotOrbit,
+    config: shaderDotOrbitConfig,
   },
   "dynamic-grid": { Component: DynamicGrid, config: dynamicGridConfig },
   "simulated-cursor": {

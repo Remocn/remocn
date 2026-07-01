@@ -1,0 +1,37 @@
+---
+title: Shader Dot Orbit
+description: Dots orbiting on concentric paths across the frame
+---
+
+<ComponentPreview name="shader-dot-orbit" />
+
+## Installation
+
+<InstallBlock name="shader-dot-orbit" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { ShaderDotOrbit } from "@/components/remocn/shader-dot-orbit";
+
+const ShaderDotOrbitScene = () => (
+  <ShaderDotOrbit speed={1} size={1} spreading={1} />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="ShaderDotOrbit"
+    component={ShaderDotOrbitScene}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+## Credits
+
+Shader by [paper-design/shaders](https://github.com/paper-design/shaders) (Apache-2.0).

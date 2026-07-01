@@ -14,6 +14,7 @@
     "shader-neuro-noise",
     "shader-perlin-noise",
     "shader-simplex-noise",
-    "shader-voronoi"
+    "shader-voronoi",
+    "shader-dot-orbit"
   ]
 }

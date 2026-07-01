@@ -680,6 +680,22 @@
       ]
     },
     {
+      "name": "shader-dot-orbit",
+      "type": "registry:component",
+      "title": "Shader Dot Orbit",
+      "description": "Dots orbiting on concentric paths across the frame.",
+      "dependencies": [
+        "@paper-design/shaders-react"
+      ],
+      "files": [
+        {
+          "path": "shader-dot-orbit/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/shader-dot-orbit.tsx"
+        }
+      ]
+    },
+    {
       "name": "dynamic-grid",
       "type": "registry:component",
       "title": "Dynamic Grid",
