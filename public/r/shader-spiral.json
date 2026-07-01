@@ -1,0 +1,18 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "shader-spiral",
+  "title": "Shader Spiral",
+  "description": "Rotating spiral arms radiating from the center.",
+  "dependencies": [
+    "@paper-design/shaders-react"
+  ],
+  "files": [
+    {
+      "path": "registry/remocn/shader-spiral/index.tsx",
+      "content": "\"use client\";\n\nimport { Spiral, type SpiralProps } from \"@paper-design/shaders-react\";\nimport { useCallback, useState } from \"react\";\nimport {\n  continueRender,\n  delayRender,\n  useCurrentFrame,\n  useVideoConfig,\n} from \"remotion\";\n\nexport interface ShaderSpiralProps extends Omit<SpiralProps, \"frame\" | \"ref\"> {}\n\nexport function ShaderSpiral({\n  speed = 1,\n  colorBack = \"#12121a\",\n  colorFront = \"#52527a\",\n  density = 1,\n  strokeWidth = 0.5,\n  softness = 0.2,\n  className,\n  ...rest\n}: ShaderSpiralProps) {\n  const frame = useCurrentFrame();\n  const { fps, width, height } = useVideoConfig();\n\n  const [handle] = useState(() => delayRender(\"shader-spiral\"));\n  const gate = useCallback(\n    (element: HTMLDivElement | null) => {\n      if (!element) return;\n      requestAnimationFrame(() =>\n        requestAnimationFrame(() => continueRender(handle)),\n      );\n    },\n    [handle],\n  );\n\n  return (\n    <div\n      ref={gate}\n      className={className}\n      style={{ position: \"absolute\", inset: 0 }}\n    >\n      <Spiral\n        speed={0}\n        frame={(frame / fps) * speed * 1000}\n        colorBack={colorBack}\n        colorFront={colorFront}\n        density={density}\n        strokeWidth={strokeWidth}\n        softness={softness}\n        fit=\"cover\"\n        width={width}\n        height={height}\n        {...rest}\n      />\n    </div>\n  );\n}\n",
+      "type": "registry:component",
+      "target": "components/remocn/shader-spiral.tsx"
+    }
+  ],
+  "type": "registry:component"
+}

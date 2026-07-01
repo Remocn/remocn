@@ -1,0 +1,18 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "shader-metaballs",
+  "title": "Shader Metaballs",
+  "description": "Organic blobs merging and splitting like lava.",
+  "dependencies": [
+    "@paper-design/shaders-react"
+  ],
+  "files": [
+    {
+      "path": "registry/remocn/shader-metaballs/index.tsx",
+      "content": "\"use client\";\n\nimport { Metaballs, type MetaballsProps } from \"@paper-design/shaders-react\";\nimport { useCallback, useState } from \"react\";\nimport {\n  continueRender,\n  delayRender,\n  useCurrentFrame,\n  useVideoConfig,\n} from \"remotion\";\n\nconst NEUTRAL_COLORS = [\"#3a3a5c\", \"#52527a\", \"#8a8a95\"];\n\nexport interface ShaderMetaballsProps\n  extends Omit<MetaballsProps, \"frame\" | \"ref\"> {}\n\nexport function ShaderMetaballs({\n  speed = 1,\n  colorBack = \"#12121a\",\n  colors = NEUTRAL_COLORS,\n  count = 10,\n  size = 0.83,\n  className,\n  ...rest\n}: ShaderMetaballsProps) {\n  const frame = useCurrentFrame();\n  const { fps, width, height } = useVideoConfig();\n\n  const [handle] = useState(() => delayRender(\"shader-metaballs\"));\n  const gate = useCallback(\n    (element: HTMLDivElement | null) => {\n      if (!element) return;\n      requestAnimationFrame(() =>\n        requestAnimationFrame(() => continueRender(handle)),\n      );\n    },\n    [handle],\n  );\n\n  return (\n    <div\n      ref={gate}\n      className={className}\n      style={{ position: \"absolute\", inset: 0 }}\n    >\n      <Metaballs\n        speed={0}\n        frame={(frame / fps) * speed * 1000}\n        colorBack={colorBack}\n        colors={colors}\n        count={count}\n        size={size}\n        fit=\"cover\"\n        width={width}\n        height={height}\n        {...rest}\n      />\n    </div>\n  );\n}\n",
+      "type": "registry:component",
+      "target": "components/remocn/shader-metaballs.tsx"
+    }
+  ],
+  "type": "registry:component"
+}

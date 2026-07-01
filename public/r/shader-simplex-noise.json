@@ -1,0 +1,18 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "shader-simplex-noise",
+  "title": "Shader Simplex Noise",
+  "description": "Simplex noise flow field, smoother than Perlin.",
+  "dependencies": [
+    "@paper-design/shaders-react"
+  ],
+  "files": [
+    {
+      "path": "registry/remocn/shader-simplex-noise/index.tsx",
+      "content": "\"use client\";\n\nimport {\n  SimplexNoise,\n  type SimplexNoiseProps,\n} from \"@paper-design/shaders-react\";\nimport { useCallback, useState } from \"react\";\nimport {\n  continueRender,\n  delayRender,\n  useCurrentFrame,\n  useVideoConfig,\n} from \"remotion\";\n\nconst NEUTRAL_COLORS = [\"#12121a\", \"#3a3a5c\", \"#52527a\", \"#8a8a95\"];\n\nexport interface ShaderSimplexNoiseProps\n  extends Omit<SimplexNoiseProps, \"frame\" | \"ref\"> {}\n\nexport function ShaderSimplexNoise({\n  speed = 1,\n  colors = NEUTRAL_COLORS,\n  stepsPerColor = 2,\n  softness = 0.1,\n  className,\n  ...rest\n}: ShaderSimplexNoiseProps) {\n  const frame = useCurrentFrame();\n  const { fps, width, height } = useVideoConfig();\n\n  const [handle] = useState(() => delayRender(\"shader-simplex-noise\"));\n  const gate = useCallback(\n    (element: HTMLDivElement | null) => {\n      if (!element) return;\n      requestAnimationFrame(() =>\n        requestAnimationFrame(() => continueRender(handle)),\n      );\n    },\n    [handle],\n  );\n\n  return (\n    <div\n      ref={gate}\n      className={className}\n      style={{ position: \"absolute\", inset: 0 }}\n    >\n      <SimplexNoise\n        speed={0}\n        frame={(frame / fps) * speed * 1000}\n        colors={colors}\n        stepsPerColor={stepsPerColor}\n        softness={softness}\n        fit=\"cover\"\n        width={width}\n        height={height}\n        {...rest}\n      />\n    </div>\n  );\n}\n",
+      "type": "registry:component",
+      "target": "components/remocn/shader-simplex-noise.tsx"
+    }
+  ],
+  "type": "registry:component"
+}

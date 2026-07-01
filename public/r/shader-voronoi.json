@@ -1,0 +1,18 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "shader-voronoi",
+  "title": "Shader Voronoi",
+  "description": "Animated Voronoi cells shifting and re-tessellating.",
+  "dependencies": [
+    "@paper-design/shaders-react"
+  ],
+  "files": [
+    {
+      "path": "registry/remocn/shader-voronoi/index.tsx",
+      "content": "\"use client\";\n\nimport { Voronoi, type VoronoiProps } from \"@paper-design/shaders-react\";\nimport { useCallback, useState } from \"react\";\nimport {\n  continueRender,\n  delayRender,\n  useCurrentFrame,\n  useVideoConfig,\n} from \"remotion\";\n\nconst NEUTRAL_COLORS = [\"#3a3a5c\", \"#52527a\"];\n\nexport interface ShaderVoronoiProps\n  extends Omit<VoronoiProps, \"frame\" | \"ref\"> {}\n\nexport function ShaderVoronoi({\n  speed = 1,\n  colors = NEUTRAL_COLORS,\n  colorGap = \"#12121a\",\n  distortion = 0.4,\n  gap = 0.04,\n  glow = 0,\n  className,\n  ...rest\n}: ShaderVoronoiProps) {\n  const frame = useCurrentFrame();\n  const { fps, width, height } = useVideoConfig();\n\n  const [handle] = useState(() => delayRender(\"shader-voronoi\"));\n  const gate = useCallback(\n    (element: HTMLDivElement | null) => {\n      if (!element) return;\n      requestAnimationFrame(() =>\n        requestAnimationFrame(() => continueRender(handle)),\n      );\n    },\n    [handle],\n  );\n\n  return (\n    <div\n      ref={gate}\n      className={className}\n      style={{ position: \"absolute\", inset: 0 }}\n    >\n      <Voronoi\n        speed={0}\n        frame={(frame / fps) * speed * 1000}\n        colors={colors}\n        colorGap={colorGap}\n        distortion={distortion}\n        gap={gap}\n        glow={glow}\n        fit=\"cover\"\n        width={width}\n        height={height}\n        {...rest}\n      />\n    </div>\n  );\n}\n",
+      "type": "registry:component",
+      "target": "components/remocn/shader-voronoi.tsx"
+    }
+  ],
+  "type": "registry:component"
+}

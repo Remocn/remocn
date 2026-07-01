@@ -1,0 +1,18 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "shader-swirl",
+  "title": "Shader Swirl",
+  "description": "Concentric bands swirling around a center point.",
+  "dependencies": [
+    "@paper-design/shaders-react"
+  ],
+  "files": [
+    {
+      "path": "registry/remocn/shader-swirl/index.tsx",
+      "content": "\"use client\";\n\nimport { Swirl, type SwirlProps } from \"@paper-design/shaders-react\";\nimport { useCallback, useState } from \"react\";\nimport {\n  continueRender,\n  delayRender,\n  useCurrentFrame,\n  useVideoConfig,\n} from \"remotion\";\n\nconst NEUTRAL_COLORS = [\"#52527a\", \"#3a3a5c\", \"#232338\"];\n\nexport interface ShaderSwirlProps extends Omit<SwirlProps, \"frame\" | \"ref\"> {}\n\nexport function ShaderSwirl({\n  speed = 1,\n  colors = NEUTRAL_COLORS,\n  colorBack = \"#12121a\",\n  bandCount = 4,\n  twist = 0.1,\n  softness = 0.2,\n  className,\n  ...rest\n}: ShaderSwirlProps) {\n  const frame = useCurrentFrame();\n  const { fps, width, height } = useVideoConfig();\n\n  const [handle] = useState(() => delayRender(\"shader-swirl\"));\n  const gate = useCallback(\n    (element: HTMLDivElement | null) => {\n      if (!element) return;\n      requestAnimationFrame(() =>\n        requestAnimationFrame(() => continueRender(handle)),\n      );\n    },\n    [handle],\n  );\n\n  return (\n    <div\n      ref={gate}\n      className={className}\n      style={{ position: \"absolute\", inset: 0 }}\n    >\n      <Swirl\n        speed={0}\n        frame={(frame / fps) * speed * 1000}\n        colors={colors}\n        colorBack={colorBack}\n        bandCount={bandCount}\n        twist={twist}\n        softness={softness}\n        fit=\"cover\"\n        width={width}\n        height={height}\n        {...rest}\n      />\n    </div>\n  );\n}\n",
+      "type": "registry:component",
+      "target": "components/remocn/shader-swirl.tsx"
+    }
+  ],
+  "type": "registry:component"
+}

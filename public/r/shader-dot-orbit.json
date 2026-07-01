@@ -1,0 +1,18 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "shader-dot-orbit",
+  "title": "Shader Dot Orbit",
+  "description": "Dots orbiting on concentric paths across the frame.",
+  "dependencies": [
+    "@paper-design/shaders-react"
+  ],
+  "files": [
+    {
+      "path": "registry/remocn/shader-dot-orbit/index.tsx",
+      "content": "\"use client\";\n\nimport { DotOrbit, type DotOrbitProps } from \"@paper-design/shaders-react\";\nimport { useCallback, useState } from \"react\";\nimport {\n  continueRender,\n  delayRender,\n  useCurrentFrame,\n  useVideoConfig,\n} from \"remotion\";\n\nconst NEUTRAL_COLORS = [\"#4a4a68\", \"#52527a\", \"#3a3a5c\"];\n\nexport interface ShaderDotOrbitProps\n  extends Omit<DotOrbitProps, \"frame\" | \"ref\"> {}\n\nexport function ShaderDotOrbit({\n  speed = 1,\n  colorBack = \"#12121a\",\n  colors = NEUTRAL_COLORS,\n  size = 1,\n  spreading = 1,\n  className,\n  ...rest\n}: ShaderDotOrbitProps) {\n  const frame = useCurrentFrame();\n  const { fps, width, height } = useVideoConfig();\n\n  const [handle] = useState(() => delayRender(\"shader-dot-orbit\"));\n  const gate = useCallback(\n    (element: HTMLDivElement | null) => {\n      if (!element) return;\n      requestAnimationFrame(() =>\n        requestAnimationFrame(() => continueRender(handle)),\n      );\n    },\n    [handle],\n  );\n\n  return (\n    <div\n      ref={gate}\n      className={className}\n      style={{ position: \"absolute\", inset: 0 }}\n    >\n      <DotOrbit\n        speed={0}\n        frame={(frame / fps) * speed * 1000}\n        colorBack={colorBack}\n        colors={colors}\n        size={size}\n        spreading={spreading}\n        fit=\"cover\"\n        width={width}\n        height={height}\n        {...rest}\n      />\n    </div>\n  );\n}\n",
+      "type": "registry:component",
+      "target": "components/remocn/shader-dot-orbit.tsx"
+    }
+  ],
+  "type": "registry:component"
+}

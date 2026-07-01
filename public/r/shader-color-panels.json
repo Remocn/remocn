@@ -1,0 +1,18 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "shader-color-panels",
+  "title": "Shader Color Panels",
+  "description": "Overlapping translucent color panels sliding past each other.",
+  "dependencies": [
+    "@paper-design/shaders-react"
+  ],
+  "files": [
+    {
+      "path": "registry/remocn/shader-color-panels/index.tsx",
+      "content": "\"use client\";\n\nimport {\n  ColorPanels,\n  type ColorPanelsProps,\n} from \"@paper-design/shaders-react\";\nimport { useCallback, useState } from \"react\";\nimport {\n  continueRender,\n  delayRender,\n  useCurrentFrame,\n  useVideoConfig,\n} from \"remotion\";\n\nconst NEUTRAL_COLORS = [\"#3a3a52\", \"#4a4a68\", \"#52527a\", \"#5a5a8a\"];\n\nexport interface ShaderColorPanelsProps\n  extends Omit<ColorPanelsProps, \"frame\" | \"ref\"> {}\n\nexport function ShaderColorPanels({\n  speed = 1,\n  colors = NEUTRAL_COLORS,\n  colorBack = \"#12121a\",\n  density = 3,\n  length = 1.1,\n  className,\n  ...rest\n}: ShaderColorPanelsProps) {\n  const frame = useCurrentFrame();\n  const { fps, width, height } = useVideoConfig();\n\n  const [handle] = useState(() => delayRender(\"shader-color-panels\"));\n  const gate = useCallback(\n    (element: HTMLDivElement | null) => {\n      if (!element) return;\n      requestAnimationFrame(() =>\n        requestAnimationFrame(() => continueRender(handle)),\n      );\n    },\n    [handle],\n  );\n\n  return (\n    <div\n      ref={gate}\n      className={className}\n      style={{ position: \"absolute\", inset: 0 }}\n    >\n      <ColorPanels\n        speed={0}\n        frame={(frame / fps) * speed * 1000}\n        colors={colors}\n        colorBack={colorBack}\n        density={density}\n        length={length}\n        fit=\"cover\"\n        width={width}\n        height={height}\n        {...rest}\n      />\n    </div>\n  );\n}\n",
+      "type": "registry:component",
+      "target": "components/remocn/shader-color-panels.tsx"
+    }
+  ],
+  "type": "registry:component"
+}

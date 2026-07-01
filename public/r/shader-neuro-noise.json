@@ -1,0 +1,18 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "shader-neuro-noise",
+  "title": "Shader Neuro Noise",
+  "description": "Organic neural-web noise field that slowly morphs.",
+  "dependencies": [
+    "@paper-design/shaders-react"
+  ],
+  "files": [
+    {
+      "path": "registry/remocn/shader-neuro-noise/index.tsx",
+      "content": "\"use client\";\n\nimport { NeuroNoise, type NeuroNoiseProps } from \"@paper-design/shaders-react\";\nimport { useCallback, useState } from \"react\";\nimport {\n  continueRender,\n  delayRender,\n  useCurrentFrame,\n  useVideoConfig,\n} from \"remotion\";\n\nexport interface ShaderNeuroNoiseProps\n  extends Omit<NeuroNoiseProps, \"frame\" | \"ref\"> {}\n\nexport function ShaderNeuroNoise({\n  speed = 1,\n  colorFront = \"#8a8a95\",\n  colorMid = \"#4a4a68\",\n  colorBack = \"#12121a\",\n  brightness = 0.05,\n  contrast = 0.3,\n  className,\n  ...rest\n}: ShaderNeuroNoiseProps) {\n  const frame = useCurrentFrame();\n  const { fps, width, height } = useVideoConfig();\n\n  const [handle] = useState(() => delayRender(\"shader-neuro-noise\"));\n  const gate = useCallback(\n    (element: HTMLDivElement | null) => {\n      if (!element) return;\n      requestAnimationFrame(() =>\n        requestAnimationFrame(() => continueRender(handle)),\n      );\n    },\n    [handle],\n  );\n\n  return (\n    <div\n      ref={gate}\n      className={className}\n      style={{ position: \"absolute\", inset: 0 }}\n    >\n      <NeuroNoise\n        speed={0}\n        frame={(frame / fps) * speed * 1000}\n        colorFront={colorFront}\n        colorMid={colorMid}\n        colorBack={colorBack}\n        brightness={brightness}\n        contrast={contrast}\n        fit=\"cover\"\n        width={width}\n        height={height}\n        {...rest}\n      />\n    </div>\n  );\n}\n",
+      "type": "registry:component",
+      "target": "components/remocn/shader-neuro-noise.tsx"
+    }
+  ],
+  "type": "registry:component"
+}

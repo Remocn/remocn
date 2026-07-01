@@ -488,6 +488,294 @@
       "type": "registry:component"
     },
     {
+      "name": "shader-mesh-gradient",
+      "title": "Shader Mesh Gradient",
+      "description": "WebGL mesh gradient backdrop driven per-frame for deterministic Remotion renders.",
+      "dependencies": [
+        "@paper-design/shaders-react"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn/shader-mesh-gradient/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/shader-mesh-gradient.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "shader-grain-gradient",
+      "title": "Shader Grain Gradient",
+      "description": "Grainy multi-stop gradient that drifts slowly with film-grain texture over the blend.",
+      "dependencies": [
+        "@paper-design/shaders-react"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn/shader-grain-gradient/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/shader-grain-gradient.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "shader-warp",
+      "title": "Shader Warp",
+      "description": "Domain-warped color field that folds and stretches like liquid.",
+      "dependencies": [
+        "@paper-design/shaders-react"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn/shader-warp/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/shader-warp.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "shader-swirl",
+      "title": "Shader Swirl",
+      "description": "Concentric bands swirling around a center point.",
+      "dependencies": [
+        "@paper-design/shaders-react"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn/shader-swirl/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/shader-swirl.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "shader-water",
+      "title": "Shader Water",
+      "description": "Caustic water-surface ripples with subtle refraction.",
+      "dependencies": [
+        "@paper-design/shaders-react"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn/shader-water/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/shader-water.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "shader-spiral",
+      "title": "Shader Spiral",
+      "description": "Rotating spiral arms radiating from the center.",
+      "dependencies": [
+        "@paper-design/shaders-react"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn/shader-spiral/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/shader-spiral.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "shader-liquid-metal",
+      "title": "Shader Liquid Metal",
+      "description": "Molten metallic surface with flowing specular highlights.",
+      "dependencies": [
+        "@paper-design/shaders-react"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn/shader-liquid-metal/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/shader-liquid-metal.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "shader-color-panels",
+      "title": "Shader Color Panels",
+      "description": "Overlapping translucent color panels sliding past each other.",
+      "dependencies": [
+        "@paper-design/shaders-react"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn/shader-color-panels/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/shader-color-panels.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "shader-neuro-noise",
+      "title": "Shader Neuro Noise",
+      "description": "Organic neural-web noise field that slowly morphs.",
+      "dependencies": [
+        "@paper-design/shaders-react"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn/shader-neuro-noise/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/shader-neuro-noise.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "shader-perlin-noise",
+      "title": "Shader Perlin Noise",
+      "description": "Classic Perlin noise clouds drifting across the frame.",
+      "dependencies": [
+        "@paper-design/shaders-react"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn/shader-perlin-noise/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/shader-perlin-noise.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "shader-simplex-noise",
+      "title": "Shader Simplex Noise",
+      "description": "Simplex noise flow field, smoother than Perlin.",
+      "dependencies": [
+        "@paper-design/shaders-react"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn/shader-simplex-noise/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/shader-simplex-noise.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "shader-voronoi",
+      "title": "Shader Voronoi",
+      "description": "Animated Voronoi cells shifting and re-tessellating.",
+      "dependencies": [
+        "@paper-design/shaders-react"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn/shader-voronoi/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/shader-voronoi.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "shader-dot-orbit",
+      "title": "Shader Dot Orbit",
+      "description": "Dots orbiting on concentric paths across the frame.",
+      "dependencies": [
+        "@paper-design/shaders-react"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn/shader-dot-orbit/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/shader-dot-orbit.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "shader-dithering",
+      "title": "Shader Dithering",
+      "description": "Ordered-dither shading over an animated gradient field.",
+      "dependencies": [
+        "@paper-design/shaders-react"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn/shader-dithering/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/shader-dithering.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "shader-god-rays",
+      "title": "Shader God Rays",
+      "description": "Volumetric light rays radiating from an off-screen source.",
+      "dependencies": [
+        "@paper-design/shaders-react"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn/shader-god-rays/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/shader-god-rays.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "shader-smoke-ring",
+      "title": "Shader Smoke Ring",
+      "description": "Soft smoke ring curling and dissipating in place.",
+      "dependencies": [
+        "@paper-design/shaders-react"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn/shader-smoke-ring/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/shader-smoke-ring.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "shader-metaballs",
+      "title": "Shader Metaballs",
+      "description": "Organic blobs merging and splitting like lava.",
+      "dependencies": [
+        "@paper-design/shaders-react"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn/shader-metaballs/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/shader-metaballs.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "shader-pulsing-border",
+      "title": "Shader Pulsing Border",
+      "description": "Glowing border frame that pulses around the edges.",
+      "dependencies": [
+        "@paper-design/shaders-react"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn/shader-pulsing-border/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/shader-pulsing-border.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
       "name": "dynamic-grid",
       "title": "Dynamic Grid",
       "description": "Subtle moving grid background with configurable cell size and direction.",

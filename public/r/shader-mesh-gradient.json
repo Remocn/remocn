@@ -1,0 +1,18 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "shader-mesh-gradient",
+  "title": "Shader Mesh Gradient",
+  "description": "WebGL mesh gradient backdrop driven per-frame for deterministic Remotion renders.",
+  "dependencies": [
+    "@paper-design/shaders-react"
+  ],
+  "files": [
+    {
+      "path": "registry/remocn/shader-mesh-gradient/index.tsx",
+      "content": "\"use client\";\n\nimport {\n  MeshGradient,\n  type MeshGradientProps,\n} from \"@paper-design/shaders-react\";\nimport { useCallback, useState } from \"react\";\nimport {\n  continueRender,\n  delayRender,\n  useCurrentFrame,\n  useVideoConfig,\n} from \"remotion\";\n\nconst NEUTRAL_COLORS = [\"#12121a\", \"#232338\", \"#3a3a5c\", \"#52527a\"];\n\nexport interface ShaderMeshGradientProps\n  extends Omit<MeshGradientProps, \"frame\" | \"ref\"> {}\n\nexport function ShaderMeshGradient({\n  speed = 1,\n  colors = NEUTRAL_COLORS,\n  distortion = 0.6,\n  swirl = 0.1,\n  className,\n  ...rest\n}: ShaderMeshGradientProps) {\n  const frame = useCurrentFrame();\n  const { fps, width, height } = useVideoConfig();\n\n  const [handle] = useState(() => delayRender(\"shader-mesh-gradient\"));\n  const gate = useCallback(\n    (element: HTMLDivElement | null) => {\n      if (!element) return;\n      requestAnimationFrame(() =>\n        requestAnimationFrame(() => continueRender(handle)),\n      );\n    },\n    [handle],\n  );\n\n  return (\n    <div\n      ref={gate}\n      className={className}\n      style={{ position: \"absolute\", inset: 0 }}\n    >\n      <MeshGradient\n        speed={0}\n        frame={(frame / fps) * speed * 1000}\n        colors={colors}\n        distortion={distortion}\n        swirl={swirl}\n        fit=\"cover\"\n        width={width}\n        height={height}\n        {...rest}\n      />\n    </div>\n  );\n}\n",
+      "type": "registry:component",
+      "target": "components/remocn/shader-mesh-gradient.tsx"
+    }
+  ],
+  "type": "registry:component"
+}
