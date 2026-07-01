@@ -1054,6 +1054,27 @@
       "type": "registry:component"
     },
     {
+      "name": "github-sponsors",
+      "title": "GitHub Sponsors",
+      "description": "Self-drawing Sponsors heart that docks to a header, every sponsor avatar blur-staggering into a grid, then a thank-you headline and a CTA. Single seek-safe timeline, 270 frames at 30fps.",
+      "dependencies": [
+        "remotion",
+        "@remotion/google-fonts"
+      ],
+      "registryDependencies": [
+        "@remocn/soft-blur-in",
+        "@remocn/blur-out-up"
+      ],
+      "files": [
+        {
+          "path": "registry/remocn/github-sponsors/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/github-sponsors.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
       "name": "github-stars",
       "title": "GitHub Stars",
       "description": "Inertial fly-through of a repo's stargazers with a synced count-up odometer that locks on the total. Horizontal 16:9 or vertical 9:16.",
