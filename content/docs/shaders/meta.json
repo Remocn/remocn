@@ -9,6 +9,7 @@
     "shader-swirl",
     "shader-water",
     "shader-spiral",
-    "shader-liquid-metal"
+    "shader-liquid-metal",
+    "shader-color-panels"
   ]
 }

@@ -600,6 +600,22 @@
       ]
     },
     {
+      "name": "shader-color-panels",
+      "type": "registry:component",
+      "title": "Shader Color Panels",
+      "description": "Overlapping translucent color panels sliding past each other.",
+      "dependencies": [
+        "@paper-design/shaders-react"
+      ],
+      "files": [
+        {
+          "path": "shader-color-panels/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/shader-color-panels.tsx"
+        }
+      ]
+    },
+    {
       "name": "dynamic-grid",
       "type": "registry:component",
       "title": "Dynamic Grid",

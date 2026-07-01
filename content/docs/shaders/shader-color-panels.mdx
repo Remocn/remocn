@@ -1,0 +1,37 @@
+---
+title: Shader Color Panels
+description: Overlapping translucent color panels sliding past each other
+---
+
+<ComponentPreview name="shader-color-panels" />
+
+## Installation
+
+<InstallBlock name="shader-color-panels" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { ShaderColorPanels } from "@/components/remocn/shader-color-panels";
+
+const ShaderColorPanelsScene = () => (
+  <ShaderColorPanels speed={1} density={3} length={1.1} />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="ShaderColorPanels"
+    component={ShaderColorPanelsScene}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+## Credits
+
+Shader by [paper-design/shaders](https://github.com/paper-design/shaders) (Apache-2.0).
