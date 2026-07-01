@@ -8,31 +8,25 @@ import { usePrefersReducedMotion } from "@/lib/use-prefers-reduced-motion";
 import { cn } from "@/lib/utils";
 import registry from "@/registry/__index__";
 import type { CardItem } from "./component-card-grid";
+import { useTheme } from "next-themes";
 
 function slugFromHref(href?: string) {
   if (!href) return undefined;
   return href.split("/").filter(Boolean).pop();
 }
 
-/** Calm static surface shown when there is no live preview to render. */
 function PreviewPlaceholder() {
   return <div className="size-full bg-muted/40" />;
 }
 
-/**
- * Preview area. The Remotion composition is only mounted once the card nears
- * the viewport (IntersectionObserver) — index pages render dozens of cards, so
- * eagerly mounting every Thumbnail would render dozens of compositions on load.
- * Until then, and for non-stable / unknown components, a calm placeholder shows.
- * In view + motion allowed: the live <Player> auto-plays (looping) — no hover
- * needed. Under prefers-reduced-motion it falls back to a static <Thumbnail>
- * first frame. Off-screen cards never mount a player.
- */
 function CardPreview({ item }: { item: CardItem }) {
   const reducedMotion = usePrefersReducedMotion();
   const ref = useRef<HTMLDivElement>(null);
   const playerRef = useRef<PlayerRef>(null);
   const [inView, setInView] = useState(false);
+
+  const { resolvedTheme } = useTheme();
+  const backgroundColor = resolvedTheme === "dark" ? "#f5f5f5" : "#f5f5f5";
 
   useEffect(() => {
     if (inView) return;
@@ -93,7 +87,7 @@ function CardPreview({ item }: { item: CardItem }) {
         fps={config.fps}
         compositionWidth={config.compositionWidth}
         compositionHeight={config.compositionHeight}
-        style={{ width: "100%", height: "100%" }}
+        style={{ width: "100%", height: "100%", backgroundColor }}
         controls={false}
         loop
         acknowledgeRemotionLicense
