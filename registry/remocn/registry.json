@@ -552,6 +552,22 @@
       ]
     },
     {
+      "name": "shader-water",
+      "type": "registry:component",
+      "title": "Shader Water",
+      "description": "Caustic water-surface ripples with subtle refraction.",
+      "dependencies": [
+        "@paper-design/shaders-react"
+      ],
+      "files": [
+        {
+          "path": "shader-water/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/shader-water.tsx"
+        }
+      ]
+    },
+    {
       "name": "dynamic-grid",
       "type": "registry:component",
       "title": "Dynamic Grid",

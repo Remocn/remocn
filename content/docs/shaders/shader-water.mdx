@@ -1,0 +1,37 @@
+---
+title: Shader Water
+description: Caustic water-surface ripples with subtle refraction
+---
+
+<ComponentPreview name="shader-water" />
+
+## Installation
+
+<InstallBlock name="shader-water" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { ShaderWater } from "@/components/remocn/shader-water";
+
+const ShaderWaterScene = () => (
+  <ShaderWater speed={1} waves={0.3} caustic={0.08} />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="ShaderWater"
+    component={ShaderWaterScene}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+## Credits
+
+Shader by [paper-design/shaders](https://github.com/paper-design/shaders) (Apache-2.0).
