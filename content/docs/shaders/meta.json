@@ -18,6 +18,7 @@
     "shader-dot-orbit",
     "shader-dithering",
     "shader-god-rays",
-    "shader-smoke-ring"
+    "shader-smoke-ring",
+    "shader-metaballs"
   ]
 }

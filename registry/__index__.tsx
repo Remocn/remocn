@@ -95,6 +95,8 @@ import { ShaderSmokeRing } from "@/registry/remocn/shader-smoke-ring";
 import { shaderSmokeRingConfig } from "@/registry/remocn/shader-smoke-ring/config";
 import { ShaderLiquidMetal } from "@/registry/remocn/shader-liquid-metal";
 import { shaderLiquidMetalConfig } from "@/registry/remocn/shader-liquid-metal/config";
+import { ShaderMetaballs } from "@/registry/remocn/shader-metaballs";
+import { shaderMetaballsConfig } from "@/registry/remocn/shader-metaballs/config";
 import { ShaderMeshGradient } from "@/registry/remocn/shader-mesh-gradient";
 import { shaderMeshGradientConfig } from "@/registry/remocn/shader-mesh-gradient/config";
 import { ShaderNeuroNoise } from "@/registry/remocn/shader-neuro-noise";
@@ -403,6 +405,10 @@ const registry: Record<string, RegistryEntry> = {
   "shader-smoke-ring": {
     Component: ShaderSmokeRing,
     config: shaderSmokeRingConfig,
+  },
+  "shader-metaballs": {
+    Component: ShaderMetaballs,
+    config: shaderMetaballsConfig,
   },
   "dynamic-grid": { Component: DynamicGrid, config: dynamicGridConfig },
   "simulated-cursor": {
