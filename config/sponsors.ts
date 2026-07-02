@@ -24,8 +24,7 @@ export const sponsors: Sponsor[] = [
     logoUrl: "/sponsors/reactbits.svg",
     website: "https://pro.reactbits.dev/?utm_source=remocn&utm_medium=sponsor&utm_campaign=remocn_sponsors_page",
     tier: "partner",
-    logoScale: 1.2,
-    customStyles: "opacity-90",
+    customStyles: "opacity-90 max-w-full",
     isPaste: false,
   },
   {
