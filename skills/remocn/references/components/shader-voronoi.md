@@ -29,7 +29,7 @@ Any other `Voronoi` prop is forwarded through `...rest`.
 
 ```tsx
 <Backdrop fill={<ShaderVoronoi speed={0.6} />} padding={0}>
-  <FadeIn><h1 style={{ color: "#fafafa" }}>Tessellated.</h1></FadeIn>
+  <SoftBlurIn text="Tessellated." color="#fafafa" />
 </Backdrop>
 ```
 

@@ -30,7 +30,7 @@ Any other `PulsingBorder` prop is forwarded through `...rest`.
 
 ```tsx
 <Backdrop fill={<ShaderPulsingBorder speed={0.6} />} padding={0}>
-  <FadeIn><h1 style={{ color: "#fafafa" }}>Framed.</h1></FadeIn>
+  <SoftBlurIn text="Framed." color="#fafafa" />
 </Backdrop>
 ```
 

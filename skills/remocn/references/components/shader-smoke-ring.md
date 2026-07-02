@@ -29,7 +29,7 @@ Any other `SmokeRing` prop is forwarded through `...rest`.
 
 ```tsx
 <Backdrop fill={<ShaderSmokeRing speed={0.5} />} padding={0}>
-  <FadeIn><h1 style={{ color: "#fafafa" }}>Dissipate.</h1></FadeIn>
+  <SoftBlurIn text="Dissipate." color="#fafafa" />
 </Backdrop>
 ```
 

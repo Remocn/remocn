@@ -26,9 +26,7 @@ Lands at `components/remocn/backdrop.tsx`.
 
 ```tsx
 <Backdrop fill="#0a0a0a" padding={6} radius={2}>
-  <FadeIn>
-    <Typewriter text="Ship faster." />
-  </FadeIn>
+  <Typewriter text="Ship faster." />
 </Backdrop>
 ```
 

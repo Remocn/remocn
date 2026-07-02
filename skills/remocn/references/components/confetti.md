@@ -32,7 +32,7 @@ Lands at `components/remocn/confetti.tsx`.
 ```tsx
 <AbsoluteFill>
   <Backdrop fill="#0f0f0f" padding={0}>
-    <FadeIn><h1 style={{ color: "#fafafa" }}>You shipped it!</h1></FadeIn>
+    <SoftBlurIn text="You shipped it!" color="#fafafa" />
   </Backdrop>
   <Confetti particleCount={200} originX={0.5} originY={0.3} power={22} />
 </AbsoluteFill>

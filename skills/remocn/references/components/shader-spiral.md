@@ -29,7 +29,7 @@ Any other `Spiral` prop is forwarded through `...rest`.
 
 ```tsx
 <Backdrop fill={<ShaderSpiral speed={0.5} />} padding={0}>
-  <FadeIn><h1 style={{ color: "#fafafa" }}>Drawn in.</h1></FadeIn>
+  <SoftBlurIn text="Drawn in." color="#fafafa" />
 </Backdrop>
 ```
 

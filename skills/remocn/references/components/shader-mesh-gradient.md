@@ -27,7 +27,7 @@ Any other `@paper-design/shaders-react` `MeshGradient` prop is forwarded through
 
 ```tsx
 <Backdrop fill={<ShaderMeshGradient speed={0.6} />} padding={0}>
-  <FadeIn><h1 style={{ color: "#fafafa" }}>Launch day.</h1></FadeIn>
+  <SoftBlurIn text="Launch day." color="#fafafa" />
 </Backdrop>
 ```
 

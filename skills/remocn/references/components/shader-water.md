@@ -29,7 +29,7 @@ Any other `Water` prop is forwarded through `...rest`.
 
 ```tsx
 <Backdrop fill={<ShaderWater speed={0.6} />} padding={0}>
-  <FadeIn><h1 style={{ color: "#fafafa" }}>Below the surface.</h1></FadeIn>
+  <SoftBlurIn text="Below the surface." color="#fafafa" />
 </Backdrop>
 ```
 

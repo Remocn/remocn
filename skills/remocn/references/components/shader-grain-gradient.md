@@ -29,7 +29,7 @@ Any other `GrainGradient` prop is forwarded through `...rest`.
 
 ```tsx
 <Backdrop fill={<ShaderGrainGradient speed={0.5} />} padding={0}>
-  <FadeIn><h1 style={{ color: "#fafafa" }}>Grain and glow.</h1></FadeIn>
+  <SoftBlurIn text="Grain and glow." color="#fafafa" />
 </Backdrop>
 ```
 
