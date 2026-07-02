@@ -76,7 +76,7 @@ Conventions differ by tier — don't assume animation-tier props on a primitive.
 - Named `Props` interface per component (e.g. `BlurOutUpProps`).
 - `speed?: number` — global time multiplier (default `1`), applied as `frame * speed`.
 - Text components: `fontSize`, `color`, `fontWeight`.
-- Transitions: take `from` / `to` as `ReactNode` (the two scenes), plus `transitionDuration`.
+- Transitions: lowercase factories (e.g. `whipPan(props)`) returning a `TransitionPresentation` — pass to `TransitionSeries.Transition` via `presentation`, pace with `linearTiming` / `springTiming`.
 - `className?: string` on the root.
 
 ### UI Primitives (`remocn-ui`)

@@ -97,6 +97,10 @@ Tier `remocn`. Presentations for `@remotion/transitions` — pass to `Transition
 | [`wave-wipe`](wave-wipe.md) | The cut should feel like physical motion — a grainy swell washes up over the scene and the… | Horizontally-related scenes (steps in a flow) — the vertical sweep fights the reading… | 60f | premium | `@paper-design/shaders-react` |
 | [`ripple-zoom`](ripple-zoom.md) | The narrative zooms in on a hero statement — the camera dives through grainy ripple rings… | Incoming scenes with opaque full-frame backgrounds — they hide the field and kill the… | 68f | premium | `@paper-design/shaders-react` |
 | [`warp-dissolve`](warp-dissolve.md) | Chapter or mood changes — the outgoing scene melts into a liquid color field and the next… | Fast cuts under ~50 frames — the melt needs room to read; spatially related step-by-step… | 76f | premium | `@paper-design/shaders-react` |
+| [`swirl-dissolve`](swirl-dissolve.md) | A dramatic chapter break where the frame visibly twists into a vortex — reveals, act… | Fast cuts under ~80 frames; repeated use — the vortex is a one-per-video statement move | 104f | premium | `@paper-design/shaders-react` |
+| [`dither-dissolve`](dither-dissolve.md) | Retro/terminal/print aesthetics — a quick 40f cut behind an animated pixel-dither texture;… | Soft organic tone — the pixel grid reads technical; use `grain-dissolve` or… | 40f | retro | `@paper-design/shaders-react` |
+| [`perlin-dissolve`](perlin-dissolve.md) | Organic, atmospheric chapter changes — a textured film dissolve that neutralizes strong… | Fast cuts — the threshold sweep needs ~100 frames; sharp geometric brand language — use… | 104f | premium | `@paper-design/shaders-react` |
+| [`smoke-dissolve`](smoke-dissolve.md) | Moody, cinematic reveals emerging from mist — the new scene is born at the center of the… | Fast cuts; bright poster-like scenes — the smoke loses definition on light backgrounds | 104f | premium | `@paper-design/shaders-react` |
 
 ## UI Blocks
 
