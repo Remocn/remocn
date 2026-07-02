@@ -18,9 +18,7 @@ function SponsorLogoCard({ sponsor }: { sponsor: Sponsor }) {
         src={sponsor.logoUrl}
         alt={sponsor.name}
         className={cn(
-          // Monochrome by default, theme-aware: dark inverts to white,
-          // light keeps it dark. Color blooms on hover.
-          "max-h-10 w-auto object-contain opacity-70 grayscale transition-all duration-300 group-hover:opacity-100 group-hover:grayscale-0 dark:[filter:grayscale(1)_brightness(0)_invert(1)] dark:group-hover:[filter:none]",
+          "max-h-10 w-auto object-contain opacity-70 grayscale transition-all duration-300 dark:[filter:grayscale(1)_brightness(0)_invert(1)]",
           sponsor.customStyles,
         )}
         style={{ transform: `scale(${sponsor.logoScale ?? 1})` }}

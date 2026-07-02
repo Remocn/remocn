@@ -19,6 +19,16 @@ export type Sponsor = {
 
 export const sponsors: Sponsor[] = [
   {
+    id: "reactbits",
+    name: "React Bits",
+    logoUrl: "/sponsors/reactbits.svg",
+    website: "https://pro.reactbits.dev/?utm_source=remocn&utm_medium=sponsor&utm_campaign=remocn_sponsors_page",
+    tier: "partner",
+    logoScale: 1.2,
+    customStyles: "opacity-90",
+    isPaste: false,
+  },
+  {
     id: "shadcnblocks",
     name: "Shadcnblocks.com",
     logoUrl: "/sponsors/shadcnblocks.svg",
