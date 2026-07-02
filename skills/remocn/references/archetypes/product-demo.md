@@ -44,7 +44,7 @@ Pick one slot per beat from these candidates (full props in each `../components/
 | **Features** | `progress-steps` (checklist), `animated-bar-chart` / `animated-line-chart`, `per-word-crossfade` for a "designed to ___" swap, `marker-highlight` / `inline-highlight` for emphasis, `data-flow-pipes` | one concrete moment per feature, 2–4 total |
 | **Proof** | `rolling-number` / `number-wheel` / `slot-machine-roll` for a score; `animated-bar-chart`; `github-stars` / `x-followers-overview` for social counts; a testimonial card (compose or build new) | land one number with the accent |
 | **CTA** | `per-word-crossfade` / `kinetic-center-build` closer, `terminal-simulator` for a run-this command, `spring-scale-in` for a pill, `logo-enter`, `confetti` (one accent pop) | one ask + where to go |
-| **Transitions** | `spatial-push` (going deeper), `fade-through` (neutral cut), `frosted-glass-wipe`, `directional-wipe`, `shared-axis-y`/`shared-axis-z` | wrap two scenes via `from`/`to` |
+| **Transitions** | `push-through` (going deeper), `fade-through` (neutral cut), `focus-pull`, `whip-pan`, `shared-axis-y`/`shared-axis-z` | pass to `TransitionSeries.Transition` as `presentation` |
 
 Budget each `<TransitionSeries.Sequence durationInFrames>` around the component's natural length
 (`Length` in `../components/index.md`). Standard ~45s split: Hook 165 · Positioning 120 · Product reveal

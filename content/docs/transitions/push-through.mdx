@@ -1,0 +1,59 @@
+---
+title: Push Through
+description: Dolly through the outgoing scene while the next one approaches from the depth
+---
+
+<ComponentPreview name="push-through" />
+
+## Installation
+
+<InstallBlock name="push-through" />
+
+## Usage
+
+`pushThrough()` is a Remotion transition presentation. Pass it to a
+`TransitionSeries.Transition` between two sequences. The camera pushes
+forward: the outgoing scene accelerates past the lens, blurring as it grows to
+`zoom`, while the incoming scene scales up from the depth with a small
+overshoot settle. Around 40 frames keeps the dolly readable.
+
+```tsx
+import { TransitionSeries, linearTiming } from "@remotion/transitions";
+import { pushThrough } from "@/components/remocn/push-through";
+
+export const MyVideo = () => (
+  <TransitionSeries>
+    <TransitionSeries.Sequence durationInFrames={76}>
+      <SceneA />
+    </TransitionSeries.Sequence>
+    <TransitionSeries.Transition
+      timing={linearTiming({ durationInFrames: 40 })}
+      presentation={pushThrough()}
+    />
+    <TransitionSeries.Sequence durationInFrames={76}>
+      <SceneB />
+    </TransitionSeries.Sequence>
+  </TransitionSeries>
+);
+```
+
+## Props
+
+`pushThrough(props)` accepts:
+
+<PropsTable
+  rows={[
+    {
+      name: "zoom",
+      type: "number",
+      default: "2.4",
+      description: "How far the outgoing scene grows past the camera.",
+    },
+    {
+      name: "blur",
+      type: "number",
+      default: "14",
+      description: "Peak blur in pixels as scenes pass the focal plane.",
+    },
+  ]}
+/>

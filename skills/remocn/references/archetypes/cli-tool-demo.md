@@ -20,7 +20,7 @@ Read `../anatomy.md` first; pick components from `../components/index.md`.
 | 360–480 | **Result** | Success callout — a metric, file count, or elapsed time — lands with the accent; plain dark hold if no visual artifact |
 | 480–540 | **Sign-off** | Logo cluster on calm dark hold |
 
-Transitions: hook→terminal `directional-wipe` down (20f); terminal→result `shared-axis-z` (spring, terminal recedes into depth); result→sign-off `fade-through` (16f).
+Transitions: hook→terminal `whip-pan` down (20f); terminal→result `shared-axis-z` (spring, terminal recedes into depth); result→sign-off `fade-through` (16f).
 
 ### Standard (~45s / 1350f)
 
@@ -35,7 +35,7 @@ Transitions: hook→terminal `directional-wipe` down (20f); terminal→result `s
 | 1050–1260 | **Result reveal** | Pipeline steps completing OR result artifact visible; plain dark hold if result needs no visual |
 | 1260–1350 | **Sign-off** | Logo cluster fades in on dark hold |
 
-Transitions: hook→chat `fade-through` (16f); chat→terminal `directional-wipe` down (20f); terminal→value-line `shared-axis-z` (spring, terminal recedes into depth); value-line→result `spatial-push` (24f); result→sign-off `fade-through` (16f).
+Transitions: hook→chat `fade-through` (16f); chat→terminal `whip-pan` down (20f); terminal→value-line `shared-axis-z` (spring, terminal recedes into depth); value-line→result `push-through` (24f); result→sign-off `fade-through` (16f).
 
 ## Beat → slots
 

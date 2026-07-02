@@ -62,7 +62,7 @@ notes). Don't read every file.
 | **Text Animations** | `remocn` | Reveal/replace/emphasize text (`typewriter`, `blur-out-up`, `tracking-in`, `rolling-number`, `shimmer-sweep`…) |
 | **Backgrounds & Effects** | `remocn` | Animated foundations, cursors, one-shot effects (`mesh-gradient-bg`, `dynamic-grid`, `spotlight-card`, `confetti`, `backdrop`) |
 | **Shaders** | `remocn` | WebGL shader backdrops, frame-driven for deterministic renders (`shader-mesh-gradient`, `shader-warp`, `shader-voronoi`, `shader-god-rays`, `shader-metaballs`…) |
-| **Transitions & Wipes** | `remocn` | Swap between two scenes (`directional-wipe`, `frosted-glass-wipe`, `spatial-push`, `zoom-through-transition`…) |
+| **Transitions** | `remocn` | TransitionSeries presentations between two scenes (`whip-pan`, `push-through`, `focus-pull`, `grain-dissolve`, `wave-wipe`…) |
 | **UI Blocks** | `remocn` | Interface sims for product demos (`terminal-simulator`, `glass-code-block`, `animated-bar-chart`, `progress-steps`…) |
 | **AI & Social Cards** | `remocn` | Brand/product card scenes (`chat-gpt`, `claude-code`, `v0`, `github-stars`, `x-follow-card`…) |
 | **UI Primitives** | `remocn-ui` | shadcn-style primitives for video (`button`, `dialog`, `select`, `command-menu`, `tooltip`…) |
@@ -76,7 +76,7 @@ Conventions differ by tier — don't assume animation-tier props on a primitive.
 - Named `Props` interface per component (e.g. `BlurOutUpProps`).
 - `speed?: number` — global time multiplier (default `1`), applied as `frame * speed`.
 - Text components: `fontSize`, `color`, `fontWeight`.
-- Transitions: take `from` / `to` as `ReactNode` (the two scenes), plus `transitionDuration`.
+- Transitions: lowercase factories (e.g. `whipPan(props)`) returning a `TransitionPresentation` — pass to `TransitionSeries.Transition` via `presentation`, pace with `linearTiming` / `springTiming`.
 - `className?: string` on the root.
 
 ### UI Primitives (`remocn-ui`)

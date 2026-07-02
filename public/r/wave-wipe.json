@@ -1,0 +1,22 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "wave-wipe",
+  "title": "Wave Wipe",
+  "description": "A grain-gradient wave that sweeps up across the frame, covering the outgoing scene and revealing the next one from below.",
+  "dependencies": [
+    "remotion",
+    "@remotion/transitions"
+  ],
+  "registryDependencies": [
+    "@remocn/shader-grain-gradient"
+  ],
+  "files": [
+    {
+      "path": "registry/remocn/wave-wipe/index.tsx",
+      "content": "\"use client\";\n\nimport type React from \"react\";\nimport { AbsoluteFill, Easing, interpolate } from \"remotion\";\nimport type {\n  TransitionPresentation,\n  TransitionPresentationComponentProps,\n} from \"@remotion/transitions\";\nimport { ShaderGrainGradient } from \"@/components/remocn/shader-grain-gradient\";\n\nconst clampOpts = {\n  extrapolateLeft: \"clamp\" as const,\n  extrapolateRight: \"clamp\" as const,\n};\n\nconst DEFAULT_COLORS = [\"#3a3a52\", \"#4a4a68\", \"#8f88ae\"];\n\nexport type WaveWipeProps = {\n  colors?: string[];\n  colorBack?: string;\n  intensity?: number;\n  softness?: number;\n  noise?: number;\n  zoom?: number;\n  speed?: number;\n};\n\nconst WaveWipePresentation: React.FC<\n  TransitionPresentationComponentProps<WaveWipeProps>\n> = ({\n  children,\n  presentationProgress,\n  presentationDirection,\n  passedProps,\n}) => {\n  const {\n    colors = DEFAULT_COLORS,\n    colorBack = \"#141318\",\n    intensity = 0.2,\n    softness = 0.7,\n    noise = 0.4,\n    zoom = 1.16,\n    speed = 1,\n  } = passedProps;\n  const entering = presentationDirection === \"entering\";\n  const p = presentationProgress;\n\n  if (!entering) {\n    const exitStyle: React.CSSProperties = {\n      opacity: interpolate(p, [0.3, 0.5], [1, 0], {\n        ...clampOpts,\n        easing: Easing.bezier(0.42, 0, 0.58, 1),\n      }),\n      transform: `translateY(${interpolate(p, [0, 0.7], [0, -70], {\n        ...clampOpts,\n        easing: Easing.in(Easing.cubic),\n      })}%)`,\n    };\n    return <AbsoluteFill style={exitStyle}>{children}</AbsoluteFill>;\n  }\n\n  const fieldOpacity = interpolate(p, [0.18, 0.45], [0, 1], {\n    ...clampOpts,\n    easing: Easing.bezier(0.42, 0, 0.58, 1),\n  });\n  const drift = interpolate(p, [0, 1], [0, 0.7], {\n    ...clampOpts,\n    easing: Easing.bezier(0.45, 0, 0.55, 1),\n  });\n  const rise = interpolate(p, [0.4, 0.82, 1], [100, -3.5, 0], {\n    ...clampOpts,\n    easing: Easing.out(Easing.cubic),\n  });\n\n  return (\n    <AbsoluteFill>\n      <AbsoluteFill style={{ opacity: fieldOpacity, pointerEvents: \"none\" }}>\n        <ShaderGrainGradient\n          speed={speed}\n          shape=\"wave\"\n          colors={colors}\n          colorBack={colorBack}\n          intensity={intensity}\n          softness={softness}\n          noise={noise}\n          scale={zoom}\n          offsetY={drift}\n        />\n      </AbsoluteFill>\n      <AbsoluteFill style={{ transform: `translateY(${rise}%)` }}>\n        {children}\n      </AbsoluteFill>\n    </AbsoluteFill>\n  );\n};\n\nexport function waveWipe(\n  props: WaveWipeProps = {},\n): TransitionPresentation<WaveWipeProps> {\n  return {\n    component: WaveWipePresentation,\n    props,\n  };\n}\n",
+      "type": "registry:component",
+      "target": "components/remocn/wave-wipe.tsx"
+    }
+  ],
+  "type": "registry:component"
+}

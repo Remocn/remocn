@@ -124,6 +124,12 @@
       "@/components/remocn/shader-smoke-ring": [
         "./registry/remocn/shader-smoke-ring/index.tsx",
       ],
+      "@/components/remocn/shader-grain-gradient": [
+        "./registry/remocn/shader-grain-gradient/index.tsx",
+      ],
+      "@/components/remocn/shader-warp": [
+        "./registry/remocn/shader-warp/index.tsx",
+      ],
       "@/components/remocn/*": ["./registry/remocn-ui/*/index.tsx"],
       "@/*": ["./*"],
     },

@@ -28,7 +28,7 @@ Any other `ColorPanels` prop is forwarded through `...rest`.
 
 ```tsx
 <Backdrop fill={<ShaderColorPanels speed={0.6} />} padding={0}>
-  <FadeIn><h1 style={{ color: "#fafafa" }}>Layered.</h1></FadeIn>
+  <SoftBlurIn text="Layered." color="#fafafa" />
 </Backdrop>
 ```
 

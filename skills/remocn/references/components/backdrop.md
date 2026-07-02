@@ -26,9 +26,7 @@ Lands at `components/remocn/backdrop.tsx`.
 
 ```tsx
 <Backdrop fill="#0a0a0a" padding={6} radius={2}>
-  <FadeIn>
-    <Typewriter text="Ship faster." />
-  </FadeIn>
+  <Typewriter text="Ship faster." />
 </Backdrop>
 ```
 
@@ -42,4 +40,4 @@ Lands at `components/remocn/backdrop.tsx`.
 
 - You need an infinitely looping ambient background as a standalone track — use `dynamic-grid` or `spotlight-card` directly and let the composition handle framing.
 - You want a raw full-bleed color with no frame treatment — set `padding={0}` and `radius={0}`, or just set `backgroundColor` in the Remotion composition root.
-- You're inside a transition component — wipes like `directional-wipe` manage their own full-frame layout; nesting Backdrop inside them creates double-framing.
+- You're inside a transition presentation — transitions like `whip-pan` manage their own full-frame layout; nesting Backdrop inside them creates double-framing.

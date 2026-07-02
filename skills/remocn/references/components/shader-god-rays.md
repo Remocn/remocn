@@ -30,7 +30,7 @@ Any other `GodRays` prop is forwarded through `...rest`.
 
 ```tsx
 <Backdrop fill={<ShaderGodRays speed={0.5} />} padding={0}>
-  <FadeIn><h1 style={{ color: "#fafafa" }}>Into the light.</h1></FadeIn>
+  <SoftBlurIn text="Into the light." color="#fafafa" />
 </Backdrop>
 ```
 

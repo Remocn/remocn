@@ -1,0 +1,59 @@
+---
+title: Whip Pan
+description: Whip the camera sideways with motion blur so both scenes fly through the frame in one move
+---
+
+<ComponentPreview name="whip-pan" />
+
+## Installation
+
+<InstallBlock name="whip-pan" />
+
+## Usage
+
+`whipPan()` is a Remotion transition presentation. Pass it to a
+`TransitionSeries.Transition` between two sequences. Both scenes travel in the
+same direction as one continuous camera whip — blur and a subtle smear stretch
+peak at maximum velocity mid-transition and hide the seam. It lives on speed:
+keep it around 26 frames.
+
+```tsx
+import { TransitionSeries, linearTiming } from "@remotion/transitions";
+import { whipPan } from "@/components/remocn/whip-pan";
+
+export const MyVideo = () => (
+  <TransitionSeries>
+    <TransitionSeries.Sequence durationInFrames={70}>
+      <SceneA />
+    </TransitionSeries.Sequence>
+    <TransitionSeries.Transition
+      timing={linearTiming({ durationInFrames: 26 })}
+      presentation={whipPan()}
+    />
+    <TransitionSeries.Sequence durationInFrames={70}>
+      <SceneB />
+    </TransitionSeries.Sequence>
+  </TransitionSeries>
+);
+```
+
+## Props
+
+`whipPan(props)` accepts:
+
+<PropsTable
+  rows={[
+    {
+      name: "direction",
+      type: "string",
+      default: '"left"',
+      description: "Direction the camera whips. One of left, right, up, down.",
+    },
+    {
+      name: "blur",
+      type: "number",
+      default: "24",
+      description: "Peak motion blur in pixels at maximum velocity.",
+    },
+  ]}
+/>

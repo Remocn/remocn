@@ -25,7 +25,7 @@ Lands at `components/remocn/mesh-gradient-bg.tsx`.
 
 ```tsx
 <Backdrop fill={<MeshGradientBg colors={["#1a1a2e", "#16213e", "#0f3460", "#533483"]} speed={0.5} />} padding={0}>
-  <FadeIn><h1 style={{ color: "#fafafa" }}>Launch day.</h1></FadeIn>
+  <SoftBlurIn text="Launch day." color="#fafafa" />
 </Backdrop>
 ```
 

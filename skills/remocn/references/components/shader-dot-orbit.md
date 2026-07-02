@@ -28,7 +28,7 @@ Any other `DotOrbit` prop is forwarded through `...rest`.
 
 ```tsx
 <Backdrop fill={<ShaderDotOrbit speed={0.6} />} padding={0}>
-  <FadeIn><h1 style={{ color: "#fafafa" }}>In orbit.</h1></FadeIn>
+  <SoftBlurIn text="In orbit." color="#fafafa" />
 </Backdrop>
 ```
 

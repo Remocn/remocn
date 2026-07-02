@@ -16,7 +16,7 @@ Frame math: `60 (wordmark) + 45 (mark, −15 overlap with wordmark) + 45 (hold) 
 | 45–105f | **Mark reveal** | the brand mark draws, scales, or assembles in, overlapping the wordmark tail; settles at full opacity |
 | 90–135f | **Hold** | complete lockup holds static — 30–45f of no motion for clean editor trim |
 
-Transitions: none internal — the bumper is atomic. Connect to surrounding content externally (`zoom-through-transition` from the host composition).
+Transitions: none internal — the bumper is atomic. Connect to surrounding content externally (`push-through` from the host composition).
 
 ## Beat → slots
 

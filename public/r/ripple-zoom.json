@@ -1,0 +1,22 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "ripple-zoom",
+  "title": "Ripple Zoom",
+  "description": "A grain-gradient ripple transition that flies the camera through the center of the rings while the next scene approaches from the depth.",
+  "dependencies": [
+    "remotion",
+    "@remotion/transitions"
+  ],
+  "registryDependencies": [
+    "@remocn/shader-grain-gradient"
+  ],
+  "files": [
+    {
+      "path": "registry/remocn/ripple-zoom/index.tsx",
+      "content": "\"use client\";\n\nimport type React from \"react\";\nimport { AbsoluteFill, Easing, interpolate } from \"remotion\";\nimport type {\n  TransitionPresentation,\n  TransitionPresentationComponentProps,\n} from \"@remotion/transitions\";\nimport { ShaderGrainGradient } from \"@/components/remocn/shader-grain-gradient\";\n\nconst clampOpts = {\n  extrapolateLeft: \"clamp\" as const,\n  extrapolateRight: \"clamp\" as const,\n};\n\nconst DEFAULT_COLORS = [\"#3a3a52\", \"#4a4a68\", \"#8f88ae\"];\n\nexport type RippleZoomProps = {\n  colors?: string[];\n  colorBack?: string;\n  intensity?: number;\n  softness?: number;\n  noise?: number;\n  zoom?: number;\n  speed?: number;\n};\n\nconst RippleZoomPresentation: React.FC<\n  TransitionPresentationComponentProps<RippleZoomProps>\n> = ({\n  children,\n  presentationProgress,\n  presentationDirection,\n  passedProps,\n}) => {\n  const {\n    colors = DEFAULT_COLORS,\n    colorBack = \"#141318\",\n    intensity = 0.5,\n    softness = 0.5,\n    noise = 0.5,\n    zoom = 4,\n    speed = 1,\n  } = passedProps;\n  const entering = presentationDirection === \"entering\";\n  const p = presentationProgress;\n\n  if (!entering) {\n    const exitStyle: React.CSSProperties = {\n      opacity: interpolate(p, [0.35, 0.55], [1, 0], {\n        ...clampOpts,\n        easing: Easing.bezier(0.42, 0, 0.58, 1),\n      }),\n      transform: `scale(${interpolate(p, [0.3, 0.62], [1, 1.6], {\n        ...clampOpts,\n        easing: Easing.in(Easing.cubic),\n      })})`,\n    };\n    return <AbsoluteFill style={exitStyle}>{children}</AbsoluteFill>;\n  }\n\n  const fieldOpacity = interpolate(p, [0.08, 0.32], [0, 1], {\n    ...clampOpts,\n    easing: Easing.bezier(0.42, 0, 0.58, 1),\n  });\n  const fieldScale = interpolate(p, [0.32, 1], [0.2, zoom], {\n    ...clampOpts,\n    easing: Easing.bezier(0.7, 0, 0.3, 1),\n  });\n\n  const childStyle: React.CSSProperties = {\n    opacity: interpolate(p, [0.45, 0.62], [0, 1], clampOpts),\n    transform: `scale(${interpolate(p, [0.42, 0.97], [0.2, 1], {\n      ...clampOpts,\n      easing: Easing.bezier(0.33, 1, 0.68, 1),\n    })})`,\n    filter: `blur(${interpolate(p, [0.42, 0.8], [8, 0], clampOpts)}px)`,\n  };\n\n  return (\n    <AbsoluteFill>\n      <AbsoluteFill style={{ opacity: fieldOpacity, pointerEvents: \"none\" }}>\n        <ShaderGrainGradient\n          speed={speed}\n          shape=\"ripple\"\n          colors={colors}\n          colorBack={colorBack}\n          intensity={intensity}\n          softness={softness}\n          noise={noise}\n          scale={fieldScale}\n        />\n      </AbsoluteFill>\n      <AbsoluteFill style={childStyle}>{children}</AbsoluteFill>\n    </AbsoluteFill>\n  );\n};\n\nexport function rippleZoom(\n  props: RippleZoomProps = {},\n): TransitionPresentation<RippleZoomProps> {\n  return {\n    component: RippleZoomPresentation,\n    props,\n  };\n}\n",
+      "type": "registry:component",
+      "target": "components/remocn/ripple-zoom.tsx"
+    }
+  ],
+  "type": "registry:component"
+}

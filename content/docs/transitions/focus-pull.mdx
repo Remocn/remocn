@@ -1,0 +1,53 @@
+---
+title: Focus Pull
+description: Rack focus from one scene to the next through a soft defocus breath
+---
+
+<ComponentPreview name="focus-pull" />
+
+## Installation
+
+<InstallBlock name="focus-pull" />
+
+## Usage
+
+`focusPull()` is a Remotion transition presentation. Pass it to a
+`TransitionSeries.Transition` between two sequences. The outgoing scene drifts
+out of focus and brightens like an over-exposed bokeh, the incoming scene
+resolves from the same blur and settles into sharpness with a gentle lens
+breath. Calm and editorial — give it around 46 frames.
+
+```tsx
+import { TransitionSeries, linearTiming } from "@remotion/transitions";
+import { focusPull } from "@/components/remocn/focus-pull";
+
+export const MyVideo = () => (
+  <TransitionSeries>
+    <TransitionSeries.Sequence durationInFrames={80}>
+      <SceneA />
+    </TransitionSeries.Sequence>
+    <TransitionSeries.Transition
+      timing={linearTiming({ durationInFrames: 46 })}
+      presentation={focusPull()}
+    />
+    <TransitionSeries.Sequence durationInFrames={80}>
+      <SceneB />
+    </TransitionSeries.Sequence>
+  </TransitionSeries>
+);
+```
+
+## Props
+
+`focusPull(props)` accepts:
+
+<PropsTable
+  rows={[
+    {
+      name: "blur",
+      type: "number",
+      default: "16",
+      description: "Maximum defocus blur in pixels at the handoff point.",
+    },
+  ]}
+/>

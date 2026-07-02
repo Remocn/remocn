@@ -28,7 +28,7 @@ Any other `PerlinNoise` prop is forwarded through `...rest`.
 
 ```tsx
 <Backdrop fill={<ShaderPerlinNoise speed={0.5} />} padding={0}>
-  <FadeIn><h1 style={{ color: "#fafafa" }}>Soft drift.</h1></FadeIn>
+  <SoftBlurIn text="Soft drift." color="#fafafa" />
 </Backdrop>
 ```
 

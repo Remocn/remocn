@@ -339,59 +339,27 @@ Pre-assembled interface elements: code editors, layouts, charts, and workflow vi
 
 Scene transitions, camera moves, and stylized wipes.
 
-### Camera & Scale
+### Camera Motion
 
 <ComponentCardGrid
   items={[
     {
-      name: "ZoomThroughTransition",
-      description: "Aggressive scale-in 'through' an element to the next scene",
+      name: "WhipPan",
+      description: "Whip the camera sideways with motion blur so both scenes fly through in one move",
       status: "stable",
-      href: "/docs/transitions/zoom-through-transition",
-    },
-  ]}
-/>
-
-### Spatial Wipes
-
-<ComponentCardGrid
-  items={[
-    {
-      name: "DirectionalWipe",
-      description: "Slide one scene in while pushing the other out",
-      status: "stable",
-      href: "/docs/transitions/directional-wipe",
+      href: "/docs/transitions/whip-pan",
     },
     {
-      name: "SpatialPush",
-      description: "A new scene physically presses the old one back into the frame",
+      name: "PushThrough",
+      description: "Dolly through the outgoing scene while the next one approaches from the depth",
       status: "stable",
-      href: "/docs/transitions/spatial-push",
+      href: "/docs/transitions/push-through",
     },
     {
-      name: "FrostedGlassWipe",
-      description: "Elegant scene transition through a sliding pane of frosted glass",
+      name: "FocusPull",
+      description: "Rack focus from one scene to the next through a soft defocus breath",
       status: "stable",
-      href: "/docs/transitions/frosted-glass-wipe",
-    },
-  ]}
-/>
-
-### Stylized
-
-<ComponentCardGrid
-  items={[
-    {
-      name: "GridPixelateWipe",
-      description: "Dissolve from one scene to the next through a deterministic grid of mask cells",
-      status: "stable",
-      href: "/docs/transitions/grid-pixelate-wipe",
-    },
-    {
-      name: "ChromaticAberrationWipe",
-      description: "An ultra-fast slide transition with an RGB glitch on the peak frames",
-      status: "stable",
-      href: "/docs/transitions/chromatic-aberration-wipe",
+      href: "/docs/transitions/focus-pull",
     },
   ]}
 />
@@ -423,6 +391,30 @@ Scene transitions, camera moves, and stylized wipes.
       description: "Expand a smoke ring outward across the frame to reveal the next scene",
       status: "stable",
       href: "/docs/transitions/smoke-dissolve",
+    },
+    {
+      name: "GrainDissolve",
+      description: "Disintegrate the outgoing scene into soft grainy shapes and condense the next out of the noise",
+      status: "stable",
+      href: "/docs/transitions/grain-dissolve",
+    },
+    {
+      name: "WaveWipe",
+      description: "Sweep a grainy wave up across the frame and reveal the next scene from below",
+      status: "stable",
+      href: "/docs/transitions/wave-wipe",
+    },
+    {
+      name: "RippleZoom",
+      description: "Fly the camera through the center of grainy ripple rings while the next scene approaches from the depth",
+      status: "stable",
+      href: "/docs/transitions/ripple-zoom",
+    },
+    {
+      name: "WarpDissolve",
+      description: "Melt the outgoing scene into a folding domain-warp field that straightens into the next",
+      status: "stable",
+      href: "/docs/transitions/warp-dissolve",
     },
   ]}
 />

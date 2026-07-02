@@ -1,0 +1,22 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "warp-dissolve",
+  "title": "Warp Dissolve",
+  "description": "A domain-warp shader transition that melts the outgoing scene into a folding color field and straightens back out into the next.",
+  "dependencies": [
+    "remotion",
+    "@remotion/transitions"
+  ],
+  "registryDependencies": [
+    "@remocn/shader-warp"
+  ],
+  "files": [
+    {
+      "path": "registry/remocn/warp-dissolve/index.tsx",
+      "content": "\"use client\";\n\nimport type React from \"react\";\nimport { AbsoluteFill, Easing, interpolate } from \"remotion\";\nimport type {\n  TransitionPresentation,\n  TransitionPresentationComponentProps,\n} from \"@remotion/transitions\";\nimport { ShaderWarp } from \"@/components/remocn/shader-warp\";\n\nconst clampOpts = {\n  extrapolateLeft: \"clamp\" as const,\n  extrapolateRight: \"clamp\" as const,\n};\n\nconst DEFAULT_COLORS = [\"#141318\", \"#3a3a5c\", \"#1f1d29\", \"#8f88ae\"];\n\nexport type WarpDissolveProps = {\n  colors?: string[];\n  distortion?: number;\n  swirl?: number;\n  softness?: number;\n  speed?: number;\n};\n\nconst WarpDissolvePresentation: React.FC<\n  TransitionPresentationComponentProps<WarpDissolveProps>\n> = ({\n  children,\n  presentationProgress,\n  presentationDirection,\n  passedProps,\n}) => {\n  const {\n    colors = DEFAULT_COLORS,\n    distortion = 0.8,\n    swirl = 0.6,\n    softness = 1,\n    speed = 1,\n  } = passedProps;\n  const entering = presentationDirection === \"entering\";\n  const p = presentationProgress;\n\n  if (!entering) {\n    const meltStyle: React.CSSProperties = {\n      opacity: interpolate(p, [0.2, 0.38], [1, 0], clampOpts),\n      transform: `scale(${interpolate(p, [0, 0.38], [1, 1.16], {\n        ...clampOpts,\n        easing: Easing.in(Easing.cubic),\n      })})`,\n      filter: `blur(${interpolate(p, [0.04, 0.38], [0, 18], clampOpts)}px)`,\n    };\n    return <AbsoluteFill style={meltStyle}>{children}</AbsoluteFill>;\n  }\n\n  const fieldOpacity = interpolate(p, [0, 0.32], [0, 1], {\n    ...clampOpts,\n    easing: Easing.bezier(0.42, 0, 0.58, 1),\n  });\n  const fieldDistortion = interpolate(\n    p,\n    [0, 0.5, 1],\n    [distortion * 0.3, distortion, distortion * 0.4],\n    clampOpts,\n  );\n\n  const childStyle: React.CSSProperties = {\n    opacity: interpolate(p, [0.66, 0.82], [0, 1], clampOpts),\n    transform: `scale(${interpolate(p, [0.66, 1], [1.18, 1], {\n      ...clampOpts,\n      easing: Easing.out(Easing.cubic),\n    })})`,\n    filter: `blur(${interpolate(p, [0.66, 0.92], [16, 0], clampOpts)}px)`,\n  };\n\n  return (\n    <AbsoluteFill>\n      <AbsoluteFill style={{ opacity: fieldOpacity, pointerEvents: \"none\" }}>\n        <ShaderWarp\n          speed={speed}\n          colors={colors}\n          distortion={fieldDistortion}\n          swirl={swirl}\n          softness={softness}\n        />\n      </AbsoluteFill>\n      <AbsoluteFill style={childStyle}>{children}</AbsoluteFill>\n    </AbsoluteFill>\n  );\n};\n\nexport function warpDissolve(\n  props: WarpDissolveProps = {},\n): TransitionPresentation<WarpDissolveProps> {\n  return {\n    component: WarpDissolvePresentation,\n    props,\n  };\n}\n",
+      "type": "registry:component",
+      "target": "components/remocn/warp-dissolve.tsx"
+    }
+  ],
+  "type": "registry:component"
+}

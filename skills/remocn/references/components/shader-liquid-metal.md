@@ -31,7 +31,7 @@ Any other `LiquidMetal` prop is forwarded through `...rest`.
 
 ```tsx
 <Backdrop fill={<ShaderLiquidMetal speed={0.6} />} padding={0}>
-  <FadeIn><h1 style={{ color: "#fafafa" }}>Forged.</h1></FadeIn>
+  <SoftBlurIn text="Forged." color="#fafafa" />
 </Backdrop>
 ```
 

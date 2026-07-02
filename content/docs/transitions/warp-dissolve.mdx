@@ -1,0 +1,77 @@
+---
+title: Warp Dissolve
+description: Melt the outgoing scene into a folding domain-warp field that straightens back out into the next scene
+---
+
+<ComponentPreview name="warp-dissolve" />
+
+## Installation
+
+<InstallBlock name="warp-dissolve" />
+
+## Usage
+
+`warpDissolve()` is a Remotion transition presentation. Pass it to a
+`TransitionSeries.Transition` between two sequences. The outgoing scene blurs
+and swells into a liquid color field, distortion peaks mid-transition, and the
+incoming scene sharpens out of the warp. Give it enough frames for the melt to
+read (76 works well).
+
+```tsx
+import { TransitionSeries, linearTiming } from "@remotion/transitions";
+import { warpDissolve } from "@/components/remocn/warp-dissolve";
+
+export const MyVideo = () => (
+  <TransitionSeries>
+    <TransitionSeries.Sequence durationInFrames={96}>
+      <SceneA />
+    </TransitionSeries.Sequence>
+    <TransitionSeries.Transition
+      timing={linearTiming({ durationInFrames: 76 })}
+      presentation={warpDissolve()}
+    />
+    <TransitionSeries.Sequence durationInFrames={96}>
+      <SceneB />
+    </TransitionSeries.Sequence>
+  </TransitionSeries>
+);
+```
+
+## Props
+
+`warpDissolve(props)` accepts:
+
+<PropsTable
+  rows={[
+    {
+      name: "colors",
+      type: "string[]",
+      default: '["#141318", "#3a3a5c", "#1f1d29", "#8f88ae"]',
+      description: "Colors of the warping field.",
+    },
+    {
+      name: "distortion",
+      type: "number",
+      default: "0.8",
+      description: "Peak distortion of the field at mid-transition.",
+    },
+    {
+      name: "swirl",
+      type: "number",
+      default: "0.6",
+      description: "Rotational folding of the warp pattern.",
+    },
+    {
+      name: "softness",
+      type: "number",
+      default: "1",
+      description: "Blending softness between the field colors.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Shader animation speed.",
+    },
+  ]}
+/>

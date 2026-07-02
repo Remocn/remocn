@@ -29,7 +29,7 @@ Any other `Warp` prop is forwarded through `...rest`.
 
 ```tsx
 <Backdrop fill={<ShaderWarp speed={0.7} />} padding={0}>
-  <FadeIn><h1 style={{ color: "#fafafa" }}>Fluid by default.</h1></FadeIn>
+  <SoftBlurIn text="Fluid by default." color="#fafafa" />
 </Backdrop>
 ```
 

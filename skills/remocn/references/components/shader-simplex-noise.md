@@ -27,7 +27,7 @@ Any other `SimplexNoise` prop is forwarded through `...rest`.
 
 ```tsx
 <Backdrop fill={<ShaderSimplexNoise speed={0.5} />} padding={0}>
-  <FadeIn><h1 style={{ color: "#fafafa" }}>Smooth field.</h1></FadeIn>
+  <SoftBlurIn text="Smooth field." color="#fafafa" />
 </Backdrop>
 ```
 

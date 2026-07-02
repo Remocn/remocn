@@ -1,0 +1,22 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "perlin-dissolve",
+  "title": "Perlin Dissolve",
+  "description": "A perlin-noise shader transition that sweeps its noise threshold to dissolve one scene into the next.",
+  "dependencies": [
+    "remotion",
+    "@remotion/transitions"
+  ],
+  "registryDependencies": [
+    "@remocn/shader-perlin-noise"
+  ],
+  "files": [
+    {
+      "path": "registry/remocn/perlin-dissolve/index.tsx",
+      "content": "\"use client\";\n\nimport type React from \"react\";\nimport { AbsoluteFill, Easing, interpolate } from \"remotion\";\nimport type {\n  TransitionPresentation,\n  TransitionPresentationComponentProps,\n} from \"@remotion/transitions\";\nimport { ShaderPerlinNoise } from \"@/components/remocn/shader-perlin-noise\";\n\nconst clampOpts = {\n  extrapolateLeft: \"clamp\" as const,\n  extrapolateRight: \"clamp\" as const,\n};\n\nexport type PerlinDissolveProps = {\n  colorBack?: string;\n  colorFront?: string;\n  softness?: number;\n  speed?: number;\n};\n\nconst PerlinDissolvePresentation: React.FC<\n  TransitionPresentationComponentProps<PerlinDissolveProps>\n> = ({\n  children,\n  presentationProgress,\n  presentationDirection,\n  passedProps,\n}) => {\n  const {\n    colorBack = \"#141318\",\n    colorFront = \"#8f88ae\",\n    softness = 0.1,\n    speed = 1,\n  } = passedProps;\n  const entering = presentationDirection === \"entering\";\n  const p = presentationProgress;\n\n  const proportion = interpolate(p, [0, 0.5], [0, 1], {\n    ...clampOpts,\n    easing: Easing.bezier(0.42, 0, 0.58, 1),\n  });\n\n  const childStyle: React.CSSProperties = entering\n    ? { opacity: interpolate(p, [0.48, 0.6], [0, 1], clampOpts) }\n    : { opacity: interpolate(p, [0.06, 0.13], [1, 0], clampOpts) };\n\n  return (\n    <AbsoluteFill>\n      {entering ? (\n        <AbsoluteFill style={{ pointerEvents: \"none\" }}>\n          <ShaderPerlinNoise\n            speed={speed}\n            proportion={proportion}\n            colorBack={colorBack}\n            colorFront={colorFront}\n            softness={softness}\n          />\n        </AbsoluteFill>\n      ) : null}\n      <AbsoluteFill style={childStyle}>{children}</AbsoluteFill>\n    </AbsoluteFill>\n  );\n};\n\nexport function perlinDissolve(\n  props: PerlinDissolveProps = {},\n): TransitionPresentation<PerlinDissolveProps> {\n  return {\n    component: PerlinDissolvePresentation,\n    props,\n  };\n}\n",
+      "type": "registry:component",
+      "target": "components/remocn/perlin-dissolve.tsx"
+    }
+  ],
+  "type": "registry:component"
+}

@@ -41,12 +41,8 @@ import { ShortSlideDown } from "@/registry/remocn/short-slide-down";
 import { shortSlideDownConfig } from "@/registry/remocn/short-slide-down/config";
 import { ChatToPreviewLayout } from "@/registry/remocn/chat-to-preview-layout";
 import { chatToPreviewLayoutConfig } from "@/registry/remocn/chat-to-preview-layout/config";
-import { ChromaticAberrationWipe } from "@/registry/remocn/chromatic-aberration-wipe";
-import { chromaticAberrationWipeConfig } from "@/registry/remocn/chromatic-aberration-wipe/config";
 import { DataFlowPipes } from "@/registry/remocn/data-flow-pipes";
 import { dataFlowPipesConfig } from "@/registry/remocn/data-flow-pipes/config";
-import { DirectionalWipe } from "@/registry/remocn/directional-wipe";
-import { directionalWipeConfig } from "@/registry/remocn/directional-wipe/config";
 import { SwirlDissolveExampleScene } from "@/components/docs/examples/swirl-dissolve-example";
 import { swirlDissolveConfig } from "@/registry/remocn/swirl-dissolve/config";
 import { DitherDissolveExampleScene } from "@/components/docs/examples/dither-dissolve-example";
@@ -55,12 +51,24 @@ import { PerlinDissolveExampleScene } from "@/components/docs/examples/perlin-di
 import { perlinDissolveConfig } from "@/registry/remocn/perlin-dissolve/config";
 import { SmokeDissolveExampleScene } from "@/components/docs/examples/smoke-dissolve-example";
 import { smokeDissolveConfig } from "@/registry/remocn/smoke-dissolve/config";
+import { GrainDissolveExampleScene } from "@/components/docs/examples/grain-dissolve-example";
+import { grainDissolveConfig } from "@/registry/remocn/grain-dissolve/config";
+import { WaveWipeExampleScene } from "@/components/docs/examples/wave-wipe-example";
+import { waveWipeConfig } from "@/registry/remocn/wave-wipe/config";
+import { RippleZoomExampleScene } from "@/components/docs/examples/ripple-zoom-example";
+import { rippleZoomConfig } from "@/registry/remocn/ripple-zoom/config";
+import { WarpDissolveExampleScene } from "@/components/docs/examples/warp-dissolve-example";
+import { warpDissolveConfig } from "@/registry/remocn/warp-dissolve/config";
+import { WhipPanExampleScene } from "@/components/docs/examples/whip-pan-example";
+import { whipPanConfig } from "@/registry/remocn/whip-pan/config";
+import { PushThroughExampleScene } from "@/components/docs/examples/push-through-example";
+import { pushThroughConfig } from "@/registry/remocn/push-through/config";
+import { FocusPullExampleScene } from "@/components/docs/examples/focus-pull-example";
+import { focusPullConfig } from "@/registry/remocn/focus-pull/config";
 import { DynamicGrid } from "@/registry/remocn/dynamic-grid";
 import { dynamicGridConfig } from "@/registry/remocn/dynamic-grid/config";
 import { EcosystemConstellation } from "@/registry/remocn/ecosystem-constellation";
 import { ecosystemConstellationConfig } from "@/registry/remocn/ecosystem-constellation/config";
-import { FrostedGlassWipe } from "@/registry/remocn/frosted-glass-wipe";
-import { frostedGlassWipeConfig } from "@/registry/remocn/frosted-glass-wipe/config";
 import { GitHubSponsors } from "@/registry/remocn/github-sponsors";
 import { githubSponsorsConfig } from "@/registry/remocn/github-sponsors/config";
 import { GitHubStars } from "@/registry/remocn/github-stars";
@@ -71,8 +79,6 @@ import { GlassCodeBlock } from "@/registry/remocn/glass-code-block";
 import { glassCodeBlockConfig } from "@/registry/remocn/glass-code-block/config";
 import { GlassCodeWalk } from "@/registry/remocn/glass-code-walk";
 import { glassCodeWalkConfig } from "@/registry/remocn/glass-code-walk/config";
-import { GridPixelateWipe } from "@/registry/remocn/grid-pixelate-wipe";
-import { gridPixelateWipeConfig } from "@/registry/remocn/grid-pixelate-wipe/config";
 import { InfiniteBentoPan } from "@/registry/remocn/infinite-bento-pan";
 import { infiniteBentoPanConfig } from "@/registry/remocn/infinite-bento-pan/config";
 import { InfiniteMarquee } from "@/registry/remocn/infinite-marquee";
@@ -141,8 +147,6 @@ import { SimulatedCursor } from "@/registry/remocn/simulated-cursor";
 import { simulatedCursorConfig } from "@/registry/remocn/simulated-cursor/config";
 import { SlotMachineRoll } from "@/registry/remocn/slot-machine-roll";
 import { slotMachineRollConfig } from "@/registry/remocn/slot-machine-roll/config";
-import { SpatialPush } from "@/registry/remocn/spatial-push";
-import { spatialPushConfig } from "@/registry/remocn/spatial-push/config";
 import { SpotlightCard } from "@/registry/remocn/spotlight-card";
 import { spotlightCardConfig } from "@/registry/remocn/spotlight-card/config";
 import { StaggeredFadeUp } from "@/registry/remocn/staggered-fade-up";
@@ -243,8 +247,6 @@ import { StepperPreview } from "@/registry/remocn-ui/stepper/preview";
 import { stepperConfig } from "@/registry/remocn-ui/stepper/config";
 import { Resizable } from "@/registry/remocn-ui/resizable";
 import { resizableConfig } from "@/registry/remocn-ui/resizable/config";
-import { ZoomThroughTransition } from "@/registry/remocn/zoom-through-transition";
-import { zoomThroughTransitionConfig } from "@/registry/remocn/zoom-through-transition/config";
 import { BackdropDemo } from "@/components/docs/examples/backdrop-demo";
 import { backdropConfig } from "@/registry/remocn/backdrop/config";
 
@@ -429,10 +431,6 @@ const registry: Record<string, RegistryEntry> = {
     Component: SimulatedCursor,
     config: simulatedCursorConfig,
   },
-  "directional-wipe": {
-    Component: DirectionalWipe,
-    config: directionalWipeConfig,
-  },
   "swirl-dissolve": {
     Component: SwirlDissolveExampleScene,
     config: swirlDissolveConfig,
@@ -449,9 +447,33 @@ const registry: Record<string, RegistryEntry> = {
     Component: SmokeDissolveExampleScene,
     config: smokeDissolveConfig,
   },
-  "zoom-through-transition": {
-    Component: ZoomThroughTransition,
-    config: zoomThroughTransitionConfig,
+  "grain-dissolve": {
+    Component: GrainDissolveExampleScene,
+    config: grainDissolveConfig,
+  },
+  "wave-wipe": {
+    Component: WaveWipeExampleScene,
+    config: waveWipeConfig,
+  },
+  "ripple-zoom": {
+    Component: RippleZoomExampleScene,
+    config: rippleZoomConfig,
+  },
+  "whip-pan": {
+    Component: WhipPanExampleScene,
+    config: whipPanConfig,
+  },
+  "push-through": {
+    Component: PushThroughExampleScene,
+    config: pushThroughConfig,
+  },
+  "focus-pull": {
+    Component: FocusPullExampleScene,
+    config: focusPullConfig,
+  },
+  "warp-dissolve": {
+    Component: WarpDissolveExampleScene,
+    config: warpDissolveConfig,
   },
   "chat-to-preview-layout": {
     Component: ChatToPreviewLayout,
@@ -474,19 +496,6 @@ const registry: Record<string, RegistryEntry> = {
     config: terminalCursorZoomConfig,
   },
   "progress-steps": { Component: ProgressSteps, config: progressStepsConfig },
-  "frosted-glass-wipe": {
-    Component: FrostedGlassWipe,
-    config: frostedGlassWipeConfig,
-  },
-  "spatial-push": { Component: SpatialPush, config: spatialPushConfig },
-  "grid-pixelate-wipe": {
-    Component: GridPixelateWipe,
-    config: gridPixelateWipeConfig,
-  },
-  "chromatic-aberration-wipe": {
-    Component: ChromaticAberrationWipe,
-    config: chromaticAberrationWipeConfig,
-  },
   "ecosystem-constellation": {
     Component: EcosystemConstellation,
     config: ecosystemConstellationConfig,

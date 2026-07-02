@@ -29,7 +29,7 @@ Any other `Dithering` prop is forwarded through `...rest`.
 
 ```tsx
 <Backdrop fill={<ShaderDithering speed={0.6} />} padding={0}>
-  <FadeIn><h1 style={{ color: "#fafafa" }}>Ordered noise.</h1></FadeIn>
+  <SoftBlurIn text="Ordered noise." color="#fafafa" />
 </Backdrop>
 ```
 

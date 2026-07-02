@@ -1,0 +1,89 @@
+---
+title: Wave Wipe
+description: Sweep a grainy wave up across the frame, covering the outgoing scene and revealing the next one from below
+---
+
+<ComponentPreview name="wave-wipe" />
+
+## Installation
+
+<InstallBlock name="wave-wipe" />
+
+## Usage
+
+`waveWipe()` is a Remotion transition presentation. Pass it to a
+`TransitionSeries.Transition` between two sequences. A full-frame
+grain-gradient wave field washes over the outgoing scene while its bands
+drift upward, then the incoming scene rides in from the bottom on top of the
+field and covers it. A 60-frame timing gives the sweep a natural pace.
+
+```tsx
+import { TransitionSeries, linearTiming } from "@remotion/transitions";
+import { waveWipe } from "@/components/remocn/wave-wipe";
+
+export const MyVideo = () => (
+  <TransitionSeries>
+    <TransitionSeries.Sequence durationInFrames={88}>
+      <SceneA />
+    </TransitionSeries.Sequence>
+    <TransitionSeries.Transition
+      timing={linearTiming({ durationInFrames: 60 })}
+      presentation={waveWipe()}
+    />
+    <TransitionSeries.Sequence durationInFrames={88}>
+      <SceneB />
+    </TransitionSeries.Sequence>
+  </TransitionSeries>
+);
+```
+
+## Props
+
+`waveWipe(props)` accepts:
+
+<PropsTable
+  rows={[
+    {
+      name: "colors",
+      type: "string[]",
+      default: '["#3a3a52", "#4a4a68", "#8f88ae"]',
+      description: "Colors of the wave bands.",
+    },
+    {
+      name: "colorBack",
+      type: "string",
+      default: '"#141318"',
+      description: "Backdrop color between the wave bands. Match it to the scene backgrounds for a seamless sweep.",
+    },
+    {
+      name: "intensity",
+      type: "number",
+      default: "0.2",
+      description: "Distortion strength of the wave bands.",
+    },
+    {
+      name: "softness",
+      type: "number",
+      default: "0.7",
+      description: "Blending softness between the wave colors.",
+    },
+    {
+      name: "noise",
+      type: "number",
+      default: "0.4",
+      description: "Amount of per-pixel grain over the wave.",
+    },
+    {
+      name: "zoom",
+      type: "number",
+      default: "1.16",
+      description: "Magnification of the wave field.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Shader animation speed of the wave bands.",
+    },
+  ]}
+/>

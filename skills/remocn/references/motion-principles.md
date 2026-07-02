@@ -68,7 +68,7 @@ Ease into and out of poses — almost nothing should move linearly.
 
 - **Mechanic:** `interpolate(..., { easing: Easing.out(Easing.cubic) })`; sharp curve = snappy,
   gentle = graceful.
-- **remocn:** transitions (`directional-wipe`, `frosted-glass-wipe`), most text reveals.
+- **remocn:** transitions (`whip-pan`, `focus-pull`), most text reveals.
 - **Do/Avoid:** default to ease-out for entrances. ❌ Linear `interpolate` for visible motion
   unless it's a constant drift (e.g. marquee, grid pan).
 
@@ -115,7 +115,7 @@ Form, weight, and consistent perspective. For block composition this is mostly f
 components; it matters only if you build 3D-ish scenes.
 
 - **Mechanic:** consistent `perspective` / `transform-origin` across layered elements.
-- **remocn:** `spatial-push`, `perspective-marquee`.
+- **remocn:** `push-through`, `perspective-marquee`.
 - **Do/Avoid:** keep one perspective per scene when stacking 3D layers. ❌ Don't mix inconsistent
   vanishing points.
 

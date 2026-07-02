@@ -29,7 +29,7 @@ Any other `NeuroNoise` prop is forwarded through `...rest`.
 
 ```tsx
 <Backdrop fill={<ShaderNeuroNoise speed={0.5} />} padding={0}>
-  <FadeIn><h1 style={{ color: "#fafafa" }}>Neural by design.</h1></FadeIn>
+  <SoftBlurIn text="Neural by design." color="#fafafa" />
 </Backdrop>
 ```
 

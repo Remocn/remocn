@@ -28,7 +28,7 @@ Any other `Metaballs` prop is forwarded through `...rest`.
 
 ```tsx
 <Backdrop fill={<ShaderMetaballs speed={0.7} />} padding={0}>
-  <FadeIn><h1 style={{ color: "#fafafa" }}>Merge.</h1></FadeIn>
+  <SoftBlurIn text="Merge." color="#fafafa" />
 </Backdrop>
 ```
 

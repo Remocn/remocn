@@ -49,7 +49,7 @@ A product demo is 6 beats. **Proof** and **CTA** are optional; **Hook** and **Pr
 | 5 | **Proof** *(optional)* | Make it credible | a metric/score counting up, metric cards, "Join 12,000+ people" + testimonials, an integration landing in Slack |
 | 6 | **CTA** *(optional)* | One ask + where to go | "Build with…", a command to run, `domain.com`, logo lockup on a calm hold |
 
-The hook usually carries the single hardest idea; features are where most of the runtime lives. Transitions between beats use `spatial-push`, `fade-through`, `frosted-glass-wipe`, or `directional-wipe` — match the move to the narrative (push for "going deeper", fade for a neutral cut).
+The hook usually carries the single hardest idea; features are where most of the runtime lives. Transitions between beats use `push-through`, `fade-through`, `focus-pull`, or `whip-pan` — match the move to the narrative (push for "going deeper", fade or focus for a neutral cut, whip for energy).
 
 ---
 

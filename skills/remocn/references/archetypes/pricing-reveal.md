@@ -17,7 +17,7 @@ A 5-beat specialization of the anatomy (Positioning → Features → CTA), compr
 | 250–320f | **PriceLand** | Recommended price rolls in with `$` prefix and lands; `/mo` gets a brief inline highlight |
 | 320–360f | **CTA** | CTA headline builds word by word; button springs in and takes a single shimmer sweep |
 
-Transitions: Lead→ColumnsEnter `shared-axis-y` (spring, 16f); grid→CTA `spatial-push` upward (linearTiming, 20f).
+Transitions: Lead→ColumnsEnter `shared-axis-y` (spring, 16f); grid→CTA `push-through` (linearTiming, 20f).
 
 ## Beat → slots
 

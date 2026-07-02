@@ -14,16 +14,23 @@ Every component has a natural length (the `Length` column in `components/index.m
 <Sequence durationInFrames={90}><BlurOutUp text="Launch" /></Sequence>
 ```
 
-## 2. Treating a transition like a static element
+## 2. Mounting a transition as a component
 
-Transitions wrap **two** scenes via `from` / `to` — they are not a single overlay.
+Transitions are presentations for `@remotion/transitions` — pass them to `TransitionSeries.Transition`, never mount them directly.
 
 ```tsx
 // ❌
-<DirectionalWipe />
+<WhipPan />
 <SceneB />
 // ✅
-<DirectionalWipe from={<SceneA />} to={<SceneB />} />
+<TransitionSeries>
+  <TransitionSeries.Sequence durationInFrames={70}><SceneA /></TransitionSeries.Sequence>
+  <TransitionSeries.Transition
+    timing={linearTiming({ durationInFrames: 26 })}
+    presentation={whipPan()}
+  />
+  <TransitionSeries.Sequence durationInFrames={70}><SceneB /></TransitionSeries.Sequence>
+</TransitionSeries>
 ```
 
 ## 3. Animation-tier props on a UI Primitive

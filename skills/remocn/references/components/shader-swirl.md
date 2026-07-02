@@ -29,7 +29,7 @@ Any other `Swirl` prop is forwarded through `...rest`.
 
 ```tsx
 <Backdrop fill={<ShaderSwirl speed={0.6} />} padding={0}>
-  <FadeIn><h1 style={{ color: "#fafafa" }}>Spun up.</h1></FadeIn>
+  <SoftBlurIn text="Spun up." color="#fafafa" />
 </Backdrop>
 ```
 

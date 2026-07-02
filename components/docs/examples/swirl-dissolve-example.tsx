@@ -7,7 +7,7 @@ import { swirlDissolve } from "@/registry/remocn/swirl-dissolve";
 const FONT_FAMILY =
   "var(--font-geist-sans), -apple-system, BlinkMacSystemFont, sans-serif";
 
-function Scene({ label, background }: { label: string; background: string }) {
+function Scene({ label, background }: { label: string; background?: string }) {
   return (
     <AbsoluteFill
       style={{
@@ -54,7 +54,7 @@ export function SwirlDissolveExampleScene({
         presentation={swirlDissolve({ bandCount, softness, colorBack, speed })}
       />
       <TransitionSeries.Sequence durationInFrames={110}>
-        <Scene label="Scene B" background="#1a1922" />
+        <Scene label="Scene B" />
       </TransitionSeries.Sequence>
     </TransitionSeries>
   );

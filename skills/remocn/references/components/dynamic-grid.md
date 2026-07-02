@@ -26,7 +26,7 @@ Lands at `components/remocn/dynamic-grid.tsx`.
 
 ```tsx
 <Backdrop fill={<DynamicGrid cellSize={48} lineColor="#3f3f46" speed={0.4} />} padding={0}>
-  <FadeIn><h1 style={{ color: "#fafafa" }}>Build in public.</h1></FadeIn>
+  <SoftBlurIn text="Build in public." color="#fafafa" />
 </Backdrop>
 ```
 

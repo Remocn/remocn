@@ -19,7 +19,7 @@ Five-beat structure: Positioning (repo name) → Proof (stars/forks) → Proof (
 | 285–360f | **InstallLine** | `terminal-simulator` types install command char by char; output line enters via `staggered-fade-up`; green checkmark `spring-scale-in` |
 | 360–390f | **CTA** | "Star it on GitHub" text `tracking-in`; repo URL and button `micro-scale-fade`; `spotlight-card` behind button |
 
-Transitions: RepoTitle→Stars `fade-through` (spring, 20f); Stars→Contributors `spatial-push` left (linear, 18f); Contributors→Install `frosted-glass-wipe` (24f); Install→CTA `zoom-through-transition` (spring, ~15f).
+Transitions: RepoTitle→Stars `fade-through` (spring, 20f); Stars→Contributors `whip-pan` left (linear, 18f); Contributors→Install `focus-pull` (24f); Install→CTA `push-through` (spring, ~15f).
 
 ## Beat → slots
 

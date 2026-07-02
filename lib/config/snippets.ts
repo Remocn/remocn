@@ -74,8 +74,8 @@ export const RENDER: Step = {
 export const SAMPLE_COMPONENTS = [
   "soft-blur-in",
   "shimmer-sweep",
-  "frosted-glass-wipe",
-  "grid-pixelate-wipe",
+  "grain-dissolve",
+  "whip-pan",
 ];
 
 // ---------------------------------------------------------------------------
