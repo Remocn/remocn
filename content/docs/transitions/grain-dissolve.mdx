@@ -1,0 +1,90 @@
+---
+title: Grain Dissolve
+description: Disintegrate the outgoing scene into soft grainy shapes and condense the next scene out of the noise
+---
+
+<ComponentPreview name="grain-dissolve" />
+
+## Installation
+
+<InstallBlock name="grain-dissolve" />
+
+## Usage
+
+`grainDissolve()` is a Remotion transition presentation. Pass it to a
+`TransitionSeries.Transition` between two sequences. The grain field starts as
+flat, hard-edged shapes and both `intensity` and `softness` sweep from 0 to 1
+across the transition — the figures grow, roughen into grain, and the incoming
+scene condenses out of the dissolved texture. Give the sweep enough frames to
+read (76 works well).
+
+```tsx
+import { TransitionSeries, linearTiming } from "@remotion/transitions";
+import { grainDissolve } from "@/components/remocn/grain-dissolve";
+
+export const MyVideo = () => (
+  <TransitionSeries>
+    <TransitionSeries.Sequence durationInFrames={96}>
+      <SceneA />
+    </TransitionSeries.Sequence>
+    <TransitionSeries.Transition
+      timing={linearTiming({ durationInFrames: 76 })}
+      presentation={grainDissolve()}
+    />
+    <TransitionSeries.Sequence durationInFrames={96}>
+      <SceneB />
+    </TransitionSeries.Sequence>
+  </TransitionSeries>
+);
+```
+
+The `shape` prop picks the figure family the field is built from — `"wave"`,
+`"dots"`, `"truchet"`, `"corners"`, `"ripple"`, `"blob"`, or `"sphere"`. Shapes
+are discrete (they cannot blend into each other), but each one gives the same
+sweep a different character: `"blob"` reads organic, `"wave"` calm and banded,
+`"dots"` halftone-like, `"sphere"` volumetric.
+
+## Props
+
+`grainDissolve(props)` accepts:
+
+<PropsTable
+  rows={[
+    {
+      name: "colors",
+      type: "string[]",
+      default: '["#3a3a52", "#4a4a68", "#8f88ae"]',
+      description: "Colors of the grain shapes, up to 7.",
+    },
+    {
+      name: "colorBack",
+      type: "string",
+      default: '"#141318"',
+      description: "Backdrop behind the shapes during the transition.",
+    },
+    {
+      name: "shape",
+      type: "string",
+      default: '"blob"',
+      description: "Figure family of the field. One of wave, dots, truchet, corners, ripple, blob, sphere.",
+    },
+    {
+      name: "noise",
+      type: "number",
+      default: "0.3",
+      description: "Amount of per-pixel grain over the shapes.",
+    },
+    {
+      name: "zoom",
+      type: "number",
+      default: "2",
+      description: "Magnification of the figure field. Raise it until the shapes fill the frame, lower it to show more of the backdrop.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Shader animation speed.",
+    },
+  ]}
+/>

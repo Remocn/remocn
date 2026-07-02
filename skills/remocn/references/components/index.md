@@ -97,6 +97,17 @@ Tier `remocn`. Swap between two scenes — wrap `from` / `to` as ReactNode plus 
 | [`spatial-push`](spatial-push.md) | The narrative moves deeper into a topic — "zooming in" on a feature, entering a… | You need a fast, energy-forward cut — the scale-based push reads as deliberate and… | 90f | premium | — |
 | [`zoom-through-transition`](zoom-through-transition.md) | The outgoing scene needs a dramatic, high-velocity exit that commands attention before… | You need a two-sided transition (swap `from` and `to` scenes in one component) —… | 60f | premium | — |
 
+## Shader Transitions
+
+Tier `remocn`. Presentations for `@remotion/transitions` — pass to `TransitionSeries.Transition` between two sequences instead of wrapping scenes as props.
+
+| Component | Use for | Avoid for | Length | Vibe | Deps |
+|---|---|---|---|---|---|
+| [`grain-dissolve`](grain-dissolve.md) | Editorial, textured chapter changes — the scene decomposes into grainy shapes and the next… | Fast cuts under ~50 frames — the intensity/softness sweep needs room; crisp minimal tone… | 76f | premium | `@paper-design/shaders-react` |
+| [`wave-wipe`](wave-wipe.md) | The cut should feel like physical motion — a grainy swell washes up over the scene and the… | Horizontally-related scenes (steps in a flow) — the vertical sweep fights the reading… | 60f | premium | `@paper-design/shaders-react` |
+| [`ripple-zoom`](ripple-zoom.md) | The narrative zooms in on a hero statement — the camera dives through grainy ripple rings… | Incoming scenes with opaque full-frame backgrounds — they hide the field and kill the… | 68f | premium | `@paper-design/shaders-react` |
+| [`warp-dissolve`](warp-dissolve.md) | Chapter or mood changes — the outgoing scene melts into a liquid color field and the next… | Fast cuts under ~50 frames — the melt needs room to read; spatially related step-by-step… | 76f | premium | `@paper-design/shaders-react` |
+
 ## UI Blocks
 
 Tier `remocn`. Interface simulations for product demos.

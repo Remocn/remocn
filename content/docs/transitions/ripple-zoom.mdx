@@ -1,0 +1,92 @@
+---
+title: Ripple Zoom
+description: Fly the camera through the center of grainy ripple rings while the next scene approaches from the depth
+---
+
+<ComponentPreview name="ripple-zoom" />
+
+## Installation
+
+<InstallBlock name="ripple-zoom" />
+
+## Usage
+
+`rippleZoom()` is a Remotion transition presentation. Pass it to a
+`TransitionSeries.Transition` between two sequences. The outgoing scene blows
+past the camera, a grain-gradient ripple field opens up, and the camera dives
+through the center of the rings — the field magnifies toward `zoom` while the
+incoming scene counter-scales up from the depth, so the two motions read as
+one continuous dolly onto the new scene. Keep the incoming scene transparent
+so it lands on the ripple field. Give the flight enough frames to read (88
+works well).
+
+```tsx
+import { TransitionSeries, linearTiming } from "@remotion/transitions";
+import { rippleZoom } from "@/components/remocn/ripple-zoom";
+
+export const MyVideo = () => (
+  <TransitionSeries>
+    <TransitionSeries.Sequence durationInFrames={102}>
+      <SceneA />
+    </TransitionSeries.Sequence>
+    <TransitionSeries.Transition
+      timing={linearTiming({ durationInFrames: 88 })}
+      presentation={rippleZoom()}
+    />
+    <TransitionSeries.Sequence durationInFrames={102}>
+      <SceneB />
+    </TransitionSeries.Sequence>
+  </TransitionSeries>
+);
+```
+
+## Props
+
+`rippleZoom(props)` accepts:
+
+<PropsTable
+  rows={[
+    {
+      name: "colors",
+      type: "string[]",
+      default: '["#3a3a52", "#4a4a68", "#8f88ae"]',
+      description: "Colors of the ripple rings.",
+    },
+    {
+      name: "colorBack",
+      type: "string",
+      default: '"#141318"',
+      description: "Backdrop color between the rings. Match it to the scene backgrounds for a seamless dive.",
+    },
+    {
+      name: "intensity",
+      type: "number",
+      default: "0.5",
+      description: "Distortion strength of the ripple rings.",
+    },
+    {
+      name: "softness",
+      type: "number",
+      default: "0.5",
+      description: "Blending softness between the ring colors.",
+    },
+    {
+      name: "noise",
+      type: "number",
+      default: "0.5",
+      description: "Amount of per-pixel grain over the rings.",
+    },
+    {
+      name: "zoom",
+      type: "number",
+      default: "4",
+      description: "Final magnification of the ripple field — how deep the camera dives through the rings.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Shader animation speed of the rings.",
+    },
+  ]}
+/>

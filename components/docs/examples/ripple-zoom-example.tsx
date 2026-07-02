@@ -2,16 +2,15 @@
 
 import { AbsoluteFill } from "remotion";
 import { TransitionSeries, linearTiming } from "@remotion/transitions";
-import { swirlDissolve } from "@/registry/remocn/swirl-dissolve";
+import { rippleZoom } from "@/registry/remocn/ripple-zoom";
 
 const FONT_FAMILY =
   "var(--font-geist-sans), -apple-system, BlinkMacSystemFont, sans-serif";
 
-function Scene({ label, background }: { label: string; background?: string }) {
+function Scene({ label }: { label: string }) {
   return (
     <AbsoluteFill
       style={{
-        background,
         alignItems: "center",
         justifyContent: "center",
       }}
@@ -31,55 +30,58 @@ function Scene({ label, background }: { label: string; background?: string }) {
   );
 }
 
-interface SwirlDissolveExampleProps {
-  bandCount?: number;
+interface RippleZoomExampleProps {
+  zoom?: number;
+  intensity?: number;
   softness?: number;
   colorBack?: string;
   speed?: number;
 }
 
-export function SwirlDissolveExampleScene({
-  bandCount,
+export function RippleZoomExampleScene({
+  zoom,
+  intensity,
   softness,
   colorBack,
   speed,
-}: SwirlDissolveExampleProps) {
+}: RippleZoomExampleProps) {
   return (
     <TransitionSeries>
-      <TransitionSeries.Sequence durationInFrames={110}>
-        <Scene label="Scene A" background="#141318" />
+      <TransitionSeries.Sequence durationInFrames={102}>
+        <Scene label="Scene A" />
       </TransitionSeries.Sequence>
       <TransitionSeries.Transition
-        timing={linearTiming({ durationInFrames: 104 })}
-        presentation={swirlDissolve({ bandCount, softness, colorBack, speed })}
+        timing={linearTiming({ durationInFrames: 88 })}
+        presentation={rippleZoom({ zoom, intensity, softness, colorBack, speed })}
       />
-      <TransitionSeries.Sequence durationInFrames={110}>
-        <Scene label="Scene B" />
+      <TransitionSeries.Sequence durationInFrames={102}>
+        <Scene label="Ripple Zoom" />
       </TransitionSeries.Sequence>
     </TransitionSeries>
   );
 }
 
-export const swirlDissolveExampleCode = (
+export const rippleZoomExampleCode = (
   values: Record<string, unknown>,
 ): string => {
-  const bandCount = (values.bandCount as number) ?? 10;
-  const softness = (values.softness as number) ?? 0.35;
+  const zoom = (values.zoom as number) ?? 4;
+  const intensity = (values.intensity as number) ?? 0.5;
+  const softness = (values.softness as number) ?? 0.5;
   const colorBack = (values.colorBack as string) ?? "#141318";
   const speed = (values.speed as number) ?? 1;
   return `import { TransitionSeries, linearTiming } from "@remotion/transitions";
-import { swirlDissolve } from "@/components/remocn/swirl-dissolve";
+import { rippleZoom } from "@/components/remocn/ripple-zoom";
 
 export const MyVideo = () => (
   <TransitionSeries>
-    <TransitionSeries.Sequence durationInFrames={110}>
+    <TransitionSeries.Sequence durationInFrames={102}>
       <SceneA />
     </TransitionSeries.Sequence>
     <TransitionSeries.Transition
-      timing={linearTiming({ durationInFrames: 104 })}
-      presentation={swirlDissolve({ bandCount: ${bandCount}, softness: ${softness}, colorBack: "${colorBack}", speed: ${speed} })}
+      timing={linearTiming({ durationInFrames: 88 })}
+      presentation={rippleZoom({ zoom: ${zoom}, intensity: ${intensity}, softness: ${softness}, colorBack: "${colorBack}", speed: ${speed} })}
     />
-    <TransitionSeries.Sequence durationInFrames={110}>
+    <TransitionSeries.Sequence durationInFrames={102}>
       <SceneB />
     </TransitionSeries.Sequence>
   </TransitionSeries>

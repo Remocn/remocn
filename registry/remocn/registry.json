@@ -904,6 +904,86 @@
       ]
     },
     {
+      "name": "wave-wipe",
+      "type": "registry:component",
+      "title": "Wave Wipe",
+      "description": "A grain-gradient wave that sweeps up across the frame, covering the outgoing scene and revealing the next one from below.",
+      "dependencies": [
+        "remotion",
+        "@remotion/transitions"
+      ],
+      "registryDependencies": [
+        "@remocn/shader-grain-gradient"
+      ],
+      "files": [
+        {
+          "path": "wave-wipe/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/wave-wipe.tsx"
+        }
+      ]
+    },
+    {
+      "name": "ripple-zoom",
+      "type": "registry:component",
+      "title": "Ripple Zoom",
+      "description": "A grain-gradient ripple transition that flies the camera through the center of the rings while the next scene approaches from the depth.",
+      "dependencies": [
+        "remotion",
+        "@remotion/transitions"
+      ],
+      "registryDependencies": [
+        "@remocn/shader-grain-gradient"
+      ],
+      "files": [
+        {
+          "path": "ripple-zoom/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/ripple-zoom.tsx"
+        }
+      ]
+    },
+    {
+      "name": "grain-dissolve",
+      "type": "registry:component",
+      "title": "Grain Dissolve",
+      "description": "A grain-gradient shader transition that disintegrates the outgoing scene into soft grainy shapes and condenses the next scene out of the noise.",
+      "dependencies": [
+        "remotion",
+        "@remotion/transitions"
+      ],
+      "registryDependencies": [
+        "@remocn/shader-grain-gradient"
+      ],
+      "files": [
+        {
+          "path": "grain-dissolve/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/grain-dissolve.tsx"
+        }
+      ]
+    },
+    {
+      "name": "warp-dissolve",
+      "type": "registry:component",
+      "title": "Warp Dissolve",
+      "description": "A domain-warp shader transition that melts the outgoing scene into a folding color field and straightens back out into the next.",
+      "dependencies": [
+        "remotion",
+        "@remotion/transitions"
+      ],
+      "registryDependencies": [
+        "@remocn/shader-warp"
+      ],
+      "files": [
+        {
+          "path": "warp-dissolve/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/warp-dissolve.tsx"
+        }
+      ]
+    },
+    {
       "name": "zoom-through-transition",
       "type": "registry:component",
       "title": "Zoom Through Transition",

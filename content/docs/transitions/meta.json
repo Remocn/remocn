@@ -3,15 +3,19 @@
   "collapsible": false,
   "pages": [
     "index",
+    "grain-dissolve",
+    "wave-wipe",
+    "ripple-zoom",
+    "warp-dissolve",
+    "swirl-dissolve",
+    "dither-dissolve",
+    "perlin-dissolve",
+    "smoke-dissolve",
     "zoom-through-transition",
     "directional-wipe",
     "spatial-push",
     "frosted-glass-wipe",
     "grid-pixelate-wipe",
-    "chromatic-aberration-wipe",
-    "swirl-dissolve",
-    "dither-dissolve",
-    "perlin-dissolve",
-    "smoke-dissolve"
+    "chromatic-aberration-wipe"
   ]
 }

@@ -55,6 +55,14 @@ import { PerlinDissolveExampleScene } from "@/components/docs/examples/perlin-di
 import { perlinDissolveConfig } from "@/registry/remocn/perlin-dissolve/config";
 import { SmokeDissolveExampleScene } from "@/components/docs/examples/smoke-dissolve-example";
 import { smokeDissolveConfig } from "@/registry/remocn/smoke-dissolve/config";
+import { GrainDissolveExampleScene } from "@/components/docs/examples/grain-dissolve-example";
+import { grainDissolveConfig } from "@/registry/remocn/grain-dissolve/config";
+import { WaveWipeExampleScene } from "@/components/docs/examples/wave-wipe-example";
+import { waveWipeConfig } from "@/registry/remocn/wave-wipe/config";
+import { RippleZoomExampleScene } from "@/components/docs/examples/ripple-zoom-example";
+import { rippleZoomConfig } from "@/registry/remocn/ripple-zoom/config";
+import { WarpDissolveExampleScene } from "@/components/docs/examples/warp-dissolve-example";
+import { warpDissolveConfig } from "@/registry/remocn/warp-dissolve/config";
 import { DynamicGrid } from "@/registry/remocn/dynamic-grid";
 import { dynamicGridConfig } from "@/registry/remocn/dynamic-grid/config";
 import { EcosystemConstellation } from "@/registry/remocn/ecosystem-constellation";
@@ -448,6 +456,22 @@ const registry: Record<string, RegistryEntry> = {
   "smoke-dissolve": {
     Component: SmokeDissolveExampleScene,
     config: smokeDissolveConfig,
+  },
+  "grain-dissolve": {
+    Component: GrainDissolveExampleScene,
+    config: grainDissolveConfig,
+  },
+  "wave-wipe": {
+    Component: WaveWipeExampleScene,
+    config: waveWipeConfig,
+  },
+  "ripple-zoom": {
+    Component: RippleZoomExampleScene,
+    config: rippleZoomConfig,
+  },
+  "warp-dissolve": {
+    Component: WarpDissolveExampleScene,
+    config: warpDissolveConfig,
   },
   "zoom-through-transition": {
     Component: ZoomThroughTransition,
