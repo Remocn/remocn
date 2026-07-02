@@ -112,6 +112,12 @@
       "@/components/remocn/dynamic-grid": [
         "./registry/remocn/dynamic-grid/index.tsx",
       ],
+      "@/components/remocn/shader-swirl": [
+        "./registry/remocn/shader-swirl/index.tsx",
+      ],
+      "@/components/remocn/shader-dithering": [
+        "./registry/remocn/shader-dithering/index.tsx",
+      ],
       "@/components/remocn/*": ["./registry/remocn-ui/*/index.tsx"],
       "@/*": ["./*"],
     },

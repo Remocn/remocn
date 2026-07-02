@@ -1,0 +1,76 @@
+---
+title: Swirl Dissolve
+description: Unwind a swirl shader open and wind it shut to reveal the next scene
+---
+
+<ComponentPreview name="swirl-dissolve" />
+
+## Installation
+
+<InstallBlock name="swirl-dissolve" />
+
+## Usage
+
+`swirlDissolve()` is a Remotion transition presentation. Pass it to a
+`TransitionSeries.Transition` between two sequences. The incoming scene
+resolves through the swirl as it winds shut, so give the transition enough
+frames for the full open → hold → close motion (104 works well).
+
+```tsx
+import { TransitionSeries, linearTiming } from "@remotion/transitions";
+import { swirlDissolve } from "@/components/remocn/swirl-dissolve";
+
+export const MyVideo = () => (
+  <TransitionSeries>
+    <TransitionSeries.Sequence durationInFrames={110}>
+      <SceneA />
+    </TransitionSeries.Sequence>
+    <TransitionSeries.Transition
+      timing={linearTiming({ durationInFrames: 104 })}
+      presentation={swirlDissolve()}
+    />
+    <TransitionSeries.Sequence durationInFrames={110}>
+      <SceneB />
+    </TransitionSeries.Sequence>
+  </TransitionSeries>
+);
+```
+
+## Props
+
+`swirlDissolve(props)` accepts:
+
+<PropsTable
+  rows={[
+    {
+      name: "colors",
+      type: "string[]",
+      default: '["#1f1d29", "#413d56", "#8f88ae"]',
+      description: "Swirl band colors.",
+    },
+    {
+      name: "colorBack",
+      type: "string",
+      default: '"#141318"',
+      description: "Solid color behind the swirl during the transition.",
+    },
+    {
+      name: "bandCount",
+      type: "number",
+      default: "10",
+      description: "Number of swirl bands.",
+    },
+    {
+      name: "softness",
+      type: "number",
+      default: "0.35",
+      description: "Edge softness of the bands.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Shader animation speed.",
+    },
+  ]}
+/>

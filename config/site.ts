@@ -53,31 +53,8 @@ export const NAV_LINKS: NavLink[] = [
  * tag another menu item — no component changes needed. See `withNewBadges`.
  */
 export const NEW_BADGE_PATHS = new Set<string>([
-  "/docs/typography/number-wheel",
-  "/docs/typography/rolling-number",
-  "/docs/typography/soft-blur-in",
-  "/docs/typography/per-character-rise",
-  "/docs/typography/bottom-up-letters",
-  "/docs/typography/top-down-letters",
-  "/docs/typography/spring-scale-in",
-  "/docs/typography/micro-scale-fade",
-  "/docs/typography/scale-down-fade",
-  "/docs/typography/blur-out-up",
-  "/docs/typography/focus-blur-resolve",
-  "/docs/typography/line-by-line-slide",
-  "/docs/typography/mask-reveal-up",
-  "/docs/typography/per-word-crossfade",
-  "/docs/typography/fade-through",
-  "/docs/typography/shared-axis-y",
-  "/docs/typography/shared-axis-z",
-  "/docs/typography/short-slide-right",
-  "/docs/typography/kinetic-center-build",
-  "/docs/typography/short-slide-down",
-  "/docs/ui/components/message-bubble",
-  "/docs/ui/components/typing-indicator",
-  "/docs/ui/blocks/chat-flow",
-  "/docs/ui/blocks/telegram-chat-flow",
-  "/docs/ui/blocks/imessage-chat-flow",
+  "/docs/transitions/swirl-dissolve",
+  "/docs/transitions/dither-dissolve",
 ]);
 
 export const FOOTER_NAV: NavLink[] = [

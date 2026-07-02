@@ -8,6 +8,8 @@
     "spatial-push",
     "frosted-glass-wipe",
     "grid-pixelate-wipe",
-    "chromatic-aberration-wipe"
+    "chromatic-aberration-wipe",
+    "swirl-dissolve",
+    "dither-dissolve"
   ]
 }

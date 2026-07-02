@@ -1,0 +1,70 @@
+---
+title: Dither Dissolve
+description: Dissolve one scene into the next through a drifting field of dither pixels
+---
+
+<ComponentPreview name="dither-dissolve" />
+
+## Installation
+
+<InstallBlock name="dither-dissolve" />
+
+## Usage
+
+`ditherDissolve()` is a Remotion transition presentation. Pass it to a
+`TransitionSeries.Transition` between two sequences. It is content-agnostic —
+the outgoing scene fades under the dither field while the incoming scene fades
+in beneath it.
+
+```tsx
+import { TransitionSeries, linearTiming } from "@remotion/transitions";
+import { ditherDissolve } from "@/components/remocn/dither-dissolve";
+
+export const MyVideo = () => (
+  <TransitionSeries>
+    <TransitionSeries.Sequence durationInFrames={70}>
+      <SceneA />
+    </TransitionSeries.Sequence>
+    <TransitionSeries.Transition
+      timing={linearTiming({ durationInFrames: 40 })}
+      presentation={ditherDissolve()}
+    />
+    <TransitionSeries.Sequence durationInFrames={70}>
+      <SceneB />
+    </TransitionSeries.Sequence>
+  </TransitionSeries>
+);
+```
+
+## Props
+
+`ditherDissolve(props)` accepts:
+
+<PropsTable
+  rows={[
+    {
+      name: "colorBack",
+      type: "string",
+      default: '"#141318"',
+      description: "Background color of the dither field.",
+    },
+    {
+      name: "colorFront",
+      type: "string",
+      default: '"#8f88ae"',
+      description: "Ink color of the dither pixels.",
+    },
+    {
+      name: "shape",
+      type: '"simplex" | "warp" | "dots" | "wave" | "ripple" | "swirl" | "sphere"',
+      default: '"simplex"',
+      description: "Pattern source driving the dither.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1.5",
+      description: "Shader animation speed.",
+    },
+  ]}
+/>
