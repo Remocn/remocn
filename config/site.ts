@@ -7,7 +7,7 @@ export const PEACH = "#FFB38E";
 export const LAVENDER = "#D4B3FF";
 export const MINT = "#A1EEBD";
 
-export const GITHUB_URL = "https://github.com/kapishdima/remocn";
+export const GITHUB_URL = "https://github.com/Remocn/remocn";
 
 /** Canonical example install command shown on the landing page. */
 export const INSTALL_COMMAND = "npx shadcn@latest add remocn/soft-blur-in";

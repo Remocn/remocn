@@ -1,4 +1,4 @@
-const GITHUB_REPO = "kapishdima/remocn";
+const GITHUB_REPO = "Remocn/remocn";
 
 /**
  * Fetches the repository star count from the GitHub REST API.

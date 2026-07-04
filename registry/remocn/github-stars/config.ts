@@ -11,7 +11,7 @@ export const githubStarsConfig: ComponentConfig = {
   controls: {
     repo: {
       type: "text",
-      default: "kapishdima/remocn",
+      default: "Remocn/remocn",
       label: "Repository",
     },
     totalStars: {

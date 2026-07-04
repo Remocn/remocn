@@ -69,14 +69,49 @@ const API_BASE = "https://api.github.com";
 // the route handler + tests keep their existing `@/lib/github-stargazers` import.
 export { parseRepoInput } from "@/lib/parse-repo";
 
-function buildHeaders(accept: string): HeadersInit {
+function buildHeaders(accept: string, withToken = true): HeadersInit {
   const headers: Record<string, string> = {
     Accept: accept,
     "X-GitHub-Api-Version": "2022-11-28",
   };
   const token = process.env.GITHUB_TOKEN;
-  if (token) headers.Authorization = `Bearer ${token}`;
+  if (withToken && token) headers.Authorization = `Bearer ${token}`;
   return headers;
+}
+
+/**
+ * Fetch a GitHub endpoint, transparently retrying WITHOUT the token when an
+ * authenticated request is rejected on data that is publicly readable.
+ *
+ * Stargazers are always public, yet some tokens can't list them: a fine-grained
+ * PAT scoped to another owner returns 403, and a classic PAT tied to an account
+ * with restricted user-list visibility returns 404 on `/stargazers` (and
+ * `/subscribers`). Unauthenticated requests succeed in every one of these cases,
+ * so on 401/403/404 we re-issue the request without `Authorization`. The token
+ * still raises the rate limit on every request GitHub does accept (e.g. the repo
+ * endpoint that backs the landing-page star count).
+ */
+async function githubFetch(
+  url: string,
+  accept: string,
+  signal?: AbortSignal,
+): Promise<Response> {
+  const res = await fetch(url, {
+    headers: buildHeaders(accept),
+    signal,
+    next: { revalidate: 3600 },
+  });
+  if (
+    process.env.GITHUB_TOKEN &&
+    (res.status === 401 || res.status === 403 || res.status === 404)
+  ) {
+    return fetch(url, {
+      headers: buildHeaders(accept, false),
+      signal,
+      next: { revalidate: 3600 },
+    });
+  }
+  return res;
 }
 
 /** Map a non-OK GitHub response to a typed error (rate limit vs. not found). */
@@ -193,11 +228,7 @@ async function fetchStargazerPage(
   const url = `${API_BASE}/repos/${owner}/${repo}/stargazers?per_page=${PER_PAGE}&page=${page}`;
   let res: Response;
   try {
-    res = await fetch(url, {
-      headers: buildHeaders("application/vnd.github.star+json"),
-      signal,
-      next: { revalidate: 3600 },
-    });
+    res = await githubFetch(url, "application/vnd.github.star+json", signal);
   } catch (err) {
     if (err instanceof StargazersError) throw err;
     throw new StargazersError(
@@ -236,11 +267,11 @@ export async function fetchStargazers({
   // 1. Repo endpoint → existence check (404) + authoritative star total.
   let repoRes: Response;
   try {
-    repoRes = await fetch(`${API_BASE}/repos/${owner}/${repo}`, {
-      headers: buildHeaders("application/vnd.github+json"),
+    repoRes = await githubFetch(
+      `${API_BASE}/repos/${owner}/${repo}`,
+      "application/vnd.github+json",
       signal,
-      next: { revalidate: 3600 },
-    });
+    );
   } catch (err) {
     if (err instanceof StargazersError) throw err;
     throw new StargazersError(
