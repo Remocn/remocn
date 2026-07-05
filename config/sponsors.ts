@@ -15,6 +15,8 @@ export type Sponsor = {
   /** Optional Tailwind classes for fine-tuning a specific logo. */
   customStyles?: string;
   isPaste?: boolean; // Whether this sponsor is from our Paste integration. Used to add a "via Paste" badge on the frontend.
+  hideFromFeatured?: boolean;
+  layout?: "row" | "col";
 };
 
 export const sponsors: Sponsor[] = [
@@ -98,10 +100,24 @@ export const sponsors: Sponsor[] = [
     customStyles: "rounded-full opacity-100 grayscale-0 dark:[filter:none]",
     isPaste: false,
   },
+  {
+    id: "canadian-ai",
+    name: "Canadian AI",
+    displayName: "Canadian AI",
+    logoUrl: "https://www.canadian-ai.ca/icon-black.svg",
+    website: "https://www.canadian-ai.ca/?utm_source=remocn&utm_medium=sponsor&utm_campaign=remocn_sponsors_page",
+    tier: "partner",
+    customStyles: "opacity-90 max-h-12",
+    isPaste: false,
+    hideFromFeatured: true,
+    layout: "row",
+  },
 ].filter(sponsor => !sponsor.isPaste);
 
 export function getGoldSponsors(): Sponsor[] {
-  return sponsors.filter((sponsor) => sponsor.tier === "partner");
+  return sponsors.filter(
+    (sponsor) => sponsor.tier === "partner" && !sponsor.hideFromFeatured,
+  );
 }
 
 export type BillingMode = "monthly" | "one-time";

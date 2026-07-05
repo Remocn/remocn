@@ -28,7 +28,9 @@ function SponsorLogoCard({ sponsor }: { sponsor: Sponsor }) {
 }
 
 export function LandingPartners() {
-  const partners = sponsors.filter((s) => s.tier === "partner");
+  const partners = sponsors.filter(
+    (s) => s.tier === "partner" && !s.hideFromFeatured,
+  );
 
   return (
     <section id="partners" className="relative py-20 sm:py-20">
