@@ -18,7 +18,10 @@ function SponsorLogoCard({
       href={sponsor.website}
       target="_blank"
       rel="noreferrer"
-      className="group surface-card flex h-full flex-col items-center justify-center gap-3 rounded-2xl p-6 transition-colors hover:border-foreground/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+      className={cn(
+        "group surface-card flex h-full items-center justify-center gap-3 rounded-2xl p-6 transition-colors hover:border-foreground/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
+        sponsor.layout === "row" ? "flex-row" : "flex-col",
+      )}
     >
       {/** biome-ignore lint/performance/noImgElement: sponsor logos are SVGs of arbitrary sizes */}
       <img
