@@ -11,7 +11,7 @@ function SponsorLogoCard({ sponsor }: { sponsor: Sponsor }) {
       href={sponsor.website}
       target="_blank"
       rel="noreferrer"
-      className="group surface-card flex items-center justify-center rounded-2xl px-8 py-10 transition-colors hover:border-foreground/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+      className="group surface-card flex items-center justify-center gap-3 rounded-2xl px-8 py-10 transition-colors hover:border-foreground/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
     >
       {/** biome-ignore lint/performance/noImgElement: sponsor logos are SVGs of arbitrary sizes */}
       <img
@@ -23,6 +23,11 @@ function SponsorLogoCard({ sponsor }: { sponsor: Sponsor }) {
         )}
         style={{ transform: `scale(${sponsor.logoScale ?? 1})` }}
       />
+      {sponsor.displayName && (
+        <span className="text-base font-semibold text-muted-foreground transition-colors group-hover:text-foreground">
+          {sponsor.displayName}
+        </span>
+      )}
     </a>
   );
 }

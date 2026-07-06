@@ -35,7 +35,7 @@ function SponsorLogoCard({
         style={{ transform: `scale(${sponsor.logoScale ?? 1})` }}
       />
       {sponsor.displayName && (
-        <span className="text-sm font-medium text-muted-foreground transition-colors group-hover:text-foreground">
+        <span className=" font-medium text-text transition-colors group-hover:text-foreground">
           {sponsor.displayName}
         </span>
       )}

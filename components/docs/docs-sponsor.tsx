@@ -44,6 +44,11 @@ export const DocsSponsor: React.FC = () => {
                   )}
                   style={{ transform: `scale(${sponsor.logoScale ?? 1})` }}
                 />
+                {sponsor.displayName && (
+                  <span className="text-xs font-bold text-text transition-colors group-hover:text-foreground">
+                    {sponsor.displayName}
+                  </span>
+                )}
               </a>
             ))}
           </div>
