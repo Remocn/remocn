@@ -362,7 +362,7 @@ export function InteractiveCode() {
                 {entry ? (
                   <Player
                     ref={playerRef}
-                    component={entry.Component}
+                    lazyComponent={entry.load}
                     inputProps={inputProps}
                     durationInFrames={entry.config.durationInFrames}
                     fps={entry.config.fps}
