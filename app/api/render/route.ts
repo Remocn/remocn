@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 
 import { parseRenderInput, RenderInputError } from "@/lib/server/validate-input";
-import { enqueueRender } from "@/lib/server/render-queue";
+import { enqueueRender, QueueFullError } from "@/lib/server/render-queue";
 import { checkRateLimit } from "@/lib/server/rate-limit";
 import { ensureCleanupSweep } from "@/lib/server/cleanup";
 
@@ -53,16 +53,37 @@ export async function POST(request: NextRequest) {
     throw err;
   }
 
-  const jobId = enqueueRender(input);
+  let jobId: string;
+  try {
+    jobId = enqueueRender(input);
+  } catch (err) {
+    if (err instanceof QueueFullError) {
+      return NextResponse.json(
+        { error: "Render queue is full. Please retry shortly.", code: "queue_full" },
+        { status: 503 },
+      );
+    }
+    throw err;
+  }
+
   return NextResponse.json({ jobId }, { status: 202 });
 }
 
-/** First hop of x-forwarded-for (the real client behind the proxy), else fallback. */
+/**
+ * The real client IP, trusting only what Traefik (the one proxy in front of
+ * this process) sets: `x-real-ip`, or else the LAST hop of `x-forwarded-for`
+ * (Traefik appends the peer; earlier hops are client-controlled and spoofable).
+ */
 function clientIp(request: NextRequest): string {
+  const realIp = request.headers.get("x-real-ip")?.trim();
+  if (realIp) return realIp;
+
   const forwarded = request.headers.get("x-forwarded-for");
   if (forwarded) {
-    const first = forwarded.split(",")[0]?.trim();
-    if (first) return first;
+    const parts = forwarded.split(",");
+    const last = parts[parts.length - 1]?.trim();
+    if (last) return last;
   }
-  return request.headers.get("x-real-ip")?.trim() || "unknown";
+
+  return "unknown";
 }

@@ -83,7 +83,7 @@ const tick = () => new Promise<void>((r) => setTimeout(r, 0));
 // Import queue + mock render fn after all vi.mock() calls are hoisted.
 // ---------------------------------------------------------------------------
 
-const { enqueueRender, getJob } = await import("@/lib/server/render-queue");
+const { enqueueRender, getJob, QueueFullError } = await import("@/lib/server/render-queue");
 
 // ---------------------------------------------------------------------------
 // Reset mock state between tests (the module singleton is shared across the
@@ -287,6 +287,28 @@ describe("render-queue — render timeout", () => {
     expect(job!.error).toMatch(/timed out/i);
 
     delete process.env.RENDER_TIMEOUT_MS;
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Queue depth cap — RENDER_MAX_QUEUE
+// ---------------------------------------------------------------------------
+
+describe("render-queue — queue depth cap", () => {
+  it("throws QueueFullError when RENDER_MAX_QUEUE is reached", async () => {
+    process.env.RENDER_MAX_QUEUE = "1";
+
+    const d = deferred();
+    mockRender.mockReturnValueOnce(d.promise);
+
+    enqueueRender(makeInput());
+    await tick();
+
+    expect(() => enqueueRender(makeInput())).toThrow(QueueFullError);
+
+    d.resolve("/tmp/out.mp4");
+    await tick();
+    delete process.env.RENDER_MAX_QUEUE;
   });
 });
 
