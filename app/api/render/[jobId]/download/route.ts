@@ -54,7 +54,9 @@ export async function GET(
     void deleteJobFile(jobId);
   });
 
-  const webStream = Readable.toWeb(nodeStream) as ReadableStream<Uint8Array>;
+  const webStream = Readable.toWeb(
+    nodeStream,
+  ) as unknown as ReadableStream<Uint8Array>;
 
   return new Response(webStream, {
     status: 200,

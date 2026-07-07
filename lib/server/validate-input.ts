@@ -13,14 +13,14 @@ import "server-only";
 export type Orientation = "horizontal" | "vertical";
 export type Theme = "light" | "dark";
 
-export interface RenderStargazer {
+export type RenderStargazer = {
   login: string;
   avatarUrl: string;
   /** ISO date string, e.g. "2021-03-04" */
   starredAt: string;
-}
+};
 
-export interface RenderInput {
+export type RenderInput = {
   repo: string;
   totalStars: number;
   stargazers: RenderStargazer[];
@@ -28,7 +28,7 @@ export interface RenderInput {
   accentColor: string;
   speed: number;
   theme: Theme;
-}
+};
 
 /** Thrown on invalid input; carries the HTTP status the API route should map to. */
 export class RenderInputError extends Error {

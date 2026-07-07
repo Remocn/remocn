@@ -92,14 +92,6 @@ export const DEFAULT_PRODUCT_DEMO_CONFIG: ProductDemoConfig = {
   ],
 };
 
-function planPresentation(from: ProductDemoScene, to: ProductDemoScene) {
-  if (from.type === "feature-frame" && to.type === "feature-frame") {
-    const direction = to.content.side === "right" ? "left" : "right";
-    return spatialPush({ direction });
-  }
-  return cameraCraneUp();
-}
-
 function SceneBackground({
   scene,
   theme,
@@ -254,13 +246,25 @@ export function ProductDemo({
 
     const next = scenes[index + 1];
     if (next) {
-      nodes.push(
-        <TransitionSeries.Transition
-          key={`transition-${index}`}
-          presentation={planPresentation(scene, next)}
-          timing={resolveTiming(planTransitionTiming(scene, next))}
-        />,
-      );
+      const timing = resolveTiming(planTransitionTiming(scene, next));
+      if (scene.type === "feature-frame" && next.type === "feature-frame") {
+        const direction = next.content.side === "right" ? "left" : "right";
+        nodes.push(
+          <TransitionSeries.Transition
+            key={`transition-${index}`}
+            presentation={spatialPush({ direction })}
+            timing={timing}
+          />,
+        );
+      } else {
+        nodes.push(
+          <TransitionSeries.Transition
+            key={`transition-${index}`}
+            presentation={cameraCraneUp()}
+            timing={timing}
+          />,
+        );
+      }
     }
   });
 

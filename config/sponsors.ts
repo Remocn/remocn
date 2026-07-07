@@ -19,7 +19,7 @@ export type Sponsor = {
   layout?: "row" | "col";
 };
 
-export const sponsors: Sponsor[] = [
+export const sponsors: Sponsor[] = ([
   {
     id: "reactbits",
     name: "React Bits",
@@ -135,7 +135,7 @@ export const sponsors: Sponsor[] = [
     isPaste: false,
     layout: "row",
   },
-].filter((sponsor) => !sponsor.isPaste);
+] satisfies Sponsor[]).filter((sponsor) => !sponsor.isPaste);
 
 export function getGoldSponsors(): Sponsor[] {
   return sponsors.filter(
