@@ -85,7 +85,7 @@ function BentoCard({
   const entry = registry[name];
   const playerRef = useRef<PlayerRef>(null);
 
-  useAutoplay(playerRef, Boolean(entry));
+  const { containerRef } = useAutoplay(playerRef, Boolean(entry));
 
   const Composition = useMemo(() => {
     const Inner = entry?.Component;
@@ -119,6 +119,7 @@ function BentoCard({
       />
 
       <div
+        ref={containerRef}
         className={cn(
           "relative w-full overflow-hidden",
           featured

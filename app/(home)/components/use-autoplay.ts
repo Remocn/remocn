@@ -1,15 +1,41 @@
 import type { PlayerRef } from "@remotion/player";
-import { type RefObject, useEffect } from "react";
+import { useIntersectionObserver } from "@uidotdev/usehooks";
+import { type RefObject, useCallback, useEffect, useRef } from "react";
 
 export function useAutoplay(
   playerRef: RefObject<PlayerRef | null>,
   enabled = true,
-) {
+): { containerRef: (node: Element | null) => void } {
+  const [observerRef, entry] = useIntersectionObserver({
+    threshold: 0,
+    root: null,
+    rootMargin: "200px",
+  });
+
+  const attached = useRef(false);
+  const containerRef = useCallback(
+    (node: Element | null) => {
+      if (node) attached.current = true;
+      observerRef(node);
+    },
+    [observerRef],
+  );
+
   useEffect(() => {
     if (!enabled) return;
+
+    const visible = attached.current
+      ? Boolean(entry?.isIntersecting)
+      : true;
+
+    if (!visible) {
+      playerRef.current?.pause();
+      return;
+    }
+
     let raf = 0;
     let attempts = 0;
-    const MAX_ATTEMPTS = 120; // ~2s at 60fps, longer on a contended mount
+    const MAX_ATTEMPTS = 120;
     const tick = () => {
       const player = playerRef.current;
       if (player && !player.isPlaying()) player.play();
@@ -20,5 +46,7 @@ export function useAutoplay(
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [playerRef, enabled]);
+  }, [enabled, entry, playerRef]);
+
+  return { containerRef };
 }

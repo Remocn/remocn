@@ -69,25 +69,27 @@ const PRIMITIVE_CHIPS = [
 
 function ScenePlayer({ entry }: { entry: SceneEntry | undefined }) {
   const ref = useRef<PlayerRef>(null);
-  useAutoplay(ref, Boolean(entry));
+  const { containerRef } = useAutoplay(ref, Boolean(entry));
 
   if (!entry) return null;
 
   return (
-    <Player
-      ref={ref}
-      component={entry.Component}
-      inputProps={{}}
-      durationInFrames={entry.durationInFrames}
-      fps={entry.fps}
-      compositionWidth={entry.width}
-      compositionHeight={entry.height}
-      style={{ width: "100%", height: "100%", pointerEvents: "none" }}
-      clickToPlay={false}
-      loop
-      initiallyMuted
-      acknowledgeRemotionLicense
-    />
+    <div ref={containerRef} style={{ width: "100%", height: "100%" }}>
+      <Player
+        ref={ref}
+        component={entry.Component}
+        inputProps={{}}
+        durationInFrames={entry.durationInFrames}
+        fps={entry.fps}
+        compositionWidth={entry.width}
+        compositionHeight={entry.height}
+        style={{ width: "100%", height: "100%", pointerEvents: "none" }}
+        clickToPlay={false}
+        loop
+        initiallyMuted
+        acknowledgeRemotionLicense
+      />
+    </div>
   );
 }
 
