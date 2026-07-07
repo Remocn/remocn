@@ -1,8 +1,8 @@
 import "server-only";
-import { readdir, rm, stat } from "node:fs/promises";
+import * as fsPromises from "node:fs/promises";
 import path from "node:path";
 import { RENDER_WORK_DIR } from "./paths";
-import { deleteJob } from "./render-queue";
+import { deleteJob, listJobs } from "./render-queue";
 
 /**
  * Disk hygiene for the render work dir. Two mechanisms:
@@ -27,22 +27,22 @@ function sweepIntervalMs(): number {
 export async function deleteJobFile(jobId: string): Promise<void> {
   const filePath = path.join(RENDER_WORK_DIR, `${jobId}.mp4`);
   try {
-    await rm(filePath, { force: true });
+    await fsPromises.rm(filePath, { force: true });
   } finally {
     deleteJob(jobId);
   }
 }
 
 /** Remove every `.mp4` in the work dir older than the TTL. */
-async function sweepOnce(): Promise<void> {
+export async function sweepOnce(): Promise<void> {
   const ttl = ttlMs();
   const now = Date.now();
 
   let entries: string[];
   try {
-    entries = await readdir(RENDER_WORK_DIR);
+    entries = await fsPromises.readdir(RENDER_WORK_DIR);
   } catch {
-    return; // dir not created yet — nothing to sweep
+    entries = [];
   }
 
   await Promise.all(
@@ -51,9 +51,9 @@ async function sweepOnce(): Promise<void> {
       .map(async (name) => {
         const filePath = path.join(RENDER_WORK_DIR, name);
         try {
-          const info = await stat(filePath);
+          const info = await fsPromises.stat(filePath);
           if (now - info.mtimeMs > ttl) {
-            await rm(filePath, { force: true });
+            await fsPromises.rm(filePath, { force: true });
             deleteJob(path.basename(name, ".mp4"));
           }
         } catch {
@@ -61,6 +61,11 @@ async function sweepOnce(): Promise<void> {
         }
       }),
   );
+
+  for (const [jobId, job] of listJobs()) {
+    if (now - job.createdAt <= ttl) continue;
+    if (job.status === "error" || job.status === "done") deleteJob(jobId);
+  }
 }
 
 // Module-level guard: ensure the sweep timer is installed exactly once per
