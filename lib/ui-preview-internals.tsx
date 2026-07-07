@@ -67,6 +67,7 @@ export function buildParsers(name: string, controls: ControlConfig) {
 export function PreviewStage({
   name,
   Component,
+  load,
   inputProps,
   durationInFrames,
   fps,
@@ -75,7 +76,8 @@ export function PreviewStage({
   previewBackdrop,
 }: {
   name: string;
-  Component: React.ComponentType<any>;
+  Component?: React.ComponentType<any>;
+  load?: () => Promise<{ default: React.ComponentType<any> }>;
   inputProps: Record<string, unknown>;
   durationInFrames: number;
   fps: number;
@@ -129,15 +131,28 @@ export function PreviewStage({
     };
   }, [mounted]);
 
-  const Composition = useMemo(() => {
-    if (!previewBackdrop) return Component;
-    const Wrapped = (p: Record<string, unknown>) => (
-      <Backdrop fill={previewBackdrop} padding={0} radius={0} shadow="">
-        <Component {...p} />
-      </Backdrop>
-    );
-    return Wrapped;
-  }, [Component, previewBackdrop]);
+  const compProps = useMemo<
+    | { lazyComponent: () => Promise<{ default: React.ComponentType<any> }> }
+    | { component: React.ComponentType<any> }
+  >(() => {
+    const wrap =
+      (Inner: React.ComponentType<any>) => (p: Record<string, unknown>) =>
+        previewBackdrop ? (
+          <Backdrop fill={previewBackdrop} padding={0} radius={0} shadow="">
+            <Inner {...p} />
+          </Backdrop>
+        ) : (
+          <Inner {...p} />
+        );
+
+    if (load) {
+      return {
+        lazyComponent: () =>
+          load().then(({ default: Inner }) => ({ default: wrap(Inner) })),
+      };
+    }
+    return { component: wrap(Component ?? (() => null)) };
+  }, [Component, load, previewBackdrop]);
 
   return (
     <div
@@ -158,7 +173,7 @@ export function PreviewStage({
         >
           <Player
             ref={playerRef}
-            component={Composition}
+            {...compProps}
             inputProps={inputProps}
             durationInFrames={durationInFrames}
             fps={fps}

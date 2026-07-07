@@ -29,7 +29,7 @@ export function ComponentPreview({ name }: { name: string }) {
         <div className="not-prose mb-6 aspect-[1.9/1] w-full animate-pulse rounded-2xl bg-muted" />
       }
     >
-      <Preview name={name} config={entry.config} Component={entry.Component} />
+      <Preview name={name} config={entry.config} load={entry.load} />
     </Suspense>
   );
 }
@@ -37,11 +37,11 @@ export function ComponentPreview({ name }: { name: string }) {
 function Preview({
   name,
   config,
-  Component,
+  load,
 }: {
   name: string;
   config: ComponentConfig;
-  Component: React.ComponentType<any>;
+  load: () => Promise<{ default: React.ComponentType<any> }>;
 }) {
   const trackEvent = useTrackEvent();
   const { parsers, urlKeys } = useMemo(
@@ -118,7 +118,7 @@ function Preview({
         <TabsContent value="preview" className="mt-0">
           <PreviewStage
             name={name}
-            Component={Component}
+            load={load}
             inputProps={values}
             durationInFrames={config.durationInFrames}
             fps={config.fps}

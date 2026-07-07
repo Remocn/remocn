@@ -33,14 +33,14 @@ function CardPreview({ item }: { item: CardItem }) {
     );
   }
 
-  const { Component, config } = entry;
+  const { load, config } = entry;
   const inputProps = getDefaults(config.controls);
 
   return (
     <div className="size-full">
       <Player
         ref={playerRef}
-        component={Component}
+        lazyComponent={load}
         inputProps={inputProps}
         durationInFrames={config.durationInFrames}
         fps={config.fps}

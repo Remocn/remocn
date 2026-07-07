@@ -87,16 +87,18 @@ function BentoCard({
 
   const { containerRef } = useAutoplay(playerRef, Boolean(entry));
 
-  const Composition = useMemo(() => {
-    const Inner = entry?.Component;
-    if (!Inner || !backdrop) return Inner;
-    return function BackdroppedComposition(props: Record<string, unknown>) {
-      return (
-        <Backdrop fill={backdrop} padding={0} radius={0} shadow="">
-          <Inner {...props} />
-        </Backdrop>
-      );
-    };
+  const lazyComponent = useMemo(() => {
+    if (!entry) return undefined;
+    const { load } = entry;
+    if (!backdrop) return load;
+    return () =>
+      load().then(({ default: Inner }) => ({
+        default: (props: Record<string, unknown>) => (
+          <Backdrop fill={backdrop} padding={0} radius={0} shadow="">
+            <Inner {...props} />
+          </Backdrop>
+        ),
+      }));
   }, [entry, backdrop]);
 
   return (
@@ -128,10 +130,10 @@ function BentoCard({
           previewClassName ?? "bg-muted",
         )}
       >
-        {entry ? (
+        {entry && lazyComponent ? (
           <Player
             ref={playerRef}
-            component={Composition ?? entry.Component}
+            lazyComponent={lazyComponent}
             inputProps={inputProps ?? {}}
             durationInFrames={entry.config.durationInFrames}
             fps={entry.config.fps}
