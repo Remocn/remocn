@@ -1,8 +1,8 @@
 "use client";
 
 import { useCurrentFrame } from "remotion";
-import { clamp01, type EasingName, easings } from "@/lib/remocn-ui";
 import type { StepperStyle } from "@/components/remocn/stepper";
+import { clamp01, type EasingName, easings } from "@/lib/remocn-ui";
 
 export interface StepperStep {
   at: number;

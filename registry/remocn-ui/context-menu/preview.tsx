@@ -1,6 +1,9 @@
 "use client";
 
-import { ContextMenu, type ContextMenuState } from "@/registry/remocn-ui/context-menu";
+import {
+  ContextMenu,
+  type ContextMenuState,
+} from "@/registry/remocn-ui/context-menu";
 
 export interface ContextMenuPreviewProps {
   state?: ContextMenuState;

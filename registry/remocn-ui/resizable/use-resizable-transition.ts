@@ -1,12 +1,12 @@
 "use client";
 
 import { useCurrentFrame } from "remotion";
-import { clamp01, type EasingName, easings } from "@/lib/remocn-ui";
 import {
-  resizableHandleStyle,
   type ResizableHandleState,
   type ResizableStyle,
+  resizableHandleStyle,
 } from "@/components/remocn/resizable";
+import { clamp01, type EasingName, easings } from "@/lib/remocn-ui";
 
 export interface ResizableStep {
   at: number;

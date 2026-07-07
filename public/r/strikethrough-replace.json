@@ -3,9 +3,7 @@
   "name": "strikethrough-replace",
   "title": "Strikethrough Replace",
   "description": "Draws a strike line across old text then reveals new text in its place.",
-  "dependencies": [
-    "remotion"
-  ],
+  "dependencies": ["remotion"],
   "files": [
     {
       "path": "registry/remocn/strikethrough-replace/index.tsx",

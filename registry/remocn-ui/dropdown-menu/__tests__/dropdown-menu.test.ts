@@ -1,13 +1,15 @@
-
 import { describe, expect, it } from "bun:test";
+import { defaultLightTheme } from "@/lib/remocn-ui";
+import { dropdownMenuConfig } from "../config";
 import {
   type DropdownMenuState,
   dropdownMenuStyle,
   dropdownMenuStyleContext,
 } from "../index";
-import { tweenDropdownMenuStyle, DEFAULT_DURATION } from "../use-dropdown-menu-transition";
-import { dropdownMenuConfig } from "../config";
-import { defaultLightTheme } from "@/lib/remocn-ui";
+import {
+  DEFAULT_DURATION,
+  tweenDropdownMenuStyle,
+} from "../use-dropdown-menu-transition";
 
 const VALID_STATES: readonly DropdownMenuState[] = ["opened", "closed"];
 
@@ -25,13 +27,15 @@ const ctx = dropdownMenuStyleContext(defaultLightTheme);
 describe("DropdownMenuState union", () => {
   it("contains exactly the two documented states", () => {
     const control = dropdownMenuConfig.controls.state;
-    if (control.type !== "select") throw new Error("state control must be a select");
+    if (control.type !== "select")
+      throw new Error("state control must be a select");
     expect(control.options).toEqual(["opened", "closed"]);
   });
 
   it("every VALID_STATES entry is assignable (no typos in the fixture)", () => {
     const control = dropdownMenuConfig.controls.state;
-    if (control.type !== "select") throw new Error("state control must be a select");
+    if (control.type !== "select")
+      throw new Error("state control must be a select");
     expect(VALID_STATES).toHaveLength(2);
     for (const s of VALID_STATES) {
       expect(control.options).toContain(s);
@@ -46,7 +50,8 @@ describe("dropdownMenuConfig.controls.state", () => {
 
   it("has exactly the two DropdownMenuState options in order", () => {
     const control = dropdownMenuConfig.controls.state;
-    if (control.type !== "select") throw new Error("state control must be a select");
+    if (control.type !== "select")
+      throw new Error("state control must be a select");
     expect(control.options).toEqual(["opened", "closed"]);
   });
 
@@ -57,7 +62,8 @@ describe("dropdownMenuConfig.controls.state", () => {
 
   it("every option is a member of the DropdownMenuState union", () => {
     const control = dropdownMenuConfig.controls.state;
-    if (control.type !== "select") throw new Error("state control must be a select");
+    if (control.type !== "select")
+      throw new Error("state control must be a select");
     for (const option of control.options) {
       expect(VALID_STATES).toContain(option as DropdownMenuState);
     }
@@ -65,17 +71,18 @@ describe("dropdownMenuConfig.controls.state", () => {
 });
 
 describe("dropdownMenuConfig.snippet: state prop emission", () => {
-  it("emits state=\"opened\" for the opened option", () => {
+  it('emits state="opened" for the opened option', () => {
     expect(snippet({ state: "opened" })).toContain('state="opened"');
   });
 
-  it("emits state=\"closed\" for the closed option", () => {
+  it('emits state="closed" for the closed option', () => {
     expect(snippet({ state: "closed" })).toContain('state="closed"');
   });
 
   it("emits the correct state for every control option", () => {
     const control = dropdownMenuConfig.controls.state;
-    if (control.type !== "select") throw new Error("state control must be a select");
+    if (control.type !== "select")
+      throw new Error("state control must be a select");
     for (const state of control.options) {
       const out = snippet({ state });
       expect(out).toContain(`state="${state}"`);
@@ -86,7 +93,7 @@ describe("dropdownMenuConfig.snippet: state prop emission", () => {
 describe("dropdownMenuConfig.snippet: import line", () => {
   it("includes `import { DropdownMenu }` from the correct path", () => {
     const out = snippet({ state: "opened" });
-    expect(out).toContain('import { DropdownMenu }');
+    expect(out).toContain("import { DropdownMenu }");
     expect(out).toContain('from "@/components/remocn/dropdown-menu"');
   });
 });
@@ -109,13 +116,15 @@ describe("dropdownMenuConfig.snippet: default props are omitted", () => {
 
 describe("dropdownMenuConfig.snippet: non-default props are emitted", () => {
   it("emits a non-default label", () => {
-    expect(snippet({ state: "opened", label: "Account" }))
-      .toContain('label="Account"');
+    expect(snippet({ state: "opened", label: "Account" })).toContain(
+      'label="Account"',
+    );
   });
 
   it("emits a non-default highlightedIndex (0 is non-default, condition is !== -1)", () => {
-    expect(snippet({ state: "opened", highlightedIndex: 0 }))
-      .toContain("highlightedIndex={0}");
+    expect(snippet({ state: "opened", highlightedIndex: 0 })).toContain(
+      "highlightedIndex={0}",
+    );
   });
 });
 
@@ -123,7 +132,7 @@ describe("dropdownMenuConfig.snippet: structural round-trip", () => {
   const out = snippet({ state: "opened" });
 
   it("starts with the import line", () => {
-    expect(out.startsWith('import { DropdownMenu }')).toBe(true);
+    expect(out.startsWith("import { DropdownMenu }")).toBe(true);
   });
 
   it("contains a <DropdownMenu JSX opening", () => {

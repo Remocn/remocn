@@ -1,18 +1,18 @@
 "use client";
 
 import {
+  type DialogState,
+  type DialogStyle,
+  dialogStyle,
+  dialogStyleContext,
+} from "@/components/remocn/dialog";
+import {
   easings,
   type RemocnTheme,
   type Step,
   useRemocnTheme,
   useStateTransition,
 } from "@/lib/remocn-ui";
-import {
-  dialogStyle,
-  dialogStyleContext,
-  type DialogState,
-  type DialogStyle,
-} from "@/components/remocn/dialog";
 
 export const DEFAULT_DURATION = 12;
 
@@ -22,7 +22,8 @@ export function tweenDialogStyle(
   t: number,
 ): DialogStyle {
   return {
-    overlayOpacity: a.overlayOpacity + (b.overlayOpacity - a.overlayOpacity) * t,
+    overlayOpacity:
+      a.overlayOpacity + (b.overlayOpacity - a.overlayOpacity) * t,
     popupOpacity: a.popupOpacity + (b.popupOpacity - a.popupOpacity) * t,
     popupScale: a.popupScale + (b.popupScale - a.popupScale) * t,
     popupTranslateY:

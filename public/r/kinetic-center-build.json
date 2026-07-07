@@ -3,9 +3,7 @@
   "name": "kinetic-center-build",
   "title": "Kinetic Center Build",
   "description": "A word appears in the center; each new word enters from the right and pushes the line until the full phrase locks centered.",
-  "dependencies": [
-    "remotion"
-  ],
+  "dependencies": ["remotion"],
   "files": [
     {
       "path": "registry/remocn/kinetic-center-build/index.tsx",

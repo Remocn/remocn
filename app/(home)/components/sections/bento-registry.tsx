@@ -5,13 +5,13 @@ import { ArrowRight, Check, Copy } from "lucide-react";
 import { motion } from "motion/react";
 import Link from "next/link";
 import { useMemo, useRef, useState } from "react";
+import { SpotlightSurface } from "@/components/spotlight-surface";
 import { Button } from "@/components/ui/button";
 import { SPRING_SOFT } from "@/config/site";
 import { useTrackEvent } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 import registry from "@/registry/__index__";
 import { Backdrop, type BackdropFill } from "@/registry/remocn/backdrop";
-import { SpotlightSurface } from "@/components/spotlight-surface";
 import { FadeUp } from "../fade-up";
 import { SectionHeading } from "../section-heading";
 import { useAutoplay } from "../use-autoplay";
@@ -85,18 +85,20 @@ function BentoCard({
   const entry = registry[name];
   const playerRef = useRef<PlayerRef>(null);
 
-  useAutoplay(playerRef, Boolean(entry));
+  const { containerRef } = useAutoplay(playerRef, Boolean(entry));
 
-  const Composition = useMemo(() => {
-    const Inner = entry?.Component;
-    if (!Inner || !backdrop) return Inner;
-    return function BackdroppedComposition(props: Record<string, unknown>) {
-      return (
-        <Backdrop fill={backdrop} padding={0} radius={0} shadow="">
-          <Inner {...props} />
-        </Backdrop>
-      );
-    };
+  const lazyComponent = useMemo(() => {
+    if (!entry) return undefined;
+    const { load } = entry;
+    if (!backdrop) return load;
+    return () =>
+      load().then(({ default: Inner }) => ({
+        default: (props: Record<string, unknown>) => (
+          <Backdrop fill={backdrop} padding={0} radius={0} shadow="">
+            <Inner {...props} />
+          </Backdrop>
+        ),
+      }));
   }, [entry, backdrop]);
 
   return (
@@ -119,6 +121,7 @@ function BentoCard({
       />
 
       <div
+        ref={containerRef}
         className={cn(
           "relative w-full overflow-hidden",
           featured
@@ -127,10 +130,10 @@ function BentoCard({
           previewClassName ?? "bg-muted",
         )}
       >
-        {entry ? (
+        {entry && lazyComponent ? (
           <Player
             ref={playerRef}
-            component={Composition ?? entry.Component}
+            lazyComponent={lazyComponent}
             inputProps={inputProps ?? {}}
             durationInFrames={entry.config.durationInFrames}
             fps={entry.config.fps}

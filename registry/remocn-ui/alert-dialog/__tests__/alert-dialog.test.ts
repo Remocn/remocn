@@ -1,13 +1,15 @@
-
 import { describe, expect, it } from "bun:test";
+import { defaultLightTheme } from "@/lib/remocn-ui";
+import { alertDialogConfig } from "../config";
 import {
   type AlertDialogState,
   alertDialogStyle,
   alertDialogStyleContext,
 } from "../index";
-import { tweenAlertDialogStyle, DEFAULT_DURATION } from "../use-alert-dialog-transition";
-import { alertDialogConfig } from "../config";
-import { defaultLightTheme } from "@/lib/remocn-ui";
+import {
+  DEFAULT_DURATION,
+  tweenAlertDialogStyle,
+} from "../use-alert-dialog-transition";
 
 const VALID_STATES: readonly AlertDialogState[] = ["opened", "closed"];
 
@@ -27,13 +29,15 @@ const ctx = alertDialogStyleContext(defaultLightTheme);
 describe("AlertDialogState union", () => {
   it("contains exactly the two documented states", () => {
     const control = alertDialogConfig.controls.state;
-    if (control.type !== "select") throw new Error("state control must be a select");
+    if (control.type !== "select")
+      throw new Error("state control must be a select");
     expect(control.options).toEqual(["opened", "closed"]);
   });
 
   it("every VALID_STATES entry is assignable (no typos in the fixture)", () => {
     const control = alertDialogConfig.controls.state;
-    if (control.type !== "select") throw new Error("state control must be a select");
+    if (control.type !== "select")
+      throw new Error("state control must be a select");
     expect(VALID_STATES).toHaveLength(2);
     for (const s of VALID_STATES) {
       expect(control.options).toContain(s);
@@ -48,7 +52,8 @@ describe("alertDialogConfig.controls.state", () => {
 
   it("has exactly the two AlertDialogState options in order", () => {
     const control = alertDialogConfig.controls.state;
-    if (control.type !== "select") throw new Error("state control must be a select");
+    if (control.type !== "select")
+      throw new Error("state control must be a select");
     expect(control.options).toEqual(["opened", "closed"]);
   });
 
@@ -59,7 +64,8 @@ describe("alertDialogConfig.controls.state", () => {
 
   it("every option is a member of the AlertDialogState union", () => {
     const control = alertDialogConfig.controls.state;
-    if (control.type !== "select") throw new Error("state control must be a select");
+    if (control.type !== "select")
+      throw new Error("state control must be a select");
     for (const option of control.options) {
       expect(VALID_STATES).toContain(option as AlertDialogState);
     }
@@ -67,17 +73,18 @@ describe("alertDialogConfig.controls.state", () => {
 });
 
 describe("alertDialogConfig.snippet: state prop emission", () => {
-  it("emits state=\"opened\" for the opened option", () => {
+  it('emits state="opened" for the opened option', () => {
     expect(snippet({ state: "opened" })).toContain('state="opened"');
   });
 
-  it("emits state=\"closed\" for the closed option", () => {
+  it('emits state="closed" for the closed option', () => {
     expect(snippet({ state: "closed" })).toContain('state="closed"');
   });
 
   it("emits the correct state for every control option", () => {
     const control = alertDialogConfig.controls.state;
-    if (control.type !== "select") throw new Error("state control must be a select");
+    if (control.type !== "select")
+      throw new Error("state control must be a select");
     for (const state of control.options) {
       const out = snippet({ state });
       expect(out).toContain(`state="${state}"`);
@@ -96,7 +103,7 @@ describe("alertDialogConfig.snippet: NEVER emits steps", () => {
 describe("alertDialogConfig.snippet: import line", () => {
   it("includes `import { AlertDialog }` from the correct path", () => {
     const out = snippet({ state: "opened" });
-    expect(out).toContain('import { AlertDialog }');
+    expect(out).toContain("import { AlertDialog }");
     expect(out).toContain('from "@/components/remocn/alert-dialog"');
   });
 });
@@ -105,7 +112,8 @@ describe("alertDialogConfig.snippet: default props are omitted", () => {
   const allDefaults = snippet({
     state: "opened",
     title: "Delete account?",
-    description: "This action cannot be undone. This will permanently remove your data from our servers.",
+    description:
+      "This action cannot be undone. This will permanently remove your data from our servers.",
     actionLabel: "Delete",
     cancelLabel: "Cancel",
   });
@@ -129,23 +137,27 @@ describe("alertDialogConfig.snippet: default props are omitted", () => {
 
 describe("alertDialogConfig.snippet: non-default props are emitted", () => {
   it("emits a non-default title", () => {
-    expect(snippet({ state: "opened", title: "Remove workspace?" }))
-      .toContain('title="Remove workspace?"');
+    expect(snippet({ state: "opened", title: "Remove workspace?" })).toContain(
+      'title="Remove workspace?"',
+    );
   });
 
   it("emits a non-default description", () => {
-    expect(snippet({ state: "opened", description: "This cannot be undone." }))
-      .toContain('description="This cannot be undone."');
+    expect(
+      snippet({ state: "opened", description: "This cannot be undone." }),
+    ).toContain('description="This cannot be undone."');
   });
 
   it("emits a non-default actionLabel", () => {
-    expect(snippet({ state: "opened", actionLabel: "Confirm" }))
-      .toContain('actionLabel="Confirm"');
+    expect(snippet({ state: "opened", actionLabel: "Confirm" })).toContain(
+      'actionLabel="Confirm"',
+    );
   });
 
   it("emits a non-default cancelLabel", () => {
-    expect(snippet({ state: "opened", cancelLabel: "Go back" }))
-      .toContain('cancelLabel="Go back"');
+    expect(snippet({ state: "opened", cancelLabel: "Go back" })).toContain(
+      'cancelLabel="Go back"',
+    );
   });
 });
 
@@ -153,7 +165,7 @@ describe("alertDialogConfig.snippet: structural round-trip", () => {
   const out = snippet({ state: "opened" });
 
   it("starts with the import line", () => {
-    expect(out.startsWith('import { AlertDialog }')).toBe(true);
+    expect(out.startsWith("import { AlertDialog }")).toBe(true);
   });
 
   it("contains a <AlertDialog JSX opening", () => {

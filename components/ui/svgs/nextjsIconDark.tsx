@@ -37,7 +37,10 @@ const NextjsIconDark = (props: SVGProps<SVGSVGElement>) => (
         y2="160.5"
       >
         <stop style={{ stopColor: "var(--background)" }} />
-        <stop offset="1" style={{ stopColor: "var(--background)", stopOpacity: 0 }} />
+        <stop
+          offset="1"
+          style={{ stopColor: "var(--background)", stopOpacity: 0 }}
+        />
       </linearGradient>
       <linearGradient
         gradientUnits="userSpaceOnUse"
@@ -48,7 +51,10 @@ const NextjsIconDark = (props: SVGProps<SVGSVGElement>) => (
         y2="106.875"
       >
         <stop style={{ stopColor: "var(--background)" }} />
-        <stop offset="1" style={{ stopColor: "var(--background)", stopOpacity: 0 }} />
+        <stop
+          offset="1"
+          style={{ stopColor: "var(--background)", stopOpacity: 0 }}
+        />
       </linearGradient>
     </defs>
   </svg>

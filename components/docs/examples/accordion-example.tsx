@@ -4,7 +4,9 @@ import { Accordion } from "@/registry/remocn-ui/accordion";
 import { useAccordionTransition } from "@/registry/remocn-ui/accordion/use-accordion-transition";
 
 export const accordionExampleControls = [
-  "title", "content", "variant",
+  "title",
+  "content",
+  "variant",
 ] as const;
 
 export interface AccordionExampleProps {
@@ -49,7 +51,9 @@ export const accordionExampleCode = (
   if (variant !== undefined && variant !== "default")
     props.push(`variant="${variant}"`);
 
-  const propsStr = props.length ? `\n      ${props.join("\n      ")}\n    ` : "";
+  const propsStr = props.length
+    ? `\n      ${props.join("\n      ")}\n    `
+    : "";
 
   const hookOpts: string[] = [];
   if (variant !== undefined && variant !== "default")

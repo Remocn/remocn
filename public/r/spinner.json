@@ -3,9 +3,7 @@
   "name": "spinner",
   "title": "UI Spinner",
   "description": "A deterministic spinning arc that loops on the Remotion frame — a pure motion atom with no state.",
-  "dependencies": [
-    "remotion"
-  ],
+  "dependencies": ["remotion"],
   "registryDependencies": [],
   "files": [
     {

@@ -1,9 +1,8 @@
-
 import { describe, expect, it } from "bun:test";
+import { defaultLightTheme } from "@/lib/remocn-ui";
+import { buttonConfig } from "../config";
 import { type ButtonState, buttonStyle, buttonStyleContext } from "../index";
 import { tweenButtonStyle } from "../use-button-transition";
-import { buttonConfig } from "../config";
-import { defaultLightTheme } from "@/lib/remocn-ui";
 
 const VALID_STATES: readonly ButtonState[] = [
   "idle",
@@ -27,7 +26,8 @@ const snippet = (values: SnippetValues): string =>
 describe("ButtonState union", () => {
   it("contains exactly the five documented states", () => {
     const control = buttonConfig.controls.state;
-    if (control.type !== "select") throw new Error("state control must be a select");
+    if (control.type !== "select")
+      throw new Error("state control must be a select");
     expect(control.options).toEqual([
       "idle",
       "hover",
@@ -39,7 +39,8 @@ describe("ButtonState union", () => {
 
   it("every VALID_STATES entry is assignable (no typos in the fixture)", () => {
     const control = buttonConfig.controls.state;
-    if (control.type !== "select") throw new Error("state control must be a select");
+    if (control.type !== "select")
+      throw new Error("state control must be a select");
     expect(VALID_STATES).toHaveLength(5);
     for (const s of VALID_STATES) {
       expect(control.options).toContain(s);
@@ -54,7 +55,8 @@ describe("buttonConfig.controls.state", () => {
 
   it("has exactly the five ButtonState options in order", () => {
     const control = buttonConfig.controls.state;
-    if (control.type !== "select") throw new Error("state control must be a select");
+    if (control.type !== "select")
+      throw new Error("state control must be a select");
     expect(control.options).toEqual([
       "idle",
       "hover",
@@ -71,7 +73,8 @@ describe("buttonConfig.controls.state", () => {
 
   it("every option is a member of the ButtonState union", () => {
     const control = buttonConfig.controls.state;
-    if (control.type !== "select") throw new Error("state control must be a select");
+    if (control.type !== "select")
+      throw new Error("state control must be a select");
     for (const option of control.options) {
       expect(VALID_STATES).toContain(option as ButtonState);
     }
@@ -79,29 +82,30 @@ describe("buttonConfig.controls.state", () => {
 });
 
 describe("buttonConfig.snippet: state prop emission", () => {
-  it("emits state=\"idle\" for the idle option", () => {
+  it('emits state="idle" for the idle option', () => {
     expect(snippet({ state: "idle" })).toContain('state="idle"');
   });
 
-  it("emits state=\"hover\" for the hover option", () => {
+  it('emits state="hover" for the hover option', () => {
     expect(snippet({ state: "hover" })).toContain('state="hover"');
   });
 
-  it("emits state=\"press\" for the press option", () => {
+  it('emits state="press" for the press option', () => {
     expect(snippet({ state: "press" })).toContain('state="press"');
   });
 
-  it("emits state=\"loading\" for the loading option", () => {
+  it('emits state="loading" for the loading option', () => {
     expect(snippet({ state: "loading" })).toContain('state="loading"');
   });
 
-  it("emits state=\"success\" for the success option", () => {
+  it('emits state="success" for the success option', () => {
     expect(snippet({ state: "success" })).toContain('state="success"');
   });
 
   it("emits the correct state for every control option", () => {
     const control = buttonConfig.controls.state;
-    if (control.type !== "select") throw new Error("state control must be a select");
+    if (control.type !== "select")
+      throw new Error("state control must be a select");
     for (const state of control.options) {
       const out = snippet({ state });
       expect(out).toContain(`state="${state}"`);
@@ -126,7 +130,7 @@ describe("buttonConfig.snippet: NEVER emits steps or action", () => {
 describe("buttonConfig.snippet: import line", () => {
   it("includes `import { Button }` from the correct path", () => {
     const out = snippet({ state: "loading" });
-    expect(out).toContain('import { Button }');
+    expect(out).toContain("import { Button }");
     expect(out).toContain('from "@/components/remocn/button"');
   });
 });
@@ -159,11 +163,15 @@ describe("buttonConfig.snippet: default props are omitted", () => {
 
 describe("buttonConfig.snippet: non-default props are emitted", () => {
   it("emits a non-default label", () => {
-    expect(snippet({ state: "success", label: "Submit" })).toContain('label="Submit"');
+    expect(snippet({ state: "success", label: "Submit" })).toContain(
+      'label="Submit"',
+    );
   });
 
   it("emits a non-default variant", () => {
-    expect(snippet({ state: "success", variant: "destructive" })).toContain('variant="destructive"');
+    expect(snippet({ state: "success", variant: "destructive" })).toContain(
+      'variant="destructive"',
+    );
   });
 
   it("emits a non-default size", () => {
@@ -171,7 +179,9 @@ describe("buttonConfig.snippet: non-default props are emitted", () => {
   });
 
   it("emits a non-default primary color", () => {
-    expect(snippet({ state: "success", primary: "#6366f1" })).toContain('primary="#6366f1"');
+    expect(snippet({ state: "success", primary: "#6366f1" })).toContain(
+      'primary="#6366f1"',
+    );
   });
 });
 
@@ -179,7 +189,7 @@ describe("buttonConfig.snippet: structural round-trip", () => {
   const out = snippet({ state: "loading" });
 
   it("starts with the import line", () => {
-    expect(out.startsWith('import { Button }')).toBe(true);
+    expect(out.startsWith("import { Button }")).toBe(true);
   });
 
   it("contains a <Button JSX opening", () => {
@@ -323,7 +333,13 @@ describe("buttonStyle: success state", () => {
 });
 
 describe("buttonStyle: opacity invariant — exactly one of label/spinner/check is visible per non-idle state", () => {
-  const states: ButtonState[] = ["idle", "hover", "press", "loading", "success"];
+  const states: ButtonState[] = [
+    "idle",
+    "hover",
+    "press",
+    "loading",
+    "success",
+  ];
 
   it("sum of label+spinner+check opacities equals 1 for every state (exactly one is shown)", () => {
     for (const state of states) {

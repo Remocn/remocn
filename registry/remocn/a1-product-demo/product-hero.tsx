@@ -2,8 +2,8 @@
 
 import { AbsoluteFill, interpolate, Sequence, useCurrentFrame } from "remotion";
 import { SoftBlurIn } from "@/components/remocn/soft-blur-in";
-import { Camera, CAMERA_TRAVEL_EASE } from "./foundation";
 import type { ProductHeroContent, TemplateTheme } from "./foundation";
+import { CAMERA_TRAVEL_EASE, Camera } from "./foundation";
 
 export interface ProductHeroProps {
   content: ProductHeroContent;

@@ -3,9 +3,7 @@
   "name": "shader-spiral",
   "title": "Shader Spiral",
   "description": "Rotating spiral arms radiating from the center.",
-  "dependencies": [
-    "@paper-design/shaders-react"
-  ],
+  "dependencies": ["@paper-design/shaders-react"],
   "files": [
     {
       "path": "registry/remocn/shader-spiral/index.tsx",

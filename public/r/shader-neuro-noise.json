@@ -3,9 +3,7 @@
   "name": "shader-neuro-noise",
   "title": "Shader Neuro Noise",
   "description": "Organic neural-web noise field that slowly morphs.",
-  "dependencies": [
-    "@paper-design/shaders-react"
-  ],
+  "dependencies": ["@paper-design/shaders-react"],
   "files": [
     {
       "path": "registry/remocn/shader-neuro-noise/index.tsx",

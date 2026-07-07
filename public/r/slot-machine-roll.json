@@ -3,9 +3,7 @@
   "name": "slot-machine-roll",
   "title": "Slot Machine Roll",
   "description": "Vertical reel scrolls characters from one value to another.",
-  "dependencies": [
-    "remotion"
-  ],
+  "dependencies": ["remotion"],
   "files": [
     {
       "path": "registry/remocn/slot-machine-roll/index.tsx",

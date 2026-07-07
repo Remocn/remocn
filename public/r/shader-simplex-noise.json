@@ -3,9 +3,7 @@
   "name": "shader-simplex-noise",
   "title": "Shader Simplex Noise",
   "description": "Simplex noise flow field, smoother than Perlin.",
-  "dependencies": [
-    "@paper-design/shaders-react"
-  ],
+  "dependencies": ["@paper-design/shaders-react"],
   "files": [
     {
       "path": "registry/remocn/shader-simplex-noise/index.tsx",

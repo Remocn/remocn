@@ -190,7 +190,9 @@ export function TypewriterCodeBlock({
             <Token color={palette.type}>Typewriter</Token>
             <Token color={palette.plain}>{" } "}</Token>
             <Token color={palette.keyword}>from</Token>{" "}
-            <Token color={palette.string}>"@/components/remocn/typewriter"</Token>
+            <Token color={palette.string}>
+              "@/components/remocn/typewriter"
+            </Token>
             <Token color={palette.punctuation}>;</Token>
             {"\n\n"}
             <Token color={palette.keyword}>export function</Token>{" "}

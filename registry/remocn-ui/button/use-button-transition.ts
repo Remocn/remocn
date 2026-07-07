@@ -1,6 +1,12 @@
 "use client";
 
 import {
+  type ButtonState,
+  type ButtonStyle,
+  buttonStyle,
+  buttonStyleContext,
+} from "@/components/remocn/button";
+import {
   easings,
   mixOklch,
   type RemocnTheme,
@@ -8,12 +14,6 @@ import {
   useRemocnTheme,
   useStateTransition,
 } from "@/lib/remocn-ui";
-import {
-  buttonStyle,
-  buttonStyleContext,
-  type ButtonState,
-  type ButtonStyle,
-} from "@/components/remocn/button";
 
 export const DEFAULT_DURATION = 8;
 

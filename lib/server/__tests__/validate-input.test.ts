@@ -6,15 +6,22 @@
  * Pure function — no mocks needed; all logic is deterministic.
  */
 
-import { describe, expect, it } from "vitest";
-import { parseRenderInput, RenderInputError } from "@/lib/server/validate-input";
+import { describe, expect, it, mock } from "bun:test";
+
+mock.module("server-only", () => ({}));
+
+const { parseRenderInput, RenderInputError } = await import(
+  "@/lib/server/validate-input"
+);
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
 /** A minimal valid body that passes every rule. */
-function validBody(overrides?: Record<string, unknown>): Record<string, unknown> {
+function validBody(
+  overrides?: Record<string, unknown>,
+): Record<string, unknown> {
   return {
     repo: "vercel/next.js",
     totalStars: 120_000,
@@ -94,7 +101,10 @@ describe("parseRenderInput — valid payload", () => {
 
   it("accepts stargazers array of exactly 60 items", () => {
     const many = Array.from({ length: 60 }, (_, i) =>
-      stargazer({ login: `user${i}`, avatarUrl: `https://example.com/u/${i}` }),
+      stargazer({
+        login: `user${i}`,
+        avatarUrl: `https://avatars.githubusercontent.com/u/${i}`,
+      }),
     );
     const result = parseRenderInput(validBody({ stargazers: many }));
     expect(result.stargazers).toHaveLength(60);
@@ -180,9 +190,9 @@ describe("parseRenderInput — non-object body throws", () => {
 
 describe("parseRenderInput — orientation", () => {
   it("throws on unknown orientation", () => {
-    expect(() => parseRenderInput(validBody({ orientation: "diagonal" }))).toThrow(
-      RenderInputError,
-    );
+    expect(() =>
+      parseRenderInput(validBody({ orientation: "diagonal" })),
+    ).toThrow(RenderInputError);
   });
 
   it("throws when orientation is missing", () => {
@@ -238,7 +248,9 @@ describe("parseRenderInput — stargazer item shapes", () => {
 
   it("throws when login is missing", () => {
     expect(() =>
-      parseRenderInput(validBody({ stargazers: [stargazer({ login: undefined })] })),
+      parseRenderInput(
+        validBody({ stargazers: [stargazer({ login: undefined })] }),
+      ),
     ).toThrow(RenderInputError);
   });
 
@@ -265,7 +277,7 @@ describe("parseRenderInput — stargazer item shapes", () => {
   });
 
   it("throws when avatarUrl exceeds 512 chars", () => {
-    const longUrl = "https://example.com/" + "a".repeat(494);
+    const longUrl = `https://example.com/${"a".repeat(494)}`;
     expect(() =>
       parseRenderInput(
         validBody({ stargazers: [stargazer({ avatarUrl: longUrl })] }),
@@ -291,14 +303,16 @@ describe("parseRenderInput — stargazer item shapes", () => {
 });
 
 // ---------------------------------------------------------------------------
-// avatarUrl — http(s) enforcement (SSRF surface narrowing)
+// avatarUrl — GitHub avatar host allowlist (closes the SSRF window)
 // ---------------------------------------------------------------------------
 
-describe("parseRenderInput — avatarUrl must be http(s)", () => {
+describe("parseRenderInput — avatarUrl must be a GitHub avatar URL", () => {
   it("throws on a file:// avatarUrl", () => {
     expect(() =>
       parseRenderInput(
-        validBody({ stargazers: [stargazer({ avatarUrl: "file:///etc/passwd" })] }),
+        validBody({
+          stargazers: [stargazer({ avatarUrl: "file:///etc/passwd" })],
+        }),
       ),
     ).toThrow(RenderInputError);
   });
@@ -306,7 +320,9 @@ describe("parseRenderInput — avatarUrl must be http(s)", () => {
   it("throws on a javascript: avatarUrl", () => {
     expect(() =>
       parseRenderInput(
-        validBody({ stargazers: [stargazer({ avatarUrl: "javascript:alert(1)" })] }),
+        validBody({
+          stargazers: [stargazer({ avatarUrl: "javascript:alert(1)" })],
+        }),
       ),
     ).toThrow(RenderInputError);
   });
@@ -319,22 +335,122 @@ describe("parseRenderInput — avatarUrl must be http(s)", () => {
     ).toThrow(RenderInputError);
   });
 
-  it("accepts an http:// avatarUrl", () => {
-    const result = parseRenderInput(
-      validBody({ stargazers: [stargazer({ avatarUrl: "http://example.com/avatar.png" })] }),
-    );
-    expect(result.stargazers[0].avatarUrl).toBe("http://example.com/avatar.png");
-  });
-
-  it("accepts an https:// avatarUrl", () => {
+  it("accepts an https:// avatarUrl on the GitHub avatar host", () => {
     const result = parseRenderInput(
       validBody({
-        stargazers: [stargazer({ avatarUrl: "https://avatars.githubusercontent.com/u/99" })],
+        stargazers: [
+          stargazer({
+            avatarUrl: "https://avatars.githubusercontent.com/u/99",
+          }),
+        ],
       }),
     );
     expect(result.stargazers[0].avatarUrl).toBe(
       "https://avatars.githubusercontent.com/u/99",
     );
+  });
+
+  it("accepts a GitHub avatar URL with a query string", () => {
+    const result = parseRenderInput(
+      validBody({
+        stargazers: [
+          stargazer({
+            avatarUrl: "https://avatars.githubusercontent.com/u/1?v=4",
+          }),
+        ],
+      }),
+    );
+    expect(result.stargazers[0].avatarUrl).toBe(
+      "https://avatars.githubusercontent.com/u/1?v=4",
+    );
+  });
+
+  it("rejects an http:// downgrade of the GitHub avatar host", () => {
+    expect(() =>
+      parseRenderInput(
+        validBody({
+          stargazers: [
+            stargazer({
+              avatarUrl: "http://avatars.githubusercontent.com/u/1",
+            }),
+          ],
+        }),
+      ),
+    ).toThrow(RenderInputError);
+  });
+
+  it("rejects a non-GitHub https host", () => {
+    expect(() =>
+      parseRenderInput(
+        validBody({
+          stargazers: [
+            stargazer({ avatarUrl: "https://evil.example.com/a.png" }),
+          ],
+        }),
+      ),
+    ).toThrow(RenderInputError);
+  });
+
+  it("rejects a loopback IP avatarUrl", () => {
+    expect(() =>
+      parseRenderInput(
+        validBody({
+          stargazers: [stargazer({ avatarUrl: "http://127.0.0.1:8080/x" })],
+        }),
+      ),
+    ).toThrow(RenderInputError);
+  });
+
+  it("rejects the cloud metadata IP avatarUrl", () => {
+    expect(() =>
+      parseRenderInput(
+        validBody({
+          stargazers: [
+            stargazer({ avatarUrl: "http://169.254.169.254/latest/meta-data" }),
+          ],
+        }),
+      ),
+    ).toThrow(RenderInputError);
+  });
+
+  it("rejects an IPv6 loopback avatarUrl", () => {
+    expect(() =>
+      parseRenderInput(
+        validBody({
+          stargazers: [stargazer({ avatarUrl: "https://[::1]/x" })],
+        }),
+      ),
+    ).toThrow(RenderInputError);
+  });
+
+  it("throws a 400 RenderInputError on an unparseable URL", () => {
+    expect(() =>
+      parseRenderInput(
+        validBody({ stargazers: [stargazer({ avatarUrl: "not a url" })] }),
+      ),
+    ).toThrow(RenderInputError);
+  });
+
+  it("throws a 400 RenderInputError on a scheme-only URL", () => {
+    expect(() =>
+      parseRenderInput(
+        validBody({ stargazers: [stargazer({ avatarUrl: "https://" })] }),
+      ),
+    ).toThrow(RenderInputError);
+  });
+
+  it("rejects a hostname that merely starts with the allowed host (subdomain spoof)", () => {
+    expect(() =>
+      parseRenderInput(
+        validBody({
+          stargazers: [
+            stargazer({
+              avatarUrl: "https://avatars.githubusercontent.com.evil.com/x",
+            }),
+          ],
+        }),
+      ),
+    ).toThrow(RenderInputError);
   });
 });
 
@@ -344,9 +460,9 @@ describe("parseRenderInput — avatarUrl must be http(s)", () => {
 
 describe("parseRenderInput — accentColor", () => {
   it("throws when accentColor is not a hex color", () => {
-    expect(() =>
-      parseRenderInput(validBody({ accentColor: "red" })),
-    ).toThrow(RenderInputError);
+    expect(() => parseRenderInput(validBody({ accentColor: "red" }))).toThrow(
+      RenderInputError,
+    );
   });
 
   it("throws when accentColor lacks the leading #", () => {
@@ -356,9 +472,9 @@ describe("parseRenderInput — accentColor", () => {
   });
 
   it("throws when accentColor has 2 hex digits (too short)", () => {
-    expect(() =>
-      parseRenderInput(validBody({ accentColor: "#ff" })),
-    ).toThrow(RenderInputError);
+    expect(() => parseRenderInput(validBody({ accentColor: "#ff" }))).toThrow(
+      RenderInputError,
+    );
   });
 });
 
@@ -374,7 +490,9 @@ describe("parseRenderInput — repo", () => {
   });
 
   it("throws when repo is empty string", () => {
-    expect(() => parseRenderInput(validBody({ repo: "" }))).toThrow(RenderInputError);
+    expect(() => parseRenderInput(validBody({ repo: "" }))).toThrow(
+      RenderInputError,
+    );
   });
 
   it("throws when repo exceeds 200 chars", () => {
@@ -396,14 +514,14 @@ describe("parseRenderInput — totalStars", () => {
   });
 
   it("throws when totalStars is Infinity", () => {
-    expect(() =>
-      parseRenderInput(validBody({ totalStars: Infinity })),
-    ).toThrow(RenderInputError);
+    expect(() => parseRenderInput(validBody({ totalStars: Infinity }))).toThrow(
+      RenderInputError,
+    );
   });
 
   it("throws when totalStars is NaN", () => {
-    expect(() =>
-      parseRenderInput(validBody({ totalStars: NaN })),
-    ).toThrow(RenderInputError);
+    expect(() => parseRenderInput(validBody({ totalStars: NaN }))).toThrow(
+      RenderInputError,
+    );
   });
 });

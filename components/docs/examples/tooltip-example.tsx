@@ -1,9 +1,9 @@
 "use client";
 
-import { Cursor } from "@/registry/remocn-ui/cursor";
-import { useCursorPath } from "@/registry/remocn-ui/cursor/use-cursor-path";
 import { Button } from "@/registry/remocn-ui/button";
 import { useButtonTransition } from "@/registry/remocn-ui/button/use-button-transition";
+import { Cursor } from "@/registry/remocn-ui/cursor";
+import { useCursorPath } from "@/registry/remocn-ui/cursor/use-cursor-path";
 import { Tooltip } from "@/registry/remocn-ui/tooltip";
 import { useTooltipTransition } from "@/registry/remocn-ui/tooltip/use-tooltip-transition";
 

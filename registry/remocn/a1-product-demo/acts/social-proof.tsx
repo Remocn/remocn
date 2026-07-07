@@ -122,9 +122,7 @@ function TestimonialCard({
           >
             {item.name}
           </span>
-          <span
-            style={{ fontFamily: FONT, fontSize: 17, color: FLOW_MUTED }}
-          >
+          <span style={{ fontFamily: FONT, fontSize: 17, color: FLOW_MUTED }}>
             {item.role}
           </span>
         </div>

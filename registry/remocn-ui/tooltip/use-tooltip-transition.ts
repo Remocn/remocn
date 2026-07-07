@@ -1,15 +1,11 @@
 "use client";
 
 import {
-  easings,
-  type Step,
-  useStateTransition,
-} from "@/lib/remocn-ui";
-import {
-  tooltipStyle,
   type TooltipState,
   type TooltipStyle,
+  tooltipStyle,
 } from "@/components/remocn/tooltip";
+import { easings, type Step, useStateTransition } from "@/lib/remocn-ui";
 
 export const DEFAULT_DURATION = 8;
 

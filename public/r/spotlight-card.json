@@ -3,9 +3,7 @@
   "name": "spotlight-card",
   "title": "Spotlight Card",
   "description": "A card with a moonlight-cool radial spotlight that follows a synthetic cursor and lights up its microborder.",
-  "dependencies": [
-    "remotion"
-  ],
+  "dependencies": ["remotion"],
   "files": [
     {
       "path": "registry/remocn/spotlight-card/index.tsx",

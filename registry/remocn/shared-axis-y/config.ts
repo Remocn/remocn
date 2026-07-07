@@ -10,8 +10,16 @@ export const sharedAxisYConfig: ComponentConfig = {
   componentName: "SharedAxisY",
   importPath: "@/components/remocn/shared-axis-y",
   controls: {
-    fromText: { type: "text", default: "Layered navigation.", label: "From text" },
-    toText: { type: "text", default: "Hierarchy made clear.", label: "To text" },
+    fromText: {
+      type: "text",
+      default: "Layered navigation.",
+      label: "From text",
+    },
+    toText: {
+      type: "text",
+      default: "Hierarchy made clear.",
+      label: "To text",
+    },
     fontSize: {
       type: "number",
       default: 72,

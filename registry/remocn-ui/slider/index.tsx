@@ -1,6 +1,11 @@
 "use client";
 
-import { clamp01, mixOklch, type RemocnTheme, useRemocnTheme } from "@/lib/remocn-ui";
+import {
+  clamp01,
+  mixOklch,
+  type RemocnTheme,
+  useRemocnTheme,
+} from "@/lib/remocn-ui";
 
 export type SliderThumbState = "idle" | "hover" | "press";
 

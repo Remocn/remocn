@@ -1,11 +1,11 @@
 "use client";
 
-import type React from "react";
-import { AbsoluteFill, Easing, interpolate } from "remotion";
 import type {
   TransitionPresentation,
   TransitionPresentationComponentProps,
 } from "@remotion/transitions";
+import type React from "react";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
 
 const clampOpts = {
   extrapolateLeft: "clamp" as const,
@@ -39,9 +39,7 @@ const WhipPanPresentation: React.FC<
     direction === "left" || direction === "right" ? "x" : "y";
   const sign = direction === "left" || direction === "up" ? -1 : 1;
 
-  const offset = entering
-    ? (travel - 1) * 110 * sign
-    : travel * 110 * sign;
+  const offset = entering ? (travel - 1) * 110 * sign : travel * 110 * sign;
   const stretch = 1 + velocity * 0.12;
 
   const translate =

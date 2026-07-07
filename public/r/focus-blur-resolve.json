@@ -3,9 +3,7 @@
   "name": "focus-blur-resolve",
   "title": "Focus Blur Resolve",
   "description": "A premium focus pull from heavy blur to crisp text, then a soft blur-out exit.",
-  "dependencies": [
-    "remotion"
-  ],
+  "dependencies": ["remotion"],
   "files": [
     {
       "path": "registry/remocn/focus-blur-resolve/index.tsx",

@@ -62,9 +62,7 @@ export function CodeBlockCommand({
     <div
       className={cn(
         "not-prose relative overflow-hidden rounded-xl",
-        variant === "outline"
-          ? "border border-border bg-card"
-          : "bg-muted",
+        variant === "outline" ? "border border-border bg-card" : "bg-muted",
       )}
     >
       <TabsPrimitive.Root

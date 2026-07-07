@@ -1,15 +1,21 @@
-
 import { describe, expect, it } from "bun:test";
+import { defaultLightTheme } from "@/lib/remocn-ui";
+import { dropdownMenuItemConfig } from "../config";
 import {
   type DropdownMenuItemState,
   dropdownMenuItemStyle,
   dropdownMenuItemStyleContext,
 } from "../index";
-import { tweenDropdownMenuItemStyle, DEFAULT_DURATION } from "../use-dropdown-menu-item-transition";
-import { dropdownMenuItemConfig } from "../config";
-import { defaultLightTheme } from "@/lib/remocn-ui";
+import {
+  DEFAULT_DURATION,
+  tweenDropdownMenuItemStyle,
+} from "../use-dropdown-menu-item-transition";
 
-const VALID_STATES: readonly DropdownMenuItemState[] = ["idle", "hover", "press"];
+const VALID_STATES: readonly DropdownMenuItemState[] = [
+  "idle",
+  "hover",
+  "press",
+];
 
 type SnippetValues = {
   state?: string;
@@ -24,13 +30,15 @@ const ctx = dropdownMenuItemStyleContext(defaultLightTheme);
 describe("DropdownMenuItemState union", () => {
   it("contains exactly the three documented states", () => {
     const control = dropdownMenuItemConfig.controls.state;
-    if (control.type !== "select") throw new Error("state control must be a select");
+    if (control.type !== "select")
+      throw new Error("state control must be a select");
     expect(control.options).toEqual(["idle", "hover", "press"]);
   });
 
   it("every VALID_STATES entry is assignable (no typos in the fixture)", () => {
     const control = dropdownMenuItemConfig.controls.state;
-    if (control.type !== "select") throw new Error("state control must be a select");
+    if (control.type !== "select")
+      throw new Error("state control must be a select");
     expect(VALID_STATES).toHaveLength(3);
     for (const s of VALID_STATES) {
       expect(control.options).toContain(s);
@@ -45,7 +53,8 @@ describe("dropdownMenuItemConfig.controls.state", () => {
 
   it("has exactly the three DropdownMenuItemState options in order", () => {
     const control = dropdownMenuItemConfig.controls.state;
-    if (control.type !== "select") throw new Error("state control must be a select");
+    if (control.type !== "select")
+      throw new Error("state control must be a select");
     expect(control.options).toEqual(["idle", "hover", "press"]);
   });
 
@@ -56,7 +65,8 @@ describe("dropdownMenuItemConfig.controls.state", () => {
 
   it("every option is a member of the DropdownMenuItemState union", () => {
     const control = dropdownMenuItemConfig.controls.state;
-    if (control.type !== "select") throw new Error("state control must be a select");
+    if (control.type !== "select")
+      throw new Error("state control must be a select");
     for (const option of control.options) {
       expect(VALID_STATES).toContain(option as DropdownMenuItemState);
     }
@@ -64,21 +74,22 @@ describe("dropdownMenuItemConfig.controls.state", () => {
 });
 
 describe("dropdownMenuItemConfig.snippet: state prop emission", () => {
-  it("emits state=\"idle\" for the idle option", () => {
+  it('emits state="idle" for the idle option', () => {
     expect(snippet({ state: "idle" })).toContain('state="idle"');
   });
 
-  it("emits state=\"hover\" for the hover option", () => {
+  it('emits state="hover" for the hover option', () => {
     expect(snippet({ state: "hover" })).toContain('state="hover"');
   });
 
-  it("emits state=\"press\" for the press option", () => {
+  it('emits state="press" for the press option', () => {
     expect(snippet({ state: "press" })).toContain('state="press"');
   });
 
   it("emits the correct state for every control option", () => {
     const control = dropdownMenuItemConfig.controls.state;
-    if (control.type !== "select") throw new Error("state control must be a select");
+    if (control.type !== "select")
+      throw new Error("state control must be a select");
     for (const state of control.options) {
       const out = snippet({ state });
       expect(out).toContain(`state="${state}"`);
@@ -89,7 +100,7 @@ describe("dropdownMenuItemConfig.snippet: state prop emission", () => {
 describe("dropdownMenuItemConfig.snippet: import line", () => {
   it("includes `import { DropdownMenuItem }` from the correct path", () => {
     const out = snippet({ state: "hover" });
-    expect(out).toContain('import { DropdownMenuItem }');
+    expect(out).toContain("import { DropdownMenuItem }");
     expect(out).toContain('from "@/components/remocn/dropdown-menu-item"');
   });
 });
@@ -107,8 +118,9 @@ describe("dropdownMenuItemConfig.snippet: default props are omitted", () => {
 
 describe("dropdownMenuItemConfig.snippet: non-default props are emitted", () => {
   it("emits a non-default label", () => {
-    expect(snippet({ state: "hover", label: "Settings" }))
-      .toContain('label="Settings"');
+    expect(snippet({ state: "hover", label: "Settings" })).toContain(
+      'label="Settings"',
+    );
   });
 });
 
@@ -116,7 +128,7 @@ describe("dropdownMenuItemConfig.snippet: structural round-trip", () => {
   const out = snippet({ state: "hover" });
 
   it("starts with the import line", () => {
-    expect(out.startsWith('import { DropdownMenuItem }')).toBe(true);
+    expect(out.startsWith("import { DropdownMenuItem }")).toBe(true);
   });
 
   it("contains a <DropdownMenuItem JSX opening", () => {

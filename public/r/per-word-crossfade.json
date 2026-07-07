@@ -3,9 +3,7 @@
   "name": "per-word-crossfade",
   "title": "Per-Word Crossfade",
   "description": "Words gently fade into place one after another, with a short vertical drift for a calm keynote rhythm.",
-  "dependencies": [
-    "remotion"
-  ],
+  "dependencies": ["remotion"],
   "files": [
     {
       "path": "registry/remocn/per-word-crossfade/index.tsx",

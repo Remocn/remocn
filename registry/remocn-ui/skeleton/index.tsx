@@ -1,8 +1,8 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { type RemocnTheme, useRemocnTheme } from "@/lib/remocn-ui";
 import { SkeletonBlock } from "@/components/remocn/skeleton-block";
+import { type RemocnTheme, useRemocnTheme } from "@/lib/remocn-ui";
 
 export type SkeletonState = "loading" | "loaded";
 

@@ -1,20 +1,23 @@
-
 import { describe, expect, it } from "bun:test";
+import { clamp01, defaultDarkTheme, defaultLightTheme } from "@/lib/remocn-ui";
+import { sliderConfig } from "../config";
 import {
-  sliderThumbStyle,
-  sliderStyleContext,
   type SliderThumbState,
+  sliderStyleContext,
+  sliderThumbStyle,
 } from "../index";
 import {
-  tweenSliderStyle,
-  sliderStyleAt,
   DEFAULT_DURATION,
   type SliderStep,
+  sliderStyleAt,
+  tweenSliderStyle,
 } from "../use-slider-transition";
-import { sliderConfig } from "../config";
-import { defaultLightTheme, defaultDarkTheme, easings, clamp01 } from "@/lib/remocn-ui";
 
-const VALID_THUMB_STATES: readonly SliderThumbState[] = ["idle", "hover", "press"];
+const VALID_THUMB_STATES: readonly SliderThumbState[] = [
+  "idle",
+  "hover",
+  "press",
+];
 
 type SnippetValues = {
   value?: number;
@@ -129,8 +132,12 @@ describe("sliderThumbStyle: press state — larger thumb + visible ring", () => 
 
 describe("sliderThumbStyle: press thumbScale > hover thumbScale > idle", () => {
   it("press > hover > idle thumbScale ordering", () => {
-    expect(sliderThumbStyle("press").thumbScale).toBeGreaterThan(sliderThumbStyle("hover").thumbScale);
-    expect(sliderThumbStyle("hover").thumbScale).toBeGreaterThan(sliderThumbStyle("idle").thumbScale);
+    expect(sliderThumbStyle("press").thumbScale).toBeGreaterThan(
+      sliderThumbStyle("hover").thumbScale,
+    );
+    expect(sliderThumbStyle("hover").thumbScale).toBeGreaterThan(
+      sliderThumbStyle("idle").thumbScale,
+    );
   });
 });
 
@@ -212,7 +219,14 @@ describe("sliderStyleContext: dark theme differs from light on theme-derived fie
 describe("sliderStyleContext: all fields are non-empty strings", () => {
   it("every SliderStyleContext field is a non-empty string for light theme", () => {
     const ctx = sliderStyleContext(defaultLightTheme);
-    for (const key of ["track", "range", "thumbBg", "thumbRing", "ring", "valueText"] as const) {
+    for (const key of [
+      "track",
+      "range",
+      "thumbBg",
+      "thumbRing",
+      "ring",
+      "valueText",
+    ] as const) {
       expect(typeof ctx[key]).toBe("string");
       expect(ctx[key].length).toBeGreaterThan(0);
     }
@@ -220,7 +234,7 @@ describe("sliderStyleContext: all fields are non-empty strings", () => {
 });
 
 describe("tweenSliderStyle: t=0 returns values equal to `a`", () => {
-  const a = { value: 0,   thumbScale: 1,   ringOpacity: 0 };
+  const a = { value: 0, thumbScale: 1, ringOpacity: 0 };
   const b = { value: 100, thumbScale: 1.1, ringOpacity: 1 };
   const r = tweenSliderStyle(a, b, 0);
 
@@ -236,7 +250,7 @@ describe("tweenSliderStyle: t=0 returns values equal to `a`", () => {
 });
 
 describe("tweenSliderStyle: t=1 returns values equal to `b`", () => {
-  const a = { value: 0,   thumbScale: 1,   ringOpacity: 0 };
+  const a = { value: 0, thumbScale: 1, ringOpacity: 0 };
   const b = { value: 100, thumbScale: 1.1, ringOpacity: 1 };
   const r = tweenSliderStyle(a, b, 1);
 
@@ -252,7 +266,7 @@ describe("tweenSliderStyle: t=1 returns values equal to `b`", () => {
 });
 
 describe("tweenSliderStyle: t=0.5 midpoint", () => {
-  const a = { value: 0,   thumbScale: 1,   ringOpacity: 0 };
+  const a = { value: 0, thumbScale: 1, ringOpacity: 0 };
   const b = { value: 100, thumbScale: 1.1, ringOpacity: 1 };
   const r = tweenSliderStyle(a, b, 0.5);
 
@@ -321,7 +335,10 @@ describe("sliderStyleAt: before first thumb step — holds at first.thumbState p
 });
 
 describe("sliderStyleAt: past last value step — rests at last.value", () => {
-  const steps: SliderStep[] = [{ at: 0, value: 0 }, { at: 18, value: 75 }];
+  const steps: SliderStep[] = [
+    { at: 0, value: 0 },
+    { at: 18, value: 75 },
+  ];
 
   it("raw=50 → value=75 (rests at last)", () => {
     expect(sliderStyleAt(steps, 50).value).toBeCloseTo(75, 10);
@@ -329,7 +346,10 @@ describe("sliderStyleAt: past last value step — rests at last.value", () => {
 });
 
 describe("sliderStyleAt: value channel mid-window uses easings.out", () => {
-  const steps: SliderStep[] = [{ at: 0, value: 0 }, { at: 18, value: 100 }];
+  const steps: SliderStep[] = [
+    { at: 0, value: 0 },
+    { at: 18, value: 100 },
+  ];
 
   it("value at raw=9 is 87.5 (out-eased, not linear 50)", () => {
     expect(sliderStyleAt(steps, 9).value).toBeCloseTo(87.5, 8);
@@ -342,7 +362,10 @@ describe("sliderStyleAt: value channel mid-window uses easings.out", () => {
 });
 
 describe("sliderStyleAt: thumb channel mid-window uses easings.out", () => {
-  const steps: SliderStep[] = [{ at: 0, thumbState: "idle" }, { at: 18, thumbState: "hover" }];
+  const steps: SliderStep[] = [
+    { at: 0, thumbState: "idle" },
+    { at: 18, thumbState: "hover" },
+  ];
 
   it("thumbScale at raw=9 is 1.0875 (out-eased)", () => {
     expect(sliderStyleAt(steps, 9).thumbScale).toBeCloseTo(1.0875, 8);
@@ -371,7 +394,10 @@ describe("sliderStyleAt: dual-channel steps fold independently", () => {
 });
 
 describe("sliderStyleAt: channels can have different step counts", () => {
-  const valueOnlySteps: SliderStep[] = [{ at: 0, value: 0 }, { at: 18, value: 100 }];
+  const valueOnlySteps: SliderStep[] = [
+    { at: 0, value: 0 },
+    { at: 18, value: 100 },
+  ];
 
   it("thumb is idle when no thumb steps are present", () => {
     const r = sliderStyleAt(valueOnlySteps, 9);
@@ -379,7 +405,10 @@ describe("sliderStyleAt: channels can have different step counts", () => {
     expect(r.ringOpacity).toBe(sliderThumbStyle("idle").ringOpacity);
   });
 
-  const thumbOnlySteps: SliderStep[] = [{ at: 0, thumbState: "idle" }, { at: 18, thumbState: "hover" }];
+  const thumbOnlySteps: SliderStep[] = [
+    { at: 0, thumbState: "idle" },
+    { at: 18, thumbState: "hover" },
+  ];
 
   it("value is 0 when no value steps are present", () => {
     expect(sliderStyleAt(thumbOnlySteps, 9).value).toBe(0);
@@ -393,7 +422,10 @@ describe("sliderStyleAt: past last with both channels", () => {
     const r = sliderStyleAt(steps, 50);
     expect(r.value).toBeCloseTo(75, 10);
     expect(r.thumbScale).toBeCloseTo(sliderThumbStyle("press").thumbScale, 10);
-    expect(r.ringOpacity).toBeCloseTo(sliderThumbStyle("press").ringOpacity, 10);
+    expect(r.ringOpacity).toBeCloseTo(
+      sliderThumbStyle("press").ringOpacity,
+      10,
+    );
   });
 });
 
@@ -491,10 +523,14 @@ describe("sliderConfig.snippet: default props are omitted", () => {
 
 describe("sliderConfig.snippet: non-default props are emitted", () => {
   it("emits thumbState='hover' when non-default", () => {
-    expect(snippet({ value: 40, thumbState: "hover" })).toContain('thumbState="hover"');
+    expect(snippet({ value: 40, thumbState: "hover" })).toContain(
+      'thumbState="hover"',
+    );
   });
   it("emits thumbState='press' when non-default", () => {
-    expect(snippet({ value: 40, thumbState: "press" })).toContain('thumbState="press"');
+    expect(snippet({ value: 40, thumbState: "press" })).toContain(
+      'thumbState="press"',
+    );
   });
   it("emits width={480} when non-default", () => {
     expect(snippet({ value: 40, width: 480 })).toContain("width={480}");
@@ -512,7 +548,9 @@ describe("sliderConfig.snippet: thumbState options round-trip", () => {
     if (ctrl.type !== "select") throw new Error("expected select");
     const nonDefault = ctrl.options.filter((o) => o !== "idle");
     for (const thumbState of nonDefault) {
-      expect(snippet({ value: 40, thumbState })).toContain(`thumbState="${thumbState}"`);
+      expect(snippet({ value: 40, thumbState })).toContain(
+        `thumbState="${thumbState}"`,
+      );
     }
   });
 });

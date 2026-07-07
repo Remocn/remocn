@@ -1,6 +1,5 @@
 "use client";
 
-import { loadFont as loadHeadingFont } from "@remotion/google-fonts/Fraunces";
 import { loadFont as loadBodyFont } from "@remotion/google-fonts/Inter";
 import {
   AbsoluteFill,

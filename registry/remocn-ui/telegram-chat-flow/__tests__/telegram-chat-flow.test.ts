@@ -1,6 +1,10 @@
-
 import { describe, expect, it } from "bun:test";
-import { telegramChatFlowSchedule, telegramChatFlowDuration, sendPulse, type TelegramMessage } from "../index";
+import {
+  sendPulse,
+  type TelegramMessage,
+  telegramChatFlowDuration,
+  telegramChatFlowSchedule,
+} from "../index";
 
 const MESSAGES: TelegramMessage[] = [
   { from: "me", text: "hi" },
@@ -126,7 +130,9 @@ describe("telegramChatFlowDuration", () => {
   });
 
   it("telegramChatFlowDuration(messages) equals telegramChatFlowSchedule(messages).duration", () => {
-    expect(telegramChatFlowDuration(MESSAGES)).toBe(telegramChatFlowSchedule(MESSAGES).duration);
+    expect(telegramChatFlowDuration(MESSAGES)).toBe(
+      telegramChatFlowSchedule(MESSAGES).duration,
+    );
   });
 
   it("telegramChatFlowDuration(messages, 2) equals Math.ceil(schedule.duration / 2)", () => {

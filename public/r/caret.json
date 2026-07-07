@@ -3,9 +3,7 @@
   "name": "caret",
   "title": "UI Caret",
   "description": "A blinking text caret — a controlled vertical bar, or a pure motion atom that blinks deterministically from useCurrentFrame.",
-  "dependencies": [
-    "remotion"
-  ],
+  "dependencies": ["remotion"],
   "registryDependencies": [],
   "files": [
     {

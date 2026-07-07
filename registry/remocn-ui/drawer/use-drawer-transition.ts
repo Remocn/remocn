@@ -1,18 +1,18 @@
 "use client";
 
 import {
+  type DrawerState,
+  type DrawerStyle,
+  drawerStyle,
+  drawerStyleContext,
+} from "@/components/remocn/drawer";
+import {
   easings,
   type RemocnTheme,
   type Step,
   useRemocnTheme,
   useStateTransition,
 } from "@/lib/remocn-ui";
-import {
-  drawerStyle,
-  drawerStyleContext,
-  type DrawerState,
-  type DrawerStyle,
-} from "@/components/remocn/drawer";
 
 export const DEFAULT_DURATION = 12;
 
@@ -22,7 +22,8 @@ export function tweenDrawerStyle(
   t: number,
 ): DrawerStyle {
   return {
-    overlayOpacity: a.overlayOpacity + (b.overlayOpacity - a.overlayOpacity) * t,
+    overlayOpacity:
+      a.overlayOpacity + (b.overlayOpacity - a.overlayOpacity) * t,
     panelOpacity: a.panelOpacity + (b.panelOpacity - a.panelOpacity) * t,
     panelTranslateY:
       a.panelTranslateY + (b.panelTranslateY - a.panelTranslateY) * t,

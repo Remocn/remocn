@@ -1,11 +1,11 @@
 "use client";
 
-import { easings, type Step, useStateTransition } from "@/lib/remocn-ui";
 import {
-  messageBubbleStyle,
   type MessageBubbleState,
   type MessageBubbleStyle,
+  messageBubbleStyle,
 } from "@/components/remocn/message-bubble";
+import { easings, type Step, useStateTransition } from "@/lib/remocn-ui";
 
 export const DEFAULT_DURATION = 14;
 
@@ -38,5 +38,9 @@ export function useMessageBubbleTransition(
     defaultDuration,
   );
   const t = easings.out(progress);
-  return tweenMessageBubbleStyle(messageBubbleStyle(from), messageBubbleStyle(to), t);
+  return tweenMessageBubbleStyle(
+    messageBubbleStyle(from),
+    messageBubbleStyle(to),
+    t,
+  );
 }

@@ -3,12 +3,8 @@
   "name": "typing-indicator",
   "title": "UI Typing Indicator",
   "description": "A continuous typing animation: N dots bounce with a staggered sine wave. A motion atom — it reads the frame and takes color, size, gap, and speed props, defaulting to currentColor so it inherits the bubble it sits in.",
-  "dependencies": [
-    "remotion"
-  ],
-  "registryDependencies": [
-    "@remocn/remocn-ui"
-  ],
+  "dependencies": ["remotion"],
+  "registryDependencies": ["@remocn/remocn-ui"],
   "files": [
     {
       "path": "registry/remocn-ui/typing-indicator/index.tsx",

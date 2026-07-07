@@ -1,13 +1,8 @@
-
 import { describe, expect, it } from "bun:test";
-import {
-  type SelectState,
-  selectStyle,
-  selectStyleContext,
-} from "../index";
-import { tweenSelectStyle, DEFAULT_DURATION } from "../use-select-transition";
-import { selectConfig } from "../config";
 import { defaultLightTheme } from "@/lib/remocn-ui";
+import { selectConfig } from "../config";
+import { type SelectState, selectStyle, selectStyleContext } from "../index";
+import { DEFAULT_DURATION, tweenSelectStyle } from "../use-select-transition";
 
 const VALID_STATES: readonly SelectState[] = ["opened", "closed"];
 
@@ -26,13 +21,15 @@ const ctx = selectStyleContext(defaultLightTheme);
 describe("SelectState union", () => {
   it("contains exactly the two documented states", () => {
     const control = selectConfig.controls.state;
-    if (control.type !== "select") throw new Error("state control must be a select");
+    if (control.type !== "select")
+      throw new Error("state control must be a select");
     expect(control.options).toEqual(["opened", "closed"]);
   });
 
   it("every VALID_STATES entry is assignable (no typos in the fixture)", () => {
     const control = selectConfig.controls.state;
-    if (control.type !== "select") throw new Error("state control must be a select");
+    if (control.type !== "select")
+      throw new Error("state control must be a select");
     expect(VALID_STATES).toHaveLength(2);
     for (const s of VALID_STATES) {
       expect(control.options).toContain(s);
@@ -47,7 +44,8 @@ describe("selectConfig.controls.state", () => {
 
   it("has exactly the two SelectState options in order", () => {
     const control = selectConfig.controls.state;
-    if (control.type !== "select") throw new Error("state control must be a select");
+    if (control.type !== "select")
+      throw new Error("state control must be a select");
     expect(control.options).toEqual(["opened", "closed"]);
   });
 
@@ -58,7 +56,8 @@ describe("selectConfig.controls.state", () => {
 
   it("every option is a member of the SelectState union", () => {
     const control = selectConfig.controls.state;
-    if (control.type !== "select") throw new Error("state control must be a select");
+    if (control.type !== "select")
+      throw new Error("state control must be a select");
     for (const option of control.options) {
       expect(VALID_STATES).toContain(option as SelectState);
     }
@@ -66,17 +65,18 @@ describe("selectConfig.controls.state", () => {
 });
 
 describe("selectConfig.snippet: state prop emission", () => {
-  it("emits state=\"opened\" for the opened option", () => {
+  it('emits state="opened" for the opened option', () => {
     expect(snippet({ state: "opened" })).toContain('state="opened"');
   });
 
-  it("emits state=\"closed\" for the closed option", () => {
+  it('emits state="closed" for the closed option', () => {
     expect(snippet({ state: "closed" })).toContain('state="closed"');
   });
 
   it("emits the correct state for every control option", () => {
     const control = selectConfig.controls.state;
-    if (control.type !== "select") throw new Error("state control must be a select");
+    if (control.type !== "select")
+      throw new Error("state control must be a select");
     for (const state of control.options) {
       const out = snippet({ state });
       expect(out).toContain(`state="${state}"`);
@@ -87,7 +87,7 @@ describe("selectConfig.snippet: state prop emission", () => {
 describe("selectConfig.snippet: import line", () => {
   it("includes `import { Select }` from the correct path", () => {
     const out = snippet({ state: "opened" });
-    expect(out).toContain('import { Select }');
+    expect(out).toContain("import { Select }");
     expect(out).toContain('from "@/components/remocn/select"');
   });
 });
@@ -111,23 +111,25 @@ describe("selectConfig.snippet: default props are omitted", () => {
   it("omits highlightedIndex when it equals the default -1", () => {
     expect(allDefaults).not.toContain("highlightedIndex=");
   });
-
 });
 
 describe("selectConfig.snippet: non-default props are emitted", () => {
   it("emits a non-default label", () => {
-    expect(snippet({ state: "opened", label: "Choose a color" }))
-      .toContain('label="Choose a color"');
+    expect(snippet({ state: "opened", label: "Choose a color" })).toContain(
+      'label="Choose a color"',
+    );
   });
 
   it("emits a non-default selectedIndex", () => {
-    expect(snippet({ state: "opened", selectedIndex: 2 }))
-      .toContain("selectedIndex={2}");
+    expect(snippet({ state: "opened", selectedIndex: 2 })).toContain(
+      "selectedIndex={2}",
+    );
   });
 
   it("emits a non-default highlightedIndex", () => {
-    expect(snippet({ state: "opened", highlightedIndex: 1 }))
-      .toContain("highlightedIndex={1}");
+    expect(snippet({ state: "opened", highlightedIndex: 1 })).toContain(
+      "highlightedIndex={1}",
+    );
   });
 });
 
@@ -135,7 +137,7 @@ describe("selectConfig.snippet: structural round-trip", () => {
   const out = snippet({ state: "opened" });
 
   it("starts with the import line", () => {
-    expect(out.startsWith('import { Select }')).toBe(true);
+    expect(out.startsWith("import { Select }")).toBe(true);
   });
 
   it("contains a <Select JSX opening", () => {

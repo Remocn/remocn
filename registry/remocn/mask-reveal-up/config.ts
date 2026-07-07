@@ -10,7 +10,11 @@ export const maskRevealUpConfig: ComponentConfig = {
   componentName: "MaskRevealUp",
   importPath: "@/components/remocn/mask-reveal-up",
   controls: {
-    text: { type: "text", default: "Designed to move.\nBuilt to focus.", label: "Text" },
+    text: {
+      type: "text",
+      default: "Designed to move.\nBuilt to focus.",
+      label: "Text",
+    },
     distance: {
       type: "number",
       default: 30,

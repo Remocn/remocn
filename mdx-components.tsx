@@ -1,15 +1,15 @@
 import defaultMdxComponents from "fumadocs-ui/mdx";
 import type { MDXComponents } from "mdx/types";
+import { BlockPreview } from "@/components/docs/block-preview";
 import { Note, Warning } from "@/components/docs/callout";
 import { ComponentCardGrid } from "@/components/docs/component-card-grid";
 import { ComponentExample } from "@/components/docs/component-example";
 import { ComponentPreview } from "@/components/docs/component-preview";
-import { UiComponentPreview } from "@/components/docs/ui-component-preview";
-import { BlockPreview } from "@/components/docs/block-preview";
 import { Dependencies } from "@/components/docs/dependencies";
 import { InstallAll } from "@/components/docs/install-all";
 import { InstallBlock } from "@/components/docs/install-block";
 import { PropsTable } from "@/components/docs/props-table";
+import { UiComponentPreview } from "@/components/docs/ui-component-preview";
 
 /**
  * MDX prose mapping for remocn docs.

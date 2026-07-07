@@ -1,11 +1,11 @@
 "use client";
 
-import { Cursor } from "@/registry/remocn-ui/cursor";
-import { useCursorPath } from "@/registry/remocn-ui/cursor/use-cursor-path";
+import { useCurrentState } from "@/lib/remocn-ui";
 import { ContextMenu } from "@/registry/remocn-ui/context-menu";
 import { useContextMenuTransition } from "@/registry/remocn-ui/context-menu/use-context-menu-transition";
+import { Cursor } from "@/registry/remocn-ui/cursor";
+import { useCursorPath } from "@/registry/remocn-ui/cursor/use-cursor-path";
 import { useDropdownMenuItemTransition } from "@/registry/remocn-ui/dropdown-menu-item/use-dropdown-menu-item-transition";
-import { useCurrentState } from "@/lib/remocn-ui";
 
 // The cursor right-clicks near the center of the file card.
 // The context menu opens AT this point (its top-left corner = click position).
@@ -25,18 +25,18 @@ export const contextMenuExampleControls = ["items"] as const;
 export const ContextMenuExampleScene = (p: ContextMenuExampleProps = {}) => {
   // Cursor: park → ease to card → right-click → move DOWN onto row 1 → click it → leave.
   const cursorStyle = useCursorPath([
-    { at: 0,   x: 80,      y: 60  },
-    { at: 30,  x: CLICK_X, y: CLICK_Y, duration: 26 },
-    { at: 42,  x: CLICK_X, y: CLICK_Y, click: true, duration: 0 },
-    { at: 58,  x: ROW1_X,  y: ROW1_Y,  duration: 14 },
-    { at: 72,  x: ROW1_X,  y: ROW1_Y,  click: true, duration: 0 },
+    { at: 0, x: 80, y: 60 },
+    { at: 30, x: CLICK_X, y: CLICK_Y, duration: 26 },
+    { at: 42, x: CLICK_X, y: CLICK_Y, click: true, duration: 0 },
+    { at: 58, x: ROW1_X, y: ROW1_Y, duration: 14 },
+    { at: 72, x: ROW1_X, y: ROW1_Y, click: true, duration: 0 },
     { at: 104, x: ROW1_X + 180, y: ROW1_Y + 80, duration: 20 },
   ]);
 
   // Menu: opens just after the right-click, closes after the row interaction.
   const menuStyle = useContextMenuTransition([
-    { at: 44,  state: "opened", duration: 10 },
-    { at: 92,  state: "closed", duration: 10 },
+    { at: 44, state: "opened", duration: 10 },
+    { at: 92, state: "closed", duration: 10 },
   ]);
 
   // Row 1 ("Reload"): idle → hover → press → idle.
@@ -44,7 +44,7 @@ export const ContextMenuExampleScene = (p: ContextMenuExampleProps = {}) => {
     [
       { at: 60, state: "hover" },
       { at: 72, state: "press" },
-      { at: 82, state: "idle"  },
+      { at: 82, state: "idle" },
     ],
     "idle",
   );
@@ -69,7 +69,8 @@ export const ContextMenuExampleScene = (p: ContextMenuExampleProps = {}) => {
           display: "flex",
           alignItems: "center",
           gap: 12,
-          fontFamily: "var(--font-geist-sans), -apple-system, BlinkMacSystemFont, sans-serif",
+          fontFamily:
+            "var(--font-geist-sans), -apple-system, BlinkMacSystemFont, sans-serif",
         }}
       >
         <svg width={20} height={20} viewBox="0 0 24 24" fill="none">
@@ -80,9 +81,17 @@ export const ContextMenuExampleScene = (p: ContextMenuExampleProps = {}) => {
             strokeLinecap="round"
             strokeLinejoin="round"
           />
-          <path d="M14 2v6h6" stroke="oklch(0.55 0 0)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          <path
+            d="M14 2v6h6"
+            stroke="oklch(0.55 0 0)"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
         </svg>
-        <span style={{ fontSize: 14, fontWeight: 500, color: "oklch(0.3 0 0)" }}>
+        <span
+          style={{ fontSize: 14, fontWeight: 500, color: "oklch(0.3 0 0)" }}
+        >
           report.pdf
         </span>
       </div>
@@ -114,7 +123,9 @@ export const contextMenuExampleCode = (
 
   const props: string[] = [];
   if (items !== undefined) props.push(`items={${JSON.stringify(items)}}`);
-  const extraProps = props.length ? `\n          ${props.join("\n          ")}` : "";
+  const extraProps = props.length
+    ? `\n          ${props.join("\n          ")}`
+    : "";
 
   return `import { Cursor } from "@/components/remocn/cursor";
 import { useCursorPath } from "@/components/remocn/use-cursor-path";

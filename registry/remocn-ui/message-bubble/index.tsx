@@ -67,7 +67,9 @@ export function messageBubbleStyleContext(
   };
 }
 
-export function messageBubbleStyle(state: MessageBubbleState): MessageBubbleStyle {
+export function messageBubbleStyle(
+  state: MessageBubbleState,
+): MessageBubbleStyle {
   switch (state) {
     case "visible":
       return { opacity: 1, translateY: 0, scale: 1 };
@@ -109,7 +111,8 @@ export function MessageBubble({
         width: "100%",
         opacity: v.opacity,
         transform: `translateY(${v.translateY}px) scale(${v.scale})`,
-        transformOrigin: ctx.align === "flex-end" ? "bottom right" : "bottom left",
+        transformOrigin:
+          ctx.align === "flex-end" ? "bottom right" : "bottom left",
       }}
     >
       <div style={{ position: "relative", maxWidth, minWidth: 0 }}>

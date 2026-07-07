@@ -1,13 +1,8 @@
-
 import { describe, expect, it } from "bun:test";
-import {
-  type RadioState,
-  radioStyle,
-  radioStyleContext,
-} from "../index";
-import { tweenRadioStyle } from "../use-radio-transition";
-import { radioConfig } from "../config";
 import { defaultLightTheme } from "@/lib/remocn-ui";
+import { radioConfig } from "../config";
+import { type RadioState, radioStyle, radioStyleContext } from "../index";
+import { tweenRadioStyle } from "../use-radio-transition";
 
 const VALID_STATES: readonly RadioState[] = ["unchecked", "checked"];
 
@@ -24,13 +19,15 @@ const snippet = (values: SnippetValues): string =>
 describe("RadioState union", () => {
   it("contains exactly the two documented states", () => {
     const control = radioConfig.controls.state;
-    if (control.type !== "select") throw new Error("state control must be a select");
+    if (control.type !== "select")
+      throw new Error("state control must be a select");
     expect(control.options).toEqual(["unchecked", "checked"]);
   });
 
   it("every VALID_STATES entry is assignable (no typos in the fixture)", () => {
     const control = radioConfig.controls.state;
-    if (control.type !== "select") throw new Error("state control must be a select");
+    if (control.type !== "select")
+      throw new Error("state control must be a select");
     expect(VALID_STATES).toHaveLength(2);
     for (const s of VALID_STATES) {
       expect(control.options).toContain(s);
@@ -45,7 +42,8 @@ describe("radioConfig.controls.state", () => {
 
   it("has exactly the two RadioState options in order", () => {
     const control = radioConfig.controls.state;
-    if (control.type !== "select") throw new Error("state control must be a select");
+    if (control.type !== "select")
+      throw new Error("state control must be a select");
     expect(control.options).toEqual(["unchecked", "checked"]);
   });
 
@@ -56,7 +54,8 @@ describe("radioConfig.controls.state", () => {
 
   it("every option is a member of the RadioState union", () => {
     const control = radioConfig.controls.state;
-    if (control.type !== "select") throw new Error("state control must be a select");
+    if (control.type !== "select")
+      throw new Error("state control must be a select");
     for (const option of control.options) {
       expect(VALID_STATES).toContain(option as RadioState);
     }
@@ -64,17 +63,18 @@ describe("radioConfig.controls.state", () => {
 });
 
 describe("radioConfig.snippet: state prop emission", () => {
-  it("emits state=\"unchecked\" for the unchecked option", () => {
+  it('emits state="unchecked" for the unchecked option', () => {
     expect(snippet({ state: "unchecked" })).toContain('state="unchecked"');
   });
 
-  it("emits state=\"checked\" for the checked option", () => {
+  it('emits state="checked" for the checked option', () => {
     expect(snippet({ state: "checked" })).toContain('state="checked"');
   });
 
   it("emits the correct state for every control option", () => {
     const control = radioConfig.controls.state;
-    if (control.type !== "select") throw new Error("state control must be a select");
+    if (control.type !== "select")
+      throw new Error("state control must be a select");
     for (const state of control.options) {
       const out = snippet({ state });
       expect(out).toContain(`state="${state}"`);
@@ -99,7 +99,7 @@ describe("radioConfig.snippet: NEVER emits steps or action", () => {
 describe("radioConfig.snippet: import line", () => {
   it("includes `import { Radio }` from the correct path", () => {
     const out = snippet({ state: "checked" });
-    expect(out).toContain('import { Radio }');
+    expect(out).toContain("import { Radio }");
     expect(out).toContain('from "@/components/remocn/radio"');
   });
 });
@@ -127,7 +127,9 @@ describe("radioConfig.snippet: default props are omitted", () => {
 
 describe("radioConfig.snippet: non-default props are emitted", () => {
   it("emits a non-default label", () => {
-    expect(snippet({ state: "checked", label: "Option A" })).toContain('label="Option A"');
+    expect(snippet({ state: "checked", label: "Option A" })).toContain(
+      'label="Option A"',
+    );
   });
 
   it("emits a non-default size", () => {
@@ -135,7 +137,9 @@ describe("radioConfig.snippet: non-default props are emitted", () => {
   });
 
   it("emits a non-default primary color", () => {
-    expect(snippet({ state: "checked", primary: "#6366f1" })).toContain('primary="#6366f1"');
+    expect(snippet({ state: "checked", primary: "#6366f1" })).toContain(
+      'primary="#6366f1"',
+    );
   });
 });
 
@@ -143,7 +147,7 @@ describe("radioConfig.snippet: structural round-trip", () => {
   const out = snippet({ state: "checked" });
 
   it("starts with the import line", () => {
-    expect(out.startsWith('import { Radio }')).toBe(true);
+    expect(out.startsWith("import { Radio }")).toBe(true);
   });
 
   it("contains a <Radio JSX opening", () => {

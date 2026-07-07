@@ -1,7 +1,10 @@
 import { useCurrentFrame, useVideoConfig } from "remotion";
 import type { Step } from "./types";
 
-export function framesFor(d: number | { seconds: number }, fps: number): number {
+export function framesFor(
+  d: number | { seconds: number },
+  fps: number,
+): number {
   return typeof d === "number" ? d : Math.round(d.seconds * fps);
 }
 

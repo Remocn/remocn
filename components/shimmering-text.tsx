@@ -1,26 +1,26 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import type { Variants } from "motion/react"
-import { motion } from "motion/react"
+import type { Variants } from "motion/react";
+import { motion } from "motion/react";
+import * as React from "react";
 
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils";
 
 export type ShimmeringTextProps = Omit<
   React.ComponentProps<typeof motion.span>,
   "children"
 > & {
   /** The text to render with the shimmering effect. */
-  text: string
+  text: string;
   /**
    * Duration in seconds for one shimmer cycle.
    * @defaultValue 1 */
-  duration?: number
+  duration?: number;
   /**
    * Whether the shimmer animation is paused.
    * @defaultValue false */
-  isStopped?: boolean
-}
+  isStopped?: boolean;
+};
 
 export function ShimmeringText({
   text,
@@ -50,15 +50,15 @@ export function ShimmeringText({
         },
       },
     }),
-    [duration, text.length]
-  )
+    [duration, text.length],
+  );
 
   return (
     <motion.span
       className={cn(
         "inline-block select-none",
         "[--color:var(--muted-foreground)] [--shimmering-color:var(--foreground)]",
-        className
+        className,
       )}
       {...props}
     >
@@ -76,5 +76,5 @@ export function ShimmeringText({
       ))}
       <span className="sr-only">{text}</span>
     </motion.span>
-  )
+  );
 }

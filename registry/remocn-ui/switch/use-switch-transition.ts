@@ -1,6 +1,12 @@
 "use client";
 
 import {
+  type SwitchState,
+  type SwitchStyle,
+  switchStyle,
+  switchStyleContext,
+} from "@/components/remocn/switch";
+import {
   easings,
   mixOklch,
   type RemocnTheme,
@@ -8,12 +14,6 @@ import {
   useRemocnTheme,
   useStateTransition,
 } from "@/lib/remocn-ui";
-import {
-  switchStyle,
-  switchStyleContext,
-  type SwitchState,
-  type SwitchStyle,
-} from "@/components/remocn/switch";
 
 export const DEFAULT_DURATION = 10;
 

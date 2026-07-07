@@ -3,9 +3,7 @@
   "name": "rgb-glitch-text",
   "title": "RGB Glitch Text",
   "description": "Three RGB-offset text copies jitter for a brief glitch window.",
-  "dependencies": [
-    "remotion"
-  ],
+  "dependencies": ["remotion"],
   "files": [
     {
       "path": "registry/remocn/rgb-glitch-text/index.tsx",

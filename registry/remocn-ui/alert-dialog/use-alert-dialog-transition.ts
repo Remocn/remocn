@@ -1,18 +1,18 @@
 "use client";
 
 import {
+  type AlertDialogState,
+  type AlertDialogStyle,
+  alertDialogStyle,
+  alertDialogStyleContext,
+} from "@/components/remocn/alert-dialog";
+import {
   easings,
   type RemocnTheme,
   type Step,
   useRemocnTheme,
   useStateTransition,
 } from "@/lib/remocn-ui";
-import {
-  alertDialogStyle,
-  alertDialogStyleContext,
-  type AlertDialogState,
-  type AlertDialogStyle,
-} from "@/components/remocn/alert-dialog";
 
 export const DEFAULT_DURATION = 12;
 
@@ -22,7 +22,8 @@ export function tweenAlertDialogStyle(
   t: number,
 ): AlertDialogStyle {
   return {
-    overlayOpacity: a.overlayOpacity + (b.overlayOpacity - a.overlayOpacity) * t,
+    overlayOpacity:
+      a.overlayOpacity + (b.overlayOpacity - a.overlayOpacity) * t,
     popupOpacity: a.popupOpacity + (b.popupOpacity - a.popupOpacity) * t,
     popupScale: a.popupScale + (b.popupScale - a.popupScale) * t,
     popupTranslateY:

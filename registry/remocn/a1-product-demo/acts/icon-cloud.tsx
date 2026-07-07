@@ -48,7 +48,13 @@ const RAW_CHIPS: RawChip[] = [
   { label: "Goals", kind: "goals", color: "#D2487A", dx: 540, dy: 140 },
   { label: "Time Tracking", kind: "time", color: "#2E9CB0", dx: 280, dy: 282 },
   { label: "Reports", kind: "reports", color: "#D69A2A", dx: -40, dy: 304 },
-  { label: "Automations", kind: "automations", color: "#2BA38C", dx: -330, dy: 250 },
+  {
+    label: "Automations",
+    kind: "automations",
+    color: "#2BA38C",
+    dx: -330,
+    dy: 250,
+  },
   { label: "AI Assistant", kind: "ai", color: "#9A55D6", dx: -540, dy: 130 },
 ];
 
@@ -282,7 +288,13 @@ function HeadWord({
   const color = interpolateColors(reveal, [0, 1], [FLOW_MUTED, FLOW_INK]);
 
   return (
-    <span style={{ display: "inline-block", overflow: "hidden", paddingBottom: "0.06em" }}>
+    <span
+      style={{
+        display: "inline-block",
+        overflow: "hidden",
+        paddingBottom: "0.06em",
+      }}
+    >
       <span
         style={{
           display: "inline-block",

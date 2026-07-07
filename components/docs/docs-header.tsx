@@ -1,8 +1,8 @@
+import { NavDesktop } from "@/app/(home)/components/header-nav";
 import {
   HeaderActions,
   HeaderLogo,
 } from "@/app/(home)/components/header-parts";
-import { NavDesktop } from "@/app/(home)/components/header-nav";
 import { NAV_LINKS } from "@/config/site";
 
 /**

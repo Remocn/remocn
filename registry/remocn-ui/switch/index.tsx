@@ -18,11 +18,18 @@ export interface SwitchProps {
 
 const SIZE_STYLES: Record<
   SwitchSize,
-  { trackW: number; trackH: number; thumb: number; pad: number; fontSize: number; gap: number }
+  {
+    trackW: number;
+    trackH: number;
+    thumb: number;
+    pad: number;
+    fontSize: number;
+    gap: number;
+  }
 > = {
-  sm:      { trackW: 36, trackH: 20, thumb: 16, pad: 2, fontSize: 13, gap: 8 },
+  sm: { trackW: 36, trackH: 20, thumb: 16, pad: 2, fontSize: 13, gap: 8 },
   default: { trackW: 44, trackH: 24, thumb: 20, pad: 2, fontSize: 15, gap: 10 },
-  lg:      { trackW: 52, trackH: 28, thumb: 24, pad: 2, fontSize: 17, gap: 12 },
+  lg: { trackW: 52, trackH: 28, thumb: 24, pad: 2, fontSize: 17, gap: 12 },
 };
 
 export interface SwitchStyle {

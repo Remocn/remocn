@@ -2,9 +2,9 @@
 
 import { Cursor } from "@/registry/remocn-ui/cursor";
 import { useCursorPath } from "@/registry/remocn-ui/cursor/use-cursor-path";
+import type { ResizableDirection } from "@/registry/remocn-ui/resizable";
 import { Resizable } from "@/registry/remocn-ui/resizable";
 import { useResizableTransition } from "@/registry/remocn-ui/resizable/use-resizable-transition";
-import type { ResizableDirection } from "@/registry/remocn-ui/resizable";
 
 const X_CENTER = 640;
 const X_RIGHT = 750;
@@ -56,8 +56,11 @@ export const resizableExampleCode = (
   const direction = values.direction as string | undefined;
 
   const props: string[] = [];
-  if (direction !== undefined && direction !== "horizontal") props.push(`direction="${direction}"`);
-  const resizableExtraProps = props.length ? `\n      ${props.join("\n      ")}\n      ` : "";
+  if (direction !== undefined && direction !== "horizontal")
+    props.push(`direction="${direction}"`);
+  const resizableExtraProps = props.length
+    ? `\n      ${props.join("\n      ")}\n      `
+    : "";
 
   return `import { Cursor } from "@/components/remocn/cursor";
 import { useCursorPath } from "@/components/remocn/use-cursor-path";

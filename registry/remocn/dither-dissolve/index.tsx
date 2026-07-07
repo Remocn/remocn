@@ -1,11 +1,11 @@
 "use client";
 
-import type React from "react";
-import { AbsoluteFill, interpolate } from "remotion";
 import type {
   TransitionPresentation,
   TransitionPresentationComponentProps,
 } from "@remotion/transitions";
+import type React from "react";
+import { AbsoluteFill, interpolate } from "remotion";
 import { ShaderDithering } from "@/components/remocn/shader-dithering";
 
 const clampOpts = {

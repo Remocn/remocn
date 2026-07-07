@@ -71,7 +71,7 @@ export function ScaleDownFade({
       extrapolateLeft: "clamp",
       extrapolateRight: "clamp",
       easing: exitEasing,
-    }
+    },
   );
 
   const scale = scaleEnter + scaleExitDelta;

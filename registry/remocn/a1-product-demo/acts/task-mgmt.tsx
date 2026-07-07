@@ -45,16 +45,8 @@ const CARD_SHADOW = "0 18px 44px rgba(30, 28, 22, 0.10)";
 function FlagIcon({ color }: { color: string }) {
   return (
     <svg width={22} height={22} viewBox="0 0 24 24" fill="none" aria-hidden>
-      <path
-        d="M6 3v18"
-        stroke={color}
-        strokeWidth={2}
-        strokeLinecap="round"
-      />
-      <path
-        d="M6 4h11l-2.2 3.3L17 11H6V4Z"
-        fill={color}
-      />
+      <path d="M6 3v18" stroke={color} strokeWidth={2} strokeLinecap="round" />
+      <path d="M6 4h11l-2.2 3.3L17 11H6V4Z" fill={color} />
     </svg>
   );
 }

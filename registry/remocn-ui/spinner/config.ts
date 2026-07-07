@@ -4,7 +4,14 @@ export const spinnerConfig: ComponentConfig = {
   componentName: "Spinner",
   importPath: "@/components/remocn/spinner",
   controls: {
-    size: { type: "number", default: 20, min: 8, max: 64, step: 2, label: "Size" },
+    size: {
+      type: "number",
+      default: 20,
+      min: 8,
+      max: 64,
+      step: 2,
+      label: "Size",
+    },
     strokeWidth: {
       type: "number",
       default: 2.5,

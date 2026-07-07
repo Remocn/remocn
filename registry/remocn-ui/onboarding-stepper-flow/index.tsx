@@ -1,14 +1,14 @@
 "use client";
 
 import { Button } from "@/components/remocn/button";
-import { useButtonTransition } from "@/components/remocn/use-button-transition";
 import { Input } from "@/components/remocn/input";
-import { useInputTransition } from "@/components/remocn/use-input-transition";
 import { Radio } from "@/components/remocn/radio";
-import { useRadioTransition } from "@/components/remocn/use-radio-transition";
 import { Stepper } from "@/components/remocn/stepper";
-import { useStepperTransition } from "@/components/remocn/use-stepper-transition";
 import { Switch } from "@/components/remocn/switch";
+import { useButtonTransition } from "@/components/remocn/use-button-transition";
+import { useInputTransition } from "@/components/remocn/use-input-transition";
+import { useRadioTransition } from "@/components/remocn/use-radio-transition";
+import { useStepperTransition } from "@/components/remocn/use-stepper-transition";
 import { useSwitchTransition } from "@/components/remocn/use-switch-transition";
 import { clamp01, type RemocnTheme } from "@/lib/remocn-ui";
 
@@ -83,7 +83,13 @@ export function OnboardingStepperFlow({
     <div style={{ position: "relative", width: "100%", height: "100%" }}>
       {}
       <div
-        style={{ position: "absolute", left: 0, right: 0, top: 96, height: 100 }}
+        style={{
+          position: "absolute",
+          left: 0,
+          right: 0,
+          top: 96,
+          height: 100,
+        }}
       >
         <Stepper style={stepperStyle} steps={steps} theme={theme} />
       </div>
@@ -99,7 +105,9 @@ export function OnboardingStepperFlow({
         }}
       >
         {}
-        <div style={{ position: "absolute", inset: 0, opacity: panelOpacity(0) }}>
+        <div
+          style={{ position: "absolute", inset: 0, opacity: panelOpacity(0) }}
+        >
           <Input
             style={nameStyle}
             placeholder={name}
@@ -109,16 +117,16 @@ export function OnboardingStepperFlow({
         </div>
 
         {}
-        <div style={{ position: "absolute", inset: 0, opacity: panelOpacity(1) }}>
-          <Radio
-            style={planStyle}
-            label={plans[1] ?? "Pro"}
-            theme={theme}
-          />
+        <div
+          style={{ position: "absolute", inset: 0, opacity: panelOpacity(1) }}
+        >
+          <Radio style={planStyle} label={plans[1] ?? "Pro"} theme={theme} />
         </div>
 
         {}
-        <div style={{ position: "absolute", inset: 0, opacity: panelOpacity(2) }}>
+        <div
+          style={{ position: "absolute", inset: 0, opacity: panelOpacity(2) }}
+        >
           <Switch
             style={settingsStyle}
             label="Email notifications"
@@ -129,7 +137,13 @@ export function OnboardingStepperFlow({
 
       {}
       <div
-        style={{ position: "absolute", left: 0, right: 0, top: NAV_TOP, height: 64 }}
+        style={{
+          position: "absolute",
+          left: 0,
+          right: 0,
+          top: NAV_TOP,
+          height: 64,
+        }}
       >
         <Button label={navLabel} style={navStyle} theme={theme} />
       </div>

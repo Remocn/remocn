@@ -1,7 +1,7 @@
 "use client";
 
-import type React from "react";
 import { loadFont as loadMono } from "@remotion/google-fonts/JetBrainsMono";
+import type React from "react";
 import {
   AbsoluteFill,
   Easing,

@@ -3,9 +3,7 @@
   "name": "shader-water",
   "title": "Shader Water",
   "description": "Caustic water-surface ripples with subtle refraction.",
-  "dependencies": [
-    "@paper-design/shaders-react"
-  ],
+  "dependencies": ["@paper-design/shaders-react"],
   "files": [
     {
       "path": "registry/remocn/shader-water/index.tsx",

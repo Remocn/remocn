@@ -8,7 +8,15 @@ export const grainDissolveConfig: ComponentConfig = {
     shape: {
       type: "select",
       default: "blob",
-      options: ["wave", "dots", "truchet", "corners", "ripple", "blob", "sphere"],
+      options: [
+        "wave",
+        "dots",
+        "truchet",
+        "corners",
+        "ripple",
+        "blob",
+        "sphere",
+      ],
       label: "Shape",
     },
     noise: {

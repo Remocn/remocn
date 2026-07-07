@@ -3,12 +3,8 @@
   "name": "glass-code-walk",
   "title": "Glass Code Walk",
   "description": "A camera that scans a glass code block top to bottom as it types, then pulls back to a centered hold.",
-  "dependencies": [
-    "remotion"
-  ],
-  "registryDependencies": [
-    "@remocn/glass-code-block"
-  ],
+  "dependencies": ["remotion"],
+  "registryDependencies": ["@remocn/glass-code-block"],
   "files": [
     {
       "path": "registry/remocn/glass-code-walk/index.tsx",

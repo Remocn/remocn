@@ -6,7 +6,10 @@ import { FadeThrough } from "@/registry/remocn/fade-through";
 export const FadeThroughExampleScene = () => (
   <>
     <Sequence durationInFrames={40}>
-      <FadeThrough fromText="Calm transitions." toText="Fade through content." />
+      <FadeThrough
+        fromText="Calm transitions."
+        toText="Fade through content."
+      />
     </Sequence>
     <Sequence from={40} durationInFrames={40}>
       <FadeThrough

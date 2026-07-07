@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import { loadFont } from "@remotion/google-fonts/Inter";
+import { useState } from "react";
 import {
   AbsoluteFill,
   Img,
@@ -419,7 +419,7 @@ function FollowButton({
   layout: { x: number; y: number; w: number; h: number };
   pressScale: number;
 }) {
-  const followed = followStateAt(frame, speed);
+  const _followed = followStateAt(frame, speed);
   const flip = interpolate(
     frame * speed,
     [CLICK_FRAME, CLICK_FRAME + 10],
@@ -651,11 +651,9 @@ function SamplePost({
 }
 
 function CursorLayer({
-  theme,
   accent,
   style,
 }: {
-  theme: "light" | "dark";
   accent: string;
   style: CursorStyle;
 }) {
@@ -667,11 +665,7 @@ function CursorLayer({
         pointerEvents: "none",
       }}
     >
-      <Cursor
-        variant="pointer"
-        rippleColor={accent}
-        style={style}
-      />
+      <Cursor variant="pointer" rippleColor={accent} style={style} />
     </div>
   );
 }
@@ -735,7 +729,6 @@ export function XFollowCard({
       transform: `translateY(${b.translateY}px)`,
     };
   };
-
 
   return (
     <AbsoluteFill style={{ background: "transparent" }}>
@@ -865,7 +858,7 @@ export function XFollowCard({
           </div>
         </div>
 
-        <CursorLayer theme="light" accent={accentColor} style={cursorStyle} />
+        <CursorLayer accent={accentColor} style={cursorStyle} />
       </div>
     </AbsoluteFill>
   );

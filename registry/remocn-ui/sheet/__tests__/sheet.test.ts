@@ -1,13 +1,8 @@
-
 import { describe, expect, it } from "bun:test";
-import {
-  type SheetState,
-  sheetStyle,
-  sheetStyleContext,
-} from "../index";
-import { tweenSheetStyle, DEFAULT_DURATION } from "../use-sheet-transition";
-import { sheetConfig } from "../config";
 import { defaultLightTheme } from "@/lib/remocn-ui";
+import { sheetConfig } from "../config";
+import { type SheetState, sheetStyle, sheetStyleContext } from "../index";
+import { DEFAULT_DURATION, tweenSheetStyle } from "../use-sheet-transition";
 
 const VALID_STATES: readonly SheetState[] = ["opened", "closed"];
 
@@ -27,13 +22,15 @@ const ctx = sheetStyleContext(defaultLightTheme);
 describe("SheetState union", () => {
   it("contains exactly the two documented states", () => {
     const control = sheetConfig.controls.state;
-    if (control.type !== "select") throw new Error("state control must be a select");
+    if (control.type !== "select")
+      throw new Error("state control must be a select");
     expect(control.options).toEqual(["opened", "closed"]);
   });
 
   it("every VALID_STATES entry is assignable (no typos in the fixture)", () => {
     const control = sheetConfig.controls.state;
-    if (control.type !== "select") throw new Error("state control must be a select");
+    if (control.type !== "select")
+      throw new Error("state control must be a select");
     expect(VALID_STATES).toHaveLength(2);
     for (const s of VALID_STATES) {
       expect(control.options).toContain(s);
@@ -48,7 +45,8 @@ describe("sheetConfig.controls.state", () => {
 
   it("has exactly the two SheetState options in order", () => {
     const control = sheetConfig.controls.state;
-    if (control.type !== "select") throw new Error("state control must be a select");
+    if (control.type !== "select")
+      throw new Error("state control must be a select");
     expect(control.options).toEqual(["opened", "closed"]);
   });
 
@@ -59,7 +57,8 @@ describe("sheetConfig.controls.state", () => {
 
   it("every option is a member of the SheetState union", () => {
     const control = sheetConfig.controls.state;
-    if (control.type !== "select") throw new Error("state control must be a select");
+    if (control.type !== "select")
+      throw new Error("state control must be a select");
     for (const option of control.options) {
       expect(VALID_STATES).toContain(option as SheetState);
     }
@@ -67,17 +66,18 @@ describe("sheetConfig.controls.state", () => {
 });
 
 describe("sheetConfig.snippet: state prop emission", () => {
-  it("emits state=\"opened\" for the opened option", () => {
+  it('emits state="opened" for the opened option', () => {
     expect(snippet({ state: "opened" })).toContain('state="opened"');
   });
 
-  it("emits state=\"closed\" for the closed option", () => {
+  it('emits state="closed" for the closed option', () => {
     expect(snippet({ state: "closed" })).toContain('state="closed"');
   });
 
   it("emits the correct state for every control option", () => {
     const control = sheetConfig.controls.state;
-    if (control.type !== "select") throw new Error("state control must be a select");
+    if (control.type !== "select")
+      throw new Error("state control must be a select");
     for (const state of control.options) {
       const out = snippet({ state });
       expect(out).toContain(`state="${state}"`);
@@ -96,7 +96,7 @@ describe("sheetConfig.snippet: NEVER emits steps", () => {
 describe("sheetConfig.snippet: import line", () => {
   it("includes `import { Sheet }` from the correct path", () => {
     const out = snippet({ state: "opened" });
-    expect(out).toContain('import { Sheet }');
+    expect(out).toContain("import { Sheet }");
     expect(out).toContain('from "@/components/remocn/sheet"');
   });
 });
@@ -105,7 +105,8 @@ describe("sheetConfig.snippet: default props are omitted", () => {
   const allDefaults = snippet({
     state: "opened",
     title: "Edit profile",
-    description: "Make changes to your profile here. Click save when you're done.",
+    description:
+      "Make changes to your profile here. Click save when you're done.",
     actionLabel: "Save changes",
     cancelLabel: "Cancel",
   });
@@ -129,23 +130,30 @@ describe("sheetConfig.snippet: default props are omitted", () => {
 
 describe("sheetConfig.snippet: non-default props are emitted", () => {
   it("emits a non-default title", () => {
-    expect(snippet({ state: "opened", title: "Edit workspace settings" }))
-      .toContain('title="Edit workspace settings"');
+    expect(
+      snippet({ state: "opened", title: "Edit workspace settings" }),
+    ).toContain('title="Edit workspace settings"');
   });
 
   it("emits a non-default description", () => {
-    expect(snippet({ state: "opened", description: "Update your workspace name and settings." }))
-      .toContain('description="Update your workspace name and settings."');
+    expect(
+      snippet({
+        state: "opened",
+        description: "Update your workspace name and settings.",
+      }),
+    ).toContain('description="Update your workspace name and settings."');
   });
 
   it("emits a non-default actionLabel", () => {
-    expect(snippet({ state: "opened", actionLabel: "Confirm" }))
-      .toContain('actionLabel="Confirm"');
+    expect(snippet({ state: "opened", actionLabel: "Confirm" })).toContain(
+      'actionLabel="Confirm"',
+    );
   });
 
   it("emits a non-default cancelLabel", () => {
-    expect(snippet({ state: "opened", cancelLabel: "Go back" }))
-      .toContain('cancelLabel="Go back"');
+    expect(snippet({ state: "opened", cancelLabel: "Go back" })).toContain(
+      'cancelLabel="Go back"',
+    );
   });
 });
 
@@ -153,7 +161,7 @@ describe("sheetConfig.snippet: structural round-trip", () => {
   const out = snippet({ state: "opened" });
 
   it("starts with the import line", () => {
-    expect(out.startsWith('import { Sheet }')).toBe(true);
+    expect(out.startsWith("import { Sheet }")).toBe(true);
   });
 
   it("contains a <Sheet JSX opening", () => {

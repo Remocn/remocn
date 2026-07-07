@@ -9,11 +9,11 @@ import {
   parseAsStringLiteral,
 } from "nuqs";
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { BackdropFill } from "@/registry/remocn/backdrop";
-import { Backdrop } from "@/registry/remocn/backdrop";
 import type { ControlConfig } from "@/lib/customizer-config";
 import { usePrefersReducedMotion } from "@/lib/use-prefers-reduced-motion";
 import { cn } from "@/lib/utils";
+import type { BackdropFill } from "@/registry/remocn/backdrop";
+import { Backdrop } from "@/registry/remocn/backdrop";
 
 /**
  * Shared internals for the docs preview widgets. Extracted verbatim from
@@ -30,6 +30,7 @@ import { cn } from "@/lib/utils";
  * so multiple previews on one page never collide.
  */
 export function buildParsers(name: string, controls: ControlConfig) {
+  // biome-ignore lint/suspicious/noExplicitAny: holds nuqs parsers of differing generic types (string/number/boolean); no common narrower type exists
   const parsers: Record<string, any> = {};
   const urlKeys: Record<string, string> = {};
   const prefix = name.replace(/-/g, "_");
@@ -67,6 +68,7 @@ export function buildParsers(name: string, controls: ControlConfig) {
 export function PreviewStage({
   name,
   Component,
+  load,
   inputProps,
   durationInFrames,
   fps,
@@ -75,7 +77,10 @@ export function PreviewStage({
   previewBackdrop,
 }: {
   name: string;
-  Component: React.ComponentType<any>;
+  // biome-ignore lint/suspicious/noExplicitAny: dynamically-loaded Remotion composition, props shape varies per component
+  Component?: React.ComponentType<any>;
+  // biome-ignore lint/suspicious/noExplicitAny: dynamically-loaded Remotion composition, props shape varies per component
+  load?: () => Promise<{ default: React.ComponentType<any> }>;
   inputProps: Record<string, unknown>;
   durationInFrames: number;
   fps: number;
@@ -129,15 +134,31 @@ export function PreviewStage({
     };
   }, [mounted]);
 
-  const Composition = useMemo(() => {
-    if (!previewBackdrop) return Component;
-    const Wrapped = (p: Record<string, unknown>) => (
-      <Backdrop fill={previewBackdrop} padding={0} radius={0} shadow="">
-        <Component {...p} />
-      </Backdrop>
-    );
-    return Wrapped;
-  }, [Component, previewBackdrop]);
+  const compProps = useMemo<
+    // biome-ignore lint/suspicious/noExplicitAny: dynamically-loaded Remotion composition, props shape varies per component
+    | { lazyComponent: () => Promise<{ default: React.ComponentType<any> }> }
+    // biome-ignore lint/suspicious/noExplicitAny: dynamically-loaded Remotion composition, props shape varies per component
+    | { component: React.ComponentType<any> }
+  >(() => {
+    const wrap =
+      // biome-ignore lint/suspicious/noExplicitAny: dynamically-loaded Remotion composition, props shape varies per component
+      (Inner: React.ComponentType<any>) => (p: Record<string, unknown>) =>
+        previewBackdrop ? (
+          <Backdrop fill={previewBackdrop} padding={0} radius={0} shadow="">
+            <Inner {...p} />
+          </Backdrop>
+        ) : (
+          <Inner {...p} />
+        );
+
+    if (load) {
+      return {
+        lazyComponent: () =>
+          load().then(({ default: Inner }) => ({ default: wrap(Inner) })),
+      };
+    }
+    return { component: wrap(Component ?? (() => null)) };
+  }, [Component, load, previewBackdrop]);
 
   return (
     <div
@@ -158,7 +179,7 @@ export function PreviewStage({
         >
           <Player
             ref={playerRef}
-            component={Composition}
+            {...compProps}
             inputProps={inputProps}
             durationInFrames={durationInFrames}
             fps={fps}

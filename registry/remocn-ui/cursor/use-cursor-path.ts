@@ -1,12 +1,8 @@
 "use client";
 
 import { useCurrentFrame } from "remotion";
-import {
-  clamp01,
-  type EasingName,
-  easings,
-} from "@/lib/remocn-ui";
 import type { CursorStyle } from "@/components/remocn/cursor";
+import { clamp01, type EasingName, easings } from "@/lib/remocn-ui";
 
 export interface CursorWaypoint {
   at: number;

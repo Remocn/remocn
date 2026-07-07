@@ -89,7 +89,7 @@ export function AnimatedBarChart({
                   filter: `drop-shadow(0 4px 16px ${barColor}55)`,
                 }}
               />
-              {labels && labels[index] && (
+              {labels?.[index] && (
                 <text
                   x={x + barWidth / 2}
                   y={baseY + 28}

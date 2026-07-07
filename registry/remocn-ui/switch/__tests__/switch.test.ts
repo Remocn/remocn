@@ -1,13 +1,8 @@
-
 import { describe, expect, it } from "bun:test";
-import {
-  type SwitchState,
-  switchStyle,
-  switchStyleContext,
-} from "../index";
-import { tweenSwitchStyle } from "../use-switch-transition";
-import { switchConfig } from "../config";
 import { defaultLightTheme } from "@/lib/remocn-ui";
+import { switchConfig } from "../config";
+import { type SwitchState, switchStyle, switchStyleContext } from "../index";
+import { tweenSwitchStyle } from "../use-switch-transition";
 
 const VALID_STATES: readonly SwitchState[] = ["unchecked", "checked"];
 
@@ -24,13 +19,15 @@ const snippet = (values: SnippetValues): string =>
 describe("SwitchState union", () => {
   it("contains exactly the two documented states", () => {
     const control = switchConfig.controls.state;
-    if (control.type !== "select") throw new Error("state control must be a select");
+    if (control.type !== "select")
+      throw new Error("state control must be a select");
     expect(control.options).toEqual(["unchecked", "checked"]);
   });
 
   it("every VALID_STATES entry is assignable (no typos in the fixture)", () => {
     const control = switchConfig.controls.state;
-    if (control.type !== "select") throw new Error("state control must be a select");
+    if (control.type !== "select")
+      throw new Error("state control must be a select");
     expect(VALID_STATES).toHaveLength(2);
     for (const s of VALID_STATES) {
       expect(control.options).toContain(s);
@@ -45,7 +42,8 @@ describe("switchConfig.controls.state", () => {
 
   it("has exactly the two SwitchState options in order", () => {
     const control = switchConfig.controls.state;
-    if (control.type !== "select") throw new Error("state control must be a select");
+    if (control.type !== "select")
+      throw new Error("state control must be a select");
     expect(control.options).toEqual(["unchecked", "checked"]);
   });
 
@@ -56,7 +54,8 @@ describe("switchConfig.controls.state", () => {
 
   it("every option is a member of the SwitchState union", () => {
     const control = switchConfig.controls.state;
-    if (control.type !== "select") throw new Error("state control must be a select");
+    if (control.type !== "select")
+      throw new Error("state control must be a select");
     for (const option of control.options) {
       expect(VALID_STATES).toContain(option as SwitchState);
     }
@@ -64,17 +63,18 @@ describe("switchConfig.controls.state", () => {
 });
 
 describe("switchConfig.snippet: state prop emission", () => {
-  it("emits state=\"unchecked\" for the unchecked option", () => {
+  it('emits state="unchecked" for the unchecked option', () => {
     expect(snippet({ state: "unchecked" })).toContain('state="unchecked"');
   });
 
-  it("emits state=\"checked\" for the checked option", () => {
+  it('emits state="checked" for the checked option', () => {
     expect(snippet({ state: "checked" })).toContain('state="checked"');
   });
 
   it("emits the correct state for every control option", () => {
     const control = switchConfig.controls.state;
-    if (control.type !== "select") throw new Error("state control must be a select");
+    if (control.type !== "select")
+      throw new Error("state control must be a select");
     for (const state of control.options) {
       const out = snippet({ state });
       expect(out).toContain(`state="${state}"`);
@@ -99,7 +99,7 @@ describe("switchConfig.snippet: NEVER emits steps or action", () => {
 describe("switchConfig.snippet: import line", () => {
   it("includes `import { Switch }` from the correct path", () => {
     const out = snippet({ state: "checked" });
-    expect(out).toContain('import { Switch }');
+    expect(out).toContain("import { Switch }");
     expect(out).toContain('from "@/components/remocn/switch"');
   });
 });
@@ -127,7 +127,9 @@ describe("switchConfig.snippet: default props are omitted", () => {
 
 describe("switchConfig.snippet: non-default props are emitted", () => {
   it("emits a non-default label", () => {
-    expect(snippet({ state: "checked", label: "Enable notifications" })).toContain('label="Enable notifications"');
+    expect(
+      snippet({ state: "checked", label: "Enable notifications" }),
+    ).toContain('label="Enable notifications"');
   });
 
   it("emits a non-default size", () => {
@@ -135,7 +137,9 @@ describe("switchConfig.snippet: non-default props are emitted", () => {
   });
 
   it("emits a non-default primary color", () => {
-    expect(snippet({ state: "checked", primary: "#6366f1" })).toContain('primary="#6366f1"');
+    expect(snippet({ state: "checked", primary: "#6366f1" })).toContain(
+      'primary="#6366f1"',
+    );
   });
 });
 
@@ -143,7 +147,7 @@ describe("switchConfig.snippet: structural round-trip", () => {
   const out = snippet({ state: "checked" });
 
   it("starts with the import line", () => {
-    expect(out.startsWith('import { Switch }')).toBe(true);
+    expect(out.startsWith("import { Switch }")).toBe(true);
   });
 
   it("contains a <Switch JSX opening", () => {

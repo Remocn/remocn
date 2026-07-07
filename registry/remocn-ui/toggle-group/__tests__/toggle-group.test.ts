@@ -1,17 +1,16 @@
-
 import { describe, expect, it } from "bun:test";
+import { defaultLightTheme } from "@/lib/remocn-ui";
+import { toggleGroupConfig } from "../config";
 import {
-  type ToggleGroupState,
   type ToggleGroupItem,
+  type ToggleGroupState,
   toggleGroupStyle,
   toggleGroupStyleContext,
 } from "../index";
 import {
-  tweenToggleGroupStyle,
   DEFAULT_DURATION,
+  tweenToggleGroupStyle,
 } from "../use-toggle-group-transition";
-import { toggleGroupConfig } from "../config";
-import { defaultLightTheme } from "@/lib/remocn-ui";
 
 const DEFAULT_ITEMS: ToggleGroupItem[] = [
   { value: "Monthly", label: "Monthly" },
@@ -271,7 +270,9 @@ describe("resolveToggleGroupTransition: before first step", () => {
 });
 
 describe("resolveToggleGroupTransition: at boundary (progress=0, t=0)", () => {
-  const steps = [{ from: 10, state: "Yearly" as ToggleGroupState, duration: 14 }];
+  const steps = [
+    { from: 10, state: "Yearly" as ToggleGroupState, duration: 14 },
+  ];
   const r = resolveToggleGroupTransition(steps, 10);
 
   it("indicatorOffset is 0 at the step boundary (progress=0, eased=0)", () => {
@@ -308,7 +309,12 @@ describe("resolveToggleGroupTransition: speed contract", () => {
     { from: 0, state: "Monthly" as ToggleGroupState, duration: 14 },
     { from: 7, state: "Yearly" as ToggleGroupState },
   ];
-  const r = resolveToggleGroupTransition(steps, 3, /* items */ DEFAULT_ITEMS, /* speed */ 2);
+  const r = resolveToggleGroupTransition(
+    steps,
+    3,
+    /* items */ DEFAULT_ITEMS,
+    /* speed */ 2,
+  );
 
   it("speed=2 accelerates transition: indicatorOffset is closer to 1 at frame 3", () => {
     expect(r.indicatorOffset).toBeGreaterThan(0.6);
@@ -326,7 +332,8 @@ describe("toggleGroupConfig.controls.state", () => {
 
   it("has exactly the two documented state options in order", () => {
     const control = toggleGroupConfig.controls.state;
-    if (control.type !== "select") throw new Error("state control must be a select");
+    if (control.type !== "select")
+      throw new Error("state control must be a select");
     expect(control.options).toEqual(["Monthly", "Yearly"]);
   });
 });
@@ -342,7 +349,8 @@ describe("toggleGroupConfig.controls.size", () => {
 
   it("has exactly the two size options in order", () => {
     const control = toggleGroupConfig.controls.size;
-    if (control.type !== "select") throw new Error("size control must be a select");
+    if (control.type !== "select")
+      throw new Error("size control must be a select");
     expect(control.options).toEqual(["default", "sm"]);
   });
 });
@@ -356,17 +364,18 @@ describe("toggleGroupConfig.snippet: import line", () => {
 });
 
 describe("toggleGroupConfig.snippet: state prop always emitted", () => {
-  it("emits state=\"Monthly\" for the Monthly option", () => {
+  it('emits state="Monthly" for the Monthly option', () => {
     expect(snippet({ state: "Monthly" })).toContain('state="Monthly"');
   });
 
-  it("emits state=\"Yearly\" for the Yearly option", () => {
+  it('emits state="Yearly" for the Yearly option', () => {
     expect(snippet({ state: "Yearly" })).toContain('state="Yearly"');
   });
 
   it("emits the correct state for every control option", () => {
     const control = toggleGroupConfig.controls.state;
-    if (control.type !== "select") throw new Error("state control must be a select");
+    if (control.type !== "select")
+      throw new Error("state control must be a select");
     for (const state of control.options) {
       expect(snippet({ state })).toContain(`state="${state}"`);
     }
@@ -398,7 +407,7 @@ describe("toggleGroupConfig.snippet: default props are omitted", () => {
 });
 
 describe("toggleGroupConfig.snippet: non-default props are emitted", () => {
-  it("emits size=\"sm\" when size is non-default", () => {
+  it('emits size="sm" when size is non-default', () => {
     expect(snippet({ state: "Monthly", size: "sm" })).toContain('size="sm"');
   });
 

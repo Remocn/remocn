@@ -3,9 +3,7 @@
   "name": "mesh-gradient-bg",
   "title": "Mesh Gradient Background",
   "description": "Living gradient with amorphous color blobs slowly drifting across the frame.",
-  "dependencies": [
-    "remotion"
-  ],
+  "dependencies": ["remotion"],
   "files": [
     {
       "path": "registry/remocn/mesh-gradient-bg/index.tsx",

@@ -9,7 +9,11 @@ export const chatGptConfig: ComponentConfig = {
       default: "What's on your mind today?",
       label: "Greeting",
     },
-    placeholder: { type: "text", default: "Ask anything", label: "Placeholder" },
+    placeholder: {
+      type: "text",
+      default: "Ask anything",
+      label: "Placeholder",
+    },
     prompt: {
       type: "text",
       default: "Make a sunset over a calm ocean",

@@ -3,9 +3,7 @@
   "name": "shader-dot-orbit",
   "title": "Shader Dot Orbit",
   "description": "Dots orbiting on concentric paths across the frame.",
-  "dependencies": [
-    "@paper-design/shaders-react"
-  ],
+  "dependencies": ["@paper-design/shaders-react"],
   "files": [
     {
       "path": "registry/remocn/shader-dot-orbit/index.tsx",

@@ -12,10 +12,10 @@ import {
 } from "@/components/ui/sheet";
 import { NAV_LINKS } from "@/config/site";
 import { cn } from "@/lib/utils";
-import { NavMobile } from "./header-nav";
-import { ThemeToggle } from "./theme-toggle";
 import { GithubButton } from "./github-button";
+import { NavMobile } from "./header-nav";
 import { StarsButton } from "./stars-button";
+import { ThemeToggle } from "./theme-toggle";
 
 export function HeaderLogo() {
   return (
@@ -66,7 +66,9 @@ export function HeaderActions() {
           </SheetHeader>
           <NavMobile links={NAV_LINKS} />
           <div className="mt-4 flex flex-col gap-4 px-6 pb-6">
-            <SheetClose render={<StarsButton className="w-full justify-center" />} />
+            <SheetClose
+              render={<StarsButton className="w-full justify-center" />}
+            />
             <GithubButton />
             <SheetClose
               render={

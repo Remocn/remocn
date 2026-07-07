@@ -38,7 +38,13 @@ const DEFAULT_ITEMS: ToggleGroupItem[] = [
 
 const SIZE_STYLES: Record<
   ToggleGroupSize,
-  { height: number; segMinWidth: number; fontSize: number; pad: number; gap: number }
+  {
+    height: number;
+    segMinWidth: number;
+    fontSize: number;
+    pad: number;
+    gap: number;
+  }
 > = {
   sm: { height: 32, segMinWidth: 72, fontSize: 13, pad: 3, gap: 6 },
   default: { height: 36, segMinWidth: 88, fontSize: 14, pad: 4, gap: 8 },

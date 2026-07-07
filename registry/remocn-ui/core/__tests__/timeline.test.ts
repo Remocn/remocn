@@ -1,4 +1,3 @@
-
 import { describe, expect, it } from "bun:test";
 
 function framesFor(d: number | { seconds: number }, fps: number): number {
@@ -141,7 +140,7 @@ describe("resolveCurrentState: activates exactly at `at`", () => {
 describe("resolveCurrentState: latest started step wins", () => {
   type S = "idle" | "hover" | "press" | "loading";
   const steps: Step<S>[] = [
-    { at: 0,  state: "hover" },
+    { at: 0, state: "hover" },
     { at: 10, state: "press" },
     { at: 20, state: "loading" },
   ];
@@ -214,7 +213,7 @@ function clamp01(t: number): number {
 }
 
 function resolveStateTransition<S extends string>(
-  raw: number,         // injected useCurrentFrame() — MIRROR of timeline.ts line 61
+  raw: number, // injected useCurrentFrame() — MIRROR of timeline.ts line 61
   steps: Step<S>[],
   defaultState: S,
   speed = 1,
@@ -339,7 +338,9 @@ describe("resolveStateTransition: per-step duration overrides defaultDuration", 
     const withDefault = resolveStateTransition(14, stepsNoDur, "idle", 1, 8);
     expect(withDur.progress).toBeCloseTo(4 / 6, 10);
     expect(withDefault.progress).toBeCloseTo(4 / 8, 10);
-    expect(Math.abs(withDur.progress - withDefault.progress)).toBeGreaterThan(0.1);
+    expect(Math.abs(withDur.progress - withDefault.progress)).toBeGreaterThan(
+      0.1,
+    );
   });
 
   it("step with duration:6 completes (progress=1) at frame=to.at+6, not at to.at+8", () => {
@@ -361,7 +362,7 @@ describe("resolveStateTransition: chained steps carry from=previous state", () =
   type S = "idle" | "hover" | "press" | "loading";
 
   const steps: Step<S>[] = [
-    { at: 0,  state: "hover" },
+    { at: 0, state: "hover" },
     { at: 10, state: "press" },
     { at: 20, state: "loading" },
   ];
@@ -417,7 +418,7 @@ describe("resolveStateTransition: same-`at` ties — later array entry wins", ()
 
   it("tie at second step: from=first step (different at), to=later-array winner", () => {
     const steps: Step<S>[] = [
-      { at: 0,  state: "a" },
+      { at: 0, state: "a" },
       { at: 10, state: "b" },
       { at: 10, state: "c" },
     ];

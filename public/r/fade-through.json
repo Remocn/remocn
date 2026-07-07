@@ -3,9 +3,7 @@
   "name": "fade-through",
   "title": "Fade Through",
   "description": "A Material-style content transition: old fades out, new fades in with a soft delay.",
-  "dependencies": [
-    "remotion"
-  ],
+  "dependencies": ["remotion"],
   "files": [
     {
       "path": "registry/remocn/fade-through/index.tsx",

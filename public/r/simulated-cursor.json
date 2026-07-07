@@ -3,9 +3,7 @@
   "name": "simulated-cursor",
   "title": "Simulated Cursor",
   "description": "Animated mouse cursor moving between waypoints with click ripple feedback.",
-  "dependencies": [
-    "remotion"
-  ],
+  "dependencies": ["remotion"],
   "files": [
     {
       "path": "registry/remocn/simulated-cursor/index.tsx",

@@ -3,9 +3,7 @@
   "name": "shader-dithering",
   "title": "Shader Dithering",
   "description": "Ordered-dither shading over an animated gradient field.",
-  "dependencies": [
-    "@paper-design/shaders-react"
-  ],
+  "dependencies": ["@paper-design/shaders-react"],
   "files": [
     {
       "path": "registry/remocn/shader-dithering/index.tsx",

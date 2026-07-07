@@ -3,9 +3,7 @@
   "name": "shader-smoke-ring",
   "title": "Shader Smoke Ring",
   "description": "Soft smoke ring curling and dissipating in place.",
-  "dependencies": [
-    "@paper-design/shaders-react"
-  ],
+  "dependencies": ["@paper-design/shaders-react"],
   "files": [
     {
       "path": "registry/remocn/shader-smoke-ring/index.tsx",

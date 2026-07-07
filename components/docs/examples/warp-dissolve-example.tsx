@@ -1,9 +1,9 @@
 "use client";
 
+import { linearTiming, TransitionSeries } from "@remotion/transitions";
 import { AbsoluteFill, Sequence } from "remotion";
-import { TransitionSeries, linearTiming } from "@remotion/transitions";
-import { warpDissolve } from "@/registry/remocn/warp-dissolve";
 import { SoftBlurIn } from "@/registry/remocn/soft-blur-in";
+import { warpDissolve } from "@/registry/remocn/warp-dissolve";
 
 const FONT_FAMILY =
   "var(--font-geist-sans), -apple-system, BlinkMacSystemFont, sans-serif";

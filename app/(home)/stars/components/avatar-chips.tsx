@@ -8,7 +8,6 @@ export function AvatarChips({ reduced }: { reduced: boolean }) {
     <div className="flex flex-wrap justify-center gap-2">
       {Array.from({ length: 9 }).map((_, i) => (
         <motion.div
-          // biome-ignore lint/suspicious/noArrayIndexKey: fixed-length decorative placeholders
           key={i}
           initial={reduced ? false : { opacity: 0, x: -12 }}
           animate={{ opacity: 1, x: 0 }}

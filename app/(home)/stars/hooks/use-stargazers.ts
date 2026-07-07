@@ -3,10 +3,10 @@
 import { useCallback, useRef, useState } from "react";
 import { toast } from "sonner";
 import { parseRepoInput } from "@/lib/parse-repo";
-import { messageForApiError } from "../lib/api-errors";
 import { fetchStargazers, StargazersApiError } from "../lib/api";
+import { messageForApiError } from "../lib/api-errors";
 import { preloadAvatars } from "../lib/preload-avatars";
-import type { StarsStatus, StargazersPayload } from "../lib/types";
+import type { StargazersPayload, StarsStatus } from "../lib/types";
 
 /**
  * Owns the generation state machine: status (idle/generating/ready), the

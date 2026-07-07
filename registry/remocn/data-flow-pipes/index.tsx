@@ -57,7 +57,7 @@ const DEFAULT_EDGES: DataFlowEdge[] = [
  */
 function bezierPath(a: { x: number; y: number }, b: { x: number; y: number }) {
   const dx = b.x - a.x;
-  const dy = b.y - a.y;
+  const _dy = b.y - a.y;
   // Stronger horizontal handles → routes look like API/DB diagrams.
   const handle = Math.max(60, Math.abs(dx) * 0.5);
   const c1x = a.x + handle;

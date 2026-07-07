@@ -1,7 +1,7 @@
 "use client";
 
+import { linearTiming, TransitionSeries } from "@remotion/transitions";
 import { AbsoluteFill } from "remotion";
-import { TransitionSeries, linearTiming } from "@remotion/transitions";
 import { focusPull } from "@/registry/remocn/focus-pull";
 
 const FONT_FAMILY =

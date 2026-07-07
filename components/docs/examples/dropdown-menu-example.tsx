@@ -1,10 +1,10 @@
 "use client";
 
+import { useCurrentState } from "@/lib/remocn-ui";
+import { useButtonTransition } from "@/registry/remocn-ui/button/use-button-transition";
 import { DropdownMenu } from "@/registry/remocn-ui/dropdown-menu";
 import { useDropdownMenuTransition } from "@/registry/remocn-ui/dropdown-menu/use-dropdown-menu-transition";
 import { useDropdownMenuItemTransition } from "@/registry/remocn-ui/dropdown-menu-item/use-dropdown-menu-item-transition";
-import { useButtonTransition } from "@/registry/remocn-ui/button/use-button-transition";
-import { useCurrentState } from "@/lib/remocn-ui";
 
 export const dropdownMenuExampleControls = ["label"] as const;
 
@@ -54,7 +54,8 @@ export const dropdownMenuExampleCode = (
   const label = values.label as string | undefined;
 
   const props: string[] = [];
-  if (label !== undefined && label !== "Options") props.push(`label="${label}"`);
+  if (label !== undefined && label !== "Options")
+    props.push(`label="${label}"`);
   const extraProps = props.length ? `\n      ${props.join("\n      ")}` : "";
 
   return `import { DropdownMenu } from "@/components/remocn/dropdown-menu";

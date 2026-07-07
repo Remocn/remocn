@@ -1,15 +1,10 @@
 "use client";
 
-import {
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
 import { ArrowUp, ChevronLeft, Plus, Video } from "lucide-react";
-import { type RemocnTheme, revealedText } from "@/lib/remocn-ui";
+import { interpolate, spring, useCurrentFrame, useVideoConfig } from "remotion";
 import { Caret } from "@/components/remocn/caret";
 import { TypingIndicator } from "@/components/remocn/typing-indicator";
+import { type RemocnTheme, revealedText } from "@/lib/remocn-ui";
 
 export interface ImessageMessage {
   from: "me" | "them";
@@ -87,7 +82,8 @@ export function imessageChatFlowSchedule(
   let cursor = LEAD_IN;
 
   messages.forEach((message, index) => {
-    const hasReaction = message.reaction !== undefined && message.reaction !== "";
+    const hasReaction =
+      message.reaction !== undefined && message.reaction !== "";
     if (message.from === "me") {
       const typeStart = cursor;
       const typeDur = clamp(
@@ -110,7 +106,10 @@ export function imessageChatFlowSchedule(
         reactAt,
       });
       cursor =
-        revealAt + REVEAL + (hasReaction ? REACT_DELAY + REACT_DUR : 0) + MSG_GAP;
+        revealAt +
+        REVEAL +
+        (hasReaction ? REACT_DELAY + REACT_DUR : 0) +
+        MSG_GAP;
     } else {
       const typingStart = cursor;
       const typingDur = clamp(
@@ -131,7 +130,10 @@ export function imessageChatFlowSchedule(
         reactAt,
       });
       cursor =
-        revealAt + REVEAL + (hasReaction ? REACT_DELAY + REACT_DUR : 0) + MSG_GAP;
+        revealAt +
+        REVEAL +
+        (hasReaction ? REACT_DELAY + REACT_DUR : 0) +
+        MSG_GAP;
     }
   });
 
@@ -182,6 +184,7 @@ function Avatar({ contact, size }: { contact: ImessageContact; size: number }) {
       }}
     >
       {contact.avatar !== undefined ? (
+        // biome-ignore lint/performance/noImgElement: Remotion output, not a Next.js app — next/image isn't available where this component ships
         <img
           src={contact.avatar}
           alt={contact.name}
@@ -194,7 +197,13 @@ function Avatar({ contact, size }: { contact: ImessageContact; size: number }) {
   );
 }
 
-function BubbleTail({ side, color }: { side: "left" | "right"; color: string }) {
+function BubbleTail({
+  side,
+  color,
+}: {
+  side: "left" | "right";
+  color: string;
+}) {
   const path =
     side === "right"
       ? "M0 0 C2 8 6 12 12 13 C7 14 1 13 0 8 Z"
@@ -243,7 +252,10 @@ export function ImessageChatFlow({
     activeMe.typeStart !== undefined &&
     activeMe.sendAt !== undefined
   ) {
-    const typeDur = Math.max(activeMe.sendAt - SEND_GAP - activeMe.typeStart, 1);
+    const typeDur = Math.max(
+      activeMe.sendAt - SEND_GAP - activeMe.typeStart,
+      1,
+    );
     const progress = clamp((eff - activeMe.typeStart) / typeDur, 0, 1);
     composerText = revealedText(
       activeMe.text,
@@ -260,8 +272,7 @@ export function ImessageChatFlow({
   items.forEach((item) => {
     if (item.from === "me") lastMeIndex = item.index;
   });
-  const deliveredIndex =
-    lastMeIndex === messages.length - 1 ? lastMeIndex : -1;
+  const deliveredIndex = lastMeIndex === messages.length - 1 ? lastMeIndex : -1;
 
   return (
     <div
@@ -467,10 +478,15 @@ function ImessageRow({
       frame: eff - item.reactAt,
       config: { damping: 11, stiffness: 220, mass: 0.6 },
     });
-    reactionOpacity = interpolate(eff, [item.reactAt, item.reactAt + 5], [0, 1], {
-      extrapolateLeft: "clamp",
-      extrapolateRight: "clamp",
-    });
+    reactionOpacity = interpolate(
+      eff,
+      [item.reactAt, item.reactAt + 5],
+      [0, 1],
+      {
+        extrapolateLeft: "clamp",
+        extrapolateRight: "clamp",
+      },
+    );
   }
 
   const bg = outgoing ? accent : INCOMING_BG;
@@ -500,7 +516,9 @@ function ImessageRow({
           {item.text}
         </span>
       )}
-      {!showTyping && <BubbleTail side={outgoing ? "right" : "left"} color={bg} />}
+      {!showTyping && (
+        <BubbleTail side={outgoing ? "right" : "left"} color={bg} />
+      )}
       {item.reaction !== undefined && (
         <div
           style={{

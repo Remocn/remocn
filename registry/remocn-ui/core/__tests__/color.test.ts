@@ -1,14 +1,12 @@
-
 import { describe, expect, it } from "bun:test";
-import {
-  mixOklch,
-  oklchToRgb,
-  parseColor,
-  rgbToOklch,
-  toCss,
-} from "../color";
+import { mixOklch, oklchToRgb, parseColor, rgbToOklch, toCss } from "../color";
 
-function rgbOf(css: string): { r: number; g: number; b: number; alpha: number } {
+function rgbOf(css: string): {
+  r: number;
+  g: number;
+  b: number;
+  alpha: number;
+} {
   const inner = css.slice(css.indexOf("(") + 1, css.lastIndexOf(")"));
   const parts = inner
     .replace(/\//g, " ")
@@ -56,8 +54,12 @@ describe("mixOklch endpoints", () => {
   it("preserves alpha at the endpoints (within 0.01)", () => {
     const aa = "oklch(0.5 0.12 250 / 40%)";
     const bb = "oklch(0.7 0.15 140 / 80%)";
-    expect(Math.abs(rgbOf(mixOklch(aa, bb, 0)).alpha - 0.4)).toBeLessThanOrEqual(0.01);
-    expect(Math.abs(rgbOf(mixOklch(aa, bb, 1)).alpha - 0.8)).toBeLessThanOrEqual(0.01);
+    expect(
+      Math.abs(rgbOf(mixOklch(aa, bb, 0)).alpha - 0.4),
+    ).toBeLessThanOrEqual(0.01);
+    expect(
+      Math.abs(rgbOf(mixOklch(aa, bb, 1)).alpha - 0.8),
+    ).toBeLessThanOrEqual(0.01);
   });
 });
 
@@ -70,7 +72,11 @@ describe("mixOklch midpoint (perceptual, not naive sRGB lerp)", () => {
   });
 
   it("matches the module's own oklchToRgb(0.5,0,0) (self-consistent, no magic number)", () => {
-    expectRgbClose(rgbOf(mixOklch(BLACK, WHITE, 0.5)), oklchToRgb(0.5, 0, 0), TOL);
+    expectRgbClose(
+      rgbOf(mixOklch(BLACK, WHITE, 0.5)),
+      oklchToRgb(0.5, 0, 0),
+      TOL,
+    );
   });
 });
 
@@ -201,7 +207,7 @@ describe("parseColor formats", () => {
 
   it("parses oklch() with a percent alpha (alpha ~= 0.10)", () => {
     const c = parseColor("oklch(1 0 0 / 10%)");
-    expect(Math.abs(c.alpha! - 0.1)).toBeLessThanOrEqual(0.01);
+    expect(Math.abs((c.alpha ?? Number.NaN) - 0.1)).toBeLessThanOrEqual(0.01);
   });
 
   it("defaults alpha to 1 when no alpha is present", () => {
@@ -238,13 +244,15 @@ describe("toCss (culori formatRgb output)", () => {
   });
 
   it("emits opaque rgb(...) when alpha is omitted", () => {
-    expect(toCss({ mode: "rgb", r: 0, g: 0, b: 0 } as never)).toBe("rgb(0, 0, 0)");
+    expect(toCss({ mode: "rgb", r: 0, g: 0, b: 0 } as never)).toBe(
+      "rgb(0, 0, 0)",
+    );
   });
 
   it('emits legacy "rgba(r, g, b, a)" when alpha < 1', () => {
-    expect(toCss({ mode: "rgb", r: 10 / 255, g: 20 / 255, b: 30 / 255, alpha: 0.5 })).toBe(
-      "rgba(10, 20, 30, 0.5)",
-    );
+    expect(
+      toCss({ mode: "rgb", r: 10 / 255, g: 20 / 255, b: 30 / 255, alpha: 0.5 }),
+    ).toBe("rgba(10, 20, 30, 0.5)");
   });
 
   it("round-trips through culori: toCss output re-parses to the same channels", () => {
@@ -258,7 +266,9 @@ describe("toCss (culori formatRgb output)", () => {
     const reparsed = parseColor(
       toCss({ mode: "rgb", r: 10 / 255, g: 20 / 255, b: 30 / 255, alpha: 0.5 }),
     );
-    expect(Math.abs(reparsed.alpha! - 0.5)).toBeLessThanOrEqual(0.01);
+    expect(Math.abs((reparsed.alpha ?? Number.NaN) - 0.5)).toBeLessThanOrEqual(
+      0.01,
+    );
   });
 });
 

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import { StarsTool } from "./components/stars-tool";
 import { Suspense } from "react";
+import { StarsTool } from "./components/stars-tool";
 
 export const metadata: Metadata = {
   title: "GitHub Stars Video Generator",

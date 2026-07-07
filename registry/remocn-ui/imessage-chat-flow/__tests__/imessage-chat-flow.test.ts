@@ -1,10 +1,9 @@
-
 import { describe, expect, it } from "bun:test";
 import {
-  imessageChatFlowSchedule,
-  imessageChatFlowDuration,
-  sendPulse,
   type ImessageMessage,
+  imessageChatFlowDuration,
+  imessageChatFlowSchedule,
+  sendPulse,
 } from "../index";
 
 const MESSAGES: ImessageMessage[] = [

@@ -256,7 +256,7 @@ export function InteractiveCode() {
   const entry = registry[COMPONENT];
   const playerRef = useRef<PlayerRef>(null);
 
-  useAutoplay(playerRef, Boolean(entry));
+  const { containerRef } = useAutoplay(playerRef, Boolean(entry));
 
   const [text, setText] = useState(TYPEWRITER_DEFAULTS.text);
   const [fontSize, setFontSize] = useState(TYPEWRITER_DEFAULTS.fontSize);
@@ -358,11 +358,15 @@ export function InteractiveCode() {
               transition={SPRING_SOFT}
               className="relative flex items-center justify-center overflow-hidden rounded-2xl bg-white shadow-2xl shadow-black/5 ring-1 ring-black/5 sm:rounded-3xl"
             >
-              <div className="w-full" style={{ aspectRatio }}>
+              <div
+                ref={containerRef}
+                className="w-full"
+                style={{ aspectRatio }}
+              >
                 {entry ? (
                   <Player
                     ref={playerRef}
-                    component={entry.Component}
+                    lazyComponent={entry.load}
                     inputProps={inputProps}
                     durationInFrames={entry.config.durationInFrames}
                     fps={entry.config.fps}

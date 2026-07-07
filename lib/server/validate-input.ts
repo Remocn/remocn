@@ -4,22 +4,23 @@ import "server-only";
  * Strict server-side validation of the render payload. Renders cost real CPU on
  * the box, so this is the gate that stops a crafted/oversized request from
  * blowing up Chromium: caps the stargazer count + string sizes, enums the
- * orientation/theme, clamps the numbers, and only lets http(s) avatar URLs
- * through (avatars are fetched by the headless browser → http(s)-only narrows
- * the SSRF surface). Throws a typed 400 error on anything outside the rules.
+ * orientation/theme, clamps the numbers, and only lets avatar URLs through
+ * whose host is on the GitHub avatar allowlist (avatars are fetched by the
+ * headless browser → pinning the host closes the SSRF window instead of just
+ * narrowing it). Throws a typed 400 error on anything outside the rules.
  */
 
 export type Orientation = "horizontal" | "vertical";
 export type Theme = "light" | "dark";
 
-export interface RenderStargazer {
+export type RenderStargazer = {
   login: string;
   avatarUrl: string;
   /** ISO date string, e.g. "2021-03-04" */
   starredAt: string;
-}
+};
 
-export interface RenderInput {
+export type RenderInput = {
   repo: string;
   totalStars: number;
   stargazers: RenderStargazer[];
@@ -27,7 +28,7 @@ export interface RenderInput {
   accentColor: string;
   speed: number;
   theme: Theme;
-}
+};
 
 /** Thrown on invalid input; carries the HTTP status the API route should map to. */
 export class RenderInputError extends Error {
@@ -49,7 +50,7 @@ const MIN_SPEED = 1;
 const MAX_SPEED = 4;
 
 const HEX_COLOR = /^#[0-9a-fA-F]{3,8}$/;
-const HTTP_URL = /^https?:\/\//i;
+const ALLOWED_AVATAR_HOSTS = new Set(["avatars.githubusercontent.com"]);
 
 const DEFAULT_ACCENT = "#ffbb00";
 const DEFAULT_SPEED = 1;
@@ -90,15 +91,30 @@ function parseStargazer(value: unknown, index: number): RenderStargazer {
   if (!isPlainObject(value)) {
     throw new RenderInputError(`stargazers[${index}] must be an object`);
   }
-  const login = requireString(value.login, `stargazers[${index}].login`, MAX_LOGIN_LEN);
+  const login = requireString(
+    value.login,
+    `stargazers[${index}].login`,
+    MAX_LOGIN_LEN,
+  );
   const avatarUrl = requireString(
     value.avatarUrl,
     `stargazers[${index}].avatarUrl`,
     MAX_AVATAR_URL_LEN,
   );
-  if (!HTTP_URL.test(avatarUrl)) {
+  let parsedAvatarUrl: URL;
+  try {
+    parsedAvatarUrl = new URL(avatarUrl);
+  } catch {
     throw new RenderInputError(
-      `stargazers[${index}].avatarUrl must be an http(s) URL`,
+      `stargazers[${index}].avatarUrl must be a valid URL`,
+    );
+  }
+  if (
+    parsedAvatarUrl.protocol !== "https:" ||
+    !ALLOWED_AVATAR_HOSTS.has(parsedAvatarUrl.hostname)
+  ) {
+    throw new RenderInputError(
+      `stargazers[${index}].avatarUrl must be a GitHub avatar URL`,
     );
   }
   const starredAt = requireString(
@@ -124,7 +140,11 @@ export function parseRenderInput(body: unknown): RenderInput {
   const repo = requireString(body.repo, "repo", MAX_REPO_LEN);
 
   const totalStars = Math.floor(
-    clamp(requireFiniteNumber(body.totalStars, "totalStars"), 0, MAX_TOTAL_STARS),
+    clamp(
+      requireFiniteNumber(body.totalStars, "totalStars"),
+      0,
+      MAX_TOTAL_STARS,
+    ),
   );
 
   if (!Array.isArray(body.stargazers)) {
@@ -138,7 +158,9 @@ export function parseRenderInput(body: unknown): RenderInput {
   const stargazers = body.stargazers.map(parseStargazer);
 
   if (body.orientation !== "horizontal" && body.orientation !== "vertical") {
-    throw new RenderInputError(`"orientation" must be "horizontal" or "vertical"`);
+    throw new RenderInputError(
+      `"orientation" must be "horizontal" or "vertical"`,
+    );
   }
   const orientation: Orientation = body.orientation;
 
@@ -146,13 +168,19 @@ export function parseRenderInput(body: unknown): RenderInput {
   if (body.accentColor !== undefined) {
     accentColor = requireString(body.accentColor, "accentColor", 32);
     if (!HEX_COLOR.test(accentColor)) {
-      throw new RenderInputError(`"accentColor" must be a hex color (e.g. #ffbb00)`);
+      throw new RenderInputError(
+        `"accentColor" must be a hex color (e.g. #ffbb00)`,
+      );
     }
   }
 
   let speed = DEFAULT_SPEED;
   if (body.speed !== undefined) {
-    speed = clamp(requireFiniteNumber(body.speed, "speed"), MIN_SPEED, MAX_SPEED);
+    speed = clamp(
+      requireFiniteNumber(body.speed, "speed"),
+      MIN_SPEED,
+      MAX_SPEED,
+    );
   }
 
   let theme: Theme = DEFAULT_THEME;
@@ -163,5 +191,13 @@ export function parseRenderInput(body: unknown): RenderInput {
     theme = body.theme;
   }
 
-  return { repo, totalStars, stargazers, orientation, accentColor, speed, theme };
+  return {
+    repo,
+    totalStars,
+    stargazers,
+    orientation,
+    accentColor,
+    speed,
+    theme,
+  };
 }

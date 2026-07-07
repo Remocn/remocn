@@ -3,9 +3,7 @@
   "name": "marker-highlight",
   "title": "Marker Highlight",
   "description": "Colored marker block draws behind a phrase as the text color shifts.",
-  "dependencies": [
-    "remotion"
-  ],
+  "dependencies": ["remotion"],
   "files": [
     {
       "path": "registry/remocn/marker-highlight/index.tsx",

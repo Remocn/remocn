@@ -6,12 +6,11 @@
  * All network is mocked — no real GitHub requests are made.
  */
 
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, jest, mock } from "bun:test";
 import {
-  type Stargazer,
-  StargazersError,
   fetchStargazers,
   parseRepoInput,
+  type Stargazer,
 } from "@/lib/github-stargazers";
 
 // ---------------------------------------------------------------------------
@@ -78,9 +77,10 @@ describe("parseRepoInput", () => {
     });
 
     it("strips .git from https URL variant", () => {
-      expect(
-        parseRepoInput("https://github.com/facebook/react.git"),
-      ).toEqual({ owner: "facebook", repo: "react" });
+      expect(parseRepoInput("https://github.com/facebook/react.git")).toEqual({
+        owner: "facebook",
+        repo: "react",
+      });
     });
   });
 
@@ -93,11 +93,11 @@ describe("parseRepoInput", () => {
       expect(parseRepoInput("   ")).toBeNull();
     });
 
-    it("rejects bare owner with no repo (\"owner\")", () => {
+    it('rejects bare owner with no repo ("owner")', () => {
       expect(parseRepoInput("owner")).toBeNull();
     });
 
-    it("rejects leading-slash with repo only (\"/name\")", () => {
+    it('rejects leading-slash with repo only ("/name")', () => {
       expect(parseRepoInput("/name")).toBeNull();
     });
 
@@ -129,7 +129,7 @@ describe("fetchStargazers", () => {
 
   afterEach(() => {
     global.fetch = originalFetch;
-    vi.restoreAllMocks();
+    jest.restoreAllMocks();
     delete process.env.GITHUB_TOKEN;
   });
 
@@ -168,8 +168,7 @@ describe("fetchStargazers", () => {
     const repoBody = { stargazers_count: 1 };
     const starBody = [rawEntry("alice", "2021-01-01T00:00:00Z")];
 
-    global.fetch = vi
-      .fn()
+    global.fetch = mock()
       .mockResolvedValueOnce(mockResponse(repoBody))
       .mockResolvedValueOnce(mockResponse(starBody));
 
@@ -192,8 +191,7 @@ describe("fetchStargazers", () => {
       rawEntry("bob", "2022-01-02T00:00:00Z"),
     ];
 
-    global.fetch = vi
-      .fn()
+    global.fetch = mock()
       .mockResolvedValueOnce(mockResponse(repoBody))
       .mockResolvedValueOnce(mockResponse(starBody));
 
@@ -207,8 +205,7 @@ describe("fetchStargazers", () => {
     // Only one page worth of data returned
     const starBody = [rawEntry("alice", "2021-01-01T00:00:00Z")];
 
-    global.fetch = vi
-      .fn()
+    global.fetch = mock()
       .mockResolvedValueOnce(mockResponse(repoBody))
       .mockResolvedValueOnce(mockResponse(starBody));
 
@@ -221,11 +218,13 @@ describe("fetchStargazers", () => {
     const repoBody = { stargazers_count: total };
     // Build 200 entries on a single page
     const starBody = Array.from({ length: total }, (_, i) =>
-      rawEntry(`user${i}`, `2021-01-${String(i + 1).padStart(2, "0")}T00:00:00Z`),
+      rawEntry(
+        `user${i}`,
+        `2021-01-${String(i + 1).padStart(2, "0")}T00:00:00Z`,
+      ),
     );
 
-    global.fetch = vi
-      .fn()
+    global.fetch = mock()
       .mockResolvedValueOnce(mockResponse(repoBody))
       .mockResolvedValueOnce(mockResponse(starBody));
 
@@ -247,8 +246,11 @@ describe("fetchStargazers", () => {
     const starBody = [rawEntry("alice", "2021-01-01T00:00:00Z")];
 
     // Repo fetch + each sampled stargazer page returns the same one-entry body.
-    global.fetch = vi.fn().mockImplementation((url: string) => {
-      if (String(url).includes("/repos/test/repo") && !String(url).includes("stargazers")) {
+    global.fetch = mock().mockImplementation((url: string) => {
+      if (
+        String(url).includes("/repos/test/repo") &&
+        !String(url).includes("stargazers")
+      ) {
         return Promise.resolve(mockResponse(repoBody));
       }
       return Promise.resolve(
@@ -262,11 +264,10 @@ describe("fetchStargazers", () => {
 
   it("sets truncated=false when the repo is within the listing ceiling", async () => {
     const repoBody = { stargazers_count: 3 };
-    const linkHeader = null; // only one page
+    const _linkHeader = null; // only one page
     const starBody = [rawEntry("alice", "2021-01-01T00:00:00Z")];
 
-    global.fetch = vi
-      .fn()
+    global.fetch = mock()
       .mockResolvedValueOnce(mockResponse(repoBody))
       .mockResolvedValueOnce(mockResponse(starBody));
 
@@ -275,9 +276,9 @@ describe("fetchStargazers", () => {
   });
 
   it("maps 404 response to StargazersError with code 'not_found'", async () => {
-    global.fetch = vi
-      .fn()
-      .mockResolvedValueOnce(mockResponse({}, { status: 404 }));
+    global.fetch = mock().mockResolvedValueOnce(
+      mockResponse({}, { status: 404 }),
+    );
 
     await expect(
       fetchStargazers({ owner: "test", repo: "nonexistent" }),
@@ -285,7 +286,7 @@ describe("fetchStargazers", () => {
   });
 
   it("maps 403 with x-ratelimit-remaining:0 to code 'rate_limited'", async () => {
-    global.fetch = vi.fn().mockResolvedValueOnce(
+    global.fetch = mock().mockResolvedValueOnce(
       mockResponse(
         { message: "API rate limit exceeded" },
         { status: 403, headers: { "x-ratelimit-remaining": "0" } },
@@ -298,9 +299,9 @@ describe("fetchStargazers", () => {
   });
 
   it("maps 429 response to code 'rate_limited'", async () => {
-    global.fetch = vi
-      .fn()
-      .mockResolvedValueOnce(mockResponse({}, { status: 429 }));
+    global.fetch = mock().mockResolvedValueOnce(
+      mockResponse({}, { status: 429 }),
+    );
 
     await expect(
       fetchStargazers({ owner: "test", repo: "repo" }),
@@ -310,9 +311,7 @@ describe("fetchStargazers", () => {
   it("handles 0-star repo: returns [] and totalStars 0 without throwing", async () => {
     const repoBody = { stargazers_count: 0 };
 
-    global.fetch = vi
-      .fn()
-      .mockResolvedValueOnce(mockResponse(repoBody));
+    global.fetch = mock().mockResolvedValueOnce(mockResponse(repoBody));
 
     const result = await fetchStargazers({ owner: "test", repo: "repo" });
     expect(result.stargazers).toEqual([]);
@@ -326,8 +325,7 @@ describe("fetchStargazers", () => {
     const repoBody = { stargazers_count: 1 };
     const starBody = [rawEntry("alice", "2021-01-01T00:00:00Z")];
 
-    global.fetch = vi
-      .fn()
+    global.fetch = mock()
       .mockResolvedValueOnce(mockResponse(repoBody))
       .mockResolvedValueOnce(mockResponse(starBody));
 
@@ -340,8 +338,7 @@ describe("fetchStargazers", () => {
     const repoBody = { stargazers_count: 1 };
     const starBody = [rawEntry("alice", "2021-01-01T00:00:00Z")];
 
-    const fetchMock = vi
-      .fn()
+    const fetchMock = mock()
       .mockResolvedValueOnce(mockResponse(repoBody))
       .mockResolvedValueOnce(mockResponse(starBody));
     global.fetch = fetchMock;
@@ -351,7 +348,7 @@ describe("fetchStargazers", () => {
     // Second call is the stargazers page fetch
     const [_url, init] = fetchMock.mock.calls[1] as [string, RequestInit];
     const headers = init?.headers as Record<string, string>;
-    expect(headers["Accept"]).toBe("application/vnd.github.star+json");
+    expect(headers.Accept).toBe("application/vnd.github.star+json");
   });
 
   it("filters out entries with missing login, avatarUrl, or starredAt", async () => {
@@ -359,11 +356,13 @@ describe("fetchStargazers", () => {
     const starBody = [
       rawEntry("alice", "2021-01-01T00:00:00Z"),
       { starred_at: "2021-01-02T00:00:00Z", user: null }, // no user
-      { starred_at: null, user: { login: "bob", avatar_url: "https://example.com/b.png" } }, // no date
+      {
+        starred_at: null,
+        user: { login: "bob", avatar_url: "https://example.com/b.png" },
+      }, // no date
     ];
 
-    global.fetch = vi
-      .fn()
+    global.fetch = mock()
       .mockResolvedValueOnce(mockResponse(repoBody))
       .mockResolvedValueOnce(mockResponse(starBody));
 

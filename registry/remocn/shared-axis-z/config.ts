@@ -10,7 +10,11 @@ export const sharedAxisZConfig: ComponentConfig = {
   componentName: "SharedAxisZ",
   importPath: "@/components/remocn/shared-axis-z",
   controls: {
-    fromText: { type: "text", default: "Zooming between states.", label: "From text" },
+    fromText: {
+      type: "text",
+      default: "Zooming between states.",
+      label: "From text",
+    },
     toText: { type: "text", default: "Elevate and settle.", label: "To text" },
     fontSize: {
       type: "number",

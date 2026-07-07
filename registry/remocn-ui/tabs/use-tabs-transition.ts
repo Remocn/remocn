@@ -1,18 +1,18 @@
 "use client";
 
 import {
+  type TabsState,
+  type TabsStyle,
+  tabsStyle,
+  tabsStyleContext,
+} from "@/components/remocn/tabs";
+import {
   easings,
   type RemocnTheme,
   type Step,
   useRemocnTheme,
   useStateTransition,
 } from "@/lib/remocn-ui";
-import {
-  tabsStyle,
-  tabsStyleContext,
-  type TabsState,
-  type TabsStyle,
-} from "@/components/remocn/tabs";
 
 const DEFAULT_ITEMS = ["Account", "Password", "Settings"];
 

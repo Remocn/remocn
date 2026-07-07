@@ -1,8 +1,8 @@
 "use client";
 
 import { useCurrentFrame } from "remotion";
-import { clamp01, type EasingName, easings } from "@/lib/remocn-ui";
 import type { ProgressStyle } from "@/components/remocn/progress";
+import { clamp01, type EasingName, easings } from "@/lib/remocn-ui";
 
 export interface ProgressStep {
   at: number;

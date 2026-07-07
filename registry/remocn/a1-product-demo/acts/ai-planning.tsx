@@ -13,7 +13,16 @@ import {
 
 const EASE = Easing.out(Easing.cubic);
 
-const TIMES = ["9 AM", "10 AM", "11 AM", "12 PM", "1 PM", "2 PM", "3 PM", "4 PM"];
+const TIMES = [
+  "9 AM",
+  "10 AM",
+  "11 AM",
+  "12 PM",
+  "1 PM",
+  "2 PM",
+  "3 PM",
+  "4 PM",
+];
 
 const CARD_W = 1200;
 const PAD = 40;
@@ -330,11 +339,7 @@ export function AIPlanning({ speed = 1 }: { speed?: number }) {
                       top: i * ROW_H - 7,
                       fontSize: 12,
                       color: FLOW_MUTED,
-                      opacity: clampInterp(
-                        f,
-                        [28 + i * 2, 40 + i * 2],
-                        [0, 1],
-                      ),
+                      opacity: clampInterp(f, [28 + i * 2, 40 + i * 2], [0, 1]),
                     }}
                   >
                     {t}

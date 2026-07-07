@@ -3,14 +3,8 @@
   "name": "claude-code",
   "title": "Claude Code",
   "description": "Animated Claude Code CLI welcome screen — terminal window with a dashed welcome box, recent activity and what's new panels, and a prompt line that types a command with a block cursor. Dark/light themes.",
-  "dependencies": [
-    "remotion",
-    "@remotion/google-fonts"
-  ],
-  "registryDependencies": [
-    "@remocn/caret",
-    "@remocn/remocn-ui"
-  ],
+  "dependencies": ["remotion", "@remotion/google-fonts"],
+  "registryDependencies": ["@remocn/caret", "@remocn/remocn-ui"],
   "files": [
     {
       "path": "registry/remocn/claude-code/index.tsx",

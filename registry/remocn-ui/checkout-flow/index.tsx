@@ -1,29 +1,29 @@
 "use client";
 
-import { type RemocnTheme, useRemocnTheme } from "@/lib/remocn-ui";
-import { Cursor } from "@/components/remocn/cursor";
-import { useCursorPath } from "@/components/remocn/use-cursor-path";
-import { Input } from "@/components/remocn/input";
-import { useInputTransition } from "@/components/remocn/use-input-transition";
-import { Button } from "@/components/remocn/button";
-import { useButtonTransition } from "@/components/remocn/use-button-transition";
-import { Checkbox } from "@/components/remocn/checkbox";
-import { useCheckboxTransition } from "@/components/remocn/use-checkbox-transition";
-import {
-  ToggleGroup,
-  type ToggleGroupItem,
-} from "@/components/remocn/toggle-group";
-import { useToggleGroupTransition } from "@/components/remocn/use-toggle-group-transition";
-import { Toast } from "@/components/remocn/toast";
-import { useToastTransition } from "@/components/remocn/use-toast-transition";
 import { BlurIn } from "@/components/remocn/blur-in";
-import { useBlurInTransition } from "@/components/remocn/use-blur-in-transition";
+import { Button } from "@/components/remocn/button";
+import { Checkbox } from "@/components/remocn/checkbox";
+import { Cursor } from "@/components/remocn/cursor";
 import {
   Field,
   FieldControl,
   FieldGroup,
   FieldLabel,
 } from "@/components/remocn/field";
+import { Input } from "@/components/remocn/input";
+import { Toast } from "@/components/remocn/toast";
+import {
+  ToggleGroup,
+  type ToggleGroupItem,
+} from "@/components/remocn/toggle-group";
+import { useBlurInTransition } from "@/components/remocn/use-blur-in-transition";
+import { useButtonTransition } from "@/components/remocn/use-button-transition";
+import { useCheckboxTransition } from "@/components/remocn/use-checkbox-transition";
+import { useCursorPath } from "@/components/remocn/use-cursor-path";
+import { useInputTransition } from "@/components/remocn/use-input-transition";
+import { useToastTransition } from "@/components/remocn/use-toast-transition";
+import { useToggleGroupTransition } from "@/components/remocn/use-toggle-group-transition";
+import { type RemocnTheme, useRemocnTheme } from "@/lib/remocn-ui";
 
 const DEFAULT_PLANS: ToggleGroupItem[] = [
   { value: "monthly", label: "Monthly" },
@@ -210,9 +210,7 @@ export function CheckoutFlow({
         <FieldGroup gap={24}>
           <BlurIn display="block" style={enterCard}>
             <Field>
-              <FieldLabel theme={theme}>
-                {cardLabel}
-              </FieldLabel>
+              <FieldLabel theme={theme}>{cardLabel}</FieldLabel>
               <FieldControl>
                 <Input
                   placeholder={cardPlaceholder}

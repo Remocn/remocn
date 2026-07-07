@@ -1,7 +1,7 @@
 "use client";
 
+import { linearTiming, TransitionSeries } from "@remotion/transitions";
 import { AbsoluteFill } from "remotion";
-import { TransitionSeries, linearTiming } from "@remotion/transitions";
 import { rippleZoom } from "@/registry/remocn/ripple-zoom";
 
 const FONT_FAMILY =
@@ -52,7 +52,13 @@ export function RippleZoomExampleScene({
       </TransitionSeries.Sequence>
       <TransitionSeries.Transition
         timing={linearTiming({ durationInFrames: 88 })}
-        presentation={rippleZoom({ zoom, intensity, softness, colorBack, speed })}
+        presentation={rippleZoom({
+          zoom,
+          intensity,
+          softness,
+          colorBack,
+          speed,
+        })}
       />
       <TransitionSeries.Sequence durationInFrames={102}>
         <Scene label="Ripple Zoom" />

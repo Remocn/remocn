@@ -1,9 +1,8 @@
-
 import { describe, expect, it } from "bun:test";
+import { defaultLightTheme } from "@/lib/remocn-ui";
+import { inputConfig } from "../config";
 import { type InputState, inputStyle, inputStyleContext } from "../index";
 import { tweenInputStyle } from "../use-input-transition";
-import { inputConfig } from "../config";
-import { defaultLightTheme } from "@/lib/remocn-ui";
 
 const VALID_STATES: readonly InputState[] = [
   "idle",
@@ -28,7 +27,8 @@ const snippet = (values: SnippetValues): string =>
 describe("InputState union", () => {
   it("contains exactly the six documented states", () => {
     const control = inputConfig.controls.state;
-    if (control.type !== "select") throw new Error("state control must be a select");
+    if (control.type !== "select")
+      throw new Error("state control must be a select");
     expect(control.options).toEqual([
       "idle",
       "hover",
@@ -41,7 +41,8 @@ describe("InputState union", () => {
 
   it("every VALID_STATES entry is assignable (no typos in the fixture)", () => {
     const control = inputConfig.controls.state;
-    if (control.type !== "select") throw new Error("state control must be a select");
+    if (control.type !== "select")
+      throw new Error("state control must be a select");
     expect(VALID_STATES).toHaveLength(6);
     for (const s of VALID_STATES) {
       expect(control.options).toContain(s);
@@ -56,7 +57,8 @@ describe("inputConfig.controls.state", () => {
 
   it("has exactly the six InputState options in order", () => {
     const control = inputConfig.controls.state;
-    if (control.type !== "select") throw new Error("state control must be a select");
+    if (control.type !== "select")
+      throw new Error("state control must be a select");
     expect(control.options).toEqual([
       "idle",
       "hover",
@@ -74,7 +76,8 @@ describe("inputConfig.controls.state", () => {
 
   it("every option is a member of the InputState union", () => {
     const control = inputConfig.controls.state;
-    if (control.type !== "select") throw new Error("state control must be a select");
+    if (control.type !== "select")
+      throw new Error("state control must be a select");
     for (const option of control.options) {
       expect(VALID_STATES).toContain(option as InputState);
     }
@@ -82,33 +85,34 @@ describe("inputConfig.controls.state", () => {
 });
 
 describe("inputConfig.snippet: state prop emission", () => {
-  it("emits state=\"idle\" for the idle option", () => {
+  it('emits state="idle" for the idle option', () => {
     expect(snippet({ state: "idle" })).toContain('state="idle"');
   });
 
-  it("emits state=\"hover\" for the hover option", () => {
+  it('emits state="hover" for the hover option', () => {
     expect(snippet({ state: "hover" })).toContain('state="hover"');
   });
 
-  it("emits state=\"active\" for the active option", () => {
+  it('emits state="active" for the active option', () => {
     expect(snippet({ state: "active" })).toContain('state="active"');
   });
 
-  it("emits state=\"typing\" for the typing option", () => {
+  it('emits state="typing" for the typing option', () => {
     expect(snippet({ state: "typing" })).toContain('state="typing"');
   });
 
-  it("emits state=\"blur\" for the blur option", () => {
+  it('emits state="blur" for the blur option', () => {
     expect(snippet({ state: "blur" })).toContain('state="blur"');
   });
 
-  it("emits state=\"invalid\" for the invalid option", () => {
+  it('emits state="invalid" for the invalid option', () => {
     expect(snippet({ state: "invalid" })).toContain('state="invalid"');
   });
 
   it("emits the correct state for every control option", () => {
     const control = inputConfig.controls.state;
-    if (control.type !== "select") throw new Error("state control must be a select");
+    if (control.type !== "select")
+      throw new Error("state control must be a select");
     for (const state of control.options) {
       const out = snippet({ state });
       expect(out).toContain(`state="${state}"`);
@@ -133,7 +137,7 @@ describe("inputConfig.snippet: NEVER emits steps or action", () => {
 describe("inputConfig.snippet: import line", () => {
   it("includes `import { Input }` from the correct path", () => {
     const out = snippet({ state: "typing" });
-    expect(out).toContain('import { Input }');
+    expect(out).toContain("import { Input }");
     expect(out).toContain('from "@/components/remocn/input"');
   });
 });
@@ -166,11 +170,15 @@ describe("inputConfig.snippet: default props are omitted", () => {
 
 describe("inputConfig.snippet: non-default props are emitted", () => {
   it("emits a non-default placeholder", () => {
-    expect(snippet({ state: "idle", placeholder: "name@company.com" })).toContain('placeholder="name@company.com"');
+    expect(
+      snippet({ state: "idle", placeholder: "name@company.com" }),
+    ).toContain('placeholder="name@company.com"');
   });
 
   it("emits a non-default value", () => {
-    expect(snippet({ state: "typing", value: "user@test.io" })).toContain('value="user@test.io"');
+    expect(snippet({ state: "typing", value: "user@test.io" })).toContain(
+      'value="user@test.io"',
+    );
   });
 
   it("emits a non-default size", () => {
@@ -178,7 +186,9 @@ describe("inputConfig.snippet: non-default props are emitted", () => {
   });
 
   it("emits a non-default primary color", () => {
-    expect(snippet({ state: "typing", primary: "#6366f1" })).toContain('primary="#6366f1"');
+    expect(snippet({ state: "typing", primary: "#6366f1" })).toContain(
+      'primary="#6366f1"',
+    );
   });
 });
 
@@ -186,7 +196,7 @@ describe("inputConfig.snippet: structural round-trip", () => {
   const out = snippet({ state: "typing" });
 
   it("starts with the import line", () => {
-    expect(out.startsWith('import { Input }')).toBe(true);
+    expect(out.startsWith("import { Input }")).toBe(true);
   });
 
   it("contains a <Input JSX opening", () => {

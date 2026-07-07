@@ -12,10 +12,13 @@ export interface SwitchExampleProps {
 }
 
 export const SwitchExampleScene = (p: SwitchExampleProps = {}) => {
-  const style = useSwitchTransition([
-    { at: 18, state: "checked", duration: 14 },
-    { at: 78, state: "unchecked", duration: 12 },
-  ], { primary: p.primary });
+  const style = useSwitchTransition(
+    [
+      { at: 18, state: "checked", duration: 14 },
+      { at: 78, state: "unchecked", duration: 12 },
+    ],
+    { primary: p.primary },
+  );
   return (
     <Switch
       label={p.label ?? "Enable notifications"}

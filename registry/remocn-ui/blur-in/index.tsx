@@ -65,7 +65,8 @@ export function BlurIn({
   display = "inline-block",
   className,
 }: BlurInProps) {
-  const v = style ?? blurInStyle(state, blurInStyleContext(blur, direction, distance));
+  const v =
+    style ?? blurInStyle(state, blurInStyleContext(blur, direction, distance));
   return (
     <div
       className={className}

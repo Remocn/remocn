@@ -14,8 +14,8 @@ export const StepperExampleScene = (p: StepperExampleProps = {}) => {
   // Start explicitly at index 0 (else the timeline holds the first step's index
   // before it fires); each step arrives at the end of a 24-frame ease.
   const stepperStyle = useStepperTransition([
-    { at: 0,   index: 0 },
-    { at: 50,  index: 1, duration: 24 },
+    { at: 0, index: 0 },
+    { at: 50, index: 1, duration: 24 },
     { at: 110, index: 2, duration: 24 },
   ]);
 
@@ -37,7 +37,9 @@ export const stepperExampleCode = (
 
   const props: string[] = [];
   if (steps !== undefined) props.push(`steps={${JSON.stringify(steps)}}`);
-  const extraProps = props.length ? `\n        ${props.join("\n        ")}\n        ` : "";
+  const extraProps = props.length
+    ? `\n        ${props.join("\n        ")}\n        `
+    : "";
 
   return `import { Stepper } from "@/components/remocn/stepper";
 import { useStepperTransition } from "@/components/remocn/use-stepper-transition";

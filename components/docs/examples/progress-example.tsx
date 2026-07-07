@@ -13,8 +13,8 @@ export const ProgressExampleScene = (p: ProgressExampleProps = {}) => {
   // Bar fills from 0 → 62 (arrives at frame 40), stalls for ~60 frames as if
   // waiting on a slow operation, then resumes to 100 (arrives at frame 130).
   const progressStyle = useProgressTransition([
-    { at: 0,   value: 0  },
-    { at: 40,  value: 62,  duration: 36 },
+    { at: 0, value: 0 },
+    { at: 40, value: 62, duration: 36 },
     { at: 130, value: 100, duration: 30 },
   ]);
 
@@ -28,7 +28,11 @@ export const ProgressExampleScene = (p: ProgressExampleProps = {}) => {
         justifyContent: "center",
       }}
     >
-      <Progress style={progressStyle} showLabel={p.showLabel ?? true} width={320} />
+      <Progress
+        style={progressStyle}
+        showLabel={p.showLabel ?? true}
+        width={320}
+      />
     </div>
   );
 };

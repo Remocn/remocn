@@ -1,6 +1,12 @@
 "use client";
 
 import {
+  type SelectItemState,
+  type SelectItemStyle,
+  selectItemStyle,
+  selectItemStyleContext,
+} from "@/components/remocn/select-item";
+import {
   easings,
   mixOklch,
   type RemocnTheme,
@@ -8,12 +14,6 @@ import {
   useRemocnTheme,
   useStateTransition,
 } from "@/lib/remocn-ui";
-import {
-  selectItemStyle,
-  selectItemStyleContext,
-  type SelectItemState,
-  type SelectItemStyle,
-} from "@/components/remocn/select-item";
 
 export const DEFAULT_DURATION = 8;
 
@@ -41,8 +41,12 @@ export function useSelectItemTransition(
   steps: Step<SelectItemState>[],
   opts: SelectItemTransitionOptions = {},
 ): SelectItemStyle {
-  const { theme: themeOverride, mode, speed = 1, defaultDuration = DEFAULT_DURATION } =
-    opts;
+  const {
+    theme: themeOverride,
+    mode,
+    speed = 1,
+    defaultDuration = DEFAULT_DURATION,
+  } = opts;
   const theme = useRemocnTheme(themeOverride, mode);
   const ctx = selectItemStyleContext(theme);
   const { from, to, progress } = useStateTransition(

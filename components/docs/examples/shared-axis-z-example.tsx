@@ -6,10 +6,16 @@ import { SharedAxisZ } from "@/registry/remocn/shared-axis-z";
 export const SharedAxisZExampleScene = () => (
   <>
     <Sequence durationInFrames={40}>
-      <SharedAxisZ fromText="Zooming between states." toText="Elevate and settle." />
+      <SharedAxisZ
+        fromText="Zooming between states."
+        toText="Elevate and settle."
+      />
     </Sequence>
     <Sequence from={40} durationInFrames={40}>
-      <SharedAxisZ fromText="Elevate and settle." toText="Scale with purpose." />
+      <SharedAxisZ
+        fromText="Elevate and settle."
+        toText="Scale with purpose."
+      />
     </Sequence>
   </>
 );

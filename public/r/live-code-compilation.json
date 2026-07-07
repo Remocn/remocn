@@ -3,9 +3,7 @@
   "name": "live-code-compilation",
   "title": "Live Code Compilation",
   "description": "Split-screen where typed code on the left snaps a live UI preview on the right, HMR-style.",
-  "dependencies": [
-    "remotion"
-  ],
+  "dependencies": ["remotion"],
   "files": [
     {
       "path": "registry/remocn/live-code-compilation/index.tsx",

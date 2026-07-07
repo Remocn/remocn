@@ -1,20 +1,24 @@
 "use client";
 
-import { type RemocnTheme, revealedText, useRemocnTheme } from "@/lib/remocn-ui";
 import {
-  inputStyle,
-  inputStyleContext,
   type InputStyle,
   type InputStyleContext,
+  inputStyle,
+  inputStyleContext,
 } from "@/components/remocn/input";
 import {
   SelectItemRow,
-  selectItemStyle,
-  selectItemStyleContext,
   type SelectItemState,
   type SelectItemStyle,
   type SelectItemStyleContext,
+  selectItemStyle,
+  selectItemStyleContext,
 } from "@/components/remocn/select-item";
+import {
+  type RemocnTheme,
+  revealedText,
+  useRemocnTheme,
+} from "@/lib/remocn-ui";
 
 export type ComboboxState = "opened" | "closed";
 
@@ -241,7 +245,12 @@ export function Combobox({
                   style={
                     override ??
                     selectItemStyle(
-                      rowState(i, selectedIndex, highlightedIndex, pressedIndex),
+                      rowState(
+                        i,
+                        selectedIndex,
+                        highlightedIndex,
+                        pressedIndex,
+                      ),
                       ctx.itemCtx,
                     )
                   }

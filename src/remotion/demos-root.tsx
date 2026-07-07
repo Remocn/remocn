@@ -1,8 +1,8 @@
-import type { ComponentType } from "react";
 import { loadFont } from "@remotion/google-fonts/Geist";
+import type { ComponentType } from "react";
 import { AbsoluteFill, Composition, Loop, registerRoot } from "remotion";
-import { aiExamples } from "@/components/docs/examples/ai";
 import { examples } from "@/components/docs/examples";
+import { aiExamples } from "@/components/docs/examples/ai";
 import { blockExamples } from "@/components/docs/examples/blocks";
 
 /**

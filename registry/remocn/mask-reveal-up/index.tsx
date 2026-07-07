@@ -35,7 +35,10 @@ export function MaskRevealUp({
   const exitEasing = Easing.bezier(0.64, 0, 0.78, 0);
 
   const enterEnd = enterDur + (lines.length - 1) * enterStagger;
-  const exitStart = Math.max(enterEnd, durationInFrames - exitDur - (lines.length - 1) * exitStagger);
+  const exitStart = Math.max(
+    enterEnd,
+    durationInFrames - exitDur - (lines.length - 1) * exitStagger,
+  );
 
   return (
     <div

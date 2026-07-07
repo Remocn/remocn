@@ -1,7 +1,7 @@
 "use client";
 
+import { linearTiming, TransitionSeries } from "@remotion/transitions";
 import { AbsoluteFill, Sequence } from "remotion";
-import { TransitionSeries, linearTiming } from "@remotion/transitions";
 import { perlinDissolve } from "@/registry/remocn/perlin-dissolve";
 import { SoftBlurIn } from "@/registry/remocn/soft-blur-in";
 
@@ -52,7 +52,12 @@ export function PerlinDissolveExampleScene({
       </TransitionSeries.Sequence>
       <TransitionSeries.Transition
         timing={linearTiming({ durationInFrames: 104 })}
-        presentation={perlinDissolve({ colorFront, colorBack, softness, speed })}
+        presentation={perlinDissolve({
+          colorFront,
+          colorBack,
+          softness,
+          speed,
+        })}
       />
       <TransitionSeries.Sequence durationInFrames={110}>
         <Sequence from={52}>

@@ -38,8 +38,8 @@ export const ComboboxExampleScene = (p: ComboboxExampleProps = {}) => {
   // Animate the first row of the filtered list: idle → hover → press → selected.
   // Once "ba" is fully revealed, only Banana remains; row 0 of the filtered list.
   const itemStyle = useSelectItemTransition([
-    { at: 60, state: "hover",    duration: 8 },
-    { at: 72, state: "press",    duration: 6 },
+    { at: 60, state: "hover", duration: 8 },
+    { at: 72, state: "press", duration: 6 },
     { at: 80, state: "selected", duration: 8 },
   ]);
 
@@ -64,7 +64,9 @@ export const comboboxExampleCode = (
   const props: string[] = [];
   if (placeholder !== undefined && placeholder !== "Select a fruit…")
     props.push(`placeholder="${placeholder}"`);
-  const extraProps = props.length ? `\n        ${props.join("\n        ")}` : "";
+  const extraProps = props.length
+    ? `\n        ${props.join("\n        ")}`
+    : "";
 
   const optsStr = "";
 

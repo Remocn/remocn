@@ -1,9 +1,9 @@
 "use client";
 
-import { Cursor } from "@/registry/remocn-ui/cursor";
-import { useCursorPath } from "@/registry/remocn-ui/cursor/use-cursor-path";
 import { Button } from "@/registry/remocn-ui/button";
 import { useButtonTransition } from "@/registry/remocn-ui/button/use-button-transition";
+import { Cursor } from "@/registry/remocn-ui/cursor";
+import { useCursorPath } from "@/registry/remocn-ui/cursor/use-cursor-path";
 import { Toast } from "@/registry/remocn-ui/toast";
 import { useToastTransition } from "@/registry/remocn-ui/toast/use-toast-transition";
 
@@ -12,7 +12,9 @@ const BTN_X = 620; // cursor tip target X (the pointer hotspot lands here)
 const BTN_Y = 360; // cursor tip target Y
 
 export const toastExampleControls = [
-  "title", "description", "variant",
+  "title",
+  "description",
+  "variant",
 ] as const;
 
 export interface ToastExampleProps {
@@ -147,7 +149,7 @@ export const Scene = () => {
       </div>
 
       <div style={{ position: "absolute", right: 24, bottom: 24 }}>
-        <Toast${toastPropsStr === "" ? "\n          title=\"Changes saved\"\n          description=\"Your profile has been updated.\"\n          variant=\"success\"\n        " : toastPropsStr}style={toastStyle} />
+        <Toast${toastPropsStr === "" ? '\n          title="Changes saved"\n          description="Your profile has been updated."\n          variant="success"\n        ' : toastPropsStr}style={toastStyle} />
       </div>
 
       <Cursor style={cursorStyle} variant="pointer" />

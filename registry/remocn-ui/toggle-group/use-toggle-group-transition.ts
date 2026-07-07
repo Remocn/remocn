@@ -1,19 +1,19 @@
 "use client";
 
 import {
+  type ToggleGroupItem,
+  type ToggleGroupState,
+  type ToggleGroupStyle,
+  toggleGroupStyle,
+  toggleGroupStyleContext,
+} from "@/components/remocn/toggle-group";
+import {
   easings,
   type RemocnTheme,
   type Step,
   useRemocnTheme,
   useStateTransition,
 } from "@/lib/remocn-ui";
-import {
-  toggleGroupStyle,
-  toggleGroupStyleContext,
-  type ToggleGroupItem,
-  type ToggleGroupState,
-  type ToggleGroupStyle,
-} from "@/components/remocn/toggle-group";
 
 const DEFAULT_ITEMS: ToggleGroupItem[] = [
   { value: "Monthly", label: "Monthly" },

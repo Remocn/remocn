@@ -3,9 +3,7 @@
   "name": "infinite-bento-pan",
   "title": "Infinite Bento Pan",
   "description": "A camera diagonally drifts across an oversized bento grid behind a soft vignette.",
-  "dependencies": [
-    "remotion"
-  ],
+  "dependencies": ["remotion"],
   "files": [
     {
       "path": "registry/remocn/infinite-bento-pan/index.tsx",

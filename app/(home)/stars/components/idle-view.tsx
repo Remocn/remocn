@@ -6,7 +6,7 @@ export function IdleView({
   onInputChange,
   onSubmit,
   canGenerate,
-  zeroStars,
+  zeroStars: _zeroStars,
 }: {
   inputValue: string;
   onInputChange: (v: string) => void;

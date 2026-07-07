@@ -168,7 +168,12 @@ type SpatialPushProps = { direction: "up" | "down" | "left" | "right" };
 
 const SpatialPushPresentation: FC<
   TransitionPresentationComponentProps<SpatialPushProps>
-> = ({ children, presentationProgress, presentationDirection, passedProps }) => {
+> = ({
+  children,
+  presentationProgress,
+  presentationDirection,
+  passedProps,
+}) => {
   const p = presentationProgress;
   const { direction } = passedProps;
   const blur = interpolate(p, [0, 0.5, 1], [0, 5, 0]);
@@ -231,7 +236,13 @@ export function CtaScene({ line, domain, theme, speed = 1 }: CtaSceneProps) {
         }}
       >
         <div
-          style={{ position: "absolute", left: 0, right: 0, top: 24, height: 150 }}
+          style={{
+            position: "absolute",
+            left: 0,
+            right: 0,
+            top: 24,
+            height: 150,
+          }}
         >
           <MaskRevealUp
             text={line}

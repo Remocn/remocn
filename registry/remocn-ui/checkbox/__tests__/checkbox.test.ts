@@ -1,13 +1,12 @@
-
 import { describe, expect, it } from "bun:test";
+import { defaultLightTheme } from "@/lib/remocn-ui";
+import { checkboxConfig } from "../config";
 import {
   type CheckboxState,
   checkboxStyle,
   checkboxStyleContext,
 } from "../index";
 import { tweenCheckboxStyle } from "../use-checkbox-transition";
-import { checkboxConfig } from "../config";
-import { defaultLightTheme } from "@/lib/remocn-ui";
 
 const VALID_STATES: readonly CheckboxState[] = ["unchecked", "checked"];
 
@@ -24,13 +23,15 @@ const snippet = (values: SnippetValues): string =>
 describe("CheckboxState union", () => {
   it("contains exactly the two documented states", () => {
     const control = checkboxConfig.controls.state;
-    if (control.type !== "select") throw new Error("state control must be a select");
+    if (control.type !== "select")
+      throw new Error("state control must be a select");
     expect(control.options).toEqual(["unchecked", "checked"]);
   });
 
   it("every VALID_STATES entry is assignable (no typos in the fixture)", () => {
     const control = checkboxConfig.controls.state;
-    if (control.type !== "select") throw new Error("state control must be a select");
+    if (control.type !== "select")
+      throw new Error("state control must be a select");
     expect(VALID_STATES).toHaveLength(2);
     for (const s of VALID_STATES) {
       expect(control.options).toContain(s);
@@ -45,7 +46,8 @@ describe("checkboxConfig.controls.state", () => {
 
   it("has exactly the two CheckboxState options in order", () => {
     const control = checkboxConfig.controls.state;
-    if (control.type !== "select") throw new Error("state control must be a select");
+    if (control.type !== "select")
+      throw new Error("state control must be a select");
     expect(control.options).toEqual(["unchecked", "checked"]);
   });
 
@@ -56,7 +58,8 @@ describe("checkboxConfig.controls.state", () => {
 
   it("every option is a member of the CheckboxState union", () => {
     const control = checkboxConfig.controls.state;
-    if (control.type !== "select") throw new Error("state control must be a select");
+    if (control.type !== "select")
+      throw new Error("state control must be a select");
     for (const option of control.options) {
       expect(VALID_STATES).toContain(option as CheckboxState);
     }
@@ -64,17 +67,18 @@ describe("checkboxConfig.controls.state", () => {
 });
 
 describe("checkboxConfig.snippet: state prop emission", () => {
-  it("emits state=\"unchecked\" for the unchecked option", () => {
+  it('emits state="unchecked" for the unchecked option', () => {
     expect(snippet({ state: "unchecked" })).toContain('state="unchecked"');
   });
 
-  it("emits state=\"checked\" for the checked option", () => {
+  it('emits state="checked" for the checked option', () => {
     expect(snippet({ state: "checked" })).toContain('state="checked"');
   });
 
   it("emits the correct state for every control option", () => {
     const control = checkboxConfig.controls.state;
-    if (control.type !== "select") throw new Error("state control must be a select");
+    if (control.type !== "select")
+      throw new Error("state control must be a select");
     for (const state of control.options) {
       const out = snippet({ state });
       expect(out).toContain(`state="${state}"`);
@@ -99,7 +103,7 @@ describe("checkboxConfig.snippet: NEVER emits steps or action", () => {
 describe("checkboxConfig.snippet: import line", () => {
   it("includes `import { Checkbox }` from the correct path", () => {
     const out = snippet({ state: "checked" });
-    expect(out).toContain('import { Checkbox }');
+    expect(out).toContain("import { Checkbox }");
     expect(out).toContain('from "@/components/remocn/checkbox"');
   });
 });
@@ -127,7 +131,9 @@ describe("checkboxConfig.snippet: default props are omitted", () => {
 
 describe("checkboxConfig.snippet: non-default props are emitted", () => {
   it("emits a non-default label", () => {
-    expect(snippet({ state: "checked", label: "Accept terms" })).toContain('label="Accept terms"');
+    expect(snippet({ state: "checked", label: "Accept terms" })).toContain(
+      'label="Accept terms"',
+    );
   });
 
   it("emits a non-default size", () => {
@@ -135,7 +141,9 @@ describe("checkboxConfig.snippet: non-default props are emitted", () => {
   });
 
   it("emits a non-default primary color", () => {
-    expect(snippet({ state: "checked", primary: "#6366f1" })).toContain('primary="#6366f1"');
+    expect(snippet({ state: "checked", primary: "#6366f1" })).toContain(
+      'primary="#6366f1"',
+    );
   });
 });
 
@@ -143,7 +151,7 @@ describe("checkboxConfig.snippet: structural round-trip", () => {
   const out = snippet({ state: "checked" });
 
   it("starts with the import line", () => {
-    expect(out.startsWith('import { Checkbox }')).toBe(true);
+    expect(out.startsWith("import { Checkbox }")).toBe(true);
   });
 
   it("contains a <Checkbox JSX opening", () => {

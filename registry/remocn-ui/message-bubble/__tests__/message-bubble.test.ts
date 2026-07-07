@@ -1,22 +1,24 @@
-
 import { describe, expect, it } from "bun:test";
+import type { Step } from "@/lib/remocn-ui";
+import { defaultDarkTheme, defaultLightTheme } from "@/lib/remocn-ui";
+import { messageBubbleConfig } from "../config";
 import {
-  messageBubbleStyle,
-  messageBubbleStyleContext,
-  messageBubbleReactionStyle,
   type MessageBubbleState,
   type MessageBubbleVariant,
+  messageBubbleReactionStyle,
+  messageBubbleStyle,
+  messageBubbleStyleContext,
 } from "../index";
 import {
-  tweenMessageBubbleStyle,
   DEFAULT_DURATION,
+  tweenMessageBubbleStyle,
 } from "../use-message-bubble-transition";
-import { messageBubbleConfig } from "../config";
-import { defaultLightTheme, defaultDarkTheme, easings, clamp01 } from "@/lib/remocn-ui";
-import type { Step } from "@/lib/remocn-ui";
 
 const VALID_STATES: readonly MessageBubbleState[] = ["hidden", "visible"];
-const VALID_VARIANTS: readonly MessageBubbleVariant[] = ["incoming", "outgoing"];
+const VALID_VARIANTS: readonly MessageBubbleVariant[] = [
+  "incoming",
+  "outgoing",
+];
 
 type SnippetValues = {
   state?: string;
@@ -261,11 +263,17 @@ describe("tweenMessageBubbleStyle: identity (a === b, any t)", () => {
   const s = messageBubbleStyle("visible");
 
   it("opacity is unchanged when both endpoints are the same", () => {
-    expect(tweenMessageBubbleStyle(s, s, 0.5).opacity).toBeCloseTo(s.opacity, 10);
+    expect(tweenMessageBubbleStyle(s, s, 0.5).opacity).toBeCloseTo(
+      s.opacity,
+      10,
+    );
   });
 
   it("translateY is unchanged when both endpoints are the same", () => {
-    expect(tweenMessageBubbleStyle(s, s, 0.5).translateY).toBeCloseTo(s.translateY, 10);
+    expect(tweenMessageBubbleStyle(s, s, 0.5).translateY).toBeCloseTo(
+      s.translateY,
+      10,
+    );
   });
 
   it("scale is unchanged when both endpoints are the same", () => {
@@ -325,7 +333,12 @@ function resolveMessageBubbleTransition(
   steps: Step<MessageBubbleState>[],
   speed = 1,
   defaultDuration = DEFAULT_DURATION,
-): { style: ReturnType<typeof tweenMessageBubbleStyle>; progress: number; from: MessageBubbleState; to: MessageBubbleState } {
+): {
+  style: ReturnType<typeof tweenMessageBubbleStyle>;
+  progress: number;
+  from: MessageBubbleState;
+  to: MessageBubbleState;
+} {
   const { from, to, progress } = resolveStateTransition(
     raw,
     steps,
@@ -339,7 +352,12 @@ function resolveMessageBubbleTransition(
     messageBubbleStyle(to as MessageBubbleState),
     t,
   );
-  return { style, progress, from: from as MessageBubbleState, to: to as MessageBubbleState };
+  return {
+    style,
+    progress,
+    from: from as MessageBubbleState,
+    to: to as MessageBubbleState,
+  };
 }
 
 describe("resolveMessageBubbleTransition: before any step — holds at hidden", () => {
@@ -502,35 +520,57 @@ describe("messageBubbleConfig.snippet: import line", () => {
 
 describe("messageBubbleConfig.snippet: structural invariants", () => {
   it("contains a <MessageBubble JSX element", () => {
-    expect(snippet({ state: "visible", variant: "incoming" })).toContain("<MessageBubble");
+    expect(snippet({ state: "visible", variant: "incoming" })).toContain(
+      "<MessageBubble",
+    );
   });
 
   it("state prop is always emitted", () => {
-    expect(snippet({ state: "visible", variant: "incoming" })).toContain('state="visible"');
-    expect(snippet({ state: "hidden", variant: "outgoing" })).toContain('state="hidden"');
+    expect(snippet({ state: "visible", variant: "incoming" })).toContain(
+      'state="visible"',
+    );
+    expect(snippet({ state: "hidden", variant: "outgoing" })).toContain(
+      'state="hidden"',
+    );
   });
 
   it("variant prop is always emitted", () => {
-    expect(snippet({ state: "visible", variant: "incoming" })).toContain('variant="incoming"');
-    expect(snippet({ state: "visible", variant: "outgoing" })).toContain('variant="outgoing"');
+    expect(snippet({ state: "visible", variant: "incoming" })).toContain(
+      'variant="incoming"',
+    );
+    expect(snippet({ state: "visible", variant: "outgoing" })).toContain(
+      'variant="outgoing"',
+    );
   });
 });
 
 describe("messageBubbleConfig.snippet: reaction omitted when empty string", () => {
   it("does not emit reaction prop when reaction is empty string", () => {
-    const out = snippet({ state: "visible", variant: "incoming", reaction: "" });
+    const out = snippet({
+      state: "visible",
+      variant: "incoming",
+      reaction: "",
+    });
     expect(out).not.toContain("reaction=");
   });
 });
 
 describe("messageBubbleConfig.snippet: reaction emitted when provided", () => {
   it("emits reaction prop when reaction is a non-empty string", () => {
-    const out = snippet({ state: "visible", variant: "incoming", reaction: "🔥" });
+    const out = snippet({
+      state: "visible",
+      variant: "incoming",
+      reaction: "🔥",
+    });
     expect(out).toContain('reaction="🔥"');
   });
 
   it("emits reaction prop for any non-empty value", () => {
-    const out = snippet({ state: "visible", variant: "outgoing", reaction: "👍" });
+    const out = snippet({
+      state: "visible",
+      variant: "outgoing",
+      reaction: "👍",
+    });
     expect(out).toContain('reaction="👍"');
   });
 });

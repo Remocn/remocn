@@ -4,13 +4,13 @@ import { ArrowRight, Check } from "lucide-react";
 import { motion } from "motion/react";
 import Link from "next/link";
 import { useState } from "react";
+import { SpotlightSurface } from "@/components/spotlight-surface";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { SPRING_BOUNCE, SPRING_SOFT } from "@/config/site";
 import { type BillingMode, type Tier, tiers } from "@/config/sponsors";
 import { cn } from "@/lib/utils";
-import { SpotlightSurface } from "@/components/spotlight-surface";
 import { FadeUp } from "../../../components/fade-up";
 
 function BillingToggle({

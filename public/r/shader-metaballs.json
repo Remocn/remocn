@@ -3,9 +3,7 @@
   "name": "shader-metaballs",
   "title": "Shader Metaballs",
   "description": "Organic blobs merging and splitting like lava.",
-  "dependencies": [
-    "@paper-design/shaders-react"
-  ],
+  "dependencies": ["@paper-design/shaders-react"],
   "files": [
     {
       "path": "registry/remocn/shader-metaballs/index.tsx",

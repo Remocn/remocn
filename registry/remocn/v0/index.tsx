@@ -224,7 +224,6 @@ export function V0({
   const headingFade = fadeUpAt(frame * speed, [4, 20]);
   const boxFade = fadeUpAt(frame * speed, [10, 26]);
 
-
   const boxWidth = 880;
   const boxLeft = (refW - boxWidth) / 2;
   const boxTop = 270;
@@ -316,7 +315,12 @@ export function V0({
                   alignItems: "center",
                 }}
               >
-                <Caret color={t.fg} blink={!tw.typing} speed={speed} height={20} />
+                <Caret
+                  color={t.fg}
+                  blink={!tw.typing}
+                  speed={speed}
+                  height={20}
+                />
                 <span style={{ marginLeft: 6 }}>{placeholder}</span>
               </span>
             )}

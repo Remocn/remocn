@@ -32,8 +32,7 @@ export const radioConfig: ComponentConfig = {
     const primary = values.primary as string | undefined;
 
     const props: string[] = [`  state="${state}"`];
-    if (label !== undefined && label !== "")
-      props.push(`  label="${label}"`);
+    if (label !== undefined && label !== "") props.push(`  label="${label}"`);
     if (size !== undefined && size !== "default")
       props.push(`  size="${size}"`);
     if (primary !== undefined && primary !== "#171717")

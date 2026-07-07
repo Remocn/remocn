@@ -3,9 +3,7 @@
   "name": "shader-voronoi",
   "title": "Shader Voronoi",
   "description": "Animated Voronoi cells shifting and re-tessellating.",
-  "dependencies": [
-    "@paper-design/shaders-react"
-  ],
+  "dependencies": ["@paper-design/shaders-react"],
   "files": [
     {
       "path": "registry/remocn/shader-voronoi/index.tsx",

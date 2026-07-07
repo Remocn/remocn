@@ -15,6 +15,9 @@ export const dropdownMenuConfig: ComponentConfig = {
     highlightedIndex: {
       type: "number",
       default: 0,
+      min: -1,
+      max: 3,
+      step: 1,
       label: "Highlighted Index",
     },
   },

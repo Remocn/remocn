@@ -1,19 +1,18 @@
-
 import { describe, expect, it } from "bun:test";
+import { defaultLightTheme, easings } from "@/lib/remocn-ui";
+import { stepperConfig } from "../config";
 import {
+  connectorFillAt,
+  stepCircleAt,
   stepperStyle,
   stepperStyleContext,
-  stepCircleAt,
-  connectorFillAt,
 } from "../index";
 import {
-  tweenStepperStyle,
-  stepperStyleAt,
   DEFAULT_DURATION,
   type StepperStep,
+  stepperStyleAt,
+  tweenStepperStyle,
 } from "../use-stepper-transition";
-import { stepperConfig } from "../config";
-import { defaultLightTheme, easings } from "@/lib/remocn-ui";
 
 type SnippetValues = {
   activeIndex?: number;
@@ -204,7 +203,13 @@ describe("stepCircleAt: fill clamps at 0 for negative (position - i)", () => {
 });
 
 describe("stepCircleAt: fill and checkDraw are always equal", () => {
-  for (const [i, pos] of [[0, 0], [0, 0.5], [0, 1], [1, 1.5], [2, 2]] as [number, number][]) {
+  for (const [i, pos] of [
+    [0, 0],
+    [0, 0.5],
+    [0, 1],
+    [1, 1.5],
+    [2, 2],
+  ] as [number, number][]) {
     it(`i=${i} pos=${pos}: fill === checkDraw`, () => {
       const r = stepCircleAt(i, pos);
       expect(r.fill).toBeCloseTo(r.checkDraw, 10);
@@ -316,7 +321,10 @@ describe("stepperStyleAt: before first step — holds at first.index", () => {
 });
 
 describe("stepperStyleAt: past last step — rests at last.index", () => {
-  const steps: StepperStep[] = [{ at: 0, index: 0 }, { at: 24, index: 1 }];
+  const steps: StepperStep[] = [
+    { at: 0, index: 0 },
+    { at: 24, index: 1 },
+  ];
 
   it("raw=50 past last.at=24 → position=1 (last index)", () => {
     expect(stepperStyleAt(steps, 50).position).toBeCloseTo(1, 10);
@@ -328,7 +336,10 @@ describe("stepperStyleAt: past last step — rests at last.index", () => {
 });
 
 describe("stepperStyleAt: mid-window uses easings.out (non-linear)", () => {
-  const steps: StepperStep[] = [{ at: 0, index: 0 }, { at: 24, index: 1 }];
+  const steps: StepperStep[] = [
+    { at: 0, index: 0 },
+    { at: 24, index: 1 },
+  ];
 
   it("raw=12 gives position=0.875 (out-eased, not linear 0.5)", () => {
     expect(stepperStyleAt(steps, 12).position).toBeCloseTo(0.875, 8);
@@ -346,7 +357,10 @@ describe("stepperStyleAt: mid-window uses easings.out (non-linear)", () => {
 });
 
 describe("stepperStyleAt: at last step boundary — pastLast → t=1", () => {
-  const steps: StepperStep[] = [{ at: 0, index: 0 }, { at: 24, index: 1 }];
+  const steps: StepperStep[] = [
+    { at: 0, index: 0 },
+    { at: 24, index: 1 },
+  ];
 
   it("raw=24 exactly at last step → position=1", () => {
     expect(stepperStyleAt(steps, 24).position).toBeCloseTo(1, 10);
@@ -370,7 +384,10 @@ describe("stepperStyleAt: two-step multi-segment timeline", () => {
 });
 
 describe("stepperStyleAt: custom duration on a step", () => {
-  const steps: StepperStep[] = [{ at: 0, index: 0 }, { at: 12, index: 1, duration: 12 }];
+  const steps: StepperStep[] = [
+    { at: 0, index: 0 },
+    { at: 12, index: 1, duration: 12 },
+  ];
 
   it("custom duration=12: raw=6 gives position=0.875", () => {
     expect(stepperStyleAt(steps, 6).position).toBeCloseTo(0.875, 8);
@@ -447,7 +464,9 @@ describe("stepperConfig.snippet: structural invariants", () => {
   });
 
   it("starts with the import line", () => {
-    expect(snippet({ activeIndex: 1 }).startsWith('import { Stepper }')).toBe(true);
+    expect(snippet({ activeIndex: 1 }).startsWith("import { Stepper }")).toBe(
+      true,
+    );
   });
 });
 

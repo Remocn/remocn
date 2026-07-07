@@ -1,16 +1,15 @@
-
 import { describe, expect, it } from "bun:test";
+import { defaultDarkTheme, defaultLightTheme } from "@/lib/remocn-ui";
+import { commandMenuItemConfig } from "../config";
 import {
+  type CommandMenuItemState,
   commandMenuItemStyle,
   commandMenuItemStyleContext,
-  type CommandMenuItemState,
 } from "../index";
 import {
-  tweenCommandMenuItemStyle,
   DEFAULT_DURATION,
+  tweenCommandMenuItemStyle,
 } from "../use-command-menu-item-transition";
-import { commandMenuItemConfig } from "../config";
-import { defaultLightTheme, defaultDarkTheme } from "@/lib/remocn-ui";
 
 const VALID_STATES: readonly CommandMenuItemState[] = [
   "idle",
@@ -91,7 +90,7 @@ describe("commandMenuItemStyleContext: pressBg is a derived (non-empty) color st
 
 describe("commandMenuItemStyleContext: all fields are non-empty strings", () => {
   it("every field is a non-empty string", () => {
-    for (const [key, value] of Object.entries(ctx)) {
+    for (const [_key, value] of Object.entries(ctx)) {
       expect(typeof value).toBe("string");
       expect((value as string).length).toBeGreaterThan(0);
     }
@@ -317,8 +316,12 @@ describe("tweenCommandMenuItemStyle: identity (a === b, any t)", () => {
   });
 
   it("background is a non-empty string for identity case", () => {
-    expect(typeof tweenCommandMenuItemStyle(s, s, 0.5).background).toBe("string");
-    expect(tweenCommandMenuItemStyle(s, s, 0.5).background.length).toBeGreaterThan(0);
+    expect(typeof tweenCommandMenuItemStyle(s, s, 0.5).background).toBe(
+      "string",
+    );
+    expect(
+      tweenCommandMenuItemStyle(s, s, 0.5).background.length,
+    ).toBeGreaterThan(0);
   });
 });
 
@@ -424,37 +427,53 @@ describe("commandMenuItemConfig.snippet: structural invariants", () => {
 
 describe("commandMenuItemConfig.snippet: default props are omitted", () => {
   it("omits label when it equals the default 'Settings'", () => {
-    expect(snippet({ state: "selected", label: "Settings" })).not.toContain("label=");
+    expect(snippet({ state: "selected", label: "Settings" })).not.toContain(
+      "label=",
+    );
   });
 
   it("omits icon when it equals the default 'settings'", () => {
-    expect(snippet({ state: "selected", icon: "settings" })).not.toContain("icon=");
+    expect(snippet({ state: "selected", icon: "settings" })).not.toContain(
+      "icon=",
+    );
   });
 
   it("omits shortcut when it is an empty string", () => {
-    expect(snippet({ state: "selected", shortcut: "" })).not.toContain("shortcut=");
+    expect(snippet({ state: "selected", shortcut: "" })).not.toContain(
+      "shortcut=",
+    );
   });
 });
 
 describe("commandMenuItemConfig.snippet: non-default props are emitted", () => {
   it("emits a non-default label", () => {
-    expect(snippet({ state: "selected", label: "Profile" })).toContain('label="Profile"');
+    expect(snippet({ state: "selected", label: "Profile" })).toContain(
+      'label="Profile"',
+    );
   });
 
   it("emits icon='search' when non-default", () => {
-    expect(snippet({ state: "selected", icon: "search" })).toContain('icon="search"');
+    expect(snippet({ state: "selected", icon: "search" })).toContain(
+      'icon="search"',
+    );
   });
 
   it("emits icon='user' when non-default", () => {
-    expect(snippet({ state: "selected", icon: "user" })).toContain('icon="user"');
+    expect(snippet({ state: "selected", icon: "user" })).toContain(
+      'icon="user"',
+    );
   });
 
   it("emits icon='file' when non-default", () => {
-    expect(snippet({ state: "selected", icon: "file" })).toContain('icon="file"');
+    expect(snippet({ state: "selected", icon: "file" })).toContain(
+      'icon="file"',
+    );
   });
 
   it("emits shortcut when non-empty", () => {
-    expect(snippet({ state: "selected", shortcut: "⌘ S" })).toContain('shortcut="⌘ S"');
+    expect(snippet({ state: "selected", shortcut: "⌘ S" })).toContain(
+      'shortcut="⌘ S"',
+    );
   });
 });
 

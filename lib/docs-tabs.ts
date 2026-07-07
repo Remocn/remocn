@@ -61,8 +61,7 @@ function isPrimitivesNode(node: Node): boolean {
   if (node.index?.url === PRIMITIVES_PREFIX) return true;
   return node.children.some(
     (child) =>
-      child.type === "page" &&
-      child.url.startsWith(`${PRIMITIVES_PREFIX}/`),
+      child.type === "page" && child.url.startsWith(`${PRIMITIVES_PREFIX}/`),
   );
 }
 

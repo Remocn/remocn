@@ -1,15 +1,11 @@
 "use client";
 
 import {
-  easings,
-  type Step,
-  useStateTransition,
-} from "@/lib/remocn-ui";
-import {
-  skeletonStyle,
   type SkeletonState,
   type SkeletonStyle,
+  skeletonStyle,
 } from "@/components/remocn/skeleton";
+import { easings, type Step, useStateTransition } from "@/lib/remocn-ui";
 
 export const DEFAULT_DURATION = 12;
 

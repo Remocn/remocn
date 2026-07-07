@@ -1,12 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  interpolate,
-  useCurrentFrame,
-} from "remotion";
+import { AbsoluteFill, Easing, interpolate, useCurrentFrame } from "remotion";
 import type { TemplateTheme } from "./foundation";
 import { UiSnapshotCard } from "./ui-snapshot-card";
 
@@ -80,7 +75,12 @@ export function FeatureFrame({
         gap: 26,
       }}
     >
-      <TitleBlock title={title} accent={accent} color={theme.foreground} f={f} />
+      <TitleBlock
+        title={title}
+        accent={accent}
+        color={theme.foreground}
+        f={f}
+      />
       <BulletLine bullet={bullet} color={theme.muted} f={f} />
     </div>
   );

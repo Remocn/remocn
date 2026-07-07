@@ -493,7 +493,6 @@ export function ElasticSlider({
         >
           {Array.from({ length: hashMarkCount }, (_, i) => (
             <div
-              // biome-ignore lint/suspicious/noArrayIndexKey: hash marks are positional and static
               key={i}
               className={cn(
                 "absolute top-1/2 h-2 w-px -translate-x-1/2 -translate-y-1/2 rounded-full transition-colors duration-200",

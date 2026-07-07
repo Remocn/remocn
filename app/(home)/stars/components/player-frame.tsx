@@ -9,7 +9,7 @@ export function PlayerFrame({
   entry,
   inputProps,
   orientation,
-  reduced,
+  reduced: _reduced,
 }: {
   entry: RegistryEntry;
   inputProps: GitHubStarsInputProps;
@@ -43,7 +43,7 @@ export function PlayerFrame({
         >
           <Player
             ref={ref}
-            component={entry.Component}
+            lazyComponent={entry.load}
             inputProps={inputProps}
             durationInFrames={entry.config.durationInFrames}
             fps={entry.config.fps}

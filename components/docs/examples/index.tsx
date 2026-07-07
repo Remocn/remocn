@@ -9,79 +9,46 @@ import {
   AlertDialogExampleScene,
   alertDialogExampleCode,
 } from "./alert-dialog-example";
-import { DialogExampleScene, dialogExampleCode } from "./dialog-example";
-import { SheetExampleScene, sheetExampleCode } from "./sheet-example";
-import { DrawerExampleScene, drawerExampleCode } from "./drawer-example";
+import { BlurInExampleScene, blurInExampleCode } from "./blur-in-example";
 import { ButtonExampleScene, buttonExampleCode } from "./button-example";
+import { CheckboxExampleScene, checkboxExampleCode } from "./checkbox-example";
+import { ComboboxExampleScene, comboboxExampleCode } from "./combobox-example";
 import {
-  CheckboxExampleScene,
-  checkboxExampleCode,
-} from "./checkbox-example";
-import { RadioExampleScene, radioExampleCode } from "./radio-example";
-import { SwitchExampleScene, switchExampleCode } from "./switch-example";
-import { InputExampleScene, inputExampleCode } from "./input-example";
-import { SelectExampleScene, selectExampleCode } from "./select-example";
+  CommandMenuExampleScene,
+  commandMenuExampleCode,
+} from "./command-menu-example";
+import {
+  ContextMenuExampleScene,
+  contextMenuExampleCode,
+} from "./context-menu-example";
+import { CursorExampleScene, cursorExampleCode } from "./cursor-example";
+import { DialogExampleScene, dialogExampleCode } from "./dialog-example";
+import { DrawerExampleScene, drawerExampleCode } from "./drawer-example";
 import {
   DropdownMenuExampleScene,
   dropdownMenuExampleCode,
 } from "./dropdown-menu-example";
-import { TabsExampleScene, tabsExampleCode } from "./tabs-example";
-import { CursorExampleScene, cursorExampleCode } from "./cursor-example";
-import { ToastExampleScene, toastExampleCode } from "./toast-example";
+import {
+  FadeThroughExampleScene,
+  fadeThroughExampleCode,
+} from "./fade-through-example";
+import { InputExampleScene, inputExampleCode } from "./input-example";
 import {
   MessageBubbleExampleScene,
   messageBubbleExampleCode,
 } from "./message-bubble-example";
 import {
-  TypingIndicatorExampleScene,
-  typingIndicatorExampleCode,
-} from "./typing-indicator-example";
-import {
-  CommandMenuExampleScene,
-  commandMenuExampleCode,
-} from "./command-menu-example";
-import { TooltipExampleScene, tooltipExampleCode } from "./tooltip-example";
-import {
-  ProgressExampleScene,
-  progressExampleCode,
-} from "./progress-example";
-import {
-  SkeletonExampleScene,
-  skeletonExampleCode,
-} from "./skeleton-example";
-import {
-  SliderExampleScene,
-  sliderExampleCode,
-} from "./slider-example";
-import {
-  ComboboxExampleScene,
-  comboboxExampleCode,
-} from "./combobox-example";
-import {
-  PopoverExampleScene,
-  popoverExampleCode,
-} from "./popover-example";
-import {
-  ContextMenuExampleScene,
-  contextMenuExampleCode,
-} from "./context-menu-example";
-import {
-  ToggleGroupExampleScene,
-  toggleGroupExampleCode,
-} from "./toggle-group-example";
-import {
-  StepperExampleScene,
-  stepperExampleCode,
-} from "./stepper-example";
+  PerWordCrossfadeExampleScene,
+  perWordCrossfadeExampleCode,
+} from "./per-word-crossfade-example";
+import { PopoverExampleScene, popoverExampleCode } from "./popover-example";
+import { ProgressExampleScene, progressExampleCode } from "./progress-example";
+import { RadioExampleScene, radioExampleCode } from "./radio-example";
 import {
   ResizableExampleScene,
   resizableExampleCode,
 } from "./resizable-example";
-import { BlurInExampleScene, blurInExampleCode } from "./blur-in-example";
-import {
-  FadeThroughExampleScene,
-  fadeThroughExampleCode,
-} from "./fade-through-example";
+import { SelectExampleScene, selectExampleCode } from "./select-example";
 import {
   SharedAxisYExampleScene,
   sharedAxisYExampleCode,
@@ -90,10 +57,22 @@ import {
   SharedAxisZExampleScene,
   sharedAxisZExampleCode,
 } from "./shared-axis-z-example";
+import { SheetExampleScene, sheetExampleCode } from "./sheet-example";
+import { SkeletonExampleScene, skeletonExampleCode } from "./skeleton-example";
+import { SliderExampleScene, sliderExampleCode } from "./slider-example";
+import { StepperExampleScene, stepperExampleCode } from "./stepper-example";
+import { SwitchExampleScene, switchExampleCode } from "./switch-example";
+import { TabsExampleScene, tabsExampleCode } from "./tabs-example";
+import { ToastExampleScene, toastExampleCode } from "./toast-example";
 import {
-  PerWordCrossfadeExampleScene,
-  perWordCrossfadeExampleCode,
-} from "./per-word-crossfade-example";
+  ToggleGroupExampleScene,
+  toggleGroupExampleCode,
+} from "./toggle-group-example";
+import { TooltipExampleScene, tooltipExampleCode } from "./tooltip-example";
+import {
+  TypingIndicatorExampleScene,
+  typingIndicatorExampleCode,
+} from "./typing-indicator-example";
 
 export interface ExampleEntry {
   Component: ComponentType;

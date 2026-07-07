@@ -3,9 +3,7 @@
   "name": "perspective-marquee",
   "title": "Perspective Marquee",
   "description": "A 3D-tilted infinite marquee with depth-of-field blur on items rolling toward the horizon.",
-  "dependencies": [
-    "remotion"
-  ],
+  "dependencies": ["remotion"],
   "files": [
     {
       "path": "registry/remocn/perspective-marquee/index.tsx",

@@ -3,9 +3,7 @@
   "name": "matrix-decode",
   "title": "Matrix Decode",
   "description": "Random scramble resolves left-to-right into the target text.",
-  "dependencies": [
-    "remotion"
-  ],
+  "dependencies": ["remotion"],
   "files": [
     {
       "path": "registry/remocn/matrix-decode/index.tsx",

@@ -1,6 +1,6 @@
 "use client";
 
-import { Sequence, interpolate, useCurrentFrame } from "remotion";
+import { interpolate, Sequence, useCurrentFrame } from "remotion";
 
 export interface GlassCodeBlockProps {
   code?: string;
@@ -68,8 +68,8 @@ function tokenizeLine(line: string): Token[] {
   const tokens: Token[] = [];
   // Split keeping delimiters: words, strings, numbers, everything else.
   const re = /("[^"]*"|'[^']*'|`[^`]*`|\b\d+\b|\b[A-Za-z_$][\w$]*\b|[^\w"']+)/g;
-  let match: RegExpExecArray | null;
-  while ((match = re.exec(line)) !== null) {
+  let match: RegExpExecArray | null = re.exec(line);
+  while (match !== null) {
     const t = match[0];
     const first = t[0];
     if (first === '"' || first === "'" || first === "`") {
@@ -81,6 +81,7 @@ function tokenizeLine(line: string): Token[] {
     } else {
       tokens.push({ text: t, kind: "code" });
     }
+    match = re.exec(line);
   }
   return tokens;
 }

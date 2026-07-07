@@ -1,9 +1,9 @@
 "use client";
 
-import { Cursor } from "@/registry/remocn-ui/cursor";
-import { useCursorPath } from "@/registry/remocn-ui/cursor/use-cursor-path";
 import { Button } from "@/registry/remocn-ui/button";
 import { useButtonTransition } from "@/registry/remocn-ui/button/use-button-transition";
+import { Cursor } from "@/registry/remocn-ui/cursor";
+import { useCursorPath } from "@/registry/remocn-ui/cursor/use-cursor-path";
 
 const BTN_X = 620; // cursor tip target X (the pointer hotspot lands here)
 const BTN_Y = 360; // cursor tip target Y

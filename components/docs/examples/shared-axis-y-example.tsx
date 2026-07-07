@@ -6,7 +6,10 @@ import { SharedAxisY } from "@/registry/remocn/shared-axis-y";
 export const SharedAxisYExampleScene = () => (
   <>
     <Sequence durationInFrames={40}>
-      <SharedAxisY fromText="Layered navigation." toText="Hierarchy made clear." />
+      <SharedAxisY
+        fromText="Layered navigation."
+        toText="Hierarchy made clear."
+      />
     </Sequence>
     <Sequence from={40} durationInFrames={40}>
       <SharedAxisY

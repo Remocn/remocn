@@ -75,13 +75,7 @@ export function Integrations({ speed = 1 }: { speed?: number }) {
   );
 }
 
-function Glyph({
-  kind,
-  size,
-}: {
-  kind: (typeof ICONS)[number];
-  size: number;
-}) {
+function Glyph({ kind, size }: { kind: (typeof ICONS)[number]; size: number }) {
   if (kind === "github") return <GithubMark size={size} />;
   if (kind === "figma") return <FigmaMark size={size} />;
   if (kind === "flowith") return <FlowithMark size={size} />;

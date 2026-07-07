@@ -1,15 +1,14 @@
-
 import { describe, expect, it } from "bun:test";
-import {
-  cursorPathAt,
-  ripplePhase,
-  clickPress,
-  DEFAULT_DURATION,
-  CLICK_FRAMES,
-  PRESS_FRAMES,
-  type CursorWaypoint,
-} from "../use-cursor-path";
 import { cursorConfig } from "../config";
+import {
+  CLICK_FRAMES,
+  type CursorWaypoint,
+  clickPress,
+  cursorPathAt,
+  DEFAULT_DURATION,
+  PRESS_FRAMES,
+  ripplePhase,
+} from "../use-cursor-path";
 
 function pathAt(waypoints: CursorWaypoint[], raw: number, speed = 1) {
   return cursorPathAt(waypoints, raw, { speed });
@@ -101,13 +100,17 @@ describe("ripplePhase: just before expiry (frame = CLICK_FRAMES - 1)", () => {
 describe("ripplePhase: monotonic invariants across the window", () => {
   it("opacity decreases monotonically across all frames in [0, CLICK_FRAMES)", () => {
     for (let f = 0; f < CLICK_FRAMES - 1; f++) {
-      expect(ripplePhase(f).rippleOpacity).toBeGreaterThan(ripplePhase(f + 1).rippleOpacity);
+      expect(ripplePhase(f).rippleOpacity).toBeGreaterThan(
+        ripplePhase(f + 1).rippleOpacity,
+      );
     }
   });
 
   it("scale increases monotonically across all frames in [0, CLICK_FRAMES)", () => {
     for (let f = 0; f < CLICK_FRAMES - 1; f++) {
-      expect(ripplePhase(f).rippleScale).toBeLessThan(ripplePhase(f + 1).rippleScale);
+      expect(ripplePhase(f).rippleScale).toBeLessThan(
+        ripplePhase(f + 1).rippleScale,
+      );
     }
   });
 });
@@ -366,7 +369,7 @@ describe("cursorPathAt: click:true — ripple and press-dip fire at arrival", ()
 
 describe("cursorPathAt: multiple clicks — only the most recent active click fires", () => {
   const wps: CursorWaypoint[] = [
-    { at: 0,  x: 0,   y: 0,   click: true },
+    { at: 0, x: 0, y: 0, click: true },
     { at: 48, x: 100, y: 100, click: true },
   ];
 
@@ -393,7 +396,7 @@ describe("cursorPathAt: multiple clicks — only the most recent active click fi
 
 describe("cursorPathAt: press:true — held press look", () => {
   const wps: CursorWaypoint[] = [
-    { at: 0,  x: 0,   y: 0,   press: true },
+    { at: 0, x: 0, y: 0, press: true },
     { at: 48, x: 100, y: 100 },
   ];
 
@@ -412,7 +415,7 @@ describe("cursorPathAt: press:true — held press look", () => {
 
 describe("cursorPathAt: no press flag — pressScale is always 1", () => {
   const wps: CursorWaypoint[] = [
-    { at: 0,  x: 0,   y: 0 },
+    { at: 0, x: 0, y: 0 },
     { at: 24, x: 100, y: 0 },
   ];
 
@@ -459,7 +462,7 @@ describe("cursorPathAt: speed contract", () => {
 
 describe("cursorPathAt: three waypoints — segment selection", () => {
   const wps: CursorWaypoint[] = [
-    { at: 0,  x: 0,   y: 0 },
+    { at: 0, x: 0, y: 0 },
     { at: 24, x: 100, y: 0 },
     { at: 48, x: 200, y: 0 },
   ];

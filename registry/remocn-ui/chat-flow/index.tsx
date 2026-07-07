@@ -1,20 +1,20 @@
 "use client";
 
 import { interpolate, spring, useCurrentFrame, useVideoConfig } from "remotion";
-import {
-  type RemocnTheme,
-  mixOklch,
-  revealedText,
-  useRemocnTheme,
-} from "@/lib/remocn-ui";
 import { Caret } from "@/components/remocn/caret";
 import {
   MessageBubble,
   type MessageBubbleReactionStyle,
   type MessageBubbleStyle,
 } from "@/components/remocn/message-bubble";
-import { useMessageBubbleTransition } from "@/components/remocn/use-message-bubble-transition";
 import { TypingIndicator } from "@/components/remocn/typing-indicator";
+import { useMessageBubbleTransition } from "@/components/remocn/use-message-bubble-transition";
+import {
+  mixOklch,
+  type RemocnTheme,
+  revealedText,
+  useRemocnTheme,
+} from "@/lib/remocn-ui";
 
 export interface ChatMessage {
   from: "me" | "them";
@@ -211,6 +211,7 @@ function Avatar({
       }}
     >
       {contact.avatar !== undefined ? (
+        // biome-ignore lint/performance/noImgElement: Remotion output, not a Next.js app — next/image isn't available where this component ships
         <img
           src={contact.avatar}
           alt={contact.name}

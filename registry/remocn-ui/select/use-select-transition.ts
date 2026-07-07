@@ -1,18 +1,18 @@
 "use client";
 
 import {
+  type SelectState,
+  type SelectStyle,
+  selectStyle,
+  selectStyleContext,
+} from "@/components/remocn/select";
+import {
   easings,
   type RemocnTheme,
   type Step,
   useRemocnTheme,
   useStateTransition,
 } from "@/lib/remocn-ui";
-import {
-  selectStyle,
-  selectStyleContext,
-  type SelectState,
-  type SelectStyle,
-} from "@/components/remocn/select";
 
 export const DEFAULT_DURATION = 12;
 
@@ -42,8 +42,12 @@ export function useSelectTransition(
   steps: Step<SelectState>[],
   opts: SelectTransitionOptions = {},
 ): SelectStyle {
-  const { theme: themeOverride, mode, speed = 1, defaultDuration = DEFAULT_DURATION } =
-    opts;
+  const {
+    theme: themeOverride,
+    mode,
+    speed = 1,
+    defaultDuration = DEFAULT_DURATION,
+  } = opts;
   const theme = useRemocnTheme(themeOverride, mode);
   const ctx = selectStyleContext(theme);
   const { from, to, progress } = useStateTransition(

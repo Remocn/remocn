@@ -6,7 +6,10 @@ import { Drawer } from "@/registry/remocn-ui/drawer";
 import { useDrawerTransition } from "@/registry/remocn-ui/drawer/use-drawer-transition";
 
 export const drawerExampleControls = [
-  "title", "description", "actionLabel", "cancelLabel",
+  "title",
+  "description",
+  "actionLabel",
+  "cancelLabel",
 ] as const;
 
 export interface DrawerExampleProps {
@@ -33,7 +36,10 @@ export const DrawerExampleScene = (p: DrawerExampleProps = {}) => {
       <Button label="Edit profile" style={trigger} />
       <Drawer
         title={p.title ?? "Edit profile"}
-        description={p.description ?? "Make changes to your profile here. Click save when you're done."}
+        description={
+          p.description ??
+          "Make changes to your profile here. Click save when you're done."
+        }
         actionLabel={p.actionLabel ?? "Save changes"}
         cancelLabel={p.cancelLabel ?? "Cancel"}
         style={drawer}
@@ -51,10 +57,18 @@ export const drawerExampleCode = (
   const cancelLabel = values.cancelLabel as string | undefined;
 
   const drawerProps: string[] = [];
-  if (title !== undefined && title !== "Edit profile") drawerProps.push(`title="${title}"`);
-  if (description !== undefined && description !== "Make changes to your profile here. Click save when you're done.") drawerProps.push(`description="${description}"`);
-  if (actionLabel !== undefined && actionLabel !== "Save changes") drawerProps.push(`actionLabel="${actionLabel}"`);
-  if (cancelLabel !== undefined && cancelLabel !== "Cancel") drawerProps.push(`cancelLabel="${cancelLabel}"`);
+  if (title !== undefined && title !== "Edit profile")
+    drawerProps.push(`title="${title}"`);
+  if (
+    description !== undefined &&
+    description !==
+      "Make changes to your profile here. Click save when you're done."
+  )
+    drawerProps.push(`description="${description}"`);
+  if (actionLabel !== undefined && actionLabel !== "Save changes")
+    drawerProps.push(`actionLabel="${actionLabel}"`);
+  if (cancelLabel !== undefined && cancelLabel !== "Cancel")
+    drawerProps.push(`cancelLabel="${cancelLabel}"`);
 
   const drawerPropsStr = drawerProps.length ? ` ${drawerProps.join(" ")}` : "";
 

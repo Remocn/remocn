@@ -1,7 +1,7 @@
 "use client";
 
+import { linearTiming, TransitionSeries } from "@remotion/transitions";
 import { AbsoluteFill } from "remotion";
-import { TransitionSeries, linearTiming } from "@remotion/transitions";
 import { pushThrough } from "@/registry/remocn/push-through";
 
 const FONT_FAMILY =

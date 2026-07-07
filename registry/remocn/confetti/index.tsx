@@ -1,6 +1,11 @@
 "use client";
 
-import { AbsoluteFill, interpolate, useCurrentFrame, useVideoConfig } from "remotion";
+import {
+  AbsoluteFill,
+  interpolate,
+  useCurrentFrame,
+  useVideoConfig,
+} from "remotion";
 
 export interface ConfettiProps {
   /** Number of confetti pieces. */

@@ -3,9 +3,7 @@
   "name": "short-slide-down",
   "title": "Short Slide Down",
   "description": "Each new word drops in from above into its own line and pushes the stack downward until a centered three-line composition locks in place.",
-  "dependencies": [
-    "remotion"
-  ],
+  "dependencies": ["remotion"],
   "files": [
     {
       "path": "registry/remocn/short-slide-down/index.tsx",

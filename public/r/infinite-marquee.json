@@ -3,9 +3,7 @@
   "name": "infinite-marquee",
   "title": "Infinite Marquee",
   "description": "Seamlessly looping horizontal text strip with optional stroke style.",
-  "dependencies": [
-    "remotion"
-  ],
+  "dependencies": ["remotion"],
   "files": [
     {
       "path": "registry/remocn/infinite-marquee/index.tsx",

@@ -3,9 +3,7 @@
   "name": "chat-to-preview-layout",
   "title": "Chat to Preview Layout",
   "description": "Two-column layout where chat shrinks and preview expands.",
-  "dependencies": [
-    "remotion"
-  ],
+  "dependencies": ["remotion"],
   "files": [
     {
       "path": "registry/remocn/chat-to-preview-layout/index.tsx",

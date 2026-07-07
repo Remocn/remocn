@@ -12,74 +12,119 @@ import { buildParsers, PreviewStage } from "@/lib/ui-preview-internals";
 import registry from "@/registry/__index__";
 import { ComponentCustomizer } from "./component-customizer";
 import { type ExampleEntry, examples } from "./examples";
-import { buttonExampleCode, buttonExampleControls } from "./examples/button-example";
-import { inputExampleCode, inputExampleControls } from "./examples/input-example";
-import { toastExampleCode, toastExampleControls } from "./examples/toast-example";
-import {
-  messageBubbleExampleCode,
-  messageBubbleExampleControls,
-} from "./examples/message-bubble-example";
-import {
-  typingIndicatorExampleCode,
-  typingIndicatorExampleControls,
-} from "./examples/typing-indicator-example";
-import { popoverExampleCode, popoverExampleControls } from "./examples/popover-example";
 import {
   accordionExampleCode,
   accordionExampleControls,
 } from "./examples/accordion-example";
-import { tooltipExampleCode, tooltipExampleControls } from "./examples/tooltip-example";
-import { dialogExampleCode, dialogExampleControls } from "./examples/dialog-example";
-import { sheetExampleCode, sheetExampleControls } from "./examples/sheet-example";
-import { drawerExampleCode, drawerExampleControls } from "./examples/drawer-example";
 import {
   alertDialogExampleCode,
   alertDialogExampleControls,
 } from "./examples/alert-dialog-example";
 import {
+  blurInExampleCode,
+  blurInExampleControls,
+} from "./examples/blur-in-example";
+import {
+  buttonExampleCode,
+  buttonExampleControls,
+} from "./examples/button-example";
+import {
   checkboxExampleCode,
   checkboxExampleControls,
 } from "./examples/checkbox-example";
-import { radioExampleCode, radioExampleControls } from "./examples/radio-example";
-import { switchExampleCode, switchExampleControls } from "./examples/switch-example";
-import { sliderExampleCode, sliderExampleControls } from "./examples/slider-example";
-import {
-  progressExampleCode,
-  progressExampleControls,
-} from "./examples/progress-example";
 import {
   comboboxExampleCode,
   comboboxExampleControls,
 } from "./examples/combobox-example";
-import { selectExampleCode, selectExampleControls } from "./examples/select-example";
 import {
   commandMenuExampleCode,
   commandMenuExampleControls,
 } from "./examples/command-menu-example";
 import {
+  contextMenuExampleCode,
+  contextMenuExampleControls,
+} from "./examples/context-menu-example";
+import {
+  cursorExampleCode,
+  cursorExampleControls,
+} from "./examples/cursor-example";
+import {
+  dialogExampleCode,
+  dialogExampleControls,
+} from "./examples/dialog-example";
+import {
+  drawerExampleCode,
+  drawerExampleControls,
+} from "./examples/drawer-example";
+import {
   dropdownMenuExampleCode,
   dropdownMenuExampleControls,
 } from "./examples/dropdown-menu-example";
 import {
-  contextMenuExampleCode,
-  contextMenuExampleControls,
-} from "./examples/context-menu-example";
-import { cursorExampleCode, cursorExampleControls } from "./examples/cursor-example";
+  inputExampleCode,
+  inputExampleControls,
+} from "./examples/input-example";
+import {
+  messageBubbleExampleCode,
+  messageBubbleExampleControls,
+} from "./examples/message-bubble-example";
+import {
+  popoverExampleCode,
+  popoverExampleControls,
+} from "./examples/popover-example";
+import {
+  progressExampleCode,
+  progressExampleControls,
+} from "./examples/progress-example";
+import {
+  radioExampleCode,
+  radioExampleControls,
+} from "./examples/radio-example";
 import {
   resizableExampleCode,
   resizableExampleControls,
 } from "./examples/resizable-example";
 import {
+  selectExampleCode,
+  selectExampleControls,
+} from "./examples/select-example";
+import {
+  sheetExampleCode,
+  sheetExampleControls,
+} from "./examples/sheet-example";
+import {
   skeletonExampleCode,
   skeletonExampleControls,
 } from "./examples/skeleton-example";
-import { stepperExampleCode, stepperExampleControls } from "./examples/stepper-example";
+import {
+  sliderExampleCode,
+  sliderExampleControls,
+} from "./examples/slider-example";
+import {
+  stepperExampleCode,
+  stepperExampleControls,
+} from "./examples/stepper-example";
+import {
+  switchExampleCode,
+  switchExampleControls,
+} from "./examples/switch-example";
 import { tabsExampleCode, tabsExampleControls } from "./examples/tabs-example";
+import {
+  toastExampleCode,
+  toastExampleControls,
+} from "./examples/toast-example";
 import {
   toggleGroupExampleCode,
   toggleGroupExampleControls,
 } from "./examples/toggle-group-example";
-import { blurInExampleCode, blurInExampleControls } from "./examples/blur-in-example";
+import {
+  tooltipExampleCode,
+  tooltipExampleControls,
+} from "./examples/tooltip-example";
+import {
+  typingIndicatorExampleCode,
+  typingIndicatorExampleControls,
+} from "./examples/typing-indicator-example";
 
 /**
  * Per-component honored-key allowlist + code template, co-located with each

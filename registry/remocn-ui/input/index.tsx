@@ -1,12 +1,12 @@
 "use client";
 
+import { Caret } from "@/components/remocn/caret";
 import {
   mixOklch,
   type RemocnTheme,
   revealedText,
   useRemocnTheme,
 } from "@/lib/remocn-ui";
-import { Caret } from "@/components/remocn/caret";
 
 export type InputState =
   | "idle"
@@ -166,7 +166,10 @@ export function Input({
   const sizeStyle = SIZE_STYLES[size];
   const ctx = inputStyleContext(theme);
   const v = style ?? inputStyle(state, ctx);
-  const revealed = revealedText(value, Math.round(value.length * v.valueReveal));
+  const revealed = revealedText(
+    value,
+    Math.round(value.length * v.valueReveal),
+  );
 
   return (
     <div

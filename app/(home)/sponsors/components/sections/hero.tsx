@@ -15,8 +15,20 @@ function OpenPanelLogo({ className }: { className?: string }) {
       className={className}
       aria-hidden="true"
     >
-      <rect x="34.0269" y="0.368164" width="10.3474" height="34.2258" rx="5.17372" />
-      <rect x="49.9458" y="0.368164" width="10.3474" height="17.5109" rx="5.17372" />
+      <rect
+        x="34.0269"
+        y="0.368164"
+        width="10.3474"
+        height="34.2258"
+        rx="5.17372"
+      />
+      <rect
+        x="49.9458"
+        y="0.368164"
+        width="10.3474"
+        height="17.5109"
+        rx="5.17372"
+      />
       <path
         fillRule="evenodd"
         clipRule="evenodd"

@@ -1,8 +1,8 @@
 "use client";
 
+import type { SkeletonLayout } from "@/registry/remocn-ui/skeleton";
 import { Skeleton } from "@/registry/remocn-ui/skeleton";
 import { useSkeletonTransition } from "@/registry/remocn-ui/skeleton/use-skeleton-transition";
-import type { SkeletonLayout } from "@/registry/remocn-ui/skeleton";
 
 export interface SkeletonExampleProps {
   layout?: SkeletonLayout;
@@ -27,10 +27,7 @@ export const SkeletonExampleScene = (p: SkeletonExampleProps = {}) => {
         justifyContent: "center",
       }}
     >
-      <Skeleton
-        style={skeletonStyle}
-        layout={p.layout ?? "card"}
-      >
+      <Skeleton style={skeletonStyle} layout={p.layout ?? "card"}>
         {/* Real content — defines the box size; revealed on crossfade. */}
         <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
           <div
@@ -72,8 +69,11 @@ export const skeletonExampleCode = (
   const layout = values.layout as string | undefined;
 
   const props: string[] = [];
-  if (layout !== undefined && layout !== "card") props.push(`layout="${layout}"`);
-  const extraProps = props.length ? `\n        ${props.join("\n        ")}\n        ` : "";
+  if (layout !== undefined && layout !== "card")
+    props.push(`layout="${layout}"`);
+  const extraProps = props.length
+    ? `\n        ${props.join("\n        ")}\n        `
+    : "";
 
   const optsStr = "";
 

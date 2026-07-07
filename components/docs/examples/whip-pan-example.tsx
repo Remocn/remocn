@@ -1,8 +1,8 @@
 "use client";
 
+import { linearTiming, TransitionSeries } from "@remotion/transitions";
 import { AbsoluteFill } from "remotion";
-import { TransitionSeries, linearTiming } from "@remotion/transitions";
-import { whipPan, type WhipPanProps } from "@/registry/remocn/whip-pan";
+import { type WhipPanProps, whipPan } from "@/registry/remocn/whip-pan";
 
 const FONT_FAMILY =
   "var(--font-geist-sans), -apple-system, BlinkMacSystemFont, sans-serif";
@@ -53,9 +53,7 @@ export function WhipPanExampleScene({ direction, blur }: WhipPanExampleProps) {
   );
 }
 
-export const whipPanExampleCode = (
-  values: Record<string, unknown>,
-): string => {
+export const whipPanExampleCode = (values: Record<string, unknown>): string => {
   const direction = (values.direction as string) ?? "left";
   const blur = (values.blur as number) ?? 24;
   return `import { TransitionSeries, linearTiming } from "@remotion/transitions";

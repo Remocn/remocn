@@ -11,6 +11,7 @@ export type PreviewSurface =
 
 export type CtaId =
   | "hero_browse"
+  | "hero_ui_badge"
   | "bento_browse"
   | "final_cta"
   | "github_header";
@@ -19,7 +20,7 @@ type AnalyticsEvents = {
   install_command_copied: {
     component: string;
     package_manager: "pnpm" | "npm" | "yarn" | "bun" | "prompt";
-    surface: "docs" | "landing";
+    surface: "docs" | "landing" | "bento";
   };
   preview_played: {
     component: string;

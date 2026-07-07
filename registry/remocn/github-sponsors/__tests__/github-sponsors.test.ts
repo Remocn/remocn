@@ -1,11 +1,11 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "bun:test";
 
 import {
-  SAMPLE_SPONSORS,
   gridColumns,
   gridLayout,
   heartDrawProgress,
   heartPulseScale,
+  SAMPLE_SPONSORS,
 } from "../index";
 
 describe("gridColumns", () => {

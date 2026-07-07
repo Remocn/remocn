@@ -6,30 +6,25 @@
  * fetchStargazers is mocked so no real network is hit.
  */
 
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, mock } from "bun:test";
+import { NextRequest } from "next/server";
 
 // ---------------------------------------------------------------------------
 // Mock the data-layer module before importing the route handler.
 // ---------------------------------------------------------------------------
-vi.mock("@/lib/github-stargazers", async (importOriginal) => {
-  const actual =
-    await importOriginal<typeof import("@/lib/github-stargazers")>();
-  return {
-    ...actual,
-    fetchStargazers: vi.fn(),
-  };
-});
+const actual = await import("@/lib/github-stargazers");
+const mockFetchStargazers = mock();
 
-import { GET } from "@/app/api/stargazers/route";
-import {
-  StargazersError,
-  fetchStargazers,
-} from "@/lib/github-stargazers";
+mock.module("@/lib/github-stargazers", () => ({
+  ...actual,
+  fetchStargazers: mockFetchStargazers,
+}));
 
-const mockFetchStargazers = vi.mocked(fetchStargazers);
+const { GET } = await import("@/app/api/stargazers/route");
+const { StargazersError } = actual;
 
 afterEach(() => {
-  vi.clearAllMocks();
+  mockFetchStargazers.mockClear();
   delete process.env.GITHUB_TOKEN;
 });
 
@@ -38,11 +33,11 @@ afterEach(() => {
 // ---------------------------------------------------------------------------
 
 /** Build a minimal NextRequest-compatible object. */
-function makeRequest(repoParam?: string): Request {
+function makeRequest(repoParam?: string): NextRequest {
   const url = repoParam
     ? `http://localhost/api/stargazers?repo=${encodeURIComponent(repoParam)}`
     : "http://localhost/api/stargazers";
-  return new Request(url);
+  return new NextRequest(url);
 }
 
 const SAMPLE_STARGAZERS = [

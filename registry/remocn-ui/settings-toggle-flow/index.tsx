@@ -1,19 +1,19 @@
 "use client";
 
 import { Button } from "@/components/remocn/button";
-import { useButtonTransition } from "@/components/remocn/use-button-transition";
 import { Cursor } from "@/components/remocn/cursor";
-import { useCursorPath } from "@/components/remocn/use-cursor-path";
 import { Select } from "@/components/remocn/select";
-import { useSelectTransition } from "@/components/remocn/use-select-transition";
-import { useSelectItemTransition } from "@/components/remocn/use-select-item-transition";
 import { Slider } from "@/components/remocn/slider";
-import { useSliderTransition } from "@/components/remocn/use-slider-transition";
 import { Switch } from "@/components/remocn/switch";
-import { useSwitchTransition } from "@/components/remocn/use-switch-transition";
 import { Toast } from "@/components/remocn/toast";
-import { useToastTransition } from "@/components/remocn/use-toast-transition";
 import { useBlurInTransition } from "@/components/remocn/use-blur-in-transition";
+import { useButtonTransition } from "@/components/remocn/use-button-transition";
+import { useCursorPath } from "@/components/remocn/use-cursor-path";
+import { useSelectItemTransition } from "@/components/remocn/use-select-item-transition";
+import { useSelectTransition } from "@/components/remocn/use-select-transition";
+import { useSliderTransition } from "@/components/remocn/use-slider-transition";
+import { useSwitchTransition } from "@/components/remocn/use-switch-transition";
+import { useToastTransition } from "@/components/remocn/use-toast-transition";
 import { type RemocnTheme, useRemocnTheme } from "@/lib/remocn-ui";
 
 const DEFAULT_ROWS = [
@@ -116,7 +116,12 @@ export function SettingsToggleFlow({
     { at: 42, state: "revealed", duration: 16 },
   ]);
 
-  const reveal = (e: { opacity: number; blur: number; translateX: number; translateY: number }) => ({
+  const reveal = (e: {
+    opacity: number;
+    blur: number;
+    translateX: number;
+    translateY: number;
+  }) => ({
     opacity: e.opacity,
     filter: e.blur > 0 ? `blur(${e.blur}px)` : "none",
     transform: `translate(${e.translateX}px, ${e.translateY}px)`,
@@ -131,8 +136,20 @@ export function SettingsToggleFlow({
     { at: 80 + DEMO, x: ITEM_CX, y: ITEM_CY, duration: 18 },
     { at: 80 + DEMO, x: ITEM_CX, y: ITEM_CY, click: true, duration: 0 },
     { at: 105 + DEMO, x: THUMB_X_AT_20, y: SLIDER_CY, duration: 18 },
-    { at: 105 + DEMO, x: THUMB_X_AT_20, y: SLIDER_CY, press: true, duration: 0 },
-    { at: 150 + DEMO, x: THUMB_X_AT_80, y: SLIDER_CY, press: true, duration: 45 },
+    {
+      at: 105 + DEMO,
+      x: THUMB_X_AT_20,
+      y: SLIDER_CY,
+      press: true,
+      duration: 0,
+    },
+    {
+      at: 150 + DEMO,
+      x: THUMB_X_AT_80,
+      y: SLIDER_CY,
+      press: true,
+      duration: 45,
+    },
     { at: 158 + DEMO, x: THUMB_X_AT_80, y: SLIDER_CY, duration: 0 },
     { at: 180 + DEMO, x: SAVE_CX, y: SAVE_CY, duration: 18 },
     { at: 180 + DEMO, x: SAVE_CX, y: SAVE_CY, click: true, duration: 0 },

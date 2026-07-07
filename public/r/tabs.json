@@ -3,12 +3,8 @@
   "name": "tabs",
   "title": "UI Tabs",
   "description": "A tabs widget whose active-tab state is a pure function of the timeline; the sliding indicator, label colors, and panel crossfade are keyframed/derived presets.",
-  "dependencies": [
-    "remotion"
-  ],
-  "registryDependencies": [
-    "@remocn/remocn-ui"
-  ],
+  "dependencies": ["remotion"],
+  "registryDependencies": ["@remocn/remocn-ui"],
   "files": [
     {
       "path": "registry/remocn-ui/tabs/index.tsx",
@@ -18,7 +14,7 @@
     },
     {
       "path": "registry/remocn-ui/tabs/use-tabs-transition.ts",
-      "content": "\"use client\";\n\nimport {\n  easings,\n  type RemocnTheme,\n  type Step,\n  useRemocnTheme,\n  useStateTransition,\n} from \"@/lib/remocn-ui\";\nimport {\n  tabsStyle,\n  tabsStyleContext,\n  type TabsState,\n  type TabsStyle,\n} from \"@/components/remocn/tabs\";\n\nconst DEFAULT_ITEMS = [\"Account\", \"Password\", \"Settings\"];\n\nexport const DEFAULT_DURATION = 14;\n\nexport function tweenTabsStyle(\n  a: TabsStyle,\n  b: TabsStyle,\n  t: number,\n): TabsStyle {\n  return {\n    indicatorOffset:\n      a.indicatorOffset + (b.indicatorOffset - a.indicatorOffset) * t,\n  };\n}\n\nexport interface TabsTransitionOptions {\n  items?: string[];\n  variant?: \"pill\" | \"underline\";\n  theme?: Partial<RemocnTheme>;\n  mode?: \"light\" | \"dark\";\n  speed?: number;\n  defaultDuration?: number;\n}\n\nexport function useTabsTransition(\n  steps: Step<TabsState>[],\n  opts: TabsTransitionOptions = {},\n): TabsStyle {\n  const {\n    items = DEFAULT_ITEMS,\n    variant = \"pill\",\n    theme: themeOverride,\n    mode,\n    speed = 1,\n    defaultDuration = DEFAULT_DURATION,\n  } = opts;\n  const theme = useRemocnTheme(themeOverride, mode);\n  const ctx = tabsStyleContext(items, variant, theme);\n  const { from, to, progress } = useStateTransition(\n    steps,\n    items[0],\n    speed,\n    defaultDuration,\n  );\n  const t = easings.out(progress);\n  return tweenTabsStyle(tabsStyle(from, ctx), tabsStyle(to, ctx), t);\n}\n",
+      "content": "\"use client\";\n\nimport {\n  type TabsState,\n  type TabsStyle,\n  tabsStyle,\n  tabsStyleContext,\n} from \"@/components/remocn/tabs\";\nimport {\n  easings,\n  type RemocnTheme,\n  type Step,\n  useRemocnTheme,\n  useStateTransition,\n} from \"@/lib/remocn-ui\";\n\nconst DEFAULT_ITEMS = [\"Account\", \"Password\", \"Settings\"];\n\nexport const DEFAULT_DURATION = 14;\n\nexport function tweenTabsStyle(\n  a: TabsStyle,\n  b: TabsStyle,\n  t: number,\n): TabsStyle {\n  return {\n    indicatorOffset:\n      a.indicatorOffset + (b.indicatorOffset - a.indicatorOffset) * t,\n  };\n}\n\nexport interface TabsTransitionOptions {\n  items?: string[];\n  variant?: \"pill\" | \"underline\";\n  theme?: Partial<RemocnTheme>;\n  mode?: \"light\" | \"dark\";\n  speed?: number;\n  defaultDuration?: number;\n}\n\nexport function useTabsTransition(\n  steps: Step<TabsState>[],\n  opts: TabsTransitionOptions = {},\n): TabsStyle {\n  const {\n    items = DEFAULT_ITEMS,\n    variant = \"pill\",\n    theme: themeOverride,\n    mode,\n    speed = 1,\n    defaultDuration = DEFAULT_DURATION,\n  } = opts;\n  const theme = useRemocnTheme(themeOverride, mode);\n  const ctx = tabsStyleContext(items, variant, theme);\n  const { from, to, progress } = useStateTransition(\n    steps,\n    items[0],\n    speed,\n    defaultDuration,\n  );\n  const t = easings.out(progress);\n  return tweenTabsStyle(tabsStyle(from, ctx), tabsStyle(to, ctx), t);\n}\n",
       "type": "registry:component",
       "target": "components/remocn/use-tabs-transition.ts"
     }

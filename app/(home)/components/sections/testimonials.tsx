@@ -2,7 +2,12 @@ import { type Testimonial, testimonials } from "@/config/testimonials";
 import { FadeUp } from "../fade-up";
 import { SectionHeading } from "../section-heading";
 
-function TestimonialCard({ authorAvatar, authorName, url, quote }: Testimonial) {
+function TestimonialCard({
+  authorAvatar,
+  authorName,
+  url,
+  quote,
+}: Testimonial) {
   return (
     <a
       href={url}

@@ -1,10 +1,6 @@
 "use client";
 
-import {
-  AbsoluteFill,
-  interpolate,
-  useCurrentFrame,
-} from "remotion";
+import { AbsoluteFill, interpolate, useCurrentFrame } from "remotion";
 import { FLOW_BG, FLOW_INK, FLOW_YELLOW, FONT_SERIF } from "../foundation";
 
 const clamp = {

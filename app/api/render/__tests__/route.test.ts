@@ -8,25 +8,38 @@
  * so no real renders, rate-buckets, or filesystem ops occur.
  */
 
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, mock } from "bun:test";
+import type { JobState } from "@/lib/server/render-queue";
 
 // ---------------------------------------------------------------------------
 // Mocks — must be declared before importing the route handlers.
 // ---------------------------------------------------------------------------
 
-vi.mock("server-only", () => ({}));
+const mockEnqueue = mock();
+const mockGetJob = mock();
+const mockCheckRate = mock();
 
-vi.mock("@/lib/server/render-queue", () => ({
-  enqueueRender: vi.fn(),
-  getJob: vi.fn(),
+mock.module("server-only", () => ({}));
+
+class MockQueueFullError extends Error {
+  constructor() {
+    super("Render queue is full");
+    this.name = "QueueFullError";
+  }
+}
+
+mock.module("@/lib/server/render-queue", () => ({
+  enqueueRender: mockEnqueue,
+  getJob: mockGetJob,
+  QueueFullError: MockQueueFullError,
 }));
 
-vi.mock("@/lib/server/rate-limit", () => ({
-  checkRateLimit: vi.fn(),
+mock.module("@/lib/server/rate-limit", () => ({
+  checkRateLimit: mockCheckRate,
 }));
 
-vi.mock("@/lib/server/cleanup", () => ({
-  ensureCleanupSweep: vi.fn(),
+mock.module("@/lib/server/cleanup", () => ({
+  ensureCleanupSweep: mock(),
 }));
 
 // validate-input is NOT mocked: we use the real parser so the route's
@@ -36,19 +49,13 @@ vi.mock("@/lib/server/cleanup", () => ({
 // Imports (after mocks)
 // ---------------------------------------------------------------------------
 
-import { POST } from "@/app/api/render/route";
-import { GET } from "@/app/api/render/[jobId]/route";
-import { enqueueRender } from "@/lib/server/render-queue";
-import { getJob } from "@/lib/server/render-queue";
-import { checkRateLimit } from "@/lib/server/rate-limit";
-import type { JobState } from "@/lib/server/render-queue";
-
-const mockEnqueue = vi.mocked(enqueueRender);
-const mockGetJob = vi.mocked(getJob);
-const mockCheckRate = vi.mocked(checkRateLimit);
+const { POST } = await import("@/app/api/render/route");
+const { GET } = await import("@/app/api/render/[jobId]/route");
 
 afterEach(() => {
-  vi.clearAllMocks();
+  mockEnqueue.mockClear();
+  mockGetJob.mockClear();
+  mockCheckRate.mockClear();
 });
 
 // ---------------------------------------------------------------------------
@@ -56,19 +63,26 @@ afterEach(() => {
 // ---------------------------------------------------------------------------
 
 /** Build a minimal NextRequest-compatible Request for POST /api/render. */
-function makePostRequest(body: unknown, ip = "1.2.3.4"): Request {
+function makePostRequest(
+  body: unknown,
+  ip = "1.2.3.4",
+  extraHeaders?: Record<string, string>,
+): Request {
   return new Request("http://localhost/api/render", {
     method: "POST",
     headers: {
       "content-type": "application/json",
       "x-forwarded-for": ip,
+      ...extraHeaders,
     },
     body: typeof body === "string" ? body : JSON.stringify(body),
   });
 }
 
 /** A valid render payload that passes parseRenderInput. */
-function validPayload(overrides?: Record<string, unknown>): Record<string, unknown> {
+function validPayload(
+  overrides?: Record<string, unknown>,
+): Record<string, unknown> {
   return {
     repo: "vercel/next.js",
     totalStars: 50_000,
@@ -129,7 +143,10 @@ describe("POST /api/render — 400 invalid JSON", () => {
     const res = await POST(
       new Request("http://localhost/api/render", {
         method: "POST",
-        headers: { "content-type": "application/json", "x-forwarded-for": "1.2.3.4" },
+        headers: {
+          "content-type": "application/json",
+          "x-forwarded-for": "1.2.3.4",
+        },
         body: "{ not valid json !!!",
       }) as never,
     );
@@ -177,7 +194,9 @@ describe("POST /api/render — 400 invalid input", () => {
       starredAt: "2021-01-01",
     }));
 
-    const res = await POST(makePostRequest(validPayload({ stargazers: many })) as never);
+    const res = await POST(
+      makePostRequest(validPayload({ stargazers: many })) as never,
+    );
 
     expect(res.status).toBe(400);
     const body = await res.json();
@@ -244,6 +263,28 @@ describe("POST /api/render — 202 success", () => {
     expect(mockCheckRate).toHaveBeenCalledWith("203.0.113.1");
   });
 
+  it("uses the LAST hop of a spoofed x-forwarded-for, not the client-controlled first hop", async () => {
+    mockCheckRate.mockReturnValue(true);
+    mockEnqueue.mockReturnValue("job-spoof-test");
+
+    await POST(makePostRequest(validPayload(), "1.1.1.1, 9.9.9.9") as never);
+
+    expect(mockCheckRate).toHaveBeenCalledWith("9.9.9.9");
+  });
+
+  it("prefers x-real-ip over x-forwarded-for when both are present", async () => {
+    mockCheckRate.mockReturnValue(true);
+    mockEnqueue.mockReturnValue("job-real-ip-test");
+
+    await POST(
+      makePostRequest(validPayload(), "1.1.1.1, 9.9.9.9", {
+        "x-real-ip": "2.2.2.2",
+      }) as never,
+    );
+
+    expect(mockCheckRate).toHaveBeenCalledWith("2.2.2.2");
+  });
+
   it("returns only { jobId } in the 202 body — no extra fields", async () => {
     mockCheckRate.mockReturnValue(true);
     mockEnqueue.mockReturnValue("clean-job");
@@ -251,6 +292,25 @@ describe("POST /api/render — 202 success", () => {
     const res = await POST(makePostRequest(validPayload()) as never);
     const body = await res.json();
     expect(Object.keys(body)).toEqual(["jobId"]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// POST /api/render — 503 queue full
+// ---------------------------------------------------------------------------
+
+describe("POST /api/render — 503 queue full", () => {
+  it("returns 503 with code queue_full when enqueueRender throws QueueFullError", async () => {
+    mockCheckRate.mockReturnValue(true);
+    mockEnqueue.mockImplementationOnce(() => {
+      throw new MockQueueFullError();
+    });
+
+    const res = await POST(makePostRequest(validPayload()) as never);
+
+    expect(res.status).toBe(503);
+    const body = await res.json();
+    expect(body.code).toBe("queue_full");
   });
 });
 
@@ -297,7 +357,10 @@ describe("GET /api/render/[jobId] — status JSON", () => {
     };
     mockGetJob.mockReturnValue(job);
 
-    const res = await GET(makeGetRequest("job1") as never, makeGetParams("job1"));
+    const res = await GET(
+      makeGetRequest("job1") as never,
+      makeGetParams("job1"),
+    );
 
     expect(res.status).toBe(200);
     const body = await res.json();
@@ -316,7 +379,10 @@ describe("GET /api/render/[jobId] — status JSON", () => {
     };
     mockGetJob.mockReturnValue(job);
 
-    const res = await GET(makeGetRequest("job2") as never, makeGetParams("job2"));
+    const res = await GET(
+      makeGetRequest("job2") as never,
+      makeGetParams("job2"),
+    );
 
     const body = await res.json();
     expect(body.status).toBe("rendering");
@@ -334,7 +400,10 @@ describe("GET /api/render/[jobId] — status JSON", () => {
     };
     mockGetJob.mockReturnValue(job);
 
-    const res = await GET(makeGetRequest("job3") as never, makeGetParams("job3"));
+    const res = await GET(
+      makeGetRequest("job3") as never,
+      makeGetParams("job3"),
+    );
 
     const body = await res.json();
     expect(body.status).toBe("done");
@@ -353,7 +422,10 @@ describe("GET /api/render/[jobId] — status JSON", () => {
     };
     mockGetJob.mockReturnValue(job);
 
-    const res = await GET(makeGetRequest("job3b") as never, makeGetParams("job3b"));
+    const res = await GET(
+      makeGetRequest("job3b") as never,
+      makeGetParams("job3b"),
+    );
     const text = await res.text();
     expect(text).not.toContain("/tmp/remocn-renders/secret.mp4");
   });
@@ -368,7 +440,10 @@ describe("GET /api/render/[jobId] — status JSON", () => {
     };
     mockGetJob.mockReturnValue(job);
 
-    const res = await GET(makeGetRequest("job4") as never, makeGetParams("job4"));
+    const res = await GET(
+      makeGetRequest("job4") as never,
+      makeGetParams("job4"),
+    );
 
     const body = await res.json();
     expect(body.status).toBe("error");
@@ -385,7 +460,10 @@ describe("GET /api/render/[jobId] — status JSON", () => {
     };
     mockGetJob.mockReturnValue(job);
 
-    const res = await GET(makeGetRequest("job5") as never, makeGetParams("job5"));
+    const res = await GET(
+      makeGetRequest("job5") as never,
+      makeGetParams("job5"),
+    );
     const body = await res.json();
     expect("error" in body).toBe(false);
   });
@@ -419,7 +497,10 @@ describe("POST + GET — no secrets or paths leak", () => {
     };
     mockGetJob.mockReturnValue(job);
 
-    const res = await GET(makeGetRequest("jobS") as never, makeGetParams("jobS"));
+    const res = await GET(
+      makeGetRequest("jobS") as never,
+      makeGetParams("jobS"),
+    );
     const text = await res.text();
     expect(text).not.toContain("/secret/render/dir");
 

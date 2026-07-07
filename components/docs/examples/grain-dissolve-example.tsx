@@ -1,10 +1,10 @@
 "use client";
 
+import { linearTiming, TransitionSeries } from "@remotion/transitions";
 import { AbsoluteFill, Sequence } from "remotion";
-import { TransitionSeries, linearTiming } from "@remotion/transitions";
 import {
-  grainDissolve,
   type GrainDissolveProps,
+  grainDissolve,
 } from "@/registry/remocn/grain-dissolve";
 import { SoftBlurIn } from "@/registry/remocn/soft-blur-in";
 

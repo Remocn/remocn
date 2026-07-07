@@ -1,13 +1,12 @@
-
 import { describe, expect, it } from "bun:test";
+import { clamp01, easings } from "@/lib/remocn-ui";
+import { progressConfig } from "../config";
 import {
-  tweenProgressStyle,
-  progressValueAt,
   DEFAULT_DURATION,
   type ProgressStep,
+  progressValueAt,
+  tweenProgressStyle,
 } from "../use-progress-transition";
-import { progressConfig } from "../config";
-import { easings, clamp01 } from "@/lib/remocn-ui";
 
 type SnippetValues = {
   value?: number;
@@ -181,7 +180,10 @@ describe("progressValueAt: past last step — rests at last.value", () => {
 });
 
 describe("progressValueAt: mid-window uses easings.out (not linear)", () => {
-  const steps: ProgressStep[] = [{ at: 0, value: 0 }, { at: 24, value: 100 }];
+  const steps: ProgressStep[] = [
+    { at: 0, value: 0 },
+    { at: 24, value: 100 },
+  ];
 
   it("raw=12 gives value=87.5 (out-eased, not linear 50)", () => {
     const r = progressValueAt(steps, 12);
@@ -194,7 +196,10 @@ describe("progressValueAt: mid-window uses easings.out (not linear)", () => {
 });
 
 describe("progressValueAt: exactly at a step boundary — progress=0", () => {
-  const steps: ProgressStep[] = [{ at: 0, value: 0 }, { at: 24, value: 100 }];
+  const steps: ProgressStep[] = [
+    { at: 0, value: 0 },
+    { at: 24, value: 100 },
+  ];
 
   it("raw=24 exactly (at last step boundary) → pastLast=true → value=100", () => {
     expect(progressValueAt(steps, 24).value).toBeCloseTo(100, 10);
@@ -222,7 +227,10 @@ describe("progressValueAt: two-step timeline mid-second segment", () => {
 });
 
 describe("progressValueAt: custom duration on a step", () => {
-  const steps: ProgressStep[] = [{ at: 0, value: 0 }, { at: 12, value: 100, duration: 12 }];
+  const steps: ProgressStep[] = [
+    { at: 0, value: 0 },
+    { at: 12, value: 100, duration: 12 },
+  ];
 
   it("custom duration=12: raw=6 gives value=87.5", () => {
     expect(progressValueAt(steps, 6).value).toBeCloseTo(87.5, 8);
@@ -230,7 +238,10 @@ describe("progressValueAt: custom duration on a step", () => {
 });
 
 describe("progressValueAt: easing applied before lerp (default 'out')", () => {
-  const steps: ProgressStep[] = [{ at: 0, value: 0 }, { at: 24, value: 100 }];
+  const steps: ProgressStep[] = [
+    { at: 0, value: 0 },
+    { at: 24, value: 100 },
+  ];
 
   it("value at raw=12 (linear 0.5) is 87.5, not 50", () => {
     const r = progressValueAt(steps, 12);
@@ -336,7 +347,6 @@ describe("progressConfig.snippet: value is always emitted", () => {
 });
 
 describe("progressConfig.snippet: default props are omitted", () => {
-
   it("omits width when it equals the default 320", () => {
     const out = snippet({ value: 50, width: 320 });
     expect(out).not.toContain("width=");

@@ -18,10 +18,7 @@ export function ExportControls({
   if (exporting) {
     return (
       <div className="flex w-full items-center gap-3 sm:w-72">
-        <Progress
-          value={Math.round(exportProgress * 100)}
-          className="flex-1"
-        />
+        <Progress value={Math.round(exportProgress * 100)} className="flex-1" />
         <Button
           variant="ghost"
           size="icon"

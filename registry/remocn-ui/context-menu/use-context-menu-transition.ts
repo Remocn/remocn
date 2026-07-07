@@ -1,18 +1,18 @@
 "use client";
 
 import {
+  type ContextMenuState,
+  type ContextMenuStyle,
+  contextMenuStyle,
+  contextMenuStyleContext,
+} from "@/components/remocn/context-menu";
+import {
   easings,
   type RemocnTheme,
   type Step,
   useRemocnTheme,
   useStateTransition,
 } from "@/lib/remocn-ui";
-import {
-  contextMenuStyle,
-  contextMenuStyleContext,
-  type ContextMenuState,
-  type ContextMenuStyle,
-} from "@/components/remocn/context-menu";
 
 export const DEFAULT_DURATION = 10;
 

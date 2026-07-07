@@ -1,5 +1,5 @@
-
 import { describe, expect, it } from "bun:test";
+import { blurInConfig } from "../config";
 import {
   type BlurInDirection,
   type BlurInState,
@@ -7,7 +7,6 @@ import {
   blurInStyleContext,
 } from "../index";
 import { tweenBlurInStyle } from "../use-blur-in-transition";
-import { blurInConfig } from "../config";
 
 const VALID_STATES: readonly BlurInState[] = ["hidden", "revealed"];
 

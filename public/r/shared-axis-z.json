@@ -3,9 +3,7 @@
   "name": "shared-axis-z",
   "title": "Shared Axis Z",
   "description": "Scale-based shared-axis transition for focus shifts and context depth.",
-  "dependencies": [
-    "remotion"
-  ],
+  "dependencies": ["remotion"],
   "files": [
     {
       "path": "registry/remocn/shared-axis-z/index.tsx",

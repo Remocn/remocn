@@ -1,9 +1,4 @@
-import {
-  type ComponentConfig,
-  FPS,
-  H,
-  W,
-} from "@/lib/customizer-config";
+import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
 
 export const githubStarsConfig: ComponentConfig = {
   componentName: "GitHubStars",

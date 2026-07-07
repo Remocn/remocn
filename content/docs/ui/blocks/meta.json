@@ -1,5 +1,13 @@
 {
   "title": "Blocks",
   "collapsible": false,
-  "pages": ["index", "chat-flow", "telegram-chat-flow", "imessage-chat-flow", "signup-flow", "checkout-flow", "settings-toggle-flow"]
+  "pages": [
+    "index",
+    "chat-flow",
+    "telegram-chat-flow",
+    "imessage-chat-flow",
+    "signup-flow",
+    "checkout-flow",
+    "settings-toggle-flow"
+  ]
 }

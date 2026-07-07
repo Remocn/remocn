@@ -1,7 +1,5 @@
 import Link from "next/link";
 import { CodeBlockCommand } from "@/components/docs/code-block-command";
-import { convertNpmCommand } from "@/lib/convert-npm-command";
-import { cn } from "@/lib/utils";
 import {
   ADD,
   INIT,
@@ -10,6 +8,8 @@ import {
   START,
   type Step,
 } from "@/lib/config/snippets";
+import { convertNpmCommand } from "@/lib/convert-npm-command";
+import { cn } from "@/lib/utils";
 import { FadeUp } from "../fade-up";
 import { SectionHeading } from "../section-heading";
 import { Tok, TypewriterCodeBlock } from "../typewriter-code-block";

@@ -52,7 +52,14 @@ const NODES: NodeSpec[] = [
   { key: "deps", label: "Dependencies", x: 1128, y: BOTTOM_Y, delay: 27 },
 ];
 
-type Connector = { key: string; x1: number; y1: number; x2: number; y2: number; delay: number };
+type Connector = {
+  key: string;
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+  delay: number;
+};
 
 const CONNECTORS: Connector[] = [
   { key: "c-todo", x1: 660, y1: TOP_Y, x2: AI_X, y2: AI_Y, delay: 34 },
@@ -62,7 +69,13 @@ const CONNECTORS: Connector[] = [
   { key: "c-deps", x1: AI_X, y1: AI_Y, x2: 1128, y2: BOTTOM_Y, delay: 47 },
 ];
 
-function Sparkle({ size = 18, color = FLOW_YELLOW }: { size?: number; color?: string }) {
+function Sparkle({
+  size = 18,
+  color = FLOW_YELLOW,
+}: {
+  size?: number;
+  color?: string;
+}) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden>
       <path

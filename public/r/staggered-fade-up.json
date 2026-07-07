@@ -3,9 +3,7 @@
   "name": "staggered-fade-up",
   "title": "Staggered Fade Up",
   "description": "Words fade in and slide up one after another with a configurable delay.",
-  "dependencies": [
-    "remotion"
-  ],
+  "dependencies": ["remotion"],
   "files": [
     {
       "path": "registry/remocn/staggered-fade-up/index.tsx",

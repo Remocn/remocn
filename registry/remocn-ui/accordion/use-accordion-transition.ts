@@ -1,6 +1,12 @@
 "use client";
 
 import {
+  type AccordionState,
+  type AccordionStyle,
+  accordionStyle,
+  accordionStyleContext,
+} from "@/components/remocn/accordion";
+import {
   easings,
   mixOklch,
   type RemocnTheme,
@@ -8,12 +14,6 @@ import {
   useRemocnTheme,
   useStateTransition,
 } from "@/lib/remocn-ui";
-import {
-  accordionStyle,
-  accordionStyleContext,
-  type AccordionState,
-  type AccordionStyle,
-} from "@/components/remocn/accordion";
 
 export const DEFAULT_DURATION = 14;
 

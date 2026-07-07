@@ -1,18 +1,18 @@
 "use client";
 
 import {
+  type ComboboxState,
+  type ComboboxStyle,
+  comboboxStyle,
+  comboboxStyleContext,
+} from "@/components/remocn/combobox";
+import {
   easings,
   type RemocnTheme,
   type Step,
   useRemocnTheme,
   useStateTransition,
 } from "@/lib/remocn-ui";
-import {
-  comboboxStyle,
-  comboboxStyleContext,
-  type ComboboxState,
-  type ComboboxStyle,
-} from "@/components/remocn/combobox";
 
 export const DEFAULT_DURATION = 12;
 

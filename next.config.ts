@@ -18,11 +18,6 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: __dirname,
   },
-  typescript: {
-    // Type-check ломается из-за коллизии @types/mdx × @react-three/fiber
-    // (см. mdx-components.tsx). Рантайм не затронут.
-    ignoreBuildErrors: true,
-  },
 };
 
 export default withMDX(nextConfig);

@@ -1,10 +1,9 @@
-
 import { describe, expect, it } from "bun:test";
 import {
-  chatFlowSchedule,
-  chatFlowDuration,
-  sendPulse,
   type ChatMessage,
+  chatFlowDuration,
+  chatFlowSchedule,
+  sendPulse,
 } from "../index";
 
 const MESSAGES: ChatMessage[] = [
@@ -131,7 +130,9 @@ describe("chatFlowDuration", () => {
   });
 
   it("chatFlowDuration(messages) equals chatFlowSchedule(messages).duration", () => {
-    expect(chatFlowDuration(MESSAGES)).toBe(chatFlowSchedule(MESSAGES).duration);
+    expect(chatFlowDuration(MESSAGES)).toBe(
+      chatFlowSchedule(MESSAGES).duration,
+    );
   });
 
   it("chatFlowDuration(messages, 2) equals Math.ceil(schedule.duration / 2)", () => {

@@ -1,4 +1,3 @@
-
 export const easings = {
   linear: (t: number): number => t,
   out: (t: number): number => 1 - (1 - t) ** 3,

@@ -1,13 +1,8 @@
-
 import { describe, expect, it } from "bun:test";
-import {
-  type TabsState,
-  tabsStyle,
-  tabsStyleContext,
-} from "../index";
-import { tweenTabsStyle, DEFAULT_DURATION } from "../use-tabs-transition";
-import { tabsConfig } from "../config";
 import { defaultLightTheme } from "@/lib/remocn-ui";
+import { tabsConfig } from "../config";
+import { type TabsState, tabsStyle, tabsStyleContext } from "../index";
+import { DEFAULT_DURATION, tweenTabsStyle } from "../use-tabs-transition";
 
 const VALID_STATES: readonly TabsState[] = ["Account", "Password", "Settings"];
 
@@ -19,7 +14,11 @@ type SnippetValues = {
 const snippet = (values: SnippetValues): string =>
   tabsConfig.snippet(values as Record<string, unknown>);
 
-const ctx = tabsStyleContext(["Account", "Password", "Settings"], "pill", defaultLightTheme);
+const ctx = tabsStyleContext(
+  ["Account", "Password", "Settings"],
+  "pill",
+  defaultLightTheme,
+);
 
 describe("TabsState / state options", () => {
   it("controls.state is a select control", () => {
@@ -28,7 +27,8 @@ describe("TabsState / state options", () => {
 
   it("contains exactly the three documented states", () => {
     const control = tabsConfig.controls.state;
-    if (control.type !== "select") throw new Error("state control must be a select");
+    if (control.type !== "select")
+      throw new Error("state control must be a select");
     expect(control.options).toEqual(["Account", "Password", "Settings"]);
   });
 
@@ -38,7 +38,8 @@ describe("TabsState / state options", () => {
 
   it("every VALID_STATES entry is present in the options list (no typos in fixture)", () => {
     const control = tabsConfig.controls.state;
-    if (control.type !== "select") throw new Error("state control must be a select");
+    if (control.type !== "select")
+      throw new Error("state control must be a select");
     expect(VALID_STATES).toHaveLength(3);
     for (const s of VALID_STATES) {
       expect(control.options).toContain(s);
@@ -53,7 +54,8 @@ describe("tabsConfig.controls.variant", () => {
 
   it("has exactly the two variant options in order", () => {
     const control = tabsConfig.controls.variant;
-    if (control.type !== "select") throw new Error("variant control must be a select");
+    if (control.type !== "select")
+      throw new Error("variant control must be a select");
     expect(control.options).toEqual(["pill", "underline"]);
   });
 
@@ -63,21 +65,22 @@ describe("tabsConfig.controls.variant", () => {
 });
 
 describe("tabsConfig.snippet: state prop emission", () => {
-  it("emits state=\"Account\" for the Account option", () => {
+  it('emits state="Account" for the Account option', () => {
     expect(snippet({ state: "Account" })).toContain('state="Account"');
   });
 
-  it("emits state=\"Password\" for the Password option", () => {
+  it('emits state="Password" for the Password option', () => {
     expect(snippet({ state: "Password" })).toContain('state="Password"');
   });
 
-  it("emits state=\"Settings\" for the Settings option", () => {
+  it('emits state="Settings" for the Settings option', () => {
     expect(snippet({ state: "Settings" })).toContain('state="Settings"');
   });
 
   it("emits the correct state for every control option", () => {
     const control = tabsConfig.controls.state;
-    if (control.type !== "select") throw new Error("state control must be a select");
+    if (control.type !== "select")
+      throw new Error("state control must be a select");
     for (const state of control.options) {
       const out = snippet({ state });
       expect(out).toContain(`state="${state}"`);
@@ -96,7 +99,7 @@ describe("tabsConfig.snippet: NEVER emits steps", () => {
 describe("tabsConfig.snippet: import line", () => {
   it("includes `import { Tabs }` from the correct path", () => {
     const out = snippet({ state: "Account" });
-    expect(out).toContain('import { Tabs }');
+    expect(out).toContain("import { Tabs }");
     expect(out).toContain('from "@/components/remocn/tabs"');
   });
 });
@@ -114,8 +117,9 @@ describe("tabsConfig.snippet: default props are omitted", () => {
 
 describe("tabsConfig.snippet: non-default props are emitted", () => {
   it("emits a non-default variant='underline'", () => {
-    expect(snippet({ state: "Account", variant: "underline" }))
-      .toContain('variant="underline"');
+    expect(snippet({ state: "Account", variant: "underline" })).toContain(
+      'variant="underline"',
+    );
   });
 });
 
@@ -123,7 +127,7 @@ describe("tabsConfig.snippet: structural round-trip", () => {
   const out = snippet({ state: "Account" });
 
   it("starts with the import line", () => {
-    expect(out.startsWith('import { Tabs }')).toBe(true);
+    expect(out.startsWith("import { Tabs }")).toBe(true);
   });
 
   it("contains a <Tabs JSX opening", () => {

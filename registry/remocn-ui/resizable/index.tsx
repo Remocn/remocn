@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { clamp01, mixOklch, type RemocnTheme, useRemocnTheme } from "@/lib/remocn-ui";
+import { mixOklch, type RemocnTheme, useRemocnTheme } from "@/lib/remocn-ui";
 
 export type ResizableHandleState = "idle" | "hover" | "press";
 
@@ -61,7 +61,9 @@ export interface ResizableStyleContext {
   radius: number;
 }
 
-export function resizableStyleContext(theme: RemocnTheme): ResizableStyleContext {
+export function resizableStyleContext(
+  theme: RemocnTheme,
+): ResizableStyleContext {
   return {
     containerBg: theme.background,
     border: theme.border,
@@ -213,7 +215,9 @@ export function Resizable({
             overflow: "hidden",
           }}
         >
-          {second ?? <Placeholder label="Panel two" color={ctx.placeholderFg} />}
+          {second ?? (
+            <Placeholder label="Panel two" color={ctx.placeholderFg} />
+          )}
         </div>
       </div>
     </div>

@@ -3,9 +3,7 @@
   "name": "shader-pulsing-border",
   "title": "Shader Pulsing Border",
   "description": "Glowing border frame that pulses around the edges.",
-  "dependencies": [
-    "@paper-design/shaders-react"
-  ],
+  "dependencies": ["@paper-design/shaders-react"],
   "files": [
     {
       "path": "registry/remocn/shader-pulsing-border/index.tsx",

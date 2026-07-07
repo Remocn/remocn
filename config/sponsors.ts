@@ -19,123 +19,125 @@ export type Sponsor = {
   layout?: "row" | "col";
 };
 
-export const sponsors: Sponsor[] = [
-  {
-    id: "reactbits",
-    name: "React Bits",
-    logoUrl: "/sponsors/reactbits.svg",
-    website:
-      "https://pro.reactbits.dev/?utm_source=remocn&utm_medium=sponsor&utm_campaign=remocn_sponsors_page",
-    tier: "partner",
-    customStyles: "opacity-90 max-w-full",
-    isPaste: false,
-  },
-  {
-    id: "shadcnblocks",
-    name: "Shadcnblocks.com",
-    logoUrl: "/sponsors/shadcnblocks.svg",
-    website:
-      "https://shadcnblocks.com/?utm_source=remocn&utm_medium=sponsor&utm_campaign=remocn_sponsors_page",
-    tier: "partner",
-    logoScale: 1.2,
-    customStyles: "opacity-90",
-    isPaste: false,
-  },
-  // Paste:
-  {
-    id: "efferd",
-    name: "Efferd",
-    logoUrl: "/sponsors/efferd.svg",
-    website:
-      "https://efferd.com/?utm_source=remocn&utm_medium=sponsor&utm_campaign=remocn_sponsors_page",
-    tier: "partner",
-    logoScale: 1.2,
-    customStyles: "opacity-90",
-    isPaste: true,
-  },
-  {
-    id: "shadcnstudio",
-    name: "ShadcnStudio",
-    logoUrl:
-      "https://cdn.shadcnstudio.com/ss-assets/marketing/shadcn-studio-logos/shadcn-studio-light-full-logo.png",
-    website:
-      "https://shadcnstudio.com/?utm_source=remocn&utm_medium=sponsor&utm_campaign=remocn_sponsors_page",
-    tier: "builder",
-    logoScale: 1.2,
-    customStyles: "invert opacity-90 h-8",
-    isPaste: true,
-  },
-  {
-    id: "shadcnspace",
-    name: "ShadcnSpace",
-    logoUrl: "https://shadcnspace.com/images/logo/shadcnspace.svg",
-    website:
-      "https://shadcnspace.com/?utm_source=remocn&utm_medium=sponsor&utm_campaign=remocn_sponsors_page",
-    tier: "builder",
-    logoScale: 1.2,
-    customStyles: "grayscale invert opacity-90 h-8",
-    isPaste: true,
-  },
-  {
-    id: "ln",
-    name: "ln",
-    displayName: "LN",
-    logoUrl: "https://unavatar.io/x/ln_dev7",
-    website:
-      "https://pro.lndevui.com/?utm_source=remocn&utm_medium=sponsor&utm_campaign=remocn_sponsors_page",
-    tier: "builder",
-    customStyles: "rounded-full opacity-100 grayscale-0 dark:[filter:none]",
-    isPaste: false,
-  },
-  {
-    id: "shieldcn",
-    name: "Justin",
-    displayName: "Justin",
-    logoUrl: "https://unavatar.io/x/jalcowastaken",
-    website:
-      "https://shieldcn.dev/?utm_source=remocn&utm_medium=sponsor&utm_campaign=remocn_sponsors_page",
-    tier: "builder",
-    customStyles: "rounded-full opacity-100 grayscale-0 dark:[filter:none]",
-    isPaste: false,
-  },
-  {
-    id: "orcdev",
-    name: "OrcDev",
-    displayName: "OrcDev",
-    logoUrl: "https://unavatar.io/x/orcdev",
-    website:
-      "https://www.8bitcn.com/?utm_source=remocn&utm_medium=sponsor&utm_campaign=remocn_sponsors_page",
-    tier: "builder",
-    customStyles: "rounded-full opacity-100 grayscale-0 dark:[filter:none]",
-    isPaste: false,
-  },
-  {
-    id: "canadian-ai",
-    name: "Canadian AI",
-    displayName: "Canadian AI",
-    logoUrl: "https://www.canadian-ai.ca/icon-black.svg",
-    website:
-      "https://www.canadian-ai.ca/?utm_source=remocn&utm_medium=sponsor&utm_campaign=remocn_sponsors_page",
-    tier: "partner",
-    customStyles: "opacity-90 max-h-12",
-    isPaste: false,
-    hideFromFeatured: true,
-    layout: "row",
-  },
-  {
-    id: "shadcnuikit",
-    name: "Shadcn UI Kit",
-    displayName: "Shadcn UI Kit",
-    logoUrl: "https://shadcnuikit.com/logo.png",
-    website:
-      "https://shadcnuikit.com/?utm_source=remocn&utm_medium=sponsor&utm_campaign=remocn_sponsors_page",
-    tier: "partner",
-    logoScale: 1,
-    customStyles: "rounded-sm opacity-100 grayscale-0 dark:[filter:none]",
-    isPaste: false,
-    layout: "row",
-  },
-].filter((sponsor) => !sponsor.isPaste);
+export const sponsors: Sponsor[] = (
+  [
+    {
+      id: "reactbits",
+      name: "React Bits",
+      logoUrl: "/sponsors/reactbits.svg",
+      website:
+        "https://pro.reactbits.dev/?utm_source=remocn&utm_medium=sponsor&utm_campaign=remocn_sponsors_page",
+      tier: "partner",
+      customStyles: "opacity-90 max-w-full",
+      isPaste: false,
+    },
+    {
+      id: "shadcnblocks",
+      name: "Shadcnblocks.com",
+      logoUrl: "/sponsors/shadcnblocks.svg",
+      website:
+        "https://shadcnblocks.com/?utm_source=remocn&utm_medium=sponsor&utm_campaign=remocn_sponsors_page",
+      tier: "partner",
+      logoScale: 1.2,
+      customStyles: "opacity-90",
+      isPaste: false,
+    },
+    // Paste:
+    {
+      id: "efferd",
+      name: "Efferd",
+      logoUrl: "/sponsors/efferd.svg",
+      website:
+        "https://efferd.com/?utm_source=remocn&utm_medium=sponsor&utm_campaign=remocn_sponsors_page",
+      tier: "partner",
+      logoScale: 1.2,
+      customStyles: "opacity-90",
+      isPaste: true,
+    },
+    {
+      id: "shadcnstudio",
+      name: "ShadcnStudio",
+      logoUrl:
+        "https://cdn.shadcnstudio.com/ss-assets/marketing/shadcn-studio-logos/shadcn-studio-light-full-logo.png",
+      website:
+        "https://shadcnstudio.com/?utm_source=remocn&utm_medium=sponsor&utm_campaign=remocn_sponsors_page",
+      tier: "builder",
+      logoScale: 1.2,
+      customStyles: "invert opacity-90 h-8",
+      isPaste: true,
+    },
+    {
+      id: "shadcnspace",
+      name: "ShadcnSpace",
+      logoUrl: "https://shadcnspace.com/images/logo/shadcnspace.svg",
+      website:
+        "https://shadcnspace.com/?utm_source=remocn&utm_medium=sponsor&utm_campaign=remocn_sponsors_page",
+      tier: "builder",
+      logoScale: 1.2,
+      customStyles: "grayscale invert opacity-90 h-8",
+      isPaste: true,
+    },
+    {
+      id: "ln",
+      name: "ln",
+      displayName: "LN",
+      logoUrl: "https://unavatar.io/x/ln_dev7",
+      website:
+        "https://pro.lndevui.com/?utm_source=remocn&utm_medium=sponsor&utm_campaign=remocn_sponsors_page",
+      tier: "builder",
+      customStyles: "rounded-full opacity-100 grayscale-0 dark:[filter:none]",
+      isPaste: false,
+    },
+    {
+      id: "shieldcn",
+      name: "Justin",
+      displayName: "Justin",
+      logoUrl: "https://unavatar.io/x/jalcowastaken",
+      website:
+        "https://shieldcn.dev/?utm_source=remocn&utm_medium=sponsor&utm_campaign=remocn_sponsors_page",
+      tier: "builder",
+      customStyles: "rounded-full opacity-100 grayscale-0 dark:[filter:none]",
+      isPaste: false,
+    },
+    {
+      id: "orcdev",
+      name: "OrcDev",
+      displayName: "OrcDev",
+      logoUrl: "https://unavatar.io/x/orcdev",
+      website:
+        "https://www.8bitcn.com/?utm_source=remocn&utm_medium=sponsor&utm_campaign=remocn_sponsors_page",
+      tier: "builder",
+      customStyles: "rounded-full opacity-100 grayscale-0 dark:[filter:none]",
+      isPaste: false,
+    },
+    {
+      id: "canadian-ai",
+      name: "Canadian AI",
+      displayName: "Canadian AI",
+      logoUrl: "https://www.canadian-ai.ca/icon-black.svg",
+      website:
+        "https://www.canadian-ai.ca/?utm_source=remocn&utm_medium=sponsor&utm_campaign=remocn_sponsors_page",
+      tier: "partner",
+      customStyles: "opacity-90 max-h-12",
+      isPaste: false,
+      hideFromFeatured: true,
+      layout: "row",
+    },
+    {
+      id: "shadcnuikit",
+      name: "Shadcn UI Kit",
+      displayName: "Shadcn UI Kit",
+      logoUrl: "https://shadcnuikit.com/logo.png",
+      website:
+        "https://shadcnuikit.com/?utm_source=remocn&utm_medium=sponsor&utm_campaign=remocn_sponsors_page",
+      tier: "partner",
+      logoScale: 1,
+      customStyles: "rounded-sm opacity-100 grayscale-0 dark:[filter:none]",
+      isPaste: false,
+      layout: "row",
+    },
+  ] satisfies Sponsor[]
+).filter((sponsor) => !sponsor.isPaste);
 
 export function getGoldSponsors(): Sponsor[] {
   return sponsors.filter(

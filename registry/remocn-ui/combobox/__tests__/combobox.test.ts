@@ -1,19 +1,18 @@
-
 import { describe, expect, it } from "bun:test";
+import type { Step } from "@/lib/remocn-ui";
+import { defaultLightTheme, easings } from "@/lib/remocn-ui";
+import { comboboxConfig } from "../config";
 import {
-  filterComboboxItems,
-  comboboxStyle,
-  comboboxStyleContext,
   type ComboboxState,
   type ComboboxStyle,
+  comboboxStyle,
+  comboboxStyleContext,
+  filterComboboxItems,
 } from "../index";
 import {
-  tweenComboboxStyle,
   DEFAULT_DURATION,
+  tweenComboboxStyle,
 } from "../use-combobox-transition";
-import { comboboxConfig } from "../config";
-import { defaultLightTheme, defaultDarkTheme, easings } from "@/lib/remocn-ui";
-import type { Step } from "@/lib/remocn-ui";
 
 const VALID_STATES: readonly ComboboxState[] = ["opened", "closed"];
 
@@ -93,18 +92,26 @@ describe("filterComboboxItems: no-match → empty array", () => {
   });
 
   it("returns empty array for a long non-matching query", () => {
-    expect(filterComboboxItems(SAMPLE_ITEMS, "zzzzzzzz", undefined)).toHaveLength(0);
+    expect(
+      filterComboboxItems(SAMPLE_ITEMS, "zzzzzzzz", undefined),
+    ).toHaveLength(0);
   });
 });
 
 describe("filterComboboxItems: case-insensitivity", () => {
   it("uppercase query matches lowercase item chars", () => {
-    expect(filterComboboxItems(SAMPLE_ITEMS, "APPLE", undefined)).toHaveLength(1);
-    expect(filterComboboxItems(SAMPLE_ITEMS, "APPLE", undefined)[0]).toBe("Apple");
+    expect(filterComboboxItems(SAMPLE_ITEMS, "APPLE", undefined)).toHaveLength(
+      1,
+    );
+    expect(filterComboboxItems(SAMPLE_ITEMS, "APPLE", undefined)[0]).toBe(
+      "Apple",
+    );
   });
 
   it("mixed case query matches item", () => {
-    expect(filterComboboxItems(SAMPLE_ITEMS, "gRaPe", undefined)).toHaveLength(1);
+    expect(filterComboboxItems(SAMPLE_ITEMS, "gRaPe", undefined)).toHaveLength(
+      1,
+    );
   });
 
   it("lowercase query matches mixed-case item ('orange')", () => {
@@ -330,11 +337,15 @@ function resolveStateTransition<S extends string>(
 }
 
 function resolveComboboxTransition(
-  raw: number,                                          // injected useCurrentFrame() — MIRROR line 59
+  raw: number, // injected useCurrentFrame() — MIRROR line 59
   steps: Step<ComboboxState>[],
   speed = 1,
   defaultDuration = DEFAULT_DURATION,
-): ComboboxStyle & { from: ComboboxState; to: ComboboxState; progress: number } {
+): ComboboxStyle & {
+  from: ComboboxState;
+  to: ComboboxState;
+  progress: number;
+} {
   const { from, to, progress } = resolveStateTransition(
     raw,
     steps,
@@ -348,7 +359,12 @@ function resolveComboboxTransition(
     comboboxStyle(to as ComboboxState, ctx),
     t,
   );
-  return { ...style, from: from as ComboboxState, to: to as ComboboxState, progress };
+  return {
+    ...style,
+    from: from as ComboboxState,
+    to: to as ComboboxState,
+    progress,
+  };
 }
 
 describe("resolveComboboxTransition: before any step — holds at closed", () => {
@@ -404,7 +420,7 @@ describe("resolveComboboxTransition: mid-window uses easings.out (not linear)", 
   it("panelTranslateY at raw=6 is -4*(1-out(0.5)) = -0.5", () => {
     const r = resolveComboboxTransition(6, steps, 1, 12);
     const t = easings.out(0.5);
-    const expected = -4 + (0 - (-4)) * t;
+    const expected = -4 + (0 - -4) * t;
     expect(r.panelTranslateY).toBeCloseTo(expected, 8);
   });
 
@@ -418,15 +434,21 @@ describe("resolveComboboxTransition: past the window → fully opened", () => {
   const steps: Step<ComboboxState>[] = [{ at: 0, state: "opened" }];
 
   it("panelOpacity is 1 after DEFAULT_DURATION frames", () => {
-    expect(resolveComboboxTransition(DEFAULT_DURATION, steps).panelOpacity).toBeCloseTo(1, 10);
+    expect(
+      resolveComboboxTransition(DEFAULT_DURATION, steps).panelOpacity,
+    ).toBeCloseTo(1, 10);
   });
 
   it("panelScale is 1 after DEFAULT_DURATION frames", () => {
-    expect(resolveComboboxTransition(DEFAULT_DURATION, steps).panelScale).toBeCloseTo(1, 10);
+    expect(
+      resolveComboboxTransition(DEFAULT_DURATION, steps).panelScale,
+    ).toBeCloseTo(1, 10);
   });
 
   it("panelTranslateY is 0 after DEFAULT_DURATION frames", () => {
-    expect(resolveComboboxTransition(DEFAULT_DURATION, steps).panelTranslateY).toBeCloseTo(0, 10);
+    expect(
+      resolveComboboxTransition(DEFAULT_DURATION, steps).panelTranslateY,
+    ).toBeCloseTo(0, 10);
   });
 });
 
@@ -534,46 +556,60 @@ describe("comboboxConfig.snippet: default props are omitted", () => {
   });
 
   it("omits revealCount when it equals 0 (default)", () => {
-    expect(snippet({ state: "opened", revealCount: 0 })).not.toContain("revealCount=");
+    expect(snippet({ state: "opened", revealCount: 0 })).not.toContain(
+      "revealCount=",
+    );
   });
 
   it("omits placeholder when it equals the default value", () => {
     expect(
-      snippet({ state: "opened", placeholder: "Select a fruit…" })
+      snippet({ state: "opened", placeholder: "Select a fruit…" }),
     ).not.toContain("placeholder=");
   });
 
   it("omits selectedIndex when it equals -1 (default)", () => {
-    expect(snippet({ state: "opened", selectedIndex: -1 })).not.toContain("selectedIndex=");
+    expect(snippet({ state: "opened", selectedIndex: -1 })).not.toContain(
+      "selectedIndex=",
+    );
   });
 
   it("omits highlightedIndex when it equals -1 (no highlight)", () => {
-    expect(snippet({ state: "opened", highlightedIndex: -1 })).not.toContain("highlightedIndex=");
+    expect(snippet({ state: "opened", highlightedIndex: -1 })).not.toContain(
+      "highlightedIndex=",
+    );
   });
-
 });
 
 describe("comboboxConfig.snippet: non-default props are emitted", () => {
   it("emits query when non-empty", () => {
-    expect(snippet({ state: "opened", query: "apple" })).toContain('query="apple"');
+    expect(snippet({ state: "opened", query: "apple" })).toContain(
+      'query="apple"',
+    );
   });
 
   it("emits revealCount when non-zero", () => {
-    expect(snippet({ state: "opened", revealCount: 3 })).toContain("revealCount={3}");
+    expect(snippet({ state: "opened", revealCount: 3 })).toContain(
+      "revealCount={3}",
+    );
   });
 
   it("emits placeholder when non-default", () => {
-    expect(snippet({ state: "opened", placeholder: "Search…" })).toContain('placeholder="Search…"');
+    expect(snippet({ state: "opened", placeholder: "Search…" })).toContain(
+      'placeholder="Search…"',
+    );
   });
 
   it("emits selectedIndex when not -1", () => {
-    expect(snippet({ state: "opened", selectedIndex: 1 })).toContain("selectedIndex={1}");
+    expect(snippet({ state: "opened", selectedIndex: 1 })).toContain(
+      "selectedIndex={1}",
+    );
   });
 
   it("emits highlightedIndex when not -1 (e.g. 0 means first row)", () => {
-    expect(snippet({ state: "opened", highlightedIndex: 0 })).toContain("highlightedIndex={0}");
+    expect(snippet({ state: "opened", highlightedIndex: 0 })).toContain(
+      "highlightedIndex={0}",
+    );
   });
-
 });
 
 describe("comboboxConfig.snippet: state options round-trip", () => {

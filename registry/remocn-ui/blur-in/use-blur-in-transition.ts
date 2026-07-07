@@ -1,17 +1,13 @@
 "use client";
 
 import {
-  easings,
-  type Step,
-  useStateTransition,
-} from "@/lib/remocn-ui";
-import {
-  blurInStyle,
-  blurInStyleContext,
   type BlurInDirection,
   type BlurInState,
   type BlurInStyle,
+  blurInStyle,
+  blurInStyleContext,
 } from "@/components/remocn/blur-in";
+import { easings, type Step, useStateTransition } from "@/lib/remocn-ui";
 
 export const DEFAULT_DURATION = 18;
 

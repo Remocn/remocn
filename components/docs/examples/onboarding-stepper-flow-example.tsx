@@ -14,7 +14,9 @@ import { OnboardingStepperFlow } from "@/registry/remocn-ui/onboarding-stepper-f
  * advance 64; plan radio 90; Next press 100 → stepper advance 104; switch 130;
  * Finish press 150 → success 156. durationInFrames 175 (~160 final ease + settle).
  */
-export const OnboardingStepperFlowExampleScene = () => <OnboardingStepperFlow />;
+export const OnboardingStepperFlowExampleScene = () => (
+  <OnboardingStepperFlow />
+);
 
 export const onboardingStepperFlowExampleCode = (): string => {
   return `import { OnboardingStepperFlow } from "@/components/remocn/onboarding-stepper-flow";

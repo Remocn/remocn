@@ -29,7 +29,12 @@ export function SkeletonBlockPreview({
         background: theme.background,
       }}
     >
-      <SkeletonBlock width={width} height={height} radius={radius} speed={speed} />
+      <SkeletonBlock
+        width={width}
+        height={height}
+        radius={radius}
+        speed={speed}
+      />
     </div>
   );
 }

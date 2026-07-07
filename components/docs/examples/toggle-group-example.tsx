@@ -10,26 +10,26 @@ import { useToggleGroupTransition } from "@/registry/remocn-ui/toggle-group/use-
 // left edge = (1280 - 184) / 2 = 548px.
 // "Monthly" center X: 548 + 4 + 44 = 596. "Yearly" center X: 548 + 4 + 88 + 44 = 684. Y = 360.
 const MONTHLY_X = 596;
-const YEARLY_X  = 684;
-const TOGGLE_Y  = 360;
+const YEARLY_X = 684;
+const TOGGLE_Y = 360;
 
-export interface ToggleGroupExampleProps {}
+export type ToggleGroupExampleProps = Record<string, never>;
 
 export const toggleGroupExampleControls = [] as const;
 
 export const ToggleGroupExampleScene = (_p: ToggleGroupExampleProps = {}) => {
   // Cursor: park → ease to "Yearly" → click → ease to "Monthly" → click.
   const cursorStyle = useCursorPath([
-    { at: 0,  x: 80,        y: 60        },
-    { at: 32, x: YEARLY_X,  y: TOGGLE_Y, duration: 28 },
-    { at: 44, x: YEARLY_X,  y: TOGGLE_Y, click: true, duration: 0 },
+    { at: 0, x: 80, y: 60 },
+    { at: 32, x: YEARLY_X, y: TOGGLE_Y, duration: 28 },
+    { at: 44, x: YEARLY_X, y: TOGGLE_Y, click: true, duration: 0 },
     { at: 80, x: MONTHLY_X, y: TOGGLE_Y, duration: 20 },
     { at: 90, x: MONTHLY_X, y: TOGGLE_Y, click: true, duration: 0 },
   ]);
 
   // Toggle: starts on "Monthly", slides to "Yearly" on first click, back on second.
   const toggleStyle = useToggleGroupTransition([
-    { at: 46, state: "Yearly",  duration: 14 },
+    { at: 46, state: "Yearly", duration: 14 },
     { at: 92, state: "Monthly", duration: 14 },
   ]);
 

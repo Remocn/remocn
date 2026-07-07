@@ -1,8 +1,5 @@
-import { describe, expect, it } from "vitest";
-import {
-  getProductDemoDuration,
-  planTransitionTiming,
-} from "../duration";
+import { describe, expect, it } from "bun:test";
+import { getProductDemoDuration, planTransitionTiming } from "../duration";
 import type { ProductDemoConfig } from "../foundation";
 
 const exampleConfig: ProductDemoConfig = {
@@ -22,12 +19,20 @@ const exampleConfig: ProductDemoConfig = {
     {
       type: "feature-frame",
       durationInFrames: 180,
-      content: { title: "Unified inbox", bullet: "Email, chat and SMS", side: "left" },
+      content: {
+        title: "Unified inbox",
+        bullet: "Email, chat and SMS",
+        side: "left",
+      },
     },
     {
       type: "feature-frame",
       durationInFrames: 180,
-      content: { title: "Auto routing", bullet: "The right person", side: "right" },
+      content: {
+        title: "Auto routing",
+        bullet: "The right person",
+        side: "right",
+      },
     },
     {
       type: "cta-scene",

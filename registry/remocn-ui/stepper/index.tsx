@@ -1,6 +1,11 @@
 "use client";
 
-import { clamp01, mixOklch, type RemocnTheme, useRemocnTheme } from "@/lib/remocn-ui";
+import {
+  clamp01,
+  mixOklch,
+  type RemocnTheme,
+  useRemocnTheme,
+} from "@/lib/remocn-ui";
 
 export interface StepperStyle {
   position: number;
@@ -46,7 +51,10 @@ export function stepperStyle(activeIndex: number): StepperStyle {
   return { position: activeIndex };
 }
 
-export function stepCircleAt(i: number, position: number): {
+export function stepCircleAt(
+  i: number,
+  position: number,
+): {
   fill: number;
   checkDraw: number;
   active: boolean;
@@ -95,7 +103,8 @@ export function Stepper({
           const circleBg = mixOklch(ctx.mutedBg, ctx.primary, fill);
           const circleBorder = mixOklch(ctx.border, ctx.primary, fill);
           const numberOpacity = 1 - checkDraw;
-          const numberColor = active || completed ? ctx.foreground : ctx.mutedFg;
+          const numberColor =
+            active || completed ? ctx.foreground : ctx.mutedFg;
           const isLast = i === steps.length - 1;
           return (
             <div
@@ -139,7 +148,12 @@ export function Stepper({
                     {i + 1}
                   </span>
                   {}
-                  <svg width={CIRCLE} height={CIRCLE} viewBox="0 0 24 24" fill="none">
+                  <svg
+                    width={CIRCLE}
+                    height={CIRCLE}
+                    viewBox="0 0 24 24"
+                    fill="none"
+                  >
                     <path
                       d="M5 12.5l4.5 4.5L19 7"
                       stroke={ctx.primaryFg}

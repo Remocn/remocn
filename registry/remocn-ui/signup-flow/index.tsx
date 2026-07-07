@@ -1,16 +1,8 @@
 "use client";
 
-import { type RemocnTheme, useRemocnTheme } from "@/lib/remocn-ui";
-import { Cursor } from "@/components/remocn/cursor";
-import { useCursorPath } from "@/components/remocn/use-cursor-path";
-import { Input } from "@/components/remocn/input";
-import { useInputTransition } from "@/components/remocn/use-input-transition";
-import { Button } from "@/components/remocn/button";
-import { useButtonTransition } from "@/components/remocn/use-button-transition";
-import { Toast } from "@/components/remocn/toast";
-import { useToastTransition } from "@/components/remocn/use-toast-transition";
 import { BlurIn } from "@/components/remocn/blur-in";
-import { useBlurInTransition } from "@/components/remocn/use-blur-in-transition";
+import { Button } from "@/components/remocn/button";
+import { Cursor } from "@/components/remocn/cursor";
 import {
   Field,
   FieldControl,
@@ -18,6 +10,14 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@/components/remocn/field";
+import { Input } from "@/components/remocn/input";
+import { Toast } from "@/components/remocn/toast";
+import { useBlurInTransition } from "@/components/remocn/use-blur-in-transition";
+import { useButtonTransition } from "@/components/remocn/use-button-transition";
+import { useCursorPath } from "@/components/remocn/use-cursor-path";
+import { useInputTransition } from "@/components/remocn/use-input-transition";
+import { useToastTransition } from "@/components/remocn/use-toast-transition";
+import { type RemocnTheme, useRemocnTheme } from "@/lib/remocn-ui";
 
 export interface SignupFlowProps {
   title?: string;
@@ -202,9 +202,7 @@ export function SignupFlow({
         <FieldGroup gap={16}>
           <BlurIn display="block" style={enterName}>
             <Field>
-              <FieldLabel theme={theme}>
-                Full Name
-              </FieldLabel>
+              <FieldLabel theme={theme}>Full Name</FieldLabel>
               <FieldControl>
                 <Input
                   placeholder={fullName}
@@ -218,9 +216,7 @@ export function SignupFlow({
 
           <BlurIn display="block" style={enterEmail}>
             <Field>
-              <FieldLabel theme={theme}>
-                Email
-              </FieldLabel>
+              <FieldLabel theme={theme}>Email</FieldLabel>
               <FieldControl>
                 <Input
                   placeholder={email}
@@ -237,9 +233,7 @@ export function SignupFlow({
 
           <BlurIn display="block" style={enterPass}>
             <Field>
-              <FieldLabel theme={theme}>
-                Password
-              </FieldLabel>
+              <FieldLabel theme={theme}>Password</FieldLabel>
               <FieldControl>
                 <Input
                   placeholder={password}
@@ -256,9 +250,7 @@ export function SignupFlow({
 
           <BlurIn display="block" style={enterConfirm}>
             <Field>
-              <FieldLabel theme={theme}>
-                Confirm Password
-              </FieldLabel>
+              <FieldLabel theme={theme}>Confirm Password</FieldLabel>
               <FieldControl>
                 <Input
                   placeholder={password}
@@ -274,11 +266,7 @@ export function SignupFlow({
         <BlurIn display="block" style={enterButton}>
           <Field gap={10}>
             <FieldControl>
-              <Button
-                label={createLabel}
-                style={buttonStyle}
-                theme={theme}
-              />
+              <Button label={createLabel} style={buttonStyle} theme={theme} />
             </FieldControl>
           </Field>
         </BlurIn>

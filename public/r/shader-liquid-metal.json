@@ -3,9 +3,7 @@
   "name": "shader-liquid-metal",
   "title": "Shader Liquid Metal",
   "description": "Molten metallic surface with flowing specular highlights.",
-  "dependencies": [
-    "@paper-design/shaders-react"
-  ],
+  "dependencies": ["@paper-design/shaders-react"],
   "files": [
     {
       "path": "registry/remocn/shader-liquid-metal/index.tsx",

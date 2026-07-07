@@ -1,6 +1,12 @@
 "use client";
 
 import {
+  type InputState,
+  type InputStyle,
+  inputStyle,
+  inputStyleContext,
+} from "@/components/remocn/input";
+import {
   easings,
   mixOklch,
   type RemocnTheme,
@@ -8,12 +14,6 @@ import {
   useRemocnTheme,
   useStateTransition,
 } from "@/lib/remocn-ui";
-import {
-  inputStyle,
-  inputStyleContext,
-  type InputState,
-  type InputStyle,
-} from "@/components/remocn/input";
 
 export const DEFAULT_DURATION = 8;
 

@@ -33,7 +33,10 @@ export function BlurOutUp({
   const exitEasing = Easing.bezier(0.64, 0, 0.78, 0);
 
   const enterEnd = enterDur + (words.length - 1) * staggerDelay;
-  const exitStart = Math.max(enterEnd, durationInFrames - exitDur - (words.length - 1) * staggerDelay);
+  const exitStart = Math.max(
+    enterEnd,
+    durationInFrames - exitDur - (words.length - 1) * staggerDelay,
+  );
 
   return (
     <div

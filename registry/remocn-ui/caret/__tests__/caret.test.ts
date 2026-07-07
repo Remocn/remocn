@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "bun:test";
 
 import { caretBlinkOpacity } from "../index";
 
@@ -13,7 +13,9 @@ describe("caretBlinkOpacity", () => {
   });
 
   it("starts visible at frame 0", () => {
-    expect(caretBlinkOpacity(0, { fps: FPS, blinkPerSecond: 1, speed: 1 })).toBe(1);
+    expect(
+      caretBlinkOpacity(0, { fps: FPS, blinkPerSecond: 1, speed: 1 }),
+    ).toBe(1);
   });
 
   it("toggles after one half-period for blinkPerSecond=1", () => {
@@ -50,7 +52,11 @@ describe("caretBlinkOpacity", () => {
 
   it("speed=2 at frame f matches speed=1 at frame 2f", () => {
     for (let f = 0; f <= 120; f++) {
-      const fast = caretBlinkOpacity(f, { fps: FPS, blinkPerSecond: 1, speed: 2 });
+      const fast = caretBlinkOpacity(f, {
+        fps: FPS,
+        blinkPerSecond: 1,
+        speed: 2,
+      });
       const normal = caretBlinkOpacity(2 * f, {
         fps: FPS,
         blinkPerSecond: 1,
@@ -61,6 +67,8 @@ describe("caretBlinkOpacity", () => {
   });
 
   it("stays visible when blinkPerSecond is 0 or negative", () => {
-    expect(caretBlinkOpacity(13, { fps: FPS, blinkPerSecond: 0, speed: 1 })).toBe(1);
+    expect(
+      caretBlinkOpacity(13, { fps: FPS, blinkPerSecond: 0, speed: 1 }),
+    ).toBe(1);
   });
 });

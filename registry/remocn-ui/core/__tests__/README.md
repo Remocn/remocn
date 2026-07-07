@@ -17,15 +17,12 @@ bun test registry/remocn-ui/core/__tests__
 `color.ts` was rewritten to wrap the **`culori`** package, which is already
 declared in `package.json` (`culori` + `@types/culori`). Run `bun install`
 first so it lands in `node_modules`, or `color.test.ts` will fail to resolve the
-import. The test runner itself still needs nothing: these tests import
-`bun:test`, not `vitest`/`jest`, so no test script or test-framework dep is
-added to `package.json`.
+import. The test runner itself needs no third-party dep: these tests import
+`bun:test`, not any external framework. A `test` script (`bun test`) is defined
+in `package.json`; run the whole suite with `bun run test`.
 
-> If you would rather standardize on a framework later, the lightest path that
-> needs a dep is **vitest**: `bunx vitest run registry/remocn-ui/core` after
-> `bun add -d vitest`. The test bodies are framework-agnostic (`describe/it/
-> expect`); only the top `import { ... } from "bun:test"` line would change to
-> `from "vitest"`. Not required for Iteration 1.
+> The repo standardizes on `bun:test` as the single test framework — one runner,
+> no extra test-framework dependency.
 
 ## What is covered
 

@@ -1,11 +1,11 @@
 "use client";
 
-import type React from "react";
-import { AbsoluteFill, Easing, interpolate } from "remotion";
 import type {
   TransitionPresentation,
   TransitionPresentationComponentProps,
 } from "@remotion/transitions";
+import type React from "react";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
 import {
   ShaderGrainGradient,
   type ShaderGrainGradientProps,
@@ -66,8 +66,7 @@ const GrainDissolvePresentation: React.FC<
     ...clampOpts,
     easing: Easing.bezier(0.42, 0, 0.58, 1),
   });
-  const fieldScale =
-    zoom * interpolate(p, [0, 1], [0.9, 1.15], clampOpts);
+  const fieldScale = zoom * interpolate(p, [0, 1], [0.9, 1.15], clampOpts);
 
   const childStyle: React.CSSProperties = {
     opacity: interpolate(p, [0.7, 0.86], [0, 1], clampOpts),

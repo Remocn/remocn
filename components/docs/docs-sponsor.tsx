@@ -1,8 +1,8 @@
-import React from "react";
+import { ArrowUpRight } from "lucide-react";
+import Link from "next/link";
+import type React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getGoldSponsors } from "@/config/sponsors";
-import Link from "next/link";
-import { ArrowUpRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const DocsSponsor: React.FC = () => {

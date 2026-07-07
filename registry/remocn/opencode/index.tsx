@@ -114,7 +114,6 @@ export function OpenCode({
   const boxFade = fadeUpAt(frame * speed, [12, 30]);
   const hintsFade = fadeUpAt(frame * speed, [20, 38]);
 
-
   const boxWidth = 1000;
 
   return (
@@ -170,10 +169,7 @@ export function OpenCode({
                 fill="#B7B1B1"
               />
               <path d="M144 30H126V18H144V30Z" fill="#4B4646" />
-              <path
-                d="M144 12H126V30H144V36H120V6H144V12Z"
-                fill="#F1ECEC"
-              />
+              <path d="M144 12H126V30H144V36H120V6H144V12Z" fill="#F1ECEC" />
               <path d="M168 30H156V18H168V30Z" fill="#4B4646" />
               <path
                 d="M168 12H156V30H168V12ZM174 36H150V6H174V36Z"

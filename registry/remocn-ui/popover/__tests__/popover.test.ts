@@ -1,17 +1,9 @@
-
 import { describe, expect, it } from "bun:test";
-import {
-  popoverStyle,
-  type PopoverState,
-  type PopoverSide,
-} from "../index";
-import {
-  tweenPopoverStyle,
-  DEFAULT_DURATION,
-} from "../use-popover-transition";
-import { popoverConfig } from "../config";
-import { easings } from "@/lib/remocn-ui";
 import type { Step } from "@/lib/remocn-ui";
+import { easings } from "@/lib/remocn-ui";
+import { popoverConfig } from "../config";
+import { type PopoverSide, type PopoverState, popoverStyle } from "../index";
+import { DEFAULT_DURATION, tweenPopoverStyle } from "../use-popover-transition";
 
 const VALID_STATES: readonly PopoverState[] = ["opened", "closed"];
 const VALID_SIDES: readonly PopoverSide[] = ["top", "bottom", "left", "right"];
@@ -223,11 +215,18 @@ function resolveStateTransition<S extends string>(
 }
 
 function resolvePopoverTransition(
-  raw: number,                                           // injected useCurrentFrame() — MIRROR line 49
+  raw: number, // injected useCurrentFrame() — MIRROR line 49
   steps: Step<PopoverState>[],
   speed = 1,
   defaultDuration = DEFAULT_DURATION,
-): { opacity: number; scale: number; translate: number; from: PopoverState; to: PopoverState; progress: number } {
+): {
+  opacity: number;
+  scale: number;
+  translate: number;
+  from: PopoverState;
+  to: PopoverState;
+  progress: number;
+} {
   const { from, to, progress } = resolveStateTransition(
     raw,
     steps,
@@ -241,7 +240,12 @@ function resolvePopoverTransition(
     popoverStyle(to as PopoverState),
     t,
   );
-  return { ...style, from: from as PopoverState, to: to as PopoverState, progress };
+  return {
+    ...style,
+    from: from as PopoverState,
+    to: to as PopoverState,
+    progress,
+  };
 }
 
 describe("resolvePopoverTransition: before any step — holds at closed", () => {
@@ -312,15 +316,22 @@ describe("resolvePopoverTransition: past the window → fully opened", () => {
   const steps: Step<PopoverState>[] = [{ at: 0, state: "opened" }];
 
   it("opacity is 1 after DEFAULT_DURATION frames", () => {
-    expect(resolvePopoverTransition(DEFAULT_DURATION, steps).opacity).toBeCloseTo(1, 10);
+    expect(
+      resolvePopoverTransition(DEFAULT_DURATION, steps).opacity,
+    ).toBeCloseTo(1, 10);
   });
 
   it("scale is 1 after DEFAULT_DURATION frames", () => {
-    expect(resolvePopoverTransition(DEFAULT_DURATION, steps).scale).toBeCloseTo(1, 10);
+    expect(resolvePopoverTransition(DEFAULT_DURATION, steps).scale).toBeCloseTo(
+      1,
+      10,
+    );
   });
 
   it("translate is 0 after DEFAULT_DURATION frames", () => {
-    expect(resolvePopoverTransition(DEFAULT_DURATION, steps).translate).toBeCloseTo(0, 10);
+    expect(
+      resolvePopoverTransition(DEFAULT_DURATION, steps).translate,
+    ).toBeCloseTo(0, 10);
   });
 });
 
@@ -452,7 +463,9 @@ describe("popoverConfig.snippet: default props are omitted", () => {
   });
 
   it("omits description when it is empty string", () => {
-    expect(snippet({ state: "opened", description: "" })).not.toContain("description=");
+    expect(snippet({ state: "opened", description: "" })).not.toContain(
+      "description=",
+    );
   });
 
   it("omits side when it equals the default 'bottom'", () => {
@@ -466,12 +479,17 @@ describe("popoverConfig.snippet: default props are omitted", () => {
 
 describe("popoverConfig.snippet: non-default props are emitted", () => {
   it("emits title when non-empty", () => {
-    expect(snippet({ state: "opened", title: "Dimensions" })).toContain('title="Dimensions"');
+    expect(snippet({ state: "opened", title: "Dimensions" })).toContain(
+      'title="Dimensions"',
+    );
   });
 
   it("emits description when non-empty", () => {
     expect(
-      snippet({ state: "opened", description: "Set the dimensions for the layer." })
+      snippet({
+        state: "opened",
+        description: "Set the dimensions for the layer.",
+      }),
     ).toContain('description="Set the dimensions for the layer."');
   });
 
@@ -484,7 +502,9 @@ describe("popoverConfig.snippet: non-default props are emitted", () => {
   });
 
   it("emits side='right' when non-default", () => {
-    expect(snippet({ state: "opened", side: "right" })).toContain('side="right"');
+    expect(snippet({ state: "opened", side: "right" })).toContain(
+      'side="right"',
+    );
   });
 
   it("emits width when non-default", () => {

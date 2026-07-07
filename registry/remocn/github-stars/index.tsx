@@ -1,9 +1,9 @@
 "use client";
 
+import { loadFont as loadMono } from "@remotion/google-fonts/GeistMono";
+import { loadFont as loadSans } from "@remotion/google-fonts/Manrope";
 import { format, parseISO } from "date-fns";
 import { memo, useMemo, useState } from "react";
-import { loadFont as loadSans } from "@remotion/google-fonts/Manrope";
-import { loadFont as loadMono } from "@remotion/google-fonts/GeistMono";
 import {
   AbsoluteFill,
   Easing,

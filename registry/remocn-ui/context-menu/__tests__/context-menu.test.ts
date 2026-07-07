@@ -1,18 +1,17 @@
-
 import { describe, expect, it } from "bun:test";
+import type { Step } from "@/lib/remocn-ui";
+import { defaultDarkTheme, defaultLightTheme, easings } from "@/lib/remocn-ui";
+import { contextMenuConfig } from "../config";
 import {
-  contextMenuStyle,
-  contextMenuStyleContext,
   type ContextMenuState,
   type ContextMenuStyle,
+  contextMenuStyle,
+  contextMenuStyleContext,
 } from "../index";
 import {
-  tweenContextMenuStyle,
   DEFAULT_DURATION,
+  tweenContextMenuStyle,
 } from "../use-context-menu-transition";
-import { contextMenuConfig } from "../config";
-import { defaultLightTheme, defaultDarkTheme, easings } from "@/lib/remocn-ui";
-import type { Step } from "@/lib/remocn-ui";
 
 const VALID_STATES: readonly ContextMenuState[] = ["opened", "closed"];
 
@@ -251,11 +250,15 @@ function resolveStateTransition<S extends string>(
 }
 
 function resolveContextMenuTransition(
-  raw: number,                                           // injected useCurrentFrame() — MIRROR line 58
+  raw: number, // injected useCurrentFrame() — MIRROR line 58
   steps: Step<ContextMenuState>[],
   speed = 1,
   defaultDuration = DEFAULT_DURATION,
-): ContextMenuStyle & { from: ContextMenuState; to: ContextMenuState; progress: number } {
+): ContextMenuStyle & {
+  from: ContextMenuState;
+  to: ContextMenuState;
+  progress: number;
+} {
   const { from, to, progress } = resolveStateTransition(
     raw,
     steps,
@@ -269,7 +272,12 @@ function resolveContextMenuTransition(
     contextMenuStyle(to as ContextMenuState, ctx),
     t,
   );
-  return { ...style, from: from as ContextMenuState, to: to as ContextMenuState, progress };
+  return {
+    ...style,
+    from: from as ContextMenuState,
+    to: to as ContextMenuState,
+    progress,
+  };
 }
 
 describe("resolveContextMenuTransition: before any step — holds at closed", () => {
@@ -326,7 +334,7 @@ describe("resolveContextMenuTransition: mid-window uses easings.out (not linear)
   it("translateY at raw=5 is -4*(1-out(0.5)) = -0.5", () => {
     const r = resolveContextMenuTransition(5, steps, 1, 10);
     const t = easings.out(0.5);
-    const expected = -4 + (0 - (-4)) * t;
+    const expected = -4 + (0 - -4) * t;
     expect(r.translateY).toBeCloseTo(expected, 8);
   });
 
@@ -340,15 +348,21 @@ describe("resolveContextMenuTransition: past the window → fully opened", () =>
   const steps: Step<ContextMenuState>[] = [{ at: 0, state: "opened" }];
 
   it("opacity is 1 after DEFAULT_DURATION frames", () => {
-    expect(resolveContextMenuTransition(DEFAULT_DURATION, steps).opacity).toBeCloseTo(1, 10);
+    expect(
+      resolveContextMenuTransition(DEFAULT_DURATION, steps).opacity,
+    ).toBeCloseTo(1, 10);
   });
 
   it("scale is 1 after DEFAULT_DURATION frames", () => {
-    expect(resolveContextMenuTransition(DEFAULT_DURATION, steps).scale).toBeCloseTo(1, 10);
+    expect(
+      resolveContextMenuTransition(DEFAULT_DURATION, steps).scale,
+    ).toBeCloseTo(1, 10);
   });
 
   it("translateY is 0 after DEFAULT_DURATION frames", () => {
-    expect(resolveContextMenuTransition(DEFAULT_DURATION, steps).translateY).toBeCloseTo(0, 10);
+    expect(
+      resolveContextMenuTransition(DEFAULT_DURATION, steps).translateY,
+    ).toBeCloseTo(0, 10);
   });
 });
 
@@ -437,17 +451,23 @@ describe("contextMenuConfig.snippet: structural invariants", () => {
 
 describe("contextMenuConfig.snippet: default props are omitted", () => {
   it("omits highlightedIndex when it equals -1 (no highlight)", () => {
-    expect(snippet({ state: "opened", highlightedIndex: -1 })).not.toContain("highlightedIndex=");
+    expect(snippet({ state: "opened", highlightedIndex: -1 })).not.toContain(
+      "highlightedIndex=",
+    );
   });
 });
 
 describe("contextMenuConfig.snippet: non-default props are emitted", () => {
   it("emits highlightedIndex when not -1 (e.g. 1 = second row)", () => {
-    expect(snippet({ state: "opened", highlightedIndex: 1 })).toContain("highlightedIndex={1}");
+    expect(snippet({ state: "opened", highlightedIndex: 1 })).toContain(
+      "highlightedIndex={1}",
+    );
   });
 
   it("emits highlightedIndex=0 when first row is highlighted", () => {
-    expect(snippet({ state: "opened", highlightedIndex: 0 })).toContain("highlightedIndex={0}");
+    expect(snippet({ state: "opened", highlightedIndex: 0 })).toContain(
+      "highlightedIndex={0}",
+    );
   });
 });
 

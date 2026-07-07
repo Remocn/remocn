@@ -2,37 +2,9 @@ import type { ComponentType } from "react";
 import { FPS, H, W } from "@/lib/customizer-config";
 import type { BackdropFill } from "@/registry/remocn/backdrop";
 import {
-  SignupFlowExampleScene,
-  signupFlowExampleCode,
-} from "../signup-flow-example";
-import {
   AiPromptFlowExampleScene,
   aiPromptFlowExampleCode,
 } from "../ai-prompt-flow-example";
-import {
-  CheckoutFlowExampleScene,
-  checkoutFlowExampleCode,
-} from "../checkout-flow-example";
-import {
-  OnboardingStepperFlowExampleScene,
-  onboardingStepperFlowExampleCode,
-} from "../onboarding-stepper-flow-example";
-import {
-  SettingsToggleFlowExampleScene,
-  settingsToggleFlowExampleCode,
-} from "../settings-toggle-flow-example";
-import {
-  ChatFlowExampleScene,
-  chatFlowExampleCode,
-} from "../chat-flow-example";
-import {
-  TelegramChatFlowExampleScene,
-  telegramChatFlowExampleCode,
-} from "../telegram-chat-flow-example";
-import {
-  ImessageChatFlowExampleScene,
-  imessageChatFlowExampleCode,
-} from "../imessage-chat-flow-example";
 import {
   BackdropColorScene,
   BackdropGradientScene,
@@ -44,9 +16,37 @@ import {
   backdropLiveCode,
 } from "../backdrop-variants";
 import {
+  ChatFlowExampleScene,
+  chatFlowExampleCode,
+} from "../chat-flow-example";
+import {
+  CheckoutFlowExampleScene,
+  checkoutFlowExampleCode,
+} from "../checkout-flow-example";
+import {
+  ImessageChatFlowExampleScene,
+  imessageChatFlowExampleCode,
+} from "../imessage-chat-flow-example";
+import {
+  OnboardingStepperFlowExampleScene,
+  onboardingStepperFlowExampleCode,
+} from "../onboarding-stepper-flow-example";
+import {
   RollingNumberConfettiExampleScene,
   rollingNumberConfettiExampleCode,
 } from "../rolling-number-confetti-example";
+import {
+  SettingsToggleFlowExampleScene,
+  settingsToggleFlowExampleCode,
+} from "../settings-toggle-flow-example";
+import {
+  SignupFlowExampleScene,
+  signupFlowExampleCode,
+} from "../signup-flow-example";
+import {
+  TelegramChatFlowExampleScene,
+  telegramChatFlowExampleCode,
+} from "../telegram-chat-flow-example";
 
 /**
  * Blocks scene registry — parallel to the ui-tier `examples` map

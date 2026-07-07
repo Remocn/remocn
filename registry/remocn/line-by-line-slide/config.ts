@@ -10,7 +10,11 @@ export const lineByLineSlideConfig: ComponentConfig = {
   componentName: "LineByLineSlide",
   importPath: "@/components/remocn/line-by-line-slide",
   controls: {
-    text: { type: "text", default: "Think different.\nDo more.", label: "Text" },
+    text: {
+      type: "text",
+      default: "Think different.\nDo more.",
+      label: "Text",
+    },
     distance: {
       type: "number",
       default: 48,

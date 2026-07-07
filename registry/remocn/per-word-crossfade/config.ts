@@ -10,7 +10,11 @@ export const perWordCrossfadeConfig: ComponentConfig = {
   componentName: "PerWordCrossfade",
   importPath: "@/components/remocn/per-word-crossfade",
   controls: {
-    fromText: { type: "text", default: "Beautifully simple.", label: "From text" },
+    fromText: {
+      type: "text",
+      default: "Beautifully simple.",
+      label: "From text",
+    },
     toText: { type: "text", default: "Designed for focus.", label: "To text" },
     fontSize: {
       type: "number",

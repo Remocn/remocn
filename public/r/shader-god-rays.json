@@ -3,9 +3,7 @@
   "name": "shader-god-rays",
   "title": "Shader God Rays",
   "description": "Volumetric light rays radiating from an off-screen source.",
-  "dependencies": [
-    "@paper-design/shaders-react"
-  ],
+  "dependencies": ["@paper-design/shaders-react"],
   "files": [
     {
       "path": "registry/remocn/shader-god-rays/index.tsx",

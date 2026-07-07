@@ -1,9 +1,9 @@
 "use client";
 
+import { linearTiming, TransitionSeries } from "@remotion/transitions";
 import { AbsoluteFill, Sequence } from "remotion";
-import { TransitionSeries, linearTiming } from "@remotion/transitions";
-import { waveWipe } from "@/registry/remocn/wave-wipe";
 import { SoftBlurIn } from "@/registry/remocn/soft-blur-in";
+import { waveWipe } from "@/registry/remocn/wave-wipe";
 
 const FONT_FAMILY =
   "var(--font-geist-sans), -apple-system, BlinkMacSystemFont, sans-serif";
@@ -53,7 +53,13 @@ export function WaveWipeExampleScene({
       </TransitionSeries.Sequence>
       <TransitionSeries.Transition
         timing={linearTiming({ durationInFrames: 60 })}
-        presentation={waveWipe({ intensity, softness, noise, colorBack, speed })}
+        presentation={waveWipe({
+          intensity,
+          softness,
+          noise,
+          colorBack,
+          speed,
+        })}
       />
       <TransitionSeries.Sequence durationInFrames={88}>
         <AbsoluteFill>

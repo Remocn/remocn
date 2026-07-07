@@ -1,7 +1,6 @@
-
 import { describe, expect, it } from "bun:test";
-import { typingDotOffset, type TypingDotOptions } from "../index";
 import { typingIndicatorConfig } from "../config";
+import { type TypingDotOptions, typingDotOffset } from "../index";
 
 const BASE_OPTS: TypingDotOptions = {
   fps: 30,

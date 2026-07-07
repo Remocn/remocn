@@ -3,9 +3,7 @@
   "name": "dynamic-grid",
   "title": "Dynamic Grid",
   "description": "Subtle moving grid background with configurable cell size and direction.",
-  "dependencies": [
-    "remotion"
-  ],
+  "dependencies": ["remotion"],
   "files": [
     {
       "path": "registry/remocn/dynamic-grid/index.tsx",

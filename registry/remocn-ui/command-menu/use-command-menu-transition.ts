@@ -1,18 +1,18 @@
 "use client";
 
 import {
+  type CommandMenuState,
+  type CommandMenuStyle,
+  commandMenuStyle,
+  commandMenuStyleContext,
+} from "@/components/remocn/command-menu";
+import {
   easings,
   type RemocnTheme,
   type Step,
   useRemocnTheme,
   useStateTransition,
 } from "@/lib/remocn-ui";
-import {
-  commandMenuStyle,
-  commandMenuStyleContext,
-  type CommandMenuState,
-  type CommandMenuStyle,
-} from "@/components/remocn/command-menu";
 
 export const DEFAULT_DURATION = 12;
 

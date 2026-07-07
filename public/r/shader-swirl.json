@@ -3,9 +3,7 @@
   "name": "shader-swirl",
   "title": "Shader Swirl",
   "description": "Concentric bands swirling around a center point.",
-  "dependencies": [
-    "@paper-design/shaders-react"
-  ],
+  "dependencies": ["@paper-design/shaders-react"],
   "files": [
     {
       "path": "registry/remocn/shader-swirl/index.tsx",

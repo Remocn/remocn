@@ -32,8 +32,7 @@ export function tsconfigWebpackAlias(root: string): AliasItem[] {
   const tsconfig = JSON.parse(
     readFileSync(path.join(root, "tsconfig.json"), "utf8"),
   );
-  const paths: Record<string, string[]> =
-    tsconfig.compilerOptions?.paths ?? {};
+  const paths: Record<string, string[]> = tsconfig.compilerOptions?.paths ?? {};
   const baseUrl: string = tsconfig.compilerOptions?.baseUrl ?? ".";
   const base = path.resolve(root, baseUrl);
 

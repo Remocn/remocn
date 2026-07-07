@@ -5,10 +5,14 @@ import { ArrowUpRight } from "lucide-react";
 import { motion } from "motion/react";
 import Link from "next/link";
 import { type ComponentType, type ReactNode, useRef } from "react";
+import { CommandMenuExampleScene } from "@/components/docs/examples/command-menu-example";
+import { InputExampleScene } from "@/components/docs/examples/input-example";
+import { SelectExampleScene } from "@/components/docs/examples/select-example";
+import { SignupFlowExampleScene } from "@/components/docs/examples/signup-flow-example";
+import { SwitchExampleScene } from "@/components/docs/examples/switch-example";
 import { SpotlightSurface } from "@/components/spotlight-surface";
-import { blockExamples } from "@/components/docs/examples/blocks";
-import { examples } from "@/components/docs/examples";
 import { SPRING_SOFT } from "@/config/site";
+import { FPS, H, W } from "@/lib/customizer-config";
 import { cn } from "@/lib/utils";
 import { FadeUp } from "../fade-up";
 import { InstallCommand } from "../install-command";
@@ -23,10 +27,49 @@ interface SceneEntry {
   height: number;
 }
 
-const atomEntry = (name: string): SceneEntry | undefined =>
-  examples[`${name}-example`] as SceneEntry | undefined;
-const flowEntry = (name: string): SceneEntry | undefined =>
-  blockExamples[name] as SceneEntry | undefined;
+const ATOM_SCENES: Record<string, SceneEntry> = {
+  select: {
+    Component: SelectExampleScene,
+    durationInFrames: 120,
+    fps: FPS,
+    width: W,
+    height: H,
+  },
+  input: {
+    Component: InputExampleScene,
+    durationInFrames: 120,
+    fps: FPS,
+    width: W,
+    height: H,
+  },
+  switch: {
+    Component: SwitchExampleScene,
+    durationInFrames: 100,
+    fps: FPS,
+    width: W,
+    height: H,
+  },
+  "command-menu": {
+    Component: CommandMenuExampleScene,
+    durationInFrames: 130,
+    fps: FPS,
+    width: W,
+    height: H,
+  },
+};
+
+const FLOW_SCENES: Record<string, SceneEntry> = {
+  "signup-flow": {
+    Component: SignupFlowExampleScene,
+    durationInFrames: 380,
+    fps: FPS,
+    width: W,
+    height: H,
+  },
+};
+
+const atomEntry = (name: string): SceneEntry | undefined => ATOM_SCENES[name];
+const flowEntry = (name: string): SceneEntry | undefined => FLOW_SCENES[name];
 
 const EYEBROW = "remocn-ui";
 const TITLE = "shadcn, on the timeline";
@@ -40,9 +83,21 @@ interface Atom {
 }
 
 const ATOMS: Atom[] = [
-  { name: "select", title: "Select", description: "Panel reveals, then an item check lands" },
-  { name: "input", title: "Input", description: "Focus ring and a typed value reveal" },
-  { name: "switch", title: "Switch", description: "Track fill with a sliding thumb" },
+  {
+    name: "select",
+    title: "Select",
+    description: "Panel reveals, then an item check lands",
+  },
+  {
+    name: "input",
+    title: "Input",
+    description: "Focus ring and a typed value reveal",
+  },
+  {
+    name: "switch",
+    title: "Switch",
+    description: "Track fill with a sliding thumb",
+  },
   {
     name: "command-menu",
     title: "Command Menu",
@@ -69,25 +124,27 @@ const PRIMITIVE_CHIPS = [
 
 function ScenePlayer({ entry }: { entry: SceneEntry | undefined }) {
   const ref = useRef<PlayerRef>(null);
-  useAutoplay(ref, Boolean(entry));
+  const { containerRef } = useAutoplay(ref, Boolean(entry));
 
   if (!entry) return null;
 
   return (
-    <Player
-      ref={ref}
-      component={entry.Component}
-      inputProps={{}}
-      durationInFrames={entry.durationInFrames}
-      fps={entry.fps}
-      compositionWidth={entry.width}
-      compositionHeight={entry.height}
-      style={{ width: "100%", height: "100%", pointerEvents: "none" }}
-      clickToPlay={false}
-      loop
-      initiallyMuted
-      acknowledgeRemotionLicense
-    />
+    <div ref={containerRef} style={{ width: "100%", height: "100%" }}>
+      <Player
+        ref={ref}
+        component={entry.Component}
+        inputProps={{}}
+        durationInFrames={entry.durationInFrames}
+        fps={entry.fps}
+        compositionWidth={entry.width}
+        compositionHeight={entry.height}
+        style={{ width: "100%", height: "100%", pointerEvents: "none" }}
+        clickToPlay={false}
+        loop
+        initiallyMuted
+        acknowledgeRemotionLicense
+      />
+    </div>
   );
 }
 

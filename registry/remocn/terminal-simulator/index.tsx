@@ -1,8 +1,8 @@
 "use client";
 
 import {
-  Sequence,
   interpolate,
+  Sequence,
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";

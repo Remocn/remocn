@@ -1,15 +1,15 @@
 "use client";
 
-import { type RemocnTheme, useRemocnTheme } from "@/lib/remocn-ui";
-import { Input } from "@/components/remocn/input";
-import { useInputTransition } from "@/components/remocn/use-input-transition";
 import { Button } from "@/components/remocn/button";
-import { useButtonTransition } from "@/components/remocn/use-button-transition";
+import { Input } from "@/components/remocn/input";
 import { Skeleton } from "@/components/remocn/skeleton";
 import { SkeletonBlock } from "@/components/remocn/skeleton-block";
-import { useSkeletonTransition } from "@/components/remocn/use-skeleton-transition";
 import { Toast } from "@/components/remocn/toast";
+import { useButtonTransition } from "@/components/remocn/use-button-transition";
+import { useInputTransition } from "@/components/remocn/use-input-transition";
+import { useSkeletonTransition } from "@/components/remocn/use-skeleton-transition";
 import { useToastTransition } from "@/components/remocn/use-toast-transition";
+import { type RemocnTheme, useRemocnTheme } from "@/lib/remocn-ui";
 
 export interface AiPromptFlowProps {
   prompt?: string;
@@ -122,11 +122,7 @@ export function AiPromptFlow({
           height: BTN_H,
         }}
       >
-        <Button
-          label={buttonLabel}
-          style={buttonStyle}
-          theme={theme}
-        />
+        <Button label={buttonLabel} style={buttonStyle} theme={theme} />
       </div>
 
       {}

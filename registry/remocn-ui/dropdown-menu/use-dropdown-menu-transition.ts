@@ -1,18 +1,18 @@
 "use client";
 
 import {
+  type DropdownMenuState,
+  type DropdownMenuStyle,
+  dropdownMenuStyle,
+  dropdownMenuStyleContext,
+} from "@/components/remocn/dropdown-menu";
+import {
   easings,
   type RemocnTheme,
   type Step,
   useRemocnTheme,
   useStateTransition,
 } from "@/lib/remocn-ui";
-import {
-  dropdownMenuStyle,
-  dropdownMenuStyleContext,
-  type DropdownMenuState,
-  type DropdownMenuStyle,
-} from "@/components/remocn/dropdown-menu";
 
 export const DEFAULT_DURATION = 12;
 

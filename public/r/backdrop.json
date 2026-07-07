@@ -3,9 +3,7 @@
   "name": "backdrop",
   "title": "Backdrop",
   "description": "Configurable full-frame background (color / gradient / image / live component) with Screen Studio-style padding and a rounded, shadowed content frame.",
-  "dependencies": [
-    "remotion"
-  ],
+  "dependencies": ["remotion"],
   "files": [
     {
       "path": "registry/remocn/backdrop/index.tsx",

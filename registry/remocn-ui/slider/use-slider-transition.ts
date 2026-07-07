@@ -1,12 +1,12 @@
 "use client";
 
 import { useCurrentFrame } from "remotion";
-import { clamp01, type EasingName, easings } from "@/lib/remocn-ui";
 import {
-  sliderThumbStyle,
   type SliderStyle,
   type SliderThumbState,
+  sliderThumbStyle,
 } from "@/components/remocn/slider";
+import { clamp01, type EasingName, easings } from "@/lib/remocn-ui";
 
 export interface SliderStep {
   at: number;

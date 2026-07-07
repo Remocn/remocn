@@ -16,7 +16,7 @@ export default async function Page(props: {
   const page = source.getPage(params.slug);
   if (!page) notFound();
 
-  const data = page.data as any;
+  const data = page.data;
   const MDX = data.body;
 
   return (
@@ -52,7 +52,7 @@ export async function generateMetadata(props: {
   const params = await props.params;
   const page = source.getPage(params.slug);
   if (!page) notFound();
-  const data = page.data as any;
+  const data = page.data;
   return {
     title: data.title,
     description: data.description,

@@ -10,8 +10,16 @@ export const fadeThroughConfig: ComponentConfig = {
   componentName: "FadeThrough",
   importPath: "@/components/remocn/fade-through",
   controls: {
-    fromText: { type: "text", default: "Calm transitions.", label: "From text" },
-    toText: { type: "text", default: "Fade through content.", label: "To text" },
+    fromText: {
+      type: "text",
+      default: "Calm transitions.",
+      label: "From text",
+    },
+    toText: {
+      type: "text",
+      default: "Fade through content.",
+      label: "To text",
+    },
     fontSize: {
       type: "number",
       default: 72,

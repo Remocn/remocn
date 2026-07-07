@@ -1,11 +1,11 @@
 "use client";
 
-import { easings, type Step, useStateTransition } from "@/lib/remocn-ui";
 import {
-  popoverStyle,
   type PopoverState,
   type PopoverStyle,
+  popoverStyle,
 } from "@/components/remocn/popover";
+import { easings, type Step, useStateTransition } from "@/lib/remocn-ui";
 
 export const DEFAULT_DURATION = 10;
 

@@ -1,10 +1,9 @@
 "use client";
 
-import { useState } from "react";
 import { loadFont as loadSans } from "@remotion/google-fonts/Manrope";
+import { useState } from "react";
 import {
   AbsoluteFill,
-  Easing,
   Img,
   interpolate,
   spring,
@@ -351,7 +350,6 @@ export function XFollowersOverview({
     "#22c55e",
     "#a855f7",
   ];
-
 
   return (
     <AbsoluteFill style={{ background: "transparent" }}>

@@ -3,9 +3,7 @@
   "name": "shared-axis-y",
   "title": "Shared Axis Y",
   "description": "Per-word hard-cut transition with staircase timing for sharp editorial swaps.",
-  "dependencies": [
-    "remotion"
-  ],
+  "dependencies": ["remotion"],
   "files": [
     {
       "path": "registry/remocn/shared-axis-y/index.tsx",

@@ -1,17 +1,8 @@
-
 import { describe, expect, it } from "bun:test";
-import {
-  tooltipStyle,
-  type TooltipState,
-  type TooltipSide,
-} from "../index";
-import {
-  tweenTooltipStyle,
-  DEFAULT_DURATION,
-} from "../use-tooltip-transition";
-import { tooltipConfig } from "../config";
-import { defaultLightTheme, defaultDarkTheme, easings } from "@/lib/remocn-ui";
 import type { Step } from "@/lib/remocn-ui";
+import { tooltipConfig } from "../config";
+import { type TooltipSide, type TooltipState, tooltipStyle } from "../index";
+import { DEFAULT_DURATION, tweenTooltipStyle } from "../use-tooltip-transition";
 
 const VALID_STATES: readonly TooltipState[] = ["hidden", "visible"];
 const VALID_SIDES: readonly TooltipSide[] = ["top", "bottom", "left", "right"];
@@ -230,11 +221,16 @@ function resolveStateTransition<S extends string>(
 }
 
 function resolveTooltipTransition(
-  raw: number,                                    // injected useCurrentFrame() — MIRROR line 53
+  raw: number, // injected useCurrentFrame() — MIRROR line 53
   steps: Step<TooltipState>[],
   speed = 1,
   defaultDuration = DEFAULT_DURATION,
-): { style: ReturnType<typeof tweenTooltipStyle>; progress: number; from: TooltipState; to: TooltipState } {
+): {
+  style: ReturnType<typeof tweenTooltipStyle>;
+  progress: number;
+  from: TooltipState;
+  to: TooltipState;
+} {
   const { from, to, progress } = resolveStateTransition(
     raw,
     steps,
@@ -243,8 +239,17 @@ function resolveTooltipTransition(
     defaultDuration,
   );
   const t = easingOut(progress);
-  const style = tweenTooltipStyle(tooltipStyle(from as TooltipState), tooltipStyle(to as TooltipState), t);
-  return { style, progress, from: from as TooltipState, to: to as TooltipState };
+  const style = tweenTooltipStyle(
+    tooltipStyle(from as TooltipState),
+    tooltipStyle(to as TooltipState),
+    t,
+  );
+  return {
+    style,
+    progress,
+    from: from as TooltipState,
+    to: to as TooltipState,
+  };
 }
 
 describe("resolveTooltipTransition: before any step — holds at hidden", () => {
@@ -442,7 +447,6 @@ describe("tooltipConfig.snippet: label is always emitted", () => {
 });
 
 describe("tooltipConfig.snippet: default props are omitted", () => {
-
   it("omits side when it equals the default 'top'", () => {
     const out = snippet({ state: "visible", side: "top" });
     expect(out).not.toContain("side=");

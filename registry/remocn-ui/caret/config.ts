@@ -4,9 +4,30 @@ export const caretConfig: ComponentConfig = {
   componentName: "Caret",
   importPath: "@/components/remocn/caret",
   controls: {
-    height: { type: "number", default: 28, min: 8, max: 80, step: 2, label: "Height" },
-    width: { type: "number", default: 3, min: 1, max: 8, step: 1, label: "Width" },
-    radius: { type: "number", default: 1, min: 0, max: 8, step: 1, label: "Radius" },
+    height: {
+      type: "number",
+      default: 28,
+      min: 8,
+      max: 80,
+      step: 2,
+      label: "Height",
+    },
+    width: {
+      type: "number",
+      default: 3,
+      min: 1,
+      max: 8,
+      step: 1,
+      label: "Width",
+    },
+    radius: {
+      type: "number",
+      default: 1,
+      min: 0,
+      max: 8,
+      step: 1,
+      label: "Radius",
+    },
     blink: { type: "boolean", default: true, label: "Blink" },
     blinkPerSecond: {
       type: "number",

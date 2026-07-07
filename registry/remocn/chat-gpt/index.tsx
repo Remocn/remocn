@@ -307,7 +307,6 @@ export function ChatGpt({
   const pillFade = fadeUpAt(frame * speed, [10, 26]);
   const chipsFade = fadeUpAt(frame * speed, [16, 32]);
 
-
   const pillWidth = 820;
   const pillLeft = (refW - pillWidth) / 2;
   const pillTop = 300;
@@ -407,7 +406,12 @@ export function ChatGpt({
                   alignItems: "center",
                 }}
               >
-                <Caret color={t.fg} blink={!tw.typing} speed={speed} height={22} />
+                <Caret
+                  color={t.fg}
+                  blink={!tw.typing}
+                  speed={speed}
+                  height={22}
+                />
                 <span style={{ marginLeft: 6 }}>{placeholder}</span>
               </span>
             )}

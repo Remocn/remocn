@@ -90,7 +90,11 @@ export interface FieldControlProps {
   style?: CSSProperties;
 }
 
-export function FieldControl({ children, height = 40, style }: FieldControlProps) {
+export function FieldControl({
+  children,
+  height = 40,
+  style,
+}: FieldControlProps) {
   return (
     <div style={{ position: "relative", height, ...style }}>{children}</div>
   );

@@ -32,7 +32,7 @@ export function TrackingIn({
     config: { damping: 18, stiffness: 90 },
   });
 
-  const letterSpacing = interpolate(t, [0, 1], [startTracking, -0.03]) + "em";
+  const letterSpacing = `${interpolate(t, [0, 1], [startTracking, -0.03])}em`;
   const blurAmount = interpolate(t, [0, 1], [startBlur, 0]);
   const opacity = interpolate(frame, [0, 15], [0, 1], {
     extrapolateLeft: "clamp",

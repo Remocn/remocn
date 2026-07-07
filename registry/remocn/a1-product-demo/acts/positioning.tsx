@@ -76,7 +76,13 @@ function WordReveal({
     : FLOW_INK;
 
   return (
-    <span style={{ display: "inline-block", overflow: "hidden", paddingBottom: "0.06em" }}>
+    <span
+      style={{
+        display: "inline-block",
+        overflow: "hidden",
+        paddingBottom: "0.06em",
+      }}
+    >
       <span
         style={{
           display: "inline-block",

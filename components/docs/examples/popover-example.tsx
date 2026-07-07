@@ -11,19 +11,19 @@ const CHIP_Y = 360;
 
 export const popoverExampleControls = [] as const;
 
-export interface PopoverExampleProps {}
+export type PopoverExampleProps = Record<string, never>;
 
 export const PopoverExampleScene = (_p: PopoverExampleProps = {}) => {
   // Cursor: park top-left → ease onto the chip → hover → leave.
   const cursorStyle = useCursorPath([
-    { at: 0,   x: 80,     y: 60     },
-    { at: 28,  x: CHIP_X, y: CHIP_Y, duration: 24 },
-    { at: 110, x: 200,    y: 200,    duration: 20 },
+    { at: 0, x: 80, y: 60 },
+    { at: 28, x: CHIP_X, y: CHIP_Y, duration: 24 },
+    { at: 110, x: 200, y: 200, duration: 20 },
   ]);
 
   // Hover-card popover: opens shortly after the cursor arrives, closes as it leaves.
   const popoverStyle = usePopoverTransition([
-    { at: 36,  state: "opened", duration: 10 },
+    { at: 36, state: "opened", duration: 10 },
     { at: 100, state: "closed", duration: 10 },
   ]);
 
@@ -51,7 +51,8 @@ export const PopoverExampleScene = (_p: PopoverExampleProps = {}) => {
             border: "1px solid oklch(0.87 0 0)",
             fontSize: 14,
             fontWeight: 500,
-            fontFamily: "var(--font-geist-sans), -apple-system, BlinkMacSystemFont, sans-serif",
+            fontFamily:
+              "var(--font-geist-sans), -apple-system, BlinkMacSystemFont, sans-serif",
             color: "oklch(0.3 0 0)",
             cursor: "default",
           }}
@@ -68,11 +69,7 @@ export const PopoverExampleScene = (_p: PopoverExampleProps = {}) => {
             transform: "translateX(-50%)",
           }}
         >
-          <Popover
-            style={popoverStyle}
-            side="top"
-            width={240}
-          >
+          <Popover style={popoverStyle} side="top" width={240}>
             {/* Hover-card content: avatar + name + bio */}
             <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
               {/* Avatar placeholder */}
@@ -91,7 +88,8 @@ export const PopoverExampleScene = (_p: PopoverExampleProps = {}) => {
                     fontSize: 14,
                     fontWeight: 600,
                     letterSpacing: "-0.01em",
-                    fontFamily: "var(--font-geist-sans), -apple-system, BlinkMacSystemFont, sans-serif",
+                    fontFamily:
+                      "var(--font-geist-sans), -apple-system, BlinkMacSystemFont, sans-serif",
                   }}
                 >
                   Alex Smith
@@ -100,7 +98,8 @@ export const PopoverExampleScene = (_p: PopoverExampleProps = {}) => {
                   style={{
                     fontSize: 12,
                     color: "oklch(0.55 0 0)",
-                    fontFamily: "var(--font-geist-sans), -apple-system, BlinkMacSystemFont, sans-serif",
+                    fontFamily:
+                      "var(--font-geist-sans), -apple-system, BlinkMacSystemFont, sans-serif",
                   }}
                 >
                   @alexsmith
@@ -111,7 +110,8 @@ export const PopoverExampleScene = (_p: PopoverExampleProps = {}) => {
                     lineHeight: 1.4,
                     color: "oklch(0.4 0 0)",
                     marginTop: 4,
-                    fontFamily: "var(--font-geist-sans), -apple-system, BlinkMacSystemFont, sans-serif",
+                    fontFamily:
+                      "var(--font-geist-sans), -apple-system, BlinkMacSystemFont, sans-serif",
                   }}
                 >
                   Product designer. Building in public.

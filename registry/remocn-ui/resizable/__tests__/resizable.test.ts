@@ -1,19 +1,18 @@
-
 import { describe, expect, it } from "bun:test";
+import { defaultDarkTheme, defaultLightTheme } from "@/lib/remocn-ui";
+import { resizableConfig } from "../config";
 import {
-  resizableHandleStyle,
-  resizableStyleContext,
-  resizableStyle,
   type ResizableHandleState,
+  resizableHandleStyle,
+  resizableStyle,
+  resizableStyleContext,
 } from "../index";
 import {
-  tweenResizableStyle,
-  resizableStyleAt,
   DEFAULT_DURATION,
   type ResizableStep,
+  resizableStyleAt,
+  tweenResizableStyle,
 } from "../use-resizable-transition";
-import { resizableConfig } from "../config";
-import { defaultLightTheme, defaultDarkTheme } from "@/lib/remocn-ui";
 
 const VALID_HANDLE_STATES: readonly ResizableHandleState[] = [
   "idle",
@@ -99,11 +98,7 @@ describe("resizableHandleStyle: every state returns numeric fields", () => {
   });
 });
 
-function clampRatio(
-  ratio: number,
-  minRatio: number,
-  maxRatio: number,
-): number {
+function clampRatio(ratio: number, minRatio: number, maxRatio: number): number {
   return Math.min(maxRatio, Math.max(minRatio, ratio));
 }
 
@@ -383,7 +378,9 @@ describe("resizableStyleAt: empty steps → ratio=0.5, handle=idle", () => {
     const r = resizableStyleAt([], 0);
     expect(r.ratio).toBe(0.5);
     expect(r.handleScale).toBe(resizableHandleStyle("idle").handleScale);
-    expect(r.handleRingOpacity).toBe(resizableHandleStyle("idle").handleRingOpacity);
+    expect(r.handleRingOpacity).toBe(
+      resizableHandleStyle("idle").handleRingOpacity,
+    );
   });
 });
 
@@ -489,7 +486,10 @@ describe("resizableStyleAt: dual-channel steps fold independently", () => {
 
   it("handle channel at raw=18 (past last) → hover preset values", () => {
     const r = resizableStyleAt(steps, 18);
-    expect(r.handleScale).toBeCloseTo(resizableHandleStyle("hover").handleScale, 10);
+    expect(r.handleScale).toBeCloseTo(
+      resizableHandleStyle("hover").handleScale,
+      10,
+    );
     expect(r.handleRingOpacity).toBeCloseTo(
       resizableHandleStyle("hover").handleRingOpacity,
       10,
@@ -506,7 +506,9 @@ describe("resizableStyleAt: channels can have different step counts", () => {
   it("handle is idle when no handle steps are present", () => {
     const r = resizableStyleAt(ratioOnlySteps, 9);
     expect(r.handleScale).toBe(resizableHandleStyle("idle").handleScale);
-    expect(r.handleRingOpacity).toBe(resizableHandleStyle("idle").handleRingOpacity);
+    expect(r.handleRingOpacity).toBe(
+      resizableHandleStyle("idle").handleRingOpacity,
+    );
   });
 
   const handleOnlySteps: ResizableStep[] = [
@@ -520,12 +522,17 @@ describe("resizableStyleAt: channels can have different step counts", () => {
 });
 
 describe("resizableStyleAt: past last with both channels — single-step timeline", () => {
-  const steps: ResizableStep[] = [{ at: 18, ratio: 0.75, handleState: "press" }];
+  const steps: ResizableStep[] = [
+    { at: 18, ratio: 0.75, handleState: "press" },
+  ];
 
   it("raw=50 → ratio=0.75, handle=press preset", () => {
     const r = resizableStyleAt(steps, 50);
     expect(r.ratio).toBeCloseTo(0.75, 10);
-    expect(r.handleScale).toBeCloseTo(resizableHandleStyle("press").handleScale, 10);
+    expect(r.handleScale).toBeCloseTo(
+      resizableHandleStyle("press").handleScale,
+      10,
+    );
     expect(r.handleRingOpacity).toBeCloseTo(
       resizableHandleStyle("press").handleRingOpacity,
       10,

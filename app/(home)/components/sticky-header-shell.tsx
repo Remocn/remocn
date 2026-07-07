@@ -1,8 +1,8 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { cn } from "@/lib/utils";
 import { useScroll } from "@/hooks/use-scroll";
+import { cn } from "@/lib/utils";
 
 export function StickyHeaderShell({ children }: { children: ReactNode }) {
   const scrolled = useScroll();

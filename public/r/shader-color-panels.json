@@ -3,9 +3,7 @@
   "name": "shader-color-panels",
   "title": "Shader Color Panels",
   "description": "Overlapping translucent color panels sliding past each other.",
-  "dependencies": [
-    "@paper-design/shaders-react"
-  ],
+  "dependencies": ["@paper-design/shaders-react"],
   "files": [
     {
       "path": "registry/remocn/shader-color-panels/index.tsx",

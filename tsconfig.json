@@ -11,128 +11,129 @@
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
+    "allowImportingTsExtensions": true,
     "jsx": "react-jsx",
     "incremental": true,
     "plugins": [
       {
-        "name": "next",
-      },
+        "name": "next"
+      }
     ],
     "paths": {
       "@/lib/remocn-ui": ["./registry/remocn-ui/core/index.ts"],
       "@/lib/remocn-ui/*": ["./registry/remocn-ui/core/*"],
       "@/components/remocn/use-cursor-path": [
-        "./registry/remocn-ui/cursor/use-cursor-path.ts",
+        "./registry/remocn-ui/cursor/use-cursor-path.ts"
       ],
       "@/components/remocn/use-button-transition": [
-        "./registry/remocn-ui/button/use-button-transition.ts",
+        "./registry/remocn-ui/button/use-button-transition.ts"
       ],
       "@/components/remocn/use-input-transition": [
-        "./registry/remocn-ui/input/use-input-transition.ts",
+        "./registry/remocn-ui/input/use-input-transition.ts"
       ],
       "@/components/remocn/use-checkbox-transition": [
-        "./registry/remocn-ui/checkbox/use-checkbox-transition.ts",
+        "./registry/remocn-ui/checkbox/use-checkbox-transition.ts"
       ],
       "@/components/remocn/use-toast-transition": [
-        "./registry/remocn-ui/toast/use-toast-transition.ts",
+        "./registry/remocn-ui/toast/use-toast-transition.ts"
       ],
       "@/components/remocn/use-skeleton-transition": [
-        "./registry/remocn-ui/skeleton/use-skeleton-transition.ts",
+        "./registry/remocn-ui/skeleton/use-skeleton-transition.ts"
       ],
       "@/components/remocn/use-toggle-group-transition": [
-        "./registry/remocn-ui/toggle-group/use-toggle-group-transition.ts",
+        "./registry/remocn-ui/toggle-group/use-toggle-group-transition.ts"
       ],
       "@/components/remocn/use-dialog-transition": [
-        "./registry/remocn-ui/dialog/use-dialog-transition.ts",
+        "./registry/remocn-ui/dialog/use-dialog-transition.ts"
       ],
       "@/components/remocn/use-radio-transition": [
-        "./registry/remocn-ui/radio/use-radio-transition.ts",
+        "./registry/remocn-ui/radio/use-radio-transition.ts"
       ],
       "@/components/remocn/use-stepper-transition": [
-        "./registry/remocn-ui/stepper/use-stepper-transition.ts",
+        "./registry/remocn-ui/stepper/use-stepper-transition.ts"
       ],
       "@/components/remocn/use-switch-transition": [
-        "./registry/remocn-ui/switch/use-switch-transition.ts",
+        "./registry/remocn-ui/switch/use-switch-transition.ts"
       ],
       "@/components/remocn/use-select-transition": [
-        "./registry/remocn-ui/select/use-select-transition.ts",
+        "./registry/remocn-ui/select/use-select-transition.ts"
       ],
       "@/components/remocn/use-select-item-transition": [
-        "./registry/remocn-ui/select-item/use-select-item-transition.ts",
+        "./registry/remocn-ui/select-item/use-select-item-transition.ts"
       ],
       "@/components/remocn/use-slider-transition": [
-        "./registry/remocn-ui/slider/use-slider-transition.ts",
+        "./registry/remocn-ui/slider/use-slider-transition.ts"
       ],
       "@/components/remocn/use-blur-in-transition": [
-        "./registry/remocn-ui/blur-in/use-blur-in-transition.ts",
+        "./registry/remocn-ui/blur-in/use-blur-in-transition.ts"
       ],
       "@/components/remocn/use-message-bubble-transition": [
-        "./registry/remocn-ui/message-bubble/use-message-bubble-transition.ts",
+        "./registry/remocn-ui/message-bubble/use-message-bubble-transition.ts"
       ],
       "@/components/remocn/confetti": ["./registry/remocn/confetti/index.tsx"],
       "@/components/remocn/glass-code-block": [
-        "./registry/remocn/glass-code-block/index.tsx",
+        "./registry/remocn/glass-code-block/index.tsx"
       ],
       "@/components/remocn/number-wheel": [
-        "./registry/remocn/number-wheel/index.tsx",
+        "./registry/remocn/number-wheel/index.tsx"
       ],
       "@/components/remocn/terminal-simulator": [
-        "./registry/remocn/terminal-simulator/index.tsx",
+        "./registry/remocn/terminal-simulator/index.tsx"
       ],
       "@/components/remocn/soft-blur-in": [
-        "./registry/remocn/soft-blur-in/index.tsx",
+        "./registry/remocn/soft-blur-in/index.tsx"
       ],
       "@/components/remocn/blur-out-up": [
-        "./registry/remocn/blur-out-up/index.tsx",
+        "./registry/remocn/blur-out-up/index.tsx"
       ],
       "@/components/remocn/kinetic-center-build": [
-        "./registry/remocn/kinetic-center-build/index.tsx",
+        "./registry/remocn/kinetic-center-build/index.tsx"
       ],
       "@/components/remocn/per-character-rise": [
-        "./registry/remocn/per-character-rise/index.tsx",
+        "./registry/remocn/per-character-rise/index.tsx"
       ],
       "@/components/remocn/per-word-crossfade": [
-        "./registry/remocn/per-word-crossfade/index.tsx",
+        "./registry/remocn/per-word-crossfade/index.tsx"
       ],
       "@/components/remocn/staggered-fade-up": [
-        "./registry/remocn/staggered-fade-up/index.tsx",
+        "./registry/remocn/staggered-fade-up/index.tsx"
       ],
       "@/components/remocn/marker-highlight": [
-        "./registry/remocn/marker-highlight/index.tsx",
+        "./registry/remocn/marker-highlight/index.tsx"
       ],
       "@/components/remocn/micro-scale-fade": [
-        "./registry/remocn/micro-scale-fade/index.tsx",
+        "./registry/remocn/micro-scale-fade/index.tsx"
       ],
       "@/components/remocn/mask-reveal-up": [
-        "./registry/remocn/mask-reveal-up/index.tsx",
+        "./registry/remocn/mask-reveal-up/index.tsx"
       ],
       "@/components/remocn/tracking-in": [
-        "./registry/remocn/tracking-in/index.tsx",
+        "./registry/remocn/tracking-in/index.tsx"
       ],
       "@/components/remocn/dynamic-grid": [
-        "./registry/remocn/dynamic-grid/index.tsx",
+        "./registry/remocn/dynamic-grid/index.tsx"
       ],
       "@/components/remocn/shader-swirl": [
-        "./registry/remocn/shader-swirl/index.tsx",
+        "./registry/remocn/shader-swirl/index.tsx"
       ],
       "@/components/remocn/shader-dithering": [
-        "./registry/remocn/shader-dithering/index.tsx",
+        "./registry/remocn/shader-dithering/index.tsx"
       ],
       "@/components/remocn/shader-perlin-noise": [
-        "./registry/remocn/shader-perlin-noise/index.tsx",
+        "./registry/remocn/shader-perlin-noise/index.tsx"
       ],
       "@/components/remocn/shader-smoke-ring": [
-        "./registry/remocn/shader-smoke-ring/index.tsx",
+        "./registry/remocn/shader-smoke-ring/index.tsx"
       ],
       "@/components/remocn/shader-grain-gradient": [
-        "./registry/remocn/shader-grain-gradient/index.tsx",
+        "./registry/remocn/shader-grain-gradient/index.tsx"
       ],
       "@/components/remocn/shader-warp": [
-        "./registry/remocn/shader-warp/index.tsx",
+        "./registry/remocn/shader-warp/index.tsx"
       ],
       "@/components/remocn/*": ["./registry/remocn-ui/*/index.tsx"],
-      "@/*": ["./*"],
-    },
+      "@/*": ["./*"]
+    }
   },
   "include": [
     "next-env.d.ts",
@@ -140,7 +141,7 @@
     "**/*.tsx",
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
-    "**/*.mts",
+    "**/*.mts"
   ],
-  "exclude": ["node_modules"],
+  "exclude": ["node_modules", "**/__tests__/**"]
 }

@@ -12,7 +12,10 @@
  * must not block), and the whole batch is bounded by a timeout so one slow image
  * can't stall the transition to the ready state.
  */
-export function preloadAvatars(urls: string[], timeoutMs = 2500): Promise<void> {
+export function preloadAvatars(
+  urls: string[],
+  timeoutMs = 2500,
+): Promise<void> {
   if (typeof window === "undefined" || urls.length === 0) {
     return Promise.resolve();
   }

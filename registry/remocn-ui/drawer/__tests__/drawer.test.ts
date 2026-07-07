@@ -1,13 +1,8 @@
-
 import { describe, expect, it } from "bun:test";
-import {
-  type DrawerState,
-  drawerStyle,
-  drawerStyleContext,
-} from "../index";
-import { tweenDrawerStyle, DEFAULT_DURATION } from "../use-drawer-transition";
-import { drawerConfig } from "../config";
 import { defaultLightTheme } from "@/lib/remocn-ui";
+import { drawerConfig } from "../config";
+import { type DrawerState, drawerStyle, drawerStyleContext } from "../index";
+import { DEFAULT_DURATION, tweenDrawerStyle } from "../use-drawer-transition";
 
 const VALID_STATES: readonly DrawerState[] = ["opened", "closed"];
 
@@ -27,13 +22,15 @@ const ctx = drawerStyleContext(defaultLightTheme);
 describe("DrawerState union", () => {
   it("contains exactly the two documented states", () => {
     const control = drawerConfig.controls.state;
-    if (control.type !== "select") throw new Error("state control must be a select");
+    if (control.type !== "select")
+      throw new Error("state control must be a select");
     expect(control.options).toEqual(["opened", "closed"]);
   });
 
   it("every VALID_STATES entry is assignable (no typos in the fixture)", () => {
     const control = drawerConfig.controls.state;
-    if (control.type !== "select") throw new Error("state control must be a select");
+    if (control.type !== "select")
+      throw new Error("state control must be a select");
     expect(VALID_STATES).toHaveLength(2);
     for (const s of VALID_STATES) {
       expect(control.options).toContain(s);
@@ -48,7 +45,8 @@ describe("drawerConfig.controls.state", () => {
 
   it("has exactly the two DrawerState options in order", () => {
     const control = drawerConfig.controls.state;
-    if (control.type !== "select") throw new Error("state control must be a select");
+    if (control.type !== "select")
+      throw new Error("state control must be a select");
     expect(control.options).toEqual(["opened", "closed"]);
   });
 
@@ -59,7 +57,8 @@ describe("drawerConfig.controls.state", () => {
 
   it("every option is a member of the DrawerState union", () => {
     const control = drawerConfig.controls.state;
-    if (control.type !== "select") throw new Error("state control must be a select");
+    if (control.type !== "select")
+      throw new Error("state control must be a select");
     for (const option of control.options) {
       expect(VALID_STATES).toContain(option as DrawerState);
     }
@@ -67,17 +66,18 @@ describe("drawerConfig.controls.state", () => {
 });
 
 describe("drawerConfig.snippet: state prop emission", () => {
-  it("emits state=\"opened\" for the opened option", () => {
+  it('emits state="opened" for the opened option', () => {
     expect(snippet({ state: "opened" })).toContain('state="opened"');
   });
 
-  it("emits state=\"closed\" for the closed option", () => {
+  it('emits state="closed" for the closed option', () => {
     expect(snippet({ state: "closed" })).toContain('state="closed"');
   });
 
   it("emits the correct state for every control option", () => {
     const control = drawerConfig.controls.state;
-    if (control.type !== "select") throw new Error("state control must be a select");
+    if (control.type !== "select")
+      throw new Error("state control must be a select");
     for (const state of control.options) {
       const out = snippet({ state });
       expect(out).toContain(`state="${state}"`);
@@ -96,7 +96,7 @@ describe("drawerConfig.snippet: NEVER emits steps", () => {
 describe("drawerConfig.snippet: import line", () => {
   it("includes `import { Drawer }` from the correct path", () => {
     const out = snippet({ state: "opened" });
-    expect(out).toContain('import { Drawer }');
+    expect(out).toContain("import { Drawer }");
     expect(out).toContain('from "@/components/remocn/drawer"');
   });
 });
@@ -105,7 +105,8 @@ describe("drawerConfig.snippet: default props are omitted", () => {
   const allDefaults = snippet({
     state: "opened",
     title: "Edit profile",
-    description: "Make changes to your profile here. Click save when you're done.",
+    description:
+      "Make changes to your profile here. Click save when you're done.",
     actionLabel: "Save changes",
     cancelLabel: "Cancel",
   });
@@ -129,23 +130,30 @@ describe("drawerConfig.snippet: default props are omitted", () => {
 
 describe("drawerConfig.snippet: non-default props are emitted", () => {
   it("emits a non-default title", () => {
-    expect(snippet({ state: "opened", title: "Edit workspace settings" }))
-      .toContain('title="Edit workspace settings"');
+    expect(
+      snippet({ state: "opened", title: "Edit workspace settings" }),
+    ).toContain('title="Edit workspace settings"');
   });
 
   it("emits a non-default description", () => {
-    expect(snippet({ state: "opened", description: "Update your workspace name and settings." }))
-      .toContain('description="Update your workspace name and settings."');
+    expect(
+      snippet({
+        state: "opened",
+        description: "Update your workspace name and settings.",
+      }),
+    ).toContain('description="Update your workspace name and settings."');
   });
 
   it("emits a non-default actionLabel", () => {
-    expect(snippet({ state: "opened", actionLabel: "Confirm" }))
-      .toContain('actionLabel="Confirm"');
+    expect(snippet({ state: "opened", actionLabel: "Confirm" })).toContain(
+      'actionLabel="Confirm"',
+    );
   });
 
   it("emits a non-default cancelLabel", () => {
-    expect(snippet({ state: "opened", cancelLabel: "Go back" }))
-      .toContain('cancelLabel="Go back"');
+    expect(snippet({ state: "opened", cancelLabel: "Go back" })).toContain(
+      'cancelLabel="Go back"',
+    );
   });
 });
 
@@ -153,7 +161,7 @@ describe("drawerConfig.snippet: structural round-trip", () => {
   const out = snippet({ state: "opened" });
 
   it("starts with the import line", () => {
-    expect(out.startsWith('import { Drawer }')).toBe(true);
+    expect(out.startsWith("import { Drawer }")).toBe(true);
   });
 
   it("contains a <Drawer JSX opening", () => {

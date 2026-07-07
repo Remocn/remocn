@@ -1,15 +1,19 @@
 "use client";
 
-import { type RemocnTheme, revealedText, useRemocnTheme } from "@/lib/remocn-ui";
 import {
-  CommandMenuItemRow,
-  commandMenuItemStyle,
-  commandMenuItemStyleContext,
   type CommandMenuIcon,
+  CommandMenuItemRow,
   type CommandMenuItemState,
   type CommandMenuItemStyle,
   type CommandMenuItemStyleContext,
+  commandMenuItemStyle,
+  commandMenuItemStyleContext,
 } from "@/components/remocn/command-menu-item";
+import {
+  type RemocnTheme,
+  revealedText,
+  useRemocnTheme,
+} from "@/lib/remocn-ui";
 
 export type CommandMenuState = "opened" | "closed";
 

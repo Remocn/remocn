@@ -1,13 +1,8 @@
 "use client";
 
-import {
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
-import { type RemocnTheme, revealedText } from "@/lib/remocn-ui";
+import { interpolate, spring, useCurrentFrame, useVideoConfig } from "remotion";
 import { Caret } from "@/components/remocn/caret";
+import { type RemocnTheme, revealedText } from "@/lib/remocn-ui";
 
 export interface TelegramMessage {
   from: "me" | "them";
@@ -53,8 +48,18 @@ const OUTGOING_META = "rgba(255,255,255,0.82)";
 
 const DEFAULT_MESSAGES: TelegramMessage[] = [
   { from: "me", text: "Hey — ready for the demo?", time: "9:40" },
-  { from: "them", text: "Yep, pushing it live now", reaction: "🔥", time: "9:41" },
-  { from: "me", text: "Perfect, sending the link over", reaction: "👍", time: "9:41" },
+  {
+    from: "them",
+    text: "Yep, pushing it live now",
+    reaction: "🔥",
+    time: "9:41",
+  },
+  {
+    from: "me",
+    text: "Perfect, sending the link over",
+    reaction: "👍",
+    time: "9:41",
+  },
 ];
 
 function clamp(value: number, lo: number, hi: number): number {
@@ -87,7 +92,8 @@ export function telegramChatFlowSchedule(
   let cursor = LEAD_IN;
 
   messages.forEach((message, index) => {
-    const hasReaction = message.reaction !== undefined && message.reaction !== "";
+    const hasReaction =
+      message.reaction !== undefined && message.reaction !== "";
     if (message.from === "me") {
       const typeStart = cursor;
       const typeDur = clamp(
@@ -111,7 +117,10 @@ export function telegramChatFlowSchedule(
         reactAt,
       });
       cursor =
-        revealAt + REVEAL + (hasReaction ? REACT_DELAY + REACT_DUR : 0) + MSG_GAP;
+        revealAt +
+        REVEAL +
+        (hasReaction ? REACT_DELAY + REACT_DUR : 0) +
+        MSG_GAP;
     } else {
       const typingStart = cursor;
       const typingDur = clamp(
@@ -133,7 +142,10 @@ export function telegramChatFlowSchedule(
         reactAt,
       });
       cursor =
-        revealAt + REVEAL + (hasReaction ? REACT_DELAY + REACT_DUR : 0) + MSG_GAP;
+        revealAt +
+        REVEAL +
+        (hasReaction ? REACT_DELAY + REACT_DUR : 0) +
+        MSG_GAP;
     }
   });
 
@@ -184,6 +196,7 @@ function Avatar({ contact, size }: { contact: TelegramContact; size: number }) {
       }}
     >
       {contact.avatar !== undefined ? (
+        // biome-ignore lint/performance/noImgElement: Remotion output, not a Next.js app — next/image isn't available where this component ships
         <img
           src={contact.avatar}
           alt={contact.name}
@@ -324,7 +337,13 @@ function MoreIcon({ color }: { color: string }) {
   );
 }
 
-function BubbleTail({ side, color }: { side: "left" | "right"; color: string }) {
+function BubbleTail({
+  side,
+  color,
+}: {
+  side: "left" | "right";
+  color: string;
+}) {
   const path =
     side === "right"
       ? "M0 0 H4 C4 7 7 12 13 13 C6 13 0 9 0 0 Z"
@@ -373,7 +392,10 @@ export function TelegramChatFlow({
     activeMe.typeStart !== undefined &&
     activeMe.sendAt !== undefined
   ) {
-    const typeDur = Math.max(activeMe.sendAt - SEND_GAP - activeMe.typeStart, 1);
+    const typeDur = Math.max(
+      activeMe.sendAt - SEND_GAP - activeMe.typeStart,
+      1,
+    );
     const progress = clamp((eff - activeMe.typeStart) / typeDur, 0, 1);
     composerText = revealedText(
       activeMe.text,
@@ -427,10 +449,15 @@ export function TelegramChatFlow({
             boxShadow: "0 1px 0 rgba(0,0,0,0.06)",
           }}
         >
-          {contact !== undefined && (
-            <Avatar contact={contact} size={38} />
-          )}
-          <div style={{ display: "flex", flexDirection: "column", gap: 0, flex: 1 }}>
+          {contact !== undefined && <Avatar contact={contact} size={38} />}
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 0,
+              flex: 1,
+            }}
+          >
             <span
               style={{
                 fontSize: 15,
@@ -477,7 +504,13 @@ export function TelegramChatFlow({
               padding: "16px 12px 14px",
             }}
           >
-            <div style={{ display: "flex", justifyContent: "center", marginBottom: 8 }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                marginBottom: 8,
+              }}
+            >
               <span
                 style={{
                   padding: "3px 11px",
@@ -606,10 +639,15 @@ function TelegramRow({
       frame: eff - item.reactAt,
       config: { damping: 11, stiffness: 220, mass: 0.6 },
     });
-    reactionOpacity = interpolate(eff, [item.reactAt, item.reactAt + 5], [0, 1], {
-      extrapolateLeft: "clamp",
-      extrapolateRight: "clamp",
-    });
+    reactionOpacity = interpolate(
+      eff,
+      [item.reactAt, item.reactAt + 5],
+      [0, 1],
+      {
+        extrapolateLeft: "clamp",
+        extrapolateRight: "clamp",
+      },
+    );
   }
 
   const bg = outgoing ? accent : INCOMING_BG;
@@ -640,7 +678,8 @@ function TelegramRow({
         style={{
           display: "flex",
           alignItems: "center",
-          justifyContent: item.reaction !== undefined ? "space-between" : "flex-end",
+          justifyContent:
+            item.reaction !== undefined ? "space-between" : "flex-end",
           gap: 8,
           marginTop: 2,
         }}
@@ -653,7 +692,9 @@ function TelegramRow({
               gap: 4,
               padding: "1px 7px",
               borderRadius: 11,
-              background: outgoing ? "rgba(255,255,255,0.22)" : "rgba(51,144,236,0.12)",
+              background: outgoing
+                ? "rgba(255,255,255,0.22)"
+                : "rgba(51,144,236,0.12)",
               color: outgoing ? "#ffffff" : accent,
               fontSize: 13,
               fontWeight: 600,

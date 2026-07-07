@@ -1,615 +1,1027 @@
 import type React from "react";
 import { type ComponentConfig, SHARED_CONTROLS } from "@/lib/customizer-config";
 
-import { AnimatedBarChart } from "@/registry/remocn/animated-bar-chart";
 import { animatedBarChartConfig } from "@/registry/remocn/animated-bar-chart/config";
-import { AnimatedLineChart } from "@/registry/remocn/animated-line-chart";
 import { animatedLineChartConfig } from "@/registry/remocn/animated-line-chart/config";
-import { SoftBlurIn } from "@/registry/remocn/soft-blur-in";
-import { softBlurInConfig } from "@/registry/remocn/soft-blur-in/config";
-import { PerCharacterRise } from "@/registry/remocn/per-character-rise";
-import { perCharacterRiseConfig } from "@/registry/remocn/per-character-rise/config";
-import { BottomUpLetters } from "@/registry/remocn/bottom-up-letters";
-import { bottomUpLettersConfig } from "@/registry/remocn/bottom-up-letters/config";
-import { TopDownLetters } from "@/registry/remocn/top-down-letters";
-import { topDownLettersConfig } from "@/registry/remocn/top-down-letters/config";
-import { SpringScaleIn } from "@/registry/remocn/spring-scale-in";
-import { springScaleInConfig } from "@/registry/remocn/spring-scale-in/config";
-import { MicroScaleFade } from "@/registry/remocn/micro-scale-fade";
-import { microScaleFadeConfig } from "@/registry/remocn/micro-scale-fade/config";
-import { ScaleDownFade } from "@/registry/remocn/scale-down-fade";
-import { scaleDownFadeConfig } from "@/registry/remocn/scale-down-fade/config";
-import { BlurOutUp } from "@/registry/remocn/blur-out-up";
-import { blurOutUpConfig } from "@/registry/remocn/blur-out-up/config";
-import { FocusBlurResolve } from "@/registry/remocn/focus-blur-resolve";
-import { focusBlurResolveConfig } from "@/registry/remocn/focus-blur-resolve/config";
-import { LineByLineSlide } from "@/registry/remocn/line-by-line-slide";
-import { lineByLineSlideConfig } from "@/registry/remocn/line-by-line-slide/config";
-import { PerWordCrossfade } from "@/registry/remocn/per-word-crossfade";
-import { perWordCrossfadeConfig } from "@/registry/remocn/per-word-crossfade/config";
-import { FadeThrough } from "@/registry/remocn/fade-through";
-import { fadeThroughConfig } from "@/registry/remocn/fade-through/config";
-import { SharedAxisY } from "@/registry/remocn/shared-axis-y";
-import { sharedAxisYConfig } from "@/registry/remocn/shared-axis-y/config";
-import { SharedAxisZ } from "@/registry/remocn/shared-axis-z";
-import { sharedAxisZConfig } from "@/registry/remocn/shared-axis-z/config";
-import { ShortSlideRight } from "@/registry/remocn/short-slide-right";
-import { shortSlideRightConfig } from "@/registry/remocn/short-slide-right/config";
-import { KineticCenterBuild } from "@/registry/remocn/kinetic-center-build";
-import { kineticCenterBuildConfig } from "@/registry/remocn/kinetic-center-build/config";
-import { ShortSlideDown } from "@/registry/remocn/short-slide-down";
-import { shortSlideDownConfig } from "@/registry/remocn/short-slide-down/config";
-import { ChatToPreviewLayout } from "@/registry/remocn/chat-to-preview-layout";
-import { chatToPreviewLayoutConfig } from "@/registry/remocn/chat-to-preview-layout/config";
-import { DataFlowPipes } from "@/registry/remocn/data-flow-pipes";
-import { dataFlowPipesConfig } from "@/registry/remocn/data-flow-pipes/config";
-import { SwirlDissolveExampleScene } from "@/components/docs/examples/swirl-dissolve-example";
-import { swirlDissolveConfig } from "@/registry/remocn/swirl-dissolve/config";
-import { DitherDissolveExampleScene } from "@/components/docs/examples/dither-dissolve-example";
-import { ditherDissolveConfig } from "@/registry/remocn/dither-dissolve/config";
-import { PerlinDissolveExampleScene } from "@/components/docs/examples/perlin-dissolve-example";
-import { perlinDissolveConfig } from "@/registry/remocn/perlin-dissolve/config";
-import { SmokeDissolveExampleScene } from "@/components/docs/examples/smoke-dissolve-example";
-import { smokeDissolveConfig } from "@/registry/remocn/smoke-dissolve/config";
-import { GrainDissolveExampleScene } from "@/components/docs/examples/grain-dissolve-example";
-import { grainDissolveConfig } from "@/registry/remocn/grain-dissolve/config";
-import { WaveWipeExampleScene } from "@/components/docs/examples/wave-wipe-example";
-import { waveWipeConfig } from "@/registry/remocn/wave-wipe/config";
-import { RippleZoomExampleScene } from "@/components/docs/examples/ripple-zoom-example";
-import { rippleZoomConfig } from "@/registry/remocn/ripple-zoom/config";
-import { WarpDissolveExampleScene } from "@/components/docs/examples/warp-dissolve-example";
-import { warpDissolveConfig } from "@/registry/remocn/warp-dissolve/config";
-import { WhipPanExampleScene } from "@/components/docs/examples/whip-pan-example";
-import { whipPanConfig } from "@/registry/remocn/whip-pan/config";
-import { PushThroughExampleScene } from "@/components/docs/examples/push-through-example";
-import { pushThroughConfig } from "@/registry/remocn/push-through/config";
-import { FocusPullExampleScene } from "@/components/docs/examples/focus-pull-example";
-import { focusPullConfig } from "@/registry/remocn/focus-pull/config";
-import { DynamicGrid } from "@/registry/remocn/dynamic-grid";
-import { dynamicGridConfig } from "@/registry/remocn/dynamic-grid/config";
-import { EcosystemConstellation } from "@/registry/remocn/ecosystem-constellation";
-import { ecosystemConstellationConfig } from "@/registry/remocn/ecosystem-constellation/config";
-import { GitHubSponsors } from "@/registry/remocn/github-sponsors";
-import { githubSponsorsConfig } from "@/registry/remocn/github-sponsors/config";
-import { GitHubStars } from "@/registry/remocn/github-stars";
-import { githubStarsConfig } from "@/registry/remocn/github-stars/config";
-import { LogoEnter } from "@/registry/remocn/logo-enter";
-import { logoEnterConfig } from "@/registry/remocn/logo-enter/config";
-import { GlassCodeBlock } from "@/registry/remocn/glass-code-block";
-import { glassCodeBlockConfig } from "@/registry/remocn/glass-code-block/config";
-import { GlassCodeWalk } from "@/registry/remocn/glass-code-walk";
-import { glassCodeWalkConfig } from "@/registry/remocn/glass-code-walk/config";
-import { InfiniteBentoPan } from "@/registry/remocn/infinite-bento-pan";
-import { infiniteBentoPanConfig } from "@/registry/remocn/infinite-bento-pan/config";
-import { InfiniteMarquee } from "@/registry/remocn/infinite-marquee";
-import { infiniteMarqueeConfig } from "@/registry/remocn/infinite-marquee/config";
-import { InlineHighlight } from "@/registry/remocn/inline-highlight";
-import { inlineHighlightConfig } from "@/registry/remocn/inline-highlight/config";
-import { LiveCodeCompilation } from "@/registry/remocn/live-code-compilation";
-import { liveCodeCompilationConfig } from "@/registry/remocn/live-code-compilation/config";
-import { MarkerHighlight } from "@/registry/remocn/marker-highlight";
-import { markerHighlightConfig } from "@/registry/remocn/marker-highlight/config";
-import { MaskRevealUp } from "@/registry/remocn/mask-reveal-up";
-import { maskRevealUpConfig } from "@/registry/remocn/mask-reveal-up/config";
-import { MatrixDecode } from "@/registry/remocn/matrix-decode";
-import { matrixDecodeConfig } from "@/registry/remocn/matrix-decode/config";
-import { MeshGradientBg } from "@/registry/remocn/mesh-gradient-bg";
-import { meshGradientBgConfig } from "@/registry/remocn/mesh-gradient-bg/config";
-import { ShaderGrainGradient } from "@/registry/remocn/shader-grain-gradient";
-import { shaderGrainGradientConfig } from "@/registry/remocn/shader-grain-gradient/config";
-import { ShaderColorPanels } from "@/registry/remocn/shader-color-panels";
-import { shaderColorPanelsConfig } from "@/registry/remocn/shader-color-panels/config";
-import { ShaderDithering } from "@/registry/remocn/shader-dithering";
-import { shaderDitheringConfig } from "@/registry/remocn/shader-dithering/config";
-import { ShaderDotOrbit } from "@/registry/remocn/shader-dot-orbit";
-import { shaderDotOrbitConfig } from "@/registry/remocn/shader-dot-orbit/config";
-import { ShaderGodRays } from "@/registry/remocn/shader-god-rays";
-import { shaderGodRaysConfig } from "@/registry/remocn/shader-god-rays/config";
-import { ShaderSmokeRing } from "@/registry/remocn/shader-smoke-ring";
-import { shaderSmokeRingConfig } from "@/registry/remocn/shader-smoke-ring/config";
-import { ShaderLiquidMetal } from "@/registry/remocn/shader-liquid-metal";
-import { shaderLiquidMetalConfig } from "@/registry/remocn/shader-liquid-metal/config";
-import { ShaderMetaballs } from "@/registry/remocn/shader-metaballs";
-import { shaderMetaballsConfig } from "@/registry/remocn/shader-metaballs/config";
-import { ShaderMeshGradient } from "@/registry/remocn/shader-mesh-gradient";
-import { shaderMeshGradientConfig } from "@/registry/remocn/shader-mesh-gradient/config";
-import { ShaderNeuroNoise } from "@/registry/remocn/shader-neuro-noise";
-import { shaderNeuroNoiseConfig } from "@/registry/remocn/shader-neuro-noise/config";
-import { ShaderPerlinNoise } from "@/registry/remocn/shader-perlin-noise";
-import { shaderPerlinNoiseConfig } from "@/registry/remocn/shader-perlin-noise/config";
-import { ShaderPulsingBorder } from "@/registry/remocn/shader-pulsing-border";
-import { shaderPulsingBorderConfig } from "@/registry/remocn/shader-pulsing-border/config";
-import { ShaderSimplexNoise } from "@/registry/remocn/shader-simplex-noise";
-import { shaderSimplexNoiseConfig } from "@/registry/remocn/shader-simplex-noise/config";
-import { ShaderVoronoi } from "@/registry/remocn/shader-voronoi";
-import { shaderVoronoiConfig } from "@/registry/remocn/shader-voronoi/config";
-import { ShaderSpiral } from "@/registry/remocn/shader-spiral";
-import { shaderSpiralConfig } from "@/registry/remocn/shader-spiral/config";
-import { ShaderSwirl } from "@/registry/remocn/shader-swirl";
-import { shaderSwirlConfig } from "@/registry/remocn/shader-swirl/config";
-import { ShaderWater } from "@/registry/remocn/shader-water";
-import { shaderWaterConfig } from "@/registry/remocn/shader-water/config";
-import { ShaderWarp } from "@/registry/remocn/shader-warp";
-import { shaderWarpConfig } from "@/registry/remocn/shader-warp/config";
-import { NumberWheel } from "@/registry/remocn/number-wheel";
-import { numberWheelConfig } from "@/registry/remocn/number-wheel/config";
-import { PerspectiveMarquee } from "@/registry/remocn/perspective-marquee";
-import { perspectiveMarqueeConfig } from "@/registry/remocn/perspective-marquee/config";
-import { ProgressSteps } from "@/registry/remocn/progress-steps";
-import { progressStepsConfig } from "@/registry/remocn/progress-steps/config";
-import { RGBGlitchText } from "@/registry/remocn/rgb-glitch-text";
-import { rgbGlitchTextConfig } from "@/registry/remocn/rgb-glitch-text/config";
-import { RollingNumber } from "@/registry/remocn/rolling-number";
-import { rollingNumberConfig } from "@/registry/remocn/rolling-number/config";
-import { ShimmerSweep } from "@/registry/remocn/shimmer-sweep";
-import { shimmerSweepConfig } from "@/registry/remocn/shimmer-sweep/config";
-import { SimulatedCursor } from "@/registry/remocn/simulated-cursor";
-import { simulatedCursorConfig } from "@/registry/remocn/simulated-cursor/config";
-import { SlotMachineRoll } from "@/registry/remocn/slot-machine-roll";
-import { slotMachineRollConfig } from "@/registry/remocn/slot-machine-roll/config";
-import { SpotlightCard } from "@/registry/remocn/spotlight-card";
-import { spotlightCardConfig } from "@/registry/remocn/spotlight-card/config";
-import { StaggeredFadeUp } from "@/registry/remocn/staggered-fade-up";
-import { staggeredFadeUpConfig } from "@/registry/remocn/staggered-fade-up/config";
-import { StrikethroughReplace } from "@/registry/remocn/strikethrough-replace";
-import { strikethroughReplaceConfig } from "@/registry/remocn/strikethrough-replace/config";
-import { TerminalCursorZoom } from "@/registry/remocn/terminal-cursor-zoom";
-import { terminalCursorZoomConfig } from "@/registry/remocn/terminal-cursor-zoom/config";
-import { TerminalSimulator } from "@/registry/remocn/terminal-simulator";
-import { terminalSimulatorConfig } from "@/registry/remocn/terminal-simulator/config";
-import { TrackingIn } from "@/registry/remocn/tracking-in";
-import { trackingInConfig } from "@/registry/remocn/tracking-in/config";
-import { Typewriter } from "@/registry/remocn/typewriter";
-import { typewriterConfig } from "@/registry/remocn/typewriter/config";
-import { XFollowCard } from "@/registry/remocn/x-follow-card";
-import { xFollowCardConfig } from "@/registry/remocn/x-follow-card/config";
-import { XFollowersOverview } from "@/registry/remocn/x-followers-overview";
-import { xFollowersOverviewConfig } from "@/registry/remocn/x-followers-overview/config";
-import { Confetti } from "@/registry/remocn/confetti";
-import { confettiConfig } from "@/registry/remocn/confetti/config";
-import { ChatGpt } from "@/registry/remocn/chat-gpt";
-import { chatGptConfig } from "@/registry/remocn/chat-gpt/config";
-import { V0 } from "@/registry/remocn/v0";
-import { v0Config } from "@/registry/remocn/v0/config";
-import { ClaudeCode } from "@/registry/remocn/claude-code";
-import { claudeCodeConfig } from "@/registry/remocn/claude-code/config";
-import { OpenCode } from "@/registry/remocn/opencode";
-import { opencodeConfig } from "@/registry/remocn/opencode/config";
-import { ClaudeChat } from "@/registry/remocn/claude-chat";
-import { claudeChatConfig } from "@/registry/remocn/claude-chat/config";
-import { Accordion } from "@/registry/remocn-ui/accordion";
-import { accordionConfig } from "@/registry/remocn-ui/accordion/config";
-import { AlertDialog } from "@/registry/remocn-ui/alert-dialog";
-import { alertDialogConfig } from "@/registry/remocn-ui/alert-dialog/config";
-import { Dialog } from "@/registry/remocn-ui/dialog";
-import { dialogConfig } from "@/registry/remocn-ui/dialog/config";
-import { Drawer } from "@/registry/remocn-ui/drawer";
-import { drawerConfig } from "@/registry/remocn-ui/drawer/config";
-import { Sheet } from "@/registry/remocn-ui/sheet";
-import { sheetConfig } from "@/registry/remocn-ui/sheet/config";
-import { Button } from "@/registry/remocn-ui/button";
-import { buttonConfig } from "@/registry/remocn-ui/button/config";
-import { Checkbox } from "@/registry/remocn-ui/checkbox";
-import { checkboxConfig } from "@/registry/remocn-ui/checkbox/config";
-import { Input } from "@/registry/remocn-ui/input";
-import { inputConfig } from "@/registry/remocn-ui/input/config";
-import { BlurInPreview } from "@/registry/remocn-ui/blur-in/preview";
-import { blurInConfig } from "@/registry/remocn-ui/blur-in/config";
-import { Radio } from "@/registry/remocn-ui/radio";
-import { radioConfig } from "@/registry/remocn-ui/radio/config";
-import { Spinner } from "@/registry/remocn-ui/spinner";
-import { spinnerConfig } from "@/registry/remocn-ui/spinner/config";
-import { CaretPreview } from "@/registry/remocn-ui/caret/preview";
-import { caretConfig } from "@/registry/remocn-ui/caret/config";
-import { Switch } from "@/registry/remocn-ui/switch";
-import { switchConfig } from "@/registry/remocn-ui/switch/config";
-import { Select } from "@/registry/remocn-ui/select";
-import { selectConfig } from "@/registry/remocn-ui/select/config";
-import { SelectItem } from "@/registry/remocn-ui/select-item";
-import { selectItemConfig } from "@/registry/remocn-ui/select-item/config";
-import { DropdownMenu } from "@/registry/remocn-ui/dropdown-menu";
-import { dropdownMenuConfig } from "@/registry/remocn-ui/dropdown-menu/config";
-import { DropdownMenuItem } from "@/registry/remocn-ui/dropdown-menu-item";
-import { dropdownMenuItemConfig } from "@/registry/remocn-ui/dropdown-menu-item/config";
-import { Tabs } from "@/registry/remocn-ui/tabs";
-import { tabsConfig } from "@/registry/remocn-ui/tabs/config";
-import { CursorPreview } from "@/registry/remocn-ui/cursor/preview";
-import { cursorConfig } from "@/registry/remocn-ui/cursor/config";
-import { ToastPreview } from "@/registry/remocn-ui/toast/preview";
-import { toastConfig } from "@/registry/remocn-ui/toast/config";
-import { MessageBubblePreview } from "@/registry/remocn-ui/message-bubble/preview";
-import { messageBubbleConfig } from "@/registry/remocn-ui/message-bubble/config";
-import { TypingIndicatorPreview } from "@/registry/remocn-ui/typing-indicator/preview";
-import { typingIndicatorConfig } from "@/registry/remocn-ui/typing-indicator/config";
-import { CommandMenuItem } from "@/registry/remocn-ui/command-menu-item";
-import { commandMenuItemConfig } from "@/registry/remocn-ui/command-menu-item/config";
-import { CommandMenu } from "@/registry/remocn-ui/command-menu";
-import { commandMenuConfig } from "@/registry/remocn-ui/command-menu/config";
-import { TooltipPreview } from "@/registry/remocn-ui/tooltip/preview";
-import { tooltipConfig } from "@/registry/remocn-ui/tooltip/config";
-import { ProgressPreview } from "@/registry/remocn-ui/progress/preview";
-import { progressConfig } from "@/registry/remocn-ui/progress/config";
-import { SkeletonBlockPreview } from "@/registry/remocn-ui/skeleton-block/preview";
-import { skeletonBlockConfig } from "@/registry/remocn-ui/skeleton-block/config";
-import { SkeletonPreview } from "@/registry/remocn-ui/skeleton/preview";
-import { skeletonConfig } from "@/registry/remocn-ui/skeleton/config";
-import { SliderPreview } from "@/registry/remocn-ui/slider/preview";
-import { sliderConfig } from "@/registry/remocn-ui/slider/config";
-import { Combobox } from "@/registry/remocn-ui/combobox";
-import { comboboxConfig } from "@/registry/remocn-ui/combobox/config";
-import { PopoverPreview } from "@/registry/remocn-ui/popover/preview";
-import { popoverConfig } from "@/registry/remocn-ui/popover/config";
-import { ContextMenuPreview } from "@/registry/remocn-ui/context-menu/preview";
-import { contextMenuConfig } from "@/registry/remocn-ui/context-menu/config";
-import { ToggleGroup } from "@/registry/remocn-ui/toggle-group";
-import { toggleGroupConfig } from "@/registry/remocn-ui/toggle-group/config";
-import { StepperPreview } from "@/registry/remocn-ui/stepper/preview";
-import { stepperConfig } from "@/registry/remocn-ui/stepper/config";
-import { Resizable } from "@/registry/remocn-ui/resizable";
-import { resizableConfig } from "@/registry/remocn-ui/resizable/config";
-import { BackdropDemo } from "@/components/docs/examples/backdrop-demo";
 import { backdropConfig } from "@/registry/remocn/backdrop/config";
+import { blurOutUpConfig } from "@/registry/remocn/blur-out-up/config";
+import { bottomUpLettersConfig } from "@/registry/remocn/bottom-up-letters/config";
+import { chatGptConfig } from "@/registry/remocn/chat-gpt/config";
+import { chatToPreviewLayoutConfig } from "@/registry/remocn/chat-to-preview-layout/config";
+import { claudeChatConfig } from "@/registry/remocn/claude-chat/config";
+import { claudeCodeConfig } from "@/registry/remocn/claude-code/config";
+import { confettiConfig } from "@/registry/remocn/confetti/config";
+import { dataFlowPipesConfig } from "@/registry/remocn/data-flow-pipes/config";
+import { ditherDissolveConfig } from "@/registry/remocn/dither-dissolve/config";
+import { dynamicGridConfig } from "@/registry/remocn/dynamic-grid/config";
+import { ecosystemConstellationConfig } from "@/registry/remocn/ecosystem-constellation/config";
+import { fadeThroughConfig } from "@/registry/remocn/fade-through/config";
+import { focusBlurResolveConfig } from "@/registry/remocn/focus-blur-resolve/config";
+import { focusPullConfig } from "@/registry/remocn/focus-pull/config";
+import { githubSponsorsConfig } from "@/registry/remocn/github-sponsors/config";
+import { githubStarsConfig } from "@/registry/remocn/github-stars/config";
+import { glassCodeBlockConfig } from "@/registry/remocn/glass-code-block/config";
+import { glassCodeWalkConfig } from "@/registry/remocn/glass-code-walk/config";
+import { grainDissolveConfig } from "@/registry/remocn/grain-dissolve/config";
+import { infiniteBentoPanConfig } from "@/registry/remocn/infinite-bento-pan/config";
+import { infiniteMarqueeConfig } from "@/registry/remocn/infinite-marquee/config";
+import { inlineHighlightConfig } from "@/registry/remocn/inline-highlight/config";
+import { kineticCenterBuildConfig } from "@/registry/remocn/kinetic-center-build/config";
+import { lineByLineSlideConfig } from "@/registry/remocn/line-by-line-slide/config";
+import { liveCodeCompilationConfig } from "@/registry/remocn/live-code-compilation/config";
+import { logoEnterConfig } from "@/registry/remocn/logo-enter/config";
+import { markerHighlightConfig } from "@/registry/remocn/marker-highlight/config";
+import { maskRevealUpConfig } from "@/registry/remocn/mask-reveal-up/config";
+import { matrixDecodeConfig } from "@/registry/remocn/matrix-decode/config";
+import { meshGradientBgConfig } from "@/registry/remocn/mesh-gradient-bg/config";
+import { microScaleFadeConfig } from "@/registry/remocn/micro-scale-fade/config";
+import { numberWheelConfig } from "@/registry/remocn/number-wheel/config";
+import { opencodeConfig } from "@/registry/remocn/opencode/config";
+import { perCharacterRiseConfig } from "@/registry/remocn/per-character-rise/config";
+import { perWordCrossfadeConfig } from "@/registry/remocn/per-word-crossfade/config";
+import { perlinDissolveConfig } from "@/registry/remocn/perlin-dissolve/config";
+import { perspectiveMarqueeConfig } from "@/registry/remocn/perspective-marquee/config";
+import { progressStepsConfig } from "@/registry/remocn/progress-steps/config";
+import { pushThroughConfig } from "@/registry/remocn/push-through/config";
+import { rgbGlitchTextConfig } from "@/registry/remocn/rgb-glitch-text/config";
+import { rippleZoomConfig } from "@/registry/remocn/ripple-zoom/config";
+import { rollingNumberConfig } from "@/registry/remocn/rolling-number/config";
+import { scaleDownFadeConfig } from "@/registry/remocn/scale-down-fade/config";
+import { shaderColorPanelsConfig } from "@/registry/remocn/shader-color-panels/config";
+import { shaderDitheringConfig } from "@/registry/remocn/shader-dithering/config";
+import { shaderDotOrbitConfig } from "@/registry/remocn/shader-dot-orbit/config";
+import { shaderGodRaysConfig } from "@/registry/remocn/shader-god-rays/config";
+import { shaderGrainGradientConfig } from "@/registry/remocn/shader-grain-gradient/config";
+import { shaderLiquidMetalConfig } from "@/registry/remocn/shader-liquid-metal/config";
+import { shaderMeshGradientConfig } from "@/registry/remocn/shader-mesh-gradient/config";
+import { shaderMetaballsConfig } from "@/registry/remocn/shader-metaballs/config";
+import { shaderNeuroNoiseConfig } from "@/registry/remocn/shader-neuro-noise/config";
+import { shaderPerlinNoiseConfig } from "@/registry/remocn/shader-perlin-noise/config";
+import { shaderPulsingBorderConfig } from "@/registry/remocn/shader-pulsing-border/config";
+import { shaderSimplexNoiseConfig } from "@/registry/remocn/shader-simplex-noise/config";
+import { shaderSmokeRingConfig } from "@/registry/remocn/shader-smoke-ring/config";
+import { shaderSpiralConfig } from "@/registry/remocn/shader-spiral/config";
+import { shaderSwirlConfig } from "@/registry/remocn/shader-swirl/config";
+import { shaderVoronoiConfig } from "@/registry/remocn/shader-voronoi/config";
+import { shaderWarpConfig } from "@/registry/remocn/shader-warp/config";
+import { shaderWaterConfig } from "@/registry/remocn/shader-water/config";
+import { sharedAxisYConfig } from "@/registry/remocn/shared-axis-y/config";
+import { sharedAxisZConfig } from "@/registry/remocn/shared-axis-z/config";
+import { shimmerSweepConfig } from "@/registry/remocn/shimmer-sweep/config";
+import { shortSlideDownConfig } from "@/registry/remocn/short-slide-down/config";
+import { shortSlideRightConfig } from "@/registry/remocn/short-slide-right/config";
+import { simulatedCursorConfig } from "@/registry/remocn/simulated-cursor/config";
+import { slotMachineRollConfig } from "@/registry/remocn/slot-machine-roll/config";
+import { smokeDissolveConfig } from "@/registry/remocn/smoke-dissolve/config";
+import { softBlurInConfig } from "@/registry/remocn/soft-blur-in/config";
+import { spotlightCardConfig } from "@/registry/remocn/spotlight-card/config";
+import { springScaleInConfig } from "@/registry/remocn/spring-scale-in/config";
+import { staggeredFadeUpConfig } from "@/registry/remocn/staggered-fade-up/config";
+import { strikethroughReplaceConfig } from "@/registry/remocn/strikethrough-replace/config";
+import { swirlDissolveConfig } from "@/registry/remocn/swirl-dissolve/config";
+import { terminalCursorZoomConfig } from "@/registry/remocn/terminal-cursor-zoom/config";
+import { terminalSimulatorConfig } from "@/registry/remocn/terminal-simulator/config";
+import { topDownLettersConfig } from "@/registry/remocn/top-down-letters/config";
+import { trackingInConfig } from "@/registry/remocn/tracking-in/config";
+import { typewriterConfig } from "@/registry/remocn/typewriter/config";
+import { v0Config } from "@/registry/remocn/v0/config";
+import { warpDissolveConfig } from "@/registry/remocn/warp-dissolve/config";
+import { waveWipeConfig } from "@/registry/remocn/wave-wipe/config";
+import { whipPanConfig } from "@/registry/remocn/whip-pan/config";
+import { xFollowCardConfig } from "@/registry/remocn/x-follow-card/config";
+import { xFollowersOverviewConfig } from "@/registry/remocn/x-followers-overview/config";
+import { accordionConfig } from "@/registry/remocn-ui/accordion/config";
+import { alertDialogConfig } from "@/registry/remocn-ui/alert-dialog/config";
+import { blurInConfig } from "@/registry/remocn-ui/blur-in/config";
+import { buttonConfig } from "@/registry/remocn-ui/button/config";
+import { caretConfig } from "@/registry/remocn-ui/caret/config";
+import { checkboxConfig } from "@/registry/remocn-ui/checkbox/config";
+import { comboboxConfig } from "@/registry/remocn-ui/combobox/config";
+import { commandMenuConfig } from "@/registry/remocn-ui/command-menu/config";
+import { commandMenuItemConfig } from "@/registry/remocn-ui/command-menu-item/config";
+import { contextMenuConfig } from "@/registry/remocn-ui/context-menu/config";
+import { cursorConfig } from "@/registry/remocn-ui/cursor/config";
+import { dialogConfig } from "@/registry/remocn-ui/dialog/config";
+import { drawerConfig } from "@/registry/remocn-ui/drawer/config";
+import { dropdownMenuConfig } from "@/registry/remocn-ui/dropdown-menu/config";
+import { dropdownMenuItemConfig } from "@/registry/remocn-ui/dropdown-menu-item/config";
+import { inputConfig } from "@/registry/remocn-ui/input/config";
+import { messageBubbleConfig } from "@/registry/remocn-ui/message-bubble/config";
+import { popoverConfig } from "@/registry/remocn-ui/popover/config";
+import { progressConfig } from "@/registry/remocn-ui/progress/config";
+import { radioConfig } from "@/registry/remocn-ui/radio/config";
+import { resizableConfig } from "@/registry/remocn-ui/resizable/config";
+import { selectConfig } from "@/registry/remocn-ui/select/config";
+import { selectItemConfig } from "@/registry/remocn-ui/select-item/config";
+import { sheetConfig } from "@/registry/remocn-ui/sheet/config";
+import { skeletonConfig } from "@/registry/remocn-ui/skeleton/config";
+import { skeletonBlockConfig } from "@/registry/remocn-ui/skeleton-block/config";
+import { sliderConfig } from "@/registry/remocn-ui/slider/config";
+import { spinnerConfig } from "@/registry/remocn-ui/spinner/config";
+import { stepperConfig } from "@/registry/remocn-ui/stepper/config";
+import { switchConfig } from "@/registry/remocn-ui/switch/config";
+import { tabsConfig } from "@/registry/remocn-ui/tabs/config";
+import { toastConfig } from "@/registry/remocn-ui/toast/config";
+import { toggleGroupConfig } from "@/registry/remocn-ui/toggle-group/config";
+import { tooltipConfig } from "@/registry/remocn-ui/tooltip/config";
+import { typingIndicatorConfig } from "@/registry/remocn-ui/typing-indicator/config";
 
 export interface RegistryEntry {
-  Component: React.ComponentType<any>;
+  // biome-ignore lint/suspicious/noExplicitAny: dynamically-loaded Remotion composition, props shape varies per component
+  load: () => Promise<{ default: React.ComponentType<any> }>;
   config: ComponentConfig;
 }
 
 const registry: Record<string, RegistryEntry> = {
-  "soft-blur-in": { Component: SoftBlurIn, config: softBlurInConfig },
+  "soft-blur-in": {
+    load: () =>
+      import("@/registry/remocn/soft-blur-in").then((m) => ({
+        default: m.SoftBlurIn,
+      })),
+    config: softBlurInConfig,
+  },
   "per-character-rise": {
-    Component: PerCharacterRise,
+    load: () =>
+      import("@/registry/remocn/per-character-rise").then((m) => ({
+        default: m.PerCharacterRise,
+      })),
     config: perCharacterRiseConfig,
   },
   "bottom-up-letters": {
-    Component: BottomUpLetters,
+    load: () =>
+      import("@/registry/remocn/bottom-up-letters").then((m) => ({
+        default: m.BottomUpLetters,
+      })),
     config: bottomUpLettersConfig,
   },
   "top-down-letters": {
-    Component: TopDownLetters,
+    load: () =>
+      import("@/registry/remocn/top-down-letters").then((m) => ({
+        default: m.TopDownLetters,
+      })),
     config: topDownLettersConfig,
   },
-  "spring-scale-in": { Component: SpringScaleIn, config: springScaleInConfig },
+  "spring-scale-in": {
+    load: () =>
+      import("@/registry/remocn/spring-scale-in").then((m) => ({
+        default: m.SpringScaleIn,
+      })),
+    config: springScaleInConfig,
+  },
   "micro-scale-fade": {
-    Component: MicroScaleFade,
+    load: () =>
+      import("@/registry/remocn/micro-scale-fade").then((m) => ({
+        default: m.MicroScaleFade,
+      })),
     config: microScaleFadeConfig,
   },
-  "scale-down-fade": { Component: ScaleDownFade, config: scaleDownFadeConfig },
-  "blur-out-up": { Component: BlurOutUp, config: blurOutUpConfig },
+  "scale-down-fade": {
+    load: () =>
+      import("@/registry/remocn/scale-down-fade").then((m) => ({
+        default: m.ScaleDownFade,
+      })),
+    config: scaleDownFadeConfig,
+  },
+  "blur-out-up": {
+    load: () =>
+      import("@/registry/remocn/blur-out-up").then((m) => ({
+        default: m.BlurOutUp,
+      })),
+    config: blurOutUpConfig,
+  },
   "focus-blur-resolve": {
-    Component: FocusBlurResolve,
+    load: () =>
+      import("@/registry/remocn/focus-blur-resolve").then((m) => ({
+        default: m.FocusBlurResolve,
+      })),
     config: focusBlurResolveConfig,
   },
   "line-by-line-slide": {
-    Component: LineByLineSlide,
+    load: () =>
+      import("@/registry/remocn/line-by-line-slide").then((m) => ({
+        default: m.LineByLineSlide,
+      })),
     config: lineByLineSlideConfig,
   },
   "per-word-crossfade": {
-    Component: PerWordCrossfade,
+    load: () =>
+      import("@/registry/remocn/per-word-crossfade").then((m) => ({
+        default: m.PerWordCrossfade,
+      })),
     config: perWordCrossfadeConfig,
   },
-  "fade-through": { Component: FadeThrough, config: fadeThroughConfig },
-  "shared-axis-y": { Component: SharedAxisY, config: sharedAxisYConfig },
-  "shared-axis-z": { Component: SharedAxisZ, config: sharedAxisZConfig },
+  "fade-through": {
+    load: () =>
+      import("@/registry/remocn/fade-through").then((m) => ({
+        default: m.FadeThrough,
+      })),
+    config: fadeThroughConfig,
+  },
+  "shared-axis-y": {
+    load: () =>
+      import("@/registry/remocn/shared-axis-y").then((m) => ({
+        default: m.SharedAxisY,
+      })),
+    config: sharedAxisYConfig,
+  },
+  "shared-axis-z": {
+    load: () =>
+      import("@/registry/remocn/shared-axis-z").then((m) => ({
+        default: m.SharedAxisZ,
+      })),
+    config: sharedAxisZConfig,
+  },
   "short-slide-right": {
-    Component: ShortSlideRight,
+    load: () =>
+      import("@/registry/remocn/short-slide-right").then((m) => ({
+        default: m.ShortSlideRight,
+      })),
     config: shortSlideRightConfig,
   },
   "kinetic-center-build": {
-    Component: KineticCenterBuild,
+    load: () =>
+      import("@/registry/remocn/kinetic-center-build").then((m) => ({
+        default: m.KineticCenterBuild,
+      })),
     config: kineticCenterBuildConfig,
   },
   "short-slide-down": {
-    Component: ShortSlideDown,
+    load: () =>
+      import("@/registry/remocn/short-slide-down").then((m) => ({
+        default: m.ShortSlideDown,
+      })),
     config: shortSlideDownConfig,
   },
-  typewriter: { Component: Typewriter, config: typewriterConfig },
+  typewriter: {
+    load: () =>
+      import("@/registry/remocn/typewriter").then((m) => ({
+        default: m.Typewriter,
+      })),
+    config: typewriterConfig,
+  },
   "inline-highlight": {
-    Component: InlineHighlight,
+    load: () =>
+      import("@/registry/remocn/inline-highlight").then((m) => ({
+        default: m.InlineHighlight,
+      })),
     config: inlineHighlightConfig,
   },
   "strikethrough-replace": {
-    Component: StrikethroughReplace,
+    load: () =>
+      import("@/registry/remocn/strikethrough-replace").then((m) => ({
+        default: m.StrikethroughReplace,
+      })),
     config: strikethroughReplaceConfig,
   },
   "staggered-fade-up": {
-    Component: StaggeredFadeUp,
+    load: () =>
+      import("@/registry/remocn/staggered-fade-up").then((m) => ({
+        default: m.StaggeredFadeUp,
+      })),
     config: staggeredFadeUpConfig,
   },
   "mask-reveal-up": {
-    Component: MaskRevealUp,
+    load: () =>
+      import("@/registry/remocn/mask-reveal-up").then((m) => ({
+        default: m.MaskRevealUp,
+      })),
     config: maskRevealUpConfig,
   },
-  "tracking-in": { Component: TrackingIn, config: trackingInConfig },
-  "shimmer-sweep": { Component: ShimmerSweep, config: shimmerSweepConfig },
+  "tracking-in": {
+    load: () =>
+      import("@/registry/remocn/tracking-in").then((m) => ({
+        default: m.TrackingIn,
+      })),
+    config: trackingInConfig,
+  },
+  "shimmer-sweep": {
+    load: () =>
+      import("@/registry/remocn/shimmer-sweep").then((m) => ({
+        default: m.ShimmerSweep,
+      })),
+    config: shimmerSweepConfig,
+  },
   "marker-highlight": {
-    Component: MarkerHighlight,
+    load: () =>
+      import("@/registry/remocn/marker-highlight").then((m) => ({
+        default: m.MarkerHighlight,
+      })),
     config: markerHighlightConfig,
   },
   "slot-machine-roll": {
-    Component: SlotMachineRoll,
+    load: () =>
+      import("@/registry/remocn/slot-machine-roll").then((m) => ({
+        default: m.SlotMachineRoll,
+      })),
     config: slotMachineRollConfig,
   },
-  "matrix-decode": { Component: MatrixDecode, config: matrixDecodeConfig },
-  "rgb-glitch-text": { Component: RGBGlitchText, config: rgbGlitchTextConfig },
+  "matrix-decode": {
+    load: () =>
+      import("@/registry/remocn/matrix-decode").then((m) => ({
+        default: m.MatrixDecode,
+      })),
+    config: matrixDecodeConfig,
+  },
+  "rgb-glitch-text": {
+    load: () =>
+      import("@/registry/remocn/rgb-glitch-text").then((m) => ({
+        default: m.RGBGlitchText,
+      })),
+    config: rgbGlitchTextConfig,
+  },
   "infinite-marquee": {
-    Component: InfiniteMarquee,
+    load: () =>
+      import("@/registry/remocn/infinite-marquee").then((m) => ({
+        default: m.InfiniteMarquee,
+      })),
     config: infiniteMarqueeConfig,
   },
   "perspective-marquee": {
-    Component: PerspectiveMarquee,
+    load: () =>
+      import("@/registry/remocn/perspective-marquee").then((m) => ({
+        default: m.PerspectiveMarquee,
+      })),
     config: perspectiveMarqueeConfig,
   },
-  "spotlight-card": { Component: SpotlightCard, config: spotlightCardConfig },
+  "spotlight-card": {
+    load: () =>
+      import("@/registry/remocn/spotlight-card").then((m) => ({
+        default: m.SpotlightCard,
+      })),
+    config: spotlightCardConfig,
+  },
   "glass-code-block": {
-    Component: GlassCodeBlock,
+    load: () =>
+      import("@/registry/remocn/glass-code-block").then((m) => ({
+        default: m.GlassCodeBlock,
+      })),
     config: glassCodeBlockConfig,
   },
   "glass-code-walk": {
-    Component: GlassCodeWalk,
+    load: () =>
+      import("@/registry/remocn/glass-code-walk").then((m) => ({
+        default: m.GlassCodeWalk,
+      })),
     config: glassCodeWalkConfig,
   },
-  "data-flow-pipes": { Component: DataFlowPipes, config: dataFlowPipesConfig },
+  "data-flow-pipes": {
+    load: () =>
+      import("@/registry/remocn/data-flow-pipes").then((m) => ({
+        default: m.DataFlowPipes,
+      })),
+    config: dataFlowPipesConfig,
+  },
   "mesh-gradient-bg": {
-    Component: MeshGradientBg,
+    load: () =>
+      import("@/registry/remocn/mesh-gradient-bg").then((m) => ({
+        default: m.MeshGradientBg,
+      })),
     config: meshGradientBgConfig,
   },
   "shader-mesh-gradient": {
-    Component: ShaderMeshGradient,
+    load: () =>
+      import("@/registry/remocn/shader-mesh-gradient").then((m) => ({
+        default: m.ShaderMeshGradient,
+      })),
     config: shaderMeshGradientConfig,
   },
   "shader-grain-gradient": {
-    Component: ShaderGrainGradient,
+    load: () =>
+      import("@/registry/remocn/shader-grain-gradient").then((m) => ({
+        default: m.ShaderGrainGradient,
+      })),
     config: shaderGrainGradientConfig,
   },
   "shader-warp": {
-    Component: ShaderWarp,
+    load: () =>
+      import("@/registry/remocn/shader-warp").then((m) => ({
+        default: m.ShaderWarp,
+      })),
     config: shaderWarpConfig,
   },
   "shader-swirl": {
-    Component: ShaderSwirl,
+    load: () =>
+      import("@/registry/remocn/shader-swirl").then((m) => ({
+        default: m.ShaderSwirl,
+      })),
     config: shaderSwirlConfig,
   },
   "shader-water": {
-    Component: ShaderWater,
+    load: () =>
+      import("@/registry/remocn/shader-water").then((m) => ({
+        default: m.ShaderWater,
+      })),
     config: shaderWaterConfig,
   },
   "shader-spiral": {
-    Component: ShaderSpiral,
+    load: () =>
+      import("@/registry/remocn/shader-spiral").then((m) => ({
+        default: m.ShaderSpiral,
+      })),
     config: shaderSpiralConfig,
   },
   "shader-liquid-metal": {
-    Component: ShaderLiquidMetal,
+    load: () =>
+      import("@/registry/remocn/shader-liquid-metal").then((m) => ({
+        default: m.ShaderLiquidMetal,
+      })),
     config: shaderLiquidMetalConfig,
   },
   "shader-color-panels": {
-    Component: ShaderColorPanels,
+    load: () =>
+      import("@/registry/remocn/shader-color-panels").then((m) => ({
+        default: m.ShaderColorPanels,
+      })),
     config: shaderColorPanelsConfig,
   },
   "shader-neuro-noise": {
-    Component: ShaderNeuroNoise,
+    load: () =>
+      import("@/registry/remocn/shader-neuro-noise").then((m) => ({
+        default: m.ShaderNeuroNoise,
+      })),
     config: shaderNeuroNoiseConfig,
   },
   "shader-perlin-noise": {
-    Component: ShaderPerlinNoise,
+    load: () =>
+      import("@/registry/remocn/shader-perlin-noise").then((m) => ({
+        default: m.ShaderPerlinNoise,
+      })),
     config: shaderPerlinNoiseConfig,
   },
   "shader-simplex-noise": {
-    Component: ShaderSimplexNoise,
+    load: () =>
+      import("@/registry/remocn/shader-simplex-noise").then((m) => ({
+        default: m.ShaderSimplexNoise,
+      })),
     config: shaderSimplexNoiseConfig,
   },
   "shader-voronoi": {
-    Component: ShaderVoronoi,
+    load: () =>
+      import("@/registry/remocn/shader-voronoi").then((m) => ({
+        default: m.ShaderVoronoi,
+      })),
     config: shaderVoronoiConfig,
   },
   "shader-dot-orbit": {
-    Component: ShaderDotOrbit,
+    load: () =>
+      import("@/registry/remocn/shader-dot-orbit").then((m) => ({
+        default: m.ShaderDotOrbit,
+      })),
     config: shaderDotOrbitConfig,
   },
   "shader-dithering": {
-    Component: ShaderDithering,
+    load: () =>
+      import("@/registry/remocn/shader-dithering").then((m) => ({
+        default: m.ShaderDithering,
+      })),
     config: shaderDitheringConfig,
   },
   "shader-god-rays": {
-    Component: ShaderGodRays,
+    load: () =>
+      import("@/registry/remocn/shader-god-rays").then((m) => ({
+        default: m.ShaderGodRays,
+      })),
     config: shaderGodRaysConfig,
   },
   "shader-smoke-ring": {
-    Component: ShaderSmokeRing,
+    load: () =>
+      import("@/registry/remocn/shader-smoke-ring").then((m) => ({
+        default: m.ShaderSmokeRing,
+      })),
     config: shaderSmokeRingConfig,
   },
   "shader-metaballs": {
-    Component: ShaderMetaballs,
+    load: () =>
+      import("@/registry/remocn/shader-metaballs").then((m) => ({
+        default: m.ShaderMetaballs,
+      })),
     config: shaderMetaballsConfig,
   },
   "shader-pulsing-border": {
-    Component: ShaderPulsingBorder,
+    load: () =>
+      import("@/registry/remocn/shader-pulsing-border").then((m) => ({
+        default: m.ShaderPulsingBorder,
+      })),
     config: shaderPulsingBorderConfig,
   },
-  "dynamic-grid": { Component: DynamicGrid, config: dynamicGridConfig },
+  "dynamic-grid": {
+    load: () =>
+      import("@/registry/remocn/dynamic-grid").then((m) => ({
+        default: m.DynamicGrid,
+      })),
+    config: dynamicGridConfig,
+  },
   "simulated-cursor": {
-    Component: SimulatedCursor,
+    load: () =>
+      import("@/registry/remocn/simulated-cursor").then((m) => ({
+        default: m.SimulatedCursor,
+      })),
     config: simulatedCursorConfig,
   },
   "swirl-dissolve": {
-    Component: SwirlDissolveExampleScene,
+    load: () =>
+      import("@/components/docs/examples/swirl-dissolve-example").then((m) => ({
+        default: m.SwirlDissolveExampleScene,
+      })),
     config: swirlDissolveConfig,
   },
   "dither-dissolve": {
-    Component: DitherDissolveExampleScene,
+    load: () =>
+      import("@/components/docs/examples/dither-dissolve-example").then(
+        (m) => ({ default: m.DitherDissolveExampleScene }),
+      ),
     config: ditherDissolveConfig,
   },
   "perlin-dissolve": {
-    Component: PerlinDissolveExampleScene,
+    load: () =>
+      import("@/components/docs/examples/perlin-dissolve-example").then(
+        (m) => ({ default: m.PerlinDissolveExampleScene }),
+      ),
     config: perlinDissolveConfig,
   },
   "smoke-dissolve": {
-    Component: SmokeDissolveExampleScene,
+    load: () =>
+      import("@/components/docs/examples/smoke-dissolve-example").then((m) => ({
+        default: m.SmokeDissolveExampleScene,
+      })),
     config: smokeDissolveConfig,
   },
   "grain-dissolve": {
-    Component: GrainDissolveExampleScene,
+    load: () =>
+      import("@/components/docs/examples/grain-dissolve-example").then((m) => ({
+        default: m.GrainDissolveExampleScene,
+      })),
     config: grainDissolveConfig,
   },
   "wave-wipe": {
-    Component: WaveWipeExampleScene,
+    load: () =>
+      import("@/components/docs/examples/wave-wipe-example").then((m) => ({
+        default: m.WaveWipeExampleScene,
+      })),
     config: waveWipeConfig,
   },
   "ripple-zoom": {
-    Component: RippleZoomExampleScene,
+    load: () =>
+      import("@/components/docs/examples/ripple-zoom-example").then((m) => ({
+        default: m.RippleZoomExampleScene,
+      })),
     config: rippleZoomConfig,
   },
   "whip-pan": {
-    Component: WhipPanExampleScene,
+    load: () =>
+      import("@/components/docs/examples/whip-pan-example").then((m) => ({
+        default: m.WhipPanExampleScene,
+      })),
     config: whipPanConfig,
   },
   "push-through": {
-    Component: PushThroughExampleScene,
+    load: () =>
+      import("@/components/docs/examples/push-through-example").then((m) => ({
+        default: m.PushThroughExampleScene,
+      })),
     config: pushThroughConfig,
   },
   "focus-pull": {
-    Component: FocusPullExampleScene,
+    load: () =>
+      import("@/components/docs/examples/focus-pull-example").then((m) => ({
+        default: m.FocusPullExampleScene,
+      })),
     config: focusPullConfig,
   },
   "warp-dissolve": {
-    Component: WarpDissolveExampleScene,
+    load: () =>
+      import("@/components/docs/examples/warp-dissolve-example").then((m) => ({
+        default: m.WarpDissolveExampleScene,
+      })),
     config: warpDissolveConfig,
   },
   "chat-to-preview-layout": {
-    Component: ChatToPreviewLayout,
+    load: () =>
+      import("@/registry/remocn/chat-to-preview-layout").then((m) => ({
+        default: m.ChatToPreviewLayout,
+      })),
     config: chatToPreviewLayoutConfig,
   },
   "animated-line-chart": {
-    Component: AnimatedLineChart,
+    load: () =>
+      import("@/registry/remocn/animated-line-chart").then((m) => ({
+        default: m.AnimatedLineChart,
+      })),
     config: animatedLineChartConfig,
   },
   "animated-bar-chart": {
-    Component: AnimatedBarChart,
+    load: () =>
+      import("@/registry/remocn/animated-bar-chart").then((m) => ({
+        default: m.AnimatedBarChart,
+      })),
     config: animatedBarChartConfig,
   },
   "terminal-simulator": {
-    Component: TerminalSimulator,
+    load: () =>
+      import("@/registry/remocn/terminal-simulator").then((m) => ({
+        default: m.TerminalSimulator,
+      })),
     config: terminalSimulatorConfig,
   },
   "terminal-cursor-zoom": {
-    Component: TerminalCursorZoom,
+    load: () =>
+      import("@/registry/remocn/terminal-cursor-zoom").then((m) => ({
+        default: m.TerminalCursorZoom,
+      })),
     config: terminalCursorZoomConfig,
   },
-  "progress-steps": { Component: ProgressSteps, config: progressStepsConfig },
+  "progress-steps": {
+    load: () =>
+      import("@/registry/remocn/progress-steps").then((m) => ({
+        default: m.ProgressSteps,
+      })),
+    config: progressStepsConfig,
+  },
   "ecosystem-constellation": {
-    Component: EcosystemConstellation,
+    load: () =>
+      import("@/registry/remocn/ecosystem-constellation").then((m) => ({
+        default: m.EcosystemConstellation,
+      })),
     config: ecosystemConstellationConfig,
   },
   "live-code-compilation": {
-    Component: LiveCodeCompilation,
+    load: () =>
+      import("@/registry/remocn/live-code-compilation").then((m) => ({
+        default: m.LiveCodeCompilation,
+      })),
     config: liveCodeCompilationConfig,
   },
   "infinite-bento-pan": {
-    Component: InfiniteBentoPan,
+    load: () =>
+      import("@/registry/remocn/infinite-bento-pan").then((m) => ({
+        default: m.InfiniteBentoPan,
+      })),
     config: infiniteBentoPanConfig,
   },
   "github-sponsors": {
-    Component: GitHubSponsors,
+    load: () =>
+      import("@/registry/remocn/github-sponsors").then((m) => ({
+        default: m.GitHubSponsors,
+      })),
     config: githubSponsorsConfig,
   },
-  "github-stars": { Component: GitHubStars, config: githubStarsConfig },
-  "logo-enter": { Component: LogoEnter, config: logoEnterConfig },
-  "number-wheel": { Component: NumberWheel, config: numberWheelConfig },
-  "rolling-number": { Component: RollingNumber, config: rollingNumberConfig },
-  "x-follow-card": { Component: XFollowCard, config: xFollowCardConfig },
+  "github-stars": {
+    load: () =>
+      import("@/registry/remocn/github-stars").then((m) => ({
+        default: m.GitHubStars,
+      })),
+    config: githubStarsConfig,
+  },
+  "logo-enter": {
+    load: () =>
+      import("@/registry/remocn/logo-enter").then((m) => ({
+        default: m.LogoEnter,
+      })),
+    config: logoEnterConfig,
+  },
+  "number-wheel": {
+    load: () =>
+      import("@/registry/remocn/number-wheel").then((m) => ({
+        default: m.NumberWheel,
+      })),
+    config: numberWheelConfig,
+  },
+  "rolling-number": {
+    load: () =>
+      import("@/registry/remocn/rolling-number").then((m) => ({
+        default: m.RollingNumber,
+      })),
+    config: rollingNumberConfig,
+  },
+  "x-follow-card": {
+    load: () =>
+      import("@/registry/remocn/x-follow-card").then((m) => ({
+        default: m.XFollowCard,
+      })),
+    config: xFollowCardConfig,
+  },
   "x-followers-overview": {
-    Component: XFollowersOverview,
+    load: () =>
+      import("@/registry/remocn/x-followers-overview").then((m) => ({
+        default: m.XFollowersOverview,
+      })),
     config: xFollowersOverviewConfig,
   },
-  confetti: { Component: Confetti, config: confettiConfig },
-  backdrop: { Component: BackdropDemo, config: backdropConfig },
-  "claude-chat": { Component: ClaudeChat, config: claudeChatConfig },
-  "chat-gpt": { Component: ChatGpt, config: chatGptConfig },
-  v0: { Component: V0, config: v0Config },
-  "claude-code": { Component: ClaudeCode, config: claudeCodeConfig },
-  opencode: { Component: OpenCode, config: opencodeConfig },
-  button: { Component: Button, config: buttonConfig },
-  accordion: { Component: Accordion, config: accordionConfig },
-  "alert-dialog": { Component: AlertDialog, config: alertDialogConfig },
-  dialog: { Component: Dialog, config: dialogConfig },
-  sheet: { Component: Sheet, config: sheetConfig },
-  drawer: { Component: Drawer, config: drawerConfig },
-  checkbox: { Component: Checkbox, config: checkboxConfig },
-  input: { Component: Input, config: inputConfig },
+  confetti: {
+    load: () =>
+      import("@/registry/remocn/confetti").then((m) => ({
+        default: m.Confetti,
+      })),
+    config: confettiConfig,
+  },
+  backdrop: {
+    load: () =>
+      import("@/components/docs/examples/backdrop-demo").then((m) => ({
+        default: m.BackdropDemo,
+      })),
+    config: backdropConfig,
+  },
+  "claude-chat": {
+    load: () =>
+      import("@/registry/remocn/claude-chat").then((m) => ({
+        default: m.ClaudeChat,
+      })),
+    config: claudeChatConfig,
+  },
+  "chat-gpt": {
+    load: () =>
+      import("@/registry/remocn/chat-gpt").then((m) => ({
+        default: m.ChatGpt,
+      })),
+    config: chatGptConfig,
+  },
+  v0: {
+    load: () => import("@/registry/remocn/v0").then((m) => ({ default: m.V0 })),
+    config: v0Config,
+  },
+  "claude-code": {
+    load: () =>
+      import("@/registry/remocn/claude-code").then((m) => ({
+        default: m.ClaudeCode,
+      })),
+    config: claudeCodeConfig,
+  },
+  opencode: {
+    load: () =>
+      import("@/registry/remocn/opencode").then((m) => ({
+        default: m.OpenCode,
+      })),
+    config: opencodeConfig,
+  },
+  button: {
+    load: () =>
+      import("@/registry/remocn-ui/button").then((m) => ({
+        default: m.Button,
+      })),
+    config: buttonConfig,
+  },
+  accordion: {
+    load: () =>
+      import("@/registry/remocn-ui/accordion").then((m) => ({
+        default: m.Accordion,
+      })),
+    config: accordionConfig,
+  },
+  "alert-dialog": {
+    load: () =>
+      import("@/registry/remocn-ui/alert-dialog").then((m) => ({
+        default: m.AlertDialog,
+      })),
+    config: alertDialogConfig,
+  },
+  dialog: {
+    load: () =>
+      import("@/registry/remocn-ui/dialog").then((m) => ({
+        default: m.Dialog,
+      })),
+    config: dialogConfig,
+  },
+  sheet: {
+    load: () =>
+      import("@/registry/remocn-ui/sheet").then((m) => ({ default: m.Sheet })),
+    config: sheetConfig,
+  },
+  drawer: {
+    load: () =>
+      import("@/registry/remocn-ui/drawer").then((m) => ({
+        default: m.Drawer,
+      })),
+    config: drawerConfig,
+  },
+  checkbox: {
+    load: () =>
+      import("@/registry/remocn-ui/checkbox").then((m) => ({
+        default: m.Checkbox,
+      })),
+    config: checkboxConfig,
+  },
+  input: {
+    load: () =>
+      import("@/registry/remocn-ui/input").then((m) => ({ default: m.Input })),
+    config: inputConfig,
+  },
   // blur-in WRAPS a single child, so the customizer Component is the
   // preview-only BlurInPreview wrapper (it supplies a fixed sample card and
   // centers it on a stage); the shipped BlurIn is a pure child-wrapper.
-  "blur-in": { Component: BlurInPreview, config: blurInConfig },
-  radio: { Component: Radio, config: radioConfig },
-  switch: { Component: Switch, config: switchConfig },
-  select: { Component: Select, config: selectConfig },
-  "select-item": { Component: SelectItem, config: selectItemConfig },
-  "dropdown-menu": { Component: DropdownMenu, config: dropdownMenuConfig },
+  "blur-in": {
+    load: () =>
+      import("@/registry/remocn-ui/blur-in/preview").then((m) => ({
+        default: m.BlurInPreview,
+      })),
+    config: blurInConfig,
+  },
+  radio: {
+    load: () =>
+      import("@/registry/remocn-ui/radio").then((m) => ({ default: m.Radio })),
+    config: radioConfig,
+  },
+  switch: {
+    load: () =>
+      import("@/registry/remocn-ui/switch").then((m) => ({
+        default: m.Switch,
+      })),
+    config: switchConfig,
+  },
+  select: {
+    load: () =>
+      import("@/registry/remocn-ui/select").then((m) => ({
+        default: m.Select,
+      })),
+    config: selectConfig,
+  },
+  "select-item": {
+    load: () =>
+      import("@/registry/remocn-ui/select-item").then((m) => ({
+        default: m.SelectItem,
+      })),
+    config: selectItemConfig,
+  },
+  "dropdown-menu": {
+    load: () =>
+      import("@/registry/remocn-ui/dropdown-menu").then((m) => ({
+        default: m.DropdownMenu,
+      })),
+    config: dropdownMenuConfig,
+  },
   "dropdown-menu-item": {
-    Component: DropdownMenuItem,
+    load: () =>
+      import("@/registry/remocn-ui/dropdown-menu-item").then((m) => ({
+        default: m.DropdownMenuItem,
+      })),
     config: dropdownMenuItemConfig,
   },
-  tabs: { Component: Tabs, config: tabsConfig },
+  tabs: {
+    load: () =>
+      import("@/registry/remocn-ui/tabs").then((m) => ({ default: m.Tabs })),
+    config: tabsConfig,
+  },
   // cursor's customizer Component is the preview-only CursorPreview wrapper (it
   // runs a fixed demo path through useCursorPath); the shipped Cursor is pure.
-  cursor: { Component: CursorPreview, config: cursorConfig },
+  cursor: {
+    load: () =>
+      import("@/registry/remocn-ui/cursor/preview").then((m) => ({
+        default: m.CursorPreview,
+      })),
+    config: cursorConfig,
+  },
   // toast's customizer Component is the preview-only ToastPreview wrapper (it
   // centers the toast on a theme-background stage); the shipped Toast is a
   // placement-agnostic card the caller positions.
-  toast: { Component: ToastPreview, config: toastConfig },
+  toast: {
+    load: () =>
+      import("@/registry/remocn-ui/toast/preview").then((m) => ({
+        default: m.ToastPreview,
+      })),
+    config: toastConfig,
+  },
   "message-bubble": {
-    Component: MessageBubblePreview,
+    load: () =>
+      import("@/registry/remocn-ui/message-bubble/preview").then((m) => ({
+        default: m.MessageBubblePreview,
+      })),
     config: messageBubbleConfig,
   },
   "typing-indicator": {
-    Component: TypingIndicatorPreview,
+    load: () =>
+      import("@/registry/remocn-ui/typing-indicator/preview").then((m) => ({
+        default: m.TypingIndicatorPreview,
+      })),
     config: typingIndicatorConfig,
   },
   "command-menu-item": {
-    Component: CommandMenuItem,
+    load: () =>
+      import("@/registry/remocn-ui/command-menu-item").then((m) => ({
+        default: m.CommandMenuItem,
+      })),
     config: commandMenuItemConfig,
   },
   // command-menu needs NO preview wrapper: like dialog it renders an intrinsic
   // inset:0 backdrop + centered panel, so the customizer mounts it directly.
-  "command-menu": { Component: CommandMenu, config: commandMenuConfig },
+  "command-menu": {
+    load: () =>
+      import("@/registry/remocn-ui/command-menu").then((m) => ({
+        default: m.CommandMenu,
+      })),
+    config: commandMenuConfig,
+  },
   // tooltip's customizer Component is the preview-only TooltipPreview wrapper: a
   // bare bubble has no backdrop and would not center as the composition root.
-  tooltip: { Component: TooltipPreview, config: tooltipConfig },
+  tooltip: {
+    load: () =>
+      import("@/registry/remocn-ui/tooltip/preview").then((m) => ({
+        default: m.TooltipPreview,
+      })),
+    config: tooltipConfig,
+  },
   // progress's customizer Component is the preview-only ProgressPreview wrapper:
   // a bare inline bar would sit top-left, so the wrapper centers it on a stage.
-  progress: { Component: ProgressPreview, config: progressConfig },
+  progress: {
+    load: () =>
+      import("@/registry/remocn-ui/progress/preview").then((m) => ({
+        default: m.ProgressPreview,
+      })),
+    config: progressConfig,
+  },
   // skeleton-block is the shimmer motion atom; its preview centers the bare block
   // on a stage. skeleton is the state atom whose preview supplies demo content +
   // placeholder for the loading↔loaded crossfade.
   "skeleton-block": {
-    Component: SkeletonBlockPreview,
+    load: () =>
+      import("@/registry/remocn-ui/skeleton-block/preview").then((m) => ({
+        default: m.SkeletonBlockPreview,
+      })),
     config: skeletonBlockConfig,
   },
-  skeleton: { Component: SkeletonPreview, config: skeletonConfig },
+  skeleton: {
+    load: () =>
+      import("@/registry/remocn-ui/skeleton/preview").then((m) => ({
+        default: m.SkeletonPreview,
+      })),
+    config: skeletonConfig,
+  },
   // slider's customizer Component is the preview-only SliderPreview wrapper: a
   // bare inline bar would sit top-left, so the wrapper centers it on a stage.
-  slider: { Component: SliderPreview, config: sliderConfig },
+  slider: {
+    load: () =>
+      import("@/registry/remocn-ui/slider/preview").then((m) => ({
+        default: m.SliderPreview,
+      })),
+    config: sliderConfig,
+  },
   // combobox registers RAW (no preview wrapper): like select it paints its own
   // opaque inset:0 wrapper, so the customizer mounts it directly and it centers.
-  combobox: { Component: Combobox, config: comboboxConfig },
+  combobox: {
+    load: () =>
+      import("@/registry/remocn-ui/combobox").then((m) => ({
+        default: m.Combobox,
+      })),
+    config: comboboxConfig,
+  },
   // popover's customizer Component is the preview-only PopoverPreview wrapper: a
   // bare card has no backdrop and would not center as the composition root.
-  popover: { Component: PopoverPreview, config: popoverConfig },
+  popover: {
+    load: () =>
+      import("@/registry/remocn-ui/popover/preview").then((m) => ({
+        default: m.PopoverPreview,
+      })),
+    config: popoverConfig,
+  },
   // context-menu's customizer Component is the preview-only ContextMenuPreview
   // wrapper: a bare panel (transparent, caller-positioned) would sit top-left,
   // so the wrapper centers it on a stage.
-  "context-menu": { Component: ContextMenuPreview, config: contextMenuConfig },
+  "context-menu": {
+    load: () =>
+      import("@/registry/remocn-ui/context-menu/preview").then((m) => ({
+        default: m.ContextMenuPreview,
+      })),
+    config: contextMenuConfig,
+  },
   // toggle-group registers RAW (no preview wrapper): like tabs it paints its own
   // opaque inset:0 centered stage, so the customizer mounts it directly.
-  "toggle-group": { Component: ToggleGroup, config: toggleGroupConfig },
+  "toggle-group": {
+    load: () =>
+      import("@/registry/remocn-ui/toggle-group").then((m) => ({
+        default: m.ToggleGroup,
+      })),
+    config: toggleGroupConfig,
+  },
   // stepper's customizer Component is the preview-only StepperPreview wrapper: a
   // bare wide horizontal element would sit top-left, so the wrapper centers it.
-  stepper: { Component: StepperPreview, config: stepperConfig },
+  stepper: {
+    load: () =>
+      import("@/registry/remocn-ui/stepper/preview").then((m) => ({
+        default: m.StepperPreview,
+      })),
+    config: stepperConfig,
+  },
   // resizable registers RAW (no preview wrapper): its index.tsx already paints
   // an opaque inset:0 stage that centers the fixed-size bordered box, like tabs.
-  resizable: { Component: Resizable, config: resizableConfig },
-  spinner: { Component: Spinner, config: spinnerConfig },
-  caret: { Component: CaretPreview, config: caretConfig },
+  resizable: {
+    load: () =>
+      import("@/registry/remocn-ui/resizable").then((m) => ({
+        default: m.Resizable,
+      })),
+    config: resizableConfig,
+  },
+  spinner: {
+    load: () =>
+      import("@/registry/remocn-ui/spinner").then((m) => ({
+        default: m.Spinner,
+      })),
+    config: spinnerConfig,
+  },
+  caret: {
+    load: () =>
+      import("@/registry/remocn-ui/caret/preview").then((m) => ({
+        default: m.CaretPreview,
+      })),
+    config: caretConfig,
+  },
 };
 
 // Append the shared controls (e.g. `speed`) to every component config so
@@ -618,7 +1030,7 @@ for (const { config } of Object.values(registry)) {
   config.controls = { ...config.controls, ...SHARED_CONTROLS };
 }
 
-const backdrop = registry["backdrop"];
+const backdrop = registry.backdrop;
 if (backdrop) {
   delete backdrop.config.controls.speed;
 }
@@ -729,7 +1141,7 @@ if (chatGpt) {
   };
 }
 
-const v0 = registry["v0"];
+const v0 = registry.v0;
 if (v0) {
   v0.config.controls.speed = {
     type: "number",
@@ -753,7 +1165,7 @@ if (claudeCode) {
   };
 }
 
-const opencode = registry["opencode"];
+const opencode = registry.opencode;
 if (opencode) {
   opencode.config.controls.speed = {
     type: "number",

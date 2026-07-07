@@ -1,13 +1,8 @@
-
 import { describe, expect, it } from "bun:test";
-import {
-  type DialogState,
-  dialogStyle,
-  dialogStyleContext,
-} from "../index";
-import { tweenDialogStyle, DEFAULT_DURATION } from "../use-dialog-transition";
-import { dialogConfig } from "../config";
 import { defaultLightTheme } from "@/lib/remocn-ui";
+import { dialogConfig } from "../config";
+import { type DialogState, dialogStyle, dialogStyleContext } from "../index";
+import { DEFAULT_DURATION, tweenDialogStyle } from "../use-dialog-transition";
 
 const VALID_STATES: readonly DialogState[] = ["opened", "closed"];
 
@@ -27,13 +22,15 @@ const ctx = dialogStyleContext(defaultLightTheme);
 describe("DialogState union", () => {
   it("contains exactly the two documented states", () => {
     const control = dialogConfig.controls.state;
-    if (control.type !== "select") throw new Error("state control must be a select");
+    if (control.type !== "select")
+      throw new Error("state control must be a select");
     expect(control.options).toEqual(["opened", "closed"]);
   });
 
   it("every VALID_STATES entry is assignable (no typos in the fixture)", () => {
     const control = dialogConfig.controls.state;
-    if (control.type !== "select") throw new Error("state control must be a select");
+    if (control.type !== "select")
+      throw new Error("state control must be a select");
     expect(VALID_STATES).toHaveLength(2);
     for (const s of VALID_STATES) {
       expect(control.options).toContain(s);
@@ -48,7 +45,8 @@ describe("dialogConfig.controls.state", () => {
 
   it("has exactly the two DialogState options in order", () => {
     const control = dialogConfig.controls.state;
-    if (control.type !== "select") throw new Error("state control must be a select");
+    if (control.type !== "select")
+      throw new Error("state control must be a select");
     expect(control.options).toEqual(["opened", "closed"]);
   });
 
@@ -59,7 +57,8 @@ describe("dialogConfig.controls.state", () => {
 
   it("every option is a member of the DialogState union", () => {
     const control = dialogConfig.controls.state;
-    if (control.type !== "select") throw new Error("state control must be a select");
+    if (control.type !== "select")
+      throw new Error("state control must be a select");
     for (const option of control.options) {
       expect(VALID_STATES).toContain(option as DialogState);
     }
@@ -67,17 +66,18 @@ describe("dialogConfig.controls.state", () => {
 });
 
 describe("dialogConfig.snippet: state prop emission", () => {
-  it("emits state=\"opened\" for the opened option", () => {
+  it('emits state="opened" for the opened option', () => {
     expect(snippet({ state: "opened" })).toContain('state="opened"');
   });
 
-  it("emits state=\"closed\" for the closed option", () => {
+  it('emits state="closed" for the closed option', () => {
     expect(snippet({ state: "closed" })).toContain('state="closed"');
   });
 
   it("emits the correct state for every control option", () => {
     const control = dialogConfig.controls.state;
-    if (control.type !== "select") throw new Error("state control must be a select");
+    if (control.type !== "select")
+      throw new Error("state control must be a select");
     for (const state of control.options) {
       const out = snippet({ state });
       expect(out).toContain(`state="${state}"`);
@@ -96,7 +96,7 @@ describe("dialogConfig.snippet: NEVER emits steps", () => {
 describe("dialogConfig.snippet: import line", () => {
   it("includes `import { Dialog }` from the correct path", () => {
     const out = snippet({ state: "opened" });
-    expect(out).toContain('import { Dialog }');
+    expect(out).toContain("import { Dialog }");
     expect(out).toContain('from "@/components/remocn/dialog"');
   });
 });
@@ -105,7 +105,8 @@ describe("dialogConfig.snippet: default props are omitted", () => {
   const allDefaults = snippet({
     state: "opened",
     title: "Edit profile",
-    description: "Make changes to your profile here. Click save when you're done.",
+    description:
+      "Make changes to your profile here. Click save when you're done.",
     actionLabel: "Save changes",
     cancelLabel: "Cancel",
   });
@@ -129,23 +130,30 @@ describe("dialogConfig.snippet: default props are omitted", () => {
 
 describe("dialogConfig.snippet: non-default props are emitted", () => {
   it("emits a non-default title", () => {
-    expect(snippet({ state: "opened", title: "Edit workspace settings" }))
-      .toContain('title="Edit workspace settings"');
+    expect(
+      snippet({ state: "opened", title: "Edit workspace settings" }),
+    ).toContain('title="Edit workspace settings"');
   });
 
   it("emits a non-default description", () => {
-    expect(snippet({ state: "opened", description: "Update your workspace name and settings." }))
-      .toContain('description="Update your workspace name and settings."');
+    expect(
+      snippet({
+        state: "opened",
+        description: "Update your workspace name and settings.",
+      }),
+    ).toContain('description="Update your workspace name and settings."');
   });
 
   it("emits a non-default actionLabel", () => {
-    expect(snippet({ state: "opened", actionLabel: "Confirm" }))
-      .toContain('actionLabel="Confirm"');
+    expect(snippet({ state: "opened", actionLabel: "Confirm" })).toContain(
+      'actionLabel="Confirm"',
+    );
   });
 
   it("emits a non-default cancelLabel", () => {
-    expect(snippet({ state: "opened", cancelLabel: "Go back" }))
-      .toContain('cancelLabel="Go back"');
+    expect(snippet({ state: "opened", cancelLabel: "Go back" })).toContain(
+      'cancelLabel="Go back"',
+    );
   });
 });
 
@@ -153,7 +161,7 @@ describe("dialogConfig.snippet: structural round-trip", () => {
   const out = snippet({ state: "opened" });
 
   it("starts with the import line", () => {
-    expect(out.startsWith('import { Dialog }')).toBe(true);
+    expect(out.startsWith("import { Dialog }")).toBe(true);
   });
 
   it("contains a <Dialog JSX opening", () => {

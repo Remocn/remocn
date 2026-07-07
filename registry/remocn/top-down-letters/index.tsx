@@ -53,12 +53,11 @@ export function TopDownLetters({
         {chars.map((char, i) => {
           const local = frame - i * staggerDelay;
           const easing = Easing.bezier(0.18, 1, 0.32, 1);
-          const opacity = interpolate(
-            local,
-            [0, charDurationFrames],
-            [0, 1],
-            { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing },
-          );
+          const opacity = interpolate(local, [0, charDurationFrames], [0, 1], {
+            extrapolateLeft: "clamp",
+            extrapolateRight: "clamp",
+            easing,
+          });
           const y = interpolate(
             local,
             [0, charDurationFrames],

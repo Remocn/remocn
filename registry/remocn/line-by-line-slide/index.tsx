@@ -35,7 +35,10 @@ export function LineByLineSlide({
   const exitEasing = Easing.bezier(0.64, 0, 0.78, 0);
 
   const enterEnd = enterDur + (lines.length - 1) * enterStagger;
-  const exitStart = Math.max(enterEnd, durationInFrames - exitDur - (lines.length - 1) * exitStagger);
+  const exitStart = Math.max(
+    enterEnd,
+    durationInFrames - exitDur - (lines.length - 1) * exitStagger,
+  );
 
   return (
     <div
@@ -79,11 +82,16 @@ export function LineByLineSlide({
 
           const opacity = enterP * (1 - exitP);
 
-          const xEnter = interpolate(enterLocal, [0, enterDur], [-distance, 0], {
-            extrapolateLeft: "clamp",
-            extrapolateRight: "clamp",
-            easing: enterEasing,
-          });
+          const xEnter = interpolate(
+            enterLocal,
+            [0, enterDur],
+            [-distance, 0],
+            {
+              extrapolateLeft: "clamp",
+              extrapolateRight: "clamp",
+              easing: enterEasing,
+            },
+          );
 
           const xExit = interpolate(exitLocal, [0, exitDur], [0, distance], {
             extrapolateLeft: "clamp",

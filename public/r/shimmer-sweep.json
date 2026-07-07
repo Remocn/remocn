@@ -3,9 +3,7 @@
   "name": "shimmer-sweep",
   "title": "Shimmer Sweep",
   "description": "Light shine sweeps across muted text via background-clip:text.",
-  "dependencies": [
-    "remotion"
-  ],
+  "dependencies": ["remotion"],
   "files": [
     {
       "path": "registry/remocn/shimmer-sweep/index.tsx",

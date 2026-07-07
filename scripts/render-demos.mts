@@ -119,7 +119,9 @@ async function main() {
     process.stdout.write(`\r${tag} ✓            \n`);
   }
 
-  console.log(`Done. ${comps.length} file(s) in ${path.relative(root, outDir)}`);
+  console.log(
+    `Done. ${comps.length} file(s) in ${path.relative(root, outDir)}`,
+  );
 }
 
 main().catch((err) => {

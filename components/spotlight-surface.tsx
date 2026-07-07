@@ -1,5 +1,10 @@
 "use client";
-import { type CSSProperties, type HTMLAttributes, type ReactNode, useRef } from "react";
+import {
+  type CSSProperties,
+  type HTMLAttributes,
+  type ReactNode,
+  useRef,
+} from "react";
 import { cn } from "@/lib/utils";
 
 export function SpotlightSurface({

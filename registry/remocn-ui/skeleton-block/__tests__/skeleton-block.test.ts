@@ -1,4 +1,3 @@
-
 import { describe, expect, it } from "bun:test";
 import { skeletonBlockConfig } from "../config";
 
@@ -80,7 +79,6 @@ describe("skeletonBlockConfig.snippet: structural invariants", () => {
 });
 
 describe("skeletonBlockConfig.snippet: default props are omitted", () => {
-
   it("omits width when it equals the default 240", () => {
     const out = snippet({ width: 240 });
     expect(out).not.toContain("width=");

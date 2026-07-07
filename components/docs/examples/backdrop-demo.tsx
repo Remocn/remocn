@@ -1,6 +1,6 @@
 "use client";
 
-import { type BackdropFill, Backdrop } from "@/registry/remocn/backdrop";
+import { Backdrop, type BackdropFill } from "@/registry/remocn/backdrop";
 
 export interface BackdropDemoProps {
   fillType?: "color" | "gradient" | "image";
@@ -29,12 +29,7 @@ export function BackdropDemo({
         : { type: "gradient", value: gradient };
 
   return (
-    <Backdrop
-      fill={fill}
-      padding={padding}
-      radius={radius}
-      shadow={shadow}
-    >
+    <Backdrop fill={fill} padding={padding} radius={radius} shadow={shadow}>
       <div
         style={{
           width: "100%",

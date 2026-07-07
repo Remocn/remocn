@@ -9,8 +9,8 @@ import { useSliderTransition } from "@/registry/remocn-ui/slider/use-slider-tran
 // Track left edge: (1280 - 320) / 2 = 480px. Track vertical center: 360px.
 // Value 20% → thumb x: 480 + 0.20 × 320 = 544. Value 80% → thumb x: 480 + 0.80 × 320 = 736.
 const THUMB_START_X = 544; // canvas x at value 20
-const THUMB_END_X   = 736; // canvas x at value 80
-const THUMB_Y       = 360; // canvas y of track center
+const THUMB_END_X = 736; // canvas x at value 80
+const THUMB_Y = 360; // canvas y of track center
 
 export const sliderExampleControls = ["showValue"] as const;
 
@@ -21,22 +21,22 @@ export interface SliderExampleProps {
 export const SliderExampleScene = (p: SliderExampleProps = {}) => {
   // Cursor: park top-left → ease to thumb (arrives frame 30) → drag to end (arrives frame 100) → release.
   const cursorStyle = useCursorPath([
-    { at: 0,   x: 80,           y: 60,      },
-    { at: 30,  x: THUMB_START_X, y: THUMB_Y, duration: 26 },
-    { at: 44,  x: THUMB_START_X, y: THUMB_Y, press: true,  duration: 0 },
-    { at: 100, x: THUMB_END_X,   y: THUMB_Y, press: true,  duration: 56 },
-    { at: 108, x: THUMB_END_X,   y: THUMB_Y, duration: 0 },
+    { at: 0, x: 80, y: 60 },
+    { at: 30, x: THUMB_START_X, y: THUMB_Y, duration: 26 },
+    { at: 44, x: THUMB_START_X, y: THUMB_Y, press: true, duration: 0 },
+    { at: 100, x: THUMB_END_X, y: THUMB_Y, press: true, duration: 56 },
+    { at: 108, x: THUMB_END_X, y: THUMB_Y, duration: 0 },
   ]);
 
   // Slider: dual-channel — value eases 20 → 80 during the drag; thumb idles → hover → press → idle.
   const sliderStyle = useSliderTransition([
-    { at: 0,   value: 20, thumbState: "idle"  },
-    { at: 30,  thumbState: "hover", duration: 8 },
-    { at: 44,  thumbState: "press", duration: 6 },
-    { at: 44,  value: 20 },
+    { at: 0, value: 20, thumbState: "idle" },
+    { at: 30, thumbState: "hover", duration: 8 },
+    { at: 44, thumbState: "press", duration: 6 },
+    { at: 44, value: 20 },
     // Match the cursor's default inOut easing so the thumb tracks the cursor exactly.
     { at: 100, value: 80, duration: 56, easing: "inOut" },
-    { at: 108, thumbState: "idle",  duration: 8 },
+    { at: 108, thumbState: "idle", duration: 8 },
   ]);
 
   return (
@@ -49,7 +49,11 @@ export const SliderExampleScene = (p: SliderExampleProps = {}) => {
           transform: "translate(-50%, -50%)",
         }}
       >
-        <Slider style={sliderStyle} width={320} showValue={p.showValue ?? true} />
+        <Slider
+          style={sliderStyle}
+          width={320}
+          showValue={p.showValue ?? true}
+        />
       </div>
       <Cursor style={cursorStyle} variant="pointer" />
     </div>

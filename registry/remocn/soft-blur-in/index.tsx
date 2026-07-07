@@ -52,18 +52,16 @@ export function SoftBlurIn({
         {chars.map((char, i) => {
           const local = frame - i * staggerFrames;
           const easing = Easing.bezier(0.22, 1, 0.36, 1);
-          const opacity = interpolate(
-            local,
-            [0, charDurationFrames],
-            [0, 1],
-            { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing },
-          );
-          const y = interpolate(
-            local,
-            [0, charDurationFrames],
-            [16, 0],
-            { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing },
-          );
+          const opacity = interpolate(local, [0, charDurationFrames], [0, 1], {
+            extrapolateLeft: "clamp",
+            extrapolateRight: "clamp",
+            easing,
+          });
+          const y = interpolate(local, [0, charDurationFrames], [16, 0], {
+            extrapolateLeft: "clamp",
+            extrapolateRight: "clamp",
+            easing,
+          });
           const blurAmount = interpolate(
             local,
             [0, charDurationFrames],

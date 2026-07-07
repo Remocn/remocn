@@ -52,18 +52,16 @@ export function PerCharacterRise({
         {chars.map((char, i) => {
           const local = frame - i * staggerFrames;
           const easing = Easing.bezier(0.2, 0.8, 0.2, 1);
-          const opacity = interpolate(
-            local,
-            [0, charDurationFrames],
-            [0, 1],
-            { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing },
-          );
-          const y = interpolate(
-            local,
-            [0, charDurationFrames],
-            [distance, 0],
-            { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing },
-          );
+          const opacity = interpolate(local, [0, charDurationFrames], [0, 1], {
+            extrapolateLeft: "clamp",
+            extrapolateRight: "clamp",
+            easing,
+          });
+          const y = interpolate(local, [0, charDurationFrames], [distance, 0], {
+            extrapolateLeft: "clamp",
+            extrapolateRight: "clamp",
+            easing,
+          });
           return (
             <span
               key={i}

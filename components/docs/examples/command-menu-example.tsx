@@ -2,7 +2,7 @@
 
 import { useCurrentFrame } from "remotion";
 import { revealCount } from "@/lib/remocn-ui";
-import { CommandMenu, filterCommandItems } from "@/registry/remocn-ui/command-menu";
+import { CommandMenu } from "@/registry/remocn-ui/command-menu";
 import { useCommandMenuTransition } from "@/registry/remocn-ui/command-menu/use-command-menu-transition";
 import { useCommandMenuItemTransition } from "@/registry/remocn-ui/command-menu-item/use-command-menu-item-transition";
 
@@ -15,7 +15,7 @@ const CPS = 4;
 
 export const commandMenuExampleControls = [] as const;
 
-export interface CommandMenuExampleProps {}
+export type CommandMenuExampleProps = Record<string, never>;
 
 export const CommandMenuExampleScene = (_p: CommandMenuExampleProps = {}) => {
   const frame = useCurrentFrame();
@@ -37,8 +37,8 @@ export const CommandMenuExampleScene = (_p: CommandMenuExampleProps = {}) => {
   // The filtered list shrinks as more characters are revealed. We animate the
   // first row of the filtered list (which becomes "Settings" once "set" is typed).
   const itemStyle = useCommandMenuItemTransition([
-    { at: 84, state: "hover",    duration: 8 },
-    { at: 92, state: "press",    duration: 6 },
+    { at: 84, state: "hover", duration: 8 },
+    { at: 92, state: "press", duration: 6 },
     { at: 100, state: "selected", duration: 8 },
   ]);
 
@@ -55,7 +55,7 @@ export const CommandMenuExampleScene = (_p: CommandMenuExampleProps = {}) => {
 };
 
 export const commandMenuExampleCode = (
-  values: Record<string, unknown> = {},
+  _values: Record<string, unknown> = {},
 ): string => {
   const extraProps = "";
   const optsStr = "";

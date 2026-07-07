@@ -3,9 +3,7 @@
   "name": "progress-steps",
   "title": "Progress Steps",
   "description": "Multi-step pipeline with sequentially activating nodes and filling lines.",
-  "dependencies": [
-    "remotion"
-  ],
+  "dependencies": ["remotion"],
   "files": [
     {
       "path": "registry/remocn/progress-steps/index.tsx",

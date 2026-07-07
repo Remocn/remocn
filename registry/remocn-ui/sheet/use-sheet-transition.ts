@@ -1,18 +1,18 @@
 "use client";
 
 import {
+  type SheetState,
+  type SheetStyle,
+  sheetStyle,
+  sheetStyleContext,
+} from "@/components/remocn/sheet";
+import {
   easings,
   type RemocnTheme,
   type Step,
   useRemocnTheme,
   useStateTransition,
 } from "@/lib/remocn-ui";
-import {
-  sheetStyle,
-  sheetStyleContext,
-  type SheetState,
-  type SheetStyle,
-} from "@/components/remocn/sheet";
 
 export const DEFAULT_DURATION = 12;
 
@@ -22,7 +22,8 @@ export function tweenSheetStyle(
   t: number,
 ): SheetStyle {
   return {
-    overlayOpacity: a.overlayOpacity + (b.overlayOpacity - a.overlayOpacity) * t,
+    overlayOpacity:
+      a.overlayOpacity + (b.overlayOpacity - a.overlayOpacity) * t,
     panelOpacity: a.panelOpacity + (b.panelOpacity - a.panelOpacity) * t,
     panelTranslateX:
       a.panelTranslateX + (b.panelTranslateX - a.panelTranslateX) * t,

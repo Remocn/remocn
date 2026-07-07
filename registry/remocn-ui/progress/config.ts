@@ -4,7 +4,14 @@ export const progressConfig: ComponentConfig = {
   componentName: "Progress",
   importPath: "@/components/remocn/progress",
   controls: {
-    value: { type: "number", default: 62, min: 0, max: 100, step: 1, label: "Value" },
+    value: {
+      type: "number",
+      default: 62,
+      min: 0,
+      max: 100,
+      step: 1,
+      label: "Value",
+    },
     width: {
       type: "number",
       default: 320,

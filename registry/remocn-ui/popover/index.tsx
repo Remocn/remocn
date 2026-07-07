@@ -34,7 +34,10 @@ export function popoverStyle(state: PopoverState): PopoverStyle {
   }
 }
 
-function offsetFor(side: PopoverSide, translate: number): { x: number; y: number } {
+function offsetFor(
+  side: PopoverSide,
+  translate: number,
+): { x: number; y: number } {
   switch (side) {
     case "bottom":
       return { x: 0, y: -translate };

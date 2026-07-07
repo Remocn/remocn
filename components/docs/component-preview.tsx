@@ -2,9 +2,9 @@
 
 import { DynamicCodeBlock } from "fumadocs-ui/components/dynamic-codeblock";
 import { CheckIcon, LinkIcon, RotateCcwIcon } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { useQueryStates } from "nuqs";
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useTrackEvent } from "@/lib/analytics";
 import { type ComponentConfig, getDefaults } from "@/lib/customizer-config";
@@ -29,7 +29,7 @@ export function ComponentPreview({ name }: { name: string }) {
         <div className="not-prose mb-6 aspect-[1.9/1] w-full animate-pulse rounded-2xl bg-muted" />
       }
     >
-      <Preview name={name} config={entry.config} Component={entry.Component} />
+      <Preview name={name} config={entry.config} load={entry.load} />
     </Suspense>
   );
 }
@@ -37,11 +37,12 @@ export function ComponentPreview({ name }: { name: string }) {
 function Preview({
   name,
   config,
-  Component,
+  load,
 }: {
   name: string;
   config: ComponentConfig;
-  Component: React.ComponentType<any>;
+  // biome-ignore lint/suspicious/noExplicitAny: dynamically-loaded Remotion composition, props shape varies per component
+  load: () => Promise<{ default: React.ComponentType<any> }>;
 }) {
   const trackEvent = useTrackEvent();
   const { parsers, urlKeys } = useMemo(
@@ -118,7 +119,7 @@ function Preview({
         <TabsContent value="preview" className="mt-0">
           <PreviewStage
             name={name}
-            Component={Component}
+            load={load}
             inputProps={values}
             durationInFrames={config.durationInFrames}
             fps={config.fps}

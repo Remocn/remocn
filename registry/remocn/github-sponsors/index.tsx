@@ -1,7 +1,7 @@
 "use client";
 
-import { memo, useMemo, useState } from "react";
 import { loadFont as loadSans } from "@remotion/google-fonts/Manrope";
+import { memo, useMemo, useState } from "react";
 import {
   AbsoluteFill,
   Easing,
@@ -11,9 +11,8 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
-
-import { SoftBlurIn } from "@/components/remocn/soft-blur-in";
 import { BlurOutUp } from "@/components/remocn/blur-out-up";
+import { SoftBlurIn } from "@/components/remocn/soft-blur-in";
 
 export interface Sponsor {
   login: string;

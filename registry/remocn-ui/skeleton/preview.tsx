@@ -41,7 +41,9 @@ function DemoContent({
             width: 180,
           }}
         >
-          <span style={{ fontSize: 15, fontWeight: 600, color: theme.foreground }}>
+          <span
+            style={{ fontSize: 15, fontWeight: 600, color: theme.foreground }}
+          >
             Ada Lovelace
           </span>
           <span style={{ fontSize: 13, color: theme.mutedForeground }}>

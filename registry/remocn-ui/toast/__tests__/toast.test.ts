@@ -1,18 +1,14 @@
-
 import { describe, expect, it } from "bun:test";
+import type { Step } from "@/lib/remocn-ui";
+import { defaultDarkTheme, defaultLightTheme } from "@/lib/remocn-ui";
+import { toastConfig } from "../config";
 import {
-  toastStyle,
-  toastStyleContext,
   type ToastState,
   type ToastVariant,
+  toastStyle,
+  toastStyleContext,
 } from "../index";
-import {
-  tweenToastStyle,
-  DEFAULT_DURATION,
-} from "../use-toast-transition";
-import { toastConfig } from "../config";
-import { defaultLightTheme, defaultDarkTheme, easings, clamp01 } from "@/lib/remocn-ui";
-import type { Step } from "@/lib/remocn-ui";
+import { DEFAULT_DURATION, tweenToastStyle } from "../use-toast-transition";
 
 const VALID_STATES: readonly ToastState[] = ["hidden", "visible"];
 const VALID_VARIANTS: readonly ToastVariant[] = ["default", "success", "error"];
@@ -279,11 +275,16 @@ function resolveStateTransition<S extends string>(
 }
 
 function resolveToastTransition(
-  raw: number,                                    // injected useCurrentFrame() — MIRROR line 52
+  raw: number, // injected useCurrentFrame() — MIRROR line 52
   steps: Step<ToastState>[],
   speed = 1,
   defaultDuration = DEFAULT_DURATION,
-): { style: ReturnType<typeof tweenToastStyle>; progress: number; from: ToastState; to: ToastState } {
+): {
+  style: ReturnType<typeof tweenToastStyle>;
+  progress: number;
+  from: ToastState;
+  to: ToastState;
+} {
   const { from, to, progress } = resolveStateTransition(
     raw,
     steps,
@@ -292,7 +293,11 @@ function resolveToastTransition(
     defaultDuration,
   );
   const t = easingOut(progress);
-  const style = tweenToastStyle(toastStyle(from as ToastState), toastStyle(to as ToastState), t);
+  const style = tweenToastStyle(
+    toastStyle(from as ToastState),
+    toastStyle(to as ToastState),
+    t,
+  );
   return { style, progress, from: from as ToastState, to: to as ToastState };
 }
 
@@ -491,7 +496,6 @@ describe("toastConfig.snippet: title is always emitted", () => {
 });
 
 describe("toastConfig.snippet: default props are omitted", () => {
-
   it("omits variant when it equals the default 'success'", () => {
     const out = snippet({ state: "visible", variant: "success" });
     expect(out).not.toContain("variant=");

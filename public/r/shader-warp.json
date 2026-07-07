@@ -3,9 +3,7 @@
   "name": "shader-warp",
   "title": "Shader Warp",
   "description": "Domain-warped color field that folds and stretches like liquid.",
-  "dependencies": [
-    "@paper-design/shaders-react"
-  ],
+  "dependencies": ["@paper-design/shaders-react"],
   "files": [
     {
       "path": "registry/remocn/shader-warp/index.tsx",

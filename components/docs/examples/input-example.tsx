@@ -4,7 +4,10 @@ import { Input } from "@/registry/remocn-ui/input";
 import { useInputTransition } from "@/registry/remocn-ui/input/use-input-transition";
 
 export const inputExampleControls = [
-  "placeholder", "value", "size", "primary",
+  "placeholder",
+  "value",
+  "size",
+  "primary",
 ] as const;
 
 export interface InputExampleProps {
@@ -15,12 +18,15 @@ export interface InputExampleProps {
 }
 
 export const InputExampleScene = (p: InputExampleProps = {}) => {
-  const style = useInputTransition([
-    { at: 10, state: "hover", duration: 8 },
-    { at: 24, state: "active", duration: 10 },
-    { at: 40, state: "typing", duration: 22 },
-    { at: 78, state: "invalid", duration: 12 },
-  ], { primary: p.primary });
+  const style = useInputTransition(
+    [
+      { at: 10, state: "hover", duration: 8 },
+      { at: 24, state: "active", duration: 10 },
+      { at: 40, state: "typing", duration: 22 },
+      { at: 78, state: "invalid", duration: 12 },
+    ],
+    { primary: p.primary },
+  );
   return (
     <Input
       placeholder={p.placeholder ?? "you@example.com"}
@@ -48,7 +54,9 @@ export const inputExampleCode = (
   if (size !== undefined && size !== "default") props.push(`size="${size}"`);
   if (primary !== undefined) props.push(`primary="${primary}"`);
 
-  const propsStr = props.length ? `\n      ${props.join("\n      ")}\n    ` : "";
+  const propsStr = props.length
+    ? `\n      ${props.join("\n      ")}\n    `
+    : "";
 
   const hookOpts: string[] = [];
   if (primary !== undefined) hookOpts.push(`primary: "${primary}"`);

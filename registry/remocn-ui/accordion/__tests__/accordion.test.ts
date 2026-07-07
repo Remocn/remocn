@@ -1,13 +1,15 @@
-
 import { describe, expect, it } from "bun:test";
+import { defaultLightTheme } from "@/lib/remocn-ui";
+import { accordionConfig } from "../config";
 import {
   type AccordionState,
   accordionStyle,
   accordionStyleContext,
 } from "../index";
-import { tweenAccordionStyle, DEFAULT_DURATION } from "../use-accordion-transition";
-import { accordionConfig } from "../config";
-import { defaultLightTheme } from "@/lib/remocn-ui";
+import {
+  DEFAULT_DURATION,
+  tweenAccordionStyle,
+} from "../use-accordion-transition";
 
 const VALID_STATES: readonly AccordionState[] = ["opened", "closed"];
 
@@ -26,13 +28,15 @@ const ctx = accordionStyleContext("default", defaultLightTheme);
 describe("AccordionState union", () => {
   it("contains exactly the two documented states", () => {
     const control = accordionConfig.controls.state;
-    if (control.type !== "select") throw new Error("state control must be a select");
+    if (control.type !== "select")
+      throw new Error("state control must be a select");
     expect(control.options).toEqual(["opened", "closed"]);
   });
 
   it("every VALID_STATES entry is assignable (no typos in the fixture)", () => {
     const control = accordionConfig.controls.state;
-    if (control.type !== "select") throw new Error("state control must be a select");
+    if (control.type !== "select")
+      throw new Error("state control must be a select");
     expect(VALID_STATES).toHaveLength(2);
     for (const s of VALID_STATES) {
       expect(control.options).toContain(s);
@@ -47,7 +51,8 @@ describe("accordionConfig.controls.state", () => {
 
   it("has exactly the two AccordionState options in order", () => {
     const control = accordionConfig.controls.state;
-    if (control.type !== "select") throw new Error("state control must be a select");
+    if (control.type !== "select")
+      throw new Error("state control must be a select");
     expect(control.options).toEqual(["opened", "closed"]);
   });
 
@@ -58,7 +63,8 @@ describe("accordionConfig.controls.state", () => {
 
   it("every option is a member of the AccordionState union", () => {
     const control = accordionConfig.controls.state;
-    if (control.type !== "select") throw new Error("state control must be a select");
+    if (control.type !== "select")
+      throw new Error("state control must be a select");
     for (const option of control.options) {
       expect(VALID_STATES).toContain(option as AccordionState);
     }
@@ -72,7 +78,8 @@ describe("accordionConfig.controls.variant", () => {
 
   it("has exactly the two variant options in order", () => {
     const control = accordionConfig.controls.variant;
-    if (control.type !== "select") throw new Error("variant control must be a select");
+    if (control.type !== "select")
+      throw new Error("variant control must be a select");
     expect(control.options).toEqual(["default", "ghost"]);
   });
 
@@ -82,17 +89,18 @@ describe("accordionConfig.controls.variant", () => {
 });
 
 describe("accordionConfig.snippet: state prop emission", () => {
-  it("emits state=\"opened\" for the opened option", () => {
+  it('emits state="opened" for the opened option', () => {
     expect(snippet({ state: "opened" })).toContain('state="opened"');
   });
 
-  it("emits state=\"closed\" for the closed option", () => {
+  it('emits state="closed" for the closed option', () => {
     expect(snippet({ state: "closed" })).toContain('state="closed"');
   });
 
   it("emits the correct state for every control option", () => {
     const control = accordionConfig.controls.state;
-    if (control.type !== "select") throw new Error("state control must be a select");
+    if (control.type !== "select")
+      throw new Error("state control must be a select");
     for (const state of control.options) {
       const out = snippet({ state });
       expect(out).toContain(`state="${state}"`);
@@ -117,7 +125,7 @@ describe("accordionConfig.snippet: NEVER emits steps or action", () => {
 describe("accordionConfig.snippet: import line", () => {
   it("includes `import { Accordion }` from the correct path", () => {
     const out = snippet({ state: "opened" });
-    expect(out).toContain('import { Accordion }');
+    expect(out).toContain("import { Accordion }");
     expect(out).toContain('from "@/components/remocn/accordion"');
   });
 });
@@ -141,23 +149,25 @@ describe("accordionConfig.snippet: default props are omitted", () => {
   it("omits variant when it equals the default 'default'", () => {
     expect(allDefaults).not.toContain("variant=");
   });
-
 });
 
 describe("accordionConfig.snippet: non-default props are emitted", () => {
   it("emits a non-default title", () => {
-    expect(snippet({ state: "opened", title: "How do I reset my password?" }))
-      .toContain('title="How do I reset my password?"');
+    expect(
+      snippet({ state: "opened", title: "How do I reset my password?" }),
+    ).toContain('title="How do I reset my password?"');
   });
 
   it("emits a non-default content", () => {
-    expect(snippet({ state: "opened", content: "Click the forgot password link." }))
-      .toContain('content="Click the forgot password link."');
+    expect(
+      snippet({ state: "opened", content: "Click the forgot password link." }),
+    ).toContain('content="Click the forgot password link."');
   });
 
   it("emits a non-default variant", () => {
-    expect(snippet({ state: "opened", variant: "ghost" }))
-      .toContain('variant="ghost"');
+    expect(snippet({ state: "opened", variant: "ghost" })).toContain(
+      'variant="ghost"',
+    );
   });
 });
 
@@ -165,7 +175,7 @@ describe("accordionConfig.snippet: structural round-trip", () => {
   const out = snippet({ state: "opened" });
 
   it("starts with the import line", () => {
-    expect(out.startsWith('import { Accordion }')).toBe(true);
+    expect(out.startsWith("import { Accordion }")).toBe(true);
   });
 
   it("contains a <Accordion JSX opening", () => {

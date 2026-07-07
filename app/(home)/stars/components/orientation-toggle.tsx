@@ -14,8 +14,7 @@ export function OrientationToggle({
       value={[orientationToParam(orientation)]}
       onValueChange={(value: string[]) => {
         const next = value[0];
-        if (next)
-          onOrientationChange(next === "v" ? "vertical" : "horizontal");
+        if (next) onOrientationChange(next === "v" ? "vertical" : "horizontal");
       }}
       aria-label="Video orientation"
       className="w-full sm:w-auto"

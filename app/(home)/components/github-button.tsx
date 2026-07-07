@@ -1,7 +1,7 @@
-import { GITHUB_URL } from "@/config/site";
-import { formatStars, getGitHubStars } from "@/lib/github";
 import { Star } from "lucide-react";
 import Link from "next/link";
+import { GITHUB_URL } from "@/config/site";
+import { formatStars, getGitHubStars } from "@/lib/github";
 
 export async function GithubButton() {
   const stars = await getGitHubStars();

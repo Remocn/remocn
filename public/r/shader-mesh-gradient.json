@@ -3,9 +3,7 @@
   "name": "shader-mesh-gradient",
   "title": "Shader Mesh Gradient",
   "description": "WebGL mesh gradient backdrop driven per-frame for deterministic Remotion renders.",
-  "dependencies": [
-    "@paper-design/shaders-react"
-  ],
+  "dependencies": ["@paper-design/shaders-react"],
   "files": [
     {
       "path": "registry/remocn/shader-mesh-gradient/index.tsx",

@@ -5,7 +5,14 @@ export const sliderConfig: ComponentConfig = {
   componentName: "Slider",
   importPath: "@/components/remocn/slider",
   controls: {
-    value: { type: "number", default: 40, min: 0, max: 100, step: 1, label: "Value" },
+    value: {
+      type: "number",
+      default: 40,
+      min: 0,
+      max: 100,
+      step: 1,
+      label: "Value",
+    },
     thumbState: {
       type: "select",
       default: "idle",

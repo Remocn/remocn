@@ -3,9 +3,7 @@
   "name": "micro-scale-fade",
   "title": "Micro Scale Fade",
   "description": "A calm, tiny scale pop used as subtle premium polish for labels and headings.",
-  "dependencies": [
-    "remotion"
-  ],
+  "dependencies": ["remotion"],
   "files": [
     {
       "path": "registry/remocn/micro-scale-fade/index.tsx",

@@ -3,12 +3,8 @@
   "name": "command-menu-item",
   "title": "UI Command Menu Item",
   "description": "A command-palette row whose idle/hover/press/selected state is a pure function of the timeline. Leading icon + label + trailing shortcut kbd. Exports an inline CommandMenuItemRow (reused by CommandMenu) and a standalone CommandMenuItem atom; the row background, label color, and icon color are keyframed presets.",
-  "dependencies": [
-    "remotion"
-  ],
-  "registryDependencies": [
-    "@remocn/remocn-ui"
-  ],
+  "dependencies": ["remotion"],
+  "registryDependencies": ["@remocn/remocn-ui"],
   "files": [
     {
       "path": "registry/remocn-ui/command-menu-item/index.tsx",
@@ -18,7 +14,7 @@
     },
     {
       "path": "registry/remocn-ui/command-menu-item/use-command-menu-item-transition.ts",
-      "content": "\"use client\";\n\nimport {\n  easings,\n  mixOklch,\n  type RemocnTheme,\n  type Step,\n  useRemocnTheme,\n  useStateTransition,\n} from \"@/lib/remocn-ui\";\nimport {\n  commandMenuItemStyle,\n  commandMenuItemStyleContext,\n  type CommandMenuItemState,\n  type CommandMenuItemStyle,\n} from \"@/components/remocn/command-menu-item\";\n\nexport const DEFAULT_DURATION = 8;\n\nexport function tweenCommandMenuItemStyle(\n  a: CommandMenuItemStyle,\n  b: CommandMenuItemStyle,\n  t: number,\n): CommandMenuItemStyle {\n  return {\n    background: mixOklch(a.background, b.background, t),\n    labelColor: mixOklch(a.labelColor, b.labelColor, t),\n    iconColor: mixOklch(a.iconColor, b.iconColor, t),\n    scale: a.scale + (b.scale - a.scale) * t,\n  };\n}\n\nexport interface CommandMenuItemTransitionOptions {\n  theme?: Partial<RemocnTheme>;\n  mode?: \"light\" | \"dark\";\n  speed?: number;\n  defaultDuration?: number;\n}\n\nexport function useCommandMenuItemTransition(\n  steps: Step<CommandMenuItemState>[],\n  opts: CommandMenuItemTransitionOptions = {},\n): CommandMenuItemStyle {\n  const {\n    theme: themeOverride,\n    mode,\n    speed = 1,\n    defaultDuration = DEFAULT_DURATION,\n  } = opts;\n  const theme = useRemocnTheme(themeOverride, mode);\n  const ctx = commandMenuItemStyleContext(theme);\n  const { from, to, progress } = useStateTransition(\n    steps,\n    \"idle\",\n    speed,\n    defaultDuration,\n  );\n  const t = easings.out(progress);\n  return tweenCommandMenuItemStyle(\n    commandMenuItemStyle(from, ctx),\n    commandMenuItemStyle(to, ctx),\n    t,\n  );\n}\n",
+      "content": "\"use client\";\n\nimport {\n  type CommandMenuItemState,\n  type CommandMenuItemStyle,\n  commandMenuItemStyle,\n  commandMenuItemStyleContext,\n} from \"@/components/remocn/command-menu-item\";\nimport {\n  easings,\n  mixOklch,\n  type RemocnTheme,\n  type Step,\n  useRemocnTheme,\n  useStateTransition,\n} from \"@/lib/remocn-ui\";\n\nexport const DEFAULT_DURATION = 8;\n\nexport function tweenCommandMenuItemStyle(\n  a: CommandMenuItemStyle,\n  b: CommandMenuItemStyle,\n  t: number,\n): CommandMenuItemStyle {\n  return {\n    background: mixOklch(a.background, b.background, t),\n    labelColor: mixOklch(a.labelColor, b.labelColor, t),\n    iconColor: mixOklch(a.iconColor, b.iconColor, t),\n    scale: a.scale + (b.scale - a.scale) * t,\n  };\n}\n\nexport interface CommandMenuItemTransitionOptions {\n  theme?: Partial<RemocnTheme>;\n  mode?: \"light\" | \"dark\";\n  speed?: number;\n  defaultDuration?: number;\n}\n\nexport function useCommandMenuItemTransition(\n  steps: Step<CommandMenuItemState>[],\n  opts: CommandMenuItemTransitionOptions = {},\n): CommandMenuItemStyle {\n  const {\n    theme: themeOverride,\n    mode,\n    speed = 1,\n    defaultDuration = DEFAULT_DURATION,\n  } = opts;\n  const theme = useRemocnTheme(themeOverride, mode);\n  const ctx = commandMenuItemStyleContext(theme);\n  const { from, to, progress } = useStateTransition(\n    steps,\n    \"idle\",\n    speed,\n    defaultDuration,\n  );\n  const t = easings.out(progress);\n  return tweenCommandMenuItemStyle(\n    commandMenuItemStyle(from, ctx),\n    commandMenuItemStyle(to, ctx),\n    t,\n  );\n}\n",
       "type": "registry:component",
       "target": "components/remocn/use-command-menu-item-transition.ts"
     }

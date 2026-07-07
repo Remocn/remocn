@@ -1,6 +1,12 @@
 "use client";
 
 import {
+  type CheckboxState,
+  type CheckboxStyle,
+  checkboxStyle,
+  checkboxStyleContext,
+} from "@/components/remocn/checkbox";
+import {
   easings,
   mixOklch,
   type RemocnTheme,
@@ -8,12 +14,6 @@ import {
   useRemocnTheme,
   useStateTransition,
 } from "@/lib/remocn-ui";
-import {
-  checkboxStyle,
-  checkboxStyleContext,
-  type CheckboxState,
-  type CheckboxStyle,
-} from "@/components/remocn/checkbox";
 
 export const DEFAULT_DURATION = 10;
 
@@ -62,5 +62,9 @@ export function useCheckboxTransition(
     defaultDuration,
   );
   const t = easings.out(progress);
-  return tweenCheckboxStyle(checkboxStyle(from, ctx), checkboxStyle(to, ctx), t);
+  return tweenCheckboxStyle(
+    checkboxStyle(from, ctx),
+    checkboxStyle(to, ctx),
+    t,
+  );
 }

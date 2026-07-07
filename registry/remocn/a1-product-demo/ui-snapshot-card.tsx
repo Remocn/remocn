@@ -58,7 +58,9 @@ export function UiSnapshotCard({
           ) : null}
         </div>
       ) : null}
-      <div style={{ position: "relative", flex: 1, padding: 22 }}>{children}</div>
+      <div style={{ position: "relative", flex: 1, padding: 22 }}>
+        {children}
+      </div>
     </div>
   );
 }

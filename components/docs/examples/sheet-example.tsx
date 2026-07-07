@@ -6,7 +6,10 @@ import { Sheet } from "@/registry/remocn-ui/sheet";
 import { useSheetTransition } from "@/registry/remocn-ui/sheet/use-sheet-transition";
 
 export const sheetExampleControls = [
-  "title", "description", "actionLabel", "cancelLabel",
+  "title",
+  "description",
+  "actionLabel",
+  "cancelLabel",
 ] as const;
 
 export interface SheetExampleProps {
@@ -33,7 +36,10 @@ export const SheetExampleScene = (p: SheetExampleProps = {}) => {
       <Button label="Edit profile" style={trigger} />
       <Sheet
         title={p.title ?? "Edit profile"}
-        description={p.description ?? "Make changes to your profile here. Click save when you're done."}
+        description={
+          p.description ??
+          "Make changes to your profile here. Click save when you're done."
+        }
         actionLabel={p.actionLabel ?? "Save changes"}
         cancelLabel={p.cancelLabel ?? "Cancel"}
         style={sheet}
@@ -51,10 +57,18 @@ export const sheetExampleCode = (
   const cancelLabel = values.cancelLabel as string | undefined;
 
   const sheetProps: string[] = [];
-  if (title !== undefined && title !== "Edit profile") sheetProps.push(`title="${title}"`);
-  if (description !== undefined && description !== "Make changes to your profile here. Click save when you're done.") sheetProps.push(`description="${description}"`);
-  if (actionLabel !== undefined && actionLabel !== "Save changes") sheetProps.push(`actionLabel="${actionLabel}"`);
-  if (cancelLabel !== undefined && cancelLabel !== "Cancel") sheetProps.push(`cancelLabel="${cancelLabel}"`);
+  if (title !== undefined && title !== "Edit profile")
+    sheetProps.push(`title="${title}"`);
+  if (
+    description !== undefined &&
+    description !==
+      "Make changes to your profile here. Click save when you're done."
+  )
+    sheetProps.push(`description="${description}"`);
+  if (actionLabel !== undefined && actionLabel !== "Save changes")
+    sheetProps.push(`actionLabel="${actionLabel}"`);
+  if (cancelLabel !== undefined && cancelLabel !== "Cancel")
+    sheetProps.push(`cancelLabel="${cancelLabel}"`);
 
   const sheetPropsStr = sheetProps.length ? ` ${sheetProps.join(" ")}` : "";
 

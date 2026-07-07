@@ -1,17 +1,15 @@
-
 import { describe, expect, it } from "bun:test";
+import type { Step } from "@/lib/remocn-ui";
+import { skeletonConfig } from "../config";
 import {
-  skeletonStyle,
-  type SkeletonState,
   type SkeletonLayout,
+  type SkeletonState,
+  skeletonStyle,
 } from "../index";
 import {
-  tweenSkeletonStyle,
   DEFAULT_DURATION,
+  tweenSkeletonStyle,
 } from "../use-skeleton-transition";
-import { skeletonConfig } from "../config";
-import { defaultLightTheme, defaultDarkTheme, easings } from "@/lib/remocn-ui";
-import type { Step } from "@/lib/remocn-ui";
 
 const VALID_STATES: readonly SkeletonState[] = ["loading", "loaded"];
 const VALID_LAYOUTS: readonly SkeletonLayout[] = ["lines", "card"];
@@ -168,11 +166,17 @@ describe("tweenSkeletonStyle: identity (a === b, any t)", () => {
   const s = skeletonStyle("loading");
 
   it("skeletonOpacity is unchanged when both endpoints are the same", () => {
-    expect(tweenSkeletonStyle(s, s, 0.5).skeletonOpacity).toBeCloseTo(s.skeletonOpacity, 10);
+    expect(tweenSkeletonStyle(s, s, 0.5).skeletonOpacity).toBeCloseTo(
+      s.skeletonOpacity,
+      10,
+    );
   });
 
   it("contentOpacity is unchanged when both endpoints are the same", () => {
-    expect(tweenSkeletonStyle(s, s, 0.5).contentOpacity).toBeCloseTo(s.contentOpacity, 10);
+    expect(tweenSkeletonStyle(s, s, 0.5).contentOpacity).toBeCloseTo(
+      s.contentOpacity,
+      10,
+    );
   });
 
   it("crossfade invariant preserved for identity tween", () => {
@@ -209,7 +213,7 @@ describe("tweenSkeletonStyle: crossfade invariant holds at any arbitrary t", () 
   });
 
   it("sum === 1 at t=0.333", () => {
-    const r = tweenSkeletonStyle(a, b, 1/3);
+    const r = tweenSkeletonStyle(a, b, 1 / 3);
     expect(r.skeletonOpacity + r.contentOpacity).toBeCloseTo(1, 10);
   });
 
@@ -249,11 +253,16 @@ function resolveStateTransition<S extends string>(
 }
 
 function resolveSkeletonTransition(
-  raw: number,                                      // injected useCurrentFrame() — MIRROR line 52
+  raw: number, // injected useCurrentFrame() — MIRROR line 52
   steps: Step<SkeletonState>[],
   speed = 1,
   defaultDuration = DEFAULT_DURATION,
-): { style: ReturnType<typeof tweenSkeletonStyle>; progress: number; from: SkeletonState; to: SkeletonState } {
+): {
+  style: ReturnType<typeof tweenSkeletonStyle>;
+  progress: number;
+  from: SkeletonState;
+  to: SkeletonState;
+} {
   const { from, to, progress } = resolveStateTransition(
     raw,
     steps,
@@ -267,7 +276,12 @@ function resolveSkeletonTransition(
     skeletonStyle(to as SkeletonState),
     t,
   );
-  return { style, progress, from: from as SkeletonState, to: to as SkeletonState };
+  return {
+    style,
+    progress,
+    from: from as SkeletonState,
+    to: to as SkeletonState,
+  };
 }
 
 describe("resolveSkeletonTransition: before any step — holds at loading", () => {
@@ -426,7 +440,9 @@ describe("skeletonConfig.snippet: structural invariants", () => {
   });
 
   it("includes a placeholder comment for real content", () => {
-    expect(snippet({ state: "loading" })).toContain("{/* your real content */}");
+    expect(snippet({ state: "loading" })).toContain(
+      "{/* your real content */}",
+    );
   });
 
   it("state prop is always emitted", () => {
@@ -440,7 +456,6 @@ describe("skeletonConfig.snippet: default props are omitted", () => {
     const out = snippet({ state: "loading", layout: "lines" });
     expect(out).not.toContain("layout=");
   });
-
 });
 
 describe("skeletonConfig.snippet: non-default props are emitted", () => {
@@ -467,7 +482,9 @@ describe("skeletonConfig.snippet: layout options round-trip", () => {
     if (ctrl.type !== "select") throw new Error("expected select");
     const nonDefault = ctrl.options.filter((o) => o !== "lines");
     for (const layout of nonDefault) {
-      expect(snippet({ state: "loading", layout })).toContain(`layout="${layout}"`);
+      expect(snippet({ state: "loading", layout })).toContain(
+        `layout="${layout}"`,
+      );
     }
   });
 });

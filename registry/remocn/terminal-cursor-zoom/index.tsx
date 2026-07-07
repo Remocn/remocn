@@ -49,10 +49,15 @@ export function TerminalCursorZoom({
   const lineStart = Math.round(FIRST_LINE_FRAME / speed);
   const localFrame = (frame - lineStart) * speed;
   const linearRevealed = Math.floor(
-    interpolate(localFrame, [0, command.length / charsPerFrame], [0, command.length], {
-      extrapolateLeft: "clamp",
-      extrapolateRight: "clamp",
-    }),
+    interpolate(
+      localFrame,
+      [0, command.length / charsPerFrame],
+      [0, command.length],
+      {
+        extrapolateLeft: "clamp",
+        extrapolateRight: "clamp",
+      },
+    ),
   );
   const revealed = Math.min(
     command.length,

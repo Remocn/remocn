@@ -1,6 +1,6 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "bun:test";
 
-import { TYPING_CPS, TYPING_START_FRAME, morphProgressAt } from "../index";
+import { morphProgressAt, TYPING_CPS, TYPING_START_FRAME } from "../index";
 
 const FPS = 30;
 

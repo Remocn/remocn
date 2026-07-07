@@ -77,7 +77,7 @@ export function ShortSlideRight({
               extrapolateLeft: "clamp",
               extrapolateRight: "clamp",
               easing,
-            }
+            },
           );
           return (
             <span

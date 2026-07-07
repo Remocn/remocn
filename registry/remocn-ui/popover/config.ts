@@ -48,14 +48,11 @@ export const popoverConfig: ComponentConfig = {
     const width = values.width as number | undefined;
 
     const props: string[] = [`  state="${state}"`];
-    if (title !== undefined && title !== "")
-      props.push(`  title="${title}"`);
+    if (title !== undefined && title !== "") props.push(`  title="${title}"`);
     if (description !== undefined && description !== "")
       props.push(`  description="${description}"`);
-    if (side !== undefined && side !== "bottom")
-      props.push(`  side="${side}"`);
-    if (width !== undefined && width !== 288)
-      props.push(`  width={${width}}`);
+    if (side !== undefined && side !== "bottom") props.push(`  side="${side}"`);
+    if (width !== undefined && width !== 288) props.push(`  width={${width}}`);
 
     return `import { Popover } from "@/components/remocn/popover";
 

@@ -2,10 +2,7 @@
 
 import { useQueryState } from "nuqs";
 import { useCallback } from "react";
-import {
-  orientationToParam,
-  paramToOrientation,
-} from "../lib/dims";
+import { orientationToParam, paramToOrientation } from "../lib/dims";
 import type { Orientation } from "../lib/types";
 
 /**

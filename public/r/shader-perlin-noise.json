@@ -3,9 +3,7 @@
   "name": "shader-perlin-noise",
   "title": "Shader Perlin Noise",
   "description": "Classic Perlin noise clouds drifting across the frame.",
-  "dependencies": [
-    "@paper-design/shaders-react"
-  ],
+  "dependencies": ["@paper-design/shaders-react"],
   "files": [
     {
       "path": "registry/remocn/shader-perlin-noise/index.tsx",

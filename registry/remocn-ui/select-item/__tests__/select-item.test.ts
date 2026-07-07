@@ -1,15 +1,22 @@
-
 import { describe, expect, it } from "bun:test";
+import { defaultLightTheme } from "@/lib/remocn-ui";
+import { selectItemConfig } from "../config";
 import {
   type SelectItemState,
   selectItemStyle,
   selectItemStyleContext,
 } from "../index";
-import { tweenSelectItemStyle, DEFAULT_DURATION } from "../use-select-item-transition";
-import { selectItemConfig } from "../config";
-import { defaultLightTheme } from "@/lib/remocn-ui";
+import {
+  DEFAULT_DURATION,
+  tweenSelectItemStyle,
+} from "../use-select-item-transition";
 
-const VALID_STATES: readonly SelectItemState[] = ["idle", "hover", "press", "selected"];
+const VALID_STATES: readonly SelectItemState[] = [
+  "idle",
+  "hover",
+  "press",
+  "selected",
+];
 
 type SnippetValues = {
   state?: string;
@@ -24,13 +31,15 @@ const ctx = selectItemStyleContext(defaultLightTheme);
 describe("SelectItemState union", () => {
   it("contains exactly the four documented states", () => {
     const control = selectItemConfig.controls.state;
-    if (control.type !== "select") throw new Error("state control must be a select");
+    if (control.type !== "select")
+      throw new Error("state control must be a select");
     expect(control.options).toEqual(["idle", "hover", "press", "selected"]);
   });
 
   it("every VALID_STATES entry is assignable (no typos in the fixture)", () => {
     const control = selectItemConfig.controls.state;
-    if (control.type !== "select") throw new Error("state control must be a select");
+    if (control.type !== "select")
+      throw new Error("state control must be a select");
     expect(VALID_STATES).toHaveLength(4);
     for (const s of VALID_STATES) {
       expect(control.options).toContain(s);
@@ -45,7 +54,8 @@ describe("selectItemConfig.controls.state", () => {
 
   it("has exactly the four SelectItemState options in order", () => {
     const control = selectItemConfig.controls.state;
-    if (control.type !== "select") throw new Error("state control must be a select");
+    if (control.type !== "select")
+      throw new Error("state control must be a select");
     expect(control.options).toEqual(["idle", "hover", "press", "selected"]);
   });
 
@@ -56,7 +66,8 @@ describe("selectItemConfig.controls.state", () => {
 
   it("every option is a member of the SelectItemState union", () => {
     const control = selectItemConfig.controls.state;
-    if (control.type !== "select") throw new Error("state control must be a select");
+    if (control.type !== "select")
+      throw new Error("state control must be a select");
     for (const option of control.options) {
       expect(VALID_STATES).toContain(option as SelectItemState);
     }
@@ -64,25 +75,26 @@ describe("selectItemConfig.controls.state", () => {
 });
 
 describe("selectItemConfig.snippet: state prop emission", () => {
-  it("emits state=\"idle\" for the idle option", () => {
+  it('emits state="idle" for the idle option', () => {
     expect(snippet({ state: "idle" })).toContain('state="idle"');
   });
 
-  it("emits state=\"hover\" for the hover option", () => {
+  it('emits state="hover" for the hover option', () => {
     expect(snippet({ state: "hover" })).toContain('state="hover"');
   });
 
-  it("emits state=\"press\" for the press option", () => {
+  it('emits state="press" for the press option', () => {
     expect(snippet({ state: "press" })).toContain('state="press"');
   });
 
-  it("emits state=\"selected\" for the selected option", () => {
+  it('emits state="selected" for the selected option', () => {
     expect(snippet({ state: "selected" })).toContain('state="selected"');
   });
 
   it("emits the correct state for every control option", () => {
     const control = selectItemConfig.controls.state;
-    if (control.type !== "select") throw new Error("state control must be a select");
+    if (control.type !== "select")
+      throw new Error("state control must be a select");
     for (const state of control.options) {
       const out = snippet({ state });
       expect(out).toContain(`state="${state}"`);
@@ -93,7 +105,7 @@ describe("selectItemConfig.snippet: state prop emission", () => {
 describe("selectItemConfig.snippet: import line", () => {
   it("includes `import { SelectItem }` from the correct path", () => {
     const out = snippet({ state: "selected" });
-    expect(out).toContain('import { SelectItem }');
+    expect(out).toContain("import { SelectItem }");
     expect(out).toContain('from "@/components/remocn/select-item"');
   });
 });
@@ -111,8 +123,9 @@ describe("selectItemConfig.snippet: default props are omitted", () => {
 
 describe("selectItemConfig.snippet: non-default props are emitted", () => {
   it("emits a non-default label", () => {
-    expect(snippet({ state: "selected", label: "Mango" }))
-      .toContain('label="Mango"');
+    expect(snippet({ state: "selected", label: "Mango" })).toContain(
+      'label="Mango"',
+    );
   });
 });
 
@@ -120,7 +133,7 @@ describe("selectItemConfig.snippet: structural round-trip", () => {
   const out = snippet({ state: "selected" });
 
   it("starts with the import line", () => {
-    expect(out.startsWith('import { SelectItem }')).toBe(true);
+    expect(out.startsWith("import { SelectItem }")).toBe(true);
   });
 
   it("contains a <SelectItem JSX opening", () => {

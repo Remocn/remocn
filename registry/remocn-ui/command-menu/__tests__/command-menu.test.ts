@@ -1,27 +1,26 @@
-
 import { describe, expect, it } from "bun:test";
+import type { Step } from "@/lib/remocn-ui";
+import { defaultDarkTheme, defaultLightTheme, easings } from "@/lib/remocn-ui";
+import { commandMenuConfig } from "../config";
 import {
-  filterCommandItems,
+  type CommandMenuEntry,
+  type CommandMenuState,
   commandMenuStyle,
   commandMenuStyleContext,
-  type CommandMenuState,
-  type CommandMenuEntry,
+  filterCommandItems,
 } from "../index";
 import {
-  tweenCommandMenuStyle,
   DEFAULT_DURATION,
+  tweenCommandMenuStyle,
 } from "../use-command-menu-transition";
-import { commandMenuConfig } from "../config";
-import { defaultLightTheme, defaultDarkTheme, easings } from "@/lib/remocn-ui";
-import type { Step } from "@/lib/remocn-ui";
 
 const VALID_STATES: readonly CommandMenuState[] = ["opened", "closed"];
 
 const SAMPLE_ITEMS: CommandMenuEntry[] = [
-  { icon: "user",     label: "Profile",     shortcut: "⌘ P" },
-  { icon: "settings", label: "Settings",    shortcut: "⌘ S" },
-  { icon: "file",     label: "New File",    shortcut: "⌘ N" },
-  { icon: "search",   label: "Search docs" },
+  { icon: "user", label: "Profile", shortcut: "⌘ P" },
+  { icon: "settings", label: "Settings", shortcut: "⌘ S" },
+  { icon: "file", label: "New File", shortcut: "⌘ N" },
+  { icon: "search", label: "Search docs" },
 ];
 
 const ctx = commandMenuStyleContext(defaultLightTheme);
@@ -99,17 +98,23 @@ describe("filterCommandItems: no-match → empty array", () => {
   });
 
   it("returns empty array for a long non-matching query", () => {
-    expect(filterCommandItems(SAMPLE_ITEMS, "zzzzzzz", undefined)).toHaveLength(0);
+    expect(filterCommandItems(SAMPLE_ITEMS, "zzzzzzz", undefined)).toHaveLength(
+      0,
+    );
   });
 });
 
 describe("filterCommandItems: case-insensitivity", () => {
   it("uppercase query matches lowercase label", () => {
-    expect(filterCommandItems(SAMPLE_ITEMS, "PROFILE", undefined)).toHaveLength(1);
+    expect(filterCommandItems(SAMPLE_ITEMS, "PROFILE", undefined)).toHaveLength(
+      1,
+    );
   });
 
   it("mixed case query matches label", () => {
-    expect(filterCommandItems(SAMPLE_ITEMS, "SeTtInGs", undefined)).toHaveLength(1);
+    expect(
+      filterCommandItems(SAMPLE_ITEMS, "SeTtInGs", undefined),
+    ).toHaveLength(1);
   });
 
   it("lowercase query matches mixed-case label ('new file')", () => {
@@ -419,11 +424,15 @@ function resolveStateTransition<S extends string>(
 }
 
 function resolveCommandMenuTransition(
-  raw: number,                                         // injected useCurrentFrame() — MIRROR line 61
+  raw: number, // injected useCurrentFrame() — MIRROR line 61
   steps: Step<CommandMenuState>[],
   speed = 1,
   defaultDuration = DEFAULT_DURATION,
-): ReturnType<typeof tweenCommandMenuStyle> & { from: CommandMenuState; to: CommandMenuState; progress: number } {
+): ReturnType<typeof tweenCommandMenuStyle> & {
+  from: CommandMenuState;
+  to: CommandMenuState;
+  progress: number;
+} {
   const { from, to, progress } = resolveStateTransition(
     raw,
     steps,
@@ -437,7 +446,12 @@ function resolveCommandMenuTransition(
     commandMenuStyle(to as CommandMenuState, ctx),
     t,
   );
-  return { ...style, from: from as CommandMenuState, to: to as CommandMenuState, progress };
+  return {
+    ...style,
+    from: from as CommandMenuState,
+    to: to as CommandMenuState,
+    progress,
+  };
 }
 
 describe("resolveCommandMenuTransition: before any step — holds at closed", () => {
@@ -503,19 +517,27 @@ describe("resolveCommandMenuTransition: past the window → fully opened", () =>
   const steps: Step<CommandMenuState>[] = [{ at: 0, state: "opened" }];
 
   it("backdropOpacity is 1 after DEFAULT_DURATION frames", () => {
-    expect(resolveCommandMenuTransition(DEFAULT_DURATION, steps).backdropOpacity).toBeCloseTo(1, 10);
+    expect(
+      resolveCommandMenuTransition(DEFAULT_DURATION, steps).backdropOpacity,
+    ).toBeCloseTo(1, 10);
   });
 
   it("panelOpacity is 1 after DEFAULT_DURATION frames", () => {
-    expect(resolveCommandMenuTransition(DEFAULT_DURATION, steps).panelOpacity).toBeCloseTo(1, 10);
+    expect(
+      resolveCommandMenuTransition(DEFAULT_DURATION, steps).panelOpacity,
+    ).toBeCloseTo(1, 10);
   });
 
   it("panelScale is 1 after DEFAULT_DURATION frames", () => {
-    expect(resolveCommandMenuTransition(DEFAULT_DURATION, steps).panelScale).toBeCloseTo(1, 10);
+    expect(
+      resolveCommandMenuTransition(DEFAULT_DURATION, steps).panelScale,
+    ).toBeCloseTo(1, 10);
   });
 
   it("panelTranslateY is 0 after DEFAULT_DURATION frames", () => {
-    expect(resolveCommandMenuTransition(DEFAULT_DURATION, steps).panelTranslateY).toBeCloseTo(0, 10);
+    expect(
+      resolveCommandMenuTransition(DEFAULT_DURATION, steps).panelTranslateY,
+    ).toBeCloseTo(0, 10);
   });
 });
 
@@ -623,36 +645,48 @@ describe("commandMenuConfig.snippet: default props are omitted", () => {
   });
 
   it("omits revealCount when it equals 0 (default)", () => {
-    expect(snippet({ state: "opened", revealCount: 0 })).not.toContain("revealCount=");
+    expect(snippet({ state: "opened", revealCount: 0 })).not.toContain(
+      "revealCount=",
+    );
   });
 
   it("omits selectedIndex when it equals -1 (default)", () => {
-    expect(snippet({ state: "opened", selectedIndex: -1 })).not.toContain("selectedIndex=");
+    expect(snippet({ state: "opened", selectedIndex: -1 })).not.toContain(
+      "selectedIndex=",
+    );
   });
 
   it("omits highlightedIndex when it equals -1 (no highlight)", () => {
-    expect(snippet({ state: "opened", highlightedIndex: -1 })).not.toContain("highlightedIndex=");
+    expect(snippet({ state: "opened", highlightedIndex: -1 })).not.toContain(
+      "highlightedIndex=",
+    );
   });
-
 });
 
 describe("commandMenuConfig.snippet: non-default props are emitted", () => {
   it("emits query when non-empty", () => {
-    expect(snippet({ state: "opened", query: "settings" })).toContain('query="settings"');
+    expect(snippet({ state: "opened", query: "settings" })).toContain(
+      'query="settings"',
+    );
   });
 
   it("emits revealCount when non-zero", () => {
-    expect(snippet({ state: "opened", revealCount: 3 })).toContain("revealCount={3}");
+    expect(snippet({ state: "opened", revealCount: 3 })).toContain(
+      "revealCount={3}",
+    );
   });
 
   it("emits selectedIndex when not -1", () => {
-    expect(snippet({ state: "opened", selectedIndex: 1 })).toContain("selectedIndex={1}");
+    expect(snippet({ state: "opened", selectedIndex: 1 })).toContain(
+      "selectedIndex={1}",
+    );
   });
 
   it("emits highlightedIndex when not -1", () => {
-    expect(snippet({ state: "opened", highlightedIndex: 0 })).toContain("highlightedIndex={0}");
+    expect(snippet({ state: "opened", highlightedIndex: 0 })).toContain(
+      "highlightedIndex={0}",
+    );
   });
-
 });
 
 describe("commandMenuConfig.snippet: state options round-trip", () => {

@@ -1,6 +1,12 @@
 "use client";
 
 import {
+  type RadioState,
+  type RadioStyle,
+  radioStyle,
+  radioStyleContext,
+} from "@/components/remocn/radio";
+import {
   easings,
   mixOklch,
   type RemocnTheme,
@@ -8,12 +14,6 @@ import {
   useRemocnTheme,
   useStateTransition,
 } from "@/lib/remocn-ui";
-import {
-  radioStyle,
-  radioStyleContext,
-  type RadioState,
-  type RadioStyle,
-} from "@/components/remocn/radio";
 
 export const DEFAULT_DURATION = 10;
 

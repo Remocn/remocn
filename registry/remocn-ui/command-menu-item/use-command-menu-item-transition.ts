@@ -1,6 +1,12 @@
 "use client";
 
 import {
+  type CommandMenuItemState,
+  type CommandMenuItemStyle,
+  commandMenuItemStyle,
+  commandMenuItemStyleContext,
+} from "@/components/remocn/command-menu-item";
+import {
   easings,
   mixOklch,
   type RemocnTheme,
@@ -8,12 +14,6 @@ import {
   useRemocnTheme,
   useStateTransition,
 } from "@/lib/remocn-ui";
-import {
-  commandMenuItemStyle,
-  commandMenuItemStyleContext,
-  type CommandMenuItemState,
-  type CommandMenuItemStyle,
-} from "@/components/remocn/command-menu-item";
 
 export const DEFAULT_DURATION = 8;
 

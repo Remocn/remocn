@@ -58,11 +58,16 @@ export function SpringScaleIn({
             extrapolateRight: "clamp",
             easing,
           });
-          const scale = interpolate(local, [0, wordDurationFrames], [scaleFrom, 1], {
-            extrapolateLeft: "clamp",
-            extrapolateRight: "clamp",
-            easing,
-          });
+          const scale = interpolate(
+            local,
+            [0, wordDurationFrames],
+            [scaleFrom, 1],
+            {
+              extrapolateLeft: "clamp",
+              extrapolateRight: "clamp",
+              easing,
+            },
+          );
           return (
             <span
               key={i}

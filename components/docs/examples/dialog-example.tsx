@@ -6,7 +6,10 @@ import { Dialog } from "@/registry/remocn-ui/dialog";
 import { useDialogTransition } from "@/registry/remocn-ui/dialog/use-dialog-transition";
 
 export const dialogExampleControls = [
-  "title", "description", "actionLabel", "cancelLabel",
+  "title",
+  "description",
+  "actionLabel",
+  "cancelLabel",
 ] as const;
 
 export interface DialogExampleProps {
@@ -33,7 +36,10 @@ export const DialogExampleScene = (p: DialogExampleProps = {}) => {
       <Button label="Edit profile" style={trigger} />
       <Dialog
         title={p.title ?? "Edit profile"}
-        description={p.description ?? "Make changes to your profile here. Click save when you're done."}
+        description={
+          p.description ??
+          "Make changes to your profile here. Click save when you're done."
+        }
         actionLabel={p.actionLabel ?? "Save changes"}
         cancelLabel={p.cancelLabel ?? "Cancel"}
         style={dialog}
@@ -51,10 +57,18 @@ export const dialogExampleCode = (
   const cancelLabel = values.cancelLabel as string | undefined;
 
   const dialogProps: string[] = [];
-  if (title !== undefined && title !== "Edit profile") dialogProps.push(`title="${title}"`);
-  if (description !== undefined && description !== "Make changes to your profile here. Click save when you're done.") dialogProps.push(`description="${description}"`);
-  if (actionLabel !== undefined && actionLabel !== "Save changes") dialogProps.push(`actionLabel="${actionLabel}"`);
-  if (cancelLabel !== undefined && cancelLabel !== "Cancel") dialogProps.push(`cancelLabel="${cancelLabel}"`);
+  if (title !== undefined && title !== "Edit profile")
+    dialogProps.push(`title="${title}"`);
+  if (
+    description !== undefined &&
+    description !==
+      "Make changes to your profile here. Click save when you're done."
+  )
+    dialogProps.push(`description="${description}"`);
+  if (actionLabel !== undefined && actionLabel !== "Save changes")
+    dialogProps.push(`actionLabel="${actionLabel}"`);
+  if (cancelLabel !== undefined && cancelLabel !== "Cancel")
+    dialogProps.push(`cancelLabel="${cancelLabel}"`);
 
   const dialogPropsStr = dialogProps.length ? ` ${dialogProps.join(" ")}` : "";
 

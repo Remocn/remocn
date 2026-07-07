@@ -3,9 +3,7 @@
   "name": "animated-line-chart",
   "title": "Animated Line Chart",
   "description": "Line chart whose SVG path draws on from left to right with a leading dot.",
-  "dependencies": [
-    "remotion"
-  ],
+  "dependencies": ["remotion"],
   "files": [
     {
       "path": "registry/remocn/animated-line-chart/index.tsx",

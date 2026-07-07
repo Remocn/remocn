@@ -333,7 +333,11 @@
       "title": "UI Select",
       "description": "A select whose opened/closed state is a pure function of the timeline; the trigger reuses the Button primitive and the reveal panel composes SelectItem rows. The panel fade, scale, lift, and chevron are keyframed presets.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/remocn-ui", "@remocn/button", "@remocn/select-item"],
+      "registryDependencies": [
+        "@remocn/remocn-ui",
+        "@remocn/button",
+        "@remocn/select-item"
+      ],
       "files": [
         {
           "path": "select/index.tsx",
@@ -393,7 +397,11 @@
       "title": "UI Dropdown Menu",
       "description": "A dropdown menu whose opened/closed state is a pure function of the timeline; the trigger reuses the Button primitive and the reveal panel composes DropdownMenuItem rows. The panel fade, scale, lift, and chevron are keyframed presets.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/remocn-ui", "@remocn/button", "@remocn/dropdown-menu-item"],
+      "registryDependencies": [
+        "@remocn/remocn-ui",
+        "@remocn/button",
+        "@remocn/dropdown-menu-item"
+      ],
       "files": [
         {
           "path": "dropdown-menu/index.tsx",
@@ -473,7 +481,10 @@
       "title": "UI Command Menu",
       "description": "A ⌘K command palette whose opened/closed state is a pure function of the timeline; the panel zoom + backdrop dim are dialog-like keyframed presets. The search row reveals the typed query, the list is filtered by a pure case-insensitive substring on the visible query prefix, and rows reuse the CommandMenuItem row.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/remocn-ui", "@remocn/command-menu-item"],
+      "registryDependencies": [
+        "@remocn/remocn-ui",
+        "@remocn/command-menu-item"
+      ],
       "files": [
         {
           "path": "command-menu/index.tsx",
@@ -588,7 +599,11 @@
       "title": "UI Combobox",
       "description": "A combobox whose opened/closed state is a pure function of the timeline; the panel fade/scale/lift are keyframed presets like select. The trigger reuses the Input presets (typed query + caret reveal via an injected inputStyle), the list is filtered by a pure case-insensitive substring on the visible query prefix, and rows reuse the SelectItem row.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/remocn-ui", "@remocn/input", "@remocn/select-item"],
+      "registryDependencies": [
+        "@remocn/remocn-ui",
+        "@remocn/input",
+        "@remocn/select-item"
+      ],
       "files": [
         {
           "path": "combobox/index.tsx",
@@ -628,7 +643,10 @@
       "title": "UI Context Menu",
       "description": "A right-click context menu whose opened/closed state is a pure function of the timeline; the panel scales from its top-left corner (the click point) with a fade + lift. No trigger — the caller positions it. Rows reuse the DropdownMenuItem row; items are plain string labels.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/remocn-ui", "@remocn/dropdown-menu-item"],
+      "registryDependencies": [
+        "@remocn/remocn-ui",
+        "@remocn/dropdown-menu-item"
+      ],
       "files": [
         {
           "path": "context-menu/index.tsx",
@@ -708,7 +726,15 @@
       "title": "UI Signup Flow",
       "description": "A signup card composition: a real shadcn-style card (header, labeled Full Name / Email / Password / Confirm fields, primary + Google-outline buttons, sign-in footer) whose cursor fills each field top-to-bottom, then clicks Create account (hover → press → loading → success) as a success toast slides in. A pure orchestrator — every channel comes from a composed primitive's transition hook.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/remocn-ui", "@remocn/cursor", "@remocn/input", "@remocn/button", "@remocn/toast", "@remocn/field", "@remocn/blur-in"],
+      "registryDependencies": [
+        "@remocn/remocn-ui",
+        "@remocn/cursor",
+        "@remocn/input",
+        "@remocn/button",
+        "@remocn/toast",
+        "@remocn/field",
+        "@remocn/blur-in"
+      ],
       "files": [
         {
           "path": "signup-flow/index.tsx",
@@ -723,7 +749,14 @@
       "title": "UI AI Prompt Flow",
       "description": "An AI prompt composition: a prompt types into the field, the Generate button runs hover → press → loading, a skeleton shimmer reveals, then crossfades into the generated answer, and a ready toast slides in. A pure orchestrator — the shimmer is owned by the skeleton-block motion atom; every other channel comes from a composed primitive's hook.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/remocn-ui", "@remocn/input", "@remocn/button", "@remocn/skeleton", "@remocn/skeleton-block", "@remocn/toast"],
+      "registryDependencies": [
+        "@remocn/remocn-ui",
+        "@remocn/input",
+        "@remocn/button",
+        "@remocn/skeleton",
+        "@remocn/skeleton-block",
+        "@remocn/toast"
+      ],
       "files": [
         {
           "path": "ai-prompt-flow/index.tsx",
@@ -738,7 +771,17 @@
       "title": "UI Checkout Flow",
       "description": "A cursor-driven checkout card: the card and its fields blur-in, then the pointer flips a billing-cycle toggle, types a card number, ticks the terms checkbox, and presses Pay through to success, ending in a toast. A pure orchestrator — every channel comes from a composed primitive's transition hook.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/remocn-ui", "@remocn/toggle-group", "@remocn/input", "@remocn/checkbox", "@remocn/button", "@remocn/field", "@remocn/blur-in", "@remocn/cursor", "@remocn/toast"],
+      "registryDependencies": [
+        "@remocn/remocn-ui",
+        "@remocn/toggle-group",
+        "@remocn/input",
+        "@remocn/checkbox",
+        "@remocn/button",
+        "@remocn/field",
+        "@remocn/blur-in",
+        "@remocn/cursor",
+        "@remocn/toast"
+      ],
       "files": [
         {
           "path": "checkout-flow/index.tsx",
@@ -753,7 +796,14 @@
       "title": "UI Onboarding Stepper Flow",
       "description": "A multi-step onboarding composition: a horizontal stepper advances through panels of input, radio, and switch fields, finishing on a Finish button that runs to success. Panel crossfade derives linearly from the stepper's exposed position channel; every other channel comes from a composed primitive's hook.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/remocn-ui", "@remocn/stepper", "@remocn/input", "@remocn/radio", "@remocn/switch", "@remocn/button"],
+      "registryDependencies": [
+        "@remocn/remocn-ui",
+        "@remocn/stepper",
+        "@remocn/input",
+        "@remocn/radio",
+        "@remocn/switch",
+        "@remocn/button"
+      ],
       "files": [
         {
           "path": "onboarding-stepper-flow/index.tsx",
@@ -768,7 +818,16 @@
       "title": "UI Settings Toggle Flow",
       "description": "A two-column settings card: the card and its controls blur-in, then the cursor flips a switch, opens a select, drags a labeled slider, and clicks Save, ending in a saved toast. A pure orchestrator — every channel comes from a composed primitive's transition hook.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/remocn-ui", "@remocn/switch", "@remocn/select", "@remocn/slider", "@remocn/button", "@remocn/blur-in", "@remocn/cursor", "@remocn/toast"],
+      "registryDependencies": [
+        "@remocn/remocn-ui",
+        "@remocn/switch",
+        "@remocn/select",
+        "@remocn/slider",
+        "@remocn/button",
+        "@remocn/blur-in",
+        "@remocn/cursor",
+        "@remocn/toast"
+      ],
       "files": [
         {
           "path": "settings-toggle-flow/index.tsx",
@@ -818,7 +877,12 @@
       "title": "UI Chat Flow",
       "description": "A messaging composition: an outgoing message types into the composer, the send button presses, and the bubble rises in; the other side shows a typing indicator that swaps into the reply, and reactions pop in. A pure orchestrator — every channel comes from a composed primitive's hook (Input, MessageBubble, TypingIndicator).",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/remocn-ui", "@remocn/caret", "@remocn/message-bubble", "@remocn/typing-indicator"],
+      "registryDependencies": [
+        "@remocn/remocn-ui",
+        "@remocn/caret",
+        "@remocn/message-bubble",
+        "@remocn/typing-indicator"
+      ],
       "files": [
         {
           "path": "chat-flow/index.tsx",
@@ -848,7 +912,11 @@
       "title": "UI iMessage Chat Flow",
       "description": "An iMessage-styled messaging composition: gray incoming and blue outgoing bubbles with tails, an in-thread typing bubble with dots, a Delivered label, and tapback-style reaction badges. The composer types the outgoing message before sending. Chrome icons come from lucide-react; self-contained otherwise, composing the caret and typing-indicator primitives.",
       "dependencies": ["remotion", "lucide-react"],
-      "registryDependencies": ["@remocn/remocn-ui", "@remocn/caret", "@remocn/typing-indicator"],
+      "registryDependencies": [
+        "@remocn/remocn-ui",
+        "@remocn/caret",
+        "@remocn/typing-indicator"
+      ],
       "files": [
         {
           "path": "imessage-chat-flow/index.tsx",

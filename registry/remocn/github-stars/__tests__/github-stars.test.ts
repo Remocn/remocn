@@ -9,16 +9,16 @@
  * All tests are fully deterministic (no network, no Date.now).
  */
 
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "bun:test";
 
 import {
-  SAMPLE_STARGAZERS,
   computeCounterProgress,
   computeScrollProgress,
   computeSpacerRows,
   downsampleStargazers,
   getStarCount,
   isScrollContained,
+  SAMPLE_STARGAZERS,
   type Stargazer,
 } from "../index";
 
@@ -213,7 +213,11 @@ describe("maxScrollOvershoot / elastic peak", () => {
     let max = -Infinity;
     let maxFrame = -1;
     for (let f = 0; f <= dur; f++) {
-      const val = computeScrollProgress({ frame: f, speed: 1, durationInFrames: dur });
+      const val = computeScrollProgress({
+        frame: f,
+        speed: 1,
+        durationInFrames: dur,
+      });
       if (val > max) {
         max = val;
         maxFrame = f;
@@ -323,7 +327,9 @@ describe("SAMPLE_STARGAZERS", () => {
 
   it("avatarUrls are HTTPS GitHub avatar URLs", () => {
     for (const sg of SAMPLE_STARGAZERS) {
-      expect(sg.avatarUrl).toMatch(/^https:\/\/avatars\.githubusercontent\.com\//);
+      expect(sg.avatarUrl).toMatch(
+        /^https:\/\/avatars\.githubusercontent\.com\//,
+      );
     }
   });
 
