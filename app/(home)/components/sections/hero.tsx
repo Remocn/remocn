@@ -134,7 +134,8 @@ export function Hero() {
                 muted
                 loop
                 playsInline
-                preload="auto"
+                preload="metadata"
+                poster="/introducing-remocn-poster.jpg"
                 className="block h-full w-full object-cover"
               />
               <button
