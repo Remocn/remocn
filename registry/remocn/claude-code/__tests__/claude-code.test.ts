@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "bun:test";
 import { TYPING_CPS, TYPING_START_FRAME, WHATS_NEW } from "../index";
 
 describe("claude-code timing constants", () => {

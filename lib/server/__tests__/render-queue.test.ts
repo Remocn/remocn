@@ -18,32 +18,26 @@
  * sufficient.
  */
 
-import {
-  afterEach,
-  beforeEach,
-  describe,
-  expect,
-  it,
-  vi,
-  type MockInstance,
-} from "vitest";
+import { afterEach, beforeEach, describe, expect, it, mock } from "bun:test";
 import type { RenderInput } from "@/lib/server/validate-input";
 
 // ---------------------------------------------------------------------------
 // Mock the render module (real Chromium → deferred promise under test control)
 // ---------------------------------------------------------------------------
 
-vi.mock("@/lib/server/render", () => ({
-  renderStarsVideo: vi.fn(),
+const mockRender = mock();
+
+mock.module("@/lib/server/render", () => ({
+  renderStarsVideo: mockRender,
 }));
 
 // Mock mkdir so no real fs ops happen.
-vi.mock("node:fs/promises", () => ({
-  mkdir: vi.fn().mockResolvedValue(undefined),
+mock.module("node:fs/promises", () => ({
+  mkdir: mock(() => Promise.resolve(undefined)),
 }));
 
-// Mock server-only so it doesn't blow up in vitest.
-vi.mock("server-only", () => ({}));
+// Mock server-only so it doesn't blow up outside Next.js.
+mock.module("server-only", () => ({}));
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -89,27 +83,19 @@ const tick = () => new Promise<void>((r) => setTimeout(r, 0));
 // Import queue + mock render fn after all vi.mock() calls are hoisted.
 // ---------------------------------------------------------------------------
 
-import { enqueueRender, getJob } from "@/lib/server/render-queue";
-import { renderStarsVideo } from "@/lib/server/render";
-
-const mockRender = renderStarsVideo as unknown as MockInstance<
-  Parameters<typeof renderStarsVideo>,
-  ReturnType<typeof renderStarsVideo>
->;
+const { enqueueRender, getJob } = await import("@/lib/server/render-queue");
 
 // ---------------------------------------------------------------------------
 // Reset mock state between tests (the module singleton is shared across the
-// file because vitest re-uses the same module instance within a test file).
+// file because bun re-uses the same module instance within a test file).
 // ---------------------------------------------------------------------------
 
 beforeEach(() => {
-  vi.useFakeTimers();
   mockRender.mockReset();
 });
 
 afterEach(() => {
-  vi.useRealTimers();
-  vi.clearAllMocks();
+  mockRender.mockReset();
 });
 
 // ---------------------------------------------------------------------------
@@ -290,8 +276,8 @@ describe("render-queue — render timeout", () => {
     const jobId = enqueueRender(makeInput());
     await tick();
 
-    // Advance fake timers past the timeout.
-    vi.advanceTimersByTime(1100);
+    // Wait past the timeout so the AbortController fires.
+    await new Promise((r) => setTimeout(r, 1100));
     await tick();
     await tick();
 

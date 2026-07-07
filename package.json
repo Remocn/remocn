@@ -6,6 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "test": "bun test",
     "lint": "biome check",
     "format": "biome format --write",
     "registry:build": "shadcn build",
@@ -63,6 +64,7 @@
   "devDependencies": {
     "@biomejs/biome": "2.2.0",
     "@tailwindcss/postcss": "^4",
+    "@types/bun": "latest",
     "@types/culori": "^4.0.0",
     "@types/node": "^20",
     "@types/react": "^19",

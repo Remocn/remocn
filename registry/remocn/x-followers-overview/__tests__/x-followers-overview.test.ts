@@ -9,7 +9,7 @@
  * All tests are fully deterministic (no network, no Date.now).
  */
 
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "bun:test";
 
 import { blurIn, flipEase, slotProgress } from "../index";
 

@@ -6,8 +6,13 @@
  * Pure function — no mocks needed; all logic is deterministic.
  */
 
-import { describe, expect, it } from "vitest";
-import { parseRenderInput, RenderInputError } from "@/lib/server/validate-input";
+import { describe, expect, it, mock } from "bun:test";
+
+mock.module("server-only", () => ({}));
+
+const { parseRenderInput, RenderInputError } = await import(
+  "@/lib/server/validate-input"
+);
 
 // ---------------------------------------------------------------------------
 // Helpers

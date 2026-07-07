@@ -8,7 +8,7 @@
  * No React DOM or Remotion player needed — only pure JS logic is exercised.
  */
 
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "bun:test";
 
 import { makeParticles, mulberry32, particleOpacity } from "../index";
 

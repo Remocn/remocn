@@ -8,25 +8,30 @@
  * so no real renders, rate-buckets, or filesystem ops occur.
  */
 
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, mock } from "bun:test";
+import type { JobState } from "@/lib/server/render-queue";
 
 // ---------------------------------------------------------------------------
 // Mocks — must be declared before importing the route handlers.
 // ---------------------------------------------------------------------------
 
-vi.mock("server-only", () => ({}));
+const mockEnqueue = mock();
+const mockGetJob = mock();
+const mockCheckRate = mock();
 
-vi.mock("@/lib/server/render-queue", () => ({
-  enqueueRender: vi.fn(),
-  getJob: vi.fn(),
+mock.module("server-only", () => ({}));
+
+mock.module("@/lib/server/render-queue", () => ({
+  enqueueRender: mockEnqueue,
+  getJob: mockGetJob,
 }));
 
-vi.mock("@/lib/server/rate-limit", () => ({
-  checkRateLimit: vi.fn(),
+mock.module("@/lib/server/rate-limit", () => ({
+  checkRateLimit: mockCheckRate,
 }));
 
-vi.mock("@/lib/server/cleanup", () => ({
-  ensureCleanupSweep: vi.fn(),
+mock.module("@/lib/server/cleanup", () => ({
+  ensureCleanupSweep: mock(),
 }));
 
 // validate-input is NOT mocked: we use the real parser so the route's
@@ -36,19 +41,13 @@ vi.mock("@/lib/server/cleanup", () => ({
 // Imports (after mocks)
 // ---------------------------------------------------------------------------
 
-import { POST } from "@/app/api/render/route";
-import { GET } from "@/app/api/render/[jobId]/route";
-import { enqueueRender } from "@/lib/server/render-queue";
-import { getJob } from "@/lib/server/render-queue";
-import { checkRateLimit } from "@/lib/server/rate-limit";
-import type { JobState } from "@/lib/server/render-queue";
-
-const mockEnqueue = vi.mocked(enqueueRender);
-const mockGetJob = vi.mocked(getJob);
-const mockCheckRate = vi.mocked(checkRateLimit);
+const { POST } = await import("@/app/api/render/route");
+const { GET } = await import("@/app/api/render/[jobId]/route");
 
 afterEach(() => {
-  vi.clearAllMocks();
+  mockEnqueue.mockClear();
+  mockGetJob.mockClear();
+  mockCheckRate.mockClear();
 });
 
 // ---------------------------------------------------------------------------

@@ -20,15 +20,23 @@
  * requirement.
  */
 
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  mock,
+  setSystemTime,
+} from "bun:test";
 
 // Mock server-only so importing the module doesn't blow up outside Next.js.
-vi.mock("server-only", () => ({}));
+mock.module("server-only", () => ({}));
 
-import { checkRateLimit } from "@/lib/server/rate-limit";
+const { checkRateLimit } = await import("@/lib/server/rate-limit");
 
 // ---------------------------------------------------------------------------
-// Reset env and timers between tests
+// Reset env and clock between tests
 // ---------------------------------------------------------------------------
 
 let ipCounter = 0;
@@ -37,15 +45,22 @@ function freshIp(): string {
   return `10.0.0.${++ipCounter}`;
 }
 
+let clock = 0;
+function advanceClock(ms: number): void {
+  clock += ms;
+  setSystemTime(new Date(clock));
+}
+
 beforeEach(() => {
-  vi.useFakeTimers();
+  clock = Date.UTC(2024, 0, 1);
+  setSystemTime(new Date(clock));
   // Defaults mirror the module defaults: capacity 5, full refill over 60 s.
   process.env.RENDER_RATE_LIMIT = "5";
   process.env.RENDER_RATE_WINDOW_MS = "60000";
 });
 
 afterEach(() => {
-  vi.useRealTimers();
+  setSystemTime();
   delete process.env.RENDER_RATE_LIMIT;
   delete process.env.RENDER_RATE_WINDOW_MS;
 });
@@ -126,7 +141,7 @@ describe("checkRateLimit — token refill", () => {
     checkRateLimit(ip); // consume the single token
     expect(checkRateLimit(ip)).toBe(false); // blocked
 
-    vi.advanceTimersByTime(60_000); // one full refill period
+    advanceClock(60_000); // one full refill period
     expect(checkRateLimit(ip)).toBe(true); // refilled
   });
 
@@ -140,7 +155,7 @@ describe("checkRateLimit — token refill", () => {
     expect(checkRateLimit(ip)).toBe(false);
 
     // Advance far past the window — tokens must cap at capacity (2).
-    vi.advanceTimersByTime(10 * 60_000);
+    advanceClock(10 * 60_000);
     expect(checkRateLimit(ip)).toBe(true);
     expect(checkRateLimit(ip)).toBe(true);
     expect(checkRateLimit(ip)).toBe(false); // 3rd blocked
@@ -154,7 +169,7 @@ describe("checkRateLimit — token refill", () => {
     checkRateLimit(ip); // consume
     expect(checkRateLimit(ip)).toBe(false);
 
-    vi.advanceTimersByTime(30_000); // exactly one token back
+    advanceClock(30_000); // exactly one token back
     expect(checkRateLimit(ip)).toBe(true);
     expect(checkRateLimit(ip)).toBe(false); // consumed again
   });
