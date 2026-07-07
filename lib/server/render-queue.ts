@@ -45,8 +45,22 @@ function renderTimeoutMs(): number {
   return Number.isFinite(parsed) && parsed >= 1000 ? Math.floor(parsed) : 120_000;
 }
 
+/** Max jobs allowed in flight or waiting before new ones are rejected. */
+function maxQueueDepth(): number {
+  const parsed = Number(process.env.RENDER_MAX_QUEUE);
+  return Number.isFinite(parsed) && parsed >= 1 ? Math.floor(parsed) : 10;
+}
+
 const limit = pLimit(maxConcurrent());
 const jobs = new Map<string, JobState>();
+
+/** Thrown by enqueueRender when the queue is already at maxQueueDepth(). */
+export class QueueFullError extends Error {
+  constructor() {
+    super("Render queue is full");
+    this.name = "QueueFullError";
+  }
+}
 
 /**
  * Register a render and kick it off through the concurrency limiter. Returns the
@@ -54,6 +68,10 @@ const jobs = new Map<string, JobState>();
  * the registry. Never await the returned render work in the request handler.
  */
 export function enqueueRender(input: RenderInput): string {
+  if (limit.activeCount + limit.pendingCount >= maxQueueDepth()) {
+    throw new QueueFullError();
+  }
+
   const jobId = randomUUID();
   const outputPath = path.join(RENDER_WORK_DIR, `${jobId}.mp4`);
 

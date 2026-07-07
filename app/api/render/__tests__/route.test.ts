@@ -21,9 +21,17 @@ const mockCheckRate = mock();
 
 mock.module("server-only", () => ({}));
 
+class MockQueueFullError extends Error {
+  constructor() {
+    super("Render queue is full");
+    this.name = "QueueFullError";
+  }
+}
+
 mock.module("@/lib/server/render-queue", () => ({
   enqueueRender: mockEnqueue,
   getJob: mockGetJob,
+  QueueFullError: MockQueueFullError,
 }));
 
 mock.module("@/lib/server/rate-limit", () => ({
@@ -55,12 +63,17 @@ afterEach(() => {
 // ---------------------------------------------------------------------------
 
 /** Build a minimal NextRequest-compatible Request for POST /api/render. */
-function makePostRequest(body: unknown, ip = "1.2.3.4"): Request {
+function makePostRequest(
+  body: unknown,
+  ip = "1.2.3.4",
+  extraHeaders?: Record<string, string>,
+): Request {
   return new Request("http://localhost/api/render", {
     method: "POST",
     headers: {
       "content-type": "application/json",
       "x-forwarded-for": ip,
+      ...extraHeaders,
     },
     body: typeof body === "string" ? body : JSON.stringify(body),
   });
@@ -243,6 +256,28 @@ describe("POST /api/render — 202 success", () => {
     expect(mockCheckRate).toHaveBeenCalledWith("203.0.113.1");
   });
 
+  it("uses the LAST hop of a spoofed x-forwarded-for, not the client-controlled first hop", async () => {
+    mockCheckRate.mockReturnValue(true);
+    mockEnqueue.mockReturnValue("job-spoof-test");
+
+    await POST(makePostRequest(validPayload(), "1.1.1.1, 9.9.9.9") as never);
+
+    expect(mockCheckRate).toHaveBeenCalledWith("9.9.9.9");
+  });
+
+  it("prefers x-real-ip over x-forwarded-for when both are present", async () => {
+    mockCheckRate.mockReturnValue(true);
+    mockEnqueue.mockReturnValue("job-real-ip-test");
+
+    await POST(
+      makePostRequest(validPayload(), "1.1.1.1, 9.9.9.9", {
+        "x-real-ip": "2.2.2.2",
+      }) as never,
+    );
+
+    expect(mockCheckRate).toHaveBeenCalledWith("2.2.2.2");
+  });
+
   it("returns only { jobId } in the 202 body — no extra fields", async () => {
     mockCheckRate.mockReturnValue(true);
     mockEnqueue.mockReturnValue("clean-job");
@@ -250,6 +285,25 @@ describe("POST /api/render — 202 success", () => {
     const res = await POST(makePostRequest(validPayload()) as never);
     const body = await res.json();
     expect(Object.keys(body)).toEqual(["jobId"]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// POST /api/render — 503 queue full
+// ---------------------------------------------------------------------------
+
+describe("POST /api/render — 503 queue full", () => {
+  it("returns 503 with code queue_full when enqueueRender throws QueueFullError", async () => {
+    mockCheckRate.mockReturnValue(true);
+    mockEnqueue.mockImplementationOnce(() => {
+      throw new MockQueueFullError();
+    });
+
+    const res = await POST(makePostRequest(validPayload()) as never);
+
+    expect(res.status).toBe(503);
+    const body = await res.json();
+    expect(body.code).toBe("queue_full");
   });
 });
 
