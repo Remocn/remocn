@@ -9,6 +9,7 @@
     "lint": "biome check",
     "format": "biome format --write",
     "registry:build": "shadcn build",
+    "registry:check": "shadcn build && git diff --quiet -- public/r || (echo 'public/r is out of sync with registry/ sources. Run: bun run registry:build and commit the result.' && exit 1)",
     "remotion:browser": "bun scripts/ensure-browser.mts",
     "bundle:remotion": "bun scripts/bundle-remotion.mts",
     "render:demos": "bun scripts/render-demos.mts",
