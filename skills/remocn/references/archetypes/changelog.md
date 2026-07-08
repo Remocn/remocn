@@ -17,7 +17,8 @@ A short 3-beat specialization of the anatomy (Positioning → Features → CTA).
 | 60–160 | **Change list** | N rows, each a category tag (Added/Fixed/Changed) + text; staggered in, ~9f apart |
 | 160–270 | **Footer / CTA** | small version chip, link/CTA fades in, optional release-progress indicator |
 
-Transitions: badge→list `shared-axis-y` (spring, 12f); list→footer `fade-through` (linear, 12f).
+Transitions: badge→list and list→footer via `fade()` from `@remotion/transitions/fade` (12f each —
+`springTiming` into the list, `linearTiming` into the footer).
 
 ## Beat → slots
 

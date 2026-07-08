@@ -7,24 +7,24 @@ Read `../anatomy.md` first; pick components from `../components/index.md`.
 
 ## Beats
 
-Frame math: `total = 60 (intro) + N×90 (quote scenes, 15f fade-through overlap each) + 10 (last-quote hold) + 90 (aggregate close)`. N=3 → 430f (~14s). Cap at N=5 (~600f, ~20s) and fold any extra quotes into "+M more" on the aggregate tagline rather than extending runtime.
+Frame math: `total = 60 (intro) + N×90 (quote scenes, 15f fade overlap each) + 10 (last-quote hold) + 90 (aggregate close)`. N=3 → 430f (~14s). Cap at N=5 (~600f, ~20s) and fold any extra quotes into "+M more" on the aggregate tagline rather than extending runtime.
 
 | Frames (N=3) | Beat | What happens |
 |---|---|---|
 | 0–60 | **Intro** | Section title "What teams say" builds via `tracking-in`; thin horizontal divider enters via `mask-reveal-up` (left → right, 20f) |
 | 60–165 | **Quote 1** | `testimonial-card` springs up (translateY 40→0, `spring({damping:18,mass:0.9})`); quote text arrives via `per-word-crossfade` (4f/word stagger); avatar + author/role enter via `staggered-fade-up` (2 elements, 6f stagger); 2 peek cards behind at scale 0.94 / opacity 0.5 |
-| 150–255 | **Quote 2** | `fade-through` swap (15f overlap); author-line enters via `short-slide-right`; peek stack shifts depth |
+| 150–255 | **Quote 2** | `fade()` transition (15f overlap); author-line enters via `short-slide-right`; peek stack shifts depth |
 | 240–355 | **Quote N** | Last quote holds +10f longer; peek cards resolve to full opacity as the stack empties; `blur-out-up` exits the card stack on the way out |
 | 345–435 | **Aggregate close** | `spring-scale-in` enters the metric block; `rolling-number` counts to the aggregate figure; tagline "Join X+ [phrase]" arrives via `staggered-fade-up`; optional `x-followers-overview` or `github-stars` anchors the number in a recognizable social surface |
 
-Transitions: `fade-through` (`linearTiming(15)`) between each quote scene; intro → Quote 1 via `springTiming({damping:200})`; Quote N → aggregate via `fade-through` (15f).
+Transitions: `fade()` from `@remotion/transitions/fade` (`linearTiming(15)`) between each quote scene; intro → Quote 1 via `springTiming({damping:200})`; Quote N → aggregate via `fade()` (15f).
 
 ## Beat → slots
 
 | Beat | Catalog components | New component needed |
 |---|---|---|
 | Intro | `tracking-in` (title), `mask-reveal-up` (divider line), `spotlight-card` (bg) | — |
-| Quote cycling | `per-word-crossfade` (quote text), `staggered-fade-up` (avatar + author/role), `short-slide-right` (author-line on swap), `fade-through` (scene transition), `blur-out-up` (stack exit) | **`testimonial-card`** — avatar + quote text + name/role; transparent bg; props: `quote`, `name`, `role`, `avatarUrl`; build per `../anatomy.md` §1 |
+| Quote cycling | `per-word-crossfade` (quote text), `staggered-fade-up` (avatar + author/role), `short-slide-right` (author-line on swap), `blur-out-up` (stack exit) | **`testimonial-card`** — avatar + quote text + name/role; transparent bg; props: `quote`, `name`, `role`, `avatarUrl`; build per `../anatomy.md` §1 |
 | Aggregate close | `spring-scale-in` (metric block entrance), `rolling-number` (count animation), `staggered-fade-up` (tagline), `x-followers-overview` or `github-stars` (optional social anchor) | — |
 
 `testimonial-card` is the only gap in the catalog. The stacking depth effect (peek cards at 0.94 scale / 0.5 opacity behind the active card) is orchestration logic in the parent composition — render 2–3 `testimonial-card` instances with interpolated transform/opacity values; no separate stack container component is needed.

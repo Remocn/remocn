@@ -11,22 +11,12 @@ demonstrates it → do/avoid tuned to remocn's restraint.
 - Idiom note: remocn components drive motion with `spring()` and `interpolate()` + `Easing`.
   Examples here use that same idiom.
 
-Tags: **`core`** — routinely useful when assembling scenes · **`rarely-needed`** — character-
-animation territory; only relevant if you hand-draw motion, not when composing blocks.
+The 8 principles below are routinely useful when assembling scenes; the remaining 4 (character-
+animation territory) are compressed at the end.
 
 ---
 
-## 1. Squash & Stretch — `rarely-needed`
-
-Compress on impact, elongate on speed; preserve volume. For UI this means a tiny scale-x/scale-y
-trade on landing — nothing cartoon.
-
-- **Mechanic:** `spring()` driving `scaleX`/`scaleY` inversely on impact frames.
-- **remocn:** `spring-scale-in` (settle), `confetti` (particle pop).
-- **Do/Avoid:** at most a 2–4% volume trade on a hard landing. ❌ No rubber-band squash on text or
-  cards — it fights `design.md`.
-
-## 2. Anticipation — `core`
+## 2. Anticipation
 
 A short wind-up before the action makes it feel intentional: a drawer dips before it expands.
 
@@ -35,7 +25,7 @@ A short wind-up before the action makes it feel intentional: a drawer dips befor
 - **remocn:** `spring-scale-in`.
 - **Do/Avoid:** keep the wind-up to 1–3 frames, ≤110% scale. ❌ No bouncy cartoon recoil.
 
-## 3. Staging — `core`
+## 3. Staging
 
 Direct the eye: one clear idea per scene. Clear the stage before introducing the next element.
 
@@ -44,16 +34,7 @@ Direct the eye: one clear idea per scene. Clear the stage before introducing the
 - **remocn:** most Compositions.
 - **Do/Avoid:** one focal action per beat. ❌ Don't enter five elements on the same frame.
 
-## 4. Straight-Ahead vs Pose-to-Pose — `rarely-needed`
-
-Pose-to-pose = define key frames, interpolate between. That's exactly how remocn works.
-
-- **Mechanic:** `interpolate(frame, [k0, k1, k2], [v0, v1, v2])` — your keyframes are the poses.
-- **remocn:** every component (key ranges in `index.tsx`).
-- **Do/Avoid:** think in keyframes and let `interpolate` fill between. Straight-ahead (frame-by-
-  frame) is for hand-drawn organic effects — not block composition.
-
-## 5. Follow-Through & Overlapping Action — `core`
+## 5. Follow-Through & Overlapping Action
 
 Nothing stops at once; elements arrive staggered. Lighter things lead, heavier lag.
 
@@ -62,7 +43,7 @@ Nothing stops at once; elements arrive staggered. Lighter things lead, heavier l
 - **Do/Avoid:** stagger 3–6 frames between siblings. ❌ Don't land a whole group on one frame
   (reads robotic) and don't over-stagger (feels sluggish).
 
-## 6. Slow In & Slow Out — `core`
+## 6. Slow In & Slow Out
 
 Ease into and out of poses — almost nothing should move linearly.
 
@@ -72,7 +53,7 @@ Ease into and out of poses — almost nothing should move linearly.
 - **Do/Avoid:** default to ease-out for entrances. ❌ Linear `interpolate` for visible motion
   unless it's a constant drift (e.g. marquee, grid pan).
 
-## 7. Arc — `core`
+## 7. Arc
 
 Living motion follows curves, not straight lines — especially cursors and gestures.
 
@@ -80,7 +61,7 @@ Living motion follows curves, not straight lines — especially cursors and gest
 - **remocn:** `cursor` + `useCursorPath`, social cards' cursor travel to the Follow button.
 - **Do/Avoid:** curve cursor/hand paths. ❌ No straight diagonal cursor jumps.
 
-## 8. Secondary Action — `core`
+## 8. Secondary Action
 
 Supporting motion that reinforces the primary action without stealing focus.
 
@@ -90,7 +71,7 @@ Supporting motion that reinforces the primary action without stealing focus.
 - **Do/Avoid:** secondary motion stays subtle and on-theme. ❌ Don't add competing animation that
   splits attention.
 
-## 9. Timing — `core`
+## 9. Timing
 
 Frame counts set weight: fast = light, slow = heavy. Vary timing for contrast.
 
@@ -100,7 +81,7 @@ Frame counts set weight: fast = light, slow = heavy. Vary timing for contrast.
 - **Do/Avoid:** match duration to weight — a heavy hero assemble is slower than a toast. ❌ Don't
   reuse one duration for everything (kills rhythm).
 
-## 10. Exaggeration — `core` (capped)
+## 10. Exaggeration (capped)
 
 Push slightly past literal reality for clarity — but remocn's house style is restraint.
 
@@ -109,22 +90,19 @@ Push slightly past literal reality for clarity — but remocn's house style is r
 - **Do/Avoid:** subtle UI exaggeration only (≤110%, gentle overshoot). ❌ No stretched/cartoon
   exaggeration — this is the principle most likely to collide with `design.md`; the cap wins.
 
-## 11. Solid Drawing — `rarely-needed`
+---
 
-Form, weight, and consistent perspective. For block composition this is mostly fixed by the
-components; it matters only if you build 3D-ish scenes.
+## Rarely needed when composing blocks
 
-- **Mechanic:** consistent `perspective` / `transform-origin` across layered elements.
-- **remocn:** `push-through`, `perspective-marquee`.
-- **Do/Avoid:** keep one perspective per scene when stacking 3D layers. ❌ Don't mix inconsistent
-  vanishing points.
+Character-animation territory — reach for these only when hand-drawing motion, not when
+assembling catalog components:
 
-## 12. Appeal — `rarely-needed`
-
-The charisma of the result: clear shapes, balanced proportion, motion that invites watching.
-Emergent, not a knob.
-
-- **Mechanic:** outcome of staging + timing + restraint working together.
-- **remocn:** the full Compositions as reference for a coherent, watchable result.
-- **Do/Avoid:** aim for clear and captivating, not busy. ❌ More motion ≠ more appeal — cut what
-  doesn't serve the focal idea.
+- **1. Squash & Stretch** — at most a 2–4% `scaleX`/`scaleY` volume trade on a hard landing
+  (`spring-scale-in`, `confetti`); rubber-band squash on text or cards fights `design.md`.
+- **4. Straight-Ahead vs Pose-to-Pose** — remocn is pose-to-pose by construction:
+  `interpolate(frame, [k0, k1, k2], [v0, v1, v2])` keyframes are your poses; straight-ahead
+  (frame-by-frame) is for hand-drawn organic effects.
+- **11. Solid Drawing** — keep one `perspective` / vanishing point per scene when stacking 3D
+  layers (`push-through`, `perspective-marquee`).
+- **12. Appeal** — emergent from staging + timing + restraint, not a knob; more motion ≠ more
+  appeal.

@@ -15,7 +15,7 @@ Fixed three-beat structure; runtime is 360f.
 | 90–240 | **Feature name** | The feature name bursts in per-character from below; the `spotlight-card` light shifts to sit behind the name over 24f; a scale pulse (1.0→1.04→1.0) lands as the last character settles |
 | 240–360 | **Payoff** | A single benefit line builds line by line; one key word receives a growing accent bar via `inline-highlight`; the whole scene exits via `scale-down-fade` |
 
-Transitions: kicker→name `fade-through` (linear, 12f); name→payoff `shared-axis-y` downward (spring, ~18f).
+Transitions: kicker→name `fade()` from `@remotion/transitions/fade` (linear, 12f); name→payoff `slide({ direction: "from-top" })` from `@remotion/transitions/slide` (spring, ~18f).
 
 ## Beat → slots
 

@@ -18,7 +18,7 @@ Duration scales with N stats: `total = 90 (intro) + N×120 (stat-beats) − N×1
 | 450–570 | **StatBeat #4** | aligned right; label stagger 10f; one `confetti` burst fires at roll end (accent only, finale stat) |
 | 570–660 | **RecapWall** | all N stats enter via `staggered-fade-up` (stagger 8f) into a 2×⌈N/2⌉ grid; accent stat pulses `micro-scale-fade`; CTA line enters via `tracking-in` (letter-spacing 0.3em→0) |
 
-Transitions: Intro → Beat #1 `shared-axis-y` (linearTiming, 18f). Between stat beats `fade-through` (springTiming, config `{ damping: 200 }`, 15f). Beat #N → RecapWall `push-through` (linearTiming, 20f).
+Transitions: Intro → Beat #1 `slide({ direction: "from-bottom" })` from `@remotion/transitions/slide` (linearTiming, 18f). Between stat beats `fade()` from `@remotion/transitions/fade` (springTiming, config `{ damping: 200 }`, 15f). Beat #N → RecapWall `push-through` (linearTiming, 20f).
 
 ## Beat → slots
 
