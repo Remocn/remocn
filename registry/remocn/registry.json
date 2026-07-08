@@ -867,6 +867,20 @@
       ]
     },
     {
+      "name": "zoom-blur",
+      "type": "registry:component",
+      "title": "Zoom Blur",
+      "description": "A depth punch-in transition that pushes the outgoing scene through the viewer while the incoming one resolves out of blur.",
+      "dependencies": ["remotion", "@remotion/transitions"],
+      "files": [
+        {
+          "path": "zoom-blur/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/zoom-blur.tsx"
+        }
+      ]
+    },
+    {
       "name": "chat-to-preview-layout",
       "type": "registry:component",
       "title": "Chat to Preview Layout",

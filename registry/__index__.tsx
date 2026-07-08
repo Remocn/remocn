@@ -90,6 +90,7 @@ import { waveWipeConfig } from "@/registry/remocn/wave-wipe/config";
 import { whipPanConfig } from "@/registry/remocn/whip-pan/config";
 import { xFollowCardConfig } from "@/registry/remocn/x-follow-card/config";
 import { xFollowersOverviewConfig } from "@/registry/remocn/x-followers-overview/config";
+import { zoomBlurConfig } from "@/registry/remocn/zoom-blur/config";
 import { accordionConfig } from "@/registry/remocn-ui/accordion/config";
 import { alertDialogConfig } from "@/registry/remocn-ui/alert-dialog/config";
 import { blurInConfig } from "@/registry/remocn-ui/blur-in/config";
@@ -587,6 +588,13 @@ const registry: Record<string, RegistryEntry> = {
         default: m.FocusPullExampleScene,
       })),
     config: focusPullConfig,
+  },
+  "zoom-blur": {
+    load: () =>
+      import("@/components/docs/examples/zoom-blur-example").then((m) => ({
+        default: m.ZoomBlurExampleScene,
+      })),
+    config: zoomBlurConfig,
   },
   "warp-dissolve": {
     load: () =>
