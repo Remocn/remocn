@@ -881,6 +881,20 @@
       ]
     },
     {
+      "name": "rolodex-flip",
+      "type": "registry:component",
+      "title": "Rolodex Flip",
+      "description": "Cycles a word through a list of values with a 3D rolodex card flip while an invisible sizer keeps the line width and baseline stable.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "rolodex-flip/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/rolodex-flip.tsx"
+        }
+      ]
+    },
+    {
       "name": "chat-to-preview-layout",
       "type": "registry:component",
       "title": "Chat to Preview Layout",

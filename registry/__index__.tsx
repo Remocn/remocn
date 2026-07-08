@@ -47,6 +47,7 @@ import { pushThroughConfig } from "@/registry/remocn/push-through/config";
 import { rgbGlitchTextConfig } from "@/registry/remocn/rgb-glitch-text/config";
 import { rippleZoomConfig } from "@/registry/remocn/ripple-zoom/config";
 import { rollingNumberConfig } from "@/registry/remocn/rolling-number/config";
+import { rolodexFlipConfig } from "@/registry/remocn/rolodex-flip/config";
 import { scaleDownFadeConfig } from "@/registry/remocn/scale-down-fade/config";
 import { shaderColorPanelsConfig } from "@/registry/remocn/shader-color-panels/config";
 import { shaderDitheringConfig } from "@/registry/remocn/shader-dithering/config";
@@ -701,6 +702,13 @@ const registry: Record<string, RegistryEntry> = {
         default: m.RollingNumber,
       })),
     config: rollingNumberConfig,
+  },
+  "rolodex-flip": {
+    load: () =>
+      import("@/components/docs/examples/rolodex-flip-example").then((m) => ({
+        default: m.RolodexFlipExampleScene,
+      })),
+    config: rolodexFlipConfig,
   },
   "x-follow-card": {
     load: () =>

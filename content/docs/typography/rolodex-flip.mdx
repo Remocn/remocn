@@ -1,0 +1,74 @@
+---
+title: Rolodex Flip
+description: Cycle a word through a list of values with a 3D rolodex card flip
+---
+
+<ComponentPreview name="rolodex-flip" />
+
+## Installation
+
+<InstallBlock name="rolodex-flip" />
+
+## Usage
+
+`RolodexFlip` renders an inline `span` and inherits the surrounding typography — drop it into the middle of a line and it flips through `items` while the rest of the line stays perfectly still: the outgoing value tips up and away, the incoming one turns in from below half a flip later, and an invisible sizer holds the width and baseline of the longest value. The first value is visible from the start and the last one stays for the rest of the scene.
+
+```tsx
+import { RolodexFlip } from "@/components/remocn/rolodex-flip";
+
+export const MyScene = () => (
+  <span style={{ fontFamily: "monospace", fontSize: 36 }}>
+    $ npx shadcn add{" "}
+    <RolodexFlip items={["button", "dialog", "command", "tabs", "chart-area"]} />
+  </span>
+);
+```
+
+## Sizing
+
+The sizer uses the longest item by character count as real hidden text, so it works in any font. In a proportional font two equal-length strings can differ in width, so if your values are the same length put the visually widest one last — or anywhere, it just needs to be in the list.
+
+`slot-machine-roll` and `number-wheel` are numeric reels, `per-word-crossfade` is a flat opacity swap — reach for `RolodexFlip` when arbitrary strings should cycle with physical depth at a fixed width.
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "items",
+      type: "string[]",
+      default: "—",
+      description: "Values shown in order. The last one stays.",
+    },
+    {
+      name: "from",
+      type: "number",
+      default: "0",
+      description: "Frame of the first flip.",
+    },
+    {
+      name: "interval",
+      type: "number",
+      default: "20",
+      description: "Frames each value holds before flipping.",
+    },
+    {
+      name: "flipDuration",
+      type: "number",
+      default: "10",
+      description: "Length of the flip itself in frames.",
+    },
+    {
+      name: "className",
+      type: "string",
+      default: "—",
+      description: "Passed to the wrapper span.",
+    },
+    {
+      name: "style",
+      type: "CSSProperties",
+      default: "—",
+      description: "Merged onto the wrapper span.",
+    },
+  ]}
+/>

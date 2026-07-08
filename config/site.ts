@@ -66,6 +66,7 @@ export const NEW_BADGE_PATHS = new Set<string>([
   "/docs/transitions/focus-pull",
   "/docs/transitions/zoom-blur",
   "/docs/layout/drift",
+  "/docs/typography/rolodex-flip",
 ]);
 
 export const FOOTER_NAV: NavLink[] = [
