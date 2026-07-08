@@ -1,0 +1,83 @@
+---
+title: Value Swap
+description: Swap a value in place with a vertical slide so the layout never shifts
+---
+
+<ComponentPreview name="value-swap" />
+
+## Installation
+
+<InstallBlock name="value-swap" />
+
+## Usage
+
+`ValueSwap` renders an inline `span` that inherits the surrounding typography and swaps its content at the exact frames you pass in `at` — the outgoing value slides up and fades as the incoming one rides in from below, one continuous upward motion, while an invisible sizer holds the width of the longest value so the layout never shifts. It is the string analog of `rolling-number` for arbitrary text.
+
+```tsx
+import { ValueSwap } from "@/components/remocn/value-swap";
+
+export const MyScene = () => (
+  <span style={{ fontSize: 40, fontWeight: 600 }}>
+    <ValueSwap values={["$99", "$199"]} at={45} />
+  </span>
+);
+```
+
+Chain more than one swap by passing an array of frames, one per transition:
+
+```tsx
+<ValueSwap values={["Draft", "In review", "Shipped"]} at={[30, 60]} />
+```
+
+A tight before/after pair reads best with a snappier swap — try `duration={9} distance={9}`. `direction="down"` mirrors the motion for downward narratives — a price dropping, a rank falling.
+
+`rolodex-flip` is a 3D card flip with its own rhythm (`interval`) — reach for it when values cycle as a montage; `ValueSwap` is a flat vertical slide at explicit frames — reach for it for a point change (before → after, a status or price flip); `rolling-number` animates numeric digits individually.
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "values",
+      type: "string[]",
+      default: "—",
+      description: "Values in order. Two or more.",
+    },
+    {
+      name: "at",
+      type: "number | number[]",
+      default: "—",
+      description: "Frame of each swap. A number for a pair, an array of length values.length - 1 for a chain.",
+    },
+    {
+      name: "duration",
+      type: "number",
+      default: "10",
+      description: "Frames per swap.",
+    },
+    {
+      name: "distance",
+      type: "number",
+      default: "12",
+      description: "Vertical travel in pixels.",
+    },
+    {
+      name: "direction",
+      type: '"up" | "down"',
+      default: '"up"',
+      description: "Direction of the through-motion.",
+    },
+    {
+      name: "className",
+      type: "string",
+      default: "—",
+      description: "Passed to the wrapper span.",
+    },
+    {
+      name: "style",
+      type: "CSSProperties",
+      default: "—",
+      description: "Merged onto the wrapper span.",
+    },
+  ]}
+/>

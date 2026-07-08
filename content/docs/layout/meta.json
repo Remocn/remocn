@@ -1,5 +1,5 @@
 {
   "title": "Layout",
   "collapsible": false,
-  "pages": ["index", "backdrop"]
+  "pages": ["index", "backdrop", "drift"]
 }

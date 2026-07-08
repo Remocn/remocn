@@ -1,14 +1,11 @@
 ---
 name: remocn
 description: >
-  Build Remotion videos with remocn — a shadcn registry of copy-paste animation components and
-  timeline-driven UI primitives. Use when composing video scenes, adding text animations,
-  transitions, backgrounds, UI blocks, brand/social cards, or full compositions in a Remotion
-  project. Triggers include "remocn", "video component", "add animation", "text reveal",
-  "scene transition", "product demo video", "remotion component", "typewriter", "terminal
-  simulator", "glass code block", and the UI-primitive tier: "video dialog", "video button",
-  "command menu", "video select", "video tooltip". Even if the user doesn't mention remocn,
-  activate when they need polished video primitives for Remotion.
+  Build Remotion videos with remocn — copy-paste animation components and timeline-driven
+  UI primitives from a shadcn registry. Use when composing a video or scene in a Remotion
+  project, adding a single animation, transition, background, or UI-block sim, or reaching
+  for a video-ready UI primitive (button, dialog, command menu). Activate for polished
+  Remotion video work even when remocn isn't named.
 ---
 
 # remocn
@@ -60,7 +57,7 @@ notes). Don't read every file.
 | Category | Tier | Use for |
 |---|---|---|
 | **Text Animations** | `remocn` | Reveal/replace/emphasize text (`typewriter`, `blur-out-up`, `tracking-in`, `rolling-number`, `shimmer-sweep`…) |
-| **Backgrounds & Effects** | `remocn` | Animated foundations, cursors, one-shot effects (`mesh-gradient-bg`, `dynamic-grid`, `spotlight-card`, `confetti`, `backdrop`) |
+| **Backgrounds & Effects** | `remocn` | Animated foundations, cursors, one-shot effects (`dynamic-grid`, `spotlight-card`, `simulated-cursor`, `confetti`, `backdrop`) |
 | **Shaders** | `remocn` | WebGL shader backdrops, frame-driven for deterministic renders (`shader-mesh-gradient`, `shader-warp`, `shader-voronoi`, `shader-god-rays`, `shader-metaballs`…) |
 | **Transitions** | `remocn` | TransitionSeries presentations between two scenes (`whip-pan`, `push-through`, `focus-pull`, `grain-dissolve`, `wave-wipe`…) |
 | **UI Blocks** | `remocn` | Interface sims for product demos (`terminal-simulator`, `glass-code-block`, `animated-bar-chart`, `progress-steps`…) |
@@ -128,25 +125,16 @@ import { Sequence, Series } from "remotion";
 
 ## Design defaults — avoid AI-slop
 
-When you write your **own** text, scene chrome, or cards (not the prebuilt components), keep it
-restrained:
+Your **own** additions (text, scene chrome, cards — not the prebuilt components) stay restrained:
+default tracking, sentence case, solid text color, subtle 1px elevation — no decorative
+letter-spacing, ALL-CAPS, gradient text-fills, or glow shadows. Never strip these traits from a
+component whose essence *is* the effect (`tracking-in`, social-card gradients, designed elevation).
 
-- **No decorative `letter-spacing`** on body/heading text you add.
-- **No `text-transform: uppercase` / ALL-CAPS** defaults — prefer sentence case (`Launch`, not `LAUNCH`).
-- **No gradient text-fills or decorative gradient washes** — gradients only as intentional backgrounds.
-- **No glow / colored drop-shadows or large blur radii** (`blur > ~24px`, spread, multi-layer) —
-  subtle 1px elevation only.
-
-**Exception:** never strip these from components whose essence is the effect — `tracking-in`
-(letter-spacing), `mesh-gradient-bg` and social cards (gradients), and intentional elevation are
-all legitimate. The rules govern *your* additions, not the library.
-
-Full do/avoid examples: `references/design.md`. For motion quality (timing, anticipation,
-staging, easing), see `references/motion-principles.md`.
+Full do/avoid examples + design tokens: `references/design.md`. Motion quality (timing,
+anticipation, staging, easing): `references/motion-principles.md`.
 
 ## Gotchas (remocn-specific)
 
-- **Transitions wrap two scenes** — pass `from` / `to` as `ReactNode`, not as a static instance.
 - **Terminal scroll is instant** — step-function `translateY`, never spring/ease the scroll.
 - **`overflow: hidden` on split layouts** — prevents content breakage during width animations.
 - **Cursor blink is deterministic** — `Math.floor(frame / 15) % 2 === 0`, not intervals.
@@ -169,7 +157,7 @@ Don't dump components — compose one story. When asked to build a full video ("
    (infer → ask → placeholder), duration variants, beat→component slots, and a worked
    `<TransitionSeries>` skeleton.
 4. **Pick each beat's component** from `references/components/index.md`; match the `vibe` tag to the
-   brand and budget each `<Sequence durationInFrames>` around its natural length.
+   brand and budget its `Sequence` per Canvas & timing above.
 5. **Check the quality bar** — one accent, sentence-case kinetic type, real content, no glow halos, no
    feature-list enumeration, no `mesh-gradient-bg`. See `references/anatomy.md` §3.
 

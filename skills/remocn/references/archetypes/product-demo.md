@@ -44,7 +44,7 @@ Pick one slot per beat from these candidates (full props in each `../components/
 | **Features** | `progress-steps` (checklist), `animated-bar-chart` / `animated-line-chart`, `per-word-crossfade` for a "designed to ___" swap, `marker-highlight` / `inline-highlight` for emphasis, `data-flow-pipes` | one concrete moment per feature, 2–4 total |
 | **Proof** | `rolling-number` / `number-wheel` / `slot-machine-roll` for a score; `animated-bar-chart`; `github-stars` / `x-followers-overview` for social counts; a testimonial card (compose or build new) | land one number with the accent |
 | **CTA** | `per-word-crossfade` / `kinetic-center-build` closer, `terminal-simulator` for a run-this command, `spring-scale-in` for a pill, `logo-enter`, `confetti` (one accent pop) | one ask + where to go |
-| **Transitions** | `push-through` (going deeper), `fade-through` (neutral cut), `focus-pull`, `whip-pan`, `shared-axis-y`/`shared-axis-z` | pass to `TransitionSeries.Transition` as `presentation` |
+| **Transitions** | `push-through` (going deeper), `focus-pull` (refined shift), `whip-pan` (energy), or plain `fade()` from `@remotion/transitions/fade` (neutral cut) | pass to `TransitionSeries.Transition` as `presentation`; text-swap components (`fade-through`, `shared-axis-*`) mount inside a scene instead |
 
 Budget each `<TransitionSeries.Sequence durationInFrames>` around the component's natural length
 (`Length` in `../components/index.md`). Standard ~45s split: Hook 165 · Positioning 120 · Product reveal
@@ -61,10 +61,8 @@ import { TransitionSeries, springTiming } from "@remotion/transitions";
 import { fade } from "@remotion/transitions/fade";
 import { KineticCenterBuild } from "@/components/remocn/kinetic-center-build";
 import { PerCharacterRise } from "@/components/remocn/per-character-rise";
-import { TerminalSimulator } from "@/components/remocn/terminal-simulator";
 import { ProgressSteps } from "@/components/remocn/progress-steps";
 import { RollingNumber } from "@/components/remocn/rolling-number";
-import { DynamicGrid } from "@/components/remocn/dynamic-grid";
 
 const ACCENT = "#F2D200";
 
@@ -105,10 +103,11 @@ export const ProductDemo = () => (
 ```
 
 Background stays on the outer `AbsoluteFill` (one accent on a neutral canvas); components render
-transparent. Swap the `DynamicGrid` import for a slow, muted shader backdrop (e.g. `ShaderMeshGradient`
-at low `speed`) or another grid hook if you want a moving background instead of a solid fill — keep it
-muted so it never fights the foreground. The product-reveal beat above is folded into the features checklist for brevity — for a richer
-surface, add a `TerminalSimulator` / chat sim / new `ui-frame` sequence before the features beat.
+transparent. For a moving background, layer a slow, muted shader backdrop (e.g. `ShaderMeshGradient`
+at low `speed`) or `dynamic-grid` behind the series instead of the solid fill — keep it muted so it
+never fights the foreground. The product-reveal beat above is folded into the features checklist for
+brevity — for a richer surface, add a `terminal-simulator` / chat sim / new `ui-frame` sequence
+before the features beat.
 
 ## Step 5 — check against the bar
 

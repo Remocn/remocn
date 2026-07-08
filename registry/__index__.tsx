@@ -13,6 +13,7 @@ import { claudeCodeConfig } from "@/registry/remocn/claude-code/config";
 import { confettiConfig } from "@/registry/remocn/confetti/config";
 import { dataFlowPipesConfig } from "@/registry/remocn/data-flow-pipes/config";
 import { ditherDissolveConfig } from "@/registry/remocn/dither-dissolve/config";
+import { driftConfig } from "@/registry/remocn/drift/config";
 import { dynamicGridConfig } from "@/registry/remocn/dynamic-grid/config";
 import { ecosystemConstellationConfig } from "@/registry/remocn/ecosystem-constellation/config";
 import { fadeThroughConfig } from "@/registry/remocn/fade-through/config";
@@ -46,6 +47,7 @@ import { pushThroughConfig } from "@/registry/remocn/push-through/config";
 import { rgbGlitchTextConfig } from "@/registry/remocn/rgb-glitch-text/config";
 import { rippleZoomConfig } from "@/registry/remocn/ripple-zoom/config";
 import { rollingNumberConfig } from "@/registry/remocn/rolling-number/config";
+import { rolodexFlipConfig } from "@/registry/remocn/rolodex-flip/config";
 import { scaleDownFadeConfig } from "@/registry/remocn/scale-down-fade/config";
 import { shaderColorPanelsConfig } from "@/registry/remocn/shader-color-panels/config";
 import { shaderDitheringConfig } from "@/registry/remocn/shader-dithering/config";
@@ -85,11 +87,13 @@ import { topDownLettersConfig } from "@/registry/remocn/top-down-letters/config"
 import { trackingInConfig } from "@/registry/remocn/tracking-in/config";
 import { typewriterConfig } from "@/registry/remocn/typewriter/config";
 import { v0Config } from "@/registry/remocn/v0/config";
+import { valueSwapConfig } from "@/registry/remocn/value-swap/config";
 import { warpDissolveConfig } from "@/registry/remocn/warp-dissolve/config";
 import { waveWipeConfig } from "@/registry/remocn/wave-wipe/config";
 import { whipPanConfig } from "@/registry/remocn/whip-pan/config";
 import { xFollowCardConfig } from "@/registry/remocn/x-follow-card/config";
 import { xFollowersOverviewConfig } from "@/registry/remocn/x-followers-overview/config";
+import { zoomBlurConfig } from "@/registry/remocn/zoom-blur/config";
 import { accordionConfig } from "@/registry/remocn-ui/accordion/config";
 import { alertDialogConfig } from "@/registry/remocn-ui/alert-dialog/config";
 import { blurInConfig } from "@/registry/remocn-ui/blur-in/config";
@@ -588,6 +592,13 @@ const registry: Record<string, RegistryEntry> = {
       })),
     config: focusPullConfig,
   },
+  "zoom-blur": {
+    load: () =>
+      import("@/components/docs/examples/zoom-blur-example").then((m) => ({
+        default: m.ZoomBlurExampleScene,
+      })),
+    config: zoomBlurConfig,
+  },
   "warp-dissolve": {
     load: () =>
       import("@/components/docs/examples/warp-dissolve-example").then((m) => ({
@@ -693,6 +704,20 @@ const registry: Record<string, RegistryEntry> = {
       })),
     config: rollingNumberConfig,
   },
+  "rolodex-flip": {
+    load: () =>
+      import("@/components/docs/examples/rolodex-flip-example").then((m) => ({
+        default: m.RolodexFlipExampleScene,
+      })),
+    config: rolodexFlipConfig,
+  },
+  "value-swap": {
+    load: () =>
+      import("@/components/docs/examples/value-swap-example").then((m) => ({
+        default: m.ValueSwapExampleScene,
+      })),
+    config: valueSwapConfig,
+  },
   "x-follow-card": {
     load: () =>
       import("@/registry/remocn/x-follow-card").then((m) => ({
@@ -720,6 +745,13 @@ const registry: Record<string, RegistryEntry> = {
         default: m.BackdropDemo,
       })),
     config: backdropConfig,
+  },
+  drift: {
+    load: () =>
+      import("@/components/docs/examples/drift-example").then((m) => ({
+        default: m.DriftExampleScene,
+      })),
+    config: driftConfig,
   },
   "claude-chat": {
     load: () =>

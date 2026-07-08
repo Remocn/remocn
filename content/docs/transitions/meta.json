@@ -13,6 +13,7 @@
     "smoke-dissolve",
     "whip-pan",
     "push-through",
-    "focus-pull"
+    "focus-pull",
+    "zoom-blur"
   ]
 }

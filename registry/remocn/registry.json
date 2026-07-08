@@ -867,6 +867,48 @@
       ]
     },
     {
+      "name": "zoom-blur",
+      "type": "registry:component",
+      "title": "Zoom Blur",
+      "description": "A depth punch-in transition that pushes the outgoing scene through the viewer while the incoming one resolves out of blur.",
+      "dependencies": ["remotion", "@remotion/transitions"],
+      "files": [
+        {
+          "path": "zoom-blur/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/zoom-blur.tsx"
+        }
+      ]
+    },
+    {
+      "name": "rolodex-flip",
+      "type": "registry:component",
+      "title": "Rolodex Flip",
+      "description": "Cycles a word through a list of values with a 3D rolodex card flip while an invisible sizer keeps the line width and baseline stable.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "rolodex-flip/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/rolodex-flip.tsx"
+        }
+      ]
+    },
+    {
+      "name": "value-swap",
+      "type": "registry:component",
+      "title": "Value Swap",
+      "description": "Swaps a value in place with a vertical slide — the old value exits up as the new one enters from below while an invisible sizer keeps the width stable.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "value-swap/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/value-swap.tsx"
+        }
+      ]
+    },
+    {
       "name": "chat-to-preview-layout",
       "type": "registry:component",
       "title": "Chat to Preview Layout",
@@ -1252,6 +1294,20 @@
           "path": "backdrop/index.tsx",
           "type": "registry:component",
           "target": "components/remocn/backdrop.tsx"
+        }
+      ]
+    },
+    {
+      "name": "drift",
+      "type": "registry:component",
+      "title": "Drift",
+      "description": "A slow linear camera push-in wrapper that scales its scene from 1 to 1+grow across the sequence so no frame is ever static.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "drift/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/drift.tsx"
         }
       ]
     },

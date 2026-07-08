@@ -1,0 +1,66 @@
+---
+title: Zoom Blur
+description: Push the outgoing scene through the viewer while the incoming one resolves out of blur
+---
+
+<ComponentPreview name="zoom-blur" />
+
+## Installation
+
+<InstallBlock name="zoom-blur" />
+
+## Usage
+
+`zoomBlur()` is a Remotion transition presentation. Pass it to a
+`TransitionSeries.Transition` between two sequences. The outgoing scene scales
+past the viewer into blur while the incoming one resolves out of blur, riding
+a soft opacity crossfade — a depth punch-in. The presentation applies no
+internal easing, so the character comes entirely from the timing function.
+`linearTiming({ durationInFrames: 18 })` is the recommended default, and
+`springTiming` gives it a springy character. `rise` adds a vertical pickup to
+the move.
+
+```tsx
+import { TransitionSeries, linearTiming } from "@remotion/transitions";
+import { zoomBlur } from "@/components/remocn/zoom-blur";
+
+export const MyVideo = () => (
+  <TransitionSeries>
+    <TransitionSeries.Sequence durationInFrames={70}>
+      <SceneA />
+    </TransitionSeries.Sequence>
+    <TransitionSeries.Transition
+      timing={linearTiming({ durationInFrames: 18 })}
+      presentation={zoomBlur()}
+    />
+    <TransitionSeries.Sequence durationInFrames={70}>
+      <SceneB />
+    </TransitionSeries.Sequence>
+  </TransitionSeries>
+);
+```
+
+`push-through` is a scale push without the blur crossfade — reach for
+`zoomBlur` when the cut should feel like a depth punch-in.
+
+## Props
+
+`zoomBlur(props)` accepts:
+
+<PropsTable
+  rows={[
+    {
+      name: "blur",
+      type: "number",
+      default: "16",
+      description: "Peak blur in pixels at the edges of the transition.",
+    },
+    {
+      name: "rise",
+      type: "number",
+      default: "0",
+      description:
+        "Vertical pickup in pixels. The incoming scene rises into place while the outgoing one lifts away. 0 keeps the move purely depth-based.",
+    },
+  ]}
+/>

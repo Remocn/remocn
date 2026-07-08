@@ -1,0 +1,68 @@
+---
+title: Drift
+description: Wrap any scene in a slow camera push-in so no frame is ever static
+---
+
+<ComponentPreview name="drift" />
+
+## Installation
+
+<InstallBlock name="drift" />
+
+## Usage
+
+`Drift` wraps scene content in a constant-speed camera push-in, scaling it from `1` to `1 + grow` over the wrapping sequence's duration. The movement is linear on purpose — a constant creep that adds life to a scene without drawing attention to itself.
+
+`durationInFrames` comes from `useVideoConfig()`, which is Sequence-scoped. Inside a `TransitionSeries.Sequence`, the drift stretches exactly across that scene's own duration and peaks right at the cut. Put `Drift` inside the scene, under the transition, not around the whole series.
+
+A `grow` of `0.03` to `0.05` is the working range — beyond that it starts to read as a deliberate zoom rather than ambient motion. A negative `grow` turns it into a slow pull-back instead of a push-in.
+
+```tsx
+import { Drift } from "@/components/remocn/drift";
+
+export const MyScene = () => (
+  <Drift>
+    <YourScene />
+  </Drift>
+);
+```
+
+Inside a `TransitionSeries.Sequence`:
+
+```tsx
+import { TransitionSeries, linearTiming } from "@remotion/transitions";
+import { Drift } from "@/components/remocn/drift";
+import { zoomBlur } from "@/components/remocn/zoom-blur";
+
+export const MyVideo = () => (
+  <TransitionSeries>
+    <TransitionSeries.Sequence durationInFrames={90}>
+      <Drift>
+        <SceneA />
+      </Drift>
+    </TransitionSeries.Sequence>
+    <TransitionSeries.Transition
+      timing={linearTiming({ durationInFrames: 18 })}
+      presentation={zoomBlur()}
+    />
+    <TransitionSeries.Sequence durationInFrames={90}>
+      <Drift>
+        <SceneB />
+      </Drift>
+    </TransitionSeries.Sequence>
+  </TransitionSeries>
+);
+```
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "grow",
+      type: "number",
+      default: "0.035",
+      description: "Scale gain reached at the end of the scene. 0.035 means the scene ends 3.5 percent larger. Negative values pull back instead.",
+    },
+  ]}
+/>
