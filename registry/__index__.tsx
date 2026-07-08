@@ -87,6 +87,7 @@ import { topDownLettersConfig } from "@/registry/remocn/top-down-letters/config"
 import { trackingInConfig } from "@/registry/remocn/tracking-in/config";
 import { typewriterConfig } from "@/registry/remocn/typewriter/config";
 import { v0Config } from "@/registry/remocn/v0/config";
+import { valueSwapConfig } from "@/registry/remocn/value-swap/config";
 import { warpDissolveConfig } from "@/registry/remocn/warp-dissolve/config";
 import { waveWipeConfig } from "@/registry/remocn/wave-wipe/config";
 import { whipPanConfig } from "@/registry/remocn/whip-pan/config";
@@ -709,6 +710,13 @@ const registry: Record<string, RegistryEntry> = {
         default: m.RolodexFlipExampleScene,
       })),
     config: rolodexFlipConfig,
+  },
+  "value-swap": {
+    load: () =>
+      import("@/components/docs/examples/value-swap-example").then((m) => ({
+        default: m.ValueSwapExampleScene,
+      })),
+    config: valueSwapConfig,
   },
   "x-follow-card": {
     load: () =>

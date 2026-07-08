@@ -895,6 +895,20 @@
       ]
     },
     {
+      "name": "value-swap",
+      "type": "registry:component",
+      "title": "Value Swap",
+      "description": "Swaps a value in place with a vertical slide — the old value exits up as the new one enters from below while an invisible sizer keeps the width stable.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "value-swap/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/value-swap.tsx"
+        }
+      ]
+    },
+    {
       "name": "chat-to-preview-layout",
       "type": "registry:component",
       "title": "Chat to Preview Layout",

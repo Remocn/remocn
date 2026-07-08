@@ -44,5 +44,5 @@ export const MyScene = () => (
 ## Avoid when
 
 - The values are numbers with a counting narrative — use `number-wheel` or `rolling-number`.
-- Only two values swap once — `shared-axis-y` or `per-word-crossfade` is lighter.
+- Only two values swap once — `value-swap`, `shared-axis-y`, or `per-word-crossfade` is lighter.
 - The line reflows per value — the fixed sizer width shows a gap next to short values.

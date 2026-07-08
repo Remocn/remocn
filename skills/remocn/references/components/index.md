@@ -46,6 +46,7 @@ Tier `remocn`. Reveal / replace / emphasize text and numbers. Frame-driven, shar
 | [`top-down-letters`](top-down-letters.md) | A single uppercase word or short acronym should enter with structural weight — each letter landing like a stamp | The text is more than ~8 characters — many letters dropping sequentially stretches the animation and the last letters feel delayed → `staggered-fade-up` | 60f | clean | — |
 | [`tracking-in`](tracking-in.md) | A title word or brand name should feel like it is focusing into place — tracking collapse is the right metaphor for clarity, precision, or sharpness | You want per-character stagger — `tracking-in` moves all letters as one unit; use `soft-blur-in` for a per-character blur-and-rise stagger instead | 90f | premium | — |
 | [`typewriter`](typewriter.md) | Simulating a command being typed into a terminal or input — pairs with `terminal-simulator` | The text is long — typing a paragraph at a readable speed eats far more frames than a viewer will wait; use `staggered-fade-up` or `blur-out-up` instead | 120f | clean | `@remocn/remocn-ui`, `@remocn/caret` |
+| [`value-swap`](value-swap.md) | A value changes at a specific story beat — before/after price, status promotion, a hex/token flip; you control the exact swap frames | Values should cycle continuously as a montage — use `rolodex-flip`; the value is a large pure number counting up — `rolling-number` or `number-wheel` reads as data | 100f | clean | — |
 
 ## Backgrounds & Effects
 
