@@ -2165,6 +2165,21 @@
       ]
     },
     {
+      "name": "icon-user-plus",
+      "type": "registry:component",
+      "title": "User Plus",
+      "description": "Animated Lucide user-plus icon — the figure draws on, then the plus strokes draw in and pop: a new member added.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-user-plus/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-user-plus.tsx"
+        }
+      ]
+    },
+    {
       "name": "icon-sparkles",
       "type": "registry:component",
       "title": "Sparkles",

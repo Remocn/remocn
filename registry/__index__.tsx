@@ -75,6 +75,7 @@ import { iconStarConfig } from "@/registry/remocn/icon-star/config";
 import { iconThumbsUpConfig } from "@/registry/remocn/icon-thumbs-up/config";
 import { iconTrashConfig } from "@/registry/remocn/icon-trash/config";
 import { iconUploadConfig } from "@/registry/remocn/icon-upload/config";
+import { iconUserPlusConfig } from "@/registry/remocn/icon-user-plus/config";
 import { iconUserConfig } from "@/registry/remocn/icon-user/config";
 import { iconUsersConfig } from "@/registry/remocn/icon-users/config";
 import { iconVideoConfig } from "@/registry/remocn/icon-video/config";
@@ -964,6 +965,13 @@ const registry: Record<string, RegistryEntry> = {
         default: m.UploadIcon,
       })),
     config: iconUploadConfig,
+  },
+  "icon-user-plus": {
+    load: () =>
+      import("@/registry/remocn/icon-user-plus").then((m) => ({
+        default: m.UserPlusIcon,
+      })),
+    config: iconUserPlusConfig,
   },
   "icon-user": {
     load: () =>

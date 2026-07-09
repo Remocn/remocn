@@ -60,6 +60,7 @@ import { ThumbsUpIconStatic } from "@/registry/remocn/icon-thumbs-up";
 import { ZapIconStatic } from "@/registry/remocn/icon-zap";
 import { TrashIconStatic } from "@/registry/remocn/icon-trash";
 import { UploadIconStatic } from "@/registry/remocn/icon-upload";
+import { UserPlusIconStatic } from "@/registry/remocn/icon-user-plus";
 import { UserIconStatic } from "@/registry/remocn/icon-user";
 import { UsersIconStatic } from "@/registry/remocn/icon-users";
 import { VideoIconStatic } from "@/registry/remocn/icon-video";
@@ -343,6 +344,12 @@ export const ICONS: IconEntry[] = [
     label: "Users",
     category: "People & communication",
     Static: UsersIconStatic,
+  },
+  {
+    name: "icon-user-plus",
+    label: "User Plus",
+    category: "People & communication",
+    Static: UserPlusIconStatic,
   },
   {
     name: "icon-heart",
