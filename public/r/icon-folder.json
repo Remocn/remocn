@@ -1,0 +1,17 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "icon-folder",
+  "title": "Folder",
+  "description": "Animated Lucide folder icon — draws on, then the folder tips open for a peek and closes.",
+  "dependencies": ["remotion"],
+  "registryDependencies": ["@remocn/icons-core"],
+  "files": [
+    {
+      "path": "registry/remocn-icons/icon-folder/index.tsx",
+      "content": "\"use client\";\n\nimport { Easing, interpolate } from \"remotion\";\nimport {\n  drawnPathProps,\n  type IconAnimationProps,\n  useIconAnimation,\n} from \"@/lib/remocn-icons\";\n\nconst FOLDER_PATH =\n  \"M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z\";\n\nconst PIVOT_X = 4;\nconst PIVOT_Y = 20;\n\nconst TIMINGS = {\n  drawDurationInFrames: 14,\n  actionDelayInFrames: 2,\n  actionDurationInFrames: 20,\n  loop: false,\n} as const;\n\nexport function FolderIcon({\n  animation = \"both\",\n  loop,\n  speed,\n  size = 48,\n  color = \"currentColor\",\n  strokeWidth = 2,\n  className,\n}: IconAnimationProps) {\n  const { drawProgress, scaleIn, actionProgress, actionFrame } =\n    useIconAnimation({ animation, loop, speed }, TIMINGS);\n\n  const acting = animation !== \"draw\" && actionFrame >= 0;\n\n  const peek = acting\n    ? interpolate(actionProgress, [0, 0.45, 1], [0, -4, 0], {\n        extrapolateLeft: \"clamp\",\n        extrapolateRight: \"clamp\",\n        easing: Easing.inOut(Easing.quad),\n      })\n    : 0;\n\n  const folder = drawnPathProps(FOLDER_PATH, drawProgress);\n\n  const scale = 0.85 + 0.15 * scaleIn;\n\n  return (\n    <svg\n      className={className}\n      width={size}\n      height={size}\n      viewBox=\"0 0 24 24\"\n      fill=\"none\"\n      stroke={color}\n      strokeWidth={strokeWidth}\n      strokeLinecap=\"round\"\n      strokeLinejoin=\"round\"\n      style={{\n        overflow: \"visible\",\n        transformOrigin: \"center\",\n        transform: `scale(${scale})`,\n      }}\n    >\n      <g transform={`rotate(${peek} ${PIVOT_X} ${PIVOT_Y})`}>\n        <path\n          d={FOLDER_PATH}\n          strokeDasharray={folder.strokeDasharray}\n          strokeDashoffset={folder.strokeDashoffset}\n        />\n      </g>\n    </svg>\n  );\n}\n\nexport function FolderIconStatic({\n  size = 48,\n  color = \"currentColor\",\n  strokeWidth = 2,\n  className,\n}: {\n  size?: number;\n  color?: string;\n  strokeWidth?: number;\n  className?: string;\n}) {\n  return (\n    <svg\n      className={className}\n      width={size}\n      height={size}\n      viewBox=\"0 0 24 24\"\n      fill=\"none\"\n      stroke={color}\n      strokeWidth={strokeWidth}\n      strokeLinecap=\"round\"\n      strokeLinejoin=\"round\"\n    >\n      <path d={FOLDER_PATH} />\n    </svg>\n  );\n}\n",
+      "type": "registry:component",
+      "target": "components/remocn/icon-folder.tsx"
+    }
+  ],
+  "type": "registry:component"
+}

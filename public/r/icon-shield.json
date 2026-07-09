@@ -1,0 +1,17 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "icon-shield",
+  "title": "Shield",
+  "description": "Animated Lucide shield icon — draws on, then braces: a firm guard pulse that asserts protection.",
+  "dependencies": ["remotion"],
+  "registryDependencies": ["@remocn/icons-core"],
+  "files": [
+    {
+      "path": "registry/remocn-icons/icon-shield/index.tsx",
+      "content": "\"use client\";\n\nimport { Easing, interpolate } from \"remotion\";\nimport {\n  drawnPathProps,\n  type IconAnimationProps,\n  useIconAnimation,\n} from \"@/lib/remocn-icons\";\n\nconst SHIELD_PATH =\n  \"M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z\";\n\nconst CENTER = 12;\n\nconst TIMINGS = {\n  drawDurationInFrames: 14,\n  actionDelayInFrames: 2,\n  actionDurationInFrames: 18,\n  loop: false,\n} as const;\n\nexport function ShieldIcon({\n  animation = \"both\",\n  loop,\n  speed,\n  size = 48,\n  color = \"currentColor\",\n  strokeWidth = 2,\n  className,\n}: IconAnimationProps) {\n  const { drawProgress, scaleIn, actionProgress, actionFrame } =\n    useIconAnimation({ animation, loop, speed }, TIMINGS);\n\n  const acting = animation !== \"draw\" && actionFrame >= 0;\n\n  const brace = acting\n    ? interpolate(actionProgress, [0, 0.45, 1], [1, 1.1, 1], {\n        extrapolateLeft: \"clamp\",\n        extrapolateRight: \"clamp\",\n        easing: Easing.out(Easing.quad),\n      })\n    : 1;\n  const lean = acting\n    ? interpolate(actionProgress, [0, 0.45, 1], [0, -2, 0], {\n        extrapolateLeft: \"clamp\",\n        extrapolateRight: \"clamp\",\n        easing: Easing.out(Easing.quad),\n      })\n    : 0;\n\n  const shield = drawnPathProps(SHIELD_PATH, drawProgress);\n\n  const scale = 0.85 + 0.15 * scaleIn;\n\n  return (\n    <svg\n      className={className}\n      width={size}\n      height={size}\n      viewBox=\"0 0 24 24\"\n      fill=\"none\"\n      stroke={color}\n      strokeWidth={strokeWidth}\n      strokeLinecap=\"round\"\n      strokeLinejoin=\"round\"\n      style={{\n        overflow: \"visible\",\n        transformOrigin: \"center\",\n        transform: `scale(${scale})`,\n      }}\n    >\n      <g transform={`rotate(${lean} ${CENTER} ${CENTER}) translate(${CENTER * (1 - brace)} ${CENTER * (1 - brace)}) scale(${brace})`}>\n        <path\n          d={SHIELD_PATH}\n          strokeDasharray={shield.strokeDasharray}\n          strokeDashoffset={shield.strokeDashoffset}\n        />\n      </g>\n    </svg>\n  );\n}\n\nexport function ShieldIconStatic({\n  size = 48,\n  color = \"currentColor\",\n  strokeWidth = 2,\n  className,\n}: {\n  size?: number;\n  color?: string;\n  strokeWidth?: number;\n  className?: string;\n}) {\n  return (\n    <svg\n      className={className}\n      width={size}\n      height={size}\n      viewBox=\"0 0 24 24\"\n      fill=\"none\"\n      stroke={color}\n      strokeWidth={strokeWidth}\n      strokeLinecap=\"round\"\n      strokeLinejoin=\"round\"\n    >\n      <path d={SHIELD_PATH} />\n    </svg>\n  );\n}\n",
+      "type": "registry:component",
+      "target": "components/remocn/icon-shield.tsx"
+    }
+  ],
+  "type": "registry:component"
+}

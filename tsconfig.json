@@ -20,7 +20,7 @@
       }
     ],
     "paths": {
-      "@/lib/remocn-icons": ["./registry/remocn/icons-core/index.ts"],
+      "@/lib/remocn-icons": ["./registry/remocn-icons/icons-core/index.ts"],
       "@/lib/remocn-ui": ["./registry/remocn-ui/core/index.ts"],
       "@/lib/remocn-ui/*": ["./registry/remocn-ui/core/*"],
       "@/components/remocn/use-cursor-path": [

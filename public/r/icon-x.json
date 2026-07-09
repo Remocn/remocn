@@ -1,0 +1,17 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "icon-x",
+  "title": "X",
+  "description": "Animated Lucide x icon — the two diagonals draw in crosswise, then the mark shakes to punctuate an error, removal, or dismissal.",
+  "dependencies": ["remotion"],
+  "registryDependencies": ["@remocn/icons-core"],
+  "files": [
+    {
+      "path": "registry/remocn-icons/icon-x/index.tsx",
+      "content": "\"use client\";\n\nimport { Easing, interpolate } from \"remotion\";\nimport {\n  drawnPathProps,\n  type IconAnimationProps,\n  useIconAnimation,\n} from \"@/lib/remocn-icons\";\n\nconst FIRST_PATH = \"M18 6 6 18\";\nconst SECOND_PATH = \"M6 6 18 18\";\n\nconst TIMINGS = {\n  drawDurationInFrames: 14,\n  actionDelayInFrames: 2,\n  actionDurationInFrames: 18,\n  loop: false,\n} as const;\n\nexport function XIcon({\n  animation = \"both\",\n  loop,\n  speed,\n  size = 48,\n  color = \"currentColor\",\n  strokeWidth = 2,\n  className,\n}: IconAnimationProps) {\n  const { drawProgress, scaleIn, actionProgress } = useIconAnimation(\n    { animation, loop, speed },\n    TIMINGS,\n  );\n\n  const linearDraw = 1 - (1 - drawProgress) ** (1 / 3);\n\n  const firstProgress = interpolate(linearDraw, [0, 0.57], [0, 1], {\n    extrapolateLeft: \"clamp\",\n    extrapolateRight: \"clamp\",\n    easing: Easing.inOut(Easing.quad),\n  });\n  const secondProgress = interpolate(linearDraw, [0.29, 0.86], [0, 1], {\n    extrapolateLeft: \"clamp\",\n    extrapolateRight: \"clamp\",\n    easing: Easing.inOut(Easing.quad),\n  });\n\n  const first = drawnPathProps(FIRST_PATH, firstProgress);\n  const second = drawnPathProps(SECOND_PATH, secondProgress);\n\n  const rotate = interpolate(\n    actionProgress,\n    [0, 0.25, 0.5, 0.75, 1],\n    [0, -8, 6, -3, 0],\n    { extrapolateLeft: \"clamp\", extrapolateRight: \"clamp\" },\n  );\n  const scale = 0.85 + 0.15 * scaleIn;\n\n  return (\n    <svg\n      className={className}\n      width={size}\n      height={size}\n      viewBox=\"0 0 24 24\"\n      fill=\"none\"\n      stroke={color}\n      strokeWidth={strokeWidth}\n      strokeLinecap=\"round\"\n      strokeLinejoin=\"round\"\n      style={{\n        overflow: \"visible\",\n        transformOrigin: \"center\",\n        transform: `rotate(${rotate}deg) scale(${scale})`,\n      }}\n    >\n      <path\n        d={FIRST_PATH}\n        strokeDasharray={first.strokeDasharray}\n        strokeDashoffset={first.strokeDashoffset}\n      />\n      <path\n        d={SECOND_PATH}\n        strokeDasharray={second.strokeDasharray}\n        strokeDashoffset={second.strokeDashoffset}\n      />\n    </svg>\n  );\n}\n\nexport function XIconStatic({\n  size = 48,\n  color = \"currentColor\",\n  strokeWidth = 2,\n  className,\n}: {\n  size?: number;\n  color?: string;\n  strokeWidth?: number;\n  className?: string;\n}) {\n  return (\n    <svg\n      className={className}\n      width={size}\n      height={size}\n      viewBox=\"0 0 24 24\"\n      fill=\"none\"\n      stroke={color}\n      strokeWidth={strokeWidth}\n      strokeLinecap=\"round\"\n      strokeLinejoin=\"round\"\n    >\n      <path d={FIRST_PATH} />\n      <path d={SECOND_PATH} />\n    </svg>\n  );\n}\n",
+      "type": "registry:component",
+      "target": "components/remocn/icon-x.tsx"
+    }
+  ],
+  "type": "registry:component"
+}

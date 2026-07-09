@@ -1,0 +1,17 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "icon-credit-card",
+  "title": "Credit Card",
+  "description": "Animated Lucide credit-card icon — the card draws on, then the stripe swipes through and the card tips: payment accepted.",
+  "dependencies": ["remotion"],
+  "registryDependencies": ["@remocn/icons-core"],
+  "files": [
+    {
+      "path": "registry/remocn-icons/icon-credit-card/index.tsx",
+      "content": "\"use client\";\n\nimport { Easing, interpolate } from \"remotion\";\nimport {\n  drawnPathProps,\n  type IconAnimationProps,\n  useIconAnimation,\n} from \"@/lib/remocn-icons\";\n\nconst CARD_PATH =\n  \"M4 5H20A2 2 0 0 1 22 7V17A2 2 0 0 1 20 19H4A2 2 0 0 1 2 17V7A2 2 0 0 1 4 5Z\";\nconst STRIPE_PATH = \"M2 10H22\";\n\nconst PIVOT_X = 12;\nconst PIVOT_Y = 19;\n\nconst TIMINGS = {\n  drawDurationInFrames: 14,\n  actionDelayInFrames: 2,\n  actionDurationInFrames: 24,\n  loop: false,\n} as const;\n\nexport function CreditCardIcon({\n  animation = \"both\",\n  loop,\n  speed,\n  size = 48,\n  color = \"currentColor\",\n  strokeWidth = 2,\n  className,\n}: IconAnimationProps) {\n  const { drawProgress, scaleIn, actionProgress, actionFrame } =\n    useIconAnimation({ animation, loop, speed }, TIMINGS);\n\n  const acting = animation !== \"draw\" && actionFrame >= 0;\n\n  const swipe = interpolate(actionProgress, [0.1, 0.45], [0, 1], {\n    extrapolateLeft: \"clamp\",\n    extrapolateRight: \"clamp\",\n    easing: Easing.out(Easing.cubic),\n  });\n  const tilt = acting\n    ? interpolate(actionProgress, [0.4, 0.6, 1], [0, 4, 0], {\n        extrapolateLeft: \"clamp\",\n        extrapolateRight: \"clamp\",\n        easing: Easing.inOut(Easing.quad),\n      })\n    : 0;\n\n  const stripeProgress = animation === \"draw\" ? 1 : acting ? swipe : 0;\n\n  const card = drawnPathProps(CARD_PATH, drawProgress);\n  const stripe = drawnPathProps(STRIPE_PATH, stripeProgress);\n\n  const scale = 0.85 + 0.15 * scaleIn;\n\n  return (\n    <svg\n      className={className}\n      width={size}\n      height={size}\n      viewBox=\"0 0 24 24\"\n      fill=\"none\"\n      stroke={color}\n      strokeWidth={strokeWidth}\n      strokeLinecap=\"round\"\n      strokeLinejoin=\"round\"\n      style={{\n        overflow: \"visible\",\n        transformOrigin: \"center\",\n        transform: `scale(${scale})`,\n      }}\n    >\n      <g transform={`rotate(${tilt} ${PIVOT_X} ${PIVOT_Y})`}>\n        <path\n          d={CARD_PATH}\n          strokeDasharray={card.strokeDasharray}\n          strokeDashoffset={card.strokeDashoffset}\n        />\n        <path\n          d={STRIPE_PATH}\n          strokeDasharray={stripe.strokeDasharray}\n          strokeDashoffset={stripe.strokeDashoffset}\n        />\n      </g>\n    </svg>\n  );\n}\n\nexport function CreditCardIconStatic({\n  size = 48,\n  color = \"currentColor\",\n  strokeWidth = 2,\n  className,\n}: {\n  size?: number;\n  color?: string;\n  strokeWidth?: number;\n  className?: string;\n}) {\n  return (\n    <svg\n      className={className}\n      width={size}\n      height={size}\n      viewBox=\"0 0 24 24\"\n      fill=\"none\"\n      stroke={color}\n      strokeWidth={strokeWidth}\n      strokeLinecap=\"round\"\n      strokeLinejoin=\"round\"\n    >\n      <rect width=\"20\" height=\"14\" x=\"2\" y=\"5\" rx=\"2\" />\n      <line x1=\"2\" x2=\"22\" y1=\"10\" y2=\"10\" />\n    </svg>\n  );\n}\n",
+      "type": "registry:component",
+      "target": "components/remocn/icon-credit-card.tsx"
+    }
+  ],
+  "type": "registry:component"
+}
