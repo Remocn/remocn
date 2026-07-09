@@ -1655,6 +1655,21 @@
       ]
     },
     {
+      "name": "icon-arrow-left",
+      "type": "registry:component",
+      "title": "Arrow Left",
+      "description": "Animated Lucide arrow-left icon — the shaft and head draw on, then the arrow nudges back for back navigation or 'previously' callbacks.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-arrow-left/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-arrow-left.tsx"
+        }
+      ]
+    },
+    {
       "name": "icon-sparkles",
       "type": "registry:component",
       "title": "Sparkles",

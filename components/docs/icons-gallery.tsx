@@ -8,6 +8,7 @@ import { usePrefersReducedMotion } from "@/lib/use-prefers-reduced-motion";
 import { cn } from "@/lib/utils";
 import registry, { type RegistryEntry } from "@/registry/__index__";
 import { AlertTriangleIconStatic } from "@/registry/remocn/icon-alert-triangle";
+import { ArrowLeftIconStatic } from "@/registry/remocn/icon-arrow-left";
 import { ArrowRightIconStatic } from "@/registry/remocn/icon-arrow-right";
 import { BellIconStatic } from "@/registry/remocn/icon-bell";
 import { CheckCircleIconStatic } from "@/registry/remocn/icon-check-circle";
@@ -193,6 +194,12 @@ export const ICONS: IconEntry[] = [
     label: "Arrow Right",
     category: "Arrows & navigation",
     Static: ArrowRightIconStatic,
+  },
+  {
+    name: "icon-arrow-left",
+    label: "Arrow Left",
+    category: "Arrows & navigation",
+    Static: ArrowLeftIconStatic,
   },
 ];
 
