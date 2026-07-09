@@ -2180,6 +2180,21 @@
       ]
     },
     {
+      "name": "icon-at-sign",
+      "type": "registry:component",
+      "title": "At Sign",
+      "description": "Animated Lucide at-sign icon — the inner 'a' draws and pops, then the outer swoosh re-traces its tail: a mention landing.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-at-sign/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-at-sign.tsx"
+        }
+      ]
+    },
+    {
       "name": "icon-user",
       "type": "registry:component",
       "title": "User",

@@ -13,6 +13,7 @@ import { ArrowDownIconStatic } from "@/registry/remocn/icon-arrow-down";
 import { ArrowLeftIconStatic } from "@/registry/remocn/icon-arrow-left";
 import { ArrowRightIconStatic } from "@/registry/remocn/icon-arrow-right";
 import { ArrowUpIconStatic } from "@/registry/remocn/icon-arrow-up";
+import { AtSignIconStatic } from "@/registry/remocn/icon-at-sign";
 import { BellIconStatic } from "@/registry/remocn/icon-bell";
 import { BookmarkIconStatic } from "@/registry/remocn/icon-bookmark";
 import { CameraIconStatic } from "@/registry/remocn/icon-camera";
@@ -371,6 +372,12 @@ export const ICONS: IconEntry[] = [
     label: "Phone",
     category: "People & communication",
     Static: PhoneIconStatic,
+  },
+  {
+    name: "icon-at-sign",
+    label: "At Sign",
+    category: "People & communication",
+    Static: AtSignIconStatic,
   },
   {
     name: "icon-heart",

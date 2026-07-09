@@ -101,6 +101,7 @@ export const Scene = () => (
 | `icon-mail` | Email features, digests, contact beats | In-app chat — use `icon-message-circle` | no | 75f |
 | `icon-message-circle` | Chat, comments, support conversations | Email — use `icon-mail` | no | 70f |
 | `icon-phone` | Calls, contact-us, telephony features | Mobile-device claims — use `icon-smartphone` | no | 70f |
+| `icon-at-sign` | Mentions, handles, email-address fields | Full email semantics — use `icon-mail` | no | 75f |
 | `icon-heart` | Likes, favorites, testimonials, or "built with love" moments | Ratings — use `icon-star` | no | 75f |
 | `icon-star` | Ratings, favorites, GitHub-star callouts | Sparkle/magic semantics — use `icon-sparkles` | no | 70f |
 | `icon-sparkles` | AI features, magic moments, premium highlights | A single award or rating — use `icon-star` | yes | 90f |
