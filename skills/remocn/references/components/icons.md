@@ -126,6 +126,7 @@ export const Scene = () => (
 | `icon-credit-card` | Payments, billing, pricing pages | Cash amounts — use `icon-dollar-sign` | no | 70f |
 | `icon-dollar-sign` | Pricing, revenue metrics, cost savings | Payment flows — use `icon-credit-card` | no | 70f |
 | `icon-tag` | Discounts, labels, pricing tiers | Categorization in dashboards — use `icon-filter` | no | 70f |
+| `icon-package` | Shipping, releases, delivery beats | Digital downloads — use `icon-download` | no | 80f |
 | `icon-heart` | Likes, favorites, testimonials, or "built with love" moments | Ratings — use `icon-star` | no | 75f |
 | `icon-star` | Ratings, favorites, GitHub-star callouts | Sparkle/magic semantics — use `icon-sparkles` | no | 70f |
 | `icon-sparkles` | AI features, magic moments, premium highlights | A single award or rating — use `icon-star` | yes | 90f |

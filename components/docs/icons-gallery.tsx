@@ -60,6 +60,7 @@ import { MicIconStatic } from "@/registry/remocn/icon-mic";
 import { MonitorIconStatic } from "@/registry/remocn/icon-monitor";
 import { MoonIconStatic } from "@/registry/remocn/icon-moon";
 import { MoreHorizontalIconStatic } from "@/registry/remocn/icon-more-horizontal";
+import { PackageIconStatic } from "@/registry/remocn/icon-package";
 import { PartyPopperIconStatic } from "@/registry/remocn/icon-party-popper";
 import { PauseIconStatic } from "@/registry/remocn/icon-pause";
 import { PencilIconStatic } from "@/registry/remocn/icon-pencil";
@@ -300,6 +301,12 @@ export const ICONS: IconEntry[] = [
     label: "Tag",
     category: "Commerce",
     Static: TagIconStatic,
+  },
+  {
+    name: "icon-package",
+    label: "Package",
+    category: "Commerce",
+    Static: PackageIconStatic,
   },
   {
     name: "icon-search",

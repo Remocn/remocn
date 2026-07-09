@@ -2555,6 +2555,21 @@
       ]
     },
     {
+      "name": "icon-package",
+      "type": "registry:component",
+      "title": "Package",
+      "description": "Animated Lucide package icon — the box draws on, lands with a squash-and-stretch, then the tape seam seals it.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-package/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-package.tsx"
+        }
+      ]
+    },
+    {
       "name": "icon-user",
       "type": "registry:component",
       "title": "User",
