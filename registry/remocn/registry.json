@@ -2150,6 +2150,21 @@
       ]
     },
     {
+      "name": "icon-message-circle",
+      "type": "registry:component",
+      "title": "Message Circle",
+      "description": "Animated Lucide message-circle icon — the bubble draws on, then inflates from its tail like a message arriving.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-message-circle/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-message-circle.tsx"
+        }
+      ]
+    },
+    {
       "name": "icon-user",
       "type": "registry:component",
       "title": "User",

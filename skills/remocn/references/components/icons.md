@@ -99,6 +99,7 @@ export const Scene = () => (
 | `icon-users` | Teams, collaboration, multiplayer features | A single profile — use `icon-user` | no | 80f |
 | `icon-user-plus` | Invites, onboarding new members | Generic add actions — use `icon-plus` | no | 75f |
 | `icon-mail` | Email features, digests, contact beats | In-app chat — use `icon-message-circle` | no | 75f |
+| `icon-message-circle` | Chat, comments, support conversations | Email — use `icon-mail` | no | 70f |
 | `icon-heart` | Likes, favorites, testimonials, or "built with love" moments | Ratings — use `icon-star` | no | 75f |
 | `icon-star` | Ratings, favorites, GitHub-star callouts | Sparkle/magic semantics — use `icon-sparkles` | no | 70f |
 | `icon-sparkles` | AI features, magic moments, premium highlights | A single award or rating — use `icon-star` | yes | 90f |

@@ -41,6 +41,7 @@ import { LogOutIconStatic } from "@/registry/remocn/icon-log-out";
 import { MailIconStatic } from "@/registry/remocn/icon-mail";
 import { MaximizeIconStatic } from "@/registry/remocn/icon-maximize";
 import { MenuIconStatic } from "@/registry/remocn/icon-menu";
+import { MessageCircleIconStatic } from "@/registry/remocn/icon-message-circle";
 import { MicIconStatic } from "@/registry/remocn/icon-mic";
 import { MoreHorizontalIconStatic } from "@/registry/remocn/icon-more-horizontal";
 import { PartyPopperIconStatic } from "@/registry/remocn/icon-party-popper";
@@ -357,6 +358,12 @@ export const ICONS: IconEntry[] = [
     label: "Mail",
     category: "People & communication",
     Static: MailIconStatic,
+  },
+  {
+    name: "icon-message-circle",
+    label: "Message Circle",
+    category: "People & communication",
+    Static: MessageCircleIconStatic,
   },
   {
     name: "icon-heart",
