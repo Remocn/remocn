@@ -2075,6 +2075,21 @@
       ]
     },
     {
+      "name": "icon-bookmark",
+      "type": "registry:component",
+      "title": "Bookmark",
+      "description": "Animated Lucide bookmark icon — draws on, then drops into place from above with a spring landing.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-bookmark/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-bookmark.tsx"
+        }
+      ]
+    },
+    {
       "name": "icon-sparkles",
       "type": "registry:component",
       "title": "Sparkles",

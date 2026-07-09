@@ -91,6 +91,7 @@ export const Scene = () => (
 | `icon-eye-off` | Hiding data, privacy modes, secret masking | Security claims — use `icon-shield` or `icon-lock` | no | 70f |
 | `icon-save` | Saving state, autosave callouts | Cloud sync — use `icon-cloud` | no | 70f |
 | `icon-link` | Linking, permalinks, connected-account beats | Opening external pages — use `icon-external-link` | no | 70f |
+| `icon-bookmark` | Save-for-later, favorites lists | Ratings — use `icon-star` | no | 70f |
 | `icon-heart` | Likes, favorites, testimonials, or "built with love" moments | Ratings — use `icon-star` | no | 75f |
 | `icon-star` | Ratings, favorites, GitHub-star callouts | Sparkle/magic semantics — use `icon-sparkles` | no | 70f |
 | `icon-sparkles` | AI features, magic moments, premium highlights | A single award or rating — use `icon-star` | yes | 90f |

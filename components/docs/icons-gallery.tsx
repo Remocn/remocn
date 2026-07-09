@@ -14,6 +14,7 @@ import { ArrowLeftIconStatic } from "@/registry/remocn/icon-arrow-left";
 import { ArrowRightIconStatic } from "@/registry/remocn/icon-arrow-right";
 import { ArrowUpIconStatic } from "@/registry/remocn/icon-arrow-up";
 import { BellIconStatic } from "@/registry/remocn/icon-bell";
+import { BookmarkIconStatic } from "@/registry/remocn/icon-bookmark";
 import { CameraIconStatic } from "@/registry/remocn/icon-camera";
 import { CheckCircleIconStatic } from "@/registry/remocn/icon-check-circle";
 import { CheckIconStatic } from "@/registry/remocn/icon-check";
@@ -247,6 +248,12 @@ export const ICONS: IconEntry[] = [
     label: "Link",
     category: "Actions & UI",
     Static: LinkIconStatic,
+  },
+  {
+    name: "icon-bookmark",
+    label: "Bookmark",
+    category: "Actions & UI",
+    Static: BookmarkIconStatic,
   },
   {
     name: "icon-play",

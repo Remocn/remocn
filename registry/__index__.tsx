@@ -30,6 +30,7 @@ import { iconArrowLeftConfig } from "@/registry/remocn/icon-arrow-left/config";
 import { iconArrowRightConfig } from "@/registry/remocn/icon-arrow-right/config";
 import { iconArrowUpConfig } from "@/registry/remocn/icon-arrow-up/config";
 import { iconBellConfig } from "@/registry/remocn/icon-bell/config";
+import { iconBookmarkConfig } from "@/registry/remocn/icon-bookmark/config";
 import { iconCameraConfig } from "@/registry/remocn/icon-camera/config";
 import { iconCheckCircleConfig } from "@/registry/remocn/icon-check-circle/config";
 import { iconCheckConfig } from "@/registry/remocn/icon-check/config";
@@ -650,6 +651,13 @@ const registry: Record<string, RegistryEntry> = {
         default: m.BellIcon,
       })),
     config: iconBellConfig,
+  },
+  "icon-bookmark": {
+    load: () =>
+      import("@/registry/remocn/icon-bookmark").then((m) => ({
+        default: m.BookmarkIcon,
+      })),
+    config: iconBookmarkConfig,
   },
   "icon-camera": {
     load: () =>
