@@ -26,6 +26,7 @@ import { glassCodeWalkConfig } from "@/registry/remocn/glass-code-walk/config";
 import { grainDissolveConfig } from "@/registry/remocn/grain-dissolve/config";
 import { iconCheckCircleConfig } from "@/registry/remocn/icon-check-circle/config";
 import { iconCheckConfig } from "@/registry/remocn/icon-check/config";
+import { iconXConfig } from "@/registry/remocn/icon-x/config";
 import { infiniteBentoPanConfig } from "@/registry/remocn/infinite-bento-pan/config";
 import { infiniteMarqueeConfig } from "@/registry/remocn/infinite-marquee/config";
 import { inlineHighlightConfig } from "@/registry/remocn/inline-highlight/config";
@@ -572,6 +573,13 @@ const registry: Record<string, RegistryEntry> = {
         default: m.CheckCircleIcon,
       })),
     config: iconCheckCircleConfig,
+  },
+  "icon-x": {
+    load: () =>
+      import("@/registry/remocn/icon-x").then((m) => ({
+        default: m.XIcon,
+      })),
+    config: iconXConfig,
   },
   "wave-wipe": {
     load: () =>

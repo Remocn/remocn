@@ -1368,6 +1368,21 @@
           "target": "components/remocn/icon-check-circle.tsx"
         }
       ]
+    },
+    {
+      "name": "icon-x",
+      "type": "registry:component",
+      "title": "X",
+      "description": "Animated Lucide x icon — the two diagonals draw in crosswise, then the mark shakes to punctuate an error, removal, or dismissal.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-x/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-x.tsx"
+        }
+      ]
     }
   ]
 }

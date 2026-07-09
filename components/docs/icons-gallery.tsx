@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import registry, { type RegistryEntry } from "@/registry/__index__";
 import { CheckCircleIconStatic } from "@/registry/remocn/icon-check-circle";
 import { CheckIconStatic } from "@/registry/remocn/icon-check";
+import { XIconStatic } from "@/registry/remocn/icon-x";
 
 export type IconCategory =
   | "Status & feedback"
@@ -39,6 +40,12 @@ export const ICONS: IconEntry[] = [
     label: "Check Circle",
     category: "Status & feedback",
     Static: CheckCircleIconStatic,
+  },
+  {
+    name: "icon-x",
+    label: "X",
+    category: "Status & feedback",
+    Static: XIconStatic,
   },
 ];
 
