@@ -77,3 +77,4 @@ export const Scene = () => (
 | `icon-upload` | An upload, publish, or submission beat | Receiving data — use `icon-download` | no | 70f |
 | `icon-copy` | Copy-to-clipboard or duplication moments (install commands, snippets) | Sharing to another surface — use `icon-external-link` | no | 70f |
 | `icon-settings` | Settings, configuration, or customization beats | Continuous background processing — use `icon-loader` | no | 75f |
+| `icon-trash` | Delete or cleanup beats in a workflow demo | Reversible dismissal — use `icon-x` | no | 75f |

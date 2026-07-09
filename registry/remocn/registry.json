@@ -1533,6 +1533,21 @@
           "target": "components/remocn/icon-settings.tsx"
         }
       ]
+    },
+    {
+      "name": "icon-trash",
+      "type": "registry:component",
+      "title": "Trash",
+      "description": "Animated Lucide trash-2 icon — the can draws on, then the lid flips open and the contents vanish for a delete or cleanup beat.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-trash/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-trash.tsx"
+        }
+      ]
     }
   ]
 }

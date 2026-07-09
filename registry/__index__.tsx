@@ -35,6 +35,7 @@ import { iconLoaderConfig } from "@/registry/remocn/icon-loader/config";
 import { iconRefreshCwConfig } from "@/registry/remocn/icon-refresh-cw/config";
 import { iconSearchConfig } from "@/registry/remocn/icon-search/config";
 import { iconSettingsConfig } from "@/registry/remocn/icon-settings/config";
+import { iconTrashConfig } from "@/registry/remocn/icon-trash/config";
 import { iconUploadConfig } from "@/registry/remocn/icon-upload/config";
 import { iconXConfig } from "@/registry/remocn/icon-x/config";
 import { infiniteBentoPanConfig } from "@/registry/remocn/infinite-bento-pan/config";
@@ -639,6 +640,13 @@ const registry: Record<string, RegistryEntry> = {
         default: m.SettingsIcon,
       })),
     config: iconSettingsConfig,
+  },
+  "icon-trash": {
+    load: () =>
+      import("@/registry/remocn/icon-trash").then((m) => ({
+        default: m.TrashIcon,
+      })),
+    config: iconTrashConfig,
   },
   "icon-upload": {
     load: () =>

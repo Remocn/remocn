@@ -18,6 +18,7 @@ import { LoaderIconStatic } from "@/registry/remocn/icon-loader";
 import { RefreshCwIconStatic } from "@/registry/remocn/icon-refresh-cw";
 import { SearchIconStatic } from "@/registry/remocn/icon-search";
 import { SettingsIconStatic } from "@/registry/remocn/icon-settings";
+import { TrashIconStatic } from "@/registry/remocn/icon-trash";
 import { UploadIconStatic } from "@/registry/remocn/icon-upload";
 import { XIconStatic } from "@/registry/remocn/icon-x";
 
@@ -116,6 +117,12 @@ export const ICONS: IconEntry[] = [
     label: "Settings",
     category: "Actions & UI",
     Static: SettingsIconStatic,
+  },
+  {
+    name: "icon-trash",
+    label: "Trash",
+    category: "Actions & UI",
+    Static: TrashIconStatic,
   },
 ];
 
