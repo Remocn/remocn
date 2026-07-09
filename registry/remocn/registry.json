@@ -2090,6 +2090,21 @@
       ]
     },
     {
+      "name": "icon-lock",
+      "type": "registry:component",
+      "title": "Lock",
+      "description": "Animated Lucide lock icon — the body draws on, then the shackle lifts and slams shut with a confirming pop.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-lock/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-lock.tsx"
+        }
+      ]
+    },
+    {
       "name": "icon-sparkles",
       "type": "registry:component",
       "title": "Sparkles",

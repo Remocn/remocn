@@ -35,6 +35,7 @@ import { InfoIconStatic } from "@/registry/remocn/icon-info";
 import { LayoutGridIconStatic } from "@/registry/remocn/icon-layout-grid";
 import { LinkIconStatic } from "@/registry/remocn/icon-link";
 import { LoaderIconStatic } from "@/registry/remocn/icon-loader";
+import { LockIconStatic } from "@/registry/remocn/icon-lock";
 import { MaximizeIconStatic } from "@/registry/remocn/icon-maximize";
 import { MenuIconStatic } from "@/registry/remocn/icon-menu";
 import { MicIconStatic } from "@/registry/remocn/icon-mic";
@@ -254,6 +255,12 @@ export const ICONS: IconEntry[] = [
     label: "Bookmark",
     category: "Actions & UI",
     Static: BookmarkIconStatic,
+  },
+  {
+    name: "icon-lock",
+    label: "Lock",
+    category: "Actions & UI",
+    Static: LockIconStatic,
   },
   {
     name: "icon-play",
