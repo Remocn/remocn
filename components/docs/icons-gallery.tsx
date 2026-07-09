@@ -70,6 +70,7 @@ import { ShieldIconStatic } from "@/registry/remocn/icon-shield";
 import { SkipForwardIconStatic } from "@/registry/remocn/icon-skip-forward";
 import { SparklesIconStatic } from "@/registry/remocn/icon-sparkles";
 import { StarIconStatic } from "@/registry/remocn/icon-star";
+import { TerminalIconStatic } from "@/registry/remocn/icon-terminal";
 import { ThumbsUpIconStatic } from "@/registry/remocn/icon-thumbs-up";
 import { TimerIconStatic } from "@/registry/remocn/icon-timer";
 import { ZapIconStatic } from "@/registry/remocn/icon-zap";
@@ -216,6 +217,12 @@ export const ICONS: IconEntry[] = [
     label: "Code",
     category: "Files & dev",
     Static: CodeIconStatic,
+  },
+  {
+    name: "icon-terminal",
+    label: "Terminal",
+    category: "Files & dev",
+    Static: TerminalIconStatic,
   },
   {
     name: "icon-search",

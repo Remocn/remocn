@@ -2375,6 +2375,21 @@
       ]
     },
     {
+      "name": "icon-terminal",
+      "type": "registry:component",
+      "title": "Terminal",
+      "description": "Animated Lucide terminal icon — draws on, then the prompt nudges forward and the cursor blinks twice.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-terminal/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-terminal.tsx"
+        }
+      ]
+    },
+    {
       "name": "icon-user",
       "type": "registry:component",
       "title": "User",

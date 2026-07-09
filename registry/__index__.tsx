@@ -86,6 +86,7 @@ import { iconShieldConfig } from "@/registry/remocn/icon-shield/config";
 import { iconSkipForwardConfig } from "@/registry/remocn/icon-skip-forward/config";
 import { iconSparklesConfig } from "@/registry/remocn/icon-sparkles/config";
 import { iconStarConfig } from "@/registry/remocn/icon-star/config";
+import { iconTerminalConfig } from "@/registry/remocn/icon-terminal/config";
 import { iconThumbsUpConfig } from "@/registry/remocn/icon-thumbs-up/config";
 import { iconTimerConfig } from "@/registry/remocn/icon-timer/config";
 import { iconTrashConfig } from "@/registry/remocn/icon-trash/config";
@@ -1058,6 +1059,13 @@ const registry: Record<string, RegistryEntry> = {
         default: m.StarIcon,
       })),
     config: iconStarConfig,
+  },
+  "icon-terminal": {
+    load: () =>
+      import("@/registry/remocn/icon-terminal").then((m) => ({
+        default: m.TerminalIcon,
+      })),
+    config: iconTerminalConfig,
   },
   "icon-thumbs-up": {
     load: () =>

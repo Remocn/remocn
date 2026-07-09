@@ -114,6 +114,7 @@ export const Scene = () => (
 | `icon-folder` | File organization, project folders | A single document — use `icon-file-text` | no | 70f |
 | `icon-file-text` | Documents, reports, invoices in demos | Code files — use `icon-code` | no | 80f |
 | `icon-code` | Developer features, API examples, embed snippets | CLI demos — use `icon-terminal` | no | 70f |
+| `icon-terminal` | CLI tools, install commands, dev workflows | GUI code editing — use `icon-code` | no | 75f |
 | `icon-heart` | Likes, favorites, testimonials, or "built with love" moments | Ratings — use `icon-star` | no | 75f |
 | `icon-star` | Ratings, favorites, GitHub-star callouts | Sparkle/magic semantics — use `icon-sparkles` | no | 70f |
 | `icon-sparkles` | AI features, magic moments, premium highlights | A single award or rating — use `icon-star` | yes | 90f |
