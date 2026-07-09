@@ -32,6 +32,7 @@ import { iconCopyConfig } from "@/registry/remocn/icon-copy/config";
 import { iconDownloadConfig } from "@/registry/remocn/icon-download/config";
 import { iconInfoConfig } from "@/registry/remocn/icon-info/config";
 import { iconLoaderConfig } from "@/registry/remocn/icon-loader/config";
+import { iconPlusConfig } from "@/registry/remocn/icon-plus/config";
 import { iconRefreshCwConfig } from "@/registry/remocn/icon-refresh-cw/config";
 import { iconSearchConfig } from "@/registry/remocn/icon-search/config";
 import { iconSettingsConfig } from "@/registry/remocn/icon-settings/config";
@@ -619,6 +620,13 @@ const registry: Record<string, RegistryEntry> = {
         default: m.LoaderIcon,
       })),
     config: iconLoaderConfig,
+  },
+  "icon-plus": {
+    load: () =>
+      import("@/registry/remocn/icon-plus").then((m) => ({
+        default: m.PlusIcon,
+      })),
+    config: iconPlusConfig,
   },
   "icon-refresh-cw": {
     load: () =>

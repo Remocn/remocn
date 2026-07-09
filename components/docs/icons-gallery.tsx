@@ -15,6 +15,7 @@ import { CopyIconStatic } from "@/registry/remocn/icon-copy";
 import { DownloadIconStatic } from "@/registry/remocn/icon-download";
 import { InfoIconStatic } from "@/registry/remocn/icon-info";
 import { LoaderIconStatic } from "@/registry/remocn/icon-loader";
+import { PlusIconStatic } from "@/registry/remocn/icon-plus";
 import { RefreshCwIconStatic } from "@/registry/remocn/icon-refresh-cw";
 import { SearchIconStatic } from "@/registry/remocn/icon-search";
 import { SettingsIconStatic } from "@/registry/remocn/icon-settings";
@@ -123,6 +124,12 @@ export const ICONS: IconEntry[] = [
     label: "Trash",
     category: "Actions & UI",
     Static: TrashIconStatic,
+  },
+  {
+    name: "icon-plus",
+    label: "Plus",
+    category: "Actions & UI",
+    Static: PlusIconStatic,
   },
 ];
 

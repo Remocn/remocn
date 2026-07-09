@@ -78,3 +78,4 @@ export const Scene = () => (
 | `icon-copy` | Copy-to-clipboard or duplication moments (install commands, snippets) | Sharing to another surface — use `icon-external-link` | no | 70f |
 | `icon-settings` | Settings, configuration, or customization beats | Continuous background processing — use `icon-loader` | no | 75f |
 | `icon-trash` | Delete or cleanup beats in a workflow demo | Reversible dismissal — use `icon-x` | no | 75f |
+| `icon-plus` | Adding an item, feature, or integration in a build-up scene | Medical or positivity semantics — it is strictly an "add" affordance here | no | 60f |

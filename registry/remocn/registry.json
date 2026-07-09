@@ -1548,6 +1548,21 @@
           "target": "components/remocn/icon-trash.tsx"
         }
       ]
+    },
+    {
+      "name": "icon-plus",
+      "type": "registry:component",
+      "title": "Plus",
+      "description": "Animated Lucide plus icon — the two strokes draw on, then the mark twirls 90deg with a scale pop for an energetic add or create beat.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-plus/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-plus.tsx"
+        }
+      ]
     }
   ]
 }
