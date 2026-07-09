@@ -2510,6 +2510,21 @@
       ]
     },
     {
+      "name": "icon-credit-card",
+      "type": "registry:component",
+      "title": "Credit Card",
+      "description": "Animated Lucide credit-card icon — the card draws on, then the stripe swipes through and the card tips: payment accepted.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-credit-card/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-credit-card.tsx"
+        }
+      ]
+    },
+    {
       "name": "icon-user",
       "type": "registry:component",
       "title": "User",

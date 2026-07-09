@@ -44,6 +44,7 @@ import { iconClockConfig } from "@/registry/remocn/icon-clock/config";
 import { iconCloudConfig } from "@/registry/remocn/icon-cloud/config";
 import { iconCodeConfig } from "@/registry/remocn/icon-code/config";
 import { iconCopyConfig } from "@/registry/remocn/icon-copy/config";
+import { iconCreditCardConfig } from "@/registry/remocn/icon-credit-card/config";
 import { iconDatabaseConfig } from "@/registry/remocn/icon-database/config";
 import { iconDownloadConfig } from "@/registry/remocn/icon-download/config";
 import { iconExternalLinkConfig } from "@/registry/remocn/icon-external-link/config";
@@ -773,6 +774,13 @@ const registry: Record<string, RegistryEntry> = {
         default: m.CopyIcon,
       })),
     config: iconCopyConfig,
+  },
+  "icon-credit-card": {
+    load: () =>
+      import("@/registry/remocn/icon-credit-card").then((m) => ({
+        default: m.CreditCardIcon,
+      })),
+    config: iconCreditCardConfig,
   },
   "icon-database": {
     load: () =>

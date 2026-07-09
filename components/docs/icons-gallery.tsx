@@ -28,6 +28,7 @@ import { ClockIconStatic } from "@/registry/remocn/icon-clock";
 import { CloudIconStatic } from "@/registry/remocn/icon-cloud";
 import { CodeIconStatic } from "@/registry/remocn/icon-code";
 import { CopyIconStatic } from "@/registry/remocn/icon-copy";
+import { CreditCardIconStatic } from "@/registry/remocn/icon-credit-card";
 import { DatabaseIconStatic } from "@/registry/remocn/icon-database";
 import { DownloadIconStatic } from "@/registry/remocn/icon-download";
 import { ExternalLinkIconStatic } from "@/registry/remocn/icon-external-link";
@@ -279,6 +280,12 @@ export const ICONS: IconEntry[] = [
     label: "Shopping Cart",
     category: "Commerce",
     Static: ShoppingCartIconStatic,
+  },
+  {
+    name: "icon-credit-card",
+    label: "Credit Card",
+    category: "Commerce",
+    Static: CreditCardIconStatic,
   },
   {
     name: "icon-search",
