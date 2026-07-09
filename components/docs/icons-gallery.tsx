@@ -4,6 +4,7 @@ import { Player, type PlayerRef } from "@remotion/player";
 import { Check, Copy, Search } from "lucide-react";
 import type { ComponentType } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { AbsoluteFill } from "remotion";
 import { usePrefersReducedMotion } from "@/lib/use-prefers-reduced-motion";
 import { cn } from "@/lib/utils";
 import registry, { type RegistryEntry } from "@/registry/__index__";
@@ -231,7 +232,9 @@ const CATEGORY_ORDER: IconCategory[] = [
   "Arrows & navigation",
 ];
 
-const TILE_SIZE = 56;
+const MEDIA_SIZE = 80;
+const GLYPH_SIZE = 48;
+const COMPOSITION_SIZE = 80;
 
 export function IconsGallery() {
   const [query, setQuery] = useState("");
@@ -281,7 +284,7 @@ export function IconsGallery() {
             <h3 className="text-sm font-medium text-muted-foreground">
               {group.category}
             </h3>
-            <div className="grid grid-cols-[repeat(auto-fill,minmax(112px,1fr))] gap-3">
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(132px,1fr))] gap-3">
               {group.icons.map((icon) => (
                 <IconTile
                   key={icon.name}
@@ -344,12 +347,12 @@ function IconTile({
     >
       <span
         className="flex items-center justify-center"
-        style={{ width: TILE_SIZE, height: TILE_SIZE }}
+        style={{ width: MEDIA_SIZE, height: MEDIA_SIZE }}
       >
         {playing && entry ? (
           <IconPlayer entry={entry} />
         ) : (
-          <Static size={TILE_SIZE} strokeWidth={2} />
+          <Static size={GLYPH_SIZE} strokeWidth={2} />
         )}
       </span>
       <span className="max-w-full truncate text-xs">{icon.label}</span>
@@ -367,6 +370,23 @@ function IconTile({
 function IconPlayer({ entry }: { entry: RegistryEntry }) {
   const playerRef = useRef<PlayerRef>(null);
   const { config, load } = entry;
+
+  const centeredComponent = useMemo(
+    () => () =>
+      load().then((m) => {
+        const Icon = m.default as ComponentType<{ size?: number }>;
+        return {
+          default: () => (
+            <AbsoluteFill
+              style={{ alignItems: "center", justifyContent: "center" }}
+            >
+              <Icon size={GLYPH_SIZE} />
+            </AbsoluteFill>
+          ),
+        };
+      }),
+    [load],
+  );
 
   useEffect(() => {
     let raf = 0;
@@ -392,12 +412,12 @@ function IconPlayer({ entry }: { entry: RegistryEntry }) {
   return (
     <Player
       ref={playerRef}
-      lazyComponent={load}
+      lazyComponent={centeredComponent}
       durationInFrames={config.durationInFrames}
       fps={config.fps}
-      compositionWidth={config.compositionWidth}
-      compositionHeight={config.compositionHeight}
-      style={{ width: TILE_SIZE, height: TILE_SIZE }}
+      compositionWidth={COMPOSITION_SIZE}
+      compositionHeight={COMPOSITION_SIZE}
+      style={{ width: MEDIA_SIZE, height: MEDIA_SIZE }}
       loop
       initiallyMuted
       acknowledgeRemotionLicense
