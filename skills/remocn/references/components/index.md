@@ -181,6 +181,12 @@ Tier `remocn-ui`. Timeline-driven shadcn-style primitives. State-based API (`sta
 | [`toggle-group`](toggle-group.md) | Showing a segmented control switching between view modes, time ranges, or mutually exclusive options | You need content panels that crossfade below the control — use `tabs` instead (full panel area + indicator) | 120f | clean | `@remocn/remocn-ui` |
 | [`tooltip`](tooltip.md) | Showing a hover tooltip appearing next to a UI element in a product walkthrough | You need title + description in the overlay — use `popover` instead (richer two-field content with optional children) | 120f | clean | `@remocn/remocn-ui` |
 
+## Icons
+
+Tier `remocn`. 28 animated Lucide line icons — draw-in entrance + icon-specific action, frame-driven and deterministic. Shared `IconAnimationProps` (`animation`/`loop`/`speed`/`size`/`color`/`strokeWidth`); offset with `<Sequence from>`, no `delay`. Every icon also exports a static `<Pascal>IconStatic`.
+
+One reference file covers the whole set — see [`icons.md`](icons.md) for the motion system and the per-icon pick table. Do not expect per-icon files.
+
 ## Core library
 
 `@remocn/remocn-ui` — shared core lib (timeline-fold hook, theme context, color math) most UI Primitives depend on. Auto-installed transitively; you rarely add it directly. See [`remocn-ui.md`](remocn-ui.md).

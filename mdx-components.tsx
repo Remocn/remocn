@@ -6,6 +6,7 @@ import { ComponentCardGrid } from "@/components/docs/component-card-grid";
 import { ComponentExample } from "@/components/docs/component-example";
 import { ComponentPreview } from "@/components/docs/component-preview";
 import { Dependencies } from "@/components/docs/dependencies";
+import { IconsGallery } from "@/components/docs/icons-gallery";
 import { InstallAll } from "@/components/docs/install-all";
 import { InstallBlock } from "@/components/docs/install-block";
 import { PropsTable } from "@/components/docs/props-table";
@@ -46,6 +47,7 @@ export function getMDXComponents(components?: MDXComponents): MDXComponents {
     Warning,
     Dependencies,
     ComponentCardGrid,
+    IconsGallery,
 
     ...components,
   };

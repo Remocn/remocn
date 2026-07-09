@@ -24,6 +24,106 @@ import { githubStarsConfig } from "@/registry/remocn/github-stars/config";
 import { glassCodeBlockConfig } from "@/registry/remocn/glass-code-block/config";
 import { glassCodeWalkConfig } from "@/registry/remocn/glass-code-walk/config";
 import { grainDissolveConfig } from "@/registry/remocn/grain-dissolve/config";
+import { iconActivityConfig } from "@/registry/remocn-icons/icon-activity/config";
+import { iconAlertTriangleConfig } from "@/registry/remocn-icons/icon-alert-triangle/config";
+import { iconArrowDownConfig } from "@/registry/remocn-icons/icon-arrow-down/config";
+import { iconArrowLeftConfig } from "@/registry/remocn-icons/icon-arrow-left/config";
+import { iconArrowRightConfig } from "@/registry/remocn-icons/icon-arrow-right/config";
+import { iconArrowUpConfig } from "@/registry/remocn-icons/icon-arrow-up/config";
+import { iconAtSignConfig } from "@/registry/remocn-icons/icon-at-sign/config";
+import { iconAwardConfig } from "@/registry/remocn-icons/icon-award/config";
+import { iconBarChart3Config } from "@/registry/remocn-icons/icon-bar-chart-3/config";
+import { iconBellConfig } from "@/registry/remocn-icons/icon-bell/config";
+import { iconBookmarkConfig } from "@/registry/remocn-icons/icon-bookmark/config";
+import { iconCalendarConfig } from "@/registry/remocn-icons/icon-calendar/config";
+import { iconCameraConfig } from "@/registry/remocn-icons/icon-camera/config";
+import { iconCheckCircleConfig } from "@/registry/remocn-icons/icon-check-circle/config";
+import { iconCheckConfig } from "@/registry/remocn-icons/icon-check/config";
+import { iconChevronDownConfig } from "@/registry/remocn-icons/icon-chevron-down/config";
+import { iconChevronLeftConfig } from "@/registry/remocn-icons/icon-chevron-left/config";
+import { iconChevronRightConfig } from "@/registry/remocn-icons/icon-chevron-right/config";
+import { iconChevronUpConfig } from "@/registry/remocn-icons/icon-chevron-up/config";
+import { iconClockConfig } from "@/registry/remocn-icons/icon-clock/config";
+import { iconCloudConfig } from "@/registry/remocn-icons/icon-cloud/config";
+import { iconCodeConfig } from "@/registry/remocn-icons/icon-code/config";
+import { iconCopyConfig } from "@/registry/remocn-icons/icon-copy/config";
+import { iconCreditCardConfig } from "@/registry/remocn-icons/icon-credit-card/config";
+import { iconCrownConfig } from "@/registry/remocn-icons/icon-crown/config";
+import { iconDatabaseConfig } from "@/registry/remocn-icons/icon-database/config";
+import { iconDollarSignConfig } from "@/registry/remocn-icons/icon-dollar-sign/config";
+import { iconDownloadConfig } from "@/registry/remocn-icons/icon-download/config";
+import { iconExternalLinkConfig } from "@/registry/remocn-icons/icon-external-link/config";
+import { iconEyeOffConfig } from "@/registry/remocn-icons/icon-eye-off/config";
+import { iconEyeConfig } from "@/registry/remocn-icons/icon-eye/config";
+import { iconFileTextConfig } from "@/registry/remocn-icons/icon-file-text/config";
+import { iconFilterConfig } from "@/registry/remocn-icons/icon-filter/config";
+import { iconFlameConfig } from "@/registry/remocn-icons/icon-flame/config";
+import { iconFolderConfig } from "@/registry/remocn-icons/icon-folder/config";
+import { iconGemConfig } from "@/registry/remocn-icons/icon-gem/config";
+import { iconGiftConfig } from "@/registry/remocn-icons/icon-gift/config";
+import { iconGlobeConfig } from "@/registry/remocn-icons/icon-globe/config";
+import { iconHeartConfig } from "@/registry/remocn-icons/icon-heart/config";
+import { iconHelpCircleConfig } from "@/registry/remocn-icons/icon-help-circle/config";
+import { iconHomeConfig } from "@/registry/remocn-icons/icon-home/config";
+import { iconImageConfig } from "@/registry/remocn-icons/icon-image/config";
+import { iconInboxConfig } from "@/registry/remocn-icons/icon-inbox/config";
+import { iconInfoConfig } from "@/registry/remocn-icons/icon-info/config";
+import { iconKeyConfig } from "@/registry/remocn-icons/icon-key/config";
+import { iconLayoutGridConfig } from "@/registry/remocn-icons/icon-layout-grid/config";
+import { iconLinkConfig } from "@/registry/remocn-icons/icon-link/config";
+import { iconLoaderConfig } from "@/registry/remocn-icons/icon-loader/config";
+import { iconLockConfig } from "@/registry/remocn-icons/icon-lock/config";
+import { iconLogOutConfig } from "@/registry/remocn-icons/icon-log-out/config";
+import { iconMailConfig } from "@/registry/remocn-icons/icon-mail/config";
+import { iconMaximizeConfig } from "@/registry/remocn-icons/icon-maximize/config";
+import { iconMenuConfig } from "@/registry/remocn-icons/icon-menu/config";
+import { iconMessageCircleConfig } from "@/registry/remocn-icons/icon-message-circle/config";
+import { iconMicConfig } from "@/registry/remocn-icons/icon-mic/config";
+import { iconMonitorConfig } from "@/registry/remocn-icons/icon-monitor/config";
+import { iconMoonConfig } from "@/registry/remocn-icons/icon-moon/config";
+import { iconMoreHorizontalConfig } from "@/registry/remocn-icons/icon-more-horizontal/config";
+import { iconPackageConfig } from "@/registry/remocn-icons/icon-package/config";
+import { iconPartyPopperConfig } from "@/registry/remocn-icons/icon-party-popper/config";
+import { iconPauseConfig } from "@/registry/remocn-icons/icon-pause/config";
+import { iconPencilConfig } from "@/registry/remocn-icons/icon-pencil/config";
+import { iconPhoneConfig } from "@/registry/remocn-icons/icon-phone/config";
+import { iconPlayConfig } from "@/registry/remocn-icons/icon-play/config";
+import { iconPlusCircleConfig } from "@/registry/remocn-icons/icon-plus-circle/config";
+import { iconPlusConfig } from "@/registry/remocn-icons/icon-plus/config";
+import { iconRefreshCwConfig } from "@/registry/remocn-icons/icon-refresh-cw/config";
+import { iconRocketConfig } from "@/registry/remocn-icons/icon-rocket/config";
+import { iconSaveConfig } from "@/registry/remocn-icons/icon-save/config";
+import { iconSearchConfig } from "@/registry/remocn-icons/icon-search/config";
+import { iconSendConfig } from "@/registry/remocn-icons/icon-send/config";
+import { iconSettingsConfig } from "@/registry/remocn-icons/icon-settings/config";
+import { iconShare2Config } from "@/registry/remocn-icons/icon-share-2/config";
+import { iconShieldConfig } from "@/registry/remocn-icons/icon-shield/config";
+import { iconShoppingCartConfig } from "@/registry/remocn-icons/icon-shopping-cart/config";
+import { iconSkipForwardConfig } from "@/registry/remocn-icons/icon-skip-forward/config";
+import { iconSmartphoneConfig } from "@/registry/remocn-icons/icon-smartphone/config";
+import { iconSparklesConfig } from "@/registry/remocn-icons/icon-sparkles/config";
+import { iconStarConfig } from "@/registry/remocn-icons/icon-star/config";
+import { iconSunConfig } from "@/registry/remocn-icons/icon-sun/config";
+import { iconTagConfig } from "@/registry/remocn-icons/icon-tag/config";
+import { iconTargetConfig } from "@/registry/remocn-icons/icon-target/config";
+import { iconTerminalConfig } from "@/registry/remocn-icons/icon-terminal/config";
+import { iconThumbsUpConfig } from "@/registry/remocn-icons/icon-thumbs-up/config";
+import { iconTimerConfig } from "@/registry/remocn-icons/icon-timer/config";
+import { iconTrashConfig } from "@/registry/remocn-icons/icon-trash/config";
+import { iconTrendingDownConfig } from "@/registry/remocn-icons/icon-trending-down/config";
+import { iconTrendingUpConfig } from "@/registry/remocn-icons/icon-trending-up/config";
+import { iconTrophyConfig } from "@/registry/remocn-icons/icon-trophy/config";
+import { iconUploadConfig } from "@/registry/remocn-icons/icon-upload/config";
+import { iconUserPlusConfig } from "@/registry/remocn-icons/icon-user-plus/config";
+import { iconUserConfig } from "@/registry/remocn-icons/icon-user/config";
+import { iconUsersConfig } from "@/registry/remocn-icons/icon-users/config";
+import { iconVideoConfig } from "@/registry/remocn-icons/icon-video/config";
+import { iconVolume2Config } from "@/registry/remocn-icons/icon-volume-2/config";
+import { iconVolumeXConfig } from "@/registry/remocn-icons/icon-volume-x/config";
+import { iconWalletConfig } from "@/registry/remocn-icons/icon-wallet/config";
+import { iconXCircleConfig } from "@/registry/remocn-icons/icon-x-circle/config";
+import { iconXConfig } from "@/registry/remocn-icons/icon-x/config";
+import { iconZapConfig } from "@/registry/remocn-icons/icon-zap/config";
 import { infiniteBentoPanConfig } from "@/registry/remocn/infinite-bento-pan/config";
 import { infiniteMarqueeConfig } from "@/registry/remocn/infinite-marquee/config";
 import { inlineHighlightConfig } from "@/registry/remocn/inline-highlight/config";
@@ -556,6 +656,706 @@ const registry: Record<string, RegistryEntry> = {
         default: m.GrainDissolveExampleScene,
       })),
     config: grainDissolveConfig,
+  },
+  "icon-activity": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-activity").then((m) => ({
+        default: m.ActivityIcon,
+      })),
+    config: iconActivityConfig,
+  },
+  "icon-alert-triangle": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-alert-triangle").then((m) => ({
+        default: m.AlertTriangleIcon,
+      })),
+    config: iconAlertTriangleConfig,
+  },
+  "icon-arrow-down": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-arrow-down").then((m) => ({
+        default: m.ArrowDownIcon,
+      })),
+    config: iconArrowDownConfig,
+  },
+  "icon-arrow-left": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-arrow-left").then((m) => ({
+        default: m.ArrowLeftIcon,
+      })),
+    config: iconArrowLeftConfig,
+  },
+  "icon-arrow-right": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-arrow-right").then((m) => ({
+        default: m.ArrowRightIcon,
+      })),
+    config: iconArrowRightConfig,
+  },
+  "icon-arrow-up": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-arrow-up").then((m) => ({
+        default: m.ArrowUpIcon,
+      })),
+    config: iconArrowUpConfig,
+  },
+  "icon-at-sign": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-at-sign").then((m) => ({
+        default: m.AtSignIcon,
+      })),
+    config: iconAtSignConfig,
+  },
+  "icon-award": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-award").then((m) => ({
+        default: m.AwardIcon,
+      })),
+    config: iconAwardConfig,
+  },
+  "icon-bar-chart-3": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-bar-chart-3").then((m) => ({
+        default: m.BarChart3Icon,
+      })),
+    config: iconBarChart3Config,
+  },
+  "icon-bell": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-bell").then((m) => ({
+        default: m.BellIcon,
+      })),
+    config: iconBellConfig,
+  },
+  "icon-bookmark": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-bookmark").then((m) => ({
+        default: m.BookmarkIcon,
+      })),
+    config: iconBookmarkConfig,
+  },
+  "icon-calendar": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-calendar").then((m) => ({
+        default: m.CalendarIcon,
+      })),
+    config: iconCalendarConfig,
+  },
+  "icon-camera": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-camera").then((m) => ({
+        default: m.CameraIcon,
+      })),
+    config: iconCameraConfig,
+  },
+  "icon-check": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-check").then((m) => ({
+        default: m.CheckIcon,
+      })),
+    config: iconCheckConfig,
+  },
+  "icon-chevron-down": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-chevron-down").then((m) => ({
+        default: m.ChevronDownIcon,
+      })),
+    config: iconChevronDownConfig,
+  },
+  "icon-chevron-left": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-chevron-left").then((m) => ({
+        default: m.ChevronLeftIcon,
+      })),
+    config: iconChevronLeftConfig,
+  },
+  "icon-chevron-right": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-chevron-right").then((m) => ({
+        default: m.ChevronRightIcon,
+      })),
+    config: iconChevronRightConfig,
+  },
+  "icon-chevron-up": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-chevron-up").then((m) => ({
+        default: m.ChevronUpIcon,
+      })),
+    config: iconChevronUpConfig,
+  },
+  "icon-clock": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-clock").then((m) => ({
+        default: m.ClockIcon,
+      })),
+    config: iconClockConfig,
+  },
+  "icon-cloud": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-cloud").then((m) => ({
+        default: m.CloudIcon,
+      })),
+    config: iconCloudConfig,
+  },
+  "icon-code": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-code").then((m) => ({
+        default: m.CodeIcon,
+      })),
+    config: iconCodeConfig,
+  },
+  "icon-copy": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-copy").then((m) => ({
+        default: m.CopyIcon,
+      })),
+    config: iconCopyConfig,
+  },
+  "icon-credit-card": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-credit-card").then((m) => ({
+        default: m.CreditCardIcon,
+      })),
+    config: iconCreditCardConfig,
+  },
+  "icon-crown": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-crown").then((m) => ({
+        default: m.CrownIcon,
+      })),
+    config: iconCrownConfig,
+  },
+  "icon-database": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-database").then((m) => ({
+        default: m.DatabaseIcon,
+      })),
+    config: iconDatabaseConfig,
+  },
+  "icon-dollar-sign": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-dollar-sign").then((m) => ({
+        default: m.DollarSignIcon,
+      })),
+    config: iconDollarSignConfig,
+  },
+  "icon-download": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-download").then((m) => ({
+        default: m.DownloadIcon,
+      })),
+    config: iconDownloadConfig,
+  },
+  "icon-external-link": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-external-link").then((m) => ({
+        default: m.ExternalLinkIcon,
+      })),
+    config: iconExternalLinkConfig,
+  },
+  "icon-eye-off": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-eye-off").then((m) => ({
+        default: m.EyeOffIcon,
+      })),
+    config: iconEyeOffConfig,
+  },
+  "icon-eye": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-eye").then((m) => ({
+        default: m.EyeIcon,
+      })),
+    config: iconEyeConfig,
+  },
+  "icon-file-text": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-file-text").then((m) => ({
+        default: m.FileTextIcon,
+      })),
+    config: iconFileTextConfig,
+  },
+  "icon-filter": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-filter").then((m) => ({
+        default: m.FilterIcon,
+      })),
+    config: iconFilterConfig,
+  },
+  "icon-flame": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-flame").then((m) => ({
+        default: m.FlameIcon,
+      })),
+    config: iconFlameConfig,
+  },
+  "icon-folder": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-folder").then((m) => ({
+        default: m.FolderIcon,
+      })),
+    config: iconFolderConfig,
+  },
+  "icon-gem": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-gem").then((m) => ({
+        default: m.GemIcon,
+      })),
+    config: iconGemConfig,
+  },
+  "icon-gift": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-gift").then((m) => ({
+        default: m.GiftIcon,
+      })),
+    config: iconGiftConfig,
+  },
+  "icon-globe": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-globe").then((m) => ({
+        default: m.GlobeIcon,
+      })),
+    config: iconGlobeConfig,
+  },
+  "icon-heart": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-heart").then((m) => ({
+        default: m.HeartIcon,
+      })),
+    config: iconHeartConfig,
+  },
+  "icon-help-circle": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-help-circle").then((m) => ({
+        default: m.HelpCircleIcon,
+      })),
+    config: iconHelpCircleConfig,
+  },
+  "icon-home": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-home").then((m) => ({
+        default: m.HomeIcon,
+      })),
+    config: iconHomeConfig,
+  },
+  "icon-image": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-image").then((m) => ({
+        default: m.ImageIcon,
+      })),
+    config: iconImageConfig,
+  },
+  "icon-inbox": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-inbox").then((m) => ({
+        default: m.InboxIcon,
+      })),
+    config: iconInboxConfig,
+  },
+  "icon-info": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-info").then((m) => ({
+        default: m.InfoIcon,
+      })),
+    config: iconInfoConfig,
+  },
+  "icon-key": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-key").then((m) => ({
+        default: m.KeyIcon,
+      })),
+    config: iconKeyConfig,
+  },
+  "icon-layout-grid": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-layout-grid").then((m) => ({
+        default: m.LayoutGridIcon,
+      })),
+    config: iconLayoutGridConfig,
+  },
+  "icon-link": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-link").then((m) => ({
+        default: m.LinkIcon,
+      })),
+    config: iconLinkConfig,
+  },
+  "icon-loader": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-loader").then((m) => ({
+        default: m.LoaderIcon,
+      })),
+    config: iconLoaderConfig,
+  },
+  "icon-lock": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-lock").then((m) => ({
+        default: m.LockIcon,
+      })),
+    config: iconLockConfig,
+  },
+  "icon-log-out": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-log-out").then((m) => ({
+        default: m.LogOutIcon,
+      })),
+    config: iconLogOutConfig,
+  },
+  "icon-mail": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-mail").then((m) => ({
+        default: m.MailIcon,
+      })),
+    config: iconMailConfig,
+  },
+  "icon-maximize": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-maximize").then((m) => ({
+        default: m.MaximizeIcon,
+      })),
+    config: iconMaximizeConfig,
+  },
+  "icon-menu": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-menu").then((m) => ({
+        default: m.MenuIcon,
+      })),
+    config: iconMenuConfig,
+  },
+  "icon-message-circle": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-message-circle").then((m) => ({
+        default: m.MessageCircleIcon,
+      })),
+    config: iconMessageCircleConfig,
+  },
+  "icon-mic": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-mic").then((m) => ({
+        default: m.MicIcon,
+      })),
+    config: iconMicConfig,
+  },
+  "icon-monitor": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-monitor").then((m) => ({
+        default: m.MonitorIcon,
+      })),
+    config: iconMonitorConfig,
+  },
+  "icon-moon": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-moon").then((m) => ({
+        default: m.MoonIcon,
+      })),
+    config: iconMoonConfig,
+  },
+  "icon-more-horizontal": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-more-horizontal").then((m) => ({
+        default: m.MoreHorizontalIcon,
+      })),
+    config: iconMoreHorizontalConfig,
+  },
+  "icon-package": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-package").then((m) => ({
+        default: m.PackageIcon,
+      })),
+    config: iconPackageConfig,
+  },
+  "icon-party-popper": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-party-popper").then((m) => ({
+        default: m.PartyPopperIcon,
+      })),
+    config: iconPartyPopperConfig,
+  },
+  "icon-pause": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-pause").then((m) => ({
+        default: m.PauseIcon,
+      })),
+    config: iconPauseConfig,
+  },
+  "icon-pencil": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-pencil").then((m) => ({
+        default: m.PencilIcon,
+      })),
+    config: iconPencilConfig,
+  },
+  "icon-phone": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-phone").then((m) => ({
+        default: m.PhoneIcon,
+      })),
+    config: iconPhoneConfig,
+  },
+  "icon-play": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-play").then((m) => ({
+        default: m.PlayIcon,
+      })),
+    config: iconPlayConfig,
+  },
+  "icon-plus": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-plus").then((m) => ({
+        default: m.PlusIcon,
+      })),
+    config: iconPlusConfig,
+  },
+  "icon-plus-circle": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-plus-circle").then((m) => ({
+        default: m.PlusCircleIcon,
+      })),
+    config: iconPlusCircleConfig,
+  },
+  "icon-refresh-cw": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-refresh-cw").then((m) => ({
+        default: m.RefreshCwIcon,
+      })),
+    config: iconRefreshCwConfig,
+  },
+  "icon-rocket": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-rocket").then((m) => ({
+        default: m.RocketIcon,
+      })),
+    config: iconRocketConfig,
+  },
+  "icon-save": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-save").then((m) => ({
+        default: m.SaveIcon,
+      })),
+    config: iconSaveConfig,
+  },
+  "icon-search": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-search").then((m) => ({
+        default: m.SearchIcon,
+      })),
+    config: iconSearchConfig,
+  },
+  "icon-send": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-send").then((m) => ({
+        default: m.SendIcon,
+      })),
+    config: iconSendConfig,
+  },
+  "icon-settings": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-settings").then((m) => ({
+        default: m.SettingsIcon,
+      })),
+    config: iconSettingsConfig,
+  },
+  "icon-share-2": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-share-2").then((m) => ({
+        default: m.Share2Icon,
+      })),
+    config: iconShare2Config,
+  },
+  "icon-shield": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-shield").then((m) => ({
+        default: m.ShieldIcon,
+      })),
+    config: iconShieldConfig,
+  },
+  "icon-shopping-cart": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-shopping-cart").then((m) => ({
+        default: m.ShoppingCartIcon,
+      })),
+    config: iconShoppingCartConfig,
+  },
+  "icon-skip-forward": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-skip-forward").then((m) => ({
+        default: m.SkipForwardIcon,
+      })),
+    config: iconSkipForwardConfig,
+  },
+  "icon-smartphone": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-smartphone").then((m) => ({
+        default: m.SmartphoneIcon,
+      })),
+    config: iconSmartphoneConfig,
+  },
+  "icon-sparkles": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-sparkles").then((m) => ({
+        default: m.SparklesIcon,
+      })),
+    config: iconSparklesConfig,
+  },
+  "icon-star": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-star").then((m) => ({
+        default: m.StarIcon,
+      })),
+    config: iconStarConfig,
+  },
+  "icon-sun": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-sun").then((m) => ({
+        default: m.SunIcon,
+      })),
+    config: iconSunConfig,
+  },
+  "icon-tag": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-tag").then((m) => ({
+        default: m.TagIcon,
+      })),
+    config: iconTagConfig,
+  },
+  "icon-target": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-target").then((m) => ({
+        default: m.TargetIcon,
+      })),
+    config: iconTargetConfig,
+  },
+  "icon-terminal": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-terminal").then((m) => ({
+        default: m.TerminalIcon,
+      })),
+    config: iconTerminalConfig,
+  },
+  "icon-thumbs-up": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-thumbs-up").then((m) => ({
+        default: m.ThumbsUpIcon,
+      })),
+    config: iconThumbsUpConfig,
+  },
+  "icon-timer": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-timer").then((m) => ({
+        default: m.TimerIcon,
+      })),
+    config: iconTimerConfig,
+  },
+  "icon-trash": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-trash").then((m) => ({
+        default: m.TrashIcon,
+      })),
+    config: iconTrashConfig,
+  },
+  "icon-trending-down": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-trending-down").then((m) => ({
+        default: m.TrendingDownIcon,
+      })),
+    config: iconTrendingDownConfig,
+  },
+  "icon-trending-up": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-trending-up").then((m) => ({
+        default: m.TrendingUpIcon,
+      })),
+    config: iconTrendingUpConfig,
+  },
+  "icon-trophy": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-trophy").then((m) => ({
+        default: m.TrophyIcon,
+      })),
+    config: iconTrophyConfig,
+  },
+  "icon-upload": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-upload").then((m) => ({
+        default: m.UploadIcon,
+      })),
+    config: iconUploadConfig,
+  },
+  "icon-user-plus": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-user-plus").then((m) => ({
+        default: m.UserPlusIcon,
+      })),
+    config: iconUserPlusConfig,
+  },
+  "icon-user": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-user").then((m) => ({
+        default: m.UserIcon,
+      })),
+    config: iconUserConfig,
+  },
+  "icon-users": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-users").then((m) => ({
+        default: m.UsersIcon,
+      })),
+    config: iconUsersConfig,
+  },
+  "icon-video": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-video").then((m) => ({
+        default: m.VideoIcon,
+      })),
+    config: iconVideoConfig,
+  },
+  "icon-volume-2": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-volume-2").then((m) => ({
+        default: m.Volume2Icon,
+      })),
+    config: iconVolume2Config,
+  },
+  "icon-volume-x": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-volume-x").then((m) => ({
+        default: m.VolumeXIcon,
+      })),
+    config: iconVolumeXConfig,
+  },
+  "icon-wallet": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-wallet").then((m) => ({
+        default: m.WalletIcon,
+      })),
+    config: iconWalletConfig,
+  },
+  "icon-check-circle": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-check-circle").then((m) => ({
+        default: m.CheckCircleIcon,
+      })),
+    config: iconCheckCircleConfig,
+  },
+  "icon-x": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-x").then((m) => ({
+        default: m.XIcon,
+      })),
+    config: iconXConfig,
+  },
+  "icon-x-circle": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-x-circle").then((m) => ({
+        default: m.XCircleIcon,
+      })),
+    config: iconXCircleConfig,
+  },
+  "icon-zap": {
+    load: () =>
+      import("@/registry/remocn-icons/icon-zap").then((m) => ({
+        default: m.ZapIcon,
+      })),
+    config: iconZapConfig,
   },
   "wave-wipe": {
     load: () =>

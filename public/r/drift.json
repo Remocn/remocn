@@ -1,0 +1,16 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "drift",
+  "title": "Drift",
+  "description": "A slow linear camera push-in wrapper that scales its scene from 1 to 1+grow across the sequence so no frame is ever static.",
+  "dependencies": ["remotion"],
+  "files": [
+    {
+      "path": "registry/remocn/drift/index.tsx",
+      "content": "\"use client\";\n\nimport type React from \"react\";\nimport { AbsoluteFill, interpolate, useCurrentFrame, useVideoConfig } from \"remotion\";\n\nexport interface DriftProps {\n  children: React.ReactNode;\n  grow?: number;\n}\n\nexport function Drift({ children, grow = 0.035 }: DriftProps) {\n  const frame = useCurrentFrame();\n  const { durationInFrames } = useVideoConfig();\n  const scale = interpolate(frame, [0, durationInFrames], [1, 1 + grow]);\n  return (\n    <AbsoluteFill style={{ transform: `scale(${scale})` }}>\n      {children}\n    </AbsoluteFill>\n  );\n}\n",
+      "type": "registry:component",
+      "target": "components/remocn/drift.tsx"
+    }
+  ],
+  "type": "registry:component"
+}

@@ -18,13 +18,15 @@ export default async function Page(props: {
 
   const data = page.data;
   const MDX = data.body;
+  const isIcons = params.slug?.[0] === "icons";
 
   return (
     <DocsPage
       breadcrumb={{ enabled: false }}
       tableOfContent={{ enabled: true, component: <DocsAdRail /> }}
       tableOfContentPopover={{ enabled: false }}
-      footer={{ enabled: true }}
+      footer={{ enabled: !isIcons }}
+      className={isIcons ? "max-w-none" : undefined}
     >
       <DocsTitle
         style={{ fontFamily: "var(--font-display)" }}

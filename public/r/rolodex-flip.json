@@ -1,0 +1,16 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "rolodex-flip",
+  "title": "Rolodex Flip",
+  "description": "Cycles a word through a list of values with a 3D rolodex card flip while an invisible sizer keeps the line width and baseline stable.",
+  "dependencies": ["remotion"],
+  "files": [
+    {
+      "path": "registry/remocn/rolodex-flip/index.tsx",
+      "content": "\"use client\";\n\nimport type React from \"react\";\nimport { Easing, interpolate, useCurrentFrame } from \"remotion\";\n\nconst clampOpts = {\n  extrapolateLeft: \"clamp\" as const,\n  extrapolateRight: \"clamp\" as const,\n};\n\nexport interface RolodexFlipProps {\n  items: string[];\n  from?: number;\n  interval?: number;\n  flipDuration?: number;\n  className?: string;\n  style?: React.CSSProperties;\n}\n\nexport function RolodexFlip({\n  items,\n  from = 0,\n  interval = 20,\n  flipDuration = 10,\n  className,\n  style,\n}: RolodexFlipProps) {\n  const frame = useCurrentFrame();\n  const sizer = items.reduce((a, b) => (b.length > a.length ? b : a), \"\");\n  return (\n    <span\n      className={className}\n      style={{\n        position: \"relative\",\n        display: \"inline-block\",\n        perspective: 420,\n        verticalAlign: \"bottom\",\n        ...style,\n      }}\n    >\n      <span style={{ visibility: \"hidden\" }}>{sizer}</span>\n      {items.map((item, i) => {\n        const inStart = from + (i - 1) * interval + flipDuration / 2;\n        const outStart = from + i * interval;\n\n        let rotate = 0;\n        let y = 0;\n        let opacity = 1;\n\n        if (i > 0) {\n          const pIn = interpolate(\n            frame,\n            [inStart, inStart + flipDuration],\n            [0, 1],\n            { ...clampOpts, easing: Easing.out(Easing.cubic) },\n          );\n          rotate = (1 - pIn) * -85;\n          y = (1 - pIn) * 20;\n          opacity = pIn;\n        }\n        if (i < items.length - 1) {\n          const pOut = interpolate(\n            frame,\n            [outStart, outStart + flipDuration],\n            [0, 1],\n            { ...clampOpts, easing: Easing.in(Easing.cubic) },\n          );\n          rotate += pOut * 85;\n          y -= pOut * 20;\n          opacity *= 1 - pOut;\n        }\n        if (opacity <= 0.001) return null;\n\n        return (\n          <span\n            key={`${i}-${item}`}\n            style={{\n              position: \"absolute\",\n              left: 0,\n              top: 0,\n              whiteSpace: \"nowrap\",\n              opacity,\n              transform: `translateY(${y}px) rotateX(${rotate}deg)`,\n              transformOrigin: \"50% 50%\",\n              backfaceVisibility: \"hidden\",\n            }}\n          >\n            {item}\n          </span>\n        );\n      })}\n    </span>\n  );\n}\n",
+      "type": "registry:component",
+      "target": "components/remocn/rolodex-flip.tsx"
+    }
+  ],
+  "type": "registry:component"
+}

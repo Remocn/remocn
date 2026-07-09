@@ -1,0 +1,16 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "zoom-blur",
+  "title": "Zoom Blur",
+  "description": "A depth punch-in transition that pushes the outgoing scene through the viewer while the incoming one resolves out of blur.",
+  "dependencies": ["remotion", "@remotion/transitions"],
+  "files": [
+    {
+      "path": "registry/remocn/zoom-blur/index.tsx",
+      "content": "\"use client\";\n\nimport type {\n  TransitionPresentation,\n  TransitionPresentationComponentProps,\n} from \"@remotion/transitions\";\nimport type React from \"react\";\nimport { AbsoluteFill } from \"remotion\";\n\nexport type ZoomBlurProps = {\n  blur?: number;\n  rise?: number;\n};\n\nconst ZoomBlurPresentation: React.FC<\n  TransitionPresentationComponentProps<ZoomBlurProps>\n> = ({\n  children,\n  presentationProgress,\n  presentationDirection,\n  passedProps,\n}) => {\n  const { blur = 16, rise = 0 } = passedProps;\n  const entering = presentationDirection === \"entering\";\n  const p = presentationProgress;\n\n  const style: React.CSSProperties = entering\n    ? {\n        opacity: p,\n        transform: `scale(${0.9 + p * 0.1})${\n          rise > 0 ? ` translateY(${(1 - p) * rise}px)` : \"\"\n        }`,\n        filter: p < 1 ? `blur(${(1 - p) * blur}px)` : undefined,\n      }\n    : {\n        opacity: 1 - p,\n        transform: `scale(${1 + p * 0.12})${\n          rise > 0 ? ` translateY(${-p * rise}px)` : \"\"\n        }`,\n        filter: p > 0 ? `blur(${p * blur}px)` : undefined,\n      };\n\n  return <AbsoluteFill style={style}>{children}</AbsoluteFill>;\n};\n\nexport function zoomBlur(\n  props: ZoomBlurProps = {},\n): TransitionPresentation<ZoomBlurProps> {\n  return {\n    component: ZoomBlurPresentation,\n    props,\n  };\n}\n",
+      "type": "registry:component",
+      "target": "components/remocn/zoom-blur.tsx"
+    }
+  ],
+  "type": "registry:component"
+}

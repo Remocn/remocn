@@ -1,0 +1,17 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "icon-home",
+  "title": "Home",
+  "description": "Animated Lucide home icon — the house draws on, then the door re-draws open and the house settles: welcome home.",
+  "dependencies": ["remotion"],
+  "registryDependencies": ["@remocn/icons-core"],
+  "files": [
+    {
+      "path": "registry/remocn-icons/icon-home/index.tsx",
+      "content": "\"use client\";\n\nimport { Easing, interpolate } from \"remotion\";\nimport {\n  drawnPathProps,\n  type IconAnimationProps,\n  useIconAnimation,\n} from \"@/lib/remocn-icons\";\n\nconst DOOR_PATH = \"M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8\";\nconst HOUSE_PATH =\n  \"M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z\";\n\nconst TIMINGS = {\n  drawDurationInFrames: 14,\n  actionDelayInFrames: 2,\n  actionDurationInFrames: 22,\n  loop: false,\n} as const;\n\nexport function HomeIcon({\n  animation = \"both\",\n  loop,\n  speed,\n  size = 48,\n  color = \"currentColor\",\n  strokeWidth = 2,\n  className,\n}: IconAnimationProps) {\n  const { drawProgress, scaleIn, actionProgress, actionFrame } =\n    useIconAnimation({ animation, loop, speed }, TIMINGS);\n\n  const acting = animation !== \"draw\" && actionFrame >= 0;\n\n  const doorDraw = interpolate(actionProgress, [0.1, 0.5], [0, 1], {\n    extrapolateLeft: \"clamp\",\n    extrapolateRight: \"clamp\",\n    easing: Easing.out(Easing.quad),\n  });\n  const pop = acting\n    ? interpolate(actionProgress, [0.5, 0.7, 1], [1, 1.05, 1], {\n        extrapolateLeft: \"clamp\",\n        extrapolateRight: \"clamp\",\n        easing: Easing.inOut(Easing.quad),\n      })\n    : 1;\n\n  const doorProgress = animation === \"draw\" ? 1 : acting ? doorDraw : 0;\n\n  const house = drawnPathProps(HOUSE_PATH, drawProgress);\n  const door = drawnPathProps(DOOR_PATH, doorProgress);\n\n  const scale = (0.85 + 0.15 * scaleIn) * pop;\n\n  return (\n    <svg\n      className={className}\n      width={size}\n      height={size}\n      viewBox=\"0 0 24 24\"\n      fill=\"none\"\n      stroke={color}\n      strokeWidth={strokeWidth}\n      strokeLinecap=\"round\"\n      strokeLinejoin=\"round\"\n      style={{\n        overflow: \"visible\",\n        transformOrigin: \"center\",\n        transform: `scale(${scale})`,\n      }}\n    >\n      <path\n        d={HOUSE_PATH}\n        strokeDasharray={house.strokeDasharray}\n        strokeDashoffset={house.strokeDashoffset}\n      />\n      <path\n        d={DOOR_PATH}\n        strokeDasharray={door.strokeDasharray}\n        strokeDashoffset={door.strokeDashoffset}\n      />\n    </svg>\n  );\n}\n\nexport function HomeIconStatic({\n  size = 48,\n  color = \"currentColor\",\n  strokeWidth = 2,\n  className,\n}: {\n  size?: number;\n  color?: string;\n  strokeWidth?: number;\n  className?: string;\n}) {\n  return (\n    <svg\n      className={className}\n      width={size}\n      height={size}\n      viewBox=\"0 0 24 24\"\n      fill=\"none\"\n      stroke={color}\n      strokeWidth={strokeWidth}\n      strokeLinecap=\"round\"\n      strokeLinejoin=\"round\"\n    >\n      <path d={DOOR_PATH} />\n      <path d={HOUSE_PATH} />\n    </svg>\n  );\n}\n",
+      "type": "registry:component",
+      "target": "components/remocn/icon-home.tsx"
+    }
+  ],
+  "type": "registry:component"
+}
