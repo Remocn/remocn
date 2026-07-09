@@ -48,6 +48,7 @@ import { iconEyeOffConfig } from "@/registry/remocn/icon-eye-off/config";
 import { iconEyeConfig } from "@/registry/remocn/icon-eye/config";
 import { iconFilterConfig } from "@/registry/remocn/icon-filter/config";
 import { iconFlameConfig } from "@/registry/remocn/icon-flame/config";
+import { iconFolderConfig } from "@/registry/remocn/icon-folder/config";
 import { iconHeartConfig } from "@/registry/remocn/icon-heart/config";
 import { iconHelpCircleConfig } from "@/registry/remocn/icon-help-circle/config";
 import { iconHomeConfig } from "@/registry/remocn/icon-home/config";
@@ -789,6 +790,13 @@ const registry: Record<string, RegistryEntry> = {
         default: m.FlameIcon,
       })),
     config: iconFlameConfig,
+  },
+  "icon-folder": {
+    load: () =>
+      import("@/registry/remocn/icon-folder").then((m) => ({
+        default: m.FolderIcon,
+      })),
+    config: iconFolderConfig,
   },
   "icon-heart": {
     load: () =>

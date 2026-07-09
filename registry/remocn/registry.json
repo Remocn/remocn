@@ -2330,6 +2330,21 @@
       ]
     },
     {
+      "name": "icon-folder",
+      "type": "registry:component",
+      "title": "Folder",
+      "description": "Animated Lucide folder icon — draws on, then the folder tips open for a peek and closes.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-folder/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-folder.tsx"
+        }
+      ]
+    },
+    {
       "name": "icon-user",
       "type": "registry:component",
       "title": "User",

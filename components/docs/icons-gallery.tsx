@@ -32,6 +32,7 @@ import { EyeOffIconStatic } from "@/registry/remocn/icon-eye-off";
 import { EyeIconStatic } from "@/registry/remocn/icon-eye";
 import { FilterIconStatic } from "@/registry/remocn/icon-filter";
 import { FlameIconStatic } from "@/registry/remocn/icon-flame";
+import { FolderIconStatic } from "@/registry/remocn/icon-folder";
 import { HeartIconStatic } from "@/registry/remocn/icon-heart";
 import { HelpCircleIconStatic } from "@/registry/remocn/icon-help-circle";
 import { HomeIconStatic } from "@/registry/remocn/icon-home";
@@ -195,6 +196,12 @@ export const ICONS: IconEntry[] = [
     label: "Home",
     category: "Files & dev",
     Static: HomeIconStatic,
+  },
+  {
+    name: "icon-folder",
+    label: "Folder",
+    category: "Files & dev",
+    Static: FolderIconStatic,
   },
   {
     name: "icon-search",
