@@ -1625,6 +1625,21 @@
       ]
     },
     {
+      "name": "icon-party-popper",
+      "type": "registry:component",
+      "title": "Party Popper",
+      "description": "Animated Lucide party-popper icon — the cone draws on, then confetti bursts outward as the cone recoils for launch, milestone, or celebration finales.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-party-popper/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-party-popper.tsx"
+        }
+      ]
+    },
+    {
       "name": "icon-sparkles",
       "type": "registry:component",
       "title": "Sparkles",

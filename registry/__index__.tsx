@@ -34,6 +34,7 @@ import { iconFlameConfig } from "@/registry/remocn/icon-flame/config";
 import { iconHeartConfig } from "@/registry/remocn/icon-heart/config";
 import { iconInfoConfig } from "@/registry/remocn/icon-info/config";
 import { iconLoaderConfig } from "@/registry/remocn/icon-loader/config";
+import { iconPartyPopperConfig } from "@/registry/remocn/icon-party-popper/config";
 import { iconPlusConfig } from "@/registry/remocn/icon-plus/config";
 import { iconRefreshCwConfig } from "@/registry/remocn/icon-refresh-cw/config";
 import { iconSearchConfig } from "@/registry/remocn/icon-search/config";
@@ -641,6 +642,13 @@ const registry: Record<string, RegistryEntry> = {
         default: m.LoaderIcon,
       })),
     config: iconLoaderConfig,
+  },
+  "icon-party-popper": {
+    load: () =>
+      import("@/registry/remocn/icon-party-popper").then((m) => ({
+        default: m.PartyPopperIcon,
+      })),
+    config: iconPartyPopperConfig,
   },
   "icon-plus": {
     load: () =>

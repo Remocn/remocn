@@ -86,3 +86,4 @@ export const Scene = () => (
 | `icon-zap` | Speed, performance, or instant-result claims | Gradual improvement narratives — pair metrics with `number-wheel` instead | no | 60f |
 | `icon-flame` | Hot features, trending items, streaks | Literal fire/danger warnings — use `icon-alert-triangle` | yes | 90f |
 | `icon-thumbs-up` | Approval, positive review, social-proof beats | Love/favorite semantics — use `icon-heart` | no | 70f |
+| `icon-party-popper` | Launch, milestone, or celebration finales | Subtle success — use `icon-check-circle` | no | 75f |

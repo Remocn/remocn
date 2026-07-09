@@ -17,6 +17,7 @@ import { FlameIconStatic } from "@/registry/remocn/icon-flame";
 import { HeartIconStatic } from "@/registry/remocn/icon-heart";
 import { InfoIconStatic } from "@/registry/remocn/icon-info";
 import { LoaderIconStatic } from "@/registry/remocn/icon-loader";
+import { PartyPopperIconStatic } from "@/registry/remocn/icon-party-popper";
 import { PlusIconStatic } from "@/registry/remocn/icon-plus";
 import { RefreshCwIconStatic } from "@/registry/remocn/icon-refresh-cw";
 import { SearchIconStatic } from "@/registry/remocn/icon-search";
@@ -179,6 +180,12 @@ export const ICONS: IconEntry[] = [
     label: "Thumbs Up",
     category: "Emotion & accents",
     Static: ThumbsUpIconStatic,
+  },
+  {
+    name: "icon-party-popper",
+    label: "Party Popper",
+    category: "Emotion & accents",
+    Static: PartyPopperIconStatic,
   },
 ];
 
