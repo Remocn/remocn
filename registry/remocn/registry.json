@@ -2405,6 +2405,21 @@
       ]
     },
     {
+      "name": "icon-cloud",
+      "type": "registry:component",
+      "title": "Cloud",
+      "description": "Animated Lucide cloud icon — draws on, then floats: a weightless bob and a half before settling.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-cloud/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-cloud.tsx"
+        }
+      ]
+    },
+    {
       "name": "icon-user",
       "type": "registry:component",
       "title": "User",
