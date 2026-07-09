@@ -14,6 +14,7 @@ import { ArrowLeftIconStatic } from "@/registry/remocn/icon-arrow-left";
 import { ArrowRightIconStatic } from "@/registry/remocn/icon-arrow-right";
 import { ArrowUpIconStatic } from "@/registry/remocn/icon-arrow-up";
 import { AtSignIconStatic } from "@/registry/remocn/icon-at-sign";
+import { BarChart3IconStatic } from "@/registry/remocn/icon-bar-chart-3";
 import { BellIconStatic } from "@/registry/remocn/icon-bell";
 import { BookmarkIconStatic } from "@/registry/remocn/icon-bookmark";
 import { CalendarIconStatic } from "@/registry/remocn/icon-calendar";
@@ -321,6 +322,12 @@ export const ICONS: IconEntry[] = [
     label: "Wallet",
     category: "Commerce",
     Static: WalletIconStatic,
+  },
+  {
+    name: "icon-bar-chart-3",
+    label: "Bar Chart 3",
+    category: "Charts & data",
+    Static: BarChart3IconStatic,
   },
   {
     name: "icon-search",

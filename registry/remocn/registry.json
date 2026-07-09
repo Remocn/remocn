@@ -2600,6 +2600,21 @@
       ]
     },
     {
+      "name": "icon-bar-chart-3",
+      "type": "registry:component",
+      "title": "Bar Chart 3",
+      "description": "Animated Lucide bar-chart-3 icon — the axis draws on, then three bars rise left to right with overshoot: the classic growth chart.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-bar-chart-3/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-bar-chart-3.tsx"
+        }
+      ]
+    },
+    {
       "name": "icon-user",
       "type": "registry:component",
       "title": "User",

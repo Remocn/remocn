@@ -30,6 +30,7 @@ import { iconArrowLeftConfig } from "@/registry/remocn/icon-arrow-left/config";
 import { iconArrowRightConfig } from "@/registry/remocn/icon-arrow-right/config";
 import { iconArrowUpConfig } from "@/registry/remocn/icon-arrow-up/config";
 import { iconAtSignConfig } from "@/registry/remocn/icon-at-sign/config";
+import { iconBarChart3Config } from "@/registry/remocn/icon-bar-chart-3/config";
 import { iconBellConfig } from "@/registry/remocn/icon-bell/config";
 import { iconBookmarkConfig } from "@/registry/remocn/icon-bookmark/config";
 import { iconCalendarConfig } from "@/registry/remocn/icon-calendar/config";
@@ -688,6 +689,13 @@ const registry: Record<string, RegistryEntry> = {
         default: m.AtSignIcon,
       })),
     config: iconAtSignConfig,
+  },
+  "icon-bar-chart-3": {
+    load: () =>
+      import("@/registry/remocn/icon-bar-chart-3").then((m) => ({
+        default: m.BarChart3Icon,
+      })),
+    config: iconBarChart3Config,
   },
   "icon-bell": {
     load: () =>
