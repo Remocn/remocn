@@ -37,6 +37,7 @@ import { LayoutGridIconStatic } from "@/registry/remocn/icon-layout-grid";
 import { LinkIconStatic } from "@/registry/remocn/icon-link";
 import { LoaderIconStatic } from "@/registry/remocn/icon-loader";
 import { LockIconStatic } from "@/registry/remocn/icon-lock";
+import { LogOutIconStatic } from "@/registry/remocn/icon-log-out";
 import { MaximizeIconStatic } from "@/registry/remocn/icon-maximize";
 import { MenuIconStatic } from "@/registry/remocn/icon-menu";
 import { MicIconStatic } from "@/registry/remocn/icon-mic";
@@ -268,6 +269,12 @@ export const ICONS: IconEntry[] = [
     label: "Key",
     category: "Actions & UI",
     Static: KeyIconStatic,
+  },
+  {
+    name: "icon-log-out",
+    label: "Log Out",
+    category: "Actions & UI",
+    Static: LogOutIconStatic,
   },
   {
     name: "icon-play",

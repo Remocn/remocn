@@ -53,6 +53,7 @@ import { iconLayoutGridConfig } from "@/registry/remocn/icon-layout-grid/config"
 import { iconLinkConfig } from "@/registry/remocn/icon-link/config";
 import { iconLoaderConfig } from "@/registry/remocn/icon-loader/config";
 import { iconLockConfig } from "@/registry/remocn/icon-lock/config";
+import { iconLogOutConfig } from "@/registry/remocn/icon-log-out/config";
 import { iconMaximizeConfig } from "@/registry/remocn/icon-maximize/config";
 import { iconMenuConfig } from "@/registry/remocn/icon-menu/config";
 import { iconMicConfig } from "@/registry/remocn/icon-mic/config";
@@ -807,6 +808,13 @@ const registry: Record<string, RegistryEntry> = {
         default: m.LockIcon,
       })),
     config: iconLockConfig,
+  },
+  "icon-log-out": {
+    load: () =>
+      import("@/registry/remocn/icon-log-out").then((m) => ({
+        default: m.LogOutIcon,
+      })),
+    config: iconLogOutConfig,
   },
   "icon-maximize": {
     load: () =>

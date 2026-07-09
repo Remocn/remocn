@@ -2120,6 +2120,21 @@
       ]
     },
     {
+      "name": "icon-log-out",
+      "type": "registry:component",
+      "title": "Log Out",
+      "description": "Animated Lucide log-out icon — draws on, then the arrow steps out through the door frame with a fading echo.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-log-out/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-log-out.tsx"
+        }
+      ]
+    },
+    {
       "name": "icon-sparkles",
       "type": "registry:component",
       "title": "Sparkles",
