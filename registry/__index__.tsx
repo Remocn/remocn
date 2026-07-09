@@ -41,6 +41,7 @@ import { iconSendConfig } from "@/registry/remocn/icon-send/config";
 import { iconSettingsConfig } from "@/registry/remocn/icon-settings/config";
 import { iconSparklesConfig } from "@/registry/remocn/icon-sparkles/config";
 import { iconStarConfig } from "@/registry/remocn/icon-star/config";
+import { iconThumbsUpConfig } from "@/registry/remocn/icon-thumbs-up/config";
 import { iconTrashConfig } from "@/registry/remocn/icon-trash/config";
 import { iconUploadConfig } from "@/registry/remocn/icon-upload/config";
 import { iconXConfig } from "@/registry/remocn/icon-x/config";
@@ -689,6 +690,13 @@ const registry: Record<string, RegistryEntry> = {
         default: m.StarIcon,
       })),
     config: iconStarConfig,
+  },
+  "icon-thumbs-up": {
+    load: () =>
+      import("@/registry/remocn/icon-thumbs-up").then((m) => ({
+        default: m.ThumbsUpIcon,
+      })),
+    config: iconThumbsUpConfig,
   },
   "icon-trash": {
     load: () =>

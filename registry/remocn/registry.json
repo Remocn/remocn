@@ -1610,6 +1610,21 @@
       ]
     },
     {
+      "name": "icon-thumbs-up",
+      "type": "registry:component",
+      "title": "Thumbs Up",
+      "description": "Animated Lucide thumbs-up icon — the hand draws on, then springs up with an approving stamp for positive reviews, approvals, or social-proof beats.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-thumbs-up/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-thumbs-up.tsx"
+        }
+      ]
+    },
+    {
       "name": "icon-sparkles",
       "type": "registry:component",
       "title": "Sparkles",
