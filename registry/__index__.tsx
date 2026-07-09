@@ -91,6 +91,7 @@ import { iconSkipForwardConfig } from "@/registry/remocn/icon-skip-forward/confi
 import { iconSmartphoneConfig } from "@/registry/remocn/icon-smartphone/config";
 import { iconSparklesConfig } from "@/registry/remocn/icon-sparkles/config";
 import { iconStarConfig } from "@/registry/remocn/icon-star/config";
+import { iconSunConfig } from "@/registry/remocn/icon-sun/config";
 import { iconTerminalConfig } from "@/registry/remocn/icon-terminal/config";
 import { iconThumbsUpConfig } from "@/registry/remocn/icon-thumbs-up/config";
 import { iconTimerConfig } from "@/registry/remocn/icon-timer/config";
@@ -1099,6 +1100,13 @@ const registry: Record<string, RegistryEntry> = {
         default: m.StarIcon,
       })),
     config: iconStarConfig,
+  },
+  "icon-sun": {
+    load: () =>
+      import("@/registry/remocn/icon-sun").then((m) => ({
+        default: m.SunIcon,
+      })),
+    config: iconSunConfig,
   },
   "icon-terminal": {
     load: () =>

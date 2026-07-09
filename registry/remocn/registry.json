@@ -2465,6 +2465,21 @@
       ]
     },
     {
+      "name": "icon-sun",
+      "type": "registry:component",
+      "title": "Sun",
+      "description": "Animated Lucide sun icon — the core draws on, then eight rays fan out clockwise and the sun swells: sunrise.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-sun/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-sun.tsx"
+        }
+      ]
+    },
+    {
       "name": "icon-user",
       "type": "registry:component",
       "title": "User",

@@ -75,6 +75,7 @@ import { SkipForwardIconStatic } from "@/registry/remocn/icon-skip-forward";
 import { SmartphoneIconStatic } from "@/registry/remocn/icon-smartphone";
 import { SparklesIconStatic } from "@/registry/remocn/icon-sparkles";
 import { StarIconStatic } from "@/registry/remocn/icon-star";
+import { SunIconStatic } from "@/registry/remocn/icon-sun";
 import { TerminalIconStatic } from "@/registry/remocn/icon-terminal";
 import { ThumbsUpIconStatic } from "@/registry/remocn/icon-thumbs-up";
 import { TimerIconStatic } from "@/registry/remocn/icon-timer";
@@ -258,6 +259,12 @@ export const ICONS: IconEntry[] = [
     label: "Smartphone",
     category: "Devices & theme",
     Static: SmartphoneIconStatic,
+  },
+  {
+    name: "icon-sun",
+    label: "Sun",
+    category: "Devices & theme",
+    Static: SunIconStatic,
   },
   {
     name: "icon-search",
