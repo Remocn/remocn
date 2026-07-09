@@ -65,3 +65,4 @@ export const Scene = () => (
 | Icon | Use for | Avoid for | Loop | Length |
 |---|---|---|---|---|
 | `icon-check` | Marking a step, task, or claim as done in a demo scene | A success state that needs a container — compose with a circle or badge from the ui tier instead | no | 60f |
+| `icon-check-circle` | A completed checklist row or success confirmation moment | A bare inline tick next to text — use `icon-check` | no | 75f |

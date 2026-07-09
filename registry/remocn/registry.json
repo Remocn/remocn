@@ -1353,6 +1353,21 @@
           "target": "components/remocn/icon-check.tsx"
         }
       ]
+    },
+    {
+      "name": "icon-check-circle",
+      "type": "registry:component",
+      "title": "Check Circle",
+      "description": "Animated Lucide circle-check icon — the ring draws clockwise, the checkmark traces in, then the whole mark pops to confirm a completed or successful state.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-check-circle/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-check-circle.tsx"
+        }
+      ]
     }
   ]
 }

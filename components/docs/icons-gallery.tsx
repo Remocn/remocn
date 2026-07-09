@@ -7,6 +7,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { usePrefersReducedMotion } from "@/lib/use-prefers-reduced-motion";
 import { cn } from "@/lib/utils";
 import registry, { type RegistryEntry } from "@/registry/__index__";
+import { CheckCircleIconStatic } from "@/registry/remocn/icon-check-circle";
 import { CheckIconStatic } from "@/registry/remocn/icon-check";
 
 export type IconCategory =
@@ -32,6 +33,12 @@ export const ICONS: IconEntry[] = [
     label: "Check",
     category: "Status & feedback",
     Static: CheckIconStatic,
+  },
+  {
+    name: "icon-check-circle",
+    label: "Check Circle",
+    category: "Status & feedback",
+    Static: CheckCircleIconStatic,
   },
 ];
 
