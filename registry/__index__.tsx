@@ -46,6 +46,7 @@ import { iconCodeConfig } from "@/registry/remocn/icon-code/config";
 import { iconCopyConfig } from "@/registry/remocn/icon-copy/config";
 import { iconCreditCardConfig } from "@/registry/remocn/icon-credit-card/config";
 import { iconDatabaseConfig } from "@/registry/remocn/icon-database/config";
+import { iconDollarSignConfig } from "@/registry/remocn/icon-dollar-sign/config";
 import { iconDownloadConfig } from "@/registry/remocn/icon-download/config";
 import { iconExternalLinkConfig } from "@/registry/remocn/icon-external-link/config";
 import { iconEyeOffConfig } from "@/registry/remocn/icon-eye-off/config";
@@ -788,6 +789,13 @@ const registry: Record<string, RegistryEntry> = {
         default: m.DatabaseIcon,
       })),
     config: iconDatabaseConfig,
+  },
+  "icon-dollar-sign": {
+    load: () =>
+      import("@/registry/remocn/icon-dollar-sign").then((m) => ({
+        default: m.DollarSignIcon,
+      })),
+    config: iconDollarSignConfig,
   },
   "icon-download": {
     load: () =>

@@ -2525,6 +2525,21 @@
       ]
     },
     {
+      "name": "icon-dollar-sign",
+      "type": "registry:component",
+      "title": "Dollar Sign",
+      "description": "Animated Lucide dollar-sign icon — draws on, then the sign stretches tall: understated cha-ching.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-dollar-sign/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-dollar-sign.tsx"
+        }
+      ]
+    },
+    {
       "name": "icon-user",
       "type": "registry:component",
       "title": "User",

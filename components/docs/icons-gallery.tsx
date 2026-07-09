@@ -30,6 +30,7 @@ import { CodeIconStatic } from "@/registry/remocn/icon-code";
 import { CopyIconStatic } from "@/registry/remocn/icon-copy";
 import { CreditCardIconStatic } from "@/registry/remocn/icon-credit-card";
 import { DatabaseIconStatic } from "@/registry/remocn/icon-database";
+import { DollarSignIconStatic } from "@/registry/remocn/icon-dollar-sign";
 import { DownloadIconStatic } from "@/registry/remocn/icon-download";
 import { ExternalLinkIconStatic } from "@/registry/remocn/icon-external-link";
 import { EyeOffIconStatic } from "@/registry/remocn/icon-eye-off";
@@ -286,6 +287,12 @@ export const ICONS: IconEntry[] = [
     label: "Credit Card",
     category: "Commerce",
     Static: CreditCardIconStatic,
+  },
+  {
+    name: "icon-dollar-sign",
+    label: "Dollar Sign",
+    category: "Commerce",
+    Static: DollarSignIconStatic,
   },
   {
     name: "icon-search",
