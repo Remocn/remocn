@@ -1730,6 +1730,21 @@
       ]
     },
     {
+      "name": "icon-pause",
+      "type": "registry:component",
+      "title": "Pause",
+      "description": "Animated Lucide pause icon — the two bars draw on, then pinch toward each other and settle like a held breath.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-pause/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-pause.tsx"
+        }
+      ]
+    },
+    {
       "name": "icon-sparkles",
       "type": "registry:component",
       "title": "Sparkles",

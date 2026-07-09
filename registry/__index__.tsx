@@ -40,6 +40,7 @@ import { iconHeartConfig } from "@/registry/remocn/icon-heart/config";
 import { iconInfoConfig } from "@/registry/remocn/icon-info/config";
 import { iconLoaderConfig } from "@/registry/remocn/icon-loader/config";
 import { iconPartyPopperConfig } from "@/registry/remocn/icon-party-popper/config";
+import { iconPauseConfig } from "@/registry/remocn/icon-pause/config";
 import { iconPlayConfig } from "@/registry/remocn/icon-play/config";
 import { iconPlusConfig } from "@/registry/remocn/icon-plus/config";
 import { iconRefreshCwConfig } from "@/registry/remocn/icon-refresh-cw/config";
@@ -690,6 +691,13 @@ const registry: Record<string, RegistryEntry> = {
         default: m.PartyPopperIcon,
       })),
     config: iconPartyPopperConfig,
+  },
+  "icon-pause": {
+    load: () =>
+      import("@/registry/remocn/icon-pause").then((m) => ({
+        default: m.PauseIcon,
+      })),
+    config: iconPauseConfig,
   },
   "icon-play": {
     load: () =>
