@@ -2360,6 +2360,21 @@
       ]
     },
     {
+      "name": "icon-code",
+      "type": "registry:component",
+      "title": "Code",
+      "description": "Animated Lucide code icon — the angle brackets draw on, pull apart, and snap back around their code.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-code/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-code.tsx"
+        }
+      ]
+    },
+    {
       "name": "icon-user",
       "type": "registry:component",
       "title": "User",

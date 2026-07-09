@@ -25,6 +25,7 @@ import { ChevronLeftIconStatic } from "@/registry/remocn/icon-chevron-left";
 import { ChevronRightIconStatic } from "@/registry/remocn/icon-chevron-right";
 import { ChevronUpIconStatic } from "@/registry/remocn/icon-chevron-up";
 import { ClockIconStatic } from "@/registry/remocn/icon-clock";
+import { CodeIconStatic } from "@/registry/remocn/icon-code";
 import { CopyIconStatic } from "@/registry/remocn/icon-copy";
 import { DownloadIconStatic } from "@/registry/remocn/icon-download";
 import { ExternalLinkIconStatic } from "@/registry/remocn/icon-external-link";
@@ -209,6 +210,12 @@ export const ICONS: IconEntry[] = [
     label: "File Text",
     category: "Files & dev",
     Static: FileTextIconStatic,
+  },
+  {
+    name: "icon-code",
+    label: "Code",
+    category: "Files & dev",
+    Static: CodeIconStatic,
   },
   {
     name: "icon-search",
