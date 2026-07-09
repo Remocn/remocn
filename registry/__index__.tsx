@@ -31,6 +31,7 @@ import { iconArrowLeftConfig } from "@/registry/remocn/icon-arrow-left/config";
 import { iconArrowRightConfig } from "@/registry/remocn/icon-arrow-right/config";
 import { iconArrowUpConfig } from "@/registry/remocn/icon-arrow-up/config";
 import { iconAtSignConfig } from "@/registry/remocn/icon-at-sign/config";
+import { iconAwardConfig } from "@/registry/remocn/icon-award/config";
 import { iconBarChart3Config } from "@/registry/remocn/icon-bar-chart-3/config";
 import { iconBellConfig } from "@/registry/remocn/icon-bell/config";
 import { iconBookmarkConfig } from "@/registry/remocn/icon-bookmark/config";
@@ -702,6 +703,13 @@ const registry: Record<string, RegistryEntry> = {
         default: m.AtSignIcon,
       })),
     config: iconAtSignConfig,
+  },
+  "icon-award": {
+    load: () =>
+      import("@/registry/remocn/icon-award").then((m) => ({
+        default: m.AwardIcon,
+      })),
+    config: iconAwardConfig,
   },
   "icon-bar-chart-3": {
     load: () =>

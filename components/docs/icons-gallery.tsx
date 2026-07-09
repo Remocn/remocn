@@ -15,6 +15,7 @@ import { ArrowLeftIconStatic } from "@/registry/remocn/icon-arrow-left";
 import { ArrowRightIconStatic } from "@/registry/remocn/icon-arrow-right";
 import { ArrowUpIconStatic } from "@/registry/remocn/icon-arrow-up";
 import { AtSignIconStatic } from "@/registry/remocn/icon-at-sign";
+import { AwardIconStatic } from "@/registry/remocn/icon-award";
 import { BarChart3IconStatic } from "@/registry/remocn/icon-bar-chart-3";
 import { BellIconStatic } from "@/registry/remocn/icon-bell";
 import { BookmarkIconStatic } from "@/registry/remocn/icon-bookmark";
@@ -622,6 +623,12 @@ export const ICONS: IconEntry[] = [
     label: "Trophy",
     category: "Emotion & accents",
     Static: TrophyIconStatic,
+  },
+  {
+    name: "icon-award",
+    label: "Award",
+    category: "Emotion & accents",
+    Static: AwardIconStatic,
   },
   {
     name: "icon-star",

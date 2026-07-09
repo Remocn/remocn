@@ -2645,6 +2645,21 @@
       ]
     },
     {
+      "name": "icon-award",
+      "type": "registry:component",
+      "title": "Award",
+      "description": "Animated Lucide award icon — the medal draws on, the ribbon unfurls beneath it, then the medal swings to rest.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-award/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-award.tsx"
+        }
+      ]
+    },
+    {
       "name": "icon-bar-chart-3",
       "type": "registry:component",
       "title": "Bar Chart 3",

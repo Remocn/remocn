@@ -136,6 +136,7 @@ export const Scene = () => (
 | `icon-target` | Goals, precision claims, OKR beats | Search — use `icon-search` | no | 80f |
 | `icon-rocket` | Launches, onboarding finales, ship-faster claims | Gradual growth — use `icon-trending-up` | no | 80f |
 | `icon-trophy` | Wins, leaderboards, case-study results | Certifications — use `icon-award` | no | 85f |
+| `icon-award` | Badges, certifications, quality seals | Competitive wins — use `icon-trophy` | no | 75f |
 | `icon-heart` | Likes, favorites, testimonials, or "built with love" moments | Ratings — use `icon-star` | no | 75f |
 | `icon-star` | Ratings, favorites, GitHub-star callouts | Sparkle/magic semantics — use `icon-sparkles` | no | 70f |
 | `icon-sparkles` | AI features, magic moments, premium highlights | A single award or rating — use `icon-star` | yes | 90f |
