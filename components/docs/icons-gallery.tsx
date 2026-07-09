@@ -18,6 +18,7 @@ import { CameraIconStatic } from "@/registry/remocn/icon-camera";
 import { CheckCircleIconStatic } from "@/registry/remocn/icon-check-circle";
 import { CheckIconStatic } from "@/registry/remocn/icon-check";
 import { ChevronDownIconStatic } from "@/registry/remocn/icon-chevron-down";
+import { ChevronLeftIconStatic } from "@/registry/remocn/icon-chevron-left";
 import { ChevronUpIconStatic } from "@/registry/remocn/icon-chevron-up";
 import { CopyIconStatic } from "@/registry/remocn/icon-copy";
 import { DownloadIconStatic } from "@/registry/remocn/icon-download";
@@ -306,6 +307,12 @@ export const ICONS: IconEntry[] = [
     label: "Chevron Down",
     category: "Arrows & navigation",
     Static: ChevronDownIconStatic,
+  },
+  {
+    name: "icon-chevron-left",
+    label: "Chevron Left",
+    category: "Arrows & navigation",
+    Static: ChevronLeftIconStatic,
   },
 ];
 
