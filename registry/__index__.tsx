@@ -110,6 +110,7 @@ import { iconUsersConfig } from "@/registry/remocn/icon-users/config";
 import { iconVideoConfig } from "@/registry/remocn/icon-video/config";
 import { iconVolume2Config } from "@/registry/remocn/icon-volume-2/config";
 import { iconVolumeXConfig } from "@/registry/remocn/icon-volume-x/config";
+import { iconWalletConfig } from "@/registry/remocn/icon-wallet/config";
 import { iconXCircleConfig } from "@/registry/remocn/icon-x-circle/config";
 import { iconXConfig } from "@/registry/remocn/icon-x/config";
 import { iconZapConfig } from "@/registry/remocn/icon-zap/config";
@@ -1240,6 +1241,13 @@ const registry: Record<string, RegistryEntry> = {
         default: m.VolumeXIcon,
       })),
     config: iconVolumeXConfig,
+  },
+  "icon-wallet": {
+    load: () =>
+      import("@/registry/remocn/icon-wallet").then((m) => ({
+        default: m.WalletIcon,
+      })),
+    config: iconWalletConfig,
   },
   "icon-check-circle": {
     load: () =>

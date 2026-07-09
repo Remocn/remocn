@@ -2585,6 +2585,21 @@
       ]
     },
     {
+      "name": "icon-wallet",
+      "type": "registry:component",
+      "title": "Wallet",
+      "description": "Animated Lucide wallet icon — draws on, then the wallet thickens with a quiet x-scale: money in.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-wallet/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-wallet.tsx"
+        }
+      ]
+    },
+    {
       "name": "icon-user",
       "type": "registry:component",
       "title": "User",

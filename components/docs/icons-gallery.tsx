@@ -95,6 +95,7 @@ import { UsersIconStatic } from "@/registry/remocn/icon-users";
 import { VideoIconStatic } from "@/registry/remocn/icon-video";
 import { Volume2IconStatic } from "@/registry/remocn/icon-volume-2";
 import { VolumeXIconStatic } from "@/registry/remocn/icon-volume-x";
+import { WalletIconStatic } from "@/registry/remocn/icon-wallet";
 import { XIconStatic } from "@/registry/remocn/icon-x";
 import { XCircleIconStatic } from "@/registry/remocn/icon-x-circle";
 
@@ -314,6 +315,12 @@ export const ICONS: IconEntry[] = [
     label: "Gift",
     category: "Commerce",
     Static: GiftIconStatic,
+  },
+  {
+    name: "icon-wallet",
+    label: "Wallet",
+    category: "Commerce",
+    Static: WalletIconStatic,
   },
   {
     name: "icon-search",
