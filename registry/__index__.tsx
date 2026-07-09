@@ -48,6 +48,7 @@ import { iconHeartConfig } from "@/registry/remocn/icon-heart/config";
 import { iconImageConfig } from "@/registry/remocn/icon-image/config";
 import { iconInfoConfig } from "@/registry/remocn/icon-info/config";
 import { iconLayoutGridConfig } from "@/registry/remocn/icon-layout-grid/config";
+import { iconLinkConfig } from "@/registry/remocn/icon-link/config";
 import { iconLoaderConfig } from "@/registry/remocn/icon-loader/config";
 import { iconMaximizeConfig } from "@/registry/remocn/icon-maximize/config";
 import { iconMenuConfig } from "@/registry/remocn/icon-menu/config";
@@ -768,6 +769,13 @@ const registry: Record<string, RegistryEntry> = {
         default: m.LayoutGridIcon,
       })),
     config: iconLayoutGridConfig,
+  },
+  "icon-link": {
+    load: () =>
+      import("@/registry/remocn/icon-link").then((m) => ({
+        default: m.LinkIcon,
+      })),
+    config: iconLinkConfig,
   },
   "icon-loader": {
     load: () =>

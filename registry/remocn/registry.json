@@ -2060,6 +2060,21 @@
       ]
     },
     {
+      "name": "icon-link",
+      "type": "registry:component",
+      "title": "Link",
+      "description": "Animated Lucide link icon — two chain halves draw on, pull apart, and click together.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-link/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-link.tsx"
+        }
+      ]
+    },
+    {
       "name": "icon-sparkles",
       "type": "registry:component",
       "title": "Sparkles",

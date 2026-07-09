@@ -32,6 +32,7 @@ import { HeartIconStatic } from "@/registry/remocn/icon-heart";
 import { ImageIconStatic } from "@/registry/remocn/icon-image";
 import { InfoIconStatic } from "@/registry/remocn/icon-info";
 import { LayoutGridIconStatic } from "@/registry/remocn/icon-layout-grid";
+import { LinkIconStatic } from "@/registry/remocn/icon-link";
 import { LoaderIconStatic } from "@/registry/remocn/icon-loader";
 import { MaximizeIconStatic } from "@/registry/remocn/icon-maximize";
 import { MenuIconStatic } from "@/registry/remocn/icon-menu";
@@ -240,6 +241,12 @@ export const ICONS: IconEntry[] = [
     label: "Save",
     category: "Actions & UI",
     Static: SaveIconStatic,
+  },
+  {
+    name: "icon-link",
+    label: "Link",
+    category: "Actions & UI",
+    Static: LinkIconStatic,
   },
   {
     name: "icon-play",
