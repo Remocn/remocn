@@ -28,6 +28,7 @@ import { iconAlertTriangleConfig } from "@/registry/remocn/icon-alert-triangle/c
 import { iconCheckCircleConfig } from "@/registry/remocn/icon-check-circle/config";
 import { iconCheckConfig } from "@/registry/remocn/icon-check/config";
 import { iconInfoConfig } from "@/registry/remocn/icon-info/config";
+import { iconLoaderConfig } from "@/registry/remocn/icon-loader/config";
 import { iconXConfig } from "@/registry/remocn/icon-x/config";
 import { infiniteBentoPanConfig } from "@/registry/remocn/infinite-bento-pan/config";
 import { infiniteMarqueeConfig } from "@/registry/remocn/infinite-marquee/config";
@@ -582,6 +583,13 @@ const registry: Record<string, RegistryEntry> = {
         default: m.InfoIcon,
       })),
     config: iconInfoConfig,
+  },
+  "icon-loader": {
+    load: () =>
+      import("@/registry/remocn/icon-loader").then((m) => ({
+        default: m.LoaderIcon,
+      })),
+    config: iconLoaderConfig,
   },
   "icon-check-circle": {
     load: () =>

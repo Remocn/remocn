@@ -11,6 +11,7 @@ import { AlertTriangleIconStatic } from "@/registry/remocn/icon-alert-triangle";
 import { CheckCircleIconStatic } from "@/registry/remocn/icon-check-circle";
 import { CheckIconStatic } from "@/registry/remocn/icon-check";
 import { InfoIconStatic } from "@/registry/remocn/icon-info";
+import { LoaderIconStatic } from "@/registry/remocn/icon-loader";
 import { XIconStatic } from "@/registry/remocn/icon-x";
 
 export type IconCategory =
@@ -60,6 +61,12 @@ export const ICONS: IconEntry[] = [
     label: "Info",
     category: "Status & feedback",
     Static: InfoIconStatic,
+  },
+  {
+    name: "icon-loader",
+    label: "Loader",
+    category: "Status & feedback",
+    Static: LoaderIconStatic,
   },
 ];
 

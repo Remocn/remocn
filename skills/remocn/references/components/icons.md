@@ -69,3 +69,4 @@ export const Scene = () => (
 | `icon-x` | An error, removal, or dismissal beat | A warning that is not a hard failure — use `icon-alert-triangle` | no | 60f |
 | `icon-alert-triangle` | Highlighting a risk, warning, or "before" pain point | A fatal error or rejection — use `icon-x` | no | 75f |
 | `icon-info` | Introducing a tip, note, or neutral callout in a scene | Anything alarming — use `icon-alert-triangle` | no | 75f |
+| `icon-loader` | A loading or processing beat between two states | A finished state — swap to `icon-check` when the wait resolves | yes | 90f |

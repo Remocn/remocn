@@ -1413,6 +1413,21 @@
           "target": "components/remocn/icon-info.tsx"
         }
       ]
+    },
+    {
+      "name": "icon-loader",
+      "type": "registry:component",
+      "title": "Loader",
+      "description": "Animated Lucide loader-circle icon — the arc draws on, then spins continuously for a loading or processing beat. Loops by default.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-loader/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-loader.tsx"
+        }
+      ]
     }
   ]
 }
