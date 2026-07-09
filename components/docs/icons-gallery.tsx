@@ -799,7 +799,7 @@ export function IconsGallery() {
       ) : (
         groups.map((group) => (
           <section key={group.category} className="flex flex-col gap-3">
-            <h3 className="text-sm font-medium text-muted-foreground">
+            <h3 className="sticky top-11 z-20 bg-background/80 py-2 text-sm font-medium text-muted-foreground backdrop-blur-xl">
               {group.category}
             </h3>
             <div className="grid grid-cols-[repeat(auto-fill,minmax(132px,1fr))] gap-3">
