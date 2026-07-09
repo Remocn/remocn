@@ -59,6 +59,7 @@ import { iconPencilConfig } from "@/registry/remocn/icon-pencil/config";
 import { iconPlayConfig } from "@/registry/remocn/icon-play/config";
 import { iconPlusConfig } from "@/registry/remocn/icon-plus/config";
 import { iconRefreshCwConfig } from "@/registry/remocn/icon-refresh-cw/config";
+import { iconSaveConfig } from "@/registry/remocn/icon-save/config";
 import { iconSearchConfig } from "@/registry/remocn/icon-search/config";
 import { iconSendConfig } from "@/registry/remocn/icon-send/config";
 import { iconSettingsConfig } from "@/registry/remocn/icon-settings/config";
@@ -844,6 +845,13 @@ const registry: Record<string, RegistryEntry> = {
         default: m.RefreshCwIcon,
       })),
     config: iconRefreshCwConfig,
+  },
+  "icon-save": {
+    load: () =>
+      import("@/registry/remocn/icon-save").then((m) => ({
+        default: m.SaveIcon,
+      })),
+    config: iconSaveConfig,
   },
   "icon-search": {
     load: () =>

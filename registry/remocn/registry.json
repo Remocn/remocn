@@ -2045,6 +2045,21 @@
       ]
     },
     {
+      "name": "icon-save",
+      "type": "registry:component",
+      "title": "Save",
+      "description": "Animated Lucide save icon — the disk draws on, then presses down and writes: the label slot re-draws as data commits.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-save/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-save.tsx"
+        }
+      ]
+    },
+    {
       "name": "icon-sparkles",
       "type": "registry:component",
       "title": "Sparkles",

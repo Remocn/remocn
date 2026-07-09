@@ -43,6 +43,7 @@ import { PencilIconStatic } from "@/registry/remocn/icon-pencil";
 import { PlayIconStatic } from "@/registry/remocn/icon-play";
 import { PlusIconStatic } from "@/registry/remocn/icon-plus";
 import { RefreshCwIconStatic } from "@/registry/remocn/icon-refresh-cw";
+import { SaveIconStatic } from "@/registry/remocn/icon-save";
 import { SearchIconStatic } from "@/registry/remocn/icon-search";
 import { SendIconStatic } from "@/registry/remocn/icon-send";
 import { Share2IconStatic } from "@/registry/remocn/icon-share-2";
@@ -233,6 +234,12 @@ export const ICONS: IconEntry[] = [
     label: "Eye Off",
     category: "Actions & UI",
     Static: EyeOffIconStatic,
+  },
+  {
+    name: "icon-save",
+    label: "Save",
+    category: "Actions & UI",
+    Static: SaveIconStatic,
   },
   {
     name: "icon-play",
