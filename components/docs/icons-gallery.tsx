@@ -39,6 +39,7 @@ import { ThumbsUpIconStatic } from "@/registry/remocn/icon-thumbs-up";
 import { ZapIconStatic } from "@/registry/remocn/icon-zap";
 import { TrashIconStatic } from "@/registry/remocn/icon-trash";
 import { UploadIconStatic } from "@/registry/remocn/icon-upload";
+import { VideoIconStatic } from "@/registry/remocn/icon-video";
 import { Volume2IconStatic } from "@/registry/remocn/icon-volume-2";
 import { VolumeXIconStatic } from "@/registry/remocn/icon-volume-x";
 import { XIconStatic } from "@/registry/remocn/icon-x";
@@ -199,6 +200,12 @@ export const ICONS: IconEntry[] = [
     label: "Mic",
     category: "Media & playback",
     Static: MicIconStatic,
+  },
+  {
+    name: "icon-video",
+    label: "Video",
+    category: "Media & playback",
+    Static: VideoIconStatic,
   },
   {
     name: "icon-heart",

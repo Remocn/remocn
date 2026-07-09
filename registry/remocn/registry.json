@@ -1805,6 +1805,21 @@
       ]
     },
     {
+      "name": "icon-video",
+      "type": "registry:component",
+      "title": "Video",
+      "description": "Animated Lucide video icon — draws on, then the lens wedge pans out and snaps back to its shot.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-video/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-video.tsx"
+        }
+      ]
+    },
+    {
       "name": "icon-sparkles",
       "type": "registry:component",
       "title": "Sparkles",

@@ -98,3 +98,4 @@ export const Scene = () => (
 | `icon-volume-2` | Sound-on moments, audio feature callouts | Muted states — use `icon-volume-x` | no | 70f |
 | `icon-volume-x` | Muted or do-not-disturb beats | General errors — use `icon-x-circle` | no | 70f |
 | `icon-mic` | Voice input, recording, dictation features | Audio playback — use `icon-volume-2` | no | 75f |
+| `icon-video` | Video calls, screen recording, camera-on beats | Photo capture — use `icon-camera` | no | 70f |

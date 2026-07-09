@@ -54,6 +54,7 @@ import { iconStarConfig } from "@/registry/remocn/icon-star/config";
 import { iconThumbsUpConfig } from "@/registry/remocn/icon-thumbs-up/config";
 import { iconTrashConfig } from "@/registry/remocn/icon-trash/config";
 import { iconUploadConfig } from "@/registry/remocn/icon-upload/config";
+import { iconVideoConfig } from "@/registry/remocn/icon-video/config";
 import { iconVolume2Config } from "@/registry/remocn/icon-volume-2/config";
 import { iconVolumeXConfig } from "@/registry/remocn/icon-volume-x/config";
 import { iconXConfig } from "@/registry/remocn/icon-x/config";
@@ -793,6 +794,13 @@ const registry: Record<string, RegistryEntry> = {
         default: m.UploadIcon,
       })),
     config: iconUploadConfig,
+  },
+  "icon-video": {
+    load: () =>
+      import("@/registry/remocn/icon-video").then((m) => ({
+        default: m.VideoIcon,
+      })),
+    config: iconVideoConfig,
   },
   "icon-volume-2": {
     load: () =>
