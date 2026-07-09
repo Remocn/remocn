@@ -1895,6 +1895,21 @@
       ]
     },
     {
+      "name": "icon-chevron-right",
+      "type": "registry:component",
+      "title": "Chevron Right",
+      "description": "Animated Lucide chevron-right icon — draws on, then nudges right with a fading echo.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-chevron-right/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-chevron-right.tsx"
+        }
+      ]
+    },
+    {
       "name": "icon-sparkles",
       "type": "registry:component",
       "title": "Sparkles",

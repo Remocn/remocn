@@ -35,6 +35,7 @@ import { iconCheckCircleConfig } from "@/registry/remocn/icon-check-circle/confi
 import { iconCheckConfig } from "@/registry/remocn/icon-check/config";
 import { iconChevronDownConfig } from "@/registry/remocn/icon-chevron-down/config";
 import { iconChevronLeftConfig } from "@/registry/remocn/icon-chevron-left/config";
+import { iconChevronRightConfig } from "@/registry/remocn/icon-chevron-right/config";
 import { iconChevronUpConfig } from "@/registry/remocn/icon-chevron-up/config";
 import { iconCopyConfig } from "@/registry/remocn/icon-copy/config";
 import { iconDownloadConfig } from "@/registry/remocn/icon-download/config";
@@ -666,6 +667,13 @@ const registry: Record<string, RegistryEntry> = {
         default: m.ChevronLeftIcon,
       })),
     config: iconChevronLeftConfig,
+  },
+  "icon-chevron-right": {
+    load: () =>
+      import("@/registry/remocn/icon-chevron-right").then((m) => ({
+        default: m.ChevronRightIcon,
+      })),
+    config: iconChevronRightConfig,
   },
   "icon-chevron-up": {
     load: () =>

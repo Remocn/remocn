@@ -95,6 +95,7 @@ export const Scene = () => (
 | `icon-chevron-up` | Expanders, collapse-up affordances, scroll-to-top cues | Growth claims — use `icon-trending-up` or `icon-arrow-up` | no | 60f |
 | `icon-chevron-down` | Dropdowns, accordions, scroll-down cues | Decline metrics — use `icon-trending-down` | no | 60f |
 | `icon-chevron-left` | Back steps in carousels or wizards | Full back-navigation semantics — use `icon-arrow-left` | no | 60f |
+| `icon-chevron-right` | Forward steps, list drill-ins, breadcrumbs | Strong CTAs — use `icon-arrow-right` | no | 60f |
 | `icon-play` | Starting a demo, video, or 'see it in action' beat | Continuous processing — use `icon-loader` | no | 60f |
 | `icon-pause` | Pausing a flow or freezing a moment mid-demo | Permanent stops or errors — use `icon-x-circle` | no | 60f |
 | `icon-skip-forward` | Jumping ahead, skipping onboarding steps | Simple next-step pointers — use `icon-arrow-right` | no | 60f |
