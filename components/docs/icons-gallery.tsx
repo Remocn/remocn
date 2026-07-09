@@ -18,6 +18,7 @@ import { LoaderIconStatic } from "@/registry/remocn/icon-loader";
 import { PlusIconStatic } from "@/registry/remocn/icon-plus";
 import { RefreshCwIconStatic } from "@/registry/remocn/icon-refresh-cw";
 import { SearchIconStatic } from "@/registry/remocn/icon-search";
+import { SendIconStatic } from "@/registry/remocn/icon-send";
 import { SettingsIconStatic } from "@/registry/remocn/icon-settings";
 import { TrashIconStatic } from "@/registry/remocn/icon-trash";
 import { UploadIconStatic } from "@/registry/remocn/icon-upload";
@@ -130,6 +131,12 @@ export const ICONS: IconEntry[] = [
     label: "Plus",
     category: "Actions & UI",
     Static: PlusIconStatic,
+  },
+  {
+    name: "icon-send",
+    label: "Send",
+    category: "Actions & UI",
+    Static: SendIconStatic,
   },
 ];
 

@@ -35,6 +35,7 @@ import { iconLoaderConfig } from "@/registry/remocn/icon-loader/config";
 import { iconPlusConfig } from "@/registry/remocn/icon-plus/config";
 import { iconRefreshCwConfig } from "@/registry/remocn/icon-refresh-cw/config";
 import { iconSearchConfig } from "@/registry/remocn/icon-search/config";
+import { iconSendConfig } from "@/registry/remocn/icon-send/config";
 import { iconSettingsConfig } from "@/registry/remocn/icon-settings/config";
 import { iconTrashConfig } from "@/registry/remocn/icon-trash/config";
 import { iconUploadConfig } from "@/registry/remocn/icon-upload/config";
@@ -641,6 +642,13 @@ const registry: Record<string, RegistryEntry> = {
         default: m.SearchIcon,
       })),
     config: iconSearchConfig,
+  },
+  "icon-send": {
+    load: () =>
+      import("@/registry/remocn/icon-send").then((m) => ({
+        default: m.SendIcon,
+      })),
+    config: iconSendConfig,
   },
   "icon-settings": {
     load: () =>

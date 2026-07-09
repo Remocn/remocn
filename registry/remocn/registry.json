@@ -1563,6 +1563,21 @@
           "target": "components/remocn/icon-plus.tsx"
         }
       ]
+    },
+    {
+      "name": "icon-send",
+      "type": "registry:component",
+      "title": "Send",
+      "description": "Animated Lucide send icon — the paper plane draws on, then darts forward with a wind-up and settles back for a send-message beat.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-send/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-send.tsx"
+        }
+      ]
     }
   ]
 }
