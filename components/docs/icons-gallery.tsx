@@ -34,6 +34,7 @@ import { FilterIconStatic } from "@/registry/remocn/icon-filter";
 import { FlameIconStatic } from "@/registry/remocn/icon-flame";
 import { HeartIconStatic } from "@/registry/remocn/icon-heart";
 import { HelpCircleIconStatic } from "@/registry/remocn/icon-help-circle";
+import { HomeIconStatic } from "@/registry/remocn/icon-home";
 import { ImageIconStatic } from "@/registry/remocn/icon-image";
 import { InboxIconStatic } from "@/registry/remocn/icon-inbox";
 import { InfoIconStatic } from "@/registry/remocn/icon-info";
@@ -188,6 +189,12 @@ export const ICONS: IconEntry[] = [
     label: "Timer",
     category: "Time & planning",
     Static: TimerIconStatic,
+  },
+  {
+    name: "icon-home",
+    label: "Home",
+    category: "Files & dev",
+    Static: HomeIconStatic,
   },
   {
     name: "icon-search",

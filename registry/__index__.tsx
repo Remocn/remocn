@@ -50,6 +50,7 @@ import { iconFilterConfig } from "@/registry/remocn/icon-filter/config";
 import { iconFlameConfig } from "@/registry/remocn/icon-flame/config";
 import { iconHeartConfig } from "@/registry/remocn/icon-heart/config";
 import { iconHelpCircleConfig } from "@/registry/remocn/icon-help-circle/config";
+import { iconHomeConfig } from "@/registry/remocn/icon-home/config";
 import { iconImageConfig } from "@/registry/remocn/icon-image/config";
 import { iconInboxConfig } from "@/registry/remocn/icon-inbox/config";
 import { iconInfoConfig } from "@/registry/remocn/icon-info/config";
@@ -802,6 +803,13 @@ const registry: Record<string, RegistryEntry> = {
         default: m.HelpCircleIcon,
       })),
     config: iconHelpCircleConfig,
+  },
+  "icon-home": {
+    load: () =>
+      import("@/registry/remocn/icon-home").then((m) => ({
+        default: m.HomeIcon,
+      })),
+    config: iconHomeConfig,
   },
   "icon-image": {
     load: () =>

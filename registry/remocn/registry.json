@@ -2315,6 +2315,21 @@
       ]
     },
     {
+      "name": "icon-home",
+      "type": "registry:component",
+      "title": "Home",
+      "description": "Animated Lucide home icon — the house draws on, then the door re-draws open and the house settles: welcome home.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-home/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-home.tsx"
+        }
+      ]
+    },
+    {
       "name": "icon-user",
       "type": "registry:component",
       "title": "User",
