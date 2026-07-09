@@ -27,6 +27,7 @@ import { ChevronUpIconStatic } from "@/registry/remocn/icon-chevron-up";
 import { ClockIconStatic } from "@/registry/remocn/icon-clock";
 import { CodeIconStatic } from "@/registry/remocn/icon-code";
 import { CopyIconStatic } from "@/registry/remocn/icon-copy";
+import { DatabaseIconStatic } from "@/registry/remocn/icon-database";
 import { DownloadIconStatic } from "@/registry/remocn/icon-download";
 import { ExternalLinkIconStatic } from "@/registry/remocn/icon-external-link";
 import { EyeOffIconStatic } from "@/registry/remocn/icon-eye-off";
@@ -223,6 +224,12 @@ export const ICONS: IconEntry[] = [
     label: "Terminal",
     category: "Files & dev",
     Static: TerminalIconStatic,
+  },
+  {
+    name: "icon-database",
+    label: "Database",
+    category: "Files & dev",
+    Static: DatabaseIconStatic,
   },
   {
     name: "icon-search",

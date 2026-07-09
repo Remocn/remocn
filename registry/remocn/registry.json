@@ -2390,6 +2390,21 @@
       ]
     },
     {
+      "name": "icon-database",
+      "type": "registry:component",
+      "title": "Database",
+      "description": "Animated Lucide database icon — the cylinder draws on, then a write lands: the top disc pops and data settles down the stack.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-database/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-database.tsx"
+        }
+      ]
+    },
+    {
       "name": "icon-user",
       "type": "registry:component",
       "title": "User",

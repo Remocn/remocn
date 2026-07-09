@@ -43,6 +43,7 @@ import { iconChevronUpConfig } from "@/registry/remocn/icon-chevron-up/config";
 import { iconClockConfig } from "@/registry/remocn/icon-clock/config";
 import { iconCodeConfig } from "@/registry/remocn/icon-code/config";
 import { iconCopyConfig } from "@/registry/remocn/icon-copy/config";
+import { iconDatabaseConfig } from "@/registry/remocn/icon-database/config";
 import { iconDownloadConfig } from "@/registry/remocn/icon-download/config";
 import { iconExternalLinkConfig } from "@/registry/remocn/icon-external-link/config";
 import { iconEyeOffConfig } from "@/registry/remocn/icon-eye-off/config";
@@ -758,6 +759,13 @@ const registry: Record<string, RegistryEntry> = {
         default: m.CopyIcon,
       })),
     config: iconCopyConfig,
+  },
+  "icon-database": {
+    load: () =>
+      import("@/registry/remocn/icon-database").then((m) => ({
+        default: m.DatabaseIcon,
+      })),
+    config: iconDatabaseConfig,
   },
   "icon-download": {
     load: () =>
