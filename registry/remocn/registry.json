@@ -2420,6 +2420,21 @@
       ]
     },
     {
+      "name": "icon-globe",
+      "type": "registry:component",
+      "title": "Globe",
+      "description": "Animated Lucide globe icon — draws on, then the meridian sweeps west to east like the world turning. Loops by default.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-globe/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-globe.tsx"
+        }
+      ]
+    },
+    {
       "name": "icon-user",
       "type": "registry:component",
       "title": "User",

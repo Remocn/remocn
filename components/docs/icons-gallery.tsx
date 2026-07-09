@@ -37,6 +37,7 @@ import { FileTextIconStatic } from "@/registry/remocn/icon-file-text";
 import { FilterIconStatic } from "@/registry/remocn/icon-filter";
 import { FlameIconStatic } from "@/registry/remocn/icon-flame";
 import { FolderIconStatic } from "@/registry/remocn/icon-folder";
+import { GlobeIconStatic } from "@/registry/remocn/icon-globe";
 import { HeartIconStatic } from "@/registry/remocn/icon-heart";
 import { HelpCircleIconStatic } from "@/registry/remocn/icon-help-circle";
 import { HomeIconStatic } from "@/registry/remocn/icon-home";
@@ -237,6 +238,12 @@ export const ICONS: IconEntry[] = [
     label: "Cloud",
     category: "Files & dev",
     Static: CloudIconStatic,
+  },
+  {
+    name: "icon-globe",
+    label: "Globe",
+    category: "Files & dev",
+    Static: GlobeIconStatic,
   },
   {
     name: "icon-search",
