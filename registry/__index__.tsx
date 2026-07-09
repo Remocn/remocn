@@ -104,6 +104,7 @@ import { iconTerminalConfig } from "@/registry/remocn/icon-terminal/config";
 import { iconThumbsUpConfig } from "@/registry/remocn/icon-thumbs-up/config";
 import { iconTimerConfig } from "@/registry/remocn/icon-timer/config";
 import { iconTrashConfig } from "@/registry/remocn/icon-trash/config";
+import { iconTrendingDownConfig } from "@/registry/remocn/icon-trending-down/config";
 import { iconTrendingUpConfig } from "@/registry/remocn/icon-trending-up/config";
 import { iconUploadConfig } from "@/registry/remocn/icon-upload/config";
 import { iconUserPlusConfig } from "@/registry/remocn/icon-user-plus/config";
@@ -1201,6 +1202,13 @@ const registry: Record<string, RegistryEntry> = {
         default: m.TrashIcon,
       })),
     config: iconTrashConfig,
+  },
+  "icon-trending-down": {
+    load: () =>
+      import("@/registry/remocn/icon-trending-down").then((m) => ({
+        default: m.TrendingDownIcon,
+      })),
+    config: iconTrendingDownConfig,
   },
   "icon-trending-up": {
     load: () =>

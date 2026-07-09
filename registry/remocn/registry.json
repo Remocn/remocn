@@ -2615,6 +2615,21 @@
       ]
     },
     {
+      "name": "icon-trending-down",
+      "type": "registry:component",
+      "title": "Trending Down",
+      "description": "Animated Lucide trending-down icon — the line descends across, then the arrowhead lands with damped weight.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-trending-down/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-trending-down.tsx"
+        }
+      ]
+    },
+    {
       "name": "icon-trending-up",
       "type": "registry:component",
       "title": "Trending Up",

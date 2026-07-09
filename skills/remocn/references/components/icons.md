@@ -130,6 +130,7 @@ export const Scene = () => (
 | `icon-gift` | Free tiers, bonuses, referral rewards | Achievements — use `icon-award` or `icon-trophy` | no | 80f |
 | `icon-wallet` | Balances, accounts, spend management | One-off payments — use `icon-credit-card` | no | 70f |
 | `icon-bar-chart-3` | Dashboards, analytics features, metric reveals | A single trend — use `icon-trending-up` | no | 80f |
+| `icon-trending-down` | Cost, latency, or error-rate reductions | Negative framing of your own metrics — pair carefully with copy | no | 75f |
 | `icon-trending-up` | Growth, conversion lifts, KPI wins | Generic upward pointers — use `icon-arrow-up` | no | 75f |
 | `icon-heart` | Likes, favorites, testimonials, or "built with love" moments | Ratings — use `icon-star` | no | 75f |
 | `icon-star` | Ratings, favorites, GitHub-star callouts | Sparkle/magic semantics — use `icon-sparkles` | no | 70f |
