@@ -72,6 +72,7 @@ import { PlayIconStatic } from "@/registry/remocn/icon-play";
 import { PlusIconStatic } from "@/registry/remocn/icon-plus";
 import { PlusCircleIconStatic } from "@/registry/remocn/icon-plus-circle";
 import { RefreshCwIconStatic } from "@/registry/remocn/icon-refresh-cw";
+import { RocketIconStatic } from "@/registry/remocn/icon-rocket";
 import { SaveIconStatic } from "@/registry/remocn/icon-save";
 import { SearchIconStatic } from "@/registry/remocn/icon-search";
 import { SendIconStatic } from "@/registry/remocn/icon-send";
@@ -608,6 +609,12 @@ export const ICONS: IconEntry[] = [
     label: "Heart",
     category: "Emotion & accents",
     Static: HeartIconStatic,
+  },
+  {
+    name: "icon-rocket",
+    label: "Rocket",
+    category: "Emotion & accents",
+    Static: RocketIconStatic,
   },
   {
     name: "icon-star",

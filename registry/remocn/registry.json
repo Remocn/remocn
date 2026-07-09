@@ -2060,6 +2060,21 @@
       ]
     },
     {
+      "name": "icon-rocket",
+      "type": "registry:component",
+      "title": "Rocket",
+      "description": "Animated Lucide rocket icon — draws on, then lifts off: the ship rises on a tilt while the flame re-ignites, then eases back to rest.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-rocket/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-rocket.tsx"
+        }
+      ]
+    },
+    {
       "name": "icon-save",
       "type": "registry:component",
       "title": "Save",

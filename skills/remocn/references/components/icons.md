@@ -134,6 +134,7 @@ export const Scene = () => (
 | `icon-trending-up` | Growth, conversion lifts, KPI wins | Generic upward pointers — use `icon-arrow-up` | no | 75f |
 | `icon-activity` | Live monitoring, health checks, real-time feeds | One-off speed claims — use `icon-zap` | yes | 90f |
 | `icon-target` | Goals, precision claims, OKR beats | Search — use `icon-search` | no | 80f |
+| `icon-rocket` | Launches, onboarding finales, ship-faster claims | Gradual growth — use `icon-trending-up` | no | 80f |
 | `icon-heart` | Likes, favorites, testimonials, or "built with love" moments | Ratings — use `icon-star` | no | 75f |
 | `icon-star` | Ratings, favorites, GitHub-star callouts | Sparkle/magic semantics — use `icon-sparkles` | no | 70f |
 | `icon-sparkles` | AI features, magic moments, premium highlights | A single award or rating — use `icon-star` | yes | 90f |
