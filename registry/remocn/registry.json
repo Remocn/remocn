@@ -2495,6 +2495,21 @@
       ]
     },
     {
+      "name": "icon-shopping-cart",
+      "type": "registry:component",
+      "title": "Shopping Cart",
+      "description": "Animated Lucide shopping-cart icon — draws on, then rolls forward to checkout, wheels popping as it stops.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-shopping-cart/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-shopping-cart.tsx"
+        }
+      ]
+    },
+    {
       "name": "icon-user",
       "type": "registry:component",
       "title": "User",

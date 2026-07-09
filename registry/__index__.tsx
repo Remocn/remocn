@@ -88,6 +88,7 @@ import { iconSendConfig } from "@/registry/remocn/icon-send/config";
 import { iconSettingsConfig } from "@/registry/remocn/icon-settings/config";
 import { iconShare2Config } from "@/registry/remocn/icon-share-2/config";
 import { iconShieldConfig } from "@/registry/remocn/icon-shield/config";
+import { iconShoppingCartConfig } from "@/registry/remocn/icon-shopping-cart/config";
 import { iconSkipForwardConfig } from "@/registry/remocn/icon-skip-forward/config";
 import { iconSmartphoneConfig } from "@/registry/remocn/icon-smartphone/config";
 import { iconSparklesConfig } from "@/registry/remocn/icon-sparkles/config";
@@ -1080,6 +1081,13 @@ const registry: Record<string, RegistryEntry> = {
         default: m.ShieldIcon,
       })),
     config: iconShieldConfig,
+  },
+  "icon-shopping-cart": {
+    load: () =>
+      import("@/registry/remocn/icon-shopping-cart").then((m) => ({
+        default: m.ShoppingCartIcon,
+      })),
+    config: iconShoppingCartConfig,
   },
   "icon-skip-forward": {
     load: () =>

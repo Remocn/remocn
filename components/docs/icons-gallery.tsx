@@ -72,6 +72,7 @@ import { SendIconStatic } from "@/registry/remocn/icon-send";
 import { Share2IconStatic } from "@/registry/remocn/icon-share-2";
 import { SettingsIconStatic } from "@/registry/remocn/icon-settings";
 import { ShieldIconStatic } from "@/registry/remocn/icon-shield";
+import { ShoppingCartIconStatic } from "@/registry/remocn/icon-shopping-cart";
 import { SkipForwardIconStatic } from "@/registry/remocn/icon-skip-forward";
 import { SmartphoneIconStatic } from "@/registry/remocn/icon-smartphone";
 import { SparklesIconStatic } from "@/registry/remocn/icon-sparkles";
@@ -272,6 +273,12 @@ export const ICONS: IconEntry[] = [
     label: "Moon",
     category: "Devices & theme",
     Static: MoonIconStatic,
+  },
+  {
+    name: "icon-shopping-cart",
+    label: "Shopping Cart",
+    category: "Commerce",
+    Static: ShoppingCartIconStatic,
   },
   {
     name: "icon-search",
