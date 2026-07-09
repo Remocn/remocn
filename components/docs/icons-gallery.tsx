@@ -8,6 +8,7 @@ import { usePrefersReducedMotion } from "@/lib/use-prefers-reduced-motion";
 import { cn } from "@/lib/utils";
 import registry, { type RegistryEntry } from "@/registry/__index__";
 import { AlertTriangleIconStatic } from "@/registry/remocn/icon-alert-triangle";
+import { BellIconStatic } from "@/registry/remocn/icon-bell";
 import { CheckCircleIconStatic } from "@/registry/remocn/icon-check-circle";
 import { CheckIconStatic } from "@/registry/remocn/icon-check";
 import { InfoIconStatic } from "@/registry/remocn/icon-info";
@@ -81,6 +82,12 @@ export const ICONS: IconEntry[] = [
     label: "Search",
     category: "Actions & UI",
     Static: SearchIconStatic,
+  },
+  {
+    name: "icon-bell",
+    label: "Bell",
+    category: "Actions & UI",
+    Static: BellIconStatic,
   },
 ];
 
@@ -235,11 +242,12 @@ function IconPlayer({ entry }: { entry: RegistryEntry }) {
     const pump = () => {
       if (cancelled) return;
       const player = playerRef.current;
-      if (player && !player.isPlaying()) player.play();
-      tries += 1;
-      if (tries < 120 && (!player || !player.isPlaying())) {
-        raf = requestAnimationFrame(pump);
+      if (player) {
+        player.play();
+        if (player.getCurrentFrame() > 0) return;
       }
+      tries += 1;
+      if (tries < 120) raf = requestAnimationFrame(pump);
     };
     raf = requestAnimationFrame(pump);
     return () => {
@@ -258,6 +266,7 @@ function IconPlayer({ entry }: { entry: RegistryEntry }) {
       compositionHeight={config.compositionHeight}
       style={{ width: TILE_SIZE, height: TILE_SIZE }}
       loop
+      initiallyMuted
       acknowledgeRemotionLicense
     />
   );

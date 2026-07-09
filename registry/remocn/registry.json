@@ -1458,6 +1458,21 @@
           "target": "components/remocn/icon-search.tsx"
         }
       ]
+    },
+    {
+      "name": "icon-bell",
+      "type": "registry:component",
+      "title": "Bell",
+      "description": "Animated Lucide bell icon — the body draws on, the clapper follows, then the bell swings from its mount to signal a notification or alert.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-bell/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-bell.tsx"
+        }
+      ]
     }
   ]
 }

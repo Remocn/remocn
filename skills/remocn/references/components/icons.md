@@ -72,3 +72,4 @@ export const Scene = () => (
 | `icon-loader` | A loading or processing beat between two states | A finished state — swap to `icon-check` when the wait resolves | yes | 90f |
 | `icon-refresh-cw` | Sync, retry, or "always up to date" messaging | An indeterminate wait — use `icon-loader` | yes | 90f |
 | `icon-search` | A search or discovery beat in a product walkthrough | Zoom semantics — pair with `zoom-blur` transitions instead | no | 75f |
+| `icon-bell` | A notification or alert arriving in a demo | Warnings about problems — use `icon-alert-triangle` | no | 75f |
