@@ -12,6 +12,7 @@ import { CheckCircleIconStatic } from "@/registry/remocn/icon-check-circle";
 import { CheckIconStatic } from "@/registry/remocn/icon-check";
 import { InfoIconStatic } from "@/registry/remocn/icon-info";
 import { LoaderIconStatic } from "@/registry/remocn/icon-loader";
+import { RefreshCwIconStatic } from "@/registry/remocn/icon-refresh-cw";
 import { XIconStatic } from "@/registry/remocn/icon-x";
 
 export type IconCategory =
@@ -67,6 +68,12 @@ export const ICONS: IconEntry[] = [
     label: "Loader",
     category: "Status & feedback",
     Static: LoaderIconStatic,
+  },
+  {
+    name: "icon-refresh-cw",
+    label: "Refresh Cw",
+    category: "Status & feedback",
+    Static: RefreshCwIconStatic,
   },
 ];
 

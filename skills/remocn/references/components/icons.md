@@ -70,3 +70,4 @@ export const Scene = () => (
 | `icon-alert-triangle` | Highlighting a risk, warning, or "before" pain point | A fatal error or rejection — use `icon-x` | no | 75f |
 | `icon-info` | Introducing a tip, note, or neutral callout in a scene | Anything alarming — use `icon-alert-triangle` | no | 75f |
 | `icon-loader` | A loading or processing beat between two states | A finished state — swap to `icon-check` when the wait resolves | yes | 90f |
+| `icon-refresh-cw` | Sync, retry, or "always up to date" messaging | An indeterminate wait — use `icon-loader` | yes | 90f |

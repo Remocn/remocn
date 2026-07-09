@@ -1428,6 +1428,21 @@
           "target": "components/remocn/icon-loader.tsx"
         }
       ]
+    },
+    {
+      "name": "icon-refresh-cw",
+      "type": "registry:component",
+      "title": "Refresh Cw",
+      "description": "Animated Lucide refresh-cw icon — the two arcs draw on, arrowheads pop, then the whole mark spins in cycles for sync, retry, or up-to-date messaging. Loops by default.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-refresh-cw/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-refresh-cw.tsx"
+        }
+      ]
     }
   ]
 }
