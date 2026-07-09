@@ -36,6 +36,7 @@ import { MicIconStatic } from "@/registry/remocn/icon-mic";
 import { MoreHorizontalIconStatic } from "@/registry/remocn/icon-more-horizontal";
 import { PartyPopperIconStatic } from "@/registry/remocn/icon-party-popper";
 import { PauseIconStatic } from "@/registry/remocn/icon-pause";
+import { PencilIconStatic } from "@/registry/remocn/icon-pencil";
 import { PlayIconStatic } from "@/registry/remocn/icon-play";
 import { PlusIconStatic } from "@/registry/remocn/icon-plus";
 import { RefreshCwIconStatic } from "@/registry/remocn/icon-refresh-cw";
@@ -198,6 +199,12 @@ export const ICONS: IconEntry[] = [
     label: "Layout Grid",
     category: "Actions & UI",
     Static: LayoutGridIconStatic,
+  },
+  {
+    name: "icon-pencil",
+    label: "Pencil",
+    category: "Actions & UI",
+    Static: PencilIconStatic,
   },
   {
     name: "icon-play",

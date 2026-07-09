@@ -1970,6 +1970,21 @@
       ]
     },
     {
+      "name": "icon-pencil",
+      "type": "registry:component",
+      "title": "Pencil",
+      "description": "Animated Lucide pencil icon — draws on, then scribbles: the pencil rocks around its tip as if writing.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-pencil/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-pencil.tsx"
+        }
+      ]
+    },
+    {
       "name": "icon-sparkles",
       "type": "registry:component",
       "title": "Sparkles",

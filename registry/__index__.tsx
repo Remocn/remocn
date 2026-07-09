@@ -52,6 +52,7 @@ import { iconMicConfig } from "@/registry/remocn/icon-mic/config";
 import { iconMoreHorizontalConfig } from "@/registry/remocn/icon-more-horizontal/config";
 import { iconPartyPopperConfig } from "@/registry/remocn/icon-party-popper/config";
 import { iconPauseConfig } from "@/registry/remocn/icon-pause/config";
+import { iconPencilConfig } from "@/registry/remocn/icon-pencil/config";
 import { iconPlayConfig } from "@/registry/remocn/icon-play/config";
 import { iconPlusConfig } from "@/registry/remocn/icon-plus/config";
 import { iconRefreshCwConfig } from "@/registry/remocn/icon-refresh-cw/config";
@@ -790,6 +791,13 @@ const registry: Record<string, RegistryEntry> = {
         default: m.PauseIcon,
       })),
     config: iconPauseConfig,
+  },
+  "icon-pencil": {
+    load: () =>
+      import("@/registry/remocn/icon-pencil").then((m) => ({
+        default: m.PencilIcon,
+      })),
+    config: iconPencilConfig,
   },
   "icon-play": {
     load: () =>
