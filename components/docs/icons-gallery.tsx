@@ -53,6 +53,7 @@ import { PencilIconStatic } from "@/registry/remocn/icon-pencil";
 import { PhoneIconStatic } from "@/registry/remocn/icon-phone";
 import { PlayIconStatic } from "@/registry/remocn/icon-play";
 import { PlusIconStatic } from "@/registry/remocn/icon-plus";
+import { PlusCircleIconStatic } from "@/registry/remocn/icon-plus-circle";
 import { RefreshCwIconStatic } from "@/registry/remocn/icon-refresh-cw";
 import { SaveIconStatic } from "@/registry/remocn/icon-save";
 import { SearchIconStatic } from "@/registry/remocn/icon-search";
@@ -153,6 +154,12 @@ export const ICONS: IconEntry[] = [
     label: "Help Circle",
     category: "Status & feedback",
     Static: HelpCircleIconStatic,
+  },
+  {
+    name: "icon-plus-circle",
+    label: "Plus Circle",
+    category: "Status & feedback",
+    Static: PlusCircleIconStatic,
   },
   {
     name: "icon-search",

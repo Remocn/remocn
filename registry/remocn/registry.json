@@ -2240,6 +2240,21 @@
       ]
     },
     {
+      "name": "icon-plus-circle",
+      "type": "registry:component",
+      "title": "Plus Circle",
+      "description": "Animated Lucide plus-circle icon — the ring draws on, the plus crosses in, then the whole badge pops.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-plus-circle/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-plus-circle.tsx"
+        }
+      ]
+    },
+    {
       "name": "icon-user",
       "type": "registry:component",
       "title": "User",

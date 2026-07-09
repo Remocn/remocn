@@ -105,6 +105,7 @@ export const Scene = () => (
 | `icon-inbox` | Unified inboxes, request queues, triage demos | Sending — use `icon-send` | no | 70f |
 | `icon-shield` | Security, privacy, compliance claims | A specific locked state — use `icon-lock` | no | 70f |
 | `icon-help-circle` | Help centers, tooltips, FAQ beats | Critical notices — use `icon-info` | no | 70f |
+| `icon-plus-circle` | Add-item affordances that need a contained shape | Bare add actions — use `icon-plus` | no | 70f |
 | `icon-heart` | Likes, favorites, testimonials, or "built with love" moments | Ratings — use `icon-star` | no | 75f |
 | `icon-star` | Ratings, favorites, GitHub-star callouts | Sparkle/magic semantics — use `icon-sparkles` | no | 70f |
 | `icon-sparkles` | AI features, magic moments, premium highlights | A single award or rating — use `icon-star` | yes | 90f |

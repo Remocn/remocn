@@ -68,6 +68,7 @@ import { iconPauseConfig } from "@/registry/remocn/icon-pause/config";
 import { iconPencilConfig } from "@/registry/remocn/icon-pencil/config";
 import { iconPhoneConfig } from "@/registry/remocn/icon-phone/config";
 import { iconPlayConfig } from "@/registry/remocn/icon-play/config";
+import { iconPlusCircleConfig } from "@/registry/remocn/icon-plus-circle/config";
 import { iconPlusConfig } from "@/registry/remocn/icon-plus/config";
 import { iconRefreshCwConfig } from "@/registry/remocn/icon-refresh-cw/config";
 import { iconSaveConfig } from "@/registry/remocn/icon-save/config";
@@ -930,6 +931,13 @@ const registry: Record<string, RegistryEntry> = {
         default: m.PlusIcon,
       })),
     config: iconPlusConfig,
+  },
+  "icon-plus-circle": {
+    load: () =>
+      import("@/registry/remocn/icon-plus-circle").then((m) => ({
+        default: m.PlusCircleIcon,
+      })),
+    config: iconPlusCircleConfig,
   },
   "icon-refresh-cw": {
     load: () =>
