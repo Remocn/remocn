@@ -1338,6 +1338,21 @@
           "target": "components/remocn/logo-enter.tsx"
         }
       ]
+    },
+    {
+      "name": "icon-check",
+      "type": "registry:component",
+      "title": "Check",
+      "description": "Animated Lucide check icon — the stroke draws on, then stamps with a spring pop to mark a step, task, or claim as done.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-check/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-check.tsx"
+        }
+      ]
     }
   ]
 }

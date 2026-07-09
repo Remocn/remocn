@@ -7,6 +7,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { usePrefersReducedMotion } from "@/lib/use-prefers-reduced-motion";
 import { cn } from "@/lib/utils";
 import registry, { type RegistryEntry } from "@/registry/__index__";
+import { CheckIconStatic } from "@/registry/remocn/icon-check";
 
 export type IconCategory =
   | "Status & feedback"
@@ -25,7 +26,14 @@ export interface IconEntry {
   }>;
 }
 
-export const ICONS: IconEntry[] = [];
+export const ICONS: IconEntry[] = [
+  {
+    name: "icon-check",
+    label: "Check",
+    category: "Status & feedback",
+    Static: CheckIconStatic,
+  },
+];
 
 const CATEGORY_ORDER: IconCategory[] = [
   "Status & feedback",
@@ -119,8 +127,8 @@ function IconTile({
 }) {
   const reducedMotion = usePrefersReducedMotion();
   const [copied, setCopied] = useState(false);
-  const entry = registry[`icon-${icon.name}`];
-  const command = `npx shadcn@latest add @remocn/icon-${icon.name}`;
+  const entry = registry[icon.name];
+  const command = `npx shadcn@latest add @remocn/${icon.name}`;
   const playing = active && !reducedMotion && Boolean(entry);
   const Static = icon.Static;
 
