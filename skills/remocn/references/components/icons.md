@@ -39,7 +39,7 @@ Shared `IconAnimationProps` across every icon:
 | `strokeWidth` | `number` | `2` |
 | `className` | `string` | — |
 
-Loops by default (pass `loop={false}` to play once): `loader`, `refresh-cw`, `sparkles`, `flame`.
+Loops by default (pass `loop={false}` to play once): `loader`, `refresh-cw`, `sparkles`, `flame`, `clock`, `globe`, `activity`.
 
 ## Example
 

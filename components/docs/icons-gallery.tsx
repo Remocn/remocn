@@ -40,6 +40,13 @@ import { XIconStatic } from "@/registry/remocn/icon-x";
 export type IconCategory =
   | "Status & feedback"
   | "Actions & UI"
+  | "Media & playback"
+  | "People & communication"
+  | "Time & planning"
+  | "Files & dev"
+  | "Devices & theme"
+  | "Commerce"
+  | "Charts & data"
   | "Emotion & accents"
   | "Arrows & navigation";
 
@@ -228,6 +235,13 @@ export const ICONS: IconEntry[] = [
 const CATEGORY_ORDER: IconCategory[] = [
   "Status & feedback",
   "Actions & UI",
+  "Media & playback",
+  "People & communication",
+  "Time & planning",
+  "Files & dev",
+  "Devices & theme",
+  "Commerce",
+  "Charts & data",
   "Emotion & accents",
   "Arrows & navigation",
 ];
