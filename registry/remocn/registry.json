@@ -2135,6 +2135,21 @@
       ]
     },
     {
+      "name": "icon-user",
+      "type": "registry:component",
+      "title": "User",
+      "description": "Animated Lucide user icon — draws on, then gives a small presence nod: head dips as shoulders rise to meet it.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-user/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-user.tsx"
+        }
+      ]
+    },
+    {
       "name": "icon-sparkles",
       "type": "registry:component",
       "title": "Sparkles",
