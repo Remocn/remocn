@@ -96,6 +96,7 @@ export const Scene = () => (
 | `icon-key` | API keys, access grants, unlock moments | The locked state itself — use `icon-lock` | no | 75f |
 | `icon-log-out` | Sign-out steps, session-end beats | Sign-in flows — use `icon-user` or `icon-arrow-right` | no | 70f |
 | `icon-user` | Profiles, accounts, single-user features | Teams — use `icon-users` | no | 70f |
+| `icon-users` | Teams, collaboration, multiplayer features | A single profile — use `icon-user` | no | 80f |
 | `icon-heart` | Likes, favorites, testimonials, or "built with love" moments | Ratings — use `icon-star` | no | 75f |
 | `icon-star` | Ratings, favorites, GitHub-star callouts | Sparkle/magic semantics — use `icon-sparkles` | no | 70f |
 | `icon-sparkles` | AI features, magic moments, premium highlights | A single award or rating — use `icon-star` | yes | 90f |

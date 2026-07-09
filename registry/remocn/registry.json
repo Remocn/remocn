@@ -2150,6 +2150,21 @@
       ]
     },
     {
+      "name": "icon-users",
+      "type": "registry:component",
+      "title": "Users",
+      "description": "Animated Lucide users icon — the front figure draws on and pops, then the second figure slides in from behind: the team assembles.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-users/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-users.tsx"
+        }
+      ]
+    },
+    {
       "name": "icon-sparkles",
       "type": "registry:component",
       "title": "Sparkles",
