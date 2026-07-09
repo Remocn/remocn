@@ -30,6 +30,7 @@ import { iconCheckCircleConfig } from "@/registry/remocn/icon-check-circle/confi
 import { iconCheckConfig } from "@/registry/remocn/icon-check/config";
 import { iconCopyConfig } from "@/registry/remocn/icon-copy/config";
 import { iconDownloadConfig } from "@/registry/remocn/icon-download/config";
+import { iconHeartConfig } from "@/registry/remocn/icon-heart/config";
 import { iconInfoConfig } from "@/registry/remocn/icon-info/config";
 import { iconLoaderConfig } from "@/registry/remocn/icon-loader/config";
 import { iconPlusConfig } from "@/registry/remocn/icon-plus/config";
@@ -607,6 +608,13 @@ const registry: Record<string, RegistryEntry> = {
         default: m.DownloadIcon,
       })),
     config: iconDownloadConfig,
+  },
+  "icon-heart": {
+    load: () =>
+      import("@/registry/remocn/icon-heart").then((m) => ({
+        default: m.HeartIcon,
+      })),
+    config: iconHeartConfig,
   },
   "icon-info": {
     load: () =>

@@ -13,6 +13,7 @@ import { CheckCircleIconStatic } from "@/registry/remocn/icon-check-circle";
 import { CheckIconStatic } from "@/registry/remocn/icon-check";
 import { CopyIconStatic } from "@/registry/remocn/icon-copy";
 import { DownloadIconStatic } from "@/registry/remocn/icon-download";
+import { HeartIconStatic } from "@/registry/remocn/icon-heart";
 import { InfoIconStatic } from "@/registry/remocn/icon-info";
 import { LoaderIconStatic } from "@/registry/remocn/icon-loader";
 import { PlusIconStatic } from "@/registry/remocn/icon-plus";
@@ -137,6 +138,12 @@ export const ICONS: IconEntry[] = [
     label: "Send",
     category: "Actions & UI",
     Static: SendIconStatic,
+  },
+  {
+    name: "icon-heart",
+    label: "Heart",
+    category: "Emotion & accents",
+    Static: HeartIconStatic,
   },
 ];
 

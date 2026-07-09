@@ -1578,6 +1578,21 @@
           "target": "components/remocn/icon-send.tsx"
         }
       ]
+    },
+    {
+      "name": "icon-heart",
+      "type": "registry:component",
+      "title": "Heart",
+      "description": "Animated Lucide heart icon — the outline draws on, then a lub-dub heartbeat pulse for likes, favorites, or built-with-love moments.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-heart/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-heart.tsx"
+        }
+      ]
     }
   ]
 }

@@ -80,3 +80,4 @@ export const Scene = () => (
 | `icon-trash` | Delete or cleanup beats in a workflow demo | Reversible dismissal — use `icon-x` | no | 75f |
 | `icon-plus` | Adding an item, feature, or integration in a build-up scene | Medical or positivity semantics — it is strictly an "add" affordance here | no | 60f |
 | `icon-send` | Sending a message, form, or request in a flow | File transfer semantics — use `icon-upload` | no | 75f |
+| `icon-heart` | Likes, favorites, testimonials, or "built with love" moments | Ratings — use `icon-star` | no | 75f |
