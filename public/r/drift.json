@@ -7,7 +7,7 @@
   "files": [
     {
       "path": "registry/remocn/drift/index.tsx",
-      "content": "\"use client\";\n\nimport type React from \"react\";\nimport { AbsoluteFill, interpolate, useCurrentFrame, useVideoConfig } from \"remotion\";\n\nexport interface DriftProps {\n  children: React.ReactNode;\n  grow?: number;\n}\n\nexport function Drift({ children, grow = 0.035 }: DriftProps) {\n  const frame = useCurrentFrame();\n  const { durationInFrames } = useVideoConfig();\n  const scale = interpolate(frame, [0, durationInFrames], [1, 1 + grow]);\n  return (\n    <AbsoluteFill style={{ transform: `scale(${scale})` }}>\n      {children}\n    </AbsoluteFill>\n  );\n}\n",
+      "content": "\"use client\";\n\nimport type React from \"react\";\nimport {\n  AbsoluteFill,\n  interpolate,\n  useCurrentFrame,\n  useVideoConfig,\n} from \"remotion\";\n\nexport interface DriftProps {\n  children: React.ReactNode;\n  grow?: number;\n}\n\nexport function Drift({ children, grow = 0.035 }: DriftProps) {\n  const frame = useCurrentFrame();\n  const { durationInFrames } = useVideoConfig();\n  const scale = interpolate(frame, [0, durationInFrames], [1, 1 + grow]);\n  return (\n    <AbsoluteFill style={{ transform: `scale(${scale})` }}>\n      {children}\n    </AbsoluteFill>\n  );\n}\n",
       "type": "registry:component",
       "target": "components/remocn/drift.tsx"
     }
