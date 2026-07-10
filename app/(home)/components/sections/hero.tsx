@@ -114,7 +114,7 @@ export function Hero() {
             transition={{ ...SPRING_BOUNCE, delay: 0.05 }}
           >
             <div
-              className="group surface-card relative w-full overflow-hidden rounded-2xl shadow-2xl shadow-black/5 sm:rounded-3xl dark:shadow-black/40"
+              className="group surface-card relative w-full overflow-hidden rounded-2xl  shadow-black/5 sm:rounded-3xl dark:shadow-black/40"
               style={{ aspectRatio }}
             >
               <video

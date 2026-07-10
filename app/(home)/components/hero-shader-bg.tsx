@@ -5,8 +5,8 @@ import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 
 const NEURO_COLORS = {
-  light: { front: "#8d87b8", mid: "#e2e1ee", back: "#ffffff" },
-  dark: { front: "#6a6390", mid: "#2a2740", back: "#1a1920" },
+  light: { front: "#8f8f94", mid: "#e7e7e9", back: "#ffffff" },
+  dark: { front: "#6e6e74", mid: "#28282c", back: "#191919" },
 };
 
 export function HeroNeuroBg() {
