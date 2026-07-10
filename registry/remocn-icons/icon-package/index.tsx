@@ -61,11 +61,16 @@ export function PackageIcon({
       })
     : 0;
   const squashY = acting
-    ? interpolate(actionProgress, [0, 0.25, 0.5, 0.7, 1], [1, 0.95, 1.04, 1, 1], {
-        extrapolateLeft: "clamp",
-        extrapolateRight: "clamp",
-        easing: Easing.inOut(Easing.quad),
-      })
+    ? interpolate(
+        actionProgress,
+        [0, 0.25, 0.5, 0.7, 1],
+        [1, 0.95, 1.04, 1, 1],
+        {
+          extrapolateLeft: "clamp",
+          extrapolateRight: "clamp",
+          easing: Easing.inOut(Easing.quad),
+        },
+      )
     : 1;
   const box = drawnPathProps(BOX_PATH, acting ? 1 : boxDraw);
   const center = drawnPathProps(CENTER_PATH, acting ? 1 : edgesDraw);

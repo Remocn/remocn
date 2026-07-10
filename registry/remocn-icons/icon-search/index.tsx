@@ -49,9 +49,23 @@ export function SearchIcon({
   const circle = drawnPathProps(CIRCLE_PATH, circleProgress);
   const handle = drawnPathProps(HANDLE_DRAW, handleProgress);
 
-  const scanEase = { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: Easing.inOut(Easing.quad) } as const;
-  const scanX = interpolate(actionProgress, [0, 0.25, 0.5, 0.75, 1], [0, -3, 3, -1, 0], scanEase);
-  const scanY = interpolate(actionProgress, [0, 0.25, 0.5, 0.75, 1], [0, -2, -1, 2, 0], scanEase);
+  const scanEase = {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+    easing: Easing.inOut(Easing.quad),
+  } as const;
+  const scanX = interpolate(
+    actionProgress,
+    [0, 0.25, 0.5, 0.75, 1],
+    [0, -3, 3, -1, 0],
+    scanEase,
+  );
+  const scanY = interpolate(
+    actionProgress,
+    [0, 0.25, 0.5, 0.75, 1],
+    [0, -2, -1, 2, 0],
+    scanEase,
+  );
 
   const scale = 0.85 + 0.15 * scaleIn;
 

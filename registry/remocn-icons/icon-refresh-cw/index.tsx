@@ -105,7 +105,9 @@ export function RefreshCwIcon({
       <g transform={`translate(21 8) scale(${arrowTopPop}) translate(-21 -8)`}>
         <path d={ARROW_TOP} />
       </g>
-      <g transform={`translate(3 16) scale(${arrowBottomPop}) translate(-3 -16)`}>
+      <g
+        transform={`translate(3 16) scale(${arrowBottomPop}) translate(-3 -16)`}
+      >
         <path d={ARROW_BOTTOM} />
       </g>
     </svg>

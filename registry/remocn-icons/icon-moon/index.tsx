@@ -34,16 +34,11 @@ export function MoonIcon({
   const acting = animation !== "draw" && actionFrame >= 0;
 
   const settle = acting
-    ? interpolate(
-        actionProgress,
-        [0, 0.2, 0.5, 0.78, 1],
-        [0, -16, 9, -3, 0],
-        {
-          extrapolateLeft: "clamp",
-          extrapolateRight: "clamp",
-          easing: Easing.inOut(Easing.sin),
-        },
-      )
+    ? interpolate(actionProgress, [0, 0.2, 0.5, 0.78, 1], [0, -16, 9, -3, 0], {
+        extrapolateLeft: "clamp",
+        extrapolateRight: "clamp",
+        easing: Easing.inOut(Easing.sin),
+      })
     : 0;
 
   const moon = drawnPathProps(MOON_PATH, drawProgress);

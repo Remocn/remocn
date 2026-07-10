@@ -86,7 +86,9 @@ export function DownloadIcon({
         transform: `scale(${scale})`,
       }}
     >
-      <g transform={`translate(12 21) scale(1 ${traySquash}) translate(-12 -21)`}>
+      <g
+        transform={`translate(12 21) scale(1 ${traySquash}) translate(-12 -21)`}
+      >
         <path
           d={TRAY_DRAW}
           strokeDasharray={tray.strokeDasharray}

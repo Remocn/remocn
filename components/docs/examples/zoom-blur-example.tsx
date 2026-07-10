@@ -53,7 +53,9 @@ export function ZoomBlurExampleScene({ blur, rise }: ZoomBlurExampleProps) {
   );
 }
 
-export const zoomBlurExampleCode = (values: Record<string, unknown>): string => {
+export const zoomBlurExampleCode = (
+  values: Record<string, unknown>,
+): string => {
   const blur = (values.blur as number) ?? 16;
   const rise = (values.rise as number) ?? 0;
   return `import { TransitionSeries, linearTiming } from "@remotion/transitions";

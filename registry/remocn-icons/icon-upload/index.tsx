@@ -55,16 +55,11 @@ export function UploadIcon({
   const shaft = drawnPathProps(SHAFT_DRAW, arrowProgress);
   const head = drawnPathProps(HEAD_PATH, arrowProgress);
 
-  const launchY = interpolate(
-    actionProgress,
-    [0, 0.4, 0.7, 1],
-    [0, -5, 1, 0],
-    {
-      extrapolateLeft: "clamp",
-      extrapolateRight: "clamp",
-      easing: Easing.inOut(Easing.quad),
-    },
-  );
+  const launchY = interpolate(actionProgress, [0, 0.4, 0.7, 1], [0, -5, 1, 0], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+    easing: Easing.inOut(Easing.quad),
+  });
   const traySquash = interpolate(
     actionProgress,
     [0, 0.2, 0.4, 1],
@@ -91,7 +86,9 @@ export function UploadIcon({
         transform: `scale(${scale})`,
       }}
     >
-      <g transform={`translate(12 21) scale(1 ${traySquash}) translate(-12 -21)`}>
+      <g
+        transform={`translate(12 21) scale(1 ${traySquash}) translate(-12 -21)`}
+      >
         <path
           d={TRAY_DRAW}
           strokeDasharray={tray.strokeDasharray}

@@ -53,11 +53,16 @@ export function PencilIcon({
       })
     : 0;
   const nudge = acting
-    ? interpolate(actionProgress, [0, 0.25, 0.5, 0.75, 1], [0, 1, -0.5, 0.5, 0], {
-        extrapolateLeft: "clamp",
-        extrapolateRight: "clamp",
-        easing: Easing.inOut(Easing.quad),
-      })
+    ? interpolate(
+        actionProgress,
+        [0, 0.25, 0.5, 0.75, 1],
+        [0, 1, -0.5, 0.5, 0],
+        {
+          extrapolateLeft: "clamp",
+          extrapolateRight: "clamp",
+          easing: Easing.inOut(Easing.quad),
+        },
+      )
     : 0;
 
   const body = drawnPathProps(BODY_PATH, bodyDraw);

@@ -81,7 +81,10 @@ export function GiftIcon({
   const box = drawnPathProps(BOX_PATH, acting ? 1 : boxDraw);
   const lid = drawnPathProps(LID_PATH, acting ? 1 : lidDraw);
   const centerTop = drawnPathProps(CENTER_TOP_PATH, acting ? 1 : ribbonDraw);
-  const centerBottom = drawnPathProps(CENTER_BOTTOM_PATH, acting ? 1 : ribbonDraw);
+  const centerBottom = drawnPathProps(
+    CENTER_BOTTOM_PATH,
+    acting ? 1 : ribbonDraw,
+  );
   const bow = drawnPathProps(BOW_PATH, acting ? 1 : ribbonDraw);
 
   const scale = 0.85 + 0.15 * scaleIn;

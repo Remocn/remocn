@@ -57,9 +57,24 @@ export function ZapIcon({
     extrapolateRight: "clamp",
     easing: Easing.out(Easing.quad),
   } as const;
-  const strikeX = interpolate(actionProgress, [0, 0.15, 0.4, 1], [0, 1.5, -3, 0], strikeEase);
-  const strikeY = interpolate(actionProgress, [0, 0.15, 0.4, 1], [0, -2, 4, 0], strikeEase);
-  const skew = interpolate(actionProgress, [0, 0.15, 0.4, 0.7, 1], [0, -4, 9, -2, 0], strikeEase);
+  const strikeX = interpolate(
+    actionProgress,
+    [0, 0.15, 0.4, 1],
+    [0, 1.5, -3, 0],
+    strikeEase,
+  );
+  const strikeY = interpolate(
+    actionProgress,
+    [0, 0.15, 0.4, 1],
+    [0, -2, 4, 0],
+    strikeEase,
+  );
+  const skew = interpolate(
+    actionProgress,
+    [0, 0.15, 0.4, 0.7, 1],
+    [0, -4, 9, -2, 0],
+    strikeEase,
+  );
   const scale = (0.85 + 0.15 * scaleIn) * pop;
 
   return (

@@ -27,7 +27,7 @@ export function Hero() {
       v.pause();
       setPlaying(false);
     }
-  }, [trackEvent]);
+  }, []);
 
   const aspectRatio = "16 / 9";
 
@@ -61,7 +61,8 @@ export function Hero() {
                 ·
               </span>
               <span className="text-muted-foreground">
-                Introducing <span className="text-foreground">Remocn Icons</span>
+                Introducing{" "}
+                <span className="text-foreground">Remocn Icons</span>
               </span>
               <ArrowRight className="size-3" aria-hidden="true" />
             </Badge>

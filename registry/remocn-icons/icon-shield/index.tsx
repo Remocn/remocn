@@ -69,7 +69,9 @@ export function ShieldIcon({
         transform: `scale(${scale})`,
       }}
     >
-      <g transform={`rotate(${lean} ${CENTER} ${CENTER}) translate(${CENTER * (1 - brace)} ${CENTER * (1 - brace)}) scale(${brace})`}>
+      <g
+        transform={`rotate(${lean} ${CENTER} ${CENTER}) translate(${CENTER * (1 - brace)} ${CENTER * (1 - brace)}) scale(${brace})`}
+      >
         <path
           d={SHIELD_PATH}
           strokeDasharray={shield.strokeDasharray}

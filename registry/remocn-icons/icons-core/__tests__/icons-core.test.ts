@@ -1,10 +1,6 @@
 import { describe, expect, it } from "bun:test";
 
-import {
-  drawnPathProps,
-  iconTimeline,
-  staggeredProgress,
-} from "../index";
+import { drawnPathProps, iconTimeline, staggeredProgress } from "../index";
 
 const FPS = 30;
 const props = (over: Partial<Parameters<typeof iconTimeline>[2]> = {}) => over;
@@ -18,9 +14,10 @@ const timings = (over: Partial<Parameters<typeof iconTimeline>[3]> = {}) => ({
 describe("iconTimeline draw phase", () => {
   it("starts at 0 draw and reaches 1 by the draw duration", () => {
     expect(iconTimeline(0, FPS, props(), timings()).drawProgress).toBe(0);
-    expect(
-      iconTimeline(14, FPS, props(), timings()).drawProgress,
-    ).toBeCloseTo(1, 6);
+    expect(iconTimeline(14, FPS, props(), timings()).drawProgress).toBeCloseTo(
+      1,
+      6,
+    );
   });
 
   it("clamps drawProgress to 1 past the draw window", () => {
@@ -33,7 +30,7 @@ describe("iconTimeline draw phase", () => {
 });
 
 describe("iconTimeline animation modes", () => {
-  it('action mode: drawProgress is 1 at frame 0 and action starts immediately', () => {
+  it("action mode: drawProgress is 1 at frame 0 and action starts immediately", () => {
     const t = iconTimeline(0, FPS, props({ animation: "action" }), timings());
     expect(t.drawProgress).toBe(1);
     expect(t.actionFrame).toBe(0);
@@ -41,18 +38,33 @@ describe("iconTimeline animation modes", () => {
   });
 
   it("draw mode: action never progresses", () => {
-    const late = iconTimeline(100, FPS, props({ animation: "draw" }), timings());
+    const late = iconTimeline(
+      100,
+      FPS,
+      props({ animation: "draw" }),
+      timings(),
+    );
     expect(late.drawProgress).toBe(1);
     expect(late.actionProgress).toBe(0);
     expect(late.cycleIndex).toBe(0);
   });
 
   it("both mode: action is gated behind draw + delay", () => {
-    const before = iconTimeline(15, FPS, props({ animation: "both" }), timings());
+    const before = iconTimeline(
+      15,
+      FPS,
+      props({ animation: "both" }),
+      timings(),
+    );
     expect(before.actionFrame).toBeLessThan(0);
     expect(before.actionProgress).toBe(0);
 
-    const atStart = iconTimeline(16, FPS, props({ animation: "both" }), timings());
+    const atStart = iconTimeline(
+      16,
+      FPS,
+      props({ animation: "both" }),
+      timings(),
+    );
     expect(atStart.actionFrame).toBe(0);
     expect(atStart.actionProgress).toBe(0);
   });
@@ -92,7 +104,12 @@ describe("iconTimeline loop action", () => {
   });
 
   it("timings.loop is overridden by the prop", () => {
-    const t = iconTimeline(16 + 25, FPS, props({ loop: false }), timings({ loop: true }));
+    const t = iconTimeline(
+      16 + 25,
+      FPS,
+      props({ loop: false }),
+      timings({ loop: true }),
+    );
     expect(t.cycleIndex).toBe(0);
     expect(t.actionProgress).toBe(1);
   });
@@ -105,7 +122,12 @@ describe("iconTimeline defaults and guards", () => {
   });
 
   it("treats a zero action duration as instantly complete", () => {
-    const t = iconTimeline(20, FPS, props(), timings({ actionDurationInFrames: 0 }));
+    const t = iconTimeline(
+      20,
+      FPS,
+      props(),
+      timings({ actionDurationInFrames: 0 }),
+    );
     expect(t.actionProgress).toBe(1);
   });
 

@@ -60,8 +60,7 @@ export function iconTimeline(
     }),
   );
 
-  const actionStart =
-    animation === "action" ? 0 : drawDuration + actionDelay;
+  const actionStart = animation === "action" ? 0 : drawDuration + actionDelay;
   const sinceStart = frame - actionStart;
 
   if (animation === "draw" || sinceStart < 0) {

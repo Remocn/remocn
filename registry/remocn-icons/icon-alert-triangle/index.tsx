@@ -92,7 +92,9 @@ export function AlertTriangleIcon({
         strokeDashoffset={triangle.strokeDashoffset}
       />
       <g opacity={blinkOpacity}>
-        <g transform={`translate(12 13) scale(1 ${stemSquash}) translate(-12 -13)`}>
+        <g
+          transform={`translate(12 13) scale(1 ${stemSquash}) translate(-12 -13)`}
+        >
           <path
             d={STEM_PATH}
             strokeDasharray={stem.strokeDasharray}

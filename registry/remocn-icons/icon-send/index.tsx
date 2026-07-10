@@ -53,9 +53,24 @@ export function SendIcon({
     extrapolateRight: "clamp",
     easing: Easing.out(Easing.quad),
   } as const;
-  const tx = interpolate(actionProgress, [0, 0.18, 0.5, 1], [0, -1.5, 5, 0], dartEase);
-  const ty = interpolate(actionProgress, [0, 0.18, 0.5, 1], [0, 1, -4, 0], dartEase);
-  const rot = interpolate(actionProgress, [0, 0.18, 0.5, 1], [0, 2, -12, 0], dartEase);
+  const tx = interpolate(
+    actionProgress,
+    [0, 0.18, 0.5, 1],
+    [0, -1.5, 5, 0],
+    dartEase,
+  );
+  const ty = interpolate(
+    actionProgress,
+    [0, 0.18, 0.5, 1],
+    [0, 1, -4, 0],
+    dartEase,
+  );
+  const rot = interpolate(
+    actionProgress,
+    [0, 0.18, 0.5, 1],
+    [0, 2, -12, 0],
+    dartEase,
+  );
 
   const scale = 0.85 + 0.15 * scaleIn;
 

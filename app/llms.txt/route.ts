@@ -28,7 +28,10 @@ export function GET() {
 
   for (const [key, pages] of sections) {
     const heading = key
-      ? key.replace(/(^|-)([a-z])/g, (_, sep, c) => (sep ? " " : "") + c.toUpperCase())
+      ? key.replace(
+          /(^|-)([a-z])/g,
+          (_, sep, c) => (sep ? " " : "") + c.toUpperCase(),
+        )
       : "Overview";
     scanned.push(`\n## ${heading}`);
     for (const page of pages) {

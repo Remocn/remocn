@@ -84,7 +84,10 @@ export function MoreHorizontalIcon({
         const tx = dot.cx * (1 - dotScale);
         const ty = 12 * (1 - dotScale) + lift;
         return (
-          <g key={dot.cx} transform={`translate(${tx} ${ty}) scale(${dotScale})`}>
+          <g
+            key={dot.cx}
+            transform={`translate(${tx} ${ty}) scale(${dotScale})`}
+          >
             <path
               d={dot.path}
               strokeDasharray={dash.strokeDasharray}

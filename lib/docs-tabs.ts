@@ -151,9 +151,7 @@ export function splitDocsTree(tree: Root): {
       $id: "docs-tab-components",
       children: tree.children.filter(
         (node) =>
-          !isPrimitivesNode(node) &&
-          !isShadersNode(node) &&
-          !isIconsNode(node),
+          !isPrimitivesNode(node) && !isShadersNode(node) && !isIconsNode(node),
       ),
     },
     primitives: {

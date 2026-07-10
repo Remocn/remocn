@@ -1,7 +1,12 @@
 "use client";
 
 import type React from "react";
-import { AbsoluteFill, interpolate, useCurrentFrame, useVideoConfig } from "remotion";
+import {
+  AbsoluteFill,
+  interpolate,
+  useCurrentFrame,
+  useVideoConfig,
+} from "remotion";
 
 export interface DriftProps {
   children: React.ReactNode;

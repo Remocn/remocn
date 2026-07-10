@@ -44,16 +44,11 @@ export function TagIcon({
       });
 
   const swing = acting
-    ? interpolate(
-        actionProgress,
-        [0, 0.2, 0.45, 0.7, 1],
-        [0, 8, -6, 3, 0],
-        {
-          extrapolateLeft: "clamp",
-          extrapolateRight: "clamp",
-          easing: Easing.inOut(Easing.sin),
-        },
-      )
+    ? interpolate(actionProgress, [0, 0.2, 0.45, 0.7, 1], [0, 8, -6, 3, 0], {
+        extrapolateLeft: "clamp",
+        extrapolateRight: "clamp",
+        easing: Easing.inOut(Easing.sin),
+      })
     : 0;
 
   const tag = drawnPathProps(TAG_PATH, drawProgress);

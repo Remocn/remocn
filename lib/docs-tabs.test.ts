@@ -34,9 +34,7 @@ const tree: Root = {
     {
       type: "folder",
       name: "Icons",
-      children: [
-        { type: "page", name: "Gallery", url: "/docs/icons/gallery" },
-      ],
+      children: [{ type: "page", name: "Gallery", url: "/docs/icons/gallery" }],
     },
   ],
 };
@@ -91,12 +89,7 @@ describe("splitDocsTree", () => {
     expect(shaders.$id).toBe("docs-tab-shaders");
     expect(icons.$id).toBe("docs-tab-icons");
     expect(
-      new Set([
-        components.$id,
-        primitives.$id,
-        shaders.$id,
-        icons.$id,
-      ]).size,
+      new Set([components.$id, primitives.$id, shaders.$id, icons.$id]).size,
     ).toBe(4);
   });
 
@@ -117,8 +110,8 @@ describe("getActiveDocsTab", () => {
   it("does not misroute other tabs", () => {
     expect(getActiveDocsTab("/docs/typography")).toBe("components");
     expect(getActiveDocsTab("/docs/ui")).toBe("primitives");
-    expect(
-      getActiveDocsTab("/docs/shaders/getting-started/introduction"),
-    ).toBe("shaders");
+    expect(getActiveDocsTab("/docs/shaders/getting-started/introduction")).toBe(
+      "shaders",
+    );
   });
 });

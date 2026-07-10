@@ -67,11 +67,16 @@ export function RocketIcon({
       })
     : 0;
   const flicker = acting
-    ? interpolate(actionProgress, [0, 0.2, 0.4, 0.6, 0.8], [1, 1.2, 1, 1.18, 1], {
-        extrapolateLeft: "clamp",
-        extrapolateRight: "clamp",
-        easing: Easing.inOut(Easing.quad),
-      })
+    ? interpolate(
+        actionProgress,
+        [0, 0.2, 0.4, 0.6, 0.8],
+        [1, 1.2, 1, 1.18, 1],
+        {
+          extrapolateLeft: "clamp",
+          extrapolateRight: "clamp",
+          easing: Easing.inOut(Easing.quad),
+        },
+      )
     : 1;
 
   const body = drawnPathProps(BODY_PATH, acting ? 1 : bodyDraw);

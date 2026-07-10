@@ -8,8 +8,7 @@ import {
 } from "@/lib/remocn-icons";
 
 const CUP_PATH = "M6 9a6 6 0 0 0 12 0V3a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1z";
-const LEG_LEFT_PATH =
-  "M10 14.66v1.626a2 2 0 0 1-.976 1.696A5 5 0 0 0 7 21.978";
+const LEG_LEFT_PATH = "M10 14.66v1.626a2 2 0 0 1-.976 1.696A5 5 0 0 0 7 21.978";
 const LEG_RIGHT_PATH =
   "M14 14.66v1.626a2 2 0 0 0 .976 1.696A5 5 0 0 1 17 21.978";
 const BASE_PATH = "M4 22h16";
