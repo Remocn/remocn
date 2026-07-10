@@ -1,0 +1,17 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "icon-tag",
+  "title": "Tag",
+  "description": "Animated Lucide tag icon — draws on, then swings from its hole like a price tag flicked by a shopper.",
+  "dependencies": ["remotion"],
+  "registryDependencies": ["@remocn/icons-core"],
+  "files": [
+    {
+      "path": "registry/remocn-icons/icon-tag/index.tsx",
+      "content": "\"use client\";\n\nimport { Easing, interpolate } from \"remotion\";\nimport {\n  drawnPathProps,\n  type IconAnimationProps,\n  useIconAnimation,\n} from \"@/lib/remocn-icons\";\n\nconst TAG_PATH =\n  \"M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z\";\n\nconst HOLE_X = 7.5;\nconst HOLE_Y = 7.5;\n\nconst TIMINGS = {\n  drawDurationInFrames: 16,\n  actionDelayInFrames: 2,\n  actionDurationInFrames: 26,\n  loop: false,\n} as const;\n\nexport function TagIcon({\n  animation = \"both\",\n  loop,\n  speed,\n  size = 48,\n  color = \"currentColor\",\n  strokeWidth = 2,\n  className,\n}: IconAnimationProps) {\n  const { drawProgress, scaleIn, actionProgress, actionFrame } =\n    useIconAnimation({ animation, loop, speed }, TIMINGS);\n\n  const linearDraw = 1 - (1 - drawProgress) ** (1 / 3);\n  const acting = animation !== \"draw\" && actionFrame >= 0;\n\n  const holeScale = acting\n    ? 1\n    : interpolate(linearDraw, [0.7, 1], [0, 1], {\n        extrapolateLeft: \"clamp\",\n        extrapolateRight: \"clamp\",\n        easing: Easing.out(Easing.quad),\n      });\n\n  const swing = acting\n    ? interpolate(actionProgress, [0, 0.2, 0.45, 0.7, 1], [0, 8, -6, 3, 0], {\n        extrapolateLeft: \"clamp\",\n        extrapolateRight: \"clamp\",\n        easing: Easing.inOut(Easing.sin),\n      })\n    : 0;\n\n  const tag = drawnPathProps(TAG_PATH, drawProgress);\n\n  const scale = 0.85 + 0.15 * scaleIn;\n  const holeTransform = `translate(${HOLE_X * (1 - holeScale)} ${HOLE_Y * (1 - holeScale)}) scale(${holeScale})`;\n\n  return (\n    <svg\n      className={className}\n      width={size}\n      height={size}\n      viewBox=\"0 0 24 24\"\n      fill=\"none\"\n      stroke={color}\n      strokeWidth={strokeWidth}\n      strokeLinecap=\"round\"\n      strokeLinejoin=\"round\"\n      style={{\n        overflow: \"visible\",\n        transformOrigin: \"center\",\n        transform: `scale(${scale})`,\n      }}\n    >\n      <g transform={`rotate(${swing} ${HOLE_X} ${HOLE_Y})`}>\n        <path\n          d={TAG_PATH}\n          strokeDasharray={tag.strokeDasharray}\n          strokeDashoffset={tag.strokeDashoffset}\n        />\n        <g transform={holeTransform}>\n          <circle cx=\"7.5\" cy=\"7.5\" r=\"0.5\" fill={color} stroke=\"none\" />\n        </g>\n      </g>\n    </svg>\n  );\n}\n\nexport function TagIconStatic({\n  size = 48,\n  color = \"currentColor\",\n  strokeWidth = 2,\n  className,\n}: {\n  size?: number;\n  color?: string;\n  strokeWidth?: number;\n  className?: string;\n}) {\n  return (\n    <svg\n      className={className}\n      width={size}\n      height={size}\n      viewBox=\"0 0 24 24\"\n      fill=\"none\"\n      stroke={color}\n      strokeWidth={strokeWidth}\n      strokeLinecap=\"round\"\n      strokeLinejoin=\"round\"\n    >\n      <path d={TAG_PATH} />\n      <circle cx=\"7.5\" cy=\"7.5\" r=\"0.5\" fill={color} stroke=\"none\" />\n    </svg>\n  );\n}\n",
+      "type": "registry:component",
+      "target": "components/remocn/icon-tag.tsx"
+    }
+  ],
+  "type": "registry:component"
+}

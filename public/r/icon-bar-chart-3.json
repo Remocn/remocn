@@ -1,0 +1,17 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "icon-bar-chart-3",
+  "title": "Bar Chart 3",
+  "description": "Animated Lucide bar-chart-3 icon — the axis draws on, then three bars rise left to right with overshoot: the classic growth chart.",
+  "dependencies": ["remotion"],
+  "registryDependencies": ["@remocn/icons-core"],
+  "files": [
+    {
+      "path": "registry/remocn-icons/icon-bar-chart-3/index.tsx",
+      "content": "\"use client\";\n\nimport { Easing, interpolate } from \"remotion\";\nimport {\n  drawnPathProps,\n  type IconAnimationProps,\n  useIconAnimation,\n} from \"@/lib/remocn-icons\";\n\nconst AXIS_PATH = \"M3 3v16a2 2 0 0 0 2 2h16\";\nconst BARS = [\"M8 17V14\", \"M13 17V5\", \"M18 17V9\"];\nconst BASE_Y = 17;\n\nconst TIMINGS = {\n  drawDurationInFrames: 12,\n  actionDelayInFrames: 2,\n  actionDurationInFrames: 30,\n  loop: false,\n} as const;\n\nexport function BarChart3Icon({\n  animation = \"both\",\n  loop,\n  speed,\n  size = 48,\n  color = \"currentColor\",\n  strokeWidth = 2,\n  className,\n}: IconAnimationProps) {\n  const { drawProgress, scaleIn, actionProgress, actionFrame } =\n    useIconAnimation({ animation, loop, speed }, TIMINGS);\n\n  const acting = animation !== \"draw\" && actionFrame >= 0;\n\n  const axis = drawnPathProps(AXIS_PATH, drawProgress);\n\n  const bars = BARS.map((d, i) => {\n    const start = i * 0.22;\n    const grow = interpolate(\n      actionProgress,\n      [start, start + 0.3, start + 0.42],\n      [0, 1.08, 1],\n      {\n        extrapolateLeft: \"clamp\",\n        extrapolateRight: \"clamp\",\n        easing: Easing.out(Easing.quad),\n      },\n    );\n    const scaleY = animation === \"draw\" ? 1 : acting ? grow : 0;\n    return { d, scaleY };\n  });\n\n  const scale = 0.85 + 0.15 * scaleIn;\n\n  return (\n    <svg\n      className={className}\n      width={size}\n      height={size}\n      viewBox=\"0 0 24 24\"\n      fill=\"none\"\n      stroke={color}\n      strokeWidth={strokeWidth}\n      strokeLinecap=\"round\"\n      strokeLinejoin=\"round\"\n      style={{\n        overflow: \"visible\",\n        transformOrigin: \"center\",\n        transform: `scale(${scale})`,\n      }}\n    >\n      <path\n        d={AXIS_PATH}\n        strokeDasharray={axis.strokeDasharray}\n        strokeDashoffset={axis.strokeDashoffset}\n      />\n      {bars.map((bar) => (\n        <g\n          key={bar.d}\n          transform={`translate(0 ${BASE_Y * (1 - bar.scaleY)}) scale(1 ${bar.scaleY})`}\n        >\n          <path d={bar.d} />\n        </g>\n      ))}\n    </svg>\n  );\n}\n\nexport function BarChart3IconStatic({\n  size = 48,\n  color = \"currentColor\",\n  strokeWidth = 2,\n  className,\n}: {\n  size?: number;\n  color?: string;\n  strokeWidth?: number;\n  className?: string;\n}) {\n  return (\n    <svg\n      className={className}\n      width={size}\n      height={size}\n      viewBox=\"0 0 24 24\"\n      fill=\"none\"\n      stroke={color}\n      strokeWidth={strokeWidth}\n      strokeLinecap=\"round\"\n      strokeLinejoin=\"round\"\n    >\n      <path d={AXIS_PATH} />\n      <path d=\"M18 17V9\" />\n      <path d=\"M13 17V5\" />\n      <path d=\"M8 17v-3\" />\n    </svg>\n  );\n}\n",
+      "type": "registry:component",
+      "target": "components/remocn/icon-bar-chart-3.tsx"
+    }
+  ],
+  "type": "registry:component"
+}

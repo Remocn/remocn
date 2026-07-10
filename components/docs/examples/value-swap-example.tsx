@@ -22,7 +22,14 @@ export function ValueSwapExampleScene({
         justifyContent: "center",
       }}
     >
-      <span style={{ fontFamily: FONT_FAMILY, fontSize: 40, fontWeight: 600, color: "#f2f2f2" }}>
+      <span
+        style={{
+          fontFamily: FONT_FAMILY,
+          fontSize: 40,
+          fontWeight: 600,
+          color: "#f2f2f2",
+        }}
+      >
         <ValueSwap
           values={["Draft", "In review", "Shipped"]}
           at={[30, 60]}

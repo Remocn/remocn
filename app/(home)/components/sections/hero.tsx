@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { SPRING_BOUNCE } from "@/config/site";
 import { useTrackEvent } from "@/lib/analytics";
 import { FadeUp } from "../fade-up";
+import { HeroNeuroBg } from "../hero-shader-bg";
 import { InstallAll } from "../install-all";
 
 export function Hero() {
@@ -22,29 +23,19 @@ export function Hero() {
     if (v.paused) {
       void v.play();
       setPlaying(true);
-      trackEvent("preview_played", {
-        component: "glass-code-block",
-        surface: "hero",
-        trigger: "click",
-      });
     } else {
       v.pause();
       setPlaying(false);
-      trackEvent("preview_paused", {
-        component: "glass-code-block",
-        surface: "hero",
-      });
     }
-  }, [trackEvent]);
+  }, []);
 
   const aspectRatio = "16 / 9";
 
   return (
-    <section className="relative overflow-hidden pt-10 pb-16 sm:pt-16 sm:pb-24">
-      {/* Theme-aware backdrop: dotted grid that fades out + a soft top glow. */}
+    <section className="relative isolate pt-10 pb-16 sm:pt-16 sm:pb-24">
       <div aria-hidden className="absolute inset-0 -z-10">
         <div className="absolute inset-0 bg-grid-fade" />
-        <div className="absolute inset-x-0 top-0 h-[420px] bg-[radial-gradient(60%_100%_at_50%_0%,var(--color-muted),transparent_70%)] opacity-70" />
+        <HeroNeuroBg />
       </div>
 
       <div className="section">
@@ -55,11 +46,11 @@ export function Hero() {
               className="mb-5 h-7 gap-1.5 rounded-full px-3 text-xs"
               render={
                 <Link
-                  href="/docs/shaders/getting-started/introduction"
+                  href="/docs/icons/gallery"
                   onClick={() =>
                     trackEvent("cta_clicked", {
                       cta: "hero_ui_badge",
-                      destination: "/docs/shaders/getting-started/introduction",
+                      destination: "/docs/icons/gallery",
                     })
                   }
                 />
@@ -70,7 +61,8 @@ export function Hero() {
                 ·
               </span>
               <span className="text-muted-foreground">
-                Introducing <span className="text-foreground">Shaders</span>
+                Introducing{" "}
+                <span className="text-foreground">Remocn Icons</span>
               </span>
               <ArrowRight className="size-3" aria-hidden="true" />
             </Badge>
@@ -123,7 +115,7 @@ export function Hero() {
             transition={{ ...SPRING_BOUNCE, delay: 0.05 }}
           >
             <div
-              className="group surface-card relative w-full overflow-hidden rounded-2xl shadow-2xl shadow-black/5 sm:rounded-3xl dark:shadow-black/40"
+              className="group surface-card relative w-full overflow-hidden rounded-2xl  shadow-black/5 sm:rounded-3xl dark:shadow-black/40"
               style={{ aspectRatio }}
             >
               <video

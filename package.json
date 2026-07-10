@@ -23,6 +23,7 @@
     "@paper-design/shaders-react": "0.0.76",
     "@remotion/bundler": "4.0.473",
     "@remotion/google-fonts": "4.0.473",
+    "@remotion/paths": "4.0.473",
     "@remotion/player": "4.0.473",
     "@remotion/renderer": "4.0.473",
     "@remotion/transitions": "4.0.473",

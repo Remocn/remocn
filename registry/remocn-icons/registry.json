@@ -1,0 +1,1521 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry.json",
+  "name": "remocn-icons",
+  "homepage": "https://remocn.dev",
+  "items": [
+    {
+      "name": "icons-core",
+      "type": "registry:lib",
+      "title": "Icons Core",
+      "description": "Shared animation contract, pure frame-to-phase timeline, and SVG path-draw helpers for remocn icons.",
+      "dependencies": ["remotion", "@remotion/paths"],
+      "files": [
+        {
+          "path": "icons-core/index.ts",
+          "type": "registry:lib",
+          "target": "lib/remocn-icons/index.ts"
+        }
+      ]
+    },
+    {
+      "name": "icon-check",
+      "type": "registry:component",
+      "title": "Check",
+      "description": "Animated Lucide check icon \u2014 the stroke draws on, then stamps with a spring pop to mark a step, task, or claim as done.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-check/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-check.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-check-circle",
+      "type": "registry:component",
+      "title": "Check Circle",
+      "description": "Animated Lucide circle-check icon \u2014 the ring draws clockwise, the checkmark traces in, then the whole mark pops to confirm a completed or successful state.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-check-circle/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-check-circle.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-x",
+      "type": "registry:component",
+      "title": "X",
+      "description": "Animated Lucide x icon \u2014 the two diagonals draw in crosswise, then the mark shakes to punctuate an error, removal, or dismissal.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-x/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-x.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-activity",
+      "type": "registry:component",
+      "title": "Activity",
+      "description": "Animated Lucide activity icon \u2014 the pulse line sweeps through like an EKG, popping at the peak. Loops by default.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-activity/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-activity.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-alert-triangle",
+      "type": "registry:component",
+      "title": "Alert Triangle",
+      "description": "Animated Lucide triangle-alert icon \u2014 the outline draws on, the mark pops in, then the exclamation blinks to flag a risk or warning.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-alert-triangle/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-alert-triangle.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-info",
+      "type": "registry:component",
+      "title": "Info",
+      "description": "Animated Lucide info icon \u2014 the ring draws clockwise, the dot pops and stem draws in, then the dot bobs to draw a gentle, neutral note.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-info/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-info.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-loader",
+      "type": "registry:component",
+      "title": "Loader",
+      "description": "Animated Lucide loader-circle icon \u2014 the arc draws on, then spins continuously for a loading or processing beat. Loops by default.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-loader/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-loader.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-refresh-cw",
+      "type": "registry:component",
+      "title": "Refresh Cw",
+      "description": "Animated Lucide refresh-cw icon \u2014 the two arcs draw on, arrowheads pop, then the whole mark spins in cycles for sync, retry, or up-to-date messaging. Loops by default.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-refresh-cw/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-refresh-cw.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-search",
+      "type": "registry:component",
+      "title": "Search",
+      "description": "Animated Lucide search icon \u2014 the lens draws on, the handle extends, then the magnifier sweeps a small scanning path for a search or discovery beat.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-search/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-search.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-bell",
+      "type": "registry:component",
+      "title": "Bell",
+      "description": "Animated Lucide bell icon \u2014 the body draws on, the clapper follows, then the bell swings from its mount to signal a notification or alert.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-bell/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-bell.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-download",
+      "type": "registry:component",
+      "title": "Download",
+      "description": "Animated Lucide download icon \u2014 the tray draws on, the arrow fades in, then drops into the tray with a squash on impact for a download or export beat.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-download/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-download.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-upload",
+      "type": "registry:component",
+      "title": "Upload",
+      "description": "Animated Lucide upload icon \u2014 the tray draws on, the arrow fades in, then launches upward with a spring for an upload, publish, or submission beat.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-upload/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-upload.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-copy",
+      "type": "registry:component",
+      "title": "Copy",
+      "description": "Animated Lucide copy icon \u2014 the two sheets draw back-to-front, then the front sheet lifts and settles to read as a duplicate for a copy-to-clipboard beat.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-copy/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-copy.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-settings",
+      "type": "registry:component",
+      "title": "Settings",
+      "description": "Animated Lucide settings icon \u2014 the gear and center draw on, then the gear turns exactly one tooth for a settings, configuration, or customization beat.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-settings/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-settings.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-trash",
+      "type": "registry:component",
+      "title": "Trash",
+      "description": "Animated Lucide trash-2 icon \u2014 the can draws on, then the lid flips open and the contents vanish for a delete or cleanup beat.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-trash/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-trash.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-plus",
+      "type": "registry:component",
+      "title": "Plus",
+      "description": "Animated Lucide plus icon \u2014 the two strokes draw on, then the mark twirls 90deg with a scale pop for an energetic add or create beat.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-plus/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-plus.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-send",
+      "type": "registry:component",
+      "title": "Send",
+      "description": "Animated Lucide send icon \u2014 the paper plane draws on, then darts forward with a wind-up and settles back for a send-message beat.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-send/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-send.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-heart",
+      "type": "registry:component",
+      "title": "Heart",
+      "description": "Animated Lucide heart icon \u2014 the outline draws on, then a lub-dub heartbeat pulse for likes, favorites, or built-with-love moments.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-heart/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-heart.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-star",
+      "type": "registry:component",
+      "title": "Star",
+      "description": "Animated Lucide star icon \u2014 the outline draws on, then twinkles into place with a small rotate and scale pop for ratings, favorites, or star callouts.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-star/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-star.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-thumbs-up",
+      "type": "registry:component",
+      "title": "Thumbs Up",
+      "description": "Animated Lucide thumbs-up icon \u2014 the hand draws on, then springs up with an approving stamp for positive reviews, approvals, or social-proof beats.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-thumbs-up/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-thumbs-up.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-party-popper",
+      "type": "registry:component",
+      "title": "Party Popper",
+      "description": "Animated Lucide party-popper icon \u2014 the cone draws on, then confetti bursts outward as the cone recoils for launch, milestone, or celebration finales.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-party-popper/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-party-popper.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-arrow-right",
+      "type": "registry:component",
+      "title": "Arrow Right",
+      "description": "Animated Lucide arrow-right icon \u2014 the shaft and head draw on, then the arrow nudges forward for CTAs, next-step pointers, or flow direction.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-arrow-right/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-arrow-right.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-arrow-left",
+      "type": "registry:component",
+      "title": "Arrow Left",
+      "description": "Animated Lucide arrow-left icon \u2014 the shaft and head draw on, then the arrow nudges back for back navigation or 'previously' callbacks.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-arrow-left/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-arrow-left.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-arrow-up",
+      "type": "registry:component",
+      "title": "Arrow Up",
+      "description": "Animated Lucide arrow-up icon \u2014 the shaft and head draw on, then the arrow nudges up for growth, improvement, or upward-trend beats.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-arrow-up/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-arrow-up.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-arrow-down",
+      "type": "registry:component",
+      "title": "Arrow Down",
+      "description": "Animated Lucide arrow-down icon \u2014 the shaft and head draw on, then the arrow nudges down for cost/latency reduction beats or scroll cues.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-arrow-down/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-arrow-down.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-external-link",
+      "type": "registry:component",
+      "title": "External Link",
+      "description": "Animated Lucide external-link icon \u2014 the box and arrow draw on, then the arrow darts out toward the top-right for 'view on GitHub', external docs, or open-in-new-tab beats.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-external-link/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-external-link.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-play",
+      "type": "registry:component",
+      "title": "Play",
+      "description": "Animated Lucide play icon \u2014 the triangle draws on, then presses in and springs forward like a play button being hit.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-play/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-play.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-pause",
+      "type": "registry:component",
+      "title": "Pause",
+      "description": "Animated Lucide pause icon \u2014 the two bars draw on, then pinch toward each other and settle like a held breath.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-pause/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-pause.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-skip-forward",
+      "type": "registry:component",
+      "title": "Skip Forward",
+      "description": "Animated Lucide skip-forward icon \u2014 draws on, then dashes forward past center and snaps against its end bar.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-skip-forward/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-skip-forward.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-volume-2",
+      "type": "registry:component",
+      "title": "Volume 2",
+      "description": "Animated Lucide volume-2 icon \u2014 the speaker draws on, then the two sound waves ripple outward one after the other.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-volume-2/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-volume-2.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-volume-x",
+      "type": "registry:component",
+      "title": "Volume X",
+      "description": "Animated Lucide volume-x icon \u2014 the speaker draws on, then the X slashes in and the glyph shakes off the sound.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-volume-x/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-volume-x.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-mic",
+      "type": "registry:component",
+      "title": "Mic",
+      "description": "Animated Lucide mic icon \u2014 draws on, then the capsule bounces twice like a level meter picking up voice.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-mic/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-mic.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-video",
+      "type": "registry:component",
+      "title": "Video",
+      "description": "Animated Lucide video icon \u2014 draws on, then the lens wedge pans out and snaps back to its shot.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-video/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-video.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-camera",
+      "type": "registry:component",
+      "title": "Camera",
+      "description": "Animated Lucide camera icon \u2014 draws on, then the lens blinks shut and open like a shutter firing.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-camera/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-camera.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-image",
+      "type": "registry:component",
+      "title": "Image",
+      "description": "Animated Lucide image icon \u2014 the frame draws on, then the mountain redraws and the sun drifts into place like a photo developing.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-image/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-image.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-chevron-up",
+      "type": "registry:component",
+      "title": "Chevron Up",
+      "description": "Animated Lucide chevron-up icon \u2014 draws on, then nudges upward with a fading echo.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-chevron-up/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-chevron-up.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-chevron-down",
+      "type": "registry:component",
+      "title": "Chevron Down",
+      "description": "Animated Lucide chevron-down icon \u2014 draws on, then nudges downward with a fading echo.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-chevron-down/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-chevron-down.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-chevron-left",
+      "type": "registry:component",
+      "title": "Chevron Left",
+      "description": "Animated Lucide chevron-left icon \u2014 draws on, then nudges left with a fading echo.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-chevron-left/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-chevron-left.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-chevron-right",
+      "type": "registry:component",
+      "title": "Chevron Right",
+      "description": "Animated Lucide chevron-right icon \u2014 draws on, then nudges right with a fading echo.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-chevron-right/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-chevron-right.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-menu",
+      "type": "registry:component",
+      "title": "Menu",
+      "description": "Animated Lucide menu icon \u2014 the three bars slide in from the left, top to bottom, each overshooting into place.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-menu/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-menu.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-more-horizontal",
+      "type": "registry:component",
+      "title": "More Horizontal",
+      "description": "Animated Lucide more-horizontal icon \u2014 three dots pop in, then do a left-to-right thinking wave.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-more-horizontal/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-more-horizontal.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-maximize",
+      "type": "registry:component",
+      "title": "Maximize",
+      "description": "Animated Lucide maximize icon \u2014 four corner brackets draw on, then fly outward and spring back like a window going fullscreen.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-maximize/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-maximize.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-layout-grid",
+      "type": "registry:component",
+      "title": "Layout Grid",
+      "description": "Animated Lucide layout-grid icon \u2014 four tiles draw on, then re-pop into place clockwise like a dashboard assembling.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-layout-grid/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-layout-grid.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-pencil",
+      "type": "registry:component",
+      "title": "Pencil",
+      "description": "Animated Lucide pencil icon \u2014 draws on, then scribbles: the pencil rocks around its tip as if writing.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-pencil/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-pencil.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-share-2",
+      "type": "registry:component",
+      "title": "Share 2",
+      "description": "Animated Lucide share-2 icon \u2014 three nodes draw on, then the connections re-trace and the receiving nodes pop as the share lands.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-share-2/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-share-2.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-filter",
+      "type": "registry:component",
+      "title": "Filter",
+      "description": "Animated Lucide filter icon \u2014 the funnel draws on, then gives two quick shakes as results fall through.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-filter/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-filter.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-eye",
+      "type": "registry:component",
+      "title": "Eye",
+      "description": "Animated Lucide eye icon \u2014 draws on, then blinks once and refocuses its pupil.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-eye/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-eye.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-eye-off",
+      "type": "registry:component",
+      "title": "Eye Off",
+      "description": "Animated Lucide eye-off icon \u2014 the eye fragments draw on, then the slash cuts through and visibility dims.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-eye-off/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-eye-off.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-rocket",
+      "type": "registry:component",
+      "title": "Rocket",
+      "description": "Animated Lucide rocket icon \u2014 draws on, then lifts off: the ship rises on a tilt while the flame re-ignites, then eases back to rest.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-rocket/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-rocket.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-save",
+      "type": "registry:component",
+      "title": "Save",
+      "description": "Animated Lucide save icon \u2014 the disk draws on, then presses down and writes: the label slot re-draws as data commits.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-save/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-save.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-link",
+      "type": "registry:component",
+      "title": "Link",
+      "description": "Animated Lucide link icon \u2014 two chain halves draw on, pull apart, and click together.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-link/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-link.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-bookmark",
+      "type": "registry:component",
+      "title": "Bookmark",
+      "description": "Animated Lucide bookmark icon \u2014 draws on, then drops into place from above with a spring landing.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-bookmark/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-bookmark.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-lock",
+      "type": "registry:component",
+      "title": "Lock",
+      "description": "Animated Lucide lock icon \u2014 the body draws on, then the shackle lifts and slams shut with a confirming pop.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-lock/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-lock.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-key",
+      "type": "registry:component",
+      "title": "Key",
+      "description": "Animated Lucide key icon \u2014 draws on, then turns in an invisible lock and springs back.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-key/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-key.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-log-out",
+      "type": "registry:component",
+      "title": "Log Out",
+      "description": "Animated Lucide log-out icon \u2014 draws on, then the arrow steps out through the door frame with a fading echo.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-log-out/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-log-out.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-mail",
+      "type": "registry:component",
+      "title": "Mail",
+      "description": "Animated Lucide mail icon \u2014 the envelope draws on, then the flap re-traces open and the whole envelope pops: you've got mail.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-mail/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-mail.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-message-circle",
+      "type": "registry:component",
+      "title": "Message Circle",
+      "description": "Animated Lucide message-circle icon \u2014 the bubble draws on, then inflates from its tail like a message arriving.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-message-circle/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-message-circle.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-phone",
+      "type": "registry:component",
+      "title": "Phone",
+      "description": "Animated Lucide phone icon \u2014 draws on, then rings: three decaying rotation oscillations around center.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-phone/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-phone.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-at-sign",
+      "type": "registry:component",
+      "title": "At Sign",
+      "description": "Animated Lucide at-sign icon \u2014 the inner 'a' draws and pops, then the outer swoosh re-traces its tail: a mention landing.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-at-sign/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-at-sign.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-inbox",
+      "type": "registry:component",
+      "title": "Inbox",
+      "description": "Animated Lucide inbox icon \u2014 the tray draws on, then dips under the weight of an arriving item and springs back.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-inbox/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-inbox.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-shield",
+      "type": "registry:component",
+      "title": "Shield",
+      "description": "Animated Lucide shield icon \u2014 draws on, then braces: a firm guard pulse that asserts protection.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-shield/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-shield.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-help-circle",
+      "type": "registry:component",
+      "title": "Help Circle",
+      "description": "Animated Lucide help-circle icon \u2014 the ring draws on, then the question mark re-draws and tilts like a curious head.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-help-circle/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-help-circle.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-plus-circle",
+      "type": "registry:component",
+      "title": "Plus Circle",
+      "description": "Animated Lucide plus-circle icon \u2014 the ring draws on, the plus crosses in, then the whole badge pops.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-plus-circle/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-plus-circle.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-x-circle",
+      "type": "registry:component",
+      "title": "X Circle",
+      "description": "Animated Lucide x-circle icon \u2014 the ring draws on, the X slashes in, and the badge shakes once: firmly rejected.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-x-circle/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-x-circle.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-calendar",
+      "type": "registry:component",
+      "title": "Calendar",
+      "description": "Animated Lucide calendar icon \u2014 the pad draws on, then the binder rings dip and the page snaps into place.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-calendar/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-calendar.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-clock",
+      "type": "registry:component",
+      "title": "Clock",
+      "description": "Animated Lucide clock icon \u2014 the face draws on, then the hands sweep through discrete ticks. Loops by default.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-clock/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-clock.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-timer",
+      "type": "registry:component",
+      "title": "Timer",
+      "description": "Animated Lucide timer icon \u2014 draws on, then the start button clicks and the hand sweeps: the stopwatch is running.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-timer/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-timer.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-home",
+      "type": "registry:component",
+      "title": "Home",
+      "description": "Animated Lucide home icon \u2014 the house draws on, then the door re-draws open and the house settles: welcome home.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-home/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-home.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-folder",
+      "type": "registry:component",
+      "title": "Folder",
+      "description": "Animated Lucide folder icon \u2014 draws on, then the folder tips open for a peek and closes.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-folder/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-folder.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-file-text",
+      "type": "registry:component",
+      "title": "File Text",
+      "description": "Animated Lucide file-text icon \u2014 the page draws on, then the text lines type themselves in, top to bottom.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-file-text/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-file-text.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-code",
+      "type": "registry:component",
+      "title": "Code",
+      "description": "Animated Lucide code icon \u2014 the angle brackets draw on, pull apart, and snap back around their code.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-code/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-code.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-target",
+      "type": "registry:component",
+      "title": "Target",
+      "description": "Animated Lucide target icon \u2014 three rings draw in from outside, then the bullseye hits: inner dot pops and the board shudders.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-target/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-target.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-terminal",
+      "type": "registry:component",
+      "title": "Terminal",
+      "description": "Animated Lucide terminal icon \u2014 draws on, then the prompt nudges forward and the cursor blinks twice.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-terminal/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-terminal.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-database",
+      "type": "registry:component",
+      "title": "Database",
+      "description": "Animated Lucide database icon \u2014 the cylinder draws on, then a write lands: the top disc pops and data settles down the stack.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-database/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-database.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-cloud",
+      "type": "registry:component",
+      "title": "Cloud",
+      "description": "Animated Lucide cloud icon \u2014 draws on, then floats: a weightless bob and a half before settling.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-cloud/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-cloud.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-globe",
+      "type": "registry:component",
+      "title": "Globe",
+      "description": "Animated Lucide globe icon \u2014 draws on, then the meridian sweeps west to east like the world turning. Loops by default.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-globe/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-globe.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-monitor",
+      "type": "registry:component",
+      "title": "Monitor",
+      "description": "Animated Lucide monitor icon \u2014 the stand draws, then the screen powers on with a CRT-style unsquash.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-monitor/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-monitor.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-smartphone",
+      "type": "registry:component",
+      "title": "Smartphone",
+      "description": "Animated Lucide smartphone icon \u2014 draws on, then buzzes: three fast vibration oscillations.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-smartphone/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-smartphone.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-sun",
+      "type": "registry:component",
+      "title": "Sun",
+      "description": "Animated Lucide sun icon \u2014 the core draws on, then eight rays fan out clockwise and the sun swells: sunrise.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-sun/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-sun.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-moon",
+      "type": "registry:component",
+      "title": "Moon",
+      "description": "Animated Lucide moon icon \u2014 draws on, then rocks gently into place: settling in for the night.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-moon/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-moon.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-shopping-cart",
+      "type": "registry:component",
+      "title": "Shopping Cart",
+      "description": "Animated Lucide shopping-cart icon \u2014 draws on, then rolls forward to checkout, wheels popping as it stops.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-shopping-cart/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-shopping-cart.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-credit-card",
+      "type": "registry:component",
+      "title": "Credit Card",
+      "description": "Animated Lucide credit-card icon \u2014 the card draws on, then the stripe swipes through and the card tips: payment accepted.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-credit-card/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-credit-card.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-crown",
+      "type": "registry:component",
+      "title": "Crown",
+      "description": "Animated Lucide crown icon \u2014 descends into place from above, lands with a pop, then rocks regally to rest.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-crown/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-crown.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-dollar-sign",
+      "type": "registry:component",
+      "title": "Dollar Sign",
+      "description": "Animated Lucide dollar-sign icon \u2014 draws on, then the sign stretches tall: understated cha-ching.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-dollar-sign/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-dollar-sign.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-tag",
+      "type": "registry:component",
+      "title": "Tag",
+      "description": "Animated Lucide tag icon \u2014 draws on, then swings from its hole like a price tag flicked by a shopper.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-tag/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-tag.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-package",
+      "type": "registry:component",
+      "title": "Package",
+      "description": "Animated Lucide package icon \u2014 the box draws on, lands with a squash-and-stretch, then the tape seam seals it.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-package/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-package.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-gem",
+      "type": "registry:component",
+      "title": "Gem",
+      "description": "Animated Lucide gem icon \u2014 the stone draws on, then light catches it: facets re-trace in sequence with a flicker and a pop.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-gem/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-gem.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-gift",
+      "type": "registry:component",
+      "title": "Gift",
+      "description": "Animated Lucide gift icon \u2014 draws on, then the lid lifts for a peek and lands with a ribbon pop: almost unwrapped.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-gift/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-gift.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-wallet",
+      "type": "registry:component",
+      "title": "Wallet",
+      "description": "Animated Lucide wallet icon \u2014 draws on, then the wallet thickens with a quiet x-scale: money in.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-wallet/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-wallet.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-award",
+      "type": "registry:component",
+      "title": "Award",
+      "description": "Animated Lucide award icon \u2014 the medal draws on, the ribbon unfurls beneath it, then the medal swings to rest.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-award/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-award.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-bar-chart-3",
+      "type": "registry:component",
+      "title": "Bar Chart 3",
+      "description": "Animated Lucide bar-chart-3 icon \u2014 the axis draws on, then three bars rise left to right with overshoot: the classic growth chart.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-bar-chart-3/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-bar-chart-3.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-trending-down",
+      "type": "registry:component",
+      "title": "Trending Down",
+      "description": "Animated Lucide trending-down icon \u2014 the line descends across, then the arrowhead lands with damped weight.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-trending-down/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-trending-down.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-trending-up",
+      "type": "registry:component",
+      "title": "Trending Up",
+      "description": "Animated Lucide trending-up icon \u2014 the line climbs across, then the arrowhead pops at the peak.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-trending-up/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-trending-up.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-trophy",
+      "type": "registry:component",
+      "title": "Trophy",
+      "description": "Animated Lucide trophy icon \u2014 draws on, then hoists: the cup hops with a pop at the apex while its handles flash in.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-trophy/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-trophy.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-user",
+      "type": "registry:component",
+      "title": "User",
+      "description": "Animated Lucide user icon \u2014 draws on, then gives a small presence nod: head dips as shoulders rise to meet it.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-user/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-user.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-users",
+      "type": "registry:component",
+      "title": "Users",
+      "description": "Animated Lucide users icon \u2014 the front figure draws on and pops, then the second figure slides in from behind: the team assembles.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-users/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-users.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-user-plus",
+      "type": "registry:component",
+      "title": "User Plus",
+      "description": "Animated Lucide user-plus icon \u2014 the figure draws on, then the plus strokes draw in and pop: a new member added.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-user-plus/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-user-plus.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-sparkles",
+      "type": "registry:component",
+      "title": "Sparkles",
+      "description": "Animated Lucide sparkles icon \u2014 the main sparkle draws on, the accents pop, then a looping twinkle for AI, magic, or premium highlights. Loops by default.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-sparkles/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-sparkles.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-zap",
+      "type": "registry:component",
+      "title": "Zap",
+      "description": "Animated Lucide zap icon \u2014 the bolt draws in fast, then flashes with a double blink for speed, performance, or instant-result claims.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-zap/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-zap.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-flame",
+      "type": "registry:component",
+      "title": "Flame",
+      "description": "Animated Lucide flame icon \u2014 the outline draws on, then flickers with a looping scale-and-skew wobble for hot features, trending items, or streaks. Loops by default.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
+      "files": [
+        {
+          "path": "icon-flame/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-flame.tsx"
+        }
+      ]
+    }
+  ]
+}

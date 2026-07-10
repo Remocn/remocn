@@ -1,0 +1,17 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "icon-flame",
+  "title": "Flame",
+  "description": "Animated Lucide flame icon — the outline draws on, then flickers with a looping scale-and-skew wobble for hot features, trending items, or streaks. Loops by default.",
+  "dependencies": ["remotion"],
+  "registryDependencies": ["@remocn/icons-core"],
+  "files": [
+    {
+      "path": "registry/remocn-icons/icon-flame/index.tsx",
+      "content": "\"use client\";\n\nimport { Easing, interpolate } from \"remotion\";\nimport {\n  drawnPathProps,\n  type IconAnimationProps,\n  useIconAnimation,\n} from \"@/lib/remocn-icons\";\n\nconst FLAME_PATH =\n  \"M12 3q1 4 4 6.5t3 5.5a1 1 0 0 1-14 0 5 5 0 0 1 1-3 1 1 0 0 0 5 0c0-2-1.5-3-1.5-5q0-2 2.5-4\";\n\nconst TIMINGS = {\n  drawDurationInFrames: 14,\n  actionDelayInFrames: 2,\n  actionDurationInFrames: 40,\n  loop: true,\n} as const;\n\nexport function FlameIcon({\n  animation = \"both\",\n  loop,\n  speed,\n  size = 48,\n  color = \"currentColor\",\n  strokeWidth = 2,\n  className,\n}: IconAnimationProps) {\n  const { drawProgress, actionProgress } = useIconAnimation(\n    { animation, loop, speed },\n    TIMINGS,\n  );\n\n  const linearDraw = 1 - (1 - drawProgress) ** (1 / 3);\n\n  const flameProgress = interpolate(linearDraw, [0, 1], [0, 1], {\n    extrapolateLeft: \"clamp\",\n    extrapolateRight: \"clamp\",\n    easing: Easing.inOut(Easing.quad),\n  });\n  const entrance = interpolate(linearDraw, [0, 1], [0.85, 1], {\n    extrapolateLeft: \"clamp\",\n    extrapolateRight: \"clamp\",\n    easing: Easing.out(Easing.quad),\n  });\n\n  const flame = drawnPathProps(FLAME_PATH, flameProgress);\n\n  const flickerEase = {\n    extrapolateLeft: \"clamp\",\n    extrapolateRight: \"clamp\",\n    easing: Easing.inOut(Easing.quad),\n  } as const;\n  const scaleY = interpolate(\n    actionProgress,\n    [0, 0.25, 0.5, 0.75, 1],\n    [1, 1.06, 0.97, 1.04, 1],\n    flickerEase,\n  );\n  const skew = interpolate(\n    actionProgress,\n    [0, 0.25, 0.5, 0.75, 1],\n    [0, -2, 2, -1, 0],\n    flickerEase,\n  );\n\n  return (\n    <svg\n      className={className}\n      width={size}\n      height={size}\n      viewBox=\"0 0 24 24\"\n      fill=\"none\"\n      stroke={color}\n      strokeWidth={strokeWidth}\n      strokeLinecap=\"round\"\n      strokeLinejoin=\"round\"\n      style={{\n        overflow: \"visible\",\n        transformOrigin: \"center\",\n        transform: `scale(${entrance})`,\n      }}\n    >\n      <g\n        transform={`translate(12 22) scale(1 ${scaleY}) skewX(${skew}) translate(-12 -22)`}\n      >\n        <path\n          d={FLAME_PATH}\n          strokeDasharray={flame.strokeDasharray}\n          strokeDashoffset={flame.strokeDashoffset}\n        />\n      </g>\n    </svg>\n  );\n}\n\nexport function FlameIconStatic({\n  size = 48,\n  color = \"currentColor\",\n  strokeWidth = 2,\n  className,\n}: {\n  size?: number;\n  color?: string;\n  strokeWidth?: number;\n  className?: string;\n}) {\n  return (\n    <svg\n      className={className}\n      width={size}\n      height={size}\n      viewBox=\"0 0 24 24\"\n      fill=\"none\"\n      stroke={color}\n      strokeWidth={strokeWidth}\n      strokeLinecap=\"round\"\n      strokeLinejoin=\"round\"\n    >\n      <path d={FLAME_PATH} />\n    </svg>\n  );\n}\n",
+      "type": "registry:component",
+      "target": "components/remocn/icon-flame.tsx"
+    }
+  ],
+  "type": "registry:component"
+}

@@ -57,7 +57,7 @@ export function NavDesktop({
           href={link.href}
           onMouseEnter={(event) => moveTo(event.currentTarget)}
           onFocus={(event) => moveTo(event.currentTarget)}
-          className="relative rounded-full px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:text-foreground focus-visible:outline-none"
+          className="relative rounded-full px-3 py-2 text-sm font-medium text-foreground focus-visible:outline-none"
         >
           {link.label}
         </Link>

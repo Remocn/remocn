@@ -1,0 +1,17 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "icon-link",
+  "title": "Link",
+  "description": "Animated Lucide link icon — two chain halves draw on, pull apart, and click together.",
+  "dependencies": ["remotion"],
+  "registryDependencies": ["@remocn/icons-core"],
+  "files": [
+    {
+      "path": "registry/remocn-icons/icon-link/index.tsx",
+      "content": "\"use client\";\n\nimport { Easing, interpolate } from \"remotion\";\nimport {\n  drawnPathProps,\n  type IconAnimationProps,\n  useIconAnimation,\n} from \"@/lib/remocn-icons\";\n\nconst TOP_PATH = \"M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71\";\nconst BOTTOM_PATH =\n  \"M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71\";\n\nconst TIMINGS = {\n  drawDurationInFrames: 14,\n  actionDelayInFrames: 2,\n  actionDurationInFrames: 20,\n  loop: false,\n} as const;\n\nexport function LinkIcon({\n  animation = \"both\",\n  loop,\n  speed,\n  size = 48,\n  color = \"currentColor\",\n  strokeWidth = 2,\n  className,\n}: IconAnimationProps) {\n  const { drawProgress, scaleIn, actionProgress, actionFrame } =\n    useIconAnimation({ animation, loop, speed }, TIMINGS);\n\n  const acting = animation !== \"draw\" && actionFrame >= 0;\n\n  const pull = acting\n    ? interpolate(actionProgress, [0, 0.4, 0.75], [0, 1.06, 0], {\n        extrapolateLeft: \"clamp\",\n        extrapolateRight: \"clamp\",\n        easing: Easing.inOut(Easing.quad),\n      })\n    : 0;\n  const pop = acting\n    ? interpolate(actionProgress, [0.6, 0.78, 1], [1, 1.06, 1], {\n        extrapolateLeft: \"clamp\",\n        extrapolateRight: \"clamp\",\n        easing: Easing.inOut(Easing.quad),\n      })\n    : 1;\n\n  const top = drawnPathProps(TOP_PATH, drawProgress);\n  const bottom = drawnPathProps(BOTTOM_PATH, drawProgress);\n\n  const scale = (0.85 + 0.15 * scaleIn) * pop;\n\n  return (\n    <svg\n      className={className}\n      width={size}\n      height={size}\n      viewBox=\"0 0 24 24\"\n      fill=\"none\"\n      stroke={color}\n      strokeWidth={strokeWidth}\n      strokeLinecap=\"round\"\n      strokeLinejoin=\"round\"\n      style={{\n        overflow: \"visible\",\n        transformOrigin: \"center\",\n        transform: `scale(${scale})`,\n      }}\n    >\n      <g transform={`translate(${pull} ${-pull})`}>\n        <path\n          d={TOP_PATH}\n          strokeDasharray={top.strokeDasharray}\n          strokeDashoffset={top.strokeDashoffset}\n        />\n      </g>\n      <g transform={`translate(${-pull} ${pull})`}>\n        <path\n          d={BOTTOM_PATH}\n          strokeDasharray={bottom.strokeDasharray}\n          strokeDashoffset={bottom.strokeDashoffset}\n        />\n      </g>\n    </svg>\n  );\n}\n\nexport function LinkIconStatic({\n  size = 48,\n  color = \"currentColor\",\n  strokeWidth = 2,\n  className,\n}: {\n  size?: number;\n  color?: string;\n  strokeWidth?: number;\n  className?: string;\n}) {\n  return (\n    <svg\n      className={className}\n      width={size}\n      height={size}\n      viewBox=\"0 0 24 24\"\n      fill=\"none\"\n      stroke={color}\n      strokeWidth={strokeWidth}\n      strokeLinecap=\"round\"\n      strokeLinejoin=\"round\"\n    >\n      <path d={TOP_PATH} />\n      <path d={BOTTOM_PATH} />\n    </svg>\n  );\n}\n",
+      "type": "registry:component",
+      "target": "components/remocn/icon-link.tsx"
+    }
+  ],
+  "type": "registry:component"
+}

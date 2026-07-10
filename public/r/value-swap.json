@@ -1,0 +1,16 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "value-swap",
+  "title": "Value Swap",
+  "description": "Swaps a value in place with a vertical slide — the old value exits up as the new one enters from below while an invisible sizer keeps the width stable.",
+  "dependencies": ["remotion"],
+  "files": [
+    {
+      "path": "registry/remocn/value-swap/index.tsx",
+      "content": "\"use client\";\n\nimport type React from \"react\";\nimport { Easing, interpolate, useCurrentFrame } from \"remotion\";\n\nconst clampOpts = {\n  extrapolateLeft: \"clamp\" as const,\n  extrapolateRight: \"clamp\" as const,\n};\n\nexport interface ValueSwapProps {\n  values: string[];\n  at: number | number[];\n  duration?: number;\n  distance?: number;\n  direction?: \"up\" | \"down\";\n  className?: string;\n  style?: React.CSSProperties;\n}\n\nexport function ValueSwap({\n  values,\n  at,\n  duration = 10,\n  distance = 12,\n  direction = \"up\",\n  className,\n  style,\n}: ValueSwapProps) {\n  const frame = useCurrentFrame();\n  const ats = Array.isArray(at) ? at : [at];\n  const d = direction === \"down\" ? -distance : distance;\n  const count = Math.min(values.length, ats.length + 1);\n  const rendered = values.slice(0, count);\n  const sizer = rendered.reduce((a, b) => (b.length > a.length ? b : a), \"\");\n  const swapP = (start: number) =>\n    interpolate(frame, [start, start + duration], [0, 1], {\n      ...clampOpts,\n      easing: Easing.inOut(Easing.cubic),\n    });\n  return (\n    <span\n      className={className}\n      style={{\n        position: \"relative\",\n        display: \"inline-block\",\n        ...style,\n      }}\n    >\n      <span style={{ visibility: \"hidden\" }}>{sizer}</span>\n      {rendered.map((value, i) => {\n        const pIn = i > 0 ? swapP(ats[i - 1]) : 1;\n        const pOut = i < count - 1 ? swapP(ats[i]) : 0;\n        const opacity = pIn * (1 - pOut);\n        if (opacity <= 0.001) return null;\n        const y = (1 - pIn) * d + pOut * -d;\n        return (\n          <span\n            key={`${i}-${value}`}\n            style={{\n              position: \"absolute\",\n              left: 0,\n              top: 0,\n              whiteSpace: \"nowrap\",\n              opacity,\n              transform: `translateY(${y}px)`,\n            }}\n          >\n            {value}\n          </span>\n        );\n      })}\n    </span>\n  );\n}\n",
+      "type": "registry:component",
+      "target": "components/remocn/value-swap.tsx"
+    }
+  ],
+  "type": "registry:component"
+}

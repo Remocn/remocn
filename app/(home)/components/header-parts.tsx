@@ -42,9 +42,6 @@ export function HeaderActions() {
   return (
     <div className="flex items-center gap-2">
       <div className="hidden sm:block">
-        <StarsButton />
-      </div>
-      <div className="hidden sm:block">
         <GithubButton />
       </div>
       <ThemeToggle />

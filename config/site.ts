@@ -43,6 +43,7 @@ export type NavLink = {
 export const NAV_LINKS: NavLink[] = [
   { href: "/docs/typography", label: "Components" },
   { href: "/docs/shaders/getting-started/introduction", label: "Shaders" },
+  { href: "/docs/icons/gallery", label: "Icons" },
   { href: "/sponsors", label: "Sponsors" },
   { href: "/docs/getting-started/introduction", label: "Docs" },
 ];
@@ -57,6 +58,7 @@ export const NEW_BADGE_PATHS = new Set<string>([
   "/docs/layout/drift",
   "/docs/typography/rolodex-flip",
   "/docs/typography/value-swap",
+  "/docs/icons/gallery",
 ]);
 
 export const FOOTER_NAV: NavLink[] = [

@@ -21,7 +21,7 @@
       "name": "per-character-rise",
       "type": "registry:component",
       "title": "Per Character Rise",
-      "description": "Letters slide up from below with no blur — crisp, deliberate, kinetic.",
+      "description": "Letters slide up from below with no blur \u2014 crisp, deliberate, kinetic.",
       "dependencies": ["remotion"],
       "files": [
         {
@@ -898,7 +898,7 @@
       "name": "value-swap",
       "type": "registry:component",
       "title": "Value Swap",
-      "description": "Swaps a value in place with a vertical slide — the old value exits up as the new one enters from below while an invisible sizer keeps the width stable.",
+      "description": "Swaps a value in place with a vertical slide \u2014 the old value exits up as the new one enters from below while an invisible sizer keeps the width stable.",
       "dependencies": ["remotion"],
       "files": [
         {
@@ -1168,7 +1168,7 @@
       "name": "x-follow-card",
       "type": "registry:component",
       "title": "X Follow Card",
-      "description": "Animated X profile follow card — spring bounce-in, staggered blur-in, a synthetic cursor that clicks Follow and flips it to Following. Light/dark, horizontal or vertical.",
+      "description": "Animated X profile follow card \u2014 spring bounce-in, staggered blur-in, a synthetic cursor that clicks Follow and flips it to Following. Light/dark, horizontal or vertical.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
       "registryDependencies": ["@remocn/cursor"],
       "files": [
@@ -1183,7 +1183,7 @@
       "name": "x-followers-overview",
       "type": "registry:component",
       "title": "X Followers Overview",
-      "description": "X follow notifications cycle through as 3D flipping text — '<name> followed you · 7h' — then the total follower count pops in with a confetti burst. Hardcoded sample list (X API ready). Light/dark, horizontal or vertical.",
+      "description": "X follow notifications cycle through as 3D flipping text \u2014 '<name> followed you \u00b7 7h' \u2014 then the total follower count pops in with a confetti burst. Hardcoded sample list (X API ready). Light/dark, horizontal or vertical.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
       "registryDependencies": ["@remocn/confetti"],
       "files": [
@@ -1198,7 +1198,7 @@
       "name": "claude-chat",
       "type": "registry:component",
       "title": "Claude Chat",
-      "description": "Animated Claude chat input — types a prompt character-by-character and the waveform button morphs into a terracotta send button the moment text appears. Warm light/dark themes.",
+      "description": "Animated Claude chat input \u2014 types a prompt character-by-character and the waveform button morphs into a terracotta send button the moment text appears. Warm light/dark themes.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
       "registryDependencies": ["@remocn/caret", "@remocn/remocn-ui"],
       "files": [
@@ -1213,7 +1213,7 @@
       "name": "chat-gpt",
       "type": "registry:component",
       "title": "ChatGPT",
-      "description": "Animated ChatGPT composer — types a prompt into the pill input, the blue voice button morphs into a send button, and the suggestion chips fade out. Light/dark themes.",
+      "description": "Animated ChatGPT composer \u2014 types a prompt into the pill input, the blue voice button morphs into a send button, and the suggestion chips fade out. Light/dark themes.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
       "registryDependencies": ["@remocn/caret", "@remocn/remocn-ui"],
       "files": [
@@ -1228,7 +1228,7 @@
       "name": "v0",
       "type": "registry:component",
       "title": "v0",
-      "description": "Animated Vercel v0 composer — types a prompt into the dark textarea and the mic button morphs into a send button. Dark/light themes.",
+      "description": "Animated Vercel v0 composer \u2014 types a prompt into the dark textarea and the mic button morphs into a send button. Dark/light themes.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
       "registryDependencies": ["@remocn/caret", "@remocn/remocn-ui"],
       "files": [
@@ -1243,7 +1243,7 @@
       "name": "claude-code",
       "type": "registry:component",
       "title": "Claude Code",
-      "description": "Animated Claude Code CLI welcome screen — terminal window with a dashed welcome box, recent activity and what's new panels, and a prompt line that types a command with a block cursor. Dark/light themes.",
+      "description": "Animated Claude Code CLI welcome screen \u2014 terminal window with a dashed welcome box, recent activity and what's new panels, and a prompt line that types a command with a block cursor. Dark/light themes.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
       "registryDependencies": ["@remocn/caret", "@remocn/remocn-ui"],
       "files": [
@@ -1258,7 +1258,7 @@
       "name": "opencode",
       "type": "registry:component",
       "title": "OpenCode",
-      "description": "Animated OpenCode TUI welcome screen — two-tone wordmark, an input box with a blue accent bar that types a query, a model status line, and command hints. Dark/light themes.",
+      "description": "Animated OpenCode TUI welcome screen \u2014 two-tone wordmark, an input box with a blue accent bar that types a query, a model status line, and command hints. Dark/light themes.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
       "registryDependencies": ["@remocn/caret", "@remocn/remocn-ui"],
       "files": [
@@ -1273,7 +1273,7 @@
       "name": "confetti",
       "type": "registry:component",
       "title": "Confetti",
-      "description": "Deterministic confetti burst for Remotion — seeded particles with gravity, spin, and flutter so every render is identical. Fire it on any frame as a celebratory overlay.",
+      "description": "Deterministic confetti burst for Remotion \u2014 seeded particles with gravity, spin, and flutter so every render is identical. Fire it on any frame as a celebratory overlay.",
       "dependencies": ["remotion"],
       "files": [
         {
