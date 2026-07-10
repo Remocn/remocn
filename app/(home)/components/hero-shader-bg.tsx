@@ -16,7 +16,7 @@ export function HeroNeuroBg() {
   if (!mounted) return null;
   const colors = NEURO_COLORS[resolvedTheme === "dark" ? "dark" : "light"];
   return (
-    <div className="pointer-events-none absolute inset-x-0 -top-16 h-screen opacity-90 [mask-image:linear-gradient(to_bottom,black_55%,transparent_98%)]">
+    <div className="pointer-events-none absolute inset-x-0 -top-22 h-screen opacity-90 [mask-composite:intersect] [mask-image:linear-gradient(to_bottom,black_55%,transparent_98%),radial-gradient(ellipse_60%_45%_at_50%_32%,transparent_38%,black_82%)]">
       <NeuroNoise
         className="h-full w-full"
         colorFront={colors.front}
