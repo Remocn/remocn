@@ -7,9 +7,7 @@
       "name": "soft-blur-in",
       "title": "Soft Blur In",
       "description": "Per-character fade-in with a gentle blur and upward motion. Apple's signature hero-title reveal.",
-      "dependencies": [
-        "remotion"
-      ],
+      "dependencies": ["remotion"],
       "files": [
         {
           "path": "registry/remocn/soft-blur-in/index.tsx",
@@ -22,10 +20,8 @@
     {
       "name": "per-character-rise",
       "title": "Per Character Rise",
-      "description": "Letters slide up from below with no blur \u2014 crisp, deliberate, kinetic.",
-      "dependencies": [
-        "remotion"
-      ],
+      "description": "Letters slide up from below with no blur — crisp, deliberate, kinetic.",
+      "dependencies": ["remotion"],
       "files": [
         {
           "path": "registry/remocn/per-character-rise/index.tsx",
@@ -39,9 +35,7 @@
       "name": "bottom-up-letters",
       "title": "Bottom-Up Letters",
       "description": "Letters rise from below in a pronounced staircase, one symbol at a time, with zero blur.",
-      "dependencies": [
-        "remotion"
-      ],
+      "dependencies": ["remotion"],
       "files": [
         {
           "path": "registry/remocn/bottom-up-letters/index.tsx",
@@ -55,9 +49,7 @@
       "name": "top-down-letters",
       "title": "Top-Down Letters",
       "description": "Letters descend from above in a pronounced staircase, one symbol at a time, with zero blur.",
-      "dependencies": [
-        "remotion"
-      ],
+      "dependencies": ["remotion"],
       "files": [
         {
           "path": "registry/remocn/top-down-letters/index.tsx",
@@ -71,9 +63,7 @@
       "name": "spring-scale-in",
       "title": "Spring Scale In",
       "description": "Words pop in with a soft overshoot scale, like a physical spring settling into place.",
-      "dependencies": [
-        "remotion"
-      ],
+      "dependencies": ["remotion"],
       "files": [
         {
           "path": "registry/remocn/spring-scale-in/index.tsx",
@@ -87,9 +77,7 @@
       "name": "micro-scale-fade",
       "title": "Micro Scale Fade",
       "description": "A calm, tiny scale pop used as subtle premium polish for labels and headings.",
-      "dependencies": [
-        "remotion"
-      ],
+      "dependencies": ["remotion"],
       "files": [
         {
           "path": "registry/remocn/micro-scale-fade/index.tsx",
@@ -103,9 +91,7 @@
       "name": "scale-down-fade",
       "title": "Scale Down Fade",
       "description": "Subtle premium settle-in with a restrained scale-down fade on exit.",
-      "dependencies": [
-        "remotion"
-      ],
+      "dependencies": ["remotion"],
       "files": [
         {
           "path": "registry/remocn/scale-down-fade/index.tsx",
@@ -119,9 +105,7 @@
       "name": "blur-out-up",
       "title": "Blur Out Up",
       "description": "Words arrive clean and depart upward with increasing blur for airy exits.",
-      "dependencies": [
-        "remotion"
-      ],
+      "dependencies": ["remotion"],
       "files": [
         {
           "path": "registry/remocn/blur-out-up/index.tsx",
@@ -135,9 +119,7 @@
       "name": "focus-blur-resolve",
       "title": "Focus Blur Resolve",
       "description": "A premium focus pull from heavy blur to crisp text, then a soft blur-out exit.",
-      "dependencies": [
-        "remotion"
-      ],
+      "dependencies": ["remotion"],
       "files": [
         {
           "path": "registry/remocn/focus-blur-resolve/index.tsx",
@@ -151,9 +133,7 @@
       "name": "line-by-line-slide",
       "title": "Line-by-Line Slide",
       "description": "Each line enters from the left with a staggered slide and exits to the right for a flowing paragraph reveal.",
-      "dependencies": [
-        "remotion"
-      ],
+      "dependencies": ["remotion"],
       "files": [
         {
           "path": "registry/remocn/line-by-line-slide/index.tsx",
@@ -167,9 +147,7 @@
       "name": "per-word-crossfade",
       "title": "Per-Word Crossfade",
       "description": "Words gently fade into place one after another, with a short vertical drift for a calm keynote rhythm.",
-      "dependencies": [
-        "remotion"
-      ],
+      "dependencies": ["remotion"],
       "files": [
         {
           "path": "registry/remocn/per-word-crossfade/index.tsx",
@@ -183,9 +161,7 @@
       "name": "fade-through",
       "title": "Fade Through",
       "description": "A Material-style content transition: old fades out, new fades in with a soft delay.",
-      "dependencies": [
-        "remotion"
-      ],
+      "dependencies": ["remotion"],
       "files": [
         {
           "path": "registry/remocn/fade-through/index.tsx",
@@ -199,9 +175,7 @@
       "name": "shared-axis-y",
       "title": "Shared Axis Y",
       "description": "Per-word hard-cut transition with staircase timing for sharp editorial swaps.",
-      "dependencies": [
-        "remotion"
-      ],
+      "dependencies": ["remotion"],
       "files": [
         {
           "path": "registry/remocn/shared-axis-y/index.tsx",
@@ -215,9 +189,7 @@
       "name": "shared-axis-z",
       "title": "Shared Axis Z",
       "description": "Scale-based shared-axis transition for focus shifts and context depth.",
-      "dependencies": [
-        "remotion"
-      ],
+      "dependencies": ["remotion"],
       "files": [
         {
           "path": "registry/remocn/shared-axis-z/index.tsx",
@@ -231,9 +203,7 @@
       "name": "short-slide-right",
       "title": "Short Slide Right",
       "description": "The whole phrase glides in from the left as one compact move while words reveal in sequence through opacity.",
-      "dependencies": [
-        "remotion"
-      ],
+      "dependencies": ["remotion"],
       "files": [
         {
           "path": "registry/remocn/short-slide-right/index.tsx",
@@ -247,9 +217,7 @@
       "name": "kinetic-center-build",
       "title": "Kinetic Center Build",
       "description": "A word appears in the center; each new word enters from the right and pushes the line until the full phrase locks centered.",
-      "dependencies": [
-        "remotion"
-      ],
+      "dependencies": ["remotion"],
       "files": [
         {
           "path": "registry/remocn/kinetic-center-build/index.tsx",
@@ -263,9 +231,7 @@
       "name": "short-slide-down",
       "title": "Short Slide Down",
       "description": "Each new word drops in from above into its own line and pushes the stack downward until a centered three-line composition locks in place.",
-      "dependencies": [
-        "remotion"
-      ],
+      "dependencies": ["remotion"],
       "files": [
         {
           "path": "registry/remocn/short-slide-down/index.tsx",
@@ -279,13 +245,8 @@
       "name": "typewriter",
       "title": "Typewriter",
       "description": "Character-by-character text reveal with a deterministic blinking cursor.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/remocn-ui",
-        "@remocn/caret"
-      ],
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/remocn-ui", "@remocn/caret"],
       "files": [
         {
           "path": "registry/remocn/typewriter/index.tsx",
@@ -299,9 +260,7 @@
       "name": "inline-highlight",
       "title": "Inline Highlight",
       "description": "Animates one word inside a sentence from a base color to a brand color.",
-      "dependencies": [
-        "remotion"
-      ],
+      "dependencies": ["remotion"],
       "files": [
         {
           "path": "registry/remocn/inline-highlight/index.tsx",
@@ -315,9 +274,7 @@
       "name": "strikethrough-replace",
       "title": "Strikethrough Replace",
       "description": "Draws a strike line across old text then reveals new text in its place.",
-      "dependencies": [
-        "remotion"
-      ],
+      "dependencies": ["remotion"],
       "files": [
         {
           "path": "registry/remocn/strikethrough-replace/index.tsx",
@@ -331,9 +288,7 @@
       "name": "staggered-fade-up",
       "title": "Staggered Fade Up",
       "description": "Words fade in and slide up one after another with a configurable delay.",
-      "dependencies": [
-        "remotion"
-      ],
+      "dependencies": ["remotion"],
       "files": [
         {
           "path": "registry/remocn/staggered-fade-up/index.tsx",
@@ -347,9 +302,7 @@
       "name": "mask-reveal-up",
       "title": "Mask Reveal Up",
       "description": "Lines reveal upward with a soft masked feel and compact stagger.",
-      "dependencies": [
-        "remotion"
-      ],
+      "dependencies": ["remotion"],
       "files": [
         {
           "path": "registry/remocn/mask-reveal-up/index.tsx",
@@ -363,9 +316,7 @@
       "name": "tracking-in",
       "title": "Tracking In",
       "description": "Letter-spacing collapses and blur clears with a springy motion.",
-      "dependencies": [
-        "remotion"
-      ],
+      "dependencies": ["remotion"],
       "files": [
         {
           "path": "registry/remocn/tracking-in/index.tsx",
@@ -379,9 +330,7 @@
       "name": "shimmer-sweep",
       "title": "Shimmer Sweep",
       "description": "Light shine sweeps across muted text via background-clip:text.",
-      "dependencies": [
-        "remotion"
-      ],
+      "dependencies": ["remotion"],
       "files": [
         {
           "path": "registry/remocn/shimmer-sweep/index.tsx",
@@ -395,9 +344,7 @@
       "name": "marker-highlight",
       "title": "Marker Highlight",
       "description": "Colored marker block draws behind a phrase as the text color shifts.",
-      "dependencies": [
-        "remotion"
-      ],
+      "dependencies": ["remotion"],
       "files": [
         {
           "path": "registry/remocn/marker-highlight/index.tsx",
@@ -411,9 +358,7 @@
       "name": "slot-machine-roll",
       "title": "Slot Machine Roll",
       "description": "Vertical reel scrolls characters from one value to another.",
-      "dependencies": [
-        "remotion"
-      ],
+      "dependencies": ["remotion"],
       "files": [
         {
           "path": "registry/remocn/slot-machine-roll/index.tsx",
@@ -427,9 +372,7 @@
       "name": "matrix-decode",
       "title": "Matrix Decode",
       "description": "Random scramble resolves left-to-right into the target text.",
-      "dependencies": [
-        "remotion"
-      ],
+      "dependencies": ["remotion"],
       "files": [
         {
           "path": "registry/remocn/matrix-decode/index.tsx",
@@ -443,9 +386,7 @@
       "name": "rgb-glitch-text",
       "title": "RGB Glitch Text",
       "description": "Three RGB-offset text copies jitter for a brief glitch window.",
-      "dependencies": [
-        "remotion"
-      ],
+      "dependencies": ["remotion"],
       "files": [
         {
           "path": "registry/remocn/rgb-glitch-text/index.tsx",
@@ -459,9 +400,7 @@
       "name": "infinite-marquee",
       "title": "Infinite Marquee",
       "description": "Seamlessly looping horizontal text strip with optional stroke style.",
-      "dependencies": [
-        "remotion"
-      ],
+      "dependencies": ["remotion"],
       "files": [
         {
           "path": "registry/remocn/infinite-marquee/index.tsx",
@@ -475,9 +414,7 @@
       "name": "shader-mesh-gradient",
       "title": "Shader Mesh Gradient",
       "description": "WebGL mesh gradient backdrop driven per-frame for deterministic Remotion renders.",
-      "dependencies": [
-        "@paper-design/shaders-react"
-      ],
+      "dependencies": ["@paper-design/shaders-react"],
       "files": [
         {
           "path": "registry/remocn/shader-mesh-gradient/index.tsx",
@@ -491,9 +428,7 @@
       "name": "shader-grain-gradient",
       "title": "Shader Grain Gradient",
       "description": "Grainy multi-stop gradient that drifts slowly with film-grain texture over the blend.",
-      "dependencies": [
-        "@paper-design/shaders-react"
-      ],
+      "dependencies": ["@paper-design/shaders-react"],
       "files": [
         {
           "path": "registry/remocn/shader-grain-gradient/index.tsx",
@@ -507,9 +442,7 @@
       "name": "shader-warp",
       "title": "Shader Warp",
       "description": "Domain-warped color field that folds and stretches like liquid.",
-      "dependencies": [
-        "@paper-design/shaders-react"
-      ],
+      "dependencies": ["@paper-design/shaders-react"],
       "files": [
         {
           "path": "registry/remocn/shader-warp/index.tsx",
@@ -523,9 +456,7 @@
       "name": "shader-swirl",
       "title": "Shader Swirl",
       "description": "Concentric bands swirling around a center point.",
-      "dependencies": [
-        "@paper-design/shaders-react"
-      ],
+      "dependencies": ["@paper-design/shaders-react"],
       "files": [
         {
           "path": "registry/remocn/shader-swirl/index.tsx",
@@ -539,9 +470,7 @@
       "name": "shader-water",
       "title": "Shader Water",
       "description": "Caustic water-surface ripples with subtle refraction.",
-      "dependencies": [
-        "@paper-design/shaders-react"
-      ],
+      "dependencies": ["@paper-design/shaders-react"],
       "files": [
         {
           "path": "registry/remocn/shader-water/index.tsx",
@@ -555,9 +484,7 @@
       "name": "shader-spiral",
       "title": "Shader Spiral",
       "description": "Rotating spiral arms radiating from the center.",
-      "dependencies": [
-        "@paper-design/shaders-react"
-      ],
+      "dependencies": ["@paper-design/shaders-react"],
       "files": [
         {
           "path": "registry/remocn/shader-spiral/index.tsx",
@@ -571,9 +498,7 @@
       "name": "shader-liquid-metal",
       "title": "Shader Liquid Metal",
       "description": "Molten metallic surface with flowing specular highlights.",
-      "dependencies": [
-        "@paper-design/shaders-react"
-      ],
+      "dependencies": ["@paper-design/shaders-react"],
       "files": [
         {
           "path": "registry/remocn/shader-liquid-metal/index.tsx",
@@ -587,9 +512,7 @@
       "name": "shader-color-panels",
       "title": "Shader Color Panels",
       "description": "Overlapping translucent color panels sliding past each other.",
-      "dependencies": [
-        "@paper-design/shaders-react"
-      ],
+      "dependencies": ["@paper-design/shaders-react"],
       "files": [
         {
           "path": "registry/remocn/shader-color-panels/index.tsx",
@@ -603,9 +526,7 @@
       "name": "shader-neuro-noise",
       "title": "Shader Neuro Noise",
       "description": "Organic neural-web noise field that slowly morphs.",
-      "dependencies": [
-        "@paper-design/shaders-react"
-      ],
+      "dependencies": ["@paper-design/shaders-react"],
       "files": [
         {
           "path": "registry/remocn/shader-neuro-noise/index.tsx",
@@ -619,9 +540,7 @@
       "name": "shader-perlin-noise",
       "title": "Shader Perlin Noise",
       "description": "Classic Perlin noise clouds drifting across the frame.",
-      "dependencies": [
-        "@paper-design/shaders-react"
-      ],
+      "dependencies": ["@paper-design/shaders-react"],
       "files": [
         {
           "path": "registry/remocn/shader-perlin-noise/index.tsx",
@@ -635,9 +554,7 @@
       "name": "shader-simplex-noise",
       "title": "Shader Simplex Noise",
       "description": "Simplex noise flow field, smoother than Perlin.",
-      "dependencies": [
-        "@paper-design/shaders-react"
-      ],
+      "dependencies": ["@paper-design/shaders-react"],
       "files": [
         {
           "path": "registry/remocn/shader-simplex-noise/index.tsx",
@@ -651,9 +568,7 @@
       "name": "shader-voronoi",
       "title": "Shader Voronoi",
       "description": "Animated Voronoi cells shifting and re-tessellating.",
-      "dependencies": [
-        "@paper-design/shaders-react"
-      ],
+      "dependencies": ["@paper-design/shaders-react"],
       "files": [
         {
           "path": "registry/remocn/shader-voronoi/index.tsx",
@@ -667,9 +582,7 @@
       "name": "shader-dot-orbit",
       "title": "Shader Dot Orbit",
       "description": "Dots orbiting on concentric paths across the frame.",
-      "dependencies": [
-        "@paper-design/shaders-react"
-      ],
+      "dependencies": ["@paper-design/shaders-react"],
       "files": [
         {
           "path": "registry/remocn/shader-dot-orbit/index.tsx",
@@ -683,9 +596,7 @@
       "name": "shader-dithering",
       "title": "Shader Dithering",
       "description": "Ordered-dither shading over an animated gradient field.",
-      "dependencies": [
-        "@paper-design/shaders-react"
-      ],
+      "dependencies": ["@paper-design/shaders-react"],
       "files": [
         {
           "path": "registry/remocn/shader-dithering/index.tsx",
@@ -699,9 +610,7 @@
       "name": "shader-god-rays",
       "title": "Shader God Rays",
       "description": "Volumetric light rays radiating from an off-screen source.",
-      "dependencies": [
-        "@paper-design/shaders-react"
-      ],
+      "dependencies": ["@paper-design/shaders-react"],
       "files": [
         {
           "path": "registry/remocn/shader-god-rays/index.tsx",
@@ -715,9 +624,7 @@
       "name": "shader-smoke-ring",
       "title": "Shader Smoke Ring",
       "description": "Soft smoke ring curling and dissipating in place.",
-      "dependencies": [
-        "@paper-design/shaders-react"
-      ],
+      "dependencies": ["@paper-design/shaders-react"],
       "files": [
         {
           "path": "registry/remocn/shader-smoke-ring/index.tsx",
@@ -731,9 +638,7 @@
       "name": "shader-metaballs",
       "title": "Shader Metaballs",
       "description": "Organic blobs merging and splitting like lava.",
-      "dependencies": [
-        "@paper-design/shaders-react"
-      ],
+      "dependencies": ["@paper-design/shaders-react"],
       "files": [
         {
           "path": "registry/remocn/shader-metaballs/index.tsx",
@@ -747,9 +652,7 @@
       "name": "shader-pulsing-border",
       "title": "Shader Pulsing Border",
       "description": "Glowing border frame that pulses around the edges.",
-      "dependencies": [
-        "@paper-design/shaders-react"
-      ],
+      "dependencies": ["@paper-design/shaders-react"],
       "files": [
         {
           "path": "registry/remocn/shader-pulsing-border/index.tsx",
@@ -763,9 +666,7 @@
       "name": "simulated-cursor",
       "title": "Simulated Cursor",
       "description": "Animated mouse cursor moving between waypoints with click ripple feedback.",
-      "dependencies": [
-        "remotion"
-      ],
+      "dependencies": ["remotion"],
       "files": [
         {
           "path": "registry/remocn/simulated-cursor/index.tsx",
@@ -779,13 +680,8 @@
       "name": "swirl-dissolve",
       "title": "Swirl Dissolve",
       "description": "A swirl shader transition that unwinds open and winds shut to reveal the next scene.",
-      "dependencies": [
-        "remotion",
-        "@remotion/transitions"
-      ],
-      "registryDependencies": [
-        "@remocn/shader-swirl"
-      ],
+      "dependencies": ["remotion", "@remotion/transitions"],
+      "registryDependencies": ["@remocn/shader-swirl"],
       "files": [
         {
           "path": "registry/remocn/swirl-dissolve/index.tsx",
@@ -799,13 +695,8 @@
       "name": "dither-dissolve",
       "title": "Dither Dissolve",
       "description": "A dithering shader transition that dissolves one scene into the next.",
-      "dependencies": [
-        "remotion",
-        "@remotion/transitions"
-      ],
-      "registryDependencies": [
-        "@remocn/shader-dithering"
-      ],
+      "dependencies": ["remotion", "@remotion/transitions"],
+      "registryDependencies": ["@remocn/shader-dithering"],
       "files": [
         {
           "path": "registry/remocn/dither-dissolve/index.tsx",
@@ -819,13 +710,8 @@
       "name": "perlin-dissolve",
       "title": "Perlin Dissolve",
       "description": "A perlin-noise shader transition that sweeps its noise threshold to dissolve one scene into the next.",
-      "dependencies": [
-        "remotion",
-        "@remotion/transitions"
-      ],
-      "registryDependencies": [
-        "@remocn/shader-perlin-noise"
-      ],
+      "dependencies": ["remotion", "@remotion/transitions"],
+      "registryDependencies": ["@remocn/shader-perlin-noise"],
       "files": [
         {
           "path": "registry/remocn/perlin-dissolve/index.tsx",
@@ -839,13 +725,8 @@
       "name": "smoke-dissolve",
       "title": "Smoke Dissolve",
       "description": "A smoke-ring shader transition that expands the ring outward to reveal the next scene.",
-      "dependencies": [
-        "remotion",
-        "@remotion/transitions"
-      ],
-      "registryDependencies": [
-        "@remocn/shader-smoke-ring"
-      ],
+      "dependencies": ["remotion", "@remotion/transitions"],
+      "registryDependencies": ["@remocn/shader-smoke-ring"],
       "files": [
         {
           "path": "registry/remocn/smoke-dissolve/index.tsx",
@@ -859,13 +740,8 @@
       "name": "wave-wipe",
       "title": "Wave Wipe",
       "description": "A grain-gradient wave that sweeps up across the frame, covering the outgoing scene and revealing the next one from below.",
-      "dependencies": [
-        "remotion",
-        "@remotion/transitions"
-      ],
-      "registryDependencies": [
-        "@remocn/shader-grain-gradient"
-      ],
+      "dependencies": ["remotion", "@remotion/transitions"],
+      "registryDependencies": ["@remocn/shader-grain-gradient"],
       "files": [
         {
           "path": "registry/remocn/wave-wipe/index.tsx",
@@ -879,13 +755,8 @@
       "name": "ripple-zoom",
       "title": "Ripple Zoom",
       "description": "A grain-gradient ripple transition that flies the camera through the center of the rings while the next scene approaches from the depth.",
-      "dependencies": [
-        "remotion",
-        "@remotion/transitions"
-      ],
-      "registryDependencies": [
-        "@remocn/shader-grain-gradient"
-      ],
+      "dependencies": ["remotion", "@remotion/transitions"],
+      "registryDependencies": ["@remocn/shader-grain-gradient"],
       "files": [
         {
           "path": "registry/remocn/ripple-zoom/index.tsx",
@@ -899,13 +770,8 @@
       "name": "grain-dissolve",
       "title": "Grain Dissolve",
       "description": "A grain-gradient shader transition that disintegrates the outgoing scene into soft grainy shapes and condenses the next scene out of the noise.",
-      "dependencies": [
-        "remotion",
-        "@remotion/transitions"
-      ],
-      "registryDependencies": [
-        "@remocn/shader-grain-gradient"
-      ],
+      "dependencies": ["remotion", "@remotion/transitions"],
+      "registryDependencies": ["@remocn/shader-grain-gradient"],
       "files": [
         {
           "path": "registry/remocn/grain-dissolve/index.tsx",
@@ -919,13 +785,8 @@
       "name": "warp-dissolve",
       "title": "Warp Dissolve",
       "description": "A domain-warp shader transition that melts the outgoing scene into a folding color field and straightens back out into the next.",
-      "dependencies": [
-        "remotion",
-        "@remotion/transitions"
-      ],
-      "registryDependencies": [
-        "@remocn/shader-warp"
-      ],
+      "dependencies": ["remotion", "@remotion/transitions"],
+      "registryDependencies": ["@remocn/shader-warp"],
       "files": [
         {
           "path": "registry/remocn/warp-dissolve/index.tsx",
@@ -939,10 +800,7 @@
       "name": "whip-pan",
       "title": "Whip Pan",
       "description": "A whip-pan transition that flies both scenes through the frame in one move with velocity-based motion blur.",
-      "dependencies": [
-        "remotion",
-        "@remotion/transitions"
-      ],
+      "dependencies": ["remotion", "@remotion/transitions"],
       "files": [
         {
           "path": "registry/remocn/whip-pan/index.tsx",
@@ -956,10 +814,7 @@
       "name": "push-through",
       "title": "Push Through",
       "description": "A dolly transition that blows the outgoing scene past the camera while the next one approaches from the depth.",
-      "dependencies": [
-        "remotion",
-        "@remotion/transitions"
-      ],
+      "dependencies": ["remotion", "@remotion/transitions"],
       "files": [
         {
           "path": "registry/remocn/push-through/index.tsx",
@@ -973,10 +828,7 @@
       "name": "focus-pull",
       "title": "Focus Pull",
       "description": "A rack-focus transition that defocuses the outgoing scene into a bright blur and resolves the next one into focus.",
-      "dependencies": [
-        "remotion",
-        "@remotion/transitions"
-      ],
+      "dependencies": ["remotion", "@remotion/transitions"],
       "files": [
         {
           "path": "registry/remocn/focus-pull/index.tsx",
@@ -990,10 +842,7 @@
       "name": "zoom-blur",
       "title": "Zoom Blur",
       "description": "A depth punch-in transition that pushes the outgoing scene through the viewer while the incoming one resolves out of blur.",
-      "dependencies": [
-        "remotion",
-        "@remotion/transitions"
-      ],
+      "dependencies": ["remotion", "@remotion/transitions"],
       "files": [
         {
           "path": "registry/remocn/zoom-blur/index.tsx",
@@ -1007,9 +856,7 @@
       "name": "rolodex-flip",
       "title": "Rolodex Flip",
       "description": "Cycles a word through a list of values with a 3D rolodex card flip while an invisible sizer keeps the line width and baseline stable.",
-      "dependencies": [
-        "remotion"
-      ],
+      "dependencies": ["remotion"],
       "files": [
         {
           "path": "registry/remocn/rolodex-flip/index.tsx",
@@ -1022,10 +869,8 @@
     {
       "name": "value-swap",
       "title": "Value Swap",
-      "description": "Swaps a value in place with a vertical slide \u2014 the old value exits up as the new one enters from below while an invisible sizer keeps the width stable.",
-      "dependencies": [
-        "remotion"
-      ],
+      "description": "Swaps a value in place with a vertical slide — the old value exits up as the new one enters from below while an invisible sizer keeps the width stable.",
+      "dependencies": ["remotion"],
       "files": [
         {
           "path": "registry/remocn/value-swap/index.tsx",
@@ -1039,9 +884,7 @@
       "name": "chat-to-preview-layout",
       "title": "Chat to Preview Layout",
       "description": "Two-column layout where chat shrinks and preview expands.",
-      "dependencies": [
-        "remotion"
-      ],
+      "dependencies": ["remotion"],
       "files": [
         {
           "path": "registry/remocn/chat-to-preview-layout/index.tsx",
@@ -1055,9 +898,7 @@
       "name": "animated-line-chart",
       "title": "Animated Line Chart",
       "description": "Line chart whose SVG path draws on from left to right with a leading dot.",
-      "dependencies": [
-        "remotion"
-      ],
+      "dependencies": ["remotion"],
       "files": [
         {
           "path": "registry/remocn/animated-line-chart/index.tsx",
@@ -1071,9 +912,7 @@
       "name": "animated-bar-chart",
       "title": "Animated Bar Chart",
       "description": "Bars spring up from the baseline in a staggered cascade.",
-      "dependencies": [
-        "remotion"
-      ],
+      "dependencies": ["remotion"],
       "files": [
         {
           "path": "registry/remocn/animated-bar-chart/index.tsx",
@@ -1087,9 +926,7 @@
       "name": "terminal-simulator",
       "title": "Terminal Simulator",
       "description": "Terminal window that types out commands and rolls old lines off the top.",
-      "dependencies": [
-        "remotion"
-      ],
+      "dependencies": ["remotion"],
       "files": [
         {
           "path": "registry/remocn/terminal-simulator/index.tsx",
@@ -1103,12 +940,8 @@
       "name": "terminal-cursor-zoom",
       "title": "Terminal Cursor Zoom",
       "description": "Camera locked to the typing cursor, dollying across a terminal as a command types at high zoom.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/terminal-simulator"
-      ],
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/terminal-simulator"],
       "files": [
         {
           "path": "registry/remocn/terminal-cursor-zoom/index.tsx",
@@ -1122,9 +955,7 @@
       "name": "progress-steps",
       "title": "Progress Steps",
       "description": "Multi-step pipeline with sequentially activating nodes and filling lines.",
-      "dependencies": [
-        "remotion"
-      ],
+      "dependencies": ["remotion"],
       "files": [
         {
           "path": "registry/remocn/progress-steps/index.tsx",
@@ -1138,9 +969,7 @@
       "name": "data-flow-pipes",
       "title": "Data Flow Pipes",
       "description": "Glowing data packets travel along SVG bezier pipes between system nodes, leaving fading trails.",
-      "dependencies": [
-        "remotion"
-      ],
+      "dependencies": ["remotion"],
       "files": [
         {
           "path": "registry/remocn/data-flow-pipes/index.tsx",
@@ -1154,9 +983,7 @@
       "name": "glass-code-block",
       "title": "Glass Code Block",
       "description": "A premium frosted-glass code editor window with a regex tokenizer and line-by-line stagger reveal.",
-      "dependencies": [
-        "remotion"
-      ],
+      "dependencies": ["remotion"],
       "files": [
         {
           "path": "registry/remocn/glass-code-block/index.tsx",
@@ -1170,12 +997,8 @@
       "name": "glass-code-walk",
       "title": "Glass Code Walk",
       "description": "A camera that scans a glass code block top to bottom as it types, then pulls back to a centered hold.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/glass-code-block"
-      ],
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/glass-code-block"],
       "files": [
         {
           "path": "registry/remocn/glass-code-walk/index.tsx",
@@ -1189,9 +1012,7 @@
       "name": "perspective-marquee",
       "title": "Perspective Marquee",
       "description": "A 3D-tilted infinite marquee with depth-of-field blur on items rolling toward the horizon.",
-      "dependencies": [
-        "remotion"
-      ],
+      "dependencies": ["remotion"],
       "files": [
         {
           "path": "registry/remocn/perspective-marquee/index.tsx",
@@ -1205,9 +1026,7 @@
       "name": "ecosystem-constellation",
       "title": "Ecosystem Constellation",
       "description": "A central logo orbited by integration satellites with pulsing data lines.",
-      "dependencies": [
-        "remotion"
-      ],
+      "dependencies": ["remotion"],
       "files": [
         {
           "path": "registry/remocn/ecosystem-constellation/index.tsx",
@@ -1221,9 +1040,7 @@
       "name": "live-code-compilation",
       "title": "Live Code Compilation",
       "description": "Split-screen where typed code on the left snaps a live UI preview on the right, HMR-style.",
-      "dependencies": [
-        "remotion"
-      ],
+      "dependencies": ["remotion"],
       "files": [
         {
           "path": "registry/remocn/live-code-compilation/index.tsx",
@@ -1237,9 +1054,7 @@
       "name": "infinite-bento-pan",
       "title": "Infinite Bento Pan",
       "description": "A camera diagonally drifts across an oversized bento grid behind a soft vignette.",
-      "dependencies": [
-        "remotion"
-      ],
+      "dependencies": ["remotion"],
       "files": [
         {
           "path": "registry/remocn/infinite-bento-pan/index.tsx",
@@ -1253,14 +1068,8 @@
       "name": "github-sponsors",
       "title": "GitHub Sponsors",
       "description": "Self-drawing Sponsors heart that docks to a header, every sponsor avatar blur-staggering into a grid, then a thank-you headline and a CTA. Single seek-safe timeline, 270 frames at 30fps.",
-      "dependencies": [
-        "remotion",
-        "@remotion/google-fonts"
-      ],
-      "registryDependencies": [
-        "@remocn/soft-blur-in",
-        "@remocn/blur-out-up"
-      ],
+      "dependencies": ["remotion", "@remotion/google-fonts"],
+      "registryDependencies": ["@remocn/soft-blur-in", "@remocn/blur-out-up"],
       "files": [
         {
           "path": "registry/remocn/github-sponsors/index.tsx",
@@ -1274,14 +1083,8 @@
       "name": "github-stars",
       "title": "GitHub Stars",
       "description": "Inertial fly-through of a repo's stargazers with a synced count-up odometer that locks on the total. Horizontal 16:9 or vertical 9:16.",
-      "dependencies": [
-        "remotion",
-        "date-fns",
-        "@remotion/google-fonts"
-      ],
-      "registryDependencies": [
-        "@remocn/number-wheel"
-      ],
+      "dependencies": ["remotion", "date-fns", "@remotion/google-fonts"],
+      "registryDependencies": ["@remocn/number-wheel"],
       "files": [
         {
           "path": "registry/remocn/github-stars/index.tsx",
@@ -1295,10 +1098,7 @@
       "name": "number-wheel",
       "title": "Number Wheel",
       "description": "Mechanical odometer that rolls an integer up or down to its target, direction inferred from the values.",
-      "dependencies": [
-        "remotion",
-        "@remotion/google-fonts"
-      ],
+      "dependencies": ["remotion", "@remotion/google-fonts"],
       "files": [
         {
           "path": "registry/remocn/number-wheel/index.tsx",
@@ -1312,10 +1112,7 @@
       "name": "rolling-number",
       "title": "Rolling Number",
       "description": "Odometer where every place rolls at its own speed, new places rising into view, settling exactly on the target value.",
-      "dependencies": [
-        "remotion",
-        "@remotion/google-fonts"
-      ],
+      "dependencies": ["remotion", "@remotion/google-fonts"],
       "files": [
         {
           "path": "registry/remocn/rolling-number/index.tsx",
@@ -1328,14 +1125,9 @@
     {
       "name": "x-follow-card",
       "title": "X Follow Card",
-      "description": "Animated X profile follow card \u2014 spring bounce-in, staggered blur-in, a synthetic cursor that clicks Follow and flips it to Following. Light/dark, horizontal or vertical.",
-      "dependencies": [
-        "remotion",
-        "@remotion/google-fonts"
-      ],
-      "registryDependencies": [
-        "@remocn/cursor"
-      ],
+      "description": "Animated X profile follow card — spring bounce-in, staggered blur-in, a synthetic cursor that clicks Follow and flips it to Following. Light/dark, horizontal or vertical.",
+      "dependencies": ["remotion", "@remotion/google-fonts"],
+      "registryDependencies": ["@remocn/cursor"],
       "files": [
         {
           "path": "registry/remocn/x-follow-card/index.tsx",
@@ -1348,14 +1140,9 @@
     {
       "name": "x-followers-overview",
       "title": "X Followers Overview",
-      "description": "X follow notifications cycle through as 3D flipping text \u2014 '<name> followed you \u00b7 7h' \u2014 then the total follower count pops in with a confetti burst. Hardcoded sample list (X API ready). Light/dark, horizontal or vertical.",
-      "dependencies": [
-        "remotion",
-        "@remotion/google-fonts"
-      ],
-      "registryDependencies": [
-        "@remocn/confetti"
-      ],
+      "description": "X follow notifications cycle through as 3D flipping text — '<name> followed you · 7h' — then the total follower count pops in with a confetti burst. Hardcoded sample list (X API ready). Light/dark, horizontal or vertical.",
+      "dependencies": ["remotion", "@remotion/google-fonts"],
+      "registryDependencies": ["@remocn/confetti"],
       "files": [
         {
           "path": "registry/remocn/x-followers-overview/index.tsx",
@@ -1368,15 +1155,9 @@
     {
       "name": "claude-chat",
       "title": "Claude Chat",
-      "description": "Animated Claude chat input \u2014 types a prompt character-by-character and the waveform button morphs into a terracotta send button the moment text appears. Warm light/dark themes.",
-      "dependencies": [
-        "remotion",
-        "@remotion/google-fonts"
-      ],
-      "registryDependencies": [
-        "@remocn/caret",
-        "@remocn/remocn-ui"
-      ],
+      "description": "Animated Claude chat input — types a prompt character-by-character and the waveform button morphs into a terracotta send button the moment text appears. Warm light/dark themes.",
+      "dependencies": ["remotion", "@remotion/google-fonts"],
+      "registryDependencies": ["@remocn/caret", "@remocn/remocn-ui"],
       "files": [
         {
           "path": "registry/remocn/claude-chat/index.tsx",
@@ -1389,15 +1170,9 @@
     {
       "name": "chat-gpt",
       "title": "ChatGPT",
-      "description": "Animated ChatGPT composer \u2014 types a prompt into the pill input, the blue voice button morphs into a send button, and the suggestion chips fade out. Light/dark themes.",
-      "dependencies": [
-        "remotion",
-        "@remotion/google-fonts"
-      ],
-      "registryDependencies": [
-        "@remocn/caret",
-        "@remocn/remocn-ui"
-      ],
+      "description": "Animated ChatGPT composer — types a prompt into the pill input, the blue voice button morphs into a send button, and the suggestion chips fade out. Light/dark themes.",
+      "dependencies": ["remotion", "@remotion/google-fonts"],
+      "registryDependencies": ["@remocn/caret", "@remocn/remocn-ui"],
       "files": [
         {
           "path": "registry/remocn/chat-gpt/index.tsx",
@@ -1410,15 +1185,9 @@
     {
       "name": "v0",
       "title": "v0",
-      "description": "Animated Vercel v0 composer \u2014 types a prompt into the dark textarea and the mic button morphs into a send button. Dark/light themes.",
-      "dependencies": [
-        "remotion",
-        "@remotion/google-fonts"
-      ],
-      "registryDependencies": [
-        "@remocn/caret",
-        "@remocn/remocn-ui"
-      ],
+      "description": "Animated Vercel v0 composer — types a prompt into the dark textarea and the mic button morphs into a send button. Dark/light themes.",
+      "dependencies": ["remotion", "@remotion/google-fonts"],
+      "registryDependencies": ["@remocn/caret", "@remocn/remocn-ui"],
       "files": [
         {
           "path": "registry/remocn/v0/index.tsx",
@@ -1431,15 +1200,9 @@
     {
       "name": "claude-code",
       "title": "Claude Code",
-      "description": "Animated Claude Code CLI welcome screen \u2014 terminal window with a dashed welcome box, recent activity and what's new panels, and a prompt line that types a command with a block cursor. Dark/light themes.",
-      "dependencies": [
-        "remotion",
-        "@remotion/google-fonts"
-      ],
-      "registryDependencies": [
-        "@remocn/caret",
-        "@remocn/remocn-ui"
-      ],
+      "description": "Animated Claude Code CLI welcome screen — terminal window with a dashed welcome box, recent activity and what's new panels, and a prompt line that types a command with a block cursor. Dark/light themes.",
+      "dependencies": ["remotion", "@remotion/google-fonts"],
+      "registryDependencies": ["@remocn/caret", "@remocn/remocn-ui"],
       "files": [
         {
           "path": "registry/remocn/claude-code/index.tsx",
@@ -1452,15 +1215,9 @@
     {
       "name": "opencode",
       "title": "OpenCode",
-      "description": "Animated OpenCode TUI welcome screen \u2014 two-tone wordmark, an input box with a blue accent bar that types a query, a model status line, and command hints. Dark/light themes.",
-      "dependencies": [
-        "remotion",
-        "@remotion/google-fonts"
-      ],
-      "registryDependencies": [
-        "@remocn/caret",
-        "@remocn/remocn-ui"
-      ],
+      "description": "Animated OpenCode TUI welcome screen — two-tone wordmark, an input box with a blue accent bar that types a query, a model status line, and command hints. Dark/light themes.",
+      "dependencies": ["remotion", "@remotion/google-fonts"],
+      "registryDependencies": ["@remocn/caret", "@remocn/remocn-ui"],
       "files": [
         {
           "path": "registry/remocn/opencode/index.tsx",
@@ -1473,10 +1230,8 @@
     {
       "name": "confetti",
       "title": "Confetti",
-      "description": "Deterministic confetti burst for Remotion \u2014 seeded particles with gravity, spin, and flutter so every render is identical. Fire it on any frame as a celebratory overlay.",
-      "dependencies": [
-        "remotion"
-      ],
+      "description": "Deterministic confetti burst for Remotion — seeded particles with gravity, spin, and flutter so every render is identical. Fire it on any frame as a celebratory overlay.",
+      "dependencies": ["remotion"],
       "files": [
         {
           "path": "registry/remocn/confetti/index.tsx",
@@ -1490,9 +1245,7 @@
       "name": "backdrop",
       "title": "Backdrop",
       "description": "Configurable full-frame background (color / gradient / image / live component) with Screen Studio-style padding and a rounded, shadowed content frame.",
-      "dependencies": [
-        "remotion"
-      ],
+      "dependencies": ["remotion"],
       "files": [
         {
           "path": "registry/remocn/backdrop/index.tsx",
@@ -1506,9 +1259,7 @@
       "name": "drift",
       "title": "Drift",
       "description": "A slow linear camera push-in wrapper that scales its scene from 1 to 1+grow across the sequence so no frame is ever static.",
-      "dependencies": [
-        "remotion"
-      ],
+      "dependencies": ["remotion"],
       "files": [
         {
           "path": "registry/remocn/drift/index.tsx",
@@ -1522,9 +1273,7 @@
       "name": "logo-enter",
       "title": "Logo Enter",
       "description": "A stacked group of round brand chips that spring in one-by-one, then hold. Swap the logos to feature any set of marks. Horizontal or vertical stacking.",
-      "dependencies": [
-        "remotion"
-      ],
+      "dependencies": ["remotion"],
       "files": [
         {
           "path": "registry/remocn/logo-enter/index.tsx",
@@ -1538,10 +1287,7 @@
       "name": "remocn-ui",
       "title": "remocn UI Core",
       "description": "Shared timeline-fold hook, theme context, and color math for remocn UI primitives.",
-      "dependencies": [
-        "remotion",
-        "culori"
-      ],
+      "dependencies": ["remotion", "culori"],
       "files": [
         {
           "path": "registry/remocn-ui/core/timeline.ts",
@@ -1579,10 +1325,8 @@
     {
       "name": "spinner",
       "title": "UI Spinner",
-      "description": "A deterministic spinning arc that loops on the Remotion frame \u2014 a pure motion atom with no state.",
-      "dependencies": [
-        "remotion"
-      ],
+      "description": "A deterministic spinning arc that loops on the Remotion frame — a pure motion atom with no state.",
+      "dependencies": ["remotion"],
       "registryDependencies": [],
       "files": [
         {
@@ -1596,10 +1340,8 @@
     {
       "name": "caret",
       "title": "UI Caret",
-      "description": "A blinking text caret \u2014 a controlled vertical bar, or a pure motion atom that blinks deterministically from useCurrentFrame.",
-      "dependencies": [
-        "remotion"
-      ],
+      "description": "A blinking text caret — a controlled vertical bar, or a pure motion atom that blinks deterministically from useCurrentFrame.",
+      "dependencies": ["remotion"],
       "registryDependencies": [],
       "files": [
         {
@@ -1614,13 +1356,8 @@
       "name": "button",
       "title": "UI Button",
       "description": "A button whose idle/hover/press/loading/success state is a pure function of the timeline; the loading state composes the Spinner motion atom.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/remocn-ui",
-        "@remocn/spinner"
-      ],
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/remocn-ui", "@remocn/spinner"],
       "files": [
         {
           "path": "registry/remocn-ui/button/index.tsx",
@@ -1639,12 +1376,8 @@
       "name": "accordion",
       "title": "UI Accordion",
       "description": "A disclosure whose opened/closed state is a pure function of the timeline; the panel reveal, chevron, and background are keyframed presets.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/remocn-ui"
-      ],
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/remocn-ui"],
       "files": [
         {
           "path": "registry/remocn-ui/accordion/index.tsx",
@@ -1662,13 +1395,9 @@
     {
       "name": "alert-dialog",
       "title": "UI Alert Dialog",
-      "description": "A modal alert dialog whose opened/closed state is a pure function of the timeline; the backdrop dim and popup zoom are keyframed presets. Self-contained \u2014 pair it with the Button as a trigger (see the example).",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/remocn-ui"
-      ],
+      "description": "A modal alert dialog whose opened/closed state is a pure function of the timeline; the backdrop dim and popup zoom are keyframed presets. Self-contained — pair it with the Button as a trigger (see the example).",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/remocn-ui"],
       "files": [
         {
           "path": "registry/remocn-ui/alert-dialog/index.tsx",
@@ -1686,13 +1415,9 @@
     {
       "name": "dialog",
       "title": "UI Dialog",
-      "description": "A modal dialog whose opened/closed state is a pure function of the timeline; the backdrop dim and popup zoom are keyframed presets, with a close button and a primary action. Self-contained \u2014 pair it with the Button as a trigger (see the example).",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/remocn-ui"
-      ],
+      "description": "A modal dialog whose opened/closed state is a pure function of the timeline; the backdrop dim and popup zoom are keyframed presets, with a close button and a primary action. Self-contained — pair it with the Button as a trigger (see the example).",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/remocn-ui"],
       "files": [
         {
           "path": "registry/remocn-ui/dialog/index.tsx",
@@ -1710,13 +1435,9 @@
     {
       "name": "sheet",
       "title": "UI Sheet",
-      "description": "A side panel whose opened/closed state is a pure function of the timeline; the backdrop dim and right-edge slide-in are keyframed presets, with a close button and a primary action. Self-contained \u2014 pair it with the Button as a trigger (see the example).",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/remocn-ui"
-      ],
+      "description": "A side panel whose opened/closed state is a pure function of the timeline; the backdrop dim and right-edge slide-in are keyframed presets, with a close button and a primary action. Self-contained — pair it with the Button as a trigger (see the example).",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/remocn-ui"],
       "files": [
         {
           "path": "registry/remocn-ui/sheet/index.tsx",
@@ -1734,13 +1455,9 @@
     {
       "name": "drawer",
       "title": "UI Drawer",
-      "description": "A bottom panel whose opened/closed state is a pure function of the timeline; the backdrop dim and bottom-edge slide-up are keyframed presets, with a drag handle and a primary action. Self-contained \u2014 pair it with the Button as a trigger (see the example).",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/remocn-ui"
-      ],
+      "description": "A bottom panel whose opened/closed state is a pure function of the timeline; the backdrop dim and bottom-edge slide-up are keyframed presets, with a drag handle and a primary action. Self-contained — pair it with the Button as a trigger (see the example).",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/remocn-ui"],
       "files": [
         {
           "path": "registry/remocn-ui/drawer/index.tsx",
@@ -1759,12 +1476,8 @@
       "name": "checkbox",
       "title": "UI Checkbox",
       "description": "A checkbox whose checked/unchecked state is a pure function of the timeline; the box fill, border, and checkmark draw are keyframed presets.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/remocn-ui"
-      ],
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/remocn-ui"],
       "files": [
         {
           "path": "registry/remocn-ui/checkbox/index.tsx",
@@ -1783,12 +1496,8 @@
       "name": "radio",
       "title": "UI Radio",
       "description": "A radio whose checked/unchecked state is a pure function of the timeline; the ring border and inner dot pop are keyframed presets.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/remocn-ui"
-      ],
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/remocn-ui"],
       "files": [
         {
           "path": "registry/remocn-ui/radio/index.tsx",
@@ -1807,12 +1516,8 @@
       "name": "switch",
       "title": "UI Switch",
       "description": "A switch whose checked/unchecked state is a pure function of the timeline; the track fill and sliding thumb are keyframed presets.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/remocn-ui"
-      ],
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/remocn-ui"],
       "files": [
         {
           "path": "registry/remocn-ui/switch/index.tsx",
@@ -1831,13 +1536,8 @@
       "name": "input",
       "title": "UI Input",
       "description": "A text input whose idle/hover/active/typing/invalid state is a pure function of the timeline; the focus ring, border, caret, and value reveal are keyframed presets.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/remocn-ui",
-        "@remocn/caret"
-      ],
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/remocn-ui", "@remocn/caret"],
       "files": [
         {
           "path": "registry/remocn-ui/input/index.tsx",
@@ -1855,13 +1555,9 @@
     {
       "name": "blur-in",
       "title": "UI Blur In",
-      "description": "A wrapper that reveals a single child with blur + opacity + a directional offset; a pure state atom, theme-independent \u2014 its context is a motion config (blur/distance/axis), not a theme.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/remocn-ui"
-      ],
+      "description": "A wrapper that reveals a single child with blur + opacity + a directional offset; a pure state atom, theme-independent — its context is a motion config (blur/distance/axis), not a theme.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/remocn-ui"],
       "files": [
         {
           "path": "registry/remocn-ui/blur-in/index.tsx",
@@ -1879,13 +1575,9 @@
     {
       "name": "field",
       "title": "UI Field",
-      "description": "A static layout family for composing labeled form controls, modeled on shadcn's Field: FieldGroup \u25b8 Field \u25b8 FieldLabel / FieldControl / FieldDescription. Reads no frame and holds no state \u2014 colors come from the resolved theme. FieldControl is a relative fixed-height slot for the absolute remocn-ui controls (Input, Button).",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/remocn-ui"
-      ],
+      "description": "A static layout family for composing labeled form controls, modeled on shadcn's Field: FieldGroup ▸ Field ▸ FieldLabel / FieldControl / FieldDescription. Reads no frame and holds no state — colors come from the resolved theme. FieldControl is a relative fixed-height slot for the absolute remocn-ui controls (Input, Button).",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/remocn-ui"],
       "files": [
         {
           "path": "registry/remocn-ui/field/index.tsx",
@@ -1899,12 +1591,8 @@
       "name": "select-item",
       "title": "UI Select Item",
       "description": "A select option row whose idle/hover/press/selected state is a pure function of the timeline; the row background, label color, and check icon are keyframed presets. Composed inside the Select panel.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/remocn-ui"
-      ],
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/remocn-ui"],
       "files": [
         {
           "path": "registry/remocn-ui/select-item/index.tsx",
@@ -1923,9 +1611,7 @@
       "name": "select",
       "title": "UI Select",
       "description": "A select whose opened/closed state is a pure function of the timeline; the trigger reuses the Button primitive and the reveal panel composes SelectItem rows. The panel fade, scale, lift, and chevron are keyframed presets.",
-      "dependencies": [
-        "remotion"
-      ],
+      "dependencies": ["remotion"],
       "registryDependencies": [
         "@remocn/remocn-ui",
         "@remocn/button",
@@ -1949,12 +1635,8 @@
       "name": "dropdown-menu-item",
       "title": "UI Dropdown Menu Item",
       "description": "A dropdown menu action row whose idle/hover/press state is a pure function of the timeline; the row background and label color are keyframed presets. Composed inside the DropdownMenu panel.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/remocn-ui"
-      ],
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/remocn-ui"],
       "files": [
         {
           "path": "registry/remocn-ui/dropdown-menu-item/index.tsx",
@@ -1973,12 +1655,8 @@
       "name": "tabs",
       "title": "UI Tabs",
       "description": "A tabs widget whose active-tab state is a pure function of the timeline; the sliding indicator, label colors, and panel crossfade are keyframed/derived presets.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/remocn-ui"
-      ],
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/remocn-ui"],
       "files": [
         {
           "path": "registry/remocn-ui/tabs/index.tsx",
@@ -1997,9 +1675,7 @@
       "name": "dropdown-menu",
       "title": "UI Dropdown Menu",
       "description": "A dropdown menu whose opened/closed state is a pure function of the timeline; the trigger reuses the Button primitive and the reveal panel composes DropdownMenuItem rows. The panel fade, scale, lift, and chevron are keyframed presets.",
-      "dependencies": [
-        "remotion"
-      ],
+      "dependencies": ["remotion"],
       "registryDependencies": [
         "@remocn/remocn-ui",
         "@remocn/button",
@@ -2023,12 +1699,8 @@
       "name": "cursor",
       "title": "UI Cursor",
       "description": "An animated cursor that moves between waypoints, clicks (ripple), and drags. The Cursor renderer is a pure function of a numeric CursorStyle channel; useCursorPath reads the frame and eases the path, ripple, and press phases.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/remocn-ui"
-      ],
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/remocn-ui"],
       "files": [
         {
           "path": "registry/remocn-ui/cursor/index.tsx",
@@ -2047,12 +1719,8 @@
       "name": "toast",
       "title": "UI Toast",
       "description": "A toast notification whose hidden/visible state is a pure function of the timeline. The Toast renderer is a pure function of a ToastStyle (opacity, translateY, scale); useToastTransition eases both the slide-in enter and the auto-dismiss exit. Variants default/success/error change the leading icon and its color.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/remocn-ui"
-      ],
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/remocn-ui"],
       "files": [
         {
           "path": "registry/remocn-ui/toast/index.tsx",
@@ -2071,12 +1739,8 @@
       "name": "command-menu-item",
       "title": "UI Command Menu Item",
       "description": "A command-palette row whose idle/hover/press/selected state is a pure function of the timeline. Leading icon + label + trailing shortcut kbd. Exports an inline CommandMenuItemRow (reused by CommandMenu) and a standalone CommandMenuItem atom; the row background, label color, and icon color are keyframed presets.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/remocn-ui"
-      ],
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/remocn-ui"],
       "files": [
         {
           "path": "registry/remocn-ui/command-menu-item/index.tsx",
@@ -2094,10 +1758,8 @@
     {
       "name": "command-menu",
       "title": "UI Command Menu",
-      "description": "A \u2318K command palette whose opened/closed state is a pure function of the timeline; the panel zoom + backdrop dim are dialog-like keyframed presets. The search row reveals the typed query, the list is filtered by a pure case-insensitive substring on the visible query prefix, and rows reuse the CommandMenuItem row.",
-      "dependencies": [
-        "remotion"
-      ],
+      "description": "A ⌘K command palette whose opened/closed state is a pure function of the timeline; the panel zoom + backdrop dim are dialog-like keyframed presets. The search row reveals the typed query, the list is filtered by a pure case-insensitive substring on the visible query prefix, and rows reuse the CommandMenuItem row.",
+      "dependencies": ["remotion"],
       "registryDependencies": [
         "@remocn/remocn-ui",
         "@remocn/command-menu-item"
@@ -2120,12 +1782,8 @@
       "name": "tooltip",
       "title": "UI Tooltip",
       "description": "A tooltip whose hidden/visible state is a pure function of the timeline. The Tooltip renderer is a pure function of a TooltipStyle (opacity, scale, translate); useTooltipTransition eases both the show and the hide. The static `side` prop sets the enter translate axis and the arrow placement.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/remocn-ui"
-      ],
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/remocn-ui"],
       "files": [
         {
           "path": "registry/remocn-ui/tooltip/index.tsx",
@@ -2143,13 +1801,9 @@
     {
       "name": "progress",
       "title": "UI Progress",
-      "description": "A progress bar whose fill is a pure function of a numeric value channel (value-channel deviation). The Progress renderer takes a clamped 0\u2013100 value; useProgressTransition reads the frame and eases the fill between value steps. Muted track + primary indicator, optional floored percentage label.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/remocn-ui"
-      ],
+      "description": "A progress bar whose fill is a pure function of a numeric value channel (value-channel deviation). The Progress renderer takes a clamped 0–100 value; useProgressTransition reads the frame and eases the fill between value steps. Muted track + primary indicator, optional floored percentage label.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/remocn-ui"],
       "files": [
         {
           "path": "registry/remocn-ui/progress/index.tsx",
@@ -2167,13 +1821,9 @@
     {
       "name": "skeleton-block",
       "title": "UI Skeleton Block",
-      "description": "A shimmer placeholder block \u2014 a motion atom (spinner pattern). A directional highlight gradient sweeps across deterministically from useCurrentFrame() and loops seamlessly. Configurable width/height/radius/speed and base/highlight colors.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/remocn-ui"
-      ],
+      "description": "A shimmer placeholder block — a motion atom (spinner pattern). A directional highlight gradient sweeps across deterministically from useCurrentFrame() and loops seamlessly. Configurable width/height/radius/speed and base/highlight colors.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/remocn-ui"],
       "files": [
         {
           "path": "registry/remocn-ui/skeleton-block/index.tsx",
@@ -2186,14 +1836,9 @@
     {
       "name": "skeleton",
       "title": "UI Skeleton",
-      "description": "A skeleton\u2192content crossfade whose loading/loaded state is a pure function of the timeline. The Skeleton renderer is pure (reads no frame); only the composed SkeletonBlock shimmer reads it. SkeletonStyle opacities sum to 1 so the box never dims; real children sit in normal flow and the placeholder (a lines/card layout or a custom node) is an absolute overlay.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/remocn-ui",
-        "@remocn/skeleton-block"
-      ],
+      "description": "A skeleton→content crossfade whose loading/loaded state is a pure function of the timeline. The Skeleton renderer is pure (reads no frame); only the composed SkeletonBlock shimmer reads it. SkeletonStyle opacities sum to 1 so the box never dims; real children sit in normal flow and the placeholder (a lines/card layout or a custom node) is an absolute overlay.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/remocn-ui", "@remocn/skeleton-block"],
       "files": [
         {
           "path": "registry/remocn-ui/skeleton/index.tsx",
@@ -2211,13 +1856,9 @@
     {
       "name": "slider",
       "title": "UI Slider",
-      "description": "A slider whose fill is a numeric value channel plus a thumb idle/hover/press channel (dual-channel value-channel deviation). The Slider renderer is pure (clamped 0\u2013100 value, thumb scale, grab-ring opacity); useSliderTransition reads the frame and eases both channels \u2014 value as a numeric lerp, the thumb visual from its state presets. Muted track + primary range + bordered thumb with a derived grab ring.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/remocn-ui"
-      ],
+      "description": "A slider whose fill is a numeric value channel plus a thumb idle/hover/press channel (dual-channel value-channel deviation). The Slider renderer is pure (clamped 0–100 value, thumb scale, grab-ring opacity); useSliderTransition reads the frame and eases both channels — value as a numeric lerp, the thumb visual from its state presets. Muted track + primary range + bordered thumb with a derived grab ring.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/remocn-ui"],
       "files": [
         {
           "path": "registry/remocn-ui/slider/index.tsx",
@@ -2236,9 +1877,7 @@
       "name": "combobox",
       "title": "UI Combobox",
       "description": "A combobox whose opened/closed state is a pure function of the timeline; the panel fade/scale/lift are keyframed presets like select. The trigger reuses the Input presets (typed query + caret reveal via an injected inputStyle), the list is filtered by a pure case-insensitive substring on the visible query prefix, and rows reuse the SelectItem row.",
-      "dependencies": [
-        "remotion"
-      ],
+      "dependencies": ["remotion"],
       "registryDependencies": [
         "@remocn/remocn-ui",
         "@remocn/input",
@@ -2262,12 +1901,8 @@
       "name": "popover",
       "title": "UI Popover",
       "description": "A popover/hover-card whose opened/closed state is a pure function of the timeline. The Popover renderer is a pure function of a PopoverStyle (opacity, scale, translate); usePopoverTransition eases both the open and the close. The static `side` prop sets the enter translate axis; renders title + description and/or arbitrary children in a popover card.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/remocn-ui"
-      ],
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/remocn-ui"],
       "files": [
         {
           "path": "registry/remocn-ui/popover/index.tsx",
@@ -2285,10 +1920,8 @@
     {
       "name": "context-menu",
       "title": "UI Context Menu",
-      "description": "A right-click context menu whose opened/closed state is a pure function of the timeline; the panel scales from its top-left corner (the click point) with a fade + lift. No trigger \u2014 the caller positions it. Rows reuse the DropdownMenuItem row; items are plain string labels.",
-      "dependencies": [
-        "remotion"
-      ],
+      "description": "A right-click context menu whose opened/closed state is a pure function of the timeline; the panel scales from its top-left corner (the click point) with a fade + lift. No trigger — the caller positions it. Rows reuse the DropdownMenuItem row; items are plain string labels.",
+      "dependencies": ["remotion"],
       "registryDependencies": [
         "@remocn/remocn-ui",
         "@remocn/dropdown-menu-item"
@@ -2311,12 +1944,8 @@
       "name": "toggle-group",
       "title": "UI Toggle Group",
       "description": "A segmented control whose active value is a pure function of the timeline; a raised thumb SLIDES between segments (position + width derived from a float indicator offset, no jumps) and the labels crossfade color via mixOklch. The tabs precedent without content panels.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/remocn-ui"
-      ],
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/remocn-ui"],
       "files": [
         {
           "path": "registry/remocn-ui/toggle-group/index.tsx",
@@ -2335,12 +1964,8 @@
       "name": "stepper",
       "title": "UI Stepper",
       "description": "A horizontal onboarding stepper whose progress is a pure function of a continuous step index (value-channel deviation). Every circle (fill, number, stroke-dash check) and connector (primary fill fraction) derives purely from the float position; useStepperTransition reads the frame and eases position between step indices.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/remocn-ui"
-      ],
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/remocn-ui"],
       "files": [
         {
           "path": "registry/remocn-ui/stepper/index.tsx",
@@ -2358,13 +1983,9 @@
     {
       "name": "resizable",
       "title": "UI Resizable",
-      "description": "Two panels split by a draggable handle, where the split ratio is a numeric channel plus a handle idle/hover/press channel (dual-channel value-channel deviation). The Resizable renderer is pure (clamped 0\u20131 ratio, handle scale, grab-ring opacity); useResizableTransition reads the frame and eases both channels \u2014 ratio as a numeric lerp, the handle visual from its state presets. Horizontal and vertical splits; 1px divider + centered grip pill with a derived grab ring.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/remocn-ui"
-      ],
+      "description": "Two panels split by a draggable handle, where the split ratio is a numeric channel plus a handle idle/hover/press channel (dual-channel value-channel deviation). The Resizable renderer is pure (clamped 0–1 ratio, handle scale, grab-ring opacity); useResizableTransition reads the frame and eases both channels — ratio as a numeric lerp, the handle visual from its state presets. Horizontal and vertical splits; 1px divider + centered grip pill with a derived grab ring.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/remocn-ui"],
       "files": [
         {
           "path": "registry/remocn-ui/resizable/index.tsx",
@@ -2382,10 +2003,8 @@
     {
       "name": "signup-flow",
       "title": "UI Signup Flow",
-      "description": "A signup card composition: a real shadcn-style card (header, labeled Full Name / Email / Password / Confirm fields, primary + Google-outline buttons, sign-in footer) whose cursor fills each field top-to-bottom, then clicks Create account (hover \u2192 press \u2192 loading \u2192 success) as a success toast slides in. A pure orchestrator \u2014 every channel comes from a composed primitive's transition hook.",
-      "dependencies": [
-        "remotion"
-      ],
+      "description": "A signup card composition: a real shadcn-style card (header, labeled Full Name / Email / Password / Confirm fields, primary + Google-outline buttons, sign-in footer) whose cursor fills each field top-to-bottom, then clicks Create account (hover → press → loading → success) as a success toast slides in. A pure orchestrator — every channel comes from a composed primitive's transition hook.",
+      "dependencies": ["remotion"],
       "registryDependencies": [
         "@remocn/remocn-ui",
         "@remocn/cursor",
@@ -2407,10 +2026,8 @@
     {
       "name": "ai-prompt-flow",
       "title": "UI AI Prompt Flow",
-      "description": "An AI prompt composition: a prompt types into the field, the Generate button runs hover \u2192 press \u2192 loading, a skeleton shimmer reveals, then crossfades into the generated answer, and a ready toast slides in. A pure orchestrator \u2014 the shimmer is owned by the skeleton-block motion atom; every other channel comes from a composed primitive's hook.",
-      "dependencies": [
-        "remotion"
-      ],
+      "description": "An AI prompt composition: a prompt types into the field, the Generate button runs hover → press → loading, a skeleton shimmer reveals, then crossfades into the generated answer, and a ready toast slides in. A pure orchestrator — the shimmer is owned by the skeleton-block motion atom; every other channel comes from a composed primitive's hook.",
+      "dependencies": ["remotion"],
       "registryDependencies": [
         "@remocn/remocn-ui",
         "@remocn/input",
@@ -2431,10 +2048,8 @@
     {
       "name": "checkout-flow",
       "title": "UI Checkout Flow",
-      "description": "A cursor-driven checkout card: the card and its fields blur-in, then the pointer flips a billing-cycle toggle, types a card number, ticks the terms checkbox, and presses Pay through to success, ending in a toast. A pure orchestrator \u2014 every channel comes from a composed primitive's transition hook.",
-      "dependencies": [
-        "remotion"
-      ],
+      "description": "A cursor-driven checkout card: the card and its fields blur-in, then the pointer flips a billing-cycle toggle, types a card number, ticks the terms checkbox, and presses Pay through to success, ending in a toast. A pure orchestrator — every channel comes from a composed primitive's transition hook.",
+      "dependencies": ["remotion"],
       "registryDependencies": [
         "@remocn/remocn-ui",
         "@remocn/toggle-group",
@@ -2459,9 +2074,7 @@
       "name": "onboarding-stepper-flow",
       "title": "UI Onboarding Stepper Flow",
       "description": "A multi-step onboarding composition: a horizontal stepper advances through panels of input, radio, and switch fields, finishing on a Finish button that runs to success. Panel crossfade derives linearly from the stepper's exposed position channel; every other channel comes from a composed primitive's hook.",
-      "dependencies": [
-        "remotion"
-      ],
+      "dependencies": ["remotion"],
       "registryDependencies": [
         "@remocn/remocn-ui",
         "@remocn/stepper",
@@ -2482,10 +2095,8 @@
     {
       "name": "settings-toggle-flow",
       "title": "UI Settings Toggle Flow",
-      "description": "A two-column settings card: the card and its controls blur-in, then the cursor flips a switch, opens a select, drags a labeled slider, and clicks Save, ending in a saved toast. A pure orchestrator \u2014 every channel comes from a composed primitive's transition hook.",
-      "dependencies": [
-        "remotion"
-      ],
+      "description": "A two-column settings card: the card and its controls blur-in, then the cursor flips a switch, opens a select, drags a labeled slider, and clicks Save, ending in a saved toast. A pure orchestrator — every channel comes from a composed primitive's transition hook.",
+      "dependencies": ["remotion"],
       "registryDependencies": [
         "@remocn/remocn-ui",
         "@remocn/switch",
@@ -2509,12 +2120,8 @@
       "name": "message-bubble",
       "title": "UI Message Bubble",
       "description": "A chat message bubble whose hidden/visible state is a pure function of the timeline. The renderer is a pure function of a MessageBubbleStyle (opacity, translateY, scale); useMessageBubbleTransition eases the rise-in enter. The incoming/outgoing variant resolves bubble color and alignment from the theme, and an optional reaction badge pops in on its own channel.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/remocn-ui"
-      ],
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/remocn-ui"],
       "files": [
         {
           "path": "registry/remocn-ui/message-bubble/index.tsx",
@@ -2532,13 +2139,9 @@
     {
       "name": "typing-indicator",
       "title": "UI Typing Indicator",
-      "description": "A continuous typing animation: N dots bounce with a staggered sine wave. A motion atom \u2014 it reads the frame and takes color, size, gap, and speed props, defaulting to currentColor so it inherits the bubble it sits in.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/remocn-ui"
-      ],
+      "description": "A continuous typing animation: N dots bounce with a staggered sine wave. A motion atom — it reads the frame and takes color, size, gap, and speed props, defaulting to currentColor so it inherits the bubble it sits in.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/remocn-ui"],
       "files": [
         {
           "path": "registry/remocn-ui/typing-indicator/index.tsx",
@@ -2551,10 +2154,8 @@
     {
       "name": "chat-flow",
       "title": "UI Chat Flow",
-      "description": "A messaging composition: an outgoing message types into the composer, the send button presses, and the bubble rises in; the other side shows a typing indicator that swaps into the reply, and reactions pop in. A pure orchestrator \u2014 every channel comes from a composed primitive's hook (Input, MessageBubble, TypingIndicator).",
-      "dependencies": [
-        "remotion"
-      ],
+      "description": "A messaging composition: an outgoing message types into the composer, the send button presses, and the bubble rises in; the other side shows a typing indicator that swaps into the reply, and reactions pop in. A pure orchestrator — every channel comes from a composed primitive's hook (Input, MessageBubble, TypingIndicator).",
+      "dependencies": ["remotion"],
       "registryDependencies": [
         "@remocn/remocn-ui",
         "@remocn/caret",
@@ -2573,14 +2174,9 @@
     {
       "name": "telegram-chat-flow",
       "title": "UI Telegram Chat Flow",
-      "description": "A Telegram-styled messaging composition: tailed bubbles (white incoming, blue outgoing) with in-bubble timestamps and delivery checks, a header that flips to 'typing\u2026' while the other side replies, reaction chips, and a Telegram composer that types the outgoing message before sending. Self-contained \u2014 it owns its timeline and only composes the caret primitive.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/remocn-ui",
-        "@remocn/caret"
-      ],
+      "description": "A Telegram-styled messaging composition: tailed bubbles (white incoming, blue outgoing) with in-bubble timestamps and delivery checks, a header that flips to 'typing…' while the other side replies, reaction chips, and a Telegram composer that types the outgoing message before sending. Self-contained — it owns its timeline and only composes the caret primitive.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/remocn-ui", "@remocn/caret"],
       "files": [
         {
           "path": "registry/remocn-ui/telegram-chat-flow/index.tsx",
@@ -2594,10 +2190,7 @@
       "name": "imessage-chat-flow",
       "title": "UI iMessage Chat Flow",
       "description": "An iMessage-styled messaging composition: gray incoming and blue outgoing bubbles with tails, an in-thread typing bubble with dots, a Delivered label, and tapback-style reaction badges. The composer types the outgoing message before sending. Chrome icons come from lucide-react; self-contained otherwise, composing the caret and typing-indicator primitives.",
-      "dependencies": [
-        "remotion",
-        "lucide-react"
-      ],
+      "dependencies": ["remotion", "lucide-react"],
       "registryDependencies": [
         "@remocn/remocn-ui",
         "@remocn/caret",
@@ -2616,10 +2209,7 @@
       "name": "icons-core",
       "title": "Icons Core",
       "description": "Shared animation contract, pure frame-to-phase timeline, and SVG path-draw helpers for remocn icons.",
-      "dependencies": [
-        "remotion",
-        "@remotion/paths"
-      ],
+      "dependencies": ["remotion", "@remotion/paths"],
       "files": [
         {
           "path": "registry/remocn-icons/icons-core/index.ts",
@@ -2632,13 +2222,9 @@
     {
       "name": "icon-check",
       "title": "Check",
-      "description": "Animated Lucide check icon \u2014 the stroke draws on, then stamps with a spring pop to mark a step, task, or claim as done.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide check icon — the stroke draws on, then stamps with a spring pop to mark a step, task, or claim as done.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-check/index.tsx",
@@ -2651,13 +2237,9 @@
     {
       "name": "icon-check-circle",
       "title": "Check Circle",
-      "description": "Animated Lucide circle-check icon \u2014 the ring draws clockwise, the checkmark traces in, then the whole mark pops to confirm a completed or successful state.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide circle-check icon — the ring draws clockwise, the checkmark traces in, then the whole mark pops to confirm a completed or successful state.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-check-circle/index.tsx",
@@ -2670,13 +2252,9 @@
     {
       "name": "icon-x",
       "title": "X",
-      "description": "Animated Lucide x icon \u2014 the two diagonals draw in crosswise, then the mark shakes to punctuate an error, removal, or dismissal.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide x icon — the two diagonals draw in crosswise, then the mark shakes to punctuate an error, removal, or dismissal.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-x/index.tsx",
@@ -2689,13 +2267,9 @@
     {
       "name": "icon-activity",
       "title": "Activity",
-      "description": "Animated Lucide activity icon \u2014 the pulse line sweeps through like an EKG, popping at the peak. Loops by default.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide activity icon — the pulse line sweeps through like an EKG, popping at the peak. Loops by default.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-activity/index.tsx",
@@ -2708,13 +2282,9 @@
     {
       "name": "icon-alert-triangle",
       "title": "Alert Triangle",
-      "description": "Animated Lucide triangle-alert icon \u2014 the outline draws on, the mark pops in, then the exclamation blinks to flag a risk or warning.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide triangle-alert icon — the outline draws on, the mark pops in, then the exclamation blinks to flag a risk or warning.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-alert-triangle/index.tsx",
@@ -2727,13 +2297,9 @@
     {
       "name": "icon-info",
       "title": "Info",
-      "description": "Animated Lucide info icon \u2014 the ring draws clockwise, the dot pops and stem draws in, then the dot bobs to draw a gentle, neutral note.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide info icon — the ring draws clockwise, the dot pops and stem draws in, then the dot bobs to draw a gentle, neutral note.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-info/index.tsx",
@@ -2746,13 +2312,9 @@
     {
       "name": "icon-loader",
       "title": "Loader",
-      "description": "Animated Lucide loader-circle icon \u2014 the arc draws on, then spins continuously for a loading or processing beat. Loops by default.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide loader-circle icon — the arc draws on, then spins continuously for a loading or processing beat. Loops by default.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-loader/index.tsx",
@@ -2765,13 +2327,9 @@
     {
       "name": "icon-refresh-cw",
       "title": "Refresh Cw",
-      "description": "Animated Lucide refresh-cw icon \u2014 the two arcs draw on, arrowheads pop, then the whole mark spins in cycles for sync, retry, or up-to-date messaging. Loops by default.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide refresh-cw icon — the two arcs draw on, arrowheads pop, then the whole mark spins in cycles for sync, retry, or up-to-date messaging. Loops by default.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-refresh-cw/index.tsx",
@@ -2784,13 +2342,9 @@
     {
       "name": "icon-search",
       "title": "Search",
-      "description": "Animated Lucide search icon \u2014 the lens draws on, the handle extends, then the magnifier sweeps a small scanning path for a search or discovery beat.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide search icon — the lens draws on, the handle extends, then the magnifier sweeps a small scanning path for a search or discovery beat.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-search/index.tsx",
@@ -2803,13 +2357,9 @@
     {
       "name": "icon-bell",
       "title": "Bell",
-      "description": "Animated Lucide bell icon \u2014 the body draws on, the clapper follows, then the bell swings from its mount to signal a notification or alert.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide bell icon — the body draws on, the clapper follows, then the bell swings from its mount to signal a notification or alert.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-bell/index.tsx",
@@ -2822,13 +2372,9 @@
     {
       "name": "icon-download",
       "title": "Download",
-      "description": "Animated Lucide download icon \u2014 the tray draws on, the arrow fades in, then drops into the tray with a squash on impact for a download or export beat.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide download icon — the tray draws on, the arrow fades in, then drops into the tray with a squash on impact for a download or export beat.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-download/index.tsx",
@@ -2841,13 +2387,9 @@
     {
       "name": "icon-upload",
       "title": "Upload",
-      "description": "Animated Lucide upload icon \u2014 the tray draws on, the arrow fades in, then launches upward with a spring for an upload, publish, or submission beat.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide upload icon — the tray draws on, the arrow fades in, then launches upward with a spring for an upload, publish, or submission beat.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-upload/index.tsx",
@@ -2860,13 +2402,9 @@
     {
       "name": "icon-copy",
       "title": "Copy",
-      "description": "Animated Lucide copy icon \u2014 the two sheets draw back-to-front, then the front sheet lifts and settles to read as a duplicate for a copy-to-clipboard beat.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide copy icon — the two sheets draw back-to-front, then the front sheet lifts and settles to read as a duplicate for a copy-to-clipboard beat.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-copy/index.tsx",
@@ -2879,13 +2417,9 @@
     {
       "name": "icon-settings",
       "title": "Settings",
-      "description": "Animated Lucide settings icon \u2014 the gear and center draw on, then the gear turns exactly one tooth for a settings, configuration, or customization beat.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide settings icon — the gear and center draw on, then the gear turns exactly one tooth for a settings, configuration, or customization beat.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-settings/index.tsx",
@@ -2898,13 +2432,9 @@
     {
       "name": "icon-trash",
       "title": "Trash",
-      "description": "Animated Lucide trash-2 icon \u2014 the can draws on, then the lid flips open and the contents vanish for a delete or cleanup beat.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide trash-2 icon — the can draws on, then the lid flips open and the contents vanish for a delete or cleanup beat.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-trash/index.tsx",
@@ -2917,13 +2447,9 @@
     {
       "name": "icon-plus",
       "title": "Plus",
-      "description": "Animated Lucide plus icon \u2014 the two strokes draw on, then the mark twirls 90deg with a scale pop for an energetic add or create beat.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide plus icon — the two strokes draw on, then the mark twirls 90deg with a scale pop for an energetic add or create beat.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-plus/index.tsx",
@@ -2936,13 +2462,9 @@
     {
       "name": "icon-send",
       "title": "Send",
-      "description": "Animated Lucide send icon \u2014 the paper plane draws on, then darts forward with a wind-up and settles back for a send-message beat.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide send icon — the paper plane draws on, then darts forward with a wind-up and settles back for a send-message beat.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-send/index.tsx",
@@ -2955,13 +2477,9 @@
     {
       "name": "icon-heart",
       "title": "Heart",
-      "description": "Animated Lucide heart icon \u2014 the outline draws on, then a lub-dub heartbeat pulse for likes, favorites, or built-with-love moments.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide heart icon — the outline draws on, then a lub-dub heartbeat pulse for likes, favorites, or built-with-love moments.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-heart/index.tsx",
@@ -2974,13 +2492,9 @@
     {
       "name": "icon-star",
       "title": "Star",
-      "description": "Animated Lucide star icon \u2014 the outline draws on, then twinkles into place with a small rotate and scale pop for ratings, favorites, or star callouts.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide star icon — the outline draws on, then twinkles into place with a small rotate and scale pop for ratings, favorites, or star callouts.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-star/index.tsx",
@@ -2993,13 +2507,9 @@
     {
       "name": "icon-thumbs-up",
       "title": "Thumbs Up",
-      "description": "Animated Lucide thumbs-up icon \u2014 the hand draws on, then springs up with an approving stamp for positive reviews, approvals, or social-proof beats.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide thumbs-up icon — the hand draws on, then springs up with an approving stamp for positive reviews, approvals, or social-proof beats.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-thumbs-up/index.tsx",
@@ -3012,13 +2522,9 @@
     {
       "name": "icon-party-popper",
       "title": "Party Popper",
-      "description": "Animated Lucide party-popper icon \u2014 the cone draws on, then confetti bursts outward as the cone recoils for launch, milestone, or celebration finales.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide party-popper icon — the cone draws on, then confetti bursts outward as the cone recoils for launch, milestone, or celebration finales.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-party-popper/index.tsx",
@@ -3031,13 +2537,9 @@
     {
       "name": "icon-arrow-right",
       "title": "Arrow Right",
-      "description": "Animated Lucide arrow-right icon \u2014 the shaft and head draw on, then the arrow nudges forward for CTAs, next-step pointers, or flow direction.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide arrow-right icon — the shaft and head draw on, then the arrow nudges forward for CTAs, next-step pointers, or flow direction.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-arrow-right/index.tsx",
@@ -3050,13 +2552,9 @@
     {
       "name": "icon-arrow-left",
       "title": "Arrow Left",
-      "description": "Animated Lucide arrow-left icon \u2014 the shaft and head draw on, then the arrow nudges back for back navigation or 'previously' callbacks.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide arrow-left icon — the shaft and head draw on, then the arrow nudges back for back navigation or 'previously' callbacks.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-arrow-left/index.tsx",
@@ -3069,13 +2567,9 @@
     {
       "name": "icon-arrow-up",
       "title": "Arrow Up",
-      "description": "Animated Lucide arrow-up icon \u2014 the shaft and head draw on, then the arrow nudges up for growth, improvement, or upward-trend beats.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide arrow-up icon — the shaft and head draw on, then the arrow nudges up for growth, improvement, or upward-trend beats.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-arrow-up/index.tsx",
@@ -3088,13 +2582,9 @@
     {
       "name": "icon-arrow-down",
       "title": "Arrow Down",
-      "description": "Animated Lucide arrow-down icon \u2014 the shaft and head draw on, then the arrow nudges down for cost/latency reduction beats or scroll cues.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide arrow-down icon — the shaft and head draw on, then the arrow nudges down for cost/latency reduction beats or scroll cues.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-arrow-down/index.tsx",
@@ -3107,13 +2597,9 @@
     {
       "name": "icon-external-link",
       "title": "External Link",
-      "description": "Animated Lucide external-link icon \u2014 the box and arrow draw on, then the arrow darts out toward the top-right for 'view on GitHub', external docs, or open-in-new-tab beats.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide external-link icon — the box and arrow draw on, then the arrow darts out toward the top-right for 'view on GitHub', external docs, or open-in-new-tab beats.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-external-link/index.tsx",
@@ -3126,13 +2612,9 @@
     {
       "name": "icon-play",
       "title": "Play",
-      "description": "Animated Lucide play icon \u2014 the triangle draws on, then presses in and springs forward like a play button being hit.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide play icon — the triangle draws on, then presses in and springs forward like a play button being hit.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-play/index.tsx",
@@ -3145,13 +2627,9 @@
     {
       "name": "icon-pause",
       "title": "Pause",
-      "description": "Animated Lucide pause icon \u2014 the two bars draw on, then pinch toward each other and settle like a held breath.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide pause icon — the two bars draw on, then pinch toward each other and settle like a held breath.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-pause/index.tsx",
@@ -3164,13 +2642,9 @@
     {
       "name": "icon-skip-forward",
       "title": "Skip Forward",
-      "description": "Animated Lucide skip-forward icon \u2014 draws on, then dashes forward past center and snaps against its end bar.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide skip-forward icon — draws on, then dashes forward past center and snaps against its end bar.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-skip-forward/index.tsx",
@@ -3183,13 +2657,9 @@
     {
       "name": "icon-volume-2",
       "title": "Volume 2",
-      "description": "Animated Lucide volume-2 icon \u2014 the speaker draws on, then the two sound waves ripple outward one after the other.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide volume-2 icon — the speaker draws on, then the two sound waves ripple outward one after the other.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-volume-2/index.tsx",
@@ -3202,13 +2672,9 @@
     {
       "name": "icon-volume-x",
       "title": "Volume X",
-      "description": "Animated Lucide volume-x icon \u2014 the speaker draws on, then the X slashes in and the glyph shakes off the sound.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide volume-x icon — the speaker draws on, then the X slashes in and the glyph shakes off the sound.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-volume-x/index.tsx",
@@ -3221,13 +2687,9 @@
     {
       "name": "icon-mic",
       "title": "Mic",
-      "description": "Animated Lucide mic icon \u2014 draws on, then the capsule bounces twice like a level meter picking up voice.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide mic icon — draws on, then the capsule bounces twice like a level meter picking up voice.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-mic/index.tsx",
@@ -3240,13 +2702,9 @@
     {
       "name": "icon-video",
       "title": "Video",
-      "description": "Animated Lucide video icon \u2014 draws on, then the lens wedge pans out and snaps back to its shot.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide video icon — draws on, then the lens wedge pans out and snaps back to its shot.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-video/index.tsx",
@@ -3259,13 +2717,9 @@
     {
       "name": "icon-camera",
       "title": "Camera",
-      "description": "Animated Lucide camera icon \u2014 draws on, then the lens blinks shut and open like a shutter firing.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide camera icon — draws on, then the lens blinks shut and open like a shutter firing.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-camera/index.tsx",
@@ -3278,13 +2732,9 @@
     {
       "name": "icon-image",
       "title": "Image",
-      "description": "Animated Lucide image icon \u2014 the frame draws on, then the mountain redraws and the sun drifts into place like a photo developing.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide image icon — the frame draws on, then the mountain redraws and the sun drifts into place like a photo developing.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-image/index.tsx",
@@ -3297,13 +2747,9 @@
     {
       "name": "icon-chevron-up",
       "title": "Chevron Up",
-      "description": "Animated Lucide chevron-up icon \u2014 draws on, then nudges upward with a fading echo.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide chevron-up icon — draws on, then nudges upward with a fading echo.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-chevron-up/index.tsx",
@@ -3316,13 +2762,9 @@
     {
       "name": "icon-chevron-down",
       "title": "Chevron Down",
-      "description": "Animated Lucide chevron-down icon \u2014 draws on, then nudges downward with a fading echo.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide chevron-down icon — draws on, then nudges downward with a fading echo.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-chevron-down/index.tsx",
@@ -3335,13 +2777,9 @@
     {
       "name": "icon-chevron-left",
       "title": "Chevron Left",
-      "description": "Animated Lucide chevron-left icon \u2014 draws on, then nudges left with a fading echo.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide chevron-left icon — draws on, then nudges left with a fading echo.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-chevron-left/index.tsx",
@@ -3354,13 +2792,9 @@
     {
       "name": "icon-chevron-right",
       "title": "Chevron Right",
-      "description": "Animated Lucide chevron-right icon \u2014 draws on, then nudges right with a fading echo.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide chevron-right icon — draws on, then nudges right with a fading echo.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-chevron-right/index.tsx",
@@ -3373,13 +2807,9 @@
     {
       "name": "icon-menu",
       "title": "Menu",
-      "description": "Animated Lucide menu icon \u2014 the three bars slide in from the left, top to bottom, each overshooting into place.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide menu icon — the three bars slide in from the left, top to bottom, each overshooting into place.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-menu/index.tsx",
@@ -3392,13 +2822,9 @@
     {
       "name": "icon-more-horizontal",
       "title": "More Horizontal",
-      "description": "Animated Lucide more-horizontal icon \u2014 three dots pop in, then do a left-to-right thinking wave.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide more-horizontal icon — three dots pop in, then do a left-to-right thinking wave.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-more-horizontal/index.tsx",
@@ -3411,13 +2837,9 @@
     {
       "name": "icon-maximize",
       "title": "Maximize",
-      "description": "Animated Lucide maximize icon \u2014 four corner brackets draw on, then fly outward and spring back like a window going fullscreen.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide maximize icon — four corner brackets draw on, then fly outward and spring back like a window going fullscreen.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-maximize/index.tsx",
@@ -3430,13 +2852,9 @@
     {
       "name": "icon-layout-grid",
       "title": "Layout Grid",
-      "description": "Animated Lucide layout-grid icon \u2014 four tiles draw on, then re-pop into place clockwise like a dashboard assembling.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide layout-grid icon — four tiles draw on, then re-pop into place clockwise like a dashboard assembling.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-layout-grid/index.tsx",
@@ -3449,13 +2867,9 @@
     {
       "name": "icon-pencil",
       "title": "Pencil",
-      "description": "Animated Lucide pencil icon \u2014 draws on, then scribbles: the pencil rocks around its tip as if writing.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide pencil icon — draws on, then scribbles: the pencil rocks around its tip as if writing.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-pencil/index.tsx",
@@ -3468,13 +2882,9 @@
     {
       "name": "icon-share-2",
       "title": "Share 2",
-      "description": "Animated Lucide share-2 icon \u2014 three nodes draw on, then the connections re-trace and the receiving nodes pop as the share lands.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide share-2 icon — three nodes draw on, then the connections re-trace and the receiving nodes pop as the share lands.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-share-2/index.tsx",
@@ -3487,13 +2897,9 @@
     {
       "name": "icon-filter",
       "title": "Filter",
-      "description": "Animated Lucide filter icon \u2014 the funnel draws on, then gives two quick shakes as results fall through.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide filter icon — the funnel draws on, then gives two quick shakes as results fall through.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-filter/index.tsx",
@@ -3506,13 +2912,9 @@
     {
       "name": "icon-eye",
       "title": "Eye",
-      "description": "Animated Lucide eye icon \u2014 draws on, then blinks once and refocuses its pupil.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide eye icon — draws on, then blinks once and refocuses its pupil.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-eye/index.tsx",
@@ -3525,13 +2927,9 @@
     {
       "name": "icon-eye-off",
       "title": "Eye Off",
-      "description": "Animated Lucide eye-off icon \u2014 the eye fragments draw on, then the slash cuts through and visibility dims.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide eye-off icon — the eye fragments draw on, then the slash cuts through and visibility dims.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-eye-off/index.tsx",
@@ -3544,13 +2942,9 @@
     {
       "name": "icon-rocket",
       "title": "Rocket",
-      "description": "Animated Lucide rocket icon \u2014 draws on, then lifts off: the ship rises on a tilt while the flame re-ignites, then eases back to rest.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide rocket icon — draws on, then lifts off: the ship rises on a tilt while the flame re-ignites, then eases back to rest.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-rocket/index.tsx",
@@ -3563,13 +2957,9 @@
     {
       "name": "icon-save",
       "title": "Save",
-      "description": "Animated Lucide save icon \u2014 the disk draws on, then presses down and writes: the label slot re-draws as data commits.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide save icon — the disk draws on, then presses down and writes: the label slot re-draws as data commits.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-save/index.tsx",
@@ -3582,13 +2972,9 @@
     {
       "name": "icon-link",
       "title": "Link",
-      "description": "Animated Lucide link icon \u2014 two chain halves draw on, pull apart, and click together.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide link icon — two chain halves draw on, pull apart, and click together.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-link/index.tsx",
@@ -3601,13 +2987,9 @@
     {
       "name": "icon-bookmark",
       "title": "Bookmark",
-      "description": "Animated Lucide bookmark icon \u2014 draws on, then drops into place from above with a spring landing.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide bookmark icon — draws on, then drops into place from above with a spring landing.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-bookmark/index.tsx",
@@ -3620,13 +3002,9 @@
     {
       "name": "icon-lock",
       "title": "Lock",
-      "description": "Animated Lucide lock icon \u2014 the body draws on, then the shackle lifts and slams shut with a confirming pop.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide lock icon — the body draws on, then the shackle lifts and slams shut with a confirming pop.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-lock/index.tsx",
@@ -3639,13 +3017,9 @@
     {
       "name": "icon-key",
       "title": "Key",
-      "description": "Animated Lucide key icon \u2014 draws on, then turns in an invisible lock and springs back.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide key icon — draws on, then turns in an invisible lock and springs back.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-key/index.tsx",
@@ -3658,13 +3032,9 @@
     {
       "name": "icon-log-out",
       "title": "Log Out",
-      "description": "Animated Lucide log-out icon \u2014 draws on, then the arrow steps out through the door frame with a fading echo.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide log-out icon — draws on, then the arrow steps out through the door frame with a fading echo.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-log-out/index.tsx",
@@ -3677,13 +3047,9 @@
     {
       "name": "icon-mail",
       "title": "Mail",
-      "description": "Animated Lucide mail icon \u2014 the envelope draws on, then the flap re-traces open and the whole envelope pops: you've got mail.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide mail icon — the envelope draws on, then the flap re-traces open and the whole envelope pops: you've got mail.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-mail/index.tsx",
@@ -3696,13 +3062,9 @@
     {
       "name": "icon-message-circle",
       "title": "Message Circle",
-      "description": "Animated Lucide message-circle icon \u2014 the bubble draws on, then inflates from its tail like a message arriving.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide message-circle icon — the bubble draws on, then inflates from its tail like a message arriving.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-message-circle/index.tsx",
@@ -3715,13 +3077,9 @@
     {
       "name": "icon-phone",
       "title": "Phone",
-      "description": "Animated Lucide phone icon \u2014 draws on, then rings: three decaying rotation oscillations around center.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide phone icon — draws on, then rings: three decaying rotation oscillations around center.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-phone/index.tsx",
@@ -3734,13 +3092,9 @@
     {
       "name": "icon-at-sign",
       "title": "At Sign",
-      "description": "Animated Lucide at-sign icon \u2014 the inner 'a' draws and pops, then the outer swoosh re-traces its tail: a mention landing.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide at-sign icon — the inner 'a' draws and pops, then the outer swoosh re-traces its tail: a mention landing.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-at-sign/index.tsx",
@@ -3753,13 +3107,9 @@
     {
       "name": "icon-inbox",
       "title": "Inbox",
-      "description": "Animated Lucide inbox icon \u2014 the tray draws on, then dips under the weight of an arriving item and springs back.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide inbox icon — the tray draws on, then dips under the weight of an arriving item and springs back.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-inbox/index.tsx",
@@ -3772,13 +3122,9 @@
     {
       "name": "icon-shield",
       "title": "Shield",
-      "description": "Animated Lucide shield icon \u2014 draws on, then braces: a firm guard pulse that asserts protection.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide shield icon — draws on, then braces: a firm guard pulse that asserts protection.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-shield/index.tsx",
@@ -3791,13 +3137,9 @@
     {
       "name": "icon-help-circle",
       "title": "Help Circle",
-      "description": "Animated Lucide help-circle icon \u2014 the ring draws on, then the question mark re-draws and tilts like a curious head.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide help-circle icon — the ring draws on, then the question mark re-draws and tilts like a curious head.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-help-circle/index.tsx",
@@ -3810,13 +3152,9 @@
     {
       "name": "icon-plus-circle",
       "title": "Plus Circle",
-      "description": "Animated Lucide plus-circle icon \u2014 the ring draws on, the plus crosses in, then the whole badge pops.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide plus-circle icon — the ring draws on, the plus crosses in, then the whole badge pops.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-plus-circle/index.tsx",
@@ -3829,13 +3167,9 @@
     {
       "name": "icon-x-circle",
       "title": "X Circle",
-      "description": "Animated Lucide x-circle icon \u2014 the ring draws on, the X slashes in, and the badge shakes once: firmly rejected.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide x-circle icon — the ring draws on, the X slashes in, and the badge shakes once: firmly rejected.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-x-circle/index.tsx",
@@ -3848,13 +3182,9 @@
     {
       "name": "icon-calendar",
       "title": "Calendar",
-      "description": "Animated Lucide calendar icon \u2014 the pad draws on, then the binder rings dip and the page snaps into place.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide calendar icon — the pad draws on, then the binder rings dip and the page snaps into place.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-calendar/index.tsx",
@@ -3867,13 +3197,9 @@
     {
       "name": "icon-clock",
       "title": "Clock",
-      "description": "Animated Lucide clock icon \u2014 the face draws on, then the hands sweep through discrete ticks. Loops by default.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide clock icon — the face draws on, then the hands sweep through discrete ticks. Loops by default.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-clock/index.tsx",
@@ -3886,13 +3212,9 @@
     {
       "name": "icon-timer",
       "title": "Timer",
-      "description": "Animated Lucide timer icon \u2014 draws on, then the start button clicks and the hand sweeps: the stopwatch is running.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide timer icon — draws on, then the start button clicks and the hand sweeps: the stopwatch is running.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-timer/index.tsx",
@@ -3905,13 +3227,9 @@
     {
       "name": "icon-home",
       "title": "Home",
-      "description": "Animated Lucide home icon \u2014 the house draws on, then the door re-draws open and the house settles: welcome home.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide home icon — the house draws on, then the door re-draws open and the house settles: welcome home.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-home/index.tsx",
@@ -3924,13 +3242,9 @@
     {
       "name": "icon-folder",
       "title": "Folder",
-      "description": "Animated Lucide folder icon \u2014 draws on, then the folder tips open for a peek and closes.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide folder icon — draws on, then the folder tips open for a peek and closes.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-folder/index.tsx",
@@ -3943,13 +3257,9 @@
     {
       "name": "icon-file-text",
       "title": "File Text",
-      "description": "Animated Lucide file-text icon \u2014 the page draws on, then the text lines type themselves in, top to bottom.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide file-text icon — the page draws on, then the text lines type themselves in, top to bottom.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-file-text/index.tsx",
@@ -3962,13 +3272,9 @@
     {
       "name": "icon-code",
       "title": "Code",
-      "description": "Animated Lucide code icon \u2014 the angle brackets draw on, pull apart, and snap back around their code.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide code icon — the angle brackets draw on, pull apart, and snap back around their code.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-code/index.tsx",
@@ -3981,13 +3287,9 @@
     {
       "name": "icon-target",
       "title": "Target",
-      "description": "Animated Lucide target icon \u2014 three rings draw in from outside, then the bullseye hits: inner dot pops and the board shudders.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide target icon — three rings draw in from outside, then the bullseye hits: inner dot pops and the board shudders.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-target/index.tsx",
@@ -4000,13 +3302,9 @@
     {
       "name": "icon-terminal",
       "title": "Terminal",
-      "description": "Animated Lucide terminal icon \u2014 draws on, then the prompt nudges forward and the cursor blinks twice.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide terminal icon — draws on, then the prompt nudges forward and the cursor blinks twice.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-terminal/index.tsx",
@@ -4019,13 +3317,9 @@
     {
       "name": "icon-database",
       "title": "Database",
-      "description": "Animated Lucide database icon \u2014 the cylinder draws on, then a write lands: the top disc pops and data settles down the stack.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide database icon — the cylinder draws on, then a write lands: the top disc pops and data settles down the stack.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-database/index.tsx",
@@ -4038,13 +3332,9 @@
     {
       "name": "icon-cloud",
       "title": "Cloud",
-      "description": "Animated Lucide cloud icon \u2014 draws on, then floats: a weightless bob and a half before settling.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide cloud icon — draws on, then floats: a weightless bob and a half before settling.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-cloud/index.tsx",
@@ -4057,13 +3347,9 @@
     {
       "name": "icon-globe",
       "title": "Globe",
-      "description": "Animated Lucide globe icon \u2014 draws on, then the meridian sweeps west to east like the world turning. Loops by default.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide globe icon — draws on, then the meridian sweeps west to east like the world turning. Loops by default.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-globe/index.tsx",
@@ -4076,13 +3362,9 @@
     {
       "name": "icon-monitor",
       "title": "Monitor",
-      "description": "Animated Lucide monitor icon \u2014 the stand draws, then the screen powers on with a CRT-style unsquash.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide monitor icon — the stand draws, then the screen powers on with a CRT-style unsquash.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-monitor/index.tsx",
@@ -4095,13 +3377,9 @@
     {
       "name": "icon-smartphone",
       "title": "Smartphone",
-      "description": "Animated Lucide smartphone icon \u2014 draws on, then buzzes: three fast vibration oscillations.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide smartphone icon — draws on, then buzzes: three fast vibration oscillations.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-smartphone/index.tsx",
@@ -4114,13 +3392,9 @@
     {
       "name": "icon-sun",
       "title": "Sun",
-      "description": "Animated Lucide sun icon \u2014 the core draws on, then eight rays fan out clockwise and the sun swells: sunrise.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide sun icon — the core draws on, then eight rays fan out clockwise and the sun swells: sunrise.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-sun/index.tsx",
@@ -4133,13 +3407,9 @@
     {
       "name": "icon-moon",
       "title": "Moon",
-      "description": "Animated Lucide moon icon \u2014 draws on, then rocks gently into place: settling in for the night.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide moon icon — draws on, then rocks gently into place: settling in for the night.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-moon/index.tsx",
@@ -4152,13 +3422,9 @@
     {
       "name": "icon-shopping-cart",
       "title": "Shopping Cart",
-      "description": "Animated Lucide shopping-cart icon \u2014 draws on, then rolls forward to checkout, wheels popping as it stops.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide shopping-cart icon — draws on, then rolls forward to checkout, wheels popping as it stops.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-shopping-cart/index.tsx",
@@ -4171,13 +3437,9 @@
     {
       "name": "icon-credit-card",
       "title": "Credit Card",
-      "description": "Animated Lucide credit-card icon \u2014 the card draws on, then the stripe swipes through and the card tips: payment accepted.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide credit-card icon — the card draws on, then the stripe swipes through and the card tips: payment accepted.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-credit-card/index.tsx",
@@ -4190,13 +3452,9 @@
     {
       "name": "icon-crown",
       "title": "Crown",
-      "description": "Animated Lucide crown icon \u2014 descends into place from above, lands with a pop, then rocks regally to rest.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide crown icon — descends into place from above, lands with a pop, then rocks regally to rest.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-crown/index.tsx",
@@ -4209,13 +3467,9 @@
     {
       "name": "icon-dollar-sign",
       "title": "Dollar Sign",
-      "description": "Animated Lucide dollar-sign icon \u2014 draws on, then the sign stretches tall: understated cha-ching.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide dollar-sign icon — draws on, then the sign stretches tall: understated cha-ching.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-dollar-sign/index.tsx",
@@ -4228,13 +3482,9 @@
     {
       "name": "icon-tag",
       "title": "Tag",
-      "description": "Animated Lucide tag icon \u2014 draws on, then swings from its hole like a price tag flicked by a shopper.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide tag icon — draws on, then swings from its hole like a price tag flicked by a shopper.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-tag/index.tsx",
@@ -4247,13 +3497,9 @@
     {
       "name": "icon-package",
       "title": "Package",
-      "description": "Animated Lucide package icon \u2014 the box draws on, lands with a squash-and-stretch, then the tape seam seals it.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide package icon — the box draws on, lands with a squash-and-stretch, then the tape seam seals it.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-package/index.tsx",
@@ -4266,13 +3512,9 @@
     {
       "name": "icon-gem",
       "title": "Gem",
-      "description": "Animated Lucide gem icon \u2014 the stone draws on, then light catches it: facets re-trace in sequence with a flicker and a pop.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide gem icon — the stone draws on, then light catches it: facets re-trace in sequence with a flicker and a pop.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-gem/index.tsx",
@@ -4285,13 +3527,9 @@
     {
       "name": "icon-gift",
       "title": "Gift",
-      "description": "Animated Lucide gift icon \u2014 draws on, then the lid lifts for a peek and lands with a ribbon pop: almost unwrapped.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide gift icon — draws on, then the lid lifts for a peek and lands with a ribbon pop: almost unwrapped.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-gift/index.tsx",
@@ -4304,13 +3542,9 @@
     {
       "name": "icon-wallet",
       "title": "Wallet",
-      "description": "Animated Lucide wallet icon \u2014 draws on, then the wallet thickens with a quiet x-scale: money in.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide wallet icon — draws on, then the wallet thickens with a quiet x-scale: money in.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-wallet/index.tsx",
@@ -4323,13 +3557,9 @@
     {
       "name": "icon-award",
       "title": "Award",
-      "description": "Animated Lucide award icon \u2014 the medal draws on, the ribbon unfurls beneath it, then the medal swings to rest.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide award icon — the medal draws on, the ribbon unfurls beneath it, then the medal swings to rest.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-award/index.tsx",
@@ -4342,13 +3572,9 @@
     {
       "name": "icon-bar-chart-3",
       "title": "Bar Chart 3",
-      "description": "Animated Lucide bar-chart-3 icon \u2014 the axis draws on, then three bars rise left to right with overshoot: the classic growth chart.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide bar-chart-3 icon — the axis draws on, then three bars rise left to right with overshoot: the classic growth chart.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-bar-chart-3/index.tsx",
@@ -4361,13 +3587,9 @@
     {
       "name": "icon-trending-down",
       "title": "Trending Down",
-      "description": "Animated Lucide trending-down icon \u2014 the line descends across, then the arrowhead lands with damped weight.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide trending-down icon — the line descends across, then the arrowhead lands with damped weight.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-trending-down/index.tsx",
@@ -4380,13 +3602,9 @@
     {
       "name": "icon-trending-up",
       "title": "Trending Up",
-      "description": "Animated Lucide trending-up icon \u2014 the line climbs across, then the arrowhead pops at the peak.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide trending-up icon — the line climbs across, then the arrowhead pops at the peak.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-trending-up/index.tsx",
@@ -4399,13 +3617,9 @@
     {
       "name": "icon-trophy",
       "title": "Trophy",
-      "description": "Animated Lucide trophy icon \u2014 draws on, then hoists: the cup hops with a pop at the apex while its handles flash in.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide trophy icon — draws on, then hoists: the cup hops with a pop at the apex while its handles flash in.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-trophy/index.tsx",
@@ -4418,13 +3632,9 @@
     {
       "name": "icon-user",
       "title": "User",
-      "description": "Animated Lucide user icon \u2014 draws on, then gives a small presence nod: head dips as shoulders rise to meet it.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide user icon — draws on, then gives a small presence nod: head dips as shoulders rise to meet it.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-user/index.tsx",
@@ -4437,13 +3647,9 @@
     {
       "name": "icon-users",
       "title": "Users",
-      "description": "Animated Lucide users icon \u2014 the front figure draws on and pops, then the second figure slides in from behind: the team assembles.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide users icon — the front figure draws on and pops, then the second figure slides in from behind: the team assembles.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-users/index.tsx",
@@ -4456,13 +3662,9 @@
     {
       "name": "icon-user-plus",
       "title": "User Plus",
-      "description": "Animated Lucide user-plus icon \u2014 the figure draws on, then the plus strokes draw in and pop: a new member added.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide user-plus icon — the figure draws on, then the plus strokes draw in and pop: a new member added.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-user-plus/index.tsx",
@@ -4475,13 +3677,9 @@
     {
       "name": "icon-sparkles",
       "title": "Sparkles",
-      "description": "Animated Lucide sparkles icon \u2014 the main sparkle draws on, the accents pop, then a looping twinkle for AI, magic, or premium highlights. Loops by default.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide sparkles icon — the main sparkle draws on, the accents pop, then a looping twinkle for AI, magic, or premium highlights. Loops by default.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-sparkles/index.tsx",
@@ -4494,13 +3692,9 @@
     {
       "name": "icon-zap",
       "title": "Zap",
-      "description": "Animated Lucide zap icon \u2014 the bolt draws in fast, then flashes with a double blink for speed, performance, or instant-result claims.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide zap icon — the bolt draws in fast, then flashes with a double blink for speed, performance, or instant-result claims.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-zap/index.tsx",
@@ -4513,13 +3707,9 @@
     {
       "name": "icon-flame",
       "title": "Flame",
-      "description": "Animated Lucide flame icon \u2014 the outline draws on, then flickers with a looping scale-and-skew wobble for hot features, trending items, or streaks. Loops by default.",
-      "dependencies": [
-        "remotion"
-      ],
-      "registryDependencies": [
-        "@remocn/icons-core"
-      ],
+      "description": "Animated Lucide flame icon — the outline draws on, then flickers with a looping scale-and-skew wobble for hot features, trending items, or streaks. Loops by default.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/icons-core"],
       "files": [
         {
           "path": "registry/remocn-icons/icon-flame/index.tsx",
