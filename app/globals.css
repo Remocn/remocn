@@ -3,6 +3,7 @@
 @import "shadcn/tailwind.css";
 @import "fumadocs-ui/css/shadcn.css";
 @import "fumadocs-ui/css/preset.css";
+@import "./typeset.css";
 @source "../node_modules/fumadocs-ui/dist/**/*.js";
 
 @custom-variant dark (&:is(.dark *));
@@ -211,7 +212,7 @@
   );
 }
 
-.prose figure.shiki {
+.typeset figure.shiki {
   /* biome-ignore lint/complexity/noImportantStyles: overrides shiki's own inline background/border/shadow, which outrank this class in specificity */
   background-color: var(--muted) !important;
   /* biome-ignore lint/complexity/noImportantStyles: see above */
@@ -220,98 +221,10 @@
   box-shadow: none !important;
   border-radius: var(--radius-xl);
 }
-.prose figure.shiki pre,
-.prose figure.shiki [class*="bg-"] {
+.typeset figure.shiki pre,
+.typeset figure.shiki [class*="bg-"] {
   /* biome-ignore lint/complexity/noImportantStyles: see above */
   background-color: transparent !important;
-}
-
-.prose figure.shiki pre {
-  font-size: 0.9375rem;
-  line-height: 1.7;
-}
-.prose :not(pre) > code {
-  background-color: color-mix(in oklab, var(--muted) 70%, transparent);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 0.125rem 0.375rem;
-  font-size: 0.875em;
-  font-weight: 500;
-}
-.prose :not(pre) > code::before,
-.prose :not(pre) > code::after {
-  content: none;
-}
-
-.prose h2 {
-  @apply mt-16 mb-4 text-3xl font-semibold tracking-tight;
-}
-.prose > :first-child h2,
-.prose h2:first-child {
-  @apply mt-12;
-}
-.prose h3 {
-  @apply mt-10 mb-3 text-xl font-semibold tracking-tight;
-}
-.prose h4 {
-  @apply mt-8 mb-2 text-base font-semibold tracking-tight;
-}
-
-.prose a:not(:where([class~="not-prose"] *)) {
-  color: var(--foreground);
-  font-weight: 500;
-  text-decoration: none;
-  text-underline-offset: 0.2em;
-  text-decoration-color: color-mix(in oklab, var(--foreground) 35%, transparent);
-  transition:
-    text-decoration-color 150ms ease,
-    color 150ms ease;
-}
-.prose a:not(:where([class~="not-prose"] *)):hover {
-  text-decoration: underline;
-  text-decoration-color: color-mix(in oklab, var(--foreground) 60%, transparent);
-}
-.prose a:not(:where([class~="not-prose"] *)):focus-visible {
-  outline: none;
-  border-radius: var(--radius-sm);
-  box-shadow: 0 0 0 2px color-mix(in oklab, var(--ring) 60%, transparent);
-}
-
-.prose table {
-  font-size: 0.875rem;
-}
-.prose thead {
-  border-bottom: 1px solid var(--border);
-}
-.prose th {
-  font-weight: 600;
-  color: var(--foreground);
-}
-.prose tbody tr {
-  border-bottom: 1px solid var(--border);
-}
-.prose td,
-.prose th {
-  padding: 0.5rem 0.75rem;
-}
-
-.prose p,
-.prose ul,
-.prose ol,
-.prose blockquote {
-  @apply max-w-3xl;
-}
-.prose .not-prose,
-.prose .not-prose p,
-.prose .not-prose ul,
-.prose .not-prose ol {
-  max-width: none;
-}
-
-.prose blockquote {
-  border-inline-start: 2px solid var(--border);
-  color: var(--muted-foreground);
-  font-style: normal;
 }
 
 #nd-sidebar a,

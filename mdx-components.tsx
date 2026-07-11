@@ -21,13 +21,12 @@ import { UiComponentPreview } from "@/components/docs/ui-component-preview";
  * internal-aware `Link`, and the overflow-wrapped `Table`. Reimplementing any
  * of these would break code highlighting, copy buttons, and heading deep-links.
  *
- * The remocn *visual* restyle that de-templates the default Fumadocs prose is
- * delivered through the token-driven `.prose` rules in `app/globals.css`
- * (headings → display H1 + sans h2–h4, links → `foreground`/`accent` with a
- * focus-visible ring, code/Shiki → `muted` token surface, tables → token
- * hairlines + muted header). That keeps every prose element on our oklch
- * tokens — no default-blue links, no templated heading look — without forking
- * the Fumadocs components here.
+ * Docs typography is owned by shadcn typeset (`app/typeset.css`, applied via
+ * the `typeset typeset-docs` container on the docs page): headings, links,
+ * code, tables and all vertical rhythm derive from its three rhythm variables
+ * on our oklch tokens. `app/globals.css` keeps only functional exceptions —
+ * the Shiki surface fix (outranks Shiki's inline styles) and the readable
+ * text-measure cap.
  *
  * Custom doc widgets are registered as-is (other lanes own their internals).
  */
