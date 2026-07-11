@@ -1,9 +1,9 @@
 "use client";
 
-import { DynamicCodeBlock } from "fumadocs-ui/components/dynamic-codeblock";
 import { CheckIcon, LinkIcon, RotateCcwIcon } from "lucide-react";
 import { useQueryStates } from "nuqs";
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { CodeBlock } from "@/components/docs/code-block";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useTrackEvent } from "@/lib/analytics";
@@ -363,9 +363,7 @@ function UiPreview({
         </TabsContent>
 
         <TabsContent value="code" className="mt-0">
-          <div className="surface-card overflow-hidden rounded-2xl [&_pre]:!rounded-none [&_pre]:!border-0 [&_pre]:!bg-transparent">
-            <DynamicCodeBlock lang="tsx" code={code} />
-          </div>
+          <CodeBlock code={code} />
         </TabsContent>
       </Tabs>
 
