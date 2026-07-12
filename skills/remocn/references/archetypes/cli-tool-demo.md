@@ -41,7 +41,7 @@ Transitions: hook→chat `fade()` (16f); chat→terminal `whip-pan` down (20f); 
 
 | Beat | Catalog components | New component needed |
 |---|---|---|
-| Hook | `kinetic-center-build` (headline), `inline-highlight` (accent word), `dynamic-grid` (0.06 opacity static bg) | — |
+| Hook | `kinetic-center-build` (headline), `inline-highlight` (accent word), `shader-dot-orbit` (0.06 opacity static bg) | — |
 | Agent chat | `claude-code` / `opencode` / `v0` / `chat-gpt` / `claude-chat` (match the tool's ecosystem), `cursor` (pointer to input field) | — |
 | Terminal run | `terminal-simulator` (hero — scroll is an instant step-function, never eased), `staggered-fade-up` (output rows, 6f apart), `rolling-number` (inline numbers — file count, elapsed time), `marker-highlight` (green sweep on the final `✓` line) | — |
 | Value line | `per-word-crossfade` (A→B two-phrase swap) or `kinetic-center-build` (single statement build), `inline-highlight` (accent phrase) | — |
@@ -73,7 +73,7 @@ Transitions: hook→chat `fade()` (16f); chat→terminal `whip-pan` down (20f); 
 - **Show 3–6 output lines maximum.** Pick the most readable step names and the success line; cut everything else. A wall of log text reads as noise, not credibility.
 - **Numbers inside the output use `rolling-number` inline.** File count, elapsed time, bundle size — these small payoffs make the terminal feel live. One or two numbers per output section; not every line.
 - **One accent color throughout.** The `✓ Done` line highlight, the hook's emphasis word, and the logo share exactly one accent. All other text stays neutral mono on dark.
-- **Background can move — keep it restrained.** A slow, muted shader (`shader-neuro-noise`, `shader-mesh-gradient`) at low `speed`, a `dynamic-grid` at 0.06 opacity, or a solid theme fill. The terminal is the focal point — if the background moves, keep it low and muted so it never competes with the terminal.
+- **Background can move — keep it restrained.** A slow, muted shader (`shader-neuro-noise`, `shader-mesh-gradient`) at low `speed`, a `shader-dot-orbit` at 0.06 opacity, or a solid theme fill. The terminal is the focal point — if the background moves, keep it low and muted so it never competes with the terminal.
 - **Agent chat beat is optional.** Include it in the standard variant when the tool is AI-powered or agentic. Skip it (and use the short structure) when the tool is a pure CLI with no AI surface — adding a chat beat to a Rust CLI just to fill time is slop.
 - **Pick the agent surface to match the tool's ecosystem.** A Claude-powered tool → `claude-code`. An OpenCode workflow → `opencode`. A web-generation tool → `v0`. Mismatching brand surfaces undermines credibility.
 - **`browser-frame` must be built before any video using `resultType: "web"`.** It does not exist in the catalog; flag it at composition time and build per `../anatomy.md` §1. It is reusable — worth building, not a one-off.

@@ -1,9 +1,4 @@
-import {
-  DocsBody,
-  DocsDescription,
-  DocsPage,
-  DocsTitle,
-} from "fumadocs-ui/page";
+import { DocsDescription, DocsPage, DocsTitle } from "fumadocs-ui/page";
 import { notFound } from "next/navigation";
 import { DocsAdRail } from "@/components/docs/docs-ad-rail";
 import { getMDXComponents } from "@/mdx-components";
@@ -37,9 +32,9 @@ export default async function Page(props: {
       <DocsDescription className="mt-3 mb-0 max-w-3xl text-balance text-lg text-muted-foreground md:text-xl">
         {data.description}
       </DocsDescription>
-      <DocsBody className="mt-8">
+      <div className="typeset typeset-docs mt-8 flex-1">
         <MDX components={getMDXComponents()} />
-      </DocsBody>
+      </div>
     </DocsPage>
   );
 }

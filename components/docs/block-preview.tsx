@@ -1,13 +1,13 @@
 "use client";
 
-import { DynamicCodeBlock } from "fumadocs-ui/components/dynamic-codeblock";
+import { CodeBlock } from "@/components/docs/code-block";
 import { PreviewStage } from "@/lib/ui-preview-internals";
 import { blockExamples } from "./examples/blocks";
 
 /**
  * Controls-free preview for composition blocks. A THIN wrapper over
  * `PreviewStage` (`lib/ui-preview-internals.tsx` — owns lazy-mount + autoplay)
- * plus `DynamicCodeBlock`: the live scene Player above, the copyable scene
+ * plus the shared `CodeBlock`: the live scene Player above, the copyable scene
  * snippet below. No Tabs, no customizer, no nuqs, no controls.
  *
  * Replaces both the vestigial `LiveExample` and `UiComponentPreview` for the
@@ -47,9 +47,7 @@ export function BlockPreview({ name }: { name: string }) {
         previewBackdrop={entry.previewBackdrop}
       />
 
-      <div className="surface-card overflow-hidden rounded-2xl [&_pre]:!rounded-none [&_pre]:!border-0 [&_pre]:!bg-transparent">
-        <DynamicCodeBlock lang="tsx" code={code} />
-      </div>
+      <CodeBlock code={code} />
     </div>
   );
 }

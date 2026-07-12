@@ -411,20 +411,6 @@
       "type": "registry:component"
     },
     {
-      "name": "mesh-gradient-bg",
-      "title": "Mesh Gradient Background",
-      "description": "Living gradient with amorphous color blobs slowly drifting across the frame.",
-      "dependencies": ["remotion"],
-      "files": [
-        {
-          "path": "registry/remocn/mesh-gradient-bg/index.tsx",
-          "type": "registry:component",
-          "target": "components/remocn/mesh-gradient-bg.tsx"
-        }
-      ],
-      "type": "registry:component"
-    },
-    {
       "name": "shader-mesh-gradient",
       "title": "Shader Mesh Gradient",
       "description": "WebGL mesh gradient backdrop driven per-frame for deterministic Remotion renders.",
@@ -672,20 +658,6 @@
           "path": "registry/remocn/shader-pulsing-border/index.tsx",
           "type": "registry:component",
           "target": "components/remocn/shader-pulsing-border.tsx"
-        }
-      ],
-      "type": "registry:component"
-    },
-    {
-      "name": "dynamic-grid",
-      "title": "Dynamic Grid",
-      "description": "Subtle moving grid background with configurable cell size and direction.",
-      "dependencies": ["remotion"],
-      "files": [
-        {
-          "path": "registry/remocn/dynamic-grid/index.tsx",
-          "type": "registry:component",
-          "target": "components/remocn/dynamic-grid.tsx"
         }
       ],
       "type": "registry:component"
@@ -1032,20 +1004,6 @@
           "path": "registry/remocn/glass-code-walk/index.tsx",
           "type": "registry:component",
           "target": "components/remocn/glass-code-walk.tsx"
-        }
-      ],
-      "type": "registry:component"
-    },
-    {
-      "name": "spotlight-card",
-      "title": "Spotlight Card",
-      "description": "A card with a moonlight-cool radial spotlight that follows a synthetic cursor and lights up its microborder.",
-      "dependencies": ["remotion"],
-      "files": [
-        {
-          "path": "registry/remocn/spotlight-card/index.tsx",
-          "type": "registry:component",
-          "target": "components/remocn/spotlight-card.tsx"
         }
       ],
       "type": "registry:component"

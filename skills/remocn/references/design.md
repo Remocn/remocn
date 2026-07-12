@@ -5,7 +5,7 @@ They keep output from reading as generic AI-slop. They are **not** retroactive r
 prebuilt remocn components.
 
 > **Scope & exception.** Never strip these traits from a component whose essence *is* the effect:
-> `tracking-in` is letter-spacing; `mesh-gradient-bg`, `spotlight-card`, and the social cards are
+> `tracking-in` is letter-spacing; the shader backdrops and the social cards are
 > gradients; some primitives use subtle elevation. The rules govern your additions, not the library.
 
 ---
@@ -47,7 +47,7 @@ decorative overlays sprinkled on cards.
 
 ```tsx
 // ✅ gradient as an intentional background
-<MeshGradientBg colors={["#0ea5e9", "#9333ea"]} />
+<ShaderMeshGradient colors={["#0ea5e9", "#9333ea"]} />
 <div style={{ color: "#fafafa" }}>Clear, solid text on top</div>
 
 // ❌ gradient-clipped text + decorative wash

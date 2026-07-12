@@ -18,6 +18,7 @@ export function CopyButton({
 
   return (
     <Button
+      data-slot="copy-button"
       variant="outline"
       size="icon-xs"
       aria-label="Copy to clipboard"

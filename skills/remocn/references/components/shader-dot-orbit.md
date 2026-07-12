@@ -40,6 +40,6 @@ Any other `DotOrbit` prop is forwarded through `...rest`.
 
 ## Don't use when
 
-- You want a static dot grid — the static `dot-grid` shader is intentionally not shipped; use a CSS grid or `dynamic-grid`.
+- You want a static dot grid — the static `dot-grid` shader is intentionally not shipped; use a CSS grid.
 - You want organic, flowing motion — use `shader-warp` or `shader-metaballs`.
 - The regular pattern would clash with dense foreground content.

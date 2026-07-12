@@ -106,7 +106,7 @@ function BentoCard({
       whileHover={{ y: -4 }}
       transition={SPRING_SOFT}
       className={cn(
-        "surface-card group relative flex flex-col overflow-hidden rounded-2xl shadow-xl shadow-black/5 sm:rounded-3xl dark:shadow-black/30",
+        "surface-card group relative flex flex-col overflow-hidden rounded-2xl sm:rounded-3xl",
         className,
       )}
     >

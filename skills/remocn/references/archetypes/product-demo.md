@@ -38,7 +38,7 @@ Pick one slot per beat from these candidates (full props in each `../components/
 
 | Beat | Slot candidates | Notes |
 |---|---|---|
-| **Hook** | `kinetic-center-build`, `blur-out-up`, `per-word-crossfade`, `tracking-in`, `staggered-fade-up` over a slow muted shader (`shader-mesh-gradient` / `shader-warp`), `dynamic-grid`, or solid | emphasize ONE word with the accent, sentence case |
+| **Hook** | `kinetic-center-build`, `blur-out-up`, `per-word-crossfade`, `tracking-in`, `staggered-fade-up` over a slow muted shader (`shader-mesh-gradient` / `shader-warp`) or solid | emphasize ONE word with the accent, sentence case |
 | **Positioning** | `per-character-rise` / `focus-blur-resolve` / `kinetic-center-build` for the line and wordmark; `logo-enter` for a brand/partner logo cluster (not a single lockup) | resolve text into the brand mark; a single styled lockup may be a small new component |
 | **Product reveal** | `terminal-simulator`, `glass-code-block`; AI surfaces `chat-gpt`/`claude-chat`/`claude-code`/`v0`/`opencode`; add `cursor` / `simulated-cursor` | if the catalog lacks the exact surface, build a new lightweight `ui-frame` (see `../anatomy.md` §1) |
 | **Features** | `progress-steps` (checklist), `animated-bar-chart` / `animated-line-chart`, `per-word-crossfade` for a "designed to ___" swap, `marker-highlight` / `inline-highlight` for emphasis, `data-flow-pipes` | one concrete moment per feature, 2–4 total |
@@ -104,7 +104,7 @@ export const ProductDemo = () => (
 
 Background stays on the outer `AbsoluteFill` (one accent on a neutral canvas); components render
 transparent. For a moving background, layer a slow, muted shader backdrop (e.g. `ShaderMeshGradient`
-at low `speed`) or `dynamic-grid` behind the series instead of the solid fill — keep it muted so it
+at low `speed`) behind the series instead of the solid fill — keep it muted so it
 never fights the foreground. The product-reveal beat above is folded into the features checklist for
 brevity — for a richer surface, add a `terminal-simulator` / chat sim / new `ui-frame` sequence
 before the features beat.
@@ -112,5 +112,5 @@ before the features beat.
 ## Step 5 — check against the bar
 
 Before delivering, run the good/slop checklist in `../anatomy.md` §3: one accent, sentence-case kinetic
-type, real content (no `Scene A` lorem), no glow halos, no feature-list enumeration, no `mesh-gradient-bg`,
+type, real content (no `Scene A` lorem), no glow halos, no feature-list enumeration,
 legible text, story not catalog. Budget frames so nothing clips and there's no dead air.

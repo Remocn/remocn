@@ -46,6 +46,6 @@ Lands at `components/remocn/confetti.tsx`.
 
 ## Don't use when
 
-- The video has a clean, minimal, or corporate tone — confetti reads as celebration-specific and breaks professional pacing; use `spotlight-card` or a subtle `dynamic-grid` instead.
-- You need a looping ambient particle background — confetti is a one-shot burst with gravity falloff, not a loop; use `dynamic-grid` for sustained motion.
+- The video has a clean, minimal, or corporate tone — confetti reads as celebration-specific and breaks professional pacing; use a subtle shader backdrop like `shader-grain-gradient` instead.
+- You need a looping ambient particle background — confetti is a one-shot burst with gravity falloff, not a loop; use `shader-dot-orbit` for sustained motion.
 - The burst should originate from a specific UI element offscreen — `originX`/`originY` are normalized 0–1 to the frame, not element-relative; compose with `AbsoluteFill` positioning instead.

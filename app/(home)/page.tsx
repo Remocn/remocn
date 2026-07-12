@@ -1,19 +1,17 @@
-import { BentoRegistry } from "./components/sections/bento-registry";
 import { FinalCTA } from "./components/sections/final-cta";
 import { GetStarted } from "./components/sections/get-started";
 import { Hero } from "./components/sections/hero";
-import { InteractiveCode } from "./components/sections/interactive-code";
 import { LandingPartners } from "./components/sections/landing-partners";
 import { Testimonials } from "./components/sections/testimonials";
-import { UiRegistry } from "./components/sections/ui-registry";
+import { WhatsInside } from "./components/sections/whats-inside";
+import { WhyRemocn } from "./components/sections/why-remocn";
 
 export default function Page() {
   return (
     <>
       <Hero />
-      <InteractiveCode />
-      <BentoRegistry />
-      <UiRegistry />
+      <WhyRemocn />
+      <WhatsInside />
       <GetStarted />
       <LandingPartners />
       <Testimonials />

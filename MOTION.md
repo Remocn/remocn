@@ -99,7 +99,7 @@ Easing камеры: `interpolate(..., { easing: Easing.out(Easing.cubic), extra
 
 - Эти движения — реализация решения «брендовые presentation поверх `TransitionSeries`» (см. TEMPLATES.md, реш. №5). `camera-crane-up`, `camera-type-flythrough`, `kinetic-word-swap` становятся presentation'ами; `card-extrude`, `wire-constellation`, `typewriter-pill` — scene-уровневые движения.
 - **Новая инфраструктура (разовая, для первого template):** core-примитив `Camera`, зависимость `@remotion/motion-blur@4.0.473`, набор easing-токенов выше как общий модуль.
-- **Фон:** референсный мягкий blue↔red аврора-вош допустим ТОЛЬКО как очень деликатный backdrop; `mesh-gradient-bg` запрещён (см. анти-слоп). Свечения нет — глубина даётся блюром и тенью, не glow.
+- **Фон:** референсный мягкий blue↔red аврора-вош допустим ТОЛЬКО как очень деликатный backdrop. Свечения нет — глубина даётся блюром и тенью, не glow.
 
 ## Чек-лист «в духе рефа» для каждого template
 

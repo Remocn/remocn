@@ -43,5 +43,5 @@ Any other `GodRays` prop is forwarded through `...rest`.
 ## Don't use when
 
 - The brief bans decorative glow — this is a genuine volumetric shader, but keep `bloom`/`intensity` restrained so it does not read as an AI-slop glow.
-- You want structured or cellular motion — use `dynamic-grid` or `shader-voronoi`.
+- You want structured or cellular motion — use `shader-dot-orbit` or `shader-voronoi`.
 - Bright rays would wash out foreground text — lower `intensity`/`bloom`.

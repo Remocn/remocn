@@ -45,7 +45,6 @@ export const NAV_LINKS: NavLink[] = [
   { href: "/docs/shaders/getting-started/introduction", label: "Shaders" },
   { href: "/docs/icons/gallery", label: "Icons" },
   { href: "/sponsors", label: "Sponsors" },
-  { href: "/docs/getting-started/introduction", label: "Docs" },
 ];
 
 /**

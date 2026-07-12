@@ -24,7 +24,7 @@ Transitions: badge→list and list→footer via `fade()` from `@remotion/transit
 
 | Beat | Catalog components | New component needed |
 |---|---|---|
-| Version badge | `tracking-in` (title), `dynamic-grid` (static low-opacity bg) | **`version-badge`** — version chip + date (build per `../anatomy.md` §1) |
+| Version badge | `tracking-in` (title), `shader-dot-orbit` (static low-opacity bg) | **`version-badge`** — version chip + date (build per `../anatomy.md` §1) |
 | Change list | `staggered-fade-up` (rows), `spring-scale-in` (tags) | **`change-list`** — renders `{tag,text}[]` with a tag→color map (Added=green, Fixed=amber, Changed=blue) and auto-stagger + "+M more" truncation; **`category-tag`** — fixed-width monospace category chip (reused in patch-notes) |
 | Footer / CTA | `soft-blur-in` (link), `micro-scale-fade` (chip), `progress-steps` (optional release indicator) | a small footer/CTA scene if none fits |
 
@@ -47,7 +47,7 @@ fold the rest into "+M more" rather than shrinking type.
 ## Notes
 
 - **Background can move — keep it restrained.** A slow, muted shader (`shader-mesh-gradient`,
-  `shader-neuro-noise`, `shader-perlin-noise`) at low `speed`, a low-opacity `dynamic-grid` (≈0.06),
+  `shader-neuro-noise`, `shader-perlin-noise`) at low `speed`, a low-opacity `shader-dot-orbit` (≈0.06),
   or a solid theme fill all work. The list is the focus — if the backdrop moves, keep it muted and
   gentle so it never competes with the reading text.
 - One accent only; the tag colors (green/amber/blue) are semantic, not decoration — keep them muted.

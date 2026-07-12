@@ -5,15 +5,15 @@ import { LAVENDER, MINT, PEACH } from "@/config/site";
 // ---------------------------------------------------------------------------
 
 /** Shown inside the hero's glass-code-block player — the real remocn flow. */
-export const HERO_CODE = `// npx shadcn@latest add remocn/soft-blur-in remocn/mesh-gradient-bg
+export const HERO_CODE = `// npx shadcn@latest add remocn/soft-blur-in remocn/shader-mesh-gradient
 import { AbsoluteFill } from "remotion";
 import { SoftBlurIn } from "@/components/remocn/soft-blur-in";
-import { MeshGradientBg } from "@/components/remocn/mesh-gradient-bg";
+import { ShaderMeshGradient } from "@/components/remocn/shader-mesh-gradient";
 
 export function LaunchScene() {
   return (
     <AbsoluteFill>
-      <MeshGradientBg />
+      <ShaderMeshGradient />
       <SoftBlurIn text="Ship your launch video" />
     </AbsoluteFill>
   );

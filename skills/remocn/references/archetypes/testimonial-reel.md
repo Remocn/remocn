@@ -2,7 +2,7 @@
 
 **Family:** C. Growth & Social Proof · **Default duration:** ~14s (430f @30fps for N=3, scales with quote count) · **Format:** 16:9 · **Vibe:** clean
 
-Cycle real customer quotes one at a time — each card springs in, holds while the quote text plays word-by-word, then fades through to the next. Close on an aggregate proof number ("Join 12,000+ people who found their flow") so the social proof lands on data, not sentiment alone. One accent color throughout; background is a `spotlight-card` soft light on a solid dark canvas.
+Cycle real customer quotes one at a time — each card springs in, holds while the quote text plays word-by-word, then fades through to the next. Close on an aggregate proof number ("Join 12,000+ people who found their flow") so the social proof lands on data, not sentiment alone. One accent color throughout; background is a muted `shader-grain-gradient` on a solid dark canvas.
 Read `../anatomy.md` first; pick components from `../components/index.md`.
 
 ## Beats
@@ -23,7 +23,7 @@ Transitions: `fade()` from `@remotion/transitions/fade` (`linearTiming(15)`) bet
 
 | Beat | Catalog components | New component needed |
 |---|---|---|
-| Intro | `tracking-in` (title), `mask-reveal-up` (divider line), `spotlight-card` (bg) | — |
+| Intro | `tracking-in` (title), `mask-reveal-up` (divider line), `shader-grain-gradient` (bg) | — |
 | Quote cycling | `per-word-crossfade` (quote text), `staggered-fade-up` (avatar + author/role), `short-slide-right` (author-line on swap), `blur-out-up` (stack exit) | **`testimonial-card`** — avatar + quote text + name/role; transparent bg; props: `quote`, `name`, `role`, `avatarUrl`; build per `../anatomy.md` §1 |
 | Aggregate close | `spring-scale-in` (metric block entrance), `rolling-number` (count animation), `staggered-fade-up` (tagline), `x-followers-overview` or `github-stars` (optional social anchor) | — |
 
@@ -43,7 +43,7 @@ Transitions: `fade()` from `@remotion/transitions/fade` (`linearTiming(15)`) bet
 
 ## Notes
 
-- **Background: `spotlight-card` or a slow muted shader on a solid dark base.** `spotlight-card`'s soft light tracks the active card for depth; a slow, muted shader (`shader-water`, `shader-mesh-gradient`) at low `speed` is the alternative for ambient motion. Keep it muted and gentle behind the quote text — no glow blob or radial halo, and never `mesh-gradient-bg`.
+- **Background: a slow muted shader on a solid dark base.** A slow, muted shader (`shader-water`, `shader-grain-gradient`) at low `speed` gives ambient motion. Keep it muted and gentle behind the quote text — no glow blob or radial halo.
 - **One accent only.** Apply it to the `rolling-number` payoff and optionally to one emphasized word per quote via `inline-highlight`. Everything else is neutral mono.
 - **No glow halos behind quote text.** Depth is conveyed by the peek-card scale/opacity stack (0.94 / 0.5) — that is sufficient.
 - **Real quotes, specific attribution.** "Marcus L., Head of Growth at Loom" beats "User, Company". If avatars are unavailable, render initials in a neutral mono circle — never use stock headshots.

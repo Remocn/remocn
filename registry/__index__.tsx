@@ -14,7 +14,6 @@ import { confettiConfig } from "@/registry/remocn/confetti/config";
 import { dataFlowPipesConfig } from "@/registry/remocn/data-flow-pipes/config";
 import { ditherDissolveConfig } from "@/registry/remocn/dither-dissolve/config";
 import { driftConfig } from "@/registry/remocn/drift/config";
-import { dynamicGridConfig } from "@/registry/remocn/dynamic-grid/config";
 import { ecosystemConstellationConfig } from "@/registry/remocn/ecosystem-constellation/config";
 import { fadeThroughConfig } from "@/registry/remocn/fade-through/config";
 import { focusBlurResolveConfig } from "@/registry/remocn/focus-blur-resolve/config";
@@ -34,7 +33,6 @@ import { logoEnterConfig } from "@/registry/remocn/logo-enter/config";
 import { markerHighlightConfig } from "@/registry/remocn/marker-highlight/config";
 import { maskRevealUpConfig } from "@/registry/remocn/mask-reveal-up/config";
 import { matrixDecodeConfig } from "@/registry/remocn/matrix-decode/config";
-import { meshGradientBgConfig } from "@/registry/remocn/mesh-gradient-bg/config";
 import { microScaleFadeConfig } from "@/registry/remocn/micro-scale-fade/config";
 import { numberWheelConfig } from "@/registry/remocn/number-wheel/config";
 import { opencodeConfig } from "@/registry/remocn/opencode/config";
@@ -76,7 +74,6 @@ import { simulatedCursorConfig } from "@/registry/remocn/simulated-cursor/config
 import { slotMachineRollConfig } from "@/registry/remocn/slot-machine-roll/config";
 import { smokeDissolveConfig } from "@/registry/remocn/smoke-dissolve/config";
 import { softBlurInConfig } from "@/registry/remocn/soft-blur-in/config";
-import { spotlightCardConfig } from "@/registry/remocn/spotlight-card/config";
 import { springScaleInConfig } from "@/registry/remocn/spring-scale-in/config";
 import { staggeredFadeUpConfig } from "@/registry/remocn/staggered-fade-up/config";
 import { strikethroughReplaceConfig } from "@/registry/remocn/strikethrough-replace/config";
@@ -447,13 +444,6 @@ const registry: Record<string, RegistryEntry> = {
       })),
     config: perspectiveMarqueeConfig,
   },
-  "spotlight-card": {
-    load: () =>
-      import("@/registry/remocn/spotlight-card").then((m) => ({
-        default: m.SpotlightCard,
-      })),
-    config: spotlightCardConfig,
-  },
   "glass-code-block": {
     load: () =>
       import("@/registry/remocn/glass-code-block").then((m) => ({
@@ -474,13 +464,6 @@ const registry: Record<string, RegistryEntry> = {
         default: m.DataFlowPipes,
       })),
     config: dataFlowPipesConfig,
-  },
-  "mesh-gradient-bg": {
-    load: () =>
-      import("@/registry/remocn/mesh-gradient-bg").then((m) => ({
-        default: m.MeshGradientBg,
-      })),
-    config: meshGradientBgConfig,
   },
   "shader-mesh-gradient": {
     load: () =>
@@ -607,13 +590,6 @@ const registry: Record<string, RegistryEntry> = {
         default: m.ShaderPulsingBorder,
       })),
     config: shaderPulsingBorderConfig,
-  },
-  "dynamic-grid": {
-    load: () =>
-      import("@/registry/remocn/dynamic-grid").then((m) => ({
-        default: m.DynamicGrid,
-      })),
-    config: dynamicGridConfig,
   },
   "simulated-cursor": {
     load: () =>

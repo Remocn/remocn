@@ -24,9 +24,9 @@ Transitions: Intro → Beat #1 `slide({ direction: "from-bottom" })` from `@remo
 
 | Beat | Catalog components | New component needed |
 |---|---|---|
-| IntroTitle | `kinetic-center-build` (year glyph), `soft-blur-in` (subtitle), `blur-out-up` (exit), `dynamic-grid` (static bg, opacity 0.06) | — |
+| IntroTitle | `kinetic-center-build` (year glyph), `soft-blur-in` (subtitle), `blur-out-up` (exit), `shader-dot-orbit` (static bg, opacity 0.06) | — |
 | StatBeat #1–N | `rolling-number` (plain large integer), `number-wheel` (integer ≤6 digits or countdown), `slot-machine-roll` (prefix/suffix: `$4.2M`, `98.4%`), `staggered-fade-up` (label), `spring-scale-in` (roll-end pulse), `blur-out-up` (exit); optionally `animated-bar-chart` or `animated-line-chart` as a secondary trend lane below the number | **`stat-beat`** — full-frame single-metric scene: large number component + label + optional delta badge; owns `align` prop (`"left"\|"center"\|"right"`); wraps the correct number component based on value shape; transparent bg |
-| RecapWall | `staggered-fade-up` (grid entries), `micro-scale-fade` (accent stat pulse), `tracking-in` (CTA), `dynamic-grid` (same static bg, continuity) | **`stat-recap`** — 2×⌈N/2⌉ grid of stat cells with staggered entry and optional CTA row; transparent bg |
+| RecapWall | `staggered-fade-up` (grid entries), `micro-scale-fade` (accent stat pulse), `tracking-in` (CTA), `shader-dot-orbit` (same static bg, continuity) | **`stat-recap`** — 2×⌈N/2⌉ grid of stat cells with staggered entry and optional CTA row; transparent bg |
 
 `stat-beat` and `stat-recap` are not in the catalog — build both as lightweight reusable components (anatomy §1, "build new"). `stat-beat` is the per-beat scene wrapper; `stat-recap` is the closing wall. They pair naturally across release, milestone, and wrap-up archetypes.
 
@@ -45,7 +45,7 @@ Transitions: Intro → Beat #1 `slide({ direction: "from-bottom" })` from `@remo
 
 ## Notes
 
-- **One continuous background across every beat.** A single backdrop — a `dynamic-grid` at opacity 0.06, or a slow, muted shader (`shader-mesh-gradient`, `shader-neuro-noise`) at low `speed` — spans every beat including the RecapWall, giving continuity. If it moves, keep it muted and gentle so the stats stay the focus.
+- **One continuous background across every beat.** A single backdrop — a `shader-dot-orbit` at opacity 0.06, or a slow, muted shader (`shader-mesh-gradient`, `shader-neuro-noise`) at low `speed` — spans every beat including the RecapWall, giving continuity. If it moves, keep it muted and gentle so the stats stay the focus.
 - **Alignment alternates left/right.** Left on odd beats, right on even. Compositional variety without introducing a new visual language per beat.
 - **Each beat must advance.** Never repeat the same metric. If two stats are closely related (revenue + MRR), pick one or combine into a single `slot-machine-roll` beat.
 - **Stagger compresses beat by beat.** 24f label stagger on Beat #1, tightening to 10f by the finale — the cadence accelerates, building urgency without changing any component.

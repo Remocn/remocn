@@ -1,7 +1,7 @@
 "use client";
 
 import { Backdrop } from "@/registry/remocn/backdrop";
-import { MeshGradientBg } from "@/registry/remocn/mesh-gradient-bg";
+import { ShaderGrainGradient } from "@/registry/remocn/shader-grain-gradient";
 
 function DemoContent() {
   return (
@@ -69,7 +69,7 @@ export const BackdropImageScene = () => (
 );
 
 export const BackdropLiveScene = () => (
-  <Backdrop fill={<MeshGradientBg />} shadow="0" padding={0}>
+  <Backdrop fill={<ShaderGrainGradient />} shadow="0" padding={0}>
     <TransparentDemoContent />
   </Backdrop>
 );
@@ -93,8 +93,8 @@ export const backdropImageCode = `import { Backdrop } from "@/components/remocn/
 </Backdrop>`;
 
 export const backdropLiveCode = `import { Backdrop } from "@/components/remocn/backdrop";
-import { MeshGradientBg } from "@/components/remocn/mesh-gradient-bg";
+import { ShaderGrainGradient } from "@/components/remocn/shader-grain-gradient";
 
-<Backdrop fill={<MeshGradientBg />} shadow="0" padding={0}>
+<Backdrop fill={<ShaderGrainGradient />} shadow="0" padding={0}>
   <YourScene />
 </Backdrop>`;

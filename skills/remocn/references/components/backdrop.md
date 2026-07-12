@@ -34,10 +34,10 @@ Lands at `components/remocn/backdrop.tsx`.
 
 - You need a scene background — wrap every composition in `Backdrop` rather than hardcoding background colors on individual components.
 - You want the Screen Studio floating-card look: colored surround with a padded, rounded, shadowed inner frame.
-- The background itself should animate (pass a `DynamicGrid` or `SpotlightCard` as the `fill`).
+- The background itself should animate (pass a shader backdrop like `ShaderMeshGradient` as the `fill`).
 
 ## Don't use when
 
-- You need an infinitely looping ambient background as a standalone track — use `dynamic-grid` or `spotlight-card` directly and let the composition handle framing.
+- You need an infinitely looping ambient background as a standalone track — use a shader backdrop directly and let the composition handle framing.
 - You want a raw full-bleed color with no frame treatment — set `padding={0}` and `radius={0}`, or just set `backgroundColor` in the Remotion composition root.
 - You're inside a transition presentation — transitions like `whip-pan` manage their own full-frame layout; nesting Backdrop inside them creates double-framing.

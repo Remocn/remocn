@@ -111,9 +111,6 @@
       "@/components/remocn/tracking-in": [
         "./registry/remocn/tracking-in/index.tsx"
       ],
-      "@/components/remocn/dynamic-grid": [
-        "./registry/remocn/dynamic-grid/index.tsx"
-      ],
       "@/components/remocn/shader-swirl": [
         "./registry/remocn/shader-swirl/index.tsx"
       ],

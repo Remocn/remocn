@@ -45,9 +45,9 @@ Live animated React element as the fill:
 
 ```tsx
 import { Backdrop } from "@/components/remocn/backdrop";
-import { MeshGradientBg } from "@/components/remocn/mesh-gradient-bg";
+import { ShaderGrainGradient } from "@/components/remocn/shader-grain-gradient";
 
-<Backdrop fill={<MeshGradientBg />}>
+<Backdrop fill={<ShaderGrainGradient />}>
   <YourScene />
 </Backdrop>
 ```
@@ -95,7 +95,7 @@ Each `fill` type renders differently — pick the one that fits your scene.
 
 ### Live background
 
-Any React element as fill, e.g. `<MeshGradientBg />`.
+Any React element as fill, e.g. `<ShaderGrainGradient />`.
 
 <BlockPreview name="backdrop-live" />
 
@@ -110,7 +110,7 @@ import { Backdrop } from "@/components/remocn/backdrop";
 <Backdrop fill={{ type: "gradient", value: "linear-gradient(135deg, #6366f1, #a855f7)" }} />
 
 // or a live animated background as the fill
-<Backdrop fill={<MeshGradientBg />} />
+<Backdrop fill={<ShaderGrainGradient />} />
 ```
 
 To render content edge-to-edge without any decorative frame, pass children but zero out padding, radius, and shadow:
@@ -136,7 +136,7 @@ import { Backdrop } from "@/components/remocn/backdrop";
       name: "fill",
       type: "BackdropFill | ReactNode",
       default: "undefined",
-      description: "The background layer. Pass a BackdropFill object ({ type: \"color\" | \"gradient\" | \"image\", ... }) for static fills, or any React element (e.g. <MeshGradientBg />) to render a live animated background.",
+      description: "The background layer. Pass a BackdropFill object ({ type: \"color\" | \"gradient\" | \"image\", ... }) for static fills, or any React element (e.g. <ShaderGrainGradient />) to render a live animated background.",
     },
     {
       name: "padding",

@@ -3,7 +3,6 @@
 import { TransitionSeries } from "@remotion/transitions";
 import type { ReactNode } from "react";
 import { AbsoluteFill, interpolate, useCurrentFrame } from "remotion";
-import { DynamicGrid } from "@/components/remocn/dynamic-grid";
 import { planTransitionTiming } from "./duration";
 import { FeatureFrame } from "./feature-frame";
 import { FlowithDemo } from "./flowith-demo";
@@ -25,11 +24,8 @@ export type {
   TemplateTheme,
 } from "./foundation";
 
-export type BackgroundMode = "dynamic-grid" | "solid";
-
 export interface A1ProductDemoProps {
   accentColor?: string;
-  background?: BackgroundMode;
   theme?: "light" | "dark";
   speed?: number;
   config?: ProductDemoConfig;
@@ -91,35 +87,6 @@ export const DEFAULT_PRODUCT_DEMO_CONFIG: ProductDemoConfig = {
     },
   ],
 };
-
-function SceneBackground({
-  scene,
-  theme,
-  background,
-}: {
-  scene: ProductDemoScene;
-  theme: TemplateTheme;
-  background: BackgroundMode;
-}) {
-  const grid =
-    background === "dynamic-grid" &&
-    (scene.type === "product-hero" || scene.type === "cta-scene");
-
-  if (grid) {
-    return (
-      <AbsoluteFill>
-        <DynamicGrid
-          cellSize={56}
-          background={theme.background}
-          lineColor={`${theme.foreground}12`}
-          direction="diagonal"
-        />
-      </AbsoluteFill>
-    );
-  }
-
-  return <AbsoluteFill style={{ background: theme.background }} />;
-}
 
 const SNAPSHOT_START = 20;
 const SNAPSHOT_STAGGER = 4;
@@ -223,11 +190,9 @@ function DefaultSnapshot({
 
 export function ProductDemo({
   config,
-  background = "dynamic-grid",
   speed = 1,
 }: {
   config: ProductDemoConfig;
-  background?: BackgroundMode;
   speed?: number;
 }) {
   const { theme, scenes } = config;
@@ -239,7 +204,7 @@ export function ProductDemo({
         key={`scene-${index}`}
         durationInFrames={scene.durationInFrames}
       >
-        <SceneBackground scene={scene} theme={theme} background={background} />
+        <AbsoluteFill style={{ background: theme.background }} />
         <SceneContent scene={scene} theme={theme} speed={speed} />
       </TransitionSeries.Sequence>,
     );
@@ -313,7 +278,6 @@ function SceneContent({
 
 export function A1ProductDemo({
   accentColor,
-  background = "dynamic-grid",
   theme = "dark",
   speed = 1,
   config,
@@ -334,11 +298,5 @@ export function A1ProductDemo({
     },
   };
 
-  return (
-    <ProductDemo
-      config={resolvedConfig}
-      background={background}
-      speed={speed}
-    />
-  );
+  return <ProductDemo config={resolvedConfig} speed={speed} />;
 }

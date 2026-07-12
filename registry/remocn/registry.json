@@ -411,20 +411,6 @@
       ]
     },
     {
-      "name": "mesh-gradient-bg",
-      "type": "registry:component",
-      "title": "Mesh Gradient Background",
-      "description": "Living gradient with amorphous color blobs slowly drifting across the frame.",
-      "dependencies": ["remotion"],
-      "files": [
-        {
-          "path": "mesh-gradient-bg/index.tsx",
-          "type": "registry:component",
-          "target": "components/remocn/mesh-gradient-bg.tsx"
-        }
-      ]
-    },
-    {
       "name": "shader-mesh-gradient",
       "type": "registry:component",
       "title": "Shader Mesh Gradient",
@@ -673,20 +659,6 @@
           "path": "shader-pulsing-border/index.tsx",
           "type": "registry:component",
           "target": "components/remocn/shader-pulsing-border.tsx"
-        }
-      ]
-    },
-    {
-      "name": "dynamic-grid",
-      "type": "registry:component",
-      "title": "Dynamic Grid",
-      "description": "Subtle moving grid background with configurable cell size and direction.",
-      "dependencies": ["remotion"],
-      "files": [
-        {
-          "path": "dynamic-grid/index.tsx",
-          "type": "registry:component",
-          "target": "components/remocn/dynamic-grid.tsx"
         }
       ]
     },
@@ -1033,20 +1005,6 @@
           "path": "glass-code-walk/index.tsx",
           "type": "registry:component",
           "target": "components/remocn/glass-code-walk.tsx"
-        }
-      ]
-    },
-    {
-      "name": "spotlight-card",
-      "type": "registry:component",
-      "title": "Spotlight Card",
-      "description": "A card with a moonlight-cool radial spotlight that follows a synthetic cursor and lights up its microborder.",
-      "dependencies": ["remotion"],
-      "files": [
-        {
-          "path": "spotlight-card/index.tsx",
-          "type": "registry:component",
-          "target": "components/remocn/spotlight-card.tsx"
         }
       ]
     },

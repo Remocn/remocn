@@ -57,7 +57,7 @@ notes). Don't read every file.
 | Category | Tier | Use for |
 |---|---|---|
 | **Text Animations** | `remocn` | Reveal/replace/emphasize text (`typewriter`, `blur-out-up`, `tracking-in`, `rolling-number`, `shimmer-sweep`…) |
-| **Backgrounds & Effects** | `remocn` | Animated foundations, cursors, one-shot effects (`dynamic-grid`, `spotlight-card`, `simulated-cursor`, `confetti`, `backdrop`) |
+| **Backgrounds & Effects** | `remocn` | Animated foundations, cursors, one-shot effects (`simulated-cursor`, `confetti`, `backdrop`) |
 | **Shaders** | `remocn` | WebGL shader backdrops, frame-driven for deterministic renders (`shader-mesh-gradient`, `shader-warp`, `shader-voronoi`, `shader-god-rays`, `shader-metaballs`…) |
 | **Transitions** | `remocn` | TransitionSeries presentations between two scenes (`whip-pan`, `push-through`, `focus-pull`, `grain-dissolve`, `wave-wipe`…) |
 | **UI Blocks** | `remocn` | Interface sims for product demos (`terminal-simulator`, `glass-code-block`, `animated-bar-chart`, `progress-steps`…) |
@@ -159,7 +159,7 @@ Don't dump components — compose one story. When asked to build a full video ("
 4. **Pick each beat's component** from `references/components/index.md`; match the `vibe` tag to the
    brand and budget its `Sequence` per Canvas & timing above.
 5. **Check the quality bar** — one accent, sentence-case kinetic type, real content, no glow halos, no
-   feature-list enumeration, no `mesh-gradient-bg`. See `references/anatomy.md` §3.
+   feature-list enumeration. See `references/anatomy.md` §3.
 
 ## Reference
 

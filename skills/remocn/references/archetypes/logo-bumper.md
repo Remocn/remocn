@@ -24,7 +24,7 @@ Transitions: none internal — the bumper is atomic. Connect to surrounding cont
 |---|---|---|
 | Wordmark build | `kinetic-center-build` (word-by-word from center, premium feel), `per-character-rise` (crisp even stagger, clean), `tracking-in` (all letters as one focusing unit, premium) | — |
 | Mark reveal | — | **`logo-sting`** — single mark; `logo-enter` is a multi-chip partner cluster and cannot represent one mark |
-| Hold + optional exit | `blur-out-up` (graceful exit before the next scene), `dynamic-grid` or `spotlight-card` or solid `backdrop` (static bg) | — |
+| Hold + optional exit | `blur-out-up` (graceful exit before the next scene), a muted shader backdrop or solid `backdrop` (static bg) | — |
 | Bumper variant: bracket frame + tagline | — | **`bumper-frame`** — corner brackets (strokeDashoffset draw, 4f stagger per corner) + tagline/CTA rows + `mode: 'intro' \| 'outro'` that mirrors choreography |
 | Accent pop (launch bumper only) | `confetti` — one burst on a product-launch sting; skip entirely on a standard brand insert | — |
 
@@ -49,7 +49,7 @@ The two new components are reusable across the entire H family: `logo-sting` is 
 - **One accent, mono otherwise.** The accent touches the active character or the mark outline only — never the whole wordmark, never the background. Gradient text is slop.
 - **No glow halo.** No radial-gradient blobs, no blur clouds behind the mark, no drop-shadow rings. The mark earns attention through motion alone.
 - **`logo-enter` is wrong here.** The catalog `logo-enter` renders a multi-chip cluster of brand logos arriving together. A single product mark needs the new `logo-sting`.
-- **Background can move — keep it restrained.** A slow, muted shader (`shader-mesh-gradient`, `shader-warp`) at low `speed`, a low-opacity `dynamic-grid` (≈0.05), or a solid `backdrop` color. If it moves, keep it muted and gentle so it never competes with the mark reveal.
+- **Background can move — keep it restrained.** A slow, muted shader (`shader-mesh-gradient`, `shader-warp`) at low `speed`, a low-opacity `shader-dot-orbit` (≈0.05), or a solid `backdrop` color. If it moves, keep it muted and gentle so it never competes with the mark reveal.
 - **Hold generously.** 30–45f of static lockup lets the editor cut cleanly. If the bumper will be dropped into many different videos, lean toward 45f.
 - **Brackets only for series bumpers.** Add `bumper-frame` for YouTube series, courses, or weekly update intros/outros. A one-off product sting uses `logo-sting` alone — no frame chrome.
 - **Outro mirrors intro.** In `bumper-frame` `mode='outro'`: wordmark enters with `mask-reveal-up` instead of `kinetic-center-build`; CTA line uses `short-slide-down`; brackets hold throughout as the brand signature rather than animating in fresh.

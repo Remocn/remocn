@@ -42,5 +42,5 @@ Any other `Water` prop is forwarded through `...rest`.
 ## Don't use when
 
 - The palette must be warm or vibrant — water reads cool by design; recolor via `colorHighlight`/`colorBack` or choose another shader.
-- You want sharp geometric motion — use `shader-swirl` or `dynamic-grid`.
+- You want sharp geometric motion — use `shader-swirl` or `shader-dot-orbit`.
 - Bright caustics would fight small text — lower `caustic`/`highlights` or use a solid `backdrop`.

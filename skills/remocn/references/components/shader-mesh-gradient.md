@@ -2,7 +2,7 @@
 
 **Tier:** `remocn` (animation) · **Vibe:** premium · **Natural length:** 150f @ 30fps
 
-WebGL mesh gradient with drifting color blobs, driven per-frame. The production-grade replacement for the low-quality `mesh-gradient-bg`. Deterministic: the shader is frozen (`speed={0}`) and its `frame` uniform is driven from `useCurrentFrame()`, so every render pass is identical.
+WebGL mesh gradient with drifting color blobs, driven per-frame. Deterministic: the shader is frozen (`speed={0}`) and its `frame` uniform is driven from `useCurrentFrame()`, so every render pass is identical.
 
 ## Install
 
@@ -33,12 +33,12 @@ Any other `@paper-design/shaders-react` `MeshGradient` prop is forwarded through
 
 ## Use when
 
-- You need a quality, production-grade gradient backdrop — this is the intended replacement for `mesh-gradient-bg`.
+- You need a quality, production-grade gradient backdrop.
 - A hero or title scene wants slow, living color motion behind foreground text without competing for attention.
 - The brand palette is soft/dark and you want the gradient to lead only when you override `colors`.
 
 ## Don't use when
 
-- You want a structured, geometric background — use `dynamic-grid`.
+- You want a structured, geometric background — use `shader-dot-orbit` or `shader-voronoi`.
 - The shader must animate on a wall clock rather than the timeline — these wrappers are frame-driven by design; that is what keeps renders deterministic.
 - You need a static, single-frame image — a solid `backdrop` fill is lighter.

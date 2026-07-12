@@ -43,4 +43,4 @@ Any other `GrainGradient` prop is forwarded through `...rest`.
 
 - You need crisp, clean color with no texture — use `shader-mesh-gradient`.
 - Foreground content is tiny text — heavy grain can reduce contrast; lower `intensity`/`noise` or pick a solid `backdrop`.
-- You want structured geometry — use `dynamic-grid`.
+- You want structured geometry — use `shader-dot-orbit` or `shader-voronoi`.

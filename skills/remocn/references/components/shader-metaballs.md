@@ -41,5 +41,5 @@ Any other `Metaballs` prop is forwarded through `...rest`.
 ## Don't use when
 
 - The brand is strictly serious/corporate — metaballs read playful.
-- You want structured or geometric motion — use `dynamic-grid` or `shader-voronoi`.
+- You want structured or geometric motion — use `shader-dot-orbit` or `shader-voronoi`.
 - Blobs would obscure dense foreground content — lower `count`/`size`.
