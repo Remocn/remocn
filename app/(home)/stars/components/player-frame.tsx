@@ -25,7 +25,7 @@ export function PlayerFrame({
     // Player still gets the true 720×1280 composition so the exported MP4 is
     // genuinely vertical (only the on-page container width stays constant).
     <div
-      className="group surface-card relative w-full overflow-hidden rounded-2xl shadow-2xl shadow-black/5 sm:rounded-3xl dark:shadow-black/40"
+      className="group surface-card relative w-full overflow-hidden rounded-2xl sm:rounded-3xl"
       style={{ aspectRatio: "1280 / 720" }}
     >
       <div className="absolute inset-0 flex items-center justify-center">

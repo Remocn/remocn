@@ -172,7 +172,7 @@ function UiPrimitivesViz({ play }: VizProps) {
   const times = [0, 0.15, 0.85, 1];
 
   return (
-    <div className="relative h-9 w-16 overflow-hidden rounded-full border border-border bg-muted shadow-sm">
+    <div className="relative h-9 w-16 overflow-hidden rounded-full border border-border bg-muted">
       <motion.div
         aria-hidden
         className="absolute inset-0 bg-primary"
@@ -185,7 +185,7 @@ function UiPrimitivesViz({ play }: VizProps) {
         }}
       />
       <motion.span
-        className="absolute top-1 left-1 size-7 rounded-full bg-background shadow-sm"
+        className="absolute top-1 left-1 size-7 rounded-full bg-background"
         animate={active ? { x: [0, 28, 28, 0] } : { x: 28 }}
         transition={{
           duration: 3,
@@ -266,7 +266,7 @@ function CategoryCard({ category, index }: { category: Category; index: number }
           ref={ref}
           whileHover={{ y: -4 }}
           transition={SPRING_SOFT}
-          className="relative flex h-full flex-col overflow-hidden rounded-3xl border border-border bg-card shadow-xl shadow-black/5 dark:shadow-black/30"
+          className="relative flex h-full flex-col overflow-hidden rounded-3xl border border-border bg-card"
         >
           <div className="relative flex h-40 items-center justify-center overflow-hidden border-b border-border bg-muted/20 sm:h-44 [background-image:radial-gradient(circle,color-mix(in_oklab,var(--color-foreground)_6%,transparent)_1px,transparent_1px)] [background-size:16px_16px]">
             <Viz play={inView} />

@@ -115,6 +115,7 @@ function ScrollStage({
     0,
     REST_RADIUS,
   ]);
+  const frameOpacity = useTransform(scrollYProgress, keyframes, [1, 0, 0, 1]);
 
   return (
     <section ref={sectionRef} data-hero-zoom className="relative h-[380vh]">
@@ -127,13 +128,18 @@ function ScrollStage({
             scaleY,
             borderRadius,
           }}
-          className="group surface-card relative overflow-hidden shadow-black/5 will-change-transform dark:shadow-black/40"
+          className="group relative overflow-hidden will-change-transform"
         >
           <VideoCard
             videoRef={videoRef}
             playing={playing}
             onToggle={onToggle}
             className="h-full w-full"
+          />
+          <motion.div
+            aria-hidden
+            style={{ borderRadius, opacity: frameOpacity }}
+            className="pointer-events-none absolute inset-0 border border-border"
           />
         </motion.div>
       </div>
