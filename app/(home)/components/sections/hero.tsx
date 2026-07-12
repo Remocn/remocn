@@ -1,38 +1,20 @@
 "use client";
 
-import { ArrowRight, Pause, Play } from "lucide-react";
-import { motion } from "motion/react";
+import { ArrowRight } from "lucide-react";
 import Link from "next/link";
-import { useCallback, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { SPRING_BOUNCE } from "@/config/site";
 import { useTrackEvent } from "@/lib/analytics";
 import { FadeUp } from "../fade-up";
 import { HeroNeuroBg } from "../hero-shader-bg";
 import { InstallAll } from "../install-all";
+import { HeroScrollVideo } from "./hero-scroll-video";
 
 export function Hero() {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const [playing, setPlaying] = useState(true);
   const trackEvent = useTrackEvent();
 
-  const togglePlay = useCallback(() => {
-    const v = videoRef.current;
-    if (!v) return;
-    if (v.paused) {
-      void v.play();
-      setPlaying(true);
-    } else {
-      v.pause();
-      setPlaying(false);
-    }
-  }, []);
-
-  const aspectRatio = "16 / 9";
-
   return (
-    <section className="relative isolate pt-10 pb-16 sm:pt-16 sm:pb-24">
+    <section className="relative isolate pt-8 pb-12 sm:pt-16 sm:pb-24">
       <div aria-hidden className="absolute inset-0 -z-10">
         <div className="absolute inset-0 bg-grid-fade" />
         <HeroNeuroBg />
@@ -105,52 +87,7 @@ export function Hero() {
         </div>
       </div>
 
-      <div className="section">
-        <FadeUp delay={0.24} className="relative mt-10 w-full sm:mt-12">
-          <motion.div
-            className="relative"
-            initial={{ y: 40, opacity: 0 }}
-            whileInView={{ y: 0, opacity: 1 }}
-            viewport={{ once: true, amount: 0.2 }}
-            transition={{ ...SPRING_BOUNCE, delay: 0.05 }}
-          >
-            <div
-              className="group surface-card relative w-full overflow-hidden rounded-2xl  shadow-black/5 sm:rounded-3xl dark:shadow-black/40"
-              style={{ aspectRatio }}
-            >
-              <video
-                ref={videoRef}
-                src="/introducing-remocn.mp4"
-                autoPlay
-                muted
-                loop
-                playsInline
-                preload="metadata"
-                poster="/introducing-remocn-poster.jpg"
-                className="block h-full w-full object-cover"
-              />
-              <button
-                type="button"
-                onClick={togglePlay}
-                aria-label={playing ? "Pause preview" : "Play preview"}
-                className="absolute inset-0 flex items-center justify-center bg-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
-              >
-                <span
-                  aria-hidden
-                  data-show={!playing}
-                  className="pointer-events-none flex size-14 items-center justify-center rounded-full bg-background/70 text-foreground opacity-0 backdrop-blur-md transition-opacity duration-200 group-hover:opacity-100 motion-reduce:transition-none data-[show=true]:opacity-100"
-                >
-                  {playing ? (
-                    <Pause className="size-5" />
-                  ) : (
-                    <Play className="size-5 translate-x-0.5" />
-                  )}
-                </span>
-              </button>
-            </div>
-          </motion.div>
-        </FadeUp>
-      </div>
+      <HeroScrollVideo />
     </section>
   );
 }

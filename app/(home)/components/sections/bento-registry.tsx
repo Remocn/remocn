@@ -106,7 +106,7 @@ function BentoCard({
       whileHover={{ y: -4 }}
       transition={SPRING_SOFT}
       className={cn(
-        "surface-card group relative flex flex-col overflow-hidden rounded-2xl shadow-xl shadow-black/5 sm:rounded-3xl dark:shadow-black/30",
+        "surface-card group relative flex flex-col overflow-hidden rounded-2xl sm:rounded-3xl",
         className,
       )}
     >
@@ -172,7 +172,7 @@ export function BentoRegistry() {
   const trackEvent = useTrackEvent();
 
   return (
-    <section id="components" className="relative py-20 sm:py-20">
+    <section id="components" className="relative py-14 sm:py-20">
       <div className="section">
         <SectionHeading
           eyebrow="The registry"
@@ -201,7 +201,7 @@ export function BentoRegistry() {
           }
         />
 
-        <FadeUp delay={0.1} className="mt-12 sm:mt-16">
+        <FadeUp delay={0.1} className="mt-10 sm:mt-16">
           <SpotlightSurface className="grid gap-4 sm:gap-6 md:grid-cols-3">
             <BentoCard
               name="claude-code"

@@ -160,7 +160,7 @@ function PreviewSurface({
       whileHover={{ y: -4 }}
       transition={SPRING_SOFT}
       className={cn(
-        "surface-card relative aspect-video overflow-hidden rounded-2xl shadow-xl shadow-black/5 sm:rounded-3xl dark:shadow-black/30",
+        "surface-card relative aspect-video overflow-hidden rounded-2xl sm:rounded-3xl",
         className,
       )}
     >
@@ -266,7 +266,7 @@ function UiRegistryIntro({ className }: { className?: string }) {
 
 export function UiRegistry() {
   return (
-    <section id="ui-registry" className="relative py-20 sm:py-20">
+    <section id="ui-registry" className="relative py-14 sm:py-20">
       <div className="section">
         <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-12">
           <UiRegistryIntro />

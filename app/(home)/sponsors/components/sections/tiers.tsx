@@ -73,7 +73,7 @@ function TierCard({
       whileHover={{ y: -4 }}
       transition={SPRING_BOUNCE}
       className={cn(
-        "surface-card group relative flex h-full flex-col overflow-hidden rounded-3xl p-8 shadow-xl shadow-black/5 dark:shadow-black/30",
+        "surface-card group relative flex h-full flex-col overflow-hidden rounded-3xl p-8",
         tier.highlighted && "ring-1 ring-foreground/15",
       )}
     >

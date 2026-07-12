@@ -120,7 +120,7 @@ function FeaturedStep({
 
 export function GetStarted() {
   return (
-    <section id="get-started" className="relative py-20 sm:py-20">
+    <section id="get-started" className="relative py-14 sm:py-20">
       <div className="section">
         <SectionHeading
           eyebrow="Get started"

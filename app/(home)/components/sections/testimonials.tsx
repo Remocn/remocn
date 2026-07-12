@@ -63,7 +63,7 @@ export function Testimonials() {
   const bottomRow = [...testimonials].reverse();
 
   return (
-    <section id="testimonials" className="relative py-20 sm:py-20">
+    <section id="testimonials" className="relative py-14 sm:py-20">
       <div className="section">
         <SectionHeading
           align="center"

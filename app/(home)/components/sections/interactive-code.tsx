@@ -298,7 +298,7 @@ export function InteractiveCode() {
     : "16 / 9";
 
   return (
-    <section id="showcase" className="relative py-20 sm:py-20">
+    <section id="showcase" className="relative py-14 sm:py-20">
       <div className="section">
         <SectionHeading
           eyebrow="It's just props"
@@ -356,7 +356,7 @@ export function InteractiveCode() {
             <motion.div
               whileHover={{ y: -4 }}
               transition={SPRING_SOFT}
-              className="relative flex items-center justify-center overflow-hidden rounded-2xl bg-white shadow-2xl shadow-black/5 ring-1 ring-black/5 sm:rounded-3xl"
+              className="relative flex items-center justify-center overflow-hidden rounded-2xl bg-white ring-1 ring-black/5 sm:rounded-3xl"
             >
               <div
                 ref={containerRef}

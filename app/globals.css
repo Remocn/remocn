@@ -171,7 +171,7 @@
 }
 
 .section {
-  @apply mx-auto w-full max-w-6xl px-4 sm:px-6;
+  @apply mx-auto w-full max-w-6xl px-4 sm:px-6 min-[1440px]:max-w-5xl;
 }
 
 .bg-control {
