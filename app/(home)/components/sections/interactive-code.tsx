@@ -298,7 +298,7 @@ export function InteractiveCode() {
     : "16 / 9";
 
   return (
-    <section id="showcase" className="relative py-20 sm:py-20">
+    <section id="showcase" className="relative py-14 sm:py-20">
       <div className="section">
         <SectionHeading
           eyebrow="It's just props"

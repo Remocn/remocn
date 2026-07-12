@@ -14,7 +14,7 @@ export function Hero() {
   const trackEvent = useTrackEvent();
 
   return (
-    <section className="relative isolate pt-10 pb-16 sm:pt-16 sm:pb-24">
+    <section className="relative isolate pt-8 pb-12 sm:pt-16 sm:pb-24">
       <div aria-hidden className="absolute inset-0 -z-10">
         <div className="absolute inset-0 bg-grid-fade" />
         <HeroNeuroBg />

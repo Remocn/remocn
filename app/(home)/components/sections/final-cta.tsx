@@ -22,9 +22,9 @@ export function FinalCTA() {
   const trackEvent = useTrackEvent();
 
   return (
-    <section className="relative py-20 sm:py-28">
+    <section className="relative py-14 sm:py-28">
       <div className="section">
-        <div className="surface-card relative overflow-hidden rounded-3xl px-6 py-16 text-center sm:px-12 sm:py-20">
+        <div className="surface-card relative overflow-hidden rounded-3xl px-6 py-12 text-center sm:px-12 sm:py-20">
           {/* Restrained accent wash — low opacity so it reads in both themes. */}
           <div
             aria-hidden

@@ -38,7 +38,7 @@ export function LandingPartners() {
   );
 
   return (
-    <section id="partners" className="relative py-20 sm:py-20">
+    <section id="partners" className="relative py-14 sm:py-20">
       <div className="section">
         <SectionHeading
           align="center"

@@ -359,7 +359,7 @@ export function WhatsInside() {
   return (
     <section
       id="whats-inside"
-      className="relative py-20 sm:py-20 [content-visibility:auto] [contain-intrinsic-size:auto_640px]"
+      className="relative py-14 sm:py-20 [content-visibility:auto] [contain-intrinsic-size:auto_640px]"
     >
       <div className="section">
         <SectionHeading eyebrow={EYEBROW} title={TITLE} lead={LEAD} />

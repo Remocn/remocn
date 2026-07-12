@@ -172,7 +172,7 @@ export function BentoRegistry() {
   const trackEvent = useTrackEvent();
 
   return (
-    <section id="components" className="relative py-20 sm:py-20">
+    <section id="components" className="relative py-14 sm:py-20">
       <div className="section">
         <SectionHeading
           eyebrow="The registry"
@@ -201,7 +201,7 @@ export function BentoRegistry() {
           }
         />
 
-        <FadeUp delay={0.1} className="mt-12 sm:mt-16">
+        <FadeUp delay={0.1} className="mt-10 sm:mt-16">
           <SpotlightSurface className="grid gap-4 sm:gap-6 md:grid-cols-3">
             <BentoCard
               name="claude-code"

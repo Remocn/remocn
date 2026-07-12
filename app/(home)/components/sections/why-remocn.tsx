@@ -1,6 +1,13 @@
 "use client";
 
-import { Bot, Check, Clapperboard, Clock, Wallet } from "lucide-react";
+import {
+  ArrowRight,
+  Bot,
+  Check,
+  Clapperboard,
+  Clock,
+  Wallet,
+} from "lucide-react";
 import { motion, useInView, useReducedMotion } from "motion/react";
 import { type ComponentType, useRef } from "react";
 import { INSTALL_COMMAND, SPRING_BOUNCE, SPRING_SOFT } from "@/config/site";
@@ -76,15 +83,17 @@ function LedgerRow({ problem, index }: { problem: Problem; index: number }) {
     <div
       ref={ref}
       className={cn(
-        "grid grid-cols-[auto_1fr_auto] items-center gap-x-2.5 py-3.5 sm:gap-x-4",
+        "flex flex-col gap-2.5 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:py-3.5",
         index > 0 && "border-t border-border/60",
       )}
     >
-      <Icon aria-hidden className="size-5 text-foreground/55" />
-      <p className="min-w-0 text-sm font-medium text-foreground sm:text-base">
-        {problem.task}
-      </p>
-      <div className="flex items-center gap-3 justify-self-end sm:gap-4">
+      <div className="flex min-w-0 items-center gap-2.5">
+        <Icon aria-hidden className="size-5 shrink-0 text-foreground/55" />
+        <p className="min-w-0 text-base font-medium text-foreground">
+          {problem.task}
+        </p>
+      </div>
+      <div className="flex items-center gap-2.5 pl-[1.875rem] sm:shrink-0 sm:gap-4 sm:pl-0">
         <span className="relative inline-block text-sm text-foreground/45 sm:text-base">
           {problem.cost}
           <motion.span
@@ -98,6 +107,10 @@ function LedgerRow({ problem, index }: { problem: Problem; index: number }) {
             }}
           />
         </span>
+        <ArrowRight
+          aria-hidden
+          className="size-3.5 shrink-0 text-muted-foreground/40"
+        />
         <motion.span
           className="inline-flex items-center gap-1.5 text-sm font-semibold text-foreground sm:text-base"
           initial={reduced ? false : { opacity: 0, x: 8 }}
@@ -121,7 +134,7 @@ function LedgerRow({ problem, index }: { problem: Problem; index: number }) {
 
 export function WhyRemocn() {
   return (
-    <section id="why-remocn" className="relative pt-8 pb-20 sm:pt-0 sm:pb-20">
+    <section id="why-remocn" className="relative pt-6 pb-14 sm:pt-0 sm:pb-20">
       <div className="section">
         <SectionHeading eyebrow={EYEBROW} title={TITLE} lead={LEAD} />
 
@@ -132,7 +145,7 @@ export function WhyRemocn() {
                 <p className="text-base font-semibold text-foreground sm:text-lg">
                   The usual bill
                 </p>
-                <p className="mt-0.5 text-xs text-muted-foreground sm:text-sm">
+                <p className="mt-0.5 hidden text-sm text-muted-foreground sm:block">
                   What a video normally costs you
                 </p>
               </div>
@@ -140,7 +153,7 @@ export function WhyRemocn() {
                 <p className="text-base font-semibold text-foreground sm:text-lg">
                   With remocn
                 </p>
-                <p className="mt-0.5 text-xs text-muted-foreground sm:text-sm">
+                <p className="mt-0.5 hidden text-sm text-muted-foreground sm:block">
                   Just one command
                 </p>
               </div>

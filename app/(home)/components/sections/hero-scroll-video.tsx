@@ -21,6 +21,7 @@ const CARD_ASPECT = 9 / 16;
 const REST_RADIUS = 24;
 const GROW_END = 0.28;
 const HOLD_END = 0.72;
+const SCRUB_MIN_WIDTH = 1024;
 
 type Viewport = { w: number; h: number };
 
@@ -51,10 +52,12 @@ export function HeroScrollVideo() {
     return () => window.removeEventListener("resize", update);
   }, []);
 
-  if (reduceMotion || !viewport) {
+  const scrubEnabled = viewport !== null && viewport.w >= SCRUB_MIN_WIDTH;
+
+  if (reduceMotion || !viewport || !scrubEnabled) {
     return (
       <div className="section">
-        <div className="relative mt-10 flex w-full justify-center sm:mt-12">
+        <div className="relative mt-8 flex w-full justify-center sm:mt-12">
           <div className="w-full max-w-[1120px]">
             <VideoCard
               videoRef={videoRef}
