@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import { Suspense } from "react";
-import { StarsTool } from "./components/stars-tool";
+import { StargazersDeprecatedNotice } from "./components/stargazers-deprecated-notice";
 
 export const metadata: Metadata = {
   title: "GitHub Stars Video Generator",
@@ -13,12 +12,16 @@ export const metadata: Metadata = {
   },
 };
 
-// The (home) layout already wraps pages in PageShell + SiteHeader + SiteFooter,
-// so this server shell only supplies metadata and mounts the client tool.
 export default function StarsPage() {
   return (
-    <Suspense>
-      <StarsTool />
-    </Suspense>
+    <section className="relative overflow-hidden pt-10 pb-16 sm:pt-16 sm:pb-24">
+      <div aria-hidden className="absolute inset-0 -z-10">
+        <div className="absolute inset-0 bg-grid-fade" />
+      </div>
+
+      <div className="section">
+        <StargazersDeprecatedNotice />
+      </div>
+    </section>
   );
 }
