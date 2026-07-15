@@ -1,0 +1,14 @@
+---
+title: Transitions revamp
+date: 2026-07-02
+---
+
+remocn had backgrounds and text animations but almost nothing for the cut between two scenes. This closes that hole with eleven transitions — eight driven by shaders, three by camera motion. All of them are Remotion transition presentations, so they drop straight into a `TransitionSeries.Transition` and take their character from the timing function you pass.
+
+<ChangelogPreview name="swirl-dissolve" />
+
+### New components
+
+Shader dissolves — [Dither Dissolve](/docs/transitions/dither-dissolve), [Grain Dissolve](/docs/transitions/grain-dissolve), [Perlin Dissolve](/docs/transitions/perlin-dissolve), [Smoke Dissolve](/docs/transitions/smoke-dissolve), [Swirl Dissolve](/docs/transitions/swirl-dissolve), [Warp Dissolve](/docs/transitions/warp-dissolve), [Wave Wipe](/docs/transitions/wave-wipe), and [Ripple Zoom](/docs/transitions/ripple-zoom).
+
+Camera moves — [Whip Pan](/docs/transitions/whip-pan), [Push Through](/docs/transitions/push-through), and [Focus Pull](/docs/transitions/focus-pull).

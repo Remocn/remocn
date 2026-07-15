@@ -62,6 +62,7 @@ export const NEW_BADGE_PATHS = new Set<string>([
 
 export const FOOTER_NAV: NavLink[] = [
   { href: "/docs/getting-started/introduction", label: "Docs" },
+  { href: "/changelog", label: "Changelog" },
   { href: GITHUB_URL, label: "GitHub" },
   { href: "/sponsors", label: "Sponsors" },
 ];

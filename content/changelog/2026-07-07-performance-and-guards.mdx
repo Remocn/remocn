@@ -1,0 +1,19 @@
+---
+title: Faster site, stronger guards
+date: 2026-07-07
+---
+
+An unglamorous week aimed entirely at the things that quietly rot — page weight, type safety, and the gap between what the registry says it ships and what it actually ships.
+
+### Improvements
+
+- Landing page Remotion players now mount only when scrolled into view, and registry components lazy-load in the preview barrels. Opening the site no longer means downloading every animation on it.
+- The hero video went from 18.5 MB to 4.7 MB, with a poster frame and `preload=metadata`.
+- A registry drift guard fails CI when the built artifacts disagree with the sources in `registry/`, so an installed component can no longer silently lag behind its docs.
+- Typechecking is back on in the build, with the real errors it was hiding fixed rather than suppressed.
+- CI runs lint, typecheck, tests, and the drift guard on every push.
+
+### Fixes
+
+- The render endpoint now trusts the proxy-set client IP, caps queue depth, and restricts avatar URLs to GitHub's host allowlist.
+- Stale finished and errored render jobs are evicted from the job registry instead of accumulating.

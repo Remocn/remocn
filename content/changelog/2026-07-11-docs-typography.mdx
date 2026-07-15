@@ -1,0 +1,11 @@
+---
+title: Docs typography rebuilt on typeset
+date: 2026-07-11
+---
+
+Docs prose had accumulated a decade of one-off overrides — a margin here, a font size there — and headings drifted between pages. That is all gone. Typography now derives from shadcn typeset, so vertical rhythm, headings, links, and tables come from one system instead of from whichever page you happened to land on.
+
+### Improvements
+
+- All docs pages render inside a single `typeset` container. Per-page text overrides were deleted rather than tuned.
+- Code blocks moved to rehype-pretty-code with the vesper theme, matching the shadcn-style block — line numbers, filename with language icon, and a copy button.
