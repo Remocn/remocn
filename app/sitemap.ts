@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { changelog } from "@/.source/server";
 import { source } from "@/source";
 
 const SITE_URL = "https://remocn.dev";
@@ -34,5 +35,16 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.7,
   }));
 
-  return [...staticRoutes, ...docRoutes];
+  const changelogRoutes: MetadataRoute.Sitemap = changelog.map((entry) => {
+    const slug = entry.info.path.replace(/\.mdx$/, "");
+
+    return {
+      url: `${SITE_URL}/changelog#${slug}`,
+      lastModified: entry.date,
+      changeFrequency: "monthly",
+      priority: 0.4,
+    };
+  });
+
+  return [...staticRoutes, ...docRoutes, ...changelogRoutes];
 }
