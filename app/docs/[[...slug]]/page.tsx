@@ -50,8 +50,24 @@ export async function generateMetadata(props: {
   const page = source.getPage(params.slug);
   if (!page) notFound();
   const data = page.data;
+  const slug = params.slug ?? [];
+  if (slug.length === 0) {
+    return { title: data.title, description: data.description };
+  }
+  const ogUrl = `/og/docs/${slug.join("/")}`;
   return {
     title: data.title,
     description: data.description,
+    openGraph: {
+      title: data.title,
+      description: data.description,
+      images: [{ url: ogUrl, width: 1200, height: 630 }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: data.title,
+      description: data.description,
+      images: [ogUrl],
+    },
   };
 }

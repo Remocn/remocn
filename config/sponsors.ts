@@ -32,6 +32,16 @@ export const sponsors: Sponsor[] = (
       isPaste: false,
     },
     {
+      id: "reui",
+      name: "ReUI",
+      logoUrl: "/sponsors/reui.svg",
+      website:
+        "https://reui.io/?utm_source=remocn&utm_medium=sponsor&utm_campaign=remocn_sponsors_page",
+      tier: "partner",
+      customStyles: "opacity-90 max-w-full",
+      isPaste: false,
+    },
+    {
       id: "shadcnblocks",
       name: "Shadcnblocks.com",
       logoUrl: "/sponsors/shadcnblocks.svg",

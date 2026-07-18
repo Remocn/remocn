@@ -134,7 +134,7 @@ function VideoCard({
     <div className={`relative overflow-hidden ${className ?? ""}`}>
       <video
         ref={videoRef}
-        src="/introducing-remocn.mp4"
+        src="https://cdn.remocn.dev/videos/intoducing-remocn.mp4"
         autoPlay
         muted
         loop

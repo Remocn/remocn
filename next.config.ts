@@ -14,6 +14,7 @@ const nextConfig: NextConfig = {
     "@remotion/renderer",
     "@remotion/bundler",
     "esbuild",
+    "@takumi-rs/core",
   ],
   turbopack: {
     root: __dirname,
