@@ -41,6 +41,15 @@ RUN bun install --frozen-lockfile
 
 # App source + build.
 COPY . .
+
+# The /showcases pages are prerendered, so the build itself fetches the manager
+# and fails loudly when it can't reach it. Coolify only forwards this to the
+# build when the variable is marked as a *build* variable in its UI — a plain
+# runtime variable is not enough. ENV also carries the value into the running
+# image as a default; a runtime variable of the same name still overrides it.
+ARG SHOWCASES_API_URL
+ENV SHOWCASES_API_URL=$SHOWCASES_API_URL
+
 RUN bun run build
 
 # Bake the Chrome Headless Shell into the image (no slow runtime download).
