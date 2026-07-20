@@ -1,10 +1,11 @@
 import type { MetadataRoute } from "next";
 import { changelog } from "@/.source/server";
+import { getShowcases } from "@/lib/showcases";
 import { source } from "@/source";
 
 const SITE_URL = "https://remocn.dev";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
 
   const staticRoutes: MetadataRoute.Sitemap = [
@@ -32,6 +33,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "weekly",
       priority: 0.5,
     },
+    {
+      url: `${SITE_URL}/showcases`,
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.6,
+    },
   ];
 
   const docRoutes: MetadataRoute.Sitemap = source.getPages().map((page) => ({
@@ -52,5 +59,19 @@ export default function sitemap(): MetadataRoute.Sitemap {
     };
   });
 
-  return [...staticRoutes, ...docRoutes, ...changelogRoutes];
+  const showcaseRoutes: MetadataRoute.Sitemap = (await getShowcases()).map(
+    (showcase) => ({
+      url: `${SITE_URL}/showcases/${showcase.slug}`,
+      lastModified: new Date(showcase.createdAt),
+      changeFrequency: "monthly",
+      priority: 0.5,
+    }),
+  );
+
+  return [
+    ...staticRoutes,
+    ...docRoutes,
+    ...changelogRoutes,
+    ...showcaseRoutes,
+  ];
 }
