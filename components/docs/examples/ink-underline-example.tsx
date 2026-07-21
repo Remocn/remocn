@@ -6,6 +6,11 @@ import { InkUnderline } from "@/registry/remocn/ink-underline";
 
 const URL_TEXT = "remocn.dev";
 
+const captionMetrics = (width: number) => {
+  const fontSize = Math.round(width * 0.152);
+  return { fontSize, height: Math.round(fontSize * 1.5) };
+};
+
 export function InkUnderlineExampleScene({
   width = 420,
   color,
@@ -22,6 +27,7 @@ export function InkUnderlineExampleScene({
   step?: number;
 }) {
   const written = handwriteDuration(URL_TEXT, { step });
+  const { fontSize, height } = captionMetrics(width);
 
   return (
     <AbsoluteFill
@@ -32,8 +38,8 @@ export function InkUnderlineExampleScene({
         gap: 4,
       }}
     >
-      <div style={{ position: "relative", width, height: 96 }}>
-        <Handwrite text={URL_TEXT} fontSize={64} step={step} />
+      <div style={{ position: "relative", width, height }}>
+        <Handwrite text={URL_TEXT} fontSize={fontSize} step={step} />
       </div>
       <InkUnderline
         width={width}
@@ -57,6 +63,7 @@ export const inkUnderlineExampleCode = (
   const durationSteps = (values.durationSteps as number) ?? 5;
   const seed = (values.seed as string) ?? "ink";
   const step = (values.step as number) ?? 3;
+  const { fontSize, height } = captionMetrics(width);
   return `import { AbsoluteFill } from "remotion";
 import { Handwrite, handwriteDuration } from "@/components/remocn/handwrite";
 import { InkUnderline } from "@/components/remocn/ink-underline";
@@ -67,8 +74,8 @@ export const MyScene = () => (
   <AbsoluteFill
     style={{ alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 4 }}
   >
-    <div style={{ position: "relative", width: ${width}, height: 96 }}>
-      <Handwrite text={url} fontSize={64} step={${step}} />
+    <div style={{ position: "relative", width: ${width}, height: ${height} }}>
+      <Handwrite text={url} fontSize={${fontSize}} step={${step}} />
     </div>
     <InkUnderline
       width={${width}}

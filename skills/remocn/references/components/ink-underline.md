@@ -1,6 +1,6 @@
 # ink-underline
 
-**Tier:** `remocn` (animation) · **Vibe:** paper · **Natural length:** 60f @ 30fps
+**Tier:** `remocn` (animation) · **Vibe:** paper · **Natural length:** 120f @ 30fps
 
 A free-standing ink stroke dragged across in a few stop-motion poses. The curve carries a per-seed wobble, so the same seed always draws the same hand. Place it under a headline, URL, or stat.
 

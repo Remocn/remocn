@@ -41,7 +41,7 @@ export const inkUnderlineConfig: ComponentConfig = {
     },
   },
   snippet: inkUnderlineExampleCode,
-  durationInFrames: 60,
+  durationInFrames: 120,
   fps: FPS,
   compositionWidth: W,
   compositionHeight: H,
