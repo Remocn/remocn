@@ -60,7 +60,7 @@ badge sweep the 12-row checklist does not cover.
 | Plan | Title | Section | Effort | Depends on | Status |
 |------|-------|---------|--------|------------|--------|
 | 024 | check-list | UI Blocks | M | 014, 015 | DONE |
-| 025 | scribble-circle | Effects | S | 014 | TODO |
+| 025 | scribble-circle | Effects | S | 014 | DONE |
 | 026 | hand-count | Typography | M | 014 | TODO |
 | 027 | tape | UI Blocks | S | 014 | TODO |
 | 028 | crumple-toss | Effects | M | 014 | TODO |

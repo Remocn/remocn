@@ -1,0 +1,65 @@
+import { scribbleCircleExampleCode } from "@/components/docs/examples/scribble-circle-example";
+import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+
+export const scribbleCircleConfig: ComponentConfig = {
+  componentName: "ScribbleCircle",
+  importPath: "@/components/remocn/scribble-circle",
+  controls: {
+    laps: {
+      type: "number",
+      default: 1.15,
+      min: 0.5,
+      max: 3,
+      step: 0.05,
+      label: "Laps",
+    },
+    strokeWidth: {
+      type: "number",
+      default: 14,
+      min: 4,
+      max: 32,
+      step: 1,
+      label: "Brush width",
+    },
+    pressure: {
+      type: "number",
+      default: 0.2,
+      min: 0.05,
+      max: 1,
+      step: 0.05,
+      label: "Opening pressure",
+    },
+    grain: {
+      type: "number",
+      default: 1,
+      min: 0,
+      max: 2,
+      step: 0.1,
+      label: "Grain",
+    },
+    durationSteps: {
+      type: "number",
+      default: 10,
+      min: 2,
+      max: 20,
+      step: 1,
+      label: "Poses to draw",
+    },
+    color: { type: "color", default: "#6f7f35", label: "Ink color" },
+    seed: { type: "text", default: "scribble", label: "Seed" },
+    step: {
+      type: "number",
+      default: 3,
+      min: 1,
+      max: 6,
+      step: 1,
+      label: "Frames / pose",
+    },
+  },
+  snippet: scribbleCircleExampleCode,
+  durationInFrames: 150,
+  fps: FPS,
+  compositionWidth: W,
+  compositionHeight: H,
+  previewBackdrop: { type: "color", value: "#f1eee7" },
+};

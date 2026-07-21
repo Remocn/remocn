@@ -11,6 +11,18 @@
 - **Section**: Effects
 - **Wave**: stop-motion wave 2 (024–029)
 
+> **Amended during implementation (owner request).** The spec below described a
+> constant-width **pen** stroke revealed by `strokeDashoffset`, with a `wobble`
+> prop scaling the radius noise. Shipped behaviour is a **brush**: a filled
+> ribbon whose width follows a pressure profile, roughened by a grain filter,
+> grown by regenerating the ribbon per pose. `wobble` is gone (the radius noise
+> is now a fixed internal constant — the character comes from the brush, and a
+> knob that could flatten the loop into a perfect ellipse contradicted the
+> component's own name). `pressure` and `grain` replace it. The draw ease is
+> linear rather than `easeOutCubic`, because with ease-out the first visible
+> pose already showed 42% of the loop and the last four poses were
+> indistinguishable — the gesture read as appearing, not as being drawn.
+
 ## Goal
 
 A loose ellipse scribbled around something — the strongest annotation gesture

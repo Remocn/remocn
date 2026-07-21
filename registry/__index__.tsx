@@ -55,6 +55,7 @@ import { rippleZoomConfig } from "@/registry/remocn/ripple-zoom/config";
 import { rollingNumberConfig } from "@/registry/remocn/rolling-number/config";
 import { rolodexFlipConfig } from "@/registry/remocn/rolodex-flip/config";
 import { scaleDownFadeConfig } from "@/registry/remocn/scale-down-fade/config";
+import { scribbleCircleConfig } from "@/registry/remocn/scribble-circle/config";
 import { shaderColorPanelsConfig } from "@/registry/remocn/shader-color-panels/config";
 import { shaderDitheringConfig } from "@/registry/remocn/shader-dithering/config";
 import { shaderDotOrbitConfig } from "@/registry/remocn/shader-dot-orbit/config";
@@ -1564,6 +1565,15 @@ const registry: Record<string, RegistryEntry> = {
         default: m.CheckListExampleScene,
       })),
     config: checkListConfig,
+  },
+  "scribble-circle": {
+    load: () =>
+      import("@/components/docs/examples/scribble-circle-example").then(
+        (m) => ({
+          default: m.ScribbleCircleExampleScene,
+        }),
+      ),
+    config: scribbleCircleConfig,
   },
   "page-turn": {
     load: () =>

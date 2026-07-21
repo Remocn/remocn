@@ -1,5 +1,5 @@
 {
   "title": "Effects",
   "collapsible": false,
-  "pages": ["index", "confetti", "paper-wobble", "ink-arrow"]
+  "pages": ["index", "confetti", "paper-wobble", "ink-arrow", "scribble-circle"]
 }

@@ -1374,6 +1374,21 @@
       ]
     },
     {
+      "name": "scribble-circle",
+      "type": "registry:component",
+      "title": "Scribble Circle",
+      "description": "A brush circle swept around a region of the frame, opening thin and closing thick, with grain breaking up the dry opening.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/stop-motion"],
+      "files": [
+        {
+          "path": "scribble-circle/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/scribble-circle.tsx"
+        }
+      ]
+    },
+    {
       "name": "check-list",
       "type": "registry:component",
       "title": "Check List",
