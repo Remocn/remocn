@@ -1284,6 +1284,21 @@
       ]
     },
     {
+      "name": "handwrite",
+      "type": "registry:component",
+      "title": "Handwrite",
+      "description": "Handwritten text laid down letter by letter on a quantized stop-motion clock, each glyph keeping its own slant and baseline wobble.",
+      "dependencies": ["remotion", "@remotion/google-fonts"],
+      "registryDependencies": ["@remocn/stop-motion"],
+      "files": [
+        {
+          "path": "handwrite/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/handwrite.tsx"
+        }
+      ]
+    },
+    {
       "name": "stop-motion",
       "type": "registry:lib",
       "title": "Stop Motion Clock",

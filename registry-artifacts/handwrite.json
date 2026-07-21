@@ -1,0 +1,17 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "handwrite",
+  "title": "Handwrite",
+  "description": "Handwritten text laid down letter by letter on a quantized stop-motion clock, each glyph keeping its own slant and baseline wobble.",
+  "dependencies": ["remotion", "@remotion/google-fonts"],
+  "registryDependencies": ["@remocn/stop-motion"],
+  "files": [
+    {
+      "path": "registry/remocn/handwrite/index.tsx",
+      "content": "\"use client\";\n\nimport { loadFont } from \"@remotion/google-fonts/Caveat\";\nimport { useCurrentFrame } from \"remotion\";\nimport { DEFAULT_STEP, hashRange, qf, qstep } from \"@/lib/remocn/stop-motion\";\n\nconst { fontFamily: HAND_FAMILY } = loadFont(\"normal\", {\n  subsets: [\"latin\"],\n  weights: [\"400\", \"500\", \"600\", \"700\"],\n});\n\nexport interface HandwriteProps {\n  text: string;\n  fontSize?: number;\n  color?: string;\n  delay?: number;\n  perStep?: number;\n  weight?: 400 | 500 | 600 | 700;\n  align?: \"left\" | \"center\";\n  fontFamily?: string;\n  step?: number;\n}\n\nexport function Handwrite({\n  text,\n  fontSize = 54,\n  color = \"#26242c\",\n  delay = 0,\n  perStep = 1.6,\n  weight = 600,\n  align = \"center\",\n  fontFamily = HAND_FAMILY,\n  step = DEFAULT_STEP,\n}: HandwriteProps) {\n  const frame = useCurrentFrame();\n  const steps = Math.max(0, qstep(Math.max(0, qf(frame, step) - delay), step));\n  const shown = Math.floor(steps * perStep);\n  const chars = Array.from(text);\n  const freshFrom = shown - Math.ceil(perStep);\n\n  return (\n    <div\n      style={{\n        position: \"absolute\",\n        inset: 0,\n        display: \"flex\",\n        alignItems: \"center\",\n        justifyContent: align === \"center\" ? \"center\" : \"flex-start\",\n        background: \"transparent\",\n      }}\n    >\n      <span\n        style={{\n          display: \"inline-block\",\n          fontFamily: `${fontFamily}, cursive`,\n          fontWeight: weight,\n          fontSize,\n          lineHeight: 1.15,\n          color,\n          whiteSpace: \"pre-wrap\",\n          textAlign: align,\n        }}\n      >\n        {chars.map((char, i) => {\n          const visible = i < shown;\n          const slant = hashRange(`hw:${text}:${i}:r`, -3.2, 3.2);\n          const dy = hashRange(`hw:${text}:${i}:y`, -1.8, 1.8);\n          const fresh = visible && i >= freshFrom;\n          return (\n            <span\n              key={i}\n              style={{\n                display: \"inline-block\",\n                whiteSpace: \"pre\",\n                opacity: visible ? 1 : 0,\n                transform: visible\n                  ? `translateY(${dy}px) rotate(${slant}deg) scale(${fresh ? 1.06 : 1})`\n                  : undefined,\n              }}\n            >\n              {char}\n            </span>\n          );\n        })}\n      </span>\n    </div>\n  );\n}\n\nexport function handwriteDuration(\n  text: string,\n  options?: { perStep?: number; step?: number },\n): number {\n  const perStep = options?.perStep ?? 1.6;\n  const step = options?.step ?? DEFAULT_STEP;\n  return Math.ceil(Array.from(text).length / perStep) * step + step;\n}\n",
+      "type": "registry:component",
+      "target": "components/remocn/handwrite.tsx"
+    }
+  ],
+  "type": "registry:component"
+}

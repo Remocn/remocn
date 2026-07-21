@@ -54,7 +54,10 @@ export function Polaroid(props: PolaroidProps): React.ReactElement;
   `@/components/remocn/handwrite`) with `delay={captionAt}`,
   `fontSize={captionSize}`, `color={captionColor}`, `perStep={1.4}`,
   `weight={600}`, `step` forwarded. No caption → empty band keeps the
-  polaroid silhouette.
+  polaroid silhouette. `Handwrite` centres itself with `position: absolute;
+  inset: 0` (the repo-wide typography convention), so the caption band MUST be
+  `position: relative` with its explicit height — otherwise the caption escapes
+  the band and centres over the nearest positioned ancestor.
 - No jitter or positioning inside — wrap with `paper-wobble` or position
   externally. Freeze/live logic is the consumer's (`<Freeze>` around their
   video); the docs show the recipe.
