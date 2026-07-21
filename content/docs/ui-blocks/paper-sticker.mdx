@@ -64,8 +64,10 @@ const labels = ["remotion", "shadcn", "bun", "biome"];
 ```
 
 The tilt is fixed per seed and the per-pose wobble is already built in, so do
-not wrap this in `paper-wobble` — that would shake it twice. `maxTilt={0}` sits
-the chip square if you want a deliberately tidy row.
+not wrap this in `paper-wobble` — that would shake it twice. `maxTilt={0}`
+removes the fixed tilt for a deliberately tidy row; the chip still carries the
+per-pose wobble of roughly a fifth of a degree, because it is still a piece of
+paper on a desk.
 
 ## Props
 
@@ -111,7 +113,7 @@ the chip square if you want a deliberately tidy row.
       name: "maxTilt",
       type: "number",
       default: "2.6",
-      description: "Largest hand-placed tilt in degrees; 0 sits square",
+      description: "Largest fixed hand-placed tilt in degrees; 0 removes it, leaving only the per-pose wobble",
     },
     {
       name: "step",

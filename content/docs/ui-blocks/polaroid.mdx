@@ -1,0 +1,142 @@
+---
+title: Polaroid
+description: An instant-photo frame with a handwritten caption for video, images, or live compositions
+---
+
+<ComponentPreview name="polaroid" />
+
+## Installation
+
+<InstallBlock name="polaroid" />
+
+## Usage
+
+The media is `children`, so anything can play inside the window. Give your
+media `width: 100%` and `height: 100%` — the frame sizes the window, the
+`objectFit` is yours.
+
+```tsx
+// src/Root.tsx
+import { AbsoluteFill, Composition, OffthreadVideo, staticFile } from "remotion";
+import { Polaroid } from "@/components/remocn/polaroid";
+
+const PolaroidScene = () => (
+  <AbsoluteFill
+    style={{
+      background: "#f1eee7",
+      alignItems: "center",
+      justifyContent: "center",
+    }}
+  >
+    <Polaroid caption="first light">
+      <OffthreadVideo
+        src={staticFile("clip.mp4")}
+        muted
+        style={{ width: "100%", height: "100%", objectFit: "cover" }}
+      />
+    </Polaroid>
+  </AbsoluteFill>
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="Polaroid"
+    component={PolaroidScene}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+### A living photograph
+
+The window takes a whole composition, not just a file. The scene inside keeps
+running on the real 30fps clock while the frame around it moves in stop-motion
+poses — a photograph that never stopped playing, with no pre-rendered video.
+
+```tsx
+<Polaroid caption="the demo">
+  <YourProductScene />
+</Polaroid>
+```
+
+### Stopping the photo
+
+Wrap the media in Remotion's `<Freeze>` to make the photograph stop playing —
+the usual reason is that the card is being flipped aside and should read as a
+still print again.
+
+```tsx
+import { Freeze } from "remotion";
+
+const FREEZE_AT = 90;
+
+<Polaroid caption="the demo">
+  <Freeze frame={FREEZE_AT} active={frame >= FREEZE_AT}>
+    <YourProductScene />
+  </Freeze>
+</Polaroid>;
+```
+
+The card has no jitter or positioning of its own. Wrap it in `paper-wobble` to
+put it on the desk, and position it yourself.
+
+Every measurement derives from `width`, so the card keeps the proportions of
+the original 652px print at any size. `captionSize` defaults to the same scale;
+pass it explicitly only when you want the caption off that ratio.
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "children",
+      type: "React.ReactNode",
+      required: true,
+      description: "The media inside the window; give it width and height of 100%",
+    },
+    {
+      name: "caption",
+      type: "string",
+      description: "Handwritten caption; omit it and the band stays empty",
+    },
+    {
+      name: "captionAt",
+      type: "number",
+      default: "0",
+      description: "Local frame the caption starts writing",
+    },
+    {
+      name: "width",
+      type: "number",
+      default: "652",
+      description: "Card width; every other measurement scales from it",
+    },
+    {
+      name: "frameColor",
+      type: "string",
+      default: "\"#fdfcf8\"",
+      description: "Card stock colour",
+    },
+    {
+      name: "captionColor",
+      type: "string",
+      default: "\"#26242c\"",
+      description: "Ink colour of the caption",
+    },
+    {
+      name: "captionSize",
+      type: "number",
+      default: "scales from width",
+      description: "Caption font size; defaults to 36 at the default width",
+    },
+    {
+      name: "step",
+      type: "number",
+      default: "3",
+      description: "Frames per stop-motion pose, forwarded to the caption",
+    },
+  ]}
+/>

@@ -1359,6 +1359,21 @@
       ]
     },
     {
+      "name": "polaroid",
+      "type": "registry:component",
+      "title": "Polaroid",
+      "description": "An instant-photo frame with a handwritten caption for video, images, or live compositions.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/stop-motion", "@remocn/handwrite"],
+      "files": [
+        {
+          "path": "polaroid/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/polaroid.tsx"
+        }
+      ]
+    },
+    {
       "name": "stop-motion",
       "type": "registry:lib",
       "title": "Stop Motion Clock",

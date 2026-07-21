@@ -24,6 +24,9 @@
       "@/lib/remocn-ui": ["./registry/remocn-ui/core/index.ts"],
       "@/lib/remocn-ui/*": ["./registry/remocn-ui/core/*"],
       "@/lib/remocn/stop-motion": ["./registry/remocn/stop-motion/index.ts"],
+      "@/components/remocn/handwrite": [
+        "./registry/remocn/handwrite/index.tsx"
+      ],
       "@/components/remocn/use-cursor-path": [
         "./registry/remocn-ui/cursor/use-cursor-path.ts"
       ],

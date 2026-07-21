@@ -45,6 +45,7 @@ import { perCharacterRiseConfig } from "@/registry/remocn/per-character-rise/con
 import { perWordCrossfadeConfig } from "@/registry/remocn/per-word-crossfade/config";
 import { perlinDissolveConfig } from "@/registry/remocn/perlin-dissolve/config";
 import { perspectiveMarqueeConfig } from "@/registry/remocn/perspective-marquee/config";
+import { polaroidConfig } from "@/registry/remocn/polaroid/config";
 import { progressStepsConfig } from "@/registry/remocn/progress-steps/config";
 import { pushThroughConfig } from "@/registry/remocn/push-through/config";
 import { rgbGlitchTextConfig } from "@/registry/remocn/rgb-glitch-text/config";
@@ -1547,6 +1548,13 @@ const registry: Record<string, RegistryEntry> = {
         default: m.PaperStickerExampleScene,
       })),
     config: paperStickerConfig,
+  },
+  polaroid: {
+    load: () =>
+      import("@/components/docs/examples/polaroid-example").then((m) => ({
+        default: m.PolaroidExampleScene,
+      })),
+    config: polaroidConfig,
   },
   "ink-arrow": {
     load: () =>

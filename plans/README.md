@@ -41,7 +41,7 @@ conventions and the shared touch-point checklist live in plan 014.
 | 018 | ink-arrow | Effects | M | 014 | DONE |
 | 019 | paper-field | Layout | S | 014 | REJECTED (owner removed the component after review — the blot texture did not earn its place) |
 | 020 | paper-sticker | UI Blocks | S | 014 | DONE |
-| 021 | polaroid | UI Blocks | M | 014, 015 | TODO |
+| 021 | polaroid | UI Blocks | M | 014, 015 | DONE |
 | 022 | page-turn | Transitions | M | 014 | TODO |
 | 023 | release sweep + changelog | — | S | 014–022 | TODO |
 

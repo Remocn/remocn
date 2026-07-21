@@ -96,7 +96,10 @@ None (no pure helpers).
 ## Acceptance criteria (owner verifies)
 
 1. Sticker pops in with a visible two-pose slap, then wobbles per pose.
-2. Different seeds produce different tilts; `maxTilt={0}` sits square.
+2. Different seeds produce different tilts; `maxTilt={0}` removes the fixed
+   tilt. Note (verified in review): the per-pose `paperJitter` `rotAmp` is a
+   hardcoded `0.2`, independent of `maxTilt`, so a ±0.2° wobble survives even at
+   `maxTilt={0}` — faithful to the demo, but "sits square" was overclaiming.
 3. Standard: typecheck, biome, registry drift clean.
 
 ## Out of scope
