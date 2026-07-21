@@ -1314,6 +1314,21 @@
       ]
     },
     {
+      "name": "paper-wobble",
+      "type": "registry:component",
+      "title": "Paper Wobble",
+      "description": "Per-pose reshoot jitter that makes any content feel hand-placed on a desk.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/stop-motion"],
+      "files": [
+        {
+          "path": "paper-wobble/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/paper-wobble.tsx"
+        }
+      ]
+    },
+    {
       "name": "stop-motion",
       "type": "registry:lib",
       "title": "Stop Motion Clock",

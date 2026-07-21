@@ -1314,6 +1314,21 @@
       "type": "registry:component"
     },
     {
+      "name": "paper-wobble",
+      "title": "Paper Wobble",
+      "description": "Per-pose reshoot jitter that makes any content feel hand-placed on a desk.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/stop-motion"],
+      "files": [
+        {
+          "path": "registry/remocn/paper-wobble/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/paper-wobble.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
       "name": "stop-motion",
       "title": "Stop Motion Clock",
       "description": "Quantized stop-motion clock for Remotion. Stepped frames, stepped springs, deterministic hashing, and per-pose paper jitter.",

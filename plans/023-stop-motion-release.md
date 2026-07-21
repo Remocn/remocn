@@ -42,8 +42,11 @@ publishing).
 2. **components.mdx**: Effects section exists with PaperWobble + InkArrow;
    Paper & Scrapbook subsection has PaperSticker + Polaroid; Layout has
    PaperField; Typography has Handwrite + InkUnderline; Transitions has
-   PageTurn. Optional consistency fix (owner call, do it unless vetoed):
-   move the existing `Confetti` card into the Effects section.
+   PageTurn. Optional consistency fix (owner call, do it unless vetoed): ADD a
+   `Confetti` card to the Effects section. Note: there is no existing Confetti
+   card anywhere in `components.mdx` to move — the component has a docs page
+   (`content/docs/effects/confetti.mdx`) but was never carded. Verified during
+   plan 017, which created the `## Effects` section.
 3. **Skill catalog**: `skills/remocn/references/components/` has all nine ref
    files; `index.md` has all nine rows in the right sections, alphabetical
    within their tables; if `skills/remocn/SKILL.md`, `references/anatomy.md`,

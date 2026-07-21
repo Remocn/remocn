@@ -38,6 +38,7 @@ import { matrixDecodeConfig } from "@/registry/remocn/matrix-decode/config";
 import { microScaleFadeConfig } from "@/registry/remocn/micro-scale-fade/config";
 import { numberWheelConfig } from "@/registry/remocn/number-wheel/config";
 import { opencodeConfig } from "@/registry/remocn/opencode/config";
+import { paperWobbleConfig } from "@/registry/remocn/paper-wobble/config";
 import { perCharacterRiseConfig } from "@/registry/remocn/per-character-rise/config";
 import { perWordCrossfadeConfig } from "@/registry/remocn/per-word-crossfade/config";
 import { perlinDissolveConfig } from "@/registry/remocn/perlin-dissolve/config";
@@ -1530,6 +1531,13 @@ const registry: Record<string, RegistryEntry> = {
         default: m.Confetti,
       })),
     config: confettiConfig,
+  },
+  "paper-wobble": {
+    load: () =>
+      import("@/components/docs/examples/paper-wobble-example").then((m) => ({
+        default: m.PaperWobbleExampleScene,
+      })),
+    config: paperWobbleConfig,
   },
   backdrop: {
     load: () =>

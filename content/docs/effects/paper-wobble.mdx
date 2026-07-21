@@ -1,0 +1,108 @@
+---
+title: Paper Wobble
+description: Per-pose reshoot jitter that makes any content feel hand-placed on a desk
+---
+
+<ComponentPreview name="paper-wobble" />
+
+## Installation
+
+<InstallBlock name="paper-wobble" />
+
+## Usage
+
+Wrap anything. The wrapper holds one offset for a whole stop-motion pose, then
+snaps to the next — the wobble of a photo that was picked up and put back down.
+
+```tsx
+// src/Root.tsx
+import { AbsoluteFill, Composition } from "remotion";
+import { PaperWobble } from "@/components/remocn/paper-wobble";
+
+const PaperWobbleScene = () => (
+  <AbsoluteFill
+    style={{
+      background: "#f1eee7",
+      alignItems: "center",
+      justifyContent: "center",
+      flexDirection: "column",
+      gap: 40,
+    }}
+  >
+    <PaperWobble seed="title">
+      <h1 style={{ fontSize: 64, color: "#26242c" }}>Shot on a desk</h1>
+    </PaperWobble>
+    <PaperWobble seed="card">
+      <YourCard />
+    </PaperWobble>
+  </AbsoluteFill>
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="PaperWobble"
+    component={PaperWobbleScene}
+    durationInFrames={90}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Give each wrapped block its own `seed` — two instances sharing a seed move in
+lockstep, which reads as one rigid sheet rather than two objects on a desk.
+
+Components that already carry their own jitter, like `paper-sticker`, do not
+need this wrapper — doubling it up just doubles the shake.
+
+The wrapper is `display: inline-block` and nothing else: no size, no
+background, no positioning. If you pass a `transform` through `style`, it is
+applied first and the jitter is appended, so your own positioning survives.
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "children",
+      type: "React.ReactNode",
+      required: true,
+      description: "The content to wobble",
+    },
+    {
+      name: "seed",
+      type: "string",
+      default: "\"wobble\"",
+      description: "Seed for the jitter — same seed, same motion",
+    },
+    {
+      name: "amp",
+      type: "number",
+      default: "1.4",
+      description: "Maximum offset in pixels on each axis",
+    },
+    {
+      name: "rotAmp",
+      type: "number",
+      default: "0.35",
+      description: "Maximum rotation in degrees",
+    },
+    {
+      name: "step",
+      type: "number",
+      default: "3",
+      description: "Frames per stop-motion pose — the tempo control",
+    },
+    {
+      name: "className",
+      type: "string",
+      description: "Passed through to the wrapper div",
+    },
+    {
+      name: "style",
+      type: "React.CSSProperties",
+      description: "Merged over the defaults; a transform here is composed before the jitter",
+    },
+  ]}
+/>

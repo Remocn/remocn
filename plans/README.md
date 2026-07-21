@@ -37,7 +37,7 @@ conventions and the shared touch-point checklist live in plan 014.
 | 014 | stop-motion core (quantized clock library) | — | S | — | DONE |
 | 015 | handwrite | Typography | M | 014 | DONE |
 | 016 | ink-underline | Typography | S | 014 | DONE |
-| 017 | paper-wobble | Effects | S | 014 | TODO |
+| 017 | paper-wobble | Effects | S | 014 | DONE |
 | 018 | ink-arrow | Effects | M | 014 | TODO |
 | 019 | paper-field | Layout | S | 014 | TODO |
 | 020 | paper-sticker | UI Blocks | S | 014 | TODO |
