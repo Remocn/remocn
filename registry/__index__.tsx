@@ -39,6 +39,7 @@ import { matrixDecodeConfig } from "@/registry/remocn/matrix-decode/config";
 import { microScaleFadeConfig } from "@/registry/remocn/micro-scale-fade/config";
 import { numberWheelConfig } from "@/registry/remocn/number-wheel/config";
 import { opencodeConfig } from "@/registry/remocn/opencode/config";
+import { pageTurnConfig } from "@/registry/remocn/page-turn/config";
 import { paperStickerConfig } from "@/registry/remocn/paper-sticker/config";
 import { paperWobbleConfig } from "@/registry/remocn/paper-wobble/config";
 import { perCharacterRiseConfig } from "@/registry/remocn/per-character-rise/config";
@@ -1555,6 +1556,13 @@ const registry: Record<string, RegistryEntry> = {
         default: m.PolaroidExampleScene,
       })),
     config: polaroidConfig,
+  },
+  "page-turn": {
+    load: () =>
+      import("@/components/docs/examples/page-turn-example").then((m) => ({
+        default: m.PageTurnExampleScene,
+      })),
+    config: pageTurnConfig,
   },
   "ink-arrow": {
     load: () =>

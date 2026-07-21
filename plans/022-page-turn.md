@@ -50,9 +50,17 @@ presentation component + factory export).
   `transformOrigin: origin`; `height` from `useVideoConfig()` (the demo's
   920px on a 720-tall comp ≈ 1.28×height).
 - Ease-in cubic applied to progress, then progress is quantized to `poses`
-  discrete values (`floor(eased * poses) / poses` style) so the page moves in
-  hand-shot jumps regardless of the timing function the user picks. `poses`
-  defaults to 8, matching the demo's 24-frame turn at step 3.
+  discrete values so the page moves in hand-shot jumps regardless of the timing
+  function the user picks. `poses` defaults to 8, matching the demo's 24-frame
+  turn at step 3.
+- **Formula correction (2026-07-21, confirmed on review):** the illustrative
+  `floor(eased * poses) / poses` above is wrong — it yields `poses + 1` distinct
+  values and reaches 1 only at the single instant `eased === 1`, so the page is
+  never fully gone until the last frame, and it contradicts this plan's own
+  Tests section ("produces exactly `poses` distinct values"). Shipped formula is
+  `min(poses - 1, floor(eased * poses)) / (poses - 1)`, with `poses <= 1`
+  guarded against divide-by-zero. Progress is clamped to `[0, 1]` first, so a
+  bouncy `springTiming` (which is NOT clamped upstream) cannot leak overshoot in.
 - Recommended pairing in docs: `linearTiming({ durationInFrames: 24 })`.
 
 ## Registry entry

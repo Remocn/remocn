@@ -1374,6 +1374,20 @@
       "type": "registry:component"
     },
     {
+      "name": "page-turn",
+      "title": "Page Turn",
+      "description": "The exiting scene swings up and away like a notebook page in stop-motion poses, staying above the scene it reveals.",
+      "dependencies": ["remotion", "@remotion/transitions"],
+      "files": [
+        {
+          "path": "registry/remocn/page-turn/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/page-turn.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
       "name": "stop-motion",
       "title": "Stop Motion Clock",
       "description": "Quantized stop-motion clock for Remotion. Stepped frames, stepped springs, deterministic hashing, and per-pose paper jitter.",

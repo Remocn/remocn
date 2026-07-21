@@ -1,0 +1,16 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "page-turn",
+  "title": "Page Turn",
+  "description": "The exiting scene swings up and away like a notebook page in stop-motion poses, staying above the scene it reveals.",
+  "dependencies": ["remotion", "@remotion/transitions"],
+  "files": [
+    {
+      "path": "registry/remocn/page-turn/index.tsx",
+      "content": "\"use client\";\n\nimport type {\n  TransitionPresentation,\n  TransitionPresentationComponentProps,\n} from \"@remotion/transitions\";\nimport type React from \"react\";\nimport { AbsoluteFill, useVideoConfig } from \"remotion\";\n\nconst LIFT_RATIO = 1.28;\n\nexport function pageTurnPose(progress: number, poses: number): number {\n  const clamped = Math.min(1, Math.max(0, progress));\n  const eased = clamped ** 3;\n  if (poses <= 1) return eased >= 1 ? 1 : 0;\n  const bucket = Math.min(poses - 1, Math.floor(eased * poses));\n  return bucket / (poses - 1);\n}\n\nexport type PageTurnProps = {\n  angle?: number;\n  origin?: string;\n  poses?: number;\n};\n\nconst PageTurnPresentation: React.FC<\n  TransitionPresentationComponentProps<PageTurnProps>\n> = ({\n  children,\n  presentationProgress,\n  presentationDirection,\n  passedProps,\n}) => {\n  const { height } = useVideoConfig();\n  const { angle = -7, origin = \"18% 100%\", poses = 8 } = passedProps;\n\n  if (presentationDirection === \"entering\") {\n    return <AbsoluteFill>{children}</AbsoluteFill>;\n  }\n\n  const pose = pageTurnPose(presentationProgress, poses);\n\n  return (\n    <AbsoluteFill\n      style={{\n        zIndex: 2,\n        transformOrigin: origin,\n        transform: `translateY(${-pose * height * LIFT_RATIO}px) rotate(${angle * pose}deg)`,\n      }}\n    >\n      {children}\n    </AbsoluteFill>\n  );\n};\n\nexport function pageTurn(\n  props: PageTurnProps = {},\n): TransitionPresentation<PageTurnProps> {\n  return {\n    component: PageTurnPresentation,\n    props,\n  };\n}\n",
+      "type": "registry:component",
+      "target": "components/remocn/page-turn.tsx"
+    }
+  ],
+  "type": "registry:component"
+}

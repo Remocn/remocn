@@ -1,0 +1,84 @@
+---
+title: Page Turn
+description: The exiting scene swings up and away like a notebook page in stop-motion poses
+---
+
+<ComponentPreview name="page-turn" />
+
+## Installation
+
+<InstallBlock name="page-turn" />
+
+## Usage
+
+`pageTurn` is a `TransitionPresentation` for `@remotion/transitions`. The
+outgoing scene lifts and rotates away like a page being turned; the incoming
+scene is simply already there, underneath.
+
+```tsx
+// src/Root.tsx
+import { linearTiming, TransitionSeries } from "@remotion/transitions";
+import { pageTurn } from "@/components/remocn/page-turn";
+
+export const MyVideo = () => (
+  <TransitionSeries>
+    <TransitionSeries.Sequence durationInFrames={76}>
+      <PageOne />
+    </TransitionSeries.Sequence>
+    <TransitionSeries.Transition
+      timing={linearTiming({ durationInFrames: 24 })}
+      presentation={pageTurn()}
+    />
+    <TransitionSeries.Sequence durationInFrames={76}>
+      <PageTwo />
+    </TransitionSeries.Sequence>
+  </TransitionSeries>
+);
+```
+
+24 frames is the pairing this transition was built around — eight poses at the
+kit's default tempo of three frames each.
+
+### The exiting scene stays on top
+
+This is the one transition in the catalog that inverts the usual stacking. In a
+`TransitionSeries` the entering scene normally paints over the outgoing one;
+here the outgoing wrapper takes `zIndex: 2`, because a page you are turning has
+to pass in front of whatever it uncovers. The entering scene is rendered
+completely untouched — no fade, no transform. The reveal *is* the entering
+animation.
+
+### Poses, not a sweep
+
+Progress is eased, then snapped to `poses` discrete values, so the page moves in
+hand-shot jumps rather than gliding. That happens inside the presentation, so it
+survives whichever timing function you pass — `springTiming` will change how
+long each pose is held, but it cannot smooth the motion back out.
+
+Lower `poses` for a rougher, more obviously hand-made turn; raise it toward 16
+and the page starts to look mechanical.
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "angle",
+      type: "number",
+      default: "-7",
+      description: "Rotation in degrees at full lift; negative swings the page left",
+    },
+    {
+      name: "origin",
+      type: "string",
+      default: "\"18% 100%\"",
+      description: "CSS transform-origin the page pivots around",
+    },
+    {
+      name: "poses",
+      type: "number",
+      default: "8",
+      description: "How many discrete stop-motion poses the turn is snapped to",
+    },
+  ]}
+/>

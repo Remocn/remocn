@@ -33,7 +33,7 @@ export interface PolaroidProps {
   width?: number;         // 652
   frameColor?: string;    // "#fdfcf8"
   captionColor?: string;  // "#26242c"
-  captionSize?: number;   // 36
+  captionSize?: number;   // scales from width; exactly 36 at width 652
   step?: number;          // 3, forwarded to the caption Handwrite
 }
 
@@ -58,6 +58,13 @@ export function Polaroid(props: PolaroidProps): React.ReactElement;
   inset: 0` (the repo-wide typography convention), so the caption band MUST be
   `position: relative` with its explicit height — otherwise the caption escapes
   the band and centres over the nearest positioned ancestor.
+- **Deviation from the contract above (2026-07-21, kept on review's
+  recommendation):** the `captionSize` default SCALES with `width`
+  (`36 * width / 652`) rather than being the literal `36`. At `width={320}` a
+  literal 36px caption gives a ~41px line-height inside a 30px band and spills
+  past the card's bottom edge, since neither the band nor the card clips
+  overflow. Scaling keeps the component's premise — every measurement derives
+  from `width` — and is exactly 36 where the contract specified it.
 - No jitter or positioning inside — wrap with `paper-wobble` or position
   externally. Freeze/live logic is the consumer's (`<Freeze>` around their
   video); the docs show the recipe.

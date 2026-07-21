@@ -45,8 +45,10 @@ describe("polaroidGeometry", () => {
     }
   });
 
-  it("keeps the card taller than it is wide only below the demo ratio", () => {
-    const g = polaroidGeometry(652);
-    expect(g.height / 652).toBeCloseTo(427 / 652, 6);
+  it("holds the card's own aspect at every width", () => {
+    for (const width of [320, 500, 900]) {
+      const g = polaroidGeometry(width);
+      expect(g.height / width).toBeCloseTo(427 / 652, 6);
+    }
   });
 });
