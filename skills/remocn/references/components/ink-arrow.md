@@ -20,10 +20,15 @@ Lands at `components/remocn/ink-arrow.tsx`. Pulls in `@remocn/stop-motion`.
 | `to` | `{ x: number; y: number }` | required |
 | `curvature` | `number` | `0.35` |
 | `color` | `string` | `"#26242c"` |
-| `strokeWidth` | `number` | `3` |
+| `strokeWidth` | `number` | `8` |
+| `pressure` | `number` | `0.2` |
+| `release` | `number` | `1` |
+| `grain` | `number` | `1` |
+
+`headSize` is a floor, not an exact length. An arrowhead whose arms are shorter than the shaft is wide is invisible — it disappears into the blob at the tip — so the head never drops below `strokeWidth * 2.6`. At the default weight that floor is inactive and `headSize` is used verbatim; raise `strokeWidth` and the head grows with it.
 | `delay` | `number` | `0` |
 | `drawDur` | `number` | `36` |
-| `headSize` | `number` | `24` |
+| `headSize` | `number` | `24` (floor — grows with `strokeWidth`) |
 | `headDur` | `number` | `step * 4` |
 | `seed` | `string` | `"arrow"` |
 | `step` | `number` | `3` |

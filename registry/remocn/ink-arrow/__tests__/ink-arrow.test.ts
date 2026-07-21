@@ -1,6 +1,31 @@
 import { describe, expect, it } from "bun:test";
 
-import { inkArrowControls, inkArrowHead, inkArrowViewport } from "../index";
+import { brushHalfWidth, brushReach } from "@/components/remocn/brush";
+import { inkArrowConfig } from "../config";
+import {
+  inkArrowApex,
+  inkArrowArmWidth,
+  inkArrowControls,
+  inkArrowHead,
+  inkArrowHeadReach,
+  inkArrowViewport,
+} from "../index";
+
+const numberControl = (name: string) => {
+  const control = inkArrowConfig.controls[name];
+  if (control.type !== "number") {
+    throw new Error(`${name} is not a number control`);
+  }
+  return control;
+};
+
+const controlValues = (name: string) => {
+  const { min, max, step } = numberControl(name);
+  return Array.from(
+    { length: Math.floor((max - min) / step + 1e-9) + 1 },
+    (_, i) => min + i * step,
+  );
+};
 
 const FROM = { x: 0, y: 0 };
 const TO = { x: 100, y: 0 };
@@ -88,9 +113,129 @@ describe("inkArrowViewport", () => {
     expect(height).toBeGreaterThan(200);
   });
 
-  it("leaves room for the bow, the head and the pen width", () => {
-    const { width } = inkArrowViewport(FROM, TO, 0.5, 24, 3);
-    expect(width).toBeCloseTo(100 + 24 + 50 + 3, 6);
+  it("leaves room for the bow, the head and the brush reach", () => {
+    const { width } = inkArrowViewport(FROM, TO, 0.5, 24, 8);
+    expect(width).toBeCloseTo(100 + 24 + 50 + brushReach(8, 1), 6);
+  });
+
+  it("widens as grain grows, since the displacement pushes past the ribbon", () => {
+    const clean = inkArrowViewport(FROM, TO, 0.5, 24, 8, 0).width;
+    const rough = inkArrowViewport(FROM, TO, 0.5, 24, 8, 2).width;
+    expect(rough).toBeGreaterThan(clean);
+    expect(clean).toBeCloseTo(100 + 24 + 50 + 4, 6);
+  });
+});
+
+describe("inkArrowHeadReach", () => {
+  it("leaves headSize alone while the brush stays thin", () => {
+    expect(inkArrowHeadReach(24, 8)).toBe(24);
+    expect(inkArrowHeadReach(48, 8)).toBe(48);
+  });
+
+  it("grows the head once the brush would swallow it", () => {
+    expect(inkArrowHeadReach(24, 24)).toBeCloseTo(62.4);
+    expect(inkArrowHeadReach(24, 24)).toBeGreaterThan(inkArrowHeadReach(24, 8));
+  });
+
+  it("keeps the arms clear of the shaft across the whole control matrix", () => {
+    for (const headSize of controlValues("headSize")) {
+      for (const strokeWidth of controlValues("strokeWidth")) {
+        const reach = inkArrowHeadReach(headSize, strokeWidth);
+        expect(reach).toBeGreaterThan(strokeWidth / 2);
+        expect(reach).toBeGreaterThanOrEqual(strokeWidth * 2);
+      }
+    }
+  });
+
+  it("never shrinks the head below what the user asked for", () => {
+    for (const headSize of controlValues("headSize")) {
+      for (const strokeWidth of controlValues("strokeWidth")) {
+        expect(inkArrowHeadReach(headSize, strokeWidth)).toBeGreaterThanOrEqual(
+          headSize,
+        );
+      }
+    }
+  });
+
+  it("is what the viewport reserves, so a grown head is never clipped", () => {
+    const wide = inkArrowViewport(FROM, TO, 0, 24, 24, 0).width;
+    expect(wide).toBeCloseTo(
+      100 + inkArrowHeadReach(24, 24) + brushReach(24, 0),
+      6,
+    );
+  });
+});
+
+describe("inkArrowApex", () => {
+  const c2 = { x: 60, y: 0 };
+
+  it("sits ahead of the tip, so the two arms cross instead of meeting in a blob", () => {
+    const apex = inkArrowApex(c2, TO, 24);
+    expect(apex.x).toBeGreaterThan(TO.x);
+    expect(apex.y).toBeCloseTo(TO.y, 9);
+  });
+
+  it("overshoots by a fraction of the head reach", () => {
+    expect(Math.hypot(inkArrowApex(c2, TO, 50).x - TO.x, 0)).toBeCloseTo(8, 6);
+    expect(Math.hypot(inkArrowApex(c2, TO, 25).x - TO.x, 0)).toBeCloseTo(4, 6);
+  });
+
+  it("follows the end tangent, not the axis", () => {
+    const apex = inkArrowApex({ x: 100, y: 60 }, TO, 40);
+    expect(apex.y).toBeLessThan(TO.y);
+  });
+
+  it("survives a degenerate tangent", () => {
+    const apex = inkArrowApex(TO, TO, 24);
+    expect(Number.isFinite(apex.x)).toBe(true);
+    expect(Number.isFinite(apex.y)).toBe(true);
+  });
+});
+
+describe("inkArrowArmWidth", () => {
+  it("matches the shaft's own width where the shaft ends", () => {
+    for (const strokeWidth of controlValues("strokeWidth")) {
+      for (const release of [0.2, 0.5, 1]) {
+        const shaftEnd =
+          2 * brushHalfWidth({ strokeWidth, pressure: 0.2, release }, 1);
+        expect(inkArrowArmWidth(strokeWidth, release)).toBeCloseTo(shaftEnd, 9);
+      }
+    }
+  });
+
+  it("follows release, so a shaft that lifts off thin gets a thin head", () => {
+    expect(inkArrowArmWidth(24, 1)).toBe(24);
+    expect(inkArrowArmWidth(24, 0.5)).toBe(12);
+    expect(inkArrowArmWidth(24, 0.5)).toBeLessThan(inkArrowArmWidth(24, 1));
+  });
+
+  it("is independent of pressure, which only shapes the opening", () => {
+    const end = (pressure: number) =>
+      2 * brushHalfWidth({ strokeWidth: 16, pressure, release: 1 }, 1);
+    expect(end(0.05)).toBeCloseTo(inkArrowArmWidth(16, 1), 9);
+    expect(end(1)).toBeCloseTo(inkArrowArmWidth(16, 1), 9);
+  });
+});
+
+describe("the head reads as a V at every brush width", () => {
+  it("spreads the arms wider than the shaft is thick", () => {
+    for (const headSize of controlValues("headSize")) {
+      for (const strokeWidth of controlValues("strokeWidth")) {
+        const reach = inkArrowHeadReach(headSize, strokeWidth);
+        const { left, right } = inkArrowHead({ x: 60, y: 0 }, TO, reach);
+        const span = Math.hypot(left.x - right.x, left.y - right.y);
+        expect(span).toBeGreaterThan(strokeWidth);
+      }
+    }
+  });
+
+  it("keeps the arm tips behind the apex so the V never inverts", () => {
+    const reach = inkArrowHeadReach(24, 24);
+    const apex = inkArrowApex({ x: 60, y: 0 }, TO, reach);
+    const { left, right } = inkArrowHead({ x: 60, y: 0 }, TO, reach);
+    for (const arm of [left, right]) {
+      expect(arm.x).toBeLessThan(apex.x);
+    }
   });
 });
 

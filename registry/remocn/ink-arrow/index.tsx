@@ -1,13 +1,25 @@
 "use client";
 
 import { useCurrentFrame } from "remotion";
+import {
+  BrushGrain,
+  type BrushPoint,
+  brushFilterId,
+  brushReach,
+  brushRibbon,
+  sampleCubic,
+  sampleLine,
+} from "@/components/remocn/brush";
 import { DEFAULT_STEP, hashRange, steppedRamp } from "@/lib/remocn/stop-motion";
 
-const easeOutCubic = (t: number) => 1 - (1 - t) ** 3;
+const HEAD_ANGLE = 0.72;
+const SHAFT_SAMPLES = 40;
+const ARM_SAMPLES = 10;
+const ARM_TAPER = 0.6;
+const ARM_OVERSHOOT = 0.16;
+const HEAD_MIN_RATIO = 2.6;
 
-const HEAD_ANGLE = 0.6;
-
-export type InkArrowPoint = { x: number; y: number };
+export type InkArrowPoint = BrushPoint;
 
 export function inkArrowControls(
   from: InkArrowPoint,
@@ -58,15 +70,44 @@ export function inkArrowHead(
   return { left: arm(HEAD_ANGLE), right: arm(-HEAD_ANGLE) };
 }
 
+export function inkArrowArmWidth(strokeWidth: number, release: number): number {
+  return strokeWidth * release;
+}
+
+export function inkArrowApex(
+  c2: InkArrowPoint,
+  to: InkArrowPoint,
+  reach: number,
+): InkArrowPoint {
+  const dx = to.x - c2.x;
+  const dy = to.y - c2.y;
+  const length = Math.hypot(dx, dy) || 1;
+  return {
+    x: to.x + (dx / length) * reach * ARM_OVERSHOOT,
+    y: to.y + (dy / length) * reach * ARM_OVERSHOOT,
+  };
+}
+
+export function inkArrowHeadReach(
+  headSize: number,
+  strokeWidth: number,
+): number {
+  return Math.max(headSize, strokeWidth * HEAD_MIN_RATIO);
+}
+
 export function inkArrowViewport(
   from: InkArrowPoint,
   to: InkArrowPoint,
   curvature: number,
   headSize: number,
   strokeWidth: number,
+  grain = 1,
 ): { width: number; height: number } {
   const distance = Math.hypot(to.x - from.x, to.y - from.y);
-  const margin = headSize + Math.abs(curvature) * distance + strokeWidth;
+  const margin =
+    inkArrowHeadReach(headSize, strokeWidth) +
+    Math.abs(curvature) * distance +
+    brushReach(strokeWidth, grain);
   return {
     width: Math.max(margin, Math.max(from.x, to.x) + margin),
     height: Math.max(margin, Math.max(from.y, to.y) + margin),
@@ -79,6 +120,9 @@ export interface InkArrowProps {
   curvature?: number;
   color?: string;
   strokeWidth?: number;
+  pressure?: number;
+  release?: number;
+  grain?: number;
   delay?: number;
   drawDur?: number;
   headSize?: number;
@@ -92,7 +136,10 @@ export function InkArrow({
   to,
   curvature = 0.35,
   color = "#26242c",
-  strokeWidth = 3,
+  strokeWidth = 8,
+  pressure = 0.2,
+  release = 1,
+  grain = 1,
   delay = 0,
   drawDur = 36,
   headSize = 24,
@@ -101,22 +148,17 @@ export function InkArrow({
   step = DEFAULT_STEP,
 }: InkArrowProps) {
   const frame = useCurrentFrame();
-  const progress = steppedRamp(frame, delay, delay + drawDur, {
-    ease: easeOutCubic,
-    step,
-  });
+  const progress = steppedRamp(frame, delay, delay + drawDur, { step });
   const { c1, c2 } = inkArrowControls(from, to, curvature, seed);
-  const head = inkArrowHead(c2, to, headSize);
+  const headReach = inkArrowHeadReach(headSize, strokeWidth);
+  const head = inkArrowHead(c2, to, headReach);
+  const apex = inkArrowApex(c2, to, headReach);
 
   const headFrames = headDur ?? step * 4;
   const headStart = delay + drawDur;
   const headMid = headStart + headFrames / 2;
-  const leftArm = steppedRamp(frame, headStart, headMid, {
-    ease: easeOutCubic,
-    step,
-  });
+  const leftArm = steppedRamp(frame, headStart, headMid, { step });
   const rightArm = steppedRamp(frame, headMid, headStart + headFrames, {
-    ease: easeOutCubic,
     step,
   });
 
@@ -126,7 +168,19 @@ export function InkArrow({
     curvature,
     headSize,
     strokeWidth,
+    grain,
   );
+
+  const filterId = brushFilterId(seed, strokeWidth, grain);
+  const filter = grain > 0 ? `url(#${filterId})` : undefined;
+
+  const armRibbon = (tip: InkArrowPoint, armProgress: number) =>
+    brushRibbon(sampleLine(apex, tip, ARM_SAMPLES), {
+      strokeWidth: inkArrowArmWidth(strokeWidth, release),
+      pressure: 1,
+      release: ARM_TAPER,
+      progress: armProgress,
+    });
 
   return (
     <svg
@@ -139,36 +193,35 @@ export function InkArrow({
         opacity: progress > 0 ? 1 : 0,
       }}
     >
+      <title>Ink arrow</title>
+      <BrushGrain seed={seed} strokeWidth={strokeWidth} grain={grain} />
       <path
-        d={`M ${from.x} ${from.y} C ${c1.x} ${c1.y}, ${c2.x} ${c2.y}, ${to.x} ${to.y}`}
-        stroke={color}
-        strokeWidth={strokeWidth}
-        strokeLinecap="round"
-        fill="none"
-        pathLength={1}
-        strokeDasharray={1}
-        strokeDashoffset={1 - progress}
+        d={brushRibbon(sampleCubic(from, c1, c2, to, SHAFT_SAMPLES), {
+          strokeWidth,
+          pressure,
+          release,
+          progress,
+        })}
+        fill={color}
+        opacity={0.85}
+        filter={filter}
       />
-      <path
-        d={`M ${to.x} ${to.y} L ${head.left.x} ${head.left.y}`}
-        stroke={color}
-        strokeWidth={strokeWidth}
-        strokeLinecap="round"
-        fill="none"
-        pathLength={1}
-        strokeDasharray={1}
-        strokeDashoffset={1 - leftArm}
-      />
-      <path
-        d={`M ${to.x} ${to.y} L ${head.right.x} ${head.right.y}`}
-        stroke={color}
-        strokeWidth={strokeWidth}
-        strokeLinecap="round"
-        fill="none"
-        pathLength={1}
-        strokeDasharray={1}
-        strokeDashoffset={1 - rightArm}
-      />
+      {leftArm > 0 ? (
+        <path
+          d={armRibbon(head.left, leftArm)}
+          fill={color}
+          opacity={0.85}
+          filter={filter}
+        />
+      ) : null}
+      {rightArm > 0 ? (
+        <path
+          d={armRibbon(head.right, rightArm)}
+          fill={color}
+          opacity={0.85}
+          filter={filter}
+        />
+      ) : null}
     </svg>
   );
 }

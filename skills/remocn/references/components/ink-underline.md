@@ -19,6 +19,9 @@ Lands at `components/remocn/ink-underline.tsx`. Pulls in `@remocn/stop-motion`.
 | `width` | `number` | required |
 | `color` | `string` | `"#6f7f35"` |
 | `thickness` | `number` | `9` |
+| `pressure` | `number` | `1` |
+| `release` | `number` | `0.15` |
+| `grain` | `number` | `1` |
 | `delay` | `number` | `0` |
 | `durationSteps` | `number` | `5` |
 | `seed` | `string` | `"ink"` |

@@ -15,6 +15,9 @@ export function InkUnderlineExampleScene({
   width = 420,
   color,
   thickness,
+  pressure,
+  release,
+  grain,
   durationSteps,
   seed,
   step,
@@ -22,6 +25,9 @@ export function InkUnderlineExampleScene({
   width?: number;
   color?: string;
   thickness?: number;
+  pressure?: number;
+  release?: number;
+  grain?: number;
   durationSteps?: number;
   seed?: string;
   step?: number;
@@ -45,6 +51,9 @@ export function InkUnderlineExampleScene({
         width={width}
         color={color}
         thickness={thickness}
+        pressure={pressure}
+        release={release}
+        grain={grain}
         delay={written}
         durationSteps={durationSteps}
         seed={seed}
@@ -60,6 +69,9 @@ export const inkUnderlineExampleCode = (
   const width = (values.width as number) ?? 420;
   const color = (values.color as string) ?? "#6f7f35";
   const thickness = (values.thickness as number) ?? 9;
+  const pressure = (values.pressure as number) ?? 1;
+  const release = (values.release as number) ?? 0.15;
+  const grain = (values.grain as number) ?? 1;
   const durationSteps = (values.durationSteps as number) ?? 5;
   const seed = (values.seed as string) ?? "ink";
   const step = (values.step as number) ?? 3;
@@ -81,6 +93,9 @@ export const MyScene = () => (
       width={${width}}
       color="${color}"
       thickness={${thickness}}
+      pressure={${pressure}}
+      release={${release}}
+      grain={${grain}}
       delay={handwriteDuration(url, { step: ${step} })}
       durationSteps={${durationSteps}}
       seed="${seed}"

@@ -88,8 +88,26 @@ always gives the same hand.
     {
       name: "strokeWidth",
       type: "number",
-      default: "3",
-      description: "Pen width in pixels",
+      default: "8",
+      description: "Brush width in pixels at full pressure",
+    },
+    {
+      name: "pressure",
+      type: "number",
+      default: "0.2",
+      description: "Weight the brush opens on, as a fraction of strokeWidth",
+    },
+    {
+      name: "release",
+      type: "number",
+      default: "1",
+      description: "Weight the brush reaches at the head; above pressure the shaft thickens as it travels",
+    },
+    {
+      name: "grain",
+      type: "number",
+      default: "1",
+      description: "Edge roughness; breaks the thin opening into dry-brush flecks, 0 gives clean edges",
     },
     {
       name: "delay",
@@ -107,7 +125,7 @@ always gives the same hand.
       name: "headSize",
       type: "number",
       default: "24",
-      description: "Length of each head stroke in pixels",
+      description: "Length of each head stroke in pixels; a floor, never shrinking below what the brush width needs",
     },
     {
       name: "headDur",

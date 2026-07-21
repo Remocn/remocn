@@ -1,10 +1,9 @@
 import { describe, expect, it } from "bun:test";
 
+import { brushReach } from "@/components/remocn/brush";
 import { scribbleCircleConfig } from "../config";
 import {
   scribbleCircleCentre,
-  scribbleCircleGrainScale,
-  scribbleCircleHalfWidth,
   scribbleCirclePath,
   scribbleCirclePoints,
   scribbleCircleProgress,
@@ -82,33 +81,6 @@ describe("scribbleCircleProgress", () => {
   });
 });
 
-describe("scribbleCircleHalfWidth", () => {
-  it("opens at the pressure fraction and closes at the full brush", () => {
-    expect(scribbleCircleHalfWidth(STROKE, 0.2, 0)).toBeCloseTo(1.4);
-    expect(scribbleCircleHalfWidth(STROKE, 0.2, 1)).toBeCloseTo(7);
-  });
-
-  it("thickens monotonically along the stroke", () => {
-    let previous = -1;
-    for (let i = 0; i <= 20; i++) {
-      const half = scribbleCircleHalfWidth(STROKE, 0.2, i / 20);
-      expect(half).toBeGreaterThan(previous);
-      previous = half;
-    }
-  });
-
-  it("gives a uniform brush at pressure 1", () => {
-    for (const t of [0, 0.3, 0.7, 1]) {
-      expect(scribbleCircleHalfWidth(STROKE, 1, t)).toBeCloseTo(STROKE / 2);
-    }
-  });
-
-  it("stays thinner than the grain displacement at the opening, so the tail breaks up", () => {
-    const opening = scribbleCircleHalfWidth(STROKE, 0.2, 0);
-    expect(opening * 2).toBeLessThan(scribbleCircleGrainScale(STROKE, 1));
-  });
-});
-
 describe("scribbleCirclePath", () => {
   it("is deterministic for a seed", () => {
     const a = scribbleCirclePath({ width: W, height: H, strokeWidth: STROKE });
@@ -167,7 +139,7 @@ describe("scribbleCirclePath", () => {
       height: H,
       strokeWidth: STROKE,
     });
-    const reach = STROKE / 2 + scribbleCircleGrainScale(STROKE, 1) / 2;
+    const reach = brushReach(STROKE, 1);
     expect(marginX).toBeCloseTo(reach + (W / 2) * 0.035 + W * 0.02);
     expect(marginY).toBeCloseTo(reach + (H / 2) * 0.035 + H * 0.02);
     expect(marginX).not.toBeCloseTo(marginY);

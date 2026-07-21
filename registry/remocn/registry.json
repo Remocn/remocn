@@ -1302,9 +1302,9 @@
       "name": "ink-underline",
       "type": "registry:component",
       "title": "Ink Underline",
-      "description": "A hand-dragged ink stroke that draws itself across in a few stop-motion poses, with a per-seed wobble.",
+      "description": "A hand-dragged brush underline that sweeps itself across in a few stop-motion poses, thinning to a dry tail.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/stop-motion"],
+      "registryDependencies": ["@remocn/stop-motion", "@remocn/brush"],
       "files": [
         {
           "path": "ink-underline/index.tsx",
@@ -1332,9 +1332,9 @@
       "name": "ink-arrow",
       "type": "registry:component",
       "title": "Ink Arrow",
-      "description": "A hand-drawn arrow that draws itself from one point to another in stop-motion poses, with the head popping on the final pose.",
+      "description": "A hand-drawn brush arrow that sweeps itself from one point to another, thickening into the head that pops on the final poses.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/stop-motion"],
+      "registryDependencies": ["@remocn/stop-motion", "@remocn/brush"],
       "files": [
         {
           "path": "ink-arrow/index.tsx",
@@ -1374,12 +1374,26 @@
       ]
     },
     {
+      "name": "brush",
+      "type": "registry:component",
+      "title": "Brush",
+      "description": "Variable-width brush ribbons for Remotion. Pressure taper, grain displacement, and spine samplers shared by the ink marks.",
+      "registryDependencies": ["@remocn/stop-motion"],
+      "files": [
+        {
+          "path": "brush/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/brush.tsx"
+        }
+      ]
+    },
+    {
       "name": "scribble-circle",
       "type": "registry:component",
       "title": "Scribble Circle",
       "description": "A brush circle swept around a region of the frame, opening thin and closing thick, with grain breaking up the dry opening.",
       "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/stop-motion"],
+      "registryDependencies": ["@remocn/stop-motion", "@remocn/brush"],
       "files": [
         {
           "path": "scribble-circle/index.tsx",

@@ -2,18 +2,17 @@
 
 import { useCurrentFrame } from "remotion";
 import {
-  DEFAULT_STEP,
-  hash01,
-  hashRange,
-  steppedRamp,
-} from "@/lib/remocn/stop-motion";
+  BrushGrain,
+  type BrushPoint,
+  brushFilterId,
+  brushReach,
+  brushRibbon,
+} from "@/components/remocn/brush";
+import { DEFAULT_STEP, hashRange, steppedRamp } from "@/lib/remocn/stop-motion";
 
 const SAMPLES_PER_LAP = 48;
 const NOISE = 0.035;
 const CENTRE = 0.02;
-const GRAIN_RATIO = 0.5;
-
-export type ScribblePoint = { x: number; y: number };
 
 export type ScribbleCircleGeometry = {
   width: number;
@@ -21,6 +20,7 @@ export type ScribbleCircleGeometry = {
   strokeWidth: number;
   laps?: number;
   pressure?: number;
+  release?: number;
   grain?: number;
   seed?: string;
   points?: number;
@@ -31,7 +31,7 @@ export function scribbleCircleCentre(
   width: number,
   height: number,
   seed = "scribble",
-): ScribblePoint {
+): BrushPoint {
   return {
     x: width / 2 + hashRange(`${seed}:cx`, -CENTRE, CENTRE) * width,
     y: height / 2 + hashRange(`${seed}:cy`, -CENTRE, CENTRE) * height,
@@ -44,7 +44,7 @@ export function scribbleCirclePoints(args: {
   laps?: number;
   seed?: string;
   points?: number;
-}): ScribblePoint[] {
+}): BrushPoint[] {
   const laps = args.laps ?? 1.15;
   const seed = args.seed ?? "scribble";
   const points = args.points ?? SAMPLES_PER_LAP;
@@ -64,81 +64,24 @@ export function scribbleCirclePoints(args: {
   });
 }
 
-export function scribbleCircleHalfWidth(
-  strokeWidth: number,
-  pressure: number,
-  t: number,
-): number {
-  return (strokeWidth / 2) * (pressure + (1 - pressure) * t);
-}
-
-export function scribbleCircleGrainScale(
-  strokeWidth: number,
-  grain: number,
-): number {
-  return strokeWidth * GRAIN_RATIO * grain;
-}
-
-const normalAt = (points: ScribblePoint[], i: number): ScribblePoint => {
-  const before = points[i - 1] ?? points[i];
-  const after = points[i + 1] ?? points[i];
-  const tx = after.x - before.x;
-  const ty = after.y - before.y;
-  const length = Math.hypot(tx, ty) || 1;
-  return { x: -ty / length, y: tx / length };
-};
-
-const curveSegments = (points: ScribblePoint[]): string =>
-  points
-    .slice(0, -1)
-    .map((p1, i) => {
-      const p0 = points[i - 1] ?? p1;
-      const p2 = points[i + 1];
-      const p3 = points[i + 2] ?? p2;
-      return `C ${p1.x + (p2.x - p0.x) / 6} ${p1.y + (p2.y - p0.y) / 6}, ${p2.x - (p3.x - p1.x) / 6} ${p2.y - (p3.y - p1.y) / 6}, ${p2.x} ${p2.y}`;
-    })
-    .join(" ");
-
 export function scribbleCirclePath(args: ScribbleCircleGeometry): {
   d: string;
   viewBox: string;
   marginX: number;
   marginY: number;
 } {
-  const pressure = args.pressure ?? 0.2;
   const grain = args.grain ?? 1;
-  const progress = args.progress ?? 1;
-  const spine = scribbleCirclePoints(args);
-  const drawn = Math.max(2, Math.round(progress * (spine.length - 1)) + 1);
-
-  const left: ScribblePoint[] = [];
-  const right: ScribblePoint[] = [];
-  for (let i = 0; i < drawn; i++) {
-    const half = scribbleCircleHalfWidth(
-      args.strokeWidth,
-      pressure,
-      i / (spine.length - 1),
-    );
-    const normal = normalAt(spine, i);
-    left.push({
-      x: spine[i].x + normal.x * half,
-      y: spine[i].y + normal.y * half,
-    });
-    right.push({
-      x: spine[i].x - normal.x * half,
-      y: spine[i].y - normal.y * half,
-    });
-  }
-  const back = right.slice().reverse();
-
-  const reach =
-    args.strokeWidth / 2 +
-    scribbleCircleGrainScale(args.strokeWidth, grain) / 2;
+  const reach = brushReach(args.strokeWidth, grain);
   const marginX = reach + (args.width / 2) * NOISE + args.width * CENTRE;
   const marginY = reach + (args.height / 2) * NOISE + args.height * CENTRE;
 
   return {
-    d: `M ${left[0].x} ${left[0].y} ${curveSegments(left)} L ${back[0].x} ${back[0].y} ${curveSegments(back)} Z`,
+    d: brushRibbon(scribbleCirclePoints(args), {
+      strokeWidth: args.strokeWidth,
+      pressure: args.pressure,
+      release: args.release,
+      progress: args.progress,
+    }),
     viewBox: `${-marginX} ${-marginY} ${args.width + marginX * 2} ${args.height + marginY * 2}`,
     marginX,
     marginY,
@@ -161,6 +104,7 @@ export interface ScribbleCircleProps {
   color?: string;
   strokeWidth?: number;
   pressure?: number;
+  release?: number;
   grain?: number;
   delay?: number;
   durationSteps?: number;
@@ -175,6 +119,7 @@ export function ScribbleCircle({
   color = "#6f7f35",
   strokeWidth = 14,
   pressure = 0.2,
+  release = 1,
   grain = 1,
   delay = 0,
   durationSteps = 10,
@@ -194,13 +139,11 @@ export function ScribbleCircle({
     strokeWidth,
     laps,
     pressure,
+    release,
     grain,
     seed,
     progress,
   });
-
-  const grainScale = scribbleCircleGrainScale(strokeWidth, grain);
-  const filterId = `scribble-grain-${Math.floor(hash01(seed) * 1e9)}`;
 
   return (
     <div
@@ -224,36 +167,16 @@ export function ScribbleCircle({
         }}
       >
         <title>Scribbled circle</title>
-        <defs>
-          <filter
-            id={filterId}
-            x="-30%"
-            y="-30%"
-            width="160%"
-            height="160%"
-            filterUnits="objectBoundingBox"
-          >
-            <feTurbulence
-              type="fractalNoise"
-              baseFrequency="0.7"
-              numOctaves={3}
-              seed={Math.floor(hash01(`${seed}:grain`) * 1000)}
-              result="grain"
-            />
-            <feDisplacementMap
-              in="SourceGraphic"
-              in2="grain"
-              scale={grainScale}
-              xChannelSelector="R"
-              yChannelSelector="G"
-            />
-          </filter>
-        </defs>
+        <BrushGrain seed={seed} strokeWidth={strokeWidth} grain={grain} />
         <path
           d={d}
           fill={color}
           opacity={0.85}
-          filter={grain > 0 ? `url(#${filterId})` : undefined}
+          filter={
+            grain > 0
+              ? `url(#${brushFilterId(seed, strokeWidth, grain)})`
+              : undefined
+          }
         />
       </svg>
     </div>
