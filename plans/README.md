@@ -43,7 +43,7 @@ conventions and the shared touch-point checklist live in plan 014.
 | 020 | paper-sticker | UI Blocks | S | 014 | DONE |
 | 021 | polaroid | UI Blocks | M | 014, 015 | DONE |
 | 022 | page-turn | Transitions | M | 014 | DONE |
-| 023 | release sweep + changelog | — | S | 014–022 | TODO |
+| 023 | release sweep + changelog | — | S | 014–022 | DONE |
 
 Wave-2 backlog (recorded in plan 023, not planned): ink-draw,
 scribble-circle, ink-cross-out, doodles, tape, rubber-stamp, torn-paper,
