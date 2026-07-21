@@ -56,8 +56,13 @@ export function InkArrow(props: InkArrowProps): React.ReactElement;
 - Draw progress = `steppedRamp(frame, delay, delay + drawDur, easeOutCubic)`
   via `pathLength/strokeDasharray/strokeDashoffset`; hidden before first pose.
 - Head: two strokes forming an open V at `to`, aligned to the path's end
-  tangent, sized by `headSize`, appearing only when progress reaches 1
-  (opacity flip on the final pose, like the demo).
+  tangent, sized by `headSize`. **Owner override (2026-07-21): the head is
+  DRAWN, not popped.** The demo's opacity flip at progress 1 is replaced by two
+  independently dash-drawn strokes, each growing out from the tip — left arm
+  first, then right — over `headDur` frames (default `step * 4`) split evenly.
+  This adds a `headDur?: number` prop beyond the original contract, and pushes
+  the preview `durationInFrames` to 150 to cover `drawDur` + `headDur` at the
+  control maxima.
 
 ## Registry entry
 

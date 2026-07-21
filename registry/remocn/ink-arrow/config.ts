@@ -1,0 +1,65 @@
+import { inkArrowExampleCode } from "@/components/docs/examples/ink-arrow-example";
+import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+
+export const inkArrowConfig: ComponentConfig = {
+  componentName: "InkArrow",
+  importPath: "@/components/remocn/ink-arrow",
+  controls: {
+    curvature: {
+      type: "number",
+      default: 0.35,
+      min: -1,
+      max: 1,
+      step: 0.05,
+      label: "Curvature",
+    },
+    strokeWidth: {
+      type: "number",
+      default: 3,
+      min: 1,
+      max: 10,
+      step: 1,
+      label: "Stroke width",
+    },
+    headSize: {
+      type: "number",
+      default: 24,
+      min: 8,
+      max: 48,
+      step: 1,
+      label: "Head size",
+    },
+    drawDur: {
+      type: "number",
+      default: 36,
+      min: 12,
+      max: 90,
+      step: 1,
+      label: "Draw frames",
+    },
+    headDur: {
+      type: "number",
+      default: 12,
+      min: 4,
+      max: 48,
+      step: 1,
+      label: "Head frames",
+    },
+    color: { type: "color", default: "#26242c", label: "Ink color" },
+    seed: { type: "text", default: "arrow", label: "Seed" },
+    step: {
+      type: "number",
+      default: 3,
+      min: 1,
+      max: 6,
+      step: 1,
+      label: "Frames / pose",
+    },
+  },
+  snippet: inkArrowExampleCode,
+  durationInFrames: 150,
+  fps: FPS,
+  compositionWidth: W,
+  compositionHeight: H,
+  previewBackdrop: { type: "color", value: "#f1eee7" },
+};

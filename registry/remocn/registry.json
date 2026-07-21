@@ -1329,6 +1329,21 @@
       ]
     },
     {
+      "name": "ink-arrow",
+      "type": "registry:component",
+      "title": "Ink Arrow",
+      "description": "A hand-drawn arrow that draws itself from one point to another in stop-motion poses, with the head popping on the final pose.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/stop-motion"],
+      "files": [
+        {
+          "path": "ink-arrow/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/ink-arrow.tsx"
+        }
+      ]
+    },
+    {
       "name": "stop-motion",
       "type": "registry:lib",
       "title": "Stop Motion Clock",

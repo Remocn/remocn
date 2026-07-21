@@ -26,6 +26,7 @@ import { grainDissolveConfig } from "@/registry/remocn/grain-dissolve/config";
 import { handwriteConfig } from "@/registry/remocn/handwrite/config";
 import { infiniteBentoPanConfig } from "@/registry/remocn/infinite-bento-pan/config";
 import { infiniteMarqueeConfig } from "@/registry/remocn/infinite-marquee/config";
+import { inkArrowConfig } from "@/registry/remocn/ink-arrow/config";
 import { inkUnderlineConfig } from "@/registry/remocn/ink-underline/config";
 import { inlineHighlightConfig } from "@/registry/remocn/inline-highlight/config";
 import { kineticCenterBuildConfig } from "@/registry/remocn/kinetic-center-build/config";
@@ -1538,6 +1539,13 @@ const registry: Record<string, RegistryEntry> = {
         default: m.PaperWobbleExampleScene,
       })),
     config: paperWobbleConfig,
+  },
+  "ink-arrow": {
+    load: () =>
+      import("@/components/docs/examples/ink-arrow-example").then((m) => ({
+        default: m.InkArrowExampleScene,
+      })),
+    config: inkArrowConfig,
   },
   backdrop: {
     load: () =>
