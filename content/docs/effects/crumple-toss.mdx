@@ -1,0 +1,232 @@
+---
+title: Crumple Toss
+description: Crushes an element into a ball of paper and throws it out of frame
+---
+
+<ComponentPreview name="crumple-toss" />
+
+## Installation
+
+<InstallBlock name="crumple-toss" />
+
+## Usage
+
+Everything else in the kit **arrives**. This is the piece that takes something
+off the desk: it crushes one element into a ball and throws it away while the
+scene around it keeps running.
+
+That unlocks the beat product videos lean on — *this is how it used to work* →
+crumple → *here is the new way*. Stack the replacement behind it and it is
+revealed as the ball leaves.
+
+```tsx
+// src/Root.tsx
+import { AbsoluteFill, Composition } from "remotion";
+import { CrumpleToss } from "@/components/remocn/crumple-toss";
+
+const BeforeAfterScene = () => (
+  <AbsoluteFill
+    style={{
+      background: "#f1eee7",
+      alignItems: "center",
+      justifyContent: "center",
+    }}
+  >
+    <div style={{ position: "relative", width: 380, height: 220 }}>
+      <div style={{ position: "absolute", inset: 0 }}>
+        <NewWayCard />
+      </div>
+      <div style={{ position: "absolute", inset: 0 }}>
+        <CrumpleToss width={380} height={220} at={6}>
+          <OldWayCard />
+        </CrumpleToss>
+      </div>
+    </div>
+  </AbsoluteFill>
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="CrumpleToss"
+    component={BeforeAfterScene}
+    durationInFrames={90}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The children are never modified — each wedge renders its own copy and clips to
+its slice — so a `polaroid`, a chart, or a whole composed card can be thrown
+as-is.
+
+`width` and `height` are required: the fold geometry is computed in pixels, and
+measuring the child would not survive Remotion's server-side render. It is the
+same call `scribble-circle` makes.
+
+### It is an exit, not a transition
+
+`crumple-toss` removes **one element** while everything else carries on. It is
+not a `TransitionPresentation` and does not belong in a `<TransitionSeries>`.
+For a scene-level paper exit, `page-turn` replaces the whole frame.
+
+### The card folds into the ball — there is no swap
+
+This is the part worth understanding, because the naive version is visibly
+wrong. The component does **not** hide your card and reveal a ball on top; you
+would see the cut. Instead the card is sliced into wedges radiating from its
+centre, and each wedge carries its own piece of the content while it folds
+inward, rotates, and shrinks. The wad **is** the card, folded.
+
+At rest the wedges tile the card exactly — their areas sum to the whole box —
+so before `at` there is nothing to see. `segments` sets how many pieces the
+paper tears into; more pieces read as thinner paper.
+
+Each wedge is then cut again, radially, into `layers` panels: a core panel near
+the middle and one or more rim panels out toward the edge. This is what stops
+the fold reading as a card sliced into pie slices. A single layer gives long
+straight seams running from the centre to the rim; splitting them lets the
+inner and outer halves of one wedge fold by different amounts, so the seam
+zigzags the way a crease does. The wedge still curls **one way** — the tilt
+grows toward the rim rather than flipping sign halfway — because paper bends,
+it does not hinge in the middle of a panel.
+
+Layers cost render time: the child is drawn once per panel, so `segments × layers`
+copies. The default 9 × 2 is cheap; 14 × 3 is 42 copies of whatever you pass in.
+
+`randomness` is how uneven the fold is. At `0` every wedge folds identically —
+even angles, no tilt, all panels landing the same distance in — which reads as
+neat origami and, notably, ignores `seed` entirely because there is nothing
+left to randomise. Turn it up and the wedges tear at uneven angles, tilt
+further, and land at different depths. `1` is a proper mess.
+
+Each panel is shaded as it folds, so the finished wad has lit faces and
+shadowed creases rather than reading as a flat blob. The shading is not one
+flat wash per panel — that just tints triangles. Every facet gets a light side
+and a dark side with a fold between them, and the gradient counter-rotates
+against the panel's own tilt so the light stays fixed while the paper turns
+under it. Panels nearer the core are shaded darker, because the inside of a
+wad is occluded.
+
+All of it only fades in with the crush, which is why the card looks untouched
+until it starts.
+
+### Aiming the throw
+
+`direction` is measured in screen space: `0` throws right, **negative angles
+throw upward**, and anything past `±90` throws leftward. The default `-35`
+sends the ball up and away.
+
+`distance` is the **scale of the arc, not the pixels travelled** — gravity is
+added on top of the launch, so at the defaults a `distance` of 900 puts the
+ball 737px right and 294px down, a 794px displacement.
+
+The opacity drops once, on the final flight pose, and then the element is gone.
+Everything in this kit is constant within a pose, so there is no sub-pose time
+to fade across; one stepped drop reads as the ball leaving, where a gradient
+would read as a dissolve.
+
+### It returns null when it is done
+
+After `at + (crumpleSteps + tossSteps) * step` the component renders nothing.
+In absolute positioning — the intended use — that is invisible. In normal flow
+the element's box collapses on that frame, so wrap it in an `<AbsoluteFill>` or
+a sized container if the layout has to hold.
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "children",
+      type: "React.ReactNode",
+      required: true,
+      description: "What gets thrown away; it is never modified",
+    },
+    {
+      name: "width",
+      type: "number",
+      required: true,
+      description: "Width of what is being thrown; the fold geometry derives from it",
+    },
+    {
+      name: "height",
+      type: "number",
+      required: true,
+      description: "Height of what is being thrown",
+    },
+    {
+      name: "at",
+      type: "number",
+      required: true,
+      description: "Frame the crumple starts; nothing moves before it",
+    },
+    {
+      name: "segments",
+      type: "number",
+      default: "9",
+      description: "Wedges the paper tears into; more pieces read as thinner paper",
+    },
+    {
+      name: "layers",
+      type: "number",
+      default: "2",
+      description: "Radial cuts per wedge; 1 gives straight seams, more breaks the fold up",
+    },
+    {
+      name: "randomness",
+      type: "number",
+      default: "0.6",
+      description: "How uneven the fold is; 0 folds every wedge identically and ignores seed",
+    },
+    {
+      name: "crumpleSteps",
+      type: "number",
+      default: "4",
+      description: "Poses spent crushing",
+    },
+    {
+      name: "tossSteps",
+      type: "number",
+      default: "5",
+      description: "Poses spent in flight",
+    },
+    {
+      name: "direction",
+      type: "number",
+      default: "-35",
+      description: "Throw angle in screen space; negative throws upward, past ±90 throws left",
+    },
+    {
+      name: "distance",
+      type: "number",
+      default: "900",
+      description: "Scale of the throw arc, not the pixels travelled",
+    },
+    {
+      name: "spin",
+      type: "number",
+      default: "220",
+      description: "Degrees of tumble across the flight",
+    },
+    {
+      name: "crushTo",
+      type: "number",
+      default: "0.34",
+      description: "Size of the finished wad, as a fraction of the shorter side",
+    },
+    {
+      name: "seed",
+      type: "string",
+      default: "\"toss\"",
+      description: "Seed for the wedge angles, the fold tilts, and where each panel lands",
+    },
+    {
+      name: "step",
+      type: "number",
+      default: "3",
+      description: "Frames per stop-motion pose",
+    },
+  ]}
+/>

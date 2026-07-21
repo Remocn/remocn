@@ -62,8 +62,8 @@ badge sweep the 12-row checklist does not cover.
 | 024 | check-list | UI Blocks | M | 014, 015 | DONE |
 | 025 | scribble-circle | Effects | S | 014 | DONE |
 | 026 | hand-count | Typography | M | 014 | DONE |
-| 027 | tape | UI Blocks | S | 014 | TODO |
-| 028 | crumple-toss | Effects | M | 014 | TODO |
+| 027 | tape | UI Blocks | S | 014 | REJECTED (owner removed the component after review — not needed) |
+| 028 | crumple-toss | Effects | M | 014 | DONE |
 | 029 | wave-2 release sweep + changelog | — | S | 024–028 | TODO |
 
 Still on the backlog, unplanned: ink-draw, ink-cross-out, doodles,

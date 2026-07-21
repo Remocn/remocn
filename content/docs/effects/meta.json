@@ -1,5 +1,12 @@
 {
   "title": "Effects",
   "collapsible": false,
-  "pages": ["index", "confetti", "paper-wobble", "ink-arrow", "scribble-circle"]
+  "pages": [
+    "index",
+    "confetti",
+    "paper-wobble",
+    "ink-arrow",
+    "scribble-circle",
+    "crumple-toss"
+  ]
 }

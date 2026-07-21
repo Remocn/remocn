@@ -12,6 +12,7 @@ import { checkListConfig } from "@/registry/remocn/check-list/config";
 import { claudeChatConfig } from "@/registry/remocn/claude-chat/config";
 import { claudeCodeConfig } from "@/registry/remocn/claude-code/config";
 import { confettiConfig } from "@/registry/remocn/confetti/config";
+import { crumpleTossConfig } from "@/registry/remocn/crumple-toss/config";
 import { dataFlowPipesConfig } from "@/registry/remocn/data-flow-pipes/config";
 import { ditherDissolveConfig } from "@/registry/remocn/dither-dissolve/config";
 import { driftConfig } from "@/registry/remocn/drift/config";
@@ -1573,6 +1574,13 @@ const registry: Record<string, RegistryEntry> = {
         default: m.CheckListExampleScene,
       })),
     config: checkListConfig,
+  },
+  "crumple-toss": {
+    load: () =>
+      import("@/components/docs/examples/crumple-toss-example").then((m) => ({
+        default: m.CrumpleTossExampleScene,
+      })),
+    config: crumpleTossConfig,
   },
   "scribble-circle": {
     load: () =>

@@ -11,6 +11,20 @@
 - **Section**: UI Blocks
 - **Wave**: stop-motion wave 2 (024–029)
 
+> **REJECTED.** The component was built to this plan and then removed at the
+> owner's request — it was not needed. Everything below is kept as the record
+> of what was tried, in the same way plan 019 (`paper-field`) is kept. Wave 2
+> therefore ships **four** components, not five; plan 029's sweep lists were
+> updated to match. Do not re-implement this without a fresh decision.
+>
+> **Amended during implementation.** The `at` control is 0–24, not 0–60, and
+> `durationInFrames` is **90**, not 120. Carried over from plan 026, where the
+> owner rejected a preview that held a settled frame for most of its length: a
+> 60-frame `at` maximum only exists to push the preview longer, and the landing
+> itself is a 6-frame gesture. Two tests pin both ends — the scene's two strips
+> must still settle inside the preview at the control maxima with a 30-frame
+> reading beat, and the default choreography must stay short enough to loop.
+
 ## Goal
 
 A torn strip of matte tape that lands across a corner. Right now nothing in

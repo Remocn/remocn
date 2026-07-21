@@ -1403,6 +1403,21 @@
       "type": "registry:component"
     },
     {
+      "name": "crumple-toss",
+      "title": "Crumple Toss",
+      "description": "Crushes an element into a ball of paper and throws it out of frame on an arc, leaving the scene around it running.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/stop-motion"],
+      "files": [
+        {
+          "path": "registry/remocn/crumple-toss/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/crumple-toss.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
       "name": "scribble-circle",
       "title": "Scribble Circle",
       "description": "A brush circle swept around a region of the frame, opening thin and closing thick, with grain breaking up the dry opening.",

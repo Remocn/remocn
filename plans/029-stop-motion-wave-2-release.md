@@ -6,7 +6,7 @@
 ## Status
 
 - **Effort**: S
-- **Depends on**: 024–028 (all merged)
+- **Depends on**: 024, 025, 026, 028 (all merged; 027 was rejected)
 - **Category**: chore
 - **Wave**: stop-motion wave 2 (024–029)
 
@@ -33,9 +33,10 @@ merge.
   the video feed, and the build does not fail.
 - Body headings are `###` only; `h1`/`h2` belong to the page.
 - Intro frames the wave by what it unlocked rather than by listing parts: the
-  kit could not show a list, point at a region, count, fasten anything down,
-  or take anything away. Now it can.
-- `### New components` linking all five to their real docs pages.
+  kit could not show a list, point at a region, count, or take anything away.
+  Now it can.
+- `### New components` linking all four to their real docs pages. Do NOT
+  mention `tape`: plan 027 was rejected and the component removed.
 - One `<ChangelogPreview name="..." />` after the intro. `name` must be a key
   in `registry/__index__.tsx` — `check-list` or `crumple-toss` read best as a
   still-to-motion preview.
@@ -44,13 +45,13 @@ merge.
 ## Sweep 1 — `config/site.ts`
 
 `NEW_BADGE_PATHS` (`config/site.ts:56-64`) currently holds the seven wave-1
-paths. Replace them with the five wave-2 docs paths:
+paths. Replace them with the four wave-2 docs paths (plan 027 `tape` was
+REJECTED and its component removed, so the wave ships four, not five):
 
 ```
 /docs/ui-blocks/check-list
 /docs/effects/scribble-circle
 /docs/typography/hand-count
-/docs/ui-blocks/tape
 /docs/effects/crumple-toss
 ```
 
@@ -63,17 +64,20 @@ sidebar badges nothing and the miss is invisible on the site.
 
 Script these rather than eyeballing a diff:
 
-1. Each of the five names resolves to a real docs page, is present in its
+1. Each of the four names resolves to a real docs page, is present in its
    `meta.json`, and has a `components.mdx` card in the section its plan named.
+   Also assert `tape` is absent everywhere — no docs page, no `meta.json`
+   entry, no card, no registry item, no built artifact, no ref file.
 2. For each registry item, the built artifact exists and its `files[0].path`,
    `files[0].target`, `dependencies` and `registryDependencies` match the
    `registry.json` entry — read both sides, do not infer from git.
 3. Every `/docs/` link inside the new changelog entry resolves.
-4. Five ref files exist under `skills/remocn/references/components/`, each with
+4. Four ref files exist under `skills/remocn/references/components/`, each with
    exactly one row in `index.md`, in the section its plan named — note plan 026
    goes under `## Text Animations`, there is no `Typography` heading in that
-   file.
-5. `plans/README.md`: 024–028 marked DONE, 029 DONE.
+   file. A fifth ref file, `brush.md`, documents the shared brush library and
+   belongs in the prose under `## Core library`, not the tables.
+5. `plans/README.md`: 024, 025, 026, 028 marked DONE; 027 REJECTED; 029 DONE.
 
 ## Sweep 3 — a pre-existing contradiction the wave makes worse
 
@@ -106,7 +110,7 @@ below; the executor does not self-verify and does not run `bun run build` or
 ## Acceptance criteria (owner verifies)
 
 1. The changelog entry renders at `/changelog` and every link in it resolves.
-2. All five sidebar entries carry the NEW badge; no wave-1 path still does.
+2. All four sidebar entries carry the NEW badge; no wave-1 path still does.
 3. The scripted sweep reports zero mismatches.
 4. Gates green.
 

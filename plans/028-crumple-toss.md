@@ -11,6 +11,44 @@
 - **Section**: Effects
 - **Wave**: stop-motion wave 2 (024–029)
 
+> **Redesigned twice during implementation (owner request).** The spec below
+> crushes the *children* as one clipped rectangle and throws that. Built to the
+> letter it reads as a shrinking card, not paper. A second attempt hid the card
+> and revealed a shaded SVG ball on top — and the swap was plainly visible, the
+> card still showing around the ball. The owner's diagnosis was the right one:
+> **cut the card into segments and fold the segments into the wad.**
+>
+> Shipped behaviour:
+> - `crumpleSegments()` slices the card into wedges radiating from its centre,
+>   including the rectangle corners so the wedges **tile the card exactly** —
+>   asserted by summing their areas. That exact tiling is what makes the card
+>   look untouched before `at`; any gap would be the seam the owner spotted.
+> - Each wedge renders its own copy of the children clipped to its slice, then
+>   translates inward, rotates and shrinks as `crush` ramps. The wad *is* the
+>   folded card; there is no handoff to hide.
+> - Each panel fades in a tone from a 4-step palette, giving lit faces and
+>   shadowed creases. `TONE_PATTERN` guarantees the mix rather than leaving it
+>   to per-facet randomness — an earlier version could produce a shadowless,
+>   flat wad on some seeds.
+> - `CrumplePose` therefore carries `crush` instead of per-axis scales, skew and
+>   a clip; `scaleX`/`scaleY`/`skewX`/`clip` are gone. `width` and `height` are
+>   now **required**, because the fold geometry is in pixels and measuring the
+>   child does not survive Remotion's SSR — the same call plan 025 documents.
+>   New `segments` prop; `crushTo` now means the size of the finished wad.
+> - `randomness` (0–1, default 0.6) scales every source of scatter at once —
+>   wedge angles, fold tilt, landing depth and panel size. At `0` the fold is
+>   perfectly regular and `seed` stops mattering entirely, which is asserted.
+>   A spiral variant was built at the owner's suggestion and then dropped.
+>
+> **Amended during implementation.** The `at` control is 0–24, not 0–60, and
+> `durationInFrames` is **90**, not 210. Carried over from plans 026 and 027,
+> where the owner rejected previews that held a finished frame for most of
+> their length: a 60-frame `at` maximum only exists to push the preview longer.
+> At 90 the default beat (33 frames) leaves 57 frames showing the replacement
+> card, which is content rather than dead air. Three tests pin the trade —
+> the default fits with a ≥30-frame beat, and the exact slider combination that
+> outruns the preview is recorded rather than left to surprise someone.
+
 ## Goal
 
 Take something off the desk. Everything in the kit so far **arrives** — the
