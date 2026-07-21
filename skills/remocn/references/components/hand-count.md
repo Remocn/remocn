@@ -1,6 +1,6 @@
 # hand-count
 
-**Tier:** `remocn` (animation) · **Vibe:** paper · **Natural length:** 54f counting at the defaults, 270f as a scene
+**Tier:** `remocn` (animation) · **Vibe:** paper · **Natural length:** 54f counting at the defaults, 90f as a scene
 
 A counting number in the paper voice. Every pose the value advances and the digits are **written again** — same number, different hand. That re-drawing is the whole illusion; it is how a flipbook counter behaves and how no other number in the registry behaves.
 

@@ -61,6 +61,10 @@ export const NEW_BADGE_PATHS = new Set<string>([
   "/docs/ui-blocks/paper-sticker",
   "/docs/ui-blocks/polaroid",
   "/docs/transitions/page-turn",
+  "/docs/ui-blocks/check-list",
+  "/docs/effects/scribble-circle",
+  "/docs/typography/hand-count",
+  "/docs/effects/crumple-toss",
 ]);
 
 export const FOOTER_NAV: NavLink[] = [

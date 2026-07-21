@@ -64,7 +64,7 @@ badge sweep the 12-row checklist does not cover.
 | 026 | hand-count | Typography | M | 014 | DONE |
 | 027 | tape | UI Blocks | S | 014 | REJECTED (owner removed the component after review — not needed) |
 | 028 | crumple-toss | Effects | M | 014 | DONE |
-| 029 | wave-2 release sweep + changelog | — | S | 024–028 | TODO |
+| 029 | wave-2 release sweep + changelog | — | S | 024–028 | DONE |
 
 Still on the backlog, unplanned: ink-draw, ink-cross-out, doodles,
 rubber-stamp, torn-paper (transition); compositions polaroid-stack and

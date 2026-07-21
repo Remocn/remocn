@@ -2,7 +2,7 @@
 
 **Tier:** `remocn` (animation) · **Vibe:** paper · **Natural length:** 120f @ 30fps
 
-A free-standing ink stroke dragged across in a few stop-motion poses. The curve carries a per-seed wobble, so the same seed always draws the same hand. Place it under a headline, URL, or stat.
+A free-standing brush underline dragged across in a few stop-motion poses. The mark is a filled ribbon with a pressure profile, not a constant-width stroke — it lands heavy under the first letters and thins into a dry tail. The curve carries a per-seed wobble, so the same seed always draws the same hand. Place it under a headline, URL, or stat.
 
 ## Install
 
@@ -10,7 +10,7 @@ A free-standing ink stroke dragged across in a few stop-motion poses. The curve 
 shadcn add @remocn/ink-underline
 ```
 
-Lands at `components/remocn/ink-underline.tsx`. Pulls in `@remocn/stop-motion`.
+Lands at `components/remocn/ink-underline.tsx`. Pulls in `@remocn/stop-motion` and `@remocn/brush`.
 
 ## Props
 

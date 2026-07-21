@@ -1,6 +1,6 @@
 # crumple-toss
 
-**Tier:** `remocn` (animation) · **Vibe:** paper · **Natural length:** 48f to crumple and throw at the defaults, 90f as a scene
+**Tier:** `remocn` (animation) · **Vibe:** paper · **Natural length:** 27f to crumple and throw at the defaults, 90f as a scene
 
 Crushes an element into a ball of paper and throws it out of frame. Everything else in the kit **arrives** — this is the only way to take one thing off the desk while the scene around it keeps running.
 
@@ -23,9 +23,10 @@ Lands at `components/remocn/crumple-toss.tsx`. Pulls in `@remocn/stop-motion`.
 | `height` | `number` | required |
 | `at` | `number` | required |
 | `segments` | `number` | `9` |
+| `layers` | `number` | `2` |
 | `randomness` | `number` | `0.6` |
-| `crumpleSteps` | `number` | `7` |
-| `tossSteps` | `number` | `9` |
+| `crumpleSteps` | `number` | `4` |
+| `tossSteps` | `number` | `5` |
 | `direction` | `number` | `-35` |
 | `distance` | `number` | `900` |
 | `spin` | `number` | `220` |
@@ -39,7 +40,7 @@ The children are never touched — all motion lives on the wrapper — so a `pol
 
 The card is **sliced into wedges** radiating from its centre; each wedge carries its own copy of the content, clipped to its slice, and folds inward while rotating and shrinking. The wad *is* the card, folded — there is no hide-the-card-and-show-a-ball swap, which is visible as a cut. At rest the wedges tile the card exactly, so nothing shows before `at`. Each panel picks up a tone from a small palette as it folds, giving lit faces and shadowed creases instead of a flat blob.
 
-`width` and `height` are required because the fold geometry is in pixels and measuring the child would not survive Remotion's server-side render — the same call `scribble-circle` makes. `segments` sets how many pieces the paper tears into; `crushTo` is the size of the finished wad as a fraction of the shorter side. `randomness` is how uneven the fold is — at `0` every wedge folds identically and `seed` stops mattering entirely; at `1` the wedges tear at uneven angles, tilt hard, and land at different depths.
+`width` and `height` are required because the fold geometry is in pixels and measuring the child would not survive Remotion's server-side render — the same call `scribble-circle` makes. `segments` sets how many pieces the paper tears into; `crushTo` is the size of the finished wad as a fraction of the shorter side. `randomness` is how uneven the fold is — at `0` every wedge folds identically and `seed` stops mattering entirely; at `1` the wedges tear at uneven angles, tilt hard, and land at different depths. `layers` cuts each wedge again radially, so the seam between wedges zigzags instead of running straight from the centre to the rim; the child is drawn once per panel, so `segments x layers` copies.
 
 Opacity drops once on the final flight pose and then the component **returns null**. In absolute positioning that is invisible; in normal flow the box collapses on that frame, so wrap it in an `<AbsoluteFill>` or a sized container if the layout must hold.
 

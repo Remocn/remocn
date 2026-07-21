@@ -9,7 +9,7 @@ Install any entry: `shadcn add @remocn/<name>` (lands at `components/remocn/<nam
 
 ## Text Animations
 
-Tier `remocn`. Reveal / replace / emphasize text and numbers. Frame-driven, shared `speed` prop.
+Tier `remocn`. Reveal / replace / emphasize text and numbers. Frame-driven. Most take a `speed` prop. The stop-motion ones (`handwrite`, `hand-count`, `ink-underline`) take `step` — the frames held per pose — instead; `rolodex-flip` and `value-swap` time themselves with `flipDuration` / `duration`.
 
 | Component | Use for | Avoid for | Length | Vibe | Deps |
 |---|---|---|---|---|---|
@@ -17,7 +17,7 @@ Tier `remocn`. Reveal / replace / emphasize text and numbers. Frame-driven, shar
 | [`bottom-up-letters`](bottom-up-letters.md) | A short punchy word or acronym should land with clear, visible per-character energy | The text is a full sentence or phrase — the high stagger makes long strings feel sluggish → `per-character-rise` | 60f | clean | — |
 | [`fade-through`](fade-through.md) | One label, stat, or short phrase needs to swap cleanly into another in the same slot | You want the incoming words to arrive one by one — use `per-word-crossfade` for a sequential word-level fade instead | 90f | clean | — |
 | [`focus-blur-resolve`](focus-blur-resolve.md) | A hero word or short phrase should feel like a camera lens pulling into focus | You want a clean departure upward after a crisp entrance — that arc belongs to `blur-out-up`, which arrives clean and exits with upward blur | 90f | premium | — |
-| [`hand-count`](hand-count.md) | A stat, price, or count in a hand-made scene — the number arrives by being written again each pose, not by rolling | A slick product-UI counter or dashboard metric → `rolling-number` / `number-wheel`; per-digit odometer choreography → `number-wheel` | 270f | paper | `@remocn/stop-motion` |
+| [`hand-count`](hand-count.md) | A stat, price, or count in a hand-made scene — the number arrives by being written again each pose, not by rolling | A slick product-UI counter or dashboard metric → `rolling-number` / `number-wheel`; per-digit odometer choreography → `number-wheel` | 90f | paper | `@remocn/stop-motion` |
 | [`handwrite`](handwrite.md) | Captions, labels, and headlines that should read as pen-written on paper — the core text voice of stop-motion scrapbook scenes | Terminal or typing simulation — that is `typewriter`; smooth per-character reveals on the real clock → `soft-blur-in` / `per-character-rise` | 120f | paper | `@remocn/stop-motion` |
 | [`infinite-marquee`](infinite-marquee.md) | A scene needs ambient motion in the background or as a decorative band between sections | The text should enter, hold, then exit — that is a reveal animation, not a ticker; use `blur-out-up` or `mask-reveal-up` instead | 180f | clean | — |
 | [`ink-underline`](ink-underline.md) | A hand-dragged brush underline beneath a written headline, URL, or stat — lands thick and thins into a dry tail; pairs with `handwrite` | Painting a highlight behind a word inside a sentence → `marker-highlight` | 120f | paper | `@remocn/stop-motion`, `@remocn/brush` |

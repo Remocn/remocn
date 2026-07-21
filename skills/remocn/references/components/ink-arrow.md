@@ -10,7 +10,7 @@ A hand-drawn arrow between two points. The pen drags a wobbly bezier from `from`
 shadcn add @remocn/ink-arrow
 ```
 
-Lands at `components/remocn/ink-arrow.tsx`. Pulls in `@remocn/stop-motion`.
+Lands at `components/remocn/ink-arrow.tsx`. Pulls in `@remocn/stop-motion` and `@remocn/brush`.
 
 ## Props
 
@@ -24,14 +24,14 @@ Lands at `components/remocn/ink-arrow.tsx`. Pulls in `@remocn/stop-motion`.
 | `pressure` | `number` | `0.2` |
 | `release` | `number` | `1` |
 | `grain` | `number` | `1` |
-
-`headSize` is a floor, not an exact length. An arrowhead whose arms are shorter than the shaft is wide is invisible — it disappears into the blob at the tip — so the head never drops below `strokeWidth * 2.6`. At the default weight that floor is inactive and `headSize` is used verbatim; raise `strokeWidth` and the head grows with it.
 | `delay` | `number` | `0` |
 | `drawDur` | `number` | `36` |
 | `headSize` | `number` | `24` (floor — grows with `strokeWidth`) |
 | `headDur` | `number` | `step * 4` |
 | `seed` | `string` | `"arrow"` |
 | `step` | `number` | `3` |
+
+`headSize` is a floor, not an exact length. An arrowhead whose arms are shorter than the shaft is wide is invisible — it disappears into the blob at the tip — so the head never drops below `strokeWidth * 2.6`. At the default weight that floor is inactive and `headSize` is used verbatim; raise `strokeWidth` and the head grows with it.
 
 Coordinates are in the arrow's own local space — position the component yourself. The SVG overflows visibly, so the bow and head are never clipped.
 

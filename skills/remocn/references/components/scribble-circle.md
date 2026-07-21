@@ -12,7 +12,7 @@ The mark is a filled ribbon with a pressure profile, not a constant-width stroke
 shadcn add @remocn/scribble-circle
 ```
 
-Lands at `components/remocn/scribble-circle.tsx`. Pulls in `@remocn/stop-motion`.
+Lands at `components/remocn/scribble-circle.tsx`. Pulls in `@remocn/stop-motion` and `@remocn/brush`.
 
 ## Props
 

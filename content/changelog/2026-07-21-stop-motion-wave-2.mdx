@@ -1,0 +1,19 @@
+---
+title: The kit learns to point, count and throw things away
+date: 2026-07-21
+---
+
+The first stop-motion drop could write. It could not show a list, point at a region of the frame, count, or take anything off the desk — which is most of what a product demo does between its titles. These four fill that in, on the same quantized clock as everything else: ten poses a second, nothing gliding.
+
+<ChangelogPreview name="check-list" />
+
+### New components
+
+- [Check List](/docs/ui-blocks/check-list) — a list that writes itself out in full, then goes back and closes items: a tick drawn over two poses and the label struck through. The two phases never interleave, because a list you are still writing is not a list you are already crossing off.
+- [Scribble Circle](/docs/effects/scribble-circle) — a brush loop thrown around the one thing that matters, a price or a button or a row in a screenshot. It goes round and carries on past where it started, the way a real one never lands back on its own line.
+- [Hand Count](/docs/typography/hand-count) — a number that arrives by being written again on every pose instead of rolling. The digits are redrawn, not scrolled, so it belongs in a hand-made scene rather than on a dashboard.
+- [Crumple Toss](/docs/effects/crumple-toss) — crushes one element into a ball of paper and throws it away while the rest of the scene carries on. There is no swap: the card is cut into wedges that each carry their own piece of the content and fold inward, so the wad **is** the card.
+
+### Improvements
+
+- [Ink Underline](/docs/typography/ink-underline) and [Ink Arrow](/docs/effects/ink-arrow) are redrawn through a shared brush library. A brush mark is a filled ribbon offset from its spine rather than a stroke, so it can carry pressure — the underline lands heavy and thins into a dry tail, the arrow opens thin and thickens into its head. Both pick up the same grain, and both now expose it: `pressure`, `release` and `grain` are yours to set, and the arrow draws heavier by default. Any mark made through the library shares one physical language — [Scribble Circle](/docs/effects/scribble-circle) is drawn with it too — and it arrives transitively, so you never install it yourself.
