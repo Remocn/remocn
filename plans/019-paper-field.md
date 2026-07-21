@@ -52,12 +52,15 @@ export function PaperField(props: PaperFieldProps): React.ReactElement;
   where `j = paperJitter(frame, "paper:" + seed, { amp: breathe, rotAmp: 0, step })`
   — the blotches breathe one pose at a time. Gradient fades `blotColor` at
   `opacity` to transparent at 70%, ellipse `r% × r*0.8%`.
-- Default preset = the demo's four blots
-  (`{22,18,46,0.05} {74,62,52,0.045} {38,86,40,0.04} {88,14,34,0.035}`).
+- Default preset = the demo's four blots at owner-raised opacities
+  (`{22,18,46,0.12} {74,62,52,0.11} {38,86,40,0.10} {88,14,34,0.08}`).
+  **Owner override (2026-07-21):** the demo's `0.035–0.05` was measured at only
+  6/255 against the paper base — invisible in the docs preview and completely
+  invisible over any saturated `color`. Ceiling raised to ~12%.
 - `vignette` adds the demo's page-edge gradient (transparent to
   `rgba(96,88,72,0.1)` at the corners).
-- The blotches are paper texture at ≤5% opacity, not decorative glows — keep
-  the opacities in that range in docs examples too.
+- The blotches are paper texture at ~8–12% opacity, not decorative glows — keep
+  the opacities in that range (and well under 20%) in docs examples too.
 
 ## Registry entry
 

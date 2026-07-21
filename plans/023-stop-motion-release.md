@@ -26,10 +26,11 @@ publishing).
 - Body (all English):
   - One intro paragraph on the concept: the world ticks at ~10 poses per
     second while media inside it plays smooth — living photographs.
-  - `### New components` — the eight visible items linked to their docs pages
-    (`handwrite`, `ink-underline`, `paper-wobble`, `ink-arrow`, `paper-field`,
-    `paper-sticker`, `polaroid`, `page-turn`) with one-line descriptions;
-    mention the shared `stop-motion` clock ships underneath via
+  - `### New components` — the seven visible items linked to their docs pages
+    (`handwrite`, `ink-underline`, `paper-wobble`, `ink-arrow`,
+    `paper-sticker`, `polaroid`, `page-turn`) with one-line descriptions.
+    `paper-field` is NOT in this list: plan 019 was REJECTED and the component
+    removed. Mention the shared `stop-motion` clock ships underneath via
     registry dependencies.
   - `<ChangelogPreview name="handwrite" />` after the intro paragraph.
 - H1/H2 belong to the page; only `###` inside the body.
@@ -40,21 +41,23 @@ publishing).
    `transitions` meta.json all list their new pages; every listed page file
    exists.
 2. **components.mdx**: Effects section exists with PaperWobble + InkArrow;
-   Paper & Scrapbook subsection has PaperSticker + Polaroid; Layout has
-   PaperField; Typography has Handwrite + InkUnderline; Transitions has
-   PageTurn. Optional consistency fix (owner call, do it unless vetoed): ADD a
+   Paper & Scrapbook subsection has PaperSticker + Polaroid; Typography has
+   Handwrite + InkUnderline; Transitions has PageTurn. Layout gains nothing —
+   plan 019 (PaperField) was REJECTED and the component removed.
+   Optional consistency fix (owner call, do it unless vetoed): ADD a
    `Confetti` card to the Effects section. Note: there is no existing Confetti
    card anywhere in `components.mdx` to move — the component has a docs page
    (`content/docs/effects/confetti.mdx`) but was never carded. Verified during
    plan 017, which created the `## Effects` section.
-3. **Skill catalog**: `skills/remocn/references/components/` has all nine ref
-   files; `index.md` has all nine rows in the right sections, alphabetical
+3. **Skill catalog**: `skills/remocn/references/components/` has all eight ref
+   files (seven components plus `stop-motion.md`); `index.md` has all seven
+   component rows in the right sections, alphabetical
    within their tables; if `skills/remocn/SKILL.md`, `references/anatomy.md`,
    or `references/archetypes/` state component counts or category lists,
    update them to include the paper/stop-motion voice.
 4. **Registry artifacts**: `bun run registry:build` has been re-run, and
    registry.json and the generated artifacts agree by inspection — for all
-   nine items `public/r/<name>.json` exists and its `files[0].path`,
+   eight items `registry-artifacts/<name>.json` exists and its `files[0].path`,
    `files[0].target`, `dependencies` and `registryDependencies` match the
    registry.json entry. Establish this by reading both sides, not by
    `git diff` — the agent never touches git.
@@ -67,7 +70,7 @@ publishing).
 
 1. `/changelog` renders the new entry; `/changelog/video` is unaffected (no
    `video` field — the entry simply does not appear there).
-2. Docs sidebar shows all eight components in their five sections; every
+2. Docs sidebar shows all seven components in their four sections; every
    preview loads.
 3. Sweep checklist above finds nothing left to fix.
 4. Standard: tests, typecheck, biome, registry drift clean.

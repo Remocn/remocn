@@ -24,8 +24,9 @@ Source demo (frozen, API-compat NOT required):
    (`stop-motion`) is a helpers-only library: no directive, no JSX, `.ts`.
 2. No code comments of any kind. All copy, sample data, and docs text in English.
 3. No added letter-spacing, no uppercase, no badges/pills, no glow. Components
-   are transparent — no hardcoded backgrounds — except `paper-field`, which IS
-   a background.
+   are transparent — no hardcoded backgrounds. (`paper-field` was the one
+   planned exception; plan 019 was REJECTED and the component removed, so the
+   rule now has no exceptions in this kit.)
 4. Ink palette is inlined per component as prop defaults (no shared palette
    export): ink `#26242c`, pencil `rgba(38,36,44,0.55)`, lime ink `#6f7f35`,
    paper `#f1eee7`.

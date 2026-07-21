@@ -39,6 +39,7 @@ import { matrixDecodeConfig } from "@/registry/remocn/matrix-decode/config";
 import { microScaleFadeConfig } from "@/registry/remocn/micro-scale-fade/config";
 import { numberWheelConfig } from "@/registry/remocn/number-wheel/config";
 import { opencodeConfig } from "@/registry/remocn/opencode/config";
+import { paperStickerConfig } from "@/registry/remocn/paper-sticker/config";
 import { paperWobbleConfig } from "@/registry/remocn/paper-wobble/config";
 import { perCharacterRiseConfig } from "@/registry/remocn/per-character-rise/config";
 import { perWordCrossfadeConfig } from "@/registry/remocn/per-word-crossfade/config";
@@ -1539,6 +1540,13 @@ const registry: Record<string, RegistryEntry> = {
         default: m.PaperWobbleExampleScene,
       })),
     config: paperWobbleConfig,
+  },
+  "paper-sticker": {
+    load: () =>
+      import("@/components/docs/examples/paper-sticker-example").then((m) => ({
+        default: m.PaperStickerExampleScene,
+      })),
+    config: paperStickerConfig,
   },
   "ink-arrow": {
     load: () =>

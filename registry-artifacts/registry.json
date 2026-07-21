@@ -1344,6 +1344,21 @@
       "type": "registry:component"
     },
     {
+      "name": "paper-sticker",
+      "title": "Paper Sticker",
+      "description": "A taped paper chip that slaps onto the scene over two stop-motion poses, keeping a hand-placed tilt and per-pose wobble.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/stop-motion"],
+      "files": [
+        {
+          "path": "registry/remocn/paper-sticker/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/paper-sticker.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
       "name": "stop-motion",
       "title": "Stop Motion Clock",
       "description": "Quantized stop-motion clock for Remotion. Stepped frames, stepped springs, deterministic hashing, and per-pose paper jitter.",
