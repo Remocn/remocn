@@ -49,9 +49,12 @@ publishing).
    within their tables; if `skills/remocn/SKILL.md`, `references/anatomy.md`,
    or `references/archetypes/` state component counts or category lists,
    update them to include the paper/stop-motion voice.
-4. **Registry artifacts**: `bun run registry:build` produces no diff
-   (everything already regenerated); `public/r/<name>.json` exists for all
-   nine items; the drift guard script passes.
+4. **Registry artifacts**: `bun run registry:build` has been re-run, and
+   registry.json and the generated artifacts agree by inspection — for all
+   nine items `public/r/<name>.json` exists and its `files[0].path`,
+   `files[0].target`, `dependencies` and `registryDependencies` match the
+   registry.json entry. Establish this by reading both sides, not by
+   `git diff` — the agent never touches git.
 5. **Dangling references**: `grep -rn "stop-motion\|handwrite\|ink-underline\|paper-wobble\|ink-arrow\|paper-field\|paper-sticker\|polaroid\|page-turn" content/ --include="*.mdx" -l`
    — every hit resolves to a real page/anchor; no plan promised a page that
    does not exist.

@@ -188,3 +188,5 @@ One reference file covers the whole set — see [`icons.md`](icons.md) for the m
 
 `@remocn/remocn-ui` — shared core lib (timeline-fold hook, theme context, color math) most UI Primitives depend on. Auto-installed transitively; you rarely add it directly. See [`remocn-ui.md`](remocn-ui.md).
 
+`@remocn/stop-motion` — the quantized clock (stepped frames, stepped springs, deterministic hashing, per-pose paper jitter) every stop-motion component depends on. Auto-installed transitively; you rarely add it directly. See [`stop-motion.md`](stop-motion.md).
+

@@ -1284,6 +1284,20 @@
       "type": "registry:component"
     },
     {
+      "name": "stop-motion",
+      "title": "Stop Motion Clock",
+      "description": "Quantized stop-motion clock for Remotion. Stepped frames, stepped springs, deterministic hashing, and per-pose paper jitter.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "registry/remocn/stop-motion/index.ts",
+          "type": "registry:lib",
+          "target": "lib/remocn/stop-motion.ts"
+        }
+      ],
+      "type": "registry:lib"
+    },
+    {
       "name": "remocn-ui",
       "title": "remocn UI Core",
       "description": "Shared timeline-fold hook, theme context, and color math for remocn UI primitives.",

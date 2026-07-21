@@ -20,7 +20,8 @@
 Source demo (frozen, API-compat NOT required):
 `~/projects/opensource/remocn-demo/src/demos/fable-flipbook/`
 
-1. `"use client"` is the first line of every component file.
+1. `"use client"` is the first line of every component file. The core
+   (`stop-motion`) is a helpers-only library: no directive, no JSX, `.ts`.
 2. No code comments of any kind. All copy, sample data, and docs text in English.
 3. No added letter-spacing, no uppercase, no badges/pills, no glow. Components
    are transparent — no hardcoded backgrounds — except `paper-field`, which IS
@@ -33,7 +34,9 @@ Source demo (frozen, API-compat NOT required):
    tempo control.
 6. All randomness is deterministic via `hashRange` with string seeds.
 7. Cross-component imports use the installed path `@/components/remocn/<name>`
-   (single-segment, resolved by the existing tsconfig glob).
+   (single-segment, resolved by the existing tsconfig glob). The core is a lib,
+   so it is imported as `@/lib/remocn/stop-motion` and needs its own explicit
+   tsconfig `paths` entry — mirroring `@/lib/remocn-ui`.
 8. Public APIs infer types from params; a consumer never writes `as`.
 
 Per-component touch checklist (plans 015–022; deviations noted per plan):
@@ -65,7 +68,7 @@ as a single registry item other items pull in via `registryDependencies`.
 
 ## API (contract)
 
-File `registry/remocn/stop-motion/index.tsx`:
+File `registry/remocn/stop-motion/index.ts`:
 
 ```ts
 export const DEFAULT_STEP = 3;
@@ -114,15 +117,15 @@ Changes vs the demo source:
 ```json
 {
   "name": "stop-motion",
-  "type": "registry:component",
+  "type": "registry:lib",
   "title": "Stop Motion Clock",
   "description": "Quantized stop-motion clock for Remotion. Stepped frames, stepped springs, deterministic hashing, and per-pose paper jitter.",
   "dependencies": ["remotion"],
   "files": [
     {
-      "path": "stop-motion/index.tsx",
-      "type": "registry:component",
-      "target": "components/remocn/stop-motion.tsx"
+      "path": "stop-motion/index.ts",
+      "type": "registry:lib",
+      "target": "lib/remocn/stop-motion.ts"
     }
   ]
 }
@@ -130,15 +133,21 @@ Changes vs the demo source:
 
 ## Touch points (deviates from the standard checklist)
 
-Infrastructure item, like `caret`: **no docs page, no `__index__` entry, no
+Infrastructure item, like the `remocn-ui` core lib: **no docs page, no `__index__` entry, no
 `components.mdx` card, no `config.ts`**. It ships silently via
 `registryDependencies` of every other kit item.
 
-- `registry/remocn/stop-motion/index.tsx`
+- `registry/remocn/stop-motion/index.ts`
 - `registry/remocn/stop-motion/__tests__/stop-motion.test.ts`
 - `registry/remocn/registry.json` + `bun run registry:build`
+- `tsconfig.json` — explicit `paths` entry
+  `"@/lib/remocn/stop-motion": ["./registry/remocn/stop-motion/index.ts"]`,
+  mirroring the existing `@/lib/remocn-ui` entry, so the site resolves the
+  dev-time source while installed projects resolve their own copy
 - `skills/remocn/references/components/stop-motion.md`
-- `skills/remocn/references/components/index.md` — row in **Core library**
+- `skills/remocn/references/components/index.md` — a second prose paragraph
+  under **Core library**, shaped like the existing `@remocn/remocn-ui` one.
+  That section is prose, not a table: do not convert it.
 
 ## Tests (`bun:test`)
 
@@ -160,7 +169,7 @@ Infrastructure item, like `caret`: **no docs page, no `__index__` entry, no
 3. `bunx biome check registry/remocn/stop-motion` clean.
 4. Registry drift guard passes (artifacts regenerated and consistent).
 5. Item installs standalone: `public/r/stop-motion.json` exists and targets
-   `components/remocn/stop-motion.tsx`.
+   `lib/remocn/stop-motion.ts`.
 
 ## Out of scope
 

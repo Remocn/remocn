@@ -34,7 +34,7 @@ conventions and the shared touch-point checklist live in plan 014.
 
 | Plan | Title | Section | Effort | Depends on | Status |
 |------|-------|---------|--------|------------|--------|
-| 014 | stop-motion core (quantized clock library) | — | S | — | TODO |
+| 014 | stop-motion core (quantized clock library) | — | S | — | DONE |
 | 015 | handwrite | Typography | M | 014 | TODO |
 | 016 | ink-underline | Typography | S | 014 | TODO |
 | 017 | paper-wobble | Effects | S | 014 | TODO |
