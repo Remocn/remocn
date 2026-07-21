@@ -8,6 +8,7 @@ import { blurOutUpConfig } from "@/registry/remocn/blur-out-up/config";
 import { bottomUpLettersConfig } from "@/registry/remocn/bottom-up-letters/config";
 import { chatGptConfig } from "@/registry/remocn/chat-gpt/config";
 import { chatToPreviewLayoutConfig } from "@/registry/remocn/chat-to-preview-layout/config";
+import { checkListConfig } from "@/registry/remocn/check-list/config";
 import { claudeChatConfig } from "@/registry/remocn/claude-chat/config";
 import { claudeCodeConfig } from "@/registry/remocn/claude-code/config";
 import { confettiConfig } from "@/registry/remocn/confetti/config";
@@ -1556,6 +1557,13 @@ const registry: Record<string, RegistryEntry> = {
         default: m.PolaroidExampleScene,
       })),
     config: polaroidConfig,
+  },
+  "check-list": {
+    load: () =>
+      import("@/components/docs/examples/check-list-example").then((m) => ({
+        default: m.CheckListExampleScene,
+      })),
+    config: checkListConfig,
   },
   "page-turn": {
     load: () =>

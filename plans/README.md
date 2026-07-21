@@ -45,9 +45,30 @@ conventions and the shared touch-point checklist live in plan 014.
 | 022 | page-turn | Transitions | M | 014 | DONE |
 | 023 | release sweep + changelog | — | S | 014–022 | DONE |
 
-Wave-2 backlog (recorded in plan 023, not planned): ink-draw,
-scribble-circle, ink-cross-out, doodles, tape, rubber-stamp, torn-paper,
-crumple-toss; compositions polaroid-stack and photo-scatter.
+## Stop-motion wave 2 (024–029)
+
+Planned 2026-07-21, after wave 1 shipped. Five components chosen for the gaps
+they close rather than for the backlog order: the kit could not show a list,
+could not point at a region, had no number in the paper voice, fastened
+nothing to the page, and could only ever add things to a scene — never remove
+one. Same interactive workflow as wave 1: the executor implements one plan,
+the owner reviews and commits before the next plan starts. Series conventions
+and the touch-point checklist still live in plan 014, and plan 029 closes the
+wave with the changelog entry `CLAUDE.md` requires plus the `config/site.ts`
+badge sweep the 12-row checklist does not cover.
+
+| Plan | Title | Section | Effort | Depends on | Status |
+|------|-------|---------|--------|------------|--------|
+| 024 | check-list | UI Blocks | M | 014, 015 | DONE |
+| 025 | scribble-circle | Effects | S | 014 | TODO |
+| 026 | hand-count | Typography | M | 014 | TODO |
+| 027 | tape | UI Blocks | S | 014 | TODO |
+| 028 | crumple-toss | Effects | M | 014 | TODO |
+| 029 | wave-2 release sweep + changelog | — | S | 024–028 | TODO |
+
+Still on the backlog, unplanned: ink-draw, ink-cross-out, doodles,
+rubber-stamp, torn-paper (transition); compositions polaroid-stack and
+photo-scatter.
 
 ## Dependency notes
 

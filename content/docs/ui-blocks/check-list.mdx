@@ -1,0 +1,207 @@
+---
+title: Check List
+description: A handwritten checklist that writes itself out, then ticks and strikes through every done item
+---
+
+<ComponentPreview name="check-list" />
+
+## Installation
+
+<InstallBlock name="check-list" />
+
+## Usage
+
+The list runs in two phases. First it **writes itself out**: each row draws its
+box closed and then has its label written inside, with rows starting `itemGap`
+frames apart and free to overlap. Only once the **whole** list has finished
+writing does the second phase begin — each done item gets its tick, then a
+stroke dragged through its label, one item after another `closeGap` frames
+apart.
+
+That ordering is the point: you read the full list before anything starts being
+crossed off.
+
+```tsx
+// src/Root.tsx
+import { AbsoluteFill, Composition, Sequence } from "remotion";
+import { CheckList, checkListDuration } from "@/components/remocn/check-list";
+
+const items = [
+  "Render on your own machine",
+  "No watermark, ever",
+  "Every component MIT",
+  { text: "Ships as source", checked: false },
+];
+
+const LIST_FROM = 12;
+const LIST_DURATION = checkListDuration(items);
+
+const CheckListScene = () => (
+  <AbsoluteFill
+    style={{
+      background: "#f1eee7",
+      alignItems: "center",
+      justifyContent: "center",
+    }}
+  >
+    <Sequence from={LIST_FROM} durationInFrames={LIST_DURATION}>
+      <CheckList items={items} width={820} />
+    </Sequence>
+  </AbsoluteFill>
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="CheckList"
+    component={CheckListScene}
+    durationInFrames={LIST_FROM + LIST_DURATION}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+### Items that never get ticked
+
+A bare string is shorthand for an item that eventually gets ticked. Pass an
+object with `checked: false` and the row keeps its box and its clean label
+forever — no tick, no stroke through it. That is the "not yet" line in a
+roadmap or a comparison, and it is skipped when the close phase counts out its
+turns, so it never leaves a gap in the rhythm.
+
+```tsx
+<CheckList
+  items={["Shipped today", { text: "Landing next", checked: false }]}
+  width={620}
+/>
+```
+
+### Sizing the scene
+
+`checkListDuration` returns the frame the last stroke ends on. Pass the same
+timing options you pass the component, and `delay` if you set it there — the
+returned frame is absolute and includes it.
+
+```tsx
+const total = checkListDuration(items, { delay: 12, itemGap: 24, step: 4 });
+```
+
+`checkListEnterEnd` returns the frame the writing phase finishes on — the
+moment the first tick lands. Use it to fire something else off the same beat,
+such as a heading or a stamp arriving once the list is fully written.
+
+```tsx
+const written = checkListEnterEnd(items);
+```
+
+Both are maxima over the whole list, not the last row's: rows overlap, so an
+early long label can outlast a later short one, and a list whose longest item
+is unchecked still has that item decide when the writing phase ends. If nothing
+is checked there is no close phase, and `checkListDuration` equals
+`checkListEnterEnd`.
+
+### Why width is required
+
+Labels are written by `handwrite`, which centres itself absolutely. Inside an
+auto-sized cell that collapses to zero width and the text silently vanishes, so
+the list takes its width explicitly and derives every label cell, box offset,
+and row from it. The component sets no background and no jitter of its own —
+wrap it in `paper-wobble` to put it on the desk.
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "items",
+      type: "(string | { text: string; checked?: boolean })[]",
+      required: true,
+      description: "Rows to draw; a bare string is an item that gets ticked",
+    },
+    {
+      name: "width",
+      type: "number",
+      required: true,
+      description: "List width; the label cell, box offset, and rows derive from it",
+    },
+    {
+      name: "fontSize",
+      type: "number",
+      default: "40",
+      description: "Label size; the box and row height scale from it",
+    },
+    {
+      name: "color",
+      type: "string",
+      default: "\"#26242c\"",
+      description: "Ink colour of the labels",
+    },
+    {
+      name: "boxColor",
+      type: "string",
+      default: "\"#26242c\"",
+      description: "Ink colour of the boxes",
+    },
+    {
+      name: "tickColor",
+      type: "string",
+      default: "\"#6f7f35\"",
+      description: "Ink colour of the ticks and the strokes through done labels",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Local frame the first box starts drawing",
+    },
+    {
+      name: "itemGap",
+      type: "number",
+      default: "step * 6",
+      description: "Frames between item starts while the list writes itself; rows may overlap",
+    },
+    {
+      name: "closeGap",
+      type: "number",
+      default: "step * 3",
+      description: "Frames between one item being ticked and the next, after the list is written",
+    },
+    {
+      name: "rowGap",
+      type: "number",
+      default: "fontSize * 0.55",
+      description: "Pixels between rows",
+    },
+    {
+      name: "strokeWidth",
+      type: "number",
+      default: "3",
+      description: "Pen width of the box; the tick is one unit heavier",
+    },
+    {
+      name: "perStep",
+      type: "number",
+      default: "1.6",
+      description: "Letters written per pose, forwarded to the labels",
+    },
+    {
+      name: "weight",
+      type: "400 | 500 | 600 | 700",
+      default: "600",
+      description: "Label font weight",
+    },
+    {
+      name: "seed",
+      type: "string",
+      default: "\"checklist\"",
+      description: "Seed for the per-box corner wobble",
+    },
+    {
+      name: "step",
+      type: "number",
+      default: "3",
+      description: "Frames per stop-motion pose",
+    },
+  ]}
+/>

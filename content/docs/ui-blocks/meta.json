@@ -12,6 +12,7 @@
     "data-flow-pipes",
     "progress-steps",
     "paper-sticker",
-    "polaroid"
+    "polaroid",
+    "check-list"
   ]
 }
