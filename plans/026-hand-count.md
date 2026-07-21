@@ -11,6 +11,34 @@
 - **Section**: Typography
 - **Wave**: stop-motion wave 2 (024–029)
 
+> **Amended during implementation (owner request).** The contract below has
+> `ease?: "out" | "linear"` defaulting to `"out"`, and `durationSteps` 12.
+> Shipped: `ease?: "in-out" | "out" | "linear"` defaulting to `"in-out"`, and
+> `durationSteps` 18. Reason: with `easeOutCubic` over 12 poses the first
+> visible pose already carried 23% of the count and the last six poses moved it
+> only 13% — the number read as appearing rather than counting. The owner asked
+> for a spring; a spring is not the fix, because springs start fast by
+> construction (the same defect) and their overshoot would show a price
+> climbing past its own figure before falling back. `easeInOutCubic` is what
+> the request actually needed.
+>
+> Also amended: `durationSteps` max 40 → 24 and `durationInFrames` 270 → **90**
+> (3s), at the owner's request that the preview hug the animation.
+>
+> This **knowingly breaks** the "size from the control maxima" rule below, and
+> the break is unavoidable rather than sloppy: `step` runs to 6 by kit
+> convention, so the *default* 18 poses already need 108 frames at `step: 6` —
+> more than a 3-second preview holds. A preview cannot both be 3 seconds long
+> and cover every slider position. The owner chose the short preview.
+>
+> Three tests pin the consequences instead of hiding them: the preview fits the
+> default count with at least a 30-frame reading beat, never runs more than 2×
+> the default settle frame, and **records the exact threshold where a maxed
+> slider outruns it** — `step: 6` clips above 15 poses, `step: 3` never clips.
+> If clipping ever matters more than the short preview, the one-line fix is
+> capping this component's `step` control at 4 (24 × 4 = 96, still over 90) or
+> at 3 (24 × 3 = 72, fits).
+
 ## Goal
 
 A counting number in the paper voice. Every pose the value advances and the

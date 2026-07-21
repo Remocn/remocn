@@ -1374,6 +1374,21 @@
       "type": "registry:component"
     },
     {
+      "name": "hand-count",
+      "title": "Hand Count",
+      "description": "A number that counts up in stop-motion poses, rewritten by hand at every pose and freezing still once it lands.",
+      "dependencies": ["remotion", "@remotion/google-fonts"],
+      "registryDependencies": ["@remocn/stop-motion"],
+      "files": [
+        {
+          "path": "registry/remocn/hand-count/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/hand-count.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
       "name": "brush",
       "title": "Brush",
       "description": "Variable-width brush ribbons for Remotion. Pressure taper, grain displacement, and spine samplers shared by the ink marks.",

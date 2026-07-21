@@ -24,6 +24,7 @@ import { githubStarsConfig } from "@/registry/remocn/github-stars/config";
 import { glassCodeBlockConfig } from "@/registry/remocn/glass-code-block/config";
 import { glassCodeWalkConfig } from "@/registry/remocn/glass-code-walk/config";
 import { grainDissolveConfig } from "@/registry/remocn/grain-dissolve/config";
+import { handCountConfig } from "@/registry/remocn/hand-count/config";
 import { handwriteConfig } from "@/registry/remocn/handwrite/config";
 import { infiniteBentoPanConfig } from "@/registry/remocn/infinite-bento-pan/config";
 import { infiniteMarqueeConfig } from "@/registry/remocn/infinite-marquee/config";
@@ -368,6 +369,13 @@ const registry: Record<string, RegistryEntry> = {
         default: m.Typewriter,
       })),
     config: typewriterConfig,
+  },
+  "hand-count": {
+    load: () =>
+      import("@/registry/remocn/hand-count").then((m) => ({
+        default: m.HandCount,
+      })),
+    config: handCountConfig,
   },
   handwrite: {
     load: () =>

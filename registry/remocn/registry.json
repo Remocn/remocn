@@ -1374,6 +1374,21 @@
       ]
     },
     {
+      "name": "hand-count",
+      "type": "registry:component",
+      "title": "Hand Count",
+      "description": "A number that counts up in stop-motion poses, rewritten by hand at every pose and freezing still once it lands.",
+      "dependencies": ["remotion", "@remotion/google-fonts"],
+      "registryDependencies": ["@remocn/stop-motion"],
+      "files": [
+        {
+          "path": "hand-count/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/hand-count.tsx"
+        }
+      ]
+    },
+    {
       "name": "brush",
       "type": "registry:component",
       "title": "Brush",
