@@ -26,6 +26,7 @@ import { grainDissolveConfig } from "@/registry/remocn/grain-dissolve/config";
 import { handwriteConfig } from "@/registry/remocn/handwrite/config";
 import { infiniteBentoPanConfig } from "@/registry/remocn/infinite-bento-pan/config";
 import { infiniteMarqueeConfig } from "@/registry/remocn/infinite-marquee/config";
+import { inkUnderlineConfig } from "@/registry/remocn/ink-underline/config";
 import { inlineHighlightConfig } from "@/registry/remocn/inline-highlight/config";
 import { kineticCenterBuildConfig } from "@/registry/remocn/kinetic-center-build/config";
 import { lineByLineSlideConfig } from "@/registry/remocn/line-by-line-slide/config";
@@ -416,6 +417,13 @@ const registry: Record<string, RegistryEntry> = {
         default: m.MarkerHighlight,
       })),
     config: markerHighlightConfig,
+  },
+  "ink-underline": {
+    load: () =>
+      import("@/components/docs/examples/ink-underline-example").then((m) => ({
+        default: m.InkUnderlineExampleScene,
+      })),
+    config: inkUnderlineConfig,
   },
   "slot-machine-roll": {
     load: () =>

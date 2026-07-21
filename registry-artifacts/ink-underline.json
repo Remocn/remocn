@@ -1,0 +1,17 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "ink-underline",
+  "title": "Ink Underline",
+  "description": "A hand-dragged ink stroke that draws itself across in a few stop-motion poses, with a per-seed wobble.",
+  "dependencies": ["remotion"],
+  "registryDependencies": ["@remocn/stop-motion"],
+  "files": [
+    {
+      "path": "registry/remocn/ink-underline/index.tsx",
+      "content": "\"use client\";\n\nimport { useCurrentFrame } from \"remotion\";\nimport { DEFAULT_STEP, hashRange, steppedRamp } from \"@/lib/remocn/stop-motion\";\n\nconst easeOutCubic = (t: number) => 1 - (1 - t) ** 3;\n\nexport interface InkUnderlineProps {\n  width: number;\n  color?: string;\n  thickness?: number;\n  delay?: number;\n  durationSteps?: number;\n  seed?: string;\n  step?: number;\n}\n\nexport function InkUnderline({\n  width,\n  color = \"#6f7f35\",\n  thickness = 9,\n  delay = 0,\n  durationSteps = 5,\n  seed = \"ink\",\n  step = DEFAULT_STEP,\n}: InkUnderlineProps) {\n  const frame = useCurrentFrame();\n  const progress = steppedRamp(frame, delay, delay + durationSteps * step, {\n    ease: easeOutCubic,\n    step,\n  });\n  const wobble = hashRange(`${seed}:w`, -1.2, 1.2);\n  const height = thickness + 4;\n  const mid = thickness / 2 + 2;\n\n  return (\n    <div\n      style={{\n        width,\n        height,\n        position: \"relative\",\n        opacity: progress > 0 ? 1 : 0,\n      }}\n    >\n      <svg\n        width={width}\n        height={height}\n        viewBox={`0 0 ${width} ${height}`}\n        style={{ display: \"block\", overflow: \"visible\" }}\n      >\n        <path\n          d={`M 2 ${mid} C ${width * 0.3} ${mid + wobble}, ${width * 0.7} ${mid - wobble}, ${width - 2} ${mid + wobble * 0.6}`}\n          stroke={color}\n          strokeWidth={thickness}\n          strokeLinecap=\"round\"\n          fill=\"none\"\n          pathLength={1}\n          strokeDasharray={1}\n          strokeDashoffset={1 - progress}\n          opacity={0.82}\n        />\n      </svg>\n    </div>\n  );\n}\n",
+      "type": "registry:component",
+      "target": "components/remocn/ink-underline.tsx"
+    }
+  ],
+  "type": "registry:component"
+}

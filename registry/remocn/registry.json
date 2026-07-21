@@ -1299,6 +1299,21 @@
       ]
     },
     {
+      "name": "ink-underline",
+      "type": "registry:component",
+      "title": "Ink Underline",
+      "description": "A hand-dragged ink stroke that draws itself across in a few stop-motion poses, with a per-seed wobble.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/stop-motion"],
+      "files": [
+        {
+          "path": "ink-underline/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/ink-underline.tsx"
+        }
+      ]
+    },
+    {
       "name": "stop-motion",
       "type": "registry:lib",
       "title": "Stop Motion Clock",
