@@ -24,6 +24,31 @@ Repo owner handles ALL git operations — executors edit files only (no branch/c
 
 Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) | REJECTED (with one-line rationale)
 
+## Stop-motion kit (014–023)
+
+Planned 2026-07-21. Extracts the fable-flipbook stop-motion demo
+(`~/projects/opensource/remocn-demo/src/demos/fable-flipbook/`) into nine
+registry items plus a release sweep. Interactive workflow: executor implements
+one plan, the owner reviews and commits before the next plan starts. Series
+conventions and the shared touch-point checklist live in plan 014.
+
+| Plan | Title | Section | Effort | Depends on | Status |
+|------|-------|---------|--------|------------|--------|
+| 014 | stop-motion core (quantized clock library) | — | S | — | TODO |
+| 015 | handwrite | Typography | M | 014 | TODO |
+| 016 | ink-underline | Typography | S | 014 | TODO |
+| 017 | paper-wobble | Effects | S | 014 | TODO |
+| 018 | ink-arrow | Effects | M | 014 | TODO |
+| 019 | paper-field | Layout | S | 014 | TODO |
+| 020 | paper-sticker | UI Blocks | S | 014 | TODO |
+| 021 | polaroid | UI Blocks | M | 014, 015 | TODO |
+| 022 | page-turn | Transitions | M | 014 | TODO |
+| 023 | release sweep + changelog | — | S | 014–022 | TODO |
+
+Wave-2 backlog (recorded in plan 023, not planned): ink-draw,
+scribble-circle, ink-cross-out, doodles, tape, rubber-stamp, torn-paper,
+crumple-toss; compositions polaroid-stack and photo-scatter.
+
 ## Dependency notes
 
 - 002 requires 001: deleting `@react-three/fiber` removes the stated cause of the `@types/mdx` collision that `ignoreBuildErrors` was masking.
