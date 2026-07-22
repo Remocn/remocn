@@ -1,5 +1,15 @@
 {
   "title": "Guides",
   "collapsible": false,
-  "pages": ["index", "setup", "launch-video"]
+  "pages": [
+    "index",
+    "setup",
+    "---Videos---",
+    "launch-video",
+    "---Practices---",
+    "how-a-video-is-built",
+    "directing-your-agent",
+    "words-on-screen",
+    "your-brand"
+  ]
 }

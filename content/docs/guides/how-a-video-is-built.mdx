@@ -1,0 +1,58 @@
+---
+title: How a video is built
+description: Think in beats — the one mental model behind every video you'll make
+---
+
+Every video in these guides — and every video you'll invent yourself — is built the same way: as a list of beats.
+
+## Beats
+
+A beat is one idea on screen. A line of text landing. A feature name over a background. A logo drawing itself on. When the idea changes, the beat changes.
+
+Three rules cover most of it:
+
+- **One idea per beat.** If describing a beat needs the word "and", it's two beats.
+- **A text beat lives about two seconds** — long enough to read once, not twice.
+- **A video is five to ten beats.** The [launch video](/docs/guides/launch-video) is eight.
+
+## The skeleton
+
+Every video that works has the same three acts:
+
+1. **Hook** — why anyone should care: a pain, a bold claim, a question.
+2. **Body** — what it is: features, value, proof.
+3. **Close** — what to do next: a command, a URL, a date.
+
+Not sure what beats to write? One or two hook beats, three to five body beats, one close beat. That's a video.
+
+## The vocabulary
+
+When you describe a beat to your agent, plain words work — and some plain words map especially well to what remocn can build:
+
+- **"an animated headline"** — a line of text that enters with motion
+- **"lines that stack up"** — claims appearing one after another
+- **"a living background"** — slow, animated color behind everything
+- **"a hard cut" / "a scene change"** — how one beat hands over to the next
+- **"a terminal that types"** — a command line typing itself out
+- **"a fake app screen"** — an interface with buttons, menus, and dialogs that act
+- **"a logo that draws itself on"**
+- **"a counter"** — a number counting up to a milestone
+
+You never need to know what any of these are called internally. Your agent does.
+
+## From beats to prompt
+
+Write your video as a numbered list of beats — one line each, your copy in quotes. That list is 80% of a prompt; add a format line and a style line and it's done:
+
+```text
+Build a ~15-second, 1920×1080, 30fps video in this Remotion project,
+using remocn components:
+
+1. Hook — an animated headline: "<YOUR LINE>".
+2. Body — three lines that stack up: <YOUR CLAIMS>.
+3. Close — a terminal that types: `<YOUR CTA>`.
+
+Style: dark background, one accent color <HEX>, calm pacing.
+```
+
+When the first cut plays, switch hats: you're the director now — see [Directing your agent](/docs/guides/directing-your-agent).
