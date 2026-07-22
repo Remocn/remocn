@@ -1,0 +1,17 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "polaroid",
+  "title": "Polaroid",
+  "description": "An instant-photo frame with a handwritten caption for video, images, or live compositions.",
+  "dependencies": ["remotion"],
+  "registryDependencies": ["@remocn/stop-motion", "@remocn/handwrite"],
+  "files": [
+    {
+      "path": "registry/remocn/polaroid/index.tsx",
+      "content": "\"use client\";\n\nimport type React from \"react\";\nimport { Handwrite } from \"@/components/remocn/handwrite\";\nimport { DEFAULT_STEP } from \"@/lib/remocn/stop-motion\";\n\nconst BASE_WIDTH = 652;\nconst BASE_PAD = 16;\nconst BASE_MEDIA_WIDTH = 620;\nconst BASE_MEDIA_HEIGHT = 349;\nconst BASE_CAPTION_HEIGHT = 62;\nconst BASE_CAPTION_SIZE = 36;\n\nexport type PolaroidGeometry = {\n  pad: number;\n  mediaWidth: number;\n  mediaHeight: number;\n  captionHeight: number;\n  height: number;\n};\n\nexport function polaroidGeometry(width: number): PolaroidGeometry {\n  const scale = width / BASE_WIDTH;\n  const pad = BASE_PAD * scale;\n  const mediaWidth = BASE_MEDIA_WIDTH * scale;\n  const mediaHeight = BASE_MEDIA_HEIGHT * scale;\n  const captionHeight = BASE_CAPTION_HEIGHT * scale;\n  return {\n    pad,\n    mediaWidth,\n    mediaHeight,\n    captionHeight,\n    height: pad + mediaHeight + captionHeight,\n  };\n}\n\nexport interface PolaroidProps {\n  children: React.ReactNode;\n  caption?: string;\n  captionAt?: number;\n  width?: number;\n  frameColor?: string;\n  captionColor?: string;\n  captionSize?: number;\n  step?: number;\n}\n\nexport function Polaroid({\n  children,\n  caption,\n  captionAt = 0,\n  width = BASE_WIDTH,\n  frameColor = \"#fdfcf8\",\n  captionColor = \"#26242c\",\n  captionSize,\n  step = DEFAULT_STEP,\n}: PolaroidProps) {\n  const { pad, mediaWidth, mediaHeight, captionHeight, height } =\n    polaroidGeometry(width);\n  const resolvedCaptionSize =\n    captionSize ?? BASE_CAPTION_SIZE * (width / BASE_WIDTH);\n\n  return (\n    <div\n      style={{\n        width,\n        height,\n        boxSizing: \"border-box\",\n        background: frameColor,\n        borderRadius: 4,\n        boxShadow:\n          \"0 8px 20px rgba(38,36,44,0.18), 0 2px 5px rgba(38,36,44,0.12)\",\n        paddingTop: pad,\n      }}\n    >\n      <div\n        style={{\n          position: \"relative\",\n          width: mediaWidth,\n          height: mediaHeight,\n          margin: \"0 auto\",\n          background: \"#100f14\",\n          overflow: \"hidden\",\n        }}\n      >\n        {children}\n      </div>\n      <div style={{ position: \"relative\", height: captionHeight }}>\n        {caption ? (\n          <Handwrite\n            text={caption}\n            fontSize={resolvedCaptionSize}\n            color={captionColor}\n            delay={captionAt}\n            perStep={1.4}\n            weight={600}\n            step={step}\n          />\n        ) : null}\n      </div>\n    </div>\n  );\n}\n",
+      "type": "registry:component",
+      "target": "components/remocn/polaroid.tsx"
+    }
+  ],
+  "type": "registry:component"
+}

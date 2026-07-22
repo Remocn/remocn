@@ -24,6 +24,52 @@ Repo owner handles ALL git operations — executors edit files only (no branch/c
 
 Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) | REJECTED (with one-line rationale)
 
+## Stop-motion kit (014–023)
+
+Planned 2026-07-21. Extracts the fable-flipbook stop-motion demo
+(`~/projects/opensource/remocn-demo/src/demos/fable-flipbook/`) into nine
+registry items plus a release sweep. Interactive workflow: executor implements
+one plan, the owner reviews and commits before the next plan starts. Series
+conventions and the shared touch-point checklist live in plan 014.
+
+| Plan | Title | Section | Effort | Depends on | Status |
+|------|-------|---------|--------|------------|--------|
+| 014 | stop-motion core (quantized clock library) | — | S | — | DONE |
+| 015 | handwrite | Typography | M | 014 | DONE |
+| 016 | ink-underline | Typography | S | 014 | DONE |
+| 017 | paper-wobble | Effects | S | 014 | DONE |
+| 018 | ink-arrow | Effects | M | 014 | DONE |
+| 019 | paper-field | Layout | S | 014 | REJECTED (owner removed the component after review — the blot texture did not earn its place) |
+| 020 | paper-sticker | UI Blocks | S | 014 | DONE |
+| 021 | polaroid | UI Blocks | M | 014, 015 | DONE |
+| 022 | page-turn | Transitions | M | 014 | DONE |
+| 023 | release sweep + changelog | — | S | 014–022 | DONE |
+
+## Stop-motion wave 2 (024–029)
+
+Planned 2026-07-21, after wave 1 shipped. Five components chosen for the gaps
+they close rather than for the backlog order: the kit could not show a list,
+could not point at a region, had no number in the paper voice, fastened
+nothing to the page, and could only ever add things to a scene — never remove
+one. Same interactive workflow as wave 1: the executor implements one plan,
+the owner reviews and commits before the next plan starts. Series conventions
+and the touch-point checklist still live in plan 014, and plan 029 closes the
+wave with the changelog entry `CLAUDE.md` requires plus the `config/site.ts`
+badge sweep the 12-row checklist does not cover.
+
+| Plan | Title | Section | Effort | Depends on | Status |
+|------|-------|---------|--------|------------|--------|
+| 024 | check-list | UI Blocks | M | 014, 015 | DONE |
+| 025 | scribble-circle | Effects | S | 014 | DONE |
+| 026 | hand-count | Typography | M | 014 | DONE |
+| 027 | tape | UI Blocks | S | 014 | REJECTED (owner removed the component after review — not needed) |
+| 028 | crumple-toss | Effects | M | 014 | DONE |
+| 029 | wave-2 release sweep + changelog | — | S | 024–028 | DONE |
+
+Still on the backlog, unplanned: ink-draw, ink-cross-out, doodles,
+rubber-stamp, torn-paper (transition); compositions polaroid-stack and
+photo-scatter.
+
 ## Dependency notes
 
 - 002 requires 001: deleting `@react-three/fiber` removes the stated cause of the `@types/mdx` collision that `ignoreBuildErrors` was masking.

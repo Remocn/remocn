@@ -8,9 +8,11 @@ import { blurOutUpConfig } from "@/registry/remocn/blur-out-up/config";
 import { bottomUpLettersConfig } from "@/registry/remocn/bottom-up-letters/config";
 import { chatGptConfig } from "@/registry/remocn/chat-gpt/config";
 import { chatToPreviewLayoutConfig } from "@/registry/remocn/chat-to-preview-layout/config";
+import { checkListConfig } from "@/registry/remocn/check-list/config";
 import { claudeChatConfig } from "@/registry/remocn/claude-chat/config";
 import { claudeCodeConfig } from "@/registry/remocn/claude-code/config";
 import { confettiConfig } from "@/registry/remocn/confetti/config";
+import { crumpleTossConfig } from "@/registry/remocn/crumple-toss/config";
 import { dataFlowPipesConfig } from "@/registry/remocn/data-flow-pipes/config";
 import { ditherDissolveConfig } from "@/registry/remocn/dither-dissolve/config";
 import { driftConfig } from "@/registry/remocn/drift/config";
@@ -23,8 +25,12 @@ import { githubStarsConfig } from "@/registry/remocn/github-stars/config";
 import { glassCodeBlockConfig } from "@/registry/remocn/glass-code-block/config";
 import { glassCodeWalkConfig } from "@/registry/remocn/glass-code-walk/config";
 import { grainDissolveConfig } from "@/registry/remocn/grain-dissolve/config";
+import { handCountConfig } from "@/registry/remocn/hand-count/config";
+import { handwriteConfig } from "@/registry/remocn/handwrite/config";
 import { infiniteBentoPanConfig } from "@/registry/remocn/infinite-bento-pan/config";
 import { infiniteMarqueeConfig } from "@/registry/remocn/infinite-marquee/config";
+import { inkArrowConfig } from "@/registry/remocn/ink-arrow/config";
+import { inkUnderlineConfig } from "@/registry/remocn/ink-underline/config";
 import { inlineHighlightConfig } from "@/registry/remocn/inline-highlight/config";
 import { kineticCenterBuildConfig } from "@/registry/remocn/kinetic-center-build/config";
 import { lineByLineSlideConfig } from "@/registry/remocn/line-by-line-slide/config";
@@ -36,10 +42,14 @@ import { matrixDecodeConfig } from "@/registry/remocn/matrix-decode/config";
 import { microScaleFadeConfig } from "@/registry/remocn/micro-scale-fade/config";
 import { numberWheelConfig } from "@/registry/remocn/number-wheel/config";
 import { opencodeConfig } from "@/registry/remocn/opencode/config";
+import { pageTurnConfig } from "@/registry/remocn/page-turn/config";
+import { paperStickerConfig } from "@/registry/remocn/paper-sticker/config";
+import { paperWobbleConfig } from "@/registry/remocn/paper-wobble/config";
 import { perCharacterRiseConfig } from "@/registry/remocn/per-character-rise/config";
 import { perWordCrossfadeConfig } from "@/registry/remocn/per-word-crossfade/config";
 import { perlinDissolveConfig } from "@/registry/remocn/perlin-dissolve/config";
 import { perspectiveMarqueeConfig } from "@/registry/remocn/perspective-marquee/config";
+import { polaroidConfig } from "@/registry/remocn/polaroid/config";
 import { progressStepsConfig } from "@/registry/remocn/progress-steps/config";
 import { pushThroughConfig } from "@/registry/remocn/push-through/config";
 import { rgbGlitchTextConfig } from "@/registry/remocn/rgb-glitch-text/config";
@@ -47,6 +57,7 @@ import { rippleZoomConfig } from "@/registry/remocn/ripple-zoom/config";
 import { rollingNumberConfig } from "@/registry/remocn/rolling-number/config";
 import { rolodexFlipConfig } from "@/registry/remocn/rolodex-flip/config";
 import { scaleDownFadeConfig } from "@/registry/remocn/scale-down-fade/config";
+import { scribbleCircleConfig } from "@/registry/remocn/scribble-circle/config";
 import { shaderColorPanelsConfig } from "@/registry/remocn/shader-color-panels/config";
 import { shaderDitheringConfig } from "@/registry/remocn/shader-dithering/config";
 import { shaderDotOrbitConfig } from "@/registry/remocn/shader-dot-orbit/config";
@@ -360,6 +371,20 @@ const registry: Record<string, RegistryEntry> = {
       })),
     config: typewriterConfig,
   },
+  "hand-count": {
+    load: () =>
+      import("@/registry/remocn/hand-count").then((m) => ({
+        default: m.HandCount,
+      })),
+    config: handCountConfig,
+  },
+  handwrite: {
+    load: () =>
+      import("@/registry/remocn/handwrite").then((m) => ({
+        default: m.Handwrite,
+      })),
+    config: handwriteConfig,
+  },
   "inline-highlight": {
     load: () =>
       import("@/registry/remocn/inline-highlight").then((m) => ({
@@ -408,6 +433,13 @@ const registry: Record<string, RegistryEntry> = {
         default: m.MarkerHighlight,
       })),
     config: markerHighlightConfig,
+  },
+  "ink-underline": {
+    load: () =>
+      import("@/components/docs/examples/ink-underline-example").then((m) => ({
+        default: m.InkUnderlineExampleScene,
+      })),
+    config: inkUnderlineConfig,
   },
   "slot-machine-roll": {
     load: () =>
@@ -1514,6 +1546,64 @@ const registry: Record<string, RegistryEntry> = {
         default: m.Confetti,
       })),
     config: confettiConfig,
+  },
+  "paper-wobble": {
+    load: () =>
+      import("@/components/docs/examples/paper-wobble-example").then((m) => ({
+        default: m.PaperWobbleExampleScene,
+      })),
+    config: paperWobbleConfig,
+  },
+  "paper-sticker": {
+    load: () =>
+      import("@/components/docs/examples/paper-sticker-example").then((m) => ({
+        default: m.PaperStickerExampleScene,
+      })),
+    config: paperStickerConfig,
+  },
+  polaroid: {
+    load: () =>
+      import("@/components/docs/examples/polaroid-example").then((m) => ({
+        default: m.PolaroidExampleScene,
+      })),
+    config: polaroidConfig,
+  },
+  "check-list": {
+    load: () =>
+      import("@/components/docs/examples/check-list-example").then((m) => ({
+        default: m.CheckListExampleScene,
+      })),
+    config: checkListConfig,
+  },
+  "crumple-toss": {
+    load: () =>
+      import("@/components/docs/examples/crumple-toss-example").then((m) => ({
+        default: m.CrumpleTossExampleScene,
+      })),
+    config: crumpleTossConfig,
+  },
+  "scribble-circle": {
+    load: () =>
+      import("@/components/docs/examples/scribble-circle-example").then(
+        (m) => ({
+          default: m.ScribbleCircleExampleScene,
+        }),
+      ),
+    config: scribbleCircleConfig,
+  },
+  "page-turn": {
+    load: () =>
+      import("@/components/docs/examples/page-turn-example").then((m) => ({
+        default: m.PageTurnExampleScene,
+      })),
+    config: pageTurnConfig,
+  },
+  "ink-arrow": {
+    load: () =>
+      import("@/components/docs/examples/ink-arrow-example").then((m) => ({
+        default: m.InkArrowExampleScene,
+      })),
+    config: inkArrowConfig,
   },
   backdrop: {
     load: () =>

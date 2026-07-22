@@ -1,0 +1,22 @@
+---
+title: The stop-motion kit
+date: 2026-07-21
+---
+
+Everything in this kit runs on a quantized clock. Instead of sampling the timeline every frame, each component samples it once every three — ten poses a second — so nothing glides. A letter is either written or it is not. A stroke has either been dragged this pose or it waits for the next one. Between poses the whole scene holds still, and every object carries a fraction of a pixel of drift, the wobble of something that was picked up and put back down.
+
+The exception is what plays inside it. Drop a video or a whole live composition into a `Polaroid` and the frame around it keeps ticking in poses while the picture itself runs at full framerate. A photograph that never stopped playing, with nothing pre-rendered.
+
+<ChangelogPreview name="handwrite" />
+
+### New components
+
+- [Handwrite](/docs/typography/handwrite) — text laid down letter by letter, each glyph keeping its own slant and baseline wobble, the newest one settling from a heavier press.
+- [Ink Underline](/docs/typography/ink-underline) — a hand-dragged stroke that draws itself across in a few poses, with a per-seed wobble so it never looks geometric.
+- [Paper Wobble](/docs/effects/paper-wobble) — wrap anything to give it the reshoot jitter. One offset held for a whole pose, then a snap to the next.
+- [Ink Arrow](/docs/effects/ink-arrow) — a pen drags a wobbly curve from one point to another, then draws the head one stroke at a time.
+- [Paper Sticker](/docs/ui-blocks/paper-sticker) — a taped chip that slaps down over two poses and keeps a fixed hand-placed tilt.
+- [Polaroid](/docs/ui-blocks/polaroid) — an instant-photo frame with a handwritten caption. The media is `children`, so anything plays inside.
+- [Page Turn](/docs/transitions/page-turn) — the exiting scene lifts and swings away like a notebook page. The only transition in the catalog where the outgoing scene stays in front of the one it reveals, because that is what a page does.
+
+The clock itself ships underneath as a registry dependency, so adding any of these pulls it in without you asking for it. Every component takes a `step` prop if you want a tempo other than three frames a pose.

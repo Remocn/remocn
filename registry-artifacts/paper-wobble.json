@@ -1,0 +1,17 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "paper-wobble",
+  "title": "Paper Wobble",
+  "description": "Per-pose reshoot jitter that makes any content feel hand-placed on a desk.",
+  "dependencies": ["remotion"],
+  "registryDependencies": ["@remocn/stop-motion"],
+  "files": [
+    {
+      "path": "registry/remocn/paper-wobble/index.tsx",
+      "content": "\"use client\";\n\nimport type React from \"react\";\nimport { useCurrentFrame } from \"remotion\";\nimport { DEFAULT_STEP, paperJitter } from \"@/lib/remocn/stop-motion\";\n\nexport interface PaperWobbleProps {\n  children: React.ReactNode;\n  seed?: string;\n  amp?: number;\n  rotAmp?: number;\n  step?: number;\n  className?: string;\n  style?: React.CSSProperties;\n}\n\nexport function PaperWobble({\n  children,\n  seed = \"wobble\",\n  amp = 1.4,\n  rotAmp = 0.35,\n  step = DEFAULT_STEP,\n  className,\n  style,\n}: PaperWobbleProps) {\n  const frame = useCurrentFrame();\n  const jitter = paperJitter(frame, seed, { amp, rotAmp, step });\n  const wobble = `translate(${jitter.x}px, ${jitter.y}px) rotate(${jitter.rot}deg)`;\n\n  return (\n    <div\n      className={className}\n      style={{\n        display: \"inline-block\",\n        ...style,\n        transform: style?.transform ? `${style.transform} ${wobble}` : wobble,\n      }}\n    >\n      {children}\n    </div>\n  );\n}\n",
+      "type": "registry:component",
+      "target": "components/remocn/paper-wobble.tsx"
+    }
+  ],
+  "type": "registry:component"
+}

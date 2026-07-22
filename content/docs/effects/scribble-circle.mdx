@@ -1,0 +1,192 @@
+---
+title: Scribble Circle
+description: A brush circle that sweeps itself around a region of the frame, opening thin and closing thick
+---
+
+<ComponentPreview name="scribble-circle" />
+
+## Installation
+
+<InstallBlock name="scribble-circle" />
+
+## Usage
+
+Position it absolutely over whatever you are pointing at. The component draws
+nothing but the loop — no background, no children — so it composes over a
+screenshot, a card, or a number without touching the layout underneath.
+
+```tsx
+// src/Root.tsx
+import { AbsoluteFill, Composition } from "remotion";
+import { ScribbleCircle } from "@/components/remocn/scribble-circle";
+
+const ScribbleScene = () => (
+  <AbsoluteFill
+    style={{
+      background: "#f1eee7",
+      alignItems: "center",
+      justifyContent: "center",
+    }}
+  >
+    <div style={{ position: "relative" }}>
+      <PricingCard />
+      <div style={{ position: "absolute", left: 326, top: 119 }}>
+        <ScribbleCircle width={108} height={62} delay={18} />
+      </div>
+    </div>
+  </AbsoluteFill>
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="ScribbleCircle"
+    component={ScribbleScene}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+### Circle it, then point at it
+
+Pairing with `ink-arrow` is the full annotation beat — the loop lands first,
+then the arrow arrives to explain it. Give the arrow a `delay` past the end of
+the circle's draw, which is `durationSteps * step` frames after its own delay.
+
+```tsx
+const CIRCLE_AT = 18;
+const CIRCLE_DRAW = 10 * 3;
+
+<>
+  <div style={{ position: "absolute", left: 326, top: 119 }}>
+    <ScribbleCircle width={108} height={62} delay={CIRCLE_AT} />
+  </div>
+  <div style={{ position: "absolute", left: 470, top: 40 }}>
+    <InkArrow
+      from={{ x: 180, y: 0 }}
+      to={{ x: 20, y: 120 }}
+      delay={CIRCLE_AT + CIRCLE_DRAW}
+    />
+  </div>
+</>;
+```
+
+### It is a brush, not a pen
+
+The mark is a filled ribbon whose width follows a pressure profile, not a
+constant-width stroke. `pressure` is where the brush starts, as a fraction of
+`strokeWidth`: at the default `0.2` the loop opens at a fifth of full weight
+and thickens all the way round to a blunt, fully loaded end. `pressure: 1`
+turns the taper off and gives a uniform band.
+
+`grain` roughens the edges. It is worth understanding what it does, because it
+is what keeps the mark from looking printed: the ribbon is displaced by a noise
+field whose amplitude is proportional to `strokeWidth`. Where the ribbon is
+thicker than that amplitude the edges merely go ragged; where it is thinner —
+which is exactly the opening, by construction — the ribbon breaks apart into
+dry-brush flecks. So the stroke is never uniformly filled in, and the thin
+opening fades rather than ending abruptly. `grain: 0` switches the filter off
+and leaves clean vector edges.
+
+### Tuning the gesture
+
+`laps` is a float and it is the character knob. The default `1.15` sends the
+brush once round and about 54° past where it started — that overshoot is what
+stops the loop reading as a drawn `<ellipse>`. `2` gives the double-loop
+scribble; `0.9` leaves an open arc. Where the brush passes its own starting
+angle the two passes sit at slightly different radii, because the radius noise
+is keyed on the sample index rather than the angle, so the laps never retrace
+each other.
+
+The loop draws in equal arcs per pose, so you watch the brush travel rather
+than seeing the circle appear nearly finished on its first frame. More
+`durationSteps` means more, smaller poses.
+
+### Why there is no children API
+
+`<ScribbleCircle>{target}</ScribbleCircle>`, measuring its child and sizing
+itself, is the nicer-looking API and it does not work here. Measurement needs
+`useLayoutEffect` and `getBoundingClientRect`, neither of which runs during
+Remotion's server-side render: the ellipse would size correctly in the browser
+preview and collapse in the exported video. Explicit `width` and `height` is
+the honest contract, the same call `ink-underline` makes with its required
+`width`.
+
+The root element keeps exactly the `width` and `height` you pass, so your
+positioning math stays predictable. Only the SVG overflows, by enough to cover
+the radius noise, the centre nudge, and the stroke.
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "width",
+      type: "number",
+      required: true,
+      description: "Nominal width of the loop and of the root element",
+    },
+    {
+      name: "height",
+      type: "number",
+      required: true,
+      description: "Nominal height of the loop and of the root element",
+    },
+    {
+      name: "color",
+      type: "string",
+      default: "\"#6f7f35\"",
+      description: "Ink colour of the stroke",
+    },
+    {
+      name: "strokeWidth",
+      type: "number",
+      default: "14",
+      description: "Brush width at full pressure; the grain amplitude scales from it",
+    },
+    {
+      name: "pressure",
+      type: "number",
+      default: "0.2",
+      description: "Weight the brush opens on, as a fraction of strokeWidth; 1 removes the taper",
+    },
+    {
+      name: "grain",
+      type: "number",
+      default: "1",
+      description: "Edge roughness; breaks the thin opening into dry-brush flecks, 0 gives clean edges",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Local frame the pen starts moving",
+    },
+    {
+      name: "durationSteps",
+      type: "number",
+      default: "10",
+      description: "Poses the loop takes to draw, each advancing an equal arc",
+    },
+    {
+      name: "laps",
+      type: "number",
+      default: "1.15",
+      description: "How far round the pen travels; above 1 it overshoots its start",
+    },
+    {
+      name: "seed",
+      type: "string",
+      default: "\"scribble\"",
+      description: "Seed for the radius noise, the centre nudge, and the grain field",
+    },
+    {
+      name: "step",
+      type: "number",
+      default: "3",
+      description: "Frames per stop-motion pose",
+    },
+  ]}
+/>

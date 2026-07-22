@@ -1,0 +1,124 @@
+---
+title: Handwrite
+description: Handwritten text laid down letter by letter on a quantized stop-motion clock
+---
+
+<ComponentPreview name="handwrite" />
+
+## Installation
+
+<InstallBlock name="handwrite" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { AbsoluteFill, Composition } from "remotion";
+import { Handwrite } from "@/components/remocn/handwrite";
+
+const HandwriteScene = () => (
+  <AbsoluteFill style={{ background: "#f1eee7" }}>
+    <Handwrite text="Made by hand" fontSize={72} />
+  </AbsoluteFill>
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="Handwrite"
+    component={HandwriteScene}
+    durationInFrames={120}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The component is transparent — put the paper colour on the layer behind it.
+
+`handwriteDuration` returns how many frames a string needs, so a `<Sequence>` can
+be sized to the writing instead of guessed:
+
+```tsx
+import { Sequence } from "remotion";
+import { Handwrite, handwriteDuration } from "@/components/remocn/handwrite";
+
+const title = "Made by hand";
+const subtitle = "one pose at a time";
+
+const Titles = () => (
+  <>
+    <Sequence durationInFrames={handwriteDuration(title)}>
+      <Handwrite text={title} fontSize={72} />
+    </Sequence>
+    <Sequence from={handwriteDuration(title)}>
+      <Handwrite text={subtitle} fontSize={44} />
+    </Sequence>
+  </>
+);
+```
+
+Letters arrive on the stop-motion clock, so `step` is the tempo control: `3`
+frames per pose is ten poses a second at 30fps. Raise it for a slower, more
+deliberate hand. The component holds still between poses — wrap it in
+`paper-wobble` if the whole sheet should breathe.
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "text",
+      type: "string",
+      required: true,
+      description: "The text to write out; newlines are honoured",
+    },
+    {
+      name: "fontSize",
+      type: "number",
+      default: "54",
+      description: "Font size in pixels",
+    },
+    {
+      name: "color",
+      type: "string",
+      default: "\"#26242c\"",
+      description: "Ink colour (any valid CSS color)",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames on the local clock before writing begins",
+    },
+    {
+      name: "perStep",
+      type: "number",
+      default: "1.6",
+      description: "Letters laid down per stop-motion pose",
+    },
+    {
+      name: "weight",
+      type: "400 | 500 | 600 | 700",
+      default: "600",
+      description: "Pen weight",
+    },
+    {
+      name: "align",
+      type: "\"left\" | \"center\"",
+      default: "\"center\"",
+      description: "Horizontal alignment of the written block",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      description: "Overrides the bundled Caveat family; falls back to cursive",
+    },
+    {
+      name: "step",
+      type: "number",
+      default: "3",
+      description: "Frames per stop-motion pose — the tempo control",
+    },
+  ]}
+/>

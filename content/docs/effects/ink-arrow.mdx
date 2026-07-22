@@ -1,0 +1,149 @@
+---
+title: Ink Arrow
+description: A hand-drawn arrow that draws itself from one point to another in stop-motion poses
+---
+
+<ComponentPreview name="ink-arrow" />
+
+## Installation
+
+<InstallBlock name="ink-arrow" />
+
+## Usage
+
+`from` and `to` are in the arrow's own local space — you place the component,
+the arrow draws inside it. The SVG lets its contents overflow, so the bow and
+the head are never clipped.
+
+```tsx
+// src/Root.tsx
+import { AbsoluteFill, Composition } from "remotion";
+import { InkArrow } from "@/components/remocn/ink-arrow";
+
+const InkArrowScene = () => (
+  <AbsoluteFill style={{ background: "#f1eee7" }}>
+    <h1 style={{ position: "absolute", left: 200, top: 150 }}>Start here</h1>
+
+    <div style={{ position: "absolute", left: 300, top: 210 }}>
+      <InkArrow from={{ x: 20, y: 20 }} to={{ x: 300, y: 210 }} />
+    </div>
+
+    <div style={{ position: "absolute", left: 600, top: 400 }}>
+      <YourCard />
+    </div>
+  </AbsoluteFill>
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="InkArrow"
+    component={InkArrowScene}
+    durationInFrames={120}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The pen drags the curve over `drawDur` frames, quantized to the stop-motion
+clock. When the line lands, the head is drawn rather than dropped in: one
+stroke out from the tip, then the other, over `headDur` frames split evenly
+between them.
+
+`curvature` is the perpendicular bow as a fraction of the distance between the
+two points, so the arc keeps its shape as the arrow gets longer. Flip its sign
+to bow the other way. Each control point also carries a small per-`seed`
+wobble, which is what stops the curve looking machine-drawn; the same seed
+always gives the same hand.
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "from",
+      type: "{ x: number; y: number }",
+      required: true,
+      description: "Start point, in the component's local space",
+    },
+    {
+      name: "to",
+      type: "{ x: number; y: number }",
+      required: true,
+      description: "End point — where the head lands",
+    },
+    {
+      name: "curvature",
+      type: "number",
+      default: "0.35",
+      description: "Perpendicular bow as a fraction of the distance; negative bows the other way",
+    },
+    {
+      name: "color",
+      type: "string",
+      default: "\"#26242c\"",
+      description: "Ink colour (any valid CSS color)",
+    },
+    {
+      name: "strokeWidth",
+      type: "number",
+      default: "8",
+      description: "Brush width in pixels at full pressure",
+    },
+    {
+      name: "pressure",
+      type: "number",
+      default: "0.2",
+      description: "Weight the brush opens on, as a fraction of strokeWidth",
+    },
+    {
+      name: "release",
+      type: "number",
+      default: "1",
+      description: "Weight the brush reaches at the head; above pressure the shaft thickens as it travels",
+    },
+    {
+      name: "grain",
+      type: "number",
+      default: "1",
+      description: "Edge roughness; breaks the thin opening into dry-brush flecks, 0 gives clean edges",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames on the local clock before the drag begins",
+    },
+    {
+      name: "drawDur",
+      type: "number",
+      default: "36",
+      description: "Frames the contour takes to draw",
+    },
+    {
+      name: "headSize",
+      type: "number",
+      default: "24",
+      description: "Length of each head stroke in pixels; a floor, never shrinking below what the brush width needs",
+    },
+    {
+      name: "headDur",
+      type: "number",
+      default: "step * 4",
+      description: "Frames to draw both head strokes, split evenly between them",
+    },
+    {
+      name: "seed",
+      type: "string",
+      default: "\"arrow\"",
+      description: "Seed for the curve wobble — same seed, same arrow",
+    },
+    {
+      name: "step",
+      type: "number",
+      default: "3",
+      description: "Frames per stop-motion pose — the tempo control",
+    },
+  ]}
+/>

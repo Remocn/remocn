@@ -54,11 +54,17 @@ export const NAV_LINKS: NavLink[] = [
  * tag another menu item — no component changes needed. See `withNewBadges`.
  */
 export const NEW_BADGE_PATHS = new Set<string>([
-  "/docs/transitions/zoom-blur",
-  "/docs/layout/drift",
-  "/docs/typography/rolodex-flip",
-  "/docs/typography/value-swap",
-  "/docs/icons/gallery",
+  "/docs/typography/handwrite",
+  "/docs/typography/ink-underline",
+  "/docs/effects/paper-wobble",
+  "/docs/effects/ink-arrow",
+  "/docs/ui-blocks/paper-sticker",
+  "/docs/ui-blocks/polaroid",
+  "/docs/transitions/page-turn",
+  "/docs/ui-blocks/check-list",
+  "/docs/effects/scribble-circle",
+  "/docs/typography/hand-count",
+  "/docs/effects/crumple-toss",
 ]);
 
 export const FOOTER_NAV: NavLink[] = [

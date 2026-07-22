@@ -1,0 +1,129 @@
+---
+title: Ink Underline
+description: A hand-dragged ink stroke that draws itself across in a few stop-motion poses
+---
+
+<ComponentPreview name="ink-underline" />
+
+## Installation
+
+<InstallBlock name="ink-underline" />
+
+## Usage
+
+The stroke renders in normal flow — a block of `width` by `thickness + 4` — so it
+stacks under text in a flex column. Pair it with `handwrite` and start the drag
+the moment the writing finishes:
+
+```tsx
+// src/Root.tsx
+import { AbsoluteFill, Composition } from "remotion";
+import { Handwrite, handwriteDuration } from "@/components/remocn/handwrite";
+import { InkUnderline } from "@/components/remocn/ink-underline";
+
+const url = "remocn.dev";
+
+const InkUnderlineScene = () => (
+  <AbsoluteFill
+    style={{
+      background: "#f1eee7",
+      alignItems: "center",
+      justifyContent: "center",
+      flexDirection: "column",
+      gap: 4,
+    }}
+  >
+    <div style={{ position: "relative", width: 420, height: 96 }}>
+      <Handwrite text={url} fontSize={64} />
+    </div>
+    <InkUnderline width={420} delay={handwriteDuration(url)} />
+  </AbsoluteFill>
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="InkUnderline"
+    component={InkUnderlineScene}
+    durationInFrames={60}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+`Handwrite` centres itself inside its nearest positioned ancestor, which is why
+it sits in a sized `position: relative` box here. The underline needs no such
+box — it is a block in the flow.
+
+The wobble in the stroke comes from `seed`: the same seed always draws the same
+curve, and changing it gives a different hand. `durationSteps` is how many
+stop-motion poses the drag takes, so the real length in frames is
+`durationSteps * step`.
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "width",
+      type: "number",
+      required: true,
+      description: "Stroke length in pixels",
+    },
+    {
+      name: "color",
+      type: "string",
+      default: "\"#6f7f35\"",
+      description: "Ink colour (any valid CSS color)",
+    },
+    {
+      name: "thickness",
+      type: "number",
+      default: "9",
+      description: "Brush width in pixels at full pressure",
+    },
+    {
+      name: "pressure",
+      type: "number",
+      default: "1",
+      description: "Weight the brush lands on, as a fraction of thickness",
+    },
+    {
+      name: "release",
+      type: "number",
+      default: "0.15",
+      description: "Weight the brush lifts off at; below pressure it thins into a dry tail",
+    },
+    {
+      name: "grain",
+      type: "number",
+      default: "1",
+      description: "Edge roughness; breaks the thin tail into dry-brush flecks, 0 gives clean edges",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames on the local clock before the drag begins",
+    },
+    {
+      name: "durationSteps",
+      type: "number",
+      default: "5",
+      description: "Stop-motion poses the drag takes",
+    },
+    {
+      name: "seed",
+      type: "string",
+      default: "\"ink\"",
+      description: "Seed for the curve wobble — same seed, same stroke",
+    },
+    {
+      name: "step",
+      type: "number",
+      default: "3",
+      description: "Frames per stop-motion pose — the tempo control",
+    },
+  ]}
+/>

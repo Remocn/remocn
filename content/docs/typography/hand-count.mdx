@@ -1,0 +1,205 @@
+---
+title: Hand Count
+description: A number that counts up in stop-motion poses, rewritten by hand at every pose
+---
+
+<ComponentPreview name="hand-count" />
+
+## Installation
+
+<InstallBlock name="hand-count" />
+
+## Usage
+
+Every pose the value advances and the digits are **written again** — same
+number, different hand. That re-drawing is the whole illusion, and it is what
+separates this from every other number in the registry: `rolling-number` and
+`number-wheel` glide a mechanical typeface, which is right for a product UI and
+wrong for a paper scene.
+
+The component fills its parent with `position: absolute; inset: 0`, so give it
+a frame and it centres itself inside it.
+
+```tsx
+// src/Root.tsx
+import { AbsoluteFill, Composition, Sequence } from "remotion";
+import { HandCount, handCountDuration } from "@/components/remocn/hand-count";
+
+const COUNT_AT = 12;
+const COUNT_FOR = 14;
+const COUNT_ENDS = handCountDuration({
+  delay: COUNT_AT,
+  durationSteps: COUNT_FOR,
+});
+
+const PricingScene = () => (
+  <AbsoluteFill style={{ background: "#f1eee7" }}>
+    <Sequence durationInFrames={COUNT_ENDS + 30}>
+      <HandCount
+        to={19}
+        delay={COUNT_AT}
+        durationSteps={COUNT_FOR}
+        prefix="$"
+        decimals={2}
+        suffix="/mo"
+      />
+    </Sequence>
+  </AbsoluteFill>
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="HandCount"
+    component={PricingScene}
+    durationInFrames={COUNT_ENDS + 30}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+### A year-in-review stat
+
+The affixes are written in the same hand as the digits, so a unit reads as part
+of the number rather than a label stuck beside it.
+
+```tsx
+<div style={{ position: "relative", width: 720, height: 220 }}>
+  <HandCount to={1284} suffix=" commits" durationSteps={18} fontSize={120} />
+</div>
+```
+
+### Sizing the scene
+
+`handCountDuration` returns the frame the number actually **settles** on, which
+is not always `delay + durationSteps * step`. The stop-motion clock saturates on
+the quantized frame, so an off-grid `delay` pushes the landing to the next pose
+boundary — a `<Sequence>` sized by the naive sum can cut up to `step - 1` frames
+before the number arrives.
+
+```tsx
+handCountDuration({ delay: 0, durationSteps: 12, step: 3 }); // 36
+handCountDuration({ delay: 1, durationSteps: 12, step: 3 }); // 39, not 37
+```
+
+Keep `delay` a multiple of `step` and the two agree.
+
+### Choosing the ease
+
+`in-out` is the default and it is the one to keep for a headline number. It
+opens on a barely-there move, does most of the counting through the middle, and
+settles gently — so every pose in the run carries a visible digit change.
+
+`out` front-loads the movement hard: at twelve poses it puts almost a quarter
+of the count into the very first pose and leaves the last third of the run
+barely moving. That is right when the number is a supporting detail arriving
+under something else, and wrong when it is the thing being watched.
+
+A literal spring is deliberately not on offer here. Springs start fast by
+construction, which is the same problem as `out`, and the overshoot would show
+a price climbing past its own figure before falling back to it.
+
+### Landing and holding still
+
+The value lands on `to` exactly — it never stops at 99.7 — and the jitter
+freezes the moment it does. A headline number that keeps twitching for the rest
+of the shot is a distraction, not a texture; ambient motion in this kit is
+`paper-wobble`'s job.
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "to",
+      type: "number",
+      required: true,
+      description: "Value the count lands on, exactly",
+    },
+    {
+      name: "from",
+      type: "number",
+      default: "0",
+      description: "Value it starts at; above `to` it counts down",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Local frame counting starts; keep it a multiple of step",
+    },
+    {
+      name: "durationSteps",
+      type: "number",
+      default: "18",
+      description: "Poses spent counting",
+    },
+    {
+      name: "decimals",
+      type: "number",
+      default: "0",
+      description: "Decimal places; 0 never renders a decimal point",
+    },
+    {
+      name: "prefix",
+      type: "string",
+      default: "\"\"",
+      description: "Written before the number in the same hand",
+    },
+    {
+      name: "suffix",
+      type: "string",
+      default: "\"\"",
+      description: "Written after the number in the same hand",
+    },
+    {
+      name: "fontSize",
+      type: "number",
+      default: "96",
+      description: "Size of the written number",
+    },
+    {
+      name: "color",
+      type: "string",
+      default: "\"#26242c\"",
+      description: "Ink colour",
+    },
+    {
+      name: "weight",
+      type: "400 | 500 | 600 | 700",
+      default: "700",
+      description: "Font weight",
+    },
+    {
+      name: "ease",
+      type: "\"in-out\" | \"out\" | \"linear\"",
+      default: "\"in-out\"",
+      description: "Shape of the count; `in-out` starts and settles gently, `out` front-loads the movement",
+    },
+    {
+      name: "align",
+      type: "\"left\" | \"center\"",
+      default: "\"center\"",
+      description: "Alignment inside the frame it fills",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "Caveat",
+      description: "Override the handwritten face",
+    },
+    {
+      name: "seed",
+      type: "string",
+      default: "\"count\"",
+      description: "Seed for the per-pose glyph jitter",
+    },
+    {
+      name: "step",
+      type: "number",
+      default: "3",
+      description: "Frames per stop-motion pose",
+    },
+  ]}
+/>

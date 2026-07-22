@@ -57,10 +57,10 @@ notes). Don't read every file.
 | Category | Tier | Use for |
 |---|---|---|
 | **Text Animations** | `remocn` | Reveal/replace/emphasize text (`typewriter`, `blur-out-up`, `tracking-in`, `rolling-number`, `shimmer-sweep`…) |
-| **Backgrounds & Effects** | `remocn` | Animated foundations, cursors, one-shot effects (`simulated-cursor`, `confetti`, `backdrop`) |
+| **Backgrounds & Effects** | `remocn` | Animated foundations, cursors, one-shot effects (`simulated-cursor`, `confetti`, `backdrop`, `paper-wobble`, `ink-arrow`) |
 | **Shaders** | `remocn` | WebGL shader backdrops, frame-driven for deterministic renders (`shader-mesh-gradient`, `shader-warp`, `shader-voronoi`, `shader-god-rays`, `shader-metaballs`…) |
 | **Transitions** | `remocn` | TransitionSeries presentations between two scenes (`whip-pan`, `push-through`, `focus-pull`, `grain-dissolve`, `wave-wipe`…) |
-| **UI Blocks** | `remocn` | Interface sims for product demos (`terminal-simulator`, `glass-code-block`, `animated-bar-chart`, `progress-steps`…) |
+| **UI Blocks** | `remocn` | Interface sims for product demos (`terminal-simulator`, `glass-code-block`, `animated-bar-chart`, `progress-steps`…) plus paper props (`paper-sticker`, `polaroid`) |
 | **AI & Social Cards** | `remocn` | Brand/product card scenes (`chat-gpt`, `claude-code`, `v0`, `github-stars`, `x-follow-card`…) |
 | **UI Primitives** | `remocn-ui` | shadcn-style primitives for video (`button`, `dialog`, `select`, `command-menu`, `tooltip`…) |
 
@@ -119,7 +119,9 @@ import { Sequence, Series } from "remotion";
   `components/index.md` (and each file's `Natural length`). Under-budgeting clips the animation;
   over-budgeting leaves dead air.
 - **Tone matching:** each catalog entry carries a `vibe` tag (`tech`/`premium`/`data`/`clean`/
-  `playful`/`social`) — pick components whose vibe fits the brand.
+  `playful`/`social`/`paper`) — pick components whose vibe fits the brand. `paper` is the
+  stop-motion kit: a quantized ~10-poses-per-second clock, handwriting and ink. Those components
+  read as one world, so mix them with each other rather than with the smooth tiers.
 - **Palette & fonts:** stay within the library's tokens (`references/design.md` → tokens) so your
   own elements don't clash.
 

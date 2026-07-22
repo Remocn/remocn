@@ -1,0 +1,17 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "paper-sticker",
+  "title": "Paper Sticker",
+  "description": "A taped paper chip that slaps onto the scene over two stop-motion poses, keeping a hand-placed tilt and per-pose wobble.",
+  "dependencies": ["remotion"],
+  "registryDependencies": ["@remocn/stop-motion"],
+  "files": [
+    {
+      "path": "registry/remocn/paper-sticker/index.tsx",
+      "content": "\"use client\";\n\nimport type React from \"react\";\nimport { useCurrentFrame } from \"remotion\";\nimport {\n  DEFAULT_STEP,\n  hashRange,\n  paperJitter,\n  steppedRamp,\n} from \"@/lib/remocn/stop-motion\";\n\nexport interface PaperStickerProps {\n  children: React.ReactNode;\n  at?: number;\n  seed?: string;\n  padding?: string;\n  background?: string;\n  borderColor?: string;\n  maxTilt?: number;\n  step?: number;\n}\n\nexport function PaperSticker({\n  children,\n  at = 0,\n  seed = \"sticker\",\n  padding = \"10px 16px\",\n  background = \"#fbfaf6\",\n  borderColor = \"rgba(38,36,44,0.55)\",\n  maxTilt = 2.6,\n  step = DEFAULT_STEP,\n}: PaperStickerProps) {\n  const frame = useCurrentFrame();\n  const progress = steppedRamp(frame, at, at + 2 * step, { step });\n  if (progress === 0) return null;\n\n  const tilt = hashRange(`${seed}:rot`, -maxTilt, maxTilt);\n  const jitter = paperJitter(frame, `sticker:${seed}`, {\n    amp: 0.7,\n    rotAmp: 0.2,\n    step,\n  });\n\n  return (\n    <div\n      style={{\n        display: \"inline-block\",\n        padding,\n        background,\n        border: `1px solid ${borderColor}`,\n        borderRadius: 3,\n        boxShadow: \"0 2px 5px rgba(38,36,44,0.14)\",\n        transform: `translate(${jitter.x}px, ${jitter.y}px) rotate(${tilt + jitter.rot}deg) scale(${progress < 1 ? 1.12 : 1})`,\n      }}\n    >\n      {children}\n    </div>\n  );\n}\n",
+      "type": "registry:component",
+      "target": "components/remocn/paper-sticker.tsx"
+    }
+  ],
+  "type": "registry:component"
+}

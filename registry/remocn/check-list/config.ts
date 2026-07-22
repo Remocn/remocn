@@ -1,0 +1,65 @@
+import { checkListExampleCode } from "@/components/docs/examples/check-list-example";
+import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+
+export const checkListConfig: ComponentConfig = {
+  componentName: "CheckList",
+  importPath: "@/components/remocn/check-list",
+  controls: {
+    fontSize: {
+      type: "number",
+      default: 40,
+      min: 24,
+      max: 64,
+      step: 2,
+      label: "Font size",
+    },
+    itemGap: {
+      type: "number",
+      default: 18,
+      min: 6,
+      max: 48,
+      step: 3,
+      label: "Frames between items",
+    },
+    closeGap: {
+      type: "number",
+      default: 9,
+      min: 3,
+      max: 24,
+      step: 3,
+      label: "Frames between ticks",
+    },
+    perStep: {
+      type: "number",
+      default: 1.6,
+      min: 0.8,
+      max: 3,
+      step: 0.2,
+      label: "Letters / pose",
+    },
+    strokeWidth: {
+      type: "number",
+      default: 3,
+      min: 1,
+      max: 8,
+      step: 1,
+      label: "Stroke width",
+    },
+    color: { type: "color", default: "#26242c", label: "Label color" },
+    tickColor: { type: "color", default: "#6f7f35", label: "Tick color" },
+    step: {
+      type: "number",
+      default: 3,
+      min: 1,
+      max: 6,
+      step: 1,
+      label: "Frames / pose",
+    },
+  },
+  snippet: checkListExampleCode,
+  durationInFrames: 360,
+  fps: FPS,
+  compositionWidth: W,
+  compositionHeight: H,
+  previewBackdrop: { type: "color", value: "#f1eee7" },
+};

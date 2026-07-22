@@ -1,0 +1,73 @@
+import { inkUnderlineExampleCode } from "@/components/docs/examples/ink-underline-example";
+import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+
+export const inkUnderlineConfig: ComponentConfig = {
+  componentName: "InkUnderline",
+  importPath: "@/components/remocn/ink-underline",
+  controls: {
+    width: {
+      type: "number",
+      default: 420,
+      min: 100,
+      max: 800,
+      step: 10,
+      label: "Width",
+    },
+    color: { type: "color", default: "#6f7f35", label: "Ink color" },
+    thickness: {
+      type: "number",
+      default: 9,
+      min: 2,
+      max: 24,
+      step: 1,
+      label: "Brush width",
+    },
+    pressure: {
+      type: "number",
+      default: 1,
+      min: 0.05,
+      max: 1,
+      step: 0.05,
+      label: "Opening pressure",
+    },
+    release: {
+      type: "number",
+      default: 0.15,
+      min: 0.05,
+      max: 1,
+      step: 0.05,
+      label: "Closing pressure",
+    },
+    grain: {
+      type: "number",
+      default: 1,
+      min: 0,
+      max: 2,
+      step: 0.1,
+      label: "Grain",
+    },
+    durationSteps: {
+      type: "number",
+      default: 5,
+      min: 2,
+      max: 10,
+      step: 1,
+      label: "Poses to draw",
+    },
+    seed: { type: "text", default: "ink", label: "Seed" },
+    step: {
+      type: "number",
+      default: 3,
+      min: 1,
+      max: 6,
+      step: 1,
+      label: "Frames / pose",
+    },
+  },
+  snippet: inkUnderlineExampleCode,
+  durationInFrames: 120,
+  fps: FPS,
+  compositionWidth: W,
+  compositionHeight: H,
+  previewBackdrop: { type: "color", value: "#f1eee7" },
+};

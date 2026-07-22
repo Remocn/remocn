@@ -21,6 +21,10 @@ import {
   ContextMenuExampleScene,
   contextMenuExampleCode,
 } from "./context-menu-example";
+import {
+  CrumpleTossExampleScene,
+  crumpleTossExampleCode,
+} from "./crumple-toss-example";
 import { CursorExampleScene, cursorExampleCode } from "./cursor-example";
 import { DialogExampleScene, dialogExampleCode } from "./dialog-example";
 import { DrawerExampleScene, drawerExampleCode } from "./drawer-example";
@@ -92,6 +96,15 @@ export interface ExampleEntry {
 }
 
 export const examples: Record<string, ExampleEntry> = {
+  "crumple-toss-example": {
+    Component: CrumpleTossExampleScene,
+    code: crumpleTossExampleCode,
+    durationInFrames: 90,
+    fps: FPS,
+    width: W,
+    height: H,
+    previewBackdrop: { type: "color", value: "#f1eee7" },
+  },
   "button-example": {
     Component: ButtonExampleScene,
     code: buttonExampleCode,

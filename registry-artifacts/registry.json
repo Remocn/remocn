@@ -1284,6 +1284,198 @@
       "type": "registry:component"
     },
     {
+      "name": "handwrite",
+      "title": "Handwrite",
+      "description": "Handwritten text laid down letter by letter on a quantized stop-motion clock, each glyph keeping its own slant and baseline wobble.",
+      "dependencies": ["remotion", "@remotion/google-fonts"],
+      "registryDependencies": ["@remocn/stop-motion"],
+      "files": [
+        {
+          "path": "registry/remocn/handwrite/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/handwrite.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "ink-underline",
+      "title": "Ink Underline",
+      "description": "A hand-dragged brush underline that sweeps itself across in a few stop-motion poses, thinning to a dry tail.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/stop-motion", "@remocn/brush"],
+      "files": [
+        {
+          "path": "registry/remocn/ink-underline/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/ink-underline.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "paper-wobble",
+      "title": "Paper Wobble",
+      "description": "Per-pose reshoot jitter that makes any content feel hand-placed on a desk.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/stop-motion"],
+      "files": [
+        {
+          "path": "registry/remocn/paper-wobble/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/paper-wobble.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "ink-arrow",
+      "title": "Ink Arrow",
+      "description": "A hand-drawn brush arrow that sweeps itself from one point to another, thickening into the head that pops on the final poses.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/stop-motion", "@remocn/brush"],
+      "files": [
+        {
+          "path": "registry/remocn/ink-arrow/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/ink-arrow.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "paper-sticker",
+      "title": "Paper Sticker",
+      "description": "A taped paper chip that slaps onto the scene over two stop-motion poses, keeping a hand-placed tilt and per-pose wobble.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/stop-motion"],
+      "files": [
+        {
+          "path": "registry/remocn/paper-sticker/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/paper-sticker.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "polaroid",
+      "title": "Polaroid",
+      "description": "An instant-photo frame with a handwritten caption for video, images, or live compositions.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/stop-motion", "@remocn/handwrite"],
+      "files": [
+        {
+          "path": "registry/remocn/polaroid/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/polaroid.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "hand-count",
+      "title": "Hand Count",
+      "description": "A number that counts up in stop-motion poses, rewritten by hand at every pose and freezing still once it lands.",
+      "dependencies": ["remotion", "@remotion/google-fonts"],
+      "registryDependencies": ["@remocn/stop-motion"],
+      "files": [
+        {
+          "path": "registry/remocn/hand-count/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/hand-count.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "brush",
+      "title": "Brush",
+      "description": "Variable-width brush ribbons for Remotion. Pressure taper, grain displacement, and spine samplers shared by the ink marks.",
+      "registryDependencies": ["@remocn/stop-motion"],
+      "files": [
+        {
+          "path": "registry/remocn/brush/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/brush.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "crumple-toss",
+      "title": "Crumple Toss",
+      "description": "Crushes an element into a ball of paper and throws it out of frame on an arc, leaving the scene around it running.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/stop-motion"],
+      "files": [
+        {
+          "path": "registry/remocn/crumple-toss/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/crumple-toss.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "scribble-circle",
+      "title": "Scribble Circle",
+      "description": "A brush circle swept around a region of the frame, opening thin and closing thick, with grain breaking up the dry opening.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/stop-motion", "@remocn/brush"],
+      "files": [
+        {
+          "path": "registry/remocn/scribble-circle/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/scribble-circle.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "check-list",
+      "title": "Check List",
+      "description": "A handwritten checklist that writes itself out in full, then ticks and strikes through every done item, one at a time.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/stop-motion", "@remocn/handwrite"],
+      "files": [
+        {
+          "path": "registry/remocn/check-list/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/check-list.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "page-turn",
+      "title": "Page Turn",
+      "description": "The exiting scene swings up and away like a notebook page in stop-motion poses, staying above the scene it reveals.",
+      "dependencies": ["remotion", "@remotion/transitions"],
+      "files": [
+        {
+          "path": "registry/remocn/page-turn/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/page-turn.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "stop-motion",
+      "title": "Stop Motion Clock",
+      "description": "Quantized stop-motion clock for Remotion. Stepped frames, stepped springs, deterministic hashing, and per-pose paper jitter.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "registry/remocn/stop-motion/index.ts",
+          "type": "registry:lib",
+          "target": "lib/remocn/stop-motion.ts"
+        }
+      ],
+      "type": "registry:lib"
+    },
+    {
       "name": "remocn-ui",
       "title": "remocn UI Core",
       "description": "Shared timeline-fold hook, theme context, and color math for remocn UI primitives.",

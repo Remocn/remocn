@@ -1,0 +1,16 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "stop-motion",
+  "title": "Stop Motion Clock",
+  "description": "Quantized stop-motion clock for Remotion. Stepped frames, stepped springs, deterministic hashing, and per-pose paper jitter.",
+  "dependencies": ["remotion"],
+  "files": [
+    {
+      "path": "registry/remocn/stop-motion/index.ts",
+      "content": "import { spring } from \"remotion\";\n\nexport const DEFAULT_STEP = 3;\n\nexport const qf = (frame: number, step = DEFAULT_STEP): number =>\n  Math.floor(frame / step) * step;\n\nexport const qstep = (frame: number, step = DEFAULT_STEP): number =>\n  Math.floor(frame / step);\n\nexport const hash01 = (seed: string): number => {\n  let h = 2166136261;\n  for (let i = 0; i < seed.length; i++) {\n    h ^= seed.charCodeAt(i);\n    h = Math.imul(h, 16777619);\n  }\n  h = Math.imul(h ^ (h >>> 13), 2246822519);\n  return ((h ^ (h >>> 16)) >>> 0) / 4294967296;\n};\n\nexport const hashRange = (seed: string, lo: number, hi: number): number =>\n  lo + hash01(seed) * (hi - lo);\n\nexport type Jitter = { x: number; y: number; rot: number };\n\nexport const paperJitter = (\n  frame: number,\n  seed: string,\n  options?: { amp?: number; rotAmp?: number; step?: number },\n): Jitter => {\n  const amp = options?.amp ?? 1.4;\n  const rotAmp = options?.rotAmp ?? 0.35;\n  const s = qstep(frame, options?.step ?? DEFAULT_STEP);\n  return {\n    x: hashRange(`${seed}:x:${s}`, -amp, amp),\n    y: hashRange(`${seed}:y:${s}`, -amp, amp),\n    rot: hashRange(`${seed}:r:${s}`, -rotAmp, rotAmp),\n  };\n};\n\nexport const steppedSpring = (args: {\n  frame: number;\n  fps: number;\n  delay?: number;\n  step?: number;\n  config?: { damping?: number; stiffness?: number; mass?: number };\n}): number =>\n  spring({\n    frame: qf(\n      Math.max(0, args.frame - (args.delay ?? 0)),\n      args.step ?? DEFAULT_STEP,\n    ),\n    fps: args.fps,\n    config: args.config,\n  });\n\nexport const steppedRamp = (\n  frame: number,\n  from: number,\n  to: number,\n  options?: { ease?: (t: number) => number; step?: number },\n): number => {\n  const f = qf(frame, options?.step ?? DEFAULT_STEP);\n  if (f <= from) return 0;\n  if (f >= to) return 1;\n  const ease = options?.ease ?? ((t: number) => t);\n  return ease((f - from) / (to - from));\n};\n",
+      "type": "registry:lib",
+      "target": "lib/remocn/stop-motion.ts"
+    }
+  ],
+  "type": "registry:lib"
+}

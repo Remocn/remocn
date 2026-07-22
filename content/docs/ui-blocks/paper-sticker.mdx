@@ -1,0 +1,125 @@
+---
+title: Paper Sticker
+description: A taped paper chip that slaps onto the scene over two stop-motion poses
+---
+
+<ComponentPreview name="paper-sticker" />
+
+## Installation
+
+<InstallBlock name="paper-sticker" />
+
+## Usage
+
+The sticker is not rendered at all until the first pose after `at`. It then
+slaps down over two poses — landing oversized on the first, settling on the
+second — so with the default `step` of 3 an `at` of 6 means the chip appears on
+frame 9 and settles on frame 12. It is a container: the font, size and colour
+of the label belong to the children.
+
+```tsx
+// src/Root.tsx
+import { AbsoluteFill, Composition } from "remotion";
+import { PaperSticker } from "@/components/remocn/paper-sticker";
+
+const StickerScene = () => (
+  <AbsoluteFill
+    style={{
+      background: "#f1eee7",
+      alignItems: "center",
+      justifyContent: "center",
+    }}
+  >
+    <PaperSticker at={6}>
+      <span style={{ fontFamily: "monospace", fontSize: 28 }}>remotion</span>
+    </PaperSticker>
+  </AbsoluteFill>
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="PaperSticker"
+    component={StickerScene}
+    durationInFrames={90}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Stagger a group by feeding the index into `at`, and give each chip its own
+`seed` so they do not all land at the same angle:
+
+```tsx
+const labels = ["remotion", "shadcn", "bun", "biome"];
+
+<>
+  {labels.map((label, i) => (
+    <PaperSticker key={label} at={i * 6} seed={label}>
+      <span style={{ fontFamily: "monospace", fontSize: 28 }}>{label}</span>
+    </PaperSticker>
+  ))}
+</>;
+```
+
+The tilt is fixed per seed and the per-pose wobble is already built in, so do
+not wrap this in `paper-wobble` — that would shake it twice. `maxTilt={0}`
+removes the fixed tilt for a deliberately tidy row; the chip still carries the
+per-pose wobble of roughly a fifth of a degree, because it is still a piece of
+paper on a desk.
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "children",
+      type: "React.ReactNode",
+      required: true,
+      description: "Contents of the chip; styling is yours",
+    },
+    {
+      name: "at",
+      type: "number",
+      default: "0",
+      description: "Local frame the slap starts from; the chip first appears one pose later and settles one pose after that",
+    },
+    {
+      name: "seed",
+      type: "string",
+      default: "\"sticker\"",
+      description: "Seed for the fixed tilt and the wobble — same seed, same placement",
+    },
+    {
+      name: "padding",
+      type: "string",
+      default: "\"10px 16px\"",
+      description: "CSS padding of the chip",
+    },
+    {
+      name: "background",
+      type: "string",
+      default: "\"#fbfaf6\"",
+      description: "Paper colour of the chip",
+    },
+    {
+      name: "borderColor",
+      type: "string",
+      default: "\"rgba(38,36,44,0.55)\"",
+      description: "Colour of the 1px pencil border",
+    },
+    {
+      name: "maxTilt",
+      type: "number",
+      default: "2.6",
+      description: "Largest fixed hand-placed tilt in degrees; 0 removes it, leaving only the per-pose wobble",
+    },
+    {
+      name: "step",
+      type: "number",
+      default: "3",
+      description: "Frames per stop-motion pose — the tempo control",
+    },
+  ]}
+/>
