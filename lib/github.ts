@@ -1,11 +1,5 @@
 const GITHUB_REPO = "Remocn/remocn";
 
-/**
- * Fetches the repository star count from the GitHub REST API.
- * Cached at the edge for an hour so we never hammer the (unauthenticated)
- * rate limit. Returns `null` on any failure so callers can degrade
- * gracefully to a bare GitHub link.
- */
 export async function getGitHubStars(): Promise<number | null> {
   try {
     const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}`, {
@@ -22,9 +16,8 @@ export async function getGitHubStars(): Promise<number | null> {
   }
 }
 
-/** 1234 → "1.2k", 980 → "980". */
 export function formatStars(count: number): string {
-  if (count < 1000) return String(count);
-  const k = count / 1000;
-  return `${k >= 10 ? Math.round(k) : k.toFixed(1).replace(/\.0$/, "")}k`;
+  const formatter = new Intl.NumberFormat('en-US', { notation: "compact", compactDisplay: "short" })
+
+  return formatter.format(count);
 }
