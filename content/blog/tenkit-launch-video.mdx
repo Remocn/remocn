@@ -1,0 +1,81 @@
+---
+title: Making a launch video for Tenkit
+description: One codebase fanning into many branded apps and resolving back to one — a Voronoi field that means exactly what it shows
+date: 2026-07-22
+video: https://cdn.remocn.dev/videos/introducing-tenkit.mp4
+videoPoster: https://cdn.remocn.dev/posters/introducing-tenkit.png
+---
+
+Tenkit turns one Expo codebase into many branded apps — white-label, multi-tenant, standalone — from a single source. The hard part of a launch video for a tool like that is showing the idea instead of narrating it. This unofficial cut runs about thirty-four seconds and spends its whole length on one metaphor: one becoming many, then many resolving back into one.
+
+### The storyboard
+
+1. **One codebase** — the phrase resolves in the center, then fans vertically into three tenant-colored copies: blue, orange, teal.
+2. **The reveal** — the Tenkit mark assembles, settles into its true lockup proportions, and the tagline reads: "Ship one app as many branded apps."
+3. **The setup line** — "The setup you actually ship."
+4. **The setup beats** — three stack in turn: white-label apps, a runtime tenant app, generic and standalone.
+5. **The bloom** — a Voronoi field re-lights in the three tenant colors and its cells bloom outward over the cut.
+6. **The money shot** — "Same code, different identity" hands off to three larger phone mockups, each branded: Atlas, Ember, Mint.
+7. **The montage** — app variants cycle, local Tenkit commands type themselves, and EAS build rows land with checks settling one by one.
+8. **Create** — a package manager cycles through pnpm, bun, npm, then locks into `pnpm create tenkit@latest`.
+9. **Outro** — the three tenant dots converge, turn white, collapse into a single point, and grow into the Tenkit mark; the wordmark and tenkit.dev resolve beneath.
+
+### Director's notes
+
+**The shader is the pitch.** Voronoi — one surface partitioned into many cells — literally is "one codebase, many apps." The field stays neutral zinc until the turn, when the cells re-light in the three tenant colors and bloom over the cut into the showcase. The metaphor is never spoken; it's the geometry the whole video sits on.
+
+**Color only ever means "a tenant."** The film is `#09090b` and `#fafafa`; the only colors — blue `#208AEF`, orange `#EF8520`, teal `#2DD4A8` — appear exclusively as tenant identity: the three copies, the three phones, the bloom. Because color has exactly one job, the viewer learns the product's core idea without a sentence explaining it.
+
+**The motion is the thesis, run forward then backward.** Division always moves outward — the hook fans, the phones split, the cells expand. The outro reverses it precisely: three dots converge, go white, collapse to a point, and grow into the mark. The video ends by proving its own claim in reverse.
+
+### The prompt
+
+The brief, as a prompt (validated against a clean project + the [remocn skill](/docs/ai/agent-skill) before publishing):
+
+```text
+I'm making an unofficial launch video for Tenkit (tenkit.dev), a starter
+that turns one Expo codebase into many branded apps, with remocn
+(remocn.dev) in a Remotion project — install anything you need with
+`npx shadcn add @remocn/<name>`.
+
+Build a ~34-second, 1280×720, 30fps introducing spot on one metaphor —
+one becoming many, then many resolving back to one:
+
+1. Hook — "One codebase" resolves, then fans vertically into three
+   tenant-colored copies (blue, orange, teal).
+2. Reveal — the Tenkit mark assembles, descends into its true lockup
+   proportions, and the tagline "Ship one app as many branded apps" reads
+   centered.
+3. Setup line — "The setup you actually ship".
+4. Setup beats — three stack in turn: white-label apps / runtime tenant
+   app / generic and standalone.
+5. Bloom — a Voronoi field re-lights in the three tenant colors, its cells
+   expanding outward over the cut.
+6. Money shot — "Same code, different identity" hands off to three larger
+   phone mockups branded Atlas / Ember / Mint.
+7. Montage — app variants cycle, local Tenkit commands type themselves, and
+   EAS build rows land with checks settling one by one, stations
+   whip-panning left.
+8. Create — a package manager cycles pnpm / bun / npm, then locks into
+   `pnpm create tenkit@latest`.
+9. Outro — the three tenant dots converge, turn white, collapse to one
+   point, and grow into the Tenkit mark; the wordmark and tenkit.dev
+   resolve beneath.
+
+Style: #09090b canvas, #fafafa ink, quiet muted foreground. The only colors
+are the three tenant accents — blue #208AEF, orange #EF8520, teal #2DD4A8 —
+and they appear ONLY as tenant identity, never as decoration. Space Grotesk
+for spoken lines, Inter for small supporting text, Geist Mono for code and
+commands. One Paper Design Voronoi field carries the whole video — neutral
+zinc cells, slow movement, a vignette scrim — and the same field re-lit in
+the tenant colors is the only transition bloom. Division always moves
+outward (the hook fans, the phones split, the cells expand); narrative
+turns push into the frame; feature stations travel left; the outro reverses
+the split. Embed the real Tenkit logo as inline paths so the mark and
+wordmark animate separately — never redraw it. No letter-spacing, uppercase,
+pills, badges, or highlight markers.
+```
+
+### Make one for your product
+
+The generic recipe is [Launch video](/docs/guides/launch-video). When the idea matters more than any single feature — like one-codebase-many-apps here — [Directing your agent](/docs/guides/directing-your-agent) is how you get the metaphor across in plain words.

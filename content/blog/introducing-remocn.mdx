@@ -1,0 +1,119 @@
+---
+title: Introducing remocn — shadcn-style copy-paste components for videos in React
+description: remocn is an MIT registry of 234 copy-paste Remotion components — text animations, cinematic transitions, WebGL shader backgrounds, animated icons, and simulated product UI.
+date: 2026-07-22
+video: https://cdn.remocn.dev/videos/intoducing-remocn.mp4
+videoPoster: https://cdn.remocn.dev/posters/intoducing-remocn.png
+---
+
+You shipped a product. Now you need a demo video — for the landing page, the launch post, the Product Hunt gallery. The usual options are all bad if you're a React developer: learn After Effects (a profession, not a weekend), hire an editor (a slow feedback loop that restarts every time your UI changes), or screen-record and accept whatever comes out.
+
+There's a fourth option that fits how you already work: write the video in React. [Remotion](https://remotion.dev) has made that possible for years — a real `.mp4` rendered from React components, where motion is a pure function of the current frame. What's been missing is the layer above it. Nobody wants to hand-build a typewriter effect again, tune a whip-pan's motion blur from scratch, or figure out why their WebGL background flickers in headless renders. Every Remotion project starts from zero.
+
+[Remocn](https://remocn.dev) is that layer: 234 production-ready components for Remotion, delivered the shadcn way — copied into your project as TypeScript source you own.
+
+## The shadcn workflow, for video
+
+If you've used [shadcn/ui](https://ui.shadcn.com), you already know the model. Components aren't an npm dependency you configure through props and fight through overrides. The CLI copies the source file into your project, and from that moment it's your code:
+
+```bash
+npx shadcn@latest add @remocn/soft-blur-in
+```
+
+That drops `soft-blur-in.tsx` into `components/remocn/`. Want the blur to start softer, the spring to settle faster, the easing to feel different? Open the file and change it. There's no library API standing between you and the animation.
+
+The registry also carries dependency metadata: installing `whip-pan` brings in `@remotion/transitions` automatically, installing a scripted UI flow pulls the primitives it's built from. One command, working code.
+
+## Sixty seconds to a rendered video
+
+remocn assumes an existing Remotion project (`npx create-video@latest` if you need one) and a `components.json` (`npx shadcn@latest init`, defaults are fine). After that:
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { SoftBlurIn } from "@/components/remocn/soft-blur-in";
+
+export const RemotionRoot = () => (
+  <Composition
+    id="HelloWorld"
+    component={SoftBlurIn}
+    durationInFrames={60}
+    fps={30}
+    width={1280}
+    height={720}
+    defaultProps={{ text: "Hello, world" }}
+  />
+);
+```
+
+```bash
+npx remotion render HelloWorld out.mp4
+```
+
+Two seconds of video, text resolving out of a soft blur, rendered to a file. Every component page on [remocn.dev](https://remocn.dev/docs) mounts a real `@remotion/player`, so you can scrub any animation frame by frame before installing it.
+
+## What's in the registry
+
+**34 text animations.** Product videos are mostly words on screen, so this is the deepest section: `staggered-fade-up`, `per-character-rise`, `typewriter` (with a deterministic blinking cursor), `kinetic-center-build` (words push the line sideways while the phrase stays centered — it measures real word widths), `slot-machine-roll`, `matrix-decode`, `number-wheel` and `rolling-number` for metrics, `value-swap` and `rolodex-flip` for word substitutions.
+
+<GuideVideo src="https://cdn.remocn.dev/videos/typography.mp4" poster="https://cdn.remocn.dev/posters/typography.png" />
+
+**12 transitions.** Four camera moves — `whip-pan`, `push-through`, `focus-pull`, `zoom-blur` — modeled on how editors actually hide cuts, plus eight GPU dissolves (`grain-dissolve`, `smoke-dissolve`, `ripple-zoom`, and friends) for texture. They're presentation functions for `@remotion/transitions`, so they slot into a `TransitionSeries` you may already have:
+
+<GuideVideo src="https://cdn.remocn.dev/videos/new-transitions.mp4" poster="https://cdn.remocn.dev/posters/new-transitions.png" />
+
+```tsx
+import { TransitionSeries, linearTiming } from "@remotion/transitions";
+import { whipPan } from "@/components/remocn/whip-pan";
+
+<TransitionSeries>
+  <TransitionSeries.Sequence durationInFrames={70}>
+    <SceneA />
+  </TransitionSeries.Sequence>
+  <TransitionSeries.Transition
+    timing={linearTiming({ durationInFrames: 26 })}
+    presentation={whipPan()}
+  />
+  <TransitionSeries.Sequence durationInFrames={70}>
+    <SceneB />
+  </TransitionSeries.Sequence>
+</TransitionSeries>
+```
+
+**18 WebGL shader backgrounds.** Mesh gradients, god rays, metaballs, liquid metal — each wraps a shader from [paper-design/shaders](https://github.com/paper-design/shaders) and adapts it for video rendering (more on why that's necessary below).
+
+<GuideVideo src="https://cdn.remocn.dev/videos/paper-shaders.mp4" poster="https://cdn.remocn.dev/posters/paper-shaders.png" />
+
+**44 video-ready UI primitives.** Buttons, dialogs, command menus, toasts, tabs — the shadcn vocabulary, rebuilt for a timeline instead of user input. On top of them: scripted flows like `signup-flow`, `checkout-flow`, and `imessage-chat-flow` that play out a complete interaction.
+
+<GuideVideo src="https://cdn.remocn.dev/videos/remocn-ui.mp4" poster="https://cdn.remocn.dev/posters/remocn-ui.png" />
+
+**100 animated icons.** Lucide-derived geometry, re-authored for video: each icon draws its stroke in, then performs one action — the check pops, the bell rings. Browse them in the [gallery](https://remocn.dev/docs/icons/gallery).
+
+<GuideVideo src="https://cdn.remocn.dev/videos/remocn-icons.mp4" poster="https://cdn.remocn.dev/posters/remocn-icons.png" />
+
+**The rest.** Terminal simulators with typed commands, glassy code blocks, animated line and bar charts, GitHub-stars and X-follower cards for social proof, AI-chat mockups (Claude, ChatGPT, v0), confetti, and a `backdrop` primitive that gives any scene a filled frame.
+
+## The boring hard parts are handled
+
+Video rendering is stricter than the browser you're used to. Remotion renders frame 47 in isolation — possibly on a different worker than frame 46, possibly out of order — and expects identical pixels every time it asks for that frame. A cursor blinking off `setInterval`, a `Math.random()` in a particle field, a CSS animation: all of them produce renders that flicker or desync.
+
+Every remocn component derives its motion from `useCurrentFrame()` and nothing else. The shader backgrounds go further: a shader normally animates against a wall clock, so the wrappers freeze it and drive its frame uniform from the timeline, gating the first paint with `delayRender()` so headless capture never grabs an uninitialized canvas. Scrubbing, looping, and multi-pass renders stay deterministic — which is exactly the class of bug you don't want to discover at render time, on a deadline.
+
+The other handled part is taste. Springs come pre-tuned, transition durations ship with sane defaults (a whip-pan lives on speed at ~26 frames; a focus-pull needs ~46 to breathe), and components render transparent so your background — a `backdrop` fill or a shader — is one wrapper away.
+
+## Stop screen-recording your product
+
+The technique I'd point any founder to first: don't record your app, simulate it. The scripted UI flows replay a signup, a checkout, a chat conversation, a command-menu search — at retina sharpness, with a cursor that never fumbles, on a timeline you control frame by frame. When your product ships a redesign, you update props and re-render instead of re-recording every asset. That's the difference between a demo video that rots and one that lives in your repo next to the code it demos.
+
+## Free, MIT, yours
+
+Everything above is MIT-licensed and free. There's no version to upgrade and no breaking API changes to absorb, because there's no dependency — the code lands in `components/remocn/` and belongs to you. Remotion itself is the only prerequisite (free for individuals and companies of up to 3 people; larger companies need their [company license](https://remotion.dev/license)).
+
+## Start here
+
+- [Docs and live previews](https://remocn.dev/docs) — every component with a scrubbable player
+- [Installation guide](https://remocn.dev/docs/getting-started/installation) — two commands and you're rendering
+- [GitHub](https://github.com/Remocn/remocn) — a star helps more people find it
+
+If you build something with it, I'd genuinely like to see the result.

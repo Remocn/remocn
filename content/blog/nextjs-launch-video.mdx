@@ -1,0 +1,71 @@
+---
+title: Making a launch video for Next.js
+description: The eclipse cut — a monochrome flight through the Next.js brand, rebuilt beat by beat in code
+date: 2026-07-22
+video: https://cdn.remocn.dev/videos/introducing-nextjs.mp4
+videoPoster: https://cdn.remocn.dev/posters/introducing-nextjs.png
+---
+
+Nobody at Vercel asked for this video. We make unofficial launch videos for products everyone knows — it is the hardest test we can give remocn, because you already know exactly what Next.js should look like, and any wrong note reads instantly. This one runs about forty seconds and never uses a color: white is the accent.
+
+### The storyboard
+
+1. **The eclipse** — a backlit black triangle over a grainy halo of light, the hook line beneath. The camera dives into the triangle until its flat black swallows the frame.
+2. **The tunnel** — we fell into a triangle, so we fall through triangles: concentric outlines rushing past the lens, born small at the vanishing point.
+3. **The logotype writes itself** — the official wordmark traced left to right, fills rising behind the tracing line, timed to start the exact frame the tunnel hands over.
+4. **The hero** — nextjs.org's own dashed construction lines and marker circles draw themselves around the real headline and `npx create-next-app@latest`.
+5. **The receipts** — five real customer names on a slow perspective marquee.
+6. **The features** — three whip-pan stations, each of the homepage's feature cards rebuilt as a live illustration: pixel mountains assembling, a wireframe streaming in with traveling pulses, a component tree growing sphere by sphere.
+7. **Powered by** — a chip with circuit traces drawing outward and colored pulses riding the wires.
+8. **The numbers** — two real performance figures landing on odometer digits.
+9. **The command and the blueprint** — the install command types itself over a grain cover, then the lockup sits on a breathing blueprint grid.
+
+### Director's notes
+
+**The register is stolen honestly.** Everything comes from nextjs.org's dark theme: pure black canvas, `#ededed` ink, Geist weighted exactly as the site weights it. The video is strictly monochrome — the only color allowed lives *inside* the rebuilt illustrations, where the site itself uses it. When you borrow a brand, borrow its discipline too.
+
+**One transition family.** Every cut is a dive, a push, or a pan — the same family of camera moves — and a slow camera creep runs under the whole piece without ever resetting at a cut. `fade` is spent exactly once, on the final breath into the lockup. That is why forty seconds read as one take.
+
+**Facts are verified, not vibed.** Every customer name and figure on screen was checked against nextjs.org the day the video was built, kept verbatim or cut. The GitHub star count is deliberately absent — the site doesn't lead with it, so neither do we. And the logo is the official brand SVG, embedded path for path, never redrawn.
+
+**The tunnel is geometry, not a shader.** A grayscale ripple shader reads as circles at best and a soft glow at worst. The triangle is the brand — so the tunnel is hand-built triangle strokes on an exponential scale cycle.
+
+### The prompt
+
+This is the video's brief, written as a prompt you can hand to your agent (we validate every prompt we publish against a clean project and the [remocn skill](/docs/ai/agent-skill)):
+
+```text
+I'm making an unofficial launch video for Next.js with remocn (remocn.dev)
+in a Remotion project — install anything you need with
+`npx shadcn add @remocn/<name>`.
+
+Build a ~40-second, 1280×720, 30fps introducing video:
+
+1. Eclipse — a backlit black triangle over a grainy halo of light, the hook
+   beneath. Dive into the triangle until flat black fills the frame.
+2. Tunnel — fall through concentric triangle outlines rushing past the lens.
+3. The wordmark writes itself — trace the official Next.js logotype left to
+   right, fills rising behind the tracing line.
+4. Hero — nextjs.org's dashed construction lines and marker circles draw
+   themselves around the real headline and `npx create-next-app@latest`.
+5. Receipts — five real customer names on a slow perspective marquee.
+6. Features — three whip-pan stations rebuilding the homepage's three
+   feature cards as live illustrations.
+7. Powered by — a chip with circuit traces drawing outward and pulses
+   riding the wires.
+8. Numbers — two real performance figures landing on odometer digits.
+9. Close — the install command types itself over a grain cover, then a
+   blueprint lockup with the logo and nextjs.org.
+
+Style: pure black canvas, #ededed ink, strictly monochrome — white is the
+only accent; color may live only inside the rebuilt illustrations. Geist
+for everything, Geist Mono for the shell. One grayscale grain-gradient
+field behind the whole video. Keep transitions in one family — dives,
+pushes, whip-pans — with a single fade reserved for the final lockup.
+Verify every name and figure against nextjs.org before it goes on screen;
+use the official logo SVGs, never redraw them.
+```
+
+### Make one for your product
+
+The generic recipe — same anatomy, your words — is [Launch video](/docs/guides/launch-video). When the first render comes back close-but-not-right, [Directing your agent](/docs/guides/directing-your-agent) is the vocabulary.

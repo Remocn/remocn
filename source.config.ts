@@ -32,6 +32,18 @@ export const changelog = defineCollections({
   }),
 });
 
+export const blog = defineCollections({
+  type: "doc",
+  dir: "content/blog",
+  schema: z.object({
+    title: z.string(),
+    description: z.string(),
+    date: z.date(),
+    video: z.url().optional(),
+    videoPoster: z.url().optional(),
+  }),
+});
+
 const transformers: ShikiTransformer[] = [
   {
     code(node) {
