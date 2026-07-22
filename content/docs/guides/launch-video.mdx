@@ -1,0 +1,88 @@
+---
+title: Launch video
+description: The ~35-second launch video we made for remocn itself — with your product in it
+---
+
+<GuideVideo
+  src="https://cdn.remocn.dev/videos/intoducing-remocn.mp4"
+  poster="https://cdn.remocn.dev/posters/intoducing-remocn.png"
+/>
+
+This is the video we launched remocn with. Eight beats, thirty-five seconds, built entirely from remocn components. Below is everything you need to make the same video for your product.
+
+## The storyboard
+
+1. **The pain** — two short lines land one after the other, naming the problem you solve.
+2. **The reveal** — "Meet &lt;Product&gt;", uncovered by a swirl of color.
+3. **The tagline** — your one-liner slides in.
+4. **The positioning** — "Like X, for Y" assembles itself word by word.
+5. **The montage** — six fast cuts: a feature name over a different animated background each time.
+6. **The value** — three claims stack up, line by line.
+7. **The install** — a terminal types out your install command or call to action.
+8. **The outro** — your logo draws itself on, with one quiet closing line.
+
+## Your words
+
+This is the whole creative work — nine blanks:
+
+- **Product name**
+- **Two pain lines** — six words or fewer each; they're on screen for about two seconds
+- **Tagline** — one line
+- **Positioning** — the "Like X, for Y" sentence
+- **Six feature labels** — one or two words each
+- **Three value claims** — short, concrete, no adjectives you can't prove
+- **Install command or CTA** — whatever you want typed on screen
+- **Closing line** — e.g. "Open source, all the way down"
+- **Accent color** — one hex value; optional, the default lime looks good
+
+Have a logo? Drop the SVG into the project folder and mention the file name in the prompt. No logo — your agent will use the product name as a wordmark.
+
+Struggling with the lines? [Words on screen](/docs/guides/words-on-screen) is the cheat sheet.
+
+## The prompt
+
+```text
+I'm making a product launch video with remocn (remocn.dev).
+
+Build a ~35-second, 1920×1080, 30fps launch video for <PRODUCT NAME> in this
+Remotion project, using remocn components — install anything you need with
+`npx shadcn add @remocn/<name>`:
+
+1. Pain — two short lines, one after the other (scale-down-fade):
+   "<PAIN LINE 1>" then "<PAIN LINE 2>".
+2. Reveal — "Meet <PRODUCT NAME>", uncovered by a swirling shader transition
+   (shader-swirl as a transition cover).
+3. Tagline — "<TAGLINE>" (short-slide-right).
+4. Positioning — "<LIKE X, FOR Y>", assembling word by word (kinetic-center-build).
+5. Montage — six hard cuts, one per feature: a fullscreen shader background
+   (color-panels, warp, mesh-gradient, voronoi, metaballs, god-rays), a dark
+   scrim, and one label each: <SIX FEATURE LABELS>.
+6. Value — three claims stacking line by line (line-by-line-slide):
+   <THREE CLAIMS>.
+7. Install — a short title beat, then a terminal line that types itself:
+   `<INSTALL COMMAND OR CTA>`.
+8. Outro — my logo (<LOGO FILE, or: use the product name as a wordmark>) over
+   a blooming shader-smoke-ring, with a quiet closing line: "<CLOSING LINE>".
+
+Style: warm dark background (#141318), off-white text, one accent color
+<ACCENT COLOR>, Manrope. One quiet shader-simplex-noise field runs behind the
+entire video with a radial scrim for readability. Transitions are shader
+covers (swirl, dithering), not plain crossfades. Use my copy exactly as
+written.
+```
+
+## Directing the result
+
+The first cut won't be the final one — that's normal. Direct with plain sentences:
+
+- "The pain lines go by too fast — hold each one longer."
+- "Cut the montage to four beats."
+- "Use my brand background #0B0B0F instead."
+- "The tagline should come in from the left."
+- "Make the outro two seconds shorter."
+
+More directing vocabulary: [Directing your agent](/docs/guides/directing-your-agent).
+
+## Get the file
+
+Ask your agent: **"Render the video."** You'll get an `.mp4` in the project folder, ready to post.

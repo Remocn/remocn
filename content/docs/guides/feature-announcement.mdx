@@ -1,0 +1,81 @@
+---
+title: Feature announcement
+description: A ~40-second release video that shows the feature working — the one we shipped remocn/ui with
+---
+
+<GuideVideo
+  src="https://cdn.remocn.dev/videos/remocn-ui.mp4"
+  poster="https://cdn.remocn.dev/posters/remocn-ui.png"
+/>
+
+This is the video we announced remocn/ui with. A launch video sells the whole product; a feature announcement sells one release — and it earns its runtime by showing the feature work, not by talking about it. Eight beats, about forty seconds, and the demo beat gets the most screen time.
+
+## The storyboard
+
+1. **The moments** — three quick situations your users know, swapping in one spot, then the problem lands in one line.
+2. **The reveal** — "Meet &lt;Feature&gt;", with your one-line promise.
+3. **The mechanism** — the single idea behind the feature, one calm beat.
+4. **The demo** — the feature acting on camera: a fake app screen doing the real thing. The longest part of the video.
+5. **The breadth** — a fast montage of what else ships in this release.
+6. **The value** — three claims stack up.
+7. **The install** — a terminal types your command or call to action.
+8. **The outro** — your logo, one quiet closing line.
+
+## Your words
+
+Ten blanks:
+
+- **Feature name**
+- **Three moments** — situations where users need it, two to four words each
+- **Problem line** — the claim that lands after the moments
+- **Promise line** — what changes now, one sentence
+- **Mechanism line** — how it works, one plain sentence
+- **Demo actions** — two or three things we should watch happen ("a dialog opens, a menu filters, a form fills itself")
+- **What else ships** — three to six short names; skip this beat if the release is one thing
+- **Three value claims**
+- **Install command or CTA**
+- **Closing line**
+
+Struggling with the lines? [Words on screen](/docs/guides/words-on-screen) is the cheat sheet.
+
+## The prompt
+
+```text
+I'm making a feature announcement video with remocn (remocn.dev).
+
+Build a ~40-second, 1920×1080, 30fps release video for <FEATURE NAME> in this
+Remotion project, using remocn components — install anything you need with
+`npx shadcn add @remocn/<name>`:
+
+1. Hook — three quick moments swapping in one center slot: "<MOMENT 1>",
+   "<MOMENT 2>", "<MOMENT 3>" — then the problem lands beneath them:
+   "<PROBLEM LINE>".
+2. Reveal — "Meet <FEATURE NAME>", then the promise: "<PROMISE LINE>".
+3. Mechanism — one calm beat naming the idea: "<MECHANISM LINE>".
+4. Demo — the feature acting on camera: a fake app screen where
+   <DEMO ACTIONS>. Give this the most screen time — it is the proof.
+5. Breadth — a fast montage of what else ships: <OTHER ITEMS>.
+6. Value — three claims stacking line by line (line-by-line-slide):
+   <THREE CLAIMS>.
+7. Install — a terminal line that types itself: `<COMMAND OR CTA>`.
+8. Outro — my logo (<LOGO FILE, or: use the product name as a wordmark>)
+   with a quiet closing line: "<CLOSING LINE>".
+
+Style: warm dark background (#141318), off-white text, one accent color
+<ACCENT COLOR>, Manrope. One quiet shader-simplex-noise field runs behind the
+entire video with a radial scrim. Keep transitions restrained — crossfades,
+plus one signature transition at the reveal. Use my copy exactly as written.
+```
+
+## Directing the result
+
+- "The demo is too fast — I can't follow what the screen does."
+- "Give the reveal more room to breathe."
+- "Cut the breadth montage — this release is one thing."
+- "The hook moments should swap faster."
+
+More directing vocabulary: [Directing your agent](/docs/guides/directing-your-agent).
+
+## Get the file
+
+Ask your agent: **"Render the video."** You'll get an `.mp4` in the project folder, ready to post.
