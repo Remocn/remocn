@@ -93,3 +93,17 @@ ALL-CAPS + wide tracking + gradient text + glow shadows on text *you* add. See `
 
 Stagger sibling entrances (3–6f). Landing a whole group simultaneously reads robotic. See
 `motion-principles.md` → Follow-Through & Overlapping Action.
+
+## 12. Promoting the wrong layer under a slow zoom
+
+Text under `drift` trembles — glyph rasters snap to whole device pixels while the zoom keeps them
+in sub-pixel motion. The fix is one `willChange: "transform"` layer per **text container**. Never
+promote per-word/char spans (many small text layers shimmer even at rest) and never `Drift` itself
+(borders become resampled texture — 1px lines pulse between sharp and blurry as the scale creeps).
+See `components/drift.md` → Text under drift.
+
+```tsx
+// ❌ <Drift><div style={{ willChange: "transform" }}>{scene}</div></Drift> — borders pulse
+// ❌ chars.map((c) => <span style={{ willChange: "transform" }}>{c}</span>) — shimmer at rest
+// ✅ bordered card unpromoted; inner text block gets willChange: "transform"
+```

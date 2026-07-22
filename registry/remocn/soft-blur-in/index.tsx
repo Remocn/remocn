@@ -25,6 +25,7 @@ export function SoftBlurIn({
 
   const chars = Array.from(text);
   const charDurationFrames = 27;
+  const charTravelFrames = 9;
   const staggerFrames = 1;
 
   return (
@@ -57,7 +58,7 @@ export function SoftBlurIn({
             extrapolateRight: "clamp",
             easing,
           });
-          const y = interpolate(local, [0, charDurationFrames], [16, 0], {
+          const y = interpolate(local, [0, charTravelFrames], [16, 0], {
             extrapolateLeft: "clamp",
             extrapolateRight: "clamp",
             easing,

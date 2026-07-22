@@ -1,0 +1,17 @@
+---
+title: Text animations no longer jitter on the landing
+date: 2026-07-21
+---
+
+A caption easing into place did not glide — it held still, clicked down a pixel, held still, clicked again. Give every word or character its own stagger and those clicks land on different frames, so a ripple ran through the line while the rule right next to it stayed perfectly smooth.
+
+That contrast is what made it visible, and it is not a Remotion bug. A glyph is rasterized into a cache that can only be placed on a whole device pixel vertically. Once an eased tail slows below roughly half a pixel per frame, nothing moves for several frames — then the accumulated offset crosses a boundary and the glyph jumps a whole pixel at once. Rectangles and borders have no such cache, so they shade their edge pixel instead and glide.
+
+The fix splits the progress driver in two. Position now lands on a short window while opacity, blur, and colour keep the full curve — the part removed is the part the eye never read as movement, only as clicking. Entrances look the same; the ripple is gone.
+
+### Fixes
+
+- Travel windows clipped on [Soft Blur In](/docs/typography/soft-blur-in), [Per Character Rise](/docs/typography/per-character-rise), [Line By Line Slide](/docs/typography/line-by-line-slide), [Mask Reveal Up](/docs/typography/mask-reveal-up), [Bottom Up Letters](/docs/typography/bottom-up-letters), [Top Down Letters](/docs/typography/top-down-letters), [Short Slide Right](/docs/typography/short-slide-right), [Short Slide Down](/docs/typography/short-slide-down), and [Kinetic Center Build](/docs/typography/kinetic-center-build).
+- Ease-in exits had the mirrored problem, with the creep at the start instead of the end. [Per Word Crossfade](/docs/typography/per-word-crossfade), [Blur Out Up](/docs/typography/blur-out-up), [Mask Reveal Up](/docs/typography/mask-reveal-up), and [Line By Line Slide](/docs/typography/line-by-line-slide) now delay the travel rather than clip it.
+- [Short Slide Down](/docs/typography/short-slide-down) and [Kinetic Center Build](/docs/typography/kinetic-center-build) also reflow their earlier words every time a new one lands. Those pushes are the dominant motion in both components and had the same eased tail, so they are clipped to the same window as the entrance.
+- [Staggered Fade Up](/docs/typography/staggered-fade-up) was already clean and is untouched. It is linear, so it never enters the sub-pixel zone — the proof of the rule rather than an exception to it.

@@ -27,7 +27,9 @@ export function LineByLineSlide({
   const lines = text.split("\n");
 
   const enterDur = 27;
+  const enterTravel = 14;
   const exitDur = 18;
+  const exitTravelFrom = 8;
   const enterStagger = 4;
   const exitStagger = 2;
 
@@ -84,7 +86,7 @@ export function LineByLineSlide({
 
           const xEnter = interpolate(
             enterLocal,
-            [0, enterDur],
+            [0, enterTravel],
             [-distance, 0],
             {
               extrapolateLeft: "clamp",
@@ -93,11 +95,16 @@ export function LineByLineSlide({
             },
           );
 
-          const xExit = interpolate(exitLocal, [0, exitDur], [0, distance], {
-            extrapolateLeft: "clamp",
-            extrapolateRight: "clamp",
-            easing: exitEasing,
-          });
+          const xExit = interpolate(
+            exitLocal,
+            [exitTravelFrom, exitDur],
+            [0, distance],
+            {
+              extrapolateLeft: "clamp",
+              extrapolateRight: "clamp",
+              easing: exitEasing,
+            },
+          );
 
           const x = xEnter + xExit;
 

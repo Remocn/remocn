@@ -1,0 +1,20 @@
+---
+title: remocn/ui arrives
+date: 2026-06-12
+video: https://cdn.remocn.dev/videos/remocn-ui.mp4
+videoPoster: https://cdn.remocn.dev/posters/remocn-ui.png
+---
+
+Every product demo eventually has to show the product — a dialog opening, a command menu filtering, a form being filled. Doing that with real shadcn components inside Remotion does not work, because they animate against wall-clock time and a video has no clock, only a frame number.
+
+So remocn/ui is a parallel set of primitives with the same shapes and a timeline-driven API. You describe the steps; the component renders whichever one the current frame belongs to.
+
+<ChangelogPreview name="command-menu" />
+
+### New components
+
+Around forty primitives, including [Button](/docs/ui/components/button), [Input](/docs/ui/components/input), [Dialog](/docs/ui/components/dialog), [Drawer](/docs/ui/components/drawer), [Sheet](/docs/ui/components/sheet), [Popover](/docs/ui/components/popover), [Tooltip](/docs/ui/components/tooltip), [Select](/docs/ui/components/select), [Combobox](/docs/ui/components/combobox), [Command Menu](/docs/ui/components/command-menu), [Context Menu](/docs/ui/components/context-menu), [Dropdown Menu](/docs/ui/components/dropdown-menu), [Accordion](/docs/ui/components/accordion), [Tabs](/docs/ui/components/tabs), [Stepper](/docs/ui/components/stepper), [Toast](/docs/ui/components/toast), [Slider](/docs/ui/components/slider), [Progress](/docs/ui/components/progress), [Skeleton](/docs/ui/components/skeleton), [Spinner](/docs/ui/components/spinner), and [Cursor](/docs/ui/components/cursor) — the simulated pointer that drives the rest.
+
+Assembled flows too — [Checkout Flow](/docs/ui/blocks/checkout-flow), [Signup Flow](/docs/ui/blocks/signup-flow), and [Settings Toggle Flow](/docs/ui/blocks/settings-toggle-flow).
+
+Read [concepts](/docs/ui/concepts) first — the steps API is the whole idea.

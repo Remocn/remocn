@@ -1,9 +1,11 @@
 import type { MetadataRoute } from "next";
+import { changelog } from "@/.source/server";
+import { getShowcases } from "@/lib/showcases";
 import { source } from "@/source";
 
 const SITE_URL = "https://remocn.dev";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
 
   const staticRoutes: MetadataRoute.Sitemap = [
@@ -19,6 +21,24 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "monthly",
       priority: 0.5,
     },
+    {
+      url: `${SITE_URL}/changelog`,
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.6,
+    },
+    {
+      url: `${SITE_URL}/changelog/video`,
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.5,
+    },
+    {
+      url: `${SITE_URL}/showcases`,
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.6,
+    },
   ];
 
   const docRoutes: MetadataRoute.Sitemap = source.getPages().map((page) => ({
@@ -28,5 +48,30 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.7,
   }));
 
-  return [...staticRoutes, ...docRoutes];
+  const changelogRoutes: MetadataRoute.Sitemap = changelog.map((entry) => {
+    const slug = entry.info.path.replace(/\.mdx$/, "");
+
+    return {
+      url: `${SITE_URL}/changelog#${slug}`,
+      lastModified: entry.date,
+      changeFrequency: "monthly",
+      priority: 0.4,
+    };
+  });
+
+  const showcaseRoutes: MetadataRoute.Sitemap = (await getShowcases()).map(
+    (showcase) => ({
+      url: `${SITE_URL}/showcases/${showcase.slug}`,
+      lastModified: new Date(showcase.createdAt),
+      changeFrequency: "monthly",
+      priority: 0.5,
+    }),
+  );
+
+  return [
+    ...staticRoutes,
+    ...docRoutes,
+    ...changelogRoutes,
+    ...showcaseRoutes,
+  ];
 }

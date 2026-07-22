@@ -27,7 +27,9 @@ export function PerWordCrossfade({
   const toWords = toText.split(" ");
 
   const enterDur = 21;
+  const enterTravel = 5;
   const exitDur = 15;
+  const exitTravelFrom = 6;
   const enterStagger = 2;
   const exitStagger = 1;
   const overlapF = 5;
@@ -76,7 +78,7 @@ export function PerWordCrossfade({
               extrapolateRight: "clamp",
               easing: exitEasing,
             });
-            const y = interpolate(local, [0, exitDur], [0, -6], {
+            const y = interpolate(local, [exitTravelFrom, exitDur], [0, -6], {
               extrapolateLeft: "clamp",
               extrapolateRight: "clamp",
               easing: exitEasing,
@@ -124,7 +126,7 @@ export function PerWordCrossfade({
               extrapolateRight: "clamp",
               easing: enterEasing,
             });
-            const y = interpolate(local, [0, enterDur], [8, 0], {
+            const y = interpolate(local, [0, enterTravel], [8, 0], {
               extrapolateLeft: "clamp",
               extrapolateRight: "clamp",
               easing: enterEasing,

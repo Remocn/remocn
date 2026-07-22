@@ -54,6 +54,23 @@ export const MyVideo = () => (
 );
 ```
 
+## Text under drift
+
+A slow push-in keeps every glyph in sub-pixel motion, and a glyph raster can only sit on a whole device pixel — so type inside a plain `Drift` trembles while borders right next to it glide. Give text blocks their own compositor layer, and the zoom moves a cached texture instead of re-rasterizing the glyphs every frame:
+
+```tsx
+<Drift>
+  <div style={{ border: "1px solid rgba(255,255,255,0.08)" }}>
+    <div style={{ willChange: "transform" }}>
+      <h1>Quarterly Report</h1>
+      <p>Revenue grew across every region this quarter.</p>
+    </div>
+  </div>
+</Drift>
+```
+
+One layer per text container — never per word or character, and never on `Drift` itself. Keep borders and other hairline geometry outside the promoted layer: as part of a resampled texture, a 1px line pulses between sharp and blurry as the scale creeps, while fresh rasterization every frame lets it glide.
+
 ## Props
 
 <PropsTable

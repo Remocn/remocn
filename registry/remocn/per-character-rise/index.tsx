@@ -25,6 +25,7 @@ export function PerCharacterRise({
 
   const chars = Array.from(text);
   const charDurationFrames = 21;
+  const charTravelFrames = 10;
   const staggerFrames = 1;
 
   return (
@@ -52,15 +53,16 @@ export function PerCharacterRise({
         {chars.map((char, i) => {
           const local = frame - i * staggerFrames;
           const easing = Easing.bezier(0.2, 0.8, 0.2, 1);
+          const travelEasing = Easing.bezier(0.2, 0.8, 0.6, 0.85);
           const opacity = interpolate(local, [0, charDurationFrames], [0, 1], {
             extrapolateLeft: "clamp",
             extrapolateRight: "clamp",
             easing,
           });
-          const y = interpolate(local, [0, charDurationFrames], [distance, 0], {
+          const y = interpolate(local, [0, charTravelFrames], [distance, 0], {
             extrapolateLeft: "clamp",
             extrapolateRight: "clamp",
-            easing,
+            easing: travelEasing,
           });
           return (
             <span

@@ -43,44 +43,46 @@ function ReportCard() {
         maxWidth: 720,
       }}
     >
-      <div
-        style={{
-          fontFamily: FONT_FAMILY,
-          fontSize: 56,
-          fontWeight: 600,
-          color: "#f2f2f2",
-        }}
-      >
-        Quarterly Report
-      </div>
-      <div
-        style={{
-          fontFamily: FONT_FAMILY,
-          fontSize: 24,
-          color: "#8a8794",
-          marginTop: 16,
-        }}
-      >
-        Revenue grew across every region this quarter.
-      </div>
-      <div
-        style={{
-          fontFamily: FONT_FAMILY,
-          fontSize: 24,
-          color: "#8a8794",
-        }}
-      >
-        Customer retention held steady above target.
-      </div>
-      <div
-        style={{
-          display: "flex",
-          gap: 40,
-          marginTop: 32,
-        }}
-      >
-        <Stat value="+18%" label="Revenue" />
-        <Stat value="94%" label="Retention" />
+      <div style={{ willChange: "transform" }}>
+        <div
+          style={{
+            fontFamily: FONT_FAMILY,
+            fontSize: 56,
+            fontWeight: 600,
+            color: "#f2f2f2",
+          }}
+        >
+          Quarterly Report
+        </div>
+        <div
+          style={{
+            fontFamily: FONT_FAMILY,
+            fontSize: 24,
+            color: "#8a8794",
+            marginTop: 16,
+          }}
+        >
+          Revenue grew across every region this quarter.
+        </div>
+        <div
+          style={{
+            fontFamily: FONT_FAMILY,
+            fontSize: 24,
+            color: "#8a8794",
+          }}
+        >
+          Customer retention held steady above target.
+        </div>
+        <div
+          style={{
+            display: "flex",
+            gap: 40,
+            marginTop: 32,
+          }}
+        >
+          <Stat value="+18%" label="Revenue" />
+          <Stat value="94%" label="Retention" />
+        </div>
       </div>
     </div>
   );

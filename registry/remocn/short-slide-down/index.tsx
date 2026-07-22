@@ -34,6 +34,7 @@ export function ShortSlideDown({
   const rowHeight = fontSize;
   const firstDur = 11;
   const pushDur = 15;
+  const travelDur = 8;
   const entryScale = 0.992;
   const entryBlur = 2.4;
   const reflowBlur = 0.7;
@@ -93,12 +94,16 @@ export function ShortSlideDown({
             blur = entryBlur;
           } else if (frame <= entryEnd) {
             const range: [number, number] = [entryStart, entryEnd];
+            const travelRange: [number, number] = [
+              entryStart,
+              Math.min(entryStart + travelDur, entryEnd),
+            ];
             const opts = {
               extrapolateLeft: "clamp" as const,
               extrapolateRight: "clamp" as const,
               easing,
             };
-            y = interpolate(frame, range, [yFrom, targetY], opts);
+            y = interpolate(frame, travelRange, [yFrom, targetY], opts);
             opacity = interpolate(frame, range, [0, 1], opts);
             scale = interpolate(frame, range, [entryScale, 1], opts);
             blur = interpolate(frame, range, [entryBlur, 0], opts);
@@ -111,11 +116,16 @@ export function ShortSlideDown({
               if (frame >= pushEnd) {
                 y = toY;
               } else if (frame >= pushStart) {
-                y = interpolate(frame, [pushStart, pushEnd], [fromY, toY], {
-                  extrapolateLeft: "clamp",
-                  extrapolateRight: "clamp",
-                  easing,
-                });
+                y = interpolate(
+                  frame,
+                  [pushStart, Math.min(pushStart + travelDur, pushEnd)],
+                  [fromY, toY],
+                  {
+                    extrapolateLeft: "clamp",
+                    extrapolateRight: "clamp",
+                    easing,
+                  },
+                );
                 blur = interpolate(
                   frame,
                   [pushStart, (pushStart + pushEnd) / 2, pushEnd],

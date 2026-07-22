@@ -28,10 +28,11 @@ export function ShortSlideRight({
   const words = text.split(" ");
 
   const enterDur = 16;
+  const travelDur = 8;
   const wordOpacityDur = 6;
   const easing = Easing.bezier(0.2, 0.8, 0.2, 1);
 
-  const x = interpolate(frame, [0, enterDur], [-distance, 0], {
+  const x = interpolate(frame, [0, travelDur], [-distance, 0], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
     easing,

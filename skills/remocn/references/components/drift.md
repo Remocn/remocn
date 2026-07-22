@@ -43,6 +43,23 @@ import { zoomBlur } from "@/components/remocn/zoom-blur";
 </TransitionSeries>
 ```
 
+## Text under drift
+
+The slow zoom keeps every glyph in sub-pixel motion, and glyph rasters sit on whole device pixels — plain text inside `Drift` trembles while borders right next to it glide. Give each text container its own compositor layer so the zoom moves a cached texture instead of re-rasterizing glyphs every frame:
+
+```tsx
+<Drift>
+  <div style={{ border: "1px solid rgba(255,255,255,0.08)" }}>
+    <div style={{ willChange: "transform" }}>
+      <h1>Quarterly Report</h1>
+      <p>Revenue grew across every region.</p>
+    </div>
+  </div>
+</Drift>
+```
+
+One layer per text container — never per word or character (many small text layers shimmer even at rest), and never on `Drift` itself (a promoted wrapper turns borders into resampled texture: 1px lines pulse between sharp and blurry as the scale creeps). Borders and other hairline geometry stay outside the promoted layer — fresh rasterization every frame is what lets them glide.
+
 ## Use when
 
 - Any static scene should feel alive — hero cards, feature panels, dashboards sitting between transitions.

@@ -27,6 +27,7 @@ export function TopDownLetters({
 
   const chars = Array.from(text);
   const charDurationFrames = 12;
+  const charTravelFrames = 7;
 
   return (
     <div
@@ -58,12 +59,11 @@ export function TopDownLetters({
             extrapolateRight: "clamp",
             easing,
           });
-          const y = interpolate(
-            local,
-            [0, charDurationFrames],
-            [-distance, 0],
-            { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing },
-          );
+          const y = interpolate(local, [0, charTravelFrames], [-distance, 0], {
+            extrapolateLeft: "clamp",
+            extrapolateRight: "clamp",
+            easing,
+          });
           return (
             <span
               key={i}

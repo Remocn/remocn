@@ -27,7 +27,9 @@ export function BlurOutUp({
   const words = text.split(" ");
 
   const enterDur = 17;
+  const enterTravel = 6;
   const exitDur = 14;
+  const exitTravelFrom = 8;
 
   const enterEasing = Easing.bezier(0.22, 1, 0.36, 1);
   const exitEasing = Easing.bezier(0.64, 0, 0.78, 0);
@@ -78,17 +80,22 @@ export function BlurOutUp({
 
           const opacity = enterP * (1 - exitP);
 
-          const yEnter = interpolate(enterLocal, [0, enterDur], [10, 0], {
+          const yEnter = interpolate(enterLocal, [0, enterTravel], [10, 0], {
             extrapolateLeft: "clamp",
             extrapolateRight: "clamp",
             easing: enterEasing,
           });
 
-          const yExit = interpolate(exitLocal, [0, exitDur], [0, -14], {
-            extrapolateLeft: "clamp",
-            extrapolateRight: "clamp",
-            easing: exitEasing,
-          });
+          const yExit = interpolate(
+            exitLocal,
+            [exitTravelFrom, exitDur],
+            [0, -14],
+            {
+              extrapolateLeft: "clamp",
+              extrapolateRight: "clamp",
+              easing: exitEasing,
+            },
+          );
 
           const y = yEnter + yExit;
 

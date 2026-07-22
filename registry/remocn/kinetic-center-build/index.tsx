@@ -53,6 +53,7 @@ export function KineticCenterBuild({
   const gap = 10;
   const firstDur = 10;
   const pushDur = 13;
+  const travelDur = 7;
   const entryScale = 0.992;
   const entryBlur = 3.5;
   const reflowBlur = 0.8;
@@ -120,16 +121,23 @@ export function KineticCenterBuild({
             y = j === 0 ? firstWordY : 0;
           } else if (frame <= entryEnd) {
             const range: [number, number] = [entryStart, entryEnd];
+            const travelRange: [number, number] = [
+              entryStart,
+              Math.min(entryStart + travelDur, entryEnd),
+            ];
             const opts = {
               extrapolateLeft: "clamp" as const,
               extrapolateRight: "clamp" as const,
               easing,
             };
-            x = interpolate(frame, range, [xFrom, targetX], opts);
+            x = interpolate(frame, travelRange, [xFrom, targetX], opts);
             opacity = interpolate(frame, range, [0, 1], opts);
             scale = interpolate(frame, range, [entryScale, 1], opts);
             blur = interpolate(frame, range, [entryBlur, 0], opts);
-            y = j === 0 ? interpolate(frame, range, [firstWordY, 0], opts) : 0;
+            y =
+              j === 0
+                ? interpolate(frame, travelRange, [firstWordY, 0], opts)
+                : 0;
           } else {
             for (let w = j + 1; w < n; w++) {
               const pushStart = firstDur + (w - 1) * pushDur;
@@ -139,11 +147,16 @@ export function KineticCenterBuild({
               if (frame >= pushEnd) {
                 x = toX;
               } else if (frame >= pushStart) {
-                x = interpolate(frame, [pushStart, pushEnd], [fromX, toX], {
-                  extrapolateLeft: "clamp",
-                  extrapolateRight: "clamp",
-                  easing,
-                });
+                x = interpolate(
+                  frame,
+                  [pushStart, Math.min(pushStart + travelDur, pushEnd)],
+                  [fromX, toX],
+                  {
+                    extrapolateLeft: "clamp",
+                    extrapolateRight: "clamp",
+                    easing,
+                  },
+                );
                 blur = interpolate(
                   frame,
                   [pushStart, (pushStart + pushEnd) / 2, pushEnd],
