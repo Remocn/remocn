@@ -52,12 +52,17 @@ export async function generateMetadata(props: {
   const data = page.data;
   const slug = params.slug ?? [];
   if (slug.length === 0) {
-    return { title: data.title, description: data.description };
+    return {
+      title: data.title,
+      description: data.description,
+      alternates: { canonical: page.url },
+    };
   }
   const ogUrl = `/og/docs/${slug.join("/")}`;
   return {
     title: data.title,
     description: data.description,
+    alternates: { canonical: page.url },
     openGraph: {
       title: data.title,
       description: data.description,
