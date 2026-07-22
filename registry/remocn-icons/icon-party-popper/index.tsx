@@ -129,7 +129,6 @@ export function PartyPopperIcon({
         });
         return (
           <path
-            // biome-ignore lint/suspicious/noArrayIndexKey: static confetti list
             key={index}
             d={piece.d}
             opacity={opacity}
@@ -167,7 +166,6 @@ export function PartyPopperIconStatic({
       <path d={CONE_MAIN} />
       <path d={CONE_CURL} />
       {CONFETTI.map((piece, index) => (
-        // biome-ignore lint/suspicious/noArrayIndexKey: static confetti list
         <path key={index} d={piece.d} />
       ))}
     </svg>
