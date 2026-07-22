@@ -23,6 +23,18 @@ const nextConfig: NextConfig = {
     // Serve raw Markdown for AI agents: `/docs/<slug>.md` -> app/llms.md route.
     return [{ source: "/docs/:path*.md", destination: "/llms.md/:path*" }];
   },
+  async redirects() {
+    // Collapse the www host into the canonical apex so Google indexes a single
+    // origin. Traefik routes both hosts to this app; 308 preserves the path.
+    return [
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "www.remocn.dev" }],
+        destination: "https://remocn.dev/:path*",
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default withMDX(nextConfig);

@@ -31,6 +31,7 @@ const shareImage = entries[0]?.videoPoster ?? "/hero.png";
 export const metadata: Metadata = {
   title: "Changelog in video",
   description: DESCRIPTION,
+  alternates: { canonical: "/changelog/video" },
   openGraph: {
     type: "website",
     url: "/changelog/video",
