@@ -45,6 +45,7 @@ export const NAV_LINKS: NavLink[] = [
   { href: "/docs/shaders/getting-started/introduction", label: "Shaders" },
   { href: "/docs/icons/gallery", label: "Icons" },
   { href: "/showcases", label: "Showcases" },
+  { href: "/blog", label: "Blog" },
   { href: "/sponsors", label: "Sponsors" },
 ];
 
@@ -64,6 +65,7 @@ export const NEW_BADGE_PATHS = new Set<string>([
 export const FOOTER_NAV: NavLink[] = [
   { href: "/docs/getting-started/introduction", label: "Docs" },
   { href: "/changelog", label: "Changelog" },
+  { href: "/blog", label: "Blog" },
   { href: "/showcases", label: "Showcases" },
   { href: GITHUB_URL, label: "GitHub" },
   { href: "/sponsors", label: "Sponsors" },

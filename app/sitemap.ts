@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
-import { changelog } from "@/.source/server";
+import { blog, changelog } from "@/.source/server";
+import { blogSlug } from "@/lib/blog";
 import { getShowcases } from "@/lib/showcases";
 import { source } from "@/source";
 
@@ -39,6 +40,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "weekly",
       priority: 0.6,
     },
+    {
+      url: `${SITE_URL}/blog`,
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.6,
+    },
   ];
 
   const docRoutes: MetadataRoute.Sitemap = source.getPages().map((page) => ({
@@ -68,5 +75,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }),
   );
 
-  return [...staticRoutes, ...docRoutes, ...changelogRoutes, ...showcaseRoutes];
+  const blogRoutes: MetadataRoute.Sitemap = blog.map((post) => ({
+    url: `${SITE_URL}/blog/${blogSlug(post)}`,
+    lastModified: post.date,
+    changeFrequency: "monthly",
+    priority: 0.5,
+  }));
+
+  return [
+    ...staticRoutes,
+    ...docRoutes,
+    ...changelogRoutes,
+    ...showcaseRoutes,
+    ...blogRoutes,
+  ];
 }
