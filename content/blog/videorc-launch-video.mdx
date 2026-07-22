@@ -1,0 +1,82 @@
+---
+title: Making a launch video for Videorc
+description: The record dot is the door — a monochrome zinc studio spot with a single red accent, built as if Videorc were recording it
+date: 2026-07-22
+video: https://cdn.remocn.dev/videos/introducing-videorc.mp4
+videoPoster: https://cdn.remocn.dev/posters/introducing-videorc.png
+---
+
+Videorc is OrcDev's open-source Mac studio — record your screen in 4K, go live to five platforms at once, and let its AI do the publishing chores. We'd already cut OrcDev a sponsor video, so this one is a proper introduction: twenty-two seconds, monochrome zinc with exactly one red, and framed as if Videorc were recording the spot itself.
+
+### The storyboard
+
+1. **● REC** — the record lockup lands dead-center, the dot blinking on a camcorder cycle. After two blinks the camera dives into the dot until flat red swallows the frame.
+2. **Meet Videorc** — we fall through the dot into a grain tunnel and land on the orc mark alone; then the wordmark drives in from the right and physically pushes the mark left, the two locking into one rigid body, and the site's tagline rises word by word: "The future of video starts here."
+3. **The verbs** — three hard cuts on the beat: Record. Stream. Publish.
+4. **One window** — the positioning line assembles word by word: "Everything you need in one window."
+5. **Capture** — a whip-pan left into the first station: a screen surface draws itself in, a red dot with a running timecode docks top-left, a camera bubble sits bottom-right, a mic waveform breathes below, and "3840×2160 · 60 fps" waits quiet in the corner — recording in 4K, free, no watermark.
+6. **Multistream** — a single source dot on the left fans five rays out to the right, one per beat, endpoints popping in as each arrives: YouTube, Twitch, X, RTMP, and one more. One go-live, five destinations.
+7. **AI publish** — four rows arrive from the right — Transcript, Title & description, Chapters, Highlights — a quiet check settling on each as it lands. Stop recording; the AI writes the rest.
+8. **The values** — a grain swell washes the montage away upward and the calm world returns; three claims slide in and hold: open source and free forever, 4K on your Mac, from stop to published.
+9. **Lockup** — a push-through dive into the last frame: the app icon springs in, "Videorc" glides in beside it, the timecode freezes, the red dot goes solid, and the recording chrome lifts away — saved. "Open source, built by OrcDev" settles beneath.
+
+### Director's notes
+
+**One red, and it's the product's own.** Everything else is Videorc's zinc — `#18181b` canvas, `#f5f5f6` ink — and the single accent allowed is record-red `#ff3b30`: the logo's eyes, the record dot, the blinking timecode marker, and nothing else. When a monochrome video has exactly one color and that color is the product's, restraint does the branding for you.
+
+**The record dot is the transition — and there's only one shader.** The hook dives into the blinking dot and falls out the other side into a grain tunnel; the brand mark itself carries the cut, so there is nothing to fade. And the two statement transitions — ripple-zoom and wave-wipe — are the *same* grain-gradient shader in different shapes, so the backdrop and the cuts speak one language. (No swirl — that one's been used to death.)
+
+**The video wears the product's chrome.** From the reveal on, a mono timecode with a blinking red dot ticks along the bottom-left, as if Videorc were recording the spot. At the lockup it freezes, the dot goes solid, and the chrome lifts away — the recording is saved. The frame story and the product demo are the same gesture.
+
+### The prompt
+
+The brief, as a prompt (validated against a clean project + the [remocn skill](/docs/ai/agent-skill) before publishing):
+
+```text
+I'm making an unofficial launch video for Videorc (videorc.com), OrcDev's
+open-source Mac recording studio, with remocn (remocn.dev) in a Remotion
+project — install anything you need with `npx shadcn add @remocn/<name>`.
+
+Build a ~22-second, 1280×720, 30fps introducing spot:
+
+1. Hook — a blinking ● REC lockup dead-center; after two blinks dive into
+   the record dot until flat red fills the frame.
+2. Reveal — fall through the dot into a grain tunnel and land on the orc
+   mark alone; the wordmark drives in from the right and pushes the mark
+   left into one lockup; the tagline "The future of video starts here"
+   rises word by word.
+3. Verbs — three hard cuts on the beat: "Record. Stream. Publish."
+4. One window — "Everything you need in one window" assembles word by word.
+5. Capture — whip-pan left into a station: a screen surface draws in, a red
+   dot with a running timecode docks top-left, a camera bubble sits
+   bottom-right, a mic waveform breathes below, "3840×2160 · 60 fps" in the
+   corner. Line: record your screen, camera and mic in 4K — free, no
+   watermark.
+6. Multistream — a source dot on the left fans five rays out to the right,
+   endpoints popping in one per beat: YouTube, Twitch, X, RTMP, and one
+   more. Line: one go-live, five destinations.
+7. AI publish — four rows arrive from the right — Transcript, Title &
+   description, Chapters, Highlights — a check settling on each. Line: stop
+   recording, AI writes the rest.
+8. Values — the montage washes away upward and three claims slide in: open
+   source, free forever / 4K on your Mac / from stop to published.
+9. Lockup — push-through into the last frame: the app icon springs in,
+   "Videorc" glides beside it, the timecode freezes and the record dot goes
+   solid as the recording chrome lifts away; "Open source, built by OrcDev"
+   beneath.
+
+Style: Videorc's own dark zinc — #18181b canvas, #f5f5f6 ink, #a1a1a8
+muted — with exactly one accent, record-red #ff3b30 (the logo's eyes, the
+record dot), nothing else colored. Manrope everywhere, Geist Mono only for
+the timecode chrome. One grain-gradient field (corners shape, grain kept
+alive, center clear for type) carries the whole video; the two statement
+transitions are the SAME shader in ripple and wave shapes — no swirl
+anywhere. From the reveal on, a mono timecode with a blinking red dot ticks
+bottom-left as if Videorc is recording the spot, then freezes at the
+lockup. Narrative beats dive into the frame; enumeration always travels
+left; nothing fades without a direction; no trailing periods on screen.
+```
+
+### Make one for your product
+
+The generic recipe is [Launch video](/docs/guides/launch-video); the trick that makes a spot feel like the real product — pointing your agent at the site's own tokens — is [Your brand](/docs/guides/your-brand).
