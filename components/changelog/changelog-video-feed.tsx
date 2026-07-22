@@ -24,6 +24,7 @@ export function ChangelogVideoFeed({
   const [activeSlug, setActiveSlug] = useState<string | null>(null);
   const [nearSlugs, setNearSlugs] = useState<ReadonlySet<string>>(new Set());
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: observers must re-attach to the frames rendered from entries
   useEffect(() => {
     const root = containerRef.current;
     if (!root || typeof IntersectionObserver === "undefined") return;

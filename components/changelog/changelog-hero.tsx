@@ -19,7 +19,10 @@ export function ChangelogHero({ active }: { active: "text" | "video" }) {
           New components, transitions, shaders, and icons as they ship.
         </p>
 
-        <nav aria-label="Changelog view" className="mt-8 flex items-center gap-1">
+        <nav
+          aria-label="Changelog view"
+          className="mt-8 flex items-center gap-1"
+        >
           {VIEWS.map((view) => {
             const isActive = view.href === activeHref;
             return (

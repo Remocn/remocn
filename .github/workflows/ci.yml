@@ -31,3 +31,5 @@ jobs:
           bun-version: latest
       - run: bun install --frozen-lockfile
       - run: bun run build
+        env:
+          SHOWCASES_API_URL: ${{ vars.SHOWCASES_API_URL }}
