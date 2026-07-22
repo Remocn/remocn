@@ -9,6 +9,7 @@ import { ComponentExample } from "@/components/docs/component-example";
 import { ComponentPreview } from "@/components/docs/component-preview";
 import { CopyButton } from "@/components/docs/copy-button";
 import { Dependencies } from "@/components/docs/dependencies";
+import { GuideVideo } from "@/components/docs/guide-video";
 import { IconsGallery } from "@/components/docs/icons-gallery";
 import { InstallAll } from "@/components/docs/install-all";
 import { InstallBlock } from "@/components/docs/install-block";
@@ -111,6 +112,7 @@ export function getMDXComponents(components?: MDXComponents): MDXComponents {
     Dependencies,
     ComponentCardGrid,
     IconsGallery,
+    GuideVideo,
 
     ...components,
   };
