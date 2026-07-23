@@ -180,15 +180,18 @@ export function ShaderWeave({
     if (!gl) return;
 
     const compile = (type: number, src: string) => {
-      const shader = gl.createShader(type)!;
+      const shader = gl.createShader(type);
+      if (!shader) throw new Error("Failed to create WebGL shader");
       gl.shaderSource(shader, src);
       gl.compileShader(shader);
       return shader;
     };
-    const program = gl.createProgram()!;
+    const program = gl.createProgram();
+    if (!program) return;
     gl.attachShader(program, compile(gl.VERTEX_SHADER, VERT));
     gl.attachShader(program, compile(gl.FRAGMENT_SHADER, FRAG));
     gl.linkProgram(program);
+    // biome-ignore lint/correctness/useHookAtTopLevel: gl.useProgram is a WebGL method, not a React hook
     gl.useProgram(program);
 
     const buf = gl.createBuffer();

@@ -44,12 +44,10 @@ export function Reel({
   return (
     <AbsoluteFill>
       {images.map((src, i) => {
-        const p = interpolate(
-          frame,
-          [i * step, i * step + reveal],
-          [0, 1],
-          { ...clamp, easing: EASE_OUT },
-        );
+        const p = interpolate(frame, [i * step, i * step + reveal], [0, 1], {
+          ...clamp,
+          easing: EASE_OUT,
+        });
         if (p <= 0) return null;
         const inset = (1 - p) * 50;
         const imgScale = interpolate(p, [0, 1], [1.08, 1], clamp);

@@ -11,10 +11,8 @@ import {
 
 const NEUTRAL_COLORS = ["#3a3a5c", "#52527a"];
 
-export interface ShaderGemSmokeProps extends Omit<
-  GemSmokeProps,
-  "frame" | "ref"
-> {}
+export interface ShaderGemSmokeProps
+  extends Omit<GemSmokeProps, "frame" | "ref"> {}
 
 /**
  * Paper's Gem Smoke shader, driven deterministically by the current frame.

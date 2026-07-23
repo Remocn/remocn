@@ -1,11 +1,11 @@
 "use client";
 
-import type React from "react";
-import { AbsoluteFill, Easing, interpolate, random } from "remotion";
 import type {
   TransitionPresentation,
   TransitionPresentationComponentProps,
 } from "@remotion/transitions";
+import type React from "react";
+import { AbsoluteFill, Easing, interpolate, random } from "remotion";
 
 // ===========================================================================
 // icon-scatter — a scene change made of icons.
@@ -95,7 +95,9 @@ function placeIcons(count: number, seed: string): Placed[] {
     const jx = (random(`${seed}-jx-${i}`) - 0.5) * cellW * 0.7;
     const jy = (random(`${seed}-jy-${i}`) - 0.5) * cellH * 0.7;
     out.push({
-      path: ICON_PATHS[Math.floor(random(`${seed}-p-${i}`) * ICON_PATHS.length)],
+      path: ICON_PATHS[
+        Math.floor(random(`${seed}-p-${i}`) * ICON_PATHS.length)
+      ],
       xPct: cellW * (col + 0.5) + jx,
       yPct: cellH * (row + 0.5) + jy,
       size: 34 + random(`${seed}-s-${i}`) * 40,
@@ -123,10 +125,15 @@ const IconField: React.FC<{
         ...clampOpts,
         easing: Easing.out(Easing.cubic),
       });
-      const scaleIn = interpolate(p, [icon.pStart, icon.pStart + 0.3], [0.4, 1], {
-        ...clampOpts,
-        easing: Easing.out(Easing.back(1.6)),
-      });
+      const scaleIn = interpolate(
+        p,
+        [icon.pStart, icon.pStart + 0.3],
+        [0.4, 1],
+        {
+          ...clampOpts,
+          easing: Easing.out(Easing.back(1.6)),
+        },
+      );
       const outP = interpolate(p, [icon.pOut, 1], [0, 1], {
         ...clampOpts,
         easing: Easing.in(Easing.cubic),
@@ -140,7 +147,8 @@ const IconField: React.FC<{
       const tx = Math.cos(angle) * fly;
       const ty = Math.sin(angle) * fly;
 
-      const spin = icon.spin * interpolate(p, [icon.pStart, 1], [0, 1], clampOpts);
+      const spin =
+        icon.spin * interpolate(p, [icon.pStart, 1], [0, 1], clampOpts);
       const opacity = Math.min(draw, 1 - outP) * icon.strokeOpacity;
       if (opacity <= 0.001) return null;
 
@@ -180,7 +188,12 @@ const IconField: React.FC<{
 
 const IconScatterPresentation: React.FC<
   TransitionPresentationComponentProps<IconScatterProps>
-> = ({ children, presentationProgress, presentationDirection, passedProps }) => {
+> = ({
+  children,
+  presentationProgress,
+  presentationDirection,
+  passedProps,
+}) => {
   const {
     count = 15,
     color = "#fafafa",

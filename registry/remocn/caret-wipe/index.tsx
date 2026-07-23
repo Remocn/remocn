@@ -1,11 +1,11 @@
 "use client";
 
-import type React from "react";
-import { AbsoluteFill, Easing, interpolate } from "remotion";
 import type {
   TransitionPresentation,
   TransitionPresentationComponentProps,
 } from "@remotion/transitions";
+import type React from "react";
+import { AbsoluteFill, Easing, interpolate } from "remotion";
 
 const clampOpts = {
   extrapolateLeft: "clamp" as const,
@@ -38,7 +38,12 @@ export type CaretWipeProps = {
 // ---------------------------------------------------------------------------
 const CaretWipePresentation: React.FC<
   TransitionPresentationComponentProps<CaretWipeProps>
-> = ({ children, presentationProgress, presentationDirection, passedProps }) => {
+> = ({
+  children,
+  presentationProgress,
+  presentationDirection,
+  passedProps,
+}) => {
   const {
     direction = "right",
     caretColor = "#C3E88D",

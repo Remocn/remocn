@@ -1,19 +1,19 @@
 "use client";
 
-import React from "react";
-import {
-  AbsoluteFill,
-  Easing,
-  continueRender,
-  delayRender,
-  interpolate,
-  random,
-  useVideoConfig,
-} from "remotion";
 import type {
   TransitionPresentation,
   TransitionPresentationComponentProps,
 } from "@remotion/transitions";
+import React from "react";
+import {
+  AbsoluteFill,
+  continueRender,
+  delayRender,
+  Easing,
+  interpolate,
+  random,
+  useVideoConfig,
+} from "remotion";
 
 const clampOpts = {
   extrapolateLeft: "clamp" as const,
@@ -143,7 +143,9 @@ const buildTextMask = (
   ctx.font = `${spec.fontWeight ?? 400} ${spec.fontSize}px ${spec.fontFamily}`;
   const spacing = (spec.letterSpacingEm ?? 0) * spec.fontSize;
   if (spacing !== 0) {
-    (ctx as CanvasRenderingContext2D & { letterSpacing?: string }).letterSpacing = `${spacing}px`;
+    (
+      ctx as CanvasRenderingContext2D & { letterSpacing?: string }
+    ).letterSpacing = `${spacing}px`;
   }
   ctx.textAlign = "center";
   // Canvas "middle" baseline is computed from the em square and lands
@@ -163,8 +165,8 @@ const buildTextMask = (
   for (let y = 0; y < rows; y++) {
     for (let x = 0; x < cols; x++) {
       let hits = 0;
-      if (data[((y * 2) * cols * 2 + x * 2) * 4 + 3] > 100) hits++;
-      if (data[((y * 2) * cols * 2 + x * 2 + 1) * 4 + 3] > 100) hits++;
+      if (data[(y * 2 * cols * 2 + x * 2) * 4 + 3] > 100) hits++;
+      if (data[(y * 2 * cols * 2 + x * 2 + 1) * 4 + 3] > 100) hits++;
       if (data[((y * 2 + 1) * cols * 2 + x * 2) * 4 + 3] > 100) hits++;
       if (data[((y * 2 + 1) * cols * 2 + x * 2 + 1) * 4 + 3] > 100) hits++;
       mask[y * cols + x] = hits;
@@ -175,7 +177,12 @@ const buildTextMask = (
 
 const AsciiDissolvePresentation: React.FC<
   TransitionPresentationComponentProps<AsciiDissolveProps>
-> = ({ children, presentationProgress, presentationDirection, passedProps }) => {
+> = ({
+  children,
+  presentationProgress,
+  presentationDirection,
+  passedProps,
+}) => {
   const {
     cellSize = 22,
     colorFront = "rgba(242,242,242,0.6)",
@@ -221,9 +228,9 @@ const AsciiDissolvePresentation: React.FC<
   }, [fontsReady]);
 
   const fontSize = cellSize * 0.86;
+  // biome-ignore lint/correctness/useExhaustiveDependencies: fontsReady is an intentional extra dep — remeasure the mono advance once the real webfonts load
   const advance = React.useMemo(
     () => measureAdvance(fontFamily, fontSize),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [fontFamily, fontSize, fontsReady],
   );
   const cols = Math.ceil(width / advance);
@@ -232,7 +239,12 @@ const AsciiDissolvePresentation: React.FC<
   // The zone styles need to know where the incoming text sits — a capsule
   // around its center line, derived from the letterform mask's bounds. The
   // mask itself is never displayed.
-  const zoneStyles: AsciiEnterStyle[] = ["clearing", "halo", "wave", "lime-echo"];
+  const zoneStyles: AsciiEnterStyle[] = [
+    "clearing",
+    "halo",
+    "wave",
+    "lime-echo",
+  ];
   const needZone = enterText !== undefined && zoneStyles.includes(enterStyle);
   const enterMask = React.useMemo(
     () =>
@@ -240,7 +252,17 @@ const AsciiDissolvePresentation: React.FC<
         ? buildTextMask(enterText, width, height, cols, rows, advance, cellSize)
         : null,
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [enterText, needZone, fontsReady, width, height, cols, rows, advance, cellSize],
+    [
+      enterText,
+      needZone,
+      fontsReady,
+      width,
+      height,
+      cols,
+      rows,
+      advance,
+      cellSize,
+    ],
   );
   const enterZone = React.useMemo(() => {
     if (enterMask === null) return null;
@@ -348,7 +370,10 @@ const AsciiDissolvePresentation: React.FC<
           const py = (y + 0.5) * cellSize;
           const nx = Math.min(Math.max(px, enterZone.x0), enterZone.x1);
           dist = Math.hypot(px - nx, py - enterZone.cy);
-          distC = Math.hypot(px - (enterZone.x0 + enterZone.x1) / 2, py - enterZone.cy);
+          distC = Math.hypot(
+            px - (enterZone.x0 + enterZone.x1) / 2,
+            py - enterZone.cy,
+          );
           s = Math.max(0, 1 - dist / (enterZone.halfH + 64));
         }
 
@@ -358,8 +383,7 @@ const AsciiDissolvePresentation: React.FC<
         } else if (enterStyle === "clearing" && enterZone !== null) {
           // Dissolve order biased by proximity: cells near the headline
           // vanish first, a granular cavity opens outward.
-          const order =
-            (1 - s) * 0.6 + random(`ascii-d-${x}-${y}`) * 0.4;
+          const order = (1 - s) * 0.6 + random(`ascii-d-${x}-${y}`) * 0.4;
           const gone = Math.max(
             0,
             Math.min(1, (dissolveG * 1.35 - order) / 0.3),
@@ -378,7 +402,10 @@ const AsciiDissolvePresentation: React.FC<
 
         let d = Math.max(
           0,
-          Math.min(0.999, (base * 0.72 + jitter * 0.28) * cellCoverage * 1.2 - 0.08),
+          Math.min(
+            0.999,
+            (base * 0.72 + jitter * 0.28) * cellCoverage * 1.2 - 0.08,
+          ),
         );
         if (enterStyle === "halo" && enterZone !== null) {
           // A smooth radial attenuation: near cells slide down the ramp.
@@ -391,7 +418,8 @@ const AsciiDissolvePresentation: React.FC<
         }
         const ch = ramp[Math.floor(d * rampLen)] ?? " ";
         const isAccent =
-          accentColor !== undefined && random(`ascii-a-${x}-${y}`) < accentDensity;
+          accentColor !== undefined &&
+          random(`ascii-a-${x}-${y}`) < accentDensity;
         mainRow += isAccent ? " " : ch;
         accentRow += isAccent ? ch : " ";
 
@@ -422,7 +450,12 @@ const AsciiDissolvePresentation: React.FC<
   // with NO transform at all — it must sit pixel-exact under the letterform.
   const enterBlur = textMode
     ? 0
-    : interpolate(p, [enterWindow[0], Math.min(1, enterWindow[1] + 0.05)], [10, 0], clampOpts);
+    : interpolate(
+        p,
+        [enterWindow[0], Math.min(1, enterWindow[1] + 0.05)],
+        [10, 0],
+        clampOpts,
+      );
   const childStyle: React.CSSProperties = textMode
     ? { opacity: interpolate(p, enterWindow, [0, 1], clampOpts) }
     : {
@@ -446,7 +479,11 @@ const AsciiDissolvePresentation: React.FC<
     color: colorFront,
   };
 
-  const renderLayer = (layerRows: string[], color: string, layerOpacity: number) =>
+  const renderLayer = (
+    layerRows: string[],
+    color: string,
+    layerOpacity: number,
+  ) =>
     layerOpacity > 0.001 ? (
       <pre style={{ ...preStyle, color, opacity: layerOpacity }}>
         {layerRows.join("\n")}
@@ -458,13 +495,16 @@ const AsciiDissolvePresentation: React.FC<
       <AbsoluteFill style={childStyle}>{children}</AbsoluteFill>
       {fieldAlive ? (
         <AbsoluteFill style={{ pointerEvents: "none" }}>
-          <AbsoluteFill style={{ background: colorBack, opacity: panelOpacity }} />
+          <AbsoluteFill
+            style={{ background: colorBack, opacity: panelOpacity }}
+          />
           <AbsoluteFill
             style={
               enterStyle === "focus" && textMode
                 ? {
                     opacity: focusFade,
-                    filter: focusBlur > 0.01 ? `blur(${focusBlur}px)` : undefined,
+                    filter:
+                      focusBlur > 0.01 ? `blur(${focusBlur}px)` : undefined,
                   }
                 : undefined
             }
