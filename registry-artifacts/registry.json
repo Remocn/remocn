@@ -1476,6 +1476,118 @@
       "type": "registry:lib"
     },
     {
+      "name": "ascii-dissolve",
+      "title": "ASCII Dissolve",
+      "description": "Dissolve one scene into the next through a drifting field of ASCII glyphs.",
+      "dependencies": ["remotion", "@remotion/transitions"],
+      "files": [
+        {
+          "path": "registry/remocn/ascii-dissolve/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/ascii-dissolve.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "caret-wipe",
+      "title": "Caret Wipe",
+      "description": "Sweep a typing caret across the frame, wiping the outgoing scene into the next.",
+      "dependencies": ["remotion", "@remotion/transitions"],
+      "files": [
+        {
+          "path": "registry/remocn/caret-wipe/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/caret-wipe.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "icon-scatter",
+      "title": "Icon Scatter",
+      "description": "Scatter a field of icons over the cut, hiding the scene swap at the field's peak.",
+      "dependencies": ["remotion", "@remotion/transitions"],
+      "files": [
+        {
+          "path": "registry/remocn/icon-scatter/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-scatter.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "shader-caustics",
+      "title": "Shader Caustics",
+      "description": "A field of refracted light — the bright filaments light makes through a rippling surface.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "registry/remocn/shader-caustics/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/shader-caustics.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "shader-gem-smoke",
+      "title": "Shader Gem Smoke",
+      "description": "Paper's Gem Smoke shader driven by the frame — smoke flowing behind and inside a glassy logo.",
+      "dependencies": ["@paper-design/shaders-react"],
+      "files": [
+        {
+          "path": "registry/remocn/shader-gem-smoke/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/shader-gem-smoke.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "shader-strata",
+      "title": "Shader Strata",
+      "description": "Fine horizontal sediment layers displaced by fbm noise, each drifting at its own depth.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "registry/remocn/shader-strata/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/shader-strata.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "shader-weave",
+      "title": "Shader Weave",
+      "description": "A woven substrate of warp and weft threads crossing on a domain-warped grid, with a travelling sheen.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "registry/remocn/shader-weave/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/shader-weave.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "reel",
+      "title": "Reel",
+      "description": "A fixed centered card where images stack on the z-axis and each blooms open over the last via a centre-out mask.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "registry/remocn/reel/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/reel.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
       "name": "remocn-ui",
       "title": "remocn UI Core",
       "description": "Shared timeline-fold hook, theme context, and color math for remocn UI primitives.",

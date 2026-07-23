@@ -1,0 +1,16 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "shader-gem-smoke",
+  "title": "Shader Gem Smoke",
+  "description": "Paper's Gem Smoke shader driven by the frame — smoke flowing behind and inside a glassy logo.",
+  "dependencies": ["@paper-design/shaders-react"],
+  "files": [
+    {
+      "path": "registry/remocn/shader-gem-smoke/index.tsx",
+      "content": "\"use client\";\n\nimport { GemSmoke, type GemSmokeProps } from \"@paper-design/shaders-react\";\nimport React, { useCallback, useState } from \"react\";\nimport {\n  continueRender,\n  delayRender,\n  useCurrentFrame,\n  useVideoConfig,\n} from \"remotion\";\n\nconst NEUTRAL_COLORS = [\"#3a3a5c\", \"#52527a\"];\n\nexport interface ShaderGemSmokeProps extends Omit<\n  GemSmokeProps,\n  \"frame\" | \"ref\"\n> {}\n\n/**\n * Paper's Gem Smoke shader, driven deterministically by the current frame.\n *\n * Animated color fields placed over a logo shape — smoke lives behind (and\n * inside) the glassy silhouette. Feed it a brand mark via `image` (a URL,\n * e.g. staticFile('prisma/symbol-light.svg')); the shape is processed once\n * and cached, so every frame renders the same smoke at the same time.\n */\nexport function ShaderGemSmoke({\n  speed = 1,\n  colors = NEUTRAL_COLORS,\n  colorBack = \"#0a0a10\",\n  innerDistortion = 0.8,\n  outerDistortion = 0.6,\n  outerGlow = 0.55,\n  innerGlow = 1,\n  size = 0.8,\n  className,\n  ...rest\n}: ShaderGemSmokeProps) {\n  const frame = useCurrentFrame();\n  const { fps, width, height } = useVideoConfig();\n\n  const [handle] = useState(() => delayRender(\"shader-gem-smoke\"));\n  const gate = useCallback(\n    (element: HTMLDivElement | null) => {\n      if (!element) return;\n      requestAnimationFrame(() =>\n        requestAnimationFrame(() => continueRender(handle)),\n      );\n    },\n    [handle],\n  );\n\n  return (\n    <div\n      ref={gate}\n      className={className}\n      style={{ position: \"absolute\", inset: 0 }}\n    >\n      <React.Suspense fallback={null}>\n        <GemSmoke\n          speed={0}\n          frame={(frame / fps) * speed * 1000}\n          colors={colors}\n          colorBack={colorBack}\n          innerDistortion={innerDistortion}\n          outerDistortion={outerDistortion}\n          outerGlow={outerGlow}\n          innerGlow={innerGlow}\n          size={size}\n          fit=\"cover\"\n          width={width}\n          height={height}\n          suspendWhenProcessingImage\n          {...rest}\n        />\n      </React.Suspense>\n    </div>\n  );\n}\n",
+      "type": "registry:component",
+      "target": "components/remocn/shader-gem-smoke.tsx"
+    }
+  ],
+  "type": "registry:component"
+}
