@@ -5,6 +5,13 @@ const withMDX = createMDX();
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  // `motion` ships a barrel (motion/react re-exports the whole runtime). Next's
+  // default optimizePackageImports list covers lucide-react/date-fns but not
+  // motion, so name it explicitly to rewrite the 15 `from "motion/react"` sites
+  // into direct imports and keep unused motion features out of the bundle.
+  experimental: {
+    optimizePackageImports: ["motion"],
+  },
   // Remotion's server packages are Node-only and ship native binaries (esbuild +
   // the platform-specific @remotion/compositor-*). They must NOT be bundled by
   // Turbopack/webpack — keep them external so they're require()'d at runtime in

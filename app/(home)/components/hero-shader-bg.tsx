@@ -1,8 +1,16 @@
 "use client";
 
-import { NeuroNoise } from "@paper-design/shaders-react";
+import dynamic from "next/dynamic";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
+
+// `@paper-design/shaders-react` pulls in a WebGL runtime — heavy and useless on
+// the server. Load it client-only so it stays out of the initial landing bundle;
+// the `mounted` gate below already keeps it from rendering before hydration.
+const NeuroNoise = dynamic(
+  () => import("@paper-design/shaders-react").then((m) => m.NeuroNoise),
+  { ssr: false },
+);
 
 const NEURO_COLORS = {
   light: { front: "#8f8f94", mid: "#e7e7e9", back: "#ffffff" },
