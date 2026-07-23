@@ -1,0 +1,39 @@
+---
+title: Weave
+description: A woven substrate of warp and weft threads crossing on a domain-warped grid
+---
+
+<ComponentPreview name="shader-weave" />
+
+## Installation
+
+<InstallBlock name="shader-weave" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { ShaderWeave } from "@/components/remocn/shader-weave";
+
+const ShaderWeaveScene = () => (
+  <ShaderWeave speed={1} scale={22} warp={0.03} />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="ShaderWeave"
+    component={ShaderWeaveScene}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A custom WebGL shader written for the remocn registry — frame-driven and
+deterministic, with no wall-clock time. Warp and weft threads cross on a
+domain-warped grid, interlacing over and under like real cloth, with a slow
+sheen of light travelling across the fabric. Raise `scale` for a finer weave
+and `warp` for a more irregular hand-woven grid.

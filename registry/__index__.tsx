@@ -102,6 +102,14 @@ import { whipPanConfig } from "@/registry/remocn/whip-pan/config";
 import { xFollowCardConfig } from "@/registry/remocn/x-follow-card/config";
 import { xFollowersOverviewConfig } from "@/registry/remocn/x-followers-overview/config";
 import { zoomBlurConfig } from "@/registry/remocn/zoom-blur/config";
+import { asciiDissolveConfig } from "@/registry/remocn/ascii-dissolve/config";
+import { caretWipeConfig } from "@/registry/remocn/caret-wipe/config";
+import { iconScatterConfig } from "@/registry/remocn/icon-scatter/config";
+import { reelConfig } from "@/registry/remocn/reel/config";
+import { shaderCausticsConfig } from "@/registry/remocn/shader-caustics/config";
+import { shaderGemSmokeConfig } from "@/registry/remocn/shader-gem-smoke/config";
+import { shaderStrataConfig } from "@/registry/remocn/shader-strata/config";
+import { shaderWeaveConfig } from "@/registry/remocn/shader-weave/config";
 import { iconActivityConfig } from "@/registry/remocn-icons/icon-activity/config";
 import { iconAlertTriangleConfig } from "@/registry/remocn-icons/icon-alert-triangle/config";
 import { iconArrowDownConfig } from "@/registry/remocn-icons/icon-arrow-down/config";
@@ -1919,6 +1927,62 @@ const registry: Record<string, RegistryEntry> = {
         default: m.CaretPreview,
       })),
     config: caretConfig,
+  },
+  "ascii-dissolve": {
+    load: () =>
+      import("@/components/docs/examples/ascii-dissolve-example").then((m) => ({
+        default: m.AsciiDissolveExampleScene,
+      })),
+    config: asciiDissolveConfig,
+  },
+  "caret-wipe": {
+    load: () =>
+      import("@/components/docs/examples/caret-wipe-example").then((m) => ({
+        default: m.CaretWipeExampleScene,
+      })),
+    config: caretWipeConfig,
+  },
+  "icon-scatter": {
+    load: () =>
+      import("@/components/docs/examples/icon-scatter-example").then((m) => ({
+        default: m.IconScatterExampleScene,
+      })),
+    config: iconScatterConfig,
+  },
+  "shader-caustics": {
+    load: () =>
+      import("@/registry/remocn/shader-caustics").then((m) => ({
+        default: m.ShaderCaustics,
+      })),
+    config: shaderCausticsConfig,
+  },
+  "shader-gem-smoke": {
+    load: () =>
+      import("@/registry/remocn/shader-gem-smoke").then((m) => ({
+        default: m.ShaderGemSmoke,
+      })),
+    config: shaderGemSmokeConfig,
+  },
+  "shader-strata": {
+    load: () =>
+      import("@/registry/remocn/shader-strata").then((m) => ({
+        default: m.ShaderStrata,
+      })),
+    config: shaderStrataConfig,
+  },
+  "shader-weave": {
+    load: () =>
+      import("@/registry/remocn/shader-weave").then((m) => ({
+        default: m.ShaderWeave,
+      })),
+    config: shaderWeaveConfig,
+  },
+  reel: {
+    load: () =>
+      import("@/components/docs/examples/reel-example").then((m) => ({
+        default: m.ReelExampleScene,
+      })),
+    config: reelConfig,
   },
 };
 

@@ -1,0 +1,70 @@
+---
+title: Caret Wipe
+description: Sweep a typing caret across the frame, wiping the outgoing scene into the next
+---
+
+<ComponentPreview name="caret-wipe" />
+
+## Installation
+
+<InstallBlock name="caret-wipe" />
+
+## Usage
+
+`caretWipe()` is a Remotion transition presentation. Pass it to a
+`TransitionSeries.Transition` between two sequences. A text caret sweeps across
+the frame — the outgoing scene is erased behind it and the incoming scene is
+typed in ahead of it, like a cursor rewriting the screen.
+
+```tsx
+import { TransitionSeries, linearTiming } from "@remotion/transitions";
+import { caretWipe } from "@/components/remocn/caret-wipe";
+
+export const MyVideo = () => (
+  <TransitionSeries>
+    <TransitionSeries.Sequence durationInFrames={70}>
+      <SceneA />
+    </TransitionSeries.Sequence>
+    <TransitionSeries.Transition
+      timing={linearTiming({ durationInFrames: 40 })}
+      presentation={caretWipe({ direction: "right" })}
+    />
+    <TransitionSeries.Sequence durationInFrames={70}>
+      <SceneB />
+    </TransitionSeries.Sequence>
+  </TransitionSeries>
+);
+```
+
+## Props
+
+`caretWipe(props)` accepts:
+
+<PropsTable
+  rows={[
+    {
+      name: "direction",
+      type: '"left" | "right"',
+      default: '"right"',
+      description: "Sweep direction. `right` types the screen left→right; `left` reverses it.",
+    },
+    {
+      name: "caretColor",
+      type: "string",
+      default: '"#C3E88D"',
+      description: "The caret's color — the remocn lime by default.",
+    },
+    {
+      name: "caretWidth",
+      type: "number",
+      default: "3",
+      description: "Caret bar width, in pixels.",
+    },
+    {
+      name: "caretHeight",
+      type: "number",
+      default: "0.5",
+      description: "Caret bar height as a fraction of frame height (0–1), vertically centered.",
+    },
+  ]}
+/>

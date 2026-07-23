@@ -66,6 +66,14 @@ export const NEW_BADGE_PATHS = new Set<string>([
   "/docs/effects/scribble-circle",
   "/docs/typography/hand-count",
   "/docs/effects/crumple-toss",
+  "/docs/transitions/ascii-dissolve",
+  "/docs/transitions/caret-wipe",
+  "/docs/transitions/icon-scatter",
+  "/docs/shaders/components/shader-caustics",
+  "/docs/shaders/components/shader-gem-smoke",
+  "/docs/shaders/components/shader-strata",
+  "/docs/shaders/components/shader-weave",
+  "/docs/ui-blocks/reel",
 ]);
 
 export const FOOTER_NAV: NavLink[] = [

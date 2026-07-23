@@ -1,0 +1,39 @@
+---
+title: Strata
+description: Fine horizontal sediment layers displaced by fbm noise, each drifting at its own depth
+---
+
+<ComponentPreview name="shader-strata" />
+
+## Installation
+
+<InstallBlock name="shader-strata" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { ShaderStrata } from "@/components/remocn/shader-strata";
+
+const ShaderStrataScene = () => (
+  <ShaderStrata speed={1} layers={14} amplitude={0.16} />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="ShaderStrata"
+    component={ShaderStrataScene}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A custom WebGL shader written for the remocn registry — frame-driven and
+deterministic, with no wall-clock time. Each layer's edge is displaced by fbm
+noise and drifts at its own depth speed, so the stack reads as a living
+foundation rather than a gradient. Pass `colors` bottom-to-top and lift
+`accentAmount` to tint the layers with `accent`.

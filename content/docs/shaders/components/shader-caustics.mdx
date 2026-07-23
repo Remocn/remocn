@@ -1,0 +1,38 @@
+---
+title: Caustics
+description: A field of refracted light — the bright filaments light makes through a rippling surface
+---
+
+<ComponentPreview name="shader-caustics" />
+
+## Installation
+
+<InstallBlock name="shader-caustics" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { ShaderCaustics } from "@/components/remocn/shader-caustics";
+
+const ShaderCausticsScene = () => (
+  <ShaderCaustics speed={1} scale={5.2} intensity={1} />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="ShaderCaustics"
+    component={ShaderCausticsScene}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A custom WebGL shader written for the remocn registry — frame-driven and
+deterministic, with no wall-clock time, so every render is identical. Feed
+`colors` a two-stop range for the water tone and lift `accentAmount` to tint
+the brightest filaments with `accent`.

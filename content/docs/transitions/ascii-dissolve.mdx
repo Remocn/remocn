@@ -1,0 +1,81 @@
+---
+title: ASCII Dissolve
+description: Dissolve one scene into the next through a drifting field of ASCII glyphs
+---
+
+<ComponentPreview name="ascii-dissolve" />
+
+## Installation
+
+<InstallBlock name="ascii-dissolve" />
+
+## Usage
+
+`asciiDissolve()` is a Remotion transition presentation. Pass it to a
+`TransitionSeries.Transition` between two sequences. The outgoing scene blurs
+out under a rising grid of monospace glyphs, then the incoming scene resolves
+cell by cell as the field dissolves.
+
+```tsx
+import { TransitionSeries, linearTiming } from "@remotion/transitions";
+import { asciiDissolve } from "@/components/remocn/ascii-dissolve";
+
+export const MyVideo = () => (
+  <TransitionSeries>
+    <TransitionSeries.Sequence durationInFrames={70}>
+      <SceneA />
+    </TransitionSeries.Sequence>
+    <TransitionSeries.Transition
+      timing={linearTiming({ durationInFrames: 40 })}
+      presentation={asciiDissolve()}
+    />
+    <TransitionSeries.Sequence durationInFrames={70}>
+      <SceneB />
+    </TransitionSeries.Sequence>
+  </TransitionSeries>
+);
+```
+
+## Props
+
+`asciiDissolve(props)` accepts:
+
+<PropsTable
+  rows={[
+    {
+      name: "colorBack",
+      type: "string",
+      default: '"#0d0d10"',
+      description: "Canvas behind the glyphs during the hold.",
+    },
+    {
+      name: "colorFront",
+      type: "string",
+      default: '"rgba(242,242,242,0.6)"',
+      description: "Glyph color.",
+    },
+    {
+      name: "cellSize",
+      type: "number",
+      default: "22",
+      description: "Row height of one glyph cell, in pixels.",
+    },
+    {
+      name: "ramp",
+      type: "string",
+      default: '" .:-=+*#%@"',
+      description: "Density ramp, lightest to densest.",
+    },
+    {
+      name: "accentColor",
+      type: "string",
+      description: "Optional second color for a sparse scattering of accent cells.",
+    },
+    {
+      name: "accentDensity",
+      type: "number",
+      default: "0.05",
+      description: "Share of cells rendered in the accent color, 0–1.",
+    },
+  ]}
+/>
