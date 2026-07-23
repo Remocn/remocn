@@ -1,0 +1,88 @@
+---
+title: Icon Scatter
+description: Scatter a field of icons over the cut, hiding the scene swap at the field's peak
+---
+
+<ComponentPreview name="icon-scatter" />
+
+## Installation
+
+<InstallBlock name="icon-scatter" />
+
+## Usage
+
+`iconScatter()` is a Remotion transition presentation. Pass it to a
+`TransitionSeries.Transition` between two sequences. A field of line icons flies
+in and fills the frame, a cover fill hides the swap at the field's peak, then
+the icons scatter away to reveal the incoming scene.
+
+```tsx
+import { TransitionSeries, linearTiming } from "@remotion/transitions";
+import { iconScatter } from "@/components/remocn/icon-scatter";
+
+export const MyVideo = () => (
+  <TransitionSeries>
+    <TransitionSeries.Sequence durationInFrames={70}>
+      <SceneA />
+    </TransitionSeries.Sequence>
+    <TransitionSeries.Transition
+      timing={linearTiming({ durationInFrames: 40 })}
+      presentation={iconScatter({ count: 15 })}
+    />
+    <TransitionSeries.Sequence durationInFrames={70}>
+      <SceneB />
+    </TransitionSeries.Sequence>
+  </TransitionSeries>
+);
+```
+
+## Props
+
+`iconScatter(props)` accepts:
+
+<PropsTable
+  rows={[
+    {
+      name: "count",
+      type: "number",
+      default: "15",
+      description: "How many icons populate the field.",
+    },
+    {
+      name: "color",
+      type: "string",
+      default: '"#fafafa"',
+      description: "Icon stroke color.",
+    },
+    {
+      name: "coverColor",
+      type: "string",
+      default: '"#0a0a0a"',
+      description: "The fill that hides the swap at the field's peak.",
+    },
+    {
+      name: "coverOpacity",
+      type: "number",
+      default: "0.92",
+      description: "Peak opacity of the cover fill (0–1). Lower shows more of the swap.",
+    },
+    {
+      name: "strokeWidth",
+      type: "number",
+      default: "2",
+      description: "Stroke width of the icons, in their 24px viewBox units.",
+    },
+    {
+      name: "flyDistance",
+      type: "number",
+      default: "260",
+      description: "How far icons fly on scatter, in pixels.",
+    },
+    {
+      name: "seed",
+      type: "string",
+      default: '"icon-scatter"',
+      description: "Seed so two scatters in one video can differ.",
+    },
+  ]}
+/>

@@ -1,0 +1,100 @@
+---
+title: Reel
+description: A fixed centered card where images stack on the z-axis and each blooms open over the last
+---
+
+<ComponentPreview name="reel" />
+
+## Installation
+
+<InstallBlock name="reel" />
+
+## Usage
+
+Give `Reel` an ordered list of image URLs. Each image stacks on the z-axis over
+the previous one at the same centered position, and reveals via a centre-out
+mask that expands from its middle — so a new shot blooms open over the last and
+the frame is never blank. No camera move: the mask is the only motion. Pace the
+reveals with `step` (frames between images) and `reveal` (frames for one image
+to open).
+
+```tsx
+// src/Root.tsx
+import { Composition, staticFile } from "remotion";
+import { Reel } from "@/components/remocn/reel";
+
+const ReelScene = () => (
+  <Reel
+    images={[
+      staticFile("shot-1.png"),
+      staticFile("shot-2.png"),
+      staticFile("shot-3.png"),
+    ]}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="Reel"
+    component={ReelScene}
+    durationInFrames={160}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "images",
+      type: "string[]",
+      description: "Ordered image URLs. Each reveals over the previous one in sequence.",
+    },
+    {
+      name: "width",
+      type: "number",
+      default: "1180",
+      description: "Card width, in pixels. The card is centered in the composition.",
+    },
+    {
+      name: "height",
+      type: "number",
+      default: "676",
+      description: "Card height, in pixels.",
+    },
+    {
+      name: "radius",
+      type: "number",
+      default: "16",
+      description: "Corner radius of the card, in pixels.",
+    },
+    {
+      name: "step",
+      type: "number",
+      default: "20",
+      description: "Frames between successive reveals.",
+    },
+    {
+      name: "reveal",
+      type: "number",
+      default: "13",
+      description: "Frames for one image's centre-out mask to fully open.",
+    },
+    {
+      name: "objectPosition",
+      type: "string",
+      default: '"top"',
+      description: "CSS object-position for the images inside the card.",
+    },
+    {
+      name: "background",
+      type: "string",
+      default: '"#050506"',
+      description: "Card surface color, shown behind an image while it opens.",
+    },
+  ]}
+/>

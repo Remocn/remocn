@@ -1474,6 +1474,118 @@
           "target": "lib/remocn/stop-motion.ts"
         }
       ]
+    },
+    {
+      "name": "ascii-dissolve",
+      "type": "registry:component",
+      "title": "ASCII Dissolve",
+      "description": "Dissolve one scene into the next through a drifting field of ASCII glyphs.",
+      "dependencies": ["remotion", "@remotion/transitions"],
+      "files": [
+        {
+          "path": "ascii-dissolve/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/ascii-dissolve.tsx"
+        }
+      ]
+    },
+    {
+      "name": "caret-wipe",
+      "type": "registry:component",
+      "title": "Caret Wipe",
+      "description": "Sweep a typing caret across the frame, wiping the outgoing scene into the next.",
+      "dependencies": ["remotion", "@remotion/transitions"],
+      "files": [
+        {
+          "path": "caret-wipe/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/caret-wipe.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-scatter",
+      "type": "registry:component",
+      "title": "Icon Scatter",
+      "description": "Scatter a field of icons over the cut, hiding the scene swap at the field's peak.",
+      "dependencies": ["remotion", "@remotion/transitions"],
+      "files": [
+        {
+          "path": "icon-scatter/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/icon-scatter.tsx"
+        }
+      ]
+    },
+    {
+      "name": "shader-caustics",
+      "type": "registry:component",
+      "title": "Shader Caustics",
+      "description": "A field of refracted light — the bright filaments light makes through a rippling surface.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "shader-caustics/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/shader-caustics.tsx"
+        }
+      ]
+    },
+    {
+      "name": "shader-gem-smoke",
+      "type": "registry:component",
+      "title": "Shader Gem Smoke",
+      "description": "Paper's Gem Smoke shader driven by the frame — smoke flowing behind and inside a glassy logo.",
+      "dependencies": ["@paper-design/shaders-react"],
+      "files": [
+        {
+          "path": "shader-gem-smoke/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/shader-gem-smoke.tsx"
+        }
+      ]
+    },
+    {
+      "name": "shader-strata",
+      "type": "registry:component",
+      "title": "Shader Strata",
+      "description": "Fine horizontal sediment layers displaced by fbm noise, each drifting at its own depth.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "shader-strata/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/shader-strata.tsx"
+        }
+      ]
+    },
+    {
+      "name": "shader-weave",
+      "type": "registry:component",
+      "title": "Shader Weave",
+      "description": "A woven substrate of warp and weft threads crossing on a domain-warped grid, with a travelling sheen.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "shader-weave/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/shader-weave.tsx"
+        }
+      ]
+    },
+    {
+      "name": "reel",
+      "type": "registry:component",
+      "title": "Reel",
+      "description": "A fixed centered card where images stack on the z-axis and each blooms open over the last via a centre-out mask.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "reel/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/reel.tsx"
+        }
+      ]
     }
   ]
 }

@@ -3,9 +3,11 @@ import { type ComponentConfig, SHARED_CONTROLS } from "@/lib/customizer-config";
 
 import { animatedBarChartConfig } from "@/registry/remocn/animated-bar-chart/config";
 import { animatedLineChartConfig } from "@/registry/remocn/animated-line-chart/config";
+import { asciiDissolveConfig } from "@/registry/remocn/ascii-dissolve/config";
 import { backdropConfig } from "@/registry/remocn/backdrop/config";
 import { blurOutUpConfig } from "@/registry/remocn/blur-out-up/config";
 import { bottomUpLettersConfig } from "@/registry/remocn/bottom-up-letters/config";
+import { caretWipeConfig } from "@/registry/remocn/caret-wipe/config";
 import { chatGptConfig } from "@/registry/remocn/chat-gpt/config";
 import { chatToPreviewLayoutConfig } from "@/registry/remocn/chat-to-preview-layout/config";
 import { checkListConfig } from "@/registry/remocn/check-list/config";
@@ -27,6 +29,7 @@ import { glassCodeWalkConfig } from "@/registry/remocn/glass-code-walk/config";
 import { grainDissolveConfig } from "@/registry/remocn/grain-dissolve/config";
 import { handCountConfig } from "@/registry/remocn/hand-count/config";
 import { handwriteConfig } from "@/registry/remocn/handwrite/config";
+import { iconScatterConfig } from "@/registry/remocn/icon-scatter/config";
 import { infiniteBentoPanConfig } from "@/registry/remocn/infinite-bento-pan/config";
 import { infiniteMarqueeConfig } from "@/registry/remocn/infinite-marquee/config";
 import { inkArrowConfig } from "@/registry/remocn/ink-arrow/config";
@@ -52,15 +55,18 @@ import { perspectiveMarqueeConfig } from "@/registry/remocn/perspective-marquee/
 import { polaroidConfig } from "@/registry/remocn/polaroid/config";
 import { progressStepsConfig } from "@/registry/remocn/progress-steps/config";
 import { pushThroughConfig } from "@/registry/remocn/push-through/config";
+import { reelConfig } from "@/registry/remocn/reel/config";
 import { rgbGlitchTextConfig } from "@/registry/remocn/rgb-glitch-text/config";
 import { rippleZoomConfig } from "@/registry/remocn/ripple-zoom/config";
 import { rollingNumberConfig } from "@/registry/remocn/rolling-number/config";
 import { rolodexFlipConfig } from "@/registry/remocn/rolodex-flip/config";
 import { scaleDownFadeConfig } from "@/registry/remocn/scale-down-fade/config";
 import { scribbleCircleConfig } from "@/registry/remocn/scribble-circle/config";
+import { shaderCausticsConfig } from "@/registry/remocn/shader-caustics/config";
 import { shaderColorPanelsConfig } from "@/registry/remocn/shader-color-panels/config";
 import { shaderDitheringConfig } from "@/registry/remocn/shader-dithering/config";
 import { shaderDotOrbitConfig } from "@/registry/remocn/shader-dot-orbit/config";
+import { shaderGemSmokeConfig } from "@/registry/remocn/shader-gem-smoke/config";
 import { shaderGodRaysConfig } from "@/registry/remocn/shader-god-rays/config";
 import { shaderGrainGradientConfig } from "@/registry/remocn/shader-grain-gradient/config";
 import { shaderLiquidMetalConfig } from "@/registry/remocn/shader-liquid-metal/config";
@@ -72,10 +78,12 @@ import { shaderPulsingBorderConfig } from "@/registry/remocn/shader-pulsing-bord
 import { shaderSimplexNoiseConfig } from "@/registry/remocn/shader-simplex-noise/config";
 import { shaderSmokeRingConfig } from "@/registry/remocn/shader-smoke-ring/config";
 import { shaderSpiralConfig } from "@/registry/remocn/shader-spiral/config";
+import { shaderStrataConfig } from "@/registry/remocn/shader-strata/config";
 import { shaderSwirlConfig } from "@/registry/remocn/shader-swirl/config";
 import { shaderVoronoiConfig } from "@/registry/remocn/shader-voronoi/config";
 import { shaderWarpConfig } from "@/registry/remocn/shader-warp/config";
 import { shaderWaterConfig } from "@/registry/remocn/shader-water/config";
+import { shaderWeaveConfig } from "@/registry/remocn/shader-weave/config";
 import { sharedAxisYConfig } from "@/registry/remocn/shared-axis-y/config";
 import { sharedAxisZConfig } from "@/registry/remocn/shared-axis-z/config";
 import { shimmerSweepConfig } from "@/registry/remocn/shimmer-sweep/config";
@@ -1919,6 +1927,62 @@ const registry: Record<string, RegistryEntry> = {
         default: m.CaretPreview,
       })),
     config: caretConfig,
+  },
+  "ascii-dissolve": {
+    load: () =>
+      import("@/components/docs/examples/ascii-dissolve-example").then((m) => ({
+        default: m.AsciiDissolveExampleScene,
+      })),
+    config: asciiDissolveConfig,
+  },
+  "caret-wipe": {
+    load: () =>
+      import("@/components/docs/examples/caret-wipe-example").then((m) => ({
+        default: m.CaretWipeExampleScene,
+      })),
+    config: caretWipeConfig,
+  },
+  "icon-scatter": {
+    load: () =>
+      import("@/components/docs/examples/icon-scatter-example").then((m) => ({
+        default: m.IconScatterExampleScene,
+      })),
+    config: iconScatterConfig,
+  },
+  "shader-caustics": {
+    load: () =>
+      import("@/registry/remocn/shader-caustics").then((m) => ({
+        default: m.ShaderCaustics,
+      })),
+    config: shaderCausticsConfig,
+  },
+  "shader-gem-smoke": {
+    load: () =>
+      import("@/registry/remocn/shader-gem-smoke").then((m) => ({
+        default: m.ShaderGemSmoke,
+      })),
+    config: shaderGemSmokeConfig,
+  },
+  "shader-strata": {
+    load: () =>
+      import("@/registry/remocn/shader-strata").then((m) => ({
+        default: m.ShaderStrata,
+      })),
+    config: shaderStrataConfig,
+  },
+  "shader-weave": {
+    load: () =>
+      import("@/registry/remocn/shader-weave").then((m) => ({
+        default: m.ShaderWeave,
+      })),
+    config: shaderWeaveConfig,
+  },
+  reel: {
+    load: () =>
+      import("@/components/docs/examples/reel-example").then((m) => ({
+        default: m.ReelExampleScene,
+      })),
+    config: reelConfig,
   },
 };
 

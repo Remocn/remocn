@@ -1,0 +1,50 @@
+---
+title: Gem Smoke
+description: Animated color fields flowing behind and inside a glassy logo silhouette
+---
+
+<ComponentPreview name="shader-gem-smoke" />
+
+## Installation
+
+<InstallBlock name="shader-gem-smoke" />
+
+## Usage
+
+Feed it a brand mark via `image` — a URL, e.g. `staticFile("symbol.svg")`. The
+shape is processed once and cached, so smoke lives behind and inside the glassy
+silhouette and every frame renders the same smoke at the same time.
+
+```tsx
+// src/Root.tsx
+import { Composition, staticFile } from "remotion";
+import { ShaderGemSmoke } from "@/components/remocn/shader-gem-smoke";
+
+const ShaderGemSmokeScene = () => (
+  <ShaderGemSmoke
+    image={staticFile("symbol.svg")}
+    speed={1}
+    colorBack="#0a0a10"
+    size={0.8}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="ShaderGemSmoke"
+    component={ShaderGemSmokeScene}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Driven deterministically by the current frame (`frame` from
+`useCurrentFrame()`), so renders stay identical. Any other `GemSmoke` prop is
+forwarded through.
+
+## Credits
+
+Shader by [paper-design/shaders](https://github.com/paper-design/shaders).

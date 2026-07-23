@@ -19,6 +19,10 @@
     "shader-god-rays",
     "shader-smoke-ring",
     "shader-metaballs",
-    "shader-pulsing-border"
+    "shader-pulsing-border",
+    "shader-caustics",
+    "shader-gem-smoke",
+    "shader-strata",
+    "shader-weave"
   ]
 }

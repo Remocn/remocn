@@ -90,6 +90,10 @@ Tier `remocn`. WebGL shader backdrops from `@paper-design/shaders`, wrapped for 
 | [`shader-smoke-ring`](shader-smoke-ring.md) | You want a single soft, centered smoke ring as a focal atmospheric element | You need a full-bleed edge-to-edge texture — this is a centered object; use a noise or gradient shader | 150f | premium | `@paper-design/shaders-react` |
 | [`shader-metaballs`](shader-metaballs.md) | A playful or organic scene wants lava-lamp blobs merging and splitting | The brand is strictly serious/corporate — metaballs read playful | 150f | playful | `@paper-design/shaders-react` |
 | [`shader-pulsing-border`](shader-pulsing-border.md) | You want a pulsing lit frame around the scene edges to contain foreground content | The brief bans decorative glow — keep `bloom`/`intensity` restrained so the border does not read as AI-slop neon | 150f | premium | `@paper-design/shaders-react` |
+| [`shader-caustics`](shader-caustics.md) | Water, light, or premium ambient backdrops where refracted-light filaments fit the mood | You want structured cellular noise — use `shader-voronoi` instead | 150f | elegant | — |
+| [`shader-gem-smoke`](shader-gem-smoke.md) | Brand or logo reveals that want smoke living inside a mark | You have no logo shape to feed — use `shader-smoke-ring` or `shader-neuro-noise` for a shapeless field instead | 150f | premium | `@paper-design/shaders-react` |
+| [`shader-strata`](shader-strata.md) | Calm, grounded, geological ambient backdrops | You want motion with a clear direction or flow — use `shader-warp` instead | 150f | calm | — |
+| [`shader-weave`](shader-weave.md) | Tactile, crafted, "made-of" textures — fabric, mesh, substrate metaphors | You want a smooth gradient field — use `shader-mesh-gradient` instead | 150f | tactile | — |
 
 ## Transitions
 
@@ -110,6 +114,9 @@ Tier `remocn`. Presentations for `@remotion/transitions` — pass to `Transition
 | [`dither-dissolve`](dither-dissolve.md) | The video has a retro, terminal, or print aesthetic — the dither reads as CRT/risograph texture | The tone is soft and organic — the pixel grid reads technical; use `grain-dissolve` or `perlin-dissolve` | 40f | retro | `@paper-design/shaders-react` |
 | [`perlin-dissolve`](perlin-dissolve.md) | Organic, atmospheric chapter changes — nature, ambient, calm product films | Fast cuts — the threshold sweep needs ~100 frames to read as a sweep, not a flicker | 104f | premium | `@paper-design/shaders-react` |
 | [`smoke-dissolve`](smoke-dissolve.md) | A reveal should feel like emerging from mist — moody, cinematic, mysterious openings | Fast cuts — the ring expansion needs ~100 frames of runway | 104f | premium | `@paper-design/shaders-react` |
+| [`ascii-dissolve`](ascii-dissolve.md) | A retro, terminal, or print aesthetic needs a text-grid dissolve that reads as CRT or risograph | The tone is soft or organic — use `grain-dissolve` or `perlin-dissolve` instead | 40f | retro | `@remotion/transitions` |
+| [`caret-wipe`](caret-wipe.md) | Dev-tool, editor, or terminal demos where a typing cursor is the through-line between scenes | The scenes aren't text/UI surfaces — the caret metaphor has nothing to type over | 40f | clean | `@remotion/transitions` |
+| [`icon-scatter`](icon-scatter.md) | Playful product or app transitions where icons are part of the brand's visual language | The piece is minimal or serious — use `fade-through` instead | 40f | playful | `@remotion/transitions` |
 
 ## UI Blocks
 
@@ -126,6 +133,7 @@ Tier `remocn`. Interface simulations for product demos.
 | [`polaroid`](polaroid.md) | Media in a hand-placed instant-photo frame with a handwritten caption — the living-photograph centrepiece of stop-motion scenes | A plain rounded video frame with no paper story → `backdrop` with padding | 150f | paper | `@remocn/stop-motion`, `@remocn/handwrite` |
 | [`progress-steps`](progress-steps.md) | Showing a CI/CD pipeline, onboarding checklist, or multi-phase workflow completing step by step | The data is quantitative and you need to show magnitudes — use `animated-bar-chart` or `animated-line-chart` instead | 150f | data | — |
 | [`terminal-simulator`](terminal-simulator.md) | Demoing a CLI tool install sequence (`npm install`, `npx shadcn add`, build output) | You only need to type a single short string — use `typewriter` instead, which is lighter and pairs with any layout | 240f | tech | — |
+| [`reel`](reel.md) | Showing a sequence of screenshots or product shots that bloom open one over the last in a fixed frame | You need a single framed photo — use `polaroid` instead | 160f | clean | — |
 
 ## AI & Social Cards
 

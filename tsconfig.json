@@ -134,6 +134,28 @@
       "@/components/remocn/shader-warp": [
         "./registry/remocn/shader-warp/index.tsx"
       ],
+      "@/components/remocn/ascii-dissolve": [
+        "./registry/remocn/ascii-dissolve/index.tsx"
+      ],
+      "@/components/remocn/caret-wipe": [
+        "./registry/remocn/caret-wipe/index.tsx"
+      ],
+      "@/components/remocn/icon-scatter": [
+        "./registry/remocn/icon-scatter/index.tsx"
+      ],
+      "@/components/remocn/shader-caustics": [
+        "./registry/remocn/shader-caustics/index.tsx"
+      ],
+      "@/components/remocn/shader-gem-smoke": [
+        "./registry/remocn/shader-gem-smoke/index.tsx"
+      ],
+      "@/components/remocn/shader-strata": [
+        "./registry/remocn/shader-strata/index.tsx"
+      ],
+      "@/components/remocn/shader-weave": [
+        "./registry/remocn/shader-weave/index.tsx"
+      ],
+      "@/components/remocn/reel": ["./registry/remocn/reel/index.tsx"],
       "@/components/remocn/*": ["./registry/remocn-ui/*/index.tsx"],
       "@/*": ["./*"]
     }

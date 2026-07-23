@@ -15,6 +15,9 @@
     "push-through",
     "focus-pull",
     "zoom-blur",
-    "page-turn"
+    "page-turn",
+    "ascii-dissolve",
+    "caret-wipe",
+    "icon-scatter"
   ]
 }
