@@ -22,6 +22,16 @@ export type Sponsor = {
 export const sponsors: Sponsor[] = (
   [
     {
+      id: "21st",
+      name: "21st.dev",
+      logoUrl: "/sponsors/21st.svg",
+      website:
+        "https://21st.dev/?utm_source=remocn&utm_medium=sponsor&utm_campaign=remocn_sponsors_page",
+      tier: "partner",
+      customStyles: "opacity-90 max-w-full",
+      isPaste: false,
+    },
+    {
       id: "reactbits",
       name: "React Bits",
       logoUrl: "/sponsors/reactbits.svg",
