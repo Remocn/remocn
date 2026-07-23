@@ -1,3 +1,4 @@
+import { RootProvider } from "fumadocs-ui/provider/next";
 import type { ReactNode } from "react";
 import { DocsHeader } from "@/components/docs/docs-header";
 import { DocsShell } from "@/components/docs/docs-shell";
@@ -16,7 +17,10 @@ export default async function Layout({ children }: { children: ReactNode }) {
   );
 
   return (
-    <>
+    // fumadocs search + sidebar context lives here (docs-only) instead of the
+    // root layout, so non-docs routes never compile fumadocs-ui. `theme.enabled:
+    // false` defers to the root next-themes ThemeProvider — no double provider.
+    <RootProvider theme={{ enabled: false }}>
       {/* Custom remocn chrome: the main header (logo + site nav + actions), then
           a thin bar holding the Components/Primitives switcher. Both are static
           (non-sticky) and content-aligned so they track the docs grid — logo
@@ -31,6 +35,6 @@ export default async function Layout({ children }: { children: ReactNode }) {
       >
         {children}
       </DocsShell>
-    </>
+    </RootProvider>
   );
 }

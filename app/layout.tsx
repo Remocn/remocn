@@ -1,6 +1,6 @@
-import { RootProvider } from "fumadocs-ui/provider/next";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Manrope, Outfit } from "next/font/google";
+import { ThemeProvider } from "next-themes";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import "./globals.css";
 import { OpenPanelComponent } from "@openpanel/nextjs";
@@ -82,15 +82,15 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <NuqsAdapter>
-          <RootProvider
-            theme={{
-              defaultTheme: "system",
-              enableSystem: true,
-            }}
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
           >
             <ThemeShortcut />
             {children}
-          </RootProvider>
+          </ThemeProvider>
         </NuqsAdapter>
         <OpenPanelComponent
           clientId={process.env.NEXT_PUBLIC_OPENPANEL_CLIENT_ID as string}

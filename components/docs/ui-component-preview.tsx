@@ -2,7 +2,7 @@
 
 import { CheckIcon, LinkIcon, RotateCcwIcon } from "lucide-react";
 import { useQueryStates } from "nuqs";
-import { Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, use, useEffect, useMemo, useRef, useState } from "react";
 import { CodeBlock } from "@/components/docs/code-block";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -11,207 +11,12 @@ import { type ControlConfig, getDefaults } from "@/lib/customizer-config";
 import { buildParsers, PreviewStage } from "@/lib/ui-preview-internals";
 import registry from "@/registry/__index__";
 import { ComponentCustomizer } from "./component-customizer";
-import { type ExampleEntry, examples } from "./examples";
 import {
-  accordionExampleCode,
-  accordionExampleControls,
-} from "./examples/accordion-example";
-import {
-  alertDialogExampleCode,
-  alertDialogExampleControls,
-} from "./examples/alert-dialog-example";
-import {
-  blurInExampleCode,
-  blurInExampleControls,
-} from "./examples/blur-in-example";
-import {
-  buttonExampleCode,
-  buttonExampleControls,
-} from "./examples/button-example";
-import {
-  checkboxExampleCode,
-  checkboxExampleControls,
-} from "./examples/checkbox-example";
-import {
-  comboboxExampleCode,
-  comboboxExampleControls,
-} from "./examples/combobox-example";
-import {
-  commandMenuExampleCode,
-  commandMenuExampleControls,
-} from "./examples/command-menu-example";
-import {
-  contextMenuExampleCode,
-  contextMenuExampleControls,
-} from "./examples/context-menu-example";
-import {
-  cursorExampleCode,
-  cursorExampleControls,
-} from "./examples/cursor-example";
-import {
-  dialogExampleCode,
-  dialogExampleControls,
-} from "./examples/dialog-example";
-import {
-  drawerExampleCode,
-  drawerExampleControls,
-} from "./examples/drawer-example";
-import {
-  dropdownMenuExampleCode,
-  dropdownMenuExampleControls,
-} from "./examples/dropdown-menu-example";
-import {
-  inputExampleCode,
-  inputExampleControls,
-} from "./examples/input-example";
-import {
-  messageBubbleExampleCode,
-  messageBubbleExampleControls,
-} from "./examples/message-bubble-example";
-import {
-  popoverExampleCode,
-  popoverExampleControls,
-} from "./examples/popover-example";
-import {
-  progressExampleCode,
-  progressExampleControls,
-} from "./examples/progress-example";
-import {
-  radioExampleCode,
-  radioExampleControls,
-} from "./examples/radio-example";
-import {
-  resizableExampleCode,
-  resizableExampleControls,
-} from "./examples/resizable-example";
-import {
-  selectExampleCode,
-  selectExampleControls,
-} from "./examples/select-example";
-import {
-  sheetExampleCode,
-  sheetExampleControls,
-} from "./examples/sheet-example";
-import {
-  skeletonExampleCode,
-  skeletonExampleControls,
-} from "./examples/skeleton-example";
-import {
-  sliderExampleCode,
-  sliderExampleControls,
-} from "./examples/slider-example";
-import {
-  stepperExampleCode,
-  stepperExampleControls,
-} from "./examples/stepper-example";
-import {
-  switchExampleCode,
-  switchExampleControls,
-} from "./examples/switch-example";
-import { tabsExampleCode, tabsExampleControls } from "./examples/tabs-example";
-import {
-  toastExampleCode,
-  toastExampleControls,
-} from "./examples/toast-example";
-import {
-  toggleGroupExampleCode,
-  toggleGroupExampleControls,
-} from "./examples/toggle-group-example";
-import {
-  tooltipExampleCode,
-  tooltipExampleControls,
-} from "./examples/tooltip-example";
-import {
-  typingIndicatorExampleCode,
-  typingIndicatorExampleControls,
-} from "./examples/typing-indicator-example";
-
-/**
- * Per-component honored-key allowlist + code template, co-located with each
- * scene file (`<name>ExampleControls` + `<name>ExampleCode`). The preview shows
- * ONLY the controls a scene actually threads into its component (visible =
- * honored, never a blacklist), and the Code tab emits ONLY those honored props.
- *
- * Each fan-out worker adds one line here per migrated component (import the two
- * exports from `./examples/<name>-example`, register them by registry name).
- * Phase 0 seeds the button pilot.
- */
-interface UiSceneMeta {
-  /** Honored control keys (visible knobs); everything else is timeline-owned. */
-  controls: readonly string[];
-  /** Function template emitting the timeline code for the honored props. */
-  code: (values: Record<string, unknown>) => string;
-}
-
-const UI_SCENE_META: Record<string, UiSceneMeta> = {
-  button: { controls: buttonExampleControls, code: buttonExampleCode },
-  input: { controls: inputExampleControls, code: inputExampleCode },
-  toast: { controls: toastExampleControls, code: toastExampleCode },
-  "message-bubble": {
-    controls: messageBubbleExampleControls,
-    code: messageBubbleExampleCode,
-  },
-  "typing-indicator": {
-    controls: typingIndicatorExampleControls,
-    code: typingIndicatorExampleCode,
-  },
-  popover: { controls: popoverExampleControls, code: popoverExampleCode },
-  accordion: { controls: accordionExampleControls, code: accordionExampleCode },
-  tooltip: { controls: tooltipExampleControls, code: tooltipExampleCode },
-  dialog: { controls: dialogExampleControls, code: dialogExampleCode },
-  sheet: { controls: sheetExampleControls, code: sheetExampleCode },
-  drawer: { controls: drawerExampleControls, code: drawerExampleCode },
-  "alert-dialog": {
-    controls: alertDialogExampleControls,
-    code: alertDialogExampleCode,
-  },
-  checkbox: { controls: checkboxExampleControls, code: checkboxExampleCode },
-  radio: { controls: radioExampleControls, code: radioExampleCode },
-  switch: { controls: switchExampleControls, code: switchExampleCode },
-  slider: { controls: sliderExampleControls, code: sliderExampleCode },
-  progress: { controls: progressExampleControls, code: progressExampleCode },
-  combobox: { controls: comboboxExampleControls, code: comboboxExampleCode },
-  select: { controls: selectExampleControls, code: selectExampleCode },
-  "command-menu": {
-    controls: commandMenuExampleControls,
-    code: commandMenuExampleCode,
-  },
-  "dropdown-menu": {
-    controls: dropdownMenuExampleControls,
-    code: dropdownMenuExampleCode,
-  },
-  "context-menu": {
-    controls: contextMenuExampleControls,
-    code: contextMenuExampleCode,
-  },
-  cursor: { controls: cursorExampleControls, code: cursorExampleCode },
-  resizable: { controls: resizableExampleControls, code: resizableExampleCode },
-  skeleton: { controls: skeletonExampleControls, code: skeletonExampleCode },
-  stepper: { controls: stepperExampleControls, code: stepperExampleCode },
-  tabs: { controls: tabsExampleControls, code: tabsExampleCode },
-  "toggle-group": {
-    controls: toggleGroupExampleControls,
-    code: toggleGroupExampleCode,
-  },
-  "blur-in": { controls: blurInExampleControls, code: blurInExampleCode },
-};
-
-/**
- * Honored-only code generator (Q4). Built from the scene's `<name>ExampleCode`
- * function template — it interpolates ONLY honored keys, ONLY when a value
- * differs from its control default, and NEVER emits a prop the component
- * ignores. Same `visibleValues` feeds the Player + this generator → parity.
- * Does NOT call the legacy `config.snippet`.
- */
-function generateUiCode(
-  name: string,
-  _exampleEntry: ExampleEntry,
-  visibleValues: Record<string, unknown>,
-): string {
-  const meta = UI_SCENE_META[name];
-  if (!meta) return "";
-  return meta.code(visibleValues);
-}
+  loadUiScene,
+  UI_PREVIEW_TIMING,
+  UI_SCENE_LOADERS,
+  type UiPreviewTiming,
+} from "./examples/ui-preview-scenes";
 
 /** Shared "Unknown component" fallback — matches the existing docs widgets. */
 function UnknownComponent({ name }: { name: string }) {
@@ -223,13 +28,13 @@ function UnknownComponent({ name }: { name: string }) {
 }
 
 export function UiComponentPreview({ name }: { name: string }) {
-  const exampleEntry = examples[`${name}-example`];
+  const timing = UI_PREVIEW_TIMING[name];
   const entry = registry[name];
-  const meta = UI_SCENE_META[name];
 
-  // Q1 — join the example (scene + timing) with the registry config (controls)
-  // and the per-scene honored list. Any miss → the shared Unknown fallback.
-  if (!exampleEntry || !entry || !meta) {
+  // Q1 — join the example timing with the registry config (controls) and a lazy
+  // scene loader. The scene (component + honored list + code template) is fetched
+  // inside `UiPreview` via `use()`. Any miss here → the shared Unknown fallback.
+  if (!timing || !entry || !(name in UI_SCENE_LOADERS)) {
     return <UnknownComponent name={name} />;
   }
 
@@ -239,27 +44,25 @@ export function UiComponentPreview({ name }: { name: string }) {
         <div className="not-prose mb-6 aspect-[1.9/1] w-full animate-pulse rounded-2xl bg-muted" />
       }
     >
-      <UiPreview
-        name={name}
-        exampleEntry={exampleEntry}
-        controls={entry.config.controls}
-        honored={meta.controls}
-      />
+      <UiPreview name={name} timing={timing} controls={entry.config.controls} />
     </Suspense>
   );
 }
 
 function UiPreview({
   name,
-  exampleEntry,
+  timing,
   controls,
-  honored,
 }: {
   name: string;
-  exampleEntry: ExampleEntry;
+  timing: UiPreviewTiming;
   controls: ControlConfig;
-  honored: readonly string[];
 }) {
+  // Suspends on first render until this component's scene chunk resolves, then
+  // returns synchronously from the cached promise. Gives us the scene component,
+  // its honored-control list, and its code template — no other scene is fetched.
+  const scene = use(loadUiScene(name));
+  const honored = scene.controls;
   const trackEvent = useTrackEvent();
 
   // visibleControls = config.controls ∩ honored[name]. This drops state/speed
@@ -294,10 +97,10 @@ function UiPreview({
     [defaults, values],
   );
 
-  const code = useMemo(
-    () => generateUiCode(name, exampleEntry, values),
-    [name, exampleEntry, values],
-  );
+  // Honored-only code (Q4): the scene's own template interpolates ONLY honored
+  // keys, ONLY when a value differs from its default, and NEVER emits a prop the
+  // component ignores. The same `values` feeds the Player → guaranteed parity.
+  const code = useMemo(() => scene.code(values), [scene, values]);
 
   const [copied, setCopied] = useState(false);
   const handleCopyLink = () => {
@@ -351,14 +154,14 @@ function UiPreview({
         <TabsContent value="preview" className="mt-0">
           <PreviewStage
             name={name}
-            Component={exampleEntry.Component}
+            Component={scene.Scene}
             inputProps={values}
             // D2 — timing is sourced from the EXAMPLE, not the config.
-            durationInFrames={exampleEntry.durationInFrames}
-            fps={exampleEntry.fps}
-            compositionWidth={exampleEntry.width}
-            compositionHeight={exampleEntry.height}
-            previewBackdrop={exampleEntry.previewBackdrop}
+            durationInFrames={timing.durationInFrames}
+            fps={timing.fps}
+            compositionWidth={timing.width}
+            compositionHeight={timing.height}
+            previewBackdrop={timing.previewBackdrop}
           />
         </TabsContent>
 

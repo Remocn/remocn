@@ -1,6 +1,5 @@
 "use client";
 
-import { Player, type PlayerRef } from "@remotion/player";
 import {
   ArrowUpRight,
   Component,
@@ -10,14 +9,24 @@ import {
   Waves,
 } from "lucide-react";
 import { motion, useInView, useReducedMotion } from "motion/react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { type ComponentType, useRef } from "react";
 import { SPRING_SOFT } from "@/config/site";
 import { cn } from "@/lib/utils";
-import { shaderGrainGradientConfig } from "@/registry/remocn/shader-grain-gradient/config";
 import { FadeUp } from "../fade-up";
 import { SectionHeading } from "../section-heading";
-import { useAutoplay } from "../use-autoplay";
+
+// The shader viz is the only tile that pulls @remotion/player + the shader
+// runtime. Load it client-only so that weight leaves the initial landing
+// bundle; the tile is below the fold and its text/links stay server-rendered.
+const ShadersViz = dynamic(
+  () => import("./shaders-viz").then((m) => ({ default: m.ShadersViz })),
+  {
+    ssr: false,
+    loading: () => <div className="absolute inset-0 bg-muted/20" />,
+  },
+);
 
 const EYEBROW = "What's inside";
 const TITLE = "Five kinds of building blocks";
@@ -130,46 +139,6 @@ function TransitionsViz({ play }: VizProps) {
           02
         </span>
       </motion.div>
-    </div>
-  );
-}
-
-const SHADER_PREVIEW_WIDTH = 480;
-const SHADER_PREVIEW_HEIGHT = 270;
-const SHADER_PREVIEW_FPS = 20;
-
-const loadShaderGrainGradient = () =>
-  import("@/registry/remocn/shader-grain-gradient").then((m) => ({
-    default: m.ShaderGrainGradient,
-  }));
-
-function ShadersViz({ play }: VizProps) {
-  const reduced = useReducedMotion();
-  const playerRef = useRef<PlayerRef>(null);
-  const { containerRef } = useAutoplay(playerRef, play && !reduced);
-
-  const durationInFrames = Math.round(
-    (shaderGrainGradientConfig.durationInFrames * SHADER_PREVIEW_FPS) /
-      shaderGrainGradientConfig.fps,
-  );
-
-  return (
-    <div ref={containerRef} className="absolute inset-0 overflow-hidden">
-      <div className="absolute top-1/2 left-1/2 aspect-video min-h-full min-w-full -translate-x-1/2 -translate-y-1/2 will-change-transform">
-        <Player
-          ref={playerRef}
-          lazyComponent={loadShaderGrainGradient}
-          inputProps={{}}
-          durationInFrames={durationInFrames}
-          fps={SHADER_PREVIEW_FPS}
-          compositionWidth={SHADER_PREVIEW_WIDTH}
-          compositionHeight={SHADER_PREVIEW_HEIGHT}
-          style={{ width: "100%", height: "100%" }}
-          loop
-          initiallyMuted
-          acknowledgeRemotionLicense
-        />
-      </div>
     </div>
   );
 }
