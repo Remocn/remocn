@@ -1,0 +1,115 @@
+---
+title: Making a launch video for Claude Opus 5
+description: One continuous canvas, twelve beats, and a brand mark that eats its own end card — a launch spot built entirely from Claude's own tokens
+date: 2026-07-24
+video: https://cdn.remocn.dev/videos/introducing-opus.mp4
+videoPoster: https://cdn.remocn.dev/posters/introducing-opus.png
+---
+
+Anthropic shipped Claude Opus 5 today. Nobody asked us for a video, so we made one anyway — fifty-five seconds, twelve beats, every claim on screen lifted from the launch post itself. This is the hardest kind of unofficial spot to get away with: the brand is one most people look at daily, so a color that's a shade off or a serif that isn't quite the right serif reads instantly. Nothing here is eyeballed.
+
+### The storyboard
+
+1. **The tradeoff** — "Frontier intelligence" lands alone on warm paper, "Or a price you can run every day" swaps in beneath it, then both dim and lift to make room for the line that names the choice: "Until today, you picked one."
+2. **The name** — black stage, the real Claude spark scaling in off a rotation settle, "Claude Opus 5" landing under it with "Opus 5" one beat behind "Claude". Then the card holds dead still for a second and a half.
+3. **The promise** — the thesis in a single sentence, with "half the price" arriving in clay on its spoken cue, and the availability line ruled off beneath it.
+4. **Frontier-Bench** — two bars grow on an asymmetric plot: Opus 4.8 in muted grey, then Opus 5 in clay past double its height, a count-up landing on the spoken "double" while the cost line falls beside it.
+5. **The board** — four benchmark rows arrive from the right, one per cue, each a name → ratio pair with the ratio following through behind its label. One benchmark becomes a sweep.
+6. **The mechanism** — a dark stage and an agent transcript writing itself: the FreeCAD ask types in, three steps check off in olive, and the receipt lands in serif — "No competing model solved it in five attempts."
+7. **The outside voice** — Framer's line set as a hanging quote under a short clay rule, held near-still.
+8. **The bill** — three efficiency counters on oat, the biggest number last and in clay, attribution ruled off underneath.
+9. **Alignment** — one claim, one number, and a held frame. The breather before the close.
+10. **The price** — $5 and $25 land as a pair, the pair anticipates downward and lifts to make room for "The same price as Opus 4.8", then `claude-opus-5` arrives in clay.
+11. **The end card that eats itself** — the real Claude lockup holds, the spark winds up with a counter-move, then launches right and swallows the wordmark letter by letter on its way off-screen, blurring out into its own speed.
+12. **The sting** — black. Nothing, for a full second past where the film should have ended. Then "Available today." fades up dead-center and never moves.
+
+### Director's notes
+
+**The brand is Claude's own, down to the woff2.** The palette is read off claude.com's live stylesheet — the gray ramp for the stages, `--color-oat`, `--color-olive` for anything verified, and `--color-clay` `#d97757` as the one accent, spent only on the payoff word, the winning bar and the spark. The type is the three faces the site actually serves, vendored and gated behind `delayRender` so a frame never catches the fallback mid-swap, set at the site's own scale. The spark, the wordmark and the "By Anthropic" mark are the shipped SVG paths — and for the outro the wordmark is split at its subpath boundaries into six glyphs that each keep their counter, so C-l-a-u-d-e animate independently while staying Anthropic's own letterforms. Taken apart, never redrawn.
+
+**Transitions are chosen by tone, not by variety.** Three grammars carry the whole film: a lateral slide (the outgoing scene shoved left, the incoming springing in from the right), a vertical rise, and a settle (the outgoing scene shrinking away as one group, one empty gap frame, the incoming items landing from above-1 scale). A slide hands the stage over while the content is still travelling, so the stage color has to crossfade across the slide window — gorgeous between two scenes in the same tonal world, and six frames of flat mid-grey when paper dissolves into near-black. So every big tonal jump takes the settle, whose color change happens inside the empty gap frame and lands instantly; the lateral moves ride the pairs that already share a tone. Twelve scenes, one continuous canvas, no slideshow.
+
+**No scene is allowed to arrive blank.** The flip side of a clean hand-off: a slide gives the incoming scene a bare stage, so a scene whose first reveal starts at local frame 0 rides in as an empty card — the exact slideshow feel the cut exists to avoid. Every sliding scene pre-rolls its own clock by twelve to twenty frames, so its opening element is already on screen and moving as it arrives, while the rest of its reveals still land on their spoken cues.
+
+**Two properties of one element never share a curve.** Opacity rides a short quad ramp; transform rides a long exponential or a damped spring roughly three times its length. Stagger compresses rather than marching — `pow(i, 0.8) × base` with a deterministic one-to-two-frame jitter — and children follow through, a check landing a few frames after its row on a looser damping. It is the difference between a slide that faded in and something that arrived.
+
+**The outro is driven by position, not by frames.** The spark's travel is one unbroken curve: a short counter-move to wind up, an accelerating sweep that eats the line, and a hand-off — with the slope still high — into a continuing acceleration straight off-scene. Each glyph's fate is a function of where the mark *is*, not of what frame it is, so the bite always lands exactly as the spark passes over, whatever the curve does. The spin is one constant rate, held from launch to the last blurred frame; it survives that speed because the mark has no rotational symmetry to alias against.
+
+### The prompt
+
+The brief, as a prompt (validated against a clean project + the [remocn skill](/docs/ai/agent-skill) before publishing):
+
+```text
+I'm making an unofficial launch video for Claude Opus 5
+(anthropic.com/news/claude-opus-5) with remocn (remocn.dev) in a Remotion
+project — install anything you need with `npx shadcn add @remocn/<name>`.
+Every claim on screen must come from that page, verbatim or cut.
+
+Build a ~55-second, 1280×720, 30fps introducing spot in twelve beats:
+
+1.  Tradeoff — "Frontier intelligence" lands alone on warm paper, "Or a
+    price you can run every day" swaps in beneath it, then both dim and
+    lift as "Until today, you picked one" lands below.
+2.  Name — black stage; the real Claude spark scales in on a rotation
+    settle, "Claude Opus 5" lands beneath with "Opus 5" one beat behind
+    "Claude". Then hold — camera only.
+3.  Promise — "It comes close to the frontier intelligence of Claude
+    Fable 5 at half the price", with "half the price" in clay on its cue;
+    the Max/Pro availability line ruled off beneath.
+4.  Frontier-Bench — two bars on an asymmetric plot: Opus 4.8 in muted
+    grey, then Opus 5 in clay past double its height, a count-up landing
+    on "double" and the cost line falling beside it.
+5.  Board — four benchmark rows arriving from the right, one per cue —
+    CursorBench 3.2, ARC-AGI 3, Zapier AutomationBench, OSWorld 2.0 —
+    each a name → ratio pair, the ratio following through behind its
+    label.
+6.  Mechanism — dark stage, an agent transcript writing itself: the
+    FreeCAD ask types in, three steps check off in olive, and the receipt
+    lands in serif: "No competing model solved it in five attempts."
+7.  Outside voice — Framer's quote under a short clay rule, held still,
+    attribution muted beneath.
+8.  The bill — three efficiency counters on oat, the biggest number last
+    and in clay, the Citadel and LexisNexis attributions ruled off under.
+9.  Alignment — one claim, one number, then a held frame.
+10. Price — "$5" and "$25" land as a pair; the pair anticipates downward
+    and lifts to make room for "The same price as Opus 4.8"; then
+    `claude-opus-5` in clay with "on the Claude API" beside it.
+11. End card — the real Claude lockup holds, then the spark winds up with
+    a counter-move, launches right and eats the wordmark letter by
+    letter, flying off-screen and blurring out into its own speed.
+12. Sting — black, empty for a full second past where the film should
+    have ended, then "Available today" fades up dead-center and never
+    moves.
+
+Style: tokens read off claude.com's live stylesheet — #f0eee6 paper,
+#faf9f5 ivory, #e3dacc oat, #141413 / #1f1e1d dark stages, #73726c muted
+ink, with #d97757 clay as the ONE accent (the spark, the payoff word, the
+winning bar) and #788c5d olive reserved for anything verified. Claude's
+own three faces: serif for every spoken headline, sans for body and data
+labels, mono for numbers, model ids and the transcript — at the site's own
+type scale, sentence case, default tracking. Use the real spark and
+wordmark SVG paths; split the wordmark into glyphs for the outro rather
+than redrawing it.
+
+Sequence all twelve scenes on ONE stage so the stage color is continuous
+and scenes never overlap. Three transition grammars, chosen by TONE not
+variety: a lateral slide (A shoved left, B springs in from the right) and
+a vertical rise only between scenes that already share a tone; a settle
+(A shrinks and fades as one group, one empty gap frame, B's items land
+from above-1 scale) for every big tonal jump, so the color change happens
+inside the gap. Pre-roll each sliding scene's internal clock by 12–20
+frames so it never arrives as a blank card. A slow camera scale runs under
+every scene, split across three depths. Two properties of one element
+never share a curve: opacity on a short quad ramp, transform on a long
+exponential or a damped spring ~3× as long; compressing stagger with a
+deterministic jitter; children follow through a few frames behind their
+parent. A vignette and one small clay spark hold above everything from
+beat 3 to beat 10 so the cuts read as camera moves inside one film.
+
+No letter-spacing, no uppercase, no badges, no eyebrows, no pulsing, no
+install pills, no bounce as a default.
+```
+
+### Make one for your product
+
+The generic recipe is [Launch video](/docs/guides/launch-video); the part that makes a spot feel like it came from inside the company — pointing your agent at the site's own tokens — is [Your brand](/docs/guides/your-brand).
