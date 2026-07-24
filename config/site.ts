@@ -9,6 +9,8 @@ export const MINT = "#A1EEBD";
 
 export const GITHUB_URL = "https://github.com/Remocn/remocn";
 
+export const SUPPORT_EMAIL = "kapish@remocn.dev";
+
 /** Canonical example install command shown on the landing page. */
 export const INSTALL_COMMAND = "npx shadcn@latest add remocn/soft-blur-in";
 
@@ -83,4 +85,5 @@ export const FOOTER_NAV: NavLink[] = [
   { href: "/showcases", label: "Showcases" },
   { href: GITHUB_URL, label: "GitHub" },
   { href: "/sponsors", label: "Sponsors" },
+  { href: "/legal", label: "Privacy & Terms" },
 ];

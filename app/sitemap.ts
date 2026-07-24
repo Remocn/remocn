@@ -46,6 +46,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "weekly",
       priority: 0.6,
     },
+    {
+      url: `${SITE_URL}/legal`,
+      lastModified: now,
+      changeFrequency: "yearly",
+      priority: 0.3,
+    },
   ];
 
   const docRoutes: MetadataRoute.Sitemap = source.getPages().map((page) => ({

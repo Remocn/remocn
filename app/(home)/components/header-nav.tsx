@@ -103,7 +103,7 @@ export function NavFooter({
   className?: string;
 }) {
   return (
-    <nav className={cn("flex gap-6", className)}>
+    <nav className={cn("flex flex-wrap gap-x-6 gap-y-2", className)}>
       {links.map((link) => {
         const external = link.href.startsWith("http");
         const linkClassName =
