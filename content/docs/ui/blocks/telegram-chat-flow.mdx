@@ -1,6 +1,17 @@
 ---
 title: Telegram Chat Flow
 description: Telegram-styled conversation with tailed bubbles, delivery checks, typing status, and reaction chips
+component: telegram-chat-flow
+vibe: social
+length: 360
+useWhen:
+  - "The scene must read as Telegram — blue tailed bubbles, in-bubble timestamps, and double-check delivery marks."
+  - "You want the reply beat announced as an italic \"typing…\" status in the header rather than a bubble of dots."
+  - "The demo needs the Telegram composer pill, where the mic button swaps to a paper plane the moment text is typed."
+avoidWhen:
+  - "The scene must read as iMessage — use `imessage-chat-flow` for gray incoming bubbles, the Delivered label, and tapback badges."
+  - "The conversation has to follow your brand tokens — use `chat-flow`; this block's chrome is a fixed light Telegram skin and only `accentColor` is overridable."
+  - "You only need a single bubble or the dots on their own — use `message-bubble` or `typing-indicator`."
 ---
 
 <BlockPreview name="telegram-chat-flow" />

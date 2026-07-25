@@ -1,6 +1,17 @@
 ---
 title: OpenCode
 description: Animated OpenCode TUI welcome screen that types a query into the input
+component: opencode
+vibe: tech
+length: 150
+useWhen:
+  - "Depicting the OpenCode TUI as a recognizable branded surface in a dev-tool demo."
+  - "A coding-agent query should type itself into the authentic welcome screen with model/provider context."
+  - "The scene wants a terminal-UI card rather than a raw shell."
+avoidWhen:
+  - "You're depicting a different product — use the matching card (`claude-code`, `v0`, `chat-gpt`, `claude-chat`)."
+  - "You need a generic, unbranded terminal — use `terminal-simulator`."
+  - "You only need a typed line with a cursor and no app chrome — use `typewriter`."
 ---
 
 <ComponentPreview name="opencode" />

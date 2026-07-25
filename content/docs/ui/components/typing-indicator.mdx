@@ -1,6 +1,17 @@
 ---
 title: Typing Indicator
 description: A motion atom that renders N bouncing dots driven directly by useCurrentFrame
+component: typing-indicator
+vibe: clean
+length: 90
+useWhen:
+  - "Signalling that a reply or an answer is being composed — drop it inside a `message-bubble` or any container."
+  - "You need a small continuous \"working on it\" motion that never resolves, tinted through `color`."
+  - "You are timing the typing beat yourself in a `<Sequence>` instead of letting a flow block schedule it."
+avoidWhen:
+  - "The wait is an async operation rather than a conversation — use `spinner`, or `skeleton` when the placeholder resolves to content."
+  - "The dots should appear and disappear on a scripted conversation timeline — `chat-flow` and `imessage-chat-flow` already sequence them."
+  - "You want a caret blinking at the end of typed text in a composer — use `caret`."
 ---
 
 <UiComponentPreview name="typing-indicator" />

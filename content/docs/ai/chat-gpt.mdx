@@ -1,6 +1,17 @@
 ---
 title: ChatGPT
 description: Animated ChatGPT composer that types a prompt and morphs the voice button into a send button
+component: chat-gpt
+vibe: tech
+length: 150
+useWhen:
+  - "Announcing a ChatGPT integration or GPT-powered feature where the OpenAI brand must be recognizable."
+  - "Showing a prompt-to-result workflow where the ChatGPT interface is the entry point."
+  - "A comparison video contrasts multiple AI products — use this for the ChatGPT card, `claude-chat` for Claude."
+avoidWhen:
+  - "The product being demoed is Claude — use `claude-chat` instead to match Anthropic's UI and warm color palette."
+  - "The product is Vercel's v0 — use `v0` instead, which replicates the v0 dark textarea and mic-to-send morph."
+  - "The product is a CLI/terminal AI agent — use `claude-code` or `opencode` instead."
 ---
 
 <ComponentPreview name="chat-gpt" />

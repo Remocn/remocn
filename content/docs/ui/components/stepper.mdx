@@ -1,6 +1,17 @@
 ---
 title: Stepper
 description: A multi-step progress indicator that advances along a scripted numeric position timeline
+component: stepper
+vibe: clean
+length: 120
+useWhen:
+  - "Showing a multi-step onboarding, checkout, or wizard flow advancing through numbered steps."
+  - "Demonstrating step completion with animated check marks, circle fills, and connector fills."
+  - "Visualizing a user's progress through a sequential workflow with discrete labeled stages."
+avoidWhen:
+  - "Steps have no sequential order — use `tabs` instead (tab switching without numbered connectors)."
+  - "You need a continuous fill bar without numbered steps — use `progress` instead."
+  - "You need a compact segmented control that switches view modes — use `toggle-group` instead."
 ---
 
 <UiComponentPreview name="stepper" />

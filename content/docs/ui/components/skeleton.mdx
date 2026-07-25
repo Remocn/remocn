@@ -1,6 +1,17 @@
 ---
 title: Skeleton
 description: A shimmer placeholder that crossfades to real content when loaded
+component: skeleton
+vibe: clean
+length: 120
+useWhen:
+  - "Showing a loading state resolving to real content — the skeleton fades out as real UI fades in."
+  - "Demonstrating content that \"loads in\" as a crossfade moment in a product walkthrough."
+  - "You need a full skeleton layout (lines or card) wrapping real children, not just a single shimmer block."
+avoidWhen:
+  - "You only need a single shimmer rectangle — use `skeleton-block` directly (no state API, no crossfade overhead)."
+  - "Content has no loading state — render children directly without a wrapper."
+  - "You need a spinner-style loading indicator — use `spinner` instead (arc, no placeholder layout)."
 ---
 
 <UiComponentPreview name="skeleton" />

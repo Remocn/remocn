@@ -1,6 +1,17 @@
 ---
 title: God Rays
 description: Volumetric light rays radiating from an off-screen source
+component: shader-god-rays
+vibe: premium
+length: 150
+useWhen:
+  - "A hero or reveal scene wants cinematic volumetric light rays from a corner source."
+  - "You want atmosphere and depth behind a title without geometric structure."
+  - "The palette is dark and you want soft neutral rays (override `colors` to brand-tint)."
+avoidWhen:
+  - "The brief bans decorative glow — this is a genuine volumetric shader, but keep `bloom`/`intensity` restrained so it does not read as an AI-slop glow."
+  - "You want structured or cellular motion — use `shader-dot-orbit` or `shader-voronoi`."
+  - "Bright rays would wash out foreground text — lower `intensity`/`bloom`."
 ---
 
 <ComponentPreview name="shader-god-rays" />

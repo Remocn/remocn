@@ -1,6 +1,17 @@
 ---
 title: Marker Highlight
 description: A colored marker block draws behind a phrase while the text color shifts
+component: marker-highlight
+vibe: playful
+length: 90
+useWhen:
+  - "A key phrase inside a sentence needs a physical, hand-drawn-feeling highlight that visually underscores the word."
+  - "A playful or educational tone is appropriate and the visible paint stroke adds expressive energy."
+  - "The brand color should appear as a background fill rather than a text color shift."
+avoidWhen:
+  - "You want a subtle color-only emphasis with no visible background — use `inline-highlight` for a clean color-shift with no marker block."
+  - "The entire sentence is new text that needs to enter the scene — both highlight components are emphasis tools, not entrances; use `mask-reveal-up` or `per-word-crossfade` for full reveals."
+  - "The scene tone is minimal or premium and a bold painted marker would clash — use `inline-highlight` for a quieter callout."
 ---
 
 <ComponentPreview name="marker-highlight" />

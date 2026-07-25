@@ -1,6 +1,17 @@
 ---
 title: X Follow Card
 description: Animated X profile follow card with spring bounce-in, staggered blur-in, and cursor-driven Follow transition
+component: x-follow-card
+vibe: social
+length: 165
+useWhen:
+  - "Showcasing a single X profile with the recognizable click-to-Follow payoff as the action beat."
+  - "A social-proof or creator-intro scene needs one branded profile card with the cursor interaction."
+  - "You want an offline-safe card (gradient avatar fallback) without wiring real image URLs."
+avoidWhen:
+  - "You're aggregating follower growth or notifications rather than one profile — use `x-followers-overview`."
+  - "The brand is GitHub, not X — use `github-stars`."
+  - "You need a generic testimonial/quote card, not an X profile — compose a plain card."
 ---
 
 <ComponentPreview name="x-follow-card" />

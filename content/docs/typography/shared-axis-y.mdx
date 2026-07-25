@@ -1,6 +1,17 @@
 ---
 title: Shared Axis Y
 description: Per-word hard-cut staircase transition for sharp editorial phrase swaps
+component: shared-axis-y
+vibe: clean
+length: 90
+useWhen:
+  - "Swapping two text values in a slide-deck style transition (A → B → C chained in `<Sequence>`)."
+  - "You want a crisp, editorial replacement without blur or scale — vertical word-by-word staircase reads as confident."
+  - "The outgoing and incoming phrases are thematically related (before/after, old/new, step N / step N+1)."
+avoidWhen:
+  - "You only need to bring text in for the first time with no outgoing content — use `short-slide-down` or `staggered-fade-up` for a clean entrance instead."
+  - "You want a depth or focus-shift feel between two contexts — use `shared-axis-z` which scales rather than slides for that spatial metaphor."
+  - "The transition should feel playful or bouncy — the hard-cut staircase is intentionally sharp; use `spring-scale-in` for a springy swap."
 ---
 
 <ComponentPreview name="shared-axis-y" />

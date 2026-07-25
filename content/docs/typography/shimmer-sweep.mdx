@@ -1,6 +1,17 @@
 ---
 title: Shimmer Sweep
 description: A bright shine travels across muted text to draw attention
+component: shimmer-sweep
+vibe: premium
+length: 120
+useWhen:
+  - "Highlighting a product name or pricing tier with a refined, metallic gleam — luxury SaaS, pricing slides."
+  - "The text is already visible and you want a continuous or looped attention effect rather than an entrance."
+  - "The design calls for a dark background where a light sweep across dark text creates contrast without a harsh cut."
+avoidWhen:
+  - "You need the text to enter the scene — shimmer-sweep does not animate the text in; use `tracking-in` or `soft-blur-in` for the entrance, then layer a shimmer if needed."
+  - "The brand aesthetic is casual or energetic — the metallic sweep reads as premium/luxury; use `spring-scale-in` or `staggered-fade-up` for a lighter feel."
+  - "You want per-character color or gradient control — `shimmer-sweep` sweeps a single shine beam; use `rgb-glitch-text` for character-level color splitting."
 ---
 
 <ComponentPreview name="shimmer-sweep" />

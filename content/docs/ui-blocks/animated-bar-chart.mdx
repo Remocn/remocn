@@ -1,6 +1,17 @@
 ---
 title: Animated Bar Chart
 description: Bars spring up from the baseline with a staggered cascade
+component: animated-bar-chart
+vibe: data
+length: 90
+useWhen:
+  - "Showing comparative categorical metrics in a product demo — feature usage, plan distribution, benchmark scores."
+  - "A business KPI or results slide needs a \"data revealed\" moment rather than a static screenshot."
+  - "The dataset has a clear winner bar to build to (stagger naturally draws attention to the tallest last)."
+avoidWhen:
+  - "The data represents change over time — continuous trends belong in `animated-line-chart`, not bars."
+  - "You want to visualize a sequential workflow or pipeline stages — use `progress-steps` instead."
+  - "You have a single data point; one bar springing up looks degenerate — embed a number counter or use a text animation."
 ---
 
 <ComponentPreview name="animated-bar-chart" />

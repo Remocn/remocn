@@ -1,6 +1,17 @@
 ---
 title: Input
 description: An input field whose visual state is a pure function of the timeline
+component: input
+vibe: clean
+length: 120
+useWhen:
+  - "Showing a text field being focused, typed into, or validated at a specific frame."
+  - "Composing inside `field` for a labeled email/name/card input in a form scene."
+  - "Demonstrating the invalid state (red border, shake) to highlight an error condition."
+avoidWhen:
+  - "The trigger needs to open a searchable list — use `combobox` instead (which wraps input internally)."
+  - "You only need a blinking cursor with no field chrome — use `caret` instead."
+  - "The control is a button-style CTA, not a text entry — use `button` instead."
 ---
 
 <UiComponentPreview name="input" />

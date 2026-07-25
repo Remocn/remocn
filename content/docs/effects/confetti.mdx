@@ -1,6 +1,17 @@
 ---
 title: Confetti
 description: Deterministic confetti burst for Remotion — seeded particles with gravity, spin, and flutter
+component: confetti
+vibe: playful
+length: 90
+useWhen:
+  - "A milestone moment needs a celebratory payoff — product launch, plan completion, success screen."
+  - "You want a deterministic particle burst that renders identically on every export pass (seed-controlled)."
+  - "The effect should fire mid-composition at a specific frame via `startFrame`."
+avoidWhen:
+  - "The video has a clean, minimal, or corporate tone — confetti reads as celebration-specific and breaks professional pacing; use a subtle shader backdrop like `shader-grain-gradient` instead."
+  - "You need a looping ambient particle background — confetti is a one-shot burst with gravity falloff, not a loop; use `shader-dot-orbit` for sustained motion."
+  - "The burst should originate from a specific UI element offscreen — `originX`/`originY` are normalized 0–1 to the frame, not element-relative; compose with `AbsoluteFill` positioning instead."
 ---
 
 <ComponentPreview name="confetti" />

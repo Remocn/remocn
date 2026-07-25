@@ -1,6 +1,17 @@
 ---
 title: Dialog
 description: A modal dialog whose opened/closed state is a pure function of the timeline
+component: dialog
+vibe: clean
+length: 120
+useWhen:
+  - "Showing a non-destructive modal (edit form, settings, profile update) opening and closing on the timeline."
+  - "A centered overlay needs a title, description, and primary/cancel actions."
+  - "Composing a trigger-to-modal sequence: `button` state=\"press\" → `dialog` state=\"open\"."
+avoidWhen:
+  - "The action is irreversible or destructive — use `alert-dialog` instead."
+  - "The panel should slide from the bottom edge — use `drawer` instead."
+  - "The overlay is non-modal and contextual — use `dropdown-menu` or `context-menu` instead."
 ---
 
 <UiComponentPreview name="dialog" />

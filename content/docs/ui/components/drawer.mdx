@@ -1,6 +1,17 @@
 ---
 title: Drawer
 description: A bottom panel whose opened/closed state is a pure function of the timeline
+component: drawer
+vibe: clean
+length: 120
+useWhen:
+  - "Showing a mobile-style bottom sheet sliding up from the edge of the frame."
+  - "Demonstrating a sheet/tray pattern typical of mobile or bottom-anchored desktop UX."
+  - "Composing a trigger-to-sheet sequence: `button` state=\"press\" → `drawer` state=\"open\"."
+avoidWhen:
+  - "The overlay should be a centered modal — use `dialog` instead."
+  - "The action is destructive and needs an explicit confirmation — use `alert-dialog` instead."
+  - "The overlay is non-modal and contextual — use `dropdown-menu` or `context-menu` instead."
 ---
 
 <UiComponentPreview name="drawer" />

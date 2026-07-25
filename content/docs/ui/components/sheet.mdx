@@ -1,6 +1,18 @@
 ---
 title: Sheet
 description: A side panel whose opened/closed state is a pure function of the timeline
+component: sheet
+vibe: clean
+length: 120
+useWhen:
+  - "Showing a slide-in edit panel or settings drawer with backdrop dim in a product demo."
+  - "Demonstrating an offcanvas overlay opening from the right edge of the frame."
+  - "Pairing with a `button` trigger to animate open → interact → close across the timeline."
+avoidWhen:
+  - "You need a full blocking modal with centered placement — use `alert-dialog` instead."
+  - "The overlay is a floating contextual card near a target element — use `popover` instead."
+  - "You only need a brief notification — use `toast` instead (no backdrop, no action panel)."
+  - "The panel should slide up from the bottom edge — use `drawer` instead; `sheet` enters from a side edge."
 ---
 
 <UiComponentPreview name="sheet" />

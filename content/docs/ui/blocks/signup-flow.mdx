@@ -1,6 +1,17 @@
 ---
 title: SignupFlow
 description: A cursor-driven signup card — labeled fields fill top-to-bottom, then submit with success feedback
+component: signup-flow
+vibe: clean
+length: "state-driven"
+useWhen:
+  - "Showing a full onboarding or signup flow in a product launch or demo video."
+  - "Demonstrating a realistic form-fill interaction with animated cursor and field progression."
+  - "You need a production-ready auth scene with zero assembly and the default field layout fits."
+avoidWhen:
+  - "You need a generic form with custom fields — compose `input` + `button` + `cursor` manually instead."
+  - "You only need the success notification — use `toast` directly."
+  - "You need a settings interaction walkthrough — use `settings-toggle-flow` instead."
 ---
 
 <BlockPreview name="signup-flow" />

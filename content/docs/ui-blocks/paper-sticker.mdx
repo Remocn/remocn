@@ -1,6 +1,16 @@
 ---
 title: Paper Sticker
 description: A taped paper chip that slaps onto the scene over two stop-motion poses
+component: paper-sticker
+vibe: paper
+length: 120
+useWhen:
+  - "Short labels, chips, or callout notes should exist as physical taped paper on a stop-motion scene."
+  - "A group of tags should land one after another — stagger `at` by the index, give each its own `seed`."
+avoidWhen:
+  - "The content is long text or looks like interactive UI — this is a paper prop, not a component sim."
+  - "You need a media frame with a caption underneath — use `polaroid`."
+  - "You were going to add `paper-wobble` on top: the wobble is already here."
 ---
 
 <ComponentPreview name="paper-sticker" />

@@ -1,6 +1,17 @@
 ---
 title: Handwrite
 description: Handwritten text laid down letter by letter on a quantized stop-motion clock
+component: handwrite
+vibe: paper
+length: 120
+useWhen:
+  - "Captions, labels, and headlines should read as pen-written on paper — the core text voice of stop-motion scrapbook scenes."
+  - "The scene already ticks on the stop-motion clock and the text must share its tempo rather than glide against it."
+  - "You need the writing time up front: `handwriteDuration` sizes the `<Sequence>` exactly."
+avoidWhen:
+  - "You are simulating a terminal or an input being typed into — use `typewriter`."
+  - "The reveal should be smooth on the real 30fps clock — use `soft-blur-in` or `per-character-rise`."
+  - "The whole sheet should wobble too: that is `paper-wobble` wrapped around this, not a prop here."
 ---
 
 <ComponentPreview name="handwrite" />

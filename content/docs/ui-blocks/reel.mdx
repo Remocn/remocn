@@ -1,6 +1,16 @@
 ---
 title: Reel
 description: A fixed centered card where images stack on the z-axis and each blooms open over the last
+component: reel
+vibe: clean
+length: 160
+useWhen:
+  - "Showing a sequence of screenshots or product shots that should bloom open one over the last in a fixed frame."
+  - "The story is \"here's what the product looks like\" across several views without a camera move."
+  - "You want the reveal itself (the centre-out mask) to be the only motion in the scene."
+avoidWhen:
+  - "You need a single framed photo rather than a sequence — use `polaroid` instead."
+  - "You want a scrolling wall of items rather than a stacked reveal — use `infinite-marquee` or `perspective-marquee` instead."
 ---
 
 <ComponentPreview name="reel" />

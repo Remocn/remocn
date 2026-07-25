@@ -1,6 +1,17 @@
 ---
 title: Cursor
 description: An animated cursor that follows a scripted path with click ripple and press effects
+component: cursor
+vibe: clean
+length: 120
+useWhen:
+  - "Guiding the viewer's attention through a UI by animating a pointer between elements."
+  - "Showing click, hover, and drag interactions in a product demo without real interactivity."
+  - "Composing inside `checkout-flow` or a custom orchestrator where the cursor drives the narrative."
+avoidWhen:
+  - "You need a blinking text insertion cursor — use `caret` instead."
+  - "There is no interaction to demonstrate and the cursor would be visual noise."
+  - "You need a crosshair or custom SVG cursor — the variant set is `arrow` / `pointer`; extend or render custom SVG directly."
 ---
 
 <UiComponentPreview name="cursor" />

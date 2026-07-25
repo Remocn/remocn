@@ -1,6 +1,17 @@
 ---
 title: Neuro Noise
 description: Organic neural-web noise field that slowly morphs
+component: shader-neuro-noise
+vibe: tech
+length: 150
+useWhen:
+  - "An AI / ML / tech scene wants an organic neural-web texture that reads as \"intelligence\"."
+  - "You want slow morphing structure behind text without hard geometry."
+  - "The palette is dark and you want a filamentary web to sit low-contrast in the back."
+avoidWhen:
+  - "You want smooth cloud noise instead of web filaments — use `shader-perlin-noise` or `shader-simplex-noise`."
+  - "The brief is playful or warm — neuro-noise reads technical."
+  - "Bright filaments would fight small text — lower `brightness`/`contrast`."
 ---
 
 <ComponentPreview name="shader-neuro-noise" />

@@ -1,6 +1,17 @@
 ---
 title: Live Code Compilation
 description: A split-screen where code is typed on the left and the right-side UI snaps to match in a single frame
+component: live-code-compilation
+vibe: tech
+length: 260
+useWhen:
+  - "You want to show cause and effect for a developer audience: a style prop finishes typing on the left and the button on the right changes on that exact frame."
+  - "The pitch needs an HMR moment — the preview button carries `transition: none`, so every property lands as a hard snap rather than an ease."
+  - "You need a self-contained developer-tooling beat that takes no props beyond an accent colour and runs its own typing schedule to completion."
+avoidWhen:
+  - "The code on screen has to be yours — the eight typed fragments and the resulting button are hardcoded, while `glass-code-block` and `glass-code-walk` take arbitrary code as a `code` prop."
+  - "The shot is about commands and their output rather than an editor next to a preview; `terminal-simulator` types commands and rolls older lines off the top."
+  - "The split should read as a conversation driving the result; `chat-to-preview-layout` shrinks a chat column while the preview column expands."
 ---
 
 <ComponentPreview name="live-code-compilation" />

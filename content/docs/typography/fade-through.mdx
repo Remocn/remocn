@@ -1,6 +1,17 @@
 ---
 title: Fade Through
 description: Old text fades out as new fades in with a soft delay, Material-style
+component: fade-through
+vibe: clean
+length: 90
+useWhen:
+  - "One label, stat, or short phrase needs to swap cleanly into another in the same slot."
+  - "The transition should be neutral and unobtrusive — content changes, nothing moves."
+  - "You're following Material motion guidelines where the gap between out and in reinforces the content change."
+avoidWhen:
+  - "You want the incoming words to arrive one by one — use `per-word-crossfade` for a sequential word-level fade instead."
+  - "The A→B swap should carry kinetic weight or directional momentum — use `line-by-line-slide` (slide direction) or `blur-out-up` (upward drift)."
+  - "There is no outgoing text (first entrance only) — skip the \"from\" slot and use `micro-scale-fade` or `mask-reveal-up` for a single entrance."
 ---
 
 <ComponentPreview name="fade-through" />

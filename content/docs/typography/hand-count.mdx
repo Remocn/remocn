@@ -1,6 +1,17 @@
 ---
 title: Hand Count
 description: A number that counts up in stop-motion poses, rewritten by hand at every pose
+component: hand-count
+vibe: paper
+length: 54
+useWhen:
+  - "A stat, price, or count belongs in a hand-made scene — the number should arrive by being written, not by rolling."
+  - "A paper pricing reveal or year-in-review needs its figure in the same voice as the rest of the shot."
+  - "You want a unit or currency written in the same hand as the digits — `prefix` and `suffix` jitter along with them."
+avoidWhen:
+  - "The scene is a slick product UI or a dashboard metric — use `rolling-number` or `number-wheel`, which glide a mechanical typeface."
+  - "You need per-digit odometer choreography — that is `number-wheel`'s job."
+  - "You need locale grouping separators (`1,000`) or full currency formatting; `prefix` and `decimals` are the whole surface here."
 ---
 
 <ComponentPreview name="hand-count" />

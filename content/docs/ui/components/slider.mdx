@@ -1,6 +1,17 @@
 ---
 title: Slider
 description: A range slider with a draggable thumb driven by a scripted value and thumb-state timeline
+component: slider
+vibe: clean
+length: 120
+useWhen:
+  - "Demonstrating a range control being dragged to a target value with hover/press thumb states."
+  - "Showing an audio, video, or settings slider animating in a product walkthrough."
+  - "Composing a settings scene alongside `switch` and `select` (used in `settings-toggle-flow`)."
+avoidWhen:
+  - "You need to show completion percentage with no thumb — use `progress` instead (fill-only, no interaction states)."
+  - "The value is binary — use `switch` instead."
+  - "You need step-by-step progress with connectors and check marks — use `stepper` instead."
 ---
 
 <UiComponentPreview name="slider" />

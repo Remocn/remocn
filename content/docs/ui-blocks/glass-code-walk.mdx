@@ -1,6 +1,17 @@
 ---
 title: Glass Code Walk
 description: A camera that scans a glass code block top to bottom as it types, then pulls back to a centered hold
+component: glass-code-walk
+vibe: tech
+length: 150
+useWhen:
+  - "A code reveal needs camera motion — the frame stays pinned to the line currently typing, then pulls back so the whole file lands as the payoff."
+  - "The snippet is too small to read at full frame and you want it magnified (2.6× by default) while it types."
+  - "The scene already has a background image or shader and the glass panel should refract it while the camera moves over it."
+avoidWhen:
+  - "The code panel should sit still in frame with no camera move — use `glass-code-block`, which this component wraps and animates."
+  - "The point is code producing live UI side by side — use `live-code-compilation`, which types styles and applies them to a rendered button."
+  - "The content is shell commands and output rather than a source file — use `terminal-simulator`, or `terminal-cursor-zoom` for the same camera treatment on a single command."
 ---
 
 <ComponentPreview name="glass-code-walk" />

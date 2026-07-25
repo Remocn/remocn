@@ -1,6 +1,17 @@
 ---
 title: Ecosystem Constellation
 description: A central product logo orbited by integration satellites with pulsing data lines
+component: ecosystem-constellation
+vibe: tech
+length: 240
+useWhen:
+  - "The story is \"we plug into everything\" — one hub product ringed by the tools it connects to."
+  - "You want recognizable integration marks on screen without shipping any logo assets: GitHub, Vercel, Stripe, Slack, Linear, Figma, Notion and Discord are inline SVGs in the component."
+  - "The shot has to hold for a while — satellites assemble once on a staggered spring, then orbit and fire their connection lines one at a time indefinitely."
+avoidWhen:
+  - "You need your own integration logos; the eight marks are hardcoded in the file, so swapping them means editing the copied component."
+  - "The point is data moving from one named system to another rather than radiating from a centre — `data-flow-pipes` sends packets along pipes between nodes."
+  - "You just want a set of brand chips to arrive and hold with no orbit; `logo-enter` springs a stacked group in one-by-one."
 ---
 
 <ComponentPreview name="ecosystem-constellation" />

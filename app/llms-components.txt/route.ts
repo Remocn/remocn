@@ -54,7 +54,11 @@ export function GET() {
     "Install any entry: `npx shadcn@latest add @remocn/<name>` (lands in `components/remocn/`;",
     "`registryDependencies` install transitively).",
     "",
-    "`Length` is the component's natural duration at 30fps — budget its `Sequence` accordingly.",
+    "`Length` is how many frames of motion the component itself runs at 30fps — for a transition it",
+    "is the value to pass to `linearTiming` / `springTiming`, for everything else it is the point at",
+    "which the animation has finished. It is a floor for the `Sequence`, not the whole beat: add hold",
+    "time on top when the element should stay on screen after it settles. `state-driven` means the",
+    "component renders purely from its `state` prop and has no duration of its own.",
     "`Vibe` is the tonal tag; match it to the brand rather than mixing freely.",
   ];
 

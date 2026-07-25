@@ -1,6 +1,17 @@
 ---
 title: Mesh Gradient
 description: WebGL mesh gradient backdrop driven per-frame for deterministic Remotion renders
+component: shader-mesh-gradient
+vibe: premium
+length: 150
+useWhen:
+  - "You need a quality, production-grade gradient backdrop."
+  - "A hero or title scene wants slow, living color motion behind foreground text without competing for attention."
+  - "The brand palette is soft/dark and you want the gradient to lead only when you override `colors`."
+avoidWhen:
+  - "You want a structured, geometric background — use `shader-dot-orbit` or `shader-voronoi`."
+  - "The shader must animate on a wall clock rather than the timeline — these wrappers are frame-driven by design; that is what keeps renders deterministic."
+  - "You need a static, single-frame image — a solid `backdrop` fill is lighter."
 ---
 
 <ComponentPreview name="shader-mesh-gradient" />

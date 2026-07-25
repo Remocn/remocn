@@ -1,6 +1,17 @@
 ---
 title: iMessage Chat Flow
 description: iMessage-styled conversation with gray incoming and blue outgoing bubbles, typing indicator, Delivered label, and tapback reactions
+component: imessage-chat-flow
+vibe: social
+length: 360
+useWhen:
+  - "The scene must read as iMessage — gray incoming and blue outgoing tailed bubbles with tapback badges at the outer top corner."
+  - "You want the reply preceded by a gray bubble of bouncing dots rather than a status line in the header."
+  - "An Apple-audience demo needs the native composer bar and a \"Delivered\" label under the closing outgoing message."
+avoidWhen:
+  - "The scene must read as Telegram — use `telegram-chat-flow` for in-bubble timestamps, double-check marks, and reaction chips."
+  - "The thread has to follow your brand tokens — use `chat-flow`; this block's palette is a fixed iMessage skin apart from `accentColor`."
+  - "You only need the bouncing dots on their own — use `typing-indicator`, which this block composes."
 ---
 
 <BlockPreview name="imessage-chat-flow" />

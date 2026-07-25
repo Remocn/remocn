@@ -1,6 +1,17 @@
 ---
 title: Progress Steps
 description: Multi-step pipeline with nodes lighting up sequentially
+component: progress-steps
+vibe: data
+length: 150
+useWhen:
+  - "Showing a CI/CD pipeline, onboarding checklist, or multi-phase workflow completing step by step."
+  - "A SaaS demo needs to convey \"how it works in 3 steps\" with a visual progress metaphor."
+  - "Vertical orientation fits a feature list reveal; horizontal fits a timeline or funnel."
+avoidWhen:
+  - "The data is quantitative and you need to show magnitudes — use `animated-bar-chart` or `animated-line-chart` instead."
+  - "The relationship between nodes is a graph/mesh rather than a linear chain — use `data-flow-pipes` instead."
+  - "You have only one step; a single activated node conveys nothing; use a text animation or icon pop-in instead."
 ---
 
 <ComponentPreview name="progress-steps" />

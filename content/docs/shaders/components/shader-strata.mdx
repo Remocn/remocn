@@ -1,6 +1,16 @@
 ---
 title: Strata
 description: Fine horizontal sediment layers displaced by fbm noise, each drifting at its own depth
+component: shader-strata
+vibe: clean
+length: 150
+useWhen:
+  - "Calm, grounded, geological ambient backdrops — foundations, stability, \"built on\" narratives."
+  - "A scene wants texture and depth without directional motion."
+  - "You want each layer moving at its own depth speed rather than a single flat gradient."
+avoidWhen:
+  - "You want motion with a clear direction or flow — use `shader-warp`."
+  - "You want cellular texture instead of layered sediment — use `shader-voronoi`."
 ---
 
 <ComponentPreview name="shader-strata" />

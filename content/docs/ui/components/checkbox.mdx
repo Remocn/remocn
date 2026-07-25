@@ -1,6 +1,17 @@
 ---
 title: Checkbox
 description: A checkbox whose checked/unchecked state is a pure function of the timeline
+component: checkbox
+vibe: clean
+length: 120
+useWhen:
+  - "Showing a task being checked off in a to-do or onboarding list."
+  - "Demonstrating a boolean form option toggling on (or off) at a timeline-driven moment."
+  - "Composing inside `checkout-flow` or `onboarding-stepper-flow` for a terms-acceptance step."
+avoidWhen:
+  - "The choice is mutually exclusive within a group — use `radio` instead."
+  - "You need a toggle switch metaphor — use `switch` instead."
+  - "The user picks one option from a long or searchable list — use `combobox` instead (a checkbox group already is the multi-select metaphor)."
 ---
 
 <UiComponentPreview name="checkbox" />

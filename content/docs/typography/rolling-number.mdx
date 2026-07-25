@@ -1,6 +1,18 @@
 ---
 title: Rolling Number
 description: Odometer where every place rolls at its own speed, new places rising into view, settling exactly on the target value
+component: rolling-number
+vibe: data
+length: 150
+useWhen:
+  - "Animating a large integer metric on a stats or milestone slide (revenue, signups, impressions)."
+  - "You need each digit place to animate independently so the viewer can read the number building up."
+  - "The `from`/`to` values are pure numbers with no currency symbol or unit mixed into the string."
+avoidWhen:
+  - "The value includes a prefix or suffix like `$99` or `1.2M` — use `slot-machine-roll` which accepts arbitrary strings instead."
+  - "The number change is small or decorative and you want a playful reel feel rather than a data-serious odometer; `slot-machine-roll` reads friendlier."
+  - "The counter is a secondary UI element that should feel lightweight — 150f is a long animation; shorten with `speed` or pick a simpler fade."
+  - "The value is a small integer or needs to count DOWN — use `number-wheel` (direction inferred from `from`/`to`, lighter 112f); `rolling-number` is tuned for large multi-digit metrics counting up."
 ---
 
 <ComponentPreview name="rolling-number" />

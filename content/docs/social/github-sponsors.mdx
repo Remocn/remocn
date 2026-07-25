@@ -1,6 +1,17 @@
 ---
 title: GitHub Sponsors
 description: Animated GitHub Sponsors lockup — a self-drawing heart that docks to a header, every sponsor avatar blur-staggering into a grid, then a thank-you headline and a CTA
+component: github-sponsors
+vibe: social
+length: 270
+useWhen:
+  - "A thank-you beat for funders — the heart draws itself, docks upward, and every sponsor avatar blur-staggers into a grid beneath it."
+  - "An OSS funding ask needs to end on the \"Become a sponsor\" pill and the github.com/sponsors/<account> line."
+  - "You want the card to size itself to a live sponsor list, since the grid columns and the \"Powered by N sponsors\" line both derive from the array length."
+avoidWhen:
+  - "The milestone is a star count rather than funding — use `github-stars`, whose odometer counts up to a total."
+  - "The subject is one person's profile instead of a group of supporters — use `x-follow-card`."
+  - "You need a neutral partner or integration lineup without the Sponsors heart and pink CTA — use `logo-enter`."
 ---
 
 <ComponentPreview name="github-sponsors" />

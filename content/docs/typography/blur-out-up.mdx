@@ -1,6 +1,17 @@
 ---
 title: Blur Out Up
 description: Words arrive clean and depart upward with increasing blur for airy exits
+component: blur-out-up
+vibe: premium
+length: 90
+useWhen:
+  - "A title or tagline needs a graceful upward exit before the next scene cuts in."
+  - "The scene calls for an airy, editorial tone — text that drifts rather than snaps away."
+  - "You need a per-word stagger on exit without any blur-in entrance (the arrival is clean)."
+avoidWhen:
+  - "You want a blurred entrance that resolves to crisp — that is `focus-blur-resolve`, which opens blurry and sharpens in."
+  - "The text is a paragraph or multi-line block where per-word stagger would drag too long; use `line-by-line-slide` for multi-line exits instead."
+  - "The scene needs a hard cut or a simple opacity fade, not an upward drift — use `fade-through` for a clean A→B replacement."
 ---
 
 <ComponentPreview name="blur-out-up" />

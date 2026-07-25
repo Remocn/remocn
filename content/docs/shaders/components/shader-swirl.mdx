@@ -1,6 +1,17 @@
 ---
 title: Swirl
 description: Concentric bands swirling around a center point
+component: shader-swirl
+vibe: premium
+length: 150
+useWhen:
+  - "You want a hypnotic, radial background with clear banded structure around a center."
+  - "A scene benefits from rotational motion that reads as \"spinning up\" or focus."
+  - "You want the band count tunable — raise `bandCount` for tighter rings."
+avoidWhen:
+  - "You want free-flowing liquid folds rather than concentric bands — use `shader-warp`."
+  - "The center would sit behind critical text — the convergence point draws the eye."
+  - "You want spiral arms instead of closed rings — use `shader-spiral`."
 ---
 
 <ComponentPreview name="shader-swirl" />

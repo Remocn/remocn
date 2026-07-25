@@ -1,6 +1,17 @@
 ---
 title: DropdownMenu
 description: A dropdown menu container with opened/closed states and action rows
+component: dropdown-menu
+vibe: clean
+length: 120
+useWhen:
+  - "Showing a button that opens an action list — the classic \"Options\" or account menu pattern."
+  - "Demonstrating hover/press states on individual menu items after the panel opens."
+  - "Composing inside a nav bar or toolbar where a trigger button owns a small action list."
+avoidWhen:
+  - "The menu is invoked by right-click at a cursor position — use `context-menu` instead."
+  - "The list is searchable or filterable — use `combobox` instead."
+  - "The overlay is a modal that blocks the scene — use `dialog` or `alert-dialog` instead."
 ---
 
 <UiComponentPreview name="dropdown-menu" />

@@ -1,6 +1,15 @@
 ---
 title: Ink Arrow
 description: A hand-drawn arrow that draws itself from one point to another in stop-motion poses
+component: ink-arrow
+vibe: paper
+length: 150
+useWhen:
+  - "A hand-drawn annotation should point from one thing to another — callouts over paper or scrapbook scenes."
+  - "The pointing itself is part of the story and should be seen being drawn, pose by pose."
+avoidWhen:
+  - "You need a straight technical connector or a diagram edge — this is a wobbly pen line with a personality, not a flowchart arrow."
+  - "The arrow must anchor itself to another component's live position: `from`/`to` are fixed coordinates you supply."
 ---
 
 <ComponentPreview name="ink-arrow" />

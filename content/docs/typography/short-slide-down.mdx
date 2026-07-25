@@ -1,6 +1,17 @@
 ---
 title: Short Slide Down
 description: Words drop in from above and stack into a centered multi-line composition
+component: short-slide-down
+vibe: clean
+length: 60
+useWhen:
+  - "A multi-word headline should build its layout visibly — each word stacking to create a composed block."
+  - "The scene is short and you need a fast (60f) entrance that still feels structured."
+  - "You want vertical motion on entrance without a transition between two different texts."
+avoidWhen:
+  - "You are swapping between two text values — use `shared-axis-y` which handles the outgoing text exit properly."
+  - "The text is a single word or short phrase that doesn't benefit from a stacking effect — use `scale-down-fade` or `soft-blur-in` for a cleaner single-unit entrance."
+  - "You want horizontal entry motion — use `short-slide-right` for a left-to-right glide instead."
 ---
 
 <ComponentPreview name="short-slide-down" />

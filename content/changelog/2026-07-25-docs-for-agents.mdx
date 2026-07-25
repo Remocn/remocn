@@ -22,6 +22,8 @@ Six components were installable from the registry but had no documentation. They
 - [Field](/docs/ui/components/field) — the static layout family for labeled form controls
 - [Skeleton Block](/docs/ui/components/skeleton-block) — the single shimmer rectangle underneath
   `skeleton`
+- [Chat to Preview Layout](/docs/layout/chat-to-preview-layout) — a two-column split where the chat
+  column shrinks as the preview expands
 
 <ChangelogPreview name="simulated-cursor" />
 
@@ -45,3 +47,8 @@ Six components were installable from the registry but had no documentation. They
   in one table with its use and avoid signal, natural length, vibe, tier and dependencies, linking
   to each component's full page. It is the entry point for an agent picking components for a scene.
 - [`/llms.txt`](https://remocn.dev/llms.txt) points at the new component index.
+- Every component page now carries that selection metadata, so the index covers the whole catalogue
+  rather than a sample of it.
+- CI now fails when a registry component has no docs page, when a page is missing its metadata, or
+  when a page recommends a component that does not exist. The catalogue had drifted silently before
+  this: ten shipped components were missing from the agent's view entirely.

@@ -1,6 +1,16 @@
 ---
 title: Caustics
 description: A field of refracted light — the bright filaments light makes through a rippling surface
+component: shader-caustics
+vibe: premium
+length: 150
+useWhen:
+  - "Water, light, or premium ambient backdrops where refracted-light filaments fit the mood."
+  - "A calm, elegant scene wants motion without a strong directional pull."
+  - "You want the light density to build toward one edge of the frame (denser toward the bottom by default)."
+avoidWhen:
+  - "You want structured cellular noise — use `shader-voronoi`."
+  - "You want soft fog instead of filaments — use `shader-perlin-noise`."
 ---
 
 <ComponentPreview name="shader-caustics" />

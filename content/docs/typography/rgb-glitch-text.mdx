@@ -1,6 +1,17 @@
 ---
 title: RGB Glitch Text
 description: Three RGB-offset text copies jitter for a few frames to create a chromatic aberration glitch
+component: rgb-glitch-text
+vibe: tech
+length: 90
+useWhen:
+  - "A tech, hacker, or cyberpunk scene needs a moment of digital corruption on a title."
+  - "You want a deterministic glitch that renders identically every time (use `seed` to vary it per clip)."
+  - "The entrance is already complete and you want a brief mid-scene disruption rather than a full reveal animation."
+avoidWhen:
+  - "You need a full text entrance animation — the glitch is a momentary effect, not a reveal; use `tracking-in` or `soft-blur-in` to bring text in."
+  - "The brand aesthetic is clean or premium — RGB splits read as intentionally broken; use `shimmer-sweep` for a high-end shimmer moment instead."
+  - "The text is long — offset copies of a full paragraph are illegible during the glitch window; keep it to a short word or phrase."
 ---
 
 <ComponentPreview name="rgb-glitch-text" />

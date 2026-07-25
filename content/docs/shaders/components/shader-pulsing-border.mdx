@@ -1,6 +1,17 @@
 ---
 title: Pulsing Border
 description: Glowing border frame that pulses around the edges
+component: shader-pulsing-border
+vibe: premium
+length: 150
+useWhen:
+  - "You want a pulsing lit frame around the scene edges to contain foreground content."
+  - "A premium reveal benefits from an edge glow that leaves the center clear for text."
+  - "You want corner radius / thickness tunable via `roundness`/`thickness`."
+avoidWhen:
+  - "The brief bans decorative glow — keep `bloom`/`intensity` restrained so the border does not read as AI-slop neon."
+  - "You want a full-field texture — the interior stays mostly `colorBack`; use a noise or gradient shader."
+  - "The scene already has a strong border/frame in the layout."
 ---
 
 <ComponentPreview name="shader-pulsing-border" />

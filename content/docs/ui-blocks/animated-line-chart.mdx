@@ -1,6 +1,17 @@
 ---
 title: Animated Line Chart
 description: A line chart whose path draws on from left to right
+component: animated-line-chart
+vibe: data
+length: 90
+useWhen:
+  - "Showing growth or trend over time — revenue curve, DAU climb, error-rate drop."
+  - "A SaaS demo needs a \"hockey stick\" moment where the line visibly inflects upward."
+  - "You want a single continuous reveal motion rather than per-bar stagger."
+avoidWhen:
+  - "The data is categorical (not time-ordered) — use `animated-bar-chart` to compare discrete values side by side."
+  - "You have only 2–3 data points; a near-straight line adds little; use a number counter or a headline stat instead."
+  - "You need to show pipeline or workflow stages — use `progress-steps` instead."
 ---
 
 <ComponentPreview name="animated-line-chart" />

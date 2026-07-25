@@ -1,6 +1,17 @@
 ---
 title: Staggered Fade Up
 description: Words slide up and fade in sequentially with a wave-like cascade
+component: staggered-fade-up
+vibe: clean
+length: 90
+useWhen:
+  - "A headline or body sentence is long and a simpler single-unit entrance would feel flat."
+  - "You want a neutral, versatile word-by-word reveal that works across any brand tone."
+  - "You need the text fully on screen by a known frame — `staggerDelay` × word count gives a predictable total duration."
+avoidWhen:
+  - "The text is very short (1–2 words) and the stagger has nothing to reveal gradually — use `scale-down-fade` or `spring-scale-in` for a single-unit entrance with more impact."
+  - "You want a per-character (not per-word) reveal — use `soft-blur-in` for character-level stagger with a premium blur feel."
+  - "The scene needs an exit animation — staggered-fade-up is entrance only; compose with a separate exit primitive inside a `<Sequence>`."
 ---
 
 <ComponentPreview name="staggered-fade-up" />

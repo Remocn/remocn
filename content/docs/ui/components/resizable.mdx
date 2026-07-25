@@ -1,6 +1,17 @@
 ---
 title: Resizable
 description: A two-panel split container whose divider ratio and handle state are driven by a scripted dual-channel timeline
+component: resizable
+vibe: clean
+length: 120
+useWhen:
+  - "Demonstrating a code/preview split pane layout with its ratio animating across frames."
+  - "Showing a drag-to-resize UI interaction in a product walkthrough with handle hover/press states."
+  - "Visualizing before/after content that morphs its split point on the timeline."
+avoidWhen:
+  - "You need fixed-width layout panels — plain CSS grid or flex avoids the drag-state overhead entirely."
+  - "The split is purely decorative — `resizable` implies an interactive drag metaphor; use a plain container instead."
+  - "You need more than two panels — `resizable` is two-panel only; compose multiple instances."
 ---
 
 <UiComponentPreview name="resizable" />

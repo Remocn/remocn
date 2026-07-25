@@ -1,6 +1,17 @@
 ---
 title: Per-Word Crossfade
 description: One phrase fades out as the next fades in, word by word
+component: per-word-crossfade
+vibe: clean
+length: 90
+useWhen:
+  - "Two short phrases need to swap with a soft, word-by-word transition that reads as calm and composed."
+  - "A keynote-style slide replacement is needed — the sequential word drift matches presentation pacing."
+  - "The A→B content change should feel deliberate but unhurried, with the crossfade reinforcing continuity."
+avoidWhen:
+  - "The transition should be a single-block fade with no word-level staging — use `fade-through` for a unified opacity swap instead."
+  - "You want the incoming words to build upward or slide in rather than drift-and-fade — use `line-by-line-slide` or `mask-reveal-up` for directional entrances."
+  - "There is no outgoing text (first entrance only) — use `micro-scale-fade` or `per-character-rise` for a standalone reveal without a `fromText`."
 ---
 
 <ComponentPreview name="per-word-crossfade" />

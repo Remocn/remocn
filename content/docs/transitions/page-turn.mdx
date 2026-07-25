@@ -1,6 +1,16 @@
 ---
 title: Page Turn
 description: The exiting scene swings up and away like a notebook page in stop-motion poses
+component: page-turn
+vibe: paper
+length: 128
+useWhen:
+  - "Act breaks in paper or scrapbook stop-motion videos — the current page physically leaves and the next scene is already living beneath it."
+  - "You want the outgoing scene to pass IN FRONT of the incoming one. This is the only transition in the catalog that does that: the exiting wrapper takes `zIndex: 2`, inverting the TransitionSeries default."
+avoidWhen:
+  - "You need a smooth cinematic cut between UI scenes — use `whip-pan` or `push-through`."
+  - "You want a dissolve — use the shader dissolve family."
+  - "The entering scene needs its own entrance animation: here the reveal IS the entrance, and the entering scene is rendered untouched."
 ---
 
 <ComponentPreview name="page-turn" />

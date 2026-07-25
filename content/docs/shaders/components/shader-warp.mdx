@@ -1,6 +1,17 @@
 ---
 title: Warp
 description: Domain-warped color field that folds and stretches like liquid
+component: shader-warp
+vibe: premium
+length: 150
+useWhen:
+  - "A hero scene wants organic, liquid motion that feels alive but stays out of the way."
+  - "You want a flowing alternative to a static gradient with more directional movement."
+  - "The palette is dark and you want folds of a single accent to read as depth."
+avoidWhen:
+  - "Text legibility over the whole frame is critical — raise `softness` and keep `distortion` low, or use a solid `backdrop`."
+  - "You want tight, repeating structure — use `shader-swirl` (banded) or `shader-spiral`."
+  - "You need a metallic sheen rather than color folds — use `shader-liquid-metal`."
 ---
 
 <ComponentPreview name="shader-warp" />

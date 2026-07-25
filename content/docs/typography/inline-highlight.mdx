@@ -1,6 +1,17 @@
 ---
 title: Inline Highlight
 description: Animate one word inside a sentence from a base color to a brand color
+component: inline-highlight
+vibe: clean
+length: 90
+useWhen:
+  - "One keyword inside a sentence needs to draw attention through a color shift without any background decoration."
+  - "The text is already visible and a subtle emphasis beat is needed mid-scene, not a full entrance."
+  - "Clean, minimal brand-color callout is required — no physical marker, no underline, just the color pop."
+avoidWhen:
+  - "You want a physical drawn marker or filled background behind the word — use `marker-highlight` for a visible paint-stroke effect instead."
+  - "The entire sentence is new and needs to enter — this component is for emphasis within existing text, not a reveal; use `mask-reveal-up` or `per-word-crossfade` for full entrances."
+  - "Multiple words across the sentence need to highlight in sequence — this highlights one span; compose multiple `Sequence`-wrapped instances or use `kinetic-center-build` for a word-by-word build."
 ---
 
 <ComponentPreview name="inline-highlight" />

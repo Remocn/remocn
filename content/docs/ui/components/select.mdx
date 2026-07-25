@@ -1,6 +1,18 @@
 ---
 title: Select
 description: A dropdown select container with opened/closed states and item panel
+component: select
+vibe: clean
+length: 120
+useWhen:
+  - "Demonstrating a dropdown menu opening and an option being highlighted or selected on the timeline."
+  - "Showing a form field interaction with animated open/close in a product walkthrough."
+  - "Composing a settings scene where one control is a dropdown — pairs naturally with `switch` and `slider`."
+avoidWhen:
+  - "You only need to show one item row in isolation — use `select-item` directly without the panel overhead."
+  - "The choice is binary — use `switch` instead (simpler, no dropdown)."
+  - "You need a compact segmented control without a dropdown — use `toggle-group` instead."
+  - "The items are actions or commands rather than a value being stored — use `dropdown-menu` (or `context-menu`); for a long, type-to-filter list use `combobox`."
 ---
 
 <UiComponentPreview name="select" />

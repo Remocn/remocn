@@ -1,6 +1,16 @@
 ---
 title: Dither Dissolve
 description: Dissolve one scene into the next through a drifting field of dither pixels
+component: dither-dissolve
+vibe: tech
+length: 40
+useWhen:
+  - "The video has a retro, terminal, or print aesthetic — the dither reads as CRT/risograph texture."
+  - "Dev-tool and CLI content — pairs naturally with `terminal-simulator` and `matrix-decode`."
+  - "Cuts need to stay quick but textured — 40 frames, unlike the longer dissolves."
+avoidWhen:
+  - "The tone is soft and organic — the pixel grid reads technical; use `grain-dissolve` or `perlin-dissolve`."
+  - "Brand colors clash with a two-color reduction — the field is strictly `colorBack`/`colorFront`."
 ---
 
 <ComponentPreview name="dither-dissolve" />

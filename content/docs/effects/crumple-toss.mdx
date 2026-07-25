@@ -1,6 +1,16 @@
 ---
 title: Crumple Toss
 description: Crushes an element into a ball of paper and throws it out of frame
+component: crumple-toss
+vibe: paper
+length: 27
+useWhen:
+  - "Discarding something on screen — the old plan, the wrong answer, the previous version."
+  - "Building a before/after beat where the replacement is revealed as the ball leaves."
+avoidWhen:
+  - "You want a general element exit in a clean UI scene — this one is loud and physical; use a fade instead."
+  - "You need a scene-level exit that replaces the whole frame — that is `page-turn`. This is **not** a `TransitionPresentation` and does not belong in a `<TransitionSeries>`."
+  - "You want the ball to land, bounce, or hit a wastebasket; none of that is here."
 ---
 
 <ComponentPreview name="crumple-toss" />

@@ -1,6 +1,17 @@
 ---
 title: Typewriter
 description: Character-by-character text reveal with a deterministic blinking cursor
+component: typewriter
+vibe: clean
+length: 120
+useWhen:
+  - "Simulating a command being typed into a terminal or input — pairs with `terminal-simulator`."
+  - "A title should feel \"authored live\" rather than appearing all at once."
+  - "You need the reveal duration to track text length predictably (`charsPerSecond` makes it deterministic)."
+avoidWhen:
+  - "The text is long — typing a paragraph at a readable speed eats far more frames than a viewer will wait; use `staggered-fade-up` or `blur-out-up` instead."
+  - "You want a designed, weighted entrance (springy, blurred, kinetic) — typing reads as plain/utilitarian; reach for `tracking-in` or `kinetic-center-build`."
+  - "Multiple lines should reveal together — typing is inherently sequential and single-stream."
 ---
 
 <ComponentPreview name="typewriter" />

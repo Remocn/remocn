@@ -1,6 +1,17 @@
 ---
 title: SettingsToggleFlow
 description: Two-column settings card with a blur-in entrance and a cursor-driven switch, select, slider, and save
+component: settings-toggle-flow
+vibe: clean
+length: "state-driven"
+useWhen:
+  - "Showing a complete settings interaction walkthrough for a product demo — zero assembly required."
+  - "Demonstrating multiple UI primitives orchestrated in sequence: switch, select, slider, then toast."
+  - "You need a production-ready settings scene and the default layout matches your content."
+avoidWhen:
+  - "You need only one control type — use `switch`, `select`, or `slider` individually instead."
+  - "Your settings layout differs from the default two-column card — compose primitives manually for full control."
+  - "You need custom cursor timing or interaction order — wire `cursor` directly with individual primitives instead."
 ---
 
 <BlockPreview name="settings-toggle-flow" />

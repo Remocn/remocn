@@ -1,6 +1,17 @@
 ---
 title: Blur In
 description: A wrapper that reveals a single child with blur, opacity, and a directional offset
+component: blur-in
+vibe: premium
+length: 120
+useWhen:
+  - "Revealing an arbitrary JSX subtree (card, image, composed scene) with a premium blur entrance."
+  - "Wrapping a UI primitive whose own `state` prop doesn't expose blur-in as an option."
+  - "Staggering multiple child elements into view by rendering each in its own `<BlurIn>` at offset frames."
+avoidWhen:
+  - "You're animating a text-only line — use a purpose-built text reveal (`soft-blur-in`, `staggered-fade-up`) instead of wrapping raw text."
+  - "The child is a remocn-ui primitive that already exposes a `state` prop with its own entrance — animate via `state` directly."
+  - "You need a full-opacity slide with no blur — use the component's own directional offset or a translation interpolation."
 ---
 
 <UiComponentPreview name="blur-in" />

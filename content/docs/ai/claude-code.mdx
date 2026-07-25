@@ -1,6 +1,17 @@
 ---
 title: Claude Code
 description: Animated Claude Code CLI welcome screen that types a command into the terminal prompt
+component: claude-code
+vibe: tech
+length: 160
+useWhen:
+  - "Depicting a Claude Code / agentic-CLI workflow as a recognizable branded surface in a dev-tool demo."
+  - "You want a coding-agent prompt to type itself out with the authentic welcome-screen chrome."
+  - "The scene calls for a terminal-app card rather than a raw shell — recent-activity and what's-new panels carry product context."
+avoidWhen:
+  - "You need a generic, unbranded terminal — use `terminal-simulator`."
+  - "You're depicting a different product's UI — use the matching card (`opencode`, `v0`, `chat-gpt`, `claude-chat`)."
+  - "You only need a typed command line with a cursor and no app frame — use `typewriter` over a plain surface."
 ---
 
 <ComponentPreview name="claude-code" />

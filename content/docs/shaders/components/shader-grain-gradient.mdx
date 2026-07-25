@@ -1,6 +1,17 @@
 ---
 title: Grain Gradient
 description: Grainy multi-stop gradient that drifts slowly with film-grain texture over the blend
+component: shader-grain-gradient
+vibe: premium
+length: 150
+useWhen:
+  - "A gradient backdrop needs analog texture — the grain reads as film/print rather than flat digital."
+  - "The scene tone is premium and editorial and you want subtle motion that does not distract."
+  - "You want the gradient softened; raise `softness`/`noise` for an even quieter field."
+avoidWhen:
+  - "You need crisp, clean color with no texture — use `shader-mesh-gradient`."
+  - "Foreground content is tiny text — heavy grain can reduce contrast; lower `intensity`/`noise` or pick a solid `backdrop`."
+  - "You want structured geometry — use `shader-dot-orbit` or `shader-voronoi`."
 ---
 
 <ComponentPreview name="shader-grain-gradient" />
