@@ -1,0 +1,23 @@
+---
+title: Scene sequencers, and Remotion off the pin
+date: 2026-07-25
+---
+
+Two grammars for moving between scenes that don't go through `TransitionSeries` at all. Instead of dropping a presentation between two sequences, a sequencer takes the whole run of scenes and owns the boundary — which is what lets a cut hold the stage empty for a frame, or hand it over with the content still moving.
+
+<ChangelogPreview name="spring-settle" />
+
+### New components
+
+- [Spring Settle](/docs/transitions/spring-settle) — the outgoing scene shrinks away as one group, the stage holds empty for a beat while the background colour changes, then the next scene's items land staggered from above-1 scale. The group transform is the point: scaling elements individually makes multi-line text spread apart as it shrinks.
+- [Slide Swap](/docs/transitions/slide-swap) — the outgoing content is shoved off on an accelerating curve and is gone before the next frame; the incoming springs in from the opposite edge and brakes into place without bouncing. Horizontal or vertical, on one constant canvas.
+- Scene Motion — a small module of the curves scene content is built from, installed alongside Spring Settle. An exponential travel curve, a separate short opacity ramp, three spring easings, and a compressing stagger with deterministic jitter.
+
+### Improvements
+
+- Spring Settle's stagger compresses instead of stepping linearly, and carries a deterministic jitter, so a column of items no longer lands on a machine cadence. `enterStaggerPower: 1` with `enterStaggerJitter: 0` restores the plain linear behaviour.
+- Both sequencers render transparent unless you give them a background, so a shader or a `Backdrop` can sit behind them.
+
+### Fixes
+
+- Remotion is no longer pinned to an exact version. All seven `remotion` and `@remotion/*` packages now track `^4.0.499` together, which unblocks APIs added after 4.0.473 — `Easing.spring` among them.

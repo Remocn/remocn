@@ -3,7 +3,7 @@ title: Transitions
 description: Scene transitions built as presentations for TransitionSeries
 ---
 
-Every transition here is a presentation for `@remotion/transitions` — pass it to a `TransitionSeries.Transition` between two sequences and control the pace with `linearTiming` or `springTiming`.
+Most transitions here are presentations for `@remotion/transitions` — pass one to a `TransitionSeries.Transition` between two sequences and control the pace with `linearTiming` or `springTiming`. The sequencers at the bottom work differently: they own the whole run of scenes themselves.
 
 ## Camera Motion
 
@@ -118,6 +118,27 @@ Kinetic, interface-flavored transitions — typed wipes, scattering icons, and m
       description: "Scatter a field of icons over the cut, hiding the scene swap at the field's peak",
       status: "stable",
       href: "/docs/transitions/icon-scatter",
+    },
+  ]}
+/>
+
+## Scene Sequencers
+
+Not presentations. Each of these takes the whole list of scenes and runs the timeline itself, so the boundary is a property of the film rather than something dropped between two sequences. Scenes never overlap and the stage is continuous, which is what makes a run of them read as one cut instead of a slideshow.
+
+<ComponentCardGrid
+  items={[
+    {
+      name: "SlideSwapScenes",
+      description: "Shove one scene off the canvas and spring the next in from the opposite edge",
+      status: "stable",
+      href: "/docs/transitions/slide-swap",
+    },
+    {
+      name: "SpringSettleScenes",
+      description: "Shrink a scene away as one group, hold the stage empty for a beat, then land the next from above",
+      status: "stable",
+      href: "/docs/transitions/spring-settle",
     },
   ]}
 />

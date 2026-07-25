@@ -18,6 +18,8 @@
     "page-turn",
     "ascii-dissolve",
     "caret-wipe",
-    "icon-scatter"
+    "icon-scatter",
+    "slide-swap",
+    "spring-settle"
   ]
 }

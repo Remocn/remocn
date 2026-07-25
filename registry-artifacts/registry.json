@@ -1588,6 +1588,49 @@
       "type": "registry:component"
     },
     {
+      "name": "scene-motion",
+      "title": "Scene Motion",
+      "description": "The motion vocabulary scene content is built from: an exponential travel curve, a separate opacity ramp, three spring easings, and a compressing stagger.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "registry/remocn/scene-motion/index.ts",
+          "type": "registry:lib",
+          "target": "lib/remocn/scene-motion.ts"
+        }
+      ],
+      "type": "registry:lib"
+    },
+    {
+      "name": "slide-swap",
+      "title": "Slide Swap",
+      "description": "A scene sequencer where the outgoing content is shoved off on an accelerating curve and the next springs in from the opposite edge, on one canvas, with no overlap.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "registry/remocn/slide-swap/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/slide-swap.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "spring-settle",
+      "title": "Spring Settle",
+      "description": "A scene sequencer where the outgoing scene shrinks away as one group, the stage holds empty for a beat, and the next scene's items land staggered from above-1 scale.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/scene-motion"],
+      "files": [
+        {
+          "path": "registry/remocn/spring-settle/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/spring-settle.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
       "name": "remocn-ui",
       "title": "remocn UI Core",
       "description": "Shared timeline-fold hook, theme context, and color math for remocn UI primitives.",
