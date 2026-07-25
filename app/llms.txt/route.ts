@@ -16,6 +16,11 @@ export function GET() {
     "\nDocs are also available as raw Markdown: append `.md` to any docs URL, or read [/llms-full.txt](" +
       `${SITE_URL}/llms-full.txt) for the full corpus in a single file.`,
   );
+  scanned.push(
+    `\nBuilding a video? Start at [/llms-components.txt](${SITE_URL}/llms-components.txt) — every` +
+      " installable component in one table with its use / avoid signal, natural length, vibe and" +
+      " dependencies, linking to each component's full page.",
+  );
 
   // Group pages by their top-level section (first slug segment).
   const sections = new Map<string, ReturnType<typeof source.getPages>>();

@@ -7,11 +7,12 @@ import {
 import rehypePrettyCode from "rehype-pretty-code";
 import type { ShikiTransformer } from "shiki";
 import { z } from "zod";
+import { componentMetaSchema } from "./lib/docs-schema";
 
 export const docs = defineDocs({
   dir: "content/docs",
   docs: {
-    schema: pageSchema,
+    schema: pageSchema.extend(componentMetaSchema.shape),
     postprocess: {
       includeProcessedMarkdown: true,
     },
