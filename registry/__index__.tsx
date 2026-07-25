@@ -90,10 +90,12 @@ import { shimmerSweepConfig } from "@/registry/remocn/shimmer-sweep/config";
 import { shortSlideDownConfig } from "@/registry/remocn/short-slide-down/config";
 import { shortSlideRightConfig } from "@/registry/remocn/short-slide-right/config";
 import { simulatedCursorConfig } from "@/registry/remocn/simulated-cursor/config";
+import { slideSwapConfig } from "@/registry/remocn/slide-swap/config";
 import { slotMachineRollConfig } from "@/registry/remocn/slot-machine-roll/config";
 import { smokeDissolveConfig } from "@/registry/remocn/smoke-dissolve/config";
 import { softBlurInConfig } from "@/registry/remocn/soft-blur-in/config";
 import { springScaleInConfig } from "@/registry/remocn/spring-scale-in/config";
+import { springSettleConfig } from "@/registry/remocn/spring-settle/config";
 import { staggeredFadeUpConfig } from "@/registry/remocn/staggered-fade-up/config";
 import { strikethroughReplaceConfig } from "@/registry/remocn/strikethrough-replace/config";
 import { swirlDissolveConfig } from "@/registry/remocn/swirl-dissolve/config";
@@ -1414,6 +1416,20 @@ const registry: Record<string, RegistryEntry> = {
         default: m.ZoomBlurExampleScene,
       })),
     config: zoomBlurConfig,
+  },
+  "slide-swap": {
+    load: () =>
+      import("@/components/docs/examples/slide-swap-example").then((m) => ({
+        default: m.SlideSwapExampleScene,
+      })),
+    config: slideSwapConfig,
+  },
+  "spring-settle": {
+    load: () =>
+      import("@/components/docs/examples/spring-settle-example").then((m) => ({
+        default: m.SpringSettleExampleScene,
+      })),
+    config: springSettleConfig,
   },
   "warp-dissolve": {
     load: () =>

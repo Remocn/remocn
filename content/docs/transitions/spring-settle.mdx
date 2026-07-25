@@ -1,0 +1,218 @@
+---
+title: Spring Settle
+description: Shrink a scene away as one group, hold the stage empty for a beat, then land the next one from above
+---
+
+<ComponentPreview name="spring-settle" />
+
+## Installation
+
+<InstallBlock name="spring-settle" />
+
+## Usage
+
+`SpringSettleScenes` is a sequencer, not a `TransitionSeries` presentation. Each boundary runs in three parts:
+
+1. **Exit** — the whole outgoing scene shrinks toward `exitScale` around the stage centre and fades on an accelerating curve, gone in `exitFrames`.
+2. **Gap** — `gapFrames` of empty stage. The background colour crossfades here and only here, so the change lands instantly on an empty frame instead of muddying two scenes together.
+3. **Enter** — the incoming items start bigger than 1 and transparent, then settle to rest on a stiff spring, staggered.
+
+Scenes hold perfectly still between boundaries. If you want them to breathe, put [Drift](/docs/layout/drift) inside a scene.
+
+```tsx
+import {
+  SpringSettleScenes,
+  SpringSettleItem,
+} from "@/components/remocn/spring-settle";
+
+const Claim = () => (
+  <AbsoluteFill style={{ alignItems: "center", justifyContent: "center" }}>
+    <SpringSettleItem index={0}>
+      <h1>Half the price</h1>
+    </SpringSettleItem>
+    <SpringSettleItem index={1}>
+      <p>The new default model</p>
+    </SpringSettleItem>
+  </AbsoluteFill>
+);
+
+export const MyVideo = () => (
+  <SpringSettleScenes
+    scenes={[
+      { name: "hook", bg: "#fbfbfa", durationInFrames: 90, content: <Hook /> },
+      { name: "claim", bg: "#141318", durationInFrames: 80, content: <Claim /> },
+    ]}
+  />
+);
+```
+
+The composition length is the sum of every scene's `durationInFrames` **plus** `gapFrames` per scene — the gap is part of each slot, not a boundary between them.
+
+## The group exit matters
+
+The exit transform is applied to the scene as a whole, never per element, and that is not an implementation detail. Scaling elements individually makes a multi-line text block visually spread apart as it shrinks: glyphs get smaller but line boxes don't, so the leading grows while the type shrinks. One transform over the whole group keeps every gap proportional.
+
+The same rule applies to `SpringSettleItem`. A multi-line paragraph belongs in **one** item — split it across two and the lines will drift apart as they land.
+
+## Stagger
+
+Items land in `index` order, but the spacing between them compresses rather than stepping linearly: later items bunch up, and a small deterministic jitter breaks the machine cadence without breaking render determinism. `enterStagger` sets the base spacing, `enterStaggerPower` the compression, `enterStaggerJitter` the wobble. Set the power to `1` and the jitter to `0` for a plain linear stagger.
+
+The stagger comes from [Scene Motion](#scene-motion), which installs alongside this component.
+
+## Background
+
+`bg` is per scene and optional. Give every scene a colour and the sequencer owns the stage, crossfading inside each gap. Leave it off everywhere and the sequencer renders transparent, so a `Backdrop` or a shader behind it shows through — you just lose the colour change, since there is nothing to fade between.
+
+## Building your own sequencer
+
+`springSettleExitStyle` returns the group transform for the exit, and `SpringSettleEnter` is the clock provider that `SpringSettleItem` reads. Together they let you drive the grammar from your own timeline:
+
+```tsx
+import {
+  SpringSettleEnter,
+  springSettleExitStyle,
+  springSettleTimeline,
+} from "@/components/remocn/spring-settle";
+
+const { index, local, dwellFrames } = springSettleTimeline(frame, scenes);
+
+<AbsoluteFill style={springSettleExitStyle(local, dwellFrames)}>
+  <SpringSettleEnter local={local}>{scenes[index].content}</SpringSettleEnter>
+</AbsoluteFill>;
+```
+
+`springSettlePhase` labels the current frame `enter`, `dwell`, `exit`, or `gap` if you need to branch on it.
+
+## Scene Motion
+
+This component installs `@remocn/scene-motion`, a small module of the curves scene content is built from. It is worth using directly inside your scenes:
+
+- `EXPO` — the travel curve. About 80 percent of the distance in the first 20 percent of the time, then settling. Reads far more deliberate than a cubic.
+- `FADE` — the short opacity ramp, deliberately not the transform's curve.
+- `SETTLE`, `SETTLE_SOFT`, `SETTLE_MARK` — spring easings. `SETTLE_SOFT` is looser, for a child that should trail its parent; `SETTLE_MARK` is the one place a touch of overshoot is allowed, for a single mark landing.
+- `stagger(index, base, power, jitter)` and `fadeIn(frame, at, frames)`.
+- `CLAMP` — the `extrapolateLeft`/`extrapolateRight` pair, since almost every scene interpolation wants it.
+
+The rule they encode: two properties of the same element never share a curve or a length. Opacity rides a short quad ramp, transform rides a long exponential or a damped spring roughly three times its length. That is the difference between "a slide faded in" and "something arrived".
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "scenes",
+      type: "SpringSettleSceneDef[]",
+      description: "The scenes, in order. Each has content, an optional name, an optional bg, and an optional durationInFrames that overrides config.sceneFrames.",
+    },
+    {
+      name: "config",
+      type: "Partial<SpringSettleConfig>",
+      description: "Overrides for the grammar's timing, scales, and stagger.",
+    },
+    {
+      name: "loop",
+      type: "boolean",
+      default: "false",
+      description: "Cycle through the scenes forever instead of holding the last one.",
+    },
+    {
+      name: "style",
+      type: "CSSProperties",
+      description: "Merged into the outer AbsoluteFill.",
+    },
+  ]}
+/>
+
+`SpringSettleItem` takes an `index` (default `0`), a `style` merged onto its wrapper, and its children. Outside a `SpringSettleEnter` it renders a plain wrapper, so a scene stays usable on its own.
+
+## Config
+
+<PropsTable
+  rows={[
+    {
+      name: "sceneFrames",
+      type: "number",
+      default: "70",
+      description: "Fallback length for scenes that don't set durationInFrames.",
+    },
+    {
+      name: "gapFrames",
+      type: "number",
+      default: "1",
+      description: "Empty frames between one scene's exit and the next scene's enter.",
+    },
+    {
+      name: "enterScale",
+      type: "number",
+      default: "1.24",
+      description: "The scale incoming items start at before settling to 1.",
+    },
+    {
+      name: "enterFadeFrames",
+      type: "number",
+      default: "5",
+      description: "Fade-in length for an incoming item. Much shorter than the spring, on purpose.",
+    },
+    {
+      name: "enterStagger",
+      type: "number",
+      default: "3",
+      description: "Base frames between item landings.",
+    },
+    {
+      name: "enterStaggerPower",
+      type: "number",
+      default: "0.8",
+      description: "Compression of the stagger. Below 1, later items bunch up; 1 is a plain linear stagger.",
+    },
+    {
+      name: "enterStaggerJitter",
+      type: "number",
+      default: "1",
+      description: "Deterministic wobble in frames, to break the machine cadence. 0 turns it off.",
+    },
+    {
+      name: "springDamping",
+      type: "number",
+      default: "30",
+      description: "Damping of the landing spring.",
+    },
+    {
+      name: "springStiffness",
+      type: "number",
+      default: "320",
+      description: "Stiffness of the landing spring.",
+    },
+    {
+      name: "springMass",
+      type: "number",
+      default: "1",
+      description: "Mass of the landing spring.",
+    },
+    {
+      name: "exitFrames",
+      type: "number",
+      default: "6",
+      description: "How long the outgoing scene takes to shrink and fade away.",
+    },
+    {
+      name: "exitScale",
+      type: "number",
+      default: "0.84",
+      description: "The scale the outgoing scene shrinks toward.",
+    },
+    {
+      name: "exitPower",
+      type: "number",
+      default: "5",
+      description: "Power of the accelerating exit. Higher means the scene holds longer, then leaves harder.",
+    },
+    {
+      name: "bgFadeFrames",
+      type: "number",
+      default: "4",
+      description: "Background crossfade length, centred in the gap.",
+    },
+  ]}
+/>

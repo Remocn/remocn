@@ -1,0 +1,16 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "scene-motion",
+  "title": "Scene Motion",
+  "description": "The motion vocabulary scene content is built from: an exponential travel curve, a separate opacity ramp, three spring easings, and a compressing stagger.",
+  "dependencies": ["remotion"],
+  "files": [
+    {
+      "path": "registry/remocn/scene-motion/index.ts",
+      "content": "import { Easing, interpolate, random } from \"remotion\";\n\nexport const CLAMP = {\n  extrapolateLeft: \"clamp\",\n  extrapolateRight: \"clamp\",\n} as const;\n\nexport const EXPO = Easing.bezier(0.16, 1, 0.3, 1);\n\nexport const FADE = Easing.out(Easing.quad);\n\nexport const SETTLE = Easing.spring({ damping: 18, stiffness: 120, mass: 1 });\n\nexport const SETTLE_SOFT = Easing.spring({\n  damping: 26,\n  stiffness: 90,\n  mass: 1,\n});\n\nexport const SETTLE_MARK = Easing.spring({\n  damping: 13,\n  stiffness: 140,\n  mass: 1,\n});\n\nexport const stagger = (\n  index: number,\n  base = 5,\n  power = 0.8,\n  jitter = 1.5,\n  seed = \"remocn-stagger\",\n): number =>\n  Math.max(\n    0,\n    index ** power * base + (random(`${seed}-${index}`) - 0.5) * 2 * jitter,\n  );\n\nexport const fadeIn = (frame: number, at: number, frames = 7): number =>\n  interpolate(frame, [at, at + frames], [0, 1], { ...CLAMP, easing: FADE });\n",
+      "type": "registry:lib",
+      "target": "lib/remocn/scene-motion.ts"
+    }
+  ],
+  "type": "registry:lib"
+}

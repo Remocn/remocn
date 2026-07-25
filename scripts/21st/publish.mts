@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -28,7 +28,9 @@ function saveResults(results: Record<string, PublishResult>) {
 
 function writeChecklist(results: Record<string, PublishResult>) {
   const drafts = Object.values(results).filter((r) => r.status === "draft");
-  const failedList = Object.values(results).filter((r) => r.status === "failed");
+  const failedList = Object.values(results).filter(
+    (r) => r.status === "failed",
+  );
   const lines = [
     "# 21st.dev CLI Review checklist",
     "",
@@ -37,7 +39,12 @@ function writeChecklist(results: Record<string, PublishResult>) {
     ...drafts.map((r) => `- [ ] ${r.slug} — ${r.editor_url}`),
   ];
   if (failedList.length) {
-    lines.push("", "## Failed", "", ...failedList.map((r) => `- ${r.slug}: ${r.error}`));
+    lines.push(
+      "",
+      "## Failed",
+      "",
+      ...failedList.map((r) => `- ${r.slug}: ${r.error}`),
+    );
   }
   writeFileSync(path.join(outRoot, "checklist.md"), `${lines.join("\n")}\n`);
 }
@@ -88,7 +95,12 @@ async function publishOne(slug: string): Promise<PublishResult> {
       }
     } catch {}
   }
-  const tail = `${stdout}\n${stderr}`.trim().split("\n").slice(-3).join(" | ").slice(0, 300);
+  const tail = `${stdout}\n${stderr}`
+    .trim()
+    .split("\n")
+    .slice(-3)
+    .join(" | ")
+    .slice(0, 300);
   return { slug, status: "failed", error: `exit ${exitCode}: ${tail}` };
 }
 
@@ -100,7 +112,9 @@ async function main() {
   const all = readdirSync(publishRoot, { withFileTypes: true })
     .filter((d) => d.isDirectory())
     .map((d) => d.name);
-  const queue = (only ?? all).filter((slug) => results[slug]?.status !== "draft");
+  const queue = (only ?? all).filter(
+    (slug) => results[slug]?.status !== "draft",
+  );
   console.log(`publishing ${queue.length} components (of ${all.length})`);
 
   let index = 0;
@@ -121,8 +135,12 @@ async function main() {
   }
   await Promise.all(Array.from({ length: CONCURRENCY }, worker));
 
-  const failedCount = Object.values(results).filter((r) => r.status === "failed").length;
-  console.log(`done. drafts: ${Object.values(results).filter((r) => r.status === "draft").length}, failed: ${failedCount}`);
+  const failedCount = Object.values(results).filter(
+    (r) => r.status === "failed",
+  ).length;
+  console.log(
+    `done. drafts: ${Object.values(results).filter((r) => r.status === "draft").length}, failed: ${failedCount}`,
+  );
   console.log(`checklist: ${path.join(outRoot, "checklist.md")}`);
 }
 

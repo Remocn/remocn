@@ -1,4 +1,10 @@
-import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  writeFileSync,
+} from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import registry from "@/registry/__index__";
@@ -9,7 +15,9 @@ const outRoot = path.join(root, "out", "21st");
 const publishRoot = path.join(outRoot, "publish");
 
 const REMOTION_VERSION = "4.0.473";
-const rootPkg = JSON.parse(readFileSync(path.join(root, "package.json"), "utf8"));
+const rootPkg = JSON.parse(
+  readFileSync(path.join(root, "package.json"), "utf8"),
+);
 const versionOf = (dep: string): string => {
   const v = rootPkg.dependencies?.[dep] ?? rootPkg.devDependencies?.[dep];
   if (!v) throw new Error(`Unknown npm dep version for ${dep}`);
@@ -34,7 +42,8 @@ for (const dir of readdirSync(docsDir, { withFileTypes: true })) {
   if (!existsSync(metaPath)) continue;
   const meta = JSON.parse(readFileSync(metaPath, "utf8"));
   for (const page of meta.pages ?? []) {
-    if (typeof page === "string" && page !== "index") sectionOf.set(page, dir.name);
+    if (typeof page === "string" && page !== "index")
+      sectionOf.set(page, dir.name);
   }
 }
 
@@ -91,13 +100,15 @@ function mergeIconWithCore(iconCode: string, coreCode: string): string {
       for (const s of specs) {
         if (set.has(s.replace(/^type /, ""))) continue;
         if (s.startsWith("type ") || !set.has(`type ${s}`)) set.add(s);
-        if (!s.startsWith("type ") && set.has(`type ${s}`)) set.delete(`type ${s}`), set.add(s);
+        if (!s.startsWith("type ") && set.has(`type ${s}`))
+          set.delete(`type ${s}`), set.add(s);
       }
       named.set(mod, set);
     }
   }
   const importLines = [...named.entries()].map(
-    ([mod, specs]) => `import { ${[...specs].sort().join(", ")} } from "${mod}";`,
+    ([mod, specs]) =>
+      `import { ${[...specs].sort().join(", ")} } from "${mod}";`,
   );
   const rest = [...new Set([...core.imports.rest, ...icon.imports.rest])];
   return `"use client";\n\n${[...importLines, ...rest].join("\n")}\n\n${core.body}\n${icon.body}`;
@@ -113,9 +124,24 @@ function demoSource(opts: {
   durationInFrames: number;
   background: string;
 }): string {
-  const { slug, exportName, props, width, height, fps, durationInFrames, background } = opts;
-  const initialFrame = Math.min(Math.floor(durationInFrames * 0.66), durationInFrames - 1);
-  const propsLiteral = JSON.stringify(props, null, 2).replace(/"([A-Za-z_$][A-Za-z0-9_$]*)":/g, "$1:");
+  const {
+    slug,
+    exportName,
+    props,
+    width,
+    height,
+    fps,
+    durationInFrames,
+    background,
+  } = opts;
+  const initialFrame = Math.min(
+    Math.floor(durationInFrames * 0.66),
+    durationInFrames - 1,
+  );
+  const propsLiteral = JSON.stringify(props, null, 2).replace(
+    /"([A-Za-z_$][A-Za-z0-9_$]*)":/g,
+    "$1:",
+  );
   return `"use client";
 
 import { Player, type PlayerRef } from "@remotion/player";
@@ -210,7 +236,10 @@ for (const ns of ["remocn", "remocn-icons"] as const) {
     const regDeps = item.registryDependencies ?? [];
     const nonCoreDeps = regDeps.filter((d) => d !== "@remocn/icons-core");
     if (nonCoreDeps.length > 0) {
-      skipped.push({ slug, reason: `registry deps: ${nonCoreDeps.join(", ")}` });
+      skipped.push({
+        slug,
+        reason: `registry deps: ${nonCoreDeps.join(", ")}`,
+      });
       continue;
     }
     const srcFile = path.join(root, "registry", ns, item.files[0].path);
@@ -265,24 +294,36 @@ for (const ns of ["remocn", "remocn-icons"] as const) {
       transpiler.transformSync(code);
       transpiler.transformSync(demo);
     } catch (err) {
-      skipped.push({ slug, reason: `transpile failed: ${String(err).slice(0, 120)}` });
+      skipped.push({
+        slug,
+        reason: `transpile failed: ${String(err).slice(0, 120)}`,
+      });
       continue;
     }
 
     const importedPkgs = new Set<string>(item.dependencies ?? []);
-    for (const m of code.matchAll(/(?:from\s+|import\s*\(\s*)"([^".@/][^"]*|@[^"]+)"/g)) {
+    for (const m of code.matchAll(
+      /(?:from\s+|import\s*\(\s*)"([^".@/][^"]*|@[^"]+)"/g,
+    )) {
       const spec = m[1];
       if (spec.startsWith("@/") || spec.startsWith(".")) continue;
       const parts = spec.split("/");
-      importedPkgs.add(spec.startsWith("@") ? `${parts[0]}/${parts[1]}` : parts[0]);
+      importedPkgs.add(
+        spec.startsWith("@") ? `${parts[0]}/${parts[1]}` : parts[0],
+      );
     }
     importedPkgs.delete("react");
     importedPkgs.delete("react-dom");
-    const npmDeps: Record<string, string> = { "@remotion/player": REMOTION_VERSION };
+    const npmDeps: Record<string, string> = {
+      "@remotion/player": REMOTION_VERSION,
+    };
     let missingDep: string | null = null;
     for (const dep of importedPkgs) {
       try {
-        npmDeps[dep] = dep.startsWith("@remotion/") || dep === "remotion" ? REMOTION_VERSION : versionOf(dep);
+        npmDeps[dep] =
+          dep.startsWith("@remotion/") || dep === "remotion"
+            ? REMOTION_VERSION
+            : versionOf(dep);
       } catch {
         missingDep = dep;
         break;
@@ -308,7 +349,11 @@ for (const ns of ["remocn", "remocn-icons"] as const) {
           name: item.title,
           slug,
           description: item.description,
-          tags: (TAGS[sectionOf.get(slug) ?? (ns === "remocn-icons" ? "icons" : "")] ?? DEFAULT_TAGS).slice(0, 5),
+          tags: (
+            TAGS[
+              sectionOf.get(slug) ?? (ns === "remocn-icons" ? "icons" : "")
+            ] ?? DEFAULT_TAGS
+          ).slice(0, 5),
         },
         null,
         2,
@@ -329,7 +374,10 @@ for (const ns of ["remocn", "remocn-icons"] as const) {
 }
 
 const coverImports = generated
-  .map((g) => `import { ${g.exportName} as C_${g.slug.replace(/-/g, "_")} } from "${g.modPath}";`)
+  .map(
+    (g) =>
+      `import { ${g.exportName} as C_${g.slug.replace(/-/g, "_")} } from "${g.modPath}";`,
+  )
   .join("\n");
 const coverComps = generated
   .map((g) => {

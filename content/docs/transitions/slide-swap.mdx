@@ -1,0 +1,180 @@
+---
+title: Slide Swap
+description: Shove one scene off the canvas and spring the next in from the opposite edge
+---
+
+<ComponentPreview name="slide-swap" />
+
+## Installation
+
+<InstallBlock name="slide-swap" />
+
+## Usage
+
+`SlideSwapScenes` is a sequencer, not a `TransitionSeries` presentation. It holds a list of scenes on one canvas and moves the content between them — nothing about the canvas itself ever changes.
+
+Two scenes never overlap. The outgoing content leaves inside the last `outFrames` of its own slot, on an accelerating power curve with an accelerating fade underneath it, and is fully gone before the next scene's first frame. The incoming content arrives on that very next frame, driven by a real spring — it accelerates out of rest, crosses, and brakes into place. The spring is overshoot-clamped, so it never bounces past its resting spot.
+
+```tsx
+import { SlideSwapScenes } from "@/components/remocn/slide-swap";
+
+export const MyVideo = () => (
+  <SlideSwapScenes
+    scenes={[
+      { name: "hook", durationInFrames: 80, content: <Hook /> },
+      { name: "claim", durationInFrames: 70, content: <Claim /> },
+      { name: "price", durationInFrames: 90, content: <Price /> },
+    ]}
+  />
+);
+```
+
+The composition needs to be as long as the sequencer: the total is the sum of every scene's `durationInFrames`, falling back to `config.sceneFrames` for scenes that don't set one.
+
+## Axis
+
+`axis="x"` shoves the outgoing scene to the left and brings the next in from the right. `axis="y"` is the same physics turned 90 degrees — the outgoing scene is pushed up, the next rises from the bottom. Distances are fractions of the stage dimension along that axis, so the same numbers read identically in portrait and landscape.
+
+## Pre-roll your scenes
+
+A slide hands the stage over with no overlap, which means a scene whose first reveal starts at its own frame 0 arrives **empty** and rides in as a blank card — the exact slideshow feel this grammar exists to avoid. Lead the scene's internal clock so its opening element is already on screen and moving when the scene slides in:
+
+```tsx
+const Claim = ({ start, lead = 18 }: { start: number; lead?: number }) => {
+  const f = useCurrentFrame() - start + lead;
+  return <YourContent frame={f} />;
+};
+```
+
+Roughly half the `slideFrames` window is a good starting lead.
+
+## Background
+
+The component paints nothing by default — pass `bg` when you want it to own the canvas colour, or leave it off and put a `Backdrop` behind it. Because the canvas is constant across the whole sequence, there is no colour crossfade to worry about; if you need the stage colour to change between scenes, use [Spring Settle](/docs/transitions/spring-settle), whose gap frame is built for exactly that.
+
+## Building your own sequencer
+
+`slideInStyle` and `slideOutStyle` return the transform and opacity for a content group, so you can drive the grammar from your own timeline instead of `SlideSwapScenes`:
+
+```tsx
+import {
+  slideInStyle,
+  slideOutStyle,
+  slideSwapTimeline,
+} from "@/components/remocn/slide-swap";
+
+const { index, local, dwellFrames, phase } = slideSwapTimeline(frame, scenes);
+
+const style =
+  phase === "exit"
+    ? slideOutStyle(local - (dwellFrames - 22), width)
+    : slideInStyle(local + 1, width, fps);
+```
+
+`slideInStyle` expects `e` to be `1` on the boundary frame, not `0` — the incoming scene is already moving on the frame it first appears.
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "scenes",
+      type: "SlideSwapSceneDef[]",
+      description: "The scenes, in order. Each has content, an optional name, and an optional durationInFrames that overrides config.sceneFrames.",
+    },
+    {
+      name: "axis",
+      type: '"x" | "y"',
+      default: '"x"',
+      description: "Horizontal shove, or vertical — the outgoing scene up and the next one from the bottom.",
+    },
+    {
+      name: "bg",
+      type: "string",
+      description: "Canvas colour. Left off, the sequencer renders transparent.",
+    },
+    {
+      name: "config",
+      type: "Partial<SlideSwapConfig>",
+      description: "Overrides for the grammar's timing and distances.",
+    },
+    {
+      name: "loop",
+      type: "boolean",
+      default: "false",
+      description: "Cycle through the scenes forever instead of holding the last one.",
+    },
+    {
+      name: "style",
+      type: "CSSProperties",
+      description: "Merged into the outer AbsoluteFill.",
+    },
+  ]}
+/>
+
+## Config
+
+<PropsTable
+  rows={[
+    {
+      name: "sceneFrames",
+      type: "number",
+      default: "70",
+      description: "Fallback length for scenes that don't set durationInFrames.",
+    },
+    {
+      name: "slideFrames",
+      type: "number",
+      default: "30",
+      description: "The enter window. The spring should be settled inside it.",
+    },
+    {
+      name: "inDistance",
+      type: "number",
+      default: "0.28",
+      description: "How far off-stage the incoming content starts, as a fraction of the stage dimension along the axis.",
+    },
+    {
+      name: "inDamping",
+      type: "number",
+      default: "60",
+      description: "Damping of the incoming spring.",
+    },
+    {
+      name: "inStiffness",
+      type: "number",
+      default: "300",
+      description: "Stiffness of the incoming spring.",
+    },
+    {
+      name: "inMass",
+      type: "number",
+      default: "0.5",
+      description: "Mass of the incoming spring.",
+    },
+    {
+      name: "inFadeFrames",
+      type: "number",
+      default: "24",
+      description: "Fade-in length. Deliberately shorter than the travel, so opacity and transform never share a curve.",
+    },
+    {
+      name: "outFrames",
+      type: "number",
+      default: "22",
+      description: "The exit window at the end of the scene's own slot.",
+    },
+    {
+      name: "outDistance",
+      type: "number",
+      default: "0.1",
+      description: "How far the outgoing content travels. Short on purpose — the fade does most of the work.",
+    },
+    {
+      name: "outPower",
+      type: "number",
+      default: "5",
+      description: "Power of the accelerating shove. Higher means the content sits still longer, then leaves harder.",
+    },
+  ]}
+/>
