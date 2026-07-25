@@ -1,0 +1,120 @@
+---
+title: Strikethrough Replace
+description: Draws a strike line through the old text, then fades the new text in beneath it for an editorial correction
+component: strikethrough-replace
+vibe: clean
+length: 120
+useWhen:
+  - "Showing a problem being replaced by a solution — the strike says you are crossing this out on purpose"
+  - "A pricing or comparison beat needs the old value visibly struck out before the new one appears"
+  - "You want editorial correction grammar — old thinking struck through, new thinking revealed below"
+avoidWhen:
+  - "There is no old text to cross out and you just need an entrance — use `staggered-fade-up` or `soft-blur-in`"
+  - "The swap should feel smooth and spatial rather than editorial — use `shared-axis-y` or `shared-axis-z`"
+  - "Both strings are long — the struck line gets hard to read and the full animation runs 120 frames"
+---
+
+<ComponentPreview name="strikethrough-replace" />
+
+## Installation
+
+<InstallBlock name="strikethrough-replace" />
+
+## Usage
+
+Keep `from` and `to` short. The strike reads as a deliberate edit, and a long struck-out line is
+hard to parse at speed.
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { StrikethroughReplace } from "@/components/remocn/strikethrough-replace";
+
+const StrikethroughScene = () => (
+  <StrikethroughReplace from="Manual video editing" to="One-click export" fontSize={48} />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="StrikethroughReplace"
+    component={StrikethroughScene}
+    durationInFrames={120}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The line draws across `from` first, then `to` fades in beneath it — so the composition needs room
+for both phases. Under-budgeting cuts the reveal.
+
+### With Backdrop
+
+The component renders transparent — supply the background via `Backdrop`.
+
+```tsx
+import { Composition } from "remotion";
+import { Backdrop } from "@/components/remocn/backdrop";
+import { StrikethroughReplace } from "@/components/remocn/strikethrough-replace";
+
+const StrikethroughScene = () => (
+  <Backdrop fill={{ type: "color", value: "#ffffff" }}>
+    <StrikethroughReplace from="$99 / month" to="$29 / month" lineColor="#ff5e3a" />
+  </Backdrop>
+);
+```
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "from",
+      type: "string",
+      required: true,
+      description: "The old text — the line is drawn across this string.",
+    },
+    {
+      name: "to",
+      type: "string",
+      required: true,
+      description: "The replacement text, revealed beneath the struck-out line.",
+    },
+    {
+      name: "lineColor",
+      type: "string",
+      default: "\"#ff5e3a\"",
+      description: "Color of the strike line. Defaults to a red-orange for maximum contrast against the text.",
+    },
+    {
+      name: "fontSize",
+      type: "number",
+      default: "48",
+      description: "Font size in pixels, applied to both strings.",
+    },
+    {
+      name: "color",
+      type: "string",
+      default: "\"#171717\"",
+      description: "Text color (any valid CSS color).",
+    },
+    {
+      name: "fontWeight",
+      type: "number",
+      default: "600",
+      description: "CSS font-weight.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Time multiplier applied as frame × speed.",
+    },
+    {
+      name: "className",
+      type: "string",
+      description: "Optional className passed to the root element.",
+    },
+  ]}
+/>

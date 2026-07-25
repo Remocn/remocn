@@ -1,0 +1,118 @@
+---
+title: Anti-patterns
+description: The dozen mistakes that recur when a video is generated, each with the fix beside it
+---
+
+Common mistakes when generating remocn videos. Each is something a model tends to get wrong.
+
+## Clipping a component by under-budgeting its Sequence
+
+Every component has a natural length. Budget the `Sequence` around it — under-budgeting cuts the
+animation off mid-motion, over-budgeting leaves dead air.
+
+```tsx
+// ❌ blur-out-up needs ~90f, gets cut at 30
+<Sequence durationInFrames={30}><BlurOutUp text="Launch" /></Sequence>
+// ✅
+<Sequence durationInFrames={90}><BlurOutUp text="Launch" /></Sequence>
+```
+
+Natural lengths for every component are listed in
+[`/llms-components.txt`](https://remocn.dev/llms-components.txt).
+
+## Mounting a transition as a component
+
+Transitions are presentations for `@remotion/transitions` — pass them to
+`TransitionSeries.Transition`, never mount them directly.
+
+```tsx
+// ❌
+<WhipPan />
+<SceneB />
+// ✅
+<TransitionSeries>
+  <TransitionSeries.Sequence durationInFrames={70}><SceneA /></TransitionSeries.Sequence>
+  <TransitionSeries.Transition
+    timing={linearTiming({ durationInFrames: 26 })}
+    presentation={whipPan()}
+  />
+  <TransitionSeries.Sequence durationInFrames={70}><SceneB /></TransitionSeries.Sequence>
+</TransitionSeries>
+```
+
+## Animation-tier props on a UI primitive
+
+Primitives (`remocn-ui`) are state-based and have **no `speed`**. Drive them with `state`.
+
+```tsx
+// ❌
+<Dialog speed={2} />
+// ✅
+<Dialog state="open" />
+```
+
+## Wrong canvas size
+
+The standard composition is `1280×720 @ 30fps`. Components are laid out for it. Don't invent
+`1920×1080` and wonder why things are off-center.
+
+## Animating layout properties
+
+Animate `transform` (and individual `translate` / `scale`), never `top` / `left` / `width` /
+`height` — layout animation reflows every frame and breaks split layouts.
+
+```tsx
+// ❌ left: interpolate(frame, [0,30], [0,200])
+// ✅ transform: `translateX(${interpolate(frame,[0,30],[0,200])}px)`
+```
+
+## Non-deterministic code
+
+Renders are multi-pass — `Math.random()`, `setInterval` / `setTimeout` and `Date.now()` all produce
+flicker or diverging frames.
+
+```tsx
+// ❌ const x = Math.random();
+// ✅ import { random } from "@remotion/random"; const x = random(`seed-${frame}`);
+```
+
+## Mishandling registryDependencies
+
+Dependencies install **automatically** — don't tell the user to add them manually, and don't
+inline-copy a dependency's code. Also don't import deeper than one path segment
+(`@/components/remocn/<name>`); the tsconfig glob doesn't resolve `<name>/helpers`.
+
+## Loading fonts mid-render
+
+Load fonts once before render via `@remotion/google-fonts` (`loadFont()`), not inside a component
+body per frame. Unloaded fonts flash a fallback in the export.
+
+## Hardcoding a background on a component
+
+remocn components render **transparent** — they don't own a background. Set the scene background
+with [`backdrop`](/docs/layout/backdrop) or your own container, not by hardcoding a fill into the
+component.
+
+## Slop styling on your own additions
+
+ALL-CAPS plus wide tracking plus gradient text plus glow shadows on text *you* add. See
+[Design defaults](/docs/craft/design-defaults).
+
+## Everything enters on one frame
+
+Stagger sibling entrances by 3–6 frames. Landing a whole group simultaneously reads robotic. See
+[Motion principles](/docs/craft/motion-principles) → follow-through and overlapping action.
+
+## Promoting the wrong layer under a slow zoom
+
+Text under [`drift`](/docs/layout/drift) trembles — glyph rasters snap to whole device pixels while
+the zoom keeps them in sub-pixel motion. The fix is one `willChange: "transform"` layer per **text
+container**. Never promote per-word or per-character spans (many small text layers shimmer even at
+rest) and never `Drift` itself (borders become resampled texture, so 1px lines pulse between sharp
+and blurry as the scale creeps).
+
+```tsx
+// ❌ <Drift><div style={{ willChange: "transform" }}>{scene}</div></Drift> — borders pulse
+// ❌ chars.map((c) => <span style={{ willChange: "transform" }}>{c}</span>) — shimmer at rest
+// ✅ bordered card unpromoted; inner text block gets willChange: "transform"
+```

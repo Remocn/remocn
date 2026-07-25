@@ -1,0 +1,120 @@
+---
+title: Onboarding Stepper Flow
+description: A multi-step onboarding scene where a stepper advances through form panels and finishes on a success state
+component: onboarding-stepper-flow
+vibe: clean
+length: 175
+useWhen:
+  - "Demoing a multi-step onboarding experience — account setup, plan choice, preferences — in one scene"
+  - "Showing progressive form completion with a stepper indicator advancing across panels"
+  - "A product video needs a complete new-user flow from first input to success without custom orchestration"
+avoidWhen:
+  - "The flow is a payment checkout — use `checkout-flow`, which is cursor-driven with card entry and a toast"
+  - "It is a single account sign-up (email and password, then success) — use `signup-flow`"
+  - "You need custom panel content like images or code blocks — the panels render fixed primitives, so orchestrate manually"
+---
+
+<BlockPreview name="onboarding-stepper-flow" />
+
+A composition scene that walks a new user through three onboarding steps. A horizontal stepper
+advances across panels of input, radio, and switch fields, finishing on a Finish button that runs to
+success. The panel crossfade derives linearly from the stepper's exposed position channel; every
+other channel comes from a composed primitive's hook.
+
+## Installation
+
+<InstallBlock name="onboarding-stepper-flow" />
+
+<Note>
+Installing `onboarding-stepper-flow` automatically installs the shared `remocn-ui` core and all composed primitives via `registryDependencies`: `stepper`, `input`, `radio`, `switch`, and `button`. You do not need to install them separately.
+</Note>
+
+## Composed primitives
+
+- **Stepper** — the horizontal progress indicator; its position channel also drives the panel crossfade
+- **Input** — the account panel's email field, which types itself in
+- **Radio** — the plan selection panel
+- **Switch** — the preferences panel toggles
+- **Button** — the Next and Finish actions, with Finish running through to success
+
+## Timeline narrative
+
+The scene opens on step one with the email typing into the input. The stepper advances to step two
+around frame 64, crossfading to the plan panel where a radio option is selected. It advances again
+around frame 104 to the preferences panel and its switches. The Finish button then runs to its
+success state at 156, leaving about 20 frames of settle before the scene ends at 175.
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { OnboardingStepperFlow } from "@/components/remocn/onboarding-stepper-flow";
+
+const OnboardingScene = () => (
+  <OnboardingStepperFlow
+    steps={["Account", "Plan", "Settings"]}
+    name="jane@acme.com"
+    finishLabel="Finish"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="OnboardingStepperFlow"
+    component={OnboardingScene}
+    durationInFrames={175}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+<Note title="Step count is fixed at three">
+  The internal schedule advances the stepper at frames 64 and 104, so `steps` renames the three
+  panels rather than adding or removing them. For a different number of steps, compose `stepper`
+  with your own panels directly.
+</Note>
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "steps",
+      type: "string[]",
+      default: "DEFAULT_STEPS",
+      description: "Labels for the three stepper positions.",
+    },
+    {
+      name: "name",
+      type: "string",
+      default: "\"jane@acme.com\"",
+      description: "Value typed into the account panel's input field.",
+    },
+    {
+      name: "plans",
+      type: "string[]",
+      default: "DEFAULT_PLANS",
+      description: "Options rendered as radio choices in the plan panel.",
+    },
+    {
+      name: "nextLabel",
+      type: "string",
+      default: "\"Next\"",
+      description: "Label on the advance button shown on the first two panels.",
+    },
+    {
+      name: "finishLabel",
+      type: "string",
+      default: "\"Finish\"",
+      description: "Label on the final button that runs through to its success state.",
+    },
+    {
+      name: "theme",
+      type: "Partial<RemocnTheme>",
+      description: "Theme overrides forwarded to every composed primitive.",
+    },
+  ]}
+/>

@@ -1,0 +1,5 @@
+{
+  "title": "Craft",
+  "collapsible": false,
+  "pages": ["index", "design-defaults", "motion-principles", "anti-patterns"]
+}
