@@ -3,7 +3,7 @@
 **Family:** A. Product & Launch · **Default duration:** ~12s (360f @30fps) · **Format:** 16:9 · **Vibe:** premium
 
 A single-feature reveal: a quiet kicker sets expectation, the feature name arrives at full scale, then one benefit line lands with an accent highlight on the key word. Three beats, one idea — this is "Introducing X" for a tweet or changelog banner, not a feature list.
-Read `../anatomy.md` first; pick components from `../components/index.md`.
+Read `../anatomy.md` first; pick components from `https://remocn.dev/llms-components.txt`.
 
 ## Beats
 

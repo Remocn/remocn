@@ -3,7 +3,7 @@
 **Family:** D. Developer/OSS · **Default duration:** ~13s (390f @30fps, scales with contributor count N) · **Format:** 16:9 · **Vibe:** tech
 
 An OSS repo announcement: establish the repo name, count up stars and forks, reveal the contributor community, show the install command, close on a GitHub CTA. The traction numbers are the story spine — they must land with satisfying momentum, not slide by as decoration.
-Read `../anatomy.md` first; pick components from `../components/index.md`.
+Read `../anatomy.md` first; pick components from `https://remocn.dev/llms-components.txt`.
 
 ## Beats
 

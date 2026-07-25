@@ -54,6 +54,12 @@ export const RemotionRoot = () => (
       description: "Color used for the JSX prop highlight, the HMR flash, and the default button background",
     },
     {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Time multiplier applied as frame × speed. The typing schedule is a fixed set of frame constants, so this shifts the whole sequence rather than remapping it cleanly — leave it at 1 unless you are matching an external beat",
+    },
+    {
       name: "className",
       type: "string",
       description: "Optional className for the outer container",

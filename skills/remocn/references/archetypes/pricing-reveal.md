@@ -3,7 +3,7 @@
 **Family:** I. Sales & Conversion · **Default duration:** ~12s (360f @30fps) · **Format:** 16:9 · **Vibe:** premium
 
 A sales scene that walks viewers through pricing tiers, elevates the recommended plan, and closes on a CTA. The recommended tier is the single focal point — every other element frames it. Restrained by design: one accent color, one highlighted column, one ask.
-Read `../anatomy.md` first; pick components from `../components/index.md`.
+Read `../anatomy.md` first; pick components from `https://remocn.dev/llms-components.txt`.
 
 ## Beats
 

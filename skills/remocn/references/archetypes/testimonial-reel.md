@@ -3,7 +3,7 @@
 **Family:** C. Growth & Social Proof · **Default duration:** ~14s (430f @30fps for N=3, scales with quote count) · **Format:** 16:9 · **Vibe:** clean
 
 Cycle real customer quotes one at a time — each card springs in, holds while the quote text plays word-by-word, then fades through to the next. Close on an aggregate proof number ("Join 12,000+ people who found their flow") so the social proof lands on data, not sentiment alone. One accent color throughout; background is a muted `shader-grain-gradient` on a solid dark canvas.
-Read `../anatomy.md` first; pick components from `../components/index.md`.
+Read `../anatomy.md` first; pick components from `https://remocn.dev/llms-components.txt`.
 
 ## Beats
 

@@ -34,7 +34,7 @@ the user only for what's missing, then fall back to honest English placeholders.
 
 ## Step 3 — map beats to component slots
 
-Pick one slot per beat from these candidates (full props in each `../components/<name>.md`):
+Pick one slot per beat from these candidates (full props at `https://remocn.dev/docs/<section>/<name>.md`, linked from the index):
 
 | Beat | Slot candidates | Notes |
 |---|---|---|
@@ -47,7 +47,7 @@ Pick one slot per beat from these candidates (full props in each `../components/
 | **Transitions** | `push-through` (going deeper), `focus-pull` (refined shift), `whip-pan` (energy), or plain `fade()` from `@remotion/transitions/fade` (neutral cut) | pass to `TransitionSeries.Transition` as `presentation`; text-swap components (`fade-through`, `shared-axis-*`) mount inside a scene instead |
 
 Budget each `<TransitionSeries.Sequence durationInFrames>` around the component's natural length
-(`Length` in `../components/index.md`). Standard ~45s split: Hook 165 · Positioning 120 · Product reveal
+(`Length` in `https://remocn.dev/llms-components.txt`). Standard ~45s split: Hook 165 · Positioning 120 · Product reveal
 150 · Features 450 (across 2–4) · Proof 300 · CTA 171.
 
 ## Step 4 — assemble (raw `<TransitionSeries>`)

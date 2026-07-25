@@ -191,6 +191,58 @@ describe("component pages carry selection metadata", () => {
   });
 });
 
+describe("the agent skill points at pages that exist", () => {
+  const skillSources = [...new Glob("skills/**/*.md").scanSync(".")].map(
+    (file) => ({
+      file,
+      text: readFileSync(file, "utf8"),
+    }),
+  );
+
+  const urls = skillSources.flatMap(({ file, text }) =>
+    [...text.matchAll(/https:\/\/remocn\.dev(\/[^\s`)"']*)/g)].map((m) => ({
+      file,
+      path: m[1],
+    })),
+  );
+
+  it("cites at least the component index", () => {
+    expect(urls.some((u) => u.path === "/llms-components.txt")).toBe(true);
+  });
+
+  it("every cited docs page resolves to a real file", () => {
+    const slugs = new Set(
+      pages.map((p) =>
+        p.file.replace(/^content\/docs\//, "").replace(/\.mdx$/, ""),
+      ),
+    );
+    const broken = urls
+      .filter(({ path }) => path.startsWith("/docs/"))
+      .map(({ file, path }) => ({
+        file,
+        path,
+        slug: path.replace(/^\/docs\//, "").replace(/\.md$/, ""),
+      }))
+      .filter(
+        ({ slug }) =>
+          !slug.includes("<") &&
+          !slugs.has(slug) &&
+          !slugs.has(`${slug}/index`),
+      )
+      .map(({ file, path }) => `${file} -> ${path}`);
+
+    expect(broken).toEqual([]);
+  });
+
+  it("no longer ships a bundled component catalog", () => {
+    const catalog = [
+      ...new Glob("skills/remocn/references/components/**").scanSync("."),
+    ];
+
+    expect(catalog).toEqual([]);
+  });
+});
+
 describe("navigation lists every page", () => {
   it("each component page appears in its section meta.json", () => {
     const missing: string[] = [];

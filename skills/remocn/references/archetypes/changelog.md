@@ -4,7 +4,7 @@
 
 A regular-release recap: show the version number and a human-readable list of changes (Added / Fixed /
 Changed), close on a footer with a link and date. Calm and legible — the list must read, not dazzle.
-Read `../anatomy.md` first; pick components from `../components/index.md`.
+Read `../anatomy.md` first; pick components from `https://remocn.dev/llms-components.txt`.
 
 ## Beats
 

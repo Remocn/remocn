@@ -3,7 +3,7 @@
 **Family:** H. Brand & Identity · **Default duration:** ~4.5s (135f @30fps, ±15f with wordmark length) · **Format:** 16:9 · **Vibe:** premium
 
 A brand insert: the wordmark assembles, the mark draws or scales in, the lockup holds. Used as a standalone intro sting, a series opener (with corner brackets and a tagline), or a closing brand card. One mark, one accent, total restraint — this archetype is where over-decoration is most tempting and most wrong.
-Read `../anatomy.md` first; pick components from `../components/index.md`.
+Read `../anatomy.md` first; pick components from `https://remocn.dev/llms-components.txt`.
 
 ## Beats
 
@@ -28,7 +28,7 @@ Transitions: none internal — the bumper is atomic. Connect to surrounding cont
 | Bumper variant: bracket frame + tagline | — | **`bumper-frame`** — corner brackets (strokeDashoffset draw, 4f stagger per corner) + tagline/CTA rows + `mode: 'intro' \| 'outro'` that mirrors choreography |
 | Accent pop (launch bumper only) | `confetti` — one burst on a product-launch sting; skip entirely on a standard brand insert | — |
 
-`logo-enter` ([`../components/logo-enter.md`](../components/logo-enter.md)) renders a brand or partner **chip cluster** ("works with Stripe, GitHub, Vercel"). A single product mark always needs the new `logo-sting` component.
+`logo-enter` ([`logo-enter`](https://remocn.dev/docs/social/logo-enter.md)) renders a brand or partner **chip cluster** ("works with Stripe, GitHub, Vercel"). A single product mark always needs the new `logo-sting` component.
 
 The two new components are reusable across the entire H family: `logo-sting` is the atomic mark primitive that H1/H3/H4 all share; `bumper-frame` wraps it for series openers and closers.
 
