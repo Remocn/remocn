@@ -1,6 +1,17 @@
 ---
 title: Spiral
 description: Rotating spiral arms radiating from the center
+component: shader-spiral
+vibe: premium
+length: 150
+useWhen:
+  - "You want a hypnotic, rotating radial background with visible arm structure."
+  - "A transition or intro benefits from a strong \"pulling in toward the center\" motion."
+  - "You want a two-tone, minimal look — `colorFront` on `colorBack`."
+avoidWhen:
+  - "You want closed concentric rings rather than open arms — use `shader-swirl`."
+  - "The center sits behind key text — the convergence point competes for attention."
+  - "You need multi-color richness — spiral is duotone by default; use `shader-warp`."
 ---
 
 <ComponentPreview name="shader-spiral" />

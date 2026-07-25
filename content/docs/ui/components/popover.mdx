@@ -1,6 +1,17 @@
 ---
 title: Popover
 description: A floating card that appears beside an anchor with arbitrary content
+component: popover
+vibe: clean
+length: 120
+useWhen:
+  - "Showing a hover-card with richer content (title + description) than a single-line tooltip label allows."
+  - "Demonstrating a popover animation keyed to the timeline — open and close sequenced across frames."
+  - "The overlay should enter from a specific axis (`side` prop controls translate direction)."
+avoidWhen:
+  - "You only need a single-line label — use `tooltip` instead (lighter, no title/description structure)."
+  - "You need a persistent side panel with a close button and action — use `sheet` instead."
+  - "The overlay needs full blocking modal behavior — use `alert-dialog` instead."
 ---
 
 <UiComponentPreview name="popover" />

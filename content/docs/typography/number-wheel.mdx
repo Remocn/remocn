@@ -1,6 +1,18 @@
 ---
 title: Number Wheel
 description: Odometer that rolls a number from one value to another with direction inferred from the values
+component: number-wheel
+vibe: data
+length: 112
+useWhen:
+  - "A metric, stat, or count should animate to its value in a satisfying odometer roll."
+  - "A data-driven scene needs a number to tick up (or down) to convey growth, reduction, or change."
+  - "Dashboard-style video content requires a numeric reveal with clear direction and mechanical rhythm."
+avoidWhen:
+  - "The value is not an integer — this component is designed for whole numbers; format decimals upstream before passing them in."
+  - "The number should appear all at once without rolling — use `micro-scale-fade` for a static entrance of a pre-formatted number string."
+  - "The scene requires text alongside the number to animate together — compose `NumberWheel` with a static text node in a flex container rather than embedding units in the `to` value."
+  - "The value carries a prefix or suffix like `$99` or `1.2M` — use `slot-machine-roll` (accepts arbitrary strings); for very large multi-digit metrics counting up, `rolling-number` is purpose-tuned."
 ---
 
 <ComponentPreview name="number-wheel" />

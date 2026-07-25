@@ -1,6 +1,17 @@
 ---
 title: Terminal Cursor Zoom
 description: Camera locked to the typing cursor, dollying across a terminal as a command types at high zoom
+component: terminal-cursor-zoom
+vibe: tech
+length: 90
+useWhen:
+  - "One install command is the whole beat and it must stay legible in a vertical or small-screen crop — the camera holds the cursor at frame center at 2.8× zoom."
+  - "A short social clip needs kinetic energy from the typing itself rather than from a full terminal session."
+  - "An install or CTA card should end on the command still under the cursor, with no output lines to distract from it."
+avoidWhen:
+  - "The session has multiple lines, logs, or success output — use `terminal-simulator`; this component types exactly one command line and the camera never leaves it."
+  - "The terminal window should stay statically framed — use `terminal-simulator` on its own, since this is only a camera rig around it."
+  - "The content is source code in an editor rather than a shell command — use `glass-code-walk` for the same tracking camera over a code panel."
 ---
 
 <ComponentPreview name="terminal-cursor-zoom" />

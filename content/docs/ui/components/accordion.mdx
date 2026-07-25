@@ -1,6 +1,17 @@
 ---
 title: Accordion
 description: An accordion panel whose open/closed state is a pure function of the timeline
+component: accordion
+vibe: clean
+length: 120
+useWhen:
+  - "Showing a collapsible FAQ or settings section expanding on a timeline cue."
+  - "Demonstrating the open/close interaction of a disclosure pattern in a product demo."
+  - "Composing multiple staggered reveals where each panel opens at a different `from` frame."
+avoidWhen:
+  - "The content is always visible — there is no collapse state; lay it out statically instead."
+  - "You need a flyout triggered from a button — use `dropdown-menu` instead."
+  - "The reveal wraps arbitrary JSX children rather than a string — use `blur-in` to wrap any node."
 ---
 
 <UiComponentPreview name="accordion" />

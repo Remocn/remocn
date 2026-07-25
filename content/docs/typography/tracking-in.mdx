@@ -1,6 +1,17 @@
 ---
 title: Tracking In
 description: Letter-spacing collapses and blur clears with a springy entrance
+component: tracking-in
+vibe: premium
+length: 90
+useWhen:
+  - "A title word or brand name should feel like it is focusing into place — tracking collapse is the right metaphor for clarity, precision, or sharpness."
+  - "The design is typographically driven and the letter-spacing motion is the centerpiece of the entrance."
+  - "A premium or cinematic tone is required — the spring-driven collapse reads as designed and intentional, not incidental."
+avoidWhen:
+  - "You want per-character stagger — `tracking-in` moves all letters as one unit; use `soft-blur-in` for a per-character blur-and-rise stagger instead."
+  - "The text is a sentence rather than a single bold word — wide initial tracking on a long phrase is illegible until it collapses; use `staggered-fade-up` for multi-word body text."
+  - "The scene is playful or casual — the typographic tracking motion reads as serious and editorial; use `spring-scale-in` for a bouncy entrance instead."
 ---
 
 <ComponentPreview name="tracking-in" />

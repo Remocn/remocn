@@ -1,6 +1,17 @@
 ---
 title: Smoke Ring
 description: Soft smoke ring curling and dissipating in place
+component: shader-smoke-ring
+vibe: premium
+length: 150
+useWhen:
+  - "You want a single soft, centered smoke ring as a focal atmospheric element."
+  - "A minimal, premium scene benefits from one curling shape on a dark field."
+  - "You want a neutral, near-monochrome look (override `colors` to tint)."
+avoidWhen:
+  - "You need a full-bleed edge-to-edge texture — this is a centered object; use a noise or gradient shader."
+  - "The center sits behind key text — the ring draws the eye inward."
+  - "You want multiple elements or busy motion — smoke-ring is deliberately singular."
 ---
 
 <ComponentPreview name="shader-smoke-ring" />

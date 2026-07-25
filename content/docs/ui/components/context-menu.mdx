@@ -1,6 +1,17 @@
 ---
 title: Context Menu
 description: A right-click menu panel that opens at the cursor point with no built-in trigger
+component: context-menu
+vibe: clean
+length: 120
+useWhen:
+  - "Showing a right-click menu appearing at a cursor position over content in a product demo."
+  - "Demonstrating browser-like or OS-like contextual actions (Back, Reload, Inspect)."
+  - "A cursor composition needs a pop-up menu that originates from a click point, not a button."
+avoidWhen:
+  - "The menu is triggered from a button in the UI — use `dropdown-menu` instead."
+  - "The overlay is a searchable command palette — use `command-menu` instead."
+  - "The overlay is a modal that blocks the rest of the scene — use `dialog` or `alert-dialog` instead."
 ---
 
 <UiComponentPreview name="context-menu" />

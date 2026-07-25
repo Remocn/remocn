@@ -1,6 +1,17 @@
 ---
 title: Slide Swap
 description: Shove one scene off the canvas and spring the next in from the opposite edge
+component: slide-swap
+vibe: clean
+length: 210
+useWhen:
+  - "You want a scene-to-scene grammar with no overlap at all — the outgoing content is fully gone before the incoming content's first frame."
+  - "The canvas colour is constant across the whole sequence and only the content should travel."
+  - "The video is a run of short claims where a directional shove keeps the pace up, and `axis` lets you pick horizontal or vertical for the whole run."
+avoidWhen:
+  - "The stage colour has to change between scenes — this sequencer paints one constant canvas, while `spring-settle` crossfades the background inside a dedicated gap."
+  - "You need a presentation to drop into a `TransitionSeries` between two `<Sequence>`s; this owns its own scene list, so reach for `push-through` or `whip-pan` instead."
+  - "What is swapping is a single phrase rather than a whole scene — `shared-axis-y` or `fade-through` replace text without moving the entire stage."
 ---
 
 <ComponentPreview name="slide-swap" />

@@ -1,6 +1,17 @@
 ---
 title: Command Menu
 description: A keyboard-driven command palette with backdrop, typing animation, and row selection
+component: command-menu
+vibe: tech
+length: 120
+useWhen:
+  - "Demoing a ⌘K palette opening with a typed query filtering icon-labeled commands."
+  - "Showing keyboard-first navigation UX in a developer or power-user product video."
+  - "Demonstrating item hover/press states with trailing keyboard shortcuts in a command palette."
+avoidWhen:
+  - "The list has no icons or keyboard shortcuts and is triggered from a button — use `dropdown-menu` instead."
+  - "The overlay is a right-click contextual menu — use `context-menu` instead."
+  - "You only need a filterable input without a modal overlay — use `combobox` instead."
 ---
 
 <UiComponentPreview name="command-menu" />

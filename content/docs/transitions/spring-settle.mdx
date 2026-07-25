@@ -1,6 +1,17 @@
 ---
 title: Spring Settle
 description: Shrink a scene away as one group, hold the stage empty for a beat, then land the next one from above
+component: spring-settle
+vibe: premium
+length: 213
+useWhen:
+  - "The stage colour changes from scene to scene — the crossfade happens inside the empty gap, so it never muddies two scenes together."
+  - "Each scene is a small stack of elements that should land one after another, which is what `SpringSettleItem` and its compressed stagger are for."
+  - "You want a deliberate, unhurried cadence: the outgoing scene shrinks away as one group and the next settles down onto the stage from slightly larger than life."
+avoidWhen:
+  - "You want directional momentum between scenes; `slide-swap` shoves the outgoing content off one edge and springs the next in from the opposite one."
+  - "You need a presentation to drop into a `TransitionSeries` between two `<Sequence>`s; this owns its own scene list, so use `push-through` or `zoom-blur` instead."
+  - "The scene should keep breathing while it holds — content is perfectly still between boundaries here, so wrap it in `drift` if you want a constant camera push."
 ---
 
 <ComponentPreview name="spring-settle" />

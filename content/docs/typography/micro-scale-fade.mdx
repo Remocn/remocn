@@ -1,6 +1,17 @@
 ---
 title: Micro Scale Fade
 description: A calm, tiny scale pop for subtle premium polish on labels and headings
+component: micro-scale-fade
+vibe: clean
+length: 60
+useWhen:
+  - "A label, subheading, or supporting text needs an entrance that feels polished without drawing attention to itself."
+  - "The scene already has a hero animation and supporting text should enter quietly underneath it."
+  - "A single block of text needs to appear in a neutral, cross-tone way that works for product, SaaS, or corporate video."
+avoidWhen:
+  - "The reveal should be the hero moment with visible kinetic weight — use `kinetic-center-build` or `per-character-rise` for entrances that command attention."
+  - "Text should enter per-character or per-word rather than as a unified block — use `bottom-up-letters`, `per-character-rise`, or `per-word-crossfade` for staged reveals."
+  - "The text needs to also exit — `micro-scale-fade` is entrance-only; use `blur-out-up` or `fade-through` when an exit arc is required."
 ---
 
 <ComponentPreview name="micro-scale-fade" />

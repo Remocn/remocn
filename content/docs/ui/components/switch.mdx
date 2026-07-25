@@ -1,6 +1,17 @@
 ---
 title: Switch
 description: A switch whose checked/unchecked state is a pure function of the timeline
+component: switch
+vibe: clean
+length: 120
+useWhen:
+  - "Showing a toggle being flipped in a settings panel walkthrough."
+  - "Demonstrating a binary on/off control with an animated thumb slide and track fill."
+  - "Composing a settings scene alongside `select` and `slider` (used in `settings-toggle-flow`)."
+avoidWhen:
+  - "The choice is one of multiple mutually exclusive options — use `radio` or `select` instead."
+  - "You need a compact segmented control — use `toggle-group` instead (continuous sliding indicator between segments)."
+  - "The state is a range value — use `slider` instead."
 ---
 
 <UiComponentPreview name="switch" />

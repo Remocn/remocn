@@ -1,6 +1,17 @@
 ---
 title: Line-by-Line Slide
 description: Each line slides in from the left with a staggered flow then exits to the right
+component: line-by-line-slide
+vibe: clean
+length: 90
+useWhen:
+  - "A multi-line headline or short paragraph needs a flowing, line-by-line entrance with a matching exit."
+  - "Directional slide motion (left-in / right-out) should underscore the reading rhythm of the text."
+  - "A body-copy-style reveal is needed for bullet points or list items staged as stacked lines."
+avoidWhen:
+  - "The text is a single short phrase — the stagger has nothing to stage; use `mask-reveal-up` or `per-character-rise` for single-line reveals instead."
+  - "The reveal should move upward rather than slide horizontally — use `mask-reveal-up` (upward, masked) or `blur-out-up` (upward, blurred exit)."
+  - "The lines should not exit — this component slides lines out to the right; for a hold-in-place reveal, use `mask-reveal-up`."
 ---
 
 <ComponentPreview name="line-by-line-slide" />

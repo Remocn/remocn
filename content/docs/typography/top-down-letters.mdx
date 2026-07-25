@@ -1,6 +1,18 @@
 ---
 title: Top-Down Letters
 description: Letters descend from above in a pronounced staircase, one symbol at a time
+component: top-down-letters
+vibe: clean
+length: 60
+useWhen:
+  - "A single uppercase word or short acronym should enter with structural weight — each letter landing like a stamp."
+  - "The scene calls for a sharp, graphic title card where the sequential drop reinforces the word's rhythm."
+  - "You want per-letter stagger with a pronounced vertical distance (default 46px) that reads clearly at large font sizes."
+avoidWhen:
+  - "The text is more than ~8 characters — many letters dropping sequentially stretches the animation and the last letters feel delayed; use `staggered-fade-up` for longer phrases."
+  - "You want blur or softness on entry — `top-down-letters` is zero-blur by design; use `soft-blur-in` for the Apple-style per-character blur reveal."
+  - "The stagger direction should be horizontal or spatial — use `short-slide-right` for a left-to-right group glide or `tracking-in` for a letter-spacing collapse instead."
+  - "The letters should rise from below rather than drop from above — use `bottom-up-letters`, the identical-cadence upward mirror."
 ---
 
 <ComponentPreview name="top-down-letters" />

@@ -1,6 +1,17 @@
 ---
 title: Color Panels
 description: Overlapping translucent color panels sliding past each other
+component: shader-color-panels
+vibe: premium
+length: 150
+useWhen:
+  - "You want an architectural, glassy backdrop of translucent panes sliding past each other."
+  - "A scene benefits from layered depth without organic blob motion."
+  - "You want the panel count tunable via `density`."
+avoidWhen:
+  - "You want organic, flowing motion — use `shader-warp` or `shader-metaballs`."
+  - "The overlap patterns would clutter dense foreground content — lower `density`."
+  - "You need a single smooth gradient — use `shader-mesh-gradient`."
 ---
 
 <ComponentPreview name="shader-color-panels" />

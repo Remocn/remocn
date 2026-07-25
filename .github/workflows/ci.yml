@@ -20,6 +20,9 @@ jobs:
       # PR #61 (12 remocn-ui suites + 2 real source bugs) are fixed.
       - run: bun run test
         continue-on-error: true
+      # Blocking on its own, because the suite above is not. Guards the
+      # registry <-> docs contract the remocn skill reads at runtime.
+      - run: bun test lib/docs-meta.test.ts
       - run: bun run registry:check
 
   build:

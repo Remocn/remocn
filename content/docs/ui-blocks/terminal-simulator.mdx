@@ -1,6 +1,16 @@
 ---
 title: Terminal Simulator
 description: A console window that types out commands and rolls older lines off the top
+component: terminal-simulator
+vibe: tech
+length: 240
+useWhen:
+  - "Demoing a CLI tool install sequence (`npm install`, `npx shadcn add`, build output)."
+  - "Showing an AI agent or script executing a multi-step task in a terminal session."
+  - "A developer tool launch video needs the authentic feel of commands running and output streaming."
+avoidWhen:
+  - "You only need to type a single short string — use `typewriter` instead, which is lighter and pairs with any layout."
+  - "The code should be displayed as a formatted, highlighted editor window — use `glass-code-block` instead."
 ---
 
 <ComponentPreview name="terminal-simulator" />

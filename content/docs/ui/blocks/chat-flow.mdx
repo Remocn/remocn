@@ -1,6 +1,17 @@
 ---
 title: Chat Flow
 description: A messaging conversation that types outgoing messages, shows typing indicators, and pops in incoming replies with reactions
+component: chat-flow
+vibe: social
+length: 360
+useWhen:
+  - "A scene needs a messaging conversation that carries your own brand tokens instead of a real platform's chrome."
+  - "The whole beat should be scripted from a `messages` array — outgoing text types into the composer, dots precede replies, reactions pop in."
+  - "Other scene elements must sync to the conversation — `chatFlowSchedule` and `chatFlowDuration` expose the per-message frame offsets."
+avoidWhen:
+  - "The video must read as Telegram — use `telegram-chat-flow`, which owns the tailed bubbles, in-bubble timestamps, and double-check marks."
+  - "The video must read as iMessage — use `imessage-chat-flow`, which owns the gray/blue tailed bubbles, the Delivered label, and tapback badges."
+  - "You only need one message landing on a beat you time yourself — use `message-bubble` with `useMessageBubbleTransition`."
 ---
 
 <BlockPreview name="chat-flow" />

@@ -1,6 +1,16 @@
 ---
 title: Perlin Dissolve
 description: Sweep a perlin-noise threshold across the frame to dissolve into the next scene
+component: perlin-dissolve
+vibe: premium
+length: 104
+useWhen:
+  - "Organic, atmospheric chapter changes — nature, ambient, calm product films."
+  - "The two scenes differ strongly in content — the noise field neutralizes the mismatch."
+  - "You want the classic film-dissolve feel with texture instead of a plain crossfade."
+avoidWhen:
+  - "Fast cuts — the threshold sweep needs ~100 frames to read as a sweep, not a flicker."
+  - "Sharp geometric brand language — the noise is deliberately unstructured; use `dither-dissolve`."
 ---
 
 <ComponentPreview name="perlin-dissolve" />

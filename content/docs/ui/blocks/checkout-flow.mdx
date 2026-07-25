@@ -1,6 +1,17 @@
 ---
 title: CheckoutFlow
 description: A cursor-driven checkout card with a pricing toggle, card input, terms checkbox, and payment confirmation
+component: checkout-flow
+vibe: clean
+length: "state-driven"
+useWhen:
+  - "Demoing a SaaS payment or upgrade UX end-to-end with cursor navigation and toast confirmation."
+  - "A product video needs a complete purchase journey (plan select → card entry → pay → success) in one scene."
+  - "Showing the full checkout funnel without assembling the individual primitives manually."
+avoidWhen:
+  - "You only need a payment form without cursor animation — compose `field`, `input`, `button` manually."
+  - "The flow is a multi-step onboarding (not payment) — use `onboarding-stepper-flow` instead."
+  - "You need custom timing control over individual steps — orchestrate the primitives directly."
 ---
 
 <BlockPreview name="checkout-flow" />

@@ -1,6 +1,18 @@
 ---
 title: Focus Blur Resolve
 description: A premium focus pull from heavy blur to crisp text, then a soft blur-out exit
+component: focus-blur-resolve
+vibe: premium
+length: 90
+useWhen:
+  - "A hero word or short phrase should feel like a camera lens pulling into focus."
+  - "The scene calls for a full in-and-out arc in a single component without composing separate entrance and exit clips."
+  - "Premium cinematic aesthetics are required — the blur depth conveys intentional production quality."
+avoidWhen:
+  - "You want a clean departure upward after a crisp entrance — that arc belongs to `blur-out-up`, which arrives clean and exits with upward blur."
+  - "The text is multiple lines or a paragraph — the blur radius is designed for a single short phrase; use `mask-reveal-up` or `line-by-line-slide` for multi-line reveals."
+  - "The entrance should be sharp from frame one — use `kinetic-center-build` or `per-character-rise` when there should be no blurry opener."
+  - "You want a blur entrance that holds crisp with no exit — `focus-blur-resolve` forces a blur-out departure; use `soft-blur-in` for an entrance-only blur reveal."
 ---
 
 <ComponentPreview name="focus-blur-resolve" />

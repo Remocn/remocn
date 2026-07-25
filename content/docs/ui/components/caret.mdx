@@ -1,6 +1,17 @@
 ---
 title: Caret
 description: A blinking text caret — a pure motion atom or a fully controlled bar
+component: caret
+vibe: tech
+length: 120
+useWhen:
+  - "Placing a blinking insertion cursor beside a text node or at the end of a typed string."
+  - "Composing inside a custom typewriter or terminal scene where `typewriter` is too opinionated."
+  - "Indicating an active input position before the `input` primitive's focus ring animation starts."
+avoidWhen:
+  - "You need the full input UX (focus ring, border, value reveal) — use `input` instead, which owns its own caret."
+  - "The typewriter effect is needed — use `typewriter`, which composes `caret` internally."
+  - "You need a text selection highlight rather than an insertion point."
 ---
 
 <ComponentPreview name="caret" />

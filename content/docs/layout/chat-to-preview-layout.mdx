@@ -1,0 +1,101 @@
+---
+title: Chat to Preview Layout
+description: A two-column split where the chat column shrinks and the preview column expands, for showing an agent building something
+component: chat-to-preview-layout
+vibe: tech
+length: 120
+useWhen:
+  - "Showing an AI agent at work — the conversation starts as the subject, then yields the frame to what it produced"
+  - "You need a two-column split whose ratio animates, without writing the width interpolation yourself"
+  - "A demo has to hand attention from input to output inside a single continuous shot, with no cut"
+avoidWhen:
+  - "Both columns should stay the same size — this component exists for the ratio change; use a plain flex row"
+  - "The transition between the two states is a cut rather than a squeeze — use a transition from `TransitionSeries` instead"
+  - "You need more than two columns, or a vertical split — the layout is horizontal and two-up by construction"
+---
+
+<ComponentPreview name="chat-to-preview-layout" />
+
+## Installation
+
+<InstallBlock name="chat-to-preview-layout" />
+
+## Usage
+
+Both columns are slots — pass whatever you want rendered. The layout animates the split from
+`startChatRatio` to `endChatRatio`, so the chat side gives up width as the preview grows.
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { ChatToPreviewLayout } from "@/components/remocn/chat-to-preview-layout";
+
+const AgentScene = () => (
+  <ChatToPreviewLayout
+    chat={<YourConversation />}
+    preview={<YourAppPreview />}
+    startChatRatio={0.5}
+    endChatRatio={0.25}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="ChatToPreviewLayout"
+    component={AgentScene}
+    durationInFrames={120}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Leaving `chat` or `preview` unset renders a built-in placeholder, which is useful while you are
+blocking out the timing before the real content exists.
+
+<Note title="Columns have minimum widths">
+  The chat column will not squeeze below 520px of inner width and the preview will not go below
+  720px, so extreme ratios clamp rather than collapse. Keep `endChatRatio` at or above roughly
+  `0.2` on the standard `1280×720` canvas to stay clear of the clamp.
+</Note>
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "chat",
+      type: "ReactNode",
+      description: "Content of the left column. Falls back to a built-in placeholder conversation.",
+    },
+    {
+      name: "preview",
+      type: "ReactNode",
+      description: "Content of the right column. Falls back to a built-in placeholder preview.",
+    },
+    {
+      name: "startChatRatio",
+      type: "number",
+      default: "0.5",
+      description: "Share of the width the chat column holds at the start, from 0 to 1.",
+    },
+    {
+      name: "endChatRatio",
+      type: "number",
+      default: "0.25",
+      description: "Share of the width the chat column holds once the squeeze completes.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Time multiplier applied as frame × speed. Above 1 the columns resize sooner.",
+    },
+    {
+      name: "className",
+      type: "string",
+      description: "Optional className passed to the root element.",
+    },
+  ]}
+/>

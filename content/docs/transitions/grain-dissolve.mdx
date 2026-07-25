@@ -1,6 +1,16 @@
 ---
 title: Grain Dissolve
 description: Disintegrate the outgoing scene into soft grainy shapes and condense the next scene out of the noise
+component: grain-dissolve
+vibe: premium
+length: 76
+useWhen:
+  - "The video has an editorial, textured, analog feel — grain reads as film and print."
+  - "Chapter or mood changes where the scene should decompose rather than move."
+  - "The `shape` prop should match the brand: `blob` organic, `wave` calm, `dots` halftone, `sphere` volumetric."
+avoidWhen:
+  - "The transition must be fast — under ~50 frames the intensity/softness sweep has no room to read."
+  - "The tone is crisp and minimal — the grain texture adds visual noise by design."
 ---
 
 <ComponentPreview name="grain-dissolve" />

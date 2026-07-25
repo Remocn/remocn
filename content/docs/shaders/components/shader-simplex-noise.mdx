@@ -1,6 +1,17 @@
 ---
 title: Simplex Noise
 description: Simplex noise flow field, smoother than Perlin
+component: shader-simplex-noise
+vibe: clean
+length: 150
+useWhen:
+  - "You want the smoothest of the noise backdrops — fewer directional artifacts than Perlin."
+  - "A clean, minimal scene needs gentle multi-stop color drift."
+  - "You want posterized banding control via `stepsPerColor`."
+avoidWhen:
+  - "You want cloudier, softer fog — use `shader-perlin-noise`."
+  - "You want cellular structure — use `shader-voronoi`."
+  - "You want neural-web filaments — use `shader-neuro-noise`."
 ---
 
 <ComponentPreview name="shader-simplex-noise" />

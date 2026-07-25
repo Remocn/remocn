@@ -1,6 +1,17 @@
 ---
 title: Spinner
 description: A deterministic spinning arc — pure function of the Remotion frame
+component: spinner
+vibe: clean
+length: 120
+useWhen:
+  - "Showing a loading indicator inside a button after a click (hover → press → loading state)."
+  - "Adding an inline async-operation indicator to any scene without layout overhead."
+  - "Composing with `skeleton` or `button` to illustrate a loading-state moment in a flow."
+avoidWhen:
+  - "You need a full-width loading bar with a track — use `progress` instead."
+  - "You need a shimmer placeholder block — use `skeleton-block` instead."
+  - "The loading state resolves to real content — use `skeleton` for the crossfade (spinner has no loaded state)."
 ---
 
 <ComponentPreview name="spinner" />

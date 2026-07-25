@@ -1,6 +1,17 @@
 ---
 title: Dithering
 description: Ordered-dither shading over an animated gradient field
+component: shader-dithering
+vibe: tech
+length: 150
+useWhen:
+  - "You want a retro/print, 1-bit ordered-dither texture over a moving gradient."
+  - "A tech or lo-fi scene benefits from visible bayer/ordered dot structure."
+  - "You want the matrix tunable via `type` (`\"2x2\"`, `\"4x4\"`, `\"8x8\"`)."
+avoidWhen:
+  - "You want a centered dithered sphere — override `shape` (this wrapper defaults to full-bleed `\"wave\"`)."
+  - "You want smooth, non-textured color — use `shader-mesh-gradient`."
+  - "The dot pattern would reduce legibility of small text — raise `size` or use a solid `backdrop`."
 ---
 
 <ComponentPreview name="shader-dithering" />

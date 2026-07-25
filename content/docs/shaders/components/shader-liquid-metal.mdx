@@ -1,6 +1,17 @@
 ---
 title: Liquid Metal
 description: Molten metallic surface with flowing specular highlights
+component: shader-liquid-metal
+vibe: premium
+length: 150
+useWhen:
+  - "A premium, industrial, or luxury scene wants a brushed/molten metal surface."
+  - "You want reflective, flowing highlights that read as material rather than color."
+  - "The palette is neutral/monochrome and you want tint to lead subtly."
+avoidWhen:
+  - "You want a centered metallic emblem — override `shape` back to a paper shape (this wrapper defaults to full-bleed `\"none\"`)."
+  - "The brief calls for color — liquid-metal is tonal; use `shader-warp` or `shader-mesh-gradient`."
+  - "High contrast highlights would fight fine text — lower `contour`/`repetition`."
 ---
 
 <ComponentPreview name="shader-liquid-metal" />

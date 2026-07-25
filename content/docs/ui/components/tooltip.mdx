@@ -1,6 +1,17 @@
 ---
 title: Tooltip
 description: A small floating label that appears above an anchor on hover
+component: tooltip
+vibe: clean
+length: 120
+useWhen:
+  - "Showing a hover tooltip appearing next to a UI element in a product walkthrough."
+  - "Demonstrating a contextual label that explains an icon or action on the timeline."
+  - "Sequencing a show → read → hide moment — `side` controls which axis the tooltip enters from."
+avoidWhen:
+  - "You need title + description in the overlay — use `popover` instead (richer two-field content with optional children)."
+  - "You need a persistent side panel with actions — use `sheet` instead."
+  - "You need a blocking confirmation — use `alert-dialog` instead."
 ---
 
 <UiComponentPreview name="tooltip" />

@@ -1,6 +1,17 @@
 ---
 title: Message Bubble
 description: A state-driven speech bubble with incoming and outgoing variants and an optional reaction badge
+component: message-bubble
+vibe: clean
+length: "state-driven"
+useWhen:
+  - "You are hand-timing a single message landing on a beat you control, driving `style` from `useMessageBubbleTransition`."
+  - "A scene needs a themed speech bubble around arbitrary content — text, an image, or a `typing-indicator`."
+  - "The conversation must carry your own `RemocnTheme` tokens rather than a real messenger's palette."
+avoidWhen:
+  - "You want a whole scripted conversation with a composer, typing beats, and reactions — use `chat-flow`, which schedules bubbles for you."
+  - "The bubble must read as a specific messenger with a tail, timestamp, or tapback — use `telegram-chat-flow` or `imessage-chat-flow`, which own those bubble shapes."
+  - "You need the bouncing dots themselves rather than the container around them — use `typing-indicator`."
 ---
 
 <UiComponentPreview name="message-bubble" />

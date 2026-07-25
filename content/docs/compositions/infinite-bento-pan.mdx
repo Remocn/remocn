@@ -1,6 +1,17 @@
 ---
 title: Infinite Bento Pan
 description: A hypnotic diagonal camera glide over an oversized grid of bento cards
+component: infinite-bento-pan
+vibe: data
+length: 300
+useWhen:
+  - "You need an ambient establishing shot that says \"a lot is happening here\" without asking anyone to read a single number."
+  - "The shot should be one uninterrupted camera move — the diagonal traversal is interpolated across the composition's whole `durationInFrames`, so a longer duration slows the glide rather than changing its path."
+  - "A background layer is wanted behind a title or logo, with dozens of dashboard cards drifting past and a built-in vignette darkening the frame edges."
+avoidWhen:
+  - "The figures on screen have to mean something — every counter, stat and chart here is sine-driven filler, so use `animated-line-chart` or `animated-bar-chart` for a number the viewer should actually read."
+  - "You need the camera to slow down, hold, or land on one specific card; the pan is a single linear diagonal with no easing and no dwell."
+  - "You want a horizontal loop rather than a camera over a grid; `infinite-marquee` and `perspective-marquee` scroll a strip seamlessly instead."
 ---
 
 <ComponentPreview name="infinite-bento-pan" />

@@ -1,6 +1,17 @@
 ---
 title: Toggle Group
 description: A segmented control whose active value slides a thumb indicator between segments
+component: toggle-group
+vibe: clean
+length: 120
+useWhen:
+  - "Showing a segmented control switching between view modes, time ranges, or mutually exclusive options."
+  - "Demonstrating a smooth continuous thumb-slide animation between compact segments."
+  - "Replacing a radio group where options are co-located and a sliding-thumb metaphor reads better than individual dots."
+avoidWhen:
+  - "You need content panels that crossfade below the control — use `tabs` instead (full panel area + indicator)."
+  - "Options are sequential numbered steps — use `stepper` instead (connectors + check marks)."
+  - "You need a full dropdown with a reveal panel — use `select` instead."
 ---
 
 <UiComponentPreview name="toggle-group" />

@@ -1,6 +1,17 @@
 ---
 title: Shared Axis Z
 description: Scale-based shared-axis transition for focus shifts and context depth
+component: shared-axis-z
+vibe: clean
+length: 90
+useWhen:
+  - "Conveying a zoom-in narrative: moving from a broad context to a focused point."
+  - "Transitioning between two text values where the second is a more specific or deeper layer of the first."
+  - "Chaining multiple topic shifts in a `<Sequence>` where each swap should feel like a camera push forward."
+avoidWhen:
+  - "The swap is a lateral topic change with no depth relationship — use `shared-axis-y` for a horizontal-edit-style cut instead."
+  - "You only need to bring text in for the first time with no outgoing content — use `scale-down-fade` or `soft-blur-in` for a single-text entrance."
+  - "The scene already has a lot of scale motion and you need variety — mix in `shared-axis-y` to alternate the spatial grammar."
 ---
 
 <ComponentPreview name="shared-axis-z" />

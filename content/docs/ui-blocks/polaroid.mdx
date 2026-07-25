@@ -1,6 +1,16 @@
 ---
 title: Polaroid
 description: An instant-photo frame with a handwritten caption for video, images, or live compositions
+component: polaroid
+vibe: paper
+length: 150
+useWhen:
+  - "Media belongs in a hand-placed instant-photo frame with a handwritten caption."
+  - "You want a live composition to keep playing inside a stop-motion scene, with no pre-rendered file."
+  - "The photograph should stop being live at some point — wrap the child in Remotion's `<Freeze>`."
+avoidWhen:
+  - "You just need a plain rounded video frame with no paper story — use `backdrop` with padding."
+  - "The card needs to wobble or sit at an angle: this component has no jitter and no positioning. Wrap it in `paper-wobble` and place it yourself."
 ---
 
 <ComponentPreview name="polaroid" />

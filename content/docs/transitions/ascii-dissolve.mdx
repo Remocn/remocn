@@ -1,6 +1,17 @@
 ---
 title: ASCII Dissolve
 description: Dissolve one scene into the next through a drifting field of ASCII glyphs
+component: ascii-dissolve
+vibe: tech
+length: 40
+useWhen:
+  - "The video has a retro, terminal, or print aesthetic — the text-grid dissolve reads as CRT or risograph texture."
+  - "Content is dev-tool or teletype in tone and a monospace-glyph cut fits the brand."
+  - "The cut needs to stay content-agnostic — it works between any two scenes with no color matching required."
+avoidWhen:
+  - "The tone is soft or organic — use `grain-dissolve` or `perlin-dissolve` for a gentler texture instead."
+  - "You need a camera move rather than a dissolve — use `whip-pan` or `push-through`."
+  - "The brand is clean and minimal — the character grid reads as deliberately rough, not polished."
 ---
 
 <ComponentPreview name="ascii-dissolve" />

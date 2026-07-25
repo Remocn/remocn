@@ -1,6 +1,16 @@
 ---
 title: Rolodex Flip
 description: Cycle a word through a list of values with a 3D rolodex card flip
+component: rolodex-flip
+vibe: tech
+length: 110
+useWhen:
+  - "Cycling package, feature, or value names inside a held line — install commands, \"works with X\" beats, plan-name cycling."
+  - "The canonical \"any component, same command\" bit."
+avoidWhen:
+  - "The values are numbers with a counting narrative — use `number-wheel` or `rolling-number`."
+  - "Only two values swap once — `value-swap`, `shared-axis-y`, or `per-word-crossfade` is lighter."
+  - "The line reflows per value — the fixed sizer width shows a gap next to short values."
 ---
 
 <ComponentPreview name="rolodex-flip" />

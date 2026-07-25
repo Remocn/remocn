@@ -1,6 +1,17 @@
 ---
 title: Perspective Marquee
 description: A 3D-tilted infinite marquee with depth-of-field blur on items rolling toward the horizon
+component: perspective-marquee
+vibe: premium
+length: 240
+useWhen:
+  - "A dark, cinematic background treatment is needed with text rolling into a 3D vanishing point."
+  - "Feature names, brand words, or a tagline list should scroll with depth and atmosphere rather than flat."
+  - "The scene calls for a premium looping background element that holds for 4–8 seconds without feeling static."
+avoidWhen:
+  - "A flat, 2D looping ticker is sufficient — use `infinite-marquee` for a simpler, lighter strip with no perspective transform."
+  - "The marquee should stop or the words should land on a specific item — both marquee components loop indefinitely; compose a `Sequence` with a static component for a hold state."
+  - "The background is light-colored — the default `fadeColor=\"#050505\"` creates edge fades tuned for dark scenes; adapt carefully or use `infinite-marquee` on light backgrounds."
 ---
 
 <ComponentPreview name="perspective-marquee" />

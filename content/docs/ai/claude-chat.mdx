@@ -1,6 +1,17 @@
 ---
 title: Claude Chat
 description: Animated Claude chat input that types a prompt and morphs the waveform button into a send button
+component: claude-chat
+vibe: tech
+length: 150
+useWhen:
+  - "Announcing a Claude integration or Anthropic-powered feature where the Claude brand must be visible."
+  - "Showcasing a prompt workflow where claude.ai is the UI surface — the warm terracotta accent is the brand signal."
+  - "A multi-AI comparison video needs the Claude card alongside `chat-gpt` and `v0`."
+avoidWhen:
+  - "The product is Claude Code CLI — use `claude-code` instead, which shows the terminal welcome screen with `cwd` and agent context."
+  - "The product is ChatGPT — use `chat-gpt` instead for the correct pill-input and blue accent."
+  - "The integration is with OpenCode's TUI — use `opencode` instead."
 ---
 
 <ComponentPreview name="claude-chat" />

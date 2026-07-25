@@ -1,6 +1,17 @@
 ---
 title: Scale Down Fade
 description: Subtle premium settle-in with a restrained scale-down fade on exit
+component: scale-down-fade
+vibe: clean
+length: 90
+useWhen:
+  - "A headline needs a confident, minimal entrance without any kinetic exaggeration."
+  - "The surrounding content is already in motion and you need one element to settle calmly into focus."
+  - "The brand is clean or corporate and bounce or blur would feel off-brand."
+avoidWhen:
+  - "You want energy or playfulness — the scale-down reads as composed, not exciting; use `spring-scale-in` for an overshoot bounce instead."
+  - "The text should feel like it is being revealed rather than settling in — use `staggered-fade-up` or `soft-blur-in` for a character-by-character or word-by-word reveal."
+  - "You need an exit animation — scale-down-fade is an entrance only; compose with a separate exit primitive inside a `<Sequence>`."
 ---
 
 <ComponentPreview name="scale-down-fade" />

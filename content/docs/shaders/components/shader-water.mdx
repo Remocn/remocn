@@ -1,6 +1,17 @@
 ---
 title: Water
 description: Caustic water-surface ripples with subtle refraction
+component: shader-water
+vibe: premium
+length: 150
+useWhen:
+  - "A scene wants a calm, aquatic atmosphere with gentle refracted highlights."
+  - "You need a cool, dark blue backdrop that moves slowly without pulling focus."
+  - "The brief calls for depth or \"flow\" imagery (data lakes, streaming, calm)."
+avoidWhen:
+  - "The palette must be warm or vibrant — water reads cool by design; recolor via `colorHighlight`/`colorBack` or choose another shader."
+  - "You want sharp geometric motion — use `shader-swirl` or `shader-dot-orbit`."
+  - "Bright caustics would fight small text — lower `caustic`/`highlights` or use a solid `backdrop`."
 ---
 
 <ComponentPreview name="shader-water" />

@@ -1,6 +1,17 @@
 ---
 title: Toast
 description: A notification that slides in from below, holds, then auto-dismisses
+component: toast
+vibe: clean
+length: 120
+useWhen:
+  - "Showing a success/error notification appear after an action (form submit, save, API call)."
+  - "Ending a flow composition with a confirmation sliding in — used as the final beat in `signup-flow` and `settings-toggle-flow`."
+  - "Demonstrating auto-dismiss feedback in a product walkthrough with a `hidden → visible → hidden` sequence."
+avoidWhen:
+  - "The feedback is persistent and must not auto-dismiss — use a banner or inline alert component instead."
+  - "You need a blocking confirmation with actions — use `alert-dialog` instead."
+  - "You need a persistent side panel — use `sheet` instead."
 ---
 
 <UiComponentPreview name="toast" />

@@ -1,6 +1,16 @@
 ---
 title: Gem Smoke
 description: Animated color fields flowing behind and inside a glassy logo silhouette
+component: shader-gem-smoke
+vibe: premium
+length: 150
+useWhen:
+  - "Brand or logo reveals that want smoke living inside and around a mark."
+  - "You have a static brand asset (SVG/PNG) to feed as `image` and want it treated as a glassy silhouette."
+  - "A premium product intro wants color fields flowing through a recognizable shape."
+avoidWhen:
+  - "You have no logo or mark to feed as `image` — use `shader-smoke-ring` or `shader-neuro-noise` for a shapeless field instead."
+  - "The brand mark should stay static and legible — the smoke will distort its read."
 ---
 
 <ComponentPreview name="shader-gem-smoke" />

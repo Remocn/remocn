@@ -1,6 +1,17 @@
 ---
 title: Short Slide Right
 description: The whole phrase glides in from the left while words reveal in sequence through opacity
+component: short-slide-right
+vibe: clean
+length: 60
+useWhen:
+  - "A short headline should enter with horizontal momentum — reads as forward motion or progress."
+  - "You want word-level opacity stagger layered on top of a single group translation, giving depth without complexity."
+  - "The composition requires a fast (60f) entrance that feels purposeful and directional."
+avoidWhen:
+  - "You are transitioning between two texts — use `shared-axis-z` (depth) or `shared-axis-y` (vertical swap) which handle the outgoing content."
+  - "You want vertical stacking motion — use `short-slide-down` where each word drops onto its own line to build a layout."
+  - "The slide distance needs to be large or cinematic — `short-slide-right` is intentionally compact (default 24px); use a custom composition for a wide pan."
 ---
 
 <ComponentPreview name="short-slide-right" />

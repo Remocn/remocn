@@ -1,6 +1,16 @@
 ---
 title: Caret Wipe
 description: Sweep a typing caret across the frame, wiping the outgoing scene into the next
+component: caret-wipe
+vibe: clean
+length: 40
+useWhen:
+  - "Dev-tool, editor, or terminal demos where a typing cursor is the natural through-line between scenes."
+  - "The scenes are UI or text surfaces that plausibly get \"typed\" or \"erased.\""
+  - "A directional wipe with a clear metaphor fits better than a generic dissolve."
+avoidWhen:
+  - "The scenes aren't text or UI surfaces — the caret metaphor has nothing to type over."
+  - "You want a textured dissolve instead of a directional wipe — use `ascii-dissolve` or `dither-dissolve`."
 ---
 
 <ComponentPreview name="caret-wipe" />

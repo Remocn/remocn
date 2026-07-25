@@ -1,6 +1,17 @@
 ---
 title: Progress
 description: A progress bar that fills along a scripted numeric value timeline
+component: progress
+vibe: data
+length: 120
+useWhen:
+  - "Showing a loading, upload, or completion bar animating to a target value."
+  - "Visualizing progression through a multi-step flow as a single continuous bar."
+  - "You need a labeled percentage readout alongside the fill indicator."
+avoidWhen:
+  - "The state is binary (done/not done) — use `switch` instead."
+  - "You need segmented, numbered step-by-step progress — use `stepper` instead (connectors + check marks)."
+  - "You need a range input the user can drag — use `slider` instead (thumb + grab-ring interaction)."
 ---
 
 <UiComponentPreview name="progress" />

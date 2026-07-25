@@ -1,6 +1,17 @@
 ---
 title: Dot Orbit
 description: Dots orbiting on concentric paths across the frame
+component: shader-dot-orbit
+vibe: tech
+length: 150
+useWhen:
+  - "You want a structured dot-grid backdrop with gentle orbital motion."
+  - "A tech scene benefits from a regular pattern that reads as \"network\" or \"system\"."
+  - "You want dot size/spread tunable via `size`/`spreading`."
+avoidWhen:
+  - "You want a static dot grid — the static `dot-grid` shader is intentionally not shipped; use a CSS grid."
+  - "You want organic, flowing motion — use `shader-warp` or `shader-metaballs`."
+  - "The regular pattern would clash with dense foreground content."
 ---
 
 <ComponentPreview name="shader-dot-orbit" />

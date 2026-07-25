@@ -1,6 +1,17 @@
 ---
 title: X Followers Overview
 description: X follow notifications flip through in 3D, then the total follower count blurs in
+component: x-followers-overview
+vibe: data
+length: 360
+useWhen:
+  - "A milestone or social-proof scene needs cycling follow notifications building to a total reveal."
+  - "You want the confetti-backed follower-count payoff at the end of a growth story."
+  - "Depicting X audience growth with multiple recent followers, not a single profile."
+avoidWhen:
+  - "You're highlighting one profile and a Follow click — use `x-follow-card`."
+  - "The metric is GitHub stars — use `github-stars`."
+  - "You only need a bare count-up with no notification feed or confetti — use `rolling-number` or `number-wheel`."
 ---
 
 <ComponentPreview name="x-followers-overview" />

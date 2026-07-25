@@ -1,6 +1,17 @@
 ---
 title: GitHub Stars
 description: Stargazer list fly-through with a synced odometer counter — renders standalone from sample data or accepts live stargazer props
+component: github-stars
+vibe: data
+length: 120
+useWhen:
+  - "Celebrating an OSS milestone — the count-up odometer landing on a star total is the payoff beat."
+  - "A repo-showcase or social-proof scene needs real stargazer faces flying past."
+  - "You want one self-contained card that pairs the avatar fly-through with the synced counter."
+avoidWhen:
+  - "You only need the number to roll up without the stargazer fly-through — use `number-wheel` or `rolling-number`."
+  - "The metric isn't GitHub stars — use a generic counter (`rolling-number`) or `animated-bar-chart` for compared values."
+  - "You're depicting follower growth on X — use `x-followers-overview`."
 ---
 
 <ComponentPreview name="github-stars" />

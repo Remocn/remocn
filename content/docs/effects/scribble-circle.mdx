@@ -1,6 +1,16 @@
 ---
 title: Scribble Circle
 description: A brush circle that sweeps itself around a region of the frame, opening thin and closing thick
+component: scribble-circle
+vibe: paper
+length: 30
+useWhen:
+  - "Circling the one element that matters — a button, a number, a row in a screenshot."
+  - "Building the full annotation beat: circle the thing, then point at it with `ink-arrow`."
+avoidWhen:
+  - "You need a permanent border or a focus ring. This is a gesture that happens once, not a state."
+  - "You want a rectangular or bracket-shaped annotation, or to cross something out."
+  - "The target's size is not known at author time — this component cannot measure it."
 ---
 
 <ComponentPreview name="scribble-circle" />

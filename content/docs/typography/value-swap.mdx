@@ -1,6 +1,15 @@
 ---
 title: Value Swap
 description: Swap a value in place with a vertical slide so the layout never shifts
+component: value-swap
+vibe: clean
+length: 100
+useWhen:
+  - "A value changes at a specific story beat — before/after price, status promotion, a hex/token flip."
+  - "You control the exact swap frames."
+avoidWhen:
+  - "Values should cycle continuously as a montage — use `rolodex-flip` with its own rhythm instead."
+  - "The value is a large pure number counting up — `rolling-number` or `number-wheel` reads as data."
 ---
 
 <ComponentPreview name="value-swap" />

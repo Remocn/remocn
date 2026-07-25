@@ -1,6 +1,17 @@
 ---
 title: Combobox
 description: A searchable select with a typed-query input, filtered panel, and row selection
+component: combobox
+vibe: clean
+length: 120
+useWhen:
+  - "Showing a searchable/filterable dropdown with a typed query narrowing the list on the timeline."
+  - "Demoing autocomplete or type-ahead selection UX in a product walkthrough."
+  - "A form field needs a constrained set of options but with search, not free-form text."
+avoidWhen:
+  - "The list is not filterable and selection is direct — use `select` (non-filterable dropdown) instead."
+  - "The overlay is a command palette with icons and keyboard shortcuts — use `command-menu` instead."
+  - "The input is free-form text entry with no list — use `input` instead."
 ---
 
 <UiComponentPreview name="combobox" />

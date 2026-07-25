@@ -1,6 +1,17 @@
 ---
 title: Button
 description: A button whose visual state is a pure function of the timeline
+component: button
+vibe: clean
+length: 120
+useWhen:
+  - "Showing the full interactive lifecycle of a CTA — hover → press → loading → success — on the timeline."
+  - "A composition needs a trigger visual for a modal-layer primitive (`dialog`, `alert-dialog`, `drawer`)."
+  - "Demonstrating a loading/submit state with a spinner inline inside the button."
+avoidWhen:
+  - "You need a selectable row inside a menu — use `dropdown-menu-item` or `command-menu-item` instead."
+  - "The button must open a searchable dropdown — use `combobox` (which uses an input trigger) instead."
+  - "You only need a static label with no interactive state — render plain text in the composition."
 ---
 
 <UiComponentPreview name="button" />

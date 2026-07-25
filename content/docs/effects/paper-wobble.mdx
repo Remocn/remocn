@@ -1,6 +1,16 @@
 ---
 title: Paper Wobble
 description: Per-pose reshoot jitter that makes any content feel hand-placed on a desk
+component: paper-wobble
+vibe: paper
+length: 90
+useWhen:
+  - "Any block should carry the stop-motion reshoot wobble — headlines, cards, or content that must feel hand-placed rather than laid out."
+  - "Two or more elements should read as separate objects on a desk: give each its own `seed`."
+avoidWhen:
+  - "The content should sit rock-still — UI simulations, code blocks being read."
+  - "You want smooth floating motion rather than discrete poses — use `drift`."
+  - "The component already jitters itself, like `paper-sticker`; wrapping it just doubles the shake."
 ---
 
 <ComponentPreview name="paper-wobble" />
