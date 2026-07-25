@@ -75,8 +75,8 @@ export default function LegalPage() {
                 anonymous usage data: pages visited, referrer, browser and
                 device type, and coarse location (country level). This tells us
                 which components people actually use. We do not use advertising
-                trackers, we do not build cross-site profiles, and we never
-                sell data.
+                trackers, we do not build cross-site profiles, and we never sell
+                data.
               </li>
               <li>
                 <strong>Local preferences.</strong> Your theme choice (light or
@@ -95,14 +95,16 @@ export default function LegalPage() {
             <p>
               Paid products are sold through{" "}
               <a href="https://creem.io">Creem</a>, our merchant of record.
-              Creem runs the checkout and handles payment processing,
-              invoicing, and taxes. Your card details go directly to Creem and
-              its payment processors — they never touch our servers. After a
-              purchase we receive only what is needed to deliver it: your email
-              address, the product, and the order details. How Creem handles
-              your data is described in{" "}
-              <a href="https://www.creem.io/privacy">Creem&apos;s privacy
-              policy</a>.
+              Creem runs the checkout and handles payment processing, invoicing,
+              and taxes. Your card details go directly to Creem and its payment
+              processors — they never touch our servers. After a purchase we
+              receive only what is needed to deliver it: your email address, the
+              product, and the order details. How Creem handles your data is
+              described in{" "}
+              <a href="https://www.creem.io/privacy">
+                Creem&apos;s privacy policy
+              </a>
+              .
             </p>
 
             <h3>Third-party services</h3>
@@ -112,21 +114,21 @@ export default function LegalPage() {
                 analytics.
               </li>
               <li>
-                <a href="https://creem.io">Creem</a> — checkout and payments,
-                as merchant of record.
+                <a href="https://creem.io">Creem</a> — checkout and payments, as
+                merchant of record.
               </li>
               <li>
                 <a href={GITHUB_URL}>GitHub</a> — source code, issues, and
-                sponsorships. Anything you do there is governed by
-                GitHub&apos;s own terms.
+                sponsorships. Anything you do there is governed by GitHub&apos;s
+                own terms.
               </li>
             </ul>
 
             <h3>Your data</h3>
             <p>
               We keep order emails for as long as we need them to provide
-              support and meet legal obligations. To ask what we hold about
-              you, or to have it deleted, email{" "}
+              support and meet legal obligations. To ask what we hold about you,
+              or to have it deleted, email{" "}
               <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a> and we
               will sort it out.
             </p>
@@ -147,9 +149,9 @@ export default function LegalPage() {
             <p>
               Some products are paid. Unless a product states otherwise at
               purchase, buying it grants you a non-exclusive license to use it
-              in any number of your own projects, commercial ones included.
-              What it does not grant is the right to redistribute or resell
-              the product itself — for example republishing the components in
+              in any number of your own projects, commercial ones included. What
+              it does not grant is the right to redistribute or resell the
+              product itself — for example republishing the components in
               another registry, template marketplace, or paid bundle.
             </p>
 
@@ -174,10 +176,10 @@ export default function LegalPage() {
 
             <h3>Changes</h3>
             <p>
-              We may update this page as the project evolves — for example
-              when new products or services launch. The date at the top
-              reflects the latest revision, and continued use of the site
-              after a change means you accept it.
+              We may update this page as the project evolves — for example when
+              new products or services launch. The date at the top reflects the
+              latest revision, and continued use of the site after a change
+              means you accept it.
             </p>
 
             <h3>Contact</h3>

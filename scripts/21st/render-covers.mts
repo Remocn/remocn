@@ -2,7 +2,11 @@ import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { bundle } from "@remotion/bundler";
-import { ensureBrowser, renderStill, selectComposition } from "@remotion/renderer";
+import {
+  ensureBrowser,
+  renderStill,
+  selectComposition,
+} from "@remotion/renderer";
 import { tsconfigWebpackAlias } from "../tsconfig-webpack-alias.mts";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -10,7 +14,9 @@ const root = path.resolve(here, "..", "..");
 const outRoot = path.join(root, "out", "21st");
 
 async function main() {
-  const { generated } = JSON.parse(readFileSync(path.join(outRoot, "generated.json"), "utf8")) as {
+  const { generated } = JSON.parse(
+    readFileSync(path.join(outRoot, "generated.json"), "utf8"),
+  ) as {
     generated: string[];
   };
   const only = process.argv.includes("--only")
@@ -31,11 +37,13 @@ async function main() {
   const serveUrl = await bundle({
     entryPoint: path.join(outRoot, "covers-root.tsx"),
     webpackOverride: (config) => {
-      const existing = Object.entries(config.resolve?.alias ?? {}).map(([name, alias]) => ({
-        name: name.replace(/\$$/, ""),
-        alias: alias as string,
-        onlyModule: name.endsWith("$"),
-      }));
+      const existing = Object.entries(config.resolve?.alias ?? {}).map(
+        ([name, alias]) => ({
+          name: name.replace(/\$$/, ""),
+          alias: alias as string,
+          onlyModule: name.endsWith("$"),
+        }),
+      );
       return {
         ...config,
         resolve: {
@@ -69,7 +77,8 @@ async function main() {
       failed.push({ slug, error: String(err).slice(0, 200) });
     }
     done += 1;
-    if (done % 10 === 0 || done === slugs.length) console.log(`covers: ${done}/${slugs.length}`);
+    if (done % 10 === 0 || done === slugs.length)
+      console.log(`covers: ${done}/${slugs.length}`);
   }
   if (failed.length) {
     console.log(`FAILED (${failed.length}):`);
