@@ -27,6 +27,7 @@
         "fumadocs-mdx": "^14.2.11",
         "fumadocs-ui": "^16.7.10",
         "jotai": "^2.19.1",
+        "json5": "^2.2.3",
         "lucide-react": "^1.7.0",
         "motion": "^12.40.0",
         "next": "16.2.10",

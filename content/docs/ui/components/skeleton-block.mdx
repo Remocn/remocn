@@ -1,0 +1,124 @@
+---
+title: Skeleton Block
+description: A single shimmer placeholder rectangle whose highlight sweep is a pure function of the frame
+component: skeleton-block
+vibe: clean
+length: 120
+useWhen:
+  - "Building a custom skeleton layout by composing individual shimmer rectangles at precise dimensions"
+  - "Adding one loading placeholder inside another component or composition"
+  - "You need per-rectangle control over size, radius, speed, and colors"
+avoidWhen:
+  - "You want shimmer and real content to crossfade automatically — use `skeleton`, which takes a loading/loaded state and children"
+  - "You need a spinning arc loader rather than a rectangle — use `spinner`"
+  - "The placeholder is a whole layout of card, avatar, and lines — use `skeleton` with its `layout` prop instead of assembling blocks by hand"
+---
+
+The motion atom underneath [`skeleton`](/docs/ui/components/skeleton). A directional highlight
+gradient sweeps across the block deterministically from `useCurrentFrame()` and loops seamlessly, so
+any number of blocks stay in phase without coordination.
+
+Unlike most primitives in this tier it has no `state` — it is always shimmering. Reach for it when
+you are laying out a placeholder yourself; reach for `skeleton` when you want the loading-to-loaded
+crossfade handled for you.
+
+## Installation
+
+<InstallBlock name="skeleton-block" />
+
+<Note>
+Installing `skeleton-block` automatically installs the shared `remocn-ui` core (`lib/remocn-ui/`) via `registryDependencies`. You do not need to install it separately.
+</Note>
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { SkeletonBlock } from "@/components/remocn/skeleton-block";
+
+const LoadingCard = () => (
+  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+    <SkeletonBlock width={240} height={20} radius={4} />
+    <SkeletonBlock width={180} height={16} />
+    <SkeletonBlock width={200} height={16} />
+  </div>
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="SkeletonBlock"
+    component={LoadingCard}
+    durationInFrames={120}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The sweep loops, so `durationInFrames` only needs to cover as long as you want the placeholder on
+screen — there is no entrance or exit to budget for.
+
+### Inside a flex row
+
+`width` accepts a string, so a block can fill remaining space. Pair it with `flexShrink` when a
+fixed-width block sits next to a flexible one.
+
+```tsx
+<div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+  <SkeletonBlock width={40} height={40} radius={20} flexShrink={0} />
+  <SkeletonBlock width="100%" height={16} />
+</div>
+```
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "width",
+      type: "number | string",
+      default: "120",
+      description: "Block width. A number is pixels; a string passes through as a CSS width, so \"100%\" fills the container.",
+    },
+    {
+      name: "height",
+      type: "number",
+      default: "16",
+      description: "Block height in pixels.",
+    },
+    {
+      name: "radius",
+      type: "number",
+      default: "6",
+      description: "Corner radius in pixels. Match half the height for a pill or avatar circle.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Time multiplier for the highlight sweep, applied as frame × speed.",
+    },
+    {
+      name: "baseColor",
+      type: "string",
+      description: "Base fill of the block. Falls back to the resolved theme's muted surface.",
+    },
+    {
+      name: "highlightColor",
+      type: "string",
+      description: "Color of the sweeping highlight. Falls back to the resolved theme.",
+    },
+    {
+      name: "flexShrink",
+      type: "number",
+      description: "CSS flex-shrink on the block. Set to 0 to stop a fixed-width block collapsing inside a flex row.",
+    },
+    {
+      name: "className",
+      type: "string",
+      description: "Optional className passed to the block element.",
+    },
+  ]}
+/>

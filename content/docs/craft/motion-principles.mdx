@@ -1,0 +1,115 @@
+---
+title: Motion principles
+description: The classic animation principles reduced to the eight that matter when you assemble scenes from prebuilt blocks
+---
+
+The 12 classic animation principles, adapted to **composing Remotion videos from remocn blocks**.
+Each entry gives the principle, the Remotion mechanic that expresses it, a remocn component that
+demonstrates it, and a do/avoid tuned to remocn's restraint.
+
+This page is about **which** principle and **when** — intent. For **how** the APIs work (easing
+curves, sequencing, spring config), read the Remotion docs. Where a principle pushes toward
+boldness (squash, exaggeration), the cap in [Design defaults](/docs/craft/design-defaults) always
+wins.
+
+remocn components drive motion with `spring()` and `interpolate()` + `Easing`; the examples below
+use that same idiom.
+
+The eight principles here are routinely useful when assembling scenes. The remaining four are
+character-animation territory and are compressed at the end.
+
+## Anticipation
+
+A short wind-up before the action makes it feel intentional: a drawer dips before it expands.
+
+- **Mechanic:** `spring()` with light overshoot, or a brief reverse `interpolate` (e.g. `−4px`)
+  for 1–3 frames before the main move.
+- **remocn:** [`spring-scale-in`](/docs/typography/spring-scale-in).
+- **Do/Avoid:** keep the wind-up to 1–3 frames, ≤110% scale. ❌ No bouncy cartoon recoil.
+
+## Staging
+
+Direct the eye: one clear idea per scene. Clear the stage before introducing the next element.
+
+- **Mechanic:** `<Sequence>` / `<Series>` to isolate beats; stagger entrances so only one focal
+  element moves at a time; dim or scale down what's leaving.
+- **remocn:** most [compositions](/docs/compositions).
+- **Do/Avoid:** one focal action per beat. ❌ Don't enter five elements on the same frame.
+
+## Follow-through and overlapping action
+
+Nothing stops at once; elements arrive staggered. Lighter things lead, heavier lag.
+
+- **Mechanic:** per-element delay offsets (`frame - index * stagger`) on the same animation.
+- **remocn:** [`staggered-fade-up`](/docs/typography/staggered-fade-up),
+  [`short-slide-right`](/docs/typography/short-slide-right).
+- **Do/Avoid:** stagger 3–6 frames between siblings. ❌ Don't land a whole group on one frame
+  (reads robotic) and don't over-stagger (feels sluggish).
+
+## Slow in and slow out
+
+Ease into and out of poses — almost nothing should move linearly.
+
+- **Mechanic:** `interpolate(..., { easing: Easing.out(Easing.cubic) })`; a sharp curve reads
+  snappy, a gentle one graceful.
+- **remocn:** transitions ([`whip-pan`](/docs/transitions/whip-pan),
+  [`focus-pull`](/docs/transitions/focus-pull)), most text reveals.
+- **Do/Avoid:** default to ease-out for entrances. ❌ Linear `interpolate` for visible motion
+  unless it's a constant drift (e.g. marquee, grid pan).
+
+## Arc
+
+Living motion follows curves, not straight lines — especially cursors and gestures.
+
+- **Mechanic:** drive `x` and `y` from separate eased interpolations, or a bezier path.
+- **remocn:** [`cursor`](/docs/ui/components/cursor) and `useCursorPath`, the social cards' cursor
+  travel to the Follow button.
+- **Do/Avoid:** curve cursor and hand paths. ❌ No straight diagonal cursor jumps.
+
+## Secondary action
+
+Supporting motion that reinforces the primary action without stealing focus.
+
+- **Mechanic:** a small parallel channel — a cursor ripple on click, a shadow that breathes as a
+  card opens, a caret blink under typing.
+- **remocn:** [`x-follow-card`](/docs/social/x-follow-card) (ripple at click),
+  [`typewriter`](/docs/typography/typewriter) (caret blink).
+- **Do/Avoid:** secondary motion stays subtle and on-theme. ❌ Don't add competing animation that
+  splits attention.
+
+## Timing
+
+Frame counts set weight: fast reads light, slow reads heavy. Vary timing for contrast.
+
+- **Mechanic:** budget in frames at the composition fps (remocn defaults to 30fps; component
+  durations run ~90–300 frames). The `speed` prop scales the animation tier.
+- **remocn:** every animation-tier component (`speed`); composition `durationInFrames`.
+- **Do/Avoid:** match duration to weight — a heavy hero assemble is slower than a toast. ❌ Don't
+  reuse one duration for everything; it kills rhythm.
+
+## Exaggeration, capped
+
+Push slightly past literal reality for clarity — but remocn's house style is restraint.
+
+- **Mechanic:** a touch of overshoot on `spring()`, a brief ≤110% scale peak.
+- **remocn:** [`spring-scale-in`](/docs/typography/spring-scale-in),
+  [`micro-scale-fade`](/docs/typography/micro-scale-fade).
+- **Do/Avoid:** subtle UI exaggeration only (≤110%, gentle overshoot). ❌ No stretched or cartoon
+  exaggeration. This is the principle most likely to collide with
+  [Design defaults](/docs/craft/design-defaults); the cap wins.
+
+## Rarely needed when composing blocks
+
+Character-animation territory — reach for these only when hand-drawing motion, not when
+assembling catalog components.
+
+- **Squash and stretch** — at most a 2–4% `scaleX`/`scaleY` volume trade on a hard landing
+  (`spring-scale-in`, `confetti`); rubber-band squash on text or cards fights the design defaults.
+- **Straight-ahead vs pose-to-pose** — remocn is pose-to-pose by construction:
+  `interpolate(frame, [k0, k1, k2], [v0, v1, v2])` keyframes are your poses. Straight-ahead
+  (frame-by-frame) is for hand-drawn organic effects.
+- **Solid drawing** — keep one `perspective` and vanishing point per scene when stacking 3D layers
+  ([`push-through`](/docs/transitions/push-through),
+  [`perspective-marquee`](/docs/typography/perspective-marquee)).
+- **Appeal** — emergent from staging, timing and restraint, not a knob. More motion is not more
+  appeal.

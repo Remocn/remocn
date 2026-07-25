@@ -1,0 +1,109 @@
+---
+title: AI Prompt Flow
+description: A full prompt-to-answer scene — the prompt types itself, the button runs to loading, a skeleton reveals, and the answer crossfades in
+component: ai-prompt-flow
+vibe: clean
+length: 230
+useWhen:
+  - "Demoing an AI product's whole prompt-to-answer experience in one self-contained scene"
+  - "Showing the generation lifecycle end to end — typing, loading, answer reveal, confirmation toast"
+  - "A product walkthrough needs a polished AI workflow beat with no custom timing work"
+avoidWhen:
+  - "You only need a button press with a loading state — use `button` with `state=\"loading\"`"
+  - "You only need a field that types — use `input` directly"
+  - "You need custom orchestration or step control across scenes — compose the primitives manually"
+---
+
+<BlockPreview name="ai-prompt-flow" />
+
+A composition scene that plays the full lifecycle of an AI generation: the prompt types into the
+field, the Generate button runs hover → press → loading, a skeleton shimmer stands in for the
+response, then crossfades into the generated answer, and a ready toast slides in. It is a pure
+orchestrator — every channel comes from a composed primitive's transition hook, so nothing is
+hand-timed.
+
+## Installation
+
+<InstallBlock name="ai-prompt-flow" />
+
+<Note>
+Installing `ai-prompt-flow` automatically installs the shared `remocn-ui` core and all composed primitives via `registryDependencies`: `input`, `button`, `skeleton`, `skeleton-block`, and `toast`. You do not need to install them separately.
+</Note>
+
+## Composed primitives
+
+- **Input** — the prompt field; the prompt reveals character by character while the field sits in its active state
+- **Button** — the Generate action, driven through hover, press, and loading states
+- **Skeleton** and **SkeletonBlock** — the shimmer placeholder standing in for the pending response
+- **Toast** — the confirmation that slides in once the answer has landed
+
+## Timeline narrative
+
+The scene opens with the prompt field active and empty. The prompt types itself in, the Generate
+button picks up hover then press, and drops into its loading state. The answer area swaps to a
+skeleton shimmer while generation is pending, then crossfades from shimmer to the real answer lines.
+A toast slides in to confirm the response is ready and dismisses near frame 220, leaving a short
+settle before the scene ends at 230.
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { AiPromptFlow } from "@/components/remocn/ai-prompt-flow";
+
+const PromptScene = () => (
+  <AiPromptFlow
+    prompt="Summarize this thread"
+    buttonLabel="Generate"
+    toastTitle="Response ready"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="AiPromptFlow"
+    component={PromptScene}
+    durationInFrames={230}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "prompt",
+      type: "string",
+      default: "\"Summarize this thread\"",
+      description: "The prompt text typed into the input field.",
+    },
+    {
+      name: "buttonLabel",
+      type: "string",
+      default: "\"Generate\"",
+      description: "Label on the action button that runs to its loading state.",
+    },
+    {
+      name: "answerLines",
+      type: "string[]",
+      default: "DEFAULT_ANSWER",
+      description: "Lines of the generated answer revealed after the skeleton crossfade.",
+    },
+    {
+      name: "toastTitle",
+      type: "string",
+      default: "\"Response ready\"",
+      description: "Title of the toast that slides in once the answer has landed.",
+    },
+    {
+      name: "theme",
+      type: "Partial<RemocnTheme>",
+      description: "Theme overrides forwarded to every composed primitive.",
+    },
+  ]}
+/>

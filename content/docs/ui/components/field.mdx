@@ -1,0 +1,203 @@
+---
+title: Field
+description: A static layout family for composing labeled form controls with consistent vertical spacing
+component: field
+vibe: clean
+length: state-driven
+useWhen:
+  - "Laying out labeled form controls — label, animated control, description hint — with consistent spacing"
+  - "Composing a form scene inside `checkout-flow` or `onboarding-stepper-flow` where several inputs need to align"
+  - "Wrapping any remocn-ui control that needs a visible label above it without hardcoding layout math"
+avoidWhen:
+  - "You need the control itself to animate — `field` is layout only; put `input` or `button` inside it"
+  - "There is a single unlabeled control — use the primitive directly"
+  - "The layout is horizontal or a grid — `FieldGroup` only stacks vertically"
+---
+
+A static layout family for composing labeled form controls, modeled on shadcn's Field. It reads no
+frame and holds no state — colors come from the resolved theme, and all motion belongs to whatever
+you place inside it.
+
+The nesting order is `FieldGroup` ▸ `Field` ▸ `FieldLabel` / `FieldControl` / `FieldDescription`.
+
+## Installation
+
+<InstallBlock name="field" />
+
+<Note>
+Installing `field` automatically installs the shared `remocn-ui` core (`lib/remocn-ui/`) via `registryDependencies`. You do not need to install it separately.
+</Note>
+
+## Usage
+
+`FieldControl` is a relative, fixed-height slot. The remocn-ui controls position themselves
+absolutely, so they need that slot to sit in — put `input` and `button` inside `FieldControl` rather
+than directly inside `Field`.
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import {
+  Field,
+  FieldControl,
+  FieldDescription,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/remocn/field";
+import { Input } from "@/components/remocn/input";
+
+const FormScene = () => (
+  <FieldGroup gap={16}>
+    <Field>
+      <FieldLabel>Email</FieldLabel>
+      <FieldControl>
+        <Input state="idle" value="jane@acme.com" />
+      </FieldControl>
+      <FieldDescription>We'll never share your email.</FieldDescription>
+    </Field>
+  </FieldGroup>
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="Field"
+    component={FormScene}
+    durationInFrames={120}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+## Props
+
+### FieldGroup
+
+Stacks fields vertically.
+
+<PropsTable
+  rows={[
+    {
+      name: "children",
+      type: "ReactNode",
+      required: true,
+      description: "The Field elements to stack.",
+    },
+    {
+      name: "gap",
+      type: "number",
+      default: "16",
+      description: "Vertical gap between fields in pixels.",
+    },
+    {
+      name: "style",
+      type: "CSSProperties",
+      description: "Style overrides merged onto the group container.",
+    },
+  ]}
+/>
+
+### Field
+
+One label, control, and description grouped together.
+
+<PropsTable
+  rows={[
+    {
+      name: "children",
+      type: "ReactNode",
+      required: true,
+      description: "Typically a FieldLabel, a FieldControl, and an optional FieldDescription.",
+    },
+    {
+      name: "gap",
+      type: "number",
+      default: "6",
+      description: "Vertical gap between the label, control, and description in pixels.",
+    },
+    {
+      name: "style",
+      type: "CSSProperties",
+      description: "Style overrides merged onto the field container.",
+    },
+  ]}
+/>
+
+### FieldLabel
+
+<PropsTable
+  rows={[
+    {
+      name: "children",
+      type: "ReactNode",
+      required: true,
+      description: "Label text shown above the control.",
+    },
+    {
+      name: "theme",
+      type: "Partial<RemocnTheme>",
+      description: "Theme overrides for the label's color.",
+    },
+    {
+      name: "style",
+      type: "CSSProperties",
+      description: "Style overrides merged onto the label.",
+    },
+  ]}
+/>
+
+### FieldControl
+
+The relative, fixed-height slot the absolutely positioned controls live in.
+
+<PropsTable
+  rows={[
+    {
+      name: "children",
+      type: "ReactNode",
+      required: true,
+      description: "The remocn-ui control to host, such as input or button.",
+    },
+    {
+      name: "height",
+      type: "number",
+      default: "40",
+      description: "Height of the slot in pixels. Match it to the control you are placing inside.",
+    },
+    {
+      name: "style",
+      type: "CSSProperties",
+      description: "Style overrides merged onto the slot.",
+    },
+  ]}
+/>
+
+### FieldDescription
+
+<PropsTable
+  rows={[
+    {
+      name: "children",
+      type: "ReactNode",
+      required: true,
+      description: "Hint text shown beneath the control.",
+    },
+    {
+      name: "align",
+      type: "\"start\" | \"center\"",
+      default: "\"start\"",
+      description: "Horizontal alignment of the description text.",
+    },
+    {
+      name: "theme",
+      type: "Partial<RemocnTheme>",
+      description: "Theme overrides for the description's color.",
+    },
+    {
+      name: "style",
+      type: "CSSProperties",
+      description: "Style overrides merged onto the description.",
+    },
+  ]}
+/>

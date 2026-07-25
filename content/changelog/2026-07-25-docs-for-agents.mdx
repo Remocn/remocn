@@ -1,0 +1,47 @@
+---
+title: Docs your agent can actually read
+date: 2026-07-25
+---
+
+The docs are becoming the single source of truth for both people and coding agents. Every page now
+renders to clean Markdown, a new Craft section holds the house rules that used to live only inside
+the agent skill, and six components that shipped without a page finally have one.
+
+### New pages
+
+Six components were installable from the registry but had no documentation. They do now.
+
+- [Simulated Cursor](/docs/effects/simulated-cursor) — a synthetic cursor that travels between
+  waypoints and fires a click ripple, for narrating a UI on screen
+- [Strikethrough Replace](/docs/typography/strikethrough-replace) — strikes through the old text and
+  fades the new text in beneath it
+- [AI Prompt Flow](/docs/ui/blocks/ai-prompt-flow) — a full prompt-to-answer scene, from typing
+  through loading skeleton to the ready toast
+- [Onboarding Stepper Flow](/docs/ui/blocks/onboarding-stepper-flow) — a stepper advancing through
+  three form panels to a success state
+- [Field](/docs/ui/components/field) — the static layout family for labeled form controls
+- [Skeleton Block](/docs/ui/components/skeleton-block) — the single shimmer rectangle underneath
+  `skeleton`
+
+<ChangelogPreview name="simulated-cursor" />
+
+### New section
+
+[Craft](/docs/craft) collects the rules that decide whether a generated video looks machine-made:
+
+- [Design defaults](/docs/craft/design-defaults) — restraint rules for the text and chrome you add
+  yourself, plus the palette and fonts the library already uses
+- [Motion principles](/docs/craft/motion-principles) — the eight classic principles that matter when
+  you assemble scenes from prebuilt blocks
+- [Anti-patterns](/docs/craft/anti-patterns) — the dozen recurring mistakes with the fix beside each
+
+### Improvements
+
+- Appending `.md` to any docs URL now returns real Markdown. Install commands, prop tables and
+  callouts were previously emitted as raw JSX — the install command was invisible entirely, and
+  heading levels were lost. All of it now renders as headings, fenced code blocks, Markdown tables
+  and blockquotes.
+- New [`/llms-components.txt`](https://remocn.dev/llms-components.txt) — every installable component
+  in one table with its use and avoid signal, natural length, vibe, tier and dependencies, linking
+  to each component's full page. It is the entry point for an agent picking components for a scene.
+- [`/llms.txt`](https://remocn.dev/llms.txt) points at the new component index.

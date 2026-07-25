@@ -8,6 +8,8 @@
     "imessage-chat-flow",
     "signup-flow",
     "checkout-flow",
+    "onboarding-stepper-flow",
+    "ai-prompt-flow",
     "settings-toggle-flow"
   ]
 }
