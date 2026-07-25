@@ -1,7 +1,7 @@
 # Video Anatomy & Composition Strategy
 
 How to turn "make a product demo with remocn" into a coherent video. Read this before composing.
-The component catalog is `components/index.md`; the per-archetype recipes are in `archetypes/` (start at `archetypes/index.md`).
+The component catalog is `https://remocn.dev/llms-components.txt`; the per-archetype recipes are in `archetypes/` (start at `archetypes/index.md`).
 
 This file has three layers, kept separate:
 1. **Strategy** — template vs compose vs build-new.
@@ -71,10 +71,10 @@ Derived from real reference demos. The good ones (CrowdReply, Flowith, HeyGen, m
 - **Long videos ride a narrative thread.** If it must run 60s+, carry it with a character / story (good Notion demo: the "Bug Wrangler" agent doing real tasks), never a feature list.
 
 ### Slop — never do these (each seen in a bad reference)
-- **Keep gradients / glow restrained — small and subtle, never large or dominant.** This is about *dosage*, not presence. A small, sparing gradient accent is fine (good_04 React Bits — restrained, not big, not much of it). Slop is a *large, saturated, full-frame* gradient wash (bad_04's hot-pink background) or a soft radial **halo behind headings** (both shadcn promos — the #1 tell). The hook gets life from motion and the accent, not a glow blob. See `design.md`, [no decorative glows].
+- **Keep gradients / glow restrained — small and subtle, never large or dominant.** This is about *dosage*, not presence. A small, sparing gradient accent is fine (good_04 React Bits — restrained, not big, not much of it). Slop is a *large, saturated, full-frame* gradient wash (bad_04's hot-pink background) or a soft radial **halo behind headings** (both shadcn promos — the #1 tell). The hook gets life from motion and the accent, not a glow blob. See `https://remocn.dev/docs/craft/design-defaults.md`, [no decorative glows].
 - **No feature-list / catalog enumeration.** Naming feature after feature ("Row Selection", "Pagination", "Sorting"…) over the same screenshot, or dumping every component in a gallery, is not a video — it has no narrative. Tell one problem → solution → proof story instead.
 - **No placeholder / lorem content.** "Scene A", "Scene B", "First", "Your UI", "Selected element", `TASK-####` filler. If real content is missing, use honest English placeholders the user will obviously replace — never ship lorem as the final.
-- **No ALL-CAPS heavy blocks, no decorative letter-spacing, no gradient text.** (A red ALL-CAPS "VISUAL EDITOR" block is slop.) See `design.md`.
+- **No ALL-CAPS heavy blocks, no decorative letter-spacing, no gradient text.** (A red ALL-CAPS "VISUAL EDITOR" block is slop.) See `https://remocn.dev/docs/craft/design-defaults.md`.
 - **No walls of dense, unreadable text** (tiny terminal dumps filling the frame). Show a few legible lines, not a transcript.
 - **No monotony.** Don't repeat the same slide/screenshot under different labels. Each beat must advance the story.
 - **Don't run long by enumerating.** 100s+ of feature-listing drags. If the content is genuinely long, give it a strong repeating rhythmic device (e.g. a question→answer cadence) or split into multiple videos.

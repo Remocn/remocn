@@ -5,7 +5,7 @@
 Demo a CLI or dev tool by running a real command to a visible result. The terminal is the product surface — show a
 believable command typed, output streaming line by line as instant steps, and the final artifact or success state.
 Two variants: short (social clip, grounded in monid ~18s) and standard (launch / conference ~43s).
-Read `../anatomy.md` first; pick components from `../components/index.md`.
+Read `../anatomy.md` first; pick components from `https://remocn.dev/llms-components.txt`.
 
 ## Beats
 

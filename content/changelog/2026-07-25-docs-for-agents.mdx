@@ -52,3 +52,7 @@ Six components were installable from the registry but had no documentation. They
 - CI now fails when a registry component has no docs page, when a page is missing its metadata, or
   when a page recommends a component that does not exist. The catalogue had drifted silently before
   this: ten shipped components were missing from the agent's view entirely.
+- The [agent skill](/docs/getting-started/agent-skill) no longer bundles a copy of the catalogue —
+  it reads these docs live. A component added today is visible to an agent whose skill was installed
+  months ago, and a prop can no longer go stale in two places at once. The skill keeps what does not
+  change per component: the two tiers, timing rules, and the recipes for composing a video.

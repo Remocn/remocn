@@ -13,15 +13,44 @@ description: >
 Copy-paste components for Remotion videos. Components install via `shadcn` and land in
 `components/remocn/` — you own the code.
 
+## The catalog lives at remocn.dev
+
+This skill does not carry a copy of the component catalog. There are ~240 components and they
+change; a bundled copy goes stale silently. Read the live docs instead.
+
+**Start every component search here:**
+
+```
+https://remocn.dev/llms-components.txt
+```
+
+One table per category, every installable component, each row carrying `Use for` / `Avoid for`,
+natural length, vibe, tier, dependencies, and a link to its full page. Scan it, shortlist, then
+fetch only the pages you shortlisted.
+
+**One component's full reference** — props with descriptions, worked examples, all use / don't-use
+notes — is the docs URL with `.md` appended:
+
+```
+https://remocn.dev/docs/typography/blur-out-up.md
+https://remocn.dev/docs/transitions/whip-pan.md
+https://remocn.dev/docs/ui/components/dialog.md
+```
+
+The index gives you the exact URL per component — don't guess the section from the name, several
+components live somewhere non-obvious.
+
+Fetch with whatever your environment provides (a web-fetch tool, `curl`, `WebFetch`). If the
+network is unavailable, say so and stop — do not invent props, defaults, or durations from memory,
+and do not substitute a component you have not read. A wrong prop name fails at build; an invented
+duration silently clips the animation.
+
 ## Installation
 
 Prerequisites: a Remotion project (`npx create-video@latest`).
 
 ```bash
-# Add any component (namespaced shadcn registry)
 shadcn add @remocn/blur-out-up
-
-# Component lands at components/remocn/blur-out-up.tsx
 ```
 
 `@remocn/<name>` is the canonical namespaced form (configured under `registries` in
@@ -46,23 +75,7 @@ remocn has two kinds of components — they have **different APIs**:
   select, command-menu, tooltip…). State-based props (`state`, `style`, `variant`, `theme`).
   **No `speed` prop.** Built on `@remocn/remocn-ui`.
 
-## Component categories
-
-Pick by what you're building. The catalog is split one file per component under
-`references/components/`. **Start at `references/components/index.md`** — a router table grouped by
-these categories with a `Use for` / `Avoid for` signal per component. Scan it, pick candidates, then
-open only the `references/components/<name>.md` files you need (full props, example, all use / don't-use
-notes). Don't read every file.
-
-| Category | Tier | Use for |
-|---|---|---|
-| **Text Animations** | `remocn` | Reveal/replace/emphasize text (`typewriter`, `blur-out-up`, `tracking-in`, `rolling-number`, `shimmer-sweep`…) |
-| **Backgrounds & Effects** | `remocn` | Animated foundations, cursors, one-shot effects (`simulated-cursor`, `confetti`, `backdrop`, `paper-wobble`, `ink-arrow`) |
-| **Shaders** | `remocn` | WebGL shader backdrops, frame-driven for deterministic renders (`shader-mesh-gradient`, `shader-warp`, `shader-voronoi`, `shader-god-rays`, `shader-metaballs`…) |
-| **Transitions** | `remocn` | TransitionSeries presentations between two scenes (`whip-pan`, `push-through`, `focus-pull`, `grain-dissolve`, `wave-wipe`…) |
-| **UI Blocks** | `remocn` | Interface sims for product demos (`terminal-simulator`, `glass-code-block`, `animated-bar-chart`, `progress-steps`…) plus paper props (`paper-sticker`, `polaroid`) |
-| **AI & Social Cards** | `remocn` | Brand/product card scenes (`chat-gpt`, `claude-code`, `v0`, `github-stars`, `x-follow-card`…) |
-| **UI Primitives** | `remocn-ui` | shadcn-style primitives for video (`button`, `dialog`, `select`, `command-menu`, `tooltip`…) |
+The index's `Tier` column tells you which one you are looking at before you open the page.
 
 ## Component patterns
 
@@ -75,6 +88,9 @@ Conventions differ by tier — don't assume animation-tier props on a primitive.
 - Text components: `fontSize`, `color`, `fontWeight`.
 - Transitions: lowercase factories (e.g. `whipPan(props)`) returning a `TransitionPresentation` — pass to `TransitionSeries.Transition` via `presentation`, pace with `linearTiming` / `springTiming`.
 - `className?: string` on the root.
+
+Not everything filed under transitions is a presentation: `slide-swap` and `spring-settle` are scene
+sequencers that take a `scenes` array and own the whole timeline. The page says which one you have.
 
 ### UI Primitives (`remocn-ui`)
 
@@ -115,15 +131,15 @@ import { Sequence, Series } from "remotion";
 ### Canvas & timing
 
 - **Canvas standard:** `1280×720 @ 30fps`. Components are laid out for it.
-- **Budget each Sequence around the component's natural length** — the `Length` column in
-  `components/index.md` (and each file's `Natural length`). Under-budgeting clips the animation;
-  over-budgeting leaves dead air.
-- **Tone matching:** each catalog entry carries a `vibe` tag (`tech`/`premium`/`data`/`clean`/
-  `playful`/`social`/`paper`) — pick components whose vibe fits the brand. `paper` is the
-  stop-motion kit: a quantized ~10-poses-per-second clock, handwriting and ink. Those components
-  read as one world, so mix them with each other rather than with the smooth tiers.
-- **Palette & fonts:** stay within the library's tokens (`references/design.md` → tokens) so your
-  own elements don't clash.
+- **`Length` is the component's own motion, not the whole beat.** For a transition it is the value
+  to pass to `linearTiming` / `springTiming`; for everything else it is the frame the animation
+  finishes on. Treat it as the floor for the `Sequence` and add hold time when the element should
+  stay on screen after it settles. `state-driven` means the component renders from its `state` prop
+  and has no duration of its own.
+- **Tone matching:** each entry carries a `vibe` tag (`tech`/`premium`/`data`/`clean`/`playful`/
+  `social`/`paper`) — pick components whose vibe fits the brand. `paper` is the stop-motion kit: a
+  quantized ~10-poses-per-second clock, handwriting and ink. Those components read as one world, so
+  mix them with each other rather than with the smooth tiers.
 
 ## Design defaults — avoid AI-slop
 
@@ -132,8 +148,14 @@ default tracking, sentence case, solid text color, subtle 1px elevation — no d
 letter-spacing, ALL-CAPS, gradient text-fills, or glow shadows. Never strip these traits from a
 component whose essence *is* the effect (`tracking-in`, social-card gradients, designed elevation).
 
-Full do/avoid examples + design tokens: `references/design.md`. Motion quality (timing,
-anticipation, staging, easing): `references/motion-principles.md`.
+Full do/avoid examples, design tokens, motion principles and the anti-pattern list live in the
+Craft section:
+
+```
+https://remocn.dev/docs/craft/design-defaults.md
+https://remocn.dev/docs/craft/motion-principles.md
+https://remocn.dev/docs/craft/anti-patterns.md
+```
 
 ## Gotchas (remocn-specific)
 
@@ -158,16 +180,23 @@ Don't dump components — compose one story. When asked to build a full video ("
 3. **Use the recipe** — `references/archetypes/index.md` routes to per-archetype builds: content contract
    (infer → ask → placeholder), duration variants, beat→component slots, and a worked
    `<TransitionSeries>` skeleton.
-4. **Pick each beat's component** from `references/components/index.md`; match the `vibe` tag to the
-   brand and budget its `Sequence` per Canvas & timing above.
+4. **Pick each beat's component** from `https://remocn.dev/llms-components.txt`; match the `vibe` tag
+   to the brand and budget its `Sequence` per Canvas & timing above.
 5. **Check the quality bar** — one accent, sentence-case kinetic type, real content, no glow halos, no
    feature-list enumeration. See `references/anatomy.md` §3.
 
 ## Reference
 
+Bundled with this skill — the judgment that does not change per component:
+
 - `references/anatomy.md` — composing a full video: strategy (template/compose/new), the product-demo beats, and the good-vs-slop quality bar.
 - `references/archetypes/index.md` — router to per-archetype build recipes (product-demo flagship + changelog, feature-announcement, oss-showcase, cli-tool-demo, testimonial-reel, year-in-review, pricing-reveal, logo-bumper): content contract, duration variants, beat→slot map.
-- `references/components/index.md` — router table (all components, grouped by category, with `Use for` / `Avoid for`). Open `references/components/<name>.md` for one component's full props, example, and use / don't-use notes.
-- `references/design.md` — anti-slop design defaults (do/avoid) + design tokens (palette, fonts, canvas).
-- `references/motion-principles.md` — motion-design principles adapted to remocn + Remotion.
-- `references/anti-patterns.md` — common generation mistakes and their fixes.
+
+Fetched from remocn.dev — everything that tracks the components:
+
+- `https://remocn.dev/llms-components.txt` — the component index. Always start here.
+- `https://remocn.dev/docs/<section>/<name>.md` — one component's full reference.
+- `https://remocn.dev/docs/craft/design-defaults.md` — anti-slop defaults and design tokens.
+- `https://remocn.dev/docs/craft/motion-principles.md` — motion principles adapted to remocn.
+- `https://remocn.dev/docs/craft/anti-patterns.md` — common generation mistakes and their fixes.
+- `https://remocn.dev/llms.txt` — index of the whole documentation, if you need something else.

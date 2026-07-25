@@ -2,7 +2,7 @@
 
 Router for video archetypes. **Pick the archetype that matches the user's ask, then open that
 `<name>.md`** for its full recipe (beats → slots → contract). Read `../anatomy.md` first for the
-strategy, the beat language, and the good-vs-slop bar; pick components from `../components/index.md`.
+strategy, the beat language, and the good-vs-slop bar; pick components from `https://remocn.dev/llms-components.txt`.
 `product-demo` is the fully-worked flagship; the others are compact recipes.
 
 | Archetype | Family | Use for | Duration |

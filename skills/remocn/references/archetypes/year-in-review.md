@@ -3,7 +3,7 @@
 **Family:** E. Data & Metrics · **Default duration:** ~20s (600f @30fps, N=4) · **Format:** 16:9 · **Vibe:** data / premium
 
 A mounting sequence of headline numbers — one stat fills the full frame per beat — building urgency as entry stagger compresses, culminating in a RecapWall that shows every figure at once. The rhythm accelerates; the numbers do the talking.
-Read `../anatomy.md` first; pick components from `../components/index.md`.
+Read `../anatomy.md` first; pick components from `https://remocn.dev/llms-components.txt`.
 
 ## Beats
 
