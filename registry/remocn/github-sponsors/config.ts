@@ -5,16 +5,23 @@ export const githubSponsorsConfig: ComponentConfig = {
   importPath: "@/components/remocn/github-sponsors",
   controls: {
     account: {
-      type: "text",
+      type: "text-content",
       default: "remocn",
-      label: "Account",
+      description: "Account",
     },
-    accentColor: { type: "color", default: "#db61a2", label: "Accent" },
+    accentColor: {
+      type: "color",
+      default: "#db61a2",
+      description: "Accent",
+    },
     theme: {
-      type: "select",
+      type: "enum",
       default: "light",
-      options: ["light", "dark"],
-      label: "Theme",
+      variants: {
+        light: {},
+        dark: {},
+      },
+      description: "Theme",
     },
   },
   durationInFrames: 270,

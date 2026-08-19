@@ -1,43 +1,52 @@
-import {
-  type ComponentConfig,
-  FONT_WEIGHT_OPTIONS,
-  FPS,
-  H,
-  W,
-} from "@/lib/customizer-config";
+import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
 
 export const matrixDecodeConfig: ComponentConfig = {
   componentName: "MatrixDecode",
   importPath: "@/components/remocn/matrix-decode",
   controls: {
-    text: { type: "text", default: "DECRYPTED", label: "Text" },
+    text: {
+      type: "text-content",
+      default: "DECRYPTED",
+      description: "Text",
+    },
     charset: {
-      type: "text",
+      type: "text-content",
       default: "!@#$%^&*()_+-=<>?/\\|",
-      label: "Charset",
+      description: "Charset",
     },
     fontSize: {
       type: "number",
-      default: 72,
       min: 12,
       max: 160,
       step: 1,
-      label: "Font size",
+      default: 72,
+      description: "Font size",
+      hiddenFromList: false,
     },
-    color: { type: "color", default: "#22c55e", label: "Color" },
+    color: {
+      type: "color",
+      default: "#22c55e",
+      description: "Color",
+    },
     fontWeight: {
-      type: "select",
+      type: "enum",
       default: "600",
-      options: FONT_WEIGHT_OPTIONS,
-      label: "Font weight",
+      variants: {
+        "400": {},
+        "500": {},
+        "600": {},
+        "700": {},
+      },
+      description: "Font weight",
     },
     revealDuration: {
       type: "number",
-      default: 60,
       min: 10,
       max: 240,
       step: 1,
-      label: "Reveal duration",
+      default: 60,
+      description: "Reveal duration",
+      hiddenFromList: false,
     },
   },
   durationInFrames: 90,

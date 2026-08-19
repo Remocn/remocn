@@ -5,23 +5,33 @@ export const accordionConfig: ComponentConfig = {
   componentName: "Accordion",
   importPath: "@/components/remocn/accordion",
   controls: {
-    title: { type: "text", default: "Is it accessible?", label: "Title" },
+    title: {
+      type: "text-content",
+      default: "Is it accessible?",
+      description: "Title",
+    },
     content: {
-      type: "text",
+      type: "text-content",
       default: "Yes. It adheres to the WAI-ARIA design pattern.",
-      label: "Content",
+      description: "Content",
     },
     variant: {
-      type: "select",
+      type: "enum",
       default: "default",
-      options: ["default", "ghost"],
-      label: "Variant",
+      variants: {
+        default: {},
+        ghost: {},
+      },
+      description: "Variant",
     },
     state: {
-      type: "select",
+      type: "enum",
       default: "opened",
-      options: ["opened", "closed"],
-      label: "State",
+      variants: {
+        opened: {},
+        closed: {},
+      },
+      description: "State",
     },
   },
   durationInFrames: 120,

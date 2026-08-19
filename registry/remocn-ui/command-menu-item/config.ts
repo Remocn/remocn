@@ -5,19 +5,37 @@ export const commandMenuItemConfig: ComponentConfig = {
   componentName: "CommandMenuItem",
   importPath: "@/components/remocn/command-menu-item",
   controls: {
-    label: { type: "text", default: "Settings", label: "Label" },
-    icon: {
-      type: "select",
-      default: "settings",
-      options: ["search", "settings", "user", "file"],
-      label: "Icon",
+    label: {
+      type: "text-content",
+      default: "Settings",
+      description: "Label",
     },
-    shortcut: { type: "text", default: "⌘ S", label: "Shortcut" },
+    icon: {
+      type: "enum",
+      default: "settings",
+      variants: {
+        search: {},
+        settings: {},
+        user: {},
+        file: {},
+      },
+      description: "Icon",
+    },
+    shortcut: {
+      type: "text-content",
+      default: "⌘ S",
+      description: "Shortcut",
+    },
     state: {
-      type: "select",
+      type: "enum",
       default: "selected",
-      options: ["idle", "hover", "press", "selected"],
-      label: "State",
+      variants: {
+        idle: {},
+        hover: {},
+        press: {},
+        selected: {},
+      },
+      description: "State",
     },
   },
   durationInFrames: 120,

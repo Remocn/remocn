@@ -5,24 +5,37 @@ export const xFollowersOverviewConfig: ComponentConfig = {
   importPath: "@/components/remocn/x-followers-overview",
   controls: {
     totalFollowers: {
-      type: "number-input",
-      default: 1709,
+      type: "number",
       min: 0,
-      max: 10000000,
       step: 1,
-      label: "Total followers",
+      default: 1709,
+      description: "Total followers",
+      hiddenFromList: false,
     },
-    handle: { type: "text", default: "remocn", label: "Handle" },
-    avatarUrl: { type: "text", default: "/logo.svg", label: "Avatar URL" },
-    accentColor: { type: "color", default: "#1d9bf0", label: "Accent" },
+    handle: {
+      type: "text-content",
+      default: "remocn",
+      description: "Handle",
+    },
+    avatarUrl: {
+      type: "text-content",
+      default: "/logo.svg",
+      description: "Avatar URL",
+    },
+    accentColor: {
+      type: "color",
+      default: "#1d9bf0",
+      description: "Accent",
+    },
     orientation: {
-      type: "select",
+      type: "enum",
       default: "horizontal",
-      options: ["horizontal", "vertical"],
-      label: "Orientation",
+      variants: {
+        horizontal: {},
+        vertical: {},
+      },
+      description: "Orientation",
     },
-    // `speed` is appended from SHARED_CONTROLS in registry/__index__.tsx.
-    // `notifications` is an array → not a control; preview uses SAMPLE_FOLLOWERS.
   },
   durationInFrames: 360,
   fps: FPS,

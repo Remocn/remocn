@@ -1,38 +1,47 @@
-import {
-  type ComponentConfig,
-  FONT_WEIGHT_OPTIONS,
-  FPS,
-  H,
-  W,
-} from "@/lib/customizer-config";
+import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
 
 export const blurOutUpConfig: ComponentConfig = {
   componentName: "BlurOutUp",
   importPath: "@/components/remocn/blur-out-up",
   controls: {
-    text: { type: "text", default: "Clear in, airy out.", label: "Text" },
+    text: {
+      type: "text-content",
+      default: "Clear in, airy out.",
+      description: "Text",
+    },
     staggerDelay: {
       type: "number",
-      default: 1,
       min: 0,
       max: 8,
       step: 1,
-      label: "Stagger",
+      default: 1,
+      description: "Stagger",
+      hiddenFromList: false,
     },
     fontSize: {
       type: "number",
-      default: 72,
       min: 12,
       max: 160,
       step: 1,
-      label: "Font size",
+      default: 72,
+      description: "Font size",
+      hiddenFromList: false,
     },
-    color: { type: "color", default: "#171717", label: "Color" },
+    color: {
+      type: "color",
+      default: "#171717",
+      description: "Color",
+    },
     fontWeight: {
-      type: "select",
+      type: "enum",
       default: "600",
-      options: FONT_WEIGHT_OPTIONS,
-      label: "Font weight",
+      variants: {
+        "400": {},
+        "500": {},
+        "600": {},
+        "700": {},
+      },
+      description: "Font weight",
     },
   },
   durationInFrames: 90,

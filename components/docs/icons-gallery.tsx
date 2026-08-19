@@ -1,10 +1,16 @@
 "use client";
 
 import { Player, type PlayerRef } from "@remotion/player";
-import { Check, Copy, Search } from "lucide-react";
+import { installInStudio, setStudioDragData } from "@remotion/studio-protocol";
+import { Check, Copy, Loader2, Search } from "lucide-react";
 import type { ComponentType } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AbsoluteFill } from "remotion";
+import { Remotion } from "@/components/ui/svgs/remotion";
+import {
+  getCachedStudioElement,
+  loadStudioElement,
+} from "@/lib/studio-element";
 import { usePrefersReducedMotion } from "@/lib/use-prefers-reduced-motion";
 import { cn } from "@/lib/utils";
 import registry, { type RegistryEntry } from "@/registry/__index__";
@@ -841,6 +847,8 @@ function IconTile({
 }) {
   const reducedMotion = usePrefersReducedMotion();
   const [copied, setCopied] = useState(false);
+  const [installing, setInstalling] = useState(false);
+  const [installError, setInstallError] = useState<string | null>(null);
   const entry = registry[icon.name];
   const preview = previewManifest[icon.name];
   const command = `npx shadcn@latest add @remocn/${icon.name}`;
@@ -853,40 +861,93 @@ function IconTile({
     setTimeout(() => setCopied(false), 1500);
   };
 
+  const handleActivate = () => {
+    onActivate();
+    void loadStudioElement(icon.name);
+  };
+
+  const handleDragStart = (event: React.DragEvent) => {
+    const payload = getCachedStudioElement(icon.name);
+    if (!payload) return;
+    setStudioDragData({ dataTransfer: event.dataTransfer, payload });
+  };
+
+  const handleInstall = async () => {
+    if (installing) return;
+    setInstalling(true);
+    setInstallError(null);
+    const payload = await loadStudioElement(icon.name);
+    if (!payload) {
+      setInstalling(false);
+      return;
+    }
+    const result = await installInStudio({ payload });
+    setInstalling(false);
+    if (!result.success) {
+      setInstallError(result.message);
+      setTimeout(() => setInstallError(null), 5000);
+    }
+  };
+
   return (
-    <button
-      type="button"
-      onClick={handleCopy}
-      onMouseEnter={onActivate}
-      onMouseLeave={onDeactivate}
-      onFocus={onActivate}
-      onBlur={onDeactivate}
-      title={command}
-      aria-label={`Copy install command for ${icon.label}`}
-      className={cn(
-        "surface-card surface-card-interactive group relative flex aspect-square flex-col items-center justify-center gap-2 rounded-xl p-3 text-muted-foreground transition-[color,box-shadow]",
-        "hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
-      )}
-    >
-      <span
-        className="flex items-center justify-center"
-        style={{ width: MEDIA_SIZE, height: MEDIA_SIZE }}
+    <div className="group relative">
+      <button
+        type="button"
+        draggable
+        onDragStart={handleDragStart}
+        onClick={handleCopy}
+        onMouseEnter={handleActivate}
+        onMouseLeave={onDeactivate}
+        onFocus={handleActivate}
+        onBlur={onDeactivate}
+        title={command}
+        aria-label={`Copy install command for ${icon.label}`}
+        className={cn(
+          "surface-card surface-card-interactive relative flex aspect-square w-full flex-col items-center justify-center gap-2 rounded-xl p-3 text-muted-foreground transition-[color,box-shadow]",
+          "hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
+        )}
       >
-        {playing && entry && preview ? (
-          <IconPlayer load={entry.load} preview={preview} />
+        <span
+          className="flex items-center justify-center"
+          style={{ width: MEDIA_SIZE, height: MEDIA_SIZE }}
+        >
+          {playing && entry && preview ? (
+            <IconPlayer load={entry.load} preview={preview} />
+          ) : (
+            <Static size={GLYPH_SIZE} strokeWidth={2} />
+          )}
+        </span>
+        <span className="max-w-full truncate text-xs">{icon.label}</span>
+        <span className="absolute top-1.5 right-1.5 opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
+          {copied ? (
+            <Check className="size-3.5" />
+          ) : (
+            <Copy className="size-3.5" />
+          )}
+        </span>
+      </button>
+      <button
+        type="button"
+        onClick={handleInstall}
+        aria-label={`Add ${icon.label} to Remotion Studio`}
+        title="Add to Remotion Studio"
+        className="absolute top-1.5 left-1.5 rounded-md p-0.5 text-muted-foreground opacity-0 transition-opacity hover:text-foreground focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 group-hover:opacity-100"
+      >
+        {installing ? (
+          <Loader2 className="size-3.5 animate-spin" />
         ) : (
-          <Static size={GLYPH_SIZE} strokeWidth={2} />
+          <Remotion className="size-3.5" />
         )}
-      </span>
-      <span className="max-w-full truncate text-xs">{icon.label}</span>
-      <span className="absolute top-1.5 right-1.5 opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
-        {copied ? (
-          <Check className="size-3.5" />
-        ) : (
-          <Copy className="size-3.5" />
-        )}
-      </span>
-    </button>
+      </button>
+      {installError ? (
+        <span
+          title={installError}
+          className="absolute inset-x-1.5 bottom-1.5 truncate rounded-md bg-background/90 px-1.5 py-0.5 text-[10px] text-muted-foreground"
+        >
+          {installError}
+        </span>
+      ) : null}
+    </div>
   );
 }
 

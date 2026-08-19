@@ -1,13 +1,16 @@
 import {
+  existsSync,
   mkdirSync,
   readdirSync,
   readFileSync,
   rmSync,
   writeFileSync,
 } from "node:fs";
-import { join } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { createElementPayload } from "@remotion/studio-protocol";
 import { Glob } from "bun";
+import type { InteractivitySchema } from "remotion";
+import { resolveSchema } from "../lib/customizer-config";
 import { previewManifest } from "../registry/__manifest__";
 
 const ARTIFACTS_DIR = "registry-artifacts";
@@ -50,7 +53,7 @@ function resolveDependencies(names: Set<string>) {
     .filter((name) => name !== "remotion")
     .map((name) => {
       if (name.startsWith("@remotion/")) {
-        return { name, version: null };
+        return { name: name as `@remotion/${string}`, version: null };
       }
       const raw = pinnedVersions[name];
       if (!raw) {
@@ -80,24 +83,41 @@ function loadFrontmatterLengths(): Record<string, number> {
 }
 
 interface ParsedSource {
-  imports: Map<string, { named: Set<string>; typeNamed: Set<string> }>;
+  imports: Map<
+    string,
+    { named: Set<string>; typeNamed: Set<string>; defaults: Set<string> }
+  >;
   body: string;
+}
+
+function getImportEntry(imports: ParsedSource["imports"], module: string) {
+  let entry = imports.get(module);
+  if (!entry) {
+    entry = { named: new Set(), typeNamed: new Set(), defaults: new Set() };
+    imports.set(module, entry);
+  }
+  return entry;
 }
 
 function parseSource(source: string): ParsedSource {
   const imports: ParsedSource["imports"] = new Map();
   const importRe =
-    /^import\s+(type\s+)?\{([\s\S]*?)\}\s+from\s+"([^"]+)";?\s*$/gm;
+    /^import\s+(type\s+)?(?:([A-Za-z_$][\w$]*)\s*,\s*)?\{([\s\S]*?)\}\s+from\s+"([^"]+)";?\s*$/gm;
+  const defaultImportRe =
+    /^import\s+(?:type\s+)?([A-Za-z_$][\w$]*)\s+from\s+"([^"]+)";?\s*$/gm;
   const body = source
     .replace(/^"use client";\s*/m, "")
     .replace(
       importRe,
-      (_, typeOnly: string | undefined, specifiers: string, module: string) => {
-        let entry = imports.get(module);
-        if (!entry) {
-          entry = { named: new Set(), typeNamed: new Set() };
-          imports.set(module, entry);
-        }
+      (
+        _,
+        typeOnly: string | undefined,
+        defaultName: string | undefined,
+        specifiers: string,
+        module: string,
+      ) => {
+        const entry = getImportEntry(imports, module);
+        if (defaultName) entry.defaults.add(defaultName);
         for (const spec of specifiers.split(",")) {
           const trimmed = spec.trim();
           if (!trimmed) continue;
@@ -110,6 +130,10 @@ function parseSource(source: string): ParsedSource {
         return "";
       },
     )
+    .replace(defaultImportRe, (_, defaultName: string, module: string) => {
+      getImportEntry(imports, module).defaults.add(defaultName);
+      return "";
+    })
     .trim();
   return { imports, body };
 }
@@ -121,23 +145,48 @@ function stripExports(body: string): string {
   );
 }
 
-function mergeSources(component: ParsedSource, libs: ParsedSource[]): string {
+const WRAPPER_IMPORTS: ParsedSource["imports"] = new Map([
+  [
+    "react",
+    {
+      named: new Set(["forwardRef", "useImperativeHandle", "useRef"]),
+      typeNamed: new Set(["ComponentProps"]),
+      defaults: new Set<string>(),
+    },
+  ],
+  [
+    "remotion",
+    {
+      named: new Set(["Interactive", "Sequence"]),
+      typeNamed: new Set([
+        "InteractiveBaseProps",
+        "InteractiveTransformProps",
+        "InteractivitySchema",
+        "SequenceControls",
+      ]),
+      defaults: new Set<string>(),
+    },
+  ],
+]);
+
+function mergeSources(
+  component: ParsedSource,
+  libs: ParsedSource[],
+  extra: ParsedSource["imports"] = new Map(),
+): string {
   const merged: ParsedSource["imports"] = new Map();
-  for (const source of [component, ...libs]) {
+  for (const source of [component, ...libs, { imports: extra, body: "" }]) {
     for (const [module, entry] of source.imports) {
       if (
         Object.values(INLINABLE_LIBS).some((lib) => lib.importPath === module)
       )
         continue;
-      let target = merged.get(module);
-      if (!target) {
-        target = { named: new Set(), typeNamed: new Set() };
-        merged.set(module, target);
-      }
+      const target = getImportEntry(merged, module);
       for (const spec of entry.named) target.named.add(spec);
       for (const spec of entry.typeNamed) {
         target.typeNamed.add(spec);
       }
+      for (const spec of entry.defaults) target.defaults.add(spec);
     }
   }
   const importLines = [...merged.entries()].map(([module, entry]) => {
@@ -148,6 +197,11 @@ function mergeSources(component: ParsedSource, libs: ParsedSource[]): string {
         .filter((spec) => !entry.named.has(spec))
         .map((spec) => `type ${spec}`),
     ];
+    const defaultName = [...entry.defaults][0];
+    if (defaultName && specs.length > 0) {
+      return `import ${defaultName}, { ${specs.join(", ")} } from "${module}";`;
+    }
+    if (defaultName) return `import ${defaultName} from "${module}";`;
     return `import { ${specs.join(", ")} } from "${module}";`;
   });
   const libBodies = libs.map((lib) => stripExports(lib.body));
@@ -164,6 +218,143 @@ function countExportedComponents(source: string): string[] {
       ].map((m) => m[1]),
     ),
   ];
+}
+
+const RESERVED_SCHEMA_KEYS = new Set([
+  "name",
+  "style",
+  "from",
+  "durationInFrames",
+  "trimBefore",
+  "freeze",
+  "hidden",
+  "showInTimeline",
+  "premountFor",
+  "controls",
+]);
+
+const IDENT = /^[A-Za-z_$][\w$]*$/;
+
+function serializeSchema(value: unknown, indent: string): string {
+  if (value === null) return "null";
+  if (typeof value === "string") return JSON.stringify(value);
+  if (typeof value === "number" || typeof value === "boolean") {
+    return String(value);
+  }
+  if (Array.isArray(value)) {
+    return `[${value.map((v) => serializeSchema(v, indent)).join(", ")}]`;
+  }
+  const entries = Object.entries(value as Record<string, unknown>);
+  if (entries.length === 0) return "{}";
+  const inner = `${indent}  `;
+  const lines = entries.map(([k, v]) => {
+    const key = IDENT.test(k) ? k : JSON.stringify(k);
+    return `${inner}${key}: ${serializeSchema(v, inner)},`;
+  });
+  return `{\n${lines.join("\n")}\n${indent}}`;
+}
+
+async function loadElementSchema(
+  name: string,
+  sourcePath: string,
+): Promise<InteractivitySchema | null> {
+  const configPath = join(dirname(sourcePath), "config.ts");
+  if (!existsSync(configPath)) return null;
+  const mod = await import(resolve(configPath));
+  const config = Object.values(mod).find(
+    (v) => v && typeof v === "object" && "controls" in (v as object),
+  ) as { controls: InteractivitySchema } | undefined;
+  if (!config) return null;
+  const schema = resolveSchema(name, config.controls);
+  if (Object.keys(schema).some((key) => RESERVED_SCHEMA_KEYS.has(key))) {
+    return null;
+  }
+  return schema;
+}
+
+function makeInteractiveWrapper(
+  componentName: string,
+  schema: InteractivitySchema,
+): string {
+  const keys = Object.keys(schema);
+  return `const elementSchema = {
+  ...Interactive.baseSchema,
+${Object.entries(schema)
+  .map(
+    ([k, v]) =>
+      `  ${IDENT.test(k) ? k : JSON.stringify(k)}: ${serializeSchema(v, "  ")},`,
+  )
+  .join("\n")}
+  ...Interactive.transformSchema,
+} as const satisfies InteractivitySchema;
+
+const ELEMENT_PROP_KEYS = new Set(${JSON.stringify(keys)});
+
+const ELEMENT_PROP_DEFAULTS: Record<string, unknown> = ${serializeSchema(
+    Object.fromEntries(
+      Object.entries(schema).flatMap(([k, v]) =>
+        "default" in v && v.default !== undefined && v.default !== null
+          ? [[k, v.default]]
+          : [],
+      ),
+    ),
+    "",
+  )};
+
+type ${componentName}ElementProps = InteractiveBaseProps &
+  InteractiveTransformProps &
+  ComponentProps<typeof ${componentName}Base>;
+
+const ${componentName}Inner = forwardRef<
+  HTMLDivElement,
+  ${componentName}ElementProps & { readonly controls: SequenceControls | undefined }
+>(({ controls, name, style, ...rest }, ref) => {
+  const outlineRef = useRef<HTMLDivElement>(null);
+  useImperativeHandle(ref, () => outlineRef.current as HTMLDivElement, []);
+  const componentProps: Record<string, unknown> = { ...ELEMENT_PROP_DEFAULTS };
+  const sequenceProps: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(rest)) {
+    if (ELEMENT_PROP_KEYS.has(key)) {
+      if (value !== undefined) componentProps[key] = value;
+    } else {
+      sequenceProps[key] = value;
+    }
+  }
+  return (
+    <Sequence
+      layout="none"
+      {...sequenceProps}
+      controls={controls}
+      name={name ?? "<${componentName}>"}
+      outlineRef={outlineRef}
+    >
+      <div
+        ref={outlineRef}
+        style={{
+          position: "relative",
+          width: "100%",
+          height: "100%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          ...style,
+        }}
+      >
+        <${componentName}Base
+          {...(componentProps as unknown as ComponentProps<typeof ${componentName}Base>)}
+        />
+      </div>
+    </Sequence>
+  );
+});
+
+export const ${componentName} = Interactive.withSchema({
+  Component: ${componentName}Inner,
+  componentName: "<${componentName}>",
+  componentIdentity: null,
+  schema: elementSchema,
+  supportsEffects: false,
+});`;
 }
 
 const frontmatterLengths = loadFrontmatterLengths();
@@ -184,6 +375,7 @@ rmSync(ELEMENTS_DIR, { recursive: true, force: true });
 mkdirSync(ELEMENTS_DIR, { recursive: true });
 
 let built = 0;
+let interactive = 0;
 const skipped: string[] = [];
 
 for (const file of readdirSync(ARTIFACTS_DIR).sort()) {
@@ -214,9 +406,11 @@ for (const file of readdirSync(ARTIFACTS_DIR).sort()) {
     const lib = libSources.get(dep);
     return lib ? [lib] : [];
   });
+  const schema = await loadElementSchema(item.name, path);
   let sourceCode = mergeSources(
     parseSource(item.files[0].content),
     libs.map((lib) => lib.parsed),
+    schema ? WRAPPER_IMPORTS : undefined,
   );
   let exported = countExportedComponents(sourceCode);
   if (exported.length === 2) {
@@ -238,6 +432,20 @@ for (const file of readdirSync(ARTIFACTS_DIR).sort()) {
     skipped.push(`${item.name} (${exported.length} exported components)`);
     continue;
   }
+  let installationMode: "wrapped" | "component-owned-sequence" = "wrapped";
+  if (schema) {
+    const componentName = exported[0];
+    sourceCode = stripExports(
+      sourceCode.replace(
+        new RegExp(`\\b${componentName}\\b`, "g"),
+        `${componentName}Base`,
+      ),
+    );
+    sourceCode += `\n\n${makeInteractiveWrapper(componentName, schema)}\n`;
+    installationMode = "component-owned-sequence";
+    interactive++;
+  }
+
   const depNames = new Set([
     ...(item.dependencies ?? []),
     ...libs.flatMap((lib) => lib.dependencies),
@@ -250,7 +458,7 @@ for (const file of readdirSync(ARTIFACTS_DIR).sort()) {
     dependencies: resolveDependencies(depNames),
     dimensions: null,
     durationInFrames,
-    installationMode: "wrapped",
+    installationMode,
   });
 
   writeFileSync(
@@ -260,6 +468,8 @@ for (const file of readdirSync(ARTIFACTS_DIR).sort()) {
   built++;
 }
 
-console.log(`Built ${built} element payloads into ${ELEMENTS_DIR}`);
+console.log(
+  `Built ${built} element payloads into ${ELEMENTS_DIR} (${interactive} interactive)`,
+);
 console.log(`Skipped ${skipped.length} incompatible items`);
 for (const s of skipped) console.log("  -", s);

@@ -5,33 +5,41 @@ export const githubStarsConfig: ComponentConfig = {
   importPath: "@/components/remocn/github-stars",
   controls: {
     repo: {
-      type: "text",
+      type: "text-content",
       default: "Remocn/remocn",
-      label: "Repository",
+      description: "Repository",
     },
     totalStars: {
-      type: "number-input",
-      default: 24813,
+      type: "number",
       min: 0,
-      max: 500000,
       step: 1,
-      label: "Total stars",
+      default: 24813,
+      description: "Total stars",
+      hiddenFromList: false,
     },
     orientation: {
-      type: "select",
+      type: "enum",
       default: "horizontal",
-      options: ["horizontal", "vertical"],
-      label: "Orientation",
+      variants: {
+        horizontal: {},
+        vertical: {},
+      },
+      description: "Orientation",
     },
-    accentColor: { type: "color", default: "#ffbb00", label: "Accent" },
+    accentColor: {
+      type: "color",
+      default: "#ffbb00",
+      description: "Accent",
+    },
     theme: {
-      type: "select",
+      type: "enum",
       default: "light",
-      options: ["light", "dark"],
-      label: "Theme",
+      variants: {
+        light: {},
+        dark: {},
+      },
+      description: "Theme",
     },
-    // `speed` is appended from SHARED_CONTROLS in registry/__index__.tsx.
-    // `stargazers` is an array → not a control; preview uses SAMPLE_STARGAZERS.
   },
   durationInFrames: 120,
   fps: FPS,

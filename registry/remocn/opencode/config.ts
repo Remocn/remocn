@@ -5,19 +5,35 @@ export const opencodeConfig: ComponentConfig = {
   importPath: "@/components/remocn/opencode",
   controls: {
     placeholder: {
-      type: "text",
+      type: "text-content",
       default: "Ask anything... ",
-      label: "Placeholder",
+      description: "Placeholder",
     },
     query: {
-      type: "text",
+      type: "text-content",
       default: '"What is the tech stack of this project?"',
-      label: "Query",
+      description: "Query",
     },
-    agentName: { type: "text", default: "Build", label: "Agent" },
-    modelName: { type: "text", default: "Kimi K2.5", label: "Model" },
-    provider: { type: "text", default: "Moonshot AI", label: "Provider" },
-    accentColor: { type: "color", default: "#2B7FFF", label: "Accent" },
+    agentName: {
+      type: "text-content",
+      default: "Build",
+      description: "Agent",
+    },
+    modelName: {
+      type: "text-content",
+      default: "Kimi K2.5",
+      description: "Model",
+    },
+    provider: {
+      type: "text-content",
+      default: "Moonshot AI",
+      description: "Provider",
+    },
+    accentColor: {
+      type: "color",
+      default: "#2B7FFF",
+      description: "Accent",
+    },
   },
   durationInFrames: 150,
   fps: FPS,

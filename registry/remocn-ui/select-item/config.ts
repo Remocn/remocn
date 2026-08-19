@@ -5,12 +5,21 @@ export const selectItemConfig: ComponentConfig = {
   componentName: "SelectItem",
   importPath: "@/components/remocn/select-item",
   controls: {
-    label: { type: "text", default: "Banana", label: "Label" },
+    label: {
+      type: "text-content",
+      default: "Banana",
+      description: "Label",
+    },
     state: {
-      type: "select",
+      type: "enum",
       default: "selected",
-      options: ["idle", "hover", "press", "selected"],
-      label: "State",
+      variants: {
+        idle: {},
+        hover: {},
+        press: {},
+        selected: {},
+      },
+      description: "State",
     },
   },
   durationInFrames: 120,

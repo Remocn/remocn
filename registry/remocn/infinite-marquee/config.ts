@@ -1,41 +1,58 @@
-import {
-  type ComponentConfig,
-  FONT_WEIGHT_OPTIONS,
-  FPS,
-  H,
-  W,
-} from "@/lib/customizer-config";
+import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
 
 export const infiniteMarqueeConfig: ComponentConfig = {
   componentName: "InfiniteMarquee",
   importPath: "@/components/remocn/infinite-marquee",
   controls: {
-    text: { type: "text", default: "ship · build · animate · ", label: "Text" },
+    text: {
+      type: "text-content",
+      default: "ship · build · animate · ",
+      description: "Text",
+    },
     fontSize: {
       type: "number",
-      default: 120,
       min: 12,
       max: 240,
       step: 1,
-      label: "Font size",
+      default: 120,
+      description: "Font size",
+      hiddenFromList: false,
     },
-    color: { type: "color", default: "#171717", label: "Color" },
+    color: {
+      type: "color",
+      default: "#171717",
+      description: "Color",
+    },
     fontWeight: {
-      type: "select",
+      type: "enum",
       default: "700",
-      options: FONT_WEIGHT_OPTIONS,
-      label: "Font weight",
+      variants: {
+        "400": {},
+        "500": {},
+        "600": {},
+        "700": {},
+      },
+      description: "Font weight",
     },
     pixelsPerFrame: {
       type: "number",
-      default: 4,
       min: 1,
       max: 30,
       step: 1,
-      label: "Pixels / frame",
+      default: 4,
+      description: "Pixels / frame",
+      hiddenFromList: false,
     },
-    stroke: { type: "boolean", default: false, label: "Stroke" },
-    strokeColor: { type: "color", default: "#171717", label: "Stroke color" },
+    stroke: {
+      type: "boolean",
+      default: false,
+      description: "Stroke",
+    },
+    strokeColor: {
+      type: "color",
+      default: "#171717",
+      description: "Stroke color",
+    },
   },
   durationInFrames: 180,
   fps: FPS,

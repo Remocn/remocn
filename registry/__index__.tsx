@@ -1,5 +1,9 @@
 import type React from "react";
-import { type ComponentConfig, resolveConfig } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  type ResolvedComponentConfig,
+  resolveConfig,
+} from "@/lib/customizer-config";
 
 export interface RegistryEntry {
   // biome-ignore lint/suspicious/noExplicitAny: dynamically-loaded Remotion composition, props shape varies per component
@@ -2655,9 +2659,11 @@ const registry: Record<string, RegistryEntry> = {
   },
 };
 
-const configCache = new Map<string, Promise<ComponentConfig>>();
+const configCache = new Map<string, Promise<ResolvedComponentConfig>>();
 
-export function loadComponentConfig(slug: string): Promise<ComponentConfig> {
+export function loadComponentConfig(
+  slug: string,
+): Promise<ResolvedComponentConfig> {
   let promise = configCache.get(slug);
   if (!promise) {
     const entry = registry[slug];

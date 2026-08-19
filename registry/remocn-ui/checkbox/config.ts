@@ -5,20 +5,35 @@ export const checkboxConfig: ComponentConfig = {
   componentName: "Checkbox",
   importPath: "@/components/remocn/checkbox",
   controls: {
-    label: { type: "text", default: "", label: "Label" },
+    label: {
+      type: "text-content",
+      default: "",
+      description: "Label",
+    },
     size: {
-      type: "select",
+      type: "enum",
       default: "default",
-      options: ["sm", "default", "lg"],
-      label: "Size",
+      variants: {
+        sm: {},
+        default: {},
+        lg: {},
+      },
+      description: "Size",
     },
     state: {
-      type: "select",
+      type: "enum",
       default: "checked",
-      options: ["unchecked", "checked"],
-      label: "State",
+      variants: {
+        unchecked: {},
+        checked: {},
+      },
+      description: "State",
     },
-    primary: { type: "color", default: "#171717", label: "Primary" },
+    primary: {
+      type: "color",
+      default: "#171717",
+      description: "Primary",
+    },
   },
   durationInFrames: 120,
   fps: FPS,

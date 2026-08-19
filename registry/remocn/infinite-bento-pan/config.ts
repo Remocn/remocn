@@ -6,16 +6,17 @@ export const infiniteBentoPanConfig: ComponentConfig = {
   controls: {
     panSpeed: {
       type: "number",
-      default: 1,
       min: 0.25,
       max: 3,
       step: 0.25,
-      label: "Pan speed",
+      default: 1,
+      description: "Pan speed",
+      hiddenFromList: false,
     },
     accentColor: {
       type: "color",
       default: "#7c3aed",
-      label: "Accent color",
+      description: "Accent color",
     },
   },
   durationInFrames: 300,

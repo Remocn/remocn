@@ -1,37 +1,53 @@
-import {
-  type ComponentConfig,
-  FONT_WEIGHT_OPTIONS,
-  FPS,
-  H,
-  W,
-} from "@/lib/customizer-config";
+import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
 
 export const inlineHighlightConfig: ComponentConfig = {
   componentName: "InlineHighlight",
   importPath: "@/components/remocn/inline-highlight",
   controls: {
-    before: { type: "text", default: "Ship faster with ", label: "Before" },
-    highlight: { type: "text", default: "remocn", label: "Highlight" },
-    after: { type: "text", default: ".", label: "After" },
-    baseColor: { type: "color", default: "#171717", label: "Base color" },
+    before: {
+      type: "text-content",
+      default: "Ship faster with ",
+      description: "Before",
+    },
+    highlight: {
+      type: "text-content",
+      default: "remocn",
+      description: "Highlight",
+    },
+    after: {
+      type: "text-content",
+      default: ".",
+      description: "After",
+    },
+    baseColor: {
+      type: "color",
+      default: "#171717",
+      description: "Base color",
+    },
     highlightColor: {
       type: "color",
       default: "#ff5e3a",
-      label: "Highlight color",
+      description: "Highlight color",
     },
     fontSize: {
       type: "number",
-      default: 72,
       min: 12,
       max: 160,
       step: 1,
-      label: "Font size",
+      default: 72,
+      description: "Font size",
+      hiddenFromList: false,
     },
     fontWeight: {
-      type: "select",
+      type: "enum",
       default: "600",
-      options: FONT_WEIGHT_OPTIONS,
-      label: "Font weight",
+      variants: {
+        "400": {},
+        "500": {},
+        "600": {},
+        "700": {},
+      },
+      description: "Font weight",
     },
   },
   durationInFrames: 90,

@@ -8,23 +8,35 @@ export const dialogConfig: ComponentConfig = {
   componentName: "Dialog",
   importPath: "@/components/remocn/dialog",
   controls: {
-    title: { type: "text", default: "Edit profile", label: "Title" },
+    title: {
+      type: "text-content",
+      default: "Edit profile",
+      description: "Title",
+    },
     description: {
-      type: "text",
-      default: DEFAULT_DESCRIPTION,
-      label: "Description",
+      type: "text-content",
+      default:
+        "Make changes to your profile here. Click save when you're done.",
+      description: "Description",
     },
     actionLabel: {
-      type: "text",
+      type: "text-content",
       default: "Save changes",
-      label: "Action Label",
+      description: "Action Label",
     },
-    cancelLabel: { type: "text", default: "Cancel", label: "Cancel Label" },
+    cancelLabel: {
+      type: "text-content",
+      default: "Cancel",
+      description: "Cancel Label",
+    },
     state: {
-      type: "select",
+      type: "enum",
       default: "opened",
-      options: ["opened", "closed"],
-      label: "State",
+      variants: {
+        opened: {},
+        closed: {},
+      },
+      description: "State",
     },
   },
   durationInFrames: 120,

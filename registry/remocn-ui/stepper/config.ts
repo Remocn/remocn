@@ -8,11 +8,12 @@ export const stepperConfig: ComponentConfig = {
   controls: {
     activeIndex: {
       type: "number",
-      default: 1,
       min: 0,
       max: 2,
       step: 1,
-      label: "Active Index",
+      default: 1,
+      description: "Active Index",
+      hiddenFromList: false,
     },
   },
   durationInFrames: 120,

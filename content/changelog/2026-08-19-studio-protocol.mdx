@@ -1,0 +1,13 @@
+---
+title: Add to Studio
+date: 2026-08-19
+---
+
+Until now there was one way to get a remocn component into your project — `npx shadcn add`, then wire it into a composition by hand. That is still the canonical path, but if a Remotion Studio (4.0.502+) is running locally, the site can now talk to it directly through the [Remotion Studio Protocol](https://www.remotion.dev/docs/studio-protocol/).
+
+### Improvements
+
+- Component pages grew an **Add to Studio** button and a drag handle next to the Preview/Code tabs. The button finds your running Studio and installs the component into the active composition; the handle lets you drag the element onto the timeline and choose its place yourself. Both deliver the same thing the CLI does — editable source code in your project, not a black box.
+- The [icons gallery](/docs/icons/gallery) works the same way: every tile is draggable, and a hover button installs the icon in one click.
+- Elements arrive editable, not frozen. Almost every element ships with the same knobs its docs page has — text, colors, timings, speed — declared through Remotion's own `InteractivitySchema` and rendered as native controls in the Studio sidebar, plus the standard timeline and transform controls on top. Under the hood the whole catalog now authors its controls in that schema format, so the docs customizer and the Studio panel are generated from one source.
+- Coverage is honest rather than total. Primitives, shaders, effects, filters and all icons ship as Studio Elements; compositions and components that build on other remocn components keep the CLI as their only path, because flattening them into a single file would produce source nobody wants to remix. Where the button is absent, `npx shadcn add` is the answer.
