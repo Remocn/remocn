@@ -20,6 +20,7 @@
     "strikethrough-replace",
     "short-slide-right",
     "kinetic-center-build",
+    "kinetic-warp",
     "short-slide-down",
     "staggered-fade-up",
     "mask-reveal-up",
@@ -39,6 +40,11 @@
     "infinite-marquee",
     "perspective-marquee",
     "matrix-decode",
-    "rgb-glitch-text"
+    "rgb-glitch-text",
+    "gooey-morph",
+    "perspective-squeeze",
+    "extrude-pop",
+    "chromatic-wave",
+    "stretch-in"
   ]
 }

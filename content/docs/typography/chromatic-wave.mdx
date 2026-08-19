@@ -1,0 +1,179 @@
+---
+title: Chromatic Wave
+description: A soft wave travels down through the type; where it crosses, the letters ripple and split into RGB fringes, then settle back to white
+component: chromatic-wave
+vibe: tech
+length: 150
+useWhen:
+  - "A held title — an album cover, a poster hold, a loop — needs slow, ambient distortion instead of a one-shot entrance."
+  - "The aesthetic is music-video or vaporwave: rippling glass with red, green and blue fringes at the distortion edges."
+  - "The type can sit on a dark background — the channel split sums back to white via screen blending, which is only exact over black."
+avoidWhen:
+  - "You need a quick glitch accent rather than a five-second traveling wave — use `rgb-glitch-text`."
+  - "The background is light — the screen blend that reassembles the channels breaks over anything but dark fills."
+  - "The copy changes or enters mid-scene — the type is static; this is a treatment, not a reveal; use `soft-blur-in` first."
+---
+
+<ComponentPreview name="chromatic-wave" />
+
+## Installation
+
+<InstallBlock name="chromatic-wave" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { ChromaticWave } from "@/components/remocn/chromatic-wave";
+
+const ChromaticWaveScene = () => (
+  <ChromaticWave headline="MUSIC" kicker="APPLES" />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="ChromaticWave"
+    component={ChromaticWaveScene}
+    durationInFrames={100}
+    fps={30}
+    width={1920}
+    height={1080}
+  />
+);
+```
+
+Three copies of the type are displaced by the same traveling wave at three
+different depths — one per color channel — and summed back together with
+`screen` blending. Where the copies still coincide the sum is white; where the
+depths pull them apart, red, green and blue fringes appear. The component
+paints its own `background` (default black) because the reassembly is only
+exact over black.
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "headline",
+      type: "string",
+      default: "\"MUSIC\"",
+      description: "The large center line",
+    },
+    {
+      name: "kicker",
+      type: "string",
+      default: "\"APPLES\"",
+      description: "The small tracked line, repeated above and below the headline",
+    },
+    {
+      name: "headlineFontFamily / kickerFontFamily",
+      type: "string",
+      default: "Helvetica stack",
+      description: "Fonts of the two lines",
+    },
+    {
+      name: "headlineFontSize / kickerFontSize",
+      type: "number",
+      default: "174 / 52",
+      description: "Font sizes in comp pixels",
+    },
+    {
+      name: "kickerTracking",
+      type: "number",
+      default: "32",
+      description: "Letter spacing of the kicker lines",
+    },
+    {
+      name: "headlineBaselineY / kickerBaselines",
+      type: "number / [number, number]",
+      default: "601 / [444, 670]",
+      description: "Baselines of the three lines in comp pixels",
+    },
+    {
+      name: "textCenterX",
+      type: "number",
+      default: "960",
+      description: "Horizontal center of the type",
+    },
+    {
+      name: "fill",
+      type: "string",
+      default: "\"#ffffff\"",
+      description: "Color of the type before the split",
+    },
+    {
+      name: "background",
+      type: "string",
+      default: "\"#000000\"",
+      description: "Painted stage background. Keep it dark — the channel reassembly is only exact over black",
+    },
+    {
+      name: "width / height",
+      type: "number",
+      default: "1920 / 1080",
+      description: "Coordinate space of the composition",
+    },
+    {
+      name: "bandHeight / bandCopies / bandPitch",
+      type: "number",
+      default: "147.1 / 7 / 750",
+      description: "Geometry of the traveling distortion bands",
+    },
+    {
+      name: "mapStartY / mapEndY / mapTravelFrames",
+      type: "number",
+      default: "31 / 1560 / 150",
+      description: "The bands' travel. Deliberately linear — an ease reads as the ripple hesitating inside the word",
+    },
+    {
+      name: "waveHeight / waveWidth / waveSpeed",
+      type: "number",
+      default: "28 / 272 / 1",
+      description: "The sine ripple on each band's edges",
+    },
+    {
+      name: "turbulentAmount / turbulentSize",
+      type: "number",
+      default: "130 / 163",
+      description: "Turbulent displacement breaking the wave's regular rhythm",
+    },
+    {
+      name: "evolutionPerSecond",
+      type: "number",
+      default: "50",
+      description: "How fast the turbulence field pans",
+    },
+    {
+      name: "mapBlurRadius / mapBlurIterations",
+      type: "number",
+      default: "13 / 6",
+      description: "Blur on the displacement map — without it the map's edges tear the output",
+    },
+    {
+      name: "glassDisplacement / maxDisplacementPx",
+      type: "number",
+      default: "100 / 39",
+      description: "Displacement strength, and the pixel span it maps to",
+    },
+    {
+      name: "glassPasses",
+      type: "number",
+      default: "3",
+      description: "How many depth passes — also how many channels split",
+    },
+    {
+      name: "channelOrder",
+      type: "(\"red\" | \"green\" | \"blue\")[]",
+      default: "[\"blue\", \"green\", \"red\"]",
+      description: "Which channel rides which depth, shallowest first",
+    },
+    {
+      name: "className",
+      type: "string",
+      description: "Optional className passed to the wrapper",
+    },
+  ]}
+/>
+
+Inspired by [5 Clean Text Animations](https://www.youtube.com/watch?v=Nmi7cE2wT54) by Mapal.

@@ -25,7 +25,7 @@ Transitions: Lead→ColumnsEnter `slide({ direction: "from-bottom" })` from `@re
 |---|---|---|
 | Lead | `soft-blur-in` (title, blur 14→0 over 20f), `staggered-fade-up` (kicker), `shader-grain-gradient` (bg, dark, low `speed`) | — |
 | ColumnsEnter | `staggered-fade-up` (column group, 8f stagger, spring `damping:18`) | **`pricing-column`** — tier card atom |
-| RecommendFocus | `micro-scale-fade` (recommended lift + scale 1→1.05), `spring-scale-in` ("Popular" badge), `progress-steps` (features drawing in, 6f stagger) | orchestrated by **`plan-table`** |
+| RecommendFocus | `micro-scale-fade` (recommended lift + scale 1→1.05), `spring-scale-in` ("Popular" badge), `check-list` (features drawing in, 6f stagger) | orchestrated by **`plan-table`** |
 | PriceLand | `slot-machine-roll` (price with `$` prefix + suffix `/mo`), `inline-highlight` (/mo emphasis) | — |
 | CTA | `kinetic-center-build` (CTA headline, word-by-word), `spring-scale-in` (button entrance, `damping:8`), `shimmer-sweep` (single sweep on button) | — |
 

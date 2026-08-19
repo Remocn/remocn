@@ -8,19 +8,35 @@ export const alertDialogConfig: ComponentConfig = {
   componentName: "AlertDialog",
   importPath: "@/components/remocn/alert-dialog",
   controls: {
-    title: { type: "text", default: "Delete account?", label: "Title" },
-    description: {
-      type: "text",
-      default: DEFAULT_DESCRIPTION,
-      label: "Description",
+    title: {
+      type: "text-content",
+      default: "Delete account?",
+      description: "Title",
     },
-    actionLabel: { type: "text", default: "Delete", label: "Action Label" },
-    cancelLabel: { type: "text", default: "Cancel", label: "Cancel Label" },
+    description: {
+      type: "text-content",
+      default:
+        "This action cannot be undone. This will permanently remove your data from our servers.",
+      description: "Description",
+    },
+    actionLabel: {
+      type: "text-content",
+      default: "Delete",
+      description: "Action Label",
+    },
+    cancelLabel: {
+      type: "text-content",
+      default: "Cancel",
+      description: "Cancel Label",
+    },
     state: {
-      type: "select",
+      type: "enum",
       default: "opened",
-      options: ["opened", "closed"],
-      label: "State",
+      variants: {
+        opened: {},
+        closed: {},
+      },
+      description: "State",
     },
   },
   durationInFrames: 120,

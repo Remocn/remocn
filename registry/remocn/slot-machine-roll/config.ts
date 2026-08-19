@@ -1,31 +1,43 @@
-import {
-  type ComponentConfig,
-  FONT_WEIGHT_OPTIONS,
-  FPS,
-  H,
-  W,
-} from "@/lib/customizer-config";
+import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
 
 export const slotMachineRollConfig: ComponentConfig = {
   componentName: "SlotMachineRoll",
   importPath: "@/components/remocn/slot-machine-roll",
   controls: {
-    from: { type: "text", default: "$99", label: "From" },
-    to: { type: "text", default: "$199", label: "To" },
+    from: {
+      type: "text-content",
+      default: "$99",
+      description: "From",
+    },
+    to: {
+      type: "text-content",
+      default: "$199",
+      description: "To",
+    },
     fontSize: {
       type: "number",
-      default: 120,
       min: 12,
       max: 240,
       step: 1,
-      label: "Font size",
+      default: 120,
+      description: "Font size",
+      hiddenFromList: false,
     },
-    color: { type: "color", default: "#171717", label: "Color" },
+    color: {
+      type: "color",
+      default: "#171717",
+      description: "Color",
+    },
     fontWeight: {
-      type: "select",
+      type: "enum",
       default: "700",
-      options: FONT_WEIGHT_OPTIONS,
-      label: "Font weight",
+      variants: {
+        "400": {},
+        "500": {},
+        "600": {},
+        "700": {},
+      },
+      description: "Font weight",
     },
   },
   durationInFrames: 90,

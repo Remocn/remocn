@@ -1,0 +1,151 @@
+---
+title: Stretch In
+description: Letters fly in from off-canvas and smear horizontally on the way — a vertex-lag deformation, not a scale
+component: stretch-in
+vibe: playful
+length: 48
+useWhen:
+  - "A heavy display word needs a fast, physical entrance where the letterforms visibly deform — bars stretch long while stems keep their exact width."
+  - "You want per-letter rhythm: each letter enters on its own beat and snaps to rest crisp (tune `entryStagger` and `travelFrames`)."
+  - "Any text and any font should work — glyph contours are extracted from a real font file at runtime via `opentype.js`."
+avoidWhen:
+  - "The type is small or body-size — the smear reads at display sizes; use `per-character-rise` for smaller text."
+  - "You can't ship or reach a font file URL — the deformation needs real glyph outlines; use `short-slide-right` for a plain slide-in."
+  - "The look should be soft or blurred rather than elastic — use `soft-blur-in`."
+---
+
+<ComponentPreview name="stretch-in" />
+
+## Installation
+
+<InstallBlock name="stretch-in" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { StretchIn } from "@/components/remocn/stretch-in";
+
+const StretchInScene = () => <StretchIn text="REMOCN" />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="StretchIn"
+    component={StretchInScene}
+    durationInFrames={60}
+    fps={30}
+    width={1920}
+    height={1080}
+  />
+);
+```
+
+The letters are geometry, not text: glyph contours are parsed out of the font
+file (`opentype.js`), so the animation can reach inside the letterforms. Each
+vertex starts its travel late in proportion to how far it sits from the
+letter's leading edge — the leading edge lands first, the trailing edge catches
+up, and the letter smears without its stems changing width. Counters (the holes
+in P, O, R) go through the same deformation, so they never detach.
+
+`fontUrl` defaults to Anton served from Google Fonts' static CDN, so it works
+out of the box; point it at any `.ttf`/`.otf` URL to change the face. The
+render is held until the font file has loaded.
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "text",
+      type: "string",
+      default: "\"REMOCN\"",
+      description: "The text to fly in — short display words read best",
+    },
+    {
+      name: "fontUrl",
+      type: "string",
+      default: "Anton (gstatic ttf)",
+      description: "URL of a .ttf/.otf font file the glyph outlines are parsed from",
+    },
+    {
+      name: "fontSize",
+      type: "number",
+      default: "510",
+      description: "Font size in comp pixels",
+    },
+    {
+      name: "letterSpacing",
+      type: "number",
+      default: "0",
+      description: "Extra spacing between letters in comp pixels",
+    },
+    {
+      name: "fill",
+      type: "string",
+      default: "\"#ffffff\"",
+      description: "Fill of the letterforms",
+    },
+    {
+      name: "strokeWidth / stroke",
+      type: "number / string",
+      default: "0 / \"#ffffff\"",
+      description: "Set `fill` to \"none\" and `strokeWidth` to 2 for the wireframe authoring view",
+    },
+    {
+      name: "width / height",
+      type: "number",
+      default: "1920 / 1080",
+      description: "Coordinate space of the composition. The word centers horizontally",
+    },
+    {
+      name: "baselineY",
+      type: "number",
+      default: "vertically centered",
+      description: "Baseline of the word in comp pixels",
+    },
+    {
+      name: "entryStart",
+      type: "number",
+      default: "0",
+      description: "Frame the first letter starts its travel",
+    },
+    {
+      name: "entryStagger",
+      type: "number",
+      default: "3",
+      description: "Frames between consecutive letters' entries",
+    },
+    {
+      name: "travelFrames",
+      type: "number",
+      default: "33",
+      description: "Frames one letter takes from off-canvas to rest",
+    },
+    {
+      name: "travelDistance",
+      type: "number",
+      default: "1500",
+      description: "How far off-canvas right the letters start, in comp pixels",
+    },
+    {
+      name: "vertexLagFrames",
+      type: "number",
+      default: "3.5",
+      description: "Frames the trailing edge lags the leading edge. This is the smear",
+    },
+    {
+      name: "curveSteps",
+      type: "number",
+      default: "8",
+      description: "Line segments each glyph curve is sampled into — every vertex must take part in the deformation",
+    },
+    {
+      name: "className",
+      type: "string",
+      description: "Optional className passed to the wrapper",
+    },
+  ]}
+/>
+
+Inspired by [Stretched Type In After Effects](https://www.youtube.com/watch?v=H_z6XJ-b9bE) by Ben Marriott.

@@ -7,11 +7,12 @@ export const focusPullConfig: ComponentConfig = {
   controls: {
     blur: {
       type: "number",
-      default: 16,
       min: 4,
       max: 32,
       step: 1,
-      label: "Blur",
+      default: 16,
+      description: "Blur",
+      hiddenFromList: false,
     },
   },
   durationInFrames: 114,

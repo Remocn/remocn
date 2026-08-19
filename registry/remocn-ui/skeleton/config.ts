@@ -6,16 +6,22 @@ export const skeletonConfig: ComponentConfig = {
   importPath: "@/components/remocn/skeleton",
   controls: {
     layout: {
-      type: "select",
+      type: "enum",
       default: "card",
-      options: ["lines", "card"],
-      label: "Layout",
+      variants: {
+        lines: {},
+        card: {},
+      },
+      description: "Layout",
     },
     state: {
-      type: "select",
+      type: "enum",
       default: "loading",
-      options: ["loading", "loaded"],
-      label: "State",
+      variants: {
+        loading: {},
+        loaded: {},
+      },
+      description: "State",
     },
   },
   durationInFrames: 120,

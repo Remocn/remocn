@@ -1,42 +1,47 @@
-import {
-  type ComponentConfig,
-  FONT_WEIGHT_OPTIONS,
-  FPS,
-  H,
-  W,
-} from "@/lib/customizer-config";
+import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
 
 export const lineByLineSlideConfig: ComponentConfig = {
   componentName: "LineByLineSlide",
   importPath: "@/components/remocn/line-by-line-slide",
   controls: {
     text: {
-      type: "text",
+      type: "text-content",
       default: "Think different.\nDo more.",
-      label: "Text",
+      description: "Text",
     },
     distance: {
       type: "number",
-      default: 48,
       min: 0,
       max: 160,
       step: 1,
-      label: "Distance",
+      default: 48,
+      description: "Distance",
+      hiddenFromList: false,
     },
     fontSize: {
       type: "number",
-      default: 72,
       min: 12,
       max: 160,
       step: 1,
-      label: "Font size",
+      default: 72,
+      description: "Font size",
+      hiddenFromList: false,
     },
-    color: { type: "color", default: "#171717", label: "Color" },
+    color: {
+      type: "color",
+      default: "#171717",
+      description: "Color",
+    },
     fontWeight: {
-      type: "select",
+      type: "enum",
       default: "600",
-      options: FONT_WEIGHT_OPTIONS,
-      label: "Font weight",
+      variants: {
+        "400": {},
+        "500": {},
+        "600": {},
+        "700": {},
+      },
+      description: "Font weight",
     },
   },
   durationInFrames: 90,

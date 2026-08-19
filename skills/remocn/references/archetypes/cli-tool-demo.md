@@ -45,7 +45,7 @@ Transitions: hook→chat `fade()` (16f); chat→terminal `whip-pan` down (20f); 
 | Agent chat | `claude-code` / `opencode` / `v0` / `chat-gpt` / `claude-chat` (match the tool's ecosystem), `cursor` (pointer to input field) | — |
 | Terminal run | `terminal-simulator` (hero — scroll is an instant step-function, never eased), `staggered-fade-up` (output rows, 6f apart), `rolling-number` (inline numbers — file count, elapsed time), `marker-highlight` (green sweep on the final `✓` line) | — |
 | Value line | `per-word-crossfade` (A→B two-phrase swap) or `kinetic-center-build` (single statement build), `inline-highlight` (accent phrase) | — |
-| Result — pipeline | `progress-steps` (CI/pipeline steps completing) | — |
+| Result — pipeline | `check-list` (CI/pipeline steps completing) | — |
 | Result — web artifact | `spring-scale-in` (window entrance), `typewriter` (address bar), `soft-blur-in` (content inside) | **`browser-frame`** — lightweight browser chrome (traffic-light buttons + address bar) wrapping a screenshot or child content; entrance `spring-scale-in` on the frame itself; address bar types with `typewriter`; child content enters with `soft-blur-in`; props: `url: string`, `screenshot?: string`, `children?: ReactNode`, `chrome?: 'mac' | 'minimal'` (default `'mac'`), `accent?: string`; the chrome strip is the only opaque element — content stays transparent |
 | Sign-off | `logo-enter` (logo cluster), `micro-scale-fade` (product name label) | — |
 
@@ -59,7 +59,7 @@ Transitions: hook→chat `fade()` (16f); chat→terminal `whip-pan` down (20f); 
 | `tagline` | yes | One phrase — what the tool does in plain language |
 | `command` | yes | Exact shell command to type, e.g. `npx vercel-snap build --prod` |
 | `outputLines[]` | yes | 3–6 log lines; last line is the success line (prefix `✓`); include 1–2 numbers (file count, time) for `rolling-number`; never real transcript walls |
-| `resultType` | yes | `"pipeline"` → `progress-steps`; `"web"` → **`browser-frame`** (build new); `"metric"` → `rolling-number` + label; `"none"` → skip result beat |
+| `resultType` | yes | `"pipeline"` → `check-list`; `"web"` → **`browser-frame`** (build new); `"metric"` → `rolling-number` + label; `"none"` → skip result beat |
 | `agentSurface` | no (standard only) | `"claude-code"` \| `"opencode"` \| `"chat-gpt"` \| `"v0"` \| `"claude-chat"` — omit to skip the chat beat entirely |
 | `prompt` | no (standard only) | Prompt text typed in the agent surface when `agentSurface` is set |
 | `hookLine` | no | Override the hook headline; defaults to `tagline` |

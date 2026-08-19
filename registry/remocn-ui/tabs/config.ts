@@ -6,16 +6,23 @@ export const tabsConfig: ComponentConfig = {
   importPath: "@/components/remocn/tabs",
   controls: {
     state: {
-      type: "select",
+      type: "enum",
       default: "Account",
-      options: ["Account", "Password", "Settings"],
-      label: "State",
+      variants: {
+        Account: {},
+        Password: {},
+        Settings: {},
+      },
+      description: "State",
     },
     variant: {
-      type: "select",
+      type: "enum",
       default: "pill",
-      options: ["pill", "underline"],
-      label: "Variant",
+      variants: {
+        pill: {},
+        underline: {},
+      },
+      description: "Variant",
     },
   },
   durationInFrames: 120,

@@ -5,22 +5,30 @@ export const v0Config: ComponentConfig = {
   importPath: "@/components/remocn/v0",
   controls: {
     greeting: {
-      type: "text",
+      type: "text-content",
       default: "What do you want to create?",
-      label: "Greeting",
+      description: "Greeting",
     },
     placeholder: {
-      type: "text",
+      type: "text-content",
       default: "Ask v0 to build…",
-      label: "Placeholder",
+      description: "Placeholder",
     },
     prompt: {
-      type: "text",
+      type: "text-content",
       default: "a landing page for my SaaS with pricing and testimonials",
-      label: "Prompt",
+      description: "Prompt",
     },
-    modelName: { type: "text", default: "v0 Max", label: "Model" },
-    projectName: { type: "text", default: "Project", label: "Project" },
+    modelName: {
+      type: "text-content",
+      default: "v0 Max",
+      description: "Model",
+    },
+    projectName: {
+      type: "text-content",
+      default: "Project",
+      description: "Project",
+    },
   },
   durationInFrames: 150,
   fps: FPS,

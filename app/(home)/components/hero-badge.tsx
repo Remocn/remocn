@@ -5,8 +5,7 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { useTrackEvent } from "@/lib/analytics";
 
-const HERO_BADGE_HREF =
-  "https://remocn.dev/docs/filters/getting-started/introduction";
+const HERO_BADGE_HREF = "http://remocn.studio/";
 
 export function HeroBadge() {
   const trackEvent = useTrackEvent();
@@ -31,7 +30,7 @@ export function HeroBadge() {
       <span aria-hidden className="text-muted-foreground/60">
         ·
       </span>
-      <span className="text-foreground">HTML in Canvas</span>
+      <span className="text-foreground">Remocn Studio</span>
       <ArrowRight
         className="size-3 transition-transform group-hover:translate-x-0.5"
         aria-hidden="true"

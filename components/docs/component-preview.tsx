@@ -1,18 +1,29 @@
 "use client";
 
+import type { StudioElementPayload } from "@remotion/studio-protocol";
 import { CheckIcon, LinkIcon, RotateCcwIcon } from "lucide-react";
 import { useQueryStates } from "nuqs";
-import { Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, use, useEffect, useMemo, useRef, useState } from "react";
 import { CodeBlock } from "@/components/docs/code-block";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useTrackEvent } from "@/lib/analytics";
-import { type ComponentConfig, getDefaults } from "@/lib/customizer-config";
+import {
+  getDefaults,
+  type ResolvedComponentConfig,
+} from "@/lib/customizer-config";
 import { buildParsers, PreviewStage } from "@/lib/ui-preview-internals";
-import registry from "@/registry/__index__";
+import registry, { loadComponentConfig } from "@/registry/__index__";
 import { ComponentCustomizer } from "./component-customizer";
+import { StudioActions } from "./studio-actions";
 
-export function ComponentPreview({ name }: { name: string }) {
+export function ComponentPreview({
+  name,
+  studioElement,
+}: {
+  name: string;
+  studioElement?: StudioElementPayload;
+}) {
   const entry = registry[name];
 
   if (!entry) {
@@ -29,21 +40,24 @@ export function ComponentPreview({ name }: { name: string }) {
         <div className="not-prose mb-6 aspect-[1.9/1] w-full animate-pulse rounded-2xl bg-muted" />
       }
     >
-      <Preview name={name} config={entry.config} load={entry.load} />
+      <Preview name={name} load={entry.load} studioElement={studioElement} />
     </Suspense>
   );
 }
 
 function Preview({
   name,
-  config,
   load,
+  studioElement,
 }: {
   name: string;
-  config: ComponentConfig;
+  studioElement?: StudioElementPayload;
   // biome-ignore lint/suspicious/noExplicitAny: dynamically-loaded Remotion composition, props shape varies per component
   load: () => Promise<{ default: React.ComponentType<any> }>;
 }) {
+  // Suspends until this component's config chunk resolves, then returns
+  // synchronously from the cached promise. No other config is fetched.
+  const config = use(loadComponentConfig(name));
   const trackEvent = useTrackEvent();
   const { parsers, urlKeys } = useMemo(
     () => buildParsers(name, config.controls),
@@ -111,10 +125,15 @@ function Preview({
   return (
     <div className="not-prose mb-6 flex w-full flex-col gap-4">
       <Tabs defaultValue="preview" className="gap-3">
-        <TabsList>
-          <TabsTrigger value="preview">Preview</TabsTrigger>
-          <TabsTrigger value="code">Code</TabsTrigger>
-        </TabsList>
+        <div className="flex items-center justify-between gap-3">
+          <TabsList>
+            <TabsTrigger value="preview">Preview</TabsTrigger>
+            <TabsTrigger value="code">Code</TabsTrigger>
+          </TabsList>
+          {studioElement ? (
+            <StudioActions name={name} payload={studioElement} />
+          ) : null}
+        </div>
 
         <TabsContent value="preview" className="mt-0">
           <PreviewStage
@@ -175,7 +194,10 @@ function Preview({
   );
 }
 
-function generateCode(config: ComponentConfig, props: Record<string, unknown>) {
+function generateCode(
+  config: ResolvedComponentConfig,
+  props: Record<string, unknown>,
+) {
   if (config.snippet) return config.snippet(props);
   const propsString = Object.entries(props)
     .map(([k, v]) => {

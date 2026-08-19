@@ -64,22 +64,13 @@ export const NAV_LINKS: NavLink[] = [
  * tag another menu item — no component changes needed. See `withNewBadges`.
  */
 export const NEW_BADGE_PATHS = new Set<string>([
-  "/docs/transitions/glitch-cut",
-  "/docs/transitions/ember-burn",
-  "/docs/transitions/particle-dissolve",
-  "/docs/transitions/grid-wave",
-  "/docs/transitions/displacement",
-  "/docs/filters/components/vhs-filter",
-  "/docs/filters/components/crt-screen",
-  "/docs/filters/components/sustained-glitch",
-  "/docs/filters/components/pixelate-region",
-  "/docs/filters/components/ascii-render",
-  "/docs/filters/components/halftone-print",
-  "/docs/filters/components/underwater-ripple",
-  "/docs/filters/components/camera-lens",
-  "/docs/filters/components/security-cam",
-  "/docs/filters/components/hologram",
-  "/docs/effects/tv-power-off",
+  "/docs/typography/kinetic-warp",
+  "/docs/transitions/lens-zoom",
+  "/docs/typography/gooey-morph",
+  "/docs/typography/perspective-squeeze",
+  "/docs/typography/extrude-pop",
+  "/docs/typography/chromatic-wave",
+  "/docs/typography/stretch-in",
 ]);
 
 export type FooterGroup = {

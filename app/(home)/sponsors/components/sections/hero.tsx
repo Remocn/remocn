@@ -2,7 +2,7 @@ import { ArrowRight, ArrowUpRight } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { FadeUp } from "../../../components/fade-up";
-import { HeroNeuroBg } from "../../../components/hero-shader-bg";
+import { HeroPhosphorBg } from "../../../components/hero-phosphor-bg";
 
 const OPENPANEL_DASHBOARD_URL = "https://op.kapish.dev/share/overview/hRpldJ";
 const INTRO_GATE = "sponsors-intro";
@@ -44,7 +44,7 @@ export function Hero() {
     <section className="relative isolate pt-24 pb-4 sm:pt-28 sm:pb-6">
       <div aria-hidden className="absolute inset-0 -z-10">
         <div className="absolute inset-0 bg-grid-fade" />
-        <HeroNeuroBg />
+        <HeroPhosphorBg variant="field" />
       </div>
       <div className="section">
         <div className="flex flex-col items-center text-center">

@@ -1,0 +1,160 @@
+---
+title: Perspective Squeeze
+description: Two lines of heavy type endlessly trade height while corner-pinned perspective bends the flat stack into receding planes
+component: perspective-squeeze
+vibe: playful
+length: 225
+useWhen:
+  - "A looping hold — an outro, a background title, a stream screen — needs constant, hypnotic typographic motion (the 225-frame track ends where it starts)."
+  - "You want an editorial poster feel: heavy condensed type crushed and stretched like a print layout come alive."
+  - "Two short words can share the frame — the two lines are forced to the same width, so pairs like a brand name and a tagline work best."
+avoidWhen:
+  - "You need an entrance or a reveal — this is a sustained loop, the type is fully visible from frame 0; use `kinetic-warp` for a punchy display moment."
+  - "The copy must stay easily readable throughout — lines spend most of the loop crushed to a third of their height."
+  - "You only need the vertical stretch without the perspective bend — drop-in alternatives like `per-character-rise` keep the type flat."
+---
+
+<ComponentPreview name="perspective-squeeze" />
+
+## Installation
+
+<InstallBlock name="perspective-squeeze" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { PerspectiveSqueeze } from "@/components/remocn/perspective-squeeze";
+
+const PerspectiveSqueezeScene = () => (
+  <PerspectiveSqueeze
+    upperText="REMOCN"
+    lowerText="BEST"
+    upperFontFamily="Impact, 'Arial Narrow', sans-serif"
+    lowerFontFamily="Impact, 'Arial Narrow', sans-serif"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="PerspectiveSqueeze"
+    component={PerspectiveSqueezeScene}
+    durationInFrames={225}
+    fps={30}
+    width={1920}
+    height={1080}
+  />
+);
+```
+
+Both lines are forced to exactly the block's width via SVG `textLength`, so any
+pair of words lines up flush. The vertical squeeze scales each line about its
+own baseline, and the layout re-derives from the scaled heights every frame —
+the gap between the lines never changes. The perspective is a true projective
+corner-pin (`matrix3d`), interpolated on the corners, so straight lines stay
+straight while parallels converge.
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "upperText / lowerText",
+      type: "string",
+      default: "\"REMOCN\" / \"BEST\"",
+      description: "The two lines. Both are stretched to the block's full width",
+    },
+    {
+      name: "upperFontFamily / lowerFontFamily",
+      type: "string",
+      default: "\"sans-serif\"",
+      description: "Font of each line — heavy condensed faces read best",
+    },
+    {
+      name: "upperFontSize / lowerFontSize",
+      type: "number",
+      default: "603 / 124",
+      description: "Font size of each line in block pixels",
+    },
+    {
+      name: "fill",
+      type: "string",
+      default: "\"#ffffff\"",
+      description: "Fill color of the type",
+    },
+    {
+      name: "width / height",
+      type: "number",
+      default: "1920 / 1080",
+      description: "Design space all positions are authored in. The stage scales to fit the actual composition, centered",
+    },
+    {
+      name: "blockWidth / blockHeight",
+      type: "number",
+      default: "990 / 546",
+      description: "Size of the cropped block the corner pin acts on — cropping before pinning keeps the corners near the artwork",
+    },
+    {
+      name: "upperBlockPosition / lowerBlockPosition",
+      type: "[number, number]",
+      default: "[960, 314] / [960, 860]",
+      description: "Center of each pinned copy in comp pixels",
+    },
+    {
+      name: "cornerKeyframes",
+      type: "number[]",
+      default: "[0, 45, 70]",
+      description: "Frames at which the corner poses land",
+    },
+    {
+      name: "upperCornersMid / upperCornersEnd",
+      type: "Corners",
+      default: "tutorial poses",
+      description: "Corner poses of the upper copy, as four `[x, y]` points in block space",
+    },
+    {
+      name: "lowerCornersMid / lowerCornersEnd",
+      type: "Corners",
+      default: "tutorial poses",
+      description: "Corner poses of the lower copy",
+    },
+    {
+      name: "cornersRest",
+      type: "Corners",
+      default: "the block's own rectangle",
+      description: "Identity pose every departure is measured from",
+    },
+    {
+      name: "scaleKeyframes",
+      type: "number[]",
+      default: "[0, 60, 118, 161, 196, 225]",
+      description: "Frames of the squish track. The last keyframe repeats the first, closing the loop",
+    },
+    {
+      name: "upperScaleY / lowerScaleY",
+      type: "number[]",
+      default: "tutorial tracks",
+      description: "Vertical scale percentages at each keyframe — the lines trade height in opposition",
+    },
+    {
+      name: "capRatio",
+      type: "number",
+      default: "0.65",
+      description: "Cap height as a fraction of em, used to stack the two lines",
+    },
+    {
+      name: "lineGap",
+      type: "number",
+      default: "50",
+      description: "Constant gap between the lines in block pixels",
+    },
+    {
+      name: "className",
+      type: "string",
+      description: "Optional className passed to the wrapper",
+    },
+  ]}
+/>
+
+Inspired by [5 Clean Text Animations](https://www.youtube.com/watch?v=Nmi7cE2wT54) by Mapal.

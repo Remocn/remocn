@@ -27,6 +27,12 @@ Want the whole library at once? Copy this command to add every remocn component 
 
 <InstallAll />
 
+## Add straight to Remotion Studio
+
+If a [Remotion Studio](https://www.remotion.dev/docs/studio) (4.0.502 or newer) is running locally, most components can skip the CLI entirely. Component pages show an **Add to Studio** button next to the preview — it finds your running Studio and drops the component into the active composition as source code. The drag handle beside it does the same thing by drag and drop, so you can place the element on the timeline yourself. Icons work the same way from the [icons gallery](/docs/icons/gallery).
+
+Either way the result matches `npx shadcn add`: the source lands in your project and is yours to edit. On top of that, elements arrive with editable controls — the same knobs each docs page shows (text, colors, timings, speed) appear as native controls in the Studio sidebar, alongside the standard timeline and transform handles. Compositions and components that build on other remocn components install through the CLI only.
+
 ## 3. Use it in a Remotion composition
 
 ```tsx

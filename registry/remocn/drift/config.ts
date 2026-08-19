@@ -7,11 +7,12 @@ export const driftConfig: ComponentConfig = {
   controls: {
     grow: {
       type: "number",
-      default: 0.035,
       min: -0.1,
       max: 0.15,
       step: 0.005,
-      label: "Grow",
+      default: 0.035,
+      description: "Grow",
+      hiddenFromList: false,
     },
   },
   durationInFrames: 90,

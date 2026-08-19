@@ -21,7 +21,7 @@
       "name": "per-character-rise",
       "type": "registry:component",
       "title": "Per Character Rise",
-      "description": "Letters slide up from below with no blur \u2014 crisp, deliberate, kinetic.",
+      "description": "Letters slide up from below with no blur — crisp, deliberate, kinetic.",
       "dependencies": ["remotion"],
       "files": [
         {
@@ -130,6 +130,20 @@
       ]
     },
     {
+      "name": "lens-zoom",
+      "type": "registry:component",
+      "title": "Lens Zoom",
+      "description": "A hard cut disguised as a lens punch-in: barrel distortion, zoom blur, chromatic split and camera shake around the splice.",
+      "dependencies": ["remotion", "@remotion/transitions"],
+      "files": [
+        {
+          "path": "lens-zoom/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/lens-zoom.tsx"
+        }
+      ]
+    },
+    {
       "name": "line-by-line-slide",
       "type": "registry:component",
       "title": "Line-by-Line Slide",
@@ -154,6 +168,20 @@
           "path": "per-word-crossfade/index.tsx",
           "type": "registry:component",
           "target": "components/remocn/per-word-crossfade.tsx"
+        }
+      ]
+    },
+    {
+      "name": "extrude-pop",
+      "type": "registry:component",
+      "title": "Extrude Pop",
+      "description": "A flat word pops up out of the plane on a solid colored 3D body, no camera involved.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "extrude-pop/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/extrude-pop.tsx"
         }
       ]
     },
@@ -214,6 +242,20 @@
       ]
     },
     {
+      "name": "kinetic-warp",
+      "type": "registry:component",
+      "title": "Kinetic Warp",
+      "description": "A coarse mesh warp bends a whole word in staccato beats, one axis per keyframe.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "kinetic-warp/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/kinetic-warp.tsx"
+        }
+      ]
+    },
+    {
       "name": "kinetic-center-build",
       "type": "registry:component",
       "title": "Kinetic Center Build",
@@ -267,6 +309,20 @@
           "path": "inline-highlight/index.tsx",
           "type": "registry:component",
           "target": "components/remocn/inline-highlight.tsx"
+        }
+      ]
+    },
+    {
+      "name": "stretch-in",
+      "type": "registry:component",
+      "title": "Stretch In",
+      "description": "Letters fly in from off-canvas and smear horizontally on the way — a vertex-lag deformation, not a scale.",
+      "dependencies": ["remotion", "opentype.js"],
+      "files": [
+        {
+          "path": "stretch-in/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/stretch-in.tsx"
         }
       ]
     },
@@ -767,6 +823,20 @@
       ]
     },
     {
+      "name": "gooey-morph",
+      "type": "registry:component",
+      "title": "Gooey Morph",
+      "description": "Bars fly in Tetris-style, land as a row, and melt into a word through a gooey blur-and-threshold morph.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "gooey-morph/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/gooey-morph.tsx"
+        }
+      ]
+    },
+    {
       "name": "grain-dissolve",
       "type": "registry:component",
       "title": "Grain Dissolve",
@@ -870,7 +940,7 @@
       "name": "value-swap",
       "type": "registry:component",
       "title": "Value Swap",
-      "description": "Swaps a value in place with a vertical slide \u2014 the old value exits up as the new one enters from below while an invisible sizer keeps the width stable.",
+      "description": "Swaps a value in place with a vertical slide — the old value exits up as the new one enters from below while an invisible sizer keeps the width stable.",
       "dependencies": ["remotion"],
       "files": [
         {
@@ -952,34 +1022,6 @@
       ]
     },
     {
-      "name": "progress-steps",
-      "type": "registry:component",
-      "title": "Progress Steps",
-      "description": "Multi-step pipeline with sequentially activating nodes and filling lines.",
-      "dependencies": ["remotion"],
-      "files": [
-        {
-          "path": "progress-steps/index.tsx",
-          "type": "registry:component",
-          "target": "components/remocn/progress-steps.tsx"
-        }
-      ]
-    },
-    {
-      "name": "data-flow-pipes",
-      "type": "registry:component",
-      "title": "Data Flow Pipes",
-      "description": "Glowing data packets travel along SVG bezier pipes between system nodes, leaving fading trails.",
-      "dependencies": ["remotion"],
-      "files": [
-        {
-          "path": "data-flow-pipes/index.tsx",
-          "type": "registry:component",
-          "target": "components/remocn/data-flow-pipes.tsx"
-        }
-      ]
-    },
-    {
       "name": "glass-code-block",
       "type": "registry:component",
       "title": "Glass Code Block",
@@ -1019,6 +1061,20 @@
           "path": "perspective-marquee/index.tsx",
           "type": "registry:component",
           "target": "components/remocn/perspective-marquee.tsx"
+        }
+      ]
+    },
+    {
+      "name": "perspective-squeeze",
+      "type": "registry:component",
+      "title": "Perspective Squeeze",
+      "description": "Two lines of heavy type endlessly trade height while corner-pinned perspective bends the flat stack into receding planes.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "perspective-squeeze/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/perspective-squeeze.tsx"
         }
       ]
     },
@@ -1126,7 +1182,7 @@
       "name": "x-follow-card",
       "type": "registry:component",
       "title": "X Follow Card",
-      "description": "Animated X profile follow card \u2014 spring bounce-in, staggered blur-in, a synthetic cursor that clicks Follow and flips it to Following. Light/dark, horizontal or vertical.",
+      "description": "Animated X profile follow card — spring bounce-in, staggered blur-in, a synthetic cursor that clicks Follow and flips it to Following. Light/dark, horizontal or vertical.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
       "registryDependencies": ["@remocn/cursor"],
       "files": [
@@ -1141,7 +1197,7 @@
       "name": "x-followers-overview",
       "type": "registry:component",
       "title": "X Followers Overview",
-      "description": "X follow notifications cycle through as 3D flipping text \u2014 '<name> followed you \u00b7 7h' \u2014 then the total follower count pops in with a confetti burst. Hardcoded sample list (X API ready). Light/dark, horizontal or vertical.",
+      "description": "X follow notifications cycle through as 3D flipping text — '<name> followed you · 7h' — then the total follower count pops in with a confetti burst. Hardcoded sample list (X API ready). Light/dark, horizontal or vertical.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
       "registryDependencies": ["@remocn/confetti"],
       "files": [
@@ -1156,7 +1212,7 @@
       "name": "claude-chat",
       "type": "registry:component",
       "title": "Claude Chat",
-      "description": "Animated Claude chat input \u2014 types a prompt character-by-character and the waveform button morphs into a terracotta send button the moment text appears. Warm light/dark themes.",
+      "description": "Animated Claude chat input — types a prompt character-by-character and the waveform button morphs into a terracotta send button the moment text appears. Warm light/dark themes.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
       "registryDependencies": ["@remocn/caret", "@remocn/remocn-ui"],
       "files": [
@@ -1171,7 +1227,7 @@
       "name": "chat-gpt",
       "type": "registry:component",
       "title": "ChatGPT",
-      "description": "Animated ChatGPT composer \u2014 types a prompt into the pill input, the blue voice button morphs into a send button, and the suggestion chips fade out. Light/dark themes.",
+      "description": "Animated ChatGPT composer — types a prompt into the pill input, the blue voice button morphs into a send button, and the suggestion chips fade out. Light/dark themes.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
       "registryDependencies": ["@remocn/caret", "@remocn/remocn-ui"],
       "files": [
@@ -1186,7 +1242,7 @@
       "name": "v0",
       "type": "registry:component",
       "title": "v0",
-      "description": "Animated Vercel v0 composer \u2014 types a prompt into the dark textarea and the mic button morphs into a send button. Dark/light themes.",
+      "description": "Animated Vercel v0 composer — types a prompt into the dark textarea and the mic button morphs into a send button. Dark/light themes.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
       "registryDependencies": ["@remocn/caret", "@remocn/remocn-ui"],
       "files": [
@@ -1201,7 +1257,7 @@
       "name": "claude-code",
       "type": "registry:component",
       "title": "Claude Code",
-      "description": "Animated Claude Code CLI welcome screen \u2014 terminal window with a dashed welcome box, recent activity and what's new panels, and a prompt line that types a command with a block cursor. Dark/light themes.",
+      "description": "Animated Claude Code CLI welcome screen — terminal window with a dashed welcome box, recent activity and what's new panels, and a prompt line that types a command with a block cursor. Dark/light themes.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
       "registryDependencies": ["@remocn/caret", "@remocn/remocn-ui"],
       "files": [
@@ -1216,7 +1272,7 @@
       "name": "opencode",
       "type": "registry:component",
       "title": "OpenCode",
-      "description": "Animated OpenCode TUI welcome screen \u2014 two-tone wordmark, an input box with a blue accent bar that types a query, a model status line, and command hints. Dark/light themes.",
+      "description": "Animated OpenCode TUI welcome screen — two-tone wordmark, an input box with a blue accent bar that types a query, a model status line, and command hints. Dark/light themes.",
       "dependencies": ["remotion", "@remotion/google-fonts"],
       "registryDependencies": ["@remocn/caret", "@remocn/remocn-ui"],
       "files": [
@@ -1228,10 +1284,24 @@
       ]
     },
     {
+      "name": "chromatic-wave",
+      "type": "registry:component",
+      "title": "Chromatic Wave",
+      "description": "A soft wave travels down through the type; where it crosses, the letters ripple and split into RGB fringes.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "chromatic-wave/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/chromatic-wave.tsx"
+        }
+      ]
+    },
+    {
       "name": "confetti",
       "type": "registry:component",
       "title": "Confetti",
-      "description": "Deterministic confetti burst for Remotion \u2014 seeded particles with gravity, spin, and flutter so every render is identical. Fire it on any frame as a celebratory overlay.",
+      "description": "Deterministic confetti burst for Remotion — seeded particles with gravity, spin, and flutter so every render is identical. Fire it on any frame as a celebratory overlay.",
       "dependencies": ["remotion"],
       "files": [
         {

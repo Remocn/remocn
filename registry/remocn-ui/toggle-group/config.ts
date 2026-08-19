@@ -6,16 +6,22 @@ export const toggleGroupConfig: ComponentConfig = {
   importPath: "@/components/remocn/toggle-group",
   controls: {
     state: {
-      type: "select",
+      type: "enum",
       default: "Monthly",
-      options: ["Monthly", "Yearly"],
-      label: "State",
+      variants: {
+        Monthly: {},
+        Yearly: {},
+      },
+      description: "State",
     },
     size: {
-      type: "select",
+      type: "enum",
       default: "default",
-      options: ["default", "sm"],
-      label: "Size",
+      variants: {
+        default: {},
+        sm: {},
+      },
+      description: "Size",
     },
   },
   durationInFrames: 120,

@@ -22,7 +22,7 @@ function SponsorLogoCard({
       target="_blank"
       rel="noreferrer"
       className={cn(
-        "group surface-card surface-card-interactive flex h-full items-center justify-center gap-3 rounded-2xl p-6 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
+        "group surface-card surface-card-interactive flex h-full items-center justify-center gap-3 rounded-2xl p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
         sponsor.layout === "row" ? "flex-row" : "flex-col",
       )}
     >
@@ -126,32 +126,32 @@ export function WallOfLove() {
               label="Legendary"
               items={legendary}
               gridClassName="grid gap-6 md:grid-cols-2"
-              aspectClassName="aspect-[2/1]"
-              maxH="max-h-24"
+              aspectClassName="aspect-[3/1]"
+              maxH="max-h-16"
               treatment="color"
             />
             <SponsorGroup
               label="Featured"
               items={featured}
               gridClassName="grid gap-6 md:grid-cols-2 lg:grid-cols-3"
-              aspectClassName="aspect-[3/2]"
-              maxH="max-h-20"
+              aspectClassName="aspect-[5/2]"
+              maxH="max-h-12"
               treatment="color"
             />
             <SponsorGroup
               label="Partners"
               items={partners}
               gridClassName="grid gap-6 md:grid-cols-2 lg:grid-cols-3"
-              aspectClassName="aspect-[3/2]"
-              maxH="max-h-20"
+              aspectClassName="aspect-[5/2]"
+              maxH="max-h-12"
               treatment="reveal"
             />
             <SponsorGroup
               label="Builders"
               items={builders}
               gridClassName="grid gap-4 md:grid-cols-3 lg:grid-cols-4"
-              aspectClassName="aspect-[3/2]"
-              maxH="max-h-14"
+              aspectClassName="aspect-[2/1]"
+              maxH="max-h-10"
             />
           </div>
         )}

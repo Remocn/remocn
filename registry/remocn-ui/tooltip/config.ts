@@ -7,18 +7,30 @@ export const tooltipConfig: ComponentConfig = {
   componentName: "Tooltip",
   importPath: "@/components/remocn/tooltip",
   controls: {
-    label: { type: "text", default: DEFAULT_LABEL, label: "Label" },
+    label: {
+      type: "text-content",
+      default: "Add to library",
+      description: "Label",
+    },
     side: {
-      type: "select",
+      type: "enum",
       default: "top",
-      options: ["top", "bottom", "left", "right"],
-      label: "Side",
+      variants: {
+        top: {},
+        bottom: {},
+        left: {},
+        right: {},
+      },
+      description: "Side",
     },
     state: {
-      type: "select",
+      type: "enum",
       default: "visible",
-      options: ["hidden", "visible"],
-      label: "State",
+      variants: {
+        hidden: {},
+        visible: {},
+      },
+      description: "State",
     },
   },
   durationInFrames: 120,

@@ -41,7 +41,7 @@ Pick one slot per beat from these candidates (full props at `https://remocn.dev/
 | **Hook** | `kinetic-center-build`, `blur-out-up`, `per-word-crossfade`, `tracking-in`, `staggered-fade-up` over a slow muted shader (`shader-mesh-gradient` / `shader-warp`) or solid | emphasize ONE word with the accent, sentence case |
 | **Positioning** | `per-character-rise` / `focus-blur-resolve` / `kinetic-center-build` for the line and wordmark; `logo-enter` for a brand/partner logo cluster (not a single lockup) | resolve text into the brand mark; a single styled lockup may be a small new component |
 | **Product reveal** | `terminal-simulator`, `glass-code-block`; AI surfaces `chat-gpt`/`claude-chat`/`claude-code`/`v0`/`opencode`; add `cursor` / `simulated-cursor` | if the catalog lacks the exact surface, build a new lightweight `ui-frame` (see `../anatomy.md` §1) |
-| **Features** | `progress-steps` (checklist), `animated-bar-chart` / `animated-line-chart`, `per-word-crossfade` for a "designed to ___" swap, `marker-highlight` / `inline-highlight` for emphasis, `data-flow-pipes` | one concrete moment per feature, 2–4 total |
+| **Features** | `check-list` (checklist), `animated-bar-chart` / `animated-line-chart`, `per-word-crossfade` for a "designed to ___" swap, `marker-highlight` / `inline-highlight` for emphasis | one concrete moment per feature, 2–4 total |
 | **Proof** | `rolling-number` / `number-wheel` / `slot-machine-roll` for a score; `animated-bar-chart`; `github-stars` / `x-followers-overview` for social counts; a testimonial card (compose or build new) | land one number with the accent |
 | **CTA** | `per-word-crossfade` / `kinetic-center-build` closer, `terminal-simulator` for a run-this command, `spring-scale-in` for a pill, `logo-enter`, `confetti` (one accent pop) | one ask + where to go |
 | **Transitions** | `push-through` (going deeper), `focus-pull` (refined shift), `whip-pan` (energy), or plain `fade()` from `@remotion/transitions/fade` (neutral cut) | pass to `TransitionSeries.Transition` as `presentation`; text-swap components (`fade-through`, `shared-axis-*`) mount inside a scene instead |
@@ -61,7 +61,7 @@ import { TransitionSeries, springTiming } from "@remotion/transitions";
 import { fade } from "@remotion/transitions/fade";
 import { KineticCenterBuild } from "@/components/remocn/kinetic-center-build";
 import { PerCharacterRise } from "@/components/remocn/per-character-rise";
-import { ProgressSteps } from "@/components/remocn/progress-steps";
+import { CheckList } from "@/components/remocn/check-list";
 import { RollingNumber } from "@/components/remocn/rolling-number";
 
 const ACCENT = "#F2D200";
@@ -85,7 +85,7 @@ export const ProductDemo = () => (
       <TransitionSeries.Transition presentation={fade()} timing={springTiming({ durationInFrames: 18 })} />
 
       <TransitionSeries.Sequence durationInFrames={450}>
-        <ProgressSteps steps={["AI Workflow Setup", "Product Metrics Audit", "Content Calendar Prep"]} accent={ACCENT} />
+        <CheckList items={["AI Workflow Setup", "Product Metrics Audit", "Content Calendar Prep"]} width={900} tickColor={ACCENT} />
       </TransitionSeries.Sequence>
       <TransitionSeries.Transition presentation={fade()} timing={springTiming({ durationInFrames: 18 })} />
 

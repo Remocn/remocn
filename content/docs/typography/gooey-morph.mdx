@@ -1,0 +1,185 @@
+---
+title: Gooey Morph
+description: Bars fly in Tetris-style, land as a row, and melt into a word through a gooey blur-and-threshold morph
+component: gooey-morph
+vibe: playful
+length: 76
+useWhen:
+  - "A title reveal should feel liquid and organic — shapes fuse and hand their mass to the word instead of crossfading."
+  - "You want a two-act entrance with a built-in rhythm: a kinetic build (bars flying in off-beat) and a payoff (the melt)."
+  - "The word is short and set in a heavy display face — the goo needs solid masses to fuse."
+  - "Everything that should fuse can live inside this one component — the morph only affects its own SVG group."
+avoidWhen:
+  - "You need a plain text entrance without the shape build-up — use `soft-blur-in` or `mask-reveal-up`."
+  - "The text is long or thin-stroked — the blur-threshold eats thin strokes and long words don't match the four-bar row."
+  - "The style is crisp and geometric rather than liquid — use `kinetic-center-build`."
+---
+
+<ComponentPreview name="gooey-morph" />
+
+## Installation
+
+<InstallBlock name="gooey-morph" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { GooeyMorph } from "@/components/remocn/gooey-morph";
+
+const GooeyMorphScene = () => (
+  <GooeyMorph word="HELLO" fontFamily="'Bodoni Moda', Georgia, serif" />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="GooeyMorph"
+    component={GooeyMorphScene}
+    durationInFrames={120}
+    fps={30}
+    width={1920}
+    height={1080}
+  />
+);
+```
+
+The melt works by blurring the alpha channel and pushing it through a
+near-vertical threshold: where two shapes sit close, their blurred edges add up,
+cross the threshold, and paint a solid neck between them. Everything that
+should fuse lives inside the component's single filtered group — nearby
+elements outside it never join the goo.
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "word",
+      type: "string",
+      default: "\"HELLO\"",
+      description: "The word the bars melt into",
+    },
+    {
+      name: "fill",
+      type: "string",
+      default: "\"#ffffff\"",
+      description: "Fill color of the bars and the word",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"sans-serif\"",
+      description: "Font family of the word — heavy display faces melt best",
+    },
+    {
+      name: "fontSize",
+      type: "number",
+      default: "237",
+      description: "Font size in comp pixels",
+    },
+    {
+      name: "tracking",
+      type: "number",
+      default: "0",
+      description: "Letter spacing of the word",
+    },
+    {
+      name: "wordCenterX / wordBaselineY",
+      type: "number",
+      default: "961.4 / 601.3",
+      description: "Horizontal center and baseline of the word in comp pixels",
+    },
+    {
+      name: "width / height",
+      type: "number",
+      default: "1920 / 1080",
+      description: "Coordinate space of the composition",
+    },
+    {
+      name: "barWidth / barHeight",
+      type: "number",
+      default: "213 / 181",
+      description: "Size of each bar in comp pixels",
+    },
+    {
+      name: "barStartPositions",
+      type: "[number, number][]",
+      default: "4 scattered points",
+      description: "Where each bar starts, as `[x, y]` centers",
+    },
+    {
+      name: "barRestPositions",
+      type: "[number, number][]",
+      default: "4 points in a row",
+      description: "Where each bar lands before the melt",
+    },
+    {
+      name: "barEntryFrames",
+      type: "number[]",
+      default: "[8, 0, 4, 13]",
+      description: "Per-bar entry frames — deliberately non-monotonic so the build reads as Tetris, not a wave",
+    },
+    {
+      name: "barTravelFrames",
+      type: "number",
+      default: "30",
+      description: "Length of one bar's L-shaped move: horizontal into the column, then vertical into the row",
+    },
+    {
+      name: "morphStartFrame / morphPeakFrame / morphEndFrame",
+      type: "number",
+      default: "50 / 63 / 76",
+      description: "The melt window. Blur and displacement are zero outside it",
+    },
+    {
+      name: "blurRadius",
+      type: "number",
+      default: "6",
+      description: "Peak goo blur radius",
+    },
+    {
+      name: "blurIterations",
+      type: "number",
+      default: "6",
+      description: "Box blur passes folded into the equivalent Gaussian sigma",
+    },
+    {
+      name: "alphaInputBlack / alphaInputWhite",
+      type: "number",
+      default: "0.4588 / 0.5098",
+      description: "Alpha threshold range — the narrower, the harder the goo edge",
+    },
+    {
+      name: "displaceAmount",
+      type: "number",
+      default: "20",
+      description: "Peak turbulent displacement of the goo edge, in pixels",
+    },
+    {
+      name: "displaceSize",
+      type: "number",
+      default: "19",
+      description: "Feature size of the displacement noise",
+    },
+    {
+      name: "displaceComplexity",
+      type: "number",
+      default: "1",
+      description: "Noise octaves",
+    },
+    {
+      name: "displaceEvolutionPerSecond",
+      type: "number",
+      default: "50",
+      description: "How fast the noise field pans, per second",
+    },
+    {
+      name: "className",
+      type: "string",
+      description: "Optional className passed to the wrapper",
+    },
+  ]}
+/>
+
+Inspired by [5 Clean Text Animations](https://www.youtube.com/watch?v=Nmi7cE2wT54) by Mapal.

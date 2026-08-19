@@ -5,15 +5,24 @@ export const asciiDissolveConfig: ComponentConfig = {
   componentName: "asciiDissolve",
   importPath: "@/components/remocn/ascii-dissolve",
   controls: {
-    colorBack: { type: "color", default: "#0d0d10", label: "Background" },
-    colorFront: { type: "color", default: "#f2f2f2", label: "Glyphs" },
+    colorBack: {
+      type: "color",
+      default: "#0d0d10",
+      description: "Background",
+    },
+    colorFront: {
+      type: "color",
+      default: "#f2f2f2",
+      description: "Glyphs",
+    },
     cellSize: {
       type: "number",
-      default: 22,
       min: 10,
       max: 36,
       step: 2,
-      label: "Cell size",
+      default: 22,
+      description: "Cell size",
+      hiddenFromList: false,
     },
   },
   durationInFrames: 100,

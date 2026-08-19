@@ -130,6 +130,20 @@
       "type": "registry:component"
     },
     {
+      "name": "lens-zoom",
+      "title": "Lens Zoom",
+      "description": "A hard cut disguised as a lens punch-in: barrel distortion, zoom blur, chromatic split and camera shake around the splice.",
+      "dependencies": ["remotion", "@remotion/transitions"],
+      "files": [
+        {
+          "path": "registry/remocn/lens-zoom/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/lens-zoom.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
       "name": "line-by-line-slide",
       "title": "Line-by-Line Slide",
       "description": "Each line enters from the left with a staggered slide and exits to the right for a flowing paragraph reveal.",
@@ -153,6 +167,20 @@
           "path": "registry/remocn/per-word-crossfade/index.tsx",
           "type": "registry:component",
           "target": "components/remocn/per-word-crossfade.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "extrude-pop",
+      "title": "Extrude Pop",
+      "description": "A flat word pops up out of the plane on a solid colored 3D body, no camera involved.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "registry/remocn/extrude-pop/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/extrude-pop.tsx"
         }
       ],
       "type": "registry:component"
@@ -214,6 +242,20 @@
       "type": "registry:component"
     },
     {
+      "name": "kinetic-warp",
+      "title": "Kinetic Warp",
+      "description": "A coarse mesh warp bends a whole word in staccato beats, one axis per keyframe.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "registry/remocn/kinetic-warp/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/kinetic-warp.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
       "name": "kinetic-center-build",
       "title": "Kinetic Center Build",
       "description": "A word appears in the center; each new word enters from the right and pushes the line until the full phrase locks centered.",
@@ -266,6 +308,20 @@
           "path": "registry/remocn/inline-highlight/index.tsx",
           "type": "registry:component",
           "target": "components/remocn/inline-highlight.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "stretch-in",
+      "title": "Stretch In",
+      "description": "Letters fly in from off-canvas and smear horizontally on the way — a vertex-lag deformation, not a scale.",
+      "dependencies": ["remotion", "opentype.js"],
+      "files": [
+        {
+          "path": "registry/remocn/stretch-in/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/stretch-in.tsx"
         }
       ],
       "type": "registry:component"
@@ -767,6 +823,20 @@
       "type": "registry:component"
     },
     {
+      "name": "gooey-morph",
+      "title": "Gooey Morph",
+      "description": "Bars fly in Tetris-style, land as a row, and melt into a word through a gooey blur-and-threshold morph.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "registry/remocn/gooey-morph/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/gooey-morph.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
       "name": "grain-dissolve",
       "title": "Grain Dissolve",
       "description": "A grain-gradient shader transition that disintegrates the outgoing scene into soft grainy shapes and condenses the next scene out of the noise.",
@@ -952,34 +1022,6 @@
       "type": "registry:component"
     },
     {
-      "name": "progress-steps",
-      "title": "Progress Steps",
-      "description": "Multi-step pipeline with sequentially activating nodes and filling lines.",
-      "dependencies": ["remotion"],
-      "files": [
-        {
-          "path": "registry/remocn/progress-steps/index.tsx",
-          "type": "registry:component",
-          "target": "components/remocn/progress-steps.tsx"
-        }
-      ],
-      "type": "registry:component"
-    },
-    {
-      "name": "data-flow-pipes",
-      "title": "Data Flow Pipes",
-      "description": "Glowing data packets travel along SVG bezier pipes between system nodes, leaving fading trails.",
-      "dependencies": ["remotion"],
-      "files": [
-        {
-          "path": "registry/remocn/data-flow-pipes/index.tsx",
-          "type": "registry:component",
-          "target": "components/remocn/data-flow-pipes.tsx"
-        }
-      ],
-      "type": "registry:component"
-    },
-    {
       "name": "glass-code-block",
       "title": "Glass Code Block",
       "description": "A premium frosted-glass code editor window with a regex tokenizer and line-by-line stagger reveal.",
@@ -1018,6 +1060,20 @@
           "path": "registry/remocn/perspective-marquee/index.tsx",
           "type": "registry:component",
           "target": "components/remocn/perspective-marquee.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "perspective-squeeze",
+      "title": "Perspective Squeeze",
+      "description": "Two lines of heavy type endlessly trade height while corner-pinned perspective bends the flat stack into receding planes.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "registry/remocn/perspective-squeeze/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/perspective-squeeze.tsx"
         }
       ],
       "type": "registry:component"
@@ -1223,6 +1279,20 @@
           "path": "registry/remocn/opencode/index.tsx",
           "type": "registry:component",
           "target": "components/remocn/opencode.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "chromatic-wave",
+      "title": "Chromatic Wave",
+      "description": "A soft wave travels down through the type; where it crosses, the letters ripple and split into RGB fringes.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "registry/remocn/chromatic-wave/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/chromatic-wave.tsx"
         }
       ],
       "type": "registry:component"

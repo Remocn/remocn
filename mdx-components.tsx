@@ -8,7 +8,7 @@ import { CanvasTransitionNote } from "@/components/docs/canvas-transition-note";
 import { getIconForLanguage } from "@/components/docs/code-icons";
 import { ComponentCardGrid } from "@/components/docs/component-card-grid";
 import { ComponentExample } from "@/components/docs/component-example";
-import { ComponentPreview } from "@/components/docs/component-preview";
+import { ComponentPreviewMdx } from "@/components/docs/component-preview-mdx";
 import { CopyButton } from "@/components/docs/copy-button";
 import { Dependencies } from "@/components/docs/dependencies";
 import { GuideVideo } from "@/components/docs/guide-video";
@@ -104,7 +104,7 @@ export function getMDXComponents(components?: MDXComponents): MDXComponents {
     code: Code,
 
     // Custom doc widgets — registrations only, not reimplemented here.
-    ComponentPreview,
+    ComponentPreview: ComponentPreviewMdx,
     ComponentExample,
     UiComponentPreview,
     BlockPreview,

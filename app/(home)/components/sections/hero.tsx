@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useTrackEvent } from "@/lib/analytics";
 import { FadeUp } from "../fade-up";
 import { HeroBadge } from "../hero-badge";
-import { HeroNeuroBg } from "../hero-shader-bg";
+import { HeroPhosphorBg } from "../hero-phosphor-bg";
 import { HeroScrollVideo } from "./hero-scroll-video";
 
 export function Hero() {
@@ -16,7 +16,7 @@ export function Hero() {
     <section className="relative isolate pt-8 pb-12 sm:pt-16 sm:pb-24">
       <div aria-hidden className="absolute inset-0 -z-10">
         <div className="absolute inset-0 bg-grid-fade" />
-        <HeroNeuroBg />
+        <HeroPhosphorBg />
       </div>
 
       <div className="section">

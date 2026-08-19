@@ -1,0 +1,18 @@
+---
+title: Seven from the tutorials
+date: 2026-08-12
+---
+
+Seven components ported from finished motion-design tutorial reproductions — six typography moments and one full-optics transition. Each one is a technique that has no CSS primitive: mesh warps, gooey thresholds, projective corner pins, morphological extrusions, glass displacement and glyph-level deformation, all rebuilt on deterministic Remotion math.
+
+<ChangelogPreview name="stretch-in" />
+
+### New components
+
+- [Kinetic Warp](/docs/typography/kinetic-warp) — a coarse mesh warp bends a whole word in staccato beats, one axis per keyframe. The text never moves; a 2×4 grid does, and two monotone splines resample the canvas so the word bends without folding through itself. Inspired by P A N T E R's kinetic warp tutorial.
+- [Lens Zoom](/docs/transitions/lens-zoom) — a hard cut disguised as a lens punch-in: barrel distortion, fading zoom blur, chromatic split and camera shake around the splice. A full `TransitionSeries` presentation; the cut lands exactly halfway through. Inspired by Creative Dojo.
+- [Gooey Morph](/docs/typography/gooey-morph) — bars fly in Tetris-style, land as a row, and melt into a word. The melt is blur-the-alpha-then-threshold: where shapes sit close, their blurred edges add up and paint a solid neck between them. Inspired by Mapal.
+- [Perspective Squeeze](/docs/typography/perspective-squeeze) — two lines of heavy type endlessly trade height while a true projective corner-pin bends the flat stack into receding planes. A 225-frame loop that ends where it starts. Inspired by Mapal.
+- [Extrude Pop](/docs/typography/extrude-pop) — a flat word pops up out of the plane on a solid colored 3D body, no camera involved. The body is the glyph swept along the extrusion vector; long text auto-shrinks to fit. Inspired by Mapal.
+- [Chromatic Wave](/docs/typography/chromatic-wave) — a soft wave travels down through the type; where it crosses, the letters ripple and split into RGB fringes, then settle back to white. Three displacement depths, one per channel, summed back with screen blending. Inspired by Mapal.
+- [Stretch In](/docs/typography/stretch-in) — letters fly in from off-canvas and smear horizontally on the way. A vertex-lag deformation on real glyph outlines parsed with `opentype.js`: the leading edge lands first, the trailing edge catches up, and stems never change width. Works with any text and any font file. Inspired by Ben Marriott.

@@ -5,25 +5,39 @@ import type {
 } from "@/registry/remocn-ui/message-bubble";
 
 const DEFAULT_TEXT = "Yep, pushing it live now";
-const DEFAULT_REACTION = "🔥";
+const _DEFAULT_REACTION = "🔥";
 
 export const messageBubbleConfig: ComponentConfig = {
   componentName: "MessageBubble",
   importPath: "@/components/remocn/message-bubble",
   controls: {
-    text: { type: "text", default: DEFAULT_TEXT, label: "Text" },
-    variant: {
-      type: "select",
-      default: "incoming",
-      options: ["incoming", "outgoing"],
-      label: "Variant",
+    text: {
+      type: "text-content",
+      default: "Yep, pushing it live now",
+      description: "Text",
     },
-    reaction: { type: "text", default: DEFAULT_REACTION, label: "Reaction" },
+    variant: {
+      type: "enum",
+      default: "incoming",
+      variants: {
+        incoming: {},
+        outgoing: {},
+      },
+      description: "Variant",
+    },
+    reaction: {
+      type: "text-content",
+      default: "🔥",
+      description: "Reaction",
+    },
     state: {
-      type: "select",
+      type: "enum",
       default: "visible",
-      options: ["hidden", "visible"],
-      label: "State",
+      variants: {
+        hidden: {},
+        visible: {},
+      },
+      description: "State",
     },
   },
   durationInFrames: 120,

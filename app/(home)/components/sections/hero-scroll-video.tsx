@@ -119,13 +119,13 @@ function VideoCard({ className }: { className?: string }) {
   return (
     <div className={`relative overflow-hidden ${className ?? ""}`}>
       <video
-        src="https://cdn.remocn.dev/videos/intoducing-remocn.mp4"
+        src="https://cdn.remocn.dev/videos/hero-crt.mp4"
         autoPlay
         muted
         loop
         playsInline
         preload="metadata"
-        poster="/introducing-remocn-poster.jpg"
+        poster="/hero-crt-poster.jpg"
         className="block h-full w-full object-cover"
       />
     </div>

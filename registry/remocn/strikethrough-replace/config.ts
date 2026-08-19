@@ -1,32 +1,48 @@
-import {
-  type ComponentConfig,
-  FONT_WEIGHT_OPTIONS,
-  FPS,
-  H,
-  W,
-} from "@/lib/customizer-config";
+import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
 
 export const strikethroughReplaceConfig: ComponentConfig = {
   componentName: "StrikethroughReplace",
   importPath: "@/components/remocn/strikethrough-replace",
   controls: {
-    from: { type: "text", default: "$49/mo", label: "From" },
-    to: { type: "text", default: "Free", label: "To" },
-    lineColor: { type: "color", default: "#ff5e3a", label: "Line color" },
+    from: {
+      type: "text-content",
+      default: "$49/mo",
+      description: "From",
+    },
+    to: {
+      type: "text-content",
+      default: "Free",
+      description: "To",
+    },
+    lineColor: {
+      type: "color",
+      default: "#ff5e3a",
+      description: "Line color",
+    },
     fontSize: {
       type: "number",
-      default: 96,
       min: 12,
       max: 160,
       step: 1,
-      label: "Font size",
+      default: 96,
+      description: "Font size",
+      hiddenFromList: false,
     },
-    color: { type: "color", default: "#171717", label: "Color" },
+    color: {
+      type: "color",
+      default: "#171717",
+      description: "Color",
+    },
     fontWeight: {
-      type: "select",
+      type: "enum",
       default: "700",
-      options: FONT_WEIGHT_OPTIONS,
-      label: "Font weight",
+      variants: {
+        "400": {},
+        "500": {},
+        "600": {},
+        "700": {},
+      },
+      description: "Font weight",
     },
   },
   durationInFrames: 120,

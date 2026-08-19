@@ -5,21 +5,25 @@ export const chatGptConfig: ComponentConfig = {
   importPath: "@/components/remocn/chat-gpt",
   controls: {
     greeting: {
-      type: "text",
+      type: "text-content",
       default: "What's on your mind today?",
-      label: "Greeting",
+      description: "Greeting",
     },
     placeholder: {
-      type: "text",
+      type: "text-content",
       default: "Ask anything",
-      label: "Placeholder",
+      description: "Placeholder",
     },
     prompt: {
-      type: "text",
+      type: "text-content",
       default: "Make a sunset over a calm ocean",
-      label: "Prompt",
+      description: "Prompt",
     },
-    accentColor: { type: "color", default: "#2F6FED", label: "Accent" },
+    accentColor: {
+      type: "color",
+      default: "#2F6FED",
+      description: "Accent",
+    },
   },
   durationInFrames: 150,
   fps: FPS,

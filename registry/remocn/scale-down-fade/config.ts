@@ -1,30 +1,38 @@
-import {
-  type ComponentConfig,
-  FONT_WEIGHT_OPTIONS,
-  FPS,
-  H,
-  W,
-} from "@/lib/customizer-config";
+import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
 
 export const scaleDownFadeConfig: ComponentConfig = {
   componentName: "ScaleDownFade",
   importPath: "@/components/remocn/scale-down-fade",
   controls: {
-    text: { type: "text", default: "Quietly refined.", label: "Text" },
+    text: {
+      type: "text-content",
+      default: "Quietly refined.",
+      description: "Text",
+    },
     fontSize: {
       type: "number",
-      default: 72,
       min: 12,
       max: 160,
       step: 1,
-      label: "Font size",
+      default: 72,
+      description: "Font size",
+      hiddenFromList: false,
     },
-    color: { type: "color", default: "#171717", label: "Color" },
+    color: {
+      type: "color",
+      default: "#171717",
+      description: "Color",
+    },
     fontWeight: {
-      type: "select",
+      type: "enum",
       default: "600",
-      options: FONT_WEIGHT_OPTIONS,
-      label: "Font weight",
+      variants: {
+        "400": {},
+        "500": {},
+        "600": {},
+        "700": {},
+      },
+      description: "Font weight",
     },
   },
   durationInFrames: 90,

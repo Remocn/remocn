@@ -7,7 +7,7 @@ export const liveCodeCompilationConfig: ComponentConfig = {
     accentColor: {
       type: "color",
       default: "#3b82f6",
-      label: "Accent color",
+      description: "Accent color",
     },
   },
   durationInFrames: 260,

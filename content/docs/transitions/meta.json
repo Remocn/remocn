@@ -15,6 +15,7 @@
     "push-through",
     "focus-pull",
     "zoom-blur",
+    "lens-zoom",
     "page-turn",
     "ascii-dissolve",
     "caret-wipe",

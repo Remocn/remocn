@@ -1,0 +1,208 @@
+---
+title: Lens Zoom
+description: A hard cut disguised as a lens punch-in — barrel distortion, zoom blur, chromatic split and camera shake around the splice
+component: lens-zoom
+vibe: premium
+length: 28
+useWhen:
+  - "A high-energy beat drop or reveal needs a cinematic camera move — the cut hides inside the peak of the distortion."
+  - "You want the full optics package (lens warp, fading zoom blur, RGB fringing, shake) in one drop-in presentation."
+  - "The two scenes are visually rich footage-like content that can sell a physical camera whip."
+avoidWhen:
+  - "You just need a clean depth punch-in without the optics — use `zoom-blur`, the cheap variant of this move."
+  - "You want static lens optics on a single scene rather than a transition — use `camera-lens`."
+  - "The scenes are heavy React subtrees — every frame paints `blurSamples × (lensSteps + 1)` copies of the scene (×3 with the chromatic split); keep scenes light or turn the counts down."
+  - "The pacing is calm or the brand is minimal — this is an aggressive, showy move."
+---
+
+<ComponentPreview name="lens-zoom" />
+
+## Installation
+
+<InstallBlock name="lens-zoom" />
+
+## Usage
+
+`lensZoom()` is a Remotion transition presentation. The transition is a hard
+cut, not a dissolve: the outgoing half owns progress 0–0.5 and the incoming
+half owns 0.5–1, so the splice lands exactly halfway through the transition.
+Use `LENS_ZOOM_DURATION_IN_FRAMES` (28) with `linearTiming` for the tutorial's
+pacing — two equal 14-frame ramps either side of the cut.
+
+```tsx
+import { TransitionSeries, linearTiming } from "@remotion/transitions";
+import {
+  lensZoom,
+  LENS_ZOOM_DURATION_IN_FRAMES,
+} from "@/components/remocn/lens-zoom";
+
+export const MyVideo = () => (
+  <TransitionSeries>
+    <TransitionSeries.Sequence durationInFrames={70}>
+      <SceneA />
+    </TransitionSeries.Sequence>
+    <TransitionSeries.Transition
+      timing={linearTiming({ durationInFrames: LENS_ZOOM_DURATION_IN_FRAMES })}
+      presentation={lensZoom()}
+    />
+    <TransitionSeries.Sequence durationInFrames={70}>
+      <SceneB />
+    </TransitionSeries.Sequence>
+  </TransitionSeries>
+);
+```
+
+Performance scales with `blurSamples × (lensSteps + 1)` painted copies of each
+scene per frame, tripled when the three channel scales differ. Setting
+`redScale`, `greenScale` and `blueScale` equal skips the chromatic split
+entirely — the single biggest thing to turn off while dialling the transition
+in.
+
+## Props
+
+`lensZoom(props)` accepts:
+
+<PropsTable
+  rows={[
+    {
+      name: "inScaleFrom / inScaleTo",
+      type: "number",
+      default: "100 / 150",
+      description: "Scale ramp of the outgoing half, in percent",
+    },
+    {
+      name: "inFovFrom / inFovTo",
+      type: "number",
+      default: "0 / 160",
+      description: "Lens distortion FOV ramp of the outgoing half, in degrees",
+    },
+    {
+      name: "inBlurFrom / inBlurTo",
+      type: "number",
+      default: "0 / 60",
+      description: "Zoom blur amount ramp of the outgoing half",
+    },
+    {
+      name: "inRotationFrom / inRotationTo",
+      type: "number",
+      default: "0 / -15",
+      description: "Rotation ramp of the outgoing half, in degrees",
+    },
+    {
+      name: "outScaleFrom / outScaleTo",
+      type: "number",
+      default: "135 / 100",
+      description: "Scale ramp of the incoming half — starts below the outgoing peak so the energy steps down at the cut",
+    },
+    {
+      name: "outFovFrom / outFovTo",
+      type: "number",
+      default: "135 / 0",
+      description: "Lens distortion FOV ramp of the incoming half",
+    },
+    {
+      name: "outBlurFrom / outBlurTo",
+      type: "number",
+      default: "45 / 0",
+      description: "Zoom blur amount ramp of the incoming half",
+    },
+    {
+      name: "outRotationFrom / outRotationTo",
+      type: "number",
+      default: "345 / 360",
+      description: "Rotation ramp of the incoming half — unwinds the outgoing twist",
+    },
+    {
+      name: "anticipateScale",
+      type: "number",
+      default: "100",
+      description: "Scale the outgoing scene squeezes down to before the punch — the wind-up before the jump. The lens, blur and rotation ramps hold until the squeeze ends. Disabled by default (scaling the full frame below 100 reveals the backdrop behind it) — prefer squeezing the subject inside the scene; set below `inScaleFrom` to enable the frame squeeze",
+    },
+    {
+      name: "anticipatePortion",
+      type: "number",
+      default: "0.35",
+      description: "Portion of the outgoing half spent on the squeeze. 0 disables it",
+    },
+    {
+      name: "lensSteps",
+      type: "number",
+      default: "9",
+      description: "Concentric rings approximating the barrel warp. Nearly free — the rings are disjoint",
+    },
+    {
+      name: "blurSamples",
+      type: "number",
+      default: "7",
+      description: "Scaled copies approximating the zoom blur. The expensive knob — higher is smoother",
+    },
+    {
+      name: "blurScaleGain",
+      type: "number",
+      default: "1",
+      description: "Scale span one unit of blur amount buys",
+    },
+    {
+      name: "blurFade",
+      type: "number",
+      default: "1.5",
+      description: "Higher keeps the sharp copy dominant over the smear",
+    },
+    {
+      name: "shakeAmount",
+      type: "number",
+      default: "50",
+      description: "Peak of the shake envelope around the cut. 0 disables the shake",
+    },
+    {
+      name: "shakeFrequency",
+      type: "number",
+      default: "1.4",
+      description: "Shake noise frequency",
+    },
+    {
+      name: "shakeCyclesPerUnit",
+      type: "number",
+      default: "8",
+      description: "Noise cycles per second one unit of frequency is worth",
+    },
+    {
+      name: "shakeTranslatePx",
+      type: "number",
+      default: "73",
+      description: "Peak shake translation in pixels",
+    },
+    {
+      name: "shakeRotateDeg",
+      type: "number",
+      default: "1.1",
+      description: "Peak shake rotation in degrees",
+    },
+    {
+      name: "redScale / greenScale / blueScale",
+      type: "number",
+      default: "1.01 / 1.0 / 0.99",
+      description: "Per-channel scales for the chromatic aberration. Set all three equal to skip the split",
+    },
+    {
+      name: "letterboxAspect",
+      type: "number",
+      default: "0",
+      description: "Cinematic bars aspect ratio (e.g. 2.39). 0 disables them",
+    },
+    {
+      name: "width / height",
+      type: "number",
+      default: "composition size",
+      description: "Stage size in pixels",
+    },
+    {
+      name: "distortionCenterX / distortionCenterY",
+      type: "number",
+      default: "stage center",
+      description: "Center of the lens distortion, blur and shake",
+    },
+  ]}
+/>
+
+Inspired by [After Effects: Lens Zoom Transition Tutorial](https://www.youtube.com/watch?v=ePz-YEPXl6Y) by Creative Dojo.

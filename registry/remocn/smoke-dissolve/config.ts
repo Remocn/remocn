@@ -5,8 +5,16 @@ export const smokeDissolveConfig: ComponentConfig = {
   componentName: "smokeDissolve",
   importPath: "@/components/remocn/smoke-dissolve",
   controls: {
-    ringColor: { type: "color", default: "#8f88ae", label: "Ring" },
-    colorBack: { type: "color", default: "#141318", label: "Background" },
+    ringColor: {
+      type: "color",
+      default: "#8f88ae",
+      description: "Ring",
+    },
+    colorBack: {
+      type: "color",
+      default: "#141318",
+      description: "Background",
+    },
   },
   durationInFrames: 116,
   fps: FPS,

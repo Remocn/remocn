@@ -6,21 +6,22 @@ export const ecosystemConstellationConfig: ComponentConfig = {
   controls: {
     satelliteCount: {
       type: "number",
-      default: 6,
       min: 3,
       max: 8,
       step: 1,
-      label: "Satellite count",
+      default: 6,
+      description: "Satellite count",
+      hiddenFromList: false,
     },
     centerLabel: {
-      type: "text",
+      type: "text-content",
       default: "V",
-      label: "Center label",
+      description: "Center label",
     },
     accentColor: {
       type: "color",
       default: "#a855f7",
-      label: "Accent color",
+      description: "Accent color",
     },
   },
   durationInFrames: 240,

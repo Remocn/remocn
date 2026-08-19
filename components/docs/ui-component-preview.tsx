@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useTrackEvent } from "@/lib/analytics";
 import { type ControlConfig, getDefaults } from "@/lib/customizer-config";
 import { buildParsers, PreviewStage } from "@/lib/ui-preview-internals";
-import registry from "@/registry/__index__";
+import registry, { loadComponentConfig } from "@/registry/__index__";
 import { ComponentCustomizer } from "./component-customizer";
 import {
   loadUiScene,
@@ -44,7 +44,7 @@ export function UiComponentPreview({ name }: { name: string }) {
         <div className="not-prose mb-6 aspect-[1.9/1] w-full animate-pulse rounded-2xl bg-muted" />
       }
     >
-      <UiPreview name={name} timing={timing} controls={entry.config.controls} />
+      <UiPreview name={name} timing={timing} />
     </Suspense>
   );
 }
@@ -52,16 +52,15 @@ export function UiComponentPreview({ name }: { name: string }) {
 function UiPreview({
   name,
   timing,
-  controls,
 }: {
   name: string;
   timing: UiPreviewTiming;
-  controls: ControlConfig;
 }) {
   // Suspends on first render until this component's scene chunk resolves, then
   // returns synchronously from the cached promise. Gives us the scene component,
   // its honored-control list, and its code template — no other scene is fetched.
   const scene = use(loadUiScene(name));
+  const controls: ControlConfig = use(loadComponentConfig(name)).controls;
   const honored = scene.controls;
   const trackEvent = useTrackEvent();
 

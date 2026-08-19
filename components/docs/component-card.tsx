@@ -4,9 +4,9 @@ import { Player, type PlayerRef } from "@remotion/player";
 import Link from "next/link";
 import { useRef } from "react";
 import { useAutoplay } from "@/app/(home)/components/use-autoplay";
-import { getDefaults } from "@/lib/customizer-config";
 import { cn } from "@/lib/utils";
 import registry from "@/registry/__index__";
+import { previewManifest } from "@/registry/__manifest__";
 import type { CardItem } from "./component-card-grid";
 
 function slugFromHref(href?: string) {
@@ -21,11 +21,12 @@ function PreviewPlaceholder() {
 function CardPreview({ item }: { item: CardItem }) {
   const slug = slugFromHref(item.href);
   const entry = slug ? registry[slug] : undefined;
+  const preview = slug ? previewManifest[slug] : undefined;
   const playerRef = useRef<PlayerRef>(null);
 
   useAutoplay(playerRef);
 
-  if (!entry) {
+  if (!entry || !preview) {
     return (
       <div className="size-full">
         <PreviewPlaceholder />
@@ -33,19 +34,16 @@ function CardPreview({ item }: { item: CardItem }) {
     );
   }
 
-  const { load, config } = entry;
-  const inputProps = getDefaults(config.controls);
-
   return (
     <div className="size-full">
       <Player
         ref={playerRef}
-        lazyComponent={load}
-        inputProps={inputProps}
-        durationInFrames={config.durationInFrames}
-        fps={config.fps}
-        compositionWidth={config.compositionWidth}
-        compositionHeight={config.compositionHeight}
+        lazyComponent={entry.load}
+        inputProps={preview.defaults}
+        durationInFrames={preview.durationInFrames}
+        fps={preview.fps}
+        compositionWidth={preview.compositionWidth}
+        compositionHeight={preview.compositionHeight}
         style={{ width: "100%", height: "100%", backgroundColor: "#f5f5f5" }}
         controls={false}
         loop

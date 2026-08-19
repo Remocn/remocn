@@ -5,12 +5,20 @@ export const dropdownMenuItemConfig: ComponentConfig = {
   componentName: "DropdownMenuItem",
   importPath: "@/components/remocn/dropdown-menu-item",
   controls: {
-    label: { type: "text", default: "Profile", label: "Label" },
+    label: {
+      type: "text-content",
+      default: "Profile",
+      description: "Label",
+    },
     state: {
-      type: "select",
+      type: "enum",
       default: "hover",
-      options: ["idle", "hover", "press"],
-      label: "State",
+      variants: {
+        idle: {},
+        hover: {},
+        press: {},
+      },
+      description: "State",
     },
   },
   durationInFrames: 120,

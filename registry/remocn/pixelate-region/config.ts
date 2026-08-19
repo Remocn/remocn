@@ -7,11 +7,12 @@ export const pixelateRegionConfig: ComponentConfig = {
   controls: {
     cellSize: {
       type: "number",
-      default: 24,
       min: 6,
       max: 72,
       step: 2,
-      label: "Cell size",
+      default: 24,
+      description: "Cell size",
+      hiddenFromList: false,
     },
   },
   durationInFrames: 90,

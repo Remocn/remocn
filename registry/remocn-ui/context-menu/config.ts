@@ -8,18 +8,22 @@ export const contextMenuConfig: ComponentConfig = {
   importPath: "@/components/remocn/context-menu",
   controls: {
     state: {
-      type: "select",
+      type: "enum",
       default: "opened",
-      options: ["opened", "closed"],
-      label: "State",
+      variants: {
+        opened: {},
+        closed: {},
+      },
+      description: "State",
     },
     highlightedIndex: {
       type: "number",
-      default: 1,
       min: -1,
       max: 5,
       step: 1,
-      label: "Highlighted Index",
+      default: 1,
+      description: "Highlighted Index",
+      hiddenFromList: false,
     },
   },
   durationInFrames: 120,

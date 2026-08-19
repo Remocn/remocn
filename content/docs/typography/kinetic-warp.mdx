@@ -1,0 +1,208 @@
+---
+title: Kinetic Warp
+description: A coarse mesh warp bends a whole word in staccato beats, one axis moving per keyframe
+component: kinetic-warp
+vibe: playful
+length: 100
+useWhen:
+  - "A short, heavy display word needs a bold kinetic-typography moment where the whole word bends and snaps instead of individual letters animating."
+  - "You want a rhythmic, beat-synced distortion — the mesh stops dead at every keyframe, so each pose lands like a drum hit (tune `keyframeStride` to the tempo)."
+  - "The type is a huge condensed display font filling the frame — the warp reads best when the word owns the canvas."
+avoidWhen:
+  - "You need a text entrance — the word is fully visible from frame 0 and only distorts; use `tracking-in` or `soft-blur-in` for reveals."
+  - "The text is long or small — the mesh bends quarters of the frame, so a paragraph turns to mush; use `per-character-rise` for body-size text motion."
+  - "The vibe is corrupted or digital rather than elastic — use `rgb-glitch-text` for a glitch read."
+---
+
+<ComponentPreview name="kinetic-warp" />
+
+## Installation
+
+<InstallBlock name="kinetic-warp" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { KineticWarp } from "@/components/remocn/kinetic-warp";
+
+const KineticWarpScene = () => (
+  <KineticWarp
+    text={"REM\nOCN"}
+    fontFamily="Passion One"
+    fontUrl="https://fonts.googleapis.com/css2?family=Passion+One:wght@700&display=block"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="KineticWarp"
+    component={KineticWarpScene}
+    durationInFrames={120}
+    fps={30}
+    width={1920}
+    height={1080}
+  />
+);
+```
+
+The component renders to a canvas, so the font must actually be loaded before the text is drawn — pass `fontUrl` for any webfont and the render is held (via `delayRender`) until it lands.
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "text",
+      type: "string",
+      default: "\"REM\\nOCN\"",
+      description: "The text to warp. Split lines with `\\n`",
+    },
+    {
+      name: "textColor",
+      type: "string",
+      default: "\"#FFFFFF\"",
+      description: "Fill color of the type",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"sans-serif\"",
+      description: "Font family drawn to the canvas",
+    },
+    {
+      name: "fontUrl",
+      type: "string",
+      default: "\"\"",
+      description: "Stylesheet URL for the webfont. Empty string skips loading and uses a local font",
+    },
+    {
+      name: "fontWeight",
+      type: "number",
+      default: "700",
+      description: "CSS font-weight",
+    },
+    {
+      name: "fontSize",
+      type: "number",
+      default: "107.1",
+      description: "Layer-space font size, before `layerScale`",
+    },
+    {
+      name: "leading",
+      type: "number",
+      default: "70",
+      description: "Layer-space baseline-to-baseline distance, before `layerScale`",
+    },
+    {
+      name: "tracking",
+      type: "number",
+      default: "-21",
+      description: "Tracking in 1/1000 em",
+    },
+    {
+      name: "layerScale",
+      type: "number",
+      default: "480",
+      description: "Percent scale applied to the type after layout",
+    },
+    {
+      name: "positionX",
+      type: "number",
+      default: "960",
+      description: "Horizontal center of the text block in comp pixels",
+    },
+    {
+      name: "positionY",
+      type: "number",
+      default: "540",
+      description: "Vertical center of the text block in comp pixels",
+    },
+    {
+      name: "compWidth",
+      type: "number",
+      default: "1920",
+      description: "Canvas width in pixels",
+    },
+    {
+      name: "compHeight",
+      type: "number",
+      default: "1080",
+      description: "Canvas height in pixels",
+    },
+    {
+      name: "meshRows",
+      type: "number",
+      default: "2",
+      description: "Mesh cells vertically — the coarseness is the effect",
+    },
+    {
+      name: "meshColumns",
+      type: "number",
+      default: "4",
+      description: "Mesh cells horizontally",
+    },
+    {
+      name: "colRestX",
+      type: "number",
+      default: "960",
+      description: "Rest position of the moving column line",
+    },
+    {
+      name: "colRightX",
+      type: "number",
+      default: "1255",
+      description: "Column position at keyframes 2 and 3",
+    },
+    {
+      name: "colLeftX",
+      type: "number",
+      default: "678",
+      description: "Column position at keyframes 4 and 5",
+    },
+    {
+      name: "rowRestY",
+      type: "number",
+      default: "540",
+      description: "Rest position of the moving row line",
+    },
+    {
+      name: "rowDownY",
+      type: "number",
+      default: "850",
+      description: "Row position at keyframes 3 and 4",
+    },
+    {
+      name: "rowUpY",
+      type: "number",
+      default: "387",
+      description: "Row position at keyframe 5",
+    },
+    {
+      name: "keyframeStride",
+      type: "number",
+      default: "20",
+      description: "Frames between the six keyframes — motion ends at `5 * keyframeStride`",
+    },
+    {
+      name: "easingBezier",
+      type: "[number, number, number, number]",
+      default: "[0.3, 0.74, 0.09, 1]",
+      description: "Cubic bezier applied between keyframes",
+    },
+    {
+      name: "resampleStep",
+      type: "number",
+      default: "4",
+      description: "Destination pixels per resampled strip — lower is smoother and slower",
+    },
+    {
+      name: "className",
+      type: "string",
+      description: "Optional className passed to the wrapper",
+    },
+  ]}
+/>
+
+Inspired by [How to Make Kinetic Warp Text Animation in After Effects](https://www.youtube.com/watch?v=IvTXbHLtod4) by P A N T E R.

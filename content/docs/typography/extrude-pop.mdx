@@ -1,0 +1,141 @@
+---
+title: Extrude Pop
+description: A flat word pops up out of the plane on a solid colored 3D body, no camera involved
+component: extrude-pop
+vibe: playful
+length: 48
+useWhen:
+  - "A short punchy word — a score, a verdict, a CTA — should land with physical weight, like a stamp rising off the page."
+  - "You want a faux-3D pop without touching cameras or 3D transforms — it's a 2D extrusion that renders identically everywhere."
+  - "The scene has a flat poster aesthetic where a solid-color body reads as intentional design, not as a shadow."
+avoidWhen:
+  - "The text is long or small — the extruded body doubles the ink and turns a sentence into mush; keep it to one short word."
+  - "You need real perspective or a moving camera — the extrusion angle is fixed; this sells one static viewpoint."
+  - "The style is minimal or elegant — the effect is loud by design; use `spring-scale-in` for a softer pop."
+---
+
+<ComponentPreview name="extrude-pop" />
+
+## Installation
+
+<InstallBlock name="extrude-pop" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { ExtrudePop } from "@/components/remocn/extrude-pop";
+
+const ExtrudePopScene = () => (
+  <ExtrudePop letter="WIN" bodyColor="#e8192b" faceColor="#ffffff" />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="ExtrudePop"
+    component={ExtrudePopScene}
+    durationInFrames={90}
+    fps={30}
+    width={1920}
+    height={1080}
+  />
+);
+```
+
+The body is the same glyph swept along the extrusion vector — a morphological
+dilation drawn as stacked copies, back-to-front, with the white face riding the
+near end. Face travel and extrusion depth are keyframed together, which is what
+makes the word read as lifting off a plane rather than growing a shadow.
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "letter",
+      type: "string",
+      default: "\"WIN\"",
+      description: "The text to extrude — one short word reads best",
+    },
+    {
+      name: "bodyColor",
+      type: "string",
+      default: "\"#e8192b\"",
+      description: "Color of the extruded body",
+    },
+    {
+      name: "faceColor",
+      type: "string",
+      default: "\"#ffffff\"",
+      description: "Color of the front face",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"'Helvetica Neue', Helvetica, Arial, sans-serif\"",
+      description: "Font family of the glyph",
+    },
+    {
+      name: "fontWeight",
+      type: "number | string",
+      default: "700",
+      description: "Font weight",
+    },
+    {
+      name: "fontSize",
+      type: "number",
+      default: "603",
+      description: "Font size in comp pixels",
+    },
+    {
+      name: "maxTextWidth",
+      type: "number",
+      default: "1660",
+      description: "Longer text auto-shrinks (font size and extrusion depth together) to fit this width in comp pixels",
+    },
+    {
+      name: "basePosition",
+      type: "[number, number]",
+      default: "[959.2, 752.5]",
+      description: "Baseline anchor of the body layer in comp pixels",
+    },
+    {
+      name: "minimaxRadius",
+      type: "number",
+      default: "80",
+      description: "Dilation radius. The extrusion depth is twice this",
+    },
+    {
+      name: "extrudeAngleDeg",
+      type: "number",
+      default: "-58.6",
+      description: "Direction of the extrusion in degrees",
+    },
+    {
+      name: "extrudeSteps",
+      type: "number",
+      default: "200",
+      description: "Copies making up the body — above the depth in pixels it is seamless",
+    },
+    {
+      name: "extrudeStartFrame / extrudeEndFrame",
+      type: "number",
+      default: "0 / 48",
+      description: "The pop window. The extrusion eases out and holds after the end frame",
+    },
+    {
+      name: "width / height",
+      type: "number",
+      default: "1920 / 1080",
+      description: "Coordinate space of the composition",
+    },
+    {
+      name: "className",
+      type: "string",
+      description: "Optional className passed to the wrapper",
+    },
+  ]}
+/>
+
+Inspired by [5 Clean Text Animations](https://www.youtube.com/watch?v=Nmi7cE2wT54) by Mapal.

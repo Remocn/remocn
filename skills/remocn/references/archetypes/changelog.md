@@ -26,7 +26,7 @@ Transitions: badge→list and list→footer via `fade()` from `@remotion/transit
 |---|---|---|
 | Version badge | `tracking-in` (title), `shader-dot-orbit` (static low-opacity bg) | **`version-badge`** — version chip + date (build per `../anatomy.md` §1) |
 | Change list | `staggered-fade-up` (rows), `spring-scale-in` (tags) | **`change-list`** — renders `{tag,text}[]` with a tag→color map (Added=green, Fixed=amber, Changed=blue) and auto-stagger + "+M more" truncation; **`category-tag`** — fixed-width monospace category chip (reused in patch-notes) |
-| Footer / CTA | `soft-blur-in` (link), `micro-scale-fade` (chip), `progress-steps` (optional release indicator) | a small footer/CTA scene if none fits |
+| Footer / CTA | `soft-blur-in` (link), `micro-scale-fade` (chip) | a small footer/CTA scene if none fits |
 
 The change-list / version-badge / category-tag don't exist in the catalog yet — they're reusable
 across release archetypes, so build them as lightweight components (anatomy §1, "build new"), not one-offs.

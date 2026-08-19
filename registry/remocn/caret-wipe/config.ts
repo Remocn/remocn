@@ -6,19 +6,27 @@ export const caretWipeConfig: ComponentConfig = {
   importPath: "@/components/remocn/caret-wipe",
   controls: {
     direction: {
-      type: "select",
+      type: "enum",
       default: "right",
-      options: ["left", "right"],
-      label: "Direction",
+      variants: {
+        left: {},
+        right: {},
+      },
+      description: "Direction",
     },
-    caretColor: { type: "color", default: "#C3E88D", label: "Caret" },
+    caretColor: {
+      type: "color",
+      default: "#C3E88D",
+      description: "Caret",
+    },
     caretWidth: {
       type: "number",
-      default: 3,
       min: 1,
       max: 8,
       step: 1,
-      label: "Caret width",
+      default: 3,
+      description: "Caret width",
+      hiddenFromList: false,
     },
   },
   durationInFrames: 100,

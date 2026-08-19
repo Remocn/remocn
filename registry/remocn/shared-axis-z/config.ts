@@ -1,35 +1,43 @@
-import {
-  type ComponentConfig,
-  FONT_WEIGHT_OPTIONS,
-  FPS,
-  H,
-  W,
-} from "@/lib/customizer-config";
+import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
 
 export const sharedAxisZConfig: ComponentConfig = {
   componentName: "SharedAxisZ",
   importPath: "@/components/remocn/shared-axis-z",
   controls: {
     fromText: {
-      type: "text",
+      type: "text-content",
       default: "Zooming between states.",
-      label: "From text",
+      description: "From text",
     },
-    toText: { type: "text", default: "Elevate and settle.", label: "To text" },
+    toText: {
+      type: "text-content",
+      default: "Elevate and settle.",
+      description: "To text",
+    },
     fontSize: {
       type: "number",
-      default: 72,
       min: 12,
       max: 160,
       step: 1,
-      label: "Font size",
+      default: 72,
+      description: "Font size",
+      hiddenFromList: false,
     },
-    color: { type: "color", default: "#171717", label: "Color" },
+    color: {
+      type: "color",
+      default: "#171717",
+      description: "Color",
+    },
     fontWeight: {
-      type: "select",
+      type: "enum",
       default: "600",
-      options: FONT_WEIGHT_OPTIONS,
-      label: "Font weight",
+      variants: {
+        "400": {},
+        "500": {},
+        "600": {},
+        "700": {},
+      },
+      description: "Font weight",
     },
   },
   durationInFrames: 90,

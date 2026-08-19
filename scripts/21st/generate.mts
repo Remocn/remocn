@@ -7,7 +7,7 @@ import {
 } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import registry from "@/registry/__index__";
+import registry, { loadComponentConfig } from "@/registry/__index__";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, "..", "..");
@@ -259,7 +259,7 @@ for (const ns of ["remocn", "remocn-icons"] as const) {
       continue;
     }
 
-    const config = entry.config;
+    const config = await loadComponentConfig(slug);
     const backdrop = config.previewBackdrop;
     const background =
       backdrop && (backdrop.type === "color" || backdrop.type === "gradient")

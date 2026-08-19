@@ -52,6 +52,12 @@ type AnalyticsEvents = {
   docs_component_viewed: {
     component: string;
   };
+  studio_install_clicked: {
+    component: string;
+  };
+  studio_drag_started: {
+    component: string;
+  };
 };
 
 export function useTrackEvent() {

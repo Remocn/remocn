@@ -1,38 +1,51 @@
 import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
 import type { PopoverState } from "@/registry/remocn-ui/popover";
 
-const DEFAULT_TITLE = "Dimensions";
-const DEFAULT_DESCRIPTION = "Set the dimensions for the layer.";
+const _DEFAULT_TITLE = "Dimensions";
+const _DEFAULT_DESCRIPTION = "Set the dimensions for the layer.";
 
 export const popoverConfig: ComponentConfig = {
   componentName: "Popover",
   importPath: "@/components/remocn/popover",
   controls: {
-    title: { type: "text", default: DEFAULT_TITLE, label: "Title" },
+    title: {
+      type: "text-content",
+      default: "Dimensions",
+      description: "Title",
+    },
     description: {
-      type: "text",
-      default: DEFAULT_DESCRIPTION,
-      label: "Description",
+      type: "text-content",
+      default: "Set the dimensions for the layer.",
+      description: "Description",
     },
     side: {
-      type: "select",
+      type: "enum",
       default: "bottom",
-      options: ["top", "bottom", "left", "right"],
-      label: "Side",
+      variants: {
+        top: {},
+        bottom: {},
+        left: {},
+        right: {},
+      },
+      description: "Side",
     },
     width: {
       type: "number",
-      default: 288,
       min: 160,
       max: 480,
       step: 8,
-      label: "Width",
+      default: 288,
+      description: "Width",
+      hiddenFromList: false,
     },
     state: {
-      type: "select",
+      type: "enum",
       default: "opened",
-      options: ["opened", "closed"],
-      label: "State",
+      variants: {
+        opened: {},
+        closed: {},
+      },
+      description: "State",
     },
   },
   durationInFrames: 120,
