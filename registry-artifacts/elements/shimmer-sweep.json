@@ -1,0 +1,14 @@
+{
+  "type": "remotion-element",
+  "version": 1,
+  "element": {
+    "dependencies": [],
+    "dimensions": null,
+    "displayName": "Shimmer Sweep",
+    "durationInFrames": 120,
+    "installationMode": "wrapped",
+    "slug": "shimmer-sweep",
+    "sourceCode": "import { interpolate, useCurrentFrame, useVideoConfig } from \"remotion\";\n\nexport interface ShimmerSweepProps {\n  text: string;\n  baseColor?: string;\n  shineColor?: string;\n  fontSize?: number;\n  fontWeight?: number;\n  speed?: number;\n  className?: string;\n}\n\nexport function ShimmerSweep({\n  text,\n  baseColor = \"#3f3f46\",\n  shineColor = \"#fafafa\",\n  fontSize = 96,\n  fontWeight = 700,\n  speed = 1,\n  className,\n}: ShimmerSweepProps) {\n  const frame = useCurrentFrame() * speed;\n  const { durationInFrames } = useVideoConfig();\n\n  const position = interpolate(\n    frame,\n    [0, durationInFrames * 0.8],\n    [200, -100],\n    { extrapolateLeft: \"clamp\", extrapolateRight: \"clamp\" },\n  );\n\n  const textStyle: React.CSSProperties = {\n    fontSize,\n    fontWeight,\n    letterSpacing: \"-0.03em\",\n    fontFamily:\n      \"var(--font-geist-sans), -apple-system, BlinkMacSystemFont, sans-serif\",\n    margin: 0,\n    lineHeight: 1,\n  };\n\n  return (\n    <div\n      style={{\n        position: \"absolute\",\n        inset: 0,\n        display: \"flex\",\n        alignItems: \"center\",\n        justifyContent: \"center\",\n        background: \"white\",\n      }}\n    >\n      <div style={{ position: \"relative\", display: \"inline-block\" }}>\n        <span style={{ ...textStyle, color: baseColor }}>{text}</span>\n        <span\n          className={className}\n          style={{\n            ...textStyle,\n            position: \"absolute\",\n            inset: 0,\n            color: \"transparent\",\n            backgroundClip: \"text\",\n            WebkitBackgroundClip: \"text\",\n            backgroundImage: `linear-gradient(110deg, transparent 30%, ${shineColor} 50%, transparent 70%)`,\n            backgroundSize: \"200% 100%\",\n            backgroundPosition: `${position}% 50%`,\n          }}\n        >\n          {text}\n        </span>\n      </div>\n    </div>\n  );\n}"
+  },
+  "durationInFrames": 120
+}

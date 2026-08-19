@@ -1,0 +1,19 @@
+{
+  "type": "remotion-element",
+  "version": 1,
+  "element": {
+    "dependencies": [
+      {
+        "name": "@paper-design/shaders-react",
+        "version": "0.0.76"
+      }
+    ],
+    "dimensions": null,
+    "displayName": "Shader Grain Gradient",
+    "durationInFrames": 150,
+    "installationMode": "wrapped",
+    "slug": "shader-grain-gradient",
+    "sourceCode": "import { GrainGradient, type GrainGradientProps } from \"@paper-design/shaders-react\";\nimport { useCallback, useState } from \"react\";\nimport { continueRender, delayRender, useCurrentFrame, useVideoConfig } from \"remotion\";\n\nconst NEUTRAL_COLORS = [\"#3a3a52\", \"#4a4a68\", \"#5a5a7e\"];\n\nexport interface ShaderGrainGradientProps\n  extends Omit<GrainGradientProps, \"frame\" | \"ref\"> {}\n\nexport function ShaderGrainGradient({\n  speed = 1,\n  colors = NEUTRAL_COLORS,\n  colorBack = \"#12121a\",\n  softness = 0.6,\n  intensity = 0.2,\n  noise = 0.15,\n  className,\n  ...rest\n}: ShaderGrainGradientProps) {\n  const frame = useCurrentFrame();\n  const { fps, width, height } = useVideoConfig();\n\n  const [handle] = useState(() => delayRender(\"shader-grain-gradient\"));\n  const gate = useCallback(\n    (element: HTMLDivElement | null) => {\n      if (!element) return;\n      requestAnimationFrame(() =>\n        requestAnimationFrame(() => continueRender(handle)),\n      );\n    },\n    [handle],\n  );\n\n  return (\n    <div\n      ref={gate}\n      className={className}\n      style={{ position: \"absolute\", inset: 0 }}\n    >\n      <GrainGradient\n        speed={0}\n        frame={(frame / fps) * speed * 1000}\n        colors={colors}\n        colorBack={colorBack}\n        softness={softness}\n        intensity={intensity}\n        noise={noise}\n        fit=\"cover\"\n        width={width}\n        height={height}\n        {...rest}\n      />\n    </div>\n  );\n}"
+  },
+  "durationInFrames": 150
+}

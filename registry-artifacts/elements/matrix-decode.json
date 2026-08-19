@@ -1,0 +1,14 @@
+{
+  "type": "remotion-element",
+  "version": 1,
+  "element": {
+    "dependencies": [],
+    "dimensions": null,
+    "displayName": "Matrix Decode",
+    "durationInFrames": 90,
+    "installationMode": "wrapped",
+    "slug": "matrix-decode",
+    "sourceCode": "import { random, useCurrentFrame, useVideoConfig } from \"remotion\";\n\nexport interface MatrixDecodeProps {\n  text: string;\n  charset?: string;\n  fontSize?: number;\n  color?: string;\n  fontWeight?: number;\n  revealDuration?: number;\n  speed?: number;\n  className?: string;\n}\n\nexport function MatrixDecode({\n  text,\n  charset = \"!@#$%^&*()_+-=<>?/\\\\|\",\n  fontSize = 72,\n  color = \"#22c55e\",\n  fontWeight = 600,\n  revealDuration = 60,\n  speed = 1,\n  className,\n}: MatrixDecodeProps) {\n  const frame = useCurrentFrame() * speed;\n  // useVideoConfig kept for consistency with sibling primitives\n  useVideoConfig();\n\n  let output = \"\";\n  for (let i = 0; i < text.length; i++) {\n    const revealFrame = (i / Math.max(text.length, 1)) * revealDuration;\n    if (text[i] === \" \") {\n      output += \" \";\n    } else if (frame >= revealFrame) {\n      output += text[i];\n    } else {\n      const r = random(`${i}-${Math.floor(frame / 2)}`);\n      const ch = charset[Math.floor(r * charset.length)];\n      output += ch;\n    }\n  }\n\n  return (\n    <div\n      style={{\n        position: \"absolute\",\n        inset: 0,\n        display: \"flex\",\n        alignItems: \"center\",\n        justifyContent: \"center\",\n        background: \"white\",\n      }}\n    >\n      <span\n        className={className}\n        style={{\n          fontSize,\n          fontWeight,\n          color,\n          letterSpacing: \"0.05em\",\n          whiteSpace: \"pre\",\n          fontFamily:\n            \"var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace\",\n        }}\n      >\n        {output}\n      </span>\n    </div>\n  );\n}"
+  },
+  "durationInFrames": 90
+}

@@ -1,0 +1,14 @@
+{
+  "type": "remotion-element",
+  "version": 1,
+  "element": {
+    "dependencies": [],
+    "dimensions": null,
+    "displayName": "Inline Highlight",
+    "durationInFrames": 90,
+    "installationMode": "wrapped",
+    "slug": "inline-highlight",
+    "sourceCode": "import { interpolate, interpolateColors, useCurrentFrame, useVideoConfig } from \"remotion\";\n\nexport interface InlineHighlightProps {\n  before: string;\n  highlight: string;\n  after?: string;\n  baseColor?: string;\n  highlightColor?: string;\n  fontSize?: number;\n  fontWeight?: number;\n  speed?: number;\n  className?: string;\n}\n\nexport function InlineHighlight({\n  before,\n  highlight,\n  after = \"\",\n  baseColor = \"#171717\",\n  highlightColor = \"#ff5e3a\",\n  fontSize = 48,\n  fontWeight = 600,\n  speed = 1,\n  className,\n}: InlineHighlightProps) {\n  const frame = useCurrentFrame() * speed;\n  const { durationInFrames } = useVideoConfig();\n\n  const progress = interpolate(\n    frame,\n    [durationInFrames * 0.2, durationInFrames * 0.7],\n    [0, 1],\n    { extrapolateLeft: \"clamp\", extrapolateRight: \"clamp\" },\n  );\n\n  const color = interpolateColors(\n    progress,\n    [0, 1],\n    [baseColor, highlightColor],\n  );\n\n  return (\n    <div\n      style={{\n        position: \"absolute\",\n        inset: 0,\n        display: \"flex\",\n        alignItems: \"center\",\n        justifyContent: \"center\",\n        background: \"white\",\n      }}\n    >\n      <span\n        className={className}\n        style={{\n          fontSize,\n          fontWeight,\n          color: baseColor,\n          letterSpacing: \"-0.03em\",\n          fontFamily:\n            \"var(--font-geist-sans), -apple-system, BlinkMacSystemFont, sans-serif\",\n        }}\n      >\n        {before}\n        <span style={{ color }}>{highlight}</span>\n        {after}\n      </span>\n    </div>\n  );\n}"
+  },
+  "durationInFrames": 90
+}

@@ -1,0 +1,19 @@
+{
+  "type": "remotion-element",
+  "version": 1,
+  "element": {
+    "dependencies": [
+      {
+        "name": "@paper-design/shaders-react",
+        "version": "0.0.76"
+      }
+    ],
+    "dimensions": null,
+    "displayName": "Shader Perlin Noise",
+    "durationInFrames": 150,
+    "installationMode": "wrapped",
+    "slug": "shader-perlin-noise",
+    "sourceCode": "import { PerlinNoise, type PerlinNoiseProps } from \"@paper-design/shaders-react\";\nimport { useCallback, useState } from \"react\";\nimport { continueRender, delayRender, useCurrentFrame, useVideoConfig } from \"remotion\";\n\nexport interface ShaderPerlinNoiseProps\n  extends Omit<PerlinNoiseProps, \"frame\" | \"ref\"> {}\n\nexport function ShaderPerlinNoise({\n  speed = 1,\n  colorBack = \"#12121a\",\n  colorFront = \"#6a6a85\",\n  proportion = 0.35,\n  softness = 0.1,\n  className,\n  ...rest\n}: ShaderPerlinNoiseProps) {\n  const frame = useCurrentFrame();\n  const { fps, width, height } = useVideoConfig();\n\n  const [handle] = useState(() => delayRender(\"shader-perlin-noise\"));\n  const gate = useCallback(\n    (element: HTMLDivElement | null) => {\n      if (!element) return;\n      requestAnimationFrame(() =>\n        requestAnimationFrame(() => continueRender(handle)),\n      );\n    },\n    [handle],\n  );\n\n  return (\n    <div\n      ref={gate}\n      className={className}\n      style={{ position: \"absolute\", inset: 0 }}\n    >\n      <PerlinNoise\n        speed={0}\n        frame={(frame / fps) * speed * 1000}\n        colorBack={colorBack}\n        colorFront={colorFront}\n        proportion={proportion}\n        softness={softness}\n        fit=\"cover\"\n        width={width}\n        height={height}\n        {...rest}\n      />\n    </div>\n  );\n}"
+  },
+  "durationInFrames": 150
+}

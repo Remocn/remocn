@@ -1,0 +1,14 @@
+{
+  "type": "remotion-element",
+  "version": 1,
+  "element": {
+    "dependencies": [],
+    "dimensions": null,
+    "displayName": "Marker Highlight",
+    "durationInFrames": 90,
+    "installationMode": "wrapped",
+    "slug": "marker-highlight",
+    "sourceCode": "import { interpolate, interpolateColors, spring, useCurrentFrame, useVideoConfig } from \"remotion\";\n\nexport interface MarkerHighlightProps {\n  before?: string;\n  highlight: string;\n  after?: string;\n  markerColor?: string;\n  baseColor?: string;\n  highlightedTextColor?: string;\n  fontSize?: number;\n  fontWeight?: number;\n  speed?: number;\n  className?: string;\n}\n\nexport function MarkerHighlight({\n  before = \"\",\n  highlight,\n  after = \"\",\n  markerColor = \"#facc15\",\n  baseColor = \"#171717\",\n  highlightedTextColor = \"#171717\",\n  fontSize = 72,\n  fontWeight = 600,\n  speed = 1,\n  className,\n}: MarkerHighlightProps) {\n  const frame = useCurrentFrame() * speed;\n  const { fps } = useVideoConfig();\n\n  const markerScale = spring({\n    frame: frame - 15,\n    fps,\n    config: { damping: 14 },\n  });\n\n  const textColor = interpolateColors(\n    interpolate(markerScale, [0.5, 0.8], [0, 1], {\n      extrapolateLeft: \"clamp\",\n      extrapolateRight: \"clamp\",\n    }),\n    [0, 1],\n    [baseColor, highlightedTextColor],\n  );\n\n  return (\n    <div\n      style={{\n        position: \"absolute\",\n        inset: 0,\n        display: \"flex\",\n        alignItems: \"center\",\n        justifyContent: \"center\",\n        background: \"white\",\n      }}\n    >\n      <span\n        className={className}\n        style={{\n          fontSize,\n          fontWeight,\n          color: baseColor,\n          letterSpacing: \"-0.03em\",\n          fontFamily:\n            \"var(--font-geist-sans), -apple-system, BlinkMacSystemFont, sans-serif\",\n        }}\n      >\n        {before}\n        <span style={{ position: \"relative\", display: \"inline-block\" }}>\n          <span\n            aria-hidden\n            style={{\n              position: \"absolute\",\n              inset: \"0 -0.1em\",\n              background: markerColor,\n              transformOrigin: \"left center\",\n              transform: `scaleX(${markerScale})`,\n              zIndex: 0,\n            }}\n          />\n          <span style={{ position: \"relative\", zIndex: 1, color: textColor }}>\n            {highlight}\n          </span>\n        </span>\n        {after}\n      </span>\n    </div>\n  );\n}"
+  },
+  "durationInFrames": 90
+}

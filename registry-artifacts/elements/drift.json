@@ -1,0 +1,14 @@
+{
+  "type": "remotion-element",
+  "version": 1,
+  "element": {
+    "dependencies": [],
+    "dimensions": null,
+    "displayName": "Drift",
+    "durationInFrames": 90,
+    "installationMode": "wrapped",
+    "slug": "drift",
+    "sourceCode": "import { AbsoluteFill, interpolate, useCurrentFrame, useVideoConfig } from \"remotion\";\n\nimport type React from \"react\";\n\nexport interface DriftProps {\n  children: React.ReactNode;\n  grow?: number;\n}\n\nexport function Drift({ children, grow = 0.035 }: DriftProps) {\n  const frame = useCurrentFrame();\n  const { durationInFrames } = useVideoConfig();\n  const scale = interpolate(frame, [0, durationInFrames], [1, 1 + grow]);\n  return (\n    <AbsoluteFill style={{ transform: `scale(${scale})` }}>\n      {children}\n    </AbsoluteFill>\n  );\n}"
+  },
+  "durationInFrames": 90
+}
