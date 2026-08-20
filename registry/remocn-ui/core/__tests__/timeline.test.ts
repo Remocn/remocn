@@ -395,17 +395,17 @@ describe("resolveStateTransition: chained steps carry from=previous state", () =
 describe("resolveStateTransition: same-`at` ties — later array entry wins", () => {
   type S = "idle" | "a" | "b" | "c";
 
-  it("second entry at same `at` wins: to=second, from=default", () => {
+  it("second entry at same `at` wins and transitions from the prior entry", () => {
     const steps: Step<S>[] = [
       { at: 5, state: "a" },
       { at: 5, state: "b" },
     ];
     const r = resolveStateTransition(5, steps, "idle");
     expect(r.to).toBe("b");
-    expect(r.from).toBe("idle");
+    expect(r.from).toBe("a");
   });
 
-  it("third entry at same `at` wins: to=third, from=default (all share same at)", () => {
+  it("third entry at same `at` wins and transitions from the prior entry", () => {
     const steps: Step<S>[] = [
       { at: 5, state: "a" },
       { at: 5, state: "b" },
@@ -413,7 +413,7 @@ describe("resolveStateTransition: same-`at` ties — later array entry wins", ()
     ];
     const r = resolveStateTransition(5, steps, "idle");
     expect(r.to).toBe("c");
-    expect(r.from).toBe("idle");
+    expect(r.from).toBe("b");
   });
 
   it("tie at second step: from=first step (different at), to=later-array winner", () => {

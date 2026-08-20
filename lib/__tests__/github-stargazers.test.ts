@@ -218,10 +218,7 @@ describe("fetchStargazers", () => {
     const repoBody = { stargazers_count: total };
     // Build 200 entries on a single page
     const starBody = Array.from({ length: total }, (_, i) =>
-      rawEntry(
-        `user${i}`,
-        `2021-01-${String(i + 1).padStart(2, "0")}T00:00:00Z`,
-      ),
+      rawEntry(`user${i}`, new Date(Date.UTC(2021, 0, i + 1)).toISOString()),
     );
 
     global.fetch = mock()

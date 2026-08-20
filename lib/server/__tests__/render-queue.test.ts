@@ -18,7 +18,16 @@
  * sufficient.
  */
 
-import { afterEach, beforeEach, describe, expect, it, mock } from "bun:test";
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  mock,
+  spyOn,
+} from "bun:test";
+import * as fsPromises from "node:fs/promises";
 import type { RenderInput } from "@/lib/server/validate-input";
 
 // ---------------------------------------------------------------------------
@@ -31,10 +40,7 @@ mock.module("@/lib/server/render", () => ({
   renderStarsVideo: mockRender,
 }));
 
-// Mock mkdir so no real fs ops happen.
-mock.module("node:fs/promises", () => ({
-  mkdir: mock(() => Promise.resolve(undefined)),
-}));
+spyOn(fsPromises, "mkdir").mockResolvedValue(undefined);
 
 // Mock server-only so it doesn't blow up outside Next.js.
 mock.module("server-only", () => ({}));

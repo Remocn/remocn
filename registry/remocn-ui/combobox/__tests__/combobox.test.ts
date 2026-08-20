@@ -122,10 +122,11 @@ describe("filterComboboxItems: case-insensitivity", () => {
 });
 
 describe("filterComboboxItems: revealCount slices the query", () => {
-  it("revealCount=2 on 'apple' uses only 'ap' → matches Apple", () => {
+  it("revealCount=2 on 'apple' uses only 'ap' → matches Apple and Grape", () => {
     const result = filterComboboxItems(SAMPLE_ITEMS, "apple", 2);
-    expect(result).toHaveLength(1);
+    expect(result).toHaveLength(2);
     expect(result[0]).toBe("Apple");
+    expect(result[1]).toBe("Grape");
   });
 
   it("revealCount=1 on 'banana' uses only 'b' → matches Banana", () => {
@@ -142,8 +143,9 @@ describe("filterComboboxItems: revealCount slices the query", () => {
 
   it("revealCount > query length uses full query (no index error)", () => {
     const result = filterComboboxItems(SAMPLE_ITEMS, "ap", 100);
-    expect(result).toHaveLength(1);
+    expect(result).toHaveLength(2);
     expect(result[0]).toBe("Apple");
+    expect(result[1]).toBe("Grape");
   });
 });
 

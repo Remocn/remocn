@@ -239,10 +239,10 @@ function resolveToggleGroupTransition(
     }
 
     if (frame >= stepStart) {
-      from = step.state;
+      from = next ? step.state : si === 0 ? defaultState : step.state;
       to = next?.state ?? step.state;
 
-      if (frame >= stepEnd || !next) {
+      if (frame >= stepEnd) {
         from = next?.state ?? step.state;
         to = from;
         progress = 0;

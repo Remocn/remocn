@@ -36,11 +36,12 @@ export function blurInStyle(
 ): BlurInStyle {
   if (state === "revealed")
     return { blur: 0, opacity: 1, translateX: 0, translateY: 0 };
+  const offset = ctx.distance === 0 ? 0 : ctx.sign * ctx.distance;
   return {
     blur: ctx.blur,
     opacity: 0,
-    translateX: ctx.axis === "x" ? ctx.sign * ctx.distance : 0,
-    translateY: ctx.axis === "y" ? ctx.sign * ctx.distance : 0,
+    translateX: ctx.axis === "x" ? offset : 0,
+    translateY: ctx.axis === "y" ? offset : 0,
   };
 }
 

@@ -55,7 +55,7 @@ export const toastConfig: ComponentConfig = {
     ];
     if (description !== undefined && description !== DEFAULT_DESCRIPTION)
       props.push(`  description="${description}"`);
-    if (variant !== undefined && variant !== "default")
+    if (variant !== undefined && variant !== "success")
       props.push(`  variant="${variant}"`);
 
     return `import { Toast } from "@/components/remocn/toast";

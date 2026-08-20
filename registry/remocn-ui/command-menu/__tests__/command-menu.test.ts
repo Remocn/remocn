@@ -79,10 +79,10 @@ describe("filterCommandItems: prefix narrows results", () => {
     expect(labels).toContain("Search docs");
   });
 
-  it("'file' matches New File (substring in middle of label)", () => {
+  it("'file' matches Profile and New File as case-insensitive substrings", () => {
     const result = filterCommandItems(SAMPLE_ITEMS, "file", undefined);
-    expect(result).toHaveLength(1);
-    expect(result[0].label).toBe("New File");
+    expect(result).toHaveLength(2);
+    expect(result.map((item) => item.label)).toEqual(["Profile", "New File"]);
   });
 
   it("'new' matches New File", () => {
