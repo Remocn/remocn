@@ -117,7 +117,8 @@ export function Camera({
   return (
     <AbsoluteFill
       style={{
-        transform: `translate(${x}px, ${y}px) scale(${scale})`,
+        translate: `${x}px ${y}px`,
+        scale: `${scale}`,
         transformOrigin: "center",
         filter: blur > 0.01 ? `blur(${blur}px)` : undefined,
         willChange: "transform, filter",
@@ -150,7 +151,7 @@ const CameraCraneUpPresentation: FC<
   return (
     <AbsoluteFill
       style={{
-        transform: `translateY(${translateY}%)`,
+        translate: `0 ${translateY}%`,
         filter: `blur(${blur}px)`,
         willChange: "transform, filter",
       }}
@@ -184,7 +185,7 @@ const SpatialPushPresentation: FC<
     return (
       <AbsoluteFill
         style={{
-          transform: `scale(${scale})`,
+          scale: `${scale}`,
           filter: `brightness(${brightness}) blur(${blur}px)`,
           willChange: "transform, filter",
         }}

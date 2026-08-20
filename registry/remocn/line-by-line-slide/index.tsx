@@ -115,7 +115,7 @@ export function LineByLineSlide({
                 display: "block",
                 transformOrigin: "0% 50%",
                 opacity,
-                transform: `translateX(${x}px)`,
+                translate: `${x}px`,
               }}
             >
               {line}

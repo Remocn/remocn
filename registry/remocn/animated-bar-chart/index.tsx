@@ -83,7 +83,7 @@ export function AnimatedBarChart({
                 rx={6}
                 fill={barColor}
                 style={{
-                  transform: `scaleY(${scaleY})`,
+                  scale: `1 ${scaleY}`,
                   transformOrigin: `${x + barWidth / 2}px ${baseY}px`,
                   transformBox: "fill-box",
                   filter: `drop-shadow(0 4px 16px ${barColor}55)`,

@@ -77,7 +77,8 @@ export function TerminalCursorZoom({
           top: 0,
           width: STAGE_WIDTH,
           height: STAGE_HEIGHT,
-          transform: `translate(${tx}px, ${ty}px) scale(${zoom})`,
+          translate: `${tx}px ${ty}px`,
+          scale: `${zoom}`,
           transformOrigin: "0 0",
         }}
       >

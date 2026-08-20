@@ -37,7 +37,7 @@ export const SLIDE_SWAP_DEFAULTS: SlideSwapConfig = {
 export type SlideAxis = "x" | "y";
 
 const translate = (axis: SlideAxis, v: number) =>
-  axis === "x" ? `translateX(${v}px)` : `translateY(${v}px)`;
+  axis === "x" ? `${v}px` : `0 ${v}px`;
 
 export const slideInStyle = (
   e: number,
@@ -60,7 +60,7 @@ export const slideInStyle = (
   });
   const tFade = Math.min(Math.max(e / cfg.inFadeFrames, 0), 1);
   return {
-    transform: translate(axis, cfg.inDistance * size * (1 - p)),
+    translate: translate(axis, cfg.inDistance * size * (1 - p)),
     opacity: 1 - (1 - tFade) * (1 - tFade),
     willChange: "transform, opacity",
   };
@@ -76,7 +76,7 @@ export const slideOutStyle = (
   if (e <= 0) return {};
   const t = Math.min(e / cfg.outFrames, 1);
   return {
-    transform: translate(axis, -cfg.outDistance * size * t ** cfg.outPower),
+    translate: translate(axis, -cfg.outDistance * size * t ** cfg.outPower),
     opacity: 1 - t * t,
     willChange: "transform, opacity",
   };

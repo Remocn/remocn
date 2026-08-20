@@ -210,7 +210,7 @@ const IconScatterPresentation: React.FC<
     // The outgoing scene sinks back and blurs as the field rises over it.
     const exitStyle: React.CSSProperties = {
       opacity: interpolate(p, [0.28, 0.5], [1, 0], clampOpts),
-      transform: `scale(${interpolate(p, [0, 0.5], [1, 0.94], {
+      scale: `${interpolate(p, [0, 0.5], [1, 0.94], {
         ...clampOpts,
         easing: Easing.in(Easing.cubic),
       })})`,
@@ -224,7 +224,7 @@ const IconScatterPresentation: React.FC<
   // The incoming scene resolves once the field starts clearing.
   const childStyle: React.CSSProperties = {
     opacity: interpolate(p, [0.5, 0.68], [0, 1], clampOpts),
-    transform: `scale(${interpolate(p, [0.5, 1], [1.06, 1], {
+    scale: `${interpolate(p, [0.5, 1], [1.06, 1], {
       ...clampOpts,
       easing: Easing.out(Easing.cubic),
     })})`,

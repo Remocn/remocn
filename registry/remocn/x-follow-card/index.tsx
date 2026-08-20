@@ -441,7 +441,7 @@ function FollowButton({
     fontWeight: 700,
     fontFamily: FONT_FAMILY,
     boxSizing: "border-box" as const,
-    transform: `scale(${pressScale})`,
+    scale: `${pressScale}`,
     transformOrigin: "center",
   };
 
@@ -726,7 +726,7 @@ export function XFollowCard({
     return {
       filter: b.blur > 0 ? `blur(${b.blur}px)` : "none",
       opacity: b.opacity,
-      transform: `translateY(${b.translateY}px)`,
+      translate: `0 ${b.translateY}px`,
     };
   };
 
@@ -739,7 +739,8 @@ export function XFollowCard({
           top: "50%",
           width: refW,
           height: refH,
-          transform: `translate(-50%, -50%) scale(${stageScale})`,
+          translate: "-50% -50%",
+          scale: `${stageScale}`,
         }}
       >
         <div
@@ -752,7 +753,8 @@ export function XFollowCard({
             border: `1px solid ${t.cardBorder}`,
             borderRadius: 24,
             overflow: "hidden",
-            transform: `translateY(${bounce.translateY}px) scale(${bounce.scale})`,
+            translate: `0 ${bounce.translateY}px`,
+            scale: `${bounce.scale}`,
             transformOrigin: "center top",
             boxShadow: "0 12px 40px -16px rgba(15,20,25,0.18)",
           }}
@@ -841,7 +843,8 @@ export function XFollowCard({
           style={{
             position: "absolute",
             inset: 0,
-            transform: `translateY(${bounce.translateY}px) scale(${bounce.scale})`,
+            translate: `0 ${bounce.translateY}px`,
+            scale: `${bounce.scale}`,
             transformOrigin: "center top",
           }}
         >

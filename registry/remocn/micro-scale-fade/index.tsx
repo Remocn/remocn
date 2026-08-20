@@ -59,7 +59,7 @@ export function MicroScaleFade({
           display: "inline-block",
           transformOrigin: "50% 50%",
           opacity,
-          transform: `scale(${scale})`,
+          scale: `${scale}`,
         }}
       >
         {text}

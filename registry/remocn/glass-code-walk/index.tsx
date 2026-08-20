@@ -110,7 +110,8 @@ export function GlassCodeWalk({
           top: 0,
           width: STAGE_WIDTH,
           height: STAGE_HEIGHT,
-          transform: `translate(${tx}px, ${ty}px) scale(${scale})`,
+          translate: `${tx}px ${ty}px`,
+          scale: `${scale}`,
           transformOrigin: "0 0",
         }}
       >

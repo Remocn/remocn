@@ -78,7 +78,7 @@ export function SoftBlurIn({
                 backfaceVisibility: "hidden",
                 transformOrigin: "50% 55%",
                 opacity,
-                transform: `translateY(${y}px)`,
+                translate: `0 ${y}px`,
                 filter: `blur(${blurAmount}px)`,
               }}
             >

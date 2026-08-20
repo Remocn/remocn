@@ -51,10 +51,10 @@ const WaveWipePresentation: React.FC<
         ...clampOpts,
         easing: Easing.bezier(0.42, 0, 0.58, 1),
       }),
-      transform: `translateY(${interpolate(p, [0, 0.7], [0, -70], {
+      translate: `0 ${interpolate(p, [0, 0.7], [0, -70], {
         ...clampOpts,
         easing: Easing.in(Easing.cubic),
-      })}%)`,
+      })}%`,
     };
     return <AbsoluteFill style={exitStyle}>{children}</AbsoluteFill>;
   }
@@ -87,7 +87,7 @@ const WaveWipePresentation: React.FC<
           offsetY={drift}
         />
       </AbsoluteFill>
-      <AbsoluteFill style={{ transform: `translateY(${rise}%)` }}>
+      <AbsoluteFill style={{ translate: `0 ${rise}%` }}>
         {children}
       </AbsoluteFill>
     </AbsoluteFill>

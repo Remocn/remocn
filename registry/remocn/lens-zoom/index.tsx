@@ -223,7 +223,8 @@ function TransitionHalf({
                 position: "absolute",
                 inset: 0,
                 clipPath: `path("${clip}")`,
-                transform: `rotate(${rotation}deg) scale(${k})`,
+                rotate: `${rotation}deg`,
+                scale: `${k}`,
                 transformOrigin: origin,
               }}
             >
@@ -296,7 +297,7 @@ function LensZoomStage({
             inset: 0,
             mixBlendMode: "screen",
             filter: `url(#${filterId}-${c.id})`,
-            transform: `scale(${c.scale})`,
+            scale: `${c.scale}`,
             transformOrigin: `${centerX}px ${centerY}px`,
           }}
         >
@@ -351,7 +352,8 @@ function LensZoomStage({
         style={{
           position: "absolute",
           inset: 0,
-          transform: `translate(${shakeX}px, ${shakeY}px) rotate(${shakeR}deg)`,
+          translate: `${shakeX}px ${shakeY}px`,
+          rotate: `${shakeR}deg`,
           transformOrigin: `${centerX}px ${centerY}px`,
         }}
       >

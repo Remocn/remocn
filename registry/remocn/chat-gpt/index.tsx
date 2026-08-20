@@ -325,7 +325,8 @@ export function ChatGpt({
           top: "50%",
           width: refW,
           height: refH,
-          transform: `translate(-50%, -50%) scale(${stageScale})`,
+          translate: "-50% -50%",
+          scale: `${stageScale}`,
         }}
       >
         <div
@@ -340,7 +341,7 @@ export function ChatGpt({
             fontWeight: 700,
             color: t.fg,
             opacity: headingFade.opacity,
-            transform: `translateY(${headingFade.translateY + intro.translateY * 0.4}px)`,
+            translate: `0 ${headingFade.translateY + intro.translateY * 0.4}px`,
           }}
         >
           {greeting}
@@ -358,7 +359,8 @@ export function ChatGpt({
             borderRadius: 32,
             boxShadow: "0 8px 30px -14px rgba(13,13,13,0.14)",
             opacity: pillFade.opacity,
-            transform: `translateY(${pillFade.translateY + intro.translateY * 0.6}px) scale(${intro.scale})`,
+            translate: `0 ${pillFade.translateY + intro.translateY * 0.6}px`,
+            scale: `${intro.scale}`,
             transformOrigin: "center top",
             display: "flex",
             alignItems: "center",
@@ -455,7 +457,7 @@ export function ChatGpt({
                   borderRadius: "100%",
                   background: accentColor,
                   opacity: 1 - morph,
-                  transform: `scale(${1 - 0.1 * morph})`,
+                  scale: `${1 - 0.1 * morph}`,
                 }}
               >
                 <WaveformIcon size={22} color="#FFFFFF" />
@@ -470,7 +472,7 @@ export function ChatGpt({
                   borderRadius: "100%",
                   background: t.sendBg,
                   opacity: morph,
-                  transform: `scale(${0.8 + 0.2 * morph})`,
+                  scale: `${0.8 + 0.2 * morph}`,
                 }}
               >
                 <ArrowUpIcon size={22} color={t.sendArrow} />
@@ -489,7 +491,7 @@ export function ChatGpt({
             justifyContent: "center",
             gap: 12,
             opacity: chipsOpacity,
-            transform: `translateY(${chipsShift}px)`,
+            translate: `0 ${chipsShift}px`,
           }}
         >
           <SuggestionChip

@@ -65,7 +65,7 @@ export function LogoOutro({ speed = 1 }: { speed?: number }) {
           alignItems: "center",
           gap: 30,
           opacity,
-          transform: `scale(${scale})`,
+          scale: `${scale}`,
           transformOrigin: "center",
           willChange: "transform, opacity",
         }}

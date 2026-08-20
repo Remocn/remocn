@@ -52,6 +52,7 @@ export const terminalSimulatorConfig: ComponentConfig = {
       hiddenFromList: false,
     },
   },
+  dimensions: { width: 900, height: 480 },
   durationInFrames: 240,
   fps: FPS,
   compositionWidth: W,

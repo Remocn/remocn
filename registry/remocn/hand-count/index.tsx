@@ -179,7 +179,8 @@ export function HandCount({
               style={{
                 display: "inline-block",
                 whiteSpace: "pre",
-                transform: `translateY(${dy}px) rotate(${rot}deg)`,
+                translate: `0 ${dy}px`,
+                rotate: `${rot}deg`,
               }}
             >
               {char}

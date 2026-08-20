@@ -74,7 +74,7 @@ const CaretWipePresentation: React.FC<
         style={{
           clipPath: keep,
           WebkitClipPath: keep,
-          transform: `translateY(${interpolate(p, [0, 1], [0, -6], clampOpts)}px)`,
+          translate: `0 ${interpolate(p, [0, 1], [0, -6], clampOpts)}px`,
           filter: `blur(${interpolate(p, [0.1, 1], [0, 4], clampOpts)}px)`,
         }}
       >
@@ -105,7 +105,7 @@ const CaretWipePresentation: React.FC<
         style={{
           clipPath: reveal,
           WebkitClipPath: reveal,
-          transform: `translateY(${interpolate(p, [0, 1], [3, 0], clampOpts)}px)`,
+          translate: `0 ${interpolate(p, [0, 1], [3, 0], clampOpts)}px`,
           filter: `blur(${interpolate(p, [0, 0.8], [2, 0], clampOpts)}px)`,
         }}
       >
@@ -122,7 +122,7 @@ const CaretWipePresentation: React.FC<
             top: `${(1 - caretHeight) * 50}%`,
             height: `${caretHeight * 100}%`,
             width: caretWidth,
-            transform: "translateX(-50%)",
+            translate: "-50%",
             background: caretColor,
             borderRadius: caretWidth,
             boxShadow: `0 0 18px ${caretColor}, 0 0 6px ${caretColor}`,

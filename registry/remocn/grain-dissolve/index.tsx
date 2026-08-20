@@ -70,7 +70,7 @@ const GrainDissolvePresentation: React.FC<
 
   const childStyle: React.CSSProperties = {
     opacity: interpolate(p, [0.7, 0.86], [0, 1], clampOpts),
-    transform: `scale(${interpolate(p, [0.7, 1], [1.05, 1], {
+    scale: `${interpolate(p, [0.7, 1], [1.05, 1], {
       ...clampOpts,
       easing: Easing.out(Easing.cubic),
     })})`,

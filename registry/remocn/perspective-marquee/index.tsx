@@ -84,7 +84,7 @@ export function PerspectiveMarquee({
           style={{
             display: "flex",
             whiteSpace: "nowrap",
-            transform: `translateX(${offset}px)`,
+            translate: `${offset}px`,
           }}
         >
           {rendered.map((item, i) => {

@@ -19,6 +19,7 @@ export const simulatedCursorConfig: ComponentConfig = {
       hiddenFromList: false,
     },
   },
+  dimensions: { width: 890, height: 450 },
   durationInFrames: 150,
   fps: FPS,
   compositionWidth: W,

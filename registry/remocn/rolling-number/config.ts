@@ -35,6 +35,7 @@ export const rollingNumberConfig: ComponentConfig = {
       description: "Color",
     },
   },
+  dimensions: { width: 380, height: 140 },
   durationInFrames: 150,
   fps: FPS,
   compositionWidth: W,

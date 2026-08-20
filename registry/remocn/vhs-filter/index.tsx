@@ -146,7 +146,7 @@ const VhsFilterFallback: React.FC<VhsFilterProps & CanvasFilterProps> = ({
     <AbsoluteFill>
       <AbsoluteFill
         style={{
-          transform: `translateX(${shift}px)`,
+          translate: `${shift}px`,
           filter: `saturate(${1 + bleed * 0.3}) contrast(1.04) brightness(${flicker}) blur(${0.3 * intensity}px)`,
         }}
       >
@@ -154,7 +154,7 @@ const VhsFilterFallback: React.FC<VhsFilterProps & CanvasFilterProps> = ({
       </AbsoluteFill>
       <AbsoluteFill
         style={{
-          transform: `translateX(${shift - smear}px)`,
+          translate: `${shift - smear}px`,
           filter: "saturate(2.2) blur(1.4px)",
           mixBlendMode: "screen",
           opacity: 0.24 * bleed * intensity,
@@ -175,7 +175,7 @@ const VhsFilterFallback: React.FC<VhsFilterProps & CanvasFilterProps> = ({
           insetInline: 0,
           bottom: 0,
           height: "3.6%",
-          transform: `translateX(${shift * 3}px)`,
+          translate: `${shift * 3}px`,
           background: `rgba(228, 228, 228, ${0.13 * intensity})`,
           mixBlendMode: "screen",
         }}

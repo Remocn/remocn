@@ -101,7 +101,7 @@ export function StrikethroughReplace({
               height: Math.max(2, Math.round(fontSize * 0.08)),
               width: `${linePct}%`,
               background: lineColor,
-              transform: "translateY(-50%)",
+              translate: "0 -50%",
               borderRadius: 2,
             }}
           />
@@ -113,7 +113,7 @@ export function StrikethroughReplace({
           style={{
             ...textStyle,
             opacity: toOpacity,
-            transform: `translateY(${toY}px)`,
+            translate: `0 ${toY}px`,
           }}
         >
           {to}

@@ -42,12 +42,12 @@ const WhipPanPresentation: React.FC<
   const offset = entering ? (travel - 1) * 110 * sign : travel * 110 * sign;
   const stretch = 1 + velocity * 0.12;
 
-  const translate =
-    axis === "x" ? `translateX(${offset}%)` : `translateY(${offset}%)`;
-  const smear = axis === "x" ? `scaleX(${stretch})` : `scaleY(${stretch})`;
+  const translate = axis === "x" ? `${offset}%` : `0 ${offset}%`;
+  const smear = axis === "x" ? `${stretch} 1` : `1 ${stretch}`;
 
   const style: React.CSSProperties = {
-    transform: `${translate} ${smear}`,
+    translate,
+    scale: smear,
     filter: `blur(${velocity * blur}px)`,
   };
 

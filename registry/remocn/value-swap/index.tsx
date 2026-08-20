@@ -63,7 +63,7 @@ export function ValueSwap({
               top: 0,
               whiteSpace: "nowrap",
               opacity,
-              transform: `translateY(${y}px)`,
+              translate: `0 ${y}px`,
             }}
           >
             {value}

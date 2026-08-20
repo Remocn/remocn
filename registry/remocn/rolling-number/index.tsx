@@ -91,14 +91,14 @@ function DigitColumn({
         verticalAlign: "top",
         textAlign: "center",
         opacity: reveal,
-        transform: `translateY(${(1 - reveal) * fontSize * REVEAL_RISE_EM}px)`,
+        translate: `0 ${(1 - reveal) * fontSize * REVEAL_RISE_EM}px`,
       }}
     >
       <span
         style={{
           display: "flex",
           flexDirection: "column",
-          transform: `translateY(${-value * cellHeight}px)`,
+          translate: `0 ${-value * cellHeight}px`,
         }}
       >
         {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0].map((d, i) => (

@@ -43,6 +43,7 @@ export const iconBarChart3Config: ComponentConfig = {
       hiddenFromList: false,
     },
   },
+  dimensions: { width: 48, height: 48 },
   durationInFrames: 80,
   fps: FPS,
   compositionWidth: 48,

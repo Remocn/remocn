@@ -53,6 +53,7 @@ export const topDownLettersConfig: ComponentConfig = {
       description: "Font weight",
     },
   },
+  dimensions: { width: 230, height: 100 },
   durationInFrames: 60,
   fps: FPS,
   compositionWidth: W,

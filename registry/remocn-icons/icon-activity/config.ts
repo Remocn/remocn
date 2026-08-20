@@ -43,6 +43,7 @@ export const iconActivityConfig: ComponentConfig = {
       hiddenFromList: false,
     },
   },
+  dimensions: { width: 48, height: 48 },
   durationInFrames: 90,
   fps: FPS,
   compositionWidth: 48,

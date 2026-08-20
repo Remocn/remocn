@@ -254,29 +254,100 @@ function serializeSchema(value: unknown, indent: string): string {
   return `{\n${lines.join("\n")}\n${indent}}`;
 }
 
-async function loadElementSchema(
+interface ElementConfig {
+  schema: InteractivitySchema | null;
+  dimensions: { width: number; height: number } | null;
+}
+
+async function loadElementConfig(
   name: string,
   sourcePath: string,
-): Promise<InteractivitySchema | null> {
+): Promise<ElementConfig> {
   const configPath = join(dirname(sourcePath), "config.ts");
-  if (!existsSync(configPath)) return null;
+  if (!existsSync(configPath)) return { schema: null, dimensions: null };
   const mod = await import(resolve(configPath));
   const config = Object.values(mod).find(
     (v) => v && typeof v === "object" && "controls" in (v as object),
-  ) as { controls: InteractivitySchema } | undefined;
-  if (!config) return null;
+  ) as
+    | {
+        controls: InteractivitySchema;
+        dimensions?: { width: number; height: number };
+      }
+    | undefined;
+  if (!config) return { schema: null, dimensions: null };
+  const dimensions = config.dimensions ?? null;
   const schema = resolveSchema(name, config.controls);
   if (Object.keys(schema).some((key) => RESERVED_SCHEMA_KEYS.has(key))) {
-    return null;
+    return { schema: null, dimensions };
   }
-  return schema;
+  return { schema, dimensions };
 }
 
 function makeInteractiveWrapper(
   componentName: string,
   schema: InteractivitySchema,
+  dimensions: { width: number; height: number } | null,
 ): string {
   const keys = Object.keys(schema);
+  const sizeControls =
+    dimensions !== null && !("width" in schema) && !("height" in schema);
+  const sizeSchema = sizeControls
+    ? `  width: {
+    type: "number",
+    default: ${dimensions?.width},
+    min: 10,
+    step: 10,
+    description: "Width",
+  },
+  height: {
+    type: "number",
+    default: ${dimensions?.height},
+    min: 10,
+    step: 10,
+    description: "Height",
+  },
+`
+    : "";
+  const content = dimensions
+    ? `<div
+        style={{
+          position: "absolute",
+          inset: 0,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <div
+          ref={outlineRef}
+          style={{
+            position: "relative",
+            width${sizeControls ? "" : `: ${dimensions.width}`},
+            height${sizeControls ? "" : `: ${dimensions.height}`},
+            ...style,
+          }}
+        >
+          <${componentName}Base
+            {...(componentProps as unknown as ComponentProps<typeof ${componentName}Base>)}
+          />
+        </div>
+      </div>`
+    : `<div
+        ref={outlineRef}
+        style={{
+          position: "relative",
+          width: "100%",
+          height: "100%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          ...style,
+        }}
+      >
+        <${componentName}Base
+          {...(componentProps as unknown as ComponentProps<typeof ${componentName}Base>)}
+        />
+      </div>`;
   return `const elementSchema = {
   ...Interactive.baseSchema,
 ${Object.entries(schema)
@@ -285,7 +356,7 @@ ${Object.entries(schema)
       `  ${IDENT.test(k) ? k : JSON.stringify(k)}: ${serializeSchema(v, "  ")},`,
   )
   .join("\n")}
-  ...Interactive.transformSchema,
+${sizeSchema}  ...Interactive.transformSchema,
 } as const satisfies InteractivitySchema;
 
 const ELEMENT_PROP_KEYS = new Set(${JSON.stringify(keys)});
@@ -302,13 +373,21 @@ const ELEMENT_PROP_DEFAULTS: Record<string, unknown> = ${serializeSchema(
   )};
 
 type ${componentName}ElementProps = InteractiveBaseProps &
-  InteractiveTransformProps &
+  InteractiveTransformProps &${
+    sizeControls
+      ? ` { readonly width?: number; readonly height?: number } &`
+      : ""
+  }
   ComponentProps<typeof ${componentName}Base>;
 
 const ${componentName}Inner = forwardRef<
   HTMLDivElement,
   ${componentName}ElementProps & { readonly controls: SequenceControls | undefined }
->(({ controls, name, style, ...rest }, ref) => {
+>(({ controls, name, style, ${
+    sizeControls
+      ? `width = ${dimensions?.width}, height = ${dimensions?.height}, `
+      : ""
+  }...rest }, ref) => {
   const outlineRef = useRef<HTMLDivElement>(null);
   useImperativeHandle(ref, () => outlineRef.current as HTMLDivElement, []);
   const componentProps: Record<string, unknown> = { ...ELEMENT_PROP_DEFAULTS };
@@ -328,22 +407,7 @@ const ${componentName}Inner = forwardRef<
       name={name ?? "<${componentName}>"}
       outlineRef={outlineRef}
     >
-      <div
-        ref={outlineRef}
-        style={{
-          position: "relative",
-          width: "100%",
-          height: "100%",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          ...style,
-        }}
-      >
-        <${componentName}Base
-          {...(componentProps as unknown as ComponentProps<typeof ${componentName}Base>)}
-        />
-      </div>
+      ${content}
     </Sequence>
   );
 });
@@ -406,7 +470,7 @@ for (const file of readdirSync(ARTIFACTS_DIR).sort()) {
     const lib = libSources.get(dep);
     return lib ? [lib] : [];
   });
-  const schema = await loadElementSchema(item.name, path);
+  const { schema, dimensions } = await loadElementConfig(item.name, path);
   let sourceCode = mergeSources(
     parseSource(item.files[0].content),
     libs.map((lib) => lib.parsed),
@@ -441,7 +505,7 @@ for (const file of readdirSync(ARTIFACTS_DIR).sort()) {
         `${componentName}Base`,
       ),
     );
-    sourceCode += `\n\n${makeInteractiveWrapper(componentName, schema)}\n`;
+    sourceCode += `\n\n${makeInteractiveWrapper(componentName, schema, dimensions)}\n`;
     installationMode = "component-owned-sequence";
     interactive++;
   }
@@ -456,7 +520,7 @@ for (const file of readdirSync(ARTIFACTS_DIR).sort()) {
     slug: item.name,
     sourceCode,
     dependencies: resolveDependencies(depNames),
-    dimensions: null,
+    dimensions,
     durationInFrames,
     installationMode,
   });

@@ -162,7 +162,7 @@ const GlitchCutFallback: React.FC<
             key={band}
             style={{
               clipPath: `inset(${band * height}% 0 ${100 - (band + 1) * height}% 0)`,
-              transform: `translateX(${shift}px)`,
+              translate: `${shift}px`,
             }}
           >
             {children}

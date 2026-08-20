@@ -88,7 +88,7 @@ function DigitColumn({
         style={{
           display: "flex",
           flexDirection: "column",
-          transform: `translateY(${-value * cellHeight}px)`,
+          translate: `0 ${-value * cellHeight}px`,
         }}
       >
         {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0].map((d, i) => (

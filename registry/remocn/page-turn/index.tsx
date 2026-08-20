@@ -45,7 +45,8 @@ const PageTurnPresentation: React.FC<
       style={{
         zIndex: 2,
         transformOrigin: origin,
-        transform: `translateY(${-pose * height * LIFT_RATIO}px) rotate(${angle * pose}deg)`,
+        translate: `0 ${-pose * height * LIFT_RATIO}px`,
+        rotate: `${angle * pose}deg`,
       }}
     >
       {children}

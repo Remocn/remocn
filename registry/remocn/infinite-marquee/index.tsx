@@ -56,7 +56,7 @@ export function InfiniteMarquee({
         style={{
           display: "flex",
           whiteSpace: "nowrap",
-          transform: `translateX(${offset}px)`,
+          translate: `${offset}px`,
         }}
       >
         <span style={spanStyle}>{text}</span>

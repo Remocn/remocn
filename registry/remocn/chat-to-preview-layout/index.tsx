@@ -252,7 +252,7 @@ export function ChatToPreviewLayout({
           borderRadius: 16,
           border: "1px solid rgba(255,255,255,0.08)",
           opacity: previewOpacity,
-          transform: `translateX(${previewTx}px)`,
+          translate: `${previewTx}px`,
         }}
       >
         <div

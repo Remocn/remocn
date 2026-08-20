@@ -121,7 +121,7 @@ export function BlurOutUp({
                 marginRight: "0.25em",
                 transformOrigin: "50% 55%",
                 opacity,
-                transform: `translateY(${y}px)`,
+                translate: `0 ${y}px`,
                 filter: `blur(${blur}px)`,
               }}
             >

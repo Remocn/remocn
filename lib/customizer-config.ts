@@ -40,6 +40,14 @@ export interface ComponentConfig {
    * type allows `undefined`.
    */
   controls: InteractivitySchema;
+  /**
+   * Element bounding box in composition pixels (1920×1080 space) for the
+   * Studio element payload. Sized to the rendered content at default props,
+   * with headroom for the animation's travel. Omit for full-frame components
+   * (backgrounds, shaders, filters, transitions) — they keep a `null` box
+   * and fill the composition.
+   */
+  dimensions?: { width: number; height: number };
   durationInFrames: number;
   fps: number;
   compositionWidth: number;

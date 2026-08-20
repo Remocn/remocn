@@ -161,7 +161,7 @@ export function SimulatedCursor({
           top: y,
           width: size,
           height: size,
-          transform: `scale(${clickScale})`,
+          scale: `${clickScale}`,
           transformOrigin: "top left",
           zIndex: 2147483647,
           pointerEvents: "none",

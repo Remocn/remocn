@@ -67,6 +67,7 @@ export const rgbGlitchTextConfig: ComponentConfig = {
       description: "Seed",
     },
   },
+  dimensions: { width: 300, height: 130 },
   durationInFrames: 90,
   fps: FPS,
   compositionWidth: W,

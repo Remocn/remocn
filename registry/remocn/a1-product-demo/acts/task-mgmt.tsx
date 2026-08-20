@@ -137,7 +137,7 @@ function ChecklistPill({
         boxShadow: row.highlighted
           ? "0 14px 34px rgba(242, 210, 0, 0.30)"
           : "0 8px 22px rgba(30, 28, 22, 0.06)",
-        transform: `translateX(${tx}px)`,
+        translate: `${tx}px`,
         opacity,
         willChange: "transform, opacity",
       }}
@@ -184,7 +184,8 @@ function DetailCard({
         borderRadius: 14,
         boxShadow: CARD_SHADOW,
         padding: "22px 26px 18px",
-        transform: `translateY(${ty}px) scale(${scale})`,
+        translate: `0 ${ty}px`,
+        scale: `${scale}`,
         opacity,
         transformOrigin: "left top",
         willChange: "transform, opacity",

@@ -261,7 +261,8 @@ export function ClaudeChat({
           top: "50%",
           width: refW,
           height: refH,
-          transform: `translate(-50%, -50%) scale(${stageScale})`,
+          translate: "-50% -50%",
+          scale: `${stageScale}`,
         }}
       >
         <div
@@ -275,7 +276,8 @@ export function ClaudeChat({
             borderRadius: 24,
             boxShadow: "0 8px 30px -12px rgba(31,30,29,0.12)",
             opacity: cardFade.opacity,
-            transform: `translateY(${cardFade.translateY + intro.translateY}px) scale(${intro.scale})`,
+            translate: `0 ${cardFade.translateY + intro.translateY}px`,
+            scale: `${intro.scale}`,
             transformOrigin: "center top",
           }}
         >
@@ -302,7 +304,7 @@ export function ClaudeChat({
                   marginLeft={1}
                   style={{
                     verticalAlign: "text-bottom",
-                    transform: "translateY(3px)",
+                    translate: "0 3px",
                   }}
                 />
               </span>
@@ -323,7 +325,7 @@ export function ClaudeChat({
                   marginLeft={1}
                   style={{
                     verticalAlign: "text-bottom",
-                    transform: "translateY(3px)",
+                    translate: "0 3px",
                   }}
                 />
                 <span style={{ marginLeft: 2 }}>{placeholder}</span>
@@ -402,7 +404,7 @@ export function ClaudeChat({
                     borderRadius: "100%",
                     border: `1px solid ${t.iconBtnBorder}`,
                     opacity: 1 - morph,
-                    transform: `scale(${1 - 0.1 * morph})`,
+                    scale: `${1 - 0.1 * morph}`,
                   }}
                 >
                   <WaveformIcon size={22} color={t.fg} />
@@ -417,7 +419,7 @@ export function ClaudeChat({
                     borderRadius: 10,
                     background: accentColor,
                     opacity: morph,
-                    transform: `scale(${0.8 + 0.2 * morph})`,
+                    scale: `${0.8 + 0.2 * morph}`,
                   }}
                 >
                   <SendIcon size={22} />

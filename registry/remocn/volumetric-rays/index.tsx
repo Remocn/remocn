@@ -82,7 +82,7 @@ export function VolumetricRays({
           ...sharedTextStyle,
           color: rayColor,
           filter: `blur(${60 * intensity}px)`,
-          transform: "scale(1.2, 1.6)",
+          scale: "1.2 1.6",
           transformOrigin: "center bottom",
           opacity: bloomOpacity * haloPulse,
         }}

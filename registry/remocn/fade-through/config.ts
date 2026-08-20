@@ -40,6 +40,7 @@ export const fadeThroughConfig: ComponentConfig = {
       description: "Font weight",
     },
   },
+  dimensions: { width: 640, height: 100 },
   durationInFrames: 90,
   fps: FPS,
   compositionWidth: W,

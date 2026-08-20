@@ -76,7 +76,7 @@ export function SpringScaleIn({
                 marginRight: "0.25em",
                 transformOrigin: "50% 50%",
                 opacity,
-                transform: `scale(${scale})`,
+                scale: `${scale}`,
               }}
             >
               {word}

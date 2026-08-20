@@ -209,7 +209,7 @@ const TvPowerOffFallback: React.FC<TvPowerOffProps & CanvasFilterProps> = (
       />
       <AbsoluteFill
         style={{
-          transform: `scale(${pinchX}, ${squash})`,
+          scale: `${pinchX} ${squash}`,
           filter: `brightness(${1 + (concentrate - 1) * Math.max(gain, 0)})`,
           opacity: fade,
         }}

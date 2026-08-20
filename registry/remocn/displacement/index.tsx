@@ -135,7 +135,7 @@ const DisplacementFallback: React.FC<
     <AbsoluteFill
       style={{
         opacity: settle,
-        transform: `translateX(${entering ? jolt : -jolt}px)`,
+        translate: `${entering ? jolt : -jolt}px`,
       }}
     >
       {children}

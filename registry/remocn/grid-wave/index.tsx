@@ -192,7 +192,7 @@ const GridWaveFallback: React.FC<
     <AbsoluteFill
       style={{
         opacity: reveal,
-        transform: `scale(${1.04 - reveal * 0.04})`,
+        scale: `${1.04 - reveal * 0.04}`,
       }}
     >
       {children}

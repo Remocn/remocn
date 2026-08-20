@@ -162,7 +162,7 @@ function TaskBlock({
         paddingRight: 12,
         overflow: "hidden",
         opacity: p,
-        transform: `translateX(${(1 - p) * -22}px)`,
+        translate: `${(1 - p) * -22}px`,
       }}
     >
       <div style={{ width: 4, height: "100%", background: ACCENT_BAR }} />
@@ -277,7 +277,7 @@ export function AIPlanning({ speed = 1 }: { speed?: number }) {
                 alignItems: "center",
                 justifyContent: "space-between",
                 opacity: headP,
-                transform: `translateY(${(1 - headP) * 8}px)`,
+                translate: `0 ${(1 - headP) * 8}px`,
               }}
             >
               <span
@@ -308,7 +308,7 @@ export function AIPlanning({ speed = 1 }: { speed?: number }) {
                 marginTop: 22,
                 marginBottom: 26,
                 opacity: titleP,
-                transform: `translateY(${(1 - titleP) * 10}px)`,
+                translate: `0 ${(1 - titleP) * 10}px`,
               }}
             >
               Intelligently plan your entire day
@@ -395,7 +395,7 @@ export function AIPlanning({ speed = 1 }: { speed?: number }) {
                     height: ROW_H - 6,
                     background: FLOW_YELLOW,
                     opacity: markerP,
-                    transform: `scaleY(${markerP})`,
+                    scale: `1 ${markerP}`,
                     transformOrigin: "top",
                   }}
                 />

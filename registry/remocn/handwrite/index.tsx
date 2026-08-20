@@ -73,9 +73,9 @@ export function Handwrite({
                 display: "inline-block",
                 whiteSpace: "pre",
                 opacity: visible ? 1 : 0,
-                transform: visible
-                  ? `translateY(${dy}px) rotate(${slant}deg) scale(${fresh ? 1.06 : 1})`
-                  : undefined,
+                translate: visible ? `0 ${dy}px` : undefined,
+                rotate: visible ? `${slant}deg` : undefined,
+                scale: visible ? `${fresh ? 1.06 : 1}` : undefined,
               }}
             >
               {char}

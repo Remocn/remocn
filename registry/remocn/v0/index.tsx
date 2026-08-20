@@ -239,7 +239,8 @@ export function V0({
           top: "50%",
           width: refW,
           height: refH,
-          transform: `translate(-50%, -50%) scale(${stageScale})`,
+          translate: "-50% -50%",
+          scale: `${stageScale}`,
         }}
       >
         <div
@@ -254,7 +255,7 @@ export function V0({
             fontWeight: 700,
             color: t.fg,
             opacity: headingFade.opacity,
-            transform: `translateY(${headingFade.translateY + intro.translateY * 0.4}px)`,
+            translate: `0 ${headingFade.translateY + intro.translateY * 0.4}px`,
           }}
         >
           {greeting}
@@ -272,7 +273,8 @@ export function V0({
             borderRadius: 16,
             boxShadow: "0 8px 40px -16px rgba(0,0,0,0.8)",
             opacity: boxFade.opacity,
-            transform: `translateY(${boxFade.translateY + intro.translateY * 0.6}px) scale(${intro.scale})`,
+            translate: `0 ${boxFade.translateY + intro.translateY * 0.6}px`,
+            scale: `${intro.scale}`,
             transformOrigin: "center top",
             display: "flex",
             flexDirection: "column",
@@ -396,7 +398,7 @@ export function V0({
                     alignItems: "center",
                     justifyContent: "center",
                     opacity: 1 - morph,
-                    transform: `scale(${1 - 0.08 * morph})`,
+                    scale: `${1 - 0.08 * morph}`,
                   }}
                 >
                   <MicIcon size={20} color={t.btnFg} />
@@ -409,7 +411,7 @@ export function V0({
                     alignItems: "center",
                     justifyContent: "center",
                     opacity: morph,
-                    transform: `scale(${0.85 + 0.15 * morph})`,
+                    scale: `${0.85 + 0.15 * morph}`,
                   }}
                 >
                   <ArrowUpIcon size={20} color={t.btnFg} />

@@ -43,6 +43,7 @@ export const iconTerminalConfig: ComponentConfig = {
       hiddenFromList: false,
     },
   },
+  dimensions: { width: 48, height: 48 },
   durationInFrames: 75,
   fps: FPS,
   compositionWidth: 48,

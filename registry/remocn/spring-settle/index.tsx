@@ -132,7 +132,7 @@ export const springSettleExitStyle = (
   if (tExit <= 0) return {};
   const eExit = tExit ** cfg.exitPower;
   return {
-    transform: `scale(${1 - (1 - cfg.exitScale) * eExit})`,
+    scale: `${1 - (1 - cfg.exitScale) * eExit}`,
     opacity: 1 - eExit,
     willChange: "transform, opacity",
   };
@@ -199,7 +199,7 @@ export function SpringSettleItem({
     <div
       style={{
         ...style,
-        transform: `scale(${scaleEnter})`,
+        scale: `${scaleEnter}`,
         opacity: opacityEnter,
         willChange: "transform, opacity",
       }}

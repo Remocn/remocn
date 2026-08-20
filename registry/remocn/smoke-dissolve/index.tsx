@@ -44,10 +44,10 @@ const SmokeDissolvePresentation: React.FC<
   const childStyle: React.CSSProperties = entering
     ? {
         opacity: interpolate(p, [0.55, 0.68], [0, 1], clampOpts),
-        transform: `scale(${interpolate(p, [0.55, 1], [0.3, 1], {
+        scale: `${interpolate(p, [0.55, 1], [0.3, 1], {
           ...clampOpts,
           easing: Easing.out(Easing.cubic),
-        })})`,
+        })}`,
         filter: `blur(${interpolate(p, [0.55, 0.75], [10, 0], clampOpts)}px)`,
       }
     : { opacity: interpolate(p, [0.06, 0.13], [1, 0], clampOpts) };

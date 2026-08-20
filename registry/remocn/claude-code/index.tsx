@@ -159,7 +159,8 @@ export function ClaudeCode({
           top: "50%",
           width: refW,
           height: refH,
-          transform: `translate(-50%, -50%) scale(${stageScale})`,
+          translate: "-50% -50%",
+          scale: `${stageScale}`,
         }}
       >
         <div
@@ -174,7 +175,8 @@ export function ClaudeCode({
             overflow: "hidden",
             boxShadow: "0 24px 60px -20px rgba(0,0,0,0.6)",
             opacity: intro.scale,
-            transform: `translateY(${intro.translateY}px) scale(${intro.scale})`,
+            translate: `0 ${intro.translateY}px`,
+            scale: `${intro.scale}`,
             transformOrigin: "center top",
             display: "flex",
             flexDirection: "column",
@@ -235,7 +237,7 @@ export function ClaudeCode({
                 borderRadius: 6,
                 padding: "28px 24px 24px",
                 opacity: leftFade.opacity,
-                transform: `translateY(${leftFade.translateY}px)`,
+                translate: `0 ${leftFade.translateY}px`,
               }}
             >
               <span
@@ -315,7 +317,7 @@ export function ClaudeCode({
                     display: "flex",
                     flexDirection: "column",
                     opacity: rightFade.opacity,
-                    transform: `translateY(${rightFade.translateY}px)`,
+                    translate: `0 ${rightFade.translateY}px`,
                   }}
                 >
                   <div>
@@ -369,7 +371,7 @@ export function ClaudeCode({
             <div
               style={{
                 opacity: promptFade.opacity,
-                transform: `translateY(${promptFade.translateY}px)`,
+                translate: `0 ${promptFade.translateY}px`,
               }}
             >
               <div

@@ -24,6 +24,7 @@ export const rolodexFlipConfig: ComponentConfig = {
       hiddenFromList: false,
     },
   },
+  dimensions: { width: 220, height: 60 },
   durationInFrames: 110,
   fps: FPS,
   compositionWidth: W,

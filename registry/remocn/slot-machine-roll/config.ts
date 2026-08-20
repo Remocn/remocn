@@ -40,6 +40,7 @@ export const slotMachineRollConfig: ComponentConfig = {
       description: "Font weight",
     },
   },
+  dimensions: { width: 190, height: 170 },
   durationInFrames: 90,
   fps: FPS,
   compositionWidth: W,

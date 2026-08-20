@@ -99,7 +99,8 @@ export function ScaleDownFade({
           display: "inline-block",
           transformOrigin: "50% 50%",
           opacity,
-          transform: `translateY(${y}px) scale(${scale})`,
+          translate: `0 ${y}px`,
+          scale: `${scale}`,
         }}
       >
         {text}

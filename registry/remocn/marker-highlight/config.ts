@@ -55,6 +55,7 @@ export const markerHighlightConfig: ComponentConfig = {
       description: "Font weight",
     },
   },
+  dimensions: { width: 340, height: 100 },
   durationInFrames: 90,
   fps: FPS,
   compositionWidth: W,
