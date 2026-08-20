@@ -172,5 +172,5 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": ["node_modules", "**/__tests__/**"]
+  "exclude": ["node_modules", "out", "**/__tests__/**"]
 }

@@ -25,7 +25,11 @@ describe("config schemas", () => {
     for (const [file, config] of await loadConfigs()) {
       for (const [key, field] of Object.entries(config.controls)) {
         if (field.type === "hidden") continue;
-        if (!("default" in field) || field.default === undefined || field.default === null) {
+        if (
+          !("default" in field) ||
+          field.default === undefined ||
+          field.default === null
+        ) {
           bad.push(`${file}: ${key}`);
         }
       }
