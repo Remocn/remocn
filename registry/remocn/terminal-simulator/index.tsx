@@ -178,7 +178,7 @@ export function TerminalSimulator({
               left: 20,
               right: 20,
               top: 20,
-              transform: `translateY(${translateY}px)`,
+              translate: `0 ${translateY}px`,
             }}
           >
             {lines.map((line, index) => (

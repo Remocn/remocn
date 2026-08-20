@@ -51,6 +51,7 @@ export const reelConfig: ComponentConfig = {
       hiddenFromList: false,
     },
   },
+  dimensions: { width: 1180, height: 676 },
   durationInFrames: 160,
   fps: FPS,
   compositionWidth: W,

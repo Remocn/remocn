@@ -61,7 +61,7 @@ export function FocusAnalytics({ speed = 1 }: { speed?: number }) {
       <div
         style={{
           position: "relative",
-          transform: `scale(${cardScale})`,
+          scale: `${cardScale}`,
           opacity: cardOpacity,
         }}
       >
@@ -140,7 +140,7 @@ export function FocusAnalytics({ speed = 1 }: { speed?: number }) {
                     height: `${h * 100}%`,
                     borderRadius: 5,
                     transformOrigin: "bottom",
-                    transform: `scaleY(${grow})`,
+                    scale: `1 ${grow}`,
                     background: isYellow ? FLOW_YELLOW : "#ECE9DA",
                   }}
                 />
@@ -154,7 +154,7 @@ export function FocusAnalytics({ speed = 1 }: { speed?: number }) {
             position: "absolute",
             top: -22,
             right: 70,
-            transform: `scale(${johnPop})`,
+            scale: `${johnPop}`,
             transformOrigin: "center",
           }}
         >
@@ -165,7 +165,7 @@ export function FocusAnalytics({ speed = 1 }: { speed?: number }) {
             position: "absolute",
             bottom: -22,
             right: -34,
-            transform: `scale(${amyPop})`,
+            scale: `${amyPop}`,
             transformOrigin: "center",
           }}
         >

@@ -44,6 +44,7 @@ export const maskRevealUpConfig: ComponentConfig = {
       description: "Font weight",
     },
   },
+  dimensions: { width: 640, height: 200 },
   durationInFrames: 90,
   fps: FPS,
   compositionWidth: W,

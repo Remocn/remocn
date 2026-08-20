@@ -460,7 +460,7 @@ export function InfiniteBentoPan({
           top: 0,
           width: SUPER_W,
           height: SUPER_H,
-          transform: `translate(${-px}px, ${-py}px)`,
+          translate: `${-px}px ${-py}px`,
           willChange: "transform",
         }}
       >

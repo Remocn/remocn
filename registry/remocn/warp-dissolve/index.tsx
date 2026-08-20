@@ -44,10 +44,10 @@ const WarpDissolvePresentation: React.FC<
   if (!entering) {
     const meltStyle: React.CSSProperties = {
       opacity: interpolate(p, [0.2, 0.38], [1, 0], clampOpts),
-      transform: `scale(${interpolate(p, [0, 0.38], [1, 1.16], {
+      scale: `${interpolate(p, [0, 0.38], [1, 1.16], {
         ...clampOpts,
         easing: Easing.in(Easing.cubic),
-      })})`,
+      })}`,
       filter: `blur(${interpolate(p, [0.04, 0.38], [0, 18], clampOpts)}px)`,
     };
     return <AbsoluteFill style={meltStyle}>{children}</AbsoluteFill>;
@@ -66,10 +66,10 @@ const WarpDissolvePresentation: React.FC<
 
   const childStyle: React.CSSProperties = {
     opacity: interpolate(p, [0.66, 0.82], [0, 1], clampOpts),
-    transform: `scale(${interpolate(p, [0.66, 1], [1.18, 1], {
+    scale: `${interpolate(p, [0.66, 1], [1.18, 1], {
       ...clampOpts,
       easing: Easing.out(Easing.cubic),
-    })})`,
+    })}`,
     filter: `blur(${interpolate(p, [0.66, 0.92], [16, 0], clampOpts)}px)`,
   };
 

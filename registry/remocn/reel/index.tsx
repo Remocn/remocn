@@ -75,7 +75,7 @@ export function Reel({
                 height: "100%",
                 objectFit: "cover",
                 objectPosition,
-                transform: `scale(${imgScale})`,
+                scale: `${imgScale}`,
                 willChange: "transform",
               }}
             />

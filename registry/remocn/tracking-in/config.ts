@@ -53,6 +53,7 @@ export const trackingInConfig: ComponentConfig = {
       description: "Font weight",
     },
   },
+  dimensions: { width: 550, height: 130 },
   durationInFrames: 90,
   fps: FPS,
   compositionWidth: W,

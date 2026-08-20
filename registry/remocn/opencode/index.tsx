@@ -125,7 +125,8 @@ export function OpenCode({
           top: "50%",
           width: refW,
           height: refH,
-          transform: `translate(-50%, -50%) scale(${stageScale})`,
+          translate: "-50% -50%",
+          scale: `${stageScale}`,
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
@@ -136,7 +137,7 @@ export function OpenCode({
           style={{
             lineHeight: 0,
             opacity: logoFade.opacity,
-            transform: `translateY(${logoFade.translateY + intro.translateY * 0.4}px)`,
+            translate: `0 ${logoFade.translateY + intro.translateY * 0.4}px`,
           }}
         >
           <svg
@@ -203,7 +204,8 @@ export function OpenCode({
             justifyContent: "center",
             gap: 26,
             opacity: boxFade.opacity,
-            transform: `translateY(${boxFade.translateY + intro.translateY * 0.6}px) scale(${intro.scale})`,
+            translate: `0 ${boxFade.translateY + intro.translateY * 0.6}px`,
+            scale: `${intro.scale}`,
             transformOrigin: "center top",
           }}
         >
@@ -259,7 +261,7 @@ export function OpenCode({
             fontFamily: MONO_FAMILY,
             fontSize: 18,
             opacity: hintsFade.opacity,
-            transform: `translateY(${hintsFade.translateY}px)`,
+            translate: `0 ${hintsFade.translateY}px`,
           }}
         >
           <span style={{ display: "inline-flex", gap: 8 }}>

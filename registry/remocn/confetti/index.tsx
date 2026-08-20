@@ -154,7 +154,9 @@ export function Confetti({
               borderRadius: 2,
               background: p.color,
               opacity,
-              transform: `translate(-50%, -50%) rotate(${rot}rad) scaleX(${flutter})`,
+              translate: "-50% -50%",
+              rotate: `${rot}rad`,
+              scale: `${flutter} 1`,
             }}
           />
         );

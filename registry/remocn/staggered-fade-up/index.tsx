@@ -66,7 +66,7 @@ export function StaggeredFadeUp({
                 display: "inline-block",
                 marginRight: "0.25em",
                 opacity,
-                transform: `translateY(${y}px)`,
+                translate: `0 ${y}px`,
               }}
             >
               {word}

@@ -73,7 +73,7 @@ export function TopDownLetters({
                 backfaceVisibility: "hidden",
                 transformOrigin: "50% 55%",
                 opacity,
-                transform: `translateY(${y}px)`,
+                translate: `0 ${y}px`,
               }}
             >
               {char}

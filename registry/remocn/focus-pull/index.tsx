@@ -34,10 +34,10 @@ const FocusPullPresentation: React.FC<
         ...clampOpts,
         easing: Easing.bezier(0.42, 0, 0.58, 1),
       }),
-      transform: `scale(${interpolate(p, [0, 0.6], [1, 1.05], {
+      scale: `${interpolate(p, [0, 0.6], [1, 1.05], {
         ...clampOpts,
         easing: Easing.bezier(0.42, 0, 0.58, 1),
-      })})`,
+      })}`,
       filter: `blur(${interpolate(p, [0.05, 0.55], [0, blur], {
         ...clampOpts,
         easing: Easing.in(Easing.quad),
@@ -48,10 +48,10 @@ const FocusPullPresentation: React.FC<
 
   const childStyle: React.CSSProperties = {
     opacity: interpolate(p, [0.32, 0.52], [0, 1], clampOpts),
-    transform: `scale(${interpolate(p, [0.35, 1], [0.97, 1], {
+    scale: `${interpolate(p, [0.35, 1], [0.97, 1], {
       ...clampOpts,
       easing: Easing.out(Easing.cubic),
-    })})`,
+    })}`,
     filter: `blur(${interpolate(p, [0.35, 0.9], [blur, 0], {
       ...clampOpts,
       easing: Easing.out(Easing.quad),

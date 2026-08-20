@@ -132,9 +132,8 @@ export function LogoEnter({
                 alignItems: "center",
                 justifyContent: "center",
                 opacity: s,
-                transform: isVertical
-                  ? `translateX(${offset}px) scale(${scale})`
-                  : `translateY(${offset}px) scale(${scale})`,
+                translate: isVertical ? `${offset}px` : `0 ${offset}px`,
+                scale: `${scale}`,
               }}
             >
               <div

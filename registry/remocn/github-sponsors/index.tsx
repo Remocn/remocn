@@ -327,7 +327,7 @@ const SponsorNode = memo(function SponsorNode({
         position: "absolute",
         left: cell.x,
         top: cell.y,
-        transform: `translate(-50%, -50%) translateY(${y}px)`,
+        translate: `-50% calc(-50% + ${y}px)`,
         opacity: progress,
         filter: `blur(${blur}px)`,
         willChange: "transform, opacity, filter",
@@ -433,7 +433,8 @@ export function GitHubSponsors({
           top: "50%",
           width: REF_W,
           height: REF_H,
-          transform: `translate(-50%, -50%) scale(${stageScale})`,
+          translate: "-50% -50%",
+          scale: `${stageScale}`,
         }}
       >
         {sponsors.map((sponsor, i) => (
@@ -457,7 +458,8 @@ export function GitHubSponsors({
             position: "absolute",
             left: GRID_CX,
             top: HEART_START_Y,
-            transform: `translate(-50%, -50%) translate(0px, ${heartDy}px) scale(${heartScale})`,
+            translate: `-50% calc(-50% + ${heartDy}px)`,
+            scale: `${heartScale}`,
             width: heartBase,
             height: heartBase,
             display: "flex",
@@ -528,7 +530,7 @@ export function GitHubSponsors({
         >
           <div
             style={{
-              transform: `translateY(${ctaY}px)`,
+              translate: `0 ${ctaY}px`,
               opacity: ctaProgress,
               filter: `blur(${ctaBlur}px)`,
               display: "flex",

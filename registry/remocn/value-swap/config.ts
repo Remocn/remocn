@@ -33,6 +33,7 @@ export const valueSwapConfig: ComponentConfig = {
       description: "Direction",
     },
   },
+  dimensions: { width: 220, height: 70 },
   durationInFrames: 100,
   fps: FPS,
   compositionWidth: W,

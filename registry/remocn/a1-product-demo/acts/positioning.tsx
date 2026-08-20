@@ -87,7 +87,7 @@ function WordReveal({
         style={{
           display: "inline-block",
           color,
-          transform: `translateY(${ty}%)`,
+          translate: `0 ${ty}%`,
           filter: blur > 0.05 ? `blur(${blur}px)` : undefined,
           willChange: "transform, filter",
         }}
@@ -152,7 +152,7 @@ export function Positioning({ speed = 1 }: { speed?: number }) {
           alignItems: "center",
           justifyContent: "center",
           opacity: lockupOpacity,
-          transform: `scale(${lockupScale})`,
+          scale: `${lockupScale}`,
           transformOrigin: "center",
           willChange: "transform, opacity",
         }}

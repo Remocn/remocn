@@ -98,7 +98,7 @@ export function SharedAxisZ({
             display: "inline-block",
             transformOrigin: "50% 50%",
             opacity: fromOpacity,
-            transform: `scale(${fromScale})`,
+            scale: `${fromScale}`,
             filter: `blur(${fromBlur}px)`,
           }}
         >
@@ -125,7 +125,7 @@ export function SharedAxisZ({
             display: "inline-block",
             transformOrigin: "50% 50%",
             opacity: toOpacity,
-            transform: `scale(${toScale})`,
+            scale: `${toScale}`,
             filter: `blur(${toBlur}px)`,
           }}
         >

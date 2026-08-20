@@ -46,7 +46,8 @@ export function Integrations({ speed = 1 }: { speed?: number }) {
             height: 2,
             background: FLOW_BORDER,
             transformOrigin: "center",
-            transform: `translateY(-50%) scaleX(${lineGrow})`,
+            translate: "0 -50%",
+            scale: `${lineGrow} 1`,
           }}
         />
         {ICONS.map((kind, i) => {
@@ -62,7 +63,7 @@ export function Integrations({ speed = 1 }: { speed?: number }) {
               key={kind}
               style={{
                 position: "relative",
-                transform: `scale(${pop})`,
+                scale: `${pop}`,
                 transformOrigin: "center",
               }}
             >

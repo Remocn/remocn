@@ -1033,7 +1033,7 @@ export function GitHubStars({
     >
       <div
         style={{
-          transform: `translateY(${scrollY}px)`,
+          translate: `0 ${scrollY}px`,
           willChange: "transform",
         }}
       >
@@ -1186,7 +1186,8 @@ export function GitHubStars({
           top: "50%",
           width: refW,
           height: refH,
-          transform: `translate(-50%, -50%) scale(${stageScale})`,
+          translate: "-50% -50%",
+          scale: `${stageScale}`,
         }}
       >
         {counterZone}

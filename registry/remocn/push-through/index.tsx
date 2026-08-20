@@ -35,10 +35,10 @@ const PushThroughPresentation: React.FC<
         ...clampOpts,
         easing: Easing.bezier(0.42, 0, 0.58, 1),
       }),
-      transform: `scale(${interpolate(p, [0, 0.65], [1, zoom], {
+      scale: `${interpolate(p, [0, 0.65], [1, zoom], {
         ...clampOpts,
         easing: Easing.in(Easing.cubic),
-      })})`,
+      })}`,
       filter: `blur(${interpolate(p, [0.15, 0.6], [0, blur], clampOpts)}px)`,
     };
     return <AbsoluteFill style={exitStyle}>{children}</AbsoluteFill>;
@@ -46,10 +46,10 @@ const PushThroughPresentation: React.FC<
 
   const childStyle: React.CSSProperties = {
     opacity: interpolate(p, [0.3, 0.5], [0, 1], clampOpts),
-    transform: `scale(${interpolate(p, [0.3, 0.88, 1], [0.68, 1.02, 1], {
+    scale: `${interpolate(p, [0.3, 0.88, 1], [0.68, 1.02, 1], {
       ...clampOpts,
       easing: Easing.out(Easing.cubic),
-    })})`,
+    })}`,
     filter: `blur(${interpolate(p, [0.3, 0.75], [blur * 0.7, 0], clampOpts)}px)`,
   };
 

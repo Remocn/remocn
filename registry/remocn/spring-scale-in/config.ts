@@ -53,6 +53,7 @@ export const springScaleInConfig: ComponentConfig = {
       description: "Font weight",
     },
   },
+  dimensions: { width: 720, height: 100 },
   durationInFrames: 60,
   fps: FPS,
   compositionWidth: W,

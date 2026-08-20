@@ -55,7 +55,8 @@ function Card({
         flexDirection: "column",
         justifyContent: "space-between",
         opacity,
-        transform: `translateY(${ty}px) scale(${scale})`,
+        translate: `0 ${ty}px`,
+        scale: `${scale}`,
         transformOrigin: "center bottom",
         willChange: "transform, opacity",
       }}

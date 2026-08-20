@@ -65,7 +65,7 @@ export function ShortSlideRight({
           fontFamily:
             "var(--font-geist-sans), -apple-system, BlinkMacSystemFont, sans-serif",
           display: "inline-block",
-          transform: `translateX(${x}px)`,
+          translate: `${x}px`,
           filter: `blur(${blurVal}px)`,
         }}
       >

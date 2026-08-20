@@ -44,6 +44,7 @@ export const blurOutUpConfig: ComponentConfig = {
       description: "Font weight",
     },
   },
+  dimensions: { width: 720, height: 100 },
   durationInFrames: 90,
   fps: FPS,
   compositionWidth: W,

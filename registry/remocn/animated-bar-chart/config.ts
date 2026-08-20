@@ -28,6 +28,7 @@ export const animatedBarChartConfig: ComponentConfig = {
       hiddenFromList: false,
     },
   },
+  dimensions: { width: 1000, height: 500 },
   durationInFrames: 90,
   fps: FPS,
   compositionWidth: W,

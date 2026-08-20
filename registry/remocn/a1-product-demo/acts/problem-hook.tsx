@@ -62,7 +62,7 @@ function WordReveal({
         style={{
           display: "inline-block",
           color,
-          transform: `translateY(${ty}%)`,
+          translate: `0 ${ty}%`,
           filter: blur > 0.05 ? `blur(${blur}px)` : undefined,
           willChange: "transform, filter",
         }}
@@ -199,7 +199,7 @@ export function ProblemHook({ speed = 1 }: { speed?: number }) {
                 top: "50%",
                 marginLeft: -card.w / 2,
                 marginTop: -card.h / 2,
-                transform: `translate(${sp * card.dx}px, ${sp * card.dy}px)`,
+                translate: `${sp * card.dx}px ${sp * card.dy}px`,
                 width: card.w,
                 height: card.h,
                 borderRadius: 10,
@@ -225,7 +225,7 @@ export function ProblemHook({ speed = 1 }: { speed?: number }) {
             letterSpacing: "-0.01em",
             position: "relative",
             zIndex: 1,
-            transform: `translateY(${line2ty}%)`,
+            translate: `0 ${line2ty}%`,
             filter: line2blur > 0.05 ? `blur(${line2blur}px)` : undefined,
             willChange: "transform, filter",
           }}
@@ -249,7 +249,7 @@ export function ProblemHook({ speed = 1 }: { speed?: number }) {
           alignItems: "center",
           justifyContent: "center",
           opacity: beat3Opacity,
-          transform: `translateY(${beat3ty}px)`,
+          translate: `0 ${beat3ty}px`,
           willChange: "transform, opacity",
         }}
       >

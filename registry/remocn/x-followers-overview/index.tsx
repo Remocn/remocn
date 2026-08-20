@@ -360,7 +360,8 @@ export function XFollowersOverview({
           top: "50%",
           width: refW,
           height: refH,
-          transform: `translate(-50%, -50%) scale(${stageScale})`,
+          translate: "-50% -50%",
+          scale: `${stageScale}`,
         }}
       >
         <div
@@ -473,7 +474,7 @@ export function XFollowersOverview({
                     opacity: avatarIn.opacity,
                     filter:
                       avatarIn.blur > 0 ? `blur(${avatarIn.blur}px)` : "none",
-                    transform: `translateX(${avatarX}px)`,
+                    translate: `${avatarX}px`,
                   }}
                 >
                   <Avatar
@@ -493,7 +494,7 @@ export function XFollowersOverview({
                     opacity: handleIn.opacity,
                     filter:
                       handleIn.blur > 0 ? `blur(${handleIn.blur}px)` : "none",
-                    transform: `translateX(${handleX}px)`,
+                    translate: `${handleX}px`,
                   }}
                 >
                   @{handle}
@@ -508,7 +509,8 @@ export function XFollowersOverview({
                   gap: 18,
                   opacity: countIn.opacity,
                   filter: countIn.blur > 0 ? `blur(${countIn.blur}px)` : "none",
-                  transform: `translateY(${countIn.translateY}px) scale(${revealScale})`,
+                  translate: `0 ${countIn.translateY}px`,
+                  scale: `${revealScale}`,
                 }}
               >
                 <span

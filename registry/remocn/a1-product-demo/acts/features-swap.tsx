@@ -37,7 +37,7 @@ export function FeaturesSwap({ speed = 1 }: { speed?: number }) {
           fontWeight: 400,
           color: FLOW_INK,
           opacity: lineReveal,
-          transform: `translateY(${lineShift}px)`,
+          translate: `0 ${lineShift}px`,
         }}
       >
         <span>Features designed to&nbsp;</span>
@@ -70,7 +70,7 @@ export function FeaturesSwap({ speed = 1 }: { speed?: number }) {
                   textAlign: "center",
                   color: FLOW_YELLOW,
                   opacity,
-                  transform: `translateY(${ty}px)`,
+                  translate: `0 ${ty}px`,
                   filter: blur > 0.05 ? `blur(${blur}px)` : undefined,
                   willChange: "transform, filter, opacity",
                 }}

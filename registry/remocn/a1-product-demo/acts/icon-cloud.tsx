@@ -232,7 +232,8 @@ function ChipNode({
         position: "absolute",
         left: `calc(50% + ${x}px)`,
         top: `calc(50% + ${y}px)`,
-        transform: `translate(-50%, -50%) scale(${scale})`,
+        translate: "-50% -50%",
+        scale: `${scale}`,
         opacity: opacityIn * opacityOut,
         filter: blur > 0.05 ? `blur(${blur}px)` : undefined,
         willChange: "transform, filter, opacity",
@@ -299,7 +300,7 @@ function HeadWord({
         style={{
           display: "inline-block",
           color,
-          transform: `translateY(${ty}%)`,
+          translate: `0 ${ty}%`,
           filter: blur > 0.05 ? `blur(${blur}px)` : undefined,
           willChange: "transform, filter",
         }}
@@ -376,7 +377,7 @@ export function IconCloud({ speed = 1 }: { speed?: number }) {
           style={{
             position: "absolute",
             opacity: lineBOpacity,
-            transform: `translateY(${lineBTy}px)`,
+            translate: `0 ${lineBTy}px`,
             filter: lineBBlur > 0.05 ? `blur(${lineBBlur}px)` : undefined,
             fontFamily: FONT_SERIF,
             fontSize: 60,

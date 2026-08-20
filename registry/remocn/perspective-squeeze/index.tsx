@@ -247,7 +247,7 @@ export function PerspectiveSqueeze({
           top: (compHeight - height * stageScale) / 2,
           width,
           height,
-          transform: `scale(${stageScale})`,
+          scale: `${stageScale}`,
           transformOrigin: "0 0",
         }}
       >

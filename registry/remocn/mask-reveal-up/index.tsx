@@ -129,7 +129,7 @@ export function MaskRevealUp({
                 display: "block",
                 transformOrigin: "50% 50%",
                 opacity,
-                transform: `translateY(${y}px)`,
+                translate: `0 ${y}px`,
                 filter: `blur(${blur}px)`,
               }}
             >

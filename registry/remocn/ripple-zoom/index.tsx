@@ -51,10 +51,10 @@ const RippleZoomPresentation: React.FC<
         ...clampOpts,
         easing: Easing.bezier(0.42, 0, 0.58, 1),
       }),
-      transform: `scale(${interpolate(p, [0.3, 0.62], [1, 1.6], {
+      scale: `${interpolate(p, [0.3, 0.62], [1, 1.6], {
         ...clampOpts,
         easing: Easing.in(Easing.cubic),
-      })})`,
+      })}`,
     };
     return <AbsoluteFill style={exitStyle}>{children}</AbsoluteFill>;
   }
@@ -70,10 +70,10 @@ const RippleZoomPresentation: React.FC<
 
   const childStyle: React.CSSProperties = {
     opacity: interpolate(p, [0.45, 0.62], [0, 1], clampOpts),
-    transform: `scale(${interpolate(p, [0.42, 0.97], [0.2, 1], {
+    scale: `${interpolate(p, [0.42, 0.97], [0.2, 1], {
       ...clampOpts,
       easing: Easing.bezier(0.33, 1, 0.68, 1),
-    })})`,
+    })}`,
     filter: `blur(${interpolate(p, [0.42, 0.8], [8, 0], clampOpts)}px)`,
   };
 

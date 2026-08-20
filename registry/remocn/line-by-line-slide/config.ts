@@ -44,6 +44,7 @@ export const lineByLineSlideConfig: ComponentConfig = {
       description: "Font weight",
     },
   },
+  dimensions: { width: 600, height: 200 },
   durationInFrames: 90,
   fps: FPS,
   compositionWidth: W,

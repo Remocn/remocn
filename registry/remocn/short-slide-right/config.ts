@@ -53,6 +53,7 @@ export const shortSlideRightConfig: ComponentConfig = {
       description: "Font weight",
     },
   },
+  dimensions: { width: 640, height: 100 },
   durationInFrames: 60,
   fps: FPS,
   compositionWidth: W,

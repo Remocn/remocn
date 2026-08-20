@@ -143,7 +143,7 @@ export function WorkflowAuto({ speed = 1 }: { speed?: number }) {
           alignItems: "center",
           gap: 18,
           opacity: headerReveal,
-          transform: `translateY(${headerShift}px)`,
+          translate: `0 ${headerShift}px`,
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -213,7 +213,8 @@ export function WorkflowAuto({ speed = 1 }: { speed?: number }) {
               position: "absolute",
               left: spec.x,
               top: spec.y,
-              transform: `translate(-50%, -50%) scale(${scale})`,
+              translate: "-50% -50%",
+              scale: `${scale}`,
               transformOrigin: "center",
               opacity: pop,
             }}

@@ -282,7 +282,7 @@ export function EcosystemConstellation({
           fontWeight: 800,
           fontSize: 52,
           letterSpacing: "-0.05em",
-          transform: `scale(${centerScale})`,
+          scale: `${centerScale}`,
           boxShadow: `0 0 60px ${accentColor}66, inset 0 1px 0 rgba(255,255,255,0.3)`,
           border: "1px solid rgba(255,255,255,0.15)",
         }}
@@ -309,7 +309,7 @@ export function EcosystemConstellation({
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              transform: `scale(${s.satScale})`,
+              scale: `${s.satScale}`,
               boxShadow: `0 8px 30px ${s.color}66, inset 0 1px 0 rgba(255,255,255,0.18)`,
               border: "1px solid rgba(255,255,255,0.12)",
               opacity: s.visible ? 1 : 0,

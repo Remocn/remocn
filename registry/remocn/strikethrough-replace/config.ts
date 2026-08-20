@@ -45,6 +45,7 @@ export const strikethroughReplaceConfig: ComponentConfig = {
       description: "Font weight",
     },
   },
+  dimensions: { width: 300, height: 130 },
   durationInFrames: 120,
   fps: FPS,
   compositionWidth: W,

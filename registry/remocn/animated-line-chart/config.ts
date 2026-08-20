@@ -29,6 +29,7 @@ export const animatedLineChartConfig: ComponentConfig = {
       description: "Show leading dot",
     },
   },
+  dimensions: { width: 1000, height: 500 },
   durationInFrames: 90,
   fps: FPS,
   compositionWidth: W,

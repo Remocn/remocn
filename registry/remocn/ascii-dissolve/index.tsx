@@ -460,10 +460,10 @@ const AsciiDissolvePresentation: React.FC<
     ? { opacity: interpolate(p, enterWindow, [0, 1], clampOpts) }
     : {
         opacity: interpolate(p, enterWindow, [0, 1], clampOpts),
-        transform: `scale(${interpolate(p, [enterWindow[0], 1], [1.04, 1], {
+        scale: `${interpolate(p, [enterWindow[0], 1], [1.04, 1], {
           ...clampOpts,
           easing: Easing.out(Easing.cubic),
-        })})`,
+        })}`,
         filter: enterBlur > 0.01 ? `blur(${enterBlur}px)` : undefined,
       };
 

@@ -117,7 +117,7 @@ function SnapshotLine({
         borderRadius: 6,
         background: strong ? `${theme.foreground}30` : `${theme.foreground}16`,
         opacity: p,
-        transform: `scaleX(${interpolate(p, [0, 1], [0.6, 1])})`,
+        scale: `${interpolate(p, [0, 1], [0.6, 1])} 1`,
         transformOrigin: "left center",
       }}
     />

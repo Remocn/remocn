@@ -252,7 +252,7 @@ function CodeLine({
     <div
       style={{
         opacity,
-        transform: `translateY(${ty}px)`,
+        translate: `0 ${ty}px`,
         whiteSpace: "pre",
         display: "flex",
         gap: 0,

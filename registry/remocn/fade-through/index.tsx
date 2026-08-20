@@ -98,7 +98,7 @@ export function FadeThrough({
             display: "inline-block",
             transformOrigin: "50% 50%",
             opacity: fromOpacity,
-            transform: `translateY(${fromY}px)`,
+            translate: `0 ${fromY}px`,
           }}
         >
           {fromText}
@@ -124,7 +124,8 @@ export function FadeThrough({
             display: "inline-block",
             transformOrigin: "50% 50%",
             opacity: toOpacity,
-            transform: `translateY(${toY}px) scale(${toScale})`,
+            translate: `0 ${toY}px`,
+            scale: `${toScale}`,
             filter: `blur(${blurVal}px)`,
           }}
         >

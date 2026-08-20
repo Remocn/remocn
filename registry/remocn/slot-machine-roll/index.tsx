@@ -53,7 +53,7 @@ export function SlotMachineRoll({
           style={{
             display: "flex",
             flexDirection: "column",
-            transform: `translateY(${-t * fontSize * 1.1}px)`,
+            translate: `0 ${-t * fontSize * 1.1}px`,
           }}
         >
           <span>{paddedFrom[i]}</span>

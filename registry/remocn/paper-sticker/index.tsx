@@ -50,7 +50,9 @@ export function PaperSticker({
         border: `1px solid ${borderColor}`,
         borderRadius: 3,
         boxShadow: "0 2px 5px rgba(38,36,44,0.14)",
-        transform: `translate(${jitter.x}px, ${jitter.y}px) rotate(${tilt + jitter.rot}deg) scale(${progress < 1 ? 1.12 : 1})`,
+        translate: `${jitter.x}px ${jitter.y}px`,
+        rotate: `${tilt + jitter.rot}deg`,
+        scale: `${progress < 1 ? 1.12 : 1}`,
       }}
     >
       {children}

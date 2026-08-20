@@ -44,6 +44,7 @@ export const focusBlurResolveConfig: ComponentConfig = {
       description: "Font weight",
     },
   },
+  dimensions: { width: 870, height: 100 },
   durationInFrames: 90,
   fps: FPS,
   compositionWidth: W,

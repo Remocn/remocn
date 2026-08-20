@@ -40,6 +40,7 @@ export const shimmerSweepConfig: ComponentConfig = {
       description: "Font weight",
     },
   },
+  dimensions: { width: 500, height: 130 },
   durationInFrames: 120,
   fps: FPS,
   compositionWidth: W,

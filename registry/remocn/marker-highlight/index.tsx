@@ -82,7 +82,7 @@ export function MarkerHighlight({
               inset: "0 -0.1em",
               background: markerColor,
               transformOrigin: "left center",
-              transform: `scaleX(${markerScale})`,
+              scale: `${markerScale} 1`,
               zIndex: 0,
             }}
           />

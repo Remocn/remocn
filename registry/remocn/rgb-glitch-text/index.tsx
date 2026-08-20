@@ -90,7 +90,7 @@ export function RGBGlitchText({
             ...baseStyle,
             color: "#ff0040",
             opacity: copyOpacity,
-            transform: `translateX(${rX}px) translateY(${rY}px)`,
+            translate: `${rX}px ${rY}px`,
           }}
         >
           {text}
@@ -100,7 +100,7 @@ export function RGBGlitchText({
             ...baseStyle,
             color: "#00ff80",
             opacity: copyOpacity,
-            transform: `translateX(${gX}px) translateY(${gY}px)`,
+            translate: `${gX}px ${gY}px`,
           }}
         >
           {text}
@@ -110,7 +110,7 @@ export function RGBGlitchText({
             ...baseStyle,
             color: "#0080ff",
             opacity: copyOpacity,
-            transform: `translateX(${bX}px) translateY(${bY}px)`,
+            translate: `${bX}px ${bY}px`,
           }}
         >
           {text}

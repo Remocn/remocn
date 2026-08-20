@@ -97,7 +97,7 @@ function TestimonialCard({
         flexDirection: "column",
         gap: 20,
         opacity,
-        transform: `translateY(${ty}px)`,
+        translate: `0 ${ty}px`,
         willChange: "transform, opacity",
       }}
     >
@@ -191,7 +191,7 @@ export function SocialProof({ speed = 1 }: { speed?: number }) {
             flexDirection: "column",
             alignItems: "center",
             opacity: headOpacity,
-            transform: `translateY(${headTy}px)`,
+            translate: `0 ${headTy}px`,
             willChange: "transform, opacity",
           }}
         >

@@ -52,7 +52,8 @@ export function FeatureFrame({
         flex: "0 0 46%",
         display: "flex",
         opacity: cardOpacity,
-        transform: `translateX(${cardShift}px) scale(${cardScale})`,
+        translate: `${cardShift}px`,
+        scale: `${cardScale}`,
       }}
     >
       <UiSnapshotCard
@@ -162,7 +163,7 @@ function TitleBlock({
                 display: "inline-block",
                 marginRight: "0.26em",
                 opacity,
-                transform: `translateY(${y}px)`,
+                translate: `0 ${y}px`,
               }}
             >
               {word}
@@ -180,7 +181,7 @@ function TitleBlock({
           borderRadius: 3,
           background: accent,
           transformOrigin: "left center",
-          transform: `scaleX(${underline})`,
+          scale: `${underline} 1`,
         }}
       />
     </div>
@@ -217,7 +218,7 @@ function BulletLine({
         letterSpacing: "-0.01em",
         color,
         opacity,
-        transform: `translateY(${y}px)`,
+        translate: `0 ${y}px`,
       }}
     >
       {bullet}

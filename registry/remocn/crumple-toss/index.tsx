@@ -332,7 +332,9 @@ export function CrumpleToss({
         height,
         transformOrigin: "center",
         opacity: pose.opacity,
-        transform: `translate(${pose.x}px, ${pose.y}px) rotate(${pose.rotate}deg) scale(${pose.scale})`,
+        translate: `${pose.x}px ${pose.y}px`,
+        rotate: `${pose.rotate}deg`,
+        scale: `${pose.scale}`,
       }}
     >
       {pieces.map((piece, i) => (
@@ -343,7 +345,9 @@ export function CrumpleToss({
             inset: 0,
             clipPath: `polygon(${piece.clip.map(([x, y]) => `${x}% ${y}%`).join(", ")})`,
             transformOrigin: `${piece.origin[0]}% ${piece.origin[1]}%`,
-            transform: `translate(${piece.dx * c}px, ${piece.dy * c}px) rotate(${piece.rotate * c}deg) scale(${1 + (piece.scale - 1) * c})`,
+            translate: `${piece.dx * c}px ${piece.dy * c}px`,
+            rotate: `${piece.rotate * c}deg`,
+            scale: `${1 + (piece.scale - 1) * c}`,
             filter:
               c > 0
                 ? `drop-shadow(0 0 ${0.6 * c}px rgba(38,36,44,0.55))`
