@@ -1,12 +1,5 @@
 {
   "title": "Layout",
   "defaultOpen": false,
-  "pages": [
-    "index",
-    "backdrop",
-    "drift",
-    "chat-to-preview-layout",
-    "stage",
-    "camera-move"
-  ]
+  "pages": ["index", "backdrop", "drift", "chat-to-preview-layout", "stage"]
 }

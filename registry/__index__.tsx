@@ -2200,16 +2200,6 @@ const registry: Record<string, RegistryEntry> = {
     loadConfig: () =>
       import("@/registry/remocn/stage/config").then((m) => m.stageConfig),
   },
-  "camera-move": {
-    load: () =>
-      import("@/components/docs/examples/camera-move-example").then((m) => ({
-        default: m.CameraMoveExampleScene,
-      })),
-    loadConfig: () =>
-      import("@/registry/remocn/camera-move/config").then(
-        (m) => m.cameraMoveConfig,
-      ),
-  },
   "claude-chat": {
     load: () =>
       import("@/registry/remocn/claude-chat").then((m) => ({

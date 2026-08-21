@@ -1,10 +1,36 @@
 import { stageExampleCode } from "@/components/docs/examples/stage-example";
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  enumVariants,
+  FPS,
+  H,
+  W,
+} from "@/lib/customizer-config";
 
 export const stageConfig: ComponentConfig = {
   componentName: "Stage",
   importPath: "@/components/remocn/stage",
   controls: {
+    preset: {
+      type: "enum",
+      default: "site-tour",
+      variants: enumVariants(["site-tour", "hero-push", "section-hop"]),
+      description: "Camera path",
+    },
+    shake: {
+      type: "number",
+      min: 0,
+      max: 1,
+      step: 0.05,
+      default: 0.12,
+      description: "Handheld shake",
+      hiddenFromList: false,
+    },
+    seed: {
+      type: "text-content",
+      default: "remocn-site-tour",
+      description: "Shake seed",
+    },
     backdrop: {
       type: "text-content",
       default: "linear-gradient(145deg, #17181d 0%, #09090b 72%)",
@@ -15,7 +41,7 @@ export const stageConfig: ComponentConfig = {
       min: -24,
       max: 24,
       step: 1,
-      default: 8,
+      default: 14,
       description: "Rotate X",
       hiddenFromList: false,
     },
@@ -24,7 +50,7 @@ export const stageConfig: ComponentConfig = {
       min: -30,
       max: 30,
       step: 1,
-      default: -12,
+      default: -20,
       description: "Rotate Y",
       hiddenFromList: false,
     },
@@ -33,16 +59,16 @@ export const stageConfig: ComponentConfig = {
       min: 500,
       max: 3000,
       step: 50,
-      default: 1400,
+      default: 900,
       description: "Perspective",
       hiddenFromList: false,
     },
     scale: {
       type: "number",
       min: 0.5,
-      max: 1,
+      max: 1.2,
       step: 0.01,
-      default: 0.82,
+      default: 0.86,
       description: "Scale",
       hiddenFromList: false,
     },
@@ -83,7 +109,7 @@ export const stageConfig: ComponentConfig = {
       hiddenFromList: false,
     },
   },
-  durationInFrames: 90,
+  durationInFrames: 300,
   fps: FPS,
   compositionWidth: W,
   compositionHeight: H,

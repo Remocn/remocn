@@ -1343,7 +1343,7 @@
       "name": "stage",
       "type": "registry:component",
       "title": "Stage",
-      "description": "Place any scene on a single studio plane with perspective, a contact shadow, floor reflection, directional light, and a soft 24-frame settle.",
+      "description": "Place a screenshot, recording, or long page on a perspective studio plane and direct an integrated camera across it with timeline keyframes.",
       "dependencies": ["remotion"],
       "registryDependencies": ["@remocn/scene-motion"],
       "files": [
@@ -1351,21 +1351,6 @@
           "path": "stage/index.tsx",
           "type": "registry:component",
           "target": "components/remocn/stage.tsx"
-        }
-      ]
-    },
-    {
-      "name": "camera-move",
-      "type": "registry:component",
-      "title": "Camera Move",
-      "description": "Direct a scene with camera-space keyframes, per-segment easing, endpoint clamps, holds, centered zoom, and deterministic handheld shake.",
-      "dependencies": ["remotion"],
-      "registryDependencies": ["@remocn/scene-motion"],
-      "files": [
-        {
-          "path": "camera-move/index.tsx",
-          "type": "registry:component",
-          "target": "components/remocn/camera-move.tsx"
         }
       ]
     },
