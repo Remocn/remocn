@@ -2192,6 +2192,14 @@ const registry: Record<string, RegistryEntry> = {
     loadConfig: () =>
       import("@/registry/remocn/drift/config").then((m) => m.driftConfig),
   },
+  stage: {
+    load: () =>
+      import("@/components/docs/examples/stage-example").then((m) => ({
+        default: m.StageExampleScene,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/stage/config").then((m) => m.stageConfig),
+  },
   "claude-chat": {
     load: () =>
       import("@/registry/remocn/claude-chat").then((m) => ({

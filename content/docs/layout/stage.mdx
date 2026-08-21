@@ -1,0 +1,175 @@
+---
+title: Stage
+description: Put a screenshot, recording, or long page on a perspective studio plane and direct the camera across it with timeline keyframes
+component: stage
+vibe: premium
+length: sustained
+useWhen:
+  - "A product screen, website, image, or live React scene should read as a photographed object rather than a flat full-frame capture."
+  - "The camera needs to travel across one continuous surface, including a page much taller than the composition."
+  - "You want studio perspective, lighting, camera keyframes, holds, easing, and deterministic handheld motion in one wrapper."
+avoidWhen:
+  - "You only need a full-frame fill or rounded inset with no 3D presentation — use `backdrop`."
+  - "You are moving between two scenes — use a transition such as `whip-pan` or `focus-pull`."
+  - "Elements inside the subject need independent depth or parallax — Stage treats all children as one flat plane."
+---
+
+<ComponentPreview name="stage" />
+
+## Installation
+
+<InstallBlock name="stage" />
+
+## Usage
+
+`Stage` is both the set and the operator camera. It places one child surface in a perspective studio, then keeps a normalized point on that surface at the center of the shot as `moves` change over time.
+
+```tsx
+import { Img, staticFile } from "remotion";
+import { Stage } from "@/components/remocn/stage";
+
+export const WebsiteTour = () => (
+  <Stage
+    contentSize={{ width: 1440, height: 9800 }}
+    moves={[
+      { at: 0, x: 0.5, y: 0.04, zoom: 1.02 },
+      { at: 45, x: 0.5, y: 0.04, zoom: 1.02 }, // hold
+      { at: 130, x: 0.48, y: 0.5, zoom: 1.12 },
+      { at: 220, x: 0.52, y: 0.96, zoom: 1.04 },
+    ]}
+    shake={0.12}
+  >
+    <Img
+      src={staticFile("long-page.png")}
+      style={{ width: "100%", height: "100%" }}
+    />
+  </Stage>
+);
+```
+
+The child can be an image, video, live React component, or whole Remotion scene. Descendants keep animating, but they share one 3D plane. The plane settles into the studio over the first 24 frames; the camera path can continue for as long as the Sequence does.
+
+## Long surfaces and camera targets
+
+`contentSize` declares the surface's intrinsic aspect ratio. Stage fits its width to the composition and allows the resulting height to extend far beyond the frame. It does not fake webpage scrolling: the long surface stays intact while the camera flies above it.
+
+`x` and `y` are normalized target points on that surface:
+
+- `x: 0`, `y: 0` targets the top-left corner.
+- `x: 0.5`, `y: 0.5` targets the center.
+- `x: 1`, `y: 1` targets the bottom-right corner.
+
+Stage clamps `x` and `y` to `0–1`. Because the current target is held at composition center, the coordinates stay stable when zoom and perspective change. An empty `moves` array leaves the surface centered and static.
+
+<Note title="Give the surface real dimensions">
+  Stage cannot infer the intended height of an absolutely positioned child. Pass `contentSize` for screenshots and long layouts, and make the child fill the resulting plane.
+</Note>
+
+## Segment easing and holds
+
+Each destination key can choose the easing used to arrive at it. The default is the project `EXPO` easing. Repeat an identical pose at a later frame to create a hold.
+
+```tsx
+import { Easing } from "remotion";
+
+<Stage
+  contentSize={{ width: 1440, height: 9800 }}
+  moves={[
+    { at: 0, x: 0.5, y: 0.05, zoom: 1 },
+    {
+      at: 60,
+      x: 0.54,
+      y: 0.34,
+      zoom: 1.16,
+      easing: Easing.out(Easing.cubic),
+    },
+    { at: 100, x: 0.54, y: 0.34, zoom: 1.16 },
+    { at: 170, x: 0.48, y: 0.72, zoom: 1.08 },
+  ]}
+>
+  <YourLongSurface />
+</Stage>
+```
+
+Before the first key, Stage holds the first pose; after the last key, it holds the final pose. Keys are sorted by `at`, and when keys share a frame, the last supplied key wins. Missing pose fields use neutral values (`x: 0.5`, `y: 0.5`, `zoom: 1`, `rotate: 0`) instead of inheriting from the previous key.
+
+## Direct the studio
+
+The studio props remain independent from the camera path:
+
+```tsx
+<Stage
+  contentSize={{ width: 1440, height: 9800 }}
+  moves={moves}
+  backdrop="radial-gradient(circle at 35% 10%, #403a72, #111117 58%, #08080b)"
+  rotateX={14}
+  rotateY={-20}
+  perspective={900}
+  scale={0.86}
+  radius={1.8}
+  reflection={0.2}
+  shadow={0.8}
+  light={0.65}
+>
+  <YourProductScene />
+</Stage>
+```
+
+Lower `perspective` values exaggerate depth. `reflection`, `shadow`, and `light` clamp to `0–1`. `radius` is a percentage of the composition width, so the corner treatment scales across render sizes.
+
+The customizer deliberately exposes experimental ranges: both rotations reach `-180–180°`, perspective reaches down to `50px`, and scale reaches `0.1–3`. Rotations beyond 90 degrees reveal the browser's naturally mirrored back face instead of making the surface disappear. Very low perspective and high scale can clip most of the surface; that is intentional for extreme close-ups and abstract depth treatments.
+
+## Deterministic handheld movement
+
+`shake` adds low-frequency operator movement and smoothly interpolated seeded noise. The same `seed`, frame, and strength always produce the same render.
+
+```tsx
+<Stage moves={moves} shake={0.18} seed="homepage-take-03">
+  <YourScene />
+</Stage>
+```
+
+Use `0.08–0.2` for a restrained human operator. `shake` clamps to `0–1`.
+
+## Text and source bleed
+
+Fractional zoom continuously resamples glyphs. If small live text trembles, put `willChange: "transform"` on each text container, not every word. Keep 1px borders outside those promoted layers so borders stay sharp.
+
+The outer frame clips the surface. Targets near an edge, zoom below `1`, and strong perspective can reveal the backdrop around it. Leave breathing room in the source or keep edge targets slightly inset, such as `y: 0.04` and `y: 0.96`.
+
+For an optical finish, wrap Stage in [`CameraLens`](/docs/filters/components/camera-lens). Stage supplies the physical set and operator path; CameraLens supplies bloom, softness, chromatic aberration, and vignette.
+
+## Props
+
+<PropsTable
+  rows={[
+    { name: "children", type: "ReactNode", description: "The image, video, component, or scene rendered as one studio plane." },
+    { name: "contentSize", type: "{ width: number; height: number }", default: "composition size", description: "Intrinsic surface dimensions used to preserve its aspect ratio, including long pages." },
+    { name: "moves", type: "StageKey[]", default: "[]", description: "Normalized camera targets keyed by Sequence-local frame." },
+    { name: "shake", type: "number", default: "0", description: "Deterministic handheld strength, clamped from 0 to 1." },
+    { name: "seed", type: "string", default: '"remocn-stage"', description: "Seed used by the handheld noise field." },
+    { name: "backdrop", type: "string", default: '"linear-gradient(145deg, #17181d 0%, #09090b 72%)"', description: "CSS background used for the full-frame studio." },
+    { name: "rotateX", type: "number", default: "14", description: "X-axis tilt of the surface in degrees." },
+    { name: "rotateY", type: "number", default: "-20", description: "Y-axis tilt of the surface in degrees." },
+    { name: "perspective", type: "number", default: "900", description: "CSS perspective distance in pixels. Lower values exaggerate depth." },
+    { name: "scale", type: "number", default: "0.86", description: "Base scale of the studio plane before keyframe zoom." },
+    { name: "radius", type: "number", default: "1.4", description: "Surface corner radius as a percentage of composition width." },
+    { name: "reflection", type: "number", default: "0.24", description: "Floor reflection strength from 0 to 1." },
+    { name: "shadow", type: "number", default: "0.7", description: "Contact-shadow strength from 0 to 1." },
+    { name: "light", type: "number", default: "0.55", description: "Directional studio-light strength from 0 to 1." },
+    { name: "className", type: "string", default: "undefined", description: "Additional class names applied to the full-frame wrapper." },
+  ]}
+/>
+
+### StageKey
+
+<PropsTable
+  rows={[
+    { name: "at", type: "number", description: "Required frame from the start of the current Sequence." },
+    { name: "x", type: "number", default: "0.5", description: "Horizontal target on the surface from left (0) to right (1)." },
+    { name: "y", type: "number", default: "0.5", description: "Vertical target on the surface from top (0) to bottom (1)." },
+    { name: "zoom", type: "number", default: "1", description: "Zoom multiplier around the current target." },
+    { name: "rotate", type: "number", default: "0", description: "Camera roll in degrees; the surface rotates in the opposite direction." },
+    { name: "easing", type: "EasingFunction", default: "EXPO", description: "Easing used by the segment arriving at this key." },
+  ]}
+/>

@@ -1,5 +1,5 @@
 {
   "title": "Layout",
   "defaultOpen": false,
-  "pages": ["index", "backdrop", "drift", "chat-to-preview-layout"]
+  "pages": ["index", "backdrop", "drift", "chat-to-preview-layout", "stage"]
 }

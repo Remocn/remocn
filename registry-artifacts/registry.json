@@ -1340,6 +1340,21 @@
       "type": "registry:component"
     },
     {
+      "name": "stage",
+      "title": "Stage",
+      "description": "Place a screenshot, recording, or long page on a perspective studio plane and direct an integrated camera across it with timeline keyframes.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/scene-motion"],
+      "files": [
+        {
+          "path": "registry/remocn/stage/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/stage.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
       "name": "logo-enter",
       "title": "Logo Enter",
       "description": "A stacked group of round brand chips that spring in one-by-one, then hold. Swap the logos to feature any set of marks. Horizontal or vertical stacking.",
