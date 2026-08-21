@@ -1,0 +1,188 @@
+---
+title: Camera Move
+description: Direct a scene with camera-space keyframes, per-segment easing, holds, centered zoom, endpoint clamps, and deterministic handheld movement
+component: camera-move
+vibe: clean
+length: sustained
+useWhen:
+  - "A shot needs an intentional push, pull, pan, orbit, or multi-beat operator move inside one continuous scene."
+  - "You want storyboard coordinates where positive x means the camera moves right, without manually reversing content transforms."
+  - "A camera path needs holds and a different easing for each arrival."
+avoidWhen:
+  - "The scene only needs an almost invisible constant creep — use `drift`."
+  - "You are moving between two scenes — use a transition such as `whip-pan` or `lens-zoom`; Camera only directs one scene."
+  - "The content already has strong full-frame motion and a second camera move would muddy the read."
+---
+
+<ComponentPreview name="camera-move" />
+
+## Installation
+
+<InstallBlock name="camera-move" />
+
+## Usage
+
+`Camera` wraps any scene and moves an operator around it. Coordinates describe the camera rather than the content: `x: 0.25` moves the camera right by one quarter of the original frame, so the rendered scene travels left.
+
+```tsx
+import { Camera } from "@/components/remocn/camera-move";
+
+export const ProductShot = () => (
+  <Camera
+    moves={[
+      { at: 0, x: -0.04, y: 0.02, zoom: 1.02 },
+      { at: 45, x: 0, y: 0, zoom: 1.14 },
+      { at: 80, x: 0, y: 0, zoom: 1.14 },
+      { at: 130, x: 0.06, y: -0.03, zoom: 1.08, rotate: 0.8 },
+    ]}
+    shake={0.15}
+  >
+    <YourScene />
+  </Camera>
+);
+```
+
+An empty `moves` array is valid and leaves the scene static. Before the first key, Camera holds the first pose; after the final key, it holds the final pose. Keys do not need to cover the full Sequence.
+
+## Segment easing and holds
+
+Camera resolves one segment at a time instead of passing the whole key list to one `interpolate()` call. That lets every arrival use its own easing. The destination key's `easing` controls the segment that arrives at it and defaults to `EXPO` from `scene-motion`.
+
+```tsx
+import { Easing } from "remotion";
+
+<Camera
+  moves={[
+    { at: 0, zoom: 1 },
+    { at: 30, zoom: 1.18, easing: Easing.out(Easing.cubic) },
+    { at: 70, zoom: 1.18 }, // identical pose: hold for 40 frames
+    { at: 110, zoom: 1, easing: Easing.inOut(Easing.quad) },
+  ]}
+>
+  <YourScene />
+</Camera>
+```
+
+Missing pose fields use neutral values (`x: 0`, `y: 0`, `zoom: 1`, `rotate: 0`). They do not inherit from the previous key, so each key is a complete readable camera pose. Keys are sorted by `at`; if multiple keys share a frame, the last supplied key wins.
+
+## Pan and zoom
+
+Zoom is always centered. Aim at an off-center detail by combining `zoom` with `x` and `y` rather than adding a separate zoom origin:
+
+```tsx
+<Camera
+  moves={[
+    { at: 0, x: 0, y: 0, zoom: 1 },
+    { at: 60, x: 0.22, y: -0.12, zoom: 1.8 },
+  ]}
+>
+  <YourScene />
+</Camera>
+```
+
+Pan is measured against the unzoomed composition. At `zoom: 2`, `x: 0.25` still means exactly one quarter of the original frame. This makes storyboard coordinates stable when zoom changes.
+
+<Note title="Provide content bleed">
+  Camera clips its outer frame. Pans and zoom values below 1 can expose the source edges, so overscan backgrounds and full-frame scenes beyond the composition bounds when the move needs it.
+</Note>
+
+## Deterministic handheld movement
+
+`shake` layers two low-frequency sine waves with smoothly interpolated seeded noise. The same `seed`, frame, and strength always produce the same result on every render machine.
+
+```tsx
+<Camera moves={moves} shake={0.28} seed="hero-take-03">
+  <YourScene />
+</Camera>
+```
+
+Use `0.08–0.2` for a restrained human operator and higher values only when the shot should clearly feel handheld. `shake` clamps to `0–1`.
+
+## Text under camera zoom
+
+Fractional zoom continuously resamples glyphs, so small text may tremble while nearby borders glide. Promote each text container to its own compositor layer:
+
+```tsx
+<Camera moves={moves}>
+  <div style={{ border: "1px solid rgba(255,255,255,0.08)" }}>
+    <div style={{ willChange: "transform" }}>
+      <h1>Quarterly Report</h1>
+      <p>Revenue grew across every region.</p>
+    </div>
+  </div>
+</Camera>
+```
+
+Use one layer per text container, not per word. Keep 1px borders outside the promoted layer so they continue to rasterize sharply at the current scale.
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "children",
+      type: "ReactNode",
+      description: "The scene directed by the camera.",
+    },
+    {
+      name: "moves",
+      type: "CameraKey[]",
+      default: "[]",
+      description: "Camera poses keyed by Sequence-local frame. Empty leaves the scene static.",
+    },
+    {
+      name: "shake",
+      type: "number",
+      default: "0",
+      description: "Deterministic handheld strength, clamped from 0 to 1.",
+    },
+    {
+      name: "seed",
+      type: "string",
+      default: '"remocn-camera"',
+      description: "Seed used by the handheld noise field.",
+    },
+  ]}
+/>
+
+### CameraKey
+
+<PropsTable
+  rows={[
+    {
+      name: "at",
+      type: "number",
+      description: "Required frame from the start of the current Sequence.",
+    },
+    {
+      name: "x",
+      type: "number",
+      default: "0",
+      description: "Horizontal camera position in fractions of the original frame. Positive moves the camera right.",
+    },
+    {
+      name: "y",
+      type: "number",
+      default: "0",
+      description: "Vertical camera position in fractions of the original frame. Positive moves the camera down.",
+    },
+    {
+      name: "zoom",
+      type: "number",
+      default: "1",
+      description: "Centered camera zoom multiplier.",
+    },
+    {
+      name: "rotate",
+      type: "number",
+      default: "0",
+      description: "Camera roll in degrees. Content rotates in the opposite direction.",
+    },
+    {
+      name: "easing",
+      type: "EasingFunction",
+      default: "EXPO",
+      description: "Easing used by the segment arriving at this key.",
+    },
+  ]}
+/>

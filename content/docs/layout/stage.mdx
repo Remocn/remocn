@@ -1,0 +1,151 @@
+---
+title: Stage
+description: Put any scene on a studio plane with perspective, a contact shadow, floor reflection, directional light, and a soft settle
+component: stage
+vibe: premium
+length: 24
+useWhen:
+  - "A product screen, dashboard, image, or live React scene should read as a photographed object rather than a flat full-frame capture."
+  - "You need a reusable studio treatment — perspective, floor contact, reflection, and light — without rebuilding those layers in every composition."
+  - "The subject should arrive with a restrained 24-frame settle before holding its pose."
+avoidWhen:
+  - "You only need a full-frame fill or a rounded inset with no 3D presentation — use `backdrop`."
+  - "Elements inside the subject need independent depth or parallax — Stage treats all children as one flat plane."
+---
+
+<ComponentPreview name="stage" />
+
+## Installation
+
+<InstallBlock name="stage" />
+
+## Usage
+
+`Stage` turns its children into one studio object. It renders the backdrop, floor reflection, contact shadow, subject, and light treatment, then settles the subject into its final pose over 24 frames.
+
+```tsx
+import { Stage } from "@/components/remocn/stage";
+
+export const ProductShot = () => (
+  <Stage>
+    <YourDashboard />
+  </Stage>
+);
+```
+
+The child can be an image, a video, a live React component, or a whole Remotion scene. Descendants keep animating, but they share one 3D plane — `Stage` does not infer depth from the child tree.
+
+## Direct the set
+
+All visual props are independent, so the studio can follow the product rather than forcing a named preset:
+
+```tsx
+<Stage
+  backdrop="radial-gradient(circle at 35% 10%, #403a72, #111117 58%, #08080b)"
+  rotateX={6}
+  rotateY={-16}
+  perspective={1600}
+  scale={0.78}
+  radius={1.8}
+  reflection={0.2}
+  shadow={0.8}
+  light={0.65}
+>
+  <YourProductScene />
+</Stage>
+```
+
+`reflection`, `shadow`, and `light` are strengths from `0` to `1`. They clamp safely outside that range. `radius` follows the same convention as `Backdrop`: it is a percentage of the composition width, so the corner treatment scales across 720p, 1080p, and 4K renders.
+
+<Note title="One subject, one plane">
+  Stage applies perspective to the child tree as a single composited surface. If two cards need different depths, wrap each card in its own Stage or build a purpose-specific 3D layout.
+</Note>
+
+## Compose with camera movement
+
+`Stage` controls how the subject looks. [`Camera`](/docs/layout/camera-move) controls how the operator moves. Nest them to combine the soft 24-frame set entrance with a longer, independent camera path:
+
+```tsx
+import { Camera } from "@/components/remocn/camera-move";
+import { Stage } from "@/components/remocn/stage";
+
+<Camera moves={[{ at: 0, zoom: 1 }, { at: 120, zoom: 1.12 }]}>
+  <Stage rotateX={8} rotateY={-12}>
+    <YourProductScene />
+  </Stage>
+</Camera>
+```
+
+For an optical finish, put [`CameraLens`](/docs/filters/components/camera-lens) outside the camera wrapper. `Stage` supplies the physical set, `Camera` supplies blocking, and `CameraLens` supplies bloom, softness, chromatic aberration, and vignette.
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "children",
+      type: "ReactNode",
+      description: "The image, video, component, or scene rendered as one studio plane.",
+    },
+    {
+      name: "backdrop",
+      type: "string",
+      default: '"linear-gradient(145deg, #17181d 0%, #09090b 72%)"',
+      description: "Any CSS background value used for the full-frame studio backdrop.",
+    },
+    {
+      name: "rotateX",
+      type: "number",
+      default: "8",
+      description: "Final X-axis tilt of the subject in degrees.",
+    },
+    {
+      name: "rotateY",
+      type: "number",
+      default: "-12",
+      description: "Final Y-axis tilt of the subject in degrees.",
+    },
+    {
+      name: "perspective",
+      type: "number",
+      default: "1400",
+      description: "CSS perspective distance in pixels. Lower values exaggerate depth.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "0.82",
+      description: "Final scale of the studio plane relative to the composition.",
+    },
+    {
+      name: "radius",
+      type: "number",
+      default: "1.4",
+      description: "Subject corner radius as a percentage of composition width.",
+    },
+    {
+      name: "reflection",
+      type: "number",
+      default: "0.24",
+      description: "Floor reflection strength from 0 to 1.",
+    },
+    {
+      name: "shadow",
+      type: "number",
+      default: "0.7",
+      description: "Contact-shadow strength from 0 to 1.",
+    },
+    {
+      name: "light",
+      type: "number",
+      default: "0.55",
+      description: "Directional studio-light overlay strength from 0 to 1.",
+    },
+    {
+      name: "className",
+      type: "string",
+      default: "undefined",
+      description: "Additional class names applied to the full-frame stage wrapper.",
+    },
+  ]}
+/>

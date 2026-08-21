@@ -222,6 +222,17 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       speed: 1,
     },
   },
+  "camera-move": {
+    durationInFrames: 150,
+    fps: 30,
+    compositionWidth: 1280,
+    compositionHeight: 720,
+    defaults: {
+      preset: "three-beat",
+      shake: 0.18,
+      seed: "remocn-camera",
+    },
+  },
   caret: {
     durationInFrames: 120,
     fps: 30,
@@ -3708,6 +3719,23 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       exitScale: 0.84,
       exitFrames: 6,
       speed: 1,
+    },
+  },
+  stage: {
+    durationInFrames: 90,
+    fps: 30,
+    compositionWidth: 1280,
+    compositionHeight: 720,
+    defaults: {
+      backdrop: "linear-gradient(145deg, #17181d 0%, #09090b 72%)",
+      rotateX: 8,
+      rotateY: -12,
+      perspective: 1400,
+      scale: 0.82,
+      radius: 1.4,
+      reflection: 0.24,
+      shadow: 0.7,
+      light: 0.55,
     },
   },
   "staggered-fade-up": {
