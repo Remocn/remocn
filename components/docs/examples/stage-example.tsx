@@ -1,11 +1,36 @@
 "use client";
 
-import { Img, staticFile } from "remotion";
+import { Easing, type EasingFunction, Img, staticFile } from "remotion";
 import { Stage, type StageKey, type StageProps } from "@/registry/remocn/stage";
 
-export type StagePreset = "site-tour" | "hero-push" | "section-hop";
+export type StagePreset =
+  | "smooth-descent"
+  | "site-tour"
+  | "hero-push"
+  | "section-hop";
+
+const SMOOTH_RAMP_IN = Easing.in(Easing.cubic);
+const SMOOTH_RAMP_OUT = Easing.out(Easing.cubic);
 
 export const STAGE_PRESETS: Record<StagePreset, StageKey[]> = {
+  "smooth-descent": [
+    { at: 0, x: 0.5, y: 0.035, zoom: 1.04 },
+    {
+      at: 30,
+      x: 0.5,
+      y: 0.07052,
+      zoom: 1.04,
+      easing: SMOOTH_RAMP_IN,
+    },
+    { at: 269, x: 0.5, y: 0.91948, zoom: 1.04, easing: Easing.linear },
+    {
+      at: 299,
+      x: 0.5,
+      y: 0.955,
+      zoom: 1.04,
+      easing: SMOOTH_RAMP_OUT,
+    },
+  ],
   "site-tour": [
     { at: 0, x: 0.48, y: 0.035, zoom: 1.04, rotate: -0.35 },
     { at: 38, x: 0.48, y: 0.035, zoom: 1.04, rotate: -0.35 },
@@ -40,16 +65,16 @@ export interface StageExampleProps
 }
 
 export function StageExampleScene({
-  preset = "site-tour",
-  shake = 0.12,
-  seed = "remocn-site-tour",
+  preset = "smooth-descent",
+  shake = 0,
+  seed = "remocn-smooth-descent",
   ...stageProps
 }: StageExampleProps) {
   return (
     <Stage
       {...stageProps}
       contentSize={{ width: 1265, height: 10022 }}
-      moves={STAGE_PRESETS[preset] ?? STAGE_PRESETS["site-tour"]}
+      moves={STAGE_PRESETS[preset] ?? STAGE_PRESETS["smooth-descent"]}
       shake={shake}
       seed={seed}
     >
@@ -61,23 +86,37 @@ export function StageExampleScene({
   );
 }
 
+const EASING_SOURCES = new Map<EasingFunction, string>([
+  [SMOOTH_RAMP_IN, "Easing.in(Easing.cubic)"],
+  [Easing.linear, "Easing.linear"],
+  [SMOOTH_RAMP_OUT, "Easing.out(Easing.cubic)"],
+]);
+
 const keyToSource = (key: StageKey) => {
-  const fields = Object.entries(key).map(
-    ([name, value]) => `${name}: ${value}`,
-  );
+  const fields = Object.entries(key).map(([name, value]) => {
+    if (name === "easing" && typeof value === "function") {
+      return `${name}: ${EASING_SOURCES.get(value) ?? "Easing.linear"}`;
+    }
+    return `${name}: ${value}`;
+  });
   return `{ ${fields.join(", ")} }`;
 };
 
 export const stageExampleCode = (values: Record<string, unknown>): string => {
-  const preset = (values.preset as StagePreset) ?? "site-tour";
-  const moves = (STAGE_PRESETS[preset] ?? STAGE_PRESETS["site-tour"])
+  const preset = (values.preset as StagePreset) ?? "smooth-descent";
+  const selectedMoves =
+    STAGE_PRESETS[preset] ?? STAGE_PRESETS["smooth-descent"];
+  const moves = selectedMoves
     .map((key) => `    ${keyToSource(key)},`)
     .join("\n");
+  const remotionImports = selectedMoves.some((key) => key.easing)
+    ? "Easing, Img, staticFile"
+    : "Img, staticFile";
   const backdrop =
     (values.backdrop as string) ??
     "linear-gradient(145deg, #17181d 0%, #09090b 72%)";
 
-  return `import { Img, staticFile } from "remotion";
+  return `import { ${remotionImports} } from "remotion";
 import { Stage } from "@/components/remocn/stage";
 
 <Stage
@@ -85,8 +124,8 @@ import { Stage } from "@/components/remocn/stage";
   moves={[
 ${moves}
   ]}
-  shake={${(values.shake as number) ?? 0.12}}
-  seed={${JSON.stringify((values.seed as string) ?? "remocn-site-tour")}}
+  shake={${(values.shake as number) ?? 0}}
+  seed={${JSON.stringify((values.seed as string) ?? "remocn-smooth-descent")}}
   backdrop={${JSON.stringify(backdrop)}}
   rotateX={${(values.rotateX as number) ?? 14}}
   rotateY={${(values.rotateY as number) ?? -20}}

@@ -3716,9 +3716,9 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
     compositionWidth: 1280,
     compositionHeight: 720,
     defaults: {
-      preset: "site-tour",
-      shake: 0.12,
-      seed: "remocn-site-tour",
+      preset: "smooth-descent",
+      shake: 0,
+      seed: "remocn-smooth-descent",
       backdrop: "linear-gradient(145deg, #17181d 0%, #09090b 72%)",
       rotateX: 14,
       rotateY: -20,

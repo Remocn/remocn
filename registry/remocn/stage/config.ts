@@ -13,8 +13,13 @@ export const stageConfig: ComponentConfig = {
   controls: {
     preset: {
       type: "enum",
-      default: "site-tour",
-      variants: enumVariants(["site-tour", "hero-push", "section-hop"]),
+      default: "smooth-descent",
+      variants: enumVariants([
+        "smooth-descent",
+        "site-tour",
+        "hero-push",
+        "section-hop",
+      ]),
       description: "Camera path",
     },
     shake: {
@@ -22,13 +27,13 @@ export const stageConfig: ComponentConfig = {
       min: 0,
       max: 1,
       step: 0.05,
-      default: 0.12,
+      default: 0,
       description: "Handheld shake",
       hiddenFromList: false,
     },
     seed: {
       type: "text-content",
-      default: "remocn-site-tour",
+      default: "remocn-smooth-descent",
       description: "Shake seed",
     },
     backdrop: {
