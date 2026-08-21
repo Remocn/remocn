@@ -117,6 +117,20 @@ describe("stage transform", () => {
       "translate3d(-2px, 13px, 0) scale(0.96) rotateZ(-2.5deg) rotateX(14deg) rotateY(-20deg)",
     );
   });
+
+  it("preserves experimental rotation and scale values", () => {
+    const pose = { x: 0.5, y: 0.5, zoom: 1, rotate: 0 };
+    const geometry = getStagePlaneGeometry(1280, 720, undefined, pose);
+    expect(
+      getStageTransform(geometry, pose, {
+        scale: 3,
+        rotateX: 180,
+        rotateY: -180,
+      }),
+    ).toBe(
+      "translate3d(0px, 0px, 0) scale(3) rotateZ(0deg) rotateX(180deg) rotateY(-180deg)",
+    );
+  });
 });
 
 describe("getStageShake", () => {
