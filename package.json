@@ -16,6 +16,7 @@
     "registry:check": "shadcn build --output registry-artifacts && bun scripts/build-elements.mts && biome format --write registry-artifacts && git diff --quiet -- registry-artifacts || (echo 'registry-artifacts is out of sync with registry/ sources. Run: bun run registry:build and commit the result.' && exit 1)",
     "manifest:build": "bun scripts/build-preview-manifest.mts && biome format --write registry/__manifest__.ts",
     "manifest:check": "bun run manifest:build && git diff --quiet -- registry/__manifest__.ts || (echo 'registry/__manifest__.ts is out of sync with registry config sources. Run: bun run manifest:build and commit the result.' && exit 1)",
+    "studio": "remotion studio",
     "remotion:browser": "bun scripts/ensure-browser.mts",
     "bundle:remotion": "bun scripts/bundle-remotion.mts",
     "render:demos": "bun scripts/render-demos.mts",
@@ -70,6 +71,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.2.0",
+    "@remotion/cli": "4.0.513",
     "@tailwindcss/postcss": "^4",
     "@types/bun": "latest",
     "@types/culori": "^4.0.0",
