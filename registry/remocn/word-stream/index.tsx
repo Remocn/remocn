@@ -69,7 +69,7 @@ export function WordStream({
   text,
   fontSize = 72,
   color = "#171717",
-  fontWeight = 500,
+  fontWeight = 400,
   wordGap = 6,
   hold = 18,
   drift = 2,

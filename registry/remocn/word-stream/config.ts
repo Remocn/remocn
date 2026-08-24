@@ -59,7 +59,7 @@ export const wordStreamConfig: ComponentConfig = {
     },
     fontWeight: {
       type: "enum",
-      default: "500",
+      default: "400",
       variants: enumVariants(FONT_WEIGHT_OPTIONS),
       description: "Font weight",
     },

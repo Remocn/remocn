@@ -27,7 +27,7 @@ export function SqueezeIn({
   text,
   fontSize = 72,
   color = "#171717",
-  fontWeight = 600,
+  fontWeight = 400,
   stagger = 3,
   squeeze = 0.03,
   speed = 1,

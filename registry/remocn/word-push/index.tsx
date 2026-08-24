@@ -37,7 +37,7 @@ export function WordPush({
   text,
   fontSize = 72,
   color = "#171717",
-  fontWeight = 500,
+  fontWeight = 400,
   wordGap = 10,
   accel = 0.8,
   speed = 1,

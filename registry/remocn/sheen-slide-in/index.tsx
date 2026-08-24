@@ -45,7 +45,7 @@ export function SheenSlideIn({
   fontSize = 72,
   baseColor = "#18181b",
   sheenColor = "#4f8ef7",
-  fontWeight = 600,
+  fontWeight = 400,
   speed = 1,
   className,
 }: SheenSlideInProps) {

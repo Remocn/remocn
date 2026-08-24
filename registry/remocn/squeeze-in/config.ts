@@ -13,7 +13,7 @@ export const squeezeInConfig: ComponentConfig = {
   controls: {
     text: {
       type: "text-content",
-      default: "commas",
+      default: "Remocn",
       description: "Text",
     },
     fontSize: {
@@ -50,7 +50,7 @@ export const squeezeInConfig: ComponentConfig = {
     },
     fontWeight: {
       type: "enum",
-      default: "600",
+      default: "400",
       variants: enumVariants(FONT_WEIGHT_OPTIONS),
       description: "Font weight",
     },
