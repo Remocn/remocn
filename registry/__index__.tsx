@@ -62,6 +62,14 @@ const registry: Record<string, RegistryEntry> = {
         (m) => m.squeezeInConfig,
       ),
   },
+  "fog-rise": {
+    load: () =>
+      import("@/registry/remocn/fog-rise").then((m) => ({
+        default: m.FogRise,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/fog-rise/config").then((m) => m.fogRiseConfig),
+  },
   "per-character-rise": {
     load: () =>
       import("@/registry/remocn/per-character-rise").then((m) => ({

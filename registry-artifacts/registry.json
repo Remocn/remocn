@@ -228,6 +228,20 @@
       "type": "registry:component"
     },
     {
+      "name": "fog-rise",
+      "title": "Fog Rise",
+      "description": "Display text resolves out of fog: characters sharpen from heavy blur center-out with vertical streaks dissolving above them, as if rising along the z-axis.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "registry/remocn/fog-rise/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/fog-rise.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
       "name": "extrude-pop",
       "title": "Extrude Pop",
       "description": "A flat word pops up out of the plane on a solid colored 3D body, no camera involved.",
