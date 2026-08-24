@@ -1,0 +1,73 @@
+import {
+  type ComponentConfig,
+  enumVariants,
+  FONT_WEIGHT_OPTIONS,
+  FPS,
+  H,
+  W,
+} from "@/lib/customizer-config";
+
+export const wordStreamConfig: ComponentConfig = {
+  componentName: "WordStream",
+  importPath: "@/components/remocn/word-stream",
+  controls: {
+    text: {
+      type: "text-content",
+      default: "introducing | one-tap checkout | for your store",
+      description: "Phrases (| separated)",
+    },
+    fontSize: {
+      type: "number",
+      min: 12,
+      max: 160,
+      step: 1,
+      default: 72,
+      description: "Font size",
+      hiddenFromList: false,
+    },
+    wordGap: {
+      type: "number",
+      min: 2,
+      max: 30,
+      step: 1,
+      default: 6,
+      description: "Frames / word",
+      hiddenFromList: false,
+    },
+    hold: {
+      type: "number",
+      min: 6,
+      max: 90,
+      step: 3,
+      default: 18,
+      description: "Phrase hold",
+      hiddenFromList: false,
+    },
+    drift: {
+      type: "number",
+      min: 0,
+      max: 6,
+      step: 0.5,
+      default: 2,
+      description: "Drift px / frame",
+      hiddenFromList: false,
+    },
+    color: {
+      type: "color",
+      default: "#171717",
+      description: "Color",
+    },
+    fontWeight: {
+      type: "enum",
+      default: "500",
+      variants: enumVariants(FONT_WEIGHT_OPTIONS),
+      description: "Font weight",
+    },
+  },
+  dimensions: { width: 700, height: 110 },
+  durationInFrames: 100,
+  fps: FPS,
+  compositionWidth: W,
+  compositionHeight: H,
+  previewBackdrop: { type: "color", value: "#ffffff" },
+};

@@ -1,0 +1,134 @@
+---
+title: Word Stream
+description: Voiceover-paced phrases building word by word while the line drifts left
+component: word-stream
+vibe: premium
+length: 63
+useWhen:
+  - "An intro or narration follows a voiceover and each phrase should build word by word at speaking pace."
+  - "You want the keynote-style restless motion where the whole line keeps drifting left as new words pop in on the right."
+  - "Several short phrases need to play in sequence inside a single component, with fast cut-like swaps between them."
+avoidWhen:
+  - "There is only one static phrase to reveal — use `per-word-crossfade` for a single calm word-by-word entrance."
+  - "You need a two-state before/after text swap rather than a stream — use `value-swap` or `strikethrough-replace`."
+  - "The text is a multi-line paragraph — use `line-by-line-slide` or `mask-reveal-up` for line-level reveals."
+---
+
+<ComponentPreview name="word-stream" />
+
+## Installation
+
+<InstallBlock name="word-stream" />
+
+## Usage
+
+Phrases are passed as a single string separated by `|`. Each phrase glides in decelerating, builds word by word while slowly drifting left, then accelerates out to the left and hard-cuts to the next phrase. The last phrase stays on screen.
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { WordStream } from "@/components/remocn/word-stream";
+
+const WordStreamScene = () => (
+  <WordStream text="introducing | one-tap checkout | for your store" />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="WordStream"
+    component={WordStreamScene}
+    durationInFrames={100}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+### With Backdrop
+
+The component renders transparent — supply the background via `Backdrop`. It ships single-theme; edit the copied file to re-theme colors.
+
+```tsx
+import { Composition } from "remotion";
+import { WordStream } from "@/components/remocn/word-stream";
+import { Backdrop } from "@/components/remocn/backdrop";
+
+const WordStreamScene = () => (
+  <Backdrop fill={{ type: "color", value: "#0b0b14" }}>
+    <WordStream
+      text="introducing | one-tap checkout | for your store"
+      color="#ffffff"
+    />
+  </Backdrop>
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="WordStream"
+    component={WordStreamScene}
+    durationInFrames={100}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+### Syncing to a voiceover
+
+`wordGap` is the number of frames between word reveals — match it to the speaking pace of the narration (at 30fps, `wordGap={6}` is 5 words per second). `hold` controls how long a finished phrase stays before the next one starts. The exported `wordStreamLength(text, wordGap, hold)` helper returns the frame on which the last word finishes resolving — use it as the lower bound of the `Sequence`.
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "text",
+      type: "string",
+      required: true,
+      description: "Phrases separated by |. Words within a phrase are split on spaces.",
+    },
+    {
+      name: "fontSize",
+      type: "number",
+      default: "72",
+      description: "Font size in pixels",
+    },
+    {
+      name: "wordGap",
+      type: "number",
+      default: "6",
+      description: "Frames between consecutive word reveals",
+    },
+    {
+      name: "hold",
+      type: "number",
+      default: "18",
+      description: "Frames a completed phrase holds before swapping to the next",
+    },
+    {
+      name: "drift",
+      type: "number",
+      default: "2",
+      description: "Leftward crawl of the line in pixels per frame between the entry glide and the exit run-out (at fontSize 72, scales proportionally). 0 disables the crawl.",
+    },
+    {
+      name: "color",
+      type: "string",
+      default: "\"#171717\"",
+      description: "Text color (any valid CSS color)",
+    },
+    {
+      name: "fontWeight",
+      type: "number",
+      default: "500",
+      description: "CSS font-weight",
+    },
+    {
+      name: "className",
+      type: "string",
+      description: "Optional className passed to the underlying span",
+    },
+  ]}
+/>

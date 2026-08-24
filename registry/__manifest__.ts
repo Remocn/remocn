@@ -4142,6 +4142,25 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       speed: 1,
     },
   },
+  "word-stream": {
+    durationInFrames: 170,
+    fps: 30,
+    compositionWidth: 1280,
+    compositionHeight: 720,
+    previewBackdrop: {
+      type: "color",
+      value: "#ffffff",
+    },
+    defaults: {
+      text: "introducing | one-tap checkout | for your store",
+      fontSize: 72,
+      wordGap: 13,
+      hold: 24,
+      color: "#171717",
+      fontWeight: "500",
+      speed: 1,
+    },
+  },
   "x-follow-card": {
     durationInFrames: 165,
     fps: 30,

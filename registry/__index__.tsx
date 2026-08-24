@@ -22,6 +22,16 @@ const registry: Record<string, RegistryEntry> = {
         (m) => m.softBlurInConfig,
       ),
   },
+  "word-stream": {
+    load: () =>
+      import("@/registry/remocn/word-stream").then((m) => ({
+        default: m.WordStream,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/word-stream/config").then(
+        (m) => m.wordStreamConfig,
+      ),
+  },
   "per-character-rise": {
     load: () =>
       import("@/registry/remocn/per-character-rise").then((m) => ({

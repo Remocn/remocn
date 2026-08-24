@@ -172,6 +172,20 @@
       ]
     },
     {
+      "name": "word-stream",
+      "type": "registry:component",
+      "title": "Word Stream",
+      "description": "Voiceover-paced phrases that build word by word — the next word looms as a blurred ghost before it resolves, then the phrase cuts away.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "word-stream/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/word-stream.tsx"
+        }
+      ]
+    },
+    {
       "name": "extrude-pop",
       "type": "registry:component",
       "title": "Extrude Pop",
