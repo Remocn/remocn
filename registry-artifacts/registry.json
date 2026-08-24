@@ -186,6 +186,20 @@
       "type": "registry:component"
     },
     {
+      "name": "word-push",
+      "title": "Word Push",
+      "description": "A phrase builds from its first word centered: each next word drives in from the right and pushes the line left, easing into the new center.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "registry/remocn/word-push/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/word-push.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
       "name": "extrude-pop",
       "title": "Extrude Pop",
       "description": "A flat word pops up out of the plane on a solid colored 3D body, no camera involved.",

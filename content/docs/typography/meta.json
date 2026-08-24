@@ -15,6 +15,7 @@
     "line-by-line-slide",
     "per-word-crossfade",
     "word-stream",
+    "word-push",
     "fade-through",
     "shared-axis-y",
     "shared-axis-z",

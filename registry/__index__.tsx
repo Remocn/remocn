@@ -32,6 +32,16 @@ const registry: Record<string, RegistryEntry> = {
         (m) => m.wordStreamConfig,
       ),
   },
+  "word-push": {
+    load: () =>
+      import("@/registry/remocn/word-push").then((m) => ({
+        default: m.WordPush,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/word-push/config").then(
+        (m) => m.wordPushConfig,
+      ),
+  },
   "per-character-rise": {
     load: () =>
       import("@/registry/remocn/per-character-rise").then((m) => ({
