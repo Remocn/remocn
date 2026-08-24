@@ -17,7 +17,7 @@ const REVEAL_FRAMES = 2;
 const SLIDE_FRAMES = 12;
 const OVERSHOOT_EM = 0.5;
 const CHAR_WIDTH_EM = 0.5;
-const SPACE_WIDTH_EM = 0.28;
+const SPACE_WIDTH_EM = 0.22;
 
 function revealFrame(index: number, wordGap: number, accel: number): number {
   if (accel === 1) return index * wordGap;
@@ -126,7 +126,7 @@ export function WordPush({
               style={{
                 display: "inline-block",
                 whiteSpace: "pre",
-                marginRight: j < words.length - 1 ? "0.28em" : undefined,
+                marginRight: j < words.length - 1 ? "0.22em" : undefined,
                 opacity,
                 translate: `${OVERSHOOT_EM * fontSize * (1 - driven)}px 0`,
               }}
