@@ -3470,6 +3470,24 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       speed: 1,
     },
   },
+  "sheen-slide-in": {
+    durationInFrames: 75,
+    fps: 30,
+    compositionWidth: 1280,
+    compositionHeight: 720,
+    previewBackdrop: {
+      type: "color",
+      value: "#ffffff",
+    },
+    defaults: {
+      text: "Introducing",
+      fontSize: 72,
+      baseColor: "#18181b",
+      sheenColor: "#4f8ef7",
+      fontWeight: "600",
+      speed: 1,
+    },
+  },
   sheet: {
     durationInFrames: 120,
     fps: 30,
@@ -4155,6 +4173,7 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       text: "move at your own pace",
       fontSize: 72,
       wordGap: 10,
+      accel: 0.8,
       color: "#171717",
       fontWeight: "500",
       speed: 1,

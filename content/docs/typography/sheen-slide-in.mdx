@@ -1,0 +1,119 @@
+---
+title: Sheen Slide In
+description: A title glides in from the right with a long settle while a gradient sheen sweeps through the glyphs
+component: sheen-slide-in
+vibe: premium
+length: 64
+useWhen:
+  - "An intro title should arrive with momentum — a fast entrance, a long exponential settle and a barely visible final creep into center."
+  - "You want a colored gradient highlight to sweep once through the glyphs while the title is settling, then cool down to the base color."
+  - "The brand moment needs more physicality than a plain fade but no per-character or per-word choreography."
+avoidWhen:
+  - "You want a repeating metallic shimmer loop rather than a single arrival — use `shimmer-sweep`."
+  - "The title should build word by word — use `word-push` or `word-stream`."
+  - "The entrance should be soft and blurred rather than kinetic — use `soft-blur-in` or `focus-blur-resolve`."
+---
+
+<ComponentPreview name="sheen-slide-in" />
+
+## Installation
+
+<InstallBlock name="sheen-slide-in" />
+
+## Usage
+
+The title enters from the right at peak velocity and settles as a sum of two exponentials — a fast settle (τ ≈ 2.5 frames) plus a slow creep (τ ≈ 12 frames) that eases it into exact center. The sheen starts moving with the text on frame 0 and sweeps left-to-right through the glyphs on an ease-in-out over 48 frames — gaining speed while the text sheds it — then cools down by frame 58. At `exitAt` the title shrinks to 0.9 over four frames at full opacity and vanishes with a hard cut. All timings were measured frame-by-frame from the reference footage.
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { SheenSlideIn } from "@/components/remocn/sheen-slide-in";
+
+const SheenSlideInScene = () => <SheenSlideIn text="Introducing" />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="SheenSlideIn"
+    component={SheenSlideInScene}
+    durationInFrames={70}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+### With Backdrop
+
+The component renders transparent — supply the background via `Backdrop`. It ships single-theme; edit the copied file to re-theme colors.
+
+```tsx
+import { Composition } from "remotion";
+import { SheenSlideIn } from "@/components/remocn/sheen-slide-in";
+import { Backdrop } from "@/components/remocn/backdrop";
+
+const SheenSlideInScene = () => (
+  <Backdrop fill={{ type: "color", value: "#ffffff" }}>
+    <SheenSlideIn text="Introducing" />
+  </Backdrop>
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="SheenSlideIn"
+    component={SheenSlideInScene}
+    durationInFrames={70}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "text",
+      type: "string",
+      required: true,
+      description: "The title text",
+    },
+    {
+      name: "exitAt",
+      type: "number",
+      default: "60",
+      description: "Frame at which the title shrinks to 0.9 and hard-cuts away",
+    },
+    {
+      name: "fontSize",
+      type: "number",
+      default: "72",
+      description: "Font size in pixels; travel distances scale with it",
+    },
+    {
+      name: "baseColor",
+      type: "string",
+      default: "\"#18181b\"",
+      description: "Resting text color",
+    },
+    {
+      name: "sheenColor",
+      type: "string",
+      default: "\"#4f8ef7\"",
+      description: "Color of the gradient highlight sweeping through the glyphs",
+    },
+    {
+      name: "fontWeight",
+      type: "number",
+      default: "600",
+      description: "CSS font-weight",
+    },
+    {
+      name: "className",
+      type: "string",
+      description: "Optional className passed to the underlying span",
+    },
+  ]}
+/>

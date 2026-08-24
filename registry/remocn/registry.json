@@ -200,6 +200,20 @@
       ]
     },
     {
+      "name": "sheen-slide-in",
+      "type": "registry:component",
+      "title": "Sheen Slide In",
+      "description": "A title glides in from the right with an exponential settle and a slow final creep to center, while a gradient sheen sweeps once through the glyphs.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "sheen-slide-in/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/sheen-slide-in.tsx"
+        }
+      ]
+    },
+    {
       "name": "extrude-pop",
       "type": "registry:component",
       "title": "Extrude Pop",

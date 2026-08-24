@@ -42,6 +42,16 @@ const registry: Record<string, RegistryEntry> = {
         (m) => m.wordPushConfig,
       ),
   },
+  "sheen-slide-in": {
+    load: () =>
+      import("@/registry/remocn/sheen-slide-in").then((m) => ({
+        default: m.SheenSlideIn,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/sheen-slide-in/config").then(
+        (m) => m.sheenSlideInConfig,
+      ),
+  },
   "per-character-rise": {
     load: () =>
       import("@/registry/remocn/per-character-rise").then((m) => ({
