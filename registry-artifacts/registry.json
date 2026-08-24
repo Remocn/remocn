@@ -256,6 +256,20 @@
       "type": "registry:component"
     },
     {
+      "name": "zoom-words",
+      "title": "Zoom Words",
+      "description": "A close-up word reveal: huge words fade into a long line while the camera rides the write head, the line streaming off-frame as the shot eases into focus.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "registry/remocn/zoom-words/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/zoom-words.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
       "name": "extrude-pop",
       "title": "Extrude Pop",
       "description": "A flat word pops up out of the plane on a solid colored 3D body, no camera involved.",

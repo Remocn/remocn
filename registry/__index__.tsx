@@ -80,6 +80,16 @@ const registry: Record<string, RegistryEntry> = {
         (m) => m.caretSwapConfig,
       ),
   },
+  "zoom-words": {
+    load: () =>
+      import("@/registry/remocn/zoom-words").then((m) => ({
+        default: m.ZoomWords,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/zoom-words/config").then(
+        (m) => m.zoomWordsConfig,
+      ),
+  },
   "per-character-rise": {
     load: () =>
       import("@/registry/remocn/per-character-rise").then((m) => ({

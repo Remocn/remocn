@@ -4330,6 +4330,28 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       speed: 1,
     },
   },
+  "zoom-words": {
+    durationInFrames: 110,
+    fps: 30,
+    compositionWidth: 1280,
+    compositionHeight: 720,
+    previewBackdrop: {
+      type: "gradient",
+      value: "linear-gradient(180deg, #0a0612 25%, #6a3fd6 100%)",
+    },
+    defaults: {
+      text: "Still piecing together tools for your digital product?",
+      fontSize: 64,
+      wordGap: 9,
+      zoom: 2.2,
+      anchor: 0.75,
+      blur: 0.04,
+      blurFrames: 60,
+      color: "#cfc2ff",
+      fontWeight: "400",
+      speed: 1,
+    },
+  },
 };
 
 export default previewManifest;
