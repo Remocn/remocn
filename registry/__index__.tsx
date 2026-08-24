@@ -70,6 +70,16 @@ const registry: Record<string, RegistryEntry> = {
     loadConfig: () =>
       import("@/registry/remocn/fog-rise/config").then((m) => m.fogRiseConfig),
   },
+  "caret-swap": {
+    load: () =>
+      import("@/registry/remocn/caret-swap").then((m) => ({
+        default: m.CaretSwap,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/caret-swap/config").then(
+        (m) => m.caretSwapConfig,
+      ),
+  },
   "per-character-rise": {
     load: () =>
       import("@/registry/remocn/per-character-rise").then((m) => ({

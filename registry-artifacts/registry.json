@@ -242,6 +242,20 @@
       "type": "registry:component"
     },
     {
+      "name": "caret-swap",
+      "title": "Caret Swap",
+      "description": "A gradient caret swells into a block that consumes the first phrase right-to-left, collapses back and types the second phrase out with a blinking caret.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "registry/remocn/caret-swap/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/caret-swap.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
       "name": "extrude-pop",
       "title": "Extrude Pop",
       "description": "A flat word pops up out of the plane on a solid colored 3D body, no camera involved.",
