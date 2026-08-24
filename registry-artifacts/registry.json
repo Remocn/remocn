@@ -214,6 +214,20 @@
       "type": "registry:component"
     },
     {
+      "name": "squeeze-in",
+      "title": "Squeeze In",
+      "description": "Characters appear one by one on a tight stagger; when the last one lands, every letter gap compresses as one and the word squeezes together.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "registry/remocn/squeeze-in/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/squeeze-in.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
       "name": "extrude-pop",
       "title": "Extrude Pop",
       "description": "A flat word pops up out of the plane on a solid colored 3D body, no camera involved.",

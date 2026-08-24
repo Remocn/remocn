@@ -3471,7 +3471,7 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
     },
   },
   "sheen-slide-in": {
-    durationInFrames: 75,
+    durationInFrames: 70,
     fps: 30,
     compositionWidth: 1280,
     compositionHeight: 720,
@@ -3481,6 +3481,7 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
     },
     defaults: {
       text: "Introducing",
+      exitAt: 60,
       fontSize: 72,
       baseColor: "#18181b",
       sheenColor: "#4f8ef7",
@@ -3725,6 +3726,25 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       enterStagger: 3,
       exitScale: 0.84,
       exitFrames: 6,
+      speed: 1,
+    },
+  },
+  "squeeze-in": {
+    durationInFrames: 60,
+    fps: 30,
+    compositionWidth: 1280,
+    compositionHeight: 720,
+    previewBackdrop: {
+      type: "color",
+      value: "#ffffff",
+    },
+    defaults: {
+      text: "commas",
+      fontSize: 72,
+      stagger: 2,
+      squeeze: 0.05,
+      color: "#171717",
+      fontWeight: "600",
       speed: 1,
     },
   },

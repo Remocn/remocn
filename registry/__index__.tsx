@@ -52,6 +52,16 @@ const registry: Record<string, RegistryEntry> = {
         (m) => m.sheenSlideInConfig,
       ),
   },
+  "squeeze-in": {
+    load: () =>
+      import("@/registry/remocn/squeeze-in").then((m) => ({
+        default: m.SqueezeIn,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/squeeze-in/config").then(
+        (m) => m.squeezeInConfig,
+      ),
+  },
   "per-character-rise": {
     load: () =>
       import("@/registry/remocn/per-character-rise").then((m) => ({
