@@ -9,15 +9,25 @@ background remain outside its scope.
 ## Motion
 
 The initial line reads `powering 20% — of the Internet.`. A short white pill
-occupies the dash position. Over the first 18 frames, the pill expands from the
-center to reveal `Start building`, physically pushing the left and right text
-apart. The pill text is already laid out at full width and is exposed through
-the pill's overflow clip rather than typed.
+occupies the dash position. Over the first 12 frames, explicit width and height
+values expand the pill background outward from its center, exposing `Start
+building` and physically pushing the left and right text apart. No transform is
+applied to this reveal, so the text keeps a fixed local font size. It becomes
+visible through a hard opacity switch and remains clipped by the growing pill
+until enough background has opened around it.
 
 Starting on frame 2, the surrounding text gains blur and fades away, reaching
-zero opacity with the pill expansion on frame 18. The pill then holds briefly.
-On frame 21 it begins a takeover push-in: a fast scale from 1 to about 1.9 by
-frame 24, followed by a slower settle to 2.15 on frame 30.
+zero opacity on frame 18 while the pill background keeps expanding. An
+independent camera wrapper starts moving on frame 12: it grows from scale 1 to
+1.25 through frame 23, cuts on frame 24 to 86% of the final close-up scale,
+then eases from 86% to 100% by frame 30. At the same moment the width reveal
+finishes, a second local pill animation begins. Through frame 36 it grows the
+background width from scale 1 to 1.08 and its height independently from 1 to
+1.16 while the text keeps its local font size. Separate width and height
+controls keep the vertical expansion visible without making the CTA too wide.
+The pill therefore grows toward the approaching camera and continues moving
+after the camera settles. The discontinuity is intentional: it should read as
+an impact too fast for the viewer to perceive as a continuous zoom.
 
 ## Component
 

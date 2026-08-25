@@ -284,6 +284,20 @@
       ]
     },
     {
+      "name": "inline-pill-takeover",
+      "type": "registry:component",
+      "title": "Inline Pill Takeover",
+      "description": "A clipped pill expands inside a sentence, physically pushes the surrounding words apart, removes them through blur and takes over the frame with a fast camera punch-in.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "inline-pill-takeover/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/inline-pill-takeover.tsx"
+        }
+      ]
+    },
+    {
       "name": "extrude-pop",
       "type": "registry:component",
       "title": "Extrude Pop",

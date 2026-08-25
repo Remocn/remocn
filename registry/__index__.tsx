@@ -100,6 +100,16 @@ const registry: Record<string, RegistryEntry> = {
         (m) => m.centeredWordBuildConfig,
       ),
   },
+  "inline-pill-takeover": {
+    load: () =>
+      import("@/registry/remocn/inline-pill-takeover").then((m) => ({
+        default: m.InlinePillTakeover,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/inline-pill-takeover/config").then(
+        (m) => m.inlinePillTakeoverConfig,
+      ),
+  },
   "per-character-rise": {
     load: () =>
       import("@/registry/remocn/per-character-rise").then((m) => ({

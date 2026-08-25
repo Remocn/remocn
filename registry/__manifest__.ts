@@ -2549,6 +2549,33 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       speed: 1,
     },
   },
+  "inline-pill-takeover": {
+    durationInFrames: 45,
+    fps: 30,
+    compositionWidth: 1280,
+    compositionHeight: 720,
+    previewBackdrop: {
+      type: "gradient",
+      value:
+        "radial-gradient(circle at 50% 108%, #ffd77a 0%, #ff6840 31%, #f13d21 78%)",
+    },
+    defaults: {
+      before: "powering 20%",
+      insert: "Start building",
+      after: "of the Internet.",
+      fontSize: 52,
+      pillWidth: 260,
+      expandFrames: 18,
+      takeoverAt: 21,
+      takeoverScale: 2.15,
+      blur: 12,
+      color: "#fff3df",
+      pillColor: "#fffaf0",
+      pillTextColor: "#1c1210",
+      fontWeight: "400",
+      speed: 1,
+    },
+  },
   input: {
     durationInFrames: 120,
     fps: 30,
