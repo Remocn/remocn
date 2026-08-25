@@ -110,6 +110,16 @@ const registry: Record<string, RegistryEntry> = {
         (m) => m.inlinePillTakeoverConfig,
       ),
   },
+  "typed-split-wipe": {
+    load: () =>
+      import("@/registry/remocn/typed-split-wipe").then((m) => ({
+        default: m.TypedSplitWipe,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/typed-split-wipe/config").then(
+        (m) => m.typedSplitWipeConfig,
+      ),
+  },
   "per-character-rise": {
     load: () =>
       import("@/registry/remocn/per-character-rise").then((m) => ({

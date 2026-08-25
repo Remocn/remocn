@@ -298,6 +298,20 @@
       ]
     },
     {
+      "name": "typed-split-wipe",
+      "type": "registry:component",
+      "title": "Typed Split Wipe",
+      "description": "A centered cursorless type build holds, then exits through opposing fixed-layout glyph wipes that leave the anchor visible longest.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "typed-split-wipe/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/typed-split-wipe.tsx"
+        }
+      ]
+    },
+    {
       "name": "extrude-pop",
       "type": "registry:component",
       "title": "Extrude Pop",

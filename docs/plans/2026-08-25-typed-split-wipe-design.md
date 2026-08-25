@@ -16,7 +16,8 @@ grows. Frames 30–49 hold the completed line.
 At frame 50, the component switches to a fixed full-line layout so disappearing
 letters never cause reflow. `Introducing` clips from right to left. The suffix
 is split into words: `Ads` and then `MCP` clip from left to right with a short
-stagger. The `X` anchor remains visible longer and exits last. The wipe clips
+stagger. As the prefix opens empty space, the `X` anchor travels left into it,
+creating unequal gaps on either side before it exits last. The wipe clips
 through glyphs rather than fading or translating whole characters.
 
 ## Component
@@ -24,8 +25,8 @@ through glyphs rather than fading or translating whole characters.
 The registry item is named `typed-split-wipe` and exports `TypedSplitWipe`
 plus its props interface. Its primary content API is `prefix`, `anchor`, and
 `suffix`; defaults produce `Introducing X Ads MCP`. Public controls cover the
-typing duration, exit start and duration, suffix-word stagger, typography,
-playback speed, and root class name.
+typing duration, exit start and duration, suffix-word stagger, anchor travel,
+typography, playback speed, and root class name.
 
 The component paints no background. Its preview uses near-black so the warm
 white type matches the source footage.
