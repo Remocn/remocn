@@ -270,6 +270,20 @@
       ]
     },
     {
+      "name": "centered-word-build",
+      "type": "registry:component",
+      "title": "Centered Word Build",
+      "description": "Words appear sharply from below while the centered phrase pushes cumulatively closer on every beat, then clears through a soft left-to-right opacity wipe.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "centered-word-build/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/centered-word-build.tsx"
+        }
+      ]
+    },
+    {
       "name": "extrude-pop",
       "type": "registry:component",
       "title": "Extrude Pop",

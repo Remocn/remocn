@@ -90,6 +90,16 @@ const registry: Record<string, RegistryEntry> = {
         (m) => m.zoomWordsConfig,
       ),
   },
+  "centered-word-build": {
+    load: () =>
+      import("@/registry/remocn/centered-word-build").then((m) => ({
+        default: m.CenteredWordBuild,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/centered-word-build/config").then(
+        (m) => m.centeredWordBuildConfig,
+      ),
+  },
   "per-character-rise": {
     load: () =>
       import("@/registry/remocn/per-character-rise").then((m) => ({

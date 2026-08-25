@@ -1,0 +1,167 @@
+---
+title: Centered Word Build
+description: Words appear sharply from below while the centered phrase pushes closer on every beat
+component: centered-word-build
+vibe: clean
+length: 63
+useWhen:
+  - "A short statement should assemble one word at a time while every visible prefix stays centered and pushes closer."
+  - "You want beat-synced typography where words appear sharply but still travel up into place."
+  - "The completed line should leave through a soft left-to-right opacity wipe."
+avoidWhen:
+  - "Each new word should physically drive the existing line aside — use `word-push`."
+  - "Words should replace one another in the same fixed slot — use `per-word-crossfade`."
+  - "You need character-by-character input with a caret — use `typewriter`."
+---
+
+<ComponentPreview name="centered-word-build" />
+
+## Installation
+
+<InstallBlock name="centered-word-build" />
+
+## Usage
+
+The visible prefix is laid out as one centered line. Each word becomes fully visible on a hard cut `rise` em below the baseline and settles upward over `settleFrames`; opacity is never animated. In the same frame, the whole phrase starts another cumulative `zoomStep` push-in and holds the closer scale until the next word. The first two word gaps establish the rhythm; later gaps are multiplied by `accel` to tighten the cadence. At `exitAt`, a broad opacity mask wipes through the completed phrase from left to right. All timings were measured frame-by-frame from the reference footage.
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { CenteredWordBuild } from "@/components/remocn/centered-word-build";
+
+const CenteredWordBuildScene = () => (
+  <CenteredWordBuild text="everything we learn from" />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="CenteredWordBuild"
+    component={CenteredWordBuildScene}
+    durationInFrames={75}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+### With Backdrop
+
+The component is transparent. Add the scene color separately with `Backdrop`; the reference pairs warm white text with an orange radial glow.
+
+```tsx
+import { Composition } from "remotion";
+import { CenteredWordBuild } from "@/components/remocn/centered-word-build";
+import { Backdrop } from "@/components/remocn/backdrop";
+
+const CenteredWordBuildScene = () => (
+  <Backdrop
+    fill={{
+      type: "gradient",
+      value:
+        "radial-gradient(circle at 50% 108%, #ffd77a 0%, #ff6840 31%, #f13d21 78%)",
+    }}
+  >
+    <CenteredWordBuild text="everything we learn from" />
+  </Backdrop>
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="CenteredWordBuild"
+    component={CenteredWordBuildScene}
+    durationInFrames={75}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+### Syncing
+
+With the defaults, a four-word phrase reveals on frames 0, 11, 22, and 30, reaching cumulative scales of 1, 1.035, 1.07, and 1.105. The exported `centeredWordBuildLength(text, wordGap, accel, settleFrames, exitAt, exitFrames)` helper returns the frame on which all motion finishes.
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "text",
+      type: "string",
+      required: true,
+      description: "The phrase to build word by word",
+    },
+    {
+      name: "fontSize",
+      type: "number",
+      default: "52",
+      description: "Font size in pixels",
+    },
+    {
+      name: "color",
+      type: "string",
+      default: "\"#fff3df\"",
+      description: "Text color (any valid CSS color)",
+    },
+    {
+      name: "fontWeight",
+      type: "number",
+      default: "400",
+      description: "CSS font-weight",
+    },
+    {
+      name: "wordGap",
+      type: "number",
+      default: "11",
+      description: "Frames between each of the first two word additions",
+    },
+    {
+      name: "accel",
+      type: "number",
+      default: "0.75",
+      description: "Multiplier applied to each later word gap; lower values accelerate more strongly",
+    },
+    {
+      name: "rise",
+      type: "number",
+      default: "0.18",
+      description: "Starting vertical offset of each new word in em",
+    },
+    {
+      name: "zoomStep",
+      type: "number",
+      default: "0.035",
+      description: "Cumulative scale added to the whole visible phrase after each new word",
+    },
+    {
+      name: "settleFrames",
+      type: "number",
+      default: "9",
+      description: "Frames used by the synchronized word rise and whole-phrase push-in",
+    },
+    {
+      name: "exitAt",
+      type: "number",
+      default: "51",
+      description: "Frame on which the left-to-right opacity wipe begins",
+    },
+    {
+      name: "exitFrames",
+      type: "number",
+      default: "12",
+      description: "Duration of the opacity wipe in frames",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier",
+    },
+    {
+      name: "className",
+      type: "string",
+      description: "Optional className passed to the text span",
+    },
+  ]}
+/>
