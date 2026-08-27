@@ -57,17 +57,18 @@ export const RemotionRoot = () => (
 
 ### Tuning The Shadow
 
-`backgroundColor` fills the canvas. `shadowColor` colors a radial field that
-fades to transparency horizontally and vertically, so no rectangular contour
-survives around it. Keep the shadow darker than the background; reducing
-`shadowSoftness` makes the reveal feel like a hard wipe, while increasing it
-leaves more of each glyph partially covered.
+`backgroundColor` fills the canvas. By default, `shadowColor` inherits that
+same color, so the radial field is visible over the letters without becoming a
+separate black shape on the blue field. It still fades to transparency
+horizontally and vertically. Reducing `shadowSoftness` makes the reveal feel
+like a hard wipe, while increasing it leaves more of each glyph partially
+covered.
 
 ```tsx
 <ShadowSweepText
   text="built for motion"
   backgroundColor="#030012"
-  shadowColor="#000008"
+  shadowColor="#030012"
   shadowSoftness={130}
   rise={96}
   driftLeft={16}
@@ -111,8 +112,8 @@ leaves more of each glyph partially covered.
     {
       name: "shadowColor",
       type: "string",
-      default: '"#000008"',
-      description: "Color at the center of the moving Gaussian shadow",
+      default: "backgroundColor",
+      description: "Color at the center of the moving Gaussian shadow; inherits the background by default",
     },
     {
       name: "shadowSoftness",

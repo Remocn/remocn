@@ -3563,7 +3563,7 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       shadowSoftness: 130,
       color: "#aaa6b5",
       backgroundColor: "#030012",
-      shadowColor: "#000008",
+      shadowColor: "#030012",
       fontWeight: "700",
       speed: 1,
     },

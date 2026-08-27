@@ -24,9 +24,10 @@ metrics gives a 36-pixel source CSS size, corresponding to a 96-pixel default
 font size in the registry.
 
 The sampled background is a near-black violet, represented by `#030012`. The
-occluder is darker at `#000008`; its compressed soft transition measures about
-45 to 55 source pixels, or approximately 130 pixels at registry resolution.
-The text is a cool gray represented by `#aaa6b5`.
+Gaussian field inherits that background color by default so it covers the text
+without becoming a separate black shape. Its compressed soft transition
+measures about 45 to 55 source pixels, or approximately 130 pixels at registry
+resolution. The text is a cool gray represented by `#aaa6b5`.
 
 ## Motion
 

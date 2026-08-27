@@ -64,7 +64,7 @@ export const shadowSweepTextConfig: ComponentConfig = {
     },
     shadowColor: {
       type: "color",
-      default: "#000008",
+      default: "#030012",
       description: "Shadow color",
     },
     fontWeight: {

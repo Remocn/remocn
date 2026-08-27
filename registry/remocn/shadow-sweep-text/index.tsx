@@ -34,7 +34,7 @@ export function ShadowSweepText({
   color = "#aaa6b5",
   fontWeight = 700,
   backgroundColor = "#030012",
-  shadowColor = "#000008",
+  shadowColor = backgroundColor,
   shadowSoftness = 130,
   rise = 96,
   driftLeft = 16,
