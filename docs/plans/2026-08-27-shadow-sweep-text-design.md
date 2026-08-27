@@ -36,10 +36,12 @@ the short readable hold. Frames 27-36 move a second dark occluder from the left
 across the line, covering it in the same direction. The text itself never
 changes opacity.
 
-Both occluders are real positioned layers above the text. Their solid bodies
-match the background while a dark blurred edge supplies the visible shadow.
-This preserves the dense physical covering seen in the reference instead of
-approximating it with a text gradient or `mask-image`.
+Text coverage and the visible shadow are separate layers. A directional mask
+controls which glyph pixels are readable during the enter and exit, while an
+independent Gaussian field travels over the mask boundary. The field is built
+from a radial gradient that fades horizontally and vertically, so it has no
+rectangular body or concrete contour. This keeps the shadow dense over the
+letters without exposing the geometry of the DOM element that carries it.
 
 The text's diagonal movement runs across the full cycle with a strong ease-out:
 it starts 16 pixels right and 96 pixels below its final position, then moves
@@ -66,6 +68,8 @@ changelog entry, then regenerate the preview manifest and registry artifacts.
 
 Run focused Biome checks, TypeScript, customizer and docs metadata tests, then
 render a 37-frame 1280x720 preview at 30 fps. Inspect frames 0, 1, 8, 16, 23,
-26, 27, 31, 35, and 36. The text must remain at constant opacity, travel up and
-left, become fully readable for only a short hold, and disappear under the
-second dark shadow rather than through fading or clipping.
+26, 27, 31, 35, and 36. The text must remain at constant element opacity,
+travel up and left, become fully readable for only a short hold, and disappear
+under the returning shadow. A pixel-gradient check on the covered frame must
+not find a hard horizontal or vertical rectangle edge around the Gaussian
+field.
