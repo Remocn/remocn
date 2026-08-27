@@ -46,6 +46,13 @@ remains visible for the whole travel, while a filled duplicate is exposed by a
 left-to-right mask. This reproduces the sequential fill of the percent sign
 without animating individual glyphs.
 
+The final track travel is responsive to the measured value width. Values that
+fit the composition stop on the reference anchor. If a value is wider than the
+available frame, its right-side overflow is added to the travel so the camera
+reaches the trailing glyphs and leaves them at a configurable end padding. The
+track follows a symmetric ease-in-out curve with a visible acceleration from
+rest and deceleration into the final hold.
+
 The entrance uses a vertical mask plus a large radial violet-black field. The
 field is separate from the text and soft in both axes, avoiding a rectangular
 occluder. The lead word does not fade or scale.
@@ -56,8 +63,8 @@ The registry item is named `outline-fill-track-text` and exports
 `OutlineFillTrackText`, `OutlineFillTrackTextProps`, and
 `outlineFillTrackTextLength`. Public controls cover both text values,
 typography, fill and outline colors, outline width, background and glow colors,
-entrance offset, shared horizontal anchor, track travel, word gap, fill
-duration, playback speed, and the root class name.
+entrance offset, shared horizontal anchor, track travel, word gap, long-value
+end padding, fill duration, playback speed, and the root class name.
 
 The default implementation uses Arial/Helvetica to match the measured wide
 geometric sans closely while remaining dependency-free. Empty strings remain

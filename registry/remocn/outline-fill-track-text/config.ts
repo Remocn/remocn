@@ -54,7 +54,7 @@ export const outlineFillTrackTextConfig: ComponentConfig = {
       max: 1800,
       step: 10,
       default: 0,
-      description: "Track travel override; zero measures the text",
+      description: "Lead-to-value distance override; zero measures the text",
       hiddenFromList: false,
     },
     wordGap: {
@@ -64,6 +64,15 @@ export const outlineFillTrackTextConfig: ComponentConfig = {
       step: 4,
       default: 220,
       description: "Gap between the lead and value",
+      hiddenFromList: false,
+    },
+    endPadding: {
+      type: "number",
+      min: 0,
+      max: 320,
+      step: 4,
+      default: 96,
+      description: "Trailing edge padding for long values",
       hiddenFromList: false,
     },
     fillDuration: {

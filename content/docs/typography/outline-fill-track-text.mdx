@@ -60,16 +60,23 @@ export const RemotionRoot = () => (
 ### Controlling The Track
 
 With `trackDistance={0}`, the component measures both strings and derives the
-travel needed to center each one in turn. `wordGap` then controls the actual
-empty space between their glyph boxes. Set a positive `trackDistance` to use an
-art-directed fixed travel instead, which is useful when matching an existing
-layout exactly.
+distance between their centers. `wordGap` controls the actual empty space
+between their glyph boxes. A value that fits the composition stops on the
+measured anchor. When it is wider than the available frame, the component adds
+the exact overflow to the camera travel and leaves its trailing edge at
+`endPadding` instead of stopping in the middle of the string.
+
+Set a positive `trackDistance` to override the center-to-center distance. The
+long-value overflow is still applied, so the camera continues through the final
+visible glyphs. The track uses a symmetric ease-in-out curve: it accelerates
+from rest, carries speed through the middle, and decelerates into the hold.
 
 ```tsx
 <OutlineFillTrackText
   leadText="Save"
   valueText="42%"
   wordGap={180}
+  endPadding={96}
   outlineWidth={3}
   fillDuration={38}
   glowColor="#64109a"
@@ -157,6 +164,12 @@ layout exactly.
       type: "number",
       default: "220",
       description: "Gap between lead and value when travel is measured",
+    },
+    {
+      name: "endPadding",
+      type: "number",
+      default: "96",
+      description: "Right-side padding where an overflowing value stops",
     },
     {
       name: "fillDuration",

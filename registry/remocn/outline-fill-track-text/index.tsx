@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { Easing, interpolate, useCurrentFrame } from "remotion";
+import { Easing, interpolate, useCurrentFrame, useVideoConfig } from "remotion";
 
 export interface OutlineFillTrackTextProps {
   leadText?: string;
@@ -17,6 +17,7 @@ export interface OutlineFillTrackTextProps {
   anchorOffsetX?: number;
   trackDistance?: number;
   wordGap?: number;
+  endPadding?: number;
   fillDuration?: number;
   speed?: number;
   className?: string;
@@ -64,35 +65,47 @@ export function OutlineFillTrackText({
   anchorOffsetX = -84,
   trackDistance = 0,
   wordGap = 220,
+  endPadding = 96,
   fillDuration = 38,
   speed = 1,
   className,
 }: OutlineFillTrackTextProps) {
   const frame = useCurrentFrame() * Math.max(speed, 0);
+  const { width: compositionWidth } = useVideoConfig();
   const safeFontSize = Math.max(fontSize, 1);
   const safeFontWeight = Math.max(fontWeight, 1);
   const safeOutlineWidth = Math.max(outlineWidth, 0);
   const safeGap = Math.max(wordGap, 0);
+  const safeEndPadding = Math.max(endPadding, 0);
   const safeFillDuration = Math.max(fillDuration, 1);
 
-  const measuredDistance = useMemo(() => {
+  const measurements = useMemo(() => {
     const leadWidth = estimateTextWidth(leadText, safeFontSize, safeFontWeight);
     const valueWidth = estimateTextWidth(
       valueText,
       safeFontSize,
       safeFontWeight,
     );
-    return leadWidth / 2 + safeGap + valueWidth / 2;
+    return {
+      valueWidth,
+      distance: leadWidth / 2 + safeGap + valueWidth / 2,
+    };
   }, [leadText, safeFontSize, safeFontWeight, safeGap, valueText]);
 
-  const distance = trackDistance > 0 ? trackDistance : measuredDistance;
+  const valueOffset = trackDistance > 0 ? trackDistance : measurements.distance;
+  const anchorX = compositionWidth / 2 + anchorOffsetX;
+  const trailingOverflow = Math.max(
+    0,
+    anchorX + measurements.valueWidth / 2 - (compositionWidth - safeEndPadding),
+  );
+  const travelDistance = valueOffset + trailingOverflow;
   const enterProgress = interpolate(frame, [0, ENTER_END], [0, 1], {
     ...clamp,
     easing: Easing.bezier(0.16, 0.84, 0.24, 1),
   });
   const trackProgress = interpolate(frame, [TRACK_START, TRACK_END], [0, 1], {
     ...clamp,
-    easing: Easing.bezier(0.45, 0, 0.25, 1),
+    easing: Easing.bezier(0.42, 0, 0.58, 1),
   });
   const fillProgress = interpolate(
     frame,
@@ -149,7 +162,7 @@ export function OutlineFillTrackText({
           position: "absolute",
           top: "50%",
           left: `calc(50% + ${anchorOffsetX}px)`,
-          transform: `translate3d(${-distance * trackProgress}px, -50%, 0)`,
+          transform: `translate3d(${-travelDistance * trackProgress}px, -50%, 0)`,
         }}
       >
         <div
@@ -174,7 +187,7 @@ export function OutlineFillTrackText({
           style={{
             position: "absolute",
             top: 0,
-            left: distance,
+            left: valueOffset,
             transform: "translate3d(-50%, -50%, 0)",
             visibility: frame < FILL_START ? "hidden" : "visible",
           }}

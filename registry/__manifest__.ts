@@ -2837,6 +2837,7 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       anchorOffsetX: -84,
       trackDistance: 0,
       wordGap: 220,
+      endPadding: 96,
       fillDuration: 38,
       outlineWidth: 3,
       color: "#f4f3f6",
