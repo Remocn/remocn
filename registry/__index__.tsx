@@ -120,6 +120,16 @@ const registry: Record<string, RegistryEntry> = {
         (m) => m.typedSplitWipeConfig,
       ),
   },
+  "shadow-sweep-text": {
+    load: () =>
+      import("@/registry/remocn/shadow-sweep-text").then((m) => ({
+        default: m.ShadowSweepText,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/shadow-sweep-text/config").then(
+        (m) => m.shadowSweepTextConfig,
+      ),
+  },
   "per-character-rise": {
     load: () =>
       import("@/registry/remocn/per-character-rise").then((m) => ({

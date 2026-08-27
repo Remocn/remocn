@@ -15,10 +15,13 @@ fully readable for roughly three frames before the exit occluder starts at
 00:05.900. The last readable pixels disappear at 00:06.233.
 
 During the complete cycle, the line eases from below and slightly right toward
-its resting position: approximately -8 to -11 source pixels horizontally and
--49 to -56 source pixels vertically. At the 1280x720 registry canvas this is a
-default travel of 29 pixels left and 149 pixels up. The source text is about 30
-pixels tall, corresponding to an 80-pixel default font size in the registry.
+its resting position. Comparing the same `are` glyphs once they are readable
+gives approximately -6 source pixels horizontally and -36 source pixels
+vertically. At the 1280x720 registry canvas this is a default travel of 16
+pixels left and 96 pixels up. The source glyphs are about
+30 pixels tall. Matching the measured 256-pixel line width against Arial Bold
+metrics gives a 36-pixel source CSS size, corresponding to a 96-pixel default
+font size in the registry.
 
 The sampled background is a near-black violet, represented by `#030012`. The
 occluder is darker at `#000008`; its compressed soft transition measures about
@@ -39,7 +42,7 @@ This preserves the dense physical covering seen in the reference instead of
 approximating it with a text gradient or `mask-image`.
 
 The text's diagonal movement runs across the full cycle with a strong ease-out:
-it starts 29 pixels right and 149 pixels below its final position, then moves
+it starts 16 pixels right and 96 pixels below its final position, then moves
 up and left without a scale or blur animation.
 
 ## Component

@@ -3546,6 +3546,28 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       accentAmount: 0,
     },
   },
+  "shadow-sweep-text": {
+    durationInFrames: 37,
+    fps: 30,
+    compositionWidth: 1280,
+    compositionHeight: 720,
+    previewBackdrop: {
+      type: "color",
+      value: "#030012",
+    },
+    defaults: {
+      text: "are abandoned",
+      fontSize: 96,
+      rise: 96,
+      driftLeft: 16,
+      shadowSoftness: 130,
+      color: "#aaa6b5",
+      backgroundColor: "#030012",
+      shadowColor: "#000008",
+      fontWeight: "700",
+      speed: 1,
+    },
+  },
   "shared-axis-y": {
     durationInFrames: 90,
     fps: 30,

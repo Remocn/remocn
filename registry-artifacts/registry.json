@@ -312,6 +312,20 @@
       "type": "registry:component"
     },
     {
+      "name": "shadow-sweep-text",
+      "title": "Shadow Sweep Text",
+      "description": "A line rises up and left while one dense dark shadow uncovers it and a second shadow sweeps back across it for the exit.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "registry/remocn/shadow-sweep-text/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/shadow-sweep-text.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
       "name": "extrude-pop",
       "title": "Extrude Pop",
       "description": "A flat word pops up out of the plane on a solid colored 3D body, no camera involved.",
