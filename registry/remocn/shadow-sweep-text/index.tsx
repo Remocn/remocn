@@ -1,6 +1,5 @@
 "use client";
 
-import type { CSSProperties } from "react";
 import { Easing, interpolate, useCurrentFrame } from "remotion";
 
 export interface ShadowSweepTextProps {
@@ -62,22 +61,38 @@ export function ShadowSweepText({
   );
   const x = REST_X + driftLeft * (1 - travelProgress);
   const y = REST_Y + rise * (1 - travelProgress);
-  const enterOffset = `calc(${enterProgress * 100}% + ${
-    enterProgress * safeSoftness
-  }px)`;
-  const remainingExit = 1 - exitProgress;
-  const exitOffset = `calc(${-remainingExit * 100}% - ${
-    remainingExit * safeSoftness
-  }px)`;
-  const shadowOffset = safeSoftness * 0.45;
-  const shadowBlur = safeSoftness * 0.55;
-  const shadowSpread = safeSoftness * 0.08;
-  const occluderStyle: CSSProperties = {
-    position: "absolute",
-    inset: "-0.45em -0.8em",
-    backgroundColor,
-    pointerEvents: "none",
-  };
+  const isEntering = frame < ENTER_END;
+  const isExiting = frame >= EXIT_START;
+  const sweepProgress = isEntering
+    ? enterProgress
+    : isExiting
+      ? exitProgress
+      : null;
+  const edgeOffset =
+    sweepProgress === null ? 0 : (sweepProgress * 2 - 1) * (safeSoftness / 2);
+  const edgePosition =
+    sweepProgress === null
+      ? "50%"
+      : `calc(${sweepProgress * 100}% + ${edgeOffset}px)`;
+  const maskStart =
+    sweepProgress === null
+      ? "50%"
+      : `calc(${sweepProgress * 100}% + ${edgeOffset - safeSoftness / 2}px)`;
+  const maskEnd =
+    sweepProgress === null
+      ? "50%"
+      : `calc(${sweepProgress * 100}% + ${edgeOffset + safeSoftness / 2}px)`;
+  const textMask = isEntering
+    ? `linear-gradient(90deg, #000 0, #000 ${maskStart}, transparent ${maskEnd}, transparent 100%)`
+    : isExiting
+      ? `linear-gradient(90deg, transparent 0, transparent ${maskStart}, #000 ${maskEnd}, #000 100%)`
+      : undefined;
+  const fieldOpacity =
+    sweepProgress === null
+      ? 0
+      : interpolate(sweepProgress, [0, 0.08, 0.82, 1], [0, 1, 1, 0], clamp);
+  const fieldWidth = Math.max(safeSoftness * 3, 1);
+  const fieldHeight = Math.max(fontSize * 2.6, safeSoftness * 1.8, 1);
 
   if (text.length === 0) {
     return (
@@ -104,33 +119,42 @@ export function ShadowSweepText({
       <div
         style={{
           position: "relative",
-          color,
-          fontFamily: "Arial, Helvetica, sans-serif",
-          fontSize,
-          fontWeight,
-          letterSpacing: 0,
-          lineHeight: 1,
-          opacity: 1,
+          display: "inline-block",
           transform: `translate3d(${x}px, ${y}px, 0)`,
-          whiteSpace: "nowrap",
         }}
       >
-        {text}
+        <span
+          style={{
+            color,
+            display: "inline-block",
+            fontFamily: "Arial, Helvetica, sans-serif",
+            fontSize,
+            fontWeight,
+            letterSpacing: 0,
+            lineHeight: 1,
+            maskImage: textMask,
+            maskRepeat: "no-repeat",
+            opacity: 1,
+            WebkitMaskImage: textMask,
+            WebkitMaskRepeat: "no-repeat",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {text}
+        </span>
 
         <div
           style={{
-            ...occluderStyle,
-            boxShadow: `${-shadowOffset}px 0 ${shadowBlur}px ${shadowSpread}px ${shadowColor}`,
-            display: frame < ENTER_END ? "block" : "none",
-            transform: `translate3d(${enterOffset}, 0, 0)`,
-          }}
-        />
-        <div
-          style={{
-            ...occluderStyle,
-            boxShadow: `${shadowOffset}px 0 ${shadowBlur}px ${shadowSpread}px ${shadowColor}`,
-            display: frame >= EXIT_START ? "block" : "none",
-            transform: `translate3d(${exitOffset}, 0, 0)`,
+            position: "absolute",
+            top: "50%",
+            left: edgePosition,
+            width: fieldWidth,
+            height: fieldHeight,
+            background: `radial-gradient(ellipse at center, ${shadowColor} 0%, ${shadowColor} 14%, transparent 72%)`,
+            filter: `blur(${safeSoftness * 0.08}px)`,
+            opacity: fieldOpacity,
+            pointerEvents: "none",
+            transform: "translate3d(-50%, -50%, 0)",
           }}
         />
       </div>

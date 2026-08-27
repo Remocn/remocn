@@ -23,10 +23,11 @@ avoidWhen:
 ## Usage
 
 `ShadowSweepText` keeps the text at constant opacity for the complete cycle.
-Frames 0–23 move a dark physical layer to the right, uncovering the line through
-its broad shadow. After a three-frame hold, a second layer enters from the left
-and covers the line by frame 36. Independently, the text eases 96 pixels up and
-16 pixels left across the shot.
+Frames 0–23 move a directional mask and a broad Gaussian shadow field to the
+right, uncovering the line without exposing a rectangular layer. After a
+three-frame hold, the same paired motion returns from the left and covers the
+line by frame 36. Independently, the text eases 96 pixels up and 16 pixels left
+across the shot.
 
 The component paints its own near-black violet background. That field and the
 slightly darker shadow are part of the animation rather than preview chrome, so
@@ -56,10 +57,11 @@ export const RemotionRoot = () => (
 
 ### Tuning The Shadow
 
-`backgroundColor` fills the canvas and the solid bodies of both occluders.
-`shadowColor` colors only their soft moving edges. Keep the shadow darker than
-the background; reducing `shadowSoftness` makes the reveal feel like a hard
-wipe, while increasing it leaves more of each glyph partially covered.
+`backgroundColor` fills the canvas. `shadowColor` colors a radial field that
+fades to transparency horizontally and vertically, so no rectangular contour
+survives around it. Keep the shadow darker than the background; reducing
+`shadowSoftness` makes the reveal feel like a hard wipe, while increasing it
+leaves more of each glyph partially covered.
 
 ```tsx
 <ShadowSweepText
@@ -104,13 +106,13 @@ wipe, while increasing it leaves more of each glyph partially covered.
       name: "backgroundColor",
       type: "string",
       default: '"#030012"',
-      description: "Canvas and occluder body color",
+      description: "Canvas color",
     },
     {
       name: "shadowColor",
       type: "string",
       default: '"#000008"',
-      description: "Color of the moving occluder shadows",
+      description: "Color at the center of the moving Gaussian shadow",
     },
     {
       name: "shadowSoftness",
