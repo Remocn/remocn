@@ -326,6 +326,20 @@
       "type": "registry:component"
     },
     {
+      "name": "outline-fill-track-text",
+      "title": "Outline Fill Track Text",
+      "description": "A rising lead word gives way to an outlined value that fills from left to right while both travel on one continuous track.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "registry/remocn/outline-fill-track-text/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/outline-fill-track-text.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
       "name": "extrude-pop",
       "title": "Extrude Pop",
       "description": "A flat word pops up out of the plane on a solid colored 3D body, no camera involved.",

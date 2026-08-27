@@ -130,6 +130,16 @@ const registry: Record<string, RegistryEntry> = {
         (m) => m.shadowSweepTextConfig,
       ),
   },
+  "outline-fill-track-text": {
+    load: () =>
+      import("@/registry/remocn/outline-fill-track-text").then((m) => ({
+        default: m.OutlineFillTrackText,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/outline-fill-track-text/config").then(
+        (m) => m.outlineFillTrackTextConfig,
+      ),
+  },
   "per-character-rise": {
     load: () =>
       import("@/registry/remocn/per-character-rise").then((m) => ({

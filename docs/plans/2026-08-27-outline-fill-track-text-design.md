@@ -17,9 +17,10 @@ registry size, the default entrance offset is therefore 240 pixels.
 The continuous horizontal move starts near 00:28.933. `Keep` crosses the left
 edge while `100%` enters from the right at approximately 00:29.500. The track
 decelerates until the value is centered at approximately 00:30.700. The source
-glyphs occupy about 135 pixels vertically, which maps to a 360-pixel default
-font size. The value's final visual center is within four source pixels of the
-frame center.
+glyphs occupy about 135 pixels vertically, which maps to a 368-pixel default
+font size after matching Arial's cap height. Both the lead and value visual
+centers sit about 32 source pixels left of the frame center, represented by an
+84-pixel registry anchor offset.
 
 The value first appears as a roughly one-source-pixel outline, represented by
 a 3-pixel stroke at registry resolution. A white fill advances from the left
@@ -32,10 +33,12 @@ scene, represented by `#030012`; the fill is a cool white, represented by
 ## Motion
 
 The component has an 80-frame natural length at 30 fps. Frames 0-16 lift and
-uncover `Keep`. Frames 16-24 hold the readable lead word. Frames 24-72 translate
-one horizontal track left with a strong ease-out. Frames 34-72 move a hard fill
-boundary across `100%`; the glyph opacity remains constant. Frames 72-79 hold
-the filled value in the center.
+uncover `Keep`. Frames 16-24 move so slowly that they read as a short lead-word
+hold, while the complete horizontal track travel runs from frames 16-72. The
+value remains hidden until a hard reveal on frame 34. Its fill mask starts ten
+frames earlier, so the `1` is already gaining weight at the cut, then the
+visible fill continues through frame 72. The glyph opacity remains constant.
+Frames 72-79 hold the filled value at its final anchor.
 
 `Keep` and `100%` share one no-wrap track so their spacing and velocity cannot
 diverge. The value is rendered twice at the same coordinates: an outlined base
@@ -53,8 +56,8 @@ The registry item is named `outline-fill-track-text` and exports
 `OutlineFillTrackText`, `OutlineFillTrackTextProps`, and
 `outlineFillTrackTextLength`. Public controls cover both text values,
 typography, fill and outline colors, outline width, background and glow colors,
-entrance offset, track travel, word gap, fill duration, playback speed, and the
-root class name.
+entrance offset, shared horizontal anchor, track travel, word gap, fill
+duration, playback speed, and the root class name.
 
 The default implementation uses Arial/Helvetica to match the measured wide
 geometric sans closely while remaining dependency-free. Empty strings remain
@@ -75,4 +78,4 @@ production build. Render the 80-frame 1280x720 composition at 30 fps and inspect
 frames 0, 8, 16, 24, 34, 44, 56, 68, 72, and 79. The lead word must rise without
 an opacity change, both words must follow the same horizontal transform, the
 outline must remain visible ahead of the fill boundary, and the last frames
-must hold a centered, completely filled `100%`.
+must hold a completely filled `100%` at the measured left-shifted anchor.
