@@ -64,13 +64,20 @@ export const NAV_LINKS: NavLink[] = [
  * tag another menu item — no component changes needed. See `withNewBadges`.
  */
 export const NEW_BADGE_PATHS = new Set<string>([
-  "/docs/typography/kinetic-warp",
-  "/docs/transitions/lens-zoom",
-  "/docs/typography/gooey-morph",
-  "/docs/typography/perspective-squeeze",
-  "/docs/typography/extrude-pop",
-  "/docs/typography/chromatic-wave",
-  "/docs/typography/stretch-in",
+  "/docs/layout/stage",
+  "/docs/typography/caret-swap",
+  "/docs/typography/centered-word-build",
+  "/docs/typography/fog-rise",
+  "/docs/typography/gradient-scale-cut-text",
+  "/docs/typography/inline-pill-takeover",
+  "/docs/typography/outline-fill-track-text",
+  "/docs/typography/shadow-sweep-text",
+  "/docs/typography/sheen-slide-in",
+  "/docs/typography/squeeze-in",
+  "/docs/typography/typed-split-wipe",
+  "/docs/typography/word-push",
+  "/docs/typography/word-stream",
+  "/docs/typography/zoom-words",
 ]);
 
 export type FooterGroup = {

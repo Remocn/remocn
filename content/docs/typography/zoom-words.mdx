@@ -1,0 +1,148 @@
+---
+title: Zoom Words
+description: Huge words fade into a long line while the camera rides the write head
+component: zoom-words
+vibe: premium
+length: 63
+useWhen:
+  - "An intro should open uncomfortably close: huge words appearing one by one while the camera tracks the growing line off-frame."
+  - "You want the shot to start slightly defocused and sharpen while the reveal runs — a cold-open feel before a hard cut."
+  - "The phrase is long and should never need to fit the frame."
+avoidWhen:
+  - "The whole phrase must fit the frame at rest — use `per-word-crossfade` or `word-stream`."
+  - "You need character-by-character typing with a caret — use `typewriter`."
+  - "The camera language should be a real 2.5D move over a scene rather than a text close-up — use `stage`."
+---
+
+<ComponentPreview name="zoom-words" />
+
+## Installation
+
+<InstallBlock name="zoom-words" />
+
+## Usage
+
+The first word fades in centered and the camera holds still. The whole phrase then reveals on one clock with a short gentle ramp-up settling into constant speed — the measured profile of the reference — with each word sliding in on a small diagonal, lightly softened but always readable, while the camera rides the growing line and stops with the last word centered. The shot starts `blur` em out of focus and sharpens over `blurFrames`. Meant to be hard-cut into the next scene (in the reference, a typewriter scene follows the cut).
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { ZoomWords } from "@/components/remocn/zoom-words";
+
+const ZoomWordsScene = () => (
+  <ZoomWords text="Still piecing together tools" />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="ZoomWords"
+    component={ZoomWordsScene}
+    durationInFrames={75}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+### With Backdrop
+
+The component renders transparent — supply the background via `Backdrop`. The reference pairs it with a dark-to-violet vertical gradient.
+
+```tsx
+import { Composition } from "remotion";
+import { ZoomWords } from "@/components/remocn/zoom-words";
+import { Backdrop } from "@/components/remocn/backdrop";
+
+const ZoomWordsScene = () => (
+  <Backdrop
+    fill={{
+      type: "gradient",
+      value: "linear-gradient(180deg, #0a0612 25%, #6a3fd6 100%)",
+    }}
+  >
+    <ZoomWords text="Still piecing together tools" />
+  </Backdrop>
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="ZoomWords"
+    component={ZoomWordsScene}
+    durationInFrames={75}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+### Syncing
+
+The exported `zoomWordsLength(text, wordGap)` helper returns the frame on which the camera settles after the last word — cut to the next scene at or shortly after it.
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "text",
+      type: "string",
+      required: true,
+      description: "The phrase to reveal; it may be arbitrarily long",
+    },
+    {
+      name: "wordGap",
+      type: "number",
+      default: "12",
+      description: "Frames between word reveals",
+    },
+    {
+      name: "fontSize",
+      type: "number",
+      default: "64",
+      description: "Base font size in pixels before the camera zoom",
+    },
+    {
+      name: "zoom",
+      type: "number",
+      default: "2.2",
+      description: "Camera scale applied to the whole shot",
+    },
+    {
+      name: "anchor",
+      type: "number",
+      default: "0.5",
+      description: "Horizontal fraction of the frame the camera holds — the first word appears centered on it",
+    },
+    {
+      name: "blur",
+      type: "number",
+      default: "0.04",
+      description: "Starting defocus in em, sharpening to zero over blurFrames",
+    },
+    {
+      name: "blurFrames",
+      type: "number",
+      default: "60",
+      description: "Frames the focus pull takes",
+    },
+    {
+      name: "color",
+      type: "string",
+      default: "\"#cfc2ff\"",
+      description: "Text color (any valid CSS color)",
+    },
+    {
+      name: "fontWeight",
+      type: "number",
+      default: "400",
+      description: "CSS font-weight",
+    },
+    {
+      name: "className",
+      type: "string",
+      description: "Optional className passed to the underlying span",
+    },
+  ]}
+/>

@@ -1,0 +1,192 @@
+---
+title: Outline Fill Track Text
+description: A rising lead word gives way to an outlined value that fills as one continuous track moves left
+component: outline-fill-track-text
+vibe: premium
+length: 80
+useWhen:
+  - "A statement should hand focus from a lead word to a large numeric value in one continuous move."
+  - "An outlined percentage or metric should progressively gain visual weight without fading."
+  - "A dark title beat needs a soft atmospheric entrance followed by a precise graphic fill."
+avoidWhen:
+  - "The two texts should swap in place — use `value-swap` for a compact replacement."
+  - "The value needs to count numerically — use `rolling-number` or `number-wheel`."
+  - "The background must remain transparent because the entrance field is part of this effect."
+---
+
+<ComponentPreview name="outline-fill-track-text" />
+
+## Installation
+
+<InstallBlock name="outline-fill-track-text" />
+
+## Usage
+
+`OutlineFillTrackText` places the lead and value on one measured horizontal
+track. The lead rises through a soft violet-black field, holds briefly, then
+the whole track travels left. The value enters as a thin outline while a
+separate filled duplicate is uncovered from left to right. Neither text layer
+animates its opacity.
+
+The track begins moving slowly as the lead settles. At frame 34 the value is
+cut into view with the fill already crossing the `1`, matching the abrupt handoff
+in the reference instead of exposing a stray piece of outline at the frame edge.
+
+The default 80-frame cycle ends on the large filled value. It deliberately does
+not include an exit, so the result can hold for the remainder of a scene or cut
+directly into the next composition.
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { OutlineFillTrackText } from "@/components/remocn/outline-fill-track-text";
+
+const OutlineFillTrackTextScene = () => (
+  <OutlineFillTrackText leadText="Keep" valueText="100%" />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="OutlineFillTrackText"
+    component={OutlineFillTrackTextScene}
+    durationInFrames={80}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+### Controlling The Track
+
+With `trackDistance={0}`, the component measures both strings and derives the
+distance between their centers. `wordGap` controls the actual empty space
+between their glyph boxes. A value that fits the composition stops on the
+measured anchor. When it is wider than the available frame, the component adds
+the exact overflow to the camera travel and leaves its trailing edge at
+`endPadding` instead of stopping in the middle of the string.
+
+Set a positive `trackDistance` to override the center-to-center distance. The
+long-value overflow is still applied, so the camera continues through the final
+visible glyphs. The track uses a symmetric ease-in-out curve: it accelerates
+from rest, carries speed through the middle, and decelerates into the hold.
+
+```tsx
+<OutlineFillTrackText
+  leadText="Save"
+  valueText="42%"
+  wordGap={180}
+  endPadding={96}
+  outlineWidth={3}
+  fillDuration={38}
+  glowColor="#64109a"
+/>
+```
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "leadText",
+      type: "string",
+      default: '"Keep"',
+      description: "Lead copy shown at the beginning of the track",
+    },
+    {
+      name: "valueText",
+      type: "string",
+      default: '"1000000000%"',
+      description: "Outlined value that becomes the final filled text",
+    },
+    {
+      name: "fontSize",
+      type: "number",
+      default: "368",
+      description: "Shared font size in pixels",
+    },
+    {
+      name: "fontWeight",
+      type: "number",
+      default: "700",
+      description: "Shared CSS font-weight",
+    },
+    {
+      name: "color",
+      type: "string",
+      default: '"#f4f3f6"',
+      description: "Lead and value fill color",
+    },
+    {
+      name: "outlineColor",
+      type: "string",
+      default: '"#e6e2ed"',
+      description: "Value outline color",
+    },
+    {
+      name: "outlineWidth",
+      type: "number",
+      default: "3",
+      description: "Value outline width in pixels",
+    },
+    {
+      name: "backgroundColor",
+      type: "string",
+      default: '"#030012"',
+      description: "Full-frame background color",
+    },
+    {
+      name: "glowColor",
+      type: "string",
+      default: '"#64109a"',
+      description: "Diffuse color above the entering lead word",
+    },
+    {
+      name: "enterOffset",
+      type: "number",
+      default: "240",
+      description: "Lead word starting offset below its resting position",
+    },
+    {
+      name: "trackDistance",
+      type: "number",
+      default: "0",
+      description: "Fixed horizontal travel; zero derives it from measured text",
+    },
+    {
+      name: "anchorOffsetX",
+      type: "number",
+      default: "-84",
+      description: "Shared horizontal offset for the lead and final value anchors",
+    },
+    {
+      name: "wordGap",
+      type: "number",
+      default: "220",
+      description: "Gap between lead and value when travel is measured",
+    },
+    {
+      name: "endPadding",
+      type: "number",
+      default: "96",
+      description: "Right-side padding where an overflowing value stops",
+    },
+    {
+      name: "fillDuration",
+      type: "number",
+      default: "38",
+      description: "Duration of the left-to-right fill in frames",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier",
+    },
+    {
+      name: "className",
+      type: "string",
+      description: "Optional className passed to the full-frame root",
+    },
+  ]}
+/>

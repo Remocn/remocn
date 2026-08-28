@@ -1,0 +1,149 @@
+---
+title: Caret Swap
+description: A gradient caret expands into a block that consumes the first text, then types the second
+component: caret-swap
+vibe: tech
+length: 67
+useWhen:
+  - "One phrase should be replaced by another through a caret gesture: the cursor swells into a block that eats the old text, collapses back and types the new one."
+  - "You want a typewriter beat mid-scene without clearing to an empty frame — the swap carries the eye through the whole replace."
+  - "The gradient caret should read as a character of its own, matching editor or AI-tool aesthetics."
+avoidWhen:
+  - "You only need one phrase typed from empty — use `typewriter`."
+  - "The swap should happen word by word rather than through a caret block — use `word-stream` or `value-swap`."
+  - "You need a full-frame scene transition driven by a caret — use the `caret-wipe` transition."
+---
+
+<ComponentPreview name="caret-swap" />
+
+## Installation
+
+<InstallBlock name="caret-swap" />
+
+## Usage
+
+The first text sits still until `swapAt`. Seven frames earlier the caret pops in after the last character; at `swapAt` it swells leftward into a full block with a sharp acceleration, consuming the text right to left in six frames. The block then dissolves its gradient tail to the right — the left edge holds still and what remains is the caret line at the start of the row. After a beat it types the second text — `typeSpeed` frames for the first character with every following gap shrinking, one accelerando to the finish — growing rightward from the anchor while drifting left to end centered. After the last character the caret blinks. All timings measured frame-by-frame from the reference footage.
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { CaretSwap } from "@/components/remocn/caret-swap";
+
+const CaretSwapScene = () => (
+  <CaretSwap
+    fromText="Executing it?"
+    toText="That's where everyone quits"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="CaretSwap"
+    component={CaretSwapScene}
+    durationInFrames={100}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+### With Backdrop
+
+The component renders transparent — supply the background via `Backdrop`. It ships single-theme; edit the copied file to re-theme colors.
+
+```tsx
+import { Composition } from "remotion";
+import { CaretSwap } from "@/components/remocn/caret-swap";
+import { Backdrop } from "@/components/remocn/backdrop";
+
+const CaretSwapScene = () => (
+  <Backdrop fill={{ type: "color", value: "#fdf6f0" }}>
+    <CaretSwap
+      fromText="Executing it?"
+      toText="That's where everyone quits"
+    />
+  </Backdrop>
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="CaretSwap"
+    component={CaretSwapScene}
+    durationInFrames={100}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+### Syncing
+
+The exported `caretSwapLength(toText, swapAt, typeSpeed)` helper returns the frame on which the last character lands — use it as the lower bound of the `Sequence`, plus whatever hold you want for the blinking caret.
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "fromText",
+      type: "string",
+      required: true,
+      description: "The phrase shown first and consumed by the caret block",
+    },
+    {
+      name: "toText",
+      type: "string",
+      required: true,
+      description: "The phrase typed out after the swap",
+    },
+    {
+      name: "fontSize",
+      type: "number",
+      default: "72",
+      description: "Font size in pixels; caret and block scale with it",
+    },
+    {
+      name: "swapAt",
+      type: "number",
+      default: "20",
+      description: "Frame at which the caret starts expanding into the block; the caret itself appears seven frames earlier",
+    },
+    {
+      name: "typeSpeed",
+      type: "number",
+      default: "1",
+      description: "Frames for the first typed character; every next gap shrinks by a fixed ratio so the typing accelerates toward the end",
+    },
+    {
+      name: "color",
+      type: "string",
+      default: "\"#171717\"",
+      description: "Text color (any valid CSS color)",
+    },
+    {
+      name: "caretColor",
+      type: "string",
+      default: "\"#FF4DAA\"",
+      description: "Top color of the caret gradient",
+    },
+    {
+      name: "caretColorEnd",
+      type: "string",
+      default: "\"#8A5CF6\"",
+      description: "Bottom color of the caret gradient",
+    },
+    {
+      name: "fontWeight",
+      type: "number",
+      default: "400",
+      description: "CSS font-weight",
+    },
+    {
+      name: "className",
+      type: "string",
+      description: "Optional className passed to the underlying span",
+    },
+  ]}
+/>

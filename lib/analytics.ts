@@ -12,7 +12,7 @@ export type PreviewSurface =
 export type CtaId =
   | "hero_start"
   | "hero_showcases"
-  | "hero_ui_badge"
+  | "hero_saas_typography_badge"
   | "how_it_works_setup"
   | "final_cta"
   | "github_header";

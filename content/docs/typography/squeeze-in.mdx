@@ -1,0 +1,119 @@
+---
+title: Squeeze In
+description: Characters appear one by one, then the whole word squeezes as the last one lands
+component: squeeze-in
+vibe: premium
+length: 34
+useWhen:
+  - "A wordmark or short title should be uncovered by a clean wipe, as if a background-colored cover slides off it."
+  - "You want the signature detail where the arrival of the last character compresses every letter gap as one — the word visibly settles tighter."
+  - "The animation must stay subtle: no blur, no bounce, just typography breathing in."
+avoidWhen:
+  - "You want the whole word to collapse from a wide tracked-out state with blur — use `tracking-in`."
+  - "Characters should rise or drop into place — use `per-character-rise` or `top-down-letters`."
+  - "You need a typing rhythm with a caret — use `typewriter`."
+---
+
+<ComponentPreview name="squeeze-in" />
+
+## Installation
+
+<InstallBlock name="squeeze-in" />
+
+## Usage
+
+The word is uncovered by an invisible wipe travelling left to right — as if a background-colored rectangle slides off the text, revealing character after character. Once the wipe clears the last character, every letter gap compresses leftward toward the first character simultaneously — one unified gap, so the word reads as settling tighter against its first letter. Motion profile measured frame-by-frame from the reference footage.
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { SqueezeIn } from "@/components/remocn/squeeze-in";
+
+const SqueezeInScene = () => <SqueezeIn text="Remocn" />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="SqueezeIn"
+    component={SqueezeInScene}
+    durationInFrames={60}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+### With Backdrop
+
+The component renders transparent — supply the background via `Backdrop`. It ships single-theme; edit the copied file to re-theme colors.
+
+```tsx
+import { Composition } from "remotion";
+import { SqueezeIn } from "@/components/remocn/squeeze-in";
+import { Backdrop } from "@/components/remocn/backdrop";
+
+const SqueezeInScene = () => (
+  <Backdrop fill={{ type: "color", value: "#09090b" }}>
+    <SqueezeIn text="Remocn" color="#fafafa" />
+  </Backdrop>
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="SqueezeIn"
+    component={SqueezeInScene}
+    durationInFrames={60}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "text",
+      type: "string",
+      required: true,
+      description: "The text to assemble",
+    },
+    {
+      name: "fontSize",
+      type: "number",
+      default: "72",
+      description: "Font size in pixels",
+    },
+    {
+      name: "stagger",
+      type: "number",
+      default: "3",
+      description: "Frames of wipe travel per character; total reveal lasts stagger times the character count",
+    },
+    {
+      name: "squeeze",
+      type: "number",
+      default: "0.03",
+      description: "Extra gap between characters in em, collapsed to zero as one when the last character lands",
+    },
+    {
+      name: "color",
+      type: "string",
+      default: "\"#171717\"",
+      description: "Text color (any valid CSS color)",
+    },
+    {
+      name: "fontWeight",
+      type: "number",
+      default: "400",
+      description: "CSS font-weight",
+    },
+    {
+      name: "className",
+      type: "string",
+      description: "Optional className passed to the underlying span",
+    },
+  ]}
+/>

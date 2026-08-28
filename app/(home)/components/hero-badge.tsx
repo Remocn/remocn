@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { useTrackEvent } from "@/lib/analytics";
 
-const HERO_BADGE_HREF = "http://remocn.studio/";
+const HERO_BADGE_HREF = "/changelog#2026-08-25-saas-typography";
 
 export function HeroBadge() {
   const trackEvent = useTrackEvent();
@@ -19,7 +19,7 @@ export function HeroBadge() {
           href={HERO_BADGE_HREF}
           onClick={() =>
             trackEvent("cta_clicked", {
-              cta: "hero_ui_badge",
+              cta: "hero_saas_typography_badge",
               destination: HERO_BADGE_HREF,
             })
           }
@@ -30,7 +30,7 @@ export function HeroBadge() {
       <span aria-hidden className="text-muted-foreground/60">
         ·
       </span>
-      <span className="text-foreground">Remocn Studio</span>
+      <span className="text-foreground">SaaS Typography</span>
       <ArrowRight
         className="size-3 transition-transform group-hover:translate-x-0.5"
         aria-hidden="true"

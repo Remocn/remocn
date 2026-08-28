@@ -22,6 +22,134 @@ const registry: Record<string, RegistryEntry> = {
         (m) => m.softBlurInConfig,
       ),
   },
+  "word-stream": {
+    load: () =>
+      import("@/registry/remocn/word-stream").then((m) => ({
+        default: m.WordStream,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/word-stream/config").then(
+        (m) => m.wordStreamConfig,
+      ),
+  },
+  "word-push": {
+    load: () =>
+      import("@/registry/remocn/word-push").then((m) => ({
+        default: m.WordPush,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/word-push/config").then(
+        (m) => m.wordPushConfig,
+      ),
+  },
+  "sheen-slide-in": {
+    load: () =>
+      import("@/registry/remocn/sheen-slide-in").then((m) => ({
+        default: m.SheenSlideIn,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/sheen-slide-in/config").then(
+        (m) => m.sheenSlideInConfig,
+      ),
+  },
+  "squeeze-in": {
+    load: () =>
+      import("@/registry/remocn/squeeze-in").then((m) => ({
+        default: m.SqueezeIn,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/squeeze-in/config").then(
+        (m) => m.squeezeInConfig,
+      ),
+  },
+  "fog-rise": {
+    load: () =>
+      import("@/registry/remocn/fog-rise").then((m) => ({
+        default: m.FogRise,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/fog-rise/config").then((m) => m.fogRiseConfig),
+  },
+  "caret-swap": {
+    load: () =>
+      import("@/registry/remocn/caret-swap").then((m) => ({
+        default: m.CaretSwap,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/caret-swap/config").then(
+        (m) => m.caretSwapConfig,
+      ),
+  },
+  "zoom-words": {
+    load: () =>
+      import("@/registry/remocn/zoom-words").then((m) => ({
+        default: m.ZoomWords,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/zoom-words/config").then(
+        (m) => m.zoomWordsConfig,
+      ),
+  },
+  "centered-word-build": {
+    load: () =>
+      import("@/registry/remocn/centered-word-build").then((m) => ({
+        default: m.CenteredWordBuild,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/centered-word-build/config").then(
+        (m) => m.centeredWordBuildConfig,
+      ),
+  },
+  "inline-pill-takeover": {
+    load: () =>
+      import("@/registry/remocn/inline-pill-takeover").then((m) => ({
+        default: m.InlinePillTakeover,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/inline-pill-takeover/config").then(
+        (m) => m.inlinePillTakeoverConfig,
+      ),
+  },
+  "typed-split-wipe": {
+    load: () =>
+      import("@/registry/remocn/typed-split-wipe").then((m) => ({
+        default: m.TypedSplitWipe,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/typed-split-wipe/config").then(
+        (m) => m.typedSplitWipeConfig,
+      ),
+  },
+  "shadow-sweep-text": {
+    load: () =>
+      import("@/registry/remocn/shadow-sweep-text").then((m) => ({
+        default: m.ShadowSweepText,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/shadow-sweep-text/config").then(
+        (m) => m.shadowSweepTextConfig,
+      ),
+  },
+  "outline-fill-track-text": {
+    load: () =>
+      import("@/registry/remocn/outline-fill-track-text").then((m) => ({
+        default: m.OutlineFillTrackText,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/outline-fill-track-text/config").then(
+        (m) => m.outlineFillTrackTextConfig,
+      ),
+  },
+  "gradient-scale-cut-text": {
+    load: () =>
+      import("@/registry/remocn/gradient-scale-cut-text").then((m) => ({
+        default: m.GradientScaleCutText,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/gradient-scale-cut-text/config").then(
+        (m) => m.gradientScaleCutTextConfig,
+      ),
+  },
   "per-character-rise": {
     load: () =>
       import("@/registry/remocn/per-character-rise").then((m) => ({

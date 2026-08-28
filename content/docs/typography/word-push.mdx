@@ -1,0 +1,123 @@
+---
+title: Word Push
+description: Words drive in from the right and push the line left into its new center
+component: word-push
+vibe: premium
+length: 42
+useWhen:
+  - "A single tagline or closing phrase should build word by word with physical, push-driven motion instead of plain fades."
+  - "The first word must glide in from the left to center and visibly get shoved further left as each next word arrives from the right."
+  - "The line follows a voiceover and each spoken word lands with a kinetic nudge."
+avoidWhen:
+  - "Several phrases must play in sequence with cuts between them — use `word-stream` for the multi-phrase flow."
+  - "You want a calm, driftless word-by-word entrance — use `per-word-crossfade`."
+  - "The reveal should happen per character rather than per word — use `per-character-rise` or `soft-blur-in`."
+---
+
+<ComponentPreview name="word-push" />
+
+## Installation
+
+<InstallBlock name="word-push" />
+
+## Usage
+
+The first word glides in from the left and settles at center. Each following word appears slightly to the right of its slot and drives left into place, pushing the whole line left by half its width so the phrase always settles centered.
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { WordPush } from "@/components/remocn/word-push";
+
+const WordPushScene = () => <WordPush text="move at your own pace" />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="WordPush"
+    component={WordPushScene}
+    durationInFrames={90}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+### With Backdrop
+
+The component renders transparent — supply the background via `Backdrop`. It ships single-theme; edit the copied file to re-theme colors.
+
+```tsx
+import { Composition } from "remotion";
+import { WordPush } from "@/components/remocn/word-push";
+import { Backdrop } from "@/components/remocn/backdrop";
+
+const WordPushScene = () => (
+  <Backdrop fill={{ type: "color", value: "#0b0b14" }}>
+    <WordPush text="move at your own pace" color="#ffffff" />
+  </Backdrop>
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="WordPush"
+    component={WordPushScene}
+    durationInFrames={90}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+### Syncing to a voiceover
+
+`wordGap` sets the first gap and `accel` shrinks every following one, so the build accelerates as one gesture rather than per word. The exported `wordPushLength(text, wordGap)` helper returns the frame on which the last push settles — use it as the lower bound of the `Sequence`.
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "text",
+      type: "string",
+      required: true,
+      description: "The phrase; words are split on spaces.",
+    },
+    {
+      name: "fontSize",
+      type: "number",
+      default: "72",
+      description: "Font size in pixels",
+    },
+    {
+      name: "wordGap",
+      type: "number",
+      default: "10",
+      description: "Frames between the first two word arrivals; later gaps shrink by accel.",
+    },
+    {
+      name: "accel",
+      type: "number",
+      default: "0.8",
+      description: "Each next gap is the previous one multiplied by this — one accelerando across the phrase. 1 keeps the rhythm uniform.",
+    },
+    {
+      name: "color",
+      type: "string",
+      default: "\"#171717\"",
+      description: "Text color (any valid CSS color)",
+    },
+    {
+      name: "fontWeight",
+      type: "number",
+      default: "400",
+      description: "CSS font-weight",
+    },
+    {
+      name: "className",
+      type: "string",
+      description: "Optional className passed to the underlying span",
+    },
+  ]}
+/>

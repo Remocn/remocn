@@ -1,0 +1,82 @@
+import {
+  type ComponentConfig,
+  enumVariants,
+  FONT_WEIGHT_OPTIONS,
+  FPS,
+  H,
+  W,
+} from "@/lib/customizer-config";
+
+export const shadowSweepTextConfig: ComponentConfig = {
+  componentName: "ShadowSweepText",
+  importPath: "@/components/remocn/shadow-sweep-text",
+  controls: {
+    text: {
+      type: "text-content",
+      default: "are abandoned",
+      description: "Text",
+    },
+    fontSize: {
+      type: "number",
+      min: 24,
+      max: 180,
+      step: 1,
+      default: 96,
+      description: "Font size",
+      hiddenFromList: false,
+    },
+    rise: {
+      type: "number",
+      min: 0,
+      max: 300,
+      step: 1,
+      default: 96,
+      description: "Vertical travel",
+      hiddenFromList: false,
+    },
+    driftLeft: {
+      type: "number",
+      min: 0,
+      max: 120,
+      step: 1,
+      default: 16,
+      description: "Leftward travel",
+      hiddenFromList: false,
+    },
+    shadowSoftness: {
+      type: "number",
+      min: 0,
+      max: 280,
+      step: 2,
+      default: 130,
+      description: "Shadow softness",
+      hiddenFromList: false,
+    },
+    color: {
+      type: "color",
+      default: "#aaa6b5",
+      description: "Text color",
+    },
+    backgroundColor: {
+      type: "color",
+      default: "#030012",
+      description: "Background color",
+    },
+    shadowColor: {
+      type: "color",
+      default: "#030012",
+      description: "Shadow color",
+    },
+    fontWeight: {
+      type: "enum",
+      default: "700",
+      variants: enumVariants(FONT_WEIGHT_OPTIONS),
+      description: "Font weight",
+    },
+  },
+  durationInFrames: 37,
+  fps: FPS,
+  compositionWidth: W,
+  compositionHeight: H,
+  previewBackdrop: { type: "color", value: "#030012" },
+};

@@ -1,0 +1,178 @@
+---
+title: Gradient Scale Cut Text
+description: An oversized gradient reveal snaps to a compact blurred line that settles into focus
+component: gradient-scale-cut-text
+vibe: premium
+length: 36
+useWhen:
+  - "A title should begin at an imposing scale and resolve through a deliberately abrupt editorial cut."
+  - "A gradient reveal needs to continue coherently across two very different framings."
+  - "A compact product-introduction beat needs more force than a continuous scale-down animation."
+avoidWhen:
+  - "The scale change must feel continuous — use `scale-down-fade` or `zoom-words`."
+  - "The text should remain one size while a gradient passes over it — use `shimmer-sweep`."
+  - "The background must remain transparent because the unrevealed ghost relies on a black field."
+---
+
+<ComponentPreview name="gradient-scale-cut-text" />
+
+## Installation
+
+<InstallBlock name="gradient-scale-cut-text" />
+
+## Usage
+
+`GradientScaleCutText` begins with an oversized line moving left while a soft
+mask uncovers a fixed orange-to-white text gradient. On frame 13 it switches to
+a separate compact layer with no intermediate scale. That layer slides into its
+final position while clearing its blur, then remains fixed in both position and
+size as the same reveal continues across the remaining letters.
+At completion, the soft mask edge travels beyond the text box so the final
+letter is fully filled rather than left under the reveal fade.
+The text layers use a descender-safe line box, preventing letters such as `g`,
+`p`, and `y` from being clipped without moving the baseline.
+
+The two layers never crossfade. Their opacity stays constant, and a discrete
+visibility condition creates the scale cut between adjacent frames.
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { GradientScaleCutText } from "@/components/remocn/gradient-scale-cut-text";
+
+const GradientScaleCutTextScene = () => (
+  <GradientScaleCutText text="Introducing" />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="GradientScaleCutText"
+    component={GradientScaleCutTextScene}
+    durationInFrames={36}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+### Tuning The Cut
+
+`cutFrame` changes the exact frame where the giant layer is replaced. The
+gradient reveal remains tied to the full component timeline, so it does not
+restart after the cut. `settleTravel` controls the compact entrance distance,
+`anchorOffsetX` sets its final position, and `compactBlur` controls focus.
+
+```tsx
+<GradientScaleCutText
+  text="Now shipping"
+  cutFrame={13}
+  giantTravel={400}
+  settleTravel={160}
+  compactBlur={12}
+  gradientStart="#f04a14"
+  gradientEnd="#f3f1f1"
+/>
+```
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "text",
+      type: "string",
+      default: '"Introducing"',
+      description: "Single-line text shared by both scale phases",
+    },
+    {
+      name: "giantFontSize",
+      type: "number",
+      default: "520",
+      description: "Font size before the hard cut",
+    },
+    {
+      name: "compactFontSize",
+      type: "number",
+      default: "132",
+      description: "Font size after the hard cut",
+    },
+    {
+      name: "fontWeight",
+      type: "number",
+      default: "700",
+      description: "Shared CSS font-weight",
+    },
+    {
+      name: "gradientStart",
+      type: "string",
+      default: '"#f04a14"',
+      description: "Color at the left edge of the revealed text",
+    },
+    {
+      name: "gradientEnd",
+      type: "string",
+      default: '"#f3f1f1"',
+      description: "Color across the right portion of the revealed text",
+    },
+    {
+      name: "ghostColor",
+      type: "string",
+      default: '"#170b0a"',
+      description: "Color of the text ahead of the reveal boundary",
+    },
+    {
+      name: "backgroundColor",
+      type: "string",
+      default: '"#000000"',
+      description: "Full-frame background color",
+    },
+    {
+      name: "anchorOffsetX",
+      type: "number",
+      default: "-16",
+      description: "Compact line offset from the frame center",
+    },
+    {
+      name: "giantTravel",
+      type: "number",
+      default: "400",
+      description: "Leftward travel before the cut",
+    },
+    {
+      name: "settleTravel",
+      type: "number",
+      default: "160",
+      description: "Compact entrance distance before it stops at the anchor",
+    },
+    {
+      name: "cutFrame",
+      type: "number",
+      default: "13",
+      description: "First frame that renders the compact layer",
+    },
+    {
+      name: "revealSoftness",
+      type: "number",
+      default: "14",
+      description: "Width of the soft mask boundary as a percentage of the text box",
+    },
+    {
+      name: "compactBlur",
+      type: "number",
+      default: "12",
+      description: "Starting blur after the cut in pixels",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier",
+    },
+    {
+      name: "className",
+      type: "string",
+      description: "Optional className passed to the full-frame root",
+    },
+  ]}
+/>

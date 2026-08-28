@@ -1,0 +1,219 @@
+---
+title: Inline Pill Takeover
+description: A clipped pill expands inside a sentence, pushes the words apart, and takes over the frame
+component: inline-pill-takeover
+vibe: premium
+length: 30
+useWhen:
+  - "A sentence should transform an inline placeholder into a CTA without cutting to a separate title card."
+  - "You want the inserted label to physically push the surrounding copy apart before taking visual control."
+  - "A short beat needs both an inline reveal and a decisive camera punch-in."
+avoidWhen:
+  - "Only one phrase should change color without affecting layout — use `inline-highlight`."
+  - "The inserted copy should replace text rather than displace it — use `caret-swap`."
+  - "The camera should track a long growing line instead of one CTA — use `zoom-words`."
+---
+
+<ComponentPreview name="inline-pill-takeover" />
+
+## Installation
+
+<InstallBlock name="inline-pill-takeover" />
+
+## Usage
+
+The line starts with a short pill between `before` and `after`. Its first animation changes explicit background width and height values, so the shape expands outward from center without scaling its contents. The full-size `insert` text appears through a hard opacity switch and is cropped by `overflow: hidden` until the pill opens around it. When that reveal finishes, a second local pill animation increases the background width and height through independent controls without changing the text's local font size. An independent camera wrapper begins its approach at the same time, cuts instantly to 86% of its final close-up, then settles to 100%. The pill and camera therefore move toward one another, and the pill keeps growing briefly after the camera settles. All timings were measured frame-by-frame from the reference footage.
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { InlinePillTakeover } from "@/components/remocn/inline-pill-takeover";
+
+const InlinePillTakeoverScene = () => (
+  <InlinePillTakeover
+    before="powering 20%"
+    insert="Start building"
+    after="of the Internet."
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="InlinePillTakeover"
+    component={InlinePillTakeoverScene}
+    durationInFrames={45}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+### With Backdrop
+
+The component paints no background. The reference pairs warm white type and pill with an orange radial glow.
+
+```tsx
+import { Composition } from "remotion";
+import { InlinePillTakeover } from "@/components/remocn/inline-pill-takeover";
+import { Backdrop } from "@/components/remocn/backdrop";
+
+const InlinePillTakeoverScene = () => (
+  <Backdrop
+    fill={{
+      type: "gradient",
+      value:
+        "radial-gradient(circle at 50% 108%, #ffd77a 0%, #ff6840 31%, #f13d21 78%)",
+    }}
+  >
+    <InlinePillTakeover
+      before="powering 20%"
+      insert="Start building"
+      after="of the Internet."
+    />
+  </Backdrop>
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="InlinePillTakeover"
+    component={InlinePillTakeoverScene}
+    durationInFrames={45}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "before",
+      type: "string",
+      required: true,
+      description: "Text rendered before the expanding pill",
+    },
+    {
+      name: "insert",
+      type: "string",
+      required: true,
+      description: "Text centered inside the pill and revealed through its clip",
+    },
+    {
+      name: "after",
+      type: "string",
+      required: true,
+      description: "Text rendered after the expanding pill",
+    },
+    {
+      name: "fontSize",
+      type: "number",
+      default: "52",
+      description: "Base font size in pixels",
+    },
+    {
+      name: "fontWeight",
+      type: "number",
+      default: "400",
+      description: "CSS font-weight shared by the sentence and pill",
+    },
+    {
+      name: "pillWidth",
+      type: "number",
+      default: "260",
+      description: "Expanded pill width in pixels; tune this when changing insert text",
+    },
+    {
+      name: "expandFrames",
+      type: "number",
+      default: "12",
+      description: "Frames used for the initial width-and-height reveal",
+    },
+    {
+      name: "pillRevealHeightScale",
+      type: "number",
+      default: "0.35",
+      description: "Starting height as a fraction of the full pill height",
+    },
+    {
+      name: "pillGrowAt",
+      type: "number",
+      default: "12",
+      description: "Frame on which the local width-and-height growth begins",
+    },
+    {
+      name: "pillGrowFrames",
+      type: "number",
+      default: "24",
+      description: "Frames used for the local width-and-height growth",
+    },
+    {
+      name: "pillGrowWidthScale",
+      type: "number",
+      default: "1.08",
+      description: "Final local scale applied only to the pill width",
+    },
+    {
+      name: "pillGrowHeightScale",
+      type: "number",
+      default: "1.16",
+      description: "Final local scale applied only to the pill height",
+    },
+    {
+      name: "outerExitFrames",
+      type: "number",
+      default: "18",
+      description: "Frames used to blur and remove the outer copy",
+    },
+    {
+      name: "takeoverAt",
+      type: "number",
+      default: "12",
+      description: "Frame on which the camera approach begins",
+    },
+    {
+      name: "takeoverScale",
+      type: "number",
+      default: "2.15",
+      description: "Final scale held after the takeover settles",
+    },
+    {
+      name: "blur",
+      type: "number",
+      default: "12",
+      description: "Maximum blur applied to the disappearing outer text in pixels",
+    },
+    {
+      name: "color",
+      type: "string",
+      default: "\"#fff3df\"",
+      description: "Outer text color",
+    },
+    {
+      name: "pillColor",
+      type: "string",
+      default: "\"#fffaf0\"",
+      description: "Pill background color",
+    },
+    {
+      name: "pillTextColor",
+      type: "string",
+      default: "\"#1c1210\"",
+      description: "Pill text color",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier",
+    },
+    {
+      name: "className",
+      type: "string",
+      description: "Optional className passed to the component root",
+    },
+  ]}
+/>

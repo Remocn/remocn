@@ -1,0 +1,16 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "squeeze-in",
+  "title": "Squeeze In",
+  "description": "Characters appear one by one on a tight stagger; when the last one lands, every letter gap compresses as one and the word squeezes together.",
+  "dependencies": ["remotion"],
+  "files": [
+    {
+      "path": "registry/remocn/squeeze-in/index.tsx",
+      "content": "\"use client\";\n\nimport { Easing, interpolate, useCurrentFrame } from \"remotion\";\n\nexport interface SqueezeInProps {\n  text: string;\n  fontSize?: number;\n  color?: string;\n  fontWeight?: number;\n  stagger?: number;\n  squeeze?: number;\n  speed?: number;\n  className?: string;\n}\n\nconst SQUEEZE_FRAMES = 16;\n\nexport function squeezeInLength(text: string, stagger = 3): number {\n  const chars = Array.from(text);\n  if (chars.length === 0) return 0;\n  return chars.length * stagger + SQUEEZE_FRAMES;\n}\n\nconst squeezeEasing = Easing.out(Easing.cubic);\n\nexport function SqueezeIn({\n  text,\n  fontSize = 72,\n  color = \"#171717\",\n  fontWeight = 400,\n  stagger = 3,\n  squeeze = 0.03,\n  speed = 1,\n  className,\n}: SqueezeInProps) {\n  const frame = useCurrentFrame() * speed;\n\n  const chars = Array.from(text);\n  const lastRevealAt = chars.length * stagger;\n\n  const squeezeProgress = interpolate(\n    frame,\n    [lastRevealAt, lastRevealAt + SQUEEZE_FRAMES],\n    [0, 1],\n    {\n      extrapolateLeft: \"clamp\",\n      extrapolateRight: \"clamp\",\n      easing: squeezeEasing,\n    },\n  );\n\n  const gap = squeeze * fontSize * (1 - squeezeProgress);\n  const wipe = interpolate(frame, [0, lastRevealAt], [100, 0], {\n    extrapolateLeft: \"clamp\",\n    extrapolateRight: \"clamp\",\n  });\n  const anchorX =\n    (-squeeze * fontSize * squeezeProgress * (chars.length - 1)) / 2;\n\n  return (\n    <div\n      style={{\n        position: \"absolute\",\n        inset: 0,\n        display: \"flex\",\n        alignItems: \"center\",\n        justifyContent: \"center\",\n        whiteSpace: \"nowrap\",\n        background: \"transparent\",\n      }}\n    >\n      <span\n        className={className}\n        style={{\n          translate: `${anchorX}px 0`,\n          clipPath: `inset(-0.2em ${wipe}% -0.25em -0.1em)`,\n          fontSize,\n          fontWeight,\n          color,\n          letterSpacing: \"-0.02em\",\n          lineHeight: 1.1,\n          fontFamily:\n            \"var(--font-geist-sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif)\",\n        }}\n      >\n        {chars.map((char, j) => (\n          <span\n            key={j}\n            style={{\n              display: \"inline-block\",\n              whiteSpace: \"pre\",\n              marginRight: j < chars.length - 1 ? gap : undefined,\n            }}\n          >\n            {char}\n          </span>\n        ))}\n      </span>\n    </div>\n  );\n}\n",
+      "type": "registry:component",
+      "target": "components/remocn/squeeze-in.tsx"
+    }
+  ],
+  "type": "registry:component"
+}

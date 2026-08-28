@@ -1,0 +1,148 @@
+---
+title: Shadow Sweep Text
+description: A rising line is uncovered and removed by two dense dark shadow sweeps
+component: shadow-sweep-text
+vibe: premium
+length: 37
+useWhen:
+  - "A short statement should emerge through a dense shadow instead of fading or clipping into view."
+  - "The text needs a subtle diagonal rise while the reveal travels independently across the line."
+  - "A compact title beat needs a matched shadow enter and exit on a dark field."
+avoidWhen:
+  - "The text should stay visible after entering — use `mask-reveal-up` for a one-way reveal."
+  - "Each word needs its own entrance timing — use `per-word-crossfade` or `centered-word-build`."
+  - "The background must remain transparent because this effect relies on a matched dark field and occluders."
+---
+
+<ComponentPreview name="shadow-sweep-text" />
+
+## Installation
+
+<InstallBlock name="shadow-sweep-text" />
+
+## Usage
+
+`ShadowSweepText` keeps the text at constant opacity for the complete cycle.
+Frames 0–23 move a directional mask and a broad Gaussian shadow field to the
+right, uncovering the line without exposing a rectangular layer. After a
+three-frame hold, the same paired motion returns from the left and covers the
+line by frame 36. Independently, the text eases 96 pixels up and 16 pixels left
+across the shot.
+
+The component paints its own near-black violet background. That field and the
+slightly darker shadow are part of the animation rather than preview chrome, so
+the installed result matches the customizer without requiring a separate
+backdrop.
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { ShadowSweepText } from "@/components/remocn/shadow-sweep-text";
+
+const ShadowSweepTextScene = () => (
+  <ShadowSweepText text="are abandoned" />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="ShadowSweepText"
+    component={ShadowSweepTextScene}
+    durationInFrames={37}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+### Tuning The Shadow
+
+`backgroundColor` fills the canvas. By default, `shadowColor` inherits that
+same color, so the radial field is visible over the letters without becoming a
+separate black shape on the blue field. It still fades to transparency
+horizontally and vertically. Reducing `shadowSoftness` makes the reveal feel
+like a hard wipe, while increasing it leaves more of each glyph partially
+covered.
+
+```tsx
+<ShadowSweepText
+  text="built for motion"
+  backgroundColor="#030012"
+  shadowColor="#030012"
+  shadowSoftness={130}
+  rise={96}
+  driftLeft={16}
+/>
+```
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "text",
+      type: "string",
+      required: true,
+      description: "Single-line copy rendered beneath both shadow layers",
+    },
+    {
+      name: "fontSize",
+      type: "number",
+      default: "96",
+      description: "Font size in pixels",
+    },
+    {
+      name: "color",
+      type: "string",
+      default: '"#aaa6b5"',
+      description: "Text color",
+    },
+    {
+      name: "fontWeight",
+      type: "number",
+      default: "700",
+      description: "CSS font-weight",
+    },
+    {
+      name: "backgroundColor",
+      type: "string",
+      default: '"#030012"',
+      description: "Canvas color",
+    },
+    {
+      name: "shadowColor",
+      type: "string",
+      default: "backgroundColor",
+      description: "Color at the center of the moving Gaussian shadow; inherits the background by default",
+    },
+    {
+      name: "shadowSoftness",
+      type: "number",
+      default: "130",
+      description: "Approximate width of each soft shadow edge in pixels",
+    },
+    {
+      name: "rise",
+      type: "number",
+      default: "96",
+      description: "Vertical travel from the starting position in pixels",
+    },
+    {
+      name: "driftLeft",
+      type: "number",
+      default: "16",
+      description: "Horizontal travel toward the left in pixels",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier",
+    },
+    {
+      name: "className",
+      type: "string",
+      description: "Optional className passed to the full-frame root",
+    },
+  ]}
+/>

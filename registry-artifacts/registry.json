@@ -172,6 +172,188 @@
       "type": "registry:component"
     },
     {
+      "name": "word-stream",
+      "title": "Word Stream",
+      "description": "Voiceover-paced phrases that build word by word — the next word looms as a blurred ghost before it resolves, then the phrase cuts away.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "registry/remocn/word-stream/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/word-stream.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "word-push",
+      "title": "Word Push",
+      "description": "A phrase builds from its first word centered: each next word drives in from the right and pushes the line left, easing into the new center.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "registry/remocn/word-push/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/word-push.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "sheen-slide-in",
+      "title": "Sheen Slide In",
+      "description": "A title glides in from the right with an exponential settle and a slow final creep to center, while a gradient sheen sweeps once through the glyphs.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "registry/remocn/sheen-slide-in/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/sheen-slide-in.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "squeeze-in",
+      "title": "Squeeze In",
+      "description": "Characters appear one by one on a tight stagger; when the last one lands, every letter gap compresses as one and the word squeezes together.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "registry/remocn/squeeze-in/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/squeeze-in.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "fog-rise",
+      "title": "Fog Rise",
+      "description": "Display text resolves out of fog: characters sharpen from heavy blur center-out with vertical streaks dissolving above them, as if rising along the z-axis.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "registry/remocn/fog-rise/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/fog-rise.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "caret-swap",
+      "title": "Caret Swap",
+      "description": "A gradient caret swells into a block that consumes the first phrase right-to-left, collapses back and types the second phrase out with a blinking caret.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "registry/remocn/caret-swap/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/caret-swap.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "zoom-words",
+      "title": "Zoom Words",
+      "description": "A close-up word reveal: huge words fade into a long line while the camera rides the write head, the line streaming off-frame as the shot eases into focus.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "registry/remocn/zoom-words/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/zoom-words.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "centered-word-build",
+      "title": "Centered Word Build",
+      "description": "Words appear sharply from below while the centered phrase pushes cumulatively closer on every beat, then clears through a soft left-to-right opacity wipe.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "registry/remocn/centered-word-build/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/centered-word-build.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "inline-pill-takeover",
+      "title": "Inline Pill Takeover",
+      "description": "A clipped pill expands inside a sentence, physically pushes the surrounding words apart, removes them through blur and takes over the frame with a fast camera punch-in.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "registry/remocn/inline-pill-takeover/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/inline-pill-takeover.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "typed-split-wipe",
+      "title": "Typed Split Wipe",
+      "description": "A centered cursorless type build holds, then exits through opposing fixed-layout glyph wipes that leave the anchor visible longest.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "registry/remocn/typed-split-wipe/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/typed-split-wipe.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "shadow-sweep-text",
+      "title": "Shadow Sweep Text",
+      "description": "A line rises up and left while one dense dark shadow uncovers it and a second shadow sweeps back across it for the exit.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "registry/remocn/shadow-sweep-text/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/shadow-sweep-text.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "outline-fill-track-text",
+      "title": "Outline Fill Track Text",
+      "description": "A rising lead word gives way to an outlined value that fills from left to right while both travel on one continuous track.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "registry/remocn/outline-fill-track-text/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/outline-fill-track-text.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "gradient-scale-cut-text",
+      "title": "Gradient Scale Cut Text",
+      "description": "An oversized gradient reveal snaps to a separate compact blurred line that settles left while the reveal continues.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "registry/remocn/gradient-scale-cut-text/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/gradient-scale-cut-text.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
       "name": "extrude-pop",
       "title": "Extrude Pop",
       "description": "A flat word pops up out of the plane on a solid colored 3D body, no camera involved.",

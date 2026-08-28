@@ -1,0 +1,165 @@
+---
+title: Typed Split Wipe
+description: A centered cursorless type build exits through opposing fixed-layout glyph wipes
+component: typed-split-wipe
+vibe: tech
+length: 75
+useWhen:
+  - "A product or feature introduction should type itself cleanly before breaking into controlled directional fragments."
+  - "One short anchor needs to remain visible while the surrounding words are erased independently."
+  - "The exit must cut through glyphs without allowing the surviving text to reflow."
+avoidWhen:
+  - "You need a conventional typewriter with a blinking caret and no exit — use `typewriter`."
+  - "Every character should rise or move independently — use `per-character-rise`."
+  - "One phrase should be consumed and replaced by another — use `caret-swap`."
+---
+
+<ComponentPreview name="typed-split-wipe" />
+
+## Installation
+
+<InstallBlock name="typed-split-wipe" />
+
+## Usage
+
+The enter renders only the currently typed substring, so every hard character step remains centered. At `exitAt`, the component switches to a visually identical fixed layout. The prefix clips from right to left and suffix words clip from left to right with a stagger. While those gaps open, the anchor travels left by `anchorShift`, making the empty spaces on its two sides deliberately uneven before it closes last from both sides.
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { TypedSplitWipe } from "@/components/remocn/typed-split-wipe";
+
+const TypedSplitWipeScene = () => (
+  <TypedSplitWipe
+    prefix="Introducing"
+    anchor="X"
+    suffix="Ads MCP"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="TypedSplitWipe"
+    component={TypedSplitWipeScene}
+    durationInFrames={75}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+### With Backdrop
+
+The component is transparent. The reference uses warm white text on an almost-black field.
+
+```tsx
+import { Composition } from "remotion";
+import { Backdrop } from "@/components/remocn/backdrop";
+import { TypedSplitWipe } from "@/components/remocn/typed-split-wipe";
+
+const TypedSplitWipeScene = () => (
+  <Backdrop fill={{ type: "color", value: "#101010" }}>
+    <TypedSplitWipe
+      prefix="Introducing"
+      anchor="X"
+      suffix="Ads MCP"
+    />
+  </Backdrop>
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="TypedSplitWipe"
+    component={TypedSplitWipeScene}
+    durationInFrames={75}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "prefix",
+      type: "string",
+      required: true,
+      description: "Leading text typed first and clipped right-to-left on exit",
+    },
+    {
+      name: "anchor",
+      type: "string",
+      required: true,
+      description: "Central segment that remains visible longest",
+    },
+    {
+      name: "suffix",
+      type: "string",
+      required: true,
+      description: "Space-delimited trailing words clipped left-to-right with a stagger",
+    },
+    {
+      name: "typeFrames",
+      type: "number",
+      default: "30",
+      description: "Frames used to type the complete line",
+    },
+    {
+      name: "exitAt",
+      type: "number",
+      default: "50",
+      description: "Frame on which the segmented exit begins",
+    },
+    {
+      name: "exitFrames",
+      type: "number",
+      default: "20",
+      description: "Frames used by the prefix wipe and final anchor close",
+    },
+    {
+      name: "wordStagger",
+      type: "number",
+      default: "4",
+      description: "Delay in frames between suffix word wipes",
+    },
+    {
+      name: "anchorShift",
+      type: "number",
+      default: "-72",
+      description: "Horizontal anchor travel in pixels during the prefix wipe",
+    },
+    {
+      name: "fontSize",
+      type: "number",
+      default: "42",
+      description: "Font size in pixels",
+    },
+    {
+      name: "fontWeight",
+      type: "number",
+      default: "400",
+      description: "CSS font-weight",
+    },
+    {
+      name: "color",
+      type: "string",
+      default: "\"#e8e8e8\"",
+      description: "Text color",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier",
+    },
+    {
+      name: "className",
+      type: "string",
+      description: "Optional className passed to the text container",
+    },
+  ]}
+/>
