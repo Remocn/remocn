@@ -56,7 +56,9 @@ remains constant; visibility changes as a discrete frame condition.
 
 The gradient fill is duplicated over a persistent ghost layer and clipped by
 a soft mask. The mask boundary advances across the complete measured text box,
-so alternate copy remains supported without per-character timing.
+then moves half its softness beyond the right edge. This fully uncovers the
+final glyph while alternate copy remains supported without per-character
+timing.
 
 ## Component
 

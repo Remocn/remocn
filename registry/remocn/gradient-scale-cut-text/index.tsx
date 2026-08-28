@@ -119,10 +119,10 @@ export function GradientScaleCutText({
     ...clamp,
     easing: Easing.bezier(0.22, 0.74, 0.24, 1),
   });
-  const revealEdge = revealProgress * 100;
+  const revealEdge = revealProgress * (100 + safeSoftness / 2);
   const revealSolid = Math.max(0, revealEdge - safeSoftness / 2);
-  const revealFade = Math.min(100, revealEdge + safeSoftness / 2);
-  const maskImage = `linear-gradient(90deg, #000 0%, #000 ${revealSolid}%, transparent ${revealFade}%, transparent 100%)`;
+  const revealFade = revealEdge + safeSoftness / 2;
+  const maskImage = `linear-gradient(90deg, #000 0%, #000 ${revealSolid}%, transparent ${revealFade}%, transparent ${revealFade}%)`;
   const giantProgress = interpolate(
     frame,
     [0, Math.max(safeCutFrame - 1, 1)],
