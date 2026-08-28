@@ -58,13 +58,12 @@ export function StudioActions({
   return (
     <div className="flex min-w-0 items-center gap-1.5">
       {message ? (
-        <span
-          role="status"
+        <output
           aria-live="polite"
           className="truncate text-xs text-muted-foreground"
         >
           {message}
-        </span>
+        </output>
       ) : null}
       <Button
         variant="outline"
