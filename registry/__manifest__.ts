@@ -2831,7 +2831,7 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
     },
     defaults: {
       leadText: "Keep",
-      valueText: "100%",
+      valueText: "1000000000%",
       fontSize: 368,
       enterOffset: 240,
       anchorOffsetX: -84,

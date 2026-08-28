@@ -18,7 +18,7 @@ export const outlineFillTrackTextConfig: ComponentConfig = {
     },
     valueText: {
       type: "text-content",
-      default: "100%",
+      default: "1000000000%",
       description: "Outlined value",
     },
     fontSize: {

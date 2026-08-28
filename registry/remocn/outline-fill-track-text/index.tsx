@@ -53,7 +53,7 @@ function estimateTextWidth(
 
 export function OutlineFillTrackText({
   leadText = "Keep",
-  valueText = "100%",
+  valueText = "1000000000%",
   fontSize = 368,
   fontWeight = 700,
   color = "#f4f3f6",

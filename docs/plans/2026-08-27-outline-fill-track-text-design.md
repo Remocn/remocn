@@ -3,9 +3,11 @@
 ## Reference
 
 Recreate the typography transition from 00:28.333 through 00:30.800 in
-`vVYqitqLt1Y2dgKy.mp4`. The source is 480x270 at 30 fps. The default copy is
+`vVYqitqLt1Y2dgKy.mp4`. The source is 480x270 at 30 fps. The reference copy is
 `Keep 100%`, and the standalone component ends on the large, completely filled
-`100%`. It does not include the following cut to the small sentence.
+value. The registry default uses `1000000000%` to demonstrate the adaptive
+long-value camera travel. It does not include the following cut to the small
+sentence.
 
 ## Measurements
 
