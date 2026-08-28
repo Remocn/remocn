@@ -120,7 +120,7 @@ function NumberInputPill({
           commit(e.target.value);
         }}
         onBlur={() => setDraft(String(committed.current))}
-        className="min-w-0 flex-1 bg-transparent text-right font-mono text-base font-medium text-foreground outline-none placeholder:text-muted-foreground/50 sm:text-sm [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+        className="min-w-0 flex-1 bg-transparent text-right font-mono text-base font-medium text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring/40 placeholder:text-muted-foreground/50 sm:text-sm [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
       />
     </div>
   );
@@ -230,7 +230,7 @@ function Control({
             autoComplete="off"
             value={value as string}
             onChange={(e) => onChange(e.target.value)}
-            className="min-w-0 flex-1 bg-transparent text-right font-mono text-base font-medium text-foreground outline-none placeholder:text-muted-foreground/50 sm:text-sm"
+            className="min-w-0 flex-1 bg-transparent text-right font-mono text-base font-medium text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring/40 placeholder:text-muted-foreground/50 sm:text-sm"
           />
         </div>
       );

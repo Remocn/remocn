@@ -73,6 +73,7 @@ export function HeaderActions() {
               render={
                 <Link
                   href="/docs/getting-started/introduction"
+                  aria-label="Get started"
                   className={cn(
                     buttonVariants({ size: "lg" }),
                     "h-11 w-full rounded-full",

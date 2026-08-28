@@ -80,6 +80,7 @@ export function NavMobile({ links }: { links: NavLink[] }) {
           render={
             <Link
               href={link.href}
+              aria-label={link.label}
               className="py-3 text-foreground/90 transition-colors hover:text-foreground focus-visible:text-foreground focus-visible:outline-none"
             />
           }

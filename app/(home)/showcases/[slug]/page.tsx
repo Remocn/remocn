@@ -78,7 +78,7 @@ export default async function ShowcasePage({ params }: PageProps) {
                   />
                 }
               >
-                <GitHubIcon className="size-4" />
+                <GitHubIcon data-icon="inline-start" className="size-4" />
                 View source
               </Button>
             ) : null}
