@@ -295,7 +295,7 @@ function CategoryCard({ category }: { category: Category }) {
           >
             <div
               aria-hidden
-              className="bg-dot-grid pointer-events-none relative flex h-40 select-none items-center justify-center overflow-hidden border-b border-border bg-muted/20 sm:h-44"
+              className="pointer-events-none relative flex h-40 select-none items-center justify-center overflow-hidden border-b border-border bg-muted/20 sm:h-44"
             >
               <Viz play={inView} />
             </div>
