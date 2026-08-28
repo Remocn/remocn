@@ -932,7 +932,7 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
     defaults: {
       text: "Introducing",
       giantFontSize: 520,
-      compactFontSize: 112,
+      compactFontSize: 132,
       anchorOffsetX: -16,
       giantTravel: 400,
       settleTravel: 160,

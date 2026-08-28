@@ -28,8 +28,6 @@ const SETTLE_FRAMES = 8;
 const GIANT_Y = -28;
 const GIANT_X_CORRECTION = -48;
 const COMPACT_Y = 5;
-const COMPACT_START_SCALE = 0.92;
-const COMPACT_PEAK_SCALE = 1.18;
 const COMPACT_X_SCALE = 0.87;
 const COMPACT_MID_X = 24;
 const COMPACT_START_X_CORRECTION = 28;
@@ -96,7 +94,7 @@ function TextLayer({
 export function GradientScaleCutText({
   text = "Introducing",
   giantFontSize = 520,
-  compactFontSize = 112,
+  compactFontSize = 132,
   fontWeight = 700,
   gradientStart = "#f04a14",
   gradientEnd = "#f3f1f1",
@@ -169,12 +167,6 @@ export function GradientScaleCutText({
     ? interpolate(resolveProgress, [0, 1], [COMPACT_MID_X, 0], clamp)
     : interpolate(moveProgress, [0, 1], [settleTravel, COMPACT_MID_X], clamp) +
       COMPACT_START_X_CORRECTION * (1 - moveProgress);
-  const compactScale = interpolate(
-    settleProgress,
-    [0, 1],
-    [COMPACT_START_SCALE, COMPACT_PEAK_SCALE],
-    clamp,
-  );
   const compactBlurValue = safeBlur * (1 - settleProgress);
 
   return (
@@ -215,7 +207,7 @@ export function GradientScaleCutText({
             left: `calc(50% + ${anchorOffsetX + compactX}px)`,
             filter: `blur(${compactBlurValue}px)`,
             opacity: 1,
-            transform: `translate3d(-50%, -50%, 0) scale(${compactScale}) scaleX(${COMPACT_X_SCALE})`,
+            transform: `translate3d(-50%, -50%, 0) scaleX(${COMPACT_X_SCALE})`,
             transformOrigin: "center",
           }}
         >

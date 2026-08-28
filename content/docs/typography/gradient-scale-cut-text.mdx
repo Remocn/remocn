@@ -25,8 +25,8 @@ avoidWhen:
 `GradientScaleCutText` begins with an oversized line moving left while a soft
 mask uncovers a fixed orange-to-white text gradient. On frame 13 it switches to
 a separate compact layer with no intermediate scale. That layer moves left,
-grows to its final size, and clears its blur. It holds that scale while the same
-reveal continues across the remaining letters.
+clears its blur, and remains at one fixed size while the same reveal continues
+across the remaining letters.
 Its first two compact frames hold nearly still, followed by the sharp leftward
 position snap visible in the reference.
 
@@ -92,7 +92,7 @@ layer's landing without affecting the giant phase.
     {
       name: "compactFontSize",
       type: "number",
-      default: "112",
+      default: "132",
       description: "Font size after the hard cut",
     },
     {

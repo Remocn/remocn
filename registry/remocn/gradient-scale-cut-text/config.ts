@@ -30,7 +30,7 @@ export const gradientScaleCutTextConfig: ComponentConfig = {
       min: 40,
       max: 240,
       step: 2,
-      default: 112,
+      default: 132,
       description: "Compact font size",
       hiddenFromList: false,
     },
