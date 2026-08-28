@@ -92,7 +92,9 @@ export function SheenSlideIn({
 
   if (exit >= 1) {
     return (
-      <div style={{ position: "absolute", inset: 0, background: "transparent" }} />
+      <div
+        style={{ position: "absolute", inset: 0, background: "transparent" }}
+      />
     );
   }
 

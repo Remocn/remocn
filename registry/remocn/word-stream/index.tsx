@@ -26,18 +26,12 @@ const ENTRY_FRAMES = 8;
 const RUN_OUT_FRAMES = 5;
 const SWAP_OVERLAP = 0;
 
-export function wordStreamLength(
-  text: string,
-  wordGap = 6,
-  hold = 18,
-): number {
+export function wordStreamLength(text: string, wordGap = 6, hold = 18): number {
   const schedule = schedulePhrases(text, wordGap, hold);
   const finalPhrase = schedule[schedule.length - 1];
   if (!finalPhrase) return 0;
   return (
-    finalPhrase.start +
-    (finalPhrase.words.length - 1) * wordGap +
-    REVEAL_FRAMES
+    finalPhrase.start + (finalPhrase.words.length - 1) * wordGap + REVEAL_FRAMES
   );
 }
 
@@ -107,7 +101,8 @@ export function WordStream({
           },
         );
         const crawlX =
-          crawl * (life / 2 - (Math.min(frame, phrase.exitStart) - phrase.start));
+          crawl *
+          (life / 2 - (Math.min(frame, phrase.exitStart) - phrase.start));
         const runOutX = phrase.last
           ? 0
           : interpolate(

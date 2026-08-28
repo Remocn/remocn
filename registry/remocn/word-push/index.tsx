@@ -24,10 +24,16 @@ function revealFrame(index: number, wordGap: number, accel: number): number {
   return (wordGap * (1 - accel ** index)) / (1 - accel);
 }
 
-export function wordPushLength(text: string, wordGap = 10, accel = 0.8): number {
+export function wordPushLength(
+  text: string,
+  wordGap = 10,
+  accel = 0.8,
+): number {
   const words = text.trim().split(/\s+/).filter(Boolean);
   if (words.length === 0) return 0;
-  return Math.ceil(revealFrame(words.length - 1, wordGap, accel)) + SLIDE_FRAMES;
+  return (
+    Math.ceil(revealFrame(words.length - 1, wordGap, accel)) + SLIDE_FRAMES
+  );
 }
 
 const pushEasing = Easing.out(Easing.cubic);
@@ -114,11 +120,16 @@ export function WordPush({
           const driven =
             j === 0
               ? 1
-              : interpolate(frame, [revealAt, revealAt + SLIDE_FRAMES], [0, 1], {
-                  extrapolateLeft: "clamp",
-                  extrapolateRight: "clamp",
-                  easing: driveEasing,
-                });
+              : interpolate(
+                  frame,
+                  [revealAt, revealAt + SLIDE_FRAMES],
+                  [0, 1],
+                  {
+                    extrapolateLeft: "clamp",
+                    extrapolateRight: "clamp",
+                    easing: driveEasing,
+                  },
+                );
 
           return (
             <span

@@ -97,9 +97,7 @@ export function CaretSwap({
   const typed = toChars.slice(0, typedCount).join("");
 
   const anchorWidthEm =
-    Array.from(fromText).length * CHAR_WIDTH_EM +
-    CARET_WIDTH_EM +
-    CARET_GAP_EM;
+    Array.from(fromText).length * CHAR_WIDTH_EM + CARET_WIDTH_EM + CARET_GAP_EM;
   const targetShiftEm = (anchorWidthEm - toChars.length * CHAR_WIDTH_EM) / 2;
   const typeProgress = toChars.length > 0 ? typedCount / toChars.length : 0;
   const typedShift = targetShiftEm * typeProgress * fontSize;

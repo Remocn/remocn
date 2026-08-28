@@ -145,8 +145,7 @@ export function ZoomWords({
                     display: "inline-block",
                     whiteSpace: "pre",
                     opacity,
-                    filter:
-                      wordBlur > 0.05 ? `blur(${wordBlur}px)` : undefined,
+                    filter: wordBlur > 0.05 ? `blur(${wordBlur}px)` : undefined,
                     translate: `${(WORD_SHIFT_X_EM * fontSize * arrive).toFixed(1)}px ${(WORD_SHIFT_Y_EM * fontSize * arrive).toFixed(1)}px`,
                   }}
                 >
