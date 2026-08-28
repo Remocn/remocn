@@ -37,15 +37,16 @@ The background is black.
 The component has a 36-frame natural length at 30 fps. Frames 0-12 show the
 giant layer and translate it left while the shared reveal advances. Frame 13
 switches visibility to the compact layer with no scale interpolation. Frames
-13-21 move that layer most of the 160 pixels left, grow it to a measured 1.18
-overshoot, and reduce its blur to zero. Frames 21-33 return it to its final scale
-while completing the remaining 24 pixels of travel. The reveal continues
-through frame 33, and frames 34-35 hold the completed line.
+13-21 move that layer most of the 160 pixels left, grow it from 0.92 to its final
+1.18 scale, and reduce its blur to zero. Frames 21-33 hold that scale while
+completing the remaining 24 pixels of travel. The reveal continues through frame
+33, and frames 34-35 hold the completed line.
 
 Position and scale use separate progress curves after the cut. The compact line
 holds its starting x position for the first two frames, makes the dominant
 leftward snap on the following frame, then eases through the remainder. Scale
-and blur remain continuous across that positional snap.
+and blur remain continuous across that positional snap. Scale reaches its final
+value on frame 21 and stays fixed while position and reveal finish.
 
 The two phases are separate, overlapping DOM layers. They share text,
 typography colors, and one deterministic reveal-progress value, but each owns

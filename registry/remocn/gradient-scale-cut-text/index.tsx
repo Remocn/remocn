@@ -169,14 +169,12 @@ export function GradientScaleCutText({
     ? interpolate(resolveProgress, [0, 1], [COMPACT_MID_X, 0], clamp)
     : interpolate(moveProgress, [0, 1], [settleTravel, COMPACT_MID_X], clamp) +
       COMPACT_START_X_CORRECTION * (1 - moveProgress);
-  const compactScale = isResolving
-    ? interpolate(resolveProgress, [0, 1], [COMPACT_PEAK_SCALE, 1], clamp)
-    : interpolate(
-        settleProgress,
-        [0, 1],
-        [COMPACT_START_SCALE, COMPACT_PEAK_SCALE],
-        clamp,
-      );
+  const compactScale = interpolate(
+    settleProgress,
+    [0, 1],
+    [COMPACT_START_SCALE, COMPACT_PEAK_SCALE],
+    clamp,
+  );
   const compactBlurValue = safeBlur * (1 - settleProgress);
 
   return (
