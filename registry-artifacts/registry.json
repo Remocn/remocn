@@ -340,6 +340,20 @@
       "type": "registry:component"
     },
     {
+      "name": "gradient-scale-cut-text",
+      "title": "Gradient Scale Cut Text",
+      "description": "An oversized gradient reveal snaps to a separate compact blurred line that settles left while the reveal continues.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "registry/remocn/gradient-scale-cut-text/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/gradient-scale-cut-text.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
       "name": "extrude-pop",
       "title": "Extrude Pop",
       "description": "A flat word pops up out of the plane on a solid colored 3D body, no camera involved.",

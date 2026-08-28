@@ -140,6 +140,16 @@ const registry: Record<string, RegistryEntry> = {
         (m) => m.outlineFillTrackTextConfig,
       ),
   },
+  "gradient-scale-cut-text": {
+    load: () =>
+      import("@/registry/remocn/gradient-scale-cut-text").then((m) => ({
+        default: m.GradientScaleCutText,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/gradient-scale-cut-text/config").then(
+        (m) => m.gradientScaleCutTextConfig,
+      ),
+  },
   "per-character-rise": {
     load: () =>
       import("@/registry/remocn/per-character-rise").then((m) => ({

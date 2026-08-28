@@ -14,7 +14,7 @@ The oversized phase occupies source frames 00:12.900 through 00:13.300. Its
 visible glyph height remains approximately 140 pixels while the line moves
 about 150 source pixels left. The full text extends beyond the right edge, and
 a soft reveal boundary exposes progressively more letters. At the 1280x720
-registry size, the matching defaults are a 440-pixel giant font and 400 pixels
+registry size, the matching defaults are a 520-pixel giant font and 400 pixels
 of horizontal travel.
 
 The scale cut occurs between adjacent source frames at 00:13.300 and
@@ -23,8 +23,8 @@ pixels without an interpolated intermediate size. The compact layer begins
 near source center x=295 and settles near x=235, a leftward move of about 60
 source pixels or 160 registry pixels. Its visible width grows from about 174 to
 233 source pixels while a broad blur clears, then resolves to a final line
-roughly 200 pixels wide. A 112-pixel registry font closely matches the settled
-size.
+roughly 200 pixels wide. A 112-pixel registry font with a 0.87 horizontal scale
+closely matches the settled height and width.
 
 The fill is a fixed horizontal text gradient rather than a moving highlight.
 Its left edge is a saturated orange near `#f04a14`, it transitions through a
@@ -37,9 +37,15 @@ The background is black.
 The component has a 36-frame natural length at 30 fps. Frames 0-12 show the
 giant layer and translate it left while the shared reveal advances. Frame 13
 switches visibility to the compact layer with no scale interpolation. Frames
-13-21 move that layer 160 pixels left, grow it slightly, and reduce its blur to
-zero. The reveal continues through frame 33, and frames 34-35 hold the completed
-line.
+13-21 move that layer most of the 160 pixels left, grow it to a measured 1.18
+overshoot, and reduce its blur to zero. Frames 21-33 return it to its final scale
+while completing the remaining 24 pixels of travel. The reveal continues
+through frame 33, and frames 34-35 hold the completed line.
+
+Position and scale use separate progress curves after the cut. The compact line
+holds its starting x position for the first two frames, makes the dominant
+leftward snap on the following frame, then eases through the remainder. Scale
+and blur remain continuous across that positional snap.
 
 The two phases are separate, overlapping DOM layers. They share text,
 typography colors, and one deterministic reveal-progress value, but each owns
