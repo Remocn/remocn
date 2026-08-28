@@ -65,6 +65,19 @@ export const NAV_LINKS: NavLink[] = [
  */
 export const NEW_BADGE_PATHS = new Set<string>([
   "/docs/layout/stage",
+  "/docs/typography/caret-swap",
+  "/docs/typography/centered-word-build",
+  "/docs/typography/fog-rise",
+  "/docs/typography/gradient-scale-cut-text",
+  "/docs/typography/inline-pill-takeover",
+  "/docs/typography/outline-fill-track-text",
+  "/docs/typography/shadow-sweep-text",
+  "/docs/typography/sheen-slide-in",
+  "/docs/typography/squeeze-in",
+  "/docs/typography/typed-split-wipe",
+  "/docs/typography/word-push",
+  "/docs/typography/word-stream",
+  "/docs/typography/zoom-words",
 ]);
 
 export type FooterGroup = {
