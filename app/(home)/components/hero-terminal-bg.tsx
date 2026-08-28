@@ -27,20 +27,26 @@ export function HeroTerminalBg() {
 
   return (
     <div
-      className={`pointer-events-none absolute inset-x-0 -top-22 h-screen [mask-composite:intersect] ${MASK}`}
+      className={`absolute inset-x-0 -top-22 h-screen [mask-composite:intersect] ${MASK}`}
     >
       <FaultyTerminal
-        className="h-full w-full opacity-35 mix-blend-multiply dark:opacity-[0.18] dark:mix-blend-normal"
+        className="h-full w-full mix-blend-multiply dark:mix-blend-normal"
         lightMode={light}
-        tint="#e5e5e5"
-        timeScale={reduced ? 0 : 0.2}
+        tint={light ? "#e879f9" : "#701a75"}
+        scale={1.5}
+        digitSize={1.2}
+        timeScale={reduced ? 0 : 0.3}
         pause={reduced}
-        scanlineIntensity={0.25}
-        glitchAmount={0.6}
-        flickerAmount={0.5}
-        curvature={0.15}
-        brightness={light ? 1 : 0.7}
-        mouseReact={false}
+        scanlineIntensity={0.28}
+        glitchAmount={1}
+        flickerAmount={1}
+        noiseAmp={1}
+        chromaticAberration={0}
+        dither={0}
+        curvature={0.1}
+        brightness={0.45}
+        mouseReact={!reduced}
+        mouseStrength={0.5}
         pageLoadAnimation={false}
         timeOffset={0}
       />

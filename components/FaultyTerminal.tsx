@@ -232,7 +232,7 @@ void main() {
     if (uLightMode > 0.5) {
       float energy = max(max(col.r, col.g), col.b);
       float coverage = clamp(smoothstep(0.0, 0.72, energy) * 0.9, 0.0, 0.9);
-      vec3 ink = clamp(col * 0.42, 0.0, 0.76);
+      vec3 ink = clamp(uTint * 0.85, 0.0, 0.85);
       col = mix(vec3(1.0), ink, coverage);
     }
 
