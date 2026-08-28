@@ -24,11 +24,9 @@ avoidWhen:
 
 `GradientScaleCutText` begins with an oversized line moving left while a soft
 mask uncovers a fixed orange-to-white text gradient. On frame 13 it switches to
-a separate compact layer with no intermediate scale. That layer moves left,
-clears its blur, and remains at one fixed size while the same reveal continues
-across the remaining letters.
-Its first two compact frames hold nearly still, followed by the sharp leftward
-position snap visible in the reference.
+a separate compact layer with no intermediate scale. That layer slides into its
+final position while clearing its blur, then remains fixed in both position and
+size as the same reveal continues across the remaining letters.
 At completion, the soft mask edge travels beyond the text box so the final
 letter is fully filled rather than left under the reveal fade.
 The text layers use a descender-safe line box, preventing letters such as `g`,
@@ -62,8 +60,8 @@ export const RemotionRoot = () => (
 
 `cutFrame` changes the exact frame where the giant layer is replaced. The
 gradient reveal remains tied to the full component timeline, so it does not
-restart after the cut. `settleTravel` and `compactBlur` control the compact
-layer's landing without affecting the giant phase.
+restart after the cut. `settleTravel` controls the compact entrance distance,
+`anchorOffsetX` sets its final position, and `compactBlur` controls focus.
 
 ```tsx
 <GradientScaleCutText
@@ -145,7 +143,7 @@ layer's landing without affecting the giant phase.
       name: "settleTravel",
       type: "number",
       default: "160",
-      description: "Leftward travel after the cut",
+      description: "Compact entrance distance before it stops at the anchor",
     },
     {
       name: "cutFrame",

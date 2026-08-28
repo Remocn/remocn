@@ -58,7 +58,7 @@ export const gradientScaleCutTextConfig: ComponentConfig = {
       max: 400,
       step: 4,
       default: 160,
-      description: "Compact phase left travel",
+      description: "Compact entrance travel",
       hiddenFromList: false,
     },
     cutFrame: {

@@ -29,7 +29,6 @@ const GIANT_Y = -28;
 const GIANT_X_CORRECTION = -48;
 const COMPACT_Y = 5;
 const COMPACT_X_SCALE = 0.87;
-const COMPACT_MID_X = 24;
 const COMPACT_START_X_CORRECTION = 28;
 const FONT_FAMILY = "Arial, Helvetica, sans-serif";
 const clamp = {
@@ -141,15 +140,6 @@ export function GradientScaleCutText({
       easing: Easing.out(Easing.cubic),
     },
   );
-  const resolveProgress = interpolate(
-    frame,
-    [safeCutFrame + SETTLE_FRAMES, REVEAL_END],
-    [0, 1],
-    {
-      ...clamp,
-      easing: Easing.inOut(Easing.cubic),
-    },
-  );
   const moveProgress = interpolate(
     frame,
     [
@@ -162,11 +152,9 @@ export function GradientScaleCutText({
     clamp,
   );
   const showGiant = frame < safeCutFrame;
-  const isResolving = frame > safeCutFrame + SETTLE_FRAMES;
-  const compactX = isResolving
-    ? interpolate(resolveProgress, [0, 1], [COMPACT_MID_X, 0], clamp)
-    : interpolate(moveProgress, [0, 1], [settleTravel, COMPACT_MID_X], clamp) +
-      COMPACT_START_X_CORRECTION * (1 - moveProgress);
+  const compactX =
+    interpolate(moveProgress, [0, 1], [settleTravel, 0], clamp) +
+    COMPACT_START_X_CORRECTION * (1 - moveProgress);
   const compactBlurValue = safeBlur * (1 - settleProgress);
 
   return (

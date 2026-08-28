@@ -20,12 +20,12 @@ of horizontal travel.
 The scale cut occurs between adjacent source frames 399 and 400, at 00:13.300
 and 00:13.333. At a luminance threshold of 45, the visible bounding box changes
 from 353x141 pixels to 173x38 pixels without an interpolated intermediate size.
-The compact layer begins near source center x=295 and settles near x=235, a
-leftward move of about 60 source pixels or 160 registry pixels. While the blur
-clears, its thresholded box expands to 233x44 pixels; the glyph core measures
-40-41 pixels high on frames 408-413. That apparent expansion comes from focus
-and reveal, not geometry. A fixed 132-pixel registry font with a constant 0.87
-horizontal correction matches the measured compact height and width.
+The compact layer begins near source center x=295 and enters to x=235, a
+leftward move of about 60 source pixels or 160 registry pixels. Its glyph core
+measures 40-41 pixels high on frames 408-413. Changes in the remaining
+thresholded bounds come from blur and progressive reveal, not scaling. A fixed
+132-pixel registry font with a constant 0.87 horizontal correction matches the
+measured compact height and width.
 
 The fill is a fixed horizontal text gradient rather than a moving highlight.
 Its left edge is a saturated orange near `#f04a14`, it transitions through a
@@ -38,15 +38,13 @@ The background is black.
 The component has a 36-frame natural length at 30 fps. Frames 0-12 show the
 giant layer and translate it left while the shared reveal advances. Frame 13
 switches visibility to the compact layer with no scale interpolation. Frames
-13-21 move that layer most of the 160 pixels left and reduce its blur to zero.
-Frames 21-33 complete the remaining 24 pixels of travel. The compact font size
-is fixed for every frame after the cut. The reveal continues through frame 33,
-and frames 34-35 hold the completed line.
+13-21 move that layer the full 160 pixels to its final anchor while reducing its
+blur to zero. From frame 21 onward, compact position and font size are fixed.
+The reveal continues through frame 33, and frames 34-35 hold the completed line.
 
-The compact line holds its starting x position for the first two frames, makes
-the dominant leftward snap on the following frame, then eases through the
-remainder. Blur clears continuously across that positional snap. There is no
-uniform scale transform or scale progress after the cut.
+The compact entrance uses one clamped progress curve and ends exactly at the
+final anchor. There is no secondary translation after it lands and no uniform
+scale transform or scale progress after the cut.
 
 The two phases are separate, overlapping DOM layers. They share text,
 typography colors, and one deterministic reveal-progress value, but each owns
