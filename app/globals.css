@@ -67,41 +67,41 @@
 
 :root {
   --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
+  --foreground: oklch(0.148 0.004 228.8);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
+  --card-foreground: oklch(0.148 0.004 228.8);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.148 0.004 228.8);
+  --primary: oklch(0.518 0.253 323.949);
+  --primary-foreground: oklch(0.977 0.017 320.058);
+  --secondary: oklch(0.963 0.002 197.1);
+  --secondary-foreground: oklch(0.218 0.008 223.9);
+  --muted: oklch(0.963 0.002 197.1);
+  --muted-foreground: oklch(0.56 0.021 213.5);
+  --accent: oklch(0.963 0.002 197.1);
+  --accent-foreground: oklch(0.218 0.008 223.9);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
+  --border: oklch(0.925 0.005 214.3);
+  --input: oklch(0.925 0.005 214.3);
+  --ring: oklch(0.723 0.014 214.4);
+  --chart-1: oklch(0.872 0.007 219.6);
+  --chart-2: oklch(0.56 0.021 213.5);
+  --chart-3: oklch(0.45 0.017 213.2);
+  --chart-4: oklch(0.378 0.015 216);
+  --chart-5: oklch(0.275 0.011 216.9);
   --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
-  --code: oklch(0.97 0 0);
-  --code-foreground: oklch(0.145 0 0);
-  --code-highlight: oklch(0.93 0 0);
-  --code-number: oklch(0.556 0 0);
+  --sidebar: oklch(0.987 0.002 197.1);
+  --sidebar-foreground: oklch(0.148 0.004 228.8);
+  --sidebar-primary: oklch(0.591 0.293 322.896);
+  --sidebar-primary-foreground: oklch(0.977 0.017 320.058);
+  --sidebar-accent: oklch(0.963 0.002 197.1);
+  --sidebar-accent-foreground: oklch(0.218 0.008 223.9);
+  --sidebar-border: oklch(0.925 0.005 214.3);
+  --sidebar-ring: oklch(0.723 0.014 214.4);
+  --code: oklch(0.963 0.002 197.1);
+  --code-foreground: oklch(0.148 0.004 228.8);
+  --code-highlight: oklch(0.93 0.004 214.3);
+  --code-number: oklch(0.56 0.021 213.5);
 
   /* "NEW" sidebar badge — editable accent. Theme-agnostic for now (same value
      in light/dark); recolor the badge by changing --badge-new-bg here. The fg
@@ -121,42 +121,41 @@
 }
 
 .dark {
-  /* Warm obsidian palette — matches landing page #141318 */
-  --background: oklch(0.18 0.008 290);
-  --foreground: oklch(0.95 0 0);
-  --card: oklch(0.2 0.008 290);
-  --card-foreground: oklch(0.95 0 0);
-  --popover: oklch(0.2 0.008 290);
-  --popover-foreground: oklch(0.95 0 0);
-  --primary: oklch(0.95 0 0);
-  --primary-foreground: oklch(0.18 0.008 290);
-  --secondary: oklch(0.22 0.008 290);
-  --secondary-foreground: oklch(0.85 0.005 290);
-  --muted: oklch(0.21 0.008 290);
-  --muted-foreground: oklch(0.65 0.008 290);
-  --accent: oklch(0.22 0.008 290);
-  --accent-foreground: oklch(0.95 0 0);
+  --background: oklch(0.148 0.004 228.8);
+  --foreground: oklch(0.987 0.002 197.1);
+  --card: oklch(0.175 0.005 225);
+  --card-foreground: oklch(0.987 0.002 197.1);
+  --popover: oklch(0.19 0.006 225);
+  --popover-foreground: oklch(0.987 0.002 197.1);
+  --primary: oklch(0.452 0.211 324.591);
+  --primary-foreground: oklch(0.977 0.017 320.058);
+  --secondary: oklch(0.225 0.008 224);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.205 0.007 225);
+  --muted-foreground: oklch(0.723 0.014 214.4);
+  --accent: oklch(0.225 0.008 224);
+  --accent-foreground: oklch(0.987 0.002 197.1);
   --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 6%);
-  --input: oklch(1 0 0 / 8%);
-  --ring: oklch(1 0 0 / 20%);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.65 0.008 290);
-  --chart-3: oklch(0.55 0.008 290);
-  --chart-4: oklch(0.45 0.008 290);
-  --chart-5: oklch(0.35 0.008 290);
-  --sidebar: oklch(0.18 0.008 290);
-  --sidebar-foreground: oklch(0.95 0 0);
-  --sidebar-primary: oklch(0.95 0 0);
-  --sidebar-primary-foreground: oklch(0.18 0.008 290);
-  --sidebar-accent: oklch(0.22 0.008 290);
-  --sidebar-accent-foreground: oklch(0.95 0 0);
-  --sidebar-border: oklch(1 0 0 / 6%);
-  --sidebar-ring: oklch(1 0 0 / 20%);
-  --code: oklch(0.16 0.008 290);
-  --code-foreground: oklch(0.95 0 0);
-  --code-highlight: oklch(0.24 0.008 290);
-  --code-number: oklch(0.55 0.008 290);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.56 0.021 213.5);
+  --chart-1: oklch(0.872 0.007 219.6);
+  --chart-2: oklch(0.56 0.021 213.5);
+  --chart-3: oklch(0.45 0.017 213.2);
+  --chart-4: oklch(0.378 0.015 216);
+  --chart-5: oklch(0.275 0.011 216.9);
+  --sidebar: oklch(0.148 0.004 228.8);
+  --sidebar-foreground: oklch(0.987 0.002 197.1);
+  --sidebar-primary: oklch(0.667 0.295 322.15);
+  --sidebar-primary-foreground: oklch(0.977 0.017 320.058);
+  --sidebar-accent: oklch(0.205 0.007 225);
+  --sidebar-accent-foreground: oklch(0.987 0.002 197.1);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.56 0.021 213.5);
+  --code: oklch(0.13 0.004 228.8);
+  --code-foreground: oklch(0.987 0.002 197.1);
+  --code-highlight: oklch(0.225 0.008 224);
+  --code-number: oklch(0.56 0.021 213.5);
 
   /* Badge keeps the same lime accent in dark mode — see :root for the knob. */
   --badge-new-bg: rgb(195, 232, 141);
@@ -186,7 +185,7 @@
 }
 
 ::selection {
-  background-color: color-mix(in oklab, #d4b3ff 35%, transparent);
+  background-color: color-mix(in oklab, var(--primary) 25%, transparent);
 }
 
 .section {
@@ -209,15 +208,6 @@
     transparent 75%
   );
   mask-image: radial-gradient(ellipse 70% 60% at 50% 0%, black, transparent 75%);
-}
-
-.bg-dot-grid {
-  background-image: radial-gradient(
-    circle,
-    color-mix(in oklab, var(--color-foreground) 6%, transparent) 1px,
-    transparent 1px
-  );
-  background-size: 16px 16px;
 }
 
 .divider-soft {
