@@ -31,6 +31,8 @@ Its first two compact frames hold nearly still, followed by the sharp leftward
 position snap visible in the reference.
 At completion, the soft mask edge travels beyond the text box so the final
 letter is fully filled rather than left under the reveal fade.
+The text layers use a descender-safe line box, preventing letters such as `g`,
+`p`, and `y` from being clipped without moving the baseline.
 
 The two layers never crossfade. Their opacity stays constant, and a discrete
 visibility condition creates the scale cut between adjacent frames.

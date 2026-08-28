@@ -58,7 +58,8 @@ The gradient fill is duplicated over a persistent ghost layer and clipped by
 a soft mask. The mask boundary advances across the complete measured text box,
 then moves half its softness beyond the right edge. This fully uncovers the
 final glyph while alternate copy remains supported without per-character
-timing.
+timing. Both text layers use a 1.12em line box so mask and background clipping
+preserve glyph descenders without an additional transform or baseline shift.
 
 ## Component
 

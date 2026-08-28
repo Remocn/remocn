@@ -62,7 +62,7 @@ function TextLayer({
     fontSize,
     fontWeight,
     letterSpacing: 0,
-    lineHeight: 0.88,
+    lineHeight: 1.12,
     whiteSpace: "nowrap" as const,
   };
 
