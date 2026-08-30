@@ -1,0 +1,77 @@
+import {
+  type ComponentConfig,
+  enumVariants,
+  FONT_WEIGHT_OPTIONS,
+  FPS,
+  H,
+  W,
+} from "@/lib/customizer-config";
+import { rushTypeLength } from ".";
+
+export const rushTypeConfig: ComponentConfig = {
+  componentName: "RushType",
+  importPath: "@/components/remocn/rush-type",
+  controls: {
+    phrase: {
+      type: "text-content",
+      default: "gone before you look",
+      description: "Phrase",
+    },
+    fontSize: {
+      type: "number",
+      default: 68,
+      min: 32,
+      max: 140,
+      step: 2,
+      description: "Resting size",
+      hiddenFromList: false,
+    },
+    fontWeight: {
+      type: "enum",
+      default: "400",
+      variants: enumVariants(FONT_WEIGHT_OPTIONS),
+      description: "Font weight",
+    },
+    verticalStretch: {
+      type: "number",
+      default: 7,
+      min: 3,
+      max: 12,
+      step: 0.25,
+      description: "Vertical stretch",
+      hiddenFromList: false,
+    },
+    chromaticSpread: {
+      type: "number",
+      default: 1,
+      min: 0,
+      max: 2,
+      step: 0.05,
+      description: "Chromatic spread",
+      hiddenFromList: false,
+    },
+    restDuration: {
+      type: "number",
+      default: 12,
+      min: 6,
+      max: 30,
+      step: 1,
+      description: "Rest duration",
+      hiddenFromList: false,
+    },
+    peakHoldDuration: {
+      type: "number",
+      default: 3,
+      min: 0,
+      max: 15,
+      step: 1,
+      description: "Peak hold",
+      hiddenFromList: false,
+    },
+  },
+  durationInFrames: rushTypeLength,
+  fps: FPS,
+  compositionWidth: W,
+  compositionHeight: H,
+  previewBackdrop: { type: "color", value: "#000000" },
+};

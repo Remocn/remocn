@@ -150,6 +150,16 @@ const registry: Record<string, RegistryEntry> = {
         (m) => m.gradientScaleCutTextConfig,
       ),
   },
+  "rush-type": {
+    load: () =>
+      import("@/registry/remocn/rush-type").then((m) => ({
+        default: m.RushType,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/rush-type/config").then(
+        (m) => m.rushTypeConfig,
+      ),
+  },
   "per-character-rise": {
     load: () =>
       import("@/registry/remocn/per-character-rise").then((m) => ({

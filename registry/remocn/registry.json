@@ -354,6 +354,20 @@
       ]
     },
     {
+      "name": "rush-type",
+      "type": "registry:component",
+      "title": "Rush Type",
+      "description": "A resting white word blasts through vertical scale motion, separating into energy-conserving RGB shutter trails before the next word resolves.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "rush-type/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/rush-type.tsx"
+        }
+      ]
+    },
+    {
       "name": "extrude-pop",
       "type": "registry:component",
       "title": "Extrude Pop",

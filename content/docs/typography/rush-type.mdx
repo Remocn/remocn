@@ -1,0 +1,149 @@
+---
+title: Rush Type
+description: White words blast into vertical RGB shutter trails generated entirely by motion
+component: rush-type
+vibe: tech
+length: 104
+useWhen:
+  - "A short phrase should cycle one forceful word at a time."
+  - "Chromatic separation should emerge from motion rather than tinting the text."
+  - "A kinetic-type beat needs a sharp readable rest between extreme blasts."
+avoidWhen:
+  - "The text must remain readable throughout the motion — use `word-push` or `zoom-words`."
+  - "You want a horizontal digital glitch — use `rgb-glitch-text`."
+  - "The background cannot be black or the component must remain transparent."
+---
+
+<ComponentPreview name="rush-type" />
+
+## Installation
+
+<InstallBlock name="rush-type" />
+
+## Usage
+
+`RushType` shows one word of a short phrase on a flat black frame. The word
+rests in pixel-sharp white, then grows rapidly through a vertical orbit. During
+that motion, the same monochrome glyph is accumulated into red, green, and blue
+channels over different shutter lengths. Green travels furthest, blue remains
+tightest, and red sits between them.
+
+The channels are divided by their accumulated sample weights, so the effect
+conserves energy instead of brightening as blur length increases. When motion
+stops, the shutter sweep collapses, all channels sample the same pixels, and the
+word resolves to white without a crossfade or a separately colored layer.
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import {
+  RushType,
+  rushTypeLength,
+} from "@/components/remocn/rush-type";
+
+export const RemotionRoot = () => (
+  <Composition
+    id="RushType"
+    component={RushType}
+    durationInFrames={rushTypeLength}
+    fps={30}
+    width={1280}
+    height={720}
+    defaultProps={{ phrase: "gone before you look" }}
+  />
+);
+```
+
+### Controlling The Color Split
+
+`chromaticSpread` changes the distance between the three shutter lengths. At
+`0`, all three channels share the same shutter and no color appears. At `1`,
+the component uses the reference ratio of approximately `0.62 / 1 / 0.34` for
+red, green, and blue. Higher values widen that timing difference; they do not
+apply new colors to the word.
+
+```tsx
+<RushType
+  phrase="move before it settles"
+  verticalStretch={8}
+  chromaticSpread={1.25}
+  restDuration={15}
+  peakHoldDuration={4}
+/>
+```
+
+## Props
+
+<PropsTable
+  rows={[
+    {
+      name: "phrase",
+      type: "string",
+      default: '"gone before you look"',
+      description: "Whitespace-delimited phrase shown one word per cycle",
+    },
+    {
+      name: "fontSize",
+      type: "number",
+      default: "68",
+      description: "Cap height of the resting word in composition pixels",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: '"Arial, Helvetica, sans-serif"',
+      description: "Canvas font-family used to rasterize the glyph atlas",
+    },
+    {
+      name: "fontWeight",
+      type: "number",
+      default: "400",
+      description: "Font weight used for every word",
+    },
+    {
+      name: "verticalStretch",
+      type: "number",
+      default: "7",
+      description: "Authored peak vertical scale before perspective",
+    },
+    {
+      name: "chromaticSpread",
+      type: "number",
+      default: "1",
+      description: "Distance between the three motion-shutter lengths",
+    },
+    {
+      name: "restDuration",
+      type: "number",
+      default: "12",
+      description: "Readable resting phase in frames",
+    },
+    {
+      name: "peakHoldDuration",
+      type: "number",
+      default: "3",
+      description: "Total near-point hang around each word swap in frames",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Global playback multiplier",
+    },
+    {
+      name: "className",
+      type: "string",
+      default: "—",
+      description: "Optional class name applied to the full-frame root",
+    },
+  ]}
+/>
+
+## Notes
+
+The blur is vertical-only and sweeps scale rather than position. Bloom, CRT
+modulation, the neutral ground, stroke thinning, and swap separation are all
+driven by motion progress and become exactly zero during the resting phase.
+The component uses deterministic frame time only: it has no timers, animation
+frames, pointer state, scroll state, random samples, or device-dependent quality
+switches.

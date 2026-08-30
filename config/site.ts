@@ -71,6 +71,7 @@ export const NEW_BADGE_PATHS = new Set<string>([
   "/docs/typography/gradient-scale-cut-text",
   "/docs/typography/inline-pill-takeover",
   "/docs/typography/outline-fill-track-text",
+  "/docs/typography/rush-type",
   "/docs/typography/shadow-sweep-text",
   "/docs/typography/sheen-slide-in",
   "/docs/typography/squeeze-in",
