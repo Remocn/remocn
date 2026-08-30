@@ -35,5 +35,6 @@
     "toggle-group",
     "tooltip",
     "typing-indicator"
-  ]
+  ],
+  "icon": "ToggleOnIcon"
 }

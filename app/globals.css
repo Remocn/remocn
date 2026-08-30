@@ -103,12 +103,6 @@
   --code-highlight: oklch(0.93 0.004 214.3);
   --code-number: oklch(0.56 0.021 213.5);
 
-  /* "NEW" sidebar badge — editable accent. Theme-agnostic for now (same value
-     in light/dark); recolor the badge by changing --badge-new-bg here. The fg
-     stays dark so the label reads on the light-lime background. */
-  --badge-new-bg: rgb(195, 232, 141);
-  --badge-new-fg: oklch(0.205 0 0);
-
   --elevation-raised:
     0 0 0 1px rgb(0 0 0 / 0.05), 0 1px 3px rgb(0 0 0 / 0.05), 0 4px 10px -4px
     rgb(0 0 0 / 0.05);
@@ -163,10 +157,6 @@
   --code-foreground: oklch(0.987 0.002 197.1);
   --code-highlight: oklch(0.225 0.008 224);
   --code-number: oklch(0.56 0.021 213.5);
-
-  /* Badge keeps the same lime accent in dark mode — see :root for the knob. */
-  --badge-new-bg: rgb(195, 232, 141);
-  --badge-new-fg: oklch(0.205 0 0);
 
   --elevation-raised: 0 0 0 1px rgb(255 255 255 / 0.09);
   --elevation-raised-hover: 0 0 0 1px rgb(255 255 255 / 0.14);
@@ -456,20 +446,10 @@
 #nd-sidebar-mobile a.w-full,
 #nd-sidebar [data-radix-scroll-area-viewport] button.w-full,
 #nd-sidebar-mobile [data-radix-scroll-area-viewport] button.w-full {
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  font-size: 0.6875rem;
-  font-weight: 600;
-  color: var(--muted-foreground);
-
+  font-size: 0.8125rem;
+  letter-spacing: -0.01em;
+  font-weight: 500;
   margin-top: 0.25rem;
-}
-#nd-sidebar a.w-full:hover,
-#nd-sidebar-mobile a.w-full:hover,
-#nd-sidebar [data-radix-scroll-area-viewport] button.w-full:hover,
-#nd-sidebar-mobile [data-radix-scroll-area-viewport] button.w-full:hover {
-  color: var(--foreground);
-  background-color: transparent;
 }
 
 #nd-sidebar [data-radix-scroll-area-viewport] a.w-full + div,

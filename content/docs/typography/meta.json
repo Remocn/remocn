@@ -60,5 +60,6 @@
     "extrude-pop",
     "chromatic-wave",
     "stretch-in"
-  ]
+  ],
+  "icon": "TextFontIcon"
 }

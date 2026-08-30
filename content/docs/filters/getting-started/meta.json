@@ -1,5 +1,8 @@
 {
   "title": "Getting Started",
   "collapsible": false,
-  "pages": ["introduction"]
+  "pages": [
+    "introduction"
+  ],
+  "icon": "Rocket01Icon"
 }

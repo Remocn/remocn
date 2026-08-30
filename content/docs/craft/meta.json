@@ -1,5 +1,11 @@
 {
   "title": "Craft",
   "defaultOpen": false,
-  "pages": ["index", "design-defaults", "motion-principles", "anti-patterns"]
+  "pages": [
+    "index",
+    "design-defaults",
+    "motion-principles",
+    "anti-patterns"
+  ],
+  "icon": "MagicWand01Icon"
 }

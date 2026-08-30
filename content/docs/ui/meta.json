@@ -1,5 +1,12 @@
 {
   "title": "UI",
   "collapsible": false,
-  "pages": ["index", "concepts", "installation", "components", "blocks"]
+  "pages": [
+    "index",
+    "concepts",
+    "installation",
+    "components",
+    "blocks"
+  ],
+  "icon": "ToggleOnIcon"
 }

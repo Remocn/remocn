@@ -27,5 +27,6 @@
     "displacement",
     "slide-swap",
     "spring-settle"
-  ]
+  ],
+  "icon": "TransitionRightIcon"
 }

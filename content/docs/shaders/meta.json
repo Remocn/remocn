@@ -1,5 +1,9 @@
 {
   "title": "Shaders",
   "collapsible": false,
-  "pages": ["getting-started", "components"]
+  "pages": [
+    "getting-started",
+    "components"
+  ],
+  "icon": "ColorsIcon"
 }

@@ -12,5 +12,6 @@
     "ascii-render",
     "halftone-print",
     "underwater-ripple"
-  ]
+  ],
+  "icon": "BlurIcon"
 }

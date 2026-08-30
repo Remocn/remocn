@@ -10,5 +10,6 @@
     "scribble-circle",
     "crumple-toss",
     "simulated-cursor"
-  ]
+  ],
+  "icon": "SparklesIcon"
 }

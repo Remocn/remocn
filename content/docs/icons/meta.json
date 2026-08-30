@@ -1,5 +1,8 @@
 {
   "title": "Icons",
   "collapsible": false,
-  "pages": ["gallery"]
+  "pages": [
+    "gallery"
+  ],
+  "icon": "SparklesIcon"
 }

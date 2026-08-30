@@ -24,5 +24,6 @@
     "shader-gem-smoke",
     "shader-strata",
     "shader-weave"
-  ]
+  ],
+  "icon": "ColorsIcon"
 }

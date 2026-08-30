@@ -32,7 +32,7 @@ export default async function Page(props: {
           <CopyMarkdownButton url={`${page.url}.md`} className="shrink-0" />
         ) : null}
       </div>
-      <DocsDescription className="mt-3 mb-0 max-w-xl text-pretty text-base text-muted-foreground md:text-lg">
+      <DocsDescription className="mb-0 max-w-xl text-pretty text-base text-muted-foreground md:text-lg">
         {data.description}
       </DocsDescription>
       <div className="typeset typeset-docs mt-8 flex-1">
