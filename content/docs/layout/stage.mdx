@@ -16,8 +16,6 @@ avoidWhen:
 
 <ComponentPreview name="stage" />
 
-## Installation
-
 <InstallBlock name="stage" />
 
 ## Usage
@@ -139,9 +137,7 @@ The outer frame clips the surface. Targets near an edge, zoom below `1`, and str
 
 For an optical finish, wrap Stage in [`CameraLens`](/docs/filters/components/camera-lens). Stage supplies the physical set and operator path; CameraLens supplies bloom, softness, chromatic aberration, and vignette.
 
-## Props
-
-<PropsTable
+<PropsTable title="Props"
   rows={[
     { name: "children", type: "ReactNode", description: "The image, video, component, or scene rendered as one studio plane." },
     { name: "contentSize", type: "{ width: number; height: number }", default: "composition size", description: "Intrinsic surface dimensions used to preserve its aspect ratio, including long pages." },

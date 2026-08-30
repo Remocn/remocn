@@ -18,8 +18,6 @@ avoidWhen:
 
 A **motion atom**: a looping animation that is a pure function of `useCurrentFrame()`. No states, no props to sequence — just a spinning arc that advances deterministically with the timeline. Safe in Remotion's headless per-frame renderer (no `Date`, `Math.random`, or `requestAnimationFrame`).
 
-## Installation
-
 <InstallBlock name="spinner" />
 
 <Note>
@@ -54,9 +52,7 @@ rotation (deg) = frame × speed × 6
 
 At 30 fps with `speed=1`, one full rotation takes 20 frames (2 frames per 12°). Increase `speed` to spin faster without changing the composition fps.
 
-## Props
-
-<PropsTable
+<PropsTable title="Props"
   rows={[
     {
       name: "size",

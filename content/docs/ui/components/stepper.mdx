@@ -20,8 +20,6 @@ A value-channel atom whose active position (`0`–`n-1`) is a pure function of t
 
 As `position` advances, each circle fills from muted to primary, the checkmark draws in, and the connector between steps fills — all derived purely from the single float `position` value.
 
-## Installation
-
 <InstallBlock name="stepper" />
 
 <Note>
@@ -102,9 +100,7 @@ The `duration` field on each step overrides the file's `DEFAULT_DURATION` (= `24
 
 Only `"horizontal"` is implemented in this release. Passing `orientation="vertical"` is accepted but falls back to horizontal — vertical layout is planned for a future wave.
 
-## Props
-
-<PropsTable
+<PropsTable title="Props"
   rows={[
     {
       name: "steps",

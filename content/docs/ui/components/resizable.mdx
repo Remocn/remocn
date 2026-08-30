@@ -18,8 +18,6 @@ avoidWhen:
 
 A dual-channel value atom whose panel split ratio (`0`–`1`) and handle appearance (`idle`, `hover`, `press`) are a pure function of the props it receives. The component reads no frame. This is a **dual-channel** variant of the value-channel pattern: `useResizableTransition` drives a numeric ratio channel and a handle-state channel independently through one `ResizableStyle`, so cursor-synced drag scenes compose naturally — the same pattern as the Slider primitive.
 
-## Installation
-
 <InstallBlock name="resizable" />
 
 <Note>
@@ -156,9 +154,7 @@ Both `"horizontal"` (default) and `"vertical"` are implemented. Horizontal split
 <Resizable style={style} direction="vertical" />
 ```
 
-## Props
-
-<PropsTable
+<PropsTable title="Props"
   rows={[
     {
       name: "first",

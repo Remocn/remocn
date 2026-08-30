@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 
 /** Shared pill surface so every non-slider control matches the elastic slider. */
 const PILL =
-  "flex h-11 items-center gap-3 rounded-xl bg-control px-3 text-sm transition-colors";
+  "flex h-9 items-center gap-3 rounded-xl control-surface px-3 text-sm transition-colors";
 
 /** Strip trailing zeros so the value reads like the reference (1, 0.8, 0.1). */
 function formatNumber(v: number) {
@@ -43,7 +43,7 @@ function SelectPill({
         id={id}
         className={cn(
           PILL,
-          "w-full justify-between outline-none hover:bg-muted/70 focus-visible:ring-2 focus-visible:ring-ring/40",
+          "control-surface-interactive w-full justify-between outline-none hover:bg-muted/70 focus-visible:ring-2 focus-visible:ring-ring/40",
         )}
       >
         <span className="font-medium text-muted-foreground">{ctrl.label}</span>
@@ -148,7 +148,6 @@ function Control({
           max={ctrl.max}
           step={ctrl.step}
           formatValue={formatNumber}
-          className="[--elastic-slider-height:--spacing(11)] [--elastic-slider-radius:0.75rem] "
         />
       );
 
@@ -176,7 +175,10 @@ function Control({
       return (
         <label
           htmlFor={id}
-          className={cn(PILL, "cursor-pointer justify-between")}
+          className={cn(
+            PILL,
+            "control-surface-interactive cursor-pointer justify-between",
+          )}
         >
           <span className="font-medium text-muted-foreground">
             {ctrl.label}

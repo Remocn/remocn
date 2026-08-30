@@ -18,8 +18,6 @@ avoidWhen:
 
 A state atom whose appearance (closed, opened) is a pure function of the `state` prop. Pass a state directly or drive it from the Remotion timeline via `useCurrentState`. The component reads no frame — only the state value you give it. The wrapper is transparent by design: Dialog is a modal layer meant to compose over another scene, so it does not paint an opaque background. Unlike AlertDialog, Dialog is a generic (non-destructive) modal — its primary action uses the theme `primary` color, and it renders a close (X) button in the top-right corner of the popup card.
 
-## Installation
-
 <InstallBlock name="dialog" />
 
 <Note>
@@ -90,9 +88,7 @@ The `duration` field on each step overrides the file's `DEFAULT_DURATION` (= `12
 
 `style` takes precedence over `state` when both are provided.
 
-## Props
-
-<PropsTable
+<PropsTable title="Props"
   rows={[
     {
       name: "state",

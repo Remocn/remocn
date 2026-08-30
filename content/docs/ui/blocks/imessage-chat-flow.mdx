@@ -18,8 +18,6 @@ avoidWhen:
 
 An iMessage-skinned composition scene — a tailed-bubble message thread, a native-feeling composer bar, and a contact header with FaceTime video icon. Outgoing messages type into the composer then send as blue tailed bubbles with a "Delivered" label underneath; incoming replies are preceded by a gray typing bubble (three bouncing dots) that swaps to the reply text; tapback reaction badges pop in at the top outer corner of their parent bubble.
 
-## Installation
-
 <InstallBlock name="imessage-chat-flow" />
 
 <Note>
@@ -37,9 +35,7 @@ The block is otherwise self-contained: it owns its tailed bubble layout (gray `#
 
 The scene opens with a focused iMessage composer. The first outgoing message types into the input field, then sends — a blue tailed bubble enters from below and settles into the thread with a "Delivered" label underneath. A gray typing bubble with three bouncing dots appears on the incoming side; after a beat the dots swap to the reply text and the tapback reaction badge pops in at the top outer corner. Subsequent outgoing messages follow the same pattern — typing, sending, Delivered — each reply preceded by the typing bubble. The composer returns to idle at the end.
 
-## Props
-
-<PropsTable
+<PropsTable title="Props"
   rows={[
     {
       name: "messages",

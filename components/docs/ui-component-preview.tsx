@@ -5,6 +5,12 @@ import { useQueryStates } from "nuqs";
 import { Suspense, use, useEffect, useMemo, useRef, useState } from "react";
 import { CodeBlock } from "@/components/docs/code-block";
 import { Button } from "@/components/ui/button";
+import {
+  Frame,
+  FrameHeader,
+  FramePanel,
+  FrameTitle,
+} from "@/components/ui/frame";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useTrackEvent } from "@/lib/analytics";
 import { type ControlConfig, getDefaults } from "@/lib/customizer-config";
@@ -144,38 +150,41 @@ function UiPreview({
 
   return (
     <div className="not-prose mb-6 flex w-full flex-col gap-4">
-      <Tabs defaultValue="preview" className="gap-3">
-        <TabsList>
-          <TabsTrigger value="preview">Preview</TabsTrigger>
-          <TabsTrigger value="code">Code</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="preview" className="mt-0">
-          <PreviewStage
-            name={name}
-            Component={scene.Scene}
-            inputProps={values}
-            // D2 — timing is sourced from the EXAMPLE, not the config.
-            durationInFrames={timing.durationInFrames}
-            fps={timing.fps}
-            compositionWidth={timing.width}
-            compositionHeight={timing.height}
-            previewBackdrop={timing.previewBackdrop}
-          />
-        </TabsContent>
-
-        <TabsContent value="code" className="mt-0">
-          <CodeBlock code={code} />
-        </TabsContent>
-      </Tabs>
+      <Frame>
+        <Tabs defaultValue="preview" className="gap-0">
+          <FrameHeader className="flex-row items-center px-2 py-2">
+            <TabsList>
+              <TabsTrigger value="preview">Preview</TabsTrigger>
+              <TabsTrigger value="code">Code</TabsTrigger>
+            </TabsList>
+          </FrameHeader>
+          <FramePanel className="overflow-hidden p-0">
+            <TabsContent value="preview" className="mt-0">
+              <PreviewStage
+                name={name}
+                Component={scene.Scene}
+                inputProps={values}
+                // D2 — timing is sourced from the EXAMPLE, not the config.
+                durationInFrames={timing.durationInFrames}
+                fps={timing.fps}
+                compositionWidth={timing.width}
+                compositionHeight={timing.height}
+                previewBackdrop={timing.previewBackdrop}
+                className="rounded-none"
+              />
+            </TabsContent>
+            <TabsContent value="code" className="mt-0">
+              <CodeBlock code={code} />
+            </TabsContent>
+          </FramePanel>
+        </Tabs>
+      </Frame>
 
       {/* Empty-panel collapse (Q5): no honored controls → only the Tabs. */}
       {hasControls && (
-        <div className="overflow-hidden ">
-          <div className="flex items-center justify-between pt-4 pb-2">
-            <span className="text-sm font-medium text-foreground">
-              Customize
-            </span>
+        <Frame className="mt-2">
+          <FrameHeader className="flex-row items-center justify-between px-3 py-2">
+            <FrameTitle>Customize</FrameTitle>
             <div className="flex items-center gap-1">
               <Button
                 variant="outline"
@@ -203,13 +212,15 @@ function UiPreview({
                 <RotateCcwIcon className="size-3.5" />
               </Button>
             </div>
-          </div>
-          <ComponentCustomizer
-            controls={visibleControls}
-            values={values as Record<string, unknown>}
-            onChange={handleCustomizeChange}
-          />
-        </div>
+          </FrameHeader>
+          <FramePanel className="p-3">
+            <ComponentCustomizer
+              controls={visibleControls}
+              values={values as Record<string, unknown>}
+              onChange={handleCustomizeChange}
+            />
+          </FramePanel>
+        </Frame>
       )}
     </div>
   );

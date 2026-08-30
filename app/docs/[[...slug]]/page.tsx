@@ -24,18 +24,17 @@ export default async function Page(props: {
       footer={{ enabled: !isIcons }}
       className={isIcons ? "max-w-none" : undefined}
     >
-      <DocsTitle
-        style={{ fontFamily: "var(--font-display)" }}
-        className="text-4xl font-semibold tracking-tight text-balance md:text-5xl"
-      >
-        {data.title}
-      </DocsTitle>
-      <DocsDescription className="mt-3 mb-0 max-w-3xl text-pretty text-lg text-muted-foreground md:text-xl">
+      <div className="flex items-center justify-between gap-4">
+        <DocsTitle className="text-3xl font-semibold tracking-tight text-balance md:text-4xl">
+          {data.title}
+        </DocsTitle>
+        {params.slug?.length ? (
+          <CopyMarkdownButton url={`${page.url}.md`} className="shrink-0" />
+        ) : null}
+      </div>
+      <DocsDescription className="mt-3 mb-0 max-w-xl text-pretty text-base text-muted-foreground md:text-lg">
         {data.description}
       </DocsDescription>
-      {params.slug?.length ? (
-        <CopyMarkdownButton url={`${page.url}.md`} className="mt-4" />
-      ) : null}
       <div className="typeset typeset-docs mt-8 flex-1">
         <MDX components={getMDXComponents()} />
       </div>

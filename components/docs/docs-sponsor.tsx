@@ -1,7 +1,12 @@
 import { ArrowUpRight } from "lucide-react";
 import Link from "next/link";
 import type React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Frame,
+  FrameHeader,
+  FramePanel,
+  FrameTitle,
+} from "@/components/ui/frame";
 import { getDocsSponsors } from "@/config/sponsors";
 import { cn } from "@/lib/utils";
 
@@ -9,9 +14,9 @@ export const DocsSponsor: React.FC = () => {
   const featuredSponsors = getDocsSponsors();
 
   return (
-    <Card size="sm" className="w-full gap-4 shadow-2xs">
-      <CardHeader className="flex flex-row items-center justify-between gap-2">
-        <CardTitle>Sponsors</CardTitle>
+    <Frame className="w-full">
+      <FrameHeader className="flex-row items-center justify-between gap-2 px-3 py-2">
+        <FrameTitle className="text-sm">Sponsors</FrameTitle>
         <Link
           href="/sponsors"
           className="inline-flex items-center gap-1 text-[10px] font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:text-foreground focus-visible:outline-none"
@@ -19,9 +24,9 @@ export const DocsSponsor: React.FC = () => {
           Become a sponsor
           <ArrowUpRight className="size-3.5" aria-hidden="true" />
         </Link>
-      </CardHeader>
+      </FrameHeader>
 
-      <CardContent className="flex flex-col gap-1">
+      <FramePanel className="flex flex-col gap-1 p-2">
         {/* <span className="text-xs font-medium text-muted-foreground">Gold</span> */}
 
         {featuredSponsors.length > 0 ? (
@@ -32,7 +37,7 @@ export const DocsSponsor: React.FC = () => {
                 href={sponsor.website}
                 target="_blank"
                 rel="noreferrer"
-                className="group flex items-center justify-center gap-3 rounded-2xl surface-card px-3 py-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+                className="group flex items-center justify-center gap-3 rounded-md surface-card px-3 py-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
               >
                 {/** biome-ignore lint/performance/noImgElement: sponsor logos are SVGs of arbitrary sizes */}
                 <img
@@ -53,11 +58,11 @@ export const DocsSponsor: React.FC = () => {
             ))}
           </div>
         ) : (
-          <span className="rounded-2xl surface-card px-3 py-2.5 text-xs font-medium text-muted-foreground">
+          <span className="rounded-md surface-card px-3 py-2.5 text-xs font-medium text-muted-foreground">
             Your logo here
           </span>
         )}
-      </CardContent>
-    </Card>
+      </FramePanel>
+    </Frame>
   );
 };

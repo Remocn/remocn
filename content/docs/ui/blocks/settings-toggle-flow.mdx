@@ -18,8 +18,6 @@ avoidWhen:
 
 A composition scene laid out as a centered two-column settings card: a descriptive text block on the left, the controls stacked on the right — each under its own label, including a "Volume" label for the slider. The card and its controls blur-in in sequence, then a cursor flips the notifications switch, opens the theme select and picks an option, drags the volume slider, and clicks the bottom-right Save button — concluding with a settings-saved confirmation toast. Shows cursor-driven interactions across multiple interactive primitives in sequence.
 
-## Installation
-
 <InstallBlock name="settings-toggle-flow" />
 
 <Note>
@@ -40,9 +38,7 @@ Installing `settings-toggle-flow` automatically installs the shared `remocn-ui` 
 
 The card surface fades in place (frames 0–18), then the header and each control group blur-in staggered, all settling by frame 58. The cursor moves to the notifications switch and clicks to toggle it on (frame 68). It arrives at the theme select trigger and clicks to open the panel (99), moves to the last option and clicks to select it (124), closing the dropdown. It then drags the volume slider — holding the pressed state while the value animates from frame 149 to 194. After releasing, the cursor moves to the bottom-right Save button and clicks (224; press → success check). The settings-saved toast then appears at frame 240 and auto-dismisses at frame 300.
 
-## Props
-
-<PropsTable
+<PropsTable title="Props"
   rows={[
     {
       name: "title",

@@ -30,8 +30,10 @@ export interface CodeBlockCommandProps {
   /**
    * Surface treatment. `muted` (default) is the filled gray slab used in docs.
    * `outline` is a lighter bordered terminal that sits softer on light cards.
+   * `plain` is border- and background-less, for hosts that own the surface
+   * (e.g. a FramePanel).
    */
-  variant?: "muted" | "outline";
+  variant?: "muted" | "outline" | "plain";
 }
 
 export function CodeBlockCommand({
@@ -62,7 +64,8 @@ export function CodeBlockCommand({
     <div
       className={cn(
         "not-prose relative overflow-hidden rounded-xl",
-        variant === "outline" ? "border border-border bg-card" : "bg-muted",
+        variant === "outline" && "border border-border bg-card",
+        variant === "muted" && "bg-muted",
       )}
     >
       <TabsPrimitive.Root

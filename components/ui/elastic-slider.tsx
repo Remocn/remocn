@@ -474,7 +474,7 @@ export function ElasticSlider({
         aria-valuetext={displayValue}
         className={cn(
           "group/elastic-slider absolute inset-0 cursor-pointer touch-none overflow-hidden rounded-xl bg-(--elastic-slider-bg) outline-none select-none",
-          "data-[focus-visible=true]:ring-2 data-[focus-visible=true]:ring-ring/50 data-[focus-visible=true]:ring-offset-1 data-[focus-visible=true]:ring-offset-background bg-control",
+          "data-[focus-visible=true]:ring-2 data-[focus-visible=true]:ring-ring/50 data-[focus-visible=true]:ring-offset-1 data-[focus-visible=true]:ring-offset-background control-surface control-surface-interactive",
         )}
         style={{ width: rubberWidth, x: rubberX }}
         onPointerDown={handlePointerDown}

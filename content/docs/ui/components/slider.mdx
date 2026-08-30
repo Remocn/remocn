@@ -18,8 +18,6 @@ avoidWhen:
 
 A dual-channel value atom whose fill (`0`–`100`) and thumb appearance (`idle`, `hover`, `press`) are a pure function of the props it receives. The component reads no frame. This is a **dual-channel** variant of the value-channel pattern: `useSliderTransition` drives a numeric fill channel and a thumb-state channel independently through one `SliderStyle`, so cursor-synced drag scenes compose naturally.
 
-## Installation
-
 <InstallBlock name="slider" />
 
 <Note>
@@ -146,9 +144,7 @@ export const Scene = () => {
 
 The cursor's drag frames (`at: 44` → `at: 100`, duration 56) match the value-channel move exactly. The thumb-state transitions (`hover` at 30, `press` at 44, `idle` at 108) are independent — they run on their own mini-durations without disturbing the fill easing.
 
-## Props
-
-<PropsTable
+<PropsTable title="Props"
   rows={[
     {
       name: "value",

@@ -18,8 +18,6 @@ avoidWhen:
 
 A composition scene that renders a full chat conversation — a contact header, a message thread, and a composer input. Outgoing messages type themselves into the input field then send; incoming replies are preceded by a typing indicator that swaps to the reply bubble; reaction emojis pop in after each reply lands.
 
-## Installation
-
 <InstallBlock name="chat-flow" />
 
 <Note>
@@ -38,9 +36,7 @@ The layout is a mobile-width column — a contact header, the message thread, an
 
 The scene opens with the composer focused. The first outgoing message ("Hey — ready for the demo?") types into the input, then sends — the bubble enters from below and settles into the thread. The contact's typing indicator appears inside an incoming bubble; after a beat the indicator swaps to the reply text ("Yep, pushing it live now") and the 🔥 reaction badge pops in. The second outgoing message types and sends ("Perfect, sending the link over"), and its 👍 reaction badge follows. `chatFlowDuration` returns the total frame count for the default script at a given speed; `chatFlowSchedule` exposes the per-message frame offsets for synchronisation with other scene elements.
 
-## Props
-
-<PropsTable
+<PropsTable title="Props"
   rows={[
     {
       name: "messages",

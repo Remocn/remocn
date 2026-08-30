@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Manrope, Outfit } from "next/font/google";
+import { Geist, Geist_Mono, Manrope } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import "./globals.css";
@@ -16,11 +16,6 @@ const geistSans = Geist({
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-const outfit = Outfit({
-  variable: "--font-display",
   subsets: ["latin"],
 });
 
@@ -75,7 +70,6 @@ export default function RootLayout({
         "antialiased",
         geistSans.variable,
         geistMono.variable,
-        outfit.variable,
         "font-sans",
         inter.variable,
       )}

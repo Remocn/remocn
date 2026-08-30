@@ -20,8 +20,6 @@ A state atom that wraps a **single child** and reveals it with blur + opacity + 
 
 Unlike the other remocn-ui atoms, `blur-in` is **theme-independent**: it carries no colors and has no `theme`/`mode`/`primary` props. Its only inputs are the motion knobs — `blur`, `direction`, and `distance`.
 
-## Installation
-
 <InstallBlock name="blur-in" />
 
 <Note>
@@ -149,9 +147,7 @@ export const Scene = () => {
 
 Each child gets its own `useBlurInTransition`, staggered by its index.
 
-## Props
-
-<PropsTable
+<PropsTable title="Props"
   rows={[
     {
       name: "state",

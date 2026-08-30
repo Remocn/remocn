@@ -75,6 +75,7 @@ export function PreviewStage({
   compositionWidth,
   compositionHeight,
   previewBackdrop,
+  className,
 }: {
   name: string;
   // biome-ignore lint/suspicious/noExplicitAny: dynamically-loaded Remotion composition, props shape varies per component
@@ -87,6 +88,7 @@ export function PreviewStage({
   compositionWidth: number;
   compositionHeight: number;
   previewBackdrop?: BackdropFill;
+  className?: string;
 }) {
   const [mounted, setMounted] = useState(false);
   const frameRef = useRef<HTMLDivElement>(null);
@@ -193,7 +195,10 @@ export function PreviewStage({
       // (aspect-video), staying full-width and aligned with the tabs/customize
       // panel. The Suspense fallback above uses the same ratio to keep zero
       // layout shift.
-      className="surface-card aspect-video w-full overflow-hidden rounded-2xl"
+      className={cn(
+        "aspect-video w-full overflow-hidden",
+        className ?? "surface-card rounded-2xl",
+      )}
     >
       {mounted ? (
         <div

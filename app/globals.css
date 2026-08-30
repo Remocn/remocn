@@ -118,6 +118,13 @@
   --elevation-raised-highlighted:
     0 0 0 1px rgb(0 0 0 / 0.15), 0 1px 3px rgb(0 0 0 / 0.05), 0 4px 10px -4px
     rgb(0 0 0 / 0.05);
+
+  --elevation-control:
+    inset 0 1px 0 rgb(255 255 255 / 0.85), inset 0 0 0 1px rgb(0 0 0 / 0.08),
+    0 1px 2px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.06);
+  --elevation-control-hover:
+    inset 0 1px 0 rgb(255 255 255 / 0.85), inset 0 0 0 1px rgb(0 0 0 / 0.12),
+    0 1px 2px rgb(0 0 0 / 0.06), 0 3px 6px -2px rgb(0 0 0 / 0.08);
 }
 
 .dark {
@@ -164,6 +171,13 @@
   --elevation-raised: 0 0 0 1px rgb(255 255 255 / 0.09);
   --elevation-raised-hover: 0 0 0 1px rgb(255 255 255 / 0.14);
   --elevation-raised-highlighted: 0 0 0 1px rgb(255 255 255 / 0.18);
+
+  --elevation-control:
+    inset 0 1px 0 rgb(255 255 255 / 0.05), inset 0 0 0 1px
+    rgb(255 255 255 / 0.08);
+  --elevation-control-hover:
+    inset 0 1px 0 rgb(255 255 255 / 0.07), inset 0 0 0 1px
+    rgb(255 255 255 / 0.12);
 }
 
 @layer base {
@@ -192,8 +206,23 @@
   @apply mx-auto w-full max-w-6xl px-4 sm:px-6 min-[1440px]:max-w-5xl;
 }
 
-.bg-control {
-  @apply bg-muted border border-border;
+.control-surface {
+  @apply bg-muted;
+  box-shadow:
+    var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000),
+    var(--elevation-control);
+}
+
+.control-surface-interactive {
+  transition-property: color, background-color, box-shadow;
+  transition-duration: 150ms;
+  transition-timing-function: ease-out;
+}
+
+.control-surface-interactive:hover {
+  box-shadow:
+    var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000),
+    var(--elevation-control-hover);
 }
 
 .bg-grid-fade {

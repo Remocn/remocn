@@ -18,8 +18,6 @@ avoidWhen:
 
 A motion atom that renders an animated cursor as a pure function of the `CursorStyle` it receives. The cursor reads no frame itself — the single time source is `useCursorPath` on the caller's side, which folds a path of waypoints into a resolved position, ripple, and press-dip visual. This is the **value-channel** variant of the primitive pattern: instead of a string-state timeline it drives numeric position channels directly.
 
-## Installation
-
 <InstallBlock name="cursor" />
 
 <Note>
@@ -137,9 +135,7 @@ const style = useCursorPath([
 ]);
 ```
 
-## Props
-
-<PropsTable
+<PropsTable title="Props"
   rows={[
     {
       name: "style",

@@ -16,8 +16,6 @@ avoidWhen:
 
 <ComponentPreview name="word-stream" />
 
-## Installation
-
 <InstallBlock name="word-stream" />
 
 ## Usage
@@ -79,9 +77,7 @@ export const RemotionRoot = () => (
 
 `wordGap` is the number of frames between word reveals — match it to the speaking pace of the narration (at 30fps, `wordGap={6}` is 5 words per second). `hold` controls how long a finished phrase stays before the next one starts. The exported `wordStreamLength(text, wordGap, hold)` helper returns the frame on which the last word finishes resolving — use it as the lower bound of the `Sequence`.
 
-## Props
-
-<PropsTable
+<PropsTable title="Props"
   rows={[
     {
       name: "text",

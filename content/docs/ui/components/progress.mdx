@@ -18,8 +18,6 @@ avoidWhen:
 
 A value-channel atom whose fill (`0`–`100`) is a pure function of the `value` prop or an interpolated `ProgressStyle` from `useProgressTransition`. The component reads no frame — only the value you give it. This is the **value-channel** variant of the primitive pattern: instead of a string-state timeline it drives a numeric fill channel directly, the same deviation used by the Cursor primitive.
 
-## Installation
-
 <InstallBlock name="progress" />
 
 <Note>
@@ -96,9 +94,7 @@ The `duration` field on each step overrides the file's `DEFAULT_DURATION` (= `24
 
 `style` takes precedence over `value` when both are provided.
 
-## Props
-
-<PropsTable
+<PropsTable title="Props"
   rows={[
     {
       name: "value",
