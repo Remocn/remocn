@@ -1,10 +1,6 @@
 {
   "title": "Getting Started",
   "defaultOpen": true,
-  "pages": [
-    "introduction",
-    "installation",
-    "agent-skill"
-  ],
+  "pages": ["introduction", "installation", "agent-skill"],
   "icon": "Rocket01Icon"
 }
