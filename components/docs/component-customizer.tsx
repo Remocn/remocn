@@ -2,9 +2,13 @@
 
 import { Select as SelectPrimitive } from "@base-ui/react/select";
 import { ChevronDownIcon } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
 import { ElasticSlider } from "@/components/ui/elastic-slider";
 import { Label } from "@/components/ui/label";
+import {
+  NumberField,
+  NumberFieldInput,
+  NumberFieldScrubArea,
+} from "@/components/ui/number-field";
 import { SelectContent, SelectItem } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import type { ControlConfig, ControlType } from "@/lib/customizer-config";
@@ -80,49 +84,24 @@ function NumberInputPill({
   value: number;
   onChange: (value: number) => void;
 }) {
-  const [draft, setDraft] = useState(String(value));
-  const committed = useRef(value);
-
-  useEffect(() => {
-    if (value !== committed.current) {
-      committed.current = value;
-      setDraft(String(value));
-    }
-  }, [value]);
-
-  const commit = (raw: string) => {
-    if (raw === "" || raw === "-") return;
-    const n = Number(raw);
-    if (Number.isNaN(n)) return;
-    const clamped = Math.min(ctrl.max, Math.max(ctrl.min, n));
-    committed.current = clamped;
-    onChange(clamped);
-  };
-
   return (
-    <div className={PILL}>
-      <Label
-        htmlFor={id}
-        className="shrink-0 font-medium text-muted-foreground"
-      >
-        {ctrl.label}
-      </Label>
-      <input
-        id={id}
-        type="number"
-        inputMode="numeric"
-        min={ctrl.min}
-        max={ctrl.max}
-        step={ctrl.step}
-        value={draft}
-        onChange={(e) => {
-          setDraft(e.target.value);
-          commit(e.target.value);
-        }}
-        onBlur={() => setDraft(String(committed.current))}
-        className="min-w-0 flex-1 bg-transparent text-right font-mono text-base font-medium text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring/40 placeholder:text-muted-foreground/50 sm:text-sm [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+    <NumberField
+      id={id}
+      value={value}
+      onValueChange={(v) => {
+        if (v !== null) onChange(v);
+      }}
+      min={ctrl.min}
+      max={ctrl.max}
+      step={ctrl.step}
+      className={cn(PILL, "flex-row justify-between")}
+    >
+      <NumberFieldScrubArea
+        label={ctrl.label}
+        className="shrink-0 text-muted-foreground"
       />
-    </div>
+      <NumberFieldInput className="h-auto min-w-0 flex-1 rounded-none px-0 text-right font-mono text-base font-medium leading-none text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring/40 sm:h-auto sm:text-sm" />
+    </NumberField>
   );
 }
 
