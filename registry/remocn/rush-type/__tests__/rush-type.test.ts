@@ -3,6 +3,7 @@ import {
   getRushTypeCycleLength,
   getRushTypeDuration,
   getRushTypeFrameState,
+  getRushTypePhraseAtlasRows,
   getRushTypeShutterRatios,
   normalizeRushTypePhrase,
   rushTypeLength,
@@ -37,6 +38,45 @@ describe("RushType phrase and duration", () => {
         peakHoldDuration: 5,
       }),
     ).toBe(72);
+  });
+});
+
+describe("RushType phrase atlas", () => {
+  it("rounds the row count up to a power of two for mipmaps", () => {
+    expect(
+      getRushTypePhraseAtlasRows({
+        wordCount: 3,
+        rowHeight: 512,
+        maxTextureSize: 4096,
+      }),
+    ).toBe(4);
+    expect(
+      getRushTypePhraseAtlasRows({
+        wordCount: 4,
+        rowHeight: 512,
+        maxTextureSize: 4096,
+      }),
+    ).toBe(4);
+  });
+
+  it("keeps two rows for a single word", () => {
+    expect(
+      getRushTypePhraseAtlasRows({
+        wordCount: 1,
+        rowHeight: 512,
+        maxTextureSize: 4096,
+      }),
+    ).toBe(2);
+  });
+
+  it("selects the pair-atlas fallback when the phrase is too tall", () => {
+    expect(
+      getRushTypePhraseAtlasRows({
+        wordCount: 9,
+        rowHeight: 512,
+        maxTextureSize: 4096,
+      }),
+    ).toBeNull();
   });
 });
 

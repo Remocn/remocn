@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   continueRender,
   delayRender,
@@ -348,6 +348,7 @@ varying vec2 vUv;
 uniform sampler2D uText;
 uniform vec2 uRes;
 uniform vec2 uHalfPx;
+uniform float uAtlasRows;
 uniform float uSx;
 uniform vec3 uSyQ;
 uniform float uCenterY;
@@ -394,7 +395,7 @@ vec2 atlasUv(float sy, float halfIdx, vec2 wordPoint, out float inside) {
   inside = step(0.0, q.x) * step(q.x, 1.0) * step(0.0, q.y) * step(q.y, 1.0);
   return vec2(
     clamp(q.x, 0.0, 1.0),
-    (clamp(q.y, 0.0, 1.0) + halfIdx) * 0.5
+    (clamp(q.y, 0.0, 1.0) + halfIdx) / uAtlasRows
   );
 }
 
@@ -533,6 +534,7 @@ const UNIFORM_NAMES = [
   "uText",
   "uRes",
   "uHalfPx",
+  "uAtlasRows",
   "uSx",
   "uSyQ",
   "uCenterY",
@@ -566,8 +568,11 @@ interface GlState {
   atlasWidth: number;
   halfHeight: number;
   textureCapHeight: number;
+  maxTextureSize: number;
   scratch: HTMLCanvasElement;
-  pairKey: string;
+  atlasKey: string;
+  atlasRows: number;
+  wordHalfWidths: number[];
   wordHalfWidth: number;
 }
 
@@ -594,7 +599,7 @@ function createGlState(canvas: HTMLCanvasElement): GlState | null {
     antialias: false,
     depth: false,
     stencil: false,
-    preserveDrawingBuffer: true,
+    preserveDrawingBuffer: false,
     powerPreference: "high-performance",
   });
   if (!gl) return null;
@@ -631,17 +636,6 @@ function createGlState(canvas: HTMLCanvasElement): GlState | null {
   const halfHeight = atlasWidth / 4;
   const textureCapHeight = Math.round(halfHeight * 0.64);
   gl.bindTexture(gl.TEXTURE_2D, texture);
-  gl.texImage2D(
-    gl.TEXTURE_2D,
-    0,
-    gl.RGBA,
-    atlasWidth,
-    halfHeight * 2,
-    0,
-    gl.RGBA,
-    gl.UNSIGNED_BYTE,
-    null,
-  );
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
   gl.texParameteri(
@@ -668,8 +662,11 @@ function createGlState(canvas: HTMLCanvasElement): GlState | null {
     atlasWidth,
     halfHeight,
     textureCapHeight,
+    maxTextureSize: gl.getParameter(gl.MAX_TEXTURE_SIZE) as number,
     scratch,
-    pairKey: "",
+    atlasKey: "",
+    atlasRows: 2,
+    wordHalfWidths: [],
     wordHalfWidth: 1,
   };
 }
@@ -690,7 +687,7 @@ function resolveFontFamily(fontFamily: string): string {
 function rasterWord(
   state: GlState,
   word: string,
-  half: 0 | 1,
+  row: number,
   fontFamily: string,
   fontWeight: number,
 ): number {
@@ -730,7 +727,7 @@ function rasterWord(
     gl.TEXTURE_2D,
     0,
     0,
-    half * state.halfHeight,
+    row * state.halfHeight,
     gl.RGBA,
     gl.UNSIGNED_BYTE,
     state.scratch,
@@ -739,20 +736,90 @@ function rasterWord(
   return halfWidth;
 }
 
+function nextPowerOfTwo(value: number): number {
+  return 2 ** Math.ceil(Math.log2(Math.max(value, 2)));
+}
+
+export function getRushTypePhraseAtlasRows({
+  wordCount,
+  rowHeight,
+  maxTextureSize,
+}: {
+  wordCount: number;
+  rowHeight: number;
+  maxTextureSize: number;
+}): number | null {
+  const rows = nextPowerOfTwo(wordCount);
+  return rowHeight * rows <= maxTextureSize ? rows : null;
+}
+
+function allocateAtlas(state: GlState, rows: number): void {
+  const { gl } = state;
+  gl.bindTexture(gl.TEXTURE_2D, state.texture);
+  gl.texImage2D(
+    gl.TEXTURE_2D,
+    0,
+    gl.RGBA,
+    state.atlasWidth,
+    state.halfHeight * rows,
+    0,
+    gl.RGBA,
+    gl.UNSIGNED_BYTE,
+    null,
+  );
+  state.atlasRows = rows;
+}
+
 function updateAtlas(
   state: GlState,
-  firstWord: string,
-  secondWord: string,
+  words: string[],
+  firstWordIndex: number,
+  secondWordIndex: number,
   fontFamily: string,
   fontWeight: number,
-): void {
-  const pairKey = `${fontFamily}\u0000${fontWeight}\u0000${firstWord}\u0000${secondWord}`;
-  if (state.pairKey === pairKey) return;
-  const firstWidth = rasterWord(state, firstWord, 0, fontFamily, fontWeight);
-  const secondWidth = rasterWord(state, secondWord, 1, fontFamily, fontWeight);
-  state.gl.generateMipmap(state.gl.TEXTURE_2D);
-  state.pairKey = pairKey;
-  state.wordHalfWidth = Math.max(firstWidth, secondWidth);
+): { firstRow: number; secondRow: number } {
+  const phraseRows = getRushTypePhraseAtlasRows({
+    wordCount: words.length,
+    rowHeight: state.halfHeight,
+    maxTextureSize: state.maxTextureSize,
+  });
+
+  if (phraseRows !== null) {
+    const atlasKey = `phrase\u0000${fontFamily}\u0000${fontWeight}\u0000${words.join("\u0000")}`;
+    if (state.atlasKey !== atlasKey) {
+      allocateAtlas(state, phraseRows);
+      state.wordHalfWidths = words.map((word, row) =>
+        rasterWord(state, word, row, fontFamily, fontWeight),
+      );
+      state.gl.generateMipmap(state.gl.TEXTURE_2D);
+      state.atlasKey = atlasKey;
+    }
+    state.wordHalfWidth = Math.max(
+      state.wordHalfWidths[firstWordIndex] ?? 1,
+      state.wordHalfWidths[secondWordIndex] ?? 1,
+    );
+    return { firstRow: firstWordIndex, secondRow: secondWordIndex };
+  }
+
+  const firstWord = words[firstWordIndex] ?? words[0];
+  const secondWord = words[secondWordIndex] ?? words[0];
+  const atlasKey = `pair\u0000${fontFamily}\u0000${fontWeight}\u0000${firstWord}\u0000${secondWord}`;
+  if (state.atlasKey !== atlasKey) {
+    allocateAtlas(state, 2);
+    const firstWidth = rasterWord(state, firstWord, 0, fontFamily, fontWeight);
+    const secondWidth = rasterWord(
+      state,
+      secondWord,
+      1,
+      fontFamily,
+      fontWeight,
+    );
+    state.gl.generateMipmap(state.gl.TEXTURE_2D);
+    state.wordHalfWidths = [firstWidth, secondWidth];
+    state.atlasKey = atlasKey;
+  }
+  state.wordHalfWidth = Math.max(...state.wordHalfWidths, 1);
+  return { firstRow: 0, secondRow: 1 };
 }
 
 function destroyGlState(state: GlState): void {
@@ -784,9 +851,14 @@ function drawRushType({
   fps: number;
 }): void {
   const { gl, uniforms } = state;
-  const beforeWord = words[computed.before.wordIndex] ?? words[0];
-  const afterWord = words[computed.after.wordIndex] ?? words[0];
-  updateAtlas(state, beforeWord, afterWord, fontFamily, fontWeight);
+  const { firstRow, secondRow } = updateAtlas(
+    state,
+    words,
+    computed.before.wordIndex,
+    computed.after.wordIndex,
+    fontFamily,
+    fontWeight,
+  );
 
   const unit = Math.max(fontSize, 1) / state.textureCapHeight;
   const scaleY = (pose: TimelinePose) =>
@@ -833,12 +905,13 @@ function drawRushType({
   gl.uniform1i(uniforms.uText, 0);
   gl.uniform2f(uniforms.uRes, gl.drawingBufferWidth, gl.drawingBufferHeight);
   gl.uniform2f(uniforms.uHalfPx, state.atlasWidth, state.halfHeight);
+  gl.uniform1f(uniforms.uAtlasRows, state.atlasRows);
   gl.uniform1f(uniforms.uSx, scaleX);
   gl.uniform3f(uniforms.uSyQ, quadraticA, quadraticB, quadraticC);
   gl.uniform1f(uniforms.uCenterY, 0.5 + pivot);
   gl.uniform1f(uniforms.uSwapU, computed.swapU);
-  gl.uniform1f(uniforms.uHalfA, 0);
-  gl.uniform1f(uniforms.uHalfB, 1);
+  gl.uniform1f(uniforms.uHalfA, firstRow);
+  gl.uniform1f(uniforms.uHalfB, secondRow);
   gl.uniform3f(
     uniforms.uK,
     computed.shutterRatios[0],
@@ -906,7 +979,11 @@ export function RushType({
   const [webGlFailed, setWebGlFailed] = useState(false);
   const [renderHandle] = useState(() => delayRender("rush-type: first frame"));
   const continuedRef = useRef(false);
-  const words = normalizeRushTypePhrase(phrase);
+  const words = useMemo(() => normalizeRushTypePhrase(phrase), [phrase]);
+  const resolvedFontFamily = useMemo(
+    () => resolveFontFamily(fontFamily),
+    [fontFamily],
+  );
   const effectiveFrame = frame * Math.max(speed, 0);
   const computed = computeFrame({
     frame: effectiveFrame,
@@ -966,7 +1043,7 @@ export function RushType({
       computed,
       words,
       fontSize,
-      fontFamily: resolveFontFamily(fontFamily),
+      fontFamily: resolvedFontFamily,
       fontWeight: Number(fontWeight) || 400,
       verticalStretch,
       frame: effectiveFrame,
@@ -979,12 +1056,12 @@ export function RushType({
   }, [
     computed,
     effectiveFrame,
-    fontFamily,
     fontReady,
     fontSize,
     fontWeight,
     fps,
     renderHandle,
+    resolvedFontFamily,
     verticalStretch,
     words,
   ]);
