@@ -11,7 +11,7 @@ useWhen:
 avoidWhen:
   - "The text must remain readable throughout the motion — use `word-push` or `zoom-words`."
   - "You want a horizontal digital glitch — use `rgb-glitch-text`."
-  - "The background cannot be black or the component must remain transparent."
+  - "The component must remain transparent — it always paints an opaque background."
 ---
 
 <ComponentPreview name="rush-type" />
@@ -22,8 +22,9 @@ avoidWhen:
 
 ## Usage
 
-`RushType` shows one word of a short phrase on a flat black frame. The word
-rests in pixel-sharp white, then grows rapidly through a vertical orbit. During
+`RushType` shows one word of a short phrase on a flat opaque frame — black
+with white type by default. The word rests pixel-sharp, then grows rapidly
+through a vertical orbit. During
 that motion, the same monochrome glyph is accumulated into red, green, and blue
 channels over different shutter lengths. Green travels furthest, blue remains
 tightest, and red sits between them.
@@ -62,6 +63,13 @@ the component uses the reference ratio of approximately `0.62 / 1 / 0.34` for
 red, green, and blue. Higher values widen that timing difference; they do not
 apply new colors to the word.
 
+`color` and `backgroundColor` remap those accumulated intensities onto your own
+palette: every pixel blends from the background toward the text color. The
+chromatic trails live in the difference between channels, so they stay visible
+with white, light, or pastel text but fade as the text color approaches a
+saturated primary — pure `#ff0000` leaves nothing for the green and blue
+shutters to show.
+
 ```tsx
 <RushType
   phrase="move before it settles"
@@ -99,6 +107,18 @@ apply new colors to the word.
       type: "number",
       default: "400",
       description: "Font weight used for every word",
+    },
+    {
+      name: "color",
+      type: "string",
+      default: '"#ffffff"',
+      description: "Hex color of the type and its motion trails",
+    },
+    {
+      name: "backgroundColor",
+      type: "string",
+      default: '"#000000"',
+      description: "Hex color of the opaque frame behind the type",
     },
     {
       name: "verticalStretch",

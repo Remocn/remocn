@@ -15,6 +15,8 @@ export interface RushTypeProps {
   fontSize?: number;
   fontFamily?: string;
   fontWeight?: number;
+  color?: string;
+  backgroundColor?: string;
   /** Authored vertical scale at the blast before perspective is applied. */
   verticalStretch?: number;
   /** 0 removes channel separation, 1 is the reference look, 2 exaggerates it. */
@@ -95,6 +97,23 @@ const ORBIT_IN = [0, 0.5, 0.82, 0.95, 1, 1];
 const ORBIT_OUT = [0, 0.05, 0.14, 0.38, 1];
 const DRIFT_DIRECTION = [-1, 0.7, -0.45, 1];
 const SWING_ARC = Math.PI - ORBIT_HANG_ARC;
+
+function parseHexColor(
+  value: string,
+  fallback: readonly [number, number, number],
+): [number, number, number] {
+  const hex = value.trim().replace(/^#/, "");
+  const expanded =
+    hex.length === 3 ? hex.replace(/./g, (char) => char + char) : hex;
+  if (!/^[0-9a-f]{6}$/i.test(expanded)) {
+    return [fallback[0], fallback[1], fallback[2]];
+  }
+  return [
+    Number.parseInt(expanded.slice(0, 2), 16) / 255,
+    Number.parseInt(expanded.slice(2, 4), 16) / 255,
+    Number.parseInt(expanded.slice(4, 6), 16) / 255,
+  ];
+}
 
 function positiveModulo(value: number, modulus: number): number {
   return ((value % modulus) + modulus) % modulus;
@@ -371,6 +390,8 @@ uniform float uCrt;
 uniform float uTime;
 uniform vec4 uGlow;
 uniform float uGlowAmp;
+uniform vec3 uColor;
+uniform vec3 uBg;
 
 #define SAMPLES ${SAMPLES}
 #define BLOOM_TAPS 4
@@ -526,7 +547,7 @@ void main() {
     accumulated *= mask * scan * hum;
   }
 
-  gl_FragColor = vec4(accumulated, 1.0);
+  gl_FragColor = vec4(uBg + (uColor - uBg) * accumulated, 1.0);
 }
 `;
 
@@ -557,6 +578,8 @@ const UNIFORM_NAMES = [
   "uTime",
   "uGlow",
   "uGlowAmp",
+  "uColor",
+  "uBg",
 ] as const;
 
 interface GlState {
@@ -837,6 +860,8 @@ function drawRushType({
   fontFamily,
   fontWeight,
   verticalStretch,
+  textColor,
+  backgroundColor,
   frame,
   fps,
 }: {
@@ -847,6 +872,8 @@ function drawRushType({
   fontFamily: string;
   fontWeight: number;
   verticalStretch: number;
+  textColor: [number, number, number];
+  backgroundColor: [number, number, number];
   frame: number;
   fps: number;
 }): void {
@@ -955,6 +982,14 @@ function drawRushType({
     ),
   );
   gl.uniform1f(uniforms.uGlowAmp, GROUND_SPEED * computed.here.p);
+  gl.uniform3f(uniforms.uColor, textColor[0], textColor[1], textColor[2]);
+  gl.uniform3f(
+    uniforms.uBg,
+    backgroundColor[0],
+    backgroundColor[1],
+    backgroundColor[2],
+  );
+  gl.clearColor(backgroundColor[0], backgroundColor[1], backgroundColor[2], 1);
   gl.clear(gl.COLOR_BUFFER_BIT);
   gl.drawArrays(gl.TRIANGLES, 0, 3);
 }
@@ -964,6 +999,8 @@ export function RushType({
   fontSize = 68,
   fontFamily = "Arial, Helvetica, sans-serif",
   fontWeight = 400,
+  color = "#ffffff",
+  backgroundColor = "#000000",
   verticalStretch = 7,
   chromaticSpread = 1,
   restDuration = DEFAULT_REST_FRAMES,
@@ -983,6 +1020,11 @@ export function RushType({
   const resolvedFontFamily = useMemo(
     () => resolveFontFamily(fontFamily),
     [fontFamily],
+  );
+  const textColor = useMemo(() => parseHexColor(color, [1, 1, 1]), [color]);
+  const frameColor = useMemo(
+    () => parseHexColor(backgroundColor, [0, 0, 0]),
+    [backgroundColor],
   );
   const effectiveFrame = frame * Math.max(speed, 0);
   const computed = computeFrame({
@@ -1046,6 +1088,8 @@ export function RushType({
       fontFamily: resolvedFontFamily,
       fontWeight: Number(fontWeight) || 400,
       verticalStretch,
+      textColor,
+      backgroundColor: frameColor,
       frame: effectiveFrame,
       fps,
     });
@@ -1060,8 +1104,10 @@ export function RushType({
     fontSize,
     fontWeight,
     fps,
+    frameColor,
     renderHandle,
     resolvedFontFamily,
+    textColor,
     verticalStretch,
     words,
   ]);
@@ -1083,7 +1129,7 @@ export function RushType({
         position: "absolute",
         inset: 0,
         overflow: "hidden",
-        backgroundColor: "#000",
+        backgroundColor,
       }}
     >
       <canvas
@@ -1104,7 +1150,7 @@ export function RushType({
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            color: "#fff",
+            color,
             fontFamily,
             fontSize,
             fontWeight,

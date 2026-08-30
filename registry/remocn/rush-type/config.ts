@@ -32,6 +32,16 @@ export const rushTypeConfig: ComponentConfig = {
       variants: enumVariants(FONT_WEIGHT_OPTIONS),
       description: "Font weight",
     },
+    color: {
+      type: "color",
+      default: "#ffffff",
+      description: "Text color",
+    },
+    backgroundColor: {
+      type: "color",
+      default: "#000000",
+      description: "Background",
+    },
     verticalStretch: {
       type: "number",
       default: 7,
