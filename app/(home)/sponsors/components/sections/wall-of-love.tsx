@@ -1,109 +1,34 @@
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { type Sponsor, sponsors } from "@/config/sponsors";
-import { cn } from "@/lib/utils";
+import { activeSponsors, formerSponsors } from "@/config/sponsors";
 import { SectionHeading } from "../../../components/section-heading";
-
-type LogoTreatment = "color" | "reveal" | "muted";
-
-function SponsorLogoCard({
-  sponsor,
-  maxH,
-  treatment = "muted",
-}: {
-  sponsor: Sponsor;
-  maxH: string;
-  treatment?: LogoTreatment;
-}) {
-  return (
-    <a
-      href={sponsor.website}
-      target="_blank"
-      rel="noreferrer"
-      className={cn(
-        "group surface-card surface-card-interactive flex h-full items-center justify-center gap-3 rounded-2xl p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
-        sponsor.layout === "row" ? "flex-row" : "flex-col",
-      )}
-    >
-      {/** biome-ignore lint/performance/noImgElement: sponsor logos are SVGs of arbitrary sizes */}
-      <img
-        src={sponsor.logoUrl}
-        alt={sponsor.name}
-        loading="lazy"
-        className={cn(
-          maxH,
-          "w-auto object-contain dark:[filter:grayscale(1)_brightness(0)_invert(1)]",
-          treatment === "color" && "opacity-100",
-          treatment === "reveal" &&
-            "opacity-70 grayscale transition-[opacity,filter] duration-300 group-hover:opacity-100 group-hover:grayscale-0 dark:group-hover:[filter:grayscale(1)_brightness(0)_invert(1)]",
-          treatment === "muted" &&
-            "opacity-70 grayscale transition-opacity duration-300 group-hover:opacity-100",
-          sponsor.customStyles,
-        )}
-        style={{ transform: `scale(${sponsor.logoScale ?? 1})` }}
-      />
-      {sponsor.displayName && (
-        <span className="font-medium text-muted-foreground transition-colors group-hover:text-foreground">
-          {sponsor.displayName}
-        </span>
-      )}
-    </a>
-  );
-}
-
-function SponsorGroup({
-  label,
-  items,
-  gridClassName,
-  aspectClassName,
-  maxH,
-  treatment,
-}: {
-  label: string;
-  items: Sponsor[];
-  gridClassName: string;
-  aspectClassName: string;
-  maxH: string;
-  treatment?: LogoTreatment;
-}) {
-  if (items.length === 0) return null;
-  return (
-    <div>
-      <h3 className="mb-5 text-2xl font-semibold tracking-tight text-foreground">
-        {label}
-      </h3>
-      <div className={gridClassName}>
-        {items.map((s) => (
-          <div key={s.id} className={aspectClassName}>
-            <SponsorLogoCard sponsor={s} maxH={maxH} treatment={treatment} />
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
+import {
+  BecomeSponsorCard,
+  SponsorCard,
+  TIER_LABEL,
+  TIER_STYLE,
+} from "../../../components/sponsor-card";
 
 export function WallOfLove() {
-  const legendary = sponsors.filter((s) => s.tier === "legendary");
-  const featured = sponsors.filter((s) => s.tier === "featured");
-  const partners = sponsors.filter((s) => s.tier === "partner");
-  const builders = sponsors.filter((s) => s.tier === "builder");
-  const isEmpty = sponsors.length === 0;
+  const ordered = (
+    ["legendary", "featured", "partner", "builder"] as const
+  ).flatMap((tier) => activeSponsors.filter((s) => s.tier === tier));
+  const isEmpty = ordered.length === 0;
 
   return (
-    <section id="wall-of-love" className="relative py-20 sm:py-28">
+    <section id="sponsors" className="relative py-12 sm:py-16">
       <div className="section">
         <SectionHeading
-          eyebrow="Wall of love"
+          eyebrow="Sponsors"
           title="The people keeping remocn alive"
           lead="The wonderful people and companies powering their videos with remocn."
           animated={false}
-          className="mb-12 sm:mb-16"
+          className="mb-8 sm:mb-10"
         />
 
         {isEmpty ? (
-          <div className="surface-card flex flex-col items-center justify-center gap-6 rounded-3xl px-8 py-20 text-center">
+          <div className="surface-card flex flex-col items-center justify-center gap-6 rounded-3xl px-8 py-16 text-center">
             <p className="max-w-md text-pretty text-lg text-foreground">
               Be the first to support remocn. Your logo could live right here.
             </p>
@@ -121,40 +46,54 @@ export function WallOfLove() {
             </Button>
           </div>
         ) : (
-          <div className="flex flex-col gap-16">
-            <SponsorGroup
-              label="Legendary"
-              items={legendary}
-              gridClassName="grid gap-6 md:grid-cols-2"
-              aspectClassName="aspect-[3/1]"
-              maxH="max-h-16"
-              treatment="color"
-            />
-            <SponsorGroup
-              label="Featured"
-              items={featured}
-              gridClassName="grid gap-6 md:grid-cols-2 lg:grid-cols-3"
-              aspectClassName="aspect-[5/2]"
-              maxH="max-h-12"
-              treatment="color"
-            />
-            <SponsorGroup
-              label="Partners"
-              items={partners}
-              gridClassName="grid gap-6 md:grid-cols-2 lg:grid-cols-3"
-              aspectClassName="aspect-[5/2]"
-              maxH="max-h-12"
-              treatment="reveal"
-            />
-            <SponsorGroup
-              label="Builders"
-              items={builders}
-              gridClassName="grid gap-4 md:grid-cols-3 lg:grid-cols-4"
-              aspectClassName="aspect-[2/1]"
-              maxH="max-h-10"
-            />
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-6">
+            {ordered.map((s) => {
+              const style = TIER_STYLE[s.tier];
+              return (
+                <div key={s.id} className={style.span}>
+                  <SponsorCard
+                    sponsor={s}
+                    label={TIER_LABEL[s.tier]}
+                    logoArea={style.logoArea}
+                    maxH={style.maxH}
+                    treatment={style.treatment}
+                  />
+                </div>
+              );
+            })}
+            <BecomeSponsorCard href="#tiers" className="md:col-span-4" />
           </div>
         )}
+      </div>
+    </section>
+  );
+}
+
+export function FormerSponsors() {
+  if (formerSponsors.length === 0) return null;
+
+  return (
+    <section id="wall-of-love" className="relative py-12 sm:py-16">
+      <div className="section">
+        <SectionHeading
+          eyebrow="Wall of love"
+          title="Wall of love"
+          lead="Sponsors who backed remocn along the way. Thank you — this project got here with your help."
+          animated={false}
+          className="mb-8 sm:mb-10"
+        />
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          {formerSponsors.map((s) => (
+            <SponsorCard
+              key={s.id}
+              sponsor={s}
+              label="Former"
+              logoArea="min-h-14"
+              maxH="max-h-8"
+              treatment="muted"
+            />
+          ))}
+        </div>
       </div>
     </section>
   );

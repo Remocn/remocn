@@ -1,5 +1,3 @@
-import { LAVENDER, MINT, PEACH } from "@/config/site";
-
 export type SponsorTier = "legendary" | "featured" | "partner" | "builder";
 
 const TIER_RANK: Record<SponsorTier, number> = {
@@ -33,6 +31,8 @@ export type Sponsor = {
   isPaste?: boolean; // Whether this sponsor is from our Paste integration. Used to add a "via Paste" badge on the frontend.
   placements?: SponsorPlacement[];
   layout?: "row" | "col";
+  /** Past sponsors move to the wall of love and drop out of tiers and placements. */
+  isFormer?: boolean;
 };
 
 export const sponsors: Sponsor[] = (
@@ -126,8 +126,8 @@ export const sponsors: Sponsor[] = (
       tier: "partner",
       customStyles: "opacity-90",
       isPaste: false,
-      placements: ["landing"],
       layout: "row",
+      isFormer: true,
     },
     // Paste:
     {
@@ -175,6 +175,7 @@ export const sponsors: Sponsor[] = (
       customStyles:
         "rounded-full opacity-100 grayscale-0 dark:[filter:none] outline-1 -outline-offset-1 outline-black/10 dark:outline-white/10",
       isPaste: false,
+      isFormer: true,
     },
     {
       id: "justin",
@@ -187,6 +188,7 @@ export const sponsors: Sponsor[] = (
       customStyles:
         "rounded-full opacity-100 grayscale-0 dark:[filter:none] outline-1 -outline-offset-1 outline-black/10 dark:outline-white/10",
       isPaste: false,
+      isFormer: true,
     },
     {
       id: "orcdev",
@@ -208,9 +210,10 @@ export const sponsors: Sponsor[] = (
       website:
         "https://www.canadian-ai.ca/?utm_source=remocn&utm_medium=sponsor&utm_campaign=remocn_sponsors_page",
       tier: "partner",
-      customStyles: "opacity-90 max-h-12",
+      customStyles: "opacity-90",
       isPaste: false,
       layout: "row",
+      isFormer: true,
     },
     {
       id: "shadcnuikit",
@@ -240,8 +243,16 @@ export const sponsors: Sponsor[] = (
   ] satisfies Sponsor[]
 ).filter((sponsor) => !sponsor.isPaste);
 
+export const activeSponsors: Sponsor[] = sponsors.filter(
+  (sponsor) => !sponsor.isFormer,
+);
+
+export const formerSponsors: Sponsor[] = sponsors.filter(
+  (sponsor) => sponsor.isFormer,
+);
+
 function getSponsorsFor(placement: SponsorPlacement): Sponsor[] {
-  return sponsors
+  return activeSponsors
     .filter((sponsor) =>
       (sponsor.placements ?? TIER_PLACEMENTS[sponsor.tier]).includes(placement),
     )
@@ -264,7 +275,6 @@ export type Tier = {
   name: string;
   tagline: string;
   perks: string[];
-  glow: string;
   highlighted: boolean;
   badge?: string;
   monthlyUrl: string;
@@ -282,7 +292,6 @@ export const tiers: Tier[] = [
       "Your name in the repository README",
       "Early access to release notes",
     ],
-    glow: MINT,
     highlighted: false,
     monthlyUrl: "https://www.creem.io/payment/prod_6fpKhXCzk9KkbA4FSUzGIU",
     oneTimeUrl: "https://www.creem.io/payment/prod_1C3cCbVoYsDPJrdlDhrhSG",
@@ -298,7 +307,6 @@ export const tiers: Tier[] = [
       "Priority on feature requests",
       "Direct line to the maintainers",
     ],
-    glow: PEACH,
     highlighted: false,
     monthlyUrl: "https://www.creem.io/payment/prod_6tdCLqKgSA14P0IEVZ2GaG",
     oneTimeUrl: "https://www.creem.io/payment/prod_2sb9zG2oJn232utqh5TN1S",
@@ -313,7 +321,6 @@ export const tiers: Tier[] = [
       "Your logo on the remocn landing page",
       "Your logo in the docs sidebar",
     ],
-    glow: LAVENDER,
     highlighted: true,
     badge: "Front page",
     monthlyUrl: "https://www.creem.io/payment/prod_1PtwNGZVHfXZgChBSCwmJA",
