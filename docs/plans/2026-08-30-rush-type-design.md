@@ -33,6 +33,12 @@ The supplied implementation's `GLOW_BASE = 0.03` contradicts the flat-black
 rest invariant. The Remotion adaptation removes that base contribution and
 gates the ground entirely on motion progress.
 
+The canvas does not expose framebuffer readback through `toDataURL()`,
+`readPixels()`, or a feedback pass. Its WebGL context therefore uses
+`preserveDrawingBuffer: false`: preserving the previous framebuffer adds a
+large sustained GPU cost without changing the authored pixels. Remotion frame
+capture must still be verified on both a resting frame and a motion frame.
+
 ## Timeline
 
 All state is a pure function of `useCurrentFrame()`, `fps`, component props, and
