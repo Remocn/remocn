@@ -12,8 +12,8 @@ export const selectMenuConfig: ComponentConfig = {
       max: 3,
       step: 1,
       default: 1,
-      description:
-        "Selected index (0–3 is the demo's 4 options; the component accepts any number)",
+      // description:
+      //   "Selected index (0–3 is the demo's 4 options; the component accepts any number)",
       hiddenFromList: false,
     },
     variant: {
