@@ -68,6 +68,7 @@ export const UI_PREVIEW_TIMING: Record<string, UiPreviewTiming> = {
   radio: timing(100, WHITE),
   resizable: timing(205, WHITE),
   select: timing(120, WHITE),
+  "select-menu": timing(128, WHITE),
   sheet: timing(120, WHITE),
   skeleton: timing(220, WHITE),
   slider: timing(120, WHITE),
@@ -194,6 +195,12 @@ export const UI_SCENE_LOADERS: Record<string, () => Promise<LoadedUiScene>> = {
       Scene: m.SelectExampleScene,
       code: m.selectExampleCode,
       controls: m.selectExampleControls,
+    })),
+  "select-menu": () =>
+    import("./select-menu-example").then((m) => ({
+      Scene: m.SelectMenuExampleScene,
+      code: m.selectMenuExampleCode,
+      controls: m.selectMenuExampleControls,
     })),
   sheet: () =>
     import("./sheet-example").then((m) => ({

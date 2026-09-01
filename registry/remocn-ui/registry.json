@@ -352,6 +352,26 @@
       ]
     },
     {
+      "name": "select-menu",
+      "type": "registry:component",
+      "title": "UI Select Menu",
+      "description": "A vertical option list where exactly one row is highlighted; the highlight bar and left accent slide smoothly between rows. Fully controlled via selectedIndex/state or useSelectMenuTransition.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/remocn-ui"],
+      "files": [
+        {
+          "path": "select-menu/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/select-menu.tsx"
+        },
+        {
+          "path": "select-menu/use-select-menu-transition.ts",
+          "type": "registry:component",
+          "target": "components/remocn/use-select-menu-transition.ts"
+        }
+      ]
+    },
+    {
       "name": "dropdown-menu-item",
       "type": "registry:component",
       "title": "UI Dropdown Menu Item",
