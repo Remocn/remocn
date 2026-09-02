@@ -5,7 +5,8 @@
   "include": [
     "registry/remocn/registry.json",
     "registry/remocn-ui/registry.json",
-    "registry/remocn-icons/registry.json"
+    "registry/remocn-icons/registry.json",
+    "registry/remocn-templates/registry.json"
   ],
   "items": []
 }

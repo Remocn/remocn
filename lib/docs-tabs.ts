@@ -1,17 +1,16 @@
 import type { Node, Root } from "fumadocs-core/page-tree";
 
 /**
- * The docs are split into two top-level tabs surfaced in `DocsHeader`. Each tab
- * owns its own sidebar tree (see {@link splitDocsTree}): "Primitives" holds only
- * the remocn-ui section (`/docs/ui/*`); "Components" holds everything else,
- * unchanged from the flat docs structure. No files move and no URLs change —
- * the split is purely a view over the existing Fumadocs page tree.
+ * The docs are split into top-level category tabs surfaced in `DocsHeader`.
+ * Each tab owns its own sidebar tree (see {@link splitDocsTree}); the split is
+ * purely a view over the existing Fumadocs page tree.
  */
 export type DocsTabId =
   | "components"
   | "primitives"
   | "shaders"
   | "filters"
+  | "templates"
   | "icons";
 
 export type DocsTab = {
@@ -37,6 +36,11 @@ export const DOCS_TABS: DocsTab[] = [
     id: "filters",
     label: "Filters",
     href: "/docs/filters/getting-started/introduction",
+  },
+  {
+    id: "templates",
+    label: "Templates",
+    href: "/docs/templates/introducing-product",
   },
   {
     id: "icons",
@@ -72,6 +76,14 @@ function isFiltersPath(pathname: string): boolean {
   );
 }
 
+const TEMPLATES_PREFIX = "/docs/templates";
+
+function isTemplatesPath(pathname: string): boolean {
+  return (
+    pathname === TEMPLATES_PREFIX || pathname.startsWith(`${TEMPLATES_PREFIX}/`)
+  );
+}
+
 const ICONS_PREFIX = "/docs/icons";
 
 function isIconsPath(pathname: string): boolean {
@@ -81,6 +93,7 @@ function isIconsPath(pathname: string): boolean {
 export function getActiveDocsTab(pathname: string): DocsTabId {
   if (isShadersPath(pathname)) return "shaders";
   if (isFiltersPath(pathname)) return "filters";
+  if (isTemplatesPath(pathname)) return "templates";
   if (isIconsPath(pathname)) return "icons";
   if (isPrimitivesPath(pathname)) return "primitives";
   return "components";
@@ -121,6 +134,7 @@ function sectionNodeMatcher(prefix: string): (node: Node) => boolean {
 
 const isShadersNode = sectionNodeMatcher(SHADERS_PREFIX);
 const isFiltersNode = sectionNodeMatcher(FILTERS_PREFIX);
+const isTemplatesNode = sectionNodeMatcher(TEMPLATES_PREFIX);
 const isIconsNode = sectionNodeMatcher(ICONS_PREFIX);
 
 /**
@@ -138,7 +152,7 @@ function hoistPrimitives(nodes: Node[]): Node[] {
 }
 
 /**
- * Splits the Fumadocs page tree into the two tab trees. Immutable — the source
+ * Splits the Fumadocs page tree into category tab trees. Immutable — the source
  * `Root` (shared across requests) is never mutated; each branch is a shallow
  * copy with a filtered `children` list, so order is preserved within each tab.
  * Compose after {@link withNewBadges} so the badge decoration survives the split.
@@ -159,6 +173,7 @@ export function splitDocsTree(tree: Root): {
   primitives: Root;
   shaders: Root;
   filters: Root;
+  templates: Root;
   icons: Root;
 } {
   return {
@@ -170,6 +185,7 @@ export function splitDocsTree(tree: Root): {
           !isPrimitivesNode(node) &&
           !isShadersNode(node) &&
           !isFiltersNode(node) &&
+          !isTemplatesNode(node) &&
           !isIconsNode(node),
       ),
     },
@@ -187,6 +203,11 @@ export function splitDocsTree(tree: Root): {
       ...tree,
       $id: "docs-tab-filters",
       children: hoistPrimitives(tree.children.filter(isFiltersNode)),
+    },
+    templates: {
+      ...tree,
+      $id: "docs-tab-templates",
+      children: hoistPrimitives(tree.children.filter(isTemplatesNode)),
     },
     icons: {
       ...tree,

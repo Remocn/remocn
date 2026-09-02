@@ -1,7 +1,7 @@
 import { describe, expect, it } from "bun:test";
 import type { Node, Root } from "fumadocs-core/page-tree";
 
-import { getActiveDocsTab, splitDocsTree } from "./docs-tabs";
+import { DOCS_TABS, getActiveDocsTab, splitDocsTree } from "./docs-tabs";
 
 const tree: Root = {
   $id: "root",
@@ -33,6 +33,28 @@ const tree: Root = {
     },
     {
       type: "folder",
+      name: "Filters",
+      children: [
+        {
+          type: "page",
+          name: "Introduction",
+          url: "/docs/filters/getting-started/introduction",
+        },
+      ],
+    },
+    {
+      type: "folder",
+      name: "Templates",
+      children: [
+        {
+          type: "page",
+          name: "Introducing Product",
+          url: "/docs/templates/introducing-product",
+        },
+      ],
+    },
+    {
+      type: "folder",
       name: "Icons",
       children: [{ type: "page", name: "Gallery", url: "/docs/icons/gallery" }],
     },
@@ -59,17 +81,19 @@ describe("splitDocsTree", () => {
     expect(urls.every((url) => url.startsWith("/docs/icons"))).toBe(true);
   });
 
-  it("excludes icons, shaders, and primitives from the components branch", () => {
+  it("excludes dedicated tab sections from the components branch", () => {
     const { components } = splitDocsTree(tree);
     const urls = collectUrls(components.children);
     expect(urls).toContain("/docs/typography");
     expect(urls.some((url) => url.startsWith("/docs/icons"))).toBe(false);
     expect(urls.some((url) => url.startsWith("/docs/shaders"))).toBe(false);
+    expect(urls.some((url) => url.startsWith("/docs/filters"))).toBe(false);
+    expect(urls.some((url) => url.startsWith("/docs/templates"))).toBe(false);
     expect(urls.some((url) => url.startsWith("/docs/ui"))).toBe(false);
   });
 
-  it("keeps shaders and icons in separate branches", () => {
-    const { shaders, icons } = splitDocsTree(tree);
+  it("keeps shaders, templates, and icons in separate branches", () => {
+    const { shaders, templates, icons } = splitDocsTree(tree);
     expect(
       collectUrls(shaders.children).some((url) =>
         url.startsWith("/docs/icons"),
@@ -80,17 +104,30 @@ describe("splitDocsTree", () => {
         url.startsWith("/docs/shaders"),
       ),
     ).toBe(false);
+    expect(collectUrls(templates.children)).toEqual([
+      "/docs/templates/introducing-product",
+    ]);
   });
 
   it("gives every branch a distinct, stable $id", () => {
-    const { components, primitives, shaders, icons } = splitDocsTree(tree);
+    const { components, primitives, shaders, filters, templates, icons } =
+      splitDocsTree(tree);
     expect(components.$id).toBe("docs-tab-components");
     expect(primitives.$id).toBe("docs-tab-primitives");
     expect(shaders.$id).toBe("docs-tab-shaders");
+    expect(filters.$id).toBe("docs-tab-filters");
+    expect(templates.$id).toBe("docs-tab-templates");
     expect(icons.$id).toBe("docs-tab-icons");
     expect(
-      new Set([components.$id, primitives.$id, shaders.$id, icons.$id]).size,
-    ).toBe(4);
+      new Set([
+        components.$id,
+        primitives.$id,
+        shaders.$id,
+        filters.$id,
+        templates.$id,
+        icons.$id,
+      ]).size,
+    ).toBe(6);
   });
 
   it("does not mutate the source tree", () => {
@@ -102,6 +139,18 @@ describe("splitDocsTree", () => {
 });
 
 describe("getActiveDocsTab", () => {
+  it("places Templates immediately after Filters", () => {
+    const labels = DOCS_TABS.map((tab) => tab.label);
+    expect(labels.indexOf("Templates")).toBe(labels.indexOf("Filters") + 1);
+  });
+
+  it("selects the templates tab for template paths", () => {
+    expect(getActiveDocsTab("/docs/templates")).toBe("templates");
+    expect(getActiveDocsTab("/docs/templates/introducing-product")).toBe(
+      "templates",
+    );
+  });
+
   it("selects the icons tab for icons paths", () => {
     expect(getActiveDocsTab("/docs/icons")).toBe("icons");
     expect(getActiveDocsTab("/docs/icons/gallery")).toBe("icons");

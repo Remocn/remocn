@@ -4,7 +4,12 @@ import { basename } from "node:path";
 import { Glob } from "bun";
 import { VIBES } from "./docs-schema";
 
-const REGISTRIES = ["remocn", "remocn-ui", "remocn-icons"] as const;
+const REGISTRIES = [
+  "remocn",
+  "remocn-ui",
+  "remocn-icons",
+  "remocn-templates",
+] as const;
 
 const UNDOCUMENTED: Record<string, string> = {
   "remocn-ui": "shared core lib, not installed directly",

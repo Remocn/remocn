@@ -6,7 +6,7 @@ import { DOCS_TABS, getActiveDocsTab } from "@/lib/docs-tabs";
 import { cn } from "@/lib/utils";
 
 /**
- * Tab switcher for the docs: Components | Primitives. Rendered inside the thin
+ * Category switcher for the docs. Rendered inside the thin
  * `DocsTabsBar` below the main header. The active tab is derived from the current
  * path (the ui section maps to Primitives, see {@link getActiveDocsTab}) and
  * carries an underline pinned to the bar's bottom border via `bottom-0`. The nav

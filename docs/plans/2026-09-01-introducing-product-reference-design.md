@@ -36,11 +36,22 @@ The registry item installs a directory while keeping the public import stable:
 ```text
 components/remocn/templates/introducing-product/
   index.tsx
-  scenes.tsx
   types.ts
+  shared.tsx
+  scenes/
+    hook.tsx
+    command.tsx
+    brand.tsx
+    product-ui.tsx
+    speed.tsx
+    features.tsx
+    montage.tsx
+    learning-loop.tsx
+    topics.tsx
+    outro.tsx
 ```
 
-`index.tsx` owns the timeline and public API. `scenes.tsx` contains the visual scenes and reusable internal primitives. `types.ts` holds the editable content contract and defaults.
+`index.tsx` owns the timeline and public API. Each scene lives in its own file so Remotion Studio can expose a readable multi-scene timeline. `shared.tsx` contains internal visual primitives, and `types.ts` holds the editable content contract and defaults.
 
 ## Editable content
 

@@ -13,8 +13,8 @@ import { baseOptions } from "@/lib/layout.shared";
  * Renders the Fumadocs `DocsLayout` with the sidebar tree that matches the
  * active docs tab. Both trees are built once on the server (in `app/docs/layout`)
  * and handed down; this client shell only picks between them by pathname, so the
- * Components and Primitives tabs each get their own sidebar without moving any
- * files or changing URLs. The page body arrives as server-rendered `children`,
+ * Each docs category gets its own sidebar without moving files or changing
+ * URLs. The page body arrives as server-rendered `children`,
  * so the RSC boundary stays intact — only the layout chrome is client-rendered.
  *
  * The `DocsLayout` props mirror the previous server layout: the custom
@@ -44,6 +44,7 @@ export function DocsShell({
   primitivesTree,
   shadersTree,
   filtersTree,
+  templatesTree,
   iconsTree,
   componentCount,
   children,
@@ -52,14 +53,22 @@ export function DocsShell({
   primitivesTree: Root;
   shadersTree: Root;
   filtersTree: Root;
+  templatesTree: Root;
   iconsTree: Root;
   componentCount: number;
   children: ReactNode;
 }) {
   const searchTriggerFull = useMemo(() => {
-    function SearchTriggerFull({ hideIfDisabled }: { hideIfDisabled?: boolean }) {
+    function SearchTriggerFull({
+      hideIfDisabled,
+    }: {
+      hideIfDisabled?: boolean;
+    }) {
       return (
-        <DocsSearchTrigger count={componentCount} hideIfDisabled={hideIfDisabled} />
+        <DocsSearchTrigger
+          count={componentCount}
+          hideIfDisabled={hideIfDisabled}
+        />
       );
     }
     return SearchTriggerFull;
@@ -72,6 +81,7 @@ export function DocsShell({
     primitives: primitivesTree,
     shaders: shadersTree,
     filters: filtersTree,
+    templates: templatesTree,
     icons: iconsTree,
   };
   const tree = trees[activeTab];

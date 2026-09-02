@@ -1,6 +1,7 @@
 import { formatLength, SITE_URL } from "@/lib/get-llm-text";
 import remocnRegistry from "@/registry/remocn/registry.json";
 import iconsRegistry from "@/registry/remocn-icons/registry.json";
+import templatesRegistry from "@/registry/remocn-templates/registry.json";
 import remocnUiRegistry from "@/registry/remocn-ui/registry.json";
 import { source } from "@/source";
 
@@ -10,6 +11,7 @@ const TIERS = [
   { tier: "remocn", items: remocnRegistry.items },
   { tier: "remocn-ui", items: remocnUiRegistry.items },
   { tier: "remocn-icons", items: iconsRegistry.items },
+  { tier: "remocn-template", items: templatesRegistry.items },
 ] as const;
 
 type RegistryFacts = { tier: string; deps: string[] };

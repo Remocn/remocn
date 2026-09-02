@@ -12,6 +12,16 @@ export interface RegistryEntry {
 }
 
 const registry: Record<string, RegistryEntry> = {
+  "introducing-product": {
+    load: () =>
+      import("@/registry/remocn-templates/introducing-product").then((m) => ({
+        default: m.IntroducingProduct,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn-templates/introducing-product/config").then(
+        (m) => m.introducingProductConfig,
+      ),
+  },
   "soft-blur-in": {
     load: () =>
       import("@/registry/remocn/soft-blur-in").then((m) => ({

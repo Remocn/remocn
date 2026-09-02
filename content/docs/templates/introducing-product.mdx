@@ -1,0 +1,91 @@
+---
+title: Introducing Product
+description: A complete product introduction with kinetic type, UI showcases, and an orbital brand reveal
+component: introducing-product
+vibe: premium
+length: 1596
+useWhen:
+  - "You need a complete product launch story that moves from a sharp positioning hook through product UI, benefits, proof, and a final brand lockup."
+avoidWhen:
+  - "You only need a single animation primitive rather than a full composition — use a typography or UI component instead."
+---
+
+<ComponentPreview name="introducing-product" />
+
+<InstallBlock name="introducing-product" />
+
+## Usage
+
+```tsx
+import { Composition } from "remotion";
+import {
+  DEFAULT_INTRODUCING_PRODUCT_PROPS,
+  getIntroducingProductDuration,
+  IntroducingProduct,
+  introducingProductSchema,
+} from "@/components/remocn/templates/introducing-product";
+
+export const RemotionRoot = () => (
+  <Composition
+    id="IntroducingProduct"
+    component={IntroducingProduct}
+    schema={introducingProductSchema}
+    durationInFrames={1596}
+    fps={30}
+    width={1280}
+    height={720}
+    calculateMetadata={({props}) => ({
+      durationInFrames: getIntroducingProductDuration(props.timeline),
+    })}
+    defaultProps={DEFAULT_INTRODUCING_PRODUCT_PROPS}
+  />
+);
+```
+
+The template renders entirely from its built-in mock product UI. Set
+`content.logoUrl` and `content.screenshotUrls` to replace the generated brand
+mark and UI panels with real product assets.
+
+## Edit in Remotion Studio
+
+This repository includes a permanent Studio entry with all defaults written
+inline, so changes can be saved back to code:
+
+```bash
+bunx remotion studio src/remotion/introducing-product-root.tsx
+```
+
+Open the **Props** panel and edit the nested groups. `timeline` controls the
+duration of every scene, while each entry in `scenes` exposes its position,
+size, internal transition points, and easing preset. The total composition
+duration updates automatically.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "content",
+      type: "ContentSettings",
+      description: "Copy, feature cards, topics, logo, and screenshot assets",
+    },
+    {
+      name: "theme",
+      type: "ThemeSettings",
+      description: "Colors, typography, glow, grid, and product-window dimensions",
+    },
+    {
+      name: "timeline",
+      type: "TimelineSettings",
+      description: "Global speed and frame duration for each of the ten scenes",
+    },
+    {
+      name: "scenes",
+      type: "SceneSettings",
+      description: "Positions, sizes, internal timing points, and easing per scene",
+    },
+    {
+      name: "className",
+      type: "string",
+      description: "Optional className for the full-frame root",
+    },
+  ]}
+/>
