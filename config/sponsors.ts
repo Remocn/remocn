@@ -72,6 +72,16 @@ export const sponsors: Sponsor[] = (
       layout: "row",
     },
     {
+      id: "vidrush",
+      name: "VidRush",
+      logoUrl: "/sponsors/vidrush.png",
+      website:
+        "https://vidrush.ai/?utm_source=remocn&utm_medium=sponsor&utm_campaign=remocn_sponsors_page",
+      tier: "featured",
+      customStyles: "opacity-90 max-w-full brightness-0",
+      isPaste: false,
+    },
+    {
       id: "21st",
       name: "21st.dev",
       logoUrl: "/sponsors/21st.svg",

@@ -1,11 +1,6 @@
 import { getLandingSponsors } from "@/config/sponsors";
 import { SectionHeading } from "../section-heading";
-import {
-  BecomeSponsorCard,
-  SponsorCard,
-  TIER_LABEL,
-  TIER_STYLE,
-} from "../sponsor-card";
+import { SponsorGrid } from "../sponsor-grid";
 
 export function LandingPartners() {
   const promoted = getLandingSponsors();
@@ -22,26 +17,11 @@ export function LandingPartners() {
           animated={false}
         />
 
-        <div className="mx-auto mt-10 grid max-w-4xl grid-cols-2 gap-3 md:grid-cols-6">
-          {promoted.map((s) => {
-            const style = TIER_STYLE[s.tier];
-            return (
-              <div key={s.id} className={style.span}>
-                <SponsorCard
-                  sponsor={s}
-                  label={TIER_LABEL[s.tier]}
-                  logoArea={style.logoArea}
-                  maxH={style.maxH}
-                  treatment={style.treatment}
-                />
-              </div>
-            );
-          })}
-          <BecomeSponsorCard
-            href="/sponsors"
-            className="col-span-2 md:col-span-2"
-          />
-        </div>
+        <SponsorGrid
+          sponsors={promoted}
+          ctaHref="/sponsors"
+          className="mx-auto mt-10 max-w-4xl"
+        />
       </div>
     </section>
   );
