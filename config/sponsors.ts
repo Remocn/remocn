@@ -78,7 +78,7 @@ export const sponsors: Sponsor[] = (
       website:
         "https://vidrush.ai/?utm_source=remocn&utm_medium=sponsor&utm_campaign=remocn_sponsors_page",
       tier: "featured",
-      customStyles: "opacity-90 max-w-full brightness-0",
+      customStyles: "opacity-90 max-w-full",
       isPaste: false,
     },
     {
