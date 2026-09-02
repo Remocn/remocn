@@ -40,17 +40,25 @@ When a browser tab opens with an empty video player, you're ready. Pick a [guide
 remocn is free and MIT-licensed. These sponsors keep the registry growing and the renders fast.
 
 <!-- sponsors:start -->
-<p align="center">
-  <a href="https://neon.com"><picture><source media="(prefers-color-scheme: dark)" srcset="https://remocn.dev/sponsors/neon-dark.svg" /><img src="https://remocn.dev/sponsors/neon.svg" alt="Neon" height="32" /></picture></a>&nbsp;&nbsp;
-  <a href="https://www.launchfa.st"><img src="https://remocn.dev/sponsors/launchfast.png" alt="LaunchFast" height="32" /></a>&nbsp;&nbsp;
-  <a href="https://ui.aceternity.com"><picture><source media="(prefers-color-scheme: dark)" srcset="https://remocn.dev/sponsors/aceternity-dark.svg" /><img src="https://remocn.dev/sponsors/aceternity.svg" alt="Aceternity UI" height="32" /></picture></a>&nbsp;&nbsp;
-  <a href="https://vidrush.ai"><picture><source media="(prefers-color-scheme: dark)" srcset="https://remocn.dev/sponsors/vidrush-dark.png" /><img src="https://remocn.dev/sponsors/vidrush.png" alt="VidRush" height="32" /></picture></a>&nbsp;&nbsp;
-  <a href="https://21st.dev"><picture><source media="(prefers-color-scheme: dark)" srcset="https://remocn.dev/sponsors/21st-dark.svg" /><img src="https://remocn.dev/sponsors/21st.svg" alt="21st.dev" height="32" /></picture></a>&nbsp;&nbsp;
-  <a href="https://pro.reactbits.dev"><picture><source media="(prefers-color-scheme: dark)" srcset="https://remocn.dev/sponsors/reactbits-dark.svg" /><img src="https://remocn.dev/sponsors/reactbits.svg" alt="React Bits" height="32" /></picture></a>&nbsp;&nbsp;
-  <a href="https://reui.io"><picture><source media="(prefers-color-scheme: dark)" srcset="https://remocn.dev/sponsors/reui-dark.svg" /><img src="https://remocn.dev/sponsors/reui.svg" alt="ReUI" height="32" /></picture></a>&nbsp;&nbsp;
-  <a href="https://shadcnblocks.com"><picture><source media="(prefers-color-scheme: dark)" srcset="https://remocn.dev/sponsors/shadcnblocks-dark.svg" /><img src="https://remocn.dev/sponsors/shadcnblocks.svg" alt="Shadcnblocks.com" height="32" /></picture></a>&nbsp;&nbsp;
-  <a href="https://shadcnuikit.com"><img src="https://remocn.dev/sponsors/shadcnuikit.png" alt="Shadcn UI Kit" height="32" /></a>&nbsp;&nbsp;
-</p>
+<table align="center">
+  <tbody>
+    <tr>
+      <td colspan="15" width="850" align="center"><a href="https://neon.com/"><picture><source media="(prefers-color-scheme: dark)" srcset="https://remocn.dev/sponsors/neon-dark.svg" /><img src="https://remocn.dev/sponsors/neon.svg" alt="Neon" height="48" align="middle" /></picture></a></td>
+    </tr>
+    <tr>
+      <td colspan="5" width="283" align="center"><a href="https://www.launchfa.st/"><img src="https://remocn.dev/sponsors/launchfast.png" alt="LaunchFast" height="40" align="middle" /> <b>LaunchFast</b></a></td>
+      <td colspan="5" width="283" align="center"><a href="https://ui.aceternity.com/"><picture><source media="(prefers-color-scheme: dark)" srcset="https://remocn.dev/sponsors/aceternity-dark.svg" /><img src="https://remocn.dev/sponsors/aceternity.svg" alt="Aceternity UI" height="40" align="middle" /></picture> <b>Aceternity UI</b></a></td>
+      <td colspan="5" width="283" align="center"><a href="https://vidrush.ai/"><picture><source media="(prefers-color-scheme: dark)" srcset="https://remocn.dev/sponsors/vidrush-dark.png" /><img src="https://remocn.dev/sponsors/vidrush.png" alt="VidRush" height="40" align="middle" /></picture></a></td>
+    </tr>
+    <tr>
+      <td colspan="3" width="170" align="center"><a href="https://21st.dev/"><picture><source media="(prefers-color-scheme: dark)" srcset="https://remocn.dev/sponsors/21st-dark.svg" /><img src="https://remocn.dev/sponsors/21st.svg" alt="21st.dev" height="32" align="middle" /></picture></a></td>
+      <td colspan="3" width="170" align="center"><a href="https://pro.reactbits.dev/"><picture><source media="(prefers-color-scheme: dark)" srcset="https://remocn.dev/sponsors/reactbits-dark.svg" /><img src="https://remocn.dev/sponsors/reactbits.svg" alt="React Bits" height="32" align="middle" /></picture></a></td>
+      <td colspan="3" width="170" align="center"><a href="https://reui.io/"><picture><source media="(prefers-color-scheme: dark)" srcset="https://remocn.dev/sponsors/reui-dark.svg" /><img src="https://remocn.dev/sponsors/reui.svg" alt="ReUI" height="32" align="middle" /></picture></a></td>
+      <td colspan="3" width="170" align="center"><a href="https://shadcnblocks.com/"><picture><source media="(prefers-color-scheme: dark)" srcset="https://remocn.dev/sponsors/shadcnblocks-dark.svg" /><img src="https://remocn.dev/sponsors/shadcnblocks.svg" alt="Shadcnblocks.com" height="32" align="middle" /></picture></a></td>
+      <td colspan="3" width="170" align="center"><a href="https://shadcnuikit.com/"><img src="https://remocn.dev/sponsors/shadcnuikit.png" alt="Shadcn UI Kit" height="32" align="middle" /> <b>Shadcn UI Kit</b></a></td>
+    </tr>
+  </tbody>
+</table>
 <!-- sponsors:end -->
 
 [Become a sponsor](https://remocn.dev/sponsors) to get your logo on the landing page, in the docs sidebar and here.
