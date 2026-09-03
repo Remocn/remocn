@@ -5,9 +5,9 @@ import { DocsShell } from "@/components/docs/docs-shell";
 import { DocsTabsBar } from "@/components/docs/docs-tabs-bar";
 import { splitDocsTree } from "@/lib/docs-tabs";
 import { withNewBadges } from "@/lib/with-new-badges";
+import remocnRegistry from "@/registry/remocn/registry.json";
 import iconsRegistry from "@/registry/remocn-icons/registry.json";
 import uiRegistry from "@/registry/remocn-ui/registry.json";
-import remocnRegistry from "@/registry/remocn/registry.json";
 import { source } from "@/source";
 
 const componentCount = [remocnRegistry, uiRegistry, iconsRegistry]

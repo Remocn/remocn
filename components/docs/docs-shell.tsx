@@ -57,9 +57,16 @@ export function DocsShell({
   children: ReactNode;
 }) {
   const searchTriggerFull = useMemo(() => {
-    function SearchTriggerFull({ hideIfDisabled }: { hideIfDisabled?: boolean }) {
+    function SearchTriggerFull({
+      hideIfDisabled,
+    }: {
+      hideIfDisabled?: boolean;
+    }) {
       return (
-        <DocsSearchTrigger count={componentCount} hideIfDisabled={hideIfDisabled} />
+        <DocsSearchTrigger
+          count={componentCount}
+          hideIfDisabled={hideIfDisabled}
+        />
       );
     }
     return SearchTriggerFull;
