@@ -55,7 +55,7 @@ remocn is free and MIT-licensed. These sponsors keep the registry growing and th
       <td colspan="3" width="170" align="center"><a href="https://pro.reactbits.dev/"><picture><source media="(prefers-color-scheme: dark)" srcset="https://remocn.dev/sponsors/reactbits-dark.svg" /><img src="https://remocn.dev/sponsors/reactbits.svg" alt="React Bits" height="32" align="middle" /></picture></a></td>
       <td colspan="3" width="170" align="center"><a href="https://reui.io/"><picture><source media="(prefers-color-scheme: dark)" srcset="https://remocn.dev/sponsors/reui-dark.svg" /><img src="https://remocn.dev/sponsors/reui.svg" alt="ReUI" height="32" align="middle" /></picture></a></td>
       <td colspan="3" width="170" align="center"><a href="https://shadcnblocks.com/"><picture><source media="(prefers-color-scheme: dark)" srcset="https://remocn.dev/sponsors/shadcnblocks-dark.svg" /><img src="https://remocn.dev/sponsors/shadcnblocks.svg" alt="Shadcnblocks.com" height="32" align="middle" /></picture></a></td>
-      <td colspan="3" width="170" align="center"><a href="https://shadcnuikit.com/"><img src="https://remocn.dev/sponsors/shadcnuikit.png" alt="Shadcn UI Kit" height="32" align="middle" /> <b>Shadcn UI Kit</b></a></td>
+      <td colspan="3" width="170" align="center"><a href="https://shadcnuikit.com/"><picture><source media="(prefers-color-scheme: dark)" srcset="https://remocn.dev/sponsors/shadcnuikit-dark.svg" /><img src="https://remocn.dev/sponsors/shadcnuikit.svg" alt="Shadcn UI Kit" height="32" align="middle" /></picture></a></td>
     </tr>
   </tbody>
 </table>

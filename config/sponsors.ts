@@ -228,13 +228,13 @@ export const sponsors: Sponsor[] = (
     {
       id: "shadcnuikit",
       name: "Shadcn UI Kit",
-      displayName: "Shadcn UI Kit",
-      logoUrl: "/sponsors/shadcnuikit.png",
+      logoUrl: "/sponsors/shadcnuikit.svg",
       website:
         "https://shadcnuikit.com/?utm_source=remocn&utm_medium=sponsor&utm_campaign=remocn_sponsors_page",
       tier: "partner",
       logoScale: 1,
-      customStyles: "rounded-sm opacity-100 grayscale-0 dark:[filter:none]",
+      customStyles:
+        "opacity-100 grayscale-0 dark:[filter:invert(1)] dark:group-hover:[filter:invert(1)]",
       isPaste: false,
       placements: ["landing", "docs"],
       layout: "row",
