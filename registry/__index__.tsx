@@ -2803,6 +2803,94 @@ const registry: Record<string, RegistryEntry> = {
     loadConfig: () =>
       import("@/registry/remocn/reel/config").then((m) => m.reelConfig),
   },
+  "signup-flow": {
+    load: () =>
+      import("@/components/docs/examples/signup-flow-example").then((m) => ({
+        default: m.SignupFlowExampleScene,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn-ui/signup-flow/config").then(
+        (m) => m.signupFlowConfig,
+      ),
+  },
+  "ai-prompt-flow": {
+    load: () =>
+      import("@/components/docs/examples/ai-prompt-flow-example").then((m) => ({
+        default: m.AiPromptFlowExampleScene,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn-ui/ai-prompt-flow/config").then(
+        (m) => m.aiPromptFlowConfig,
+      ),
+  },
+  "chat-flow": {
+    load: () =>
+      import("@/components/docs/examples/chat-flow-example").then((m) => ({
+        default: m.ChatFlowExampleScene,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn-ui/chat-flow/config").then(
+        (m) => m.chatFlowConfig,
+      ),
+  },
+  "telegram-chat-flow": {
+    load: () =>
+      import("@/components/docs/examples/telegram-chat-flow-example").then(
+        (m) => ({
+          default: m.TelegramChatFlowExampleScene,
+        }),
+      ),
+    loadConfig: () =>
+      import("@/registry/remocn-ui/telegram-chat-flow/config").then(
+        (m) => m.telegramChatFlowConfig,
+      ),
+  },
+  "imessage-chat-flow": {
+    load: () =>
+      import("@/components/docs/examples/imessage-chat-flow-example").then(
+        (m) => ({
+          default: m.ImessageChatFlowExampleScene,
+        }),
+      ),
+    loadConfig: () =>
+      import("@/registry/remocn-ui/imessage-chat-flow/config").then(
+        (m) => m.imessageChatFlowConfig,
+      ),
+  },
+  "checkout-flow": {
+    load: () =>
+      import("@/components/docs/examples/checkout-flow-example").then((m) => ({
+        default: m.CheckoutFlowExampleScene,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn-ui/checkout-flow/config").then(
+        (m) => m.checkoutFlowConfig,
+      ),
+  },
+  "onboarding-stepper-flow": {
+    load: () =>
+      import("@/components/docs/examples/onboarding-stepper-flow-example").then(
+        (m) => ({
+          default: m.OnboardingStepperFlowExampleScene,
+        }),
+      ),
+    loadConfig: () =>
+      import("@/registry/remocn-ui/onboarding-stepper-flow/config").then(
+        (m) => m.onboardingStepperFlowConfig,
+      ),
+  },
+  "settings-toggle-flow": {
+    load: () =>
+      import("@/components/docs/examples/settings-toggle-flow-example").then(
+        (m) => ({
+          default: m.SettingsToggleFlowExampleScene,
+        }),
+      ),
+    loadConfig: () =>
+      import("@/registry/remocn-ui/settings-toggle-flow/config").then(
+        (m) => m.settingsToggleFlowConfig,
+      ),
+  },
 };
 
 const configCache = new Map<string, Promise<ResolvedComponentConfig>>();

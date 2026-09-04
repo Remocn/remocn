@@ -35,6 +35,17 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       speed: 1,
     },
   },
+  "ai-prompt-flow": {
+    durationInFrames: 230,
+    fps: 30,
+    compositionWidth: 1280,
+    compositionHeight: 720,
+    previewBackdrop: {
+      type: "color",
+      value: "oklch(1 0 0)",
+    },
+    defaults: {},
+  },
   "alert-dialog": {
     durationInFrames: 120,
     fps: 30,
@@ -300,6 +311,17 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       speed: 1,
     },
   },
+  "chat-flow": {
+    durationInFrames: 360,
+    fps: 30,
+    compositionWidth: 432,
+    compositionHeight: 768,
+    previewBackdrop: {
+      type: "color",
+      value: "oklch(1 0 0)",
+    },
+    defaults: {},
+  },
   "chat-gpt": {
     durationInFrames: 150,
     fps: 30,
@@ -369,6 +391,17 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       primary: "#171717",
       speed: 1,
     },
+  },
+  "checkout-flow": {
+    durationInFrames: 320,
+    fps: 30,
+    compositionWidth: 1280,
+    compositionHeight: 720,
+    previewBackdrop: {
+      type: "color",
+      value: "oklch(0.97 0 0)",
+    },
+    defaults: {},
   },
   "chromatic-wave": {
     durationInFrames: 100,
@@ -2479,6 +2512,17 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       speed: 1,
     },
   },
+  "imessage-chat-flow": {
+    durationInFrames: 360,
+    fps: 30,
+    compositionWidth: 432,
+    compositionHeight: 768,
+    previewBackdrop: {
+      type: "color",
+      value: "#ffffff",
+    },
+    defaults: {},
+  },
   "infinite-bento-pan": {
     durationInFrames: 300,
     fps: 30,
@@ -2827,6 +2871,17 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       color: "#171717",
       speed: 1,
     },
+  },
+  "onboarding-stepper-flow": {
+    durationInFrames: 175,
+    fps: 30,
+    compositionWidth: 1280,
+    compositionHeight: 720,
+    previewBackdrop: {
+      type: "color",
+      value: "oklch(1 0 0)",
+    },
+    defaults: {},
   },
   opencode: {
     durationInFrames: 150,
@@ -3248,6 +3303,8 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       phrase: "gone before you look",
       fontSize: 68,
       fontWeight: "400",
+      color: "#ffffff",
+      backgroundColor: "#000000",
       verticalStretch: 7,
       chromaticSpread: 1,
       restDuration: 12,
@@ -3341,6 +3398,17 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       state: "selected",
       speed: 1,
     },
+  },
+  "settings-toggle-flow": {
+    durationInFrames: 320,
+    fps: 30,
+    compositionWidth: 1280,
+    compositionHeight: 720,
+    previewBackdrop: {
+      type: "color",
+      value: "oklch(0.97 0 0)",
+    },
+    defaults: {},
   },
   "shader-caustics": {
     durationInFrames: 150,
@@ -3768,6 +3836,17 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       speed: 1,
     },
   },
+  "signup-flow": {
+    durationInFrames: 380,
+    fps: 30,
+    compositionWidth: 1280,
+    compositionHeight: 720,
+    previewBackdrop: {
+      type: "color",
+      value: "oklch(0.97 0 0)",
+    },
+    defaults: {},
+  },
   "simulated-cursor": {
     durationInFrames: 150,
     fps: 30,
@@ -4104,6 +4183,17 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       variant: "pill",
       speed: 1,
     },
+  },
+  "telegram-chat-flow": {
+    durationInFrames: 360,
+    fps: 30,
+    compositionWidth: 432,
+    compositionHeight: 768,
+    previewBackdrop: {
+      type: "gradient",
+      value: "linear-gradient(180deg, #cfe0ec 0%, #a7c6e0 100%)",
+    },
+    defaults: {},
   },
   "terminal-cursor-zoom": {
     durationInFrames: 90,

@@ -2,11 +2,12 @@
 
 import { Player, type PlayerRef } from "@remotion/player";
 import Link from "next/link";
-import { useRef } from "react";
+import { useMemo, useRef } from "react";
 import { useAutoplay } from "@/app/(home)/components/use-autoplay";
 import { cn } from "@/lib/utils";
 import registry from "@/registry/__index__";
 import { previewManifest } from "@/registry/__manifest__";
+import { Backdrop } from "@/registry/remocn/backdrop";
 import type { CardItem } from "./component-card-grid";
 
 function slugFromHref(href?: string) {
@@ -26,29 +27,49 @@ function CardPreview({ item }: { item: CardItem }) {
 
   const { containerRef } = useAutoplay(playerRef);
 
-  if (!entry || !preview) {
+  // Mirror PreviewStage's Backdrop wrap so card thumbnails with a
+  // previewBackdrop (e.g. blocks) match their detail-page background.
+  // Lazy to keep cards code-split: only the visible card's scene loads.
+  const lazyComponent = useMemo(() => {
+    if (!entry) return null;
+    const fill = preview?.previewBackdrop;
+    if (!fill) return entry.load;
+    return () =>
+      entry.load().then(({ default: Inner }) => ({
+        // biome-ignore lint/suspicious/noExplicitAny: dynamically-loaded scene, props shape varies
+        default: function CardStage(props: Record<string, any>) {
+          return (
+            <Backdrop fill={fill} padding={0} radius={0} shadow="">
+              <Inner {...props} />
+            </Backdrop>
+          );
+        },
+      }));
+  }, [entry, preview]);
+
+  if (entry && preview && lazyComponent) {
     return (
-      <div className="size-full">
-        <PreviewPlaceholder />
+      <div ref={containerRef} className="size-full">
+        <Player
+          ref={playerRef}
+          lazyComponent={lazyComponent}
+          inputProps={preview.defaults}
+          durationInFrames={preview.durationInFrames}
+          fps={preview.fps}
+          compositionWidth={preview.compositionWidth}
+          compositionHeight={preview.compositionHeight}
+          style={{ width: "100%", height: "100%", backgroundColor: "#f5f5f5" }}
+          controls={false}
+          loop
+          acknowledgeRemotionLicense
+        />
       </div>
     );
   }
 
   return (
-    <div ref={containerRef} className="size-full">
-      <Player
-        ref={playerRef}
-        lazyComponent={entry.load}
-        inputProps={preview.defaults}
-        durationInFrames={preview.durationInFrames}
-        fps={preview.fps}
-        compositionWidth={preview.compositionWidth}
-        compositionHeight={preview.compositionHeight}
-        style={{ width: "100%", height: "100%", backgroundColor: "#f5f5f5" }}
-        controls={false}
-        loop
-        acknowledgeRemotionLicense
-      />
+    <div className="size-full">
+      <PreviewPlaceholder />
     </div>
   );
 }
