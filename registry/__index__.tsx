@@ -2488,6 +2488,16 @@ const registry: Record<string, RegistryEntry> = {
         (m) => m.selectItemConfig,
       ),
   },
+  "select-menu": {
+    load: () =>
+      import("@/registry/remocn-ui/select-menu").then((m) => ({
+        default: m.SelectMenu,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn-ui/select-menu/config").then(
+        (m) => m.selectMenuConfig,
+      ),
+  },
   "dropdown-menu": {
     load: () =>
       import("@/registry/remocn-ui/dropdown-menu").then((m) => ({
