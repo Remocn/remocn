@@ -164,7 +164,13 @@
       ],
       "@/components/remocn/reel": ["./registry/remocn/reel/index.tsx"],
       "@/components/remocn/*": ["./registry/remocn-ui/*/index.tsx"],
-      "@/*": ["./*"]
+      "@/*": ["./*"],
+      "@/components/remocn/word-push": [
+        "./registry/remocn/word-push/index.tsx"
+      ],
+      "@/components/remocn/radial-burst": [
+        "./registry/remocn/radial-burst/index.tsx"
+      ]
     }
   },
   "include": [

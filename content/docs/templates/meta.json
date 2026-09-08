@@ -1,5 +1,9 @@
 {
   "title": "Templates",
   "collapsible": false,
-  "pages": ["introducing-product"]
+  "pages": [
+    "introducing-product",
+    "fomo-limit-orders",
+    "studio-launch"
+  ]
 }

@@ -11,10 +11,18 @@ Config.overrideWebpackConfig((config) => ({
     alias: {
       ...(config.resolve?.alias ?? {}),
       "@/components/remocn/number-wheel$": path.join(
-        __dirname,
+        process.cwd(),
         "registry/remocn/number-wheel/index.tsx",
       ),
-      "@": __dirname,
+      "@/components/remocn/word-push$": path.join(
+        process.cwd(),
+        "registry/remocn/word-push/index.tsx",
+      ),
+      "@/components/remocn/radial-burst$": path.join(
+        process.cwd(),
+        "registry/remocn/radial-burst/index.tsx",
+      ),
+      "@": process.cwd(),
     },
   },
 }));

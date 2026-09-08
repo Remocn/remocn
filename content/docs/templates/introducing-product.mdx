@@ -1,37 +1,157 @@
 ---
 title: Introducing Product
-description: A minimal placeholder for a future product introduction template
+description: A complete product launch video with editable scenes, real component demos, and an original soundtrack
 component: introducing-product
-vibe: clean
-length: 90
+vibe: premium
+length: 960
 useWhen:
-  - "You need a temporary full-frame placeholder while building a product introduction."
+  - "You want a finished introduction video with source you can edit for your product."
+  - "You want a 32-second product story with kinetic typography, code editing, and component previews."
 avoidWhen:
-  - "You need a finished production template or a multi-scene product story."
+  - "You only need a short text entrance; use `word-push`."
+  - "You need a single animated graphic; use `radial-burst`."
 ---
 
 <ComponentPreview name="introducing-product" />
 
 <InstallBlock name="introducing-product" />
 
+Introducing Product is the complete **Introducing remocn** video, shipped as
+editable React source. The default render is a 32-second launch video at
+1920×1080 and 60 fps, with nine scenes and an original instrumental soundtrack.
+
+The install includes every scene, motion presets, content, theme, and soundtrack
+source. It also installs the `word-push` and `radial-burst` primitives used in the
+live demonstrations, plus Manrope font files through `@fontsource/manrope`.
+The default video makes no external asset or API requests.
+
 ## Usage
 
 ```tsx
 import { Composition } from "remotion";
-import { IntroducingProduct } from "@/components/remocn/templates/introducing-product";
+import {
+  IntroducingProduct,
+  INTRODUCING_DURATION,
+  INTRODUCING_FPS,
+  INTRODUCING_WIDTH,
+  INTRODUCING_HEIGHT,
+} from "@/components/remocn/templates/introducing-product";
 
 export const RemotionRoot = () => (
   <Composition
     id="IntroducingProduct"
     component={IntroducingProduct}
-    durationInFrames={90}
-    fps={30}
-    width={1280}
-    height={720}
-    defaultProps={{ message: "Template placeholder" }}
+    durationInFrames={INTRODUCING_DURATION * INTRODUCING_FPS}
+    fps={INTRODUCING_FPS}
+    width={INTRODUCING_WIDTH}
+    height={INTRODUCING_HEIGHT}
+    defaultProps={{}}
   />
 );
 ```
 
-This entry intentionally contains only one static component. Replace its body
-when the real template is ready.
+Render with your existing Remotion entry:
+
+```bash
+npx remotion render IntroducingProduct out/introducing-product.mp4 --codec=h264 --crf=16
+```
+
+In the remocn repository, use `bun run studio:introducing` to open the dedicated
+composition or `bun run render:introducing` to export `out/introducing-remocn.mp4`.
+
+## Make it yours
+
+```tsx
+<IntroducingProduct
+  productName="Forma"
+  website="forma.example"
+  accentColor="#B7D7FA"
+  content={{
+    hook: "You have the idea.",
+    hookPayoff: "Give it a shape.",
+    tagline: "Your next idea, beautifully made.",
+    installCommand: "npm create forma@latest",
+    installLabel: "Start with one command.",
+    galleryTitle: "A better starting point.",
+    initialText: "Your first idea.",
+    editedText: "Your next launch.",
+    showcaseTitle: "Made with Forma.",
+    showcaseWords: ["Imagine.", "Create.", "Share."],
+    ownershipTitle: "Your idea. Your creation.",
+    closingLine: "Make something worth sharing.",
+  }}
+/>
+```
+
+Changing the product name replaces the remocn mark with an initial mark. Supply
+`logoSrc` to use a real logo. Product-specific demonstrations are source scenes:
+replace the code editor and component previews when your product works differently.
+
+The preview controls cover product name, URL, accent, sound, and volume. The
+remaining content and scene layout are edited through props or source files.
+The complete timeline stays 32 seconds; motion is calculated in seconds, so
+30 fps exports also work when the composition duration is set to `32 * 30`.
+
+| Prop | Default | Purpose |
+| --- | --- | --- |
+| `productName` | `"remocn"` | Name throughout the film; overrides `content.productName` |
+| `website` | `"remocn.dev"` | Final URL; overrides `content.website` |
+| `accentColor` | `"#D4B3FF"` | Main accent; overrides `theme.accent` |
+| `logoSrc` | — | Image URL or `staticFile(...)` path; otherwise a vector/initial mark |
+| `content` | remocn copy | Partial override of the exported `introducingContent` object |
+| `theme` | graphite, paper, lavender, peach, mint | Partial override of `introducingTheme`; six-digit hex colors |
+| `sound` | `true` | Include the original score or replacement audio |
+| `audioSrc` | generated original score | Replacement audio URL or `staticFile(...)` path |
+| `volume` | `0.8` | Audio volume, clamped to 0–1 |
+
+Use concise titles (roughly 3–7 words), a short tagline, and a readable install
+command. Main titles and names scale down to fit; very long strings will become
+small. Blank content fields and missing array entries use their defaults. The
+composition is designed for 16:9; other aspect ratios are letterboxed. Redesign
+scene positions for a native portrait edit.
+
+## Scene source
+
+| Time | File | What happens |
+| --- | --- | --- |
+| 0–2.5 s | `scenes/hook.tsx` | Short word-driven opening |
+| 2.5–5 s | `scenes/brand.tsx` | Mark and product reveal |
+| 5–9 s | `scenes/install.tsx` | Command becomes a live preview |
+| 9–13 s | `scenes/gallery.tsx` | Components fan into a gallery |
+| 13–18 s | `scenes/customize.tsx` | Color, copy, and timing change in source and preview |
+| 18–22 s | `scenes/compose.tsx` | Preview cards gather into timeline clips |
+| 22–26 s | `scenes/showcase.tsx` | A finished mini launch sequence fills the screen |
+| 26–29 s | `scenes/ownership.tsx` | Ownership statement resolves to the mark |
+| 29–32 s | `scenes/outro.tsx` | Brand and URL hold |
+
+`index.tsx` owns the composition. `content.ts` owns copy and theme defaults.
+`motion.ts` owns the timeline and named easing curves. `shared.tsx` contains the
+brand mark, type helpers, cursor, and window chrome. `previews.tsx` contains live
+component demonstrations. Scene components remain ordinary React functions:
+replace, reorder, or extend them to match your story.
+
+If you change scene durations, update the `from` times, total duration, any
+shared transition geometry, and soundtrack accents together. The generated
+score is composed for the default 32-second edit.
+
+## Sound and assets
+
+The default instrumental and transition accents are synthesized by
+`soundtrack.ts`, with no third-party samples. This source is MIT-licensed with
+the template. The score is cached after its first generation and packaged as a
+WAV data URI for both the Player and MP4 renderer.
+
+For a silent export, pass `sound={false}`. To replace the score:
+
+```tsx
+import { staticFile } from "remotion";
+
+<IntroducingProduct
+  audioSrc={staticFile("launch-score.wav")}
+  volume={0.7}
+/>
+```
+
+Put replacement media in your project's `public/` folder. Supply a track long
+enough for the composition. Missing or inaccessible custom assets should be
+fixed before rendering; they are not silently replaced by unrelated media.

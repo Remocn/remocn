@@ -23,7 +23,15 @@
     "render:demos": "bun scripts/render-demos.mts",
     "spike:canvas": "bun scripts/canvas-determinism.mts",
     "render:not-found": "bun scripts/render-not-found.mts",
-    "postinstall": "fumadocs-mdx"
+    "postinstall": "fumadocs-mdx",
+    "studio:introducing": "remotion studio src/remotion/introducing-root.tsx",
+    "render:introducing": "remotion render src/remotion/introducing-root.tsx IntroducingRemocn out/introducing-remocn.mp4 --codec=h264 --crf=16",
+    "studio:fomo": "remotion studio src/remotion/fomo-root.tsx",
+    "render:fomo": "bun scripts/render-fomo.mts",
+    "review:fomo": "bun scripts/review-fomo.mts",
+    "studio:launch": "remotion studio src/remotion/studio-launch-root.tsx",
+    "render:launch": "bun scripts/render-studio-launch.mts",
+    "review:launch": "bun scripts/review-studio-launch.mts"
   },
   "dependencies": {
     "@base-ui/react": "^1.3.0",

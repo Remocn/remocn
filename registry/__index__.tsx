@@ -12,6 +12,26 @@ export interface RegistryEntry {
 }
 
 const registry: Record<string, RegistryEntry> = {
+  "studio-launch": {
+    load: () =>
+      import("@/registry/remocn-templates/studio-launch").then((m) => ({
+        default: m.StudioLaunch,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn-templates/studio-launch").then(
+        (m) => m.studioLaunchConfig,
+      ),
+  },
+  "fomo-limit-orders": {
+    load: () =>
+      import("@/registry/remocn-templates/fomo-limit-orders").then((m) => ({
+        default: m.FomoLimitOrders,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn-templates/fomo-limit-orders").then(
+        (m) => m.fomoLimitOrdersConfig,
+      ),
+  },
   "introducing-product": {
     load: () =>
       import("@/registry/remocn-templates/introducing-product").then((m) => ({

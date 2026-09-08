@@ -819,6 +819,16 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       speed: 1,
     },
   },
+  "fomo-limit-orders": {
+    durationInFrames: 1108,
+    fps: 60,
+    compositionWidth: 1920,
+    compositionHeight: 1080,
+    defaults: {
+      brandName: "fomo",
+      accentColor: "#6164f5",
+    },
+  },
   "github-sponsors": {
     durationInFrames: 270,
     fps: 30,
@@ -2628,13 +2638,16 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
     },
   },
   "introducing-product": {
-    durationInFrames: 90,
-    fps: 30,
-    compositionWidth: 1280,
-    compositionHeight: 720,
+    durationInFrames: 1920,
+    fps: 60,
+    compositionWidth: 1920,
+    compositionHeight: 1080,
     defaults: {
-      message: "Template placeholder",
-      speed: 1,
+      productName: "remocn",
+      website: "remocn.dev",
+      accentColor: "#D4B3FF",
+      sound: true,
+      volume: 0.8,
     },
   },
   "kinetic-center-build": {
@@ -4128,6 +4141,16 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       color: "#171717",
       fontWeight: "700",
       speed: 1,
+    },
+  },
+  "studio-launch": {
+    durationInFrames: 1065,
+    fps: 30,
+    compositionWidth: 1920,
+    compositionHeight: 1080,
+    defaults: {
+      brandName: "remocn",
+      accentColor: "#81bfff",
     },
   },
   "sustained-glitch": {
