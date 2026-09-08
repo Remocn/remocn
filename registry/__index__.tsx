@@ -18,7 +18,7 @@ const registry: Record<string, RegistryEntry> = {
         default: m.IntroducingProduct,
       })),
     loadConfig: () =>
-      import("@/registry/remocn-templates/introducing-product/config").then(
+      import("@/registry/remocn-templates/introducing-product").then(
         (m) => m.introducingProductConfig,
       ),
   },

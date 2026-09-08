@@ -7,83 +7,13 @@
       "name": "introducing-product",
       "type": "registry:component",
       "title": "Introducing Product",
-      "description": "A ready-to-use product introduction video template.",
-      "dependencies": ["remotion", "zod", "@remotion/zod-types"],
+      "description": "A minimal placeholder for a future product introduction template.",
+      "dependencies": ["remotion"],
       "files": [
         {
           "path": "introducing-product/index.tsx",
           "type": "registry:component",
           "target": "components/remocn/templates/introducing-product/index.tsx"
-        },
-        {
-          "path": "introducing-product/types.ts",
-          "type": "registry:component",
-          "target": "components/remocn/templates/introducing-product/types.ts"
-        },
-        {
-          "path": "introducing-product/schema.ts",
-          "type": "registry:component",
-          "target": "components/remocn/templates/introducing-product/schema.ts"
-        },
-        {
-          "path": "introducing-product/easing.ts",
-          "type": "registry:component",
-          "target": "components/remocn/templates/introducing-product/easing.ts"
-        },
-        {
-          "path": "introducing-product/shared.tsx",
-          "type": "registry:component",
-          "target": "components/remocn/templates/introducing-product/shared.tsx"
-        },
-        {
-          "path": "introducing-product/scenes/hook.tsx",
-          "type": "registry:component",
-          "target": "components/remocn/templates/introducing-product/scenes/hook.tsx"
-        },
-        {
-          "path": "introducing-product/scenes/command.tsx",
-          "type": "registry:component",
-          "target": "components/remocn/templates/introducing-product/scenes/command.tsx"
-        },
-        {
-          "path": "introducing-product/scenes/brand.tsx",
-          "type": "registry:component",
-          "target": "components/remocn/templates/introducing-product/scenes/brand.tsx"
-        },
-        {
-          "path": "introducing-product/scenes/product-ui.tsx",
-          "type": "registry:component",
-          "target": "components/remocn/templates/introducing-product/scenes/product-ui.tsx"
-        },
-        {
-          "path": "introducing-product/scenes/speed.tsx",
-          "type": "registry:component",
-          "target": "components/remocn/templates/introducing-product/scenes/speed.tsx"
-        },
-        {
-          "path": "introducing-product/scenes/features.tsx",
-          "type": "registry:component",
-          "target": "components/remocn/templates/introducing-product/scenes/features.tsx"
-        },
-        {
-          "path": "introducing-product/scenes/montage.tsx",
-          "type": "registry:component",
-          "target": "components/remocn/templates/introducing-product/scenes/montage.tsx"
-        },
-        {
-          "path": "introducing-product/scenes/learning-loop.tsx",
-          "type": "registry:component",
-          "target": "components/remocn/templates/introducing-product/scenes/learning-loop.tsx"
-        },
-        {
-          "path": "introducing-product/scenes/topics.tsx",
-          "type": "registry:component",
-          "target": "components/remocn/templates/introducing-product/scenes/topics.tsx"
-        },
-        {
-          "path": "introducing-product/scenes/outro.tsx",
-          "type": "registry:component",
-          "target": "components/remocn/templates/introducing-product/scenes/outro.tsx"
         }
       ]
     }
