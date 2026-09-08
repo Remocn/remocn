@@ -232,10 +232,7 @@ function LabHeader({ cfg, active }: { cfg: LabConfig; active: boolean }) {
   );
 
   return (
-    <header
-      className="fixed top-0 left-0 z-40"
-      style={{ right: PANEL_WIDTH }}
-    >
+    <header className="fixed top-0 left-0 z-40" style={{ right: PANEL_WIDTH }}>
       {island ? (
         <div
           className="section"
@@ -387,11 +384,18 @@ export function HeaderLab() {
           </div>
         </div>
 
-        <label className="mt-4 flex h-9 items-center justify-between rounded-xl control-surface px-3 text-sm">
+        <label
+          htmlFor="force-scrolled"
+          className="mt-4 flex h-9 items-center justify-between rounded-xl control-surface px-3 text-sm"
+        >
           <span className="font-medium text-muted-foreground">
             Force scrolled state
           </span>
-          <Switch checked={forceScrolled} onCheckedChange={setForceScrolled} />
+          <Switch
+            id="force-scrolled"
+            checked={forceScrolled}
+            onCheckedChange={setForceScrolled}
+          />
         </label>
 
         <div className="mt-3 [&>div]:grid-cols-1!">

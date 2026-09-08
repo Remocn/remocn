@@ -1,0 +1,125 @@
+---
+title: Kinetic Morph Text
+description: Letters lift, rotate, and reshape into the next phrase with delicate outline trails
+component: kinetic-morph-text
+vibe: playful
+length: 246
+useWhen:
+  - "A short sequence of phrases should feel like the same letters physically rearranging."
+  - "A playful title needs individual letter flights, soft shape changes, and readable pauses."
+  - "Editable copy should drive the animation without manually positioning characters."
+avoidWhen:
+  - "Words should switch with minimal movement — use `per-word-crossfade`."
+  - "The text should stay readable throughout a subtle entrance — use `per-character-rise`."
+  - "A single word should deform as one continuous surface — use `kinetic-warp`."
+---
+
+<ComponentPreview name="kinetic-morph-text" />
+
+<InstallBlock name="kinetic-morph-text" />
+
+## Usage
+
+Separate phrases with `|` or a newline. The first phrase flies into place;
+after a readable pause, its letters lift and rotate into the next phrase.
+Identical letters travel to their new positions. Other letters stretch and
+soften into replacement glyphs, while additional characters enter and excess
+characters leave. The final phrase stays on screen.
+
+```tsx
+import { KineticMorphText } from "@/components/remocn/kinetic-morph-text";
+
+export const TitleScene = () => (
+  <KineticMorphText text="Hello | Make it move | Shape what's next" />
+);
+```
+
+The soft morph combines squash/stretch and a local blur/threshold blend of
+native glyphs; it does not interpolate font outlines. Contour trails sample
+earlier poses and disappear when the letters settle. All motion is driven by
+the Remotion frame, including when scrubbing backward.
+
+## Timing
+
+At the defaults, the first entrance takes 54 frames, followed by a 42-frame
+hold. Each subsequent phrase adds another 54-frame transition and 42-frame
+hold. The three-phrase sequence finishes moving at frame 246; its full duration
+including the final hold is 288 frames at 30 fps.
+
+Use the duration helper when changing the phrase count, timing, or speed. It
+returns frames at 30 fps; scale the result for another composition frame rate.
+The docs preview updates its duration automatically when the copy, timing, or
+speed changes, so every phrase remains included.
+
+```tsx
+import { Composition } from "remotion";
+import {
+  KineticMorphText,
+  getKineticMorphTextDuration,
+} from "@/components/remocn/kinetic-morph-text";
+
+const props = {
+  text: "Think | Make | Move | Repeat",
+  transitionFrames: 48,
+  holdFrames: 36,
+  speed: 1,
+};
+
+export const Root = () => (
+  <Composition
+    id="KineticMorphText"
+    component={KineticMorphText}
+    defaultProps={props}
+    durationInFrames={getKineticMorphTextDuration(props)}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+With `loop`, the sequence starts on the readable first phrase, skips the initial
+entrance, and uses its final transition to return to that phrase. One complete
+cycle has the same duration as the non-looping sequence. A single phrase stays
+still in loop mode.
+
+## Tuning the motion
+
+Reduce `spread` and `rotation` for quieter movement. Set `morph={0}` for a clean
+glyph crossfade during the flight and `trails={0}` to remove the outlines.
+The font is Arial with Helvetica and sans-serif fallbacks, so no font download
+is needed. The longest phrase determines a shared font size that fits within
+82% of the composition width. Empty entries are ignored; empty input renders
+only the background. Spaces, punctuation, repeated letters, and grapheme
+clusters are preserved.
+
+```tsx
+<KineticMorphText
+  text="Create | Iterate | Ship"
+  spread={140}
+  rotation={80}
+  morph={0.65}
+  trails={0.3}
+  color="#ded4ff"
+  backgroundColor="#171324"
+/>
+```
+
+<PropsTable title="Props"
+  rows={[
+    { name: "text", type: "string", default: '"Hello | Make it move | Shape what\'s next"', description: "Phrases separated by pipes or newlines" },
+    { name: "fontSize", type: "number", default: "100", description: "Maximum font size; automatically reduced to fit the longest phrase" },
+    { name: "fontWeight", type: "number", default: "600", description: "CSS font weight" },
+    { name: "color", type: "string", default: '"#b4f4d9"', description: "Letter and outline color" },
+    { name: "backgroundColor", type: "string", default: '"#a800b7"', description: "Full-frame background; accepts transparent" },
+    { name: "spread", type: "number", default: "180", description: "Flight radius in pixels, capped to fit the composition" },
+    { name: "rotation", type: "number", default: "110", description: "Maximum letter rotation in degrees" },
+    { name: "morph", type: "number", default: "0.75", description: "Soft shape-blend strength from 0 to 1" },
+    { name: "trails", type: "number", default: "0.45", description: "Outline echo opacity from 0 to 1" },
+    { name: "transitionFrames", type: "number", default: "54", description: "Entrance and transition duration at 30 fps" },
+    { name: "holdFrames", type: "number", default: "42", description: "Readable pause per phrase at 30 fps" },
+    { name: "loop", type: "boolean", default: "false", description: "Start on the first phrase and cycle back to it" },
+    { name: "speed", type: "number", default: "1", description: "Playback multiplier; 0 freezes the animation" },
+    { name: "className", type: "string", description: "Optional class name on the full-frame root" },
+  ]}
+/>

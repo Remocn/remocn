@@ -77,6 +77,10 @@ import {
 } from "./security-cam-recipes";
 import { SelectExampleScene, selectExampleCode } from "./select-example";
 import {
+  SelectMenuExampleScene,
+  selectMenuExampleCode,
+} from "./select-menu-example";
+import {
   SharedAxisYExampleScene,
   sharedAxisYExampleCode,
 } from "./shared-axis-y-example";
@@ -232,6 +236,17 @@ export const examples: Record<string, ExampleEntry> = {
     code: selectExampleCode,
     // Panel closes at 96 + dur 12 = 108; a short settle then loop.
     durationInFrames: 120,
+    fps: FPS,
+    width: W,
+    height: H,
+    previewBackdrop: { type: "color", value: "oklch(1 0 0)" },
+  },
+  "select-menu-example": {
+    Component: SelectMenuExampleScene,
+    code: selectMenuExampleCode,
+    // Longest cycle (selectedIndex=3): glide 0→3 (60+12), click, selected hold,
+    // check fade-off, then instant restart jump at 78+14+20+8 = 120.
+    durationInFrames: 128,
     fps: FPS,
     width: W,
     height: H,

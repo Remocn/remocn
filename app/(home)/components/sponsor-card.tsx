@@ -17,25 +17,25 @@ export const TIER_STYLE: Record<
   { span: string; logoArea: string; maxH: string; treatment: LogoTreatment }
 > = {
   legendary: {
-    span: "col-span-2 md:col-span-6",
+    span: "col-span-2",
     logoArea: "min-h-24",
     maxH: "max-h-12",
     treatment: "color",
   },
   featured: {
-    span: "col-span-2 md:col-span-3",
+    span: "col-span-2",
     logoArea: "min-h-20",
     maxH: "max-h-10",
     treatment: "color",
   },
   partner: {
-    span: "col-span-1 md:col-span-2",
+    span: "col-span-1",
     logoArea: "min-h-16",
     maxH: "max-h-8",
     treatment: "reveal",
   },
   builder: {
-    span: "col-span-1 md:col-span-2",
+    span: "col-span-1",
     logoArea: "min-h-16",
     maxH: "max-h-8",
     treatment: "muted",

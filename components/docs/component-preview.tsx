@@ -147,7 +147,10 @@ function Preview({
                 name={name}
                 load={load}
                 inputProps={values}
-                durationInFrames={config.durationInFrames}
+                durationInFrames={
+                  config.getDurationInFrames?.(values) ??
+                  config.durationInFrames
+                }
                 fps={config.fps}
                 compositionWidth={config.compositionWidth}
                 compositionHeight={config.compositionHeight}

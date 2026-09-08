@@ -438,6 +438,20 @@
       "type": "registry:component"
     },
     {
+      "name": "kinetic-morph-text",
+      "title": "Kinetic Morph Text",
+      "description": "Letters lift, rotate, and softly reshape into editable phrases with sampled outline trails.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "registry/remocn/kinetic-morph-text/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/kinetic-morph-text.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
       "name": "kinetic-warp",
       "title": "Kinetic Warp",
       "description": "A coarse mesh warp bends a whole word in staccato beats, one axis per keyframe.",
@@ -1494,6 +1508,20 @@
       "type": "registry:component"
     },
     {
+      "name": "radial-burst",
+      "title": "Radial Burst",
+      "description": "Sculptural ribbons twist into a tilted ring and sweep outward through contour echoes for an expressive product introduction.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "registry/remocn/radial-burst/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/radial-burst.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
       "name": "confetti",
       "title": "Confetti",
       "description": "Deterministic confetti burst for Remotion — seeded particles with gravity, spin, and flutter so every render is identical. Fire it on any frame as a celebratory overlay.",
@@ -2166,6 +2194,20 @@
       "type": "registry:component"
     },
     {
+      "name": "search-reveal",
+      "title": "Search Reveal",
+      "description": "Expanding construction circles snap into a search pill, type editable text, and reveal an abstract graphic panel.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "registry/remocn/search-reveal/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/search-reveal.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
       "name": "remocn-ui",
       "title": "remocn UI Core",
       "description": "Shared timeline-fold hook, theme context, and color math for remocn UI primitives.",
@@ -2509,6 +2551,26 @@
           "path": "registry/remocn-ui/select/use-select-transition.ts",
           "type": "registry:component",
           "target": "components/remocn/use-select-transition.ts"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "select-menu",
+      "title": "UI Select Menu",
+      "description": "A vertical option list where exactly one row is highlighted; the highlight bar and left accent slide smoothly between rows. Fully controlled via selectedIndex/state or useSelectMenuTransition.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/remocn-ui"],
+      "files": [
+        {
+          "path": "registry/remocn-ui/select-menu/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/select-menu.tsx"
+        },
+        {
+          "path": "registry/remocn-ui/select-menu/use-select-menu-transition.ts",
+          "type": "registry:component",
+          "target": "components/remocn/use-select-menu-transition.ts"
         }
       ],
       "type": "registry:component"

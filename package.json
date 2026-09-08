@@ -10,6 +10,7 @@
     "start": "next start",
     "test": "bun test",
     "typecheck": "tsc --noEmit",
+    "sponsors:readme": "bun scripts/sponsors-readme.mts",
     "lint": "biome check",
     "format": "biome format --write",
     "registry:build": "shadcn build --output registry-artifacts && bun scripts/build-elements.mts && biome format --write registry-artifacts",

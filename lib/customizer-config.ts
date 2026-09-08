@@ -49,6 +49,8 @@ export interface ComponentConfig {
    */
   dimensions?: { width: number; height: number };
   durationInFrames: number;
+  /** Optional duration for edited copy/timing in the interactive docs preview. */
+  getDurationInFrames?: (values: Record<string, unknown>) => number;
   fps: number;
   compositionWidth: number;
   compositionHeight: number;

@@ -3,18 +3,11 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { activeSponsors, formerSponsors } from "@/config/sponsors";
 import { SectionHeading } from "../../../components/section-heading";
-import {
-  BecomeSponsorCard,
-  SponsorCard,
-  TIER_LABEL,
-  TIER_STYLE,
-} from "../../../components/sponsor-card";
+import { SponsorCard } from "../../../components/sponsor-card";
+import { SponsorGrid } from "../../../components/sponsor-grid";
 
 export function WallOfLove() {
-  const ordered = (
-    ["legendary", "featured", "partner", "builder"] as const
-  ).flatMap((tier) => activeSponsors.filter((s) => s.tier === tier));
-  const isEmpty = ordered.length === 0;
+  const isEmpty = activeSponsors.length === 0;
 
   return (
     <section id="sponsors" className="relative py-12 sm:py-16">
@@ -46,23 +39,7 @@ export function WallOfLove() {
             </Button>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-6">
-            {ordered.map((s) => {
-              const style = TIER_STYLE[s.tier];
-              return (
-                <div key={s.id} className={style.span}>
-                  <SponsorCard
-                    sponsor={s}
-                    label={TIER_LABEL[s.tier]}
-                    logoArea={style.logoArea}
-                    maxH={style.maxH}
-                    treatment={style.treatment}
-                  />
-                </div>
-              );
-            })}
-            <BecomeSponsorCard href="#tiers" className="md:col-span-4" />
-          </div>
+          <SponsorGrid sponsors={activeSponsors} ctaHref="#tiers" />
         )}
       </div>
     </section>

@@ -3,6 +3,7 @@
   "defaultOpen": true,
   "pages": [
     "index",
+    "search-reveal",
     "glass-code-block",
     "glass-code-walk",
     "terminal-simulator",

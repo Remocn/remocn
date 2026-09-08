@@ -438,6 +438,20 @@
       ]
     },
     {
+      "name": "kinetic-morph-text",
+      "type": "registry:component",
+      "title": "Kinetic Morph Text",
+      "description": "Letters lift, rotate, and softly reshape into editable phrases with sampled outline trails.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "kinetic-morph-text/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/kinetic-morph-text.tsx"
+        }
+      ]
+    },
+    {
       "name": "kinetic-warp",
       "type": "registry:component",
       "title": "Kinetic Warp",
@@ -1494,6 +1508,20 @@
       ]
     },
     {
+      "name": "radial-burst",
+      "type": "registry:component",
+      "title": "Radial Burst",
+      "description": "Sculptural ribbons twist into a tilted ring and sweep outward through contour echoes for an expressive product introduction.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "radial-burst/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/radial-burst.tsx"
+        }
+      ]
+    },
+    {
       "name": "confetti",
       "type": "registry:component",
       "title": "Confetti",
@@ -2162,6 +2190,20 @@
           "path": "glitch-cut/index.tsx",
           "type": "registry:component",
           "target": "components/remocn/glitch-cut.tsx"
+        }
+      ]
+    },
+    {
+      "name": "search-reveal",
+      "type": "registry:component",
+      "title": "Search Reveal",
+      "description": "Expanding construction circles snap into a search pill, type editable text, and reveal an abstract graphic panel.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "search-reveal/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/search-reveal.tsx"
         }
       ]
     }

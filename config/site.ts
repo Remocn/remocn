@@ -70,6 +70,7 @@ export const NEW_BADGE_PATHS = new Set<string>([
   "/docs/typography/fog-rise",
   "/docs/typography/gradient-scale-cut-text",
   "/docs/typography/inline-pill-takeover",
+  "/docs/typography/kinetic-morph-text",
   "/docs/typography/outline-fill-track-text",
   "/docs/typography/rush-type",
   "/docs/typography/shadow-sweep-text",
@@ -79,6 +80,8 @@ export const NEW_BADGE_PATHS = new Set<string>([
   "/docs/typography/word-push",
   "/docs/typography/word-stream",
   "/docs/typography/zoom-words",
+  "/docs/effects/radial-burst",
+  "/docs/ui-blocks/search-reveal",
 ]);
 
 export type FooterGroup = {

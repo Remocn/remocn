@@ -1,0 +1,128 @@
+---
+title: Radial Burst
+description: Sculptural ribbons twist into a tilted ring and sweep outward through layered contour echoes
+component: radial-burst
+vibe: playful
+length: 114
+useWhen:
+  - "A product introduction needs a short abstract geometric opening before its title."
+  - "A motion-design stinger should build anticipation and leave a clean frame for the next beat."
+  - "A brand-colored animation needs editable segment count, rotation, and scale without external assets."
+avoidWhen:
+  - "The effect should celebrate an action with scattered particles — use `confetti`."
+  - "Two complete scenes need a camera move through concentric rings — use `ripple-zoom`."
+  - "The introduction should be driven by editable words — use `kinetic-morph-text`."
+---
+
+<ComponentPreview name="radial-burst" />
+
+<InstallBlock name="radial-burst" />
+
+## Usage
+
+`RadialBurst` is a four-second sculptural stinger. A small circle bursts into
+wide, tapered ribbons that twist through an asymmetric bloom. Fine contour
+echoes trace their movement while a warm accent picks out a few petals. The
+ribbons fold into a tilted ring, compress, then sweep outward through layered
+rings to leave a clean field for the next title, logo, or scene.
+
+```tsx
+import { RadialBurst } from "@/components/remocn/radial-burst";
+
+export const Intro = () => <RadialBurst />;
+```
+
+The default palette is white and warm cream on remocn's primary purple. No text, logo,
+images, fonts, or shaders are included. SVG geometry, springs, and curves are
+derived directly from the Remotion frame, so seeking and rendering are
+deterministic. The geometry scales with the shorter composition dimension;
+the exit uses the full diagonal to clear portrait, square, and wide frames.
+
+## Timing and title handoff
+
+At 30 fps and `speed={1}`:
+
+| Frames | Motion |
+| --- | --- |
+| 0–18 | Central circle enters with a small overshoot |
+| 18–44 | Ribbons burst outward, stretching into broad petals |
+| 44–84 | Ribbons twist through a tilted bloom, then close into a ring |
+| 84–96 | Ring contracts to anticipate the exit |
+| 96–114 | Ring and contour echoes expand out of frame |
+| 114–120 | Clean background |
+
+Place a title above the animation as the ring opens up. This example shares
+the purple background and uses the burst as a transparent overlay.
+
+```tsx
+import { AbsoluteFill, Sequence } from "remotion";
+import { RadialBurst } from "@/components/remocn/radial-burst";
+
+export const ProductIntro = () => (
+  <AbsoluteFill style={{ backgroundColor: "#a800b7" }}>
+    <RadialBurst backgroundColor="transparent" />
+    <Sequence from={108}>
+      <AbsoluteFill style={{
+        alignItems: "center",
+        justifyContent: "center",
+        color: "#ffffff",
+        fontFamily: "Arial, sans-serif",
+        fontSize: 88,
+        fontWeight: 600,
+      }}>
+        Introducing something new
+      </AbsoluteFill>
+    </Sequence>
+  </AbsoluteFill>
+);
+```
+
+`radialBurstLength` is 114 frames, the point where all shapes have left.
+`getRadialBurstDuration({ speed })` includes the clean tail and returns the
+duration at 30 fps. Multiply by `fps / 30` and round up for another frame rate.
+The docs preview adjusts its duration when speed changes. Enable `loop` to
+repeat the full 120-frame cycle; otherwise the background stays clear after
+the first pass.
+
+## Variations
+
+Use four segments for broad, sculptural shapes or twelve for a dense radial
+pattern. `intensity` controls ribbon swelling, asymmetric movement, and plane
+tilt. Set it to `0` for the original flat capsule-to-ring animation. `twist`
+changes the ribbon bend; negative values curl in the opposite direction.
+`echoes={0}` removes the contour trails. Negative `rotation` reverses the
+assembly. `radius` and `thickness` are measured at a 720px reference size and
+scale with the composition.
+
+```tsx
+<RadialBurst
+  segments={6}
+  radius={240}
+  thickness={24}
+  rotation={-180}
+  intensity={1.2}
+  twist={140}
+  echoes={3}
+  color="#a800b7"
+  backgroundColor="#faf5ff"
+  speed={1.25}
+/>
+```
+
+<PropsTable title="Props"
+  rows={[
+    { name: "segments", type: "number", default: "8", description: "Rounded segment count, clamped to 4–16 and rounded to an integer" },
+    { name: "radius", type: "number", default: "210", description: "Burst radius at 720px, clamped to 100–280" },
+    { name: "thickness", type: "number", default: "30", description: "Segment thickness at 720px, clamped to 8–60" },
+    { name: "rotation", type: "number", default: "135", description: "Assembly rotation in degrees; negative values reverse it" },
+    { name: "intensity", type: "number", default: "1", description: "Ribbon swelling, asymmetric movement, and tilt; 0 restores classic geometry, maximum 1.5" },
+    { name: "twist", type: "number", default: "110", description: "Ribbon bend in degrees, from -180 to 180" },
+    { name: "echoes", type: "number", default: "3", description: "Contour echo count, from 0 to 5" },
+    { name: "accentColor", type: "string", default: '"#f4e4a7"', description: "Warm accent on selected ribbons and exit echoes" },
+    { name: "color", type: "string", default: '"#ffffff"', description: "Circle, segment, and ring color" },
+    { name: "backgroundColor", type: "string", default: '"#a800b7"', description: "Full-frame background; use transparent for an overlay" },
+    { name: "speed", type: "number", default: "1", description: "Playback multiplier; 0 freezes the initial frame" },
+    { name: "loop", type: "boolean", default: "false", description: "Repeat the entire animation, including its clean tail" },
+    { name: "className", type: "string", description: "Optional class name on the full-frame root" },
+  ]}
+/>
