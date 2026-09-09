@@ -22,6 +22,7 @@ export function StickyHeaderShell({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let zoom: HTMLElement | null = null;
+    let run = 0;
 
     const evaluate = () => {
       const height = headerRef.current?.offsetHeight ?? HEADER_HEIGHT;
@@ -31,7 +32,7 @@ export function StickyHeaderShell({ children }: { children: ReactNode }) {
 
       if (!zoom) {
         y.set(0);
-        prevPast.current = true;
+        prevPast.current = null;
         return;
       }
 
@@ -40,9 +41,13 @@ export function StickyHeaderShell({ children }: { children: ReactNode }) {
 
       if (!first && past !== prevPast.current) {
         animating.current = true;
-        animate(y, past ? 0 : -height, REVEAL_SPRING).then(() => {
+        const id = ++run;
+        const settle = () => {
+          if (id !== run) return;
           animating.current = false;
-        });
+          schedule();
+        };
+        animate(y, past ? 0 : -height, REVEAL_SPRING).then(settle, settle);
       } else if (past) {
         if (first) y.set(0);
       } else if (!animating.current) {
