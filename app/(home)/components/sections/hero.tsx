@@ -15,7 +15,6 @@ export function Hero() {
   return (
     <section className="relative isolate pt-8 pb-12 sm:pt-16 sm:pb-24">
       <div aria-hidden className="absolute inset-0 -z-10">
-        <div className="absolute inset-0 bg-grid-fade" />
         <HeroTerminalBg />
       </div>
 
@@ -34,7 +33,7 @@ export function Hero() {
           </FadeUp>
 
           <FadeUp gate="landing-intro" delay={0.12}>
-            <p className="mt-4 max-w-2xl text-balance text-base leading-relaxed text-muted-foreground sm:text-lg">
+            <p className="mt-4 max-w-2xl text-balance text-base leading-relaxed text-foreground [text-shadow:0_0_10px_var(--background),0_0_20px_var(--background)] sm:text-lg">
               Describe your product to your AI agent. It builds the demo video
               from ready-made pieces while you watch in the browser.
             </p>
