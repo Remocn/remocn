@@ -274,6 +274,11 @@
   );
 }
 
+[data-rehype-pretty-code-figure] pre {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in oklab, currentColor 25%, transparent)
+    transparent;
+}
 .typeset figure.shiki {
   /* biome-ignore lint/complexity/noImportantStyles: overrides shiki's own inline background/border/shadow, which outrank this class in specificity */
   background-color: var(--muted) !important;
@@ -288,8 +293,7 @@
   /* biome-ignore lint/complexity/noImportantStyles: see above */
   background-color: transparent !important;
 }
-.typeset figure.shiki pre,
-[data-rehype-pretty-code-figure] pre {
+.typeset figure.shiki pre {
   scrollbar-width: thin;
   scrollbar-color: color-mix(in oklab, currentColor 25%, transparent)
     transparent;
@@ -309,6 +313,7 @@
   [data-slot="copy-button"] {
   top: calc(var(--spacing) * 1.5);
 }
+/* biome-ignore lint/style/noDescendingSpecificity: rehype-pretty-code markup never carries .typeset figure.shiki, so the earlier rule cannot apply here */
 [data-rehype-pretty-code-figure] pre,
 [data-rehype-pretty-code-figure] code {
   font-family: var(--font-mono);
@@ -358,6 +363,7 @@
   width: 100%;
   padding-block: calc(var(--spacing) * 0.25);
 }
+/* biome-ignore lint/style/noDescendingSpecificity: sets the shiki token colour every span inherits; the earlier rule deliberately owns layout only */
 [data-line] span {
   color: var(--shiki-light);
 }

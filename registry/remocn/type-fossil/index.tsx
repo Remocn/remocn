@@ -222,20 +222,18 @@ export function TypeFossil({
           </clipPath>
         </defs>
         {finalText ? (
-          <>
-            {state.from === state.to ? (
-              renderSlice(revisions[state.from])
-            ) : (
-              <>
-                <g clipPath={`url(#${id}-old)`}>
-                  {renderSlice(revisions[state.from])}
-                </g>
-                <g clipPath={`url(#${id}-new)`}>
-                  {renderSlice(revisions[state.to])}
-                </g>
-              </>
-            )}
-          </>
+          state.from === state.to ? (
+            renderSlice(revisions[state.from])
+          ) : (
+            <>
+              <g clipPath={`url(#${id}-old)`}>
+                {renderSlice(revisions[state.from])}
+              </g>
+              <g clipPath={`url(#${id}-new)`}>
+                {renderSlice(revisions[state.to])}
+              </g>
+            </>
+          )
         ) : null}
       </svg>
     </div>

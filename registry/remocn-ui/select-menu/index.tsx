@@ -191,7 +191,6 @@ export function SelectMenu({
 
         {/* Rows */}
         {options.map((option, i) => {
-
           const proximity = Math.max(0, 1 - Math.abs(i - v.indicatorOffset));
           const onRow = proximity >= 0.65 ? 1 : 0;
           const scale = 1 - PRESS_DIP * pressDepth * proximity;
