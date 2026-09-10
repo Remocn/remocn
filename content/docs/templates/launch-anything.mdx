@@ -1,0 +1,130 @@
+---
+title: Launch Anything
+description: A cinematic launch film with chrome type, a sunlit laptop showcase, and an orbital finale
+component: launch-anything
+vibe: premium
+length: 800
+useWhen:
+  - "You want a complete 26.7-second launch film with editable text and product demonstrations."
+  - "Your portfolio needs a continuous laptop camera move through seven product examples."
+avoidWhen:
+  - "You want a longer studio or course launch; use `studio-launch`."
+  - "You only need a chrome headline; use `shader-text-reveal`."
+---
+
+<ComponentPreview name="launch-anything" />
+
+<InstallBlock name="launch-anything" />
+
+A reference-based launch film: **1600 frames at 60 fps**, **1920×1080**, **26.67 seconds**.
+Nine scenes preserve the reference's order and pacing, from chrome typography to
+the sunlit laptop, drifting brand grid, orbital montage, typed address, and closing mark.
+
+The picture is independently reconstructed using React, SVG, a text shader, and
+four generated photographic plates. No original video frames are played back.
+The photographs, fine product details, brand glyphs, and bundled Manrope font are
+approximations of the low-resolution reference, not its original production assets.
+
+## Usage
+
+```tsx
+import { Composition } from "remotion";
+import {
+  LaunchAnything,
+  LAUNCH_FRAMES,
+  LAUNCH_FPS,
+  LAUNCH_WIDTH,
+  LAUNCH_HEIGHT,
+} from "@/components/remocn/templates/launch-anything";
+
+export const Root = () => (
+  <Composition
+    id="LaunchAnything"
+    component={LaunchAnything}
+    durationInFrames={LAUNCH_FRAMES}
+    fps={LAUNCH_FPS}
+    width={LAUNCH_WIDTH}
+    height={LAUNCH_HEIGHT}
+    defaultProps={{}}
+  />
+);
+```
+
+## Customize
+
+```tsx
+import { staticFile } from "remotion";
+
+<LaunchAnything
+  opening="Your next"
+  subject="big idea"
+  brandUrl="Acme.studio"
+  accentColor="#df622b"
+  content={{
+    proof: "Built for ambitious\nteams",
+    industry: "Every ambition",
+    promise: "Make your next move.",
+    integrations: ["Notion", "Slack", "Linear"],
+  }}
+  screenImages={{
+    dashboard: staticFile("product-dashboard.png"),
+    shoppers: staticFile("mobile-app.png"),
+  }}
+  logos={[staticFile("partner-a.svg"), staticFile("partner-b.svg")]}
+  logoSrc={staticFile("brand-mark.svg")}
+  audioSrc={staticFile("soundtrack.m4a")}
+  volume={0.8}
+/>
+```
+
+All props are optional. `content` overrides individual headlines, product labels,
+and integration names. `screenImages` replaces any of the seven product demonstrations:
+`dashboard`, `shoppers`, `exchange`, `builder`, `trading`, `loyalty`, and `integrations`.
+Images fill the display using `object-fit: cover`; approximately 1.52:1 images fit best.
+The defaults render actual animated interface layers instead of screenshots.
+
+`media` accepts `desk`, `horizon`, `rocket`, and `earth`. The included images are
+embedded for a self-contained, offline registry installation. A replacement desk
+plate must retain the screen geometry in `scenes/showcase.tsx`, or update those
+coordinates to match the new image. Text is fitted to the reference layout; use
+short copy to retain its rhythm. The shader intro requires WebGL2.
+
+Audio is optional and the installed template is silent by default. The original
+reference soundtrack is not distributed in the registry.
+
+## Scene timing
+
+| Scene | Time | Editable layers |
+| --- | --- | --- |
+| Opening | 0–3.80s | Chrome words, horizon, readiness headline |
+| Action | 3.80–5.90s | Sliding headline, glass button, pointer |
+| Portal | 5.90–7.33s | Rounded glass aperture and color sweep |
+| Showcase | 7.33–15.12s | Continuous camera move, seven product demonstrations |
+| Proof | 15.12–17.02s | Floating brand marks and two-line headline |
+| Industry | 17.02–20.22s | Dark orbit rims and two title beats |
+| Space | 20.22–21.55s | Rocket, distant orbit, Earth and launch headline |
+| Address | 21.55–23.72s | Typed domain and blue light sweep |
+| Mark | 23.72–26.67s | Slow brand-mark scale-down |
+
+`motion.ts` owns the cut points and camera curve. `scenes/` contains the shots;
+`screens.tsx` contains the independently editable product demos. All animation
+derives from the current frame, so scrubbing and out-of-order rendering are deterministic.
+
+## Run in this repository
+
+```bash
+bun run studio:launch-anything
+bun run review:launch-anything
+bun run render:launch-anything
+```
+
+The Studio composition includes a props schema for copy, colors, media, logos,
+screen replacements, and audio. The render writes `out/launch-anything.mp4`.
+To compare against a local reference with its soundtrack:
+
+```bash
+bun run render:launch-anything --reference-audio=/absolute/path/to/reference.mp4
+```
+
+This muxes the reference audio into the local render and trims it to the picture
+duration. The reference file and its audio are never added to the public registry.

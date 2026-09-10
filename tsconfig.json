@@ -20,6 +20,9 @@
       }
     ],
     "paths": {
+      "@/components/remocn/shader-text-reveal": [
+        "./registry/remocn/shader-text-reveal/index.tsx"
+      ],
       "@/lib/remocn-icons": ["./registry/remocn-icons/icons-core/index.ts"],
       "@/lib/remocn-ui": ["./registry/remocn-ui/core/index.ts"],
       "@/lib/remocn-ui/*": ["./registry/remocn-ui/core/*"],

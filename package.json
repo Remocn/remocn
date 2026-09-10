@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "studio:launch-anything": "remotion studio src/remotion/launch-anything-root.tsx",
+    "render:launch-anything": "bun scripts/render-launch-anything.mts",
+    "review:launch-anything": "bun scripts/review-launch-anything.mts",
     "dev": "next dev",
     "dev:clean": "rm -rf .next && next dev",
     "clean": "rm -rf .next",

@@ -4763,6 +4763,86 @@
       "type": "registry:component"
     },
     {
+      "name": "launch-anything",
+      "title": "Launch Anything",
+      "description": "A complete 26.7-second launch film with chrome type, a sunlit laptop showcase, floating brand marks, orbital imagery, and editable scenes.",
+      "dependencies": ["remotion", "@fontsource/manrope"],
+      "registryDependencies": ["@remocn/shader-text-reveal"],
+      "files": [
+        {
+          "path": "registry/remocn-templates/launch-anything/assets.ts",
+          "type": "registry:component",
+          "target": "components/remocn/templates/launch-anything/assets.ts"
+        },
+        {
+          "path": "registry/remocn-templates/launch-anything/content.ts",
+          "type": "registry:component",
+          "target": "components/remocn/templates/launch-anything/content.ts"
+        },
+        {
+          "path": "registry/remocn-templates/launch-anything/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/launch-anything/index.tsx"
+        },
+        {
+          "path": "registry/remocn-templates/launch-anything/motion.ts",
+          "type": "registry:component",
+          "target": "components/remocn/templates/launch-anything/motion.ts"
+        },
+        {
+          "path": "registry/remocn-templates/launch-anything/screens.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/launch-anything/screens.tsx"
+        },
+        {
+          "path": "registry/remocn-templates/launch-anything/ui.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/launch-anything/ui.tsx"
+        },
+        {
+          "path": "registry/remocn-templates/launch-anything/scenes/opening.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/launch-anything/scenes/opening.tsx"
+        },
+        {
+          "path": "registry/remocn-templates/launch-anything/scenes/action.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/launch-anything/scenes/action.tsx"
+        },
+        {
+          "path": "registry/remocn-templates/launch-anything/scenes/portal.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/launch-anything/scenes/portal.tsx"
+        },
+        {
+          "path": "registry/remocn-templates/launch-anything/scenes/showcase.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/launch-anything/scenes/showcase.tsx"
+        },
+        {
+          "path": "registry/remocn-templates/launch-anything/scenes/proof.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/launch-anything/scenes/proof.tsx"
+        },
+        {
+          "path": "registry/remocn-templates/launch-anything/scenes/industry.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/launch-anything/scenes/industry.tsx"
+        },
+        {
+          "path": "registry/remocn-templates/launch-anything/scenes/space.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/launch-anything/scenes/space.tsx"
+        },
+        {
+          "path": "registry/remocn-templates/launch-anything/scenes/closing.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/launch-anything/scenes/closing.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
       "name": "introducing-product",
       "title": "Introducing Product",
       "description": "A complete 32-second product launch video with editable scenes, real component demos, and an original soundtrack.",

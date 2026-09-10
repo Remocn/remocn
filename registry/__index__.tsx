@@ -12,6 +12,16 @@ export interface RegistryEntry {
 }
 
 const registry: Record<string, RegistryEntry> = {
+  "launch-anything": {
+    load: () =>
+      import("@/registry/remocn-templates/launch-anything").then((m) => ({
+        default: m.LaunchAnything,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn-templates/launch-anything").then(
+        (m) => m.launchAnythingConfig,
+      ),
+  },
   "studio-launch": {
     load: () =>
       import("@/registry/remocn-templates/studio-launch").then((m) => ({

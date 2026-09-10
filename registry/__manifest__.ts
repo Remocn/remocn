@@ -2743,6 +2743,19 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       speed: 1,
     },
   },
+  "launch-anything": {
+    durationInFrames: 1600,
+    fps: 60,
+    compositionWidth: 1920,
+    compositionHeight: 1080,
+    defaults: {
+      opening: "Your",
+      subject: "product",
+      brandUrl: "Launchanything.now",
+      accentColor: "#3730ed",
+      speed: 1,
+    },
+  },
   "lens-zoom": {
     durationInFrames: 112,
     fps: 30,

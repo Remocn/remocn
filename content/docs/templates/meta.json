@@ -2,6 +2,7 @@
   "title": "Templates",
   "collapsible": false,
   "pages": [
+    "launch-anything",
     "introducing-product",
     "fomo-limit-orders",
     "studio-launch"

@@ -4,14 +4,91 @@
   "homepage": "https://remocn.dev",
   "items": [
     {
+      "name": "launch-anything",
+      "title": "Launch Anything",
+      "type": "registry:component",
+      "description": "A complete 26.7-second launch film with chrome type, a sunlit laptop showcase, floating brand marks, orbital imagery, and editable scenes.",
+      "dependencies": ["remotion", "@fontsource/manrope"],
+      "registryDependencies": ["@remocn/shader-text-reveal"],
+      "files": [
+        {
+          "path": "launch-anything/assets.ts",
+          "type": "registry:component",
+          "target": "components/remocn/templates/launch-anything/assets.ts"
+        },
+        {
+          "path": "launch-anything/content.ts",
+          "type": "registry:component",
+          "target": "components/remocn/templates/launch-anything/content.ts"
+        },
+        {
+          "path": "launch-anything/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/launch-anything/index.tsx"
+        },
+        {
+          "path": "launch-anything/motion.ts",
+          "type": "registry:component",
+          "target": "components/remocn/templates/launch-anything/motion.ts"
+        },
+        {
+          "path": "launch-anything/screens.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/launch-anything/screens.tsx"
+        },
+        {
+          "path": "launch-anything/ui.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/launch-anything/ui.tsx"
+        },
+        {
+          "path": "launch-anything/scenes/opening.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/launch-anything/scenes/opening.tsx"
+        },
+        {
+          "path": "launch-anything/scenes/action.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/launch-anything/scenes/action.tsx"
+        },
+        {
+          "path": "launch-anything/scenes/portal.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/launch-anything/scenes/portal.tsx"
+        },
+        {
+          "path": "launch-anything/scenes/showcase.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/launch-anything/scenes/showcase.tsx"
+        },
+        {
+          "path": "launch-anything/scenes/proof.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/launch-anything/scenes/proof.tsx"
+        },
+        {
+          "path": "launch-anything/scenes/industry.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/launch-anything/scenes/industry.tsx"
+        },
+        {
+          "path": "launch-anything/scenes/space.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/launch-anything/scenes/space.tsx"
+        },
+        {
+          "path": "launch-anything/scenes/closing.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/launch-anything/scenes/closing.tsx"
+        }
+      ]
+    },
+    {
       "name": "introducing-product",
       "type": "registry:component",
       "title": "Introducing Product",
       "description": "A complete 32-second product launch video with editable scenes, real component demos, and an original soundtrack.",
-      "dependencies": [
-        "remotion",
-        "@fontsource/manrope"
-      ],
+      "dependencies": ["remotion", "@fontsource/manrope"],
       "files": [
         {
           "path": "introducing-product/content.ts",
@@ -89,20 +166,14 @@
           "target": "components/remocn/templates/introducing-product/soundtrack.ts"
         }
       ],
-      "registryDependencies": [
-        "@remocn/word-push",
-        "@remocn/radial-burst"
-      ]
+      "registryDependencies": ["@remocn/word-push", "@remocn/radial-burst"]
     },
     {
       "name": "fomo-limit-orders",
       "type": "registry:component",
       "title": "Fomo Limit Orders",
       "description": "An 18-second trading-product introduction with editable typography, interface, border-following motion, and camera animation.",
-      "dependencies": [
-        "remotion",
-        "@fontsource/manrope"
-      ],
+      "dependencies": ["remotion", "@fontsource/manrope"],
       "files": [
         {
           "path": "fomo-limit-orders/content.ts",
@@ -161,10 +232,7 @@
       "title": "Studio Launch",
       "type": "registry:component",
       "description": "A cinematic 35.5-second studio launch with editable product interfaces, atmospheric landscapes, camera movement, and remocn branding.",
-      "dependencies": [
-        "remotion",
-        "@fontsource/manrope"
-      ],
+      "dependencies": ["remotion", "@fontsource/manrope"],
       "files": [
         {
           "path": "studio-launch/assets.ts",

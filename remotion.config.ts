@@ -10,6 +10,10 @@ Config.overrideWebpackConfig((config) => ({
     ...config.resolve,
     alias: {
       ...(config.resolve?.alias ?? {}),
+      "@/components/remocn/shader-text-reveal$": path.join(
+        process.cwd(),
+        "registry/remocn/shader-text-reveal/index.tsx",
+      ),
       "@/components/remocn/number-wheel$": path.join(
         process.cwd(),
         "registry/remocn/number-wheel/index.tsx",
