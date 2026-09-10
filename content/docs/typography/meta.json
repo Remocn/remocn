@@ -3,6 +3,9 @@
   "defaultOpen": true,
   "pages": [
     "index",
+    "inline-word-roll",
+    "shader-text-reveal",
+    "type-fossil",
     "soft-blur-in",
     "per-character-rise",
     "bottom-up-letters",

@@ -42,6 +42,56 @@ const registry: Record<string, RegistryEntry> = {
         (m) => m.introducingProductConfig,
       ),
   },
+  "shader-spiral-pass": {
+    load: () =>
+      import("@/components/docs/examples/shader-spiral-pass-example").then(
+        (m) => ({ default: m.ShaderSpiralPassExampleScene }),
+      ),
+    loadConfig: () =>
+      import("@/registry/remocn/shader-spiral-pass/config").then(
+        (m) => m.shaderSpiralPassConfig,
+      ),
+  },
+  "shader-light-tunnel": {
+    load: () =>
+      import("@/registry/remocn/shader-light-tunnel").then((m) => ({
+        default: m.ShaderLightTunnel,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/shader-light-tunnel/config").then(
+        (m) => m.shaderLightTunnelConfig,
+      ),
+  },
+  "inline-word-roll": {
+    load: () =>
+      import("@/registry/remocn/inline-word-roll").then((m) => ({
+        default: m.InlineWordRoll,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/inline-word-roll/config").then(
+        (m) => m.inlineWordRollConfig,
+      ),
+  },
+  "shader-text-reveal": {
+    load: () =>
+      import("@/registry/remocn/shader-text-reveal").then((m) => ({
+        default: m.ShaderTextReveal,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/shader-text-reveal/config").then(
+        (m) => m.shaderTextRevealConfig,
+      ),
+  },
+  "shader-seam": {
+    load: () =>
+      import("@/components/docs/examples/shader-seam-example").then((m) => ({
+        default: m.ShaderSeamExampleScene,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/shader-seam/config").then(
+        (m) => m.shaderSeamConfig,
+      ),
+  },
   "search-reveal": {
     load: () =>
       import("@/registry/remocn/search-reveal").then((m) => ({
@@ -50,6 +100,16 @@ const registry: Record<string, RegistryEntry> = {
     loadConfig: () =>
       import("@/registry/remocn/search-reveal/config").then(
         (m) => m.searchRevealConfig,
+      ),
+  },
+  "type-fossil": {
+    load: () =>
+      import("@/registry/remocn/type-fossil").then((m) => ({
+        default: m.TypeFossil,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/type-fossil/config").then(
+        (m) => m.typeFossilConfig,
       ),
   },
   "soft-blur-in": {
@@ -2274,6 +2334,16 @@ const registry: Record<string, RegistryEntry> = {
     loadConfig: () =>
       import("@/registry/remocn/x-followers-overview/config").then(
         (m) => m.xFollowersOverviewConfig,
+      ),
+  },
+  "cursor-gravity": {
+    load: () =>
+      import("@/registry/remocn/cursor-gravity").then((m) => ({
+        default: m.CursorGravity,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/cursor-gravity/config").then(
+        (m) => m.cursorGravityConfig,
       ),
   },
   "radial-burst": {

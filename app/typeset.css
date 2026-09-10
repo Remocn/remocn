@@ -454,6 +454,7 @@
       &:where(pre, table, blockquote, figure) {
         break-inside: avoid;
       }
+      /* biome-ignore lint/style/noDescendingSpecificity: print-only rule, never in the cascade with the screen rule it is compared against */
       &:where(h1, h2, h3, h4) {
         break-after: avoid;
       }
@@ -461,6 +462,7 @@
 
     /* Forced colors strips the code background, so give it a border. */
     @media (forced-colors: active) {
+      /* biome-ignore lint/style/noDescendingSpecificity: forced-colors-only rule, never in the cascade with the rule it is compared against */
       &:where(:not(pre) > code) {
         border: 1px solid;
       }

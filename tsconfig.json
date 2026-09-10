@@ -138,6 +138,9 @@
       "@/components/remocn/shader-grain-gradient": [
         "./registry/remocn/shader-grain-gradient/index.tsx"
       ],
+      "@/components/remocn/shader-light-tunnel": [
+        "./registry/remocn/shader-light-tunnel/index.tsx"
+      ],
       "@/components/remocn/shader-warp": [
         "./registry/remocn/shader-warp/index.tsx"
       ],

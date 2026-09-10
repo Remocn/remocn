@@ -1,0 +1,64 @@
+---
+title: Shader Text Reveal
+description: Reveal words through the original OpenShaders hero material, then settle into white type
+component: shader-text-reveal
+vibe: premium
+length: 48
+useWhen:
+  - "A short headline needs the hero shader reveal, one word at a time."
+  - "The hero material should appear inside letters before they settle into white."
+avoidWhen:
+  - "A quiet text entrance is enough — use `soft-blur-in`."
+  - "Words should physically morph into each other — use `kinetic-morph-text`."
+---
+
+<ComponentPreview name="shader-text-reveal" />
+
+<InstallBlock name="shader-text-reveal" />
+
+## Usage
+
+The original [@remocn OpenShaders shader](https://openshaders.com/@remocn) from the
+site's hero fills the letters, including its magenta-violet field and halftone
+texture. A reveal exposes the material, then leaves clean white type. A diagonal
+dark wave removes the word before the next one appears. The final word stays
+visible. The hero field and halftone GLSL are included unchanged; Remotion drives
+their clock and a separate compositing pass applies the text shape and timing.
+
+```tsx
+import { AbsoluteFill } from "remotion";
+import { ShaderTextReveal } from "@/components/remocn/shader-text-reveal";
+
+export const Headline = () => (
+  <AbsoluteFill style={{ background: "#000" }}>
+    <ShaderTextReveal text="Your product" wordDuration={30} />
+  </AbsoluteFill>
+);
+```
+
+At 30 fps the default shows **Your** during the first second and **product**
+during the second. Give the composition at least 60 frames; 75 frames includes
+a short final hold. Animation timing is measured in frames. For N words,
+allocate at least `(N - 1) * wordDuration + 0.6 * wordDuration` frames, then add
+any hold you need.
+
+Space-separated text plays word by word. Use newlines to keep phrases together:
+`text={"Your product\nOne clear story"}`. Blank lines are ignored.
+
+## Props
+
+<PropsTable rows={[
+  { name: "text", type: "string", default: '"Your product"', description: "Words, or newline-separated phrases, shown in sequence." },
+  { name: "fontSize", type: "number", default: "400", description: "Maximum font size in composition pixels. Text automatically fits within 72% of the frame width and a font-size cap of 58% of its height." },
+  { name: "fontFamily", type: "string", default: '"Arial, sans-serif"', description: "Canvas font family. Load custom font faces in your composition; rendering waits for the selected font." },
+  { name: "fontWeight", type: "number", default: "500", description: "Font weight." },
+  { name: "wordDuration", type: "number", default: "30", description: "Frames per word, rounded and clamped to at least 12. The final word remains after its entrance." },
+  { name: "intensity", type: "number", default: "1", description: "Original hero material and subtle refraction; clamped to 0–1. At 0, the reveal uses white letters." },
+]} />
+
+The background is transparent. A black backdrop matches the preview; the shader
+can also be composed over other layers. Text is rasterized once per font or
+content change and uploaded when the active word changes. GLSL controls the
+hero field, halftone texture, reveal, exit and local refraction. All timing comes from Remotion
+frames, so seeking is deterministic. WebGL2 is required; shader or font errors
+fail the render explicitly.

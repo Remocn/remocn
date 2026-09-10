@@ -2206,6 +2206,105 @@
           "target": "components/remocn/search-reveal.tsx"
         }
       ]
+    },
+    {
+      "name": "cursor-gravity",
+      "type": "registry:component",
+      "title": "Cursor Gravity",
+      "description": "A rounded triangular cursor tugs a button out of the screen edge with pulsed elastic resistance.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "cursor-gravity/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/cursor-gravity.tsx"
+        }
+      ]
+    },
+    {
+      "name": "type-fossil",
+      "type": "registry:component",
+      "title": "Type Fossil",
+      "description": "A readable word carries layers of fine contours, revises itself, then compresses into a clean typographic imprint.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "type-fossil/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/type-fossil.tsx"
+        }
+      ]
+    },
+    {
+      "name": "shader-seam",
+      "type": "registry:component",
+      "title": "Shader Seam",
+      "description": "Dissolve a stationary OpenShaders material to uncover the next scene.",
+      "dependencies": ["remotion", "@remotion/transitions"],
+      "files": [
+        {
+          "path": "shader-seam/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/shader-seam.tsx"
+        }
+      ]
+    },
+    {
+      "name": "shader-text-reveal",
+      "type": "registry:component",
+      "title": "Shader Text Reveal",
+      "description": "Reveal words through the original OpenShaders hero shader, then settle into white type.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "shader-text-reveal/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/shader-text-reveal.tsx"
+        }
+      ]
+    },
+    {
+      "name": "inline-word-roll",
+      "type": "registry:component",
+      "title": "Inline Word Roll",
+      "description": "Roll through words beside a fixed prefix with accelerating timing and smoothly centered width.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "inline-word-roll/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/inline-word-roll.tsx"
+        }
+      ]
+    },
+    {
+      "name": "shader-light-tunnel",
+      "type": "registry:component",
+      "title": "Light Tunnel",
+      "description": "Fly straight through a tunnel made from the original OpenShaders hero shader.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "shader-light-tunnel/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/shader-light-tunnel.tsx"
+        }
+      ]
+    },
+    {
+      "name": "shader-spiral-pass",
+      "type": "registry:component",
+      "title": "Shader Spiral Pass",
+      "description": "Accelerate into the hero spiral and emerge through its soft center into the next scene.",
+      "dependencies": ["remotion", "@remotion/transitions"],
+      "registryDependencies": ["@remocn/shader-light-tunnel"],
+      "files": [
+        {
+          "path": "shader-spiral-pass/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/shader-spiral-pass.tsx"
+        }
+      ]
     }
   ]
 }

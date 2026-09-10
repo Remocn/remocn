@@ -3,6 +3,7 @@
   "defaultOpen": true,
   "pages": [
     "index",
+    "cursor-gravity",
     "radial-burst",
     "tv-power-off",
     "confetti",
