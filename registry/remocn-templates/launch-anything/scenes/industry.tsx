@@ -1,10 +1,8 @@
-import { useId } from "react";
 import type { SceneProps } from "../content";
 import { tween } from "../motion";
 import { Center, RevealCopy } from "../ui";
 
 export function Industry({ scene, t }: SceneProps) {
-  const id = useId();
   const age = t - 1021 / 60;
   const second = t >= 18.58;
   const start = second ? 18.58 : 1021 / 60;
@@ -13,8 +11,8 @@ export function Industry({ scene, t }: SceneProps) {
       style={{
         position: "absolute",
         inset: 0,
-        background: "#010102",
-        color: "#fff",
+        background: "#122d24",
+        color: "#f7f1e4",
         overflow: "hidden",
       }}
     >
@@ -26,48 +24,19 @@ export function Industry({ scene, t }: SceneProps) {
         style={{
           position: "absolute",
           inset: 0,
-          transform: `rotate(${age * 4 - 3}deg) scale(1.12)`,
+          transform: `rotate(${age * 2 - 3}deg) scale(1.12)`,
         }}
       >
-        <defs>
-          <radialGradient id={`${id}-sphere`} cx="57%" cy="53%" r="51%">
-            <stop offset="0.9" stopColor="#000" />
-            <stop offset="0.965" stopColor="#08090a" />
-            <stop offset="0.986" stopColor="#414044" />
-            <stop offset="0.994" stopColor="#94979a" />
-            <stop offset="1" stopColor="#040406" />
-          </radialGradient>
-          <linearGradient id={`${id}-fade`} x1="0" y1="0" x2="1" y2="1">
-            <stop stopColor="#fff" stopOpacity="0.3" />
-            <stop offset="0.52" stopColor="#fff" stopOpacity="0.55" />
-            <stop offset="0.8" stopColor="#fff" stopOpacity="0.9" />
-            <stop offset="1" stopColor="#fff" stopOpacity="0.25" />
-          </linearGradient>
-          <mask id={`${id}-mask`}>
-            <rect width="480" height="270" fill={`url(#${id}-fade)`} />
-          </mask>
-        </defs>
-        <g mask={`url(#${id}-mask)`}>
-          <circle
-            cx={275 - age * 2}
-            cy="-118"
-            r="197"
-            fill={`url(#${id}-sphere)`}
+        {[0, 1, 2, 3, 4, 5].map((i) => (
+          <path
+            key={i}
+            d={`M${-70 + i * 21} 310V${90 - i * 22}Q${240} ${-140 - i * 24} ${550 - i * 21} ${90 - i * 22}V310`}
+            fill="none"
+            stroke={i % 2 ? "#b6c7ad" : "#688d73"}
+            strokeWidth={0.7}
+            opacity={0.12 + i * 0.04}
           />
-          <circle
-            cx="-150"
-            cy={129 + age * 3}
-            r="210"
-            fill={`url(#${id}-sphere)`}
-          />
-          <circle
-            cx="603"
-            cy={153 - age * 3}
-            r="195"
-            fill={`url(#${id}-sphere)`}
-          />
-          <circle cx="227" cy="470" r="235" fill={`url(#${id}-sphere)`} />
-        </g>
+        ))}
       </svg>
       <Center
         style={{

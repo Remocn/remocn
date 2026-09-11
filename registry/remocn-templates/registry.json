@@ -4,10 +4,203 @@
   "homepage": "https://remocn.dev",
   "items": [
     {
-      "name": "launch-anything",
-      "title": "Launch Anything",
+      "name": "release-teaser",
+      "title": "Release Teaser",
       "type": "registry:component",
-      "description": "A complete 26.7-second launch film with chrome type, a sunlit laptop showcase, floating brand marks, orbital imagery, and editable scenes.",
+      "description": "A 16-second cinematic release teaser with center-out typography, a procedural dimensional mark, moving edge light, and an independent fictional identity.",
+      "dependencies": ["remotion", "@fontsource/inter"],
+      "files": [
+        {
+          "path": "release-teaser/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/release-teaser/index.tsx"
+        },
+        {
+          "path": "release-teaser/content.ts",
+          "type": "registry:component",
+          "target": "components/remocn/templates/release-teaser/content.ts"
+        },
+        {
+          "path": "release-teaser/motion.ts",
+          "type": "registry:component",
+          "target": "components/remocn/templates/release-teaser/motion.ts"
+        },
+        {
+          "path": "release-teaser/geometry.ts",
+          "type": "registry:component",
+          "target": "components/remocn/templates/release-teaser/geometry.ts"
+        },
+        {
+          "path": "release-teaser/background.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/release-teaser/background.tsx"
+        },
+        {
+          "path": "release-teaser/ui.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/release-teaser/ui.tsx"
+        },
+        {
+          "path": "release-teaser/scenes/statement.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/release-teaser/scenes/statement.tsx"
+        },
+        {
+          "path": "release-teaser/scenes/closing.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/release-teaser/scenes/closing.tsx"
+        }
+      ]
+    },
+    {
+      "name": "brand-guidelines",
+      "title": "Brand Guidelines",
+      "type": "registry:component",
+      "description": "An independent 17.9-second identity film with a geometric mark, sliding palette, kinetic type specimens, and original object photography.",
+      "dependencies": ["remotion", "@fontsource/manrope", "@fontsource/inter"],
+      "registryDependencies": ["@remocn/caret"],
+      "files": [
+        {
+          "path": "brand-guidelines/assets.ts",
+          "type": "registry:component",
+          "target": "components/remocn/templates/brand-guidelines/assets.ts"
+        },
+        {
+          "path": "brand-guidelines/content.ts",
+          "type": "registry:component",
+          "target": "components/remocn/templates/brand-guidelines/content.ts"
+        },
+        {
+          "path": "brand-guidelines/motion.ts",
+          "type": "registry:component",
+          "target": "components/remocn/templates/brand-guidelines/motion.ts"
+        },
+        {
+          "path": "brand-guidelines/ui.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/brand-guidelines/ui.tsx"
+        },
+        {
+          "path": "brand-guidelines/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/brand-guidelines/index.tsx"
+        },
+        {
+          "path": "brand-guidelines/scenes/identity.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/brand-guidelines/scenes/identity.tsx"
+        },
+        {
+          "path": "brand-guidelines/scenes/palette.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/brand-guidelines/scenes/palette.tsx"
+        },
+        {
+          "path": "brand-guidelines/scenes/typography.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/brand-guidelines/scenes/typography.tsx"
+        },
+        {
+          "path": "brand-guidelines/scenes/collage.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/brand-guidelines/scenes/collage.tsx"
+        },
+        {
+          "path": "brand-guidelines/scenes/closing.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/brand-guidelines/scenes/closing.tsx"
+        }
+      ]
+    },
+    {
+      "name": "x-ads-mcp",
+      "title": "Workflow Console",
+      "type": "registry:component",
+      "description": "An independent 46.8-second release automation demo with typed commands, environment diagrams, pipeline metrics, and an original node mark.",
+      "dependencies": [
+        "remotion",
+        "@fontsource/inter",
+        "@fontsource/roboto-mono"
+      ],
+      "registryDependencies": ["@remocn/typed-split-wipe", "@remocn/caret"],
+      "files": [
+        {
+          "path": "x-ads-mcp/content.ts",
+          "type": "registry:component",
+          "target": "components/remocn/templates/x-ads-mcp/content.ts"
+        },
+        {
+          "path": "x-ads-mcp/countries.ts",
+          "type": "registry:component",
+          "target": "components/remocn/templates/x-ads-mcp/countries.ts"
+        },
+        {
+          "path": "x-ads-mcp/motion.ts",
+          "type": "registry:component",
+          "target": "components/remocn/templates/x-ads-mcp/motion.ts"
+        },
+        {
+          "path": "x-ads-mcp/ui.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/x-ads-mcp/ui.tsx"
+        },
+        {
+          "path": "x-ads-mcp/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/x-ads-mcp/index.tsx"
+        },
+        {
+          "path": "x-ads-mcp/scenes/intro.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/x-ads-mcp/scenes/intro.tsx"
+        },
+        {
+          "path": "x-ads-mcp/scenes/commands.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/x-ads-mcp/scenes/commands.tsx"
+        },
+        {
+          "path": "x-ads-mcp/scenes/terminal.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/x-ads-mcp/scenes/terminal.tsx"
+        },
+        {
+          "path": "x-ads-mcp/scenes/geography.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/x-ads-mcp/scenes/geography.tsx"
+        },
+        {
+          "path": "x-ads-mcp/scenes/tools.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/x-ads-mcp/scenes/tools.tsx"
+        },
+        {
+          "path": "x-ads-mcp/scenes/responses.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/x-ads-mcp/scenes/responses.tsx"
+        },
+        {
+          "path": "x-ads-mcp/scenes/titles.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/x-ads-mcp/scenes/titles.tsx"
+        },
+        {
+          "path": "x-ads-mcp/scenes/chart.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/x-ads-mcp/scenes/chart.tsx"
+        },
+        {
+          "path": "x-ads-mcp/scenes/mark.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/x-ads-mcp/scenes/mark.tsx"
+        }
+      ]
+    },
+    {
+      "name": "launch-anything",
+      "title": "Product Showcase",
+      "type": "registry:component",
+      "description": "An independent 26.7-second editorial product film with forest-green accents, original photography, seven editable demos, and geometric marks.",
       "dependencies": ["remotion", "@fontsource/manrope"],
       "registryDependencies": ["@remocn/shader-text-reveal"],
       "files": [
@@ -171,8 +364,8 @@
     {
       "name": "fomo-limit-orders",
       "type": "registry:component",
-      "title": "Fomo Limit Orders",
-      "description": "An 18-second trading-product introduction with editable typography, interface, border-following motion, and camera animation.",
+      "title": "Order Flow",
+      "description": "An independent 18-second trading-interface demo with fictional market data, graphite and amber styling, an original stepped mark, and editable camera choreography.",
       "dependencies": ["remotion", "@fontsource/manrope"],
       "files": [
         {

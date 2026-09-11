@@ -1,12 +1,12 @@
 ---
-title: Fomo Limit Orders
-description: A trading-product introduction with editable interface scenes and precise camera choreography
+title: Order Flow
+description: An independent trading-interface demo with fictional data, amber controls, and precise camera choreography
 component: fomo-limit-orders
 vibe: premium
 length: 554
 useWhen:
-  - "You want a complete product demo built from editable React and SVG layers."
-  - "You want close-up UI choreography, a slider morph, and an order confirmation."
+  - "You want a complete trading-interface demo built from editable React and SVG layers."
+  - "You need close-up UI choreography, a slider morph, and an order confirmation."
 avoidWhen:
   - "You need a general product launch story; use `introducing-product`."
   - "You only need a text transition; use `word-push`."
@@ -16,27 +16,26 @@ avoidWhen:
 
 <InstallBlock name="fomo-limit-orders" />
 
-An editable reconstruction of the supplied **fomo limit close orders** reference:
-**1108 frames at 60 fps**, rendered at **1920×1080**. Six scenes recreate the
-original story, interface, light-to-dark transitions, and camera movements.
-The picture is React and SVG; it does not play or require the reference MP4.
+**Order Flow** is an 18.47-second product template with graphite surfaces, amber controls,
+an original stepped mark, and a fictional market called **DEMO**. Six editable scenes
+move from a product introduction through a phone interface, exit-price control,
+confirmation, and closing identity. The sample figures are illustrative, not live market data.
+
+The composition is **1108 frames at 60 fps**, **1920×1080**. Everything is React and SVG;
+no reference footage, external logos, or soundtrack is included.
 
 ## Usage
 
 ```tsx
 import { Composition } from "remotion";
 import {
-  FomoLimitOrders,
-  FOMO_FRAMES,
-  FOMO_FPS,
-  FOMO_WIDTH,
-  FOMO_HEIGHT,
+  OrderFlow, FOMO_FRAMES, FOMO_FPS, FOMO_WIDTH, FOMO_HEIGHT,
 } from "@/components/remocn/templates/fomo-limit-orders";
 
-export const RemotionRoot = () => (
+export const Root = () => (
   <Composition
-    id="FomoLimitOrders"
-    component={FomoLimitOrders}
+    id="OrderFlow"
+    component={OrderFlow}
     durationInFrames={FOMO_FRAMES}
     fps={FOMO_FPS}
     width={FOMO_WIDTH}
@@ -49,62 +48,46 @@ export const RemotionRoot = () => (
 ## Customize
 
 ```tsx
-<FomoLimitOrders
-  brandName="Forma"
-  accentColor="#7973ff"
+<OrderFlow
+  brandName="Your product"
+  accentColor="#e8b45a"
   content={{
-    intro: "introducing",
-    ticker: "ACME",
-    assetName: "Acme (Tokenized)",
-    limitPrice: "$210.00",
-    action: "Place limit close",
-    closing: "trade by your own rules",
+    intro: "New in your workspace",
+    ticker: "DEMO",
+    assetName: "Example Market",
+    limitPrice: "$82.00",
+    action: "Set an exit price",
+    closing: "Your price. Your next move.",
   }}
-  audioSrc={staticFile("your-soundtrack.m4a")}
-  volume={0.8}
 />
 ```
 
-Import `staticFile` from `remotion` when using local media in your public folder.
-Audio is optional. The install is silent by default and includes no third-party
-soundtrack. Use audio you have permission to use.
+`content.ts` holds the text and market figures. `theme` overrides `ink`, `panel`,
+`paper`, `accent`, and `positive`; `accentColor` is a shortcut for the accent.
+The code-native mark lives in `ui.tsx`. `motion.ts` contains timings and camera curves.
+Use short copy for the close-up interface shots.
 
-`content.ts` contains the copy and trading values. `motion.ts` contains timing,
-easing, and the measured slider contraction curve. The six files in `scenes/`
-contain the individual shots. `ui.tsx` contains reusable interface details.
-The 480×270 design coordinate system scales uniformly into the composition.
-Keep short labels close to the original lengths, or adjust their scene layout.
+| Scene | Time |
+| --- | --- |
+| Opening | 0–2.70s |
+| Phone | 2.70–8.00s |
+| Slider | 8.00–10.90s |
+| Price | 10.90–12.60s |
+| Confirmation | 12.60–14.15s |
+| Closing | 14.15–18.47s |
 
-| Scene | Time | Motion |
-| --- | --- | --- |
-| Opening | 0–2.70s | Word entrances and floating glass |
-| Phone | 2.70–8.00s | Asset reveal, camera travel, point-to-screen wipe |
-| Slider | 8.00–10.90s | Label roll, zoom, counters, slider-to-caret morph |
-| Price | 10.90–12.60s | Interface reveal, typing, camera push, stationary fade |
-| Confirmation | 12.60–14.15s | Order filling and camera approach |
-| Closing | 14.15–18.47s | Word-by-word line and brand reveal |
+Audio is optional: provide `audioSrc` and `volume` for your own licensed soundtrack.
+The template is silent by default. Bundled Manrope works offline.
 
-## Render in this repository
+## Compatibility and preview
+
+The registry ID `fomo-limit-orders`, the `FomoLimitOrders` export, and existing props
+remain supported. `OrderFlow` is the preferred export; existing imports do not break.
 
 ```bash
 bun run studio:fomo
-bun run render:fomo
-bun run review:fomo
+bun run review:independent-templates --only=order-flow
+bun run render:independent-templates --only=order-flow
 ```
 
-The render writes `out/fomo-limit-orders.mp4`. To recreate the soundtrack from
-your own local reference alongside the new picture:
-
-```bash
-bun run render:fomo --reference-audio=/absolute/path/to/reference.mp4
-```
-
-This removes the corresponding 12.60–14.45s section from the reference audio,
-extracts it with FFmpeg into a temporary directory, supplies it to the
-composition, and removes the temporary files after rendering. It never adds the
-reference video or audio to the public registry.
-
-The original font assets were unavailable. Typography uses bundled Manrope.
-The perspective control scene has been removed; the price shot fades directly
-into the order confirmation. The ball follows the phone border in its local
-coordinate system, including the rounded corner and camera movement.
+The independent render writes `out/order-flow.mp4`.

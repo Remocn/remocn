@@ -28,9 +28,9 @@ Add the installable `brand-guidelines` registry item, lazy website preview, full
 
 ## Implementation checklist
 
-- [ ] Original still-life assets and documented prompts
-- [ ] Configurable content, SVG mark and five timed scenes
-- [ ] Registry, docs, changelog and Studio integration
-- [ ] Tests, typecheck, generated payloads and visual review
+- [x] Original still-life assets and documented prompts
+- [x] Configurable content, SVG mark and five timed scenes
+- [x] Registry, docs, changelog and Studio integration
+- [x] Tests, typecheck, generated payloads and visual review
 
 The brainstorming workflow requested a writing-plans skill, which is not installed in this environment. This explicit checklist is the local fallback; the approved design is sufficient to proceed.

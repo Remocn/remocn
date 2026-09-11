@@ -10,6 +10,14 @@ Config.overrideWebpackConfig((config) => ({
     ...config.resolve,
     alias: {
       ...(config.resolve?.alias ?? {}),
+      "@/components/remocn/typed-split-wipe$": path.join(
+        process.cwd(),
+        "registry/remocn/typed-split-wipe/index.tsx",
+      ),
+      "@/components/remocn/caret$": path.join(
+        process.cwd(),
+        "registry/remocn-ui/caret/index.tsx",
+      ),
       "@/components/remocn/shader-text-reveal$": path.join(
         process.cwd(),
         "registry/remocn/shader-text-reveal/index.tsx",

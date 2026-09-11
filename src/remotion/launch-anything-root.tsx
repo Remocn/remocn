@@ -18,6 +18,11 @@ const schema = z.object({
       promise: z.string().optional(),
       launch: z.string().optional(),
       shoppers: z.string().optional(),
+      shopName: z.string().optional(),
+      shopHeadline: z.string().optional(),
+      shopDetail: z.string().optional(),
+      shopAction: z.string().optional(),
+      connections: z.string().optional(),
       builder: z.string().optional(),
       builderPrompt: z.string().optional(),
       trading: z.string().optional(),
@@ -39,6 +44,11 @@ const schema = z.object({
     .object({
       dashboard: z.string().optional(),
       shoppers: z.string().optional(),
+      shopName: z.string().optional(),
+      shopHeadline: z.string().optional(),
+      shopDetail: z.string().optional(),
+      shopAction: z.string().optional(),
+      connections: z.string().optional(),
       exchange: z.string().optional(),
       builder: z.string().optional(),
       trading: z.string().optional(),
@@ -63,10 +73,10 @@ function LaunchAnythingRoot() {
       height={1080}
       schema={schema}
       defaultProps={{
-        opening: "Your",
-        subject: "product",
-        brandUrl: "Launchanything.now",
-        accentColor: "#3730ed",
+        opening: "Good",
+        subject: "ideas",
+        brandUrl: "yourproduct.example",
+        accentColor: "#245744",
       }}
     />
   );

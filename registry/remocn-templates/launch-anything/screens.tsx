@@ -1,4 +1,5 @@
 import { useId } from "react";
+import { Img } from "remotion";
 import type { SceneProps } from "./content";
 import { clamp, getShowcase, key, tween } from "./motion";
 import { LogoGlyph } from "./ui";
@@ -29,14 +30,14 @@ function Dashboard({ scene, t }: SceneProps) {
         }}
       >
         <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 26 }}>
-          ◈ Overview
+          ◈ Workroom
         </div>
         {[
           "Workspace",
           "Overview",
-          "Analytics",
+          "Milestones",
           "Projects",
-          "Customers",
+          "Teammates",
           "Reports",
           "Settings",
         ].map((label, i) => (
@@ -45,7 +46,7 @@ function Dashboard({ scene, t }: SceneProps) {
             style={{
               padding: "10px 2px",
               color: i === 1 ? scene.accent : "#958b86",
-              background: i === 1 ? "#efedf9" : undefined,
+              background: i === 1 ? "#e1e9dc" : undefined,
               borderRadius: 4,
             }}
           >
@@ -62,14 +63,14 @@ function Dashboard({ scene, t }: SceneProps) {
             fontWeight: 600,
           }}
         >
-          <span>Good morning, Alex</span>
+          <span>Your week, in focus</span>
           <span style={{ fontSize: 9, color: "#94837a" }}>This month ▾</span>
         </div>
         <div style={{ display: "flex", gap: 12, marginTop: 24 }}>
           {[
-            ["Revenue", "$48,290"],
-            ["Customers", "2,408"],
-            ["Conversion", "8.42%"],
+            ["Tasks closed", "128"],
+            ["Active projects", "12"],
+            ["On track", "92%"],
           ].map(([label, value]) => (
             <div
               key={label}
@@ -83,7 +84,7 @@ function Dashboard({ scene, t }: SceneProps) {
               <div style={{ color: "#a7978e" }}>{label}</div>
               <div style={{ fontSize: 19, marginTop: 9 }}>{value}</div>
               <div style={{ color: "#6b9869", fontSize: 7, marginTop: 5 }}>
-                ↗ 12.5% from last month
+                Demo workspace · this month
               </div>
             </div>
           ))}
@@ -97,18 +98,18 @@ function Dashboard({ scene, t }: SceneProps) {
               borderRadius: 7,
             }}
           >
-            <b>Revenue overview</b>
+            <b>Project momentum</b>
             <svg
               width="258"
               height="153"
               viewBox="0 0 258 153"
               role="img"
-              aria-label="Revenue growth chart"
+              aria-label="Completed tasks by week"
             >
               <defs>
                 <linearGradient id={id} x2="0" y2="1">
                   <stop stopColor={scene.accent} />
-                  <stop offset="1" stopColor="#c5b9ef" />
+                  <stop offset="1" stopColor="#b5c9ae" />
                 </linearGradient>
               </defs>
               {[0, 1, 2, 3].map((n) => (
@@ -130,7 +131,7 @@ function Dashboard({ scene, t }: SceneProps) {
                     width="8"
                     height={h * 0.67 * p}
                     rx="3"
-                    fill="#d9a39c"
+                    fill="#d2b58e"
                   />
                 </g>
               ))}
@@ -146,11 +147,11 @@ function Dashboard({ scene, t }: SceneProps) {
           >
             <b>Recent activity</b>
             {[
-              "New customer",
-              "Payment received",
+              "Brief approved",
+              "Review completed",
               "Project completed",
-              "New subscription",
-              "Order confirmed",
+              "Files organized",
+              "Milestone reached",
             ].map((label, n) => (
               <div
                 key={label}
@@ -191,10 +192,10 @@ function Shoppers({ scene, t }: SceneProps) {
         {scene.content.shoppers}
       </div>
       {[
-        [-80, 120, "#619bea"],
-        [515, 280, "#fd9476"],
-        [500, 85, "#f4e768"],
-        [40, 310, "#eb8dba"],
+        [-80, 120, "#668d78"],
+        [515, 280, "#b4916e"],
+        [500, 85, "#d4c7a1"],
+        [40, 310, "#a5b38e"],
       ].map(([x, y, color], i) => (
         <div
           key={i}
@@ -219,11 +220,11 @@ function Shoppers({ scene, t }: SceneProps) {
           width: 235,
           height: 406,
           borderRadius: 38,
-          border: "7px solid #24202e",
-          background: "#fcfaff",
+          border: "7px solid #293a2d",
+          background: "#f6f1e7",
           transform: `translateY(${(1 - p) * 135}px) rotateY(${(1 - p) * 75}deg) rotateZ(${tween(t, 8.43, 9.2, 8, -4)}deg)`,
           overflow: "hidden",
-          boxShadow: "10px 14px 25px #32208224",
+          boxShadow: "10px 14px 25px #243b2424",
         }}
       >
         <div
@@ -243,7 +244,7 @@ function Shoppers({ scene, t }: SceneProps) {
             fontSize: 12,
           }}
         >
-          <b>alo</b>
+          <b>{scene.content.shopName}</b>
           <span>♡ ☰</span>
         </div>
         <div
@@ -251,8 +252,9 @@ function Shoppers({ scene, t }: SceneProps) {
             height: 140,
             margin: "6px 10px",
             borderRadius: 11,
-            background:
-              "linear-gradient(140deg, #a7ac80, #646b50 44%, #303c2c 45%, #bbb791 72%, #f2d6ba)",
+            background: "#153326",
+            position: "relative",
+            overflow: "hidden",
             display: "flex",
             alignItems: "end",
             padding: 12,
@@ -260,12 +262,31 @@ function Shoppers({ scene, t }: SceneProps) {
             fontSize: 24,
           }}
         >
-          Find your flow.
+          <Img
+            src={scene.media.rocket}
+            style={{
+              position: "absolute",
+              inset: 0,
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              background: "linear-gradient(0deg, #153326aa, transparent)",
+            }}
+          />
+          <span style={{ position: "relative" }}>
+            {scene.content.shopHeadline}
+          </span>
         </div>
         <div style={{ padding: "12px 15px", fontSize: 13 }}>
-          <b>Made for your every day.</b>
+          <b>{scene.content.shopDetail}</b>
           <p style={{ fontSize: 9, color: "#827c82" }}>
-            New season. New possibilities.
+            A collection for slower mornings.
           </p>
           <div
             style={{
@@ -276,7 +297,7 @@ function Shoppers({ scene, t }: SceneProps) {
               textAlign: "center",
             }}
           >
-            Shop the collection
+            {scene.content.shopAction}
           </div>
         </div>
       </div>
@@ -284,10 +305,10 @@ function Shoppers({ scene, t }: SceneProps) {
   );
 }
 
-function Exchange({ t }: SceneProps) {
+function Exchange({ scene, t }: SceneProps) {
   const p = tween(t, 9.25, 9.83);
   return (
-    <div style={{ ...surface, background: "#060609", color: "#fff" }}>
+    <div style={{ ...surface, background: "#122d24", color: "#fff" }}>
       <div
         style={{
           paddingTop: 58,
@@ -297,8 +318,9 @@ function Exchange({ t }: SceneProps) {
           opacity: p,
         }}
       >
-        120+ Cryptocurrency, Equity &<br />
-        Commodity pairs to trade
+        <span style={{ whiteSpace: "pre-line" }}>
+          {scene.content.connections}
+        </span>
       </div>
       <div
         style={{
@@ -307,8 +329,9 @@ function Exchange({ t }: SceneProps) {
           top: 196,
           width: 104,
           height: 123,
-          background: "linear-gradient(120deg,#f8dafc,#a453da 48%,#532289)",
-          clipPath: "polygon(50% 0,100% 100%,60% 75%,50% 51%,34% 93%,0 100%)",
+          background: "linear-gradient(120deg,#e0e6cb,#7ba385 48%,#345b40)",
+          clipPath:
+            "polygon(0 0,75% 0,75% 25%,25% 25%,25% 75%,100% 75%,100% 100%,0 100%)",
           transform: `rotateY(${t * 30}deg)`,
         }}
       />
@@ -326,14 +349,14 @@ function Exchange({ t }: SceneProps) {
               borderRadius: "50%",
               display: "grid",
               placeItems: "center",
-              color: "#d6c2f5",
-              background: "#332442",
-              border: "1px solid #8c66b8",
-              boxShadow: "0 0 12px #9763a936",
+              color: "#d2dfbc",
+              background: "#244a38",
+              border: "1px solid #72937d",
+              boxShadow: "0 0 12px #62835e36",
               fontSize: 14,
             }}
           >
-            {["₿", "Ξ", "S", "◎", "₮", "◈"][i % 6]}
+            <LogoGlyph variant={i} size={14} />
           </div>
         );
       })}
@@ -344,7 +367,7 @@ function Exchange({ t }: SceneProps) {
           width: "100%",
           height: 53,
           borderTop: "1px solid #33313b",
-          background: "linear-gradient(#16131f88, #08070b)",
+          background: "linear-gradient(#203d2d88, #12271c)",
         }}
       />
     </div>
@@ -370,7 +393,7 @@ function Builder({ scene, t }: SceneProps) {
         }}
       >
         <div
-          style={{ fontSize: 20, color: "#ad6b5f", letterSpacing: "-0.02em" }}
+          style={{ fontSize: 20, color: "#245744", letterSpacing: "-0.02em" }}
         >
           {scene.content.builder}
         </div>
@@ -389,14 +412,14 @@ function Builder({ scene, t }: SceneProps) {
         >
           <span style={{ flex: 1 }}>
             {prompt}
-            <span style={{ color: "#9c88e7" }}>│</span>
+            <span style={{ color: "#245744" }}>│</span>
           </span>
           <span
             style={{
               width: 21,
               height: 23,
               borderRadius: 5,
-              background: "linear-gradient(130deg,#829def,#8261cd)",
+              background: "linear-gradient(130deg,#749876,#245744)",
               color: "#fff",
               display: "grid",
               placeItems: "center",
@@ -412,7 +435,7 @@ function Builder({ scene, t }: SceneProps) {
 
 function Trading({ scene, t }: SceneProps) {
   return (
-    <div style={{ ...surface, background: "#050604", color: "#f4f1df" }}>
+    <div style={{ ...surface, background: "#132a21", color: "#f4f1df" }}>
       <div
         style={{
           position: "absolute",
@@ -426,14 +449,14 @@ function Trading({ scene, t }: SceneProps) {
           overflow: "hidden",
         }}
       >
-        <div style={{ padding: 12, fontSize: 10 }}>Market depth</div>
+        <div style={{ padding: 12, fontSize: 10 }}>Review activity</div>
         {Array.from({ length: 25 }, (_, i) => (
           <div
             key={i}
             style={{
               marginTop: 6,
               height: 5,
-              background: i < 11 ? "#632a36" : "#135d4c",
+              background: i < 11 ? "#7d7654" : "#135d4c",
               width: 35 + ((i * 17) % 160),
             }}
           />
@@ -446,7 +469,7 @@ function Trading({ scene, t }: SceneProps) {
           top: 31,
           width: 217,
           height: 357,
-          background: "linear-gradient(120deg,#0b0c0b,#080909)",
+          background: "linear-gradient(120deg,#1b382a,#152d23)",
           border: "1px solid #32312b",
           borderRadius: 8,
           padding: 16,
@@ -454,19 +477,19 @@ function Trading({ scene, t }: SceneProps) {
           transform: `perspective(900px) rotateY(${tween(t, 11.25, 12.35, -12, 0)}deg)`,
         }}
       >
-        <div style={{ fontSize: 10 }}>Market　 Limit　 Stop</div>
+        <div style={{ fontSize: 10 }}>Draft　 Review　 Ready</div>
         <div style={{ height: 1, background: "#34312a", marginTop: 16 }} />
         <div style={{ fontSize: 9, color: "#aba694", marginTop: 15 }}>
-          Order type
+          Project
         </div>
-        <div style={{ fontSize: 13, marginTop: 8 }}>Market order　⌄</div>
+        <div style={{ fontSize: 13, marginTop: 8 }}>Autumn release　⌄</div>
         <div style={{ fontSize: 9, color: "#9f9d8c", marginTop: 22 }}>
-          Amount (USD)
+          Review progress
         </div>
         <div style={{ fontSize: 22, marginTop: 9 }}>
-          $1,000
+          12 / 12
           <span style={{ fontSize: 10, float: "right", color: "#a09a81" }}>
-            USD
+            DONE
           </span>
         </div>
         <div style={{ display: "flex", marginTop: 18, gap: 6 }}>
@@ -480,26 +503,26 @@ function Trading({ scene, t }: SceneProps) {
               borderRadius: 4,
             }}
           >
-            Buy
+            Approve
           </span>
           <span
             style={{
               flex: 1,
-              background: "#b2253c",
+              background: "#705d41",
               textAlign: "center",
               padding: 9,
               fontSize: 13,
               borderRadius: 4,
             }}
           >
-            Sell
+            Revise
           </span>
         </div>
         {[
-          "Margin available",
-          "Order value",
-          "Trading fee",
-          "Liquidation price",
+          "Files reviewed",
+          "Comments resolved",
+          "Contributors",
+          "Next milestone",
         ].map((label, i) => (
           <div
             key={label}
@@ -512,7 +535,9 @@ function Trading({ scene, t }: SceneProps) {
             }}
           >
             <span>{label}</span>
-            <span>{["$24,350.00", "$1,000.00", "$0.60", "$58,190.00"][i]}</span>
+            <span>
+              {["12 files", "28 / 28", "4 people", "Ready to share"][i]}
+            </span>
           </div>
         ))}
       </div>
@@ -527,7 +552,7 @@ function Trading({ scene, t }: SceneProps) {
           lineHeight: 1.14,
           letterSpacing: "-0.045em",
           opacity: tween(t, 11.25, 11.55),
-          color: "#ecdfa7",
+          color: "#d3dfbd",
         }}
       >
         {scene.content.trading}
@@ -561,8 +586,8 @@ function Loyalty({ scene, t }: SceneProps) {
             fontSize: 10,
           }}
         >
-          <b>◎ Loyalty rewards</b>
-          <p>Earn points on every purchase</p>
+          <b>◫ Project notes</b>
+          <p>Collect ideas. Connect the details.</p>
           {[80, 106, 63].map((width, n) => (
             <div
               key={n}
@@ -576,7 +601,7 @@ function Loyalty({ scene, t }: SceneProps) {
         width={95 + grow * 230}
         height={104 + grow * 248}
         role="img"
-        aria-label="Purple loyalty mascot"
+        aria-label="Layered project cards"
         style={{
           position: "absolute",
           left: 265 - grow * 97,
@@ -586,49 +611,43 @@ function Loyalty({ scene, t }: SceneProps) {
       >
         <defs>
           <linearGradient id={id} x1="0" x2="1" y1="0" y2="1">
-            <stop stopColor="#7772f5" />
+            <stop stopColor="#92b195" />
             <stop offset="0.3" stopColor={scene.accent} />
-            <stop offset="1" stopColor="#200780" />
+            <stop offset="1" stopColor="#153b2a" />
           </linearGradient>
         </defs>
         <rect
-          x="6"
-          y="6"
-          width="247"
-          height="261"
-          rx="62"
+          x="24"
+          y="30"
+          width="170"
+          height="215"
+          rx="10"
+          fill="#c8d2b9"
+          transform="rotate(-12 130 140)"
+        />
+        <rect
+          x="54"
+          y="20"
+          width="170"
+          height="215"
+          rx="10"
           fill={`url(#${id})`}
+          transform="rotate(8 130 140)"
         />
-        <ellipse cx="171" cy="45" rx="11" ry="20" fill="#fffdeb" />
-        <ellipse cx="220" cy="47" rx="11" ry="20" fill="#fffdeb" />
-        <ellipse cx="173" cy="47" rx="4" ry="9" fill="#130b43" />
-        <ellipse cx="222" cy="49" rx="4" ry="9" fill="#130b43" />
         <path
-          d={`M20 ${88 - grow * 12}Q117 ${57 - grow * 9} 217 96Q261 153 216 ${220 + grow * 17}Q110 275 20 218Q-14 149 20 88Z`}
-          fill="#050407"
-          stroke="#f9eb9b"
-          strokeWidth="3"
+          d="M88 74h89M88 96h64M88 163h80M88 181h53"
+          stroke="#e8efda"
+          strokeWidth="8"
+          strokeLinecap="round"
         />
-        {[0, 1, 2, 3, 4].map((n) => (
-          <g key={n} fill="#f5e693">
-            <rect
-              x={31 + n * 40}
-              y={66 + Math.abs(n - 2) * 6}
-              width="25"
-              height={33 + grow * 8}
-              rx="10"
-              transform={`rotate(${(n - 2) * 8} ${42 + n * 40} 84)`}
-            />
-            <rect
-              x={27 + n * 39}
-              y={217 - grow * 8}
-              width="27"
-              height="39"
-              rx="10"
-              transform={`rotate(${(n - 2) * 8} ${42 + n * 40} 232)`}
-            />
-          </g>
-        ))}
+        <path
+          d="M90 122l13 13 29-31"
+          fill="none"
+          stroke="#d5dfaa"
+          strokeWidth="8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
       </svg>
       {[
         [-1, 65],
@@ -644,7 +663,7 @@ function Loyalty({ scene, t }: SceneProps) {
             width: 26 + i * 5,
             height: 26 + i * 5,
             borderRadius: 5,
-            background: i === 1 ? "#f4ff49" : scene.accent,
+            background: i === 1 ? "#d3bb7b" : scene.accent,
             transform: `rotate(${age * 70 + i * 30}deg)`,
             opacity: tween(age, 0.1 + i * 0.1, 0.45 + i * 0.1),
           }}
@@ -700,7 +719,7 @@ function Integrations({ scene, t }: SceneProps) {
           display: "grid",
           placeItems: "center",
           borderRadius: "50%",
-          background: index === 0 ? "#271c29" : "#242326",
+          background: index === 0 ? "#204732" : "#2b4938",
           color: index === 0 ? "#e6a749" : "white",
           transform: `scale(${tween(progress, 0, 0.3, 0.6, 1)})`,
         }}
@@ -711,7 +730,7 @@ function Integrations({ scene, t }: SceneProps) {
         style={{
           borderRadius: 5,
           color: "#fff",
-          background: "#da4416",
+          background: scene.accent,
           padding: "10px 13px",
           transform: `translateY(${tween(progress, 0, 0.3, 12, 0)}px)`,
           opacity: tween(progress, 0, 0.17),

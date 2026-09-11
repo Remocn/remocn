@@ -20,6 +20,9 @@
       }
     ],
     "paths": {
+      "@/components/remocn/typed-split-wipe": [
+        "./registry/remocn/typed-split-wipe/index.tsx"
+      ],
       "@/components/remocn/shader-text-reveal": [
         "./registry/remocn/shader-text-reveal/index.tsx"
       ],

@@ -26,8 +26,8 @@ playback, screenshot panels, or generated photographic assets are needed.
 | 8.1–10.7 | Campaign analysis in a full terminal |
 | 10.7–12.55 | Launch it command |
 | 12.55–16.8 | Rounded geography aperture and rotating country outlines |
-| 16.8–19.5 | Tool execution log |
-| 19.5–22 | Summer Collection delivery response |
+| 16.8–19.9 | Tool execution log |
+| 19.9–22 | Summer Collection delivery response |
 | 22–24 | Campaign creation terminal |
 | 24–25.6 | Grow your performance headline |
 | 25.6–27.8 | Getting campaign stats timer |
@@ -60,13 +60,40 @@ interactive layers appear in Studio, with a props schema for customization.
 
 - [x] Inspect repository, reference metadata, full contact sheet, and detailed frames.
 - [x] Confirm reconstruction strategy and output spec with the user.
-- [ ] Build typed content, timing helpers, and independently editable scenes.
-- [ ] Add registry item, preview config, docs, changelog, and Studio entry point.
-- [ ] Add seek/timeline/prop/packaging tests and deterministic review/render scripts.
-- [ ] Review key stills and edited props; compare with the reference.
-- [ ] Run targeted tests, TypeScript, lint, site build, manifest and registry builds.
-- [ ] Export the full film, mux the local source audio, verify streams and cut frames.
+- [x] Build typed content, timing helpers, and independently editable scenes.
+- [x] Add registry item, preview config, docs, changelog, and Studio entry point.
+- [x] Add seek/timeline/prop/packaging tests and deterministic review/render scripts.
+- [x] Review key stills and edited props; compare with the reference.
+- [x] Run targeted tests, TypeScript, lint, site build, manifest and registry builds.
+- [x] Export the full film, mux the local source audio, verify streams and cut frames.
 
 The requested writing-plans skill is not installed; this document is the local
 implementation plan. The source MP4, extracted stills, and reference soundtrack
 remain local and are not included in the registry package.
+
+## Verification
+
+- 35 targeted tests pass (6039 assertions), including frame coverage, rate
+  conversion, explicit Studio chapter instances, changed props, registry import
+  closure, and Unicode-safe typing in Typed Split Wipe.
+- TypeScript, lint, and the production site build pass. Existing warnings remain
+  in `app/globals.css` (unused suppression) and the OG image route (dynamic
+  filesystem tracing); neither belongs to this template.
+- Preview manifest contains 298 entries. All 14 installable template modules and
+  the updated Typed Split Wipe dependency match their generated registry payloads.
+- Reviewed key frames across the full timeline and edited title, country, accent,
+  and chart props. Reference comparisons prompted corrections to command timing,
+  country order, terminal holds, the final chart hold, and recommendation travel.
+- Remotion Studio at `http://localhost:4003/XAdsMcp` exposes all 18 chapters
+  individually. Motion remains code-authored; the props schema exposes content
+  and data. No source-video frames or audio are shipped as registry assets.
+- Final `out/x-ads-mcp.mp4`: H.264, 1920×1080, 60 fps, 2810 frames,
+  46.833333 seconds; AAC mono 48 kHz. Full decode succeeds. Reviewed the final
+  contact sheet and before/after chapter-boundary frames. The first 46.8 seconds
+  of decoded audio correlate with the reference at 0.99937 with zero offset.
+- `out/x-ads-mcp-comparison.mp4` places the original on the left and the rebuilt
+  picture on the right. Both local videos are ignored output artifacts.
+
+Country silhouettes are derived from the public-domain Natural Earth 110m country
+dataset. The compressed source does not support a claim of pixel identity: fine
+terminal copy, chart labels, type metrics, and outline choreography are approximate.

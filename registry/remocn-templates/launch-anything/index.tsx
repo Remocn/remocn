@@ -67,9 +67,9 @@ export function LaunchAnything(props: LaunchAnythingProps) {
     : 1;
   return (
     <AbsoluteFill
-      name="Launch Anything"
+      name="Product Showcase"
       style={{
-        background: "#000",
+        background: "#122d24",
         color: "#fff",
         overflow: "hidden",
         fontFamily: "Manrope, sans-serif",
@@ -113,28 +113,31 @@ export function LaunchAnything(props: LaunchAnythingProps) {
   );
 }
 
+export const ProductShowcase = LaunchAnything;
+export type ProductShowcaseProps = LaunchAnythingProps;
+
 export const launchAnythingConfig = {
-  componentName: "LaunchAnything",
+  componentName: "ProductShowcase",
   importPath: "@/components/remocn/templates/launch-anything",
   controls: {
     opening: {
       type: "text-content" as const,
-      default: "Your",
+      default: "Good",
       description: "First chrome word",
     },
     subject: {
       type: "text-content" as const,
-      default: "product",
+      default: "ideas",
       description: "Second chrome word",
     },
     brandUrl: {
       type: "text-content" as const,
-      default: "Launchanything.now",
+      default: "yourproduct.example",
       description: "Closing website address",
     },
     accentColor: {
       type: "color" as const,
-      default: "#3730ed",
+      default: "#245744",
       description: "Product interface accent",
     },
   },

@@ -44,8 +44,8 @@ export function Proof({ scene, t }: SceneProps) {
       style={{
         position: "absolute",
         inset: 0,
-        background: "linear-gradient(#f6f5fb,#fefefe 65%,#faf9fd)",
-        color: "#151419",
+        background: "linear-gradient(#f2ecdf,#faf6ec 65%,#eee8da)",
+        color: "#17392b",
         overflow: "hidden",
       }}
     >
@@ -73,13 +73,13 @@ export function Proof({ scene, t }: SceneProps) {
                 height: 27,
                 display: "grid",
                 placeItems: "center",
-                color: "#5b5d72",
+                color: "#51735b",
                 opacity: [0.73, 0.3, 0.58, 0.19, 0.4][i % 5] * reveal,
                 filter: `blur(${blur}px)`,
                 transform: `rotate(${Math.sin(i * 2.8) * 9}deg)`,
-                background: i % 7 === 0 ? "#e4e0f6" : undefined,
+                background: i % 7 === 0 ? "#dce3cf" : undefined,
                 borderRadius: 7,
-                boxShadow: i % 7 === 0 ? "0 0 12px #a294f24d" : undefined,
+                boxShadow: i % 7 === 0 ? "0 3px 12px #34492812" : undefined,
               }}
             >
               {src ? (

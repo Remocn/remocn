@@ -25,8 +25,8 @@ export function Opening({ t, content }: SceneProps) {
               opacity: ramp(t, 0.8, 1.05) * (1 - ramp(t, 2.45, 2.7)),
               transform: `translateY(${(1 - drift) * (upper ? -75 : 75) + Math.sin(t * 2 + column) * 5}px)`,
               borderRadius: 2,
-              background: `linear-gradient(${upper ? 150 : 30}deg, #9891d752, #6665a04a 40%, #42336130 76%, #09061300)`,
-              boxShadow: "inset 0.5px 0 1px #d3b4ff26",
+              background: `linear-gradient(${upper ? 150 : 30}deg, #c29b5452, #8770444a 40%, #4a412d30 76%, #12131000)`,
+              boxShadow: "inset 0.5px 0 1px #efd19626",
               filter: "blur(0.7px)",
             }}
           />

@@ -12,10 +12,40 @@ export interface RegistryEntry {
 }
 
 const registry: Record<string, RegistryEntry> = {
+  "release-teaser": {
+    load: () =>
+      import("@/registry/remocn-templates/release-teaser").then((m) => ({
+        default: m.ReleaseTeaser,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn-templates/release-teaser").then(
+        (m) => m.releaseTeaserConfig,
+      ),
+  },
+  "brand-guidelines": {
+    load: () =>
+      import("@/registry/remocn-templates/brand-guidelines").then((m) => ({
+        default: m.BrandGuidelines,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn-templates/brand-guidelines").then(
+        (m) => m.brandGuidelinesConfig,
+      ),
+  },
+  "x-ads-mcp": {
+    load: () =>
+      import("@/registry/remocn-templates/x-ads-mcp").then((m) => ({
+        default: m.WorkflowConsole,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn-templates/x-ads-mcp").then(
+        (m) => m.xAdsMcpConfig,
+      ),
+  },
   "launch-anything": {
     load: () =>
       import("@/registry/remocn-templates/launch-anything").then((m) => ({
-        default: m.LaunchAnything,
+        default: m.ProductShowcase,
       })),
     loadConfig: () =>
       import("@/registry/remocn-templates/launch-anything").then(
@@ -35,7 +65,7 @@ const registry: Record<string, RegistryEntry> = {
   "fomo-limit-orders": {
     load: () =>
       import("@/registry/remocn-templates/fomo-limit-orders").then((m) => ({
-        default: m.FomoLimitOrders,
+        default: m.OrderFlow,
       })),
     loadConfig: () =>
       import("@/registry/remocn-templates/fomo-limit-orders").then(

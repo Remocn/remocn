@@ -11,7 +11,7 @@ export function Portal({ scene, t }: SceneProps) {
       style={{
         position: "absolute",
         inset: 0,
-        background: "#f6f6fd",
+        background: "#f3eee2",
         perspective: 600,
         overflow: "hidden",
       }}
@@ -22,7 +22,7 @@ export function Portal({ scene, t }: SceneProps) {
           inset: 15,
           borderRadius: 56,
           background:
-            "linear-gradient(140deg, #b8b5f3, #d1d6ff 35%, #fff 60%, #a9a5e8)",
+            "linear-gradient(140deg, #8ca48d, #d1d8c3 35%, #f8f4ea 60%, #9ca78a)",
           boxShadow: "inset 0 1px 2px #fff",
           transform: `scale(${zoom}) rotateY(${tween(t, 5.9, 6.55, -12, 0)}deg) rotateZ(${tween(t, 5.9, 6.55, -3, 0)}deg)`,
         }}
@@ -36,7 +36,7 @@ export function Portal({ scene, t }: SceneProps) {
             borderRightWidth: 34 * (1 - aperture),
             borderBottomWidth: 30 * (1 - aperture),
             background:
-              "linear-gradient(140deg, #fff 25%, #fdfdff 46%, #e0e1fa 72%, #9992e7)",
+              "linear-gradient(140deg, #f8f4ea 25%, #efecdf 46%, #d5d8c2 72%, #849b7b)",
             boxShadow: "inset 0 0 12px #ffffff9a",
             overflow: "hidden",
           }}
@@ -46,7 +46,7 @@ export function Portal({ scene, t }: SceneProps) {
               position: "absolute",
               inset: 0,
               background:
-                "linear-gradient(120deg, #83defc 6%, #6869ed 27%, #6800ec 51%, #a03dec 75%, #e5ddff)",
+                "linear-gradient(120deg, #cbdac2 6%, #8ca887 27%, #245744 51%, #6b8b65 75%, #e2e4cf)",
               opacity: tween(t, 6.85, 7.07),
             }}
           />

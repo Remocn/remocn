@@ -16,15 +16,15 @@ export function Address({ scene, t }: SceneProps) {
   );
   const glow = tween(t, 22.15, 22.45) * (1 - tween(t, 22.6, 23.25));
   return (
-    <Center style={{ background: "#000", color: "#fff9f3" }}>
+    <Center style={{ background: "#122d24", color: "#fff9f3" }}>
       <Title
         text={text}
         size={tween(t, 21.55, 21.9, 43, 32, smooth)}
         style={{
           fontWeight: 400,
           letterSpacing: "-0.06em",
-          color: glow > 0.5 ? "#b2e3ff" : "#fff9f3",
-          textShadow: `0 0 ${glow * 5}px #fff, 0 0 ${glow * 20}px #245afb, 0 0 ${glow * 32}px #3352d3`,
+          color: glow > 0.5 ? "#d5e2bd" : "#fff9f3",
+          textShadow: `0 0 ${glow * 5}px #fff, 0 0 ${glow * 20}px #72935c, 0 0 ${glow * 32}px #496b4d`,
         }}
       />
     </Center>
@@ -35,8 +35,8 @@ export function ClosingMark({ scene, t }: SceneProps) {
   return (
     <Center
       style={{
-        background: "linear-gradient(#faf9fe,#fefefe)",
-        color: "#030202",
+        background: "linear-gradient(#f4efdf,#faf5e9)",
+        color: "#245744",
       }}
     >
       <div

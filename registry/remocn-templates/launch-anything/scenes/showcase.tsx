@@ -12,7 +12,7 @@ export function Showcase({ scene, t }: SceneProps) {
         position: "absolute",
         inset: 0,
         overflow: "hidden",
-        background: "#f4d9ba",
+        background: "#e8dcc2",
       }}
     >
       <div
@@ -33,7 +33,44 @@ export function Showcase({ scene, t }: SceneProps) {
             objectFit: "fill",
           }}
         />
-        {/* Display measured on the generated 1672x941 desk plate: (647,368)–(1094,659). */}
+        {/* Code-native, unbranded laptop. The screen keeps the camera's existing focus geometry. */}
+        <svg
+          width="480"
+          height="270"
+          viewBox="0 0 480 270"
+          aria-label="Product display"
+          role="img"
+          style={{ position: "absolute", inset: 0 }}
+        >
+          <ellipse
+            cx="250"
+            cy="208"
+            rx="94"
+            ry="7"
+            fill="#2d241a"
+            opacity="0.2"
+          />
+          <rect
+            x="180.8"
+            y="99.3"
+            width="138.4"
+            height="96"
+            rx="5"
+            fill="#202820"
+            stroke="#778272"
+            strokeWidth="0.7"
+          />
+          <circle cx="250" cy="102.5" r="0.6" fill="#6a7764" />
+          <path
+            d="M180.8 194.5H319.2L337 206H163Z"
+            fill="#a6ab98"
+            stroke="#666f5d"
+            strokeWidth="0.5"
+          />
+          <path d="M190 197H310L318 202H182Z" fill="#4b5645" />
+          <path d="M163 206H337L332 209H168Z" fill="#7e8875" />
+          <path d="M234 203H265L268 205H231Z" fill="#d0d3bc" />
+        </svg>
         <div
           style={{
             position: "absolute",
@@ -79,7 +116,7 @@ export function Showcase({ scene, t }: SceneProps) {
         style={{
           position: "absolute",
           inset: 0,
-          border: `${tween(t, 7.333, 7.55, 12, 0)}px solid #f8f7fc`,
+          border: `${tween(t, 7.333, 7.55, 12, 0)}px solid #f7f2e6`,
           borderRadius: tween(t, 7.333, 7.55, 36, 0),
           opacity: 1 - tween(t, 7.4, 7.6),
           pointerEvents: "none",

@@ -27,11 +27,11 @@ Native SVG is used for the original foreground mark; the background is a determi
 - [x] Inspect repository, reference contact sheets, and complete scene order.
 - [x] Present alternatives and secure user approval.
 - [x] Record the approved design. The unavailable writing-plans skill is replaced by this local checklist.
-- [ ] Build deterministic timing, content resolution, and geometry helpers.
-- [ ] Build the procedural background, five editable statements, and release lockup.
-- [ ] Add registry entry, preview config, Studio root/controls, docs, changelog, and review script.
-- [ ] Test boundaries, Unicode, alternate props, geometry, reduced motion, and package closure.
-- [ ] Rebuild registry and manifest; run typecheck, lint, relevant tests, and production build.
-- [ ] Review representative frames and alternate identity; verify live Studio playback and leave it open.
+- [x] Build deterministic timing, content resolution, and geometry helpers.
+- [x] Build the procedural background, five editable statements, and release lockup.
+- [x] Add registry entry, preview config, Studio root/controls, docs, changelog, and review script.
+- [x] Test boundaries, Unicode, alternate props, geometry, reduced motion, and package closure.
+- [x] Rebuild registry and manifest; run typecheck, lint, relevant tests, and production build.
+- [x] Review representative frames and alternate identity; verify live Studio playback and leave it open.
 
 No full MP4 export is requested. Validation renders are still frames; an explicit render command will be available for later use.

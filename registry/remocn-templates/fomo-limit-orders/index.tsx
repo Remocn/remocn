@@ -49,7 +49,7 @@ export function FomoLimitOrders(props: FomoLimitOrdersProps) {
     t,
     theme,
     content: { ...fomoContent, ...props.content },
-    brandName: props.brandName ?? "fomo",
+    brandName: props.brandName ?? "Order Flow",
   };
   const volume = Number.isFinite(props.volume)
     ? Math.min(1, Math.max(0, props.volume ?? 1))
@@ -113,18 +113,21 @@ export function FomoLimitOrders(props: FomoLimitOrdersProps) {
   );
 }
 
+export const OrderFlow = FomoLimitOrders;
+export type OrderFlowProps = FomoLimitOrdersProps;
+
 export const fomoLimitOrdersConfig = {
-  componentName: "FomoLimitOrders",
+  componentName: "OrderFlow",
   importPath: "@/components/remocn/templates/fomo-limit-orders",
   controls: {
     brandName: {
       type: "text-content" as const,
-      default: "fomo",
+      default: "Order Flow",
       description: "Closing wordmark",
     },
     accentColor: {
       type: "color" as const,
-      default: "#6164f5",
+      default: "#e8b45a",
       description: "Controls and progress color",
     },
   },

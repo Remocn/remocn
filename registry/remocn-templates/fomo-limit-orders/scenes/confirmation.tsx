@@ -39,7 +39,7 @@ export function Confirmation({ t, content: c, theme }: SceneProps) {
         Cancel
       </Layer>
       <Layer x={10} y={41} style={{ ...row, gap: 5, fontSize: 16 }}>
-        <AssetIcon size={18} />
+        <AssetIcon size={18} color={theme.accent} />
         <span>{c.ticker}</span>
         <span style={{ color: muted, fontSize: 12 }}>⊙</span>
         <span>{c.limitPrice}</span>

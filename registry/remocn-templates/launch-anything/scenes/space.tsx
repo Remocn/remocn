@@ -1,117 +1,53 @@
-import { useId } from "react";
 import { Img } from "remotion";
 import type { SceneProps } from "../content";
-import { key, tween } from "../motion";
+import { tween } from "../motion";
 import { Center, Title } from "../ui";
 
+// Three editorial cuts retain the original montage timing, with original plates.
 export function Space({ scene, t }: SceneProps) {
-  const id = useId();
   const first = t < 20.62;
-  const wide = !first && t < 21.02;
-  const age = t - 20.22;
-  const rocketTransform = `translate(${key(age, [0, 0.4], [-17, 7])}px, ${key(age, [0, 0.4], [18, -11])}px) scale(1.07)`;
+  const inset = !first && t < 21.02;
+  const age = t - (first ? 20.22 : inset ? 20.62 : 21.02);
   return (
     <div
       style={{
         position: "absolute",
         inset: 0,
         overflow: "hidden",
-        background: first ? "#071629" : "#000",
+        background: "#eee8d9",
       }}
     >
-      {first ? (
-        <Img
-          src={scene.media.rocket}
-          style={{
-            position: "absolute",
-            width: "100%",
-            height: "100%",
-            transform: rocketTransform,
-            objectFit: "cover",
-            filter: "blur(0.7px)",
-          }}
-        />
-      ) : null}
-      {wide ? (
-        <>
-          <Img
-            src={scene.media.earth}
-            style={{
-              position: "absolute",
-              width: 470,
-              height: 265,
-              top: 219 - tween(t, 20.62, 21.02, 0, 10),
-              left: 47,
-              objectFit: "cover",
-              filter: "blur(1px) brightness(0.6)",
-              borderRadius: "50%",
-            }}
-          />
-          <svg
-            viewBox="0 0 20 150"
-            width="9"
-            height="113"
-            aria-label="Ascending rocket"
-            role="img"
-            style={{
-              position: "absolute",
-              left: 237,
-              top: tween(t, 20.62, 21.02, 59, 47),
-            }}
-          >
-            <defs>
-              <linearGradient id={id} x2="0" y2="1">
-                <stop stopColor="#fffbdc" />
-                <stop offset="1" stopColor="#ed853f" stopOpacity="0" />
-              </linearGradient>
-            </defs>
-            <path d="M6 17Q10-6 14 17V75H6Z" fill="#e8dee3" />
-            <path d="M8 75H12L11 150H9Z" fill={`url(#${id})`} />
-          </svg>
-        </>
-      ) : null}
-      {!first && !wide ? (
-        <Img
-          src={scene.media.earth}
-          style={{
-            position: "absolute",
-            width: "100%",
-            height: "100%",
-            objectFit: "cover",
-            transform: `translateX(${tween(t, 21.02, 21.55, 10, -7)}px) scale(${tween(t, 21.02, 21.55, 1.07, 1)})`,
-            filter: "brightness(0.75)",
-          }}
-        />
-      ) : null}
+      <Img
+        src={first ? scene.media.rocket : scene.media.earth}
+        style={{
+          position: "absolute",
+          inset: inset ? "20px 32px" : 0,
+          width: inset ? 416 : "100%",
+          height: inset ? 230 : "100%",
+          objectFit: "cover",
+          transform: `translateX(${tween(age, 0, 0.53, -3, 3)}px) scale(${tween(age, 0, 0.53, 1.07, 1.02)})`,
+          filter: first ? "brightness(0.8)" : "brightness(0.68)",
+        }}
+      />
+      <div
+        style={{
+          position: "absolute",
+          inset: 18,
+          border: "0.65px solid #f4f0e970",
+          opacity: inset ? 0 : 0.8,
+        }}
+      />
       <Center>
         <Title
           text={scene.content.launch}
-          size={100}
+          size={92}
           style={{
-            letterSpacing: "-0.07em",
+            letterSpacing: "-0.05em",
             fontWeight: 400,
-            color: "#fff8f5",
-            filter: "drop-shadow(0 0 0.65px #fff)",
-            maskImage: "linear-gradient(100deg, black 60%, #0009 100%)",
+            color: "#f8f2e5",
           }}
         />
       </Center>
-      {first ? (
-        <Img
-          src={scene.media.rocket}
-          style={{
-            position: "absolute",
-            width: "100%",
-            height: "100%",
-            objectFit: "cover",
-            transform: rocketTransform,
-            maskImage:
-              "radial-gradient(ellipse 9% 32% at 44% 69%, black, transparent 98%)",
-            mixBlendMode: "screen",
-            filter: "blur(1px)",
-          }}
-        />
-      ) : null}
     </div>
   );
 }

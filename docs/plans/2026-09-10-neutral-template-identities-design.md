@@ -38,19 +38,30 @@ copy or default template assets.
 
 ## Implementation plan
 
-- [ ] Replace Order Flow copy, sample figures, default wordmark, asset symbol, palette,
+- [x] Replace Order Flow copy, sample figures, default wordmark, asset symbol, palette,
       Studio defaults, and catalog metadata.
-- [ ] Replace Workflow Console story, tool rows, logo, palette, environment carousel,
+- [x] Replace Workflow Console story, tool rows, logo, palette, environment carousel,
       graph copy, Studio defaults, and catalog metadata; preserve legacy props.
-- [ ] Generate and inspect four new Product Showcase plates. Replace its copy, sample
+- [x] Generate and inspect four new Product Showcase plates. Replace its copy, sample
       screens, proof grid, mascot, logo, orbital imagery, and palette.
-- [ ] Update docs and changelog, add neutral named exports, rebuild asset bundles,
+- [x] Update docs and changelog, add neutral named exports, rebuild asset bundles,
       registry payloads, and preview manifest.
-- [ ] Add regression checks for default brand removal and API compatibility; run
+- [x] Add regression checks for default brand removal and API compatibility; run
       targeted tests, typecheck, lint, and production build.
-- [ ] Review varied/default props and key frames; export all three local MP4 previews
+- [x] Review varied/default props and key frames; export all three local MP4 previews
       and verify their streams and duration.
 
 `writing-plans` is not installed. This approved document contains the local design
 and execution checklist. Only this plan is committed before implementation; ongoing
 template changes from the preceding task are preserved.
+
+## Verification
+
+- Targeted template, customization, docs, and Unicode tests: 56 passed, 12,762 assertions.
+- TypeScript and the production Next.js build pass (764 pages).
+- Lint has no errors; the pre-existing unused CSS suppression warning remains. Biome skips the two generated photographic payloads above its 1 MiB default limit.
+- The 38 shipped files across the three registry payloads exactly match their source files. The preview manifest has been rebuilt.
+- Default scenes were reviewed in contact sheets; override handling and legacy API compatibility are covered by tests. The running XAdsMcp Studio route shows Workflow Console after hot reload.
+- Final H.264 videos decode completely without errors: `out/order-flow.mp4` (1108 frames), `out/workflow-console.mp4` (2810 frames), and `out/product-showcase.mp4` (1600 frames), all 1920×1080 at 60 fps. Defaults are silent; no reference soundtrack was used.
+- New independent render scripts use ANGLE; `--software` selects the slower software fallback. New exports are staged before replacing the final file.
+- Original photo prompts and saved paths: `docs/plans/2026-09-10-product-showcase-assets.md`.

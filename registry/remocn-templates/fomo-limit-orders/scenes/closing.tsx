@@ -1,8 +1,8 @@
 import type { SceneProps } from "../content";
 import { ramp, tween } from "../motion";
-import { Layer } from "../ui";
+import { AssetIcon, Layer } from "../ui";
 
-export function Closing({ t, content, brandName }: SceneProps) {
+export function Closing({ t, content, brandName, theme }: SceneProps) {
   const brand = tween(t, 18.15, 18.38);
   return (
     <>
@@ -50,14 +50,17 @@ export function Closing({ t, content, brandName }: SceneProps) {
             display: "grid",
             placeItems: "center",
             fontSize: brandName.length > 9 ? 31 : 42,
-            fontWeight: 800,
-            letterSpacing: -2.5,
+            fontWeight: 600,
+            letterSpacing: -1.2,
             opacity: brand,
             transform: `scale(${0.95 + 0.05 * brand})`,
             filter: `blur(${(1 - brand) * 5}px)`,
           }}
         >
-          {brandName}
+          <span style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <AssetIcon size={42} color={theme.accent} />
+            {brandName}
+          </span>
         </Layer>
       )}
     </>

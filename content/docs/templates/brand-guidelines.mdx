@@ -1,0 +1,127 @@
+---
+title: Brand Guidelines
+description: A complete editorial identity film with a color palette, kinetic typography, original object photography, and a geometric brand mark
+component: brand-guidelines
+vibe: premium
+length: 536
+useWhen:
+  - "You want to introduce a brand system through its mark, colors, typography, and photography."
+  - "You need a complete 17.9-second identity film with editable content and a layered object collage."
+avoidWhen:
+  - "You need a multi-feature software demo rather than an identity film; use `launch-anything`."
+  - "You only need a short typed title with an exit; use `typed-split-wipe`."
+---
+
+<ComponentPreview name="brand-guidelines" />
+
+<InstallBlock name="brand-guidelines" />
+
+**Brand Guidelines** presents the fictional object-design studio **Form Study**.
+An architectural mark leads into terracotta, graphite, stone, and paper; a type
+specimen types and deletes itself before changing styles. Original still-life
+photographs and editable brand posters travel through a layered collage. Three
+flipping tiles become “Make / Ideas / Real.” before the closing wordmark resolves
+back to the mark.
+
+The complete composition is **1072 frames at 60 fps**, **1920×1080**
+(**17.87 seconds**). All motion is frame-driven React and SVG. The photographs
+are newly AI-generated, bundled with the template, and replaceable. No reference
+video, third-party logo, remote image dependency, or original soundtrack is used.
+
+## Usage
+
+```tsx
+import { Composition } from "remotion";
+import { BrandGuidelines } from "@/components/remocn/templates/brand-guidelines";
+
+export const Root = () => (
+  <Composition
+    id="BrandGuidelines"
+    component={BrandGuidelines}
+    durationInFrames={1072}
+    fps={60}
+    width={1920}
+    height={1080}
+    defaultProps={{}}
+  />
+);
+```
+
+## Customize
+
+```tsx
+<BrandGuidelines
+  brandName="Your Studio"
+  accentColor="#285A50"
+  theme={{ ink: "#242321", stone: "#D6CFC4", paper: "#F5F1E9" }}
+  content={{
+    openingTagline: "A new point of view.",
+    guidelinesLabel: "Visual identity",
+    collageTitle: "Objects for a slower everyday.",
+    collectionLabel: "The first collection",
+    footer: "Your identity. Your story.",
+  }}
+  phrases={[
+    "Thoughtful objects.", "Everyday rituals.",
+    "Find your form.", "Quiet by design.",
+    "Make space.", "Feel the texture.",
+    "Shape the everyday.", "Made to last.",
+  ]}
+  closingWords={["Imagine", "Make", "Share."]}
+/>
+```
+
+`brandName` overrides `content.brandName`; `accentColor` overrides `theme.accent`.
+Palette labels always reflect the supplied theme colors. `phrases` contains eight
+slots: the first two type on (the first also backspaces), followed by six quick
+style cuts. `closingWords` contains three independently animated words. Missing
+or blank entries in partial lists preserve the corresponding defaults.
+
+Keep specimens to short phrases (ideally 25 characters or fewer), closing words
+to 10 characters, and brand names to 24 characters. Type scales down for longer
+overrides. Font families and weights can be changed in `scenes/typography.tsx`;
+the default Manrope and Inter faces are bundled through Fontsource.
+
+| Prop | Purpose |
+| --- | --- |
+| `content` | Brand name, opening tagline, section label, poster headline, collection label, footer |
+| `theme` | `ink`, `accent`, `stone`, `paper` color tokens |
+| `photos` | Replace any of `ceramics`, `materials`, `chair` with your own image URL or data URI |
+| `logoSrc` | Replace the original SVG mark with a transparent image suitable for both light and dark backgrounds |
+| `audioSrc`, `volume` | Optional licensed soundtrack, with volume from 0 to 1; silent by default |
+| `reducedMotion` | Static specimen and collage layouts; no typing, sliding columns, parallax, or tile flips |
+
+## Timeline
+
+| Scene | Reference frames at 60 fps | Time |
+| --- | --- | --- |
+| Opening identity | 0–117 | 0–1.97s |
+| Sliding palette | 118–325 | 1.97–5.43s |
+| Type specimen and style cuts | 294–805 | 4.90–13.43s |
+| Layered object collage | 614–805 | 10.23–13.43s |
+| Tiles, closing words, wordmark, mark | 806–1071 | 13.43–17.87s |
+
+The palette/type overlap creates a continuous push. The type specimen remains
+behind the collage. Each chapter is a named Studio sequence. Other frame rates
+are supported by scaling the reference clock; use `Math.round(1072 / 60 * fps)`
+for the composition duration. The 960×540 design space scales uniformly and
+letterboxes in other aspect ratios; it does not reflow into a vertical layout.
+
+Static photographs use native images only in the interactive Studio preview to
+avoid a nested media-registration update loop in Remotion 4.0.513. Change them
+through the composition's `photos` props. Exports and embedded players use
+Remotion `Img`, including its image-loading guarantee.
+
+For an embedded player, connect the viewer's reduced-motion preference to
+`reducedMotion` and disable autoplay. Exported files use the chosen prop value.
+
+## Local preview
+
+```bash
+bun run studio:brand-guidelines
+bun run review:brand-guidelines
+bun run render:brand-guidelines
+```
+
+The review command captures 36 timeline samples and six customization samples
+under `out/brand-guidelines/`. The optional render writes `out/brand-guidelines.mp4`.

@@ -8,12 +8,16 @@ export function Opening({ scene, t }: SceneProps) {
   const { fps } = useVideoConfig();
   return (
     <>
-      <Sequence name="Your — chrome reveal" durationInFrames={Math.round(fps)}>
+      <Sequence
+        name="Opening — chrome reveal"
+        durationInFrames={Math.round(fps)}
+      >
         <div
           style={{
             position: "absolute",
             inset: 0,
-            filter: "hue-rotate(290deg) saturate(4) brightness(1.5)",
+            filter:
+              "sepia(0.7) hue-rotate(65deg) saturate(0.65) brightness(1.35)",
             maskImage: `linear-gradient(125deg, transparent ${tween(t, 0.7, 1, -70, 105)}%, black ${tween(t, 0.7, 1, -45, 130)}%)`,
           }}
         >
@@ -21,13 +25,13 @@ export function Opening({ scene, t }: SceneProps) {
             text={`${scene.content.opening}\n`}
             fontFamily="Manrope"
             fontWeight={500}
-            fontSize={570}
+            fontSize={430}
             wordDuration={fps * 1.4}
           />
         </div>
       </Sequence>
       <Sequence
-        name="Product — chrome reveal"
+        name="Subject — chrome reveal"
         from={Math.round(fps)}
         durationInFrames={Math.round(fps * 1.5)}
       >
@@ -35,7 +39,8 @@ export function Opening({ scene, t }: SceneProps) {
           style={{
             position: "absolute",
             inset: 0,
-            filter: "hue-rotate(290deg) saturate(4) brightness(1.5)",
+            filter:
+              "sepia(0.7) hue-rotate(65deg) saturate(0.65) brightness(1.35)",
           }}
         >
           <ShaderTextReveal

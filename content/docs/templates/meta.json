@@ -2,6 +2,9 @@
   "title": "Templates",
   "collapsible": false,
   "pages": [
+    "release-teaser",
+    "brand-guidelines",
+    "x-ads-mcp",
     "launch-anything",
     "introducing-product",
     "fomo-limit-orders",

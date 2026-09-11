@@ -2,30 +2,35 @@ import { launchMedia } from "./assets";
 import type { ShowcaseId } from "./motion";
 
 export const launchContent = {
-  opening: "Your",
-  subject: "product",
-  ready: "is ready",
-  next: "Now let’s",
-  action: "Launch it",
-  proof: "Trusted by Brands &\nEnterprises",
-  industry: "Any industry",
-  promise: "We Launch it all.",
-  launch: "Launch",
-  shoppers: "your shoppers do",
-  builder: "2. Build Data apps",
-  builderPrompt: "Build an ecommerce insights dashboard",
-  trading: "Place Orders\nInstantly",
-  loyalty: "every loyalty program",
-  loyaltyPayoff: "isn’t bleeding money",
-  integration: "Integrate your app with",
-  integrations: ["Slack", "Amplitude", "Hubspot"],
+  opening: "Good",
+  subject: "ideas",
+  ready: "deserve a stage",
+  next: "Let’s make",
+  action: "them real",
+  proof: "Your work.\nA clearer view.",
+  industry: "Built around you",
+  promise: "Made to be yours.",
+  launch: "Begin",
+  shoppers: "Small things. Well made.",
+  builder: "Turn a brief into a workspace",
+  builderPrompt: "Create a workspace for our next product release",
+  trading: "Review once.\nMove forward.",
+  loyalty: "A place for every idea",
+  loyaltyPayoff: "Room for the next one",
+  integration: "Bring your work together",
+  integrations: ["Files", "Messages", "Calendar"],
+  shopName: "Object Study",
+  shopHeadline: "Everyday, considered.",
+  shopDetail: "Useful objects. Quiet details.",
+  shopAction: "Explore the objects",
+  connections: "Connect your tools.\nKeep work moving.",
 };
 
 export type LaunchContent = typeof launchContent;
 export type LaunchMedia = typeof launchMedia;
 
 export type LaunchAnythingProps = {
-  /** Closing address. Preserved from the reference by default. */
+  /** Editable closing label or URL. The default uses a reserved example domain. */
   brandUrl?: string;
   accentColor?: string;
   opening?: string;
@@ -46,8 +51,8 @@ export function resolveLaunchProps(props: LaunchAnythingProps) {
     name.trim(),
   );
   return {
-    brandUrl: props.brandUrl ?? "Launchanything.now",
-    accent: props.accentColor ?? "#3730ed",
+    brandUrl: props.brandUrl ?? "yourproduct.example",
+    accent: props.accentColor ?? "#245744",
     content: {
       ...launchContent,
       ...props.content,

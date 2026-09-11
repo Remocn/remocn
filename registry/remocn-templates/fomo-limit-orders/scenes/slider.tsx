@@ -1,6 +1,6 @@
 import type { SceneProps } from "../content";
 import { contraction, key, money, ramp, tween } from "../motion";
-import { Chevron, Layer, muted } from "../ui";
+import { Chevron, Layer, lightMuted as muted } from "../ui";
 
 export function Slider({ t, theme, content }: SceneProps) {
   const label = t < 8.65;
@@ -18,19 +18,13 @@ export function Slider({ t, theme, content }: SceneProps) {
     [650, 400, 154, 66, 35, 24, 22, 20, 19],
   );
   const centerX = tween(t, 10.45, 10.8833, 240, 250, contraction);
-  const price = key(
-    t,
-    [9.3, 9.55, 9.8, 10.05, 10.3],
-    [60.21, 103.75, 167.09, 191.25, 193.43],
-  );
+  const price = key(t, [9.3, 9.55, 9.8, 10.05, 10.3], [79, 79.5, 80, 81, 82]);
   const quantity = key(
     t,
     [9.3, 9.55, 9.8, 10.05, 10.3],
-    [161.4, 275.51, 413.46, 491.64, 493.32],
+    [40, 72, 112, 144, 160],
   );
-  const percent = Math.round(
-    key(t, [9.3, 9.55, 9.8, 10.05, 10.3], [69, 82, 96, 99, 100]),
-  );
+  const percent = Math.round((quantity / 160) * 100);
   const detailAlpha = ramp(t, 9.15, 9.4) * (1 - ramp(t, 10.3, 10.56));
   const uiScale = key(t, [9.3, 9.55, 9.8, 10.3], [1.6, 1.1, 1, 0.93]);
   const roll = tween(t, 8.18, 8.55, 0, 1, (v) => v);
@@ -43,7 +37,7 @@ export function Slider({ t, theme, content }: SceneProps) {
         style={{
           background: label
             ? "white"
-            : `linear-gradient(145deg, ${theme.paper}, #e7ebfb 65%, #edf0ff)`,
+            : `linear-gradient(145deg, ${theme.paper}, #ebe1ce 65%, #f7f0e3)`,
         }}
       />
       {label ? (
@@ -57,7 +51,7 @@ export function Slider({ t, theme, content }: SceneProps) {
             alignItems: "center",
             justifyContent: "center",
             gap: 9,
-            color: "#a5a0e1",
+            color: "#865616",
             fontSize: 23,
             letterSpacing: -0.6,
             opacity: ramp(t, 8.01, 8.1),
@@ -90,11 +84,11 @@ export function Slider({ t, theme, content }: SceneProps) {
             w={barW}
             h={barH}
             style={{
-              background: `linear-gradient(100deg, #5455fa, ${theme.accent})`,
+              background: `linear-gradient(100deg, #c78a30, ${theme.accent})`,
               borderRadius: Math.min(9, barH / 3),
               boxShadow:
                 t < 10.7
-                  ? "inset 0 0.5px 1px #d0d5ff, 0 1px 2px #646dd21f"
+                  ? "inset 0 0.5px 1px #f3d8a3, 0 1px 2px #8d6a301f"
                   : undefined,
             }}
           >
@@ -110,7 +104,7 @@ export function Slider({ t, theme, content }: SceneProps) {
               style={{
                 background: "#fff",
                 borderRadius: "50%",
-                boxShadow: "0 1px 3px #27297426",
+                boxShadow: "0 1px 3px #4d3b2126",
                 opacity: 1 - ramp(t, 10.4, 10.65),
               }}
             />
@@ -121,7 +115,7 @@ export function Slider({ t, theme, content }: SceneProps) {
             style={{
               transform: `scale(${uiScale})`,
               opacity: detailAlpha,
-              color: "#15141d",
+              color: "#28281f",
               fontSize: 9,
               whiteSpace: "nowrap",
             }}
@@ -139,10 +133,13 @@ export function Slider({ t, theme, content }: SceneProps) {
             >
               <span>Limit price</span>
               <span>
-                {money(price)} <span style={{ color: muted }}>(+0.58%)</span>
+                {money(price)}{" "}
+                <span style={{ color: muted }}>
+                  (+{(((price - 79) / 79) * 100).toFixed(2)}%)
+                </span>
               </span>
             </Layer>
-            <Layer x={-142} y={-31} style={{ fontSize: 13, color: "#444553" }}>
+            <Layer x={-142} y={-31} style={{ fontSize: 13, color: "#5b5548" }}>
               {quantity.toFixed(2)} {content.ticker}
             </Layer>
             <Layer
@@ -152,7 +149,7 @@ export function Slider({ t, theme, content }: SceneProps) {
               style={{
                 textAlign: "right",
                 fontSize: 13,
-                color: theme.accent,
+                color: "#865616",
                 fontWeight: 600,
               }}
             >
@@ -169,14 +166,8 @@ export function Slider({ t, theme, content }: SceneProps) {
               }}
             >
               <span style={{ color: muted }}>Est. profit</span>
-              <span style={{ color: "#04ad6b" }}>
-                {money(
-                  key(
-                    t,
-                    [9.3, 9.55, 9.8, 10.05, 10.3],
-                    [8608.37, 16969.58, 25963.71, 31736.79, 32099.64],
-                  ),
-                )}
+              <span style={{ color: "#326846" }}>
+                {money(quantity * (price - 75))}
               </span>
             </Layer>
             <Layer

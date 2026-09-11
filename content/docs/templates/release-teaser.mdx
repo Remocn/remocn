@@ -1,0 +1,120 @@
+---
+title: Release Teaser
+description: A cinematic release announcement with quiet kinetic typography, a dimensional open-ring mark, and moving edge light
+component: release-teaser
+vibe: premium
+length: 481
+useWhen:
+  - "You want a sixteen-second release announcement built around anticipation and a final brand reveal."
+  - "Your story fits five short statements, with a dimensional identity as the visual thread."
+avoidWhen:
+  - "You need to show actual product interactions and workflows; use `launch-anything`."
+  - "You want to introduce a complete palette, typography, and photography system; use `brand-guidelines`."
+---
+
+<ComponentPreview name="release-teaser" />
+
+<InstallBlock name="release-teaser" />
+
+**Release Teaser** introduces **Orvio 2**, a fictional creative workspace. Five
+short statements resolve from the center outward above an extreme close-up of a
+dark, beveled open ring. The camera pulls back to reveal the original mark behind
+the release lockup, then the lighting recedes while the name holds.
+
+The composition is **960 frames at 60000/1001 fps** (approximately **59.94 fps**),
+**1920×1080**, **16.016 seconds**. The geometry, camera, lighting, typography, and
+mark are generated from editable code. No source footage, inherited brand assets,
+remote images, external 3D engine, or original soundtrack is included.
+
+## Usage
+
+```tsx
+import { Composition } from "remotion";
+import { ReleaseTeaser } from "@/components/remocn/templates/release-teaser";
+
+export const Root = () => (
+  <Composition
+    id="ReleaseTeaser"
+    component={ReleaseTeaser}
+    durationInFrames={960}
+    fps={60000 / 1001}
+    width={1920}
+    height={1080}
+    defaultProps={{}}
+  />
+);
+```
+
+## Customize
+
+```tsx
+<ReleaseTeaser
+  brandName="Your Studio"
+  release="03"
+  tagline="Make what comes next."
+  accentColor="#D7B37B"
+  statements={[
+    "Start with a question",
+    "Find a new\npoint of view",
+    "Make every detail matter",
+    "Build together.\nGo further.",
+    "Your next chapter.\nAlready in motion.",
+  ]}
+  lightIntensity={1.1}
+/>
+```
+
+| Prop | Default / behavior |
+| --- | --- |
+| `brandName` | `"Orvio"`; final title |
+| `release` | `"2"`; an empty string hides the version suffix |
+| `tagline` | `"Your next chapter starts here."`; closing supporting line |
+| `statements` | Five fixed slots; missing or blank entries retain their corresponding defaults |
+| `accentColor` | `"#9BC8DD"`; overrides `theme.accent` |
+| `theme` | Partial `background`, `surface`, `foreground`, `muted`, and `accent` CSS colors |
+| `lightIntensity` | `1`; clamped to 0–2; controls dimensional edge highlights |
+| `logoSrc` | Optional transparent image; replaces both marks with a flat custom-logo treatment |
+| `audioSrc`, `volume` | Optional user-owned soundtrack; silent by default, volume clamped to 0–1 |
+| `reducedMotion` | `false`; use `true` for static geometry, complete statements, and no camera movement or blur |
+
+Keep each statement to one or two short lines. Use `\n` for intentional line
+breaks; longer overrides scale down to stay inside the safe area. Grapheme-aware
+reveals preserve emoji, combining accents, and non-Latin text. Inter 500 and 600
+are bundled through Fontsource. The defaults describe a fictional product, not
+claims about an existing service.
+
+The default mark is an original 320-degree beveled annulus, drawn using a
+deterministic projected mesh on a 2D canvas. Geometry and surface normals live in
+`geometry.ts`; camera and light timing live in `motion.ts`; material shading
+lives in `background.tsx`. Replacing `logoSrc` does not extrude the supplied
+bitmap. Custom images use native `img` only in live Studio to avoid Remotion
+4.0.513's nested media-registration loop; exports and embedded players use `Img`.
+
+## Timeline
+
+| Beat | Picture frames (59.94 fps) | Time |
+| --- | --- | --- |
+| An idea | 0–103 | 0–1.74s |
+| Better work | 104–207 | 1.74–3.47s |
+| Every detail | 208–325 | 3.47–5.44s |
+| Together | 326–445 | 5.44–7.44s |
+| A fresh chapter | 446–609 | 7.44–10.18s |
+| Release reveal | 610–959 | 10.18–16.016s |
+
+The reference picture clock is preserved exactly; audio/container padding is not
+included. For another frame rate use `Math.round(16.016 * fps)` frames. The
+960×540 design space scales uniformly and letterboxes at other aspect ratios;
+it does not reflow to portrait. For embedded players, wire the viewer's motion
+preference to `reducedMotion` and disable autoplay when that preference is set.
+
+## Local preview
+
+```bash
+bun run studio:release-teaser
+bun run review:release-teaser
+bun run render:release-teaser
+```
+
+The review command captures 32 timeline samples, eight customization samples, and
+two repeated-seek checks under `out/release-teaser/`. The optional render command
+exports `out/release-teaser.mp4` through an atomic staging file.

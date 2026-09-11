@@ -12,7 +12,7 @@ export function Action({ scene, t }: SceneProps) {
       style={{
         position: "absolute",
         inset: 0,
-        background: "linear-gradient(#f6f7fd, #fcfefc 75%)",
+        background: "linear-gradient(#f3edde, #faf6ec 75%)",
         color: "#050608",
       }}
     >
@@ -50,8 +50,8 @@ export function Action({ scene, t }: SceneProps) {
             inset: 0,
             borderRadius: 13,
             background:
-              "linear-gradient(135deg, #ffffff 10%, #fff 36%, #dedbf4 70%, #928bea 100%)",
-            boxShadow: "inset 1px 1px 2px #fff, 0 4px 18px #9690d415",
+              "linear-gradient(135deg, #fbf8ee 10%, #f5f1e5 36%, #d9dfc8 70%, #90a47f 100%)",
+            boxShadow: "inset 1px 1px 2px #fff, 0 4px 18px #728b6415",
             transform: `scale(${1 - 0.07 * press}) rotateY(${-9 + 9 * travel}deg)`,
             display: "flex",
             alignItems: "center",
@@ -76,21 +76,21 @@ export function Action({ scene, t }: SceneProps) {
             left: 110,
             top: tween(t, 5.02, 5.35, 92, 34) + press * 5,
             opacity: tween(t, 5.02, 5.18),
-            filter: "drop-shadow(0 6px 4px #5444d52a)",
+            filter: "drop-shadow(0 6px 4px #365a342a)",
             transform: `scale(${1 - press * 0.12}) rotate(-12deg)`,
           }}
         >
           <defs>
             <linearGradient id={id} x1="0" x2="1" y1="0" y2="1">
-              <stop stopColor="#aea7fc" />
+              <stop stopColor="#93af8f" />
               <stop offset="0.5" stopColor={scene.accent} />
-              <stop offset="1" stopColor="#ceccff" />
+              <stop offset="1" stopColor="#d3dfc2" />
             </linearGradient>
           </defs>
           <path
             d="M27 4Q30 0 33 4L57 57Q58 64 51 62L32 54 13 63Q5 66 9 56Z"
             fill={`url(#${id})`}
-            stroke="#b4aff3"
+            stroke="#b3c6a4"
             strokeWidth="1"
           />
         </svg>

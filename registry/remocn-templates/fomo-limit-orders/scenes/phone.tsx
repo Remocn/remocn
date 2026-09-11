@@ -21,7 +21,7 @@ function PhoneUI({ t, content: c, theme }: SceneProps) {
       </Layer>
       <Layer x={54} y={73} style={{ ...row, gap: 14 }}>
         <span style={{ position: "relative", display: "flex" }}>
-          <AssetIcon size={44} />
+          <AssetIcon size={44} color={theme.accent} />
           <span
             style={{
               position: "absolute",
@@ -46,10 +46,7 @@ function PhoneUI({ t, content: c, theme }: SceneProps) {
               stroke="#ffffff10"
               strokeWidth="0.4"
             />
-            <path
-              d="m11 24 7-5-5-3h4l4 2c5-3 9-4 12-4-8 3-14 6-19 10Zm7-3 2-1 5 4h-4Z"
-              fill="white"
-            />
+            <path d="M9 25h5v6H9Zm8-8h5v14h-5Zm8-8h6v22h-6Z" fill="white" />
           </svg>
         </span>
         <div>
@@ -58,10 +55,10 @@ function PhoneUI({ t, content: c, theme }: SceneProps) {
             <span
               style={{
                 fontSize: 12,
-                color: "#8d8afb",
+                color: theme.accent,
                 borderRadius: 3,
                 padding: "1px 5px",
-                background: "#514ccd30",
+                background: `${theme.accent}25`,
                 opacity: ramp(t, 3.35, 3.85),
               }}
             >
@@ -81,7 +78,7 @@ function PhoneUI({ t, content: c, theme }: SceneProps) {
           {c.marketPrice}
         </Layer>
         <Layer x={24} y={169} style={{ fontSize: 12, color: theme.positive }}>
-          ↑ $7.3614 ({c.change})
+          ↑ $1.00 ({c.change})
         </Layer>
         <Layer x={22} y={215} w={355} h={110}>
           <svg width="355" height="110" viewBox="0 0 355 110" aria-hidden>
@@ -136,7 +133,7 @@ function PhoneUI({ t, content: c, theme }: SceneProps) {
               key={s}
               style={{
                 padding: 4,
-                background: i === 0 ? "#16141c" : undefined,
+                background: i === 0 ? "#2b2c26" : undefined,
                 borderRadius: 4,
                 color: i === 0 ? "white" : undefined,
               }}
@@ -152,7 +149,7 @@ function PhoneUI({ t, content: c, theme }: SceneProps) {
           w={366}
           h={138}
           style={{
-            background: `linear-gradient(125deg, #101016, ${theme.panel})`,
+            background: `linear-gradient(125deg, ${theme.ink}, ${theme.panel})`,
             borderRadius: 11,
             boxShadow: "inset 0 1px 8px #ffffff04",
           }}
@@ -227,12 +224,12 @@ function PhoneUI({ t, content: c, theme }: SceneProps) {
           }}
         >
           <span>
-            <span style={{ color: muted, marginRight: 10 }}>＋</span>Add thesis
+            <span style={{ color: muted, marginRight: 10 }}>＋</span>Add a note
           </span>
           <span>Add SL/TP</span>
         </Layer>
         <Layer x={51} y={575} style={{ fontSize: 11, color: muted }}>
-          Holders　　Transactions　　Info
+          Overview　　Activity　　Details
         </Layer>
         <Layer
           x={24}
@@ -248,18 +245,19 @@ function PhoneUI({ t, content: c, theme }: SceneProps) {
               display: "grid",
               placeItems: "center",
               borderRadius: 11,
-              background: "#242333",
-              border: "1px solid #77718b",
+              background: "#282c22",
+              border: "1px solid #7e806c",
             }}
           >
             <svg width="19" height="19" viewBox="0 0 24 24">
               <path d="m4 16 11-11 5 5-11 11-6 1Z" fill="white" />
-              <path d="m13 7 5 5" stroke="#242333" />
+              <path d="m13 7 5 5" stroke="#282c22" />
             </svg>
           </div>
           <div
             style={{
-              background: "linear-gradient(#859bff,#5d70ef)",
+              background: theme.accent,
+              color: theme.ink,
               borderRadius: 9,
               padding: "11px 14px",
               whiteSpace: "nowrap",
@@ -270,7 +268,8 @@ function PhoneUI({ t, content: c, theme }: SceneProps) {
           </div>
           <div
             style={{
-              background: theme.positive,
+              background: theme.panel,
+              color: theme.positive,
               borderRadius: 9,
               padding: "11px 32px",
             }}
@@ -326,11 +325,11 @@ export function Phone(props: SceneProps) {
           w={400}
           h={680}
           style={{
-            border: "1.7px solid #5a556b",
+            border: "1.7px solid #55584a",
             boxSizing: "border-box",
             borderRadius: 59,
             opacity: ramp(t, 3.65, 4.35) * (1 - 0.8 * push * (1 - pull)),
-            boxShadow: "0 0 2px #7c6caf55, inset 0 0 4px #7c6caf22",
+            boxShadow: "0 0 2px #ad926155, inset 0 0 4px #ad926122",
             background: "#000",
           }}
         />
@@ -338,13 +337,13 @@ export function Phone(props: SceneProps) {
           w={400}
           h={680}
           style={{
-            borderLeft: "1.2px solid #7470ee",
+            borderLeft: "1.2px solid #e8b45a",
             boxSizing: "border-box",
-            borderBottom: "1.2px solid #7470ee",
+            borderBottom: "1.2px solid #e8b45a",
             borderRadius: 59,
             opacity: ramp(t, 6.55, 7.2),
             maskImage: "linear-gradient(0deg, black, transparent 34%)",
-            boxShadow: "-1px 1px 3px #4c40ec44",
+            boxShadow: "-1px 1px 3px #d59b4044",
           }}
         />
         <div style={{ opacity: 1 - ramp(t, 7.78, 7.96), fontWeight: 500 }}>
@@ -357,7 +356,7 @@ export function Phone(props: SceneProps) {
         style={{
           opacity: Math.sin(push * Math.PI) * 0.24,
           background:
-            "linear-gradient(120deg, transparent 10%, #8998ff 53%, transparent 75%)",
+            "linear-gradient(120deg, transparent 10%, #ebc47b 53%, transparent 75%)",
           mixBlendMode: "screen",
         }}
       />
@@ -378,7 +377,7 @@ export function Phone(props: SceneProps) {
             w={radius * 4}
             h={radius * 4}
             style={{
-              background: "#c2d4ff",
+              background: "#eed7a6",
               borderRadius: "50%",
               filter: `blur(${Math.min(10, radius)}px)`,
               opacity: t < 7.88 ? 0.2 : 0,
@@ -392,7 +391,7 @@ export function Phone(props: SceneProps) {
             style={{
               background: "#fff",
               borderRadius: "50%",
-              boxShadow: "0 0 4px #dce5ff",
+              boxShadow: "0 0 4px #f6e3bf",
             }}
           />
         </>

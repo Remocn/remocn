@@ -1,6 +1,6 @@
 import type { SceneProps } from "../content";
 import { ramp, travel, tween } from "../motion";
-import { AssetIcon, Layer, muted } from "../ui";
+import { AssetIcon, Layer, lightMuted as muted } from "../ui";
 
 export function Price({ t, content: c, theme }: SceneProps) {
   const zoom = tween(t, 11.65, 12.25, 1, 2.7, travel);
@@ -21,7 +21,7 @@ export function Price({ t, content: c, theme }: SceneProps) {
         w={480}
         h={270}
         style={{
-          background: `linear-gradient(145deg, ${theme.paper}, #e7ebfb 65%, #edf0ff)`,
+          background: `linear-gradient(145deg, ${theme.paper}, #ebe1ce 65%, #f7f0e3)`,
         }}
       />
       <Layer
@@ -32,12 +32,12 @@ export function Price({ t, content: c, theme }: SceneProps) {
         style={{
           transform: `scale(${zoom})`,
           transformOrigin: "0 0",
-          color: "#171721",
+          color: "#28281f",
         }}
       >
         <div style={{ opacity: alpha, fontWeight: 500 }}>
           <Layer x={100} y={61}>
-            <AssetIcon size={30} />
+            <AssetIcon size={30} color={theme.accent} />
           </Layer>
           <Layer x={140} y={63} style={{ fontSize: 12 }}>
             {c.ticker}
@@ -52,7 +52,7 @@ export function Price({ t, content: c, theme }: SceneProps) {
             style={{ textAlign: "right", fontSize: 12 }}
           >
             {c.marketPrice}
-            <div style={{ marginTop: 3, color: theme.positive, fontSize: 9 }}>
+            <div style={{ marginTop: 3, color: "#326846", fontSize: 9 }}>
               {c.change}
             </div>
           </Layer>
@@ -61,19 +61,19 @@ export function Price({ t, content: c, theme }: SceneProps) {
             y={110}
             w={279}
             h={0.6}
-            style={{ background: "#c9cfdf66" }}
+            style={{ background: "#c5bba466" }}
           />
           <Layer
             x={100}
             y={158}
             w={279}
             h={0.6}
-            style={{ background: "#c9cfdf44" }}
+            style={{ background: "#c5bba444" }}
           />
           <Layer x={117} y={120} style={{ fontSize: 11 }}>
             Limit price
             <div style={{ marginTop: 4, fontSize: 8, color: muted }}>
-              -4.45% from Mid
+              +3.80% above market
             </div>
           </Layer>
           <Layer x={100} y={181} w={279} style={{ display: "flex", gap: 6 }}>
@@ -84,7 +84,7 @@ export function Price({ t, content: c, theme }: SceneProps) {
                   width: 66,
                   height: 21,
                   borderRadius: 5,
-                  border: "0.5px solid #ccd2e282",
+                  border: "0.5px solid #cbbda282",
                   background: "#ffffff24",
                   display: "grid",
                   placeItems: "center",
@@ -121,7 +121,7 @@ export function Price({ t, content: c, theme }: SceneProps) {
               opacity: 1,
             }}
           />
-          <span style={{ color: theme.accent, marginLeft: -1, opacity: alpha }}>
+          <span style={{ color: "#865616", marginLeft: -1, opacity: alpha }}>
             Mid
           </span>
         </Layer>
