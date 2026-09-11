@@ -1,7 +1,7 @@
 import { Composition, registerRoot } from "remotion";
 import { OrderFlow } from "@/registry/remocn-templates/fomo-limit-orders";
 import { ProductShowcase } from "@/registry/remocn-templates/launch-anything";
-import { WorkflowConsole } from "@/registry/remocn-templates/x-ads-mcp";
+import { WorkflowConsole } from "@/registry/remocn-templates/workflow-console";
 
 function IndependentTemplatesRoot() {
   return (

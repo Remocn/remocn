@@ -4,10 +4,8 @@
   "pages": [
     "release-teaser",
     "brand-guidelines",
-    "x-ads-mcp",
+    "workflow-console",
     "launch-anything",
-    "introducing-product",
-    "fomo-limit-orders",
-    "studio-launch"
+    "fomo-limit-orders"
   ]
 }

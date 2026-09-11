@@ -1,18 +1,20 @@
 import { useId } from "react";
 import type { SceneProps } from "../content";
-import { smooth, tween } from "../motion";
+import { actionFrame, tween } from "../motion";
 import { Center, RevealCopy } from "../ui";
+import { ActionFrame, actionBackground } from "./action-frame";
 
 export function Action({ scene, t }: SceneProps) {
   const id = useId();
-  const travel = tween(t, 4.87, 5.17, 0, 1, smooth);
-  const press = tween(t, 5.35, 5.47) - tween(t, 5.48, 5.7);
+  const shape = actionFrame(t);
+  const travel = shape.enter;
+  const press = shape.press;
   return (
     <div
       style={{
         position: "absolute",
         inset: 0,
-        background: "linear-gradient(#f3edde, #faf6ec 75%)",
+        background: actionBackground,
         color: "#050608",
       }}
     >
@@ -20,51 +22,32 @@ export function Action({ scene, t }: SceneProps) {
         style={{
           position: "absolute",
           inset: 0,
-          transform: `translateX(${-235 * travel}px)`,
+          transform: `translateX(${-118 * travel}px)`,
+          opacity: 1 - tween(t, 5.4, 5.65),
         }}
       >
         <Center>
           <RevealCopy
             text={scene.content.next}
-            size={47}
+            size={47 - 11 * travel}
             t={t}
             start={3.8}
             dark
           />
         </Center>
       </div>
+      <ActionFrame scene={scene} t={t} />
       <div
         style={{
           position: "absolute",
-          left: 495 - 276 * travel,
-          top: 108,
+          left: shape.x - 105,
+          top: 105,
           width: 216,
           height: 61,
           opacity: travel,
           perspective: 600,
         }}
       >
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            borderRadius: 13,
-            background:
-              "linear-gradient(135deg, #fbf8ee 10%, #f5f1e5 36%, #d9dfc8 70%, #90a47f 100%)",
-            boxShadow: "inset 1px 1px 2px #fff, 0 4px 18px #728b6415",
-            transform: `scale(${1 - 0.07 * press}) rotateY(${-9 + 9 * travel}deg)`,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: "#070707",
-            fontSize: 39,
-            letterSpacing: "-0.06em",
-            fontWeight: 500,
-            whiteSpace: "nowrap",
-          }}
-        >
-          {scene.content.action}
-        </div>
         <svg
           role="img"
           aria-label="Click pointer"
@@ -75,7 +58,7 @@ export function Action({ scene, t }: SceneProps) {
             position: "absolute",
             left: 110,
             top: tween(t, 5.02, 5.35, 92, 34) + press * 5,
-            opacity: tween(t, 5.02, 5.18),
+            opacity: tween(t, 5.02, 5.18) * (1 - tween(t, 5.48, 5.75)),
             filter: "drop-shadow(0 6px 4px #365a342a)",
             transform: `scale(${1 - press * 0.12}) rotate(-12deg)`,
           }}

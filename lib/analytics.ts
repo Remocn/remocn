@@ -13,6 +13,7 @@ export type CtaId =
   | "hero_start"
   | "hero_showcases"
   | "hero_saas_typography_badge"
+  | "hero_templates_badge"
   | "how_it_works_setup"
   | "final_cta"
   | "github_header";

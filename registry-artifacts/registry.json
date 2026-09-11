@@ -4872,7 +4872,7 @@
       "type": "registry:component"
     },
     {
-      "name": "x-ads-mcp",
+      "name": "workflow-console",
       "title": "Workflow Console",
       "description": "An independent 46.8-second release automation demo with typed commands, environment diagrams, pipeline metrics, and an original node mark.",
       "dependencies": [
@@ -4883,74 +4883,74 @@
       "registryDependencies": ["@remocn/typed-split-wipe", "@remocn/caret"],
       "files": [
         {
-          "path": "registry/remocn-templates/x-ads-mcp/content.ts",
+          "path": "registry/remocn-templates/workflow-console/content.ts",
           "type": "registry:component",
-          "target": "components/remocn/templates/x-ads-mcp/content.ts"
+          "target": "components/remocn/templates/workflow-console/content.ts"
         },
         {
-          "path": "registry/remocn-templates/x-ads-mcp/countries.ts",
+          "path": "registry/remocn-templates/workflow-console/countries.ts",
           "type": "registry:component",
-          "target": "components/remocn/templates/x-ads-mcp/countries.ts"
+          "target": "components/remocn/templates/workflow-console/countries.ts"
         },
         {
-          "path": "registry/remocn-templates/x-ads-mcp/motion.ts",
+          "path": "registry/remocn-templates/workflow-console/motion.ts",
           "type": "registry:component",
-          "target": "components/remocn/templates/x-ads-mcp/motion.ts"
+          "target": "components/remocn/templates/workflow-console/motion.ts"
         },
         {
-          "path": "registry/remocn-templates/x-ads-mcp/ui.tsx",
+          "path": "registry/remocn-templates/workflow-console/ui.tsx",
           "type": "registry:component",
-          "target": "components/remocn/templates/x-ads-mcp/ui.tsx"
+          "target": "components/remocn/templates/workflow-console/ui.tsx"
         },
         {
-          "path": "registry/remocn-templates/x-ads-mcp/index.tsx",
+          "path": "registry/remocn-templates/workflow-console/index.tsx",
           "type": "registry:component",
-          "target": "components/remocn/templates/x-ads-mcp/index.tsx"
+          "target": "components/remocn/templates/workflow-console/index.tsx"
         },
         {
-          "path": "registry/remocn-templates/x-ads-mcp/scenes/intro.tsx",
+          "path": "registry/remocn-templates/workflow-console/scenes/intro.tsx",
           "type": "registry:component",
-          "target": "components/remocn/templates/x-ads-mcp/scenes/intro.tsx"
+          "target": "components/remocn/templates/workflow-console/scenes/intro.tsx"
         },
         {
-          "path": "registry/remocn-templates/x-ads-mcp/scenes/commands.tsx",
+          "path": "registry/remocn-templates/workflow-console/scenes/commands.tsx",
           "type": "registry:component",
-          "target": "components/remocn/templates/x-ads-mcp/scenes/commands.tsx"
+          "target": "components/remocn/templates/workflow-console/scenes/commands.tsx"
         },
         {
-          "path": "registry/remocn-templates/x-ads-mcp/scenes/terminal.tsx",
+          "path": "registry/remocn-templates/workflow-console/scenes/terminal.tsx",
           "type": "registry:component",
-          "target": "components/remocn/templates/x-ads-mcp/scenes/terminal.tsx"
+          "target": "components/remocn/templates/workflow-console/scenes/terminal.tsx"
         },
         {
-          "path": "registry/remocn-templates/x-ads-mcp/scenes/geography.tsx",
+          "path": "registry/remocn-templates/workflow-console/scenes/geography.tsx",
           "type": "registry:component",
-          "target": "components/remocn/templates/x-ads-mcp/scenes/geography.tsx"
+          "target": "components/remocn/templates/workflow-console/scenes/geography.tsx"
         },
         {
-          "path": "registry/remocn-templates/x-ads-mcp/scenes/tools.tsx",
+          "path": "registry/remocn-templates/workflow-console/scenes/tools.tsx",
           "type": "registry:component",
-          "target": "components/remocn/templates/x-ads-mcp/scenes/tools.tsx"
+          "target": "components/remocn/templates/workflow-console/scenes/tools.tsx"
         },
         {
-          "path": "registry/remocn-templates/x-ads-mcp/scenes/responses.tsx",
+          "path": "registry/remocn-templates/workflow-console/scenes/responses.tsx",
           "type": "registry:component",
-          "target": "components/remocn/templates/x-ads-mcp/scenes/responses.tsx"
+          "target": "components/remocn/templates/workflow-console/scenes/responses.tsx"
         },
         {
-          "path": "registry/remocn-templates/x-ads-mcp/scenes/titles.tsx",
+          "path": "registry/remocn-templates/workflow-console/scenes/titles.tsx",
           "type": "registry:component",
-          "target": "components/remocn/templates/x-ads-mcp/scenes/titles.tsx"
+          "target": "components/remocn/templates/workflow-console/scenes/titles.tsx"
         },
         {
-          "path": "registry/remocn-templates/x-ads-mcp/scenes/chart.tsx",
+          "path": "registry/remocn-templates/workflow-console/scenes/chart.tsx",
           "type": "registry:component",
-          "target": "components/remocn/templates/x-ads-mcp/scenes/chart.tsx"
+          "target": "components/remocn/templates/workflow-console/scenes/chart.tsx"
         },
         {
-          "path": "registry/remocn-templates/x-ads-mcp/scenes/mark.tsx",
+          "path": "registry/remocn-templates/workflow-console/scenes/mark.tsx",
           "type": "registry:component",
-          "target": "components/remocn/templates/x-ads-mcp/scenes/mark.tsx"
+          "target": "components/remocn/templates/workflow-console/scenes/mark.tsx"
         }
       ],
       "type": "registry:component"
@@ -5031,91 +5031,11 @@
           "path": "registry/remocn-templates/launch-anything/scenes/closing.tsx",
           "type": "registry:component",
           "target": "components/remocn/templates/launch-anything/scenes/closing.tsx"
-        }
-      ],
-      "type": "registry:component"
-    },
-    {
-      "name": "introducing-product",
-      "title": "Introducing Product",
-      "description": "A complete 32-second product launch video with editable scenes, real component demos, and an original soundtrack.",
-      "dependencies": ["remotion", "@fontsource/manrope"],
-      "registryDependencies": ["@remocn/word-push", "@remocn/radial-burst"],
-      "files": [
-        {
-          "path": "registry/remocn-templates/introducing-product/content.ts",
-          "type": "registry:component",
-          "target": "components/remocn/templates/introducing-product/content.ts"
         },
         {
-          "path": "registry/remocn-templates/introducing-product/index.tsx",
+          "path": "registry/remocn-templates/launch-anything/scenes/action-frame.tsx",
           "type": "registry:component",
-          "target": "components/remocn/templates/introducing-product/index.tsx"
-        },
-        {
-          "path": "registry/remocn-templates/introducing-product/motion.ts",
-          "type": "registry:component",
-          "target": "components/remocn/templates/introducing-product/motion.ts"
-        },
-        {
-          "path": "registry/remocn-templates/introducing-product/previews.tsx",
-          "type": "registry:component",
-          "target": "components/remocn/templates/introducing-product/previews.tsx"
-        },
-        {
-          "path": "registry/remocn-templates/introducing-product/scenes/brand.tsx",
-          "type": "registry:component",
-          "target": "components/remocn/templates/introducing-product/scenes/brand.tsx"
-        },
-        {
-          "path": "registry/remocn-templates/introducing-product/scenes/compose.tsx",
-          "type": "registry:component",
-          "target": "components/remocn/templates/introducing-product/scenes/compose.tsx"
-        },
-        {
-          "path": "registry/remocn-templates/introducing-product/scenes/customize.tsx",
-          "type": "registry:component",
-          "target": "components/remocn/templates/introducing-product/scenes/customize.tsx"
-        },
-        {
-          "path": "registry/remocn-templates/introducing-product/scenes/gallery.tsx",
-          "type": "registry:component",
-          "target": "components/remocn/templates/introducing-product/scenes/gallery.tsx"
-        },
-        {
-          "path": "registry/remocn-templates/introducing-product/scenes/hook.tsx",
-          "type": "registry:component",
-          "target": "components/remocn/templates/introducing-product/scenes/hook.tsx"
-        },
-        {
-          "path": "registry/remocn-templates/introducing-product/scenes/install.tsx",
-          "type": "registry:component",
-          "target": "components/remocn/templates/introducing-product/scenes/install.tsx"
-        },
-        {
-          "path": "registry/remocn-templates/introducing-product/scenes/outro.tsx",
-          "type": "registry:component",
-          "target": "components/remocn/templates/introducing-product/scenes/outro.tsx"
-        },
-        {
-          "path": "registry/remocn-templates/introducing-product/scenes/ownership.tsx",
-          "type": "registry:component",
-          "target": "components/remocn/templates/introducing-product/scenes/ownership.tsx"
-        },
-        {
-          "path": "registry/remocn-templates/introducing-product/scenes/showcase.tsx",
-          "type": "registry:component",
-          "target": "components/remocn/templates/introducing-product/scenes/showcase.tsx"
-        },
-        {
-          "path": "registry/remocn-templates/introducing-product/shared.tsx",
-          "type": "registry:component",
-          "target": "components/remocn/templates/introducing-product/shared.tsx"
-        },
-        {
-          "path": "registry/remocn-templates/introducing-product/soundtrack.ts",
-          "type": "registry:component",
-          "target": "components/remocn/templates/introducing-product/soundtrack.ts"
+          "target": "components/remocn/templates/launch-anything/scenes/action-frame.tsx"
         }
       ],
       "type": "registry:component"
@@ -5175,90 +5095,6 @@
           "path": "registry/remocn-templates/fomo-limit-orders/ui.tsx",
           "type": "registry:component",
           "target": "components/remocn/templates/fomo-limit-orders/ui.tsx"
-        }
-      ],
-      "type": "registry:component"
-    },
-    {
-      "name": "studio-launch",
-      "title": "Studio Launch",
-      "description": "A cinematic 35.5-second studio launch with editable product interfaces, atmospheric landscapes, camera movement, and remocn branding.",
-      "dependencies": ["remotion", "@fontsource/manrope"],
-      "files": [
-        {
-          "path": "registry/remocn-templates/studio-launch/assets.ts",
-          "type": "registry:component",
-          "target": "components/remocn/templates/studio-launch/assets.ts"
-        },
-        {
-          "path": "registry/remocn-templates/studio-launch/brand.ts",
-          "type": "registry:component",
-          "target": "components/remocn/templates/studio-launch/brand.ts"
-        },
-        {
-          "path": "registry/remocn-templates/studio-launch/content.ts",
-          "type": "registry:component",
-          "target": "components/remocn/templates/studio-launch/content.ts"
-        },
-        {
-          "path": "registry/remocn-templates/studio-launch/index.tsx",
-          "type": "registry:component",
-          "target": "components/remocn/templates/studio-launch/index.tsx"
-        },
-        {
-          "path": "registry/remocn-templates/studio-launch/interfaces.tsx",
-          "type": "registry:component",
-          "target": "components/remocn/templates/studio-launch/interfaces.tsx"
-        },
-        {
-          "path": "registry/remocn-templates/studio-launch/motion.ts",
-          "type": "registry:component",
-          "target": "components/remocn/templates/studio-launch/motion.ts"
-        },
-        {
-          "path": "registry/remocn-templates/studio-launch/scenes/editor.tsx",
-          "type": "registry:component",
-          "target": "components/remocn/templates/studio-launch/scenes/editor.tsx"
-        },
-        {
-          "path": "registry/remocn-templates/studio-launch/scenes/feed.tsx",
-          "type": "registry:component",
-          "target": "components/remocn/templates/studio-launch/scenes/feed.tsx"
-        },
-        {
-          "path": "registry/remocn-templates/studio-launch/scenes/gate.tsx",
-          "type": "registry:component",
-          "target": "components/remocn/templates/studio-launch/scenes/gate.tsx"
-        },
-        {
-          "path": "registry/remocn-templates/studio-launch/scenes/host.tsx",
-          "type": "registry:component",
-          "target": "components/remocn/templates/studio-launch/scenes/host.tsx"
-        },
-        {
-          "path": "registry/remocn-templates/studio-launch/scenes/opening.tsx",
-          "type": "registry:component",
-          "target": "components/remocn/templates/studio-launch/scenes/opening.tsx"
-        },
-        {
-          "path": "registry/remocn-templates/studio-launch/scenes/outro.tsx",
-          "type": "registry:component",
-          "target": "components/remocn/templates/studio-launch/scenes/outro.tsx"
-        },
-        {
-          "path": "registry/remocn-templates/studio-launch/scenes/sell.tsx",
-          "type": "registry:component",
-          "target": "components/remocn/templates/studio-launch/scenes/sell.tsx"
-        },
-        {
-          "path": "registry/remocn-templates/studio-launch/scenes/workspace.tsx",
-          "type": "registry:component",
-          "target": "components/remocn/templates/studio-launch/scenes/workspace.tsx"
-        },
-        {
-          "path": "registry/remocn-templates/studio-launch/ui.tsx",
-          "type": "registry:component",
-          "target": "components/remocn/templates/studio-launch/ui.tsx"
         }
       ],
       "type": "registry:component"

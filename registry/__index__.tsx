@@ -32,14 +32,14 @@ const registry: Record<string, RegistryEntry> = {
         (m) => m.brandGuidelinesConfig,
       ),
   },
-  "x-ads-mcp": {
+  "workflow-console": {
     load: () =>
-      import("@/registry/remocn-templates/x-ads-mcp").then((m) => ({
+      import("@/registry/remocn-templates/workflow-console").then((m) => ({
         default: m.WorkflowConsole,
       })),
     loadConfig: () =>
-      import("@/registry/remocn-templates/x-ads-mcp").then(
-        (m) => m.xAdsMcpConfig,
+      import("@/registry/remocn-templates/workflow-console").then(
+        (m) => m.workflowConsoleConfig,
       ),
   },
   "launch-anything": {
@@ -52,16 +52,6 @@ const registry: Record<string, RegistryEntry> = {
         (m) => m.launchAnythingConfig,
       ),
   },
-  "studio-launch": {
-    load: () =>
-      import("@/registry/remocn-templates/studio-launch").then((m) => ({
-        default: m.StudioLaunch,
-      })),
-    loadConfig: () =>
-      import("@/registry/remocn-templates/studio-launch").then(
-        (m) => m.studioLaunchConfig,
-      ),
-  },
   "fomo-limit-orders": {
     load: () =>
       import("@/registry/remocn-templates/fomo-limit-orders").then((m) => ({
@@ -70,16 +60,6 @@ const registry: Record<string, RegistryEntry> = {
     loadConfig: () =>
       import("@/registry/remocn-templates/fomo-limit-orders").then(
         (m) => m.fomoLimitOrdersConfig,
-      ),
-  },
-  "introducing-product": {
-    load: () =>
-      import("@/registry/remocn-templates/introducing-product").then((m) => ({
-        default: m.IntroducingProduct,
-      })),
-    loadConfig: () =>
-      import("@/registry/remocn-templates/introducing-product").then(
-        (m) => m.introducingProductConfig,
       ),
   },
   "shader-spiral-pass": {

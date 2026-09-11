@@ -34,6 +34,24 @@ export const settle = Easing.bezier(0.16, 1, 0.3, 1);
 export const smooth = Easing.bezier(0.65, 0, 0.25, 1);
 export const ramp = (t: number, a: number, b: number) =>
   clamp((t - a) / (b - a));
+
+/** Shared geometry: the clicked button becomes the portal frame without a cut. */
+export function actionFrame(t: number) {
+  const enter = tween(t, 4.65, 5.05, 0, 1, smooth);
+  const center = tween(t, 5.47, 5.83, 0, 1, smooth);
+  const morph = tween(t, 5.83, 6.5, 0, 1, smooth);
+  return {
+    enter,
+    center,
+    morph,
+    x: (600 - 253 * enter) * (1 - center) + 240 * center,
+    y: 135,
+    width: 210 + 240 * morph,
+    height: 60 + 180 * morph,
+    radius: 13 + 43 * morph,
+    press: tween(t, 5.35, 5.47) - tween(t, 5.48, 5.65),
+  };
+}
 export function tween(
   t: number,
   a: number,

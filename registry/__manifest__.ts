@@ -2685,19 +2685,6 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       speed: 1,
     },
   },
-  "introducing-product": {
-    durationInFrames: 1920,
-    fps: 60,
-    compositionWidth: 1920,
-    compositionHeight: 1080,
-    defaults: {
-      productName: "remocn",
-      website: "remocn.dev",
-      accentColor: "#D4B3FF",
-      sound: true,
-      volume: 0.8,
-    },
-  },
   "kinetic-center-build": {
     durationInFrames: 60,
     fps: 30,
@@ -4287,16 +4274,6 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       speed: 1,
     },
   },
-  "studio-launch": {
-    durationInFrames: 1065,
-    fps: 30,
-    compositionWidth: 1920,
-    compositionHeight: 1080,
-    defaults: {
-      brandName: "remocn",
-      accentColor: "#81bfff",
-    },
-  },
   "sustained-glitch": {
     durationInFrames: 120,
     fps: 30,
@@ -4727,7 +4704,7 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       speed: 1,
     },
   },
-  "x-ads-mcp": {
+  "workflow-console": {
     durationInFrames: 2810,
     fps: 60,
     compositionWidth: 1920,

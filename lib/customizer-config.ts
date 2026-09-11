@@ -111,13 +111,7 @@ export const SHARED_CONTROLS: InteractivitySchema = {
 };
 
 /** Components that opt out of the shared `speed` control entirely. */
-const NO_SHARED_SPEED = new Set([
-  "backdrop",
-  "stage",
-  "introducing-product",
-  "fomo-limit-orders",
-  "studio-launch",
-]);
+const NO_SHARED_SPEED = new Set(["backdrop", "stage", "fomo-limit-orders"]);
 
 /**
  * Components whose animation rides a shared progress driver that must reach its

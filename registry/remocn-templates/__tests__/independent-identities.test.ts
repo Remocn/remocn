@@ -5,12 +5,12 @@ import { fomoContent, fomoTheme } from "../fomo-limit-orders/content";
 import { launchMedia } from "../launch-anything/assets";
 import { launchContent, resolveLaunchProps } from "../launch-anything/content";
 import {
-  resolveXAdsProps,
+  resolveWorkflowProps,
   terminalContent,
+  workflowContent,
   workflowEnvironments,
   workflowTools,
-  xAdsContent,
-} from "../x-ads-mcp/content";
+} from "../workflow-console/content";
 
 const root = path.resolve(import.meta.dir, "../../..");
 
@@ -18,19 +18,22 @@ test("each default identity has independent copy and its own palette", () => {
   expect(fomoContent.assetName).toBe("Demo Market");
   expect(fomoContent.ticker).toBe("DEMO");
   expect(fomoTheme.accent).toBe("#e8b45a");
-  expect(resolveXAdsProps({}).accent).toBe("#8ed8f8");
-  expect(resolveXAdsProps({}).background).toBe("#0e1b2b");
-  expect(xAdsContent.product).toBe("Workflow Console");
+  expect(resolveWorkflowProps({}).accent).toBe("#8ed8f8");
+  expect(resolveWorkflowProps({}).background).toBe("#0e1b2b");
+  expect(workflowContent.product).toBe("Workflow Console");
   expect(resolveLaunchProps({}).accent).toBe("#245744");
   expect(resolveLaunchProps({}).brandUrl).toBe("yourproduct.example");
   expect(launchContent.integrations).toEqual(["Files", "Messages", "Calendar"]);
   const defaults = JSON.stringify([
     fomoContent,
     launchContent,
-    xAdsContent,
+    workflowContent,
     workflowTools,
     ...["campaign", "launched", "stats"].map((run) =>
-      terminalContent(run as "campaign" | "launched" | "stats", xAdsContent),
+      terminalContent(
+        run as "campaign" | "launched" | "stats",
+        workflowContent,
+      ),
     ),
   ]);
   expect(defaults).not.toMatch(
@@ -39,12 +42,14 @@ test("each default identity has independent copy and its own palette", () => {
 });
 
 test("environment defaults and legacy country overrides both work", () => {
-  const scene = resolveXAdsProps({ environments: [], tools: [] });
+  const scene = resolveWorkflowProps({ environments: [], tools: [] });
   expect(scene.useCountries).toBe(false);
   expect(scene.environments).toEqual(workflowEnvironments);
   expect(scene.tools).toEqual(workflowTools);
-  expect(resolveXAdsProps({ countries: ["Japan"] }).useCountries).toBe(true);
-  const custom = resolveXAdsProps({
+  expect(resolveWorkflowProps({ countries: ["Japan"] }).useCountries).toBe(
+    true,
+  );
+  const custom = resolveWorkflowProps({
     countries: ["Japan"],
     environments: [{ label: "Review", topology: "parallel" }],
     tools: ["Read checklist"],
@@ -79,7 +84,12 @@ test("catalog titles and preferred exports change without breaking registry IDs"
   );
   for (const [id, title, preferred, legacy] of [
     ["fomo-limit-orders", "Order Flow", "OrderFlow", "FomoLimitOrders"],
-    ["x-ads-mcp", "Workflow Console", "WorkflowConsole", "XAdsMcp"],
+    [
+      "workflow-console",
+      "Workflow Console",
+      "WorkflowConsole",
+      "WorkflowConsole",
+    ],
     [
       "launch-anything",
       "Product Showcase",
@@ -94,7 +104,8 @@ test("catalog titles and preferred exports change without breaking registry IDs"
       path.join(root, "registry/remocn-templates", id, "index.tsx"),
       "utf8",
     );
-    expect(source).toContain(`export const ${preferred} = ${legacy}`);
+    if (preferred !== legacy)
+      expect(source).toContain(`export const ${preferred} = ${legacy}`);
     expect(source).toContain(`componentName: "${preferred}"`);
     expect(source).toContain(`export function ${legacy}`);
   }

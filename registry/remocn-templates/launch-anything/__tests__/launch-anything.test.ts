@@ -3,12 +3,47 @@ import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { launchContent, resolveLaunchProps } from "../content";
 import {
+  actionFrame,
   deskCamera,
   getShowcase,
   LAUNCH_FRAMES,
   launchTimeline,
   showcaseTimeline,
 } from "../motion";
+
+test("action button centers before expanding into the portal frame", () => {
+  const button = actionFrame(5.1);
+  expect(button.x - button.width / 2).toBeGreaterThan(0);
+  expect(button.x + button.width / 2).toBeLessThan(480);
+  expect(actionFrame(5.47).x).toBe(347);
+  expect(actionFrame(5.83).x).toBe(240);
+  expect(actionFrame(5.83).width).toBe(210);
+  expect(actionFrame(6.5)).toMatchObject({
+    x: 240,
+    y: 135,
+    width: 450,
+    height: 240,
+    radius: 56,
+  });
+  let previousX = 347;
+  let previousWidth = 210;
+  for (let frame = 329; frame <= 390; frame++) {
+    const shape = actionFrame(frame / 60);
+    expect(shape.x).toBeLessThanOrEqual(previousX);
+    expect(shape.width).toBeGreaterThanOrEqual(previousWidth);
+    previousX = shape.x;
+    previousWidth = shape.width;
+  }
+  const boundary = 354 / 60;
+  for (const key of ["x", "y", "width", "height", "radius"] as const) {
+    expect(
+      Math.abs(
+        actionFrame(boundary - 1e-6)[key] - actionFrame(boundary + 1e-6)[key],
+      ),
+    ).toBeLessThan(0.01);
+  }
+  expect(actionFrame(5.6)).toEqual(actionFrame(5.6));
+});
 
 test("scene and display timelines cover every frame exactly once", () => {
   for (const [timeline, from, to] of [

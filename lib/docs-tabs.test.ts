@@ -48,8 +48,8 @@ const tree: Root = {
       children: [
         {
           type: "page",
-          name: "Introducing Product",
-          url: "/docs/templates/introducing-product",
+          name: "Product Showcase",
+          url: "/docs/templates/launch-anything",
         },
       ],
     },
@@ -105,7 +105,7 @@ describe("splitDocsTree", () => {
       ),
     ).toBe(false);
     expect(collectUrls(templates.children)).toEqual([
-      "/docs/templates/introducing-product",
+      "/docs/templates/launch-anything",
     ]);
   });
 
@@ -146,7 +146,7 @@ describe("getActiveDocsTab", () => {
 
   it("selects the templates tab for template paths", () => {
     expect(getActiveDocsTab("/docs/templates")).toBe("templates");
-    expect(getActiveDocsTab("/docs/templates/introducing-product")).toBe(
+    expect(getActiveDocsTab("/docs/templates/launch-anything")).toBe(
       "templates",
     );
   });

@@ -19,7 +19,7 @@ const serveUrl = await bundle({
   }),
 });
 const browser = await openBrowser("chrome", {
-  chromiumOptions: { gl: "swangle" },
+  chromiumOptions: { gl: "angle" },
 });
 try {
   const composition = await selectComposition({

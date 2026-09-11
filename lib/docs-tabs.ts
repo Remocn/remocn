@@ -40,7 +40,7 @@ export const DOCS_TABS: DocsTab[] = [
   {
     id: "templates",
     label: "Templates",
-    href: "/docs/templates/introducing-product",
+    href: "/docs/templates/launch-anything",
   },
   {
     id: "icons",

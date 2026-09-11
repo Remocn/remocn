@@ -12,9 +12,9 @@
     "studio:independent-templates": "remotion studio src/remotion/independent-templates-root.tsx",
     "review:independent-templates": "bun scripts/review-independent-templates.mts",
     "render:independent-templates": "bun scripts/review-independent-templates.mts --render",
-    "studio:x-ads-mcp": "remotion studio src/remotion/x-ads-mcp-root.tsx",
-    "review:x-ads-mcp": "bun scripts/review-x-ads-mcp.mts",
-    "render:x-ads-mcp": "bun scripts/render-x-ads-mcp.mts",
+    "studio:workflow-console": "remotion studio src/remotion/workflow-console-root.tsx",
+    "review:workflow-console": "bun scripts/review-workflow-console.mts",
+    "render:workflow-console": "bun scripts/render-workflow-console.mts",
     "studio:launch-anything": "remotion studio src/remotion/launch-anything-root.tsx",
     "render:launch-anything": "bun scripts/render-launch-anything.mts",
     "review:launch-anything": "bun scripts/review-launch-anything.mts",
@@ -39,14 +39,9 @@
     "spike:canvas": "bun scripts/canvas-determinism.mts",
     "render:not-found": "bun scripts/render-not-found.mts",
     "postinstall": "fumadocs-mdx",
-    "studio:introducing": "remotion studio src/remotion/introducing-root.tsx",
-    "render:introducing": "remotion render src/remotion/introducing-root.tsx IntroducingRemocn out/introducing-remocn.mp4 --codec=h264 --crf=16",
     "studio:fomo": "remotion studio src/remotion/fomo-root.tsx",
     "render:fomo": "bun scripts/render-fomo.mts",
-    "review:fomo": "bun scripts/review-fomo.mts",
-    "studio:launch": "remotion studio src/remotion/studio-launch-root.tsx",
-    "render:launch": "bun scripts/render-studio-launch.mts",
-    "review:launch": "bun scripts/review-studio-launch.mts"
+    "review:fomo": "bun scripts/review-fomo.mts"
   },
   "dependencies": {
     "@base-ui/react": "^1.3.0",
