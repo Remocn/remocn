@@ -1,24 +1,97 @@
 ---
 title: Introduction
-description: What remocn is and who it's for
+description: What remocn is — a shadcn-style component registry for Remotion plus an agent skill. Copy-paste video components, MIT, code lives in your repo.
 ---
 
-remocn is built for solo builders and small teams who need to ship product demo videos without rebuilding the same animation primitives every time. If you've used [shadcn/ui](https://ui.shadcn.com), you'll feel at home: the workflow is identical, just for video instead of UI.
+remocn is shadcn for Remotion. It is a registry of copy-paste video components (text animations, transitions, backgrounds, UI blocks, icons) that you add to a [Remotion](https://www.remotion.dev) project with the shadcn CLI, plus an [agent skill](/docs/getting-started/agent-skill) that teaches AI coding agents how to compose a video from them. Everything is MIT, and the code lands in your repo, not in `node_modules`.
 
-## Why remocn
+If you searched for "remotion shadcn" or "shadcn remotion", this is the thing you were looking for.
 
-- **Production-ready Remotion code:** every component uses `useCurrentFrame()`, `interpolate()`, and `spring()` correctly. No `Math.random()` traps that break rendering.
-- **Own your code:** components are copied into your project, not installed as a dependency. Tweak them however you like.
-- **Live previews:** each component page mounts a real `@remotion/player` you can scrub frame-by-frame.
+```bash
+npx shadcn@latest add @remocn/soft-blur-in
+```
 
-## Prerequisites
+## If you know shadcn/ui
 
-You should already have a Remotion project set up. If you don't:
+The workflow is the one you already use. There is a `components.json`, there is `npx shadcn add`, and each component is a `.tsx` file copied into `components/remocn/` that you own and edit. remocn is a namespaced registry, so components are addressed as `@remocn/<name>`.
+
+What changes is the runtime. A shadcn button responds to a click. A remocn component is a pure function of `useCurrentFrame()`: it renders the same pixels for the same frame every time, which is what Remotion's headless renderer needs. There is no `useState`, no event handler, no CSS transition. Timing is expressed in frames, and every component page tells you how many frames its motion takes so you can budget a `Sequence`.
+
+remocn ships two tiers of components:
+
+- **Animation tier** (`remocn`): text reveals, scene transitions, shader and canvas backgrounds, UI-block simulations, icons that draw themselves in.
+- **UI tier** (`remocn-ui`): familiar shadcn primitives (Button, Input, Checkbox, Select, Dialog) rebuilt so their states are [scripted on the timeline](/docs/ui) instead of driven by the user.
+
+## If you know Remotion
+
+`npx create-video` gives you a blank canvas and the right APIs. remocn gives you the parts that every product video needs and that you would otherwise rebuild each time: a blur-in for the headline, a push transition between scenes, a background that moves, a terminal that types. Each one already uses `interpolate()` and `spring()` correctly and avoids the traps that break deterministic rendering, such as `Math.random()` inside a frame.
+
+The agent skill is the other half. It reads the [component index](/docs/components) live from this site, picks components by their use and avoid signals, budgets the timeline, and composes scenes in a consistent style. If you build videos with Claude Code, Cursor or a similar agent, the skill is the difference between "generate a Remotion video" and a video that looks shipped.
+
+## What remocn is not
+
+- **Not After Effects or a video editor.** There is no timeline UI to drag things around in. You write or prompt code, and Remotion Studio previews the result.
+- **Not a hosted service.** Nothing runs on remocn servers. No account, no runtime, no usage limits. Rendering happens on your machine or wherever you run Remotion.
+- **Not a fork of Remotion.** Remotion is a prerequisite, and remocn is a set of components written against its public API. Remotion keeps [its own license](https://www.remotion.dev/docs/license); remocn's own code is MIT.
+- **Not only AI chat components.** The [AI section](/docs/ai) recreates chat composers and CLI screens because product demos need them often, but it is one category among text, transitions, backgrounds, layout, UI blocks and templates.
+
+remocn is an independent project. It is not affiliated with shadcn or with Remotion; it builds on the shadcn CLI and the Remotion library.
+
+## Quick start
+
+You need a Remotion project. If you do not have one:
 
 ```bash
 npx create-video@latest
 ```
 
+Then initialize shadcn (if the project has no `components.json`) and add a component:
+
+```bash
+npx shadcn@latest init
+npx shadcn@latest add @remocn/soft-blur-in
+```
+
+If you work through an AI agent, install the skill too:
+
+```bash
+npx skills add Remocn/remocn --skill remocn --yes
+```
+
+The [Installation](/docs/getting-started/installation) page covers the full flow, including the one-shot command that installs every component and the Add to Studio button for a running Remotion Studio.
+
+## remocn vs raw Remotion
+
+| | Raw Remotion | Remotion + remocn |
+|---|---|---|
+| Starting point | Empty composition | Composition plus a catalog of ready components |
+| Animation code | Written per project | Copied in, then edited like any file you own |
+| Timing | Decided per element | Each component states its natural length in frames |
+| AI agents | Generic Remotion knowledge | Skill with catalog access, timing rules and scene recipes |
+| Dependency | Remotion | Remotion, same as before. remocn adds no runtime |
+
+Nothing here replaces Remotion. If you already have a component library of your own, remocn is a set of files to borrow from; if you are starting from a blank `create-video`, it is the fastest way to a first scene.
+
+## FAQ
+
+**Do I need to know how to code?**
+Not necessarily, if you work through an AI coding agent. The [guides](/docs/guides) walk through building a video with prompts. Without an agent, you need to be comfortable with React and TypeScript.
+
+**Do I need After Effects or a video editor?**
+No. Everything happens in your editor and a browser preview.
+
+**Is it free?**
+remocn is MIT licensed. Components copy onto your machine and stay yours.
+
+**Does it work with any AI agent?**
+The skill installs through [skills.sh](https://skills.sh) into agents that load skills, Claude Code among them. The components themselves are plain Remotion code and work with any agent or no agent at all.
+
+**Is this the official shadcn registry for Remotion?**
+No. It is a community registry that uses the shadcn CLI and registry format. shadcn and Remotion are separate projects with their own maintainers.
+
 ## What's next
 
 - [Installation](/docs/getting-started/installation): add remocn to an existing Remotion project
+- [Agent Skill](/docs/getting-started/agent-skill): teach your AI agent to compose videos with remocn
+- [Components](/docs/components): every component, grouped by category
+- [Homepage](/): see the kind of video remocn is built for
