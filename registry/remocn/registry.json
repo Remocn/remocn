@@ -2305,6 +2305,146 @@
           "target": "components/remocn/shader-spiral-pass.tsx"
         }
       ]
+    },
+    {
+      "name": "truchet-flip",
+      "type": "registry:component",
+      "title": "Truchet Flip",
+      "description": "Quarter-circle Truchet tiles snap a quarter turn as a wave crosses the grid, rerouting continuous lines until they settle into concentric loops, a calm field, or a circle of small rings.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "truchet-flip/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/truchet-flip.tsx"
+        }
+      ]
+    },
+    {
+      "name": "mondrian-split",
+      "type": "registry:component",
+      "title": "Mondrian Split",
+      "description": "Black lines cut the frame into a seeded De Stijl grid, primaries wipe into its cells, the grid reflows like rubber, and one cell pushes its own lines out past the edges to become a clean color field or the next scene.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "mondrian-split/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/mondrian-split.tsx"
+        }
+      ]
+    },
+    {
+      "name": "swiss-grid",
+      "type": "registry:component",
+      "title": "Swiss Grid",
+      "description": "A Swiss title card that sets a kicker, a headline of up to three lines, a big numeral and a meta line on a strict modular grid, with rules that snap from their pinned edges to the width of their text and words that land one at a time on grid baselines.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "swiss-grid/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/swiss-grid.tsx"
+        }
+      ]
+    },
+    {
+      "name": "bauhaus-build",
+      "type": "registry:component",
+      "title": "Bauhaus Build",
+      "description": "Flat Bauhaus circles, arcs, squares and bars tumble corner over corner on a hidden grid into an asymmetric frieze, then rebuild into two friezes around an open band for the title.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "bauhaus-build/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/bauhaus-build.tsx"
+        }
+      ]
+    },
+    {
+      "name": "squiggle",
+      "type": "registry:component",
+      "title": "Squiggle",
+      "description": "A flat line draws itself along a straight course as a traveling wave whose crests swim forward and calm down as the head runs out, in wave, zigzag, loop or coil shapes, then erases toward its end point.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "squiggle/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/squiggle.tsx"
+        }
+      ]
+    },
+    {
+      "name": "speed-lines",
+      "type": "registry:component",
+      "title": "Speed Lines",
+      "description": "Parallel streaks trail an element as it flies in at its real speed, the element stretching with that speed and landing with a squash and a small bounce as the streaks die, or radial lines rush in from the frame edges and snap onto one point for a manga-style impact frame.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "speed-lines/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/speed-lines.tsx"
+        }
+      ]
+    },
+    {
+      "name": "trim-burst",
+      "type": "registry:component",
+      "title": "Trim Burst",
+      "description": "A ring of short straight strokes shoots out from a point like Trim Paths: each end races ahead on a hard-braking ease-out while its start holds, then chases it on a smoother ease-in-out, so every stroke grows, travels and zips shut at its outer distance.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "trim-burst/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/trim-burst.tsx"
+        }
+      ]
+    },
+    {
+      "name": "keystroke",
+      "type": "registry:component",
+      "title": "Keystroke",
+      "description": "Physical keycaps rise in for each shortcut, press in real order with the modifiers held while the letter taps, spring back with a small capped overshoot, and leave after an idle hold, firing on the same frames as the remocn-ui steps they trigger.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "keystroke/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/keystroke.tsx"
+        }
+      ]
+    },
+    {
+      "name": "code-morph",
+      "type": "registry:component",
+      "title": "Code Morph",
+      "description": "A flat code editor that morphs between versions of a file, gliding each surviving token to its new line and column while removed code dissolves and new code fades in.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "code-morph/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/code-morph.tsx"
+        }
+      ]
+    },
+    {
+      "name": "agent-run",
+      "type": "registry:component",
+      "title": "Agent Run",
+      "description": "Animated brand-neutral AI agent run — a Thinking status and short plan, tool calls whose spinners close into checks while a timer counts real seconds, then a markdown answer with citations and a code block that streams in irregular token bursts. Light/dark themes.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "agent-run/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/agent-run.tsx"
+        }
+      ]
     }
   ]
 }

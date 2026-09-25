@@ -64,6 +64,16 @@ export const NAV_LINKS: NavLink[] = [
  * tag another menu item — no component changes needed. See `withNewBadges`.
  */
 export const NEW_BADGE_PATHS = new Set<string>([
+  "/docs/effects/keystroke",
+  "/docs/ui-blocks/code-morph",
+  "/docs/ai/agent-run",
+  "/docs/motion-graphics/bauhaus-build",
+  "/docs/motion-graphics/swiss-grid",
+  "/docs/motion-graphics/mondrian-split",
+  "/docs/motion-graphics/truchet-flip",
+  "/docs/motion-graphics/trim-burst",
+  "/docs/motion-graphics/speed-lines",
+  "/docs/motion-graphics/squiggle",
   "/docs/typography/inline-word-roll",
   "/docs/typography/shader-text-reveal",
   "/docs/transitions/shader-seam",

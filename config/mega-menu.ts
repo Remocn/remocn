@@ -33,6 +33,11 @@ const COMPONENT_CATEGORIES: MegaMenuItem[] = [
   },
   { label: "Effects", href: "/docs/effects", preview: "tv-power-off" },
   {
+    label: "Motion Graphics",
+    href: "/docs/motion-graphics",
+    preview: "bauhaus-build",
+  },
+  {
     label: "Filters",
     href: "/docs/filters/getting-started/introduction",
     preview: "camera-lens",

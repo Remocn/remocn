@@ -690,6 +690,16 @@ const registry: Record<string, RegistryEntry> = {
         (m) => m.glassCodeWalkConfig,
       ),
   },
+  "code-morph": {
+    load: () =>
+      import("@/registry/remocn/code-morph").then((m) => ({
+        default: m.CodeMorph,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/code-morph/config").then(
+        (m) => m.codeMorphConfig,
+      ),
+  },
   "shader-mesh-gradient": {
     load: () =>
       import("@/registry/remocn/shader-mesh-gradient").then((m) => ({
@@ -878,6 +888,16 @@ const registry: Record<string, RegistryEntry> = {
     loadConfig: () =>
       import("@/registry/remocn/simulated-cursor/config").then(
         (m) => m.simulatedCursorConfig,
+      ),
+  },
+  keystroke: {
+    load: () =>
+      import("@/registry/remocn/keystroke").then((m) => ({
+        default: m.Keystroke,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/keystroke/config").then(
+        (m) => m.keystrokeConfig,
       ),
   },
   "swirl-dissolve": {
@@ -2376,6 +2396,76 @@ const registry: Record<string, RegistryEntry> = {
         (m) => m.radialBurstConfig,
       ),
   },
+  "bauhaus-build": {
+    load: () =>
+      import("@/registry/remocn/bauhaus-build").then((m) => ({
+        default: m.BauhausBuild,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/bauhaus-build/config").then(
+        (m) => m.bauhausBuildConfig,
+      ),
+  },
+  "swiss-grid": {
+    load: () =>
+      import("@/registry/remocn/swiss-grid").then((m) => ({
+        default: m.SwissGrid,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/swiss-grid/config").then(
+        (m) => m.swissGridConfig,
+      ),
+  },
+  "mondrian-split": {
+    load: () =>
+      import("@/registry/remocn/mondrian-split").then((m) => ({
+        default: m.MondrianSplit,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/mondrian-split/config").then(
+        (m) => m.mondrianSplitConfig,
+      ),
+  },
+  "truchet-flip": {
+    load: () =>
+      import("@/registry/remocn/truchet-flip").then((m) => ({
+        default: m.TruchetFlip,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/truchet-flip/config").then(
+        (m) => m.truchetFlipConfig,
+      ),
+  },
+  "trim-burst": {
+    load: () =>
+      import("@/registry/remocn/trim-burst").then((m) => ({
+        default: m.TrimBurst,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/trim-burst/config").then(
+        (m) => m.trimBurstConfig,
+      ),
+  },
+  "speed-lines": {
+    load: () =>
+      import("@/registry/remocn/speed-lines").then((m) => ({
+        default: m.SpeedLines,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/speed-lines/config").then(
+        (m) => m.speedLinesConfig,
+      ),
+  },
+  squiggle: {
+    load: () =>
+      import("@/registry/remocn/squiggle").then((m) => ({
+        default: m.Squiggle,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/squiggle/config").then(
+        (m) => m.squiggleConfig,
+      ),
+  },
   confetti: {
     load: () =>
       import("@/registry/remocn/confetti").then((m) => ({
@@ -2528,6 +2618,16 @@ const registry: Record<string, RegistryEntry> = {
       })),
     loadConfig: () =>
       import("@/registry/remocn/opencode/config").then((m) => m.opencodeConfig),
+  },
+  "agent-run": {
+    load: () =>
+      import("@/registry/remocn/agent-run").then((m) => ({
+        default: m.AgentRun,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/agent-run/config").then(
+        (m) => m.agentRunConfig,
+      ),
   },
   button: {
     load: () =>

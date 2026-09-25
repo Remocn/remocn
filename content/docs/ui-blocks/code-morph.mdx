@@ -1,0 +1,190 @@
+---
+title: Code Morph
+description: A code panel morphs between versions of a file, with surviving tokens gliding to their new line and column while removed code dissolves and new code fades in
+component: code-morph
+vibe: tech
+length: 114
+useWhen:
+  - "A launch or product demo needs to show an API getting simpler, with the before and after code in one panel and the surviving tokens visibly traveling to their new places."
+  - "A refactor, a new SDK call, or a config change should read as one continuous edit instead of a hard cut between two screenshots."
+  - "A walkthrough builds one file up in two to four steps, with each change landing on a highlighted line."
+avoidWhen:
+  - "The code should simply appear line by line, with no before and after — use `glass-code-block`."
+  - "The code should be typed out character by character — use `terminal-simulator` or `typewriter`."
+  - "The camera should scan a long file while it reveals — use `glass-code-walk`."
+---
+
+<ComponentPreview name="code-morph" />
+
+<InstallBlock name="code-morph" />
+
+## Usage
+
+`CodeMorph` works like Keynote's Magic Move for code. A flat editor panel
+shows one version of a file, then morphs into the next. A token-level diff
+pairs every token that survives the edit. Each survivor is one element that
+glides from its old line and column to its new ones, so the eye can follow it.
+In the default content, `"/api/invoices"` lifts out of `fetch(...)` and lands
+inside `useSWR(...)`. Removed code blurs out first, the survivors travel, and
+new tokens fade in line by line. The panel is sized once to fit every version
+and never moves, so code that did not change stays exactly where it was. The
+changed lines hold a short accent highlight.
+
+```tsx
+import { Backdrop } from "@/components/remocn/backdrop";
+import { CodeMorph } from "@/components/remocn/code-morph";
+
+export const ApiSimplification = () => (
+  <Backdrop
+    fill={{ type: "color", value: "#f1eee7" }}
+    padding={0}
+    radius={0}
+    shadow=""
+  >
+    <CodeMorph />
+  </Backdrop>
+);
+```
+
+The component paints only the panel, so it composites over any scene. The
+backdrop supplies the color. Sizes are reference pixels at 1280×720 and scale
+with the composition, and a panel that would not fit shrinks as a whole.
+Token positions come from the monospace grid, not from DOM measurement.
+Everything derives from the Remotion frame, so seeking and rendering are
+deterministic.
+
+### Your own code
+
+Pass the versions as `steps`. Each `at` is the frame, at 30 fps, where the
+morph into that version starts. The first version shows from frame 0.
+Indentation shared by every line is removed, so template literals can stay
+indented. The panel takes its height from the tallest version and its width
+from the longest line, so a shorter version leaves empty editor space below
+it. Keep each version to about 16 lines at the default size. Longer files
+shrink the whole panel.
+
+```tsx
+import { Composition } from "remotion";
+import { Backdrop } from "@/components/remocn/backdrop";
+import {
+  CodeMorph,
+  type CodeMorphStep,
+  getCodeMorphDuration,
+} from "@/components/remocn/code-morph";
+
+const steps: CodeMorphStep[] = [
+  {
+    at: 0,
+    code: `
+      import { defineConfig } from "vite";
+      import react from "@vitejs/plugin-react";
+
+      export default defineConfig({
+        plugins: [react()],
+      });
+    `,
+  },
+  {
+    at: 45,
+    code: `
+      import { defineConfig } from "vite";
+      import react from "@vitejs/plugin-react";
+      import tailwindcss from "@tailwindcss/vite";
+
+      export default defineConfig({
+        plugins: [react(), tailwindcss()],
+      });
+    `,
+  },
+  {
+    at: 110,
+    code: `
+      import { defineConfig } from "vite";
+      import react from "@vitejs/plugin-react";
+      import tailwindcss from "@tailwindcss/vite";
+
+      export default defineConfig({
+        plugins: [react(), tailwindcss()],
+        server: { port: 3000 },
+      });
+    `,
+  },
+];
+
+const ViteSetup = () => (
+  <Backdrop
+    fill={{ type: "color", value: "#0a0a0a" }}
+    padding={0}
+    radius={0}
+    shadow=""
+  >
+    <CodeMorph
+      steps={steps}
+      filename="vite.config.ts"
+      theme="light"
+      accentColor="#22c55e"
+    />
+  </Backdrop>
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="ViteSetup"
+    component={ViteSetup}
+    durationInFrames={getCodeMorphDuration({ steps })}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Identical tokens are matched in reading order, words first. Punctuation
+survives only when it stays with the words on its line. Closing brackets
+follow their opening bracket, and a line that only moved travels as one block.
+Everything else fades out or in.
+
+## Timing
+
+At 30 fps, `speed={1}` and the default content:
+
+| Frames | Motion |
+| --- | --- |
+| 0–48 | The 16-line version holds |
+| 48–64 | Removed tokens fade, blur and shrink slightly, top line first |
+| 54–80 | Surviving tokens glide to their new line and column; each destination line starts one frame after the line above |
+| 58–78 | Line numbers 9–16 fade out behind the last line to move; the panel keeps its size |
+| 68–84 | New tokens fade in line by line |
+| 68–100 | Lines 1, 4, 6 and 7 rise to an accent highlight and hold it |
+| 100–114 | The highlight fades |
+| 114–138 | The new version holds |
+
+A morph lasts `morphDuration` frames, 36 by default, and its phases scale with
+it. In a 36-frame morph, removed tokens leave over frames 0–16, survivors glide
+over 6–32, and new tokens arrive over 20–36. Nothing overshoots: the code lands
+exactly on the grid. The highlight keeps its own timing: 8 frames up, 24 held
+and 14 down. If a step's `at` comes before the previous morph has finished, it
+waits for that morph, so two morphs never overlap.
+
+`codeMorphLength` is 114, the frame where the default highlight fades out.
+`getCodeMorphTimeline({ steps, morphDuration, highlight })` returns every
+morph's `start`, `end` and highlight frames, plus `settled`.
+`getCodeMorphDuration({ steps, morphDuration, highlight, speed })` returns the
+composition length with a 24-frame hold, 138 by default. For another frame
+rate, multiply by `fps / 30` and round up.
+
+<PropsTable title="Props"
+  rows={[
+    { name: "steps", type: "{ at: number; code: string }[]", default: "Invoices before and after", description: "Versions of the file in order. at is the 30 fps frame where the morph into that version starts; the first version shows from frame 0" },
+    { name: "morphDuration", type: "number", default: "36", description: "Frames from the first removed token leaving to the last new token settling, clamped to 12–120; the phases scale with it" },
+    { name: "highlight", type: "boolean", default: "true", description: "Hold an accent band on the lines each morph changed" },
+    { name: "fontSize", type: "number", default: "20", description: "Code size in reference px at 720p, clamped to 10–40; the panel shrinks as a whole if it would not fit" },
+    { name: "lineNumbers", type: "boolean", default: "true", description: "Show right-aligned line numbers in a gutter" },
+    { name: "filename", type: "string", default: '"invoices.tsx"', description: "Label of the file tab; an empty string hides the tab" },
+    { name: "windowDots", type: "boolean", default: "true", description: "Show three neutral window dots in the header" },
+    { name: "theme", type: '"dark" | "light"', default: '"dark"', description: "Panel and syntax palette" },
+    { name: "accentColor", type: "string", default: '"#0ea5e9"', description: "Strings, numbers and the changed-line highlight" },
+    { name: "speed", type: "number", default: "1", description: "Playback multiplier; 0 freezes the first version" },
+    { name: "className", type: "string", description: "Optional class name on the full-frame root" },
+  ]}
+/>

@@ -1,0 +1,128 @@
+---
+title: Truchet Flip
+description: Quarter-circle tiles snap a quarter turn as a wave crosses the grid, reconnecting the lines until they settle into rings, a calm field, or a circle
+component: truchet-flip
+vibe: clean
+length: 102
+useWhen:
+  - "A scene needs a flat geometric pattern bed that moves by one rule, each tile turning a quarter as a wave passes and the lines reconnecting across the frame."
+  - "An intro, section break, or title card should settle into a centered structure such as concentric rings or a circle made of small rings."
+  - "A seamless background loop is needed in any brand color, with no shaders, images, or fonts."
+avoidWhen:
+  - "The moment calls for a one-shot abstract burst that clears the frame for a title — use `radial-burst`."
+  - "The background should feel soft and organic rather than drawn with lines — use `shader-mesh-gradient`."
+  - "The pattern should carry the cut into the next scene rather than sit behind it — use `grid-wave`."
+---
+
+<ComponentPreview name="truchet-flip" />
+
+<InstallBlock name="truchet-flip" />
+
+## Usage
+
+`TruchetFlip` fills the frame with Truchet tiles. Each tile holds two
+quarter-circle arcs on opposite corners, and every arc ends on an edge
+midpoint, so neighboring tiles join into continuous lines. A wave crosses the
+grid, and each tile it reaches snaps a quarter turn with a small overshoot.
+The lines reconnect behind the wave, and mazes form and dissolve. Two passes
+run through the seeded maze. A final pass then turns only the tiles that
+differ from the target, and the pattern settles into a circle at the center,
+ringed by concentric wavy loops.
+
+```tsx
+import { Backdrop } from "@/components/remocn/backdrop";
+import { TruchetFlip } from "@/components/remocn/truchet-flip";
+
+export const PatternBed = () => (
+  <Backdrop
+    fill={{ type: "color", value: "#002fa7" }}
+    padding={0}
+    radius={0}
+    shadow=""
+  >
+    <TruchetFlip />
+  </Backdrop>
+);
+```
+
+The component paints no background, so it composites over any scene; the
+backdrop supplies the color. Tile size fits the shorter side of the
+composition, and a tile corner sits exactly on the frame center, so the rings
+stay centered at 16:9, 1:1 and 9:16. Everything is flat SVG geometry derived
+from the Remotion frame and the seed, so seeking and rendering are
+deterministic.
+
+## Timing
+
+At 30 fps, `speed={1}` and the default two passes:
+
+| Frames | Motion |
+| --- | --- |
+| 0–6 | The seeded maze holds still |
+| 6–48 | First pass turns every tile a quarter, clockwise, outward from the center |
+| 30–72 | Second pass follows and turns every tile back |
+| 60–102 | Resolve pass turns only the tiles that differ from the target |
+| 102–120 | The resolved pattern holds |
+
+Each turn takes 12 frames. The tile reaches its new angle on frame 4,
+overshoots by about 6°, and lands exactly on the quarter by frame 12. The wave
+needs 30 frames to cross the grid, so neighboring tiles start a few frames
+apart and several are always mid-turn. A title placed over the animation can
+enter around frame 96, as the last tiles settle.
+
+`truchetFlipLength` is 102, the frame where the last tile settles with the
+default two passes. `getTruchetFlipTimeline({ passes }).settled` gives that
+frame for any pass count. `getTruchetFlipDuration({ speed, passes, loop })`
+returns the preview duration at 30 fps, hold included. Each pass beyond the
+first adds 24 frames. With `passes={0}` the maze resolves directly: the last
+tile settles on frame 48 and the preview runs 66 frames. For another frame
+rate, multiply by `fps / 30` and round up.
+
+Set `loop` for a background. The resolved pattern holds for 24 frames, then a
+return pass turns the changed tiles back to the opening maze. The 168-frame
+cycle ends on the opening maze, so it repeats without a seam.
+
+## Variations
+
+`waveMode="diagonal"` sweeps from the top-left corner to the bottom-right, and
+`waveMode="random"` turns tiles in a seeded shuffle. `resolve="field"` aligns
+every tile into parallel wavy diagonals. `resolve="silhouette"` closes the
+tiles inside a centered circle into small rings and wraps the field around
+them. `variant="filled"` draws the arcs as quarter discs, and `secondaryColor`
+colors alternate tiles for a two-tone checker.
+
+```tsx
+<Backdrop
+  fill={{ type: "color", value: "#f1eee7" }}
+  padding={0}
+  radius={0}
+  shadow=""
+>
+  <TruchetFlip
+    tiles={14}
+    weight={0.14}
+    waveMode="diagonal"
+    resolve="silhouette"
+    color="#171717"
+    secondaryColor="#d97757"
+    loop
+  />
+</Backdrop>
+```
+
+<PropsTable title="Props"
+  rows={[
+    { name: "tiles", type: "number", default: "10", description: "Tiles across the shorter side, clamped to 4–24 and rounded; sets the tile size" },
+    { name: "weight", type: "number", default: "0.2", description: "Stroke width as a fraction of the tile size, clamped to 0.04–0.34; ignored by the filled variant" },
+    { name: "passes", type: "number", default: "2", description: "Full passes that turn every tile before the resolve pass, clamped to 0–4 and rounded" },
+    { name: "waveMode", type: '"radial" | "diagonal" | "random"', default: '"radial"', description: "Turn order: outward from the center, a top-left to bottom-right sweep, or a seeded shuffle" },
+    { name: "resolve", type: '"rings" | "field" | "silhouette"', default: '"rings"', description: "Structure the last pass settles into: concentric loops, parallel diagonals, or small rings inside a centered circle" },
+    { name: "variant", type: '"stroke" | "filled"', default: '"stroke"', description: "Arcs as butt-capped strokes, or as filled quarter discs" },
+    { name: "color", type: "string", default: '"#ffffff"', description: "Line or disc color" },
+    { name: "secondaryColor", type: "string", default: "color", description: "Color of alternate tiles in a checkerboard; matches color for a single tone" },
+    { name: "seed", type: "number", default: "1", description: "Seeds the opening maze and the random wave order" },
+    { name: "speed", type: "number", default: "1", description: "Playback multiplier; 0 freezes the opening maze" },
+    { name: "loop", type: "boolean", default: "false", description: "Adds a return pass so the cycle ends on its first frame" },
+    { name: "className", type: "string", description: "Optional class name on the full-frame root" },
+  ]}
+/>

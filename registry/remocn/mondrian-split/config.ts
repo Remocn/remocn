@@ -1,0 +1,60 @@
+import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import { getMondrianSplitDuration } from ".";
+
+export const mondrianSplitConfig: ComponentConfig = {
+  componentName: "MondrianSplit",
+  importPath: "@/components/remocn/mondrian-split",
+  controls: {
+    seed: {
+      type: "number",
+      default: 7,
+      min: 1,
+      max: 99,
+      step: 1,
+      description: "Seed",
+      hiddenFromList: false,
+    },
+    splits: {
+      type: "number",
+      default: 7,
+      min: 3,
+      max: 12,
+      step: 1,
+      description: "Splits",
+      hiddenFromList: false,
+    },
+    lineWeight: {
+      type: "number",
+      default: 14,
+      min: 4,
+      max: 32,
+      step: 1,
+      description: "Line weight",
+      hiddenFromList: false,
+    },
+    expandCell: {
+      type: "number",
+      default: 0,
+      min: 0,
+      max: 12,
+      step: 1,
+      description: "Expanding cell (0 is the largest)",
+      hiddenFromList: false,
+    },
+    lineColor: { type: "color", default: "#121212", description: "Lines" },
+    redColor: { type: "color", default: "#d62d20", description: "Red" },
+    yellowColor: { type: "color", default: "#f4c20d", description: "Yellow" },
+    blueColor: { type: "color", default: "#1f4e9e", description: "Blue" },
+    fieldColor: {
+      type: "color",
+      default: "#d62d20",
+      description: "Expanding cell color",
+    },
+  },
+  durationInFrames: 145,
+  getDurationInFrames: (values) => getMondrianSplitDuration(values),
+  fps: FPS,
+  compositionWidth: W,
+  compositionHeight: H,
+  previewBackdrop: { type: "color", value: "#f3efe6" },
+};

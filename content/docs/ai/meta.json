@@ -7,7 +7,8 @@
     "chat-gpt",
     "v0",
     "claude-code",
-    "opencode"
+    "opencode",
+    "agent-run"
   ],
   "icon": "ArtificialIntelligence04Icon"
 }

@@ -1,0 +1,183 @@
+---
+title: Bauhaus Build
+description: Flat shapes tumble corner over corner into a Bauhaus frieze, then rebuild around an open band that hands off to a title
+component: bauhaus-build
+vibe: playful
+length: 125
+useWhen:
+  - "A launch or chapter opener should build an abstract geometric poster and end on an open band for the title."
+  - "The brand wants a Bauhaus look made of flat circles, arcs, squares and bars, in its own palette or in classic red, yellow and blue."
+  - "Shapes should travel into place with a visible hinged tumble rather than fading or sliding in."
+avoidWhen:
+  - "The opener should burst and clear the whole frame instead of leaving shapes around the title — use `radial-burst`."
+  - "The motion should be a pattern of tiles turning in place rather than a composed poster — use `truchet-flip`."
+  - "The card should typeset the title itself on a strict Swiss grid of rules and baselines instead of framing it with shapes — use `swiss-grid`."
+  - "The graphic should become the cut into the next scene instead of framing a title — use `mondrian-split`."
+---
+
+<ComponentPreview name="bauhaus-build" />
+
+<InstallBlock name="bauhaus-build" />
+
+## Usage
+
+`BauhausBuild` assembles an abstract Bauhaus poster from nine flat pieces: a
+large circle, two quarter circles, a semicircle, two squares, two bars and a
+small circle. They arrive one at a time on a six-frame beat and build a frieze
+across the middle of an invisible square grid. After a short hold the frieze
+splits. Every piece makes one more quarter turn, and together they settle
+above and below an empty center band. That band is the handoff field for your
+title.
+
+Pieces never slide or fade into place. Each one travels by tumbling over its
+corners like a hinged tile. It makes a chain of quarter turns, each about the
+grid corner on its leading edge, and rolls cell by cell until it lands
+exactly in its slot. A new piece unfolds out of its first hinge point, which
+can lie outside the poster, so some pieces roll in from the margins. The last
+quarter turn overshoots by 4.5° and settles back.
+
+The component draws no background, text, or fonts. Put a `Backdrop` in the
+paper color behind it, with no padding, so the grid centers on the whole
+frame.
+
+```tsx
+import { Backdrop } from "@/components/remocn/backdrop";
+import { BauhausBuild } from "@/components/remocn/bauhaus-build";
+
+export const Opener = () => (
+  <Backdrop
+    fill={{ type: "color", value: "#f1eee7" }}
+    padding={0}
+    radius={0}
+    shadow=""
+  >
+    <BauhausBuild />
+  </Backdrop>
+);
+```
+
+### Title handoff
+
+`getBauhausBuildField` returns the open band in composition pixels. The band
+spans the full frame width and the middle third of the poster, and it stays
+vertically centered at every aspect ratio. Pass it the same `scale` as the
+component. The band is clear from `bauhausBuildTimeline.clear` (frame 116 at
+30 fps) and stays clear while the handoff holds.
+
+```tsx
+import { Sequence, useVideoConfig } from "remotion";
+import { Backdrop } from "@/components/remocn/backdrop";
+import {
+  BauhausBuild,
+  bauhausBuildTimeline,
+  getBauhausBuildField,
+} from "@/components/remocn/bauhaus-build";
+
+export const Opener = () => {
+  const { width, height } = useVideoConfig();
+  const field = getBauhausBuildField({ width, height });
+
+  return (
+    <Backdrop
+      fill={{ type: "color", value: "#f1eee7" }}
+      padding={0}
+      radius={0}
+      shadow=""
+    >
+      <BauhausBuild />
+      <Sequence from={bauhausBuildTimeline.clear}>
+        <div
+          style={{
+            position: "absolute",
+            left: field.x,
+            top: field.y,
+            width: field.width,
+            height: field.height,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+            color: "#1c1a17",
+            fontFamily: "Helvetica, Arial, sans-serif",
+            fontSize: field.unit * 1.25,
+            fontWeight: 700,
+            lineHeight: 1.1,
+          }}
+        >
+          Form follows function
+        </div>
+      </Sequence>
+    </Backdrop>
+  );
+};
+```
+
+## Timing
+
+At 30 fps and `speed={1}`:
+
+| Frames | Motion |
+| --- | --- |
+| 0–22 | The first pieces unfold out of grid points and start tumbling toward their slots |
+| 22–75 | Nine landings, one every six frames, each with a 4.5° overshoot that settles |
+| 75–90 | Hold on the frieze |
+| 90–125 | The frieze splits in a three-frame cascade. Paired pieces swing apart about shared corners, and the bars tip into rules above and below the band |
+| 125–150 | Hold on the handoff. The band has been clear since frame 116 |
+
+- `bauhausBuildLength` is 125, the frame where the last piece settles.
+- `getBauhausBuildDuration({ speed, loop })` returns the preview length,
+  including the final hold: 150 frames at `speed={1}`, or 300 with `loop`.
+- At another speed or frame rate, divide these frames by `speed` and multiply
+  by `fps / 30`.
+- `loop` plays the whole sequence forward, then backward. The pieces tumble
+  back out and fold into their hinge points, so the cycle repeats without a
+  cut. Played backward, each landing overshoot becomes a small anticipation.
+
+## Palette and variants
+
+Each piece has a color role. The default is one warm accent and three
+neutrals on a paper backdrop. Set the roles to red, yellow and blue for the
+classic Bauhaus look:
+
+```tsx
+<Backdrop
+  fill={{ type: "color", value: "#efe9dc" }}
+  padding={0}
+  radius={0}
+  shadow=""
+>
+  <BauhausBuild
+    inkColor="#161616"
+    accentColor="#d7362b"
+    secondaryColor="#f2b930"
+    tertiaryColor="#1f4f9e"
+  />
+</Backdrop>
+```
+
+- `seed` mirrors the composition: 1 is the authored layout, 2 mirrors it
+  horizontally, 3 vertically, 4 both ways, and then the cycle repeats. Every
+  seed also reshuffles the arrival order. The band stays in the middle for
+  every seed, so `getBauhausBuildField` does not need one.
+- `scale` sets the size of the square poster. At 1 it fills 80% of the
+  shorter side, and the range is 0.5–1.25. The composition keeps its
+  proportions at 16:9, 1:1 and 9:16.
+- `getBauhausBuildState(time, options)` returns every piece's pose in grid
+  modules (position, rotation, hinge and scale), the poster's `originX`,
+  `originY` and `unit` in pixels, and the seed's `flipX` and `flipY`, so other
+  layers can follow the same grid. `time` counts frames at 30 fps and
+  `speed={1}`.
+
+<PropsTable title="Props"
+  rows={[
+    { name: "scale", type: "number", default: "1", description: "Poster size; 1 fills 80% of the shorter side, clamped to 0.5–1.25" },
+    { name: "seed", type: "number", default: "1", description: "Mirror variant, cycling every four seeds, and arrival order" },
+    { name: "inkColor", type: "string", default: '"#1c1a17"', description: "Large quarter circle, pillar bar and small circle" },
+    { name: "accentColor", type: "string", default: '"#e4572e"', description: "Large circle and small square" },
+    { name: "secondaryColor", type: "string", default: '"#cbbc9f"', description: "Semicircle and small quarter circle" },
+    { name: "tertiaryColor", type: "string", default: '"#7e776b"', description: "Post bar and square block" },
+    { name: "speed", type: "number", default: "1", description: "Playback multiplier; 0 freezes the empty first frame" },
+    { name: "loop", type: "boolean", default: "false", description: "Plays the sequence forward and back so it repeats seamlessly every 300 frames" },
+    { name: "className", type: "string", description: "Optional class name on the full-frame root" },
+  ]}
+/>

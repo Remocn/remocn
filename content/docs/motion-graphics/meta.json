@@ -1,0 +1,15 @@
+{
+  "title": "Motion Graphics",
+  "defaultOpen": true,
+  "pages": [
+    "index",
+    "bauhaus-build",
+    "swiss-grid",
+    "mondrian-split",
+    "truchet-flip",
+    "trim-burst",
+    "speed-lines",
+    "squiggle"
+  ],
+  "icon": "GeometricShapes01Icon"
+}
