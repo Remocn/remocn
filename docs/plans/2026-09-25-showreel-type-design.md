@@ -52,7 +52,7 @@ Timeline:
 | Frames | Beat |
 | --- | --- |
 | 0–8 | Word (weight `fromWeight`) and four corner brackets fade in; brackets settle from 1.06× |
-| 14–28 | Snap: padding goes from loose (0.55em × 0.5em) to tight (0.12em × 0) with a small overshoot, `Easing.bezier(0.34, 1.3, 0.64, 1)` |
+| 14–28 | Snap: padding goes from loose (1.1em × 0.9em) to tight (0.12em × 0) with a small overshoot, `Easing.bezier(0.34, 1.3, 0.64, 1)` |
 | 14–30 | Weight `fromWeight → toWeight`, ease-in-out cubic |
 | 18–30 | Color `color → accent` |
 | 16–26 | Bracket arms grow along the edges until they meet: the frame becomes a 1px box |
@@ -60,7 +60,7 @@ Timeline:
 | 24–32 | Badge pops in below the box: scale 0.6 → 1, 8px rise |
 | 24–38 | Badge numbers count from the loose size to the tight size, ease-out cubic |
 
-Length 40. The box is the word's wrapper (`display: inline-block`,
+Length 38. The box is the word's wrapper (`display: inline-block`,
 `line-height: 1`), so its width tracks the text at every weight. The badge
 reads `W × H` in reference px; the final width is measured on canvas at
 `toWeight`. Selection color defaults to `#0d99ff`.
@@ -83,9 +83,9 @@ Timeline:
 | 0–4 | Bar grows from zero width at the word's left edge |
 | 2–22 | Bar crosses the letters, ease-in-out sine, one equal time slot per letter |
 | per letter | Starts when the bar is 35% into its slot. 9 frames: x from −0.3em, `scaleX` 1 + 0.8 × `smear` → 1 (origin right), horizontal blur → 0, opacity in 3 frames. Vertical: from −0.16em onto the baseline with a spring that overshoots below it, then settles |
-| 22–34 | Bar thickness 0.16em → 0.045em, it drops below the baseline and its left edge runs back to the word start |
+| 22–34 | Bar thickness 0.16em → 0.045em, it drops below the baseline (to 0.09em, or 0.05em under the lowest descender) and its left edge runs back to the word start |
 
-Length 36. The bar lives inside the span of the letter it is crossing and sits
+Length 34 for the default word. The bar lives inside the span of the letter it is crossing and sits
 at `left: p × 100%`, so it walks letter by letter without measuring advances.
 Its vertical placement uses the baseline measured from the font's ascent and
 descent.
@@ -102,7 +102,7 @@ drum.
 - Main word: 0–14 blur 12px → 0, opacity 0 → 1, scale 1.04 → 1, ease-out
   cubic.
 - Echo rows: `echoes` per side on a pitch of 1.05em. Every row is an outline
-  copy (`-webkit-text-stroke`, transparent fill). The column scrolls one
+  copy, built from the filled glyphs by an SVG erode filter; a text stroke would draw the overlapping contours inside variable-font letters such as M and K. The column scrolls one
   pitch every `cycle` frames (60) in `direction`, wrapping seamlessly.
 - Echo opacity is computed per row from its distance `d` to the center, in
   pitches: 0 below 0.55 (hidden behind the main word), up to 1 at 1, then
@@ -127,6 +127,7 @@ The center row runs on an accent band.
   loops by translating a whole number of tokens, in percent, so no width
   measurement is needed. Speed is in tokens per second: `0.22 ×` a seeded
   factor in `[0.7, 1.3]`. Even rows run left, odd rows run right.
+- Outline rows use the same erode filter as `echo-stack`.
 - Entrance: each row slides in from its own side, ease-out cubic over 20
   frames, staggered 2 frames per row away from the center. The accent band
   grows from the center over 6–20.
@@ -143,12 +144,16 @@ placed with `rotateY(θ) translateZ(R)`, and the band color is the panel
 background. On the far side the letters read mirrored and the band darkens
 with the cosine of its angle to the camera.
 
-- `radius` (190 ref px) sets the ring. The text plus separator repeats as
+- `radius` (210 ref px) sets the ring. The text plus separator repeats as
   many times as fits the circumference, and the remainder is spread as
   letter spacing so the band closes without a seam. Advances are measured
   on canvas.
-- Pose: `rotateZ(roll)` (−18°), `rotateX(tilt + wobble)` with `tilt` 62°
-  and a 6° wobble over 150 frames, then `rotateY(φ)`.
+- Pose: `rotateZ(roll)` (−16°), `rotateX(−(tilt + wobble))` with `tilt` 38°
+  and a 6° wobble over 150 frames, then `rotateY(−φ)`. The negative tilt
+  views the ring from above, so the near side is at the bottom. Opacity sits
+  on the perspective wrapper: on the preserve-3d ring it would flatten it.
+  Only the letters dim on the far side; shading the band per panel shows the
+  seams, and every panel bleeds 1.5px into its neighbors for the same reason.
 - Spin: one turn per `period` frames (240). Entrance 0–30: scale 0.85 → 1,
   opacity in, and an extra 90° that decays with ease-out cubic, so the ring
   arrives spinning fast and settles to its cruise speed.
@@ -156,7 +161,7 @@ with the cosine of its angle to the camera.
 Length `sustained`.
 
 Props: `text` ("Type in motion"), `separator` ("•"), `radius`, `fontSize`
-(34), `fontWeight` (800), `fontFamily`, `color`, `band`, `tilt`, `roll`,
+(40), `fontWeight` (800), `fontFamily`, `color`, `band`, `tilt`, `roll`,
 `period`, `speed`.
 
 ## period-drop
@@ -172,13 +177,14 @@ and settles as the period.
 - Fall from `0.62 × height` above the rest point, starting at frame 20,
   gravity-shaped over 12 frames. Bounces with restitution 0.35: the first
   lasts 8.4 frames and rises 12% of the drop, the second lasts 2.9 frames.
-  Rest at about 43.3.
+  The last touch is at 43.3.
 - Stretch in flight with speed: `scaleY` up to 1.3. Impact squash decays over
   about 3 frames: `scaleX` up to 1.3, `scaleY` down to 0.78, origin bottom.
   Both are capped. This is past the 2–4% squash in the motion principles on
   purpose: the bounce is the effect, as with `speed-lines` (1.3 × 0.8).
 
-Length 44.
+Length 47: the last impact's squash has decayed below 0.5% there and snaps
+to rest.
 
 Props: `text` ("remocn"), `fontSize` (160), `fontWeight` (800),
 `fontFamily`, `color`, `dotColor`, `dotSize`, `speed`.

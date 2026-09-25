@@ -1,0 +1,140 @@
+---
+title: Ring Text
+description: Text runs around a tilted 3D band that spins, reading on the near side and mirrored on the far side
+component: ring-text
+vibe: playful
+length: sustained
+useWhen:
+  - "A headline needs a dimensional object next to it, and the object itself should carry a short phrase."
+  - "A tagline, a feature name or a slogan should loop continuously in a compact spot."
+  - "You want a badge-like accent that reads as 3D without any 3D library or assets."
+avoidWhen:
+  - "The phrase should scroll flat across the frame — use `infinite-marquee`."
+  - "The text should pop out of the plane as a solid extruded word — use `extrude-pop`."
+  - "The motion should be ribbons bursting outward rather than a steady ring — use `radial-burst`."
+---
+
+<ComponentPreview name="ring-text" />
+
+<InstallBlock name="ring-text" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { AbsoluteFill, Composition } from "remotion";
+import { RingText } from "@/components/remocn/ring-text";
+
+const Ring = () => (
+  <AbsoluteFill style={{ backgroundColor: "#d4ff1f" }}>
+    <RingText text="Type in motion" color="#d4ff1f" band="#0a0a0a" />
+  </AbsoluteFill>
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="RingText"
+    component={Ring}
+    durationInFrames={180}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Every character sits on its own panel, placed around the ring with
+`rotateY(θ) translateZ(radius)`, and the panel background forms the band. The
+text and separator repeat as many times as fit the circumference, and the
+remainder is spread as letter spacing so the band closes without a gap. A
+phrase longer than one lap grows the radius instead.
+
+The ring is viewed from above: the near side reads left to right, and the far
+side shows the letters mirrored and dimmed. It turns once every `period`
+frames, and its tilt sways by six degrees. It arrives scaled down, spinning
+fast, and settles into its cruise speed by frame 30.
+
+The ring is centered in its parent; place it with a wrapper. Sizes scale with
+`height / 720`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "text",
+      type: "string",
+      default: "\"Type in motion\"",
+      description: "The phrase around the ring",
+    },
+    {
+      name: "separator",
+      type: "string",
+      default: "\"•\"",
+      description: "Glyph between repeats. An empty string leaves a space",
+    },
+    {
+      name: "radius",
+      type: "number",
+      default: "210",
+      description: "Ring radius in reference px. Long text grows it",
+    },
+    {
+      name: "fontSize",
+      type: "number",
+      default: "40",
+      description: "Font size in reference px. The band is 1.5em tall",
+    },
+    {
+      name: "fontWeight",
+      type: "number",
+      default: "800",
+      description: "Font weight",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "Inter",
+      description: "Font family",
+    },
+    {
+      name: "color",
+      type: "string",
+      default: "\"#fafafa\"",
+      description: "Letter color",
+    },
+    {
+      name: "band",
+      type: "string",
+      default: "\"#0a0a0a\"",
+      description: "Band color",
+    },
+    {
+      name: "tilt",
+      type: "number",
+      default: "38",
+      description: "Degrees the ring leans toward the camera",
+    },
+    {
+      name: "roll",
+      type: "number",
+      default: "-16",
+      description: "Degrees the ring is rotated in the frame",
+    },
+    {
+      name: "period",
+      type: "number",
+      default: "240",
+      description: "Frames for one full turn",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Timeline speed multiplier",
+    },
+    {
+      name: "className",
+      type: "string",
+      description: "Optional className passed to the wrapper",
+    },
+  ]}
+/>

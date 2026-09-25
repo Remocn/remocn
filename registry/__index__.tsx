@@ -590,6 +590,66 @@ const registry: Record<string, RegistryEntry> = {
         (m) => m.stretchInConfig,
       ),
   },
+  "selection-snap": {
+    load: () =>
+      import("@/registry/remocn/selection-snap").then((m) => ({
+        default: m.SelectionSnap,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/selection-snap/config").then(
+        (m) => m.selectionSnapConfig,
+      ),
+  },
+  "lead-bar-type": {
+    load: () =>
+      import("@/registry/remocn/lead-bar-type").then((m) => ({
+        default: m.LeadBarType,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/lead-bar-type/config").then(
+        (m) => m.leadBarTypeConfig,
+      ),
+  },
+  "echo-stack": {
+    load: () =>
+      import("@/registry/remocn/echo-stack").then((m) => ({
+        default: m.EchoStack,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/echo-stack/config").then(
+        (m) => m.echoStackConfig,
+      ),
+  },
+  "type-wall": {
+    load: () =>
+      import("@/registry/remocn/type-wall").then((m) => ({
+        default: m.TypeWall,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/type-wall/config").then(
+        (m) => m.typeWallConfig,
+      ),
+  },
+  "ring-text": {
+    load: () =>
+      import("@/registry/remocn/ring-text").then((m) => ({
+        default: m.RingText,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/ring-text/config").then(
+        (m) => m.ringTextConfig,
+      ),
+  },
+  "period-drop": {
+    load: () =>
+      import("@/registry/remocn/period-drop").then((m) => ({
+        default: m.PeriodDrop,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/period-drop/config").then(
+        (m) => m.periodDropConfig,
+      ),
+  },
   "chromatic-wave": {
     load: () =>
       import("@/registry/remocn/chromatic-wave").then((m) => ({
@@ -2462,9 +2522,7 @@ const registry: Record<string, RegistryEntry> = {
         default: m.Squiggle,
       })),
     loadConfig: () =>
-      import("@/registry/remocn/squiggle/config").then(
-        (m) => m.squiggleConfig,
-      ),
+      import("@/registry/remocn/squiggle/config").then((m) => m.squiggleConfig),
   },
   confetti: {
     load: () =>

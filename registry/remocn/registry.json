@@ -2445,6 +2445,90 @@
           "target": "components/remocn/agent-run.tsx"
         }
       ]
+    },
+    {
+      "name": "selection-snap",
+      "type": "registry:component",
+      "title": "Selection Snap",
+      "description": "A thin word in a loose viewfinder snaps into a design-tool selection while it goes from Thin to Black, pops its handles and counts up a size badge.",
+      "dependencies": ["remotion", "@remotion/google-fonts"],
+      "files": [
+        {
+          "path": "selection-snap/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/selection-snap.tsx"
+        }
+      ]
+    },
+    {
+      "name": "lead-bar-type",
+      "type": "registry:component",
+      "title": "Lead Bar Type",
+      "description": "A thick cursor bar runs along the baseline, the letters chase it in smeared and land with an overshoot, then the bar settles into an underline.",
+      "dependencies": ["remotion", "@remotion/google-fonts"],
+      "files": [
+        {
+          "path": "lead-bar-type/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/lead-bar-type.tsx"
+        }
+      ]
+    },
+    {
+      "name": "echo-stack",
+      "type": "registry:component",
+      "title": "Echo Stack",
+      "description": "A word focuses in at the center while outline copies of it unfold above and below and keep drifting, like the one clear line on a spinning drum.",
+      "dependencies": ["remotion", "@remotion/google-fonts"],
+      "files": [
+        {
+          "path": "echo-stack/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/echo-stack.tsx"
+        }
+      ]
+    },
+    {
+      "name": "type-wall",
+      "type": "registry:component",
+      "title": "Type Wall",
+      "description": "Rows of one word fill the frame, run in alternating directions at different speeds in heavy, narrow and outline faces, with an accent band through the middle.",
+      "dependencies": ["remotion", "@remotion/google-fonts"],
+      "files": [
+        {
+          "path": "type-wall/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/type-wall.tsx"
+        }
+      ]
+    },
+    {
+      "name": "ring-text",
+      "type": "registry:component",
+      "title": "Ring Text",
+      "description": "Text runs around a tilted 3D band that spins, reading on the near side and mirrored on the far side.",
+      "dependencies": ["remotion", "@remotion/google-fonts"],
+      "files": [
+        {
+          "path": "ring-text/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/ring-text.tsx"
+        }
+      ]
+    },
+    {
+      "name": "period-drop",
+      "type": "registry:component",
+      "title": "Period Drop",
+      "description": "A word rises out of its line, then a colored dot falls from above the frame, bounces with squash and stretch, and settles as the period.",
+      "dependencies": ["remotion", "@remotion/google-fonts"],
+      "files": [
+        {
+          "path": "period-drop/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/period-drop.tsx"
+        }
+      ]
     }
   ]
 }
