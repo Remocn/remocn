@@ -2335,20 +2335,6 @@
       "type": "registry:component"
     },
     {
-      "name": "swiss-grid",
-      "title": "Swiss Grid",
-      "description": "A Swiss title card that sets a kicker, a headline of up to three lines, a big numeral and a meta line on a strict modular grid, with rules that snap from their pinned edges to the width of their text and words that land one at a time on grid baselines.",
-      "dependencies": ["remotion"],
-      "files": [
-        {
-          "path": "registry/remocn/swiss-grid/index.tsx",
-          "type": "registry:component",
-          "target": "components/remocn/swiss-grid.tsx"
-        }
-      ],
-      "type": "registry:component"
-    },
-    {
       "name": "bauhaus-build",
       "title": "Bauhaus Build",
       "description": "Flat Bauhaus circles, arcs, squares and bars tumble corner over corner on a hidden grid into an asymmetric frieze, then rebuild into two friezes around an open band for the title.",

@@ -4,7 +4,6 @@
   "pages": [
     "index",
     "bauhaus-build",
-    "swiss-grid",
     "mondrian-split",
     "truchet-flip",
     "trim-burst",

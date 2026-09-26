@@ -68,7 +68,6 @@ export const NEW_BADGE_PATHS = new Set<string>([
   "/docs/ui-blocks/code-morph",
   "/docs/ai/agent-run",
   "/docs/motion-graphics/bauhaus-build",
-  "/docs/motion-graphics/swiss-grid",
   "/docs/motion-graphics/mondrian-split",
   "/docs/motion-graphics/truchet-flip",
   "/docs/motion-graphics/trim-burst",

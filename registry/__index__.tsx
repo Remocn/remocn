@@ -2466,16 +2466,6 @@ const registry: Record<string, RegistryEntry> = {
         (m) => m.bauhausBuildConfig,
       ),
   },
-  "swiss-grid": {
-    load: () =>
-      import("@/registry/remocn/swiss-grid").then((m) => ({
-        default: m.SwissGrid,
-      })),
-    loadConfig: () =>
-      import("@/registry/remocn/swiss-grid/config").then(
-        (m) => m.swissGridConfig,
-      ),
-  },
   "mondrian-split": {
     load: () =>
       import("@/registry/remocn/mondrian-split").then((m) => ({
