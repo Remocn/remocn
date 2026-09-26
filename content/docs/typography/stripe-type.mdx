@@ -1,0 +1,136 @@
+---
+title: Stripe Type
+description: A word cut into horizontal bands, as in the IBM logo, slides together from alternating sides and locks, then can pass on through
+component: stripe-type
+vibe: tech
+length: 30
+useWhen:
+  - "A bold word needs a graphic, engineered entrance on a flat field, such as a product name or a section title."
+  - "You want the striped-logo look as the resting state, or as a transition into solid type with `settle` set to solid."
+  - "A word should enter and leave in one move: the bands arrive from alternating sides and exit through the other."
+avoidWhen:
+  - "The word should split along its letters rather than in horizontal bands — use `typed-split-wipe`."
+  - "The whole frame should fill with moving rows of type — use `type-wall`."
+  - "A soft, quiet entrance fits better — use `mask-reveal-up`."
+---
+
+<ComponentPreview name="stripe-type" />
+
+<InstallBlock name="stripe-type" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { AbsoluteFill, Composition } from "remotion";
+import { StripeType } from "@/components/remocn/stripe-type";
+
+const Title = () => (
+  <AbsoluteFill style={{ backgroundColor: "#2b3bff" }}>
+    <StripeType text="Launch" />
+  </AbsoluteFill>
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="StripeType"
+    component={Title}
+    durationInFrames={100}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The bands cover the word's ink, from the top of its tallest letter to the
+bottom of its lowest, measured from the loaded font. With `stripes` bands and
+a `gap` share of each pitch left empty, the first band starts at the top and
+the last ends at the bottom. Each band is a copy of the text clipped to its
+strip.
+
+Band 0 enters from the left, band 1 from the right, and so on, two frames
+apart, each over 16 frames with an expo ease. The word is whole at frame 30
+for eight bands. `settle="solid"` closes the gaps over the next ten frames.
+With `exit`, after `hold` frames the bands carry on in the direction they came
+from and leave through the other side. `getStripeTypeDuration` gives the
+length for any set of props.
+
+The component paints no background and centers the word in its parent. Sizes
+scale with `height / 720`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "text",
+      type: "string",
+      default: "\"Launch\"",
+      description: "The word to stripe",
+    },
+    {
+      name: "fontSize",
+      type: "number",
+      default: "180",
+      description: "Font size in reference px at 720p",
+    },
+    {
+      name: "fontWeight",
+      type: "number",
+      default: "800",
+      description: "Font weight. Heavy weights stripe best",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "Inter",
+      description: "Font family",
+    },
+    {
+      name: "color",
+      type: "string",
+      default: "\"#fafafa\"",
+      description: "Text color",
+    },
+    {
+      name: "stripes",
+      type: "number",
+      default: "8",
+      description: "Number of bands",
+    },
+    {
+      name: "gap",
+      type: "number",
+      default: "0.35",
+      description: "Share of each band pitch left empty",
+    },
+    {
+      name: "settle",
+      type: "\"striped\" | \"solid\"",
+      default: "\"striped\"",
+      description: "Keep the gaps, or close them into solid type",
+    },
+    {
+      name: "exit",
+      type: "boolean",
+      default: "true",
+      description: "Let the bands pass on through after the hold",
+    },
+    {
+      name: "hold",
+      type: "number",
+      default: "30",
+      description: "Frames the word rests before the exit",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Timeline speed multiplier",
+    },
+    {
+      name: "className",
+      type: "string",
+      description: "Optional className passed to the wrapper",
+    },
+  ]}
+/>

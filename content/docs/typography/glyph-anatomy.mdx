@@ -1,0 +1,120 @@
+---
+title: Glyph Anatomy
+description: A word builds as in a font editor, with metric guides, anchors along each contour and Bézier handles that pull straight segments into curves before the glyphs fill
+component: glyph-anatomy
+vibe: tech
+length: 66
+useWhen:
+  - "A product for designers, a type or a design tool, should show its craft: the letters are built from points and curves on screen."
+  - "A title should feel constructed and precise, with the scaffolding visible for a moment before the clean word."
+  - "You want to show how a letter is made, for a talk, a course or a type specimen."
+avoidWhen:
+  - "The outline should simply draw itself without points or handles — use `outline-trace`."
+  - "The design-tool feel should come from a selection box around the word instead of its construction — use `selection-snap`."
+  - "The word only needs a quiet reveal — use `soft-blur-in`."
+---
+
+<ComponentPreview name="glyph-anatomy" />
+
+<InstallBlock name="glyph-anatomy" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { AbsoluteFill, Composition } from "remotion";
+import { GlyphAnatomy } from "@/components/remocn/glyph-anatomy";
+
+const Title = () => (
+  <AbsoluteFill style={{ backgroundColor: "#0a0a0a" }}>
+    <GlyphAnatomy text="Glyph" />
+  </AbsoluteFill>
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="GlyphAnatomy"
+    component={Title}
+    durationInFrames={96}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Four guides draw across first: cap height, x-height, baseline and descender,
+read from the font's own metrics. Then, letter by letter two frames apart,
+anchors pop along each contour in drawing order. While they appear the
+outline runs straight from anchor to anchor. Handles grow out of the anchors
+next and pull each segment into its curve, overshooting a little before they
+settle. The glyphs fill in around frame 40 and the points, handles and guides
+fade out, leaving the clean word. `keepPoints` keeps the scaffolding.
+
+TrueType fonts describe curves with quadratics; the component converts them to
+cubics so every curve shows one handle on each end, as in Figma or Glyphs.
+Static instances of variable fonts keep overlapping contours, and they show in
+the outline the way they would in a font editor.
+
+`fontUrl` defaults to Inter ExtraBold from Google Fonts' static CDN and accepts
+any `.ttf`, `.otf` or `.woff` file. The labels use Inter from
+`@remotion/google-fonts`. The word centers in its parent and sizes scale with
+`height / 720`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "text",
+      type: "string",
+      default: "\"Glyph\"",
+      description: "The word to build. Short words show the construction best",
+    },
+    {
+      name: "fontUrl",
+      type: "string",
+      default: "Inter ExtraBold (gstatic ttf)",
+      description: "URL of a .ttf, .otf or .woff file the outlines are parsed from",
+    },
+    {
+      name: "fontSize",
+      type: "number",
+      default: "200",
+      description: "Font size in reference px at 720p",
+    },
+    {
+      name: "color",
+      type: "string",
+      default: "\"#fafafa\"",
+      description: "Outline and fill color",
+    },
+    {
+      name: "guideColor",
+      type: "string",
+      default: "\"#0d99ff\"",
+      description: "Guides, anchor borders and handles",
+    },
+    {
+      name: "guides",
+      type: "boolean",
+      default: "true",
+      description: "Draw the metric guides with their labels",
+    },
+    {
+      name: "keepPoints",
+      type: "boolean",
+      default: "false",
+      description: "Keep anchors, handles and guides after the fill",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Timeline speed multiplier",
+    },
+    {
+      name: "className",
+      type: "string",
+      description: "Optional className passed to the wrapper",
+    },
+  ]}
+/>

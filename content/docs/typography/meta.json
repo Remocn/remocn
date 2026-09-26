@@ -68,7 +68,12 @@
     "echo-stack",
     "type-wall",
     "ring-text",
-    "period-drop"
+    "period-drop",
+    "outline-trace",
+    "glyph-anatomy",
+    "stripe-type",
+    "path-ride",
+    "type-repeater"
   ],
   "icon": "TextFontIcon"
 }

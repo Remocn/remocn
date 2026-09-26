@@ -1,0 +1,132 @@
+---
+title: Outline Trace
+description: Every glyph contour draws itself as a stroke, letter by letter, then the fill wipes up inside each letter and the stroke fades into it
+component: outline-trace
+vibe: premium
+length: 44
+useWhen:
+  - "A title should be drawn rather than revealed, like a trim path running around the real letterforms."
+  - "You want a crafted, vector-native entrance for a brand word or a headline in any font you can point to."
+  - "An outline-only look is wanted: set `fill` off and the drawn contours stay."
+avoidWhen:
+  - "The text should look handwritten, stroke by stroke in a script face — use `handwrite`."
+  - "The letters should fly in and deform rather than be drawn — use `stretch-in`."
+  - "The build should show the construction points and handles of a font editor — use `glyph-anatomy`."
+---
+
+<ComponentPreview name="outline-trace" />
+
+<InstallBlock name="outline-trace" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { AbsoluteFill, Composition } from "remotion";
+import { OutlineTrace } from "@/components/remocn/outline-trace";
+
+const Title = () => (
+  <AbsoluteFill style={{ backgroundColor: "#ff4d1a" }}>
+    <OutlineTrace text="Outline" color="#111111" />
+  </AbsoluteFill>
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="OutlineTrace"
+    component={Title}
+    durationInFrames={75}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The letters are geometry parsed out of the font file with `opentype.js`, so the
+stroke runs along the actual contours. Each letter starts `stagger` frames
+after the previous one. Its outer contours draw over 18 frames; counters, such
+as the hole in an a or an e, start four frames later. When the outline has
+closed, the fill rises from the bottom of the letter and the stroke fades into
+it, so the resting word is exactly the glyphs. `keepStroke` leaves the stroke
+on top of the fill, and `fill={false}` keeps the drawn outline only.
+
+Static instances of variable fonts, including the default Inter, keep
+overlapping contours inside some letters (the bar of a t crosses its stem). A
+mask hides the part of the stroke that runs inside the letter's filled shape,
+so those overlaps never draw.
+
+`fontUrl` defaults to Inter ExtraBold from Google Fonts' static CDN. Point it
+at any `.ttf`, `.otf` or `.woff` file; `.woff2` is not supported. The render
+is held until the font has loaded. The word centers in its parent and sizes
+scale with `height / 720`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "text",
+      type: "string",
+      default: "\"Outline\"",
+      description: "The text to draw",
+    },
+    {
+      name: "fontUrl",
+      type: "string",
+      default: "Inter ExtraBold (gstatic ttf)",
+      description: "URL of a .ttf, .otf or .woff file the outlines are parsed from",
+    },
+    {
+      name: "fontSize",
+      type: "number",
+      default: "150",
+      description: "Font size in reference px at 720p",
+    },
+    {
+      name: "color",
+      type: "string",
+      default: "\"#fafafa\"",
+      description: "Fill color",
+    },
+    {
+      name: "strokeColor",
+      type: "string",
+      default: "same as color",
+      description: "Stroke color",
+    },
+    {
+      name: "strokeWidth",
+      type: "number",
+      default: "2.5",
+      description: "Stroke width in reference px",
+    },
+    {
+      name: "stagger",
+      type: "number",
+      default: "3",
+      description: "Frames between letters",
+    },
+    {
+      name: "fill",
+      type: "boolean",
+      default: "true",
+      description: "Fill the letters after the outline draws",
+    },
+    {
+      name: "keepStroke",
+      type: "boolean",
+      default: "false",
+      description: "Keep the stroke on top of the fill",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Timeline speed multiplier",
+    },
+    {
+      name: "className",
+      type: "string",
+      description: "Optional className passed to the wrapper",
+    },
+  ]}
+/>

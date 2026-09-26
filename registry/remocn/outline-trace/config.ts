@@ -1,0 +1,45 @@
+import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+
+export const outlineTraceConfig: ComponentConfig = {
+  componentName: "OutlineTrace",
+  importPath: "@/components/remocn/outline-trace",
+  controls: {
+    text: { type: "text-content", default: "Outline", description: "Text" },
+    color: { type: "color", default: "#111111", description: "Fill" },
+    strokeColor: { type: "color", default: "#111111", description: "Stroke" },
+    fontSize: {
+      type: "number",
+      default: 150,
+      min: 60,
+      max: 300,
+      step: 2,
+      description: "Font size",
+      hiddenFromList: false,
+    },
+    strokeWidth: {
+      type: "number",
+      default: 2.5,
+      min: 0.5,
+      max: 8,
+      step: 0.5,
+      description: "Stroke width",
+      hiddenFromList: false,
+    },
+    stagger: {
+      type: "number",
+      default: 3,
+      min: 0,
+      max: 12,
+      step: 1,
+      description: "Letter stagger",
+      hiddenFromList: false,
+    },
+    fill: { type: "boolean", default: true, description: "Fill" },
+    keepStroke: { type: "boolean", default: false, description: "Keep stroke" },
+  },
+  durationInFrames: 75,
+  fps: FPS,
+  compositionWidth: W,
+  compositionHeight: H,
+  previewBackdrop: { type: "color", value: "#ff4d1a" },
+};

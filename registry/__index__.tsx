@@ -640,6 +640,56 @@ const registry: Record<string, RegistryEntry> = {
         (m) => m.periodDropConfig,
       ),
   },
+  "outline-trace": {
+    load: () =>
+      import("@/registry/remocn/outline-trace").then((m) => ({
+        default: m.OutlineTrace,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/outline-trace/config").then(
+        (m) => m.outlineTraceConfig,
+      ),
+  },
+  "glyph-anatomy": {
+    load: () =>
+      import("@/registry/remocn/glyph-anatomy").then((m) => ({
+        default: m.GlyphAnatomy,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/glyph-anatomy/config").then(
+        (m) => m.glyphAnatomyConfig,
+      ),
+  },
+  "stripe-type": {
+    load: () =>
+      import("@/registry/remocn/stripe-type").then((m) => ({
+        default: m.StripeType,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/stripe-type/config").then(
+        (m) => m.stripeTypeConfig,
+      ),
+  },
+  "path-ride": {
+    load: () =>
+      import("@/registry/remocn/path-ride").then((m) => ({
+        default: m.PathRide,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/path-ride/config").then(
+        (m) => m.pathRideConfig,
+      ),
+  },
+  "type-repeater": {
+    load: () =>
+      import("@/registry/remocn/type-repeater").then((m) => ({
+        default: m.TypeRepeater,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/type-repeater/config").then(
+        (m) => m.typeRepeaterConfig,
+      ),
+  },
   "chromatic-wave": {
     load: () =>
       import("@/registry/remocn/chromatic-wave").then((m) => ({

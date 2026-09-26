@@ -46,6 +46,9 @@ into it.
   frames, ease-out cubic. Unless `keepStroke`, the stroke fades over the same
   window, so the resting letters are the exact glyphs.
 - `fill={false}` keeps the drawn outline only.
+- Static instances of variable fonts keep overlapping contours (the bar of a
+  t crosses its stem). Each letter's stroke is masked by its own fill eroded
+  by half the stroke width, so strokes inside the silhouette never show.
 
 Length for the default "Outline": `6 × 3 + 26 = 44`.
 
@@ -80,7 +83,7 @@ Timeline, letter offset `o = 2i`:
 
 Length for the default "Glyph": `58 + 8 = 66`.
 
-Props: `text`, `fontUrl`, `fontSize` (170), `color`, `guideColor`,
+Props: `text`, `fontUrl`, `fontSize` (200), `color`, `guideColor`,
 `guides` (true), `keepPoints` (false), `speed`.
 
 ## stripe-type
@@ -102,7 +105,7 @@ slide in from alternating sides and lock into the word.
 
 Length 30 for 8 bands (entrance); `getStripeTypeDuration` gives the preview.
 
-Props: `text`, `fontSize` (180), `fontWeight` (800), `fontFamily`, `color`,
+Props: `text` ("Launch"), `fontSize` (180), `fontWeight` (800), `fontFamily`, `color`,
 `stripes` (8), `gap` (0.35), `settle` ("striped"), `exit` (true), `hold`
 (30), `speed`.
 
@@ -121,11 +124,15 @@ centered baseline.
   first half-em on the curve.
 - Letters stand on the curve: the baseline point is lifted along the normal
   by the line width plus 0.08em.
-- Straighten: 50–66, letter `j` delayed `j` frames, position and angle
-  interpolate (shortest turn) to the straight baseline. The line's tail runs
-  to the head over 50–64.
+- Straighten: the path itself pulls taut over 50–68. Every point moves
+  toward a straight baseline where arc length maps one to one onto x, and
+  the tangent blends toward horizontal, so the line and the letters on it
+  straighten together and the text keeps its spacing. (Moving each letter
+  to its slot on its own made the word fall apart mid-move.) The path is
+  sampled once (400 points) and the line is drawn as the pulled polyline.
+  The tail erases over 52–70.
 
-Length about 70 (depends on the letter count).
+Length 70.
 
 Props: `text`, `path`, `fontSize` (44), `fontWeight` (700), `fontFamily`,
 `color`, `lineColor`, `lineWidth` (3), `speed`.
@@ -136,19 +143,22 @@ An After Effects repeater on a word: copy `i` gets `i` steps of rotation and
 scale. The copies unfold from the word, breathe, then collapse back into it.
 
 - `mode`:
-  - `fan`: `rotate(i × 12° × s)` around a pivot 2.2em below the word.
-  - `spiral`: `rotate(i × 24° × s)`, `scale(0.86^(i × s))` around the center.
-  - `tunnel`: `scale(0.84^(i × s))` around the center.
+  - `tunnel` (default): `scale(1.2^(i × s))` around the center.
+  - `spiral`: `rotate(i × 12° × s)`, `scale(1.1^(i × s))` around the center.
+  - `fan`: `rotate(±⌈i/2⌉ × 11° × s)` to alternating sides around a pivot
+    2.6em below the word.
+  Shrinking copies, as first drafted, hid behind the word or clumped into
+  it; growing copies read as depth.
 - Spread `s`: 10–34 from 0 to 1, back-eased; 34–70 breathes ±6%; 70–90
   back to 0, ease-in-out cubic.
 - Copy 0 is the word in `color`; later copies step toward `accent` and fade
   with their index. `outline` draws the copies with the erode filter from
-  `echo-stack`.
+  `echo-stack`; it is on by default.
 
 Length 90.
 
 Props: `text`, `copies` (12), `mode`, `fontSize` (110), `fontWeight` (800),
-`fontFamily`, `color`, `accent`, `outline` (false), `speed`.
+`fontFamily`, `color`, `accent`, `outline` (true), `speed`.
 
 ## Integration
 
