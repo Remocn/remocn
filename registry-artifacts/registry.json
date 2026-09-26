@@ -2503,6 +2503,76 @@
       "type": "registry:component"
     },
     {
+      "name": "outline-trace",
+      "title": "Outline Trace",
+      "description": "Every glyph contour draws itself as a stroke, letter by letter, then the fill wipes up inside each letter and the stroke fades into it.",
+      "dependencies": ["remotion", "opentype.js"],
+      "files": [
+        {
+          "path": "registry/remocn/outline-trace/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/outline-trace.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "glyph-anatomy",
+      "title": "Glyph Anatomy",
+      "description": "A word builds as in a font editor, with metric guides, anchors along each contour and Bézier handles that pull straight segments into curves before the glyphs fill.",
+      "dependencies": ["remotion", "opentype.js", "@remotion/google-fonts"],
+      "files": [
+        {
+          "path": "registry/remocn/glyph-anatomy/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/glyph-anatomy.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "stripe-type",
+      "title": "Stripe Type",
+      "description": "A word cut into horizontal bands, as in the IBM logo, slides together from alternating sides and locks, then can pass on through.",
+      "dependencies": ["remotion", "@remotion/google-fonts"],
+      "files": [
+        {
+          "path": "registry/remocn/stripe-type/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/stripe-type.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "path-ride",
+      "title": "Path Ride",
+      "description": "A line draws itself along a curve with the text riding behind its head, then the curve pulls taut and the text settles on a straight, centered baseline.",
+      "dependencies": ["remotion", "@remotion/google-fonts", "@remotion/paths"],
+      "files": [
+        {
+          "path": "registry/remocn/path-ride/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/path-ride.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "type-repeater",
+      "title": "Type Repeater",
+      "description": "An After Effects style repeater on a word, where copies unfold into a tunnel, a spiral or a fan behind it, breathe, then fold back into the word.",
+      "dependencies": ["remotion", "@remotion/google-fonts"],
+      "files": [
+        {
+          "path": "registry/remocn/type-repeater/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/type-repeater.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
       "name": "remocn-ui",
       "title": "remocn UI Core",
       "description": "Shared timeline-fold hook, theme context, and color math for remocn UI primitives.",
