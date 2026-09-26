@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { useTrackEvent } from "@/lib/analytics";
 
-const HERO_BADGE_HREF = "/changelog#2026-09-11-template-refinements";
+const HERO_BADGE_HREF = "/changelog#2026-09-26-motion-graphics";
 
 export function HeroBadge() {
   const trackEvent = useTrackEvent();
@@ -19,7 +19,7 @@ export function HeroBadge() {
           href={HERO_BADGE_HREF}
           onClick={() =>
             trackEvent("cta_clicked", {
-              cta: "hero_templates_badge",
+              cta: "hero_motion_graphics_badge",
               destination: HERO_BADGE_HREF,
             })
           }
@@ -27,7 +27,7 @@ export function HeroBadge() {
       }
     >
       <span className="font-semibold text-foreground">Introducing</span>
-      <span className="text-foreground">Remocn Templates</span>
+      <span className="text-foreground">Motion Graphics</span>
       <ArrowRight
         className="size-3 transition-transform group-hover:translate-x-0.5"
         aria-hidden="true"
