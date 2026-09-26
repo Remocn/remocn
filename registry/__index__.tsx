@@ -600,16 +600,6 @@ const registry: Record<string, RegistryEntry> = {
         (m) => m.selectionSnapConfig,
       ),
   },
-  "lead-bar-type": {
-    load: () =>
-      import("@/registry/remocn/lead-bar-type").then((m) => ({
-        default: m.LeadBarType,
-      })),
-    loadConfig: () =>
-      import("@/registry/remocn/lead-bar-type/config").then(
-        (m) => m.leadBarTypeConfig,
-      ),
-  },
   "echo-stack": {
     load: () =>
       import("@/registry/remocn/echo-stack").then((m) => ({

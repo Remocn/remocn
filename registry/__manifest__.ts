@@ -2854,25 +2854,6 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       speed: 1,
     },
   },
-  "lead-bar-type": {
-    durationInFrames: 66,
-    fps: 30,
-    compositionWidth: 1280,
-    compositionHeight: 720,
-    previewBackdrop: {
-      type: "color",
-      value: "#ff4d1a",
-    },
-    defaults: {
-      text: "Every",
-      color: "#111111",
-      barColor: "#111111",
-      fontSize: 180,
-      fontWeight: 800,
-      smear: 1,
-      speed: 1,
-    },
-  },
   "lens-zoom": {
     durationInFrames: 112,
     fps: 30,

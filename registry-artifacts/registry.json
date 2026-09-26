@@ -2447,20 +2447,6 @@
       "type": "registry:component"
     },
     {
-      "name": "lead-bar-type",
-      "title": "Lead Bar Type",
-      "description": "A thick cursor bar runs along the baseline, the letters chase it in smeared and land with an overshoot, then the bar settles into an underline.",
-      "dependencies": ["remotion", "@remotion/google-fonts"],
-      "files": [
-        {
-          "path": "registry/remocn/lead-bar-type/index.tsx",
-          "type": "registry:component",
-          "target": "components/remocn/lead-bar-type.tsx"
-        }
-      ],
-      "type": "registry:component"
-    },
-    {
       "name": "echo-stack",
       "title": "Echo Stack",
       "description": "A word focuses in at the center while outline copies of it unfold above and below and keep drifting, like the one clear line on a spinning drum.",

@@ -2447,20 +2447,6 @@
       ]
     },
     {
-      "name": "lead-bar-type",
-      "type": "registry:component",
-      "title": "Lead Bar Type",
-      "description": "A thick cursor bar runs along the baseline, the letters chase it in smeared and land with an overshoot, then the bar settles into an underline.",
-      "dependencies": ["remotion", "@remotion/google-fonts"],
-      "files": [
-        {
-          "path": "lead-bar-type/index.tsx",
-          "type": "registry:component",
-          "target": "components/remocn/lead-bar-type.tsx"
-        }
-      ]
-    },
-    {
       "name": "echo-stack",
       "type": "registry:component",
       "title": "Echo Stack",
