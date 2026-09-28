@@ -1,0 +1,18 @@
+---
+title: Vector type
+date: 2026-09-26
+---
+
+Five typography pieces built the way a motion designer builds type in After Effects. Two work on the real glyph outlines of any font file: a trim path around every contour, and a font editor's anchors and handles pulling the curves into shape. Three work on live text: striped type, text riding a path, and a repeater.
+
+<ChangelogPreview name="glyph-anatomy" />
+
+### New components
+
+- [Outline Trace](/docs/typography/outline-trace) — every contour draws itself as a stroke, letter by letter, then the fill wipes up inside each letter and the stroke fades into it. Overlapping contours in variable-font instances stay hidden.
+- [Glyph Anatomy](/docs/typography/glyph-anatomy) — metric guides draw across, anchors pop along each contour, and Bézier handles pull straight segments into curves before the glyphs fill and the scaffolding fades.
+- [Stripe Type](/docs/typography/stripe-type) — the word is cut into IBM-style bands that slide in from alternating sides and lock, stay striped or close into solid type, and pass on through on the exit.
+- [Path Ride](/docs/typography/path-ride) — a line draws itself along any SVG path with the text riding behind its head, then the curve pulls taut and the text settles on a straight, centered baseline.
+- [Type Repeater](/docs/typography/type-repeater) — copies of a word unfold into a tunnel, a spiral or a fan behind it, breathe, and fold back into the word.
+
+<ChangelogPreview name="path-ride" />

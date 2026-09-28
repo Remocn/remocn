@@ -63,7 +63,17 @@
     "perspective-squeeze",
     "extrude-pop",
     "chromatic-wave",
-    "stretch-in"
+    "stretch-in",
+    "selection-snap",
+    "echo-stack",
+    "type-wall",
+    "ring-text",
+    "period-drop",
+    "outline-trace",
+    "glyph-anatomy",
+    "stripe-type",
+    "path-ride",
+    "type-repeater"
   ],
   "icon": "TextFontIcon"
 }

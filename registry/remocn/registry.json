@@ -2305,6 +2305,272 @@
           "target": "components/remocn/shader-spiral-pass.tsx"
         }
       ]
+    },
+    {
+      "name": "truchet-flip",
+      "type": "registry:component",
+      "title": "Truchet Flip",
+      "description": "Quarter-circle Truchet tiles snap a quarter turn as a wave crosses the grid, rerouting continuous lines until they settle into concentric loops, a calm field, or a circle of small rings.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "truchet-flip/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/truchet-flip.tsx"
+        }
+      ]
+    },
+    {
+      "name": "mondrian-split",
+      "type": "registry:component",
+      "title": "Mondrian Split",
+      "description": "Black lines cut the frame into a seeded De Stijl grid, primaries wipe into its cells, the grid reflows like rubber, and one cell pushes its own lines out past the edges to become a clean color field or the next scene.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "mondrian-split/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/mondrian-split.tsx"
+        }
+      ]
+    },
+    {
+      "name": "bauhaus-build",
+      "type": "registry:component",
+      "title": "Bauhaus Build",
+      "description": "Flat Bauhaus circles, arcs, squares and bars tumble corner over corner on a hidden grid into an asymmetric frieze, then rebuild into two friezes around an open band for the title.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "bauhaus-build/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/bauhaus-build.tsx"
+        }
+      ]
+    },
+    {
+      "name": "squiggle",
+      "type": "registry:component",
+      "title": "Squiggle",
+      "description": "A flat line draws itself along a straight course as a traveling wave whose crests swim forward and calm down as the head runs out, in wave, zigzag, loop or coil shapes, then erases toward its end point.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "squiggle/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/squiggle.tsx"
+        }
+      ]
+    },
+    {
+      "name": "speed-lines",
+      "type": "registry:component",
+      "title": "Speed Lines",
+      "description": "Parallel streaks trail an element as it flies in at its real speed, the element stretching with that speed and landing with a squash and a small bounce as the streaks die, or radial lines rush in from the frame edges and snap onto one point for a manga-style impact frame.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "speed-lines/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/speed-lines.tsx"
+        }
+      ]
+    },
+    {
+      "name": "trim-burst",
+      "type": "registry:component",
+      "title": "Trim Burst",
+      "description": "A ring of short straight strokes shoots out from a point like Trim Paths: each end races ahead on a hard-braking ease-out while its start holds, then chases it on a smoother ease-in-out, so every stroke grows, travels and zips shut at its outer distance.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "trim-burst/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/trim-burst.tsx"
+        }
+      ]
+    },
+    {
+      "name": "keystroke",
+      "type": "registry:component",
+      "title": "Keystroke",
+      "description": "Physical keycaps rise in for each shortcut, press in real order with the modifiers held while the letter taps, spring back with a small capped overshoot, and leave after an idle hold, firing on the same frames as the remocn-ui steps they trigger.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "keystroke/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/keystroke.tsx"
+        }
+      ]
+    },
+    {
+      "name": "code-morph",
+      "type": "registry:component",
+      "title": "Code Morph",
+      "description": "A flat code editor that morphs between versions of a file, gliding each surviving token to its new line and column while removed code dissolves and new code fades in.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "code-morph/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/code-morph.tsx"
+        }
+      ]
+    },
+    {
+      "name": "agent-run",
+      "type": "registry:component",
+      "title": "Agent Run",
+      "description": "Animated brand-neutral AI agent run — a Thinking status and short plan, tool calls whose spinners close into checks while a timer counts real seconds, then a markdown answer with citations and a code block that streams in irregular token bursts. Light/dark themes.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "agent-run/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/agent-run.tsx"
+        }
+      ]
+    },
+    {
+      "name": "selection-snap",
+      "type": "registry:component",
+      "title": "Selection Snap",
+      "description": "A thin word in a loose viewfinder snaps into a design-tool selection while it goes from Thin to Black, pops its handles and counts up a size badge.",
+      "dependencies": ["remotion", "@remotion/google-fonts"],
+      "files": [
+        {
+          "path": "selection-snap/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/selection-snap.tsx"
+        }
+      ]
+    },
+    {
+      "name": "echo-stack",
+      "type": "registry:component",
+      "title": "Echo Stack",
+      "description": "A word focuses in at the center while outline copies of it unfold above and below and keep drifting, like the one clear line on a spinning drum.",
+      "dependencies": ["remotion", "@remotion/google-fonts"],
+      "files": [
+        {
+          "path": "echo-stack/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/echo-stack.tsx"
+        }
+      ]
+    },
+    {
+      "name": "type-wall",
+      "type": "registry:component",
+      "title": "Type Wall",
+      "description": "Rows of one word fill the frame, run in alternating directions at different speeds in heavy, narrow and outline faces, with an accent band through the middle.",
+      "dependencies": ["remotion", "@remotion/google-fonts"],
+      "files": [
+        {
+          "path": "type-wall/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/type-wall.tsx"
+        }
+      ]
+    },
+    {
+      "name": "ring-text",
+      "type": "registry:component",
+      "title": "Ring Text",
+      "description": "Text runs around a tilted 3D band that spins, reading on the near side and mirrored on the far side.",
+      "dependencies": ["remotion", "@remotion/google-fonts"],
+      "files": [
+        {
+          "path": "ring-text/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/ring-text.tsx"
+        }
+      ]
+    },
+    {
+      "name": "period-drop",
+      "type": "registry:component",
+      "title": "Period Drop",
+      "description": "A word rises out of its line, then a colored dot falls from above the frame, bounces with squash and stretch, and settles as the period.",
+      "dependencies": ["remotion", "@remotion/google-fonts"],
+      "files": [
+        {
+          "path": "period-drop/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/period-drop.tsx"
+        }
+      ]
+    },
+    {
+      "name": "outline-trace",
+      "type": "registry:component",
+      "title": "Outline Trace",
+      "description": "Every glyph contour draws itself as a stroke, letter by letter, then the fill wipes up inside each letter and the stroke fades into it.",
+      "dependencies": ["remotion", "opentype.js"],
+      "files": [
+        {
+          "path": "outline-trace/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/outline-trace.tsx"
+        }
+      ]
+    },
+    {
+      "name": "glyph-anatomy",
+      "type": "registry:component",
+      "title": "Glyph Anatomy",
+      "description": "A word builds as in a font editor, with metric guides, anchors along each contour and Bézier handles that pull straight segments into curves before the glyphs fill.",
+      "dependencies": ["remotion", "opentype.js", "@remotion/google-fonts"],
+      "files": [
+        {
+          "path": "glyph-anatomy/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/glyph-anatomy.tsx"
+        }
+      ]
+    },
+    {
+      "name": "stripe-type",
+      "type": "registry:component",
+      "title": "Stripe Type",
+      "description": "A word cut into horizontal bands, as in the IBM logo, slides together from alternating sides and locks, then can pass on through.",
+      "dependencies": ["remotion", "@remotion/google-fonts"],
+      "files": [
+        {
+          "path": "stripe-type/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/stripe-type.tsx"
+        }
+      ]
+    },
+    {
+      "name": "path-ride",
+      "type": "registry:component",
+      "title": "Path Ride",
+      "description": "A line draws itself along a curve with the text riding behind its head, then the curve pulls taut and the text settles on a straight, centered baseline.",
+      "dependencies": ["remotion", "@remotion/google-fonts", "@remotion/paths"],
+      "files": [
+        {
+          "path": "path-ride/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/path-ride.tsx"
+        }
+      ]
+    },
+    {
+      "name": "type-repeater",
+      "type": "registry:component",
+      "title": "Type Repeater",
+      "description": "An After Effects style repeater on a word, where copies unfold into a tunnel, a spiral or a fan behind it, breathe, then fold back into the word.",
+      "dependencies": ["remotion", "@remotion/google-fonts"],
+      "files": [
+        {
+          "path": "type-repeater/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/type-repeater.tsx"
+        }
+      ]
     }
   ]
 }

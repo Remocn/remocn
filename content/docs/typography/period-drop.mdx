@@ -1,0 +1,116 @@
+---
+title: Period Drop
+description: A word rises out of its line, then a colored dot falls from above the frame, bounces with squash and stretch, and settles as the period
+component: period-drop
+vibe: playful
+length: 47
+useWhen:
+  - "An end card or a logo lockup should land with one physical, memorable beat."
+  - "A brand word should finish with a colored period, as in a wordmark."
+  - "A statement needs a full stop that the viewer actually sees arrive."
+avoidWhen:
+  - "The lockup is a row of brand marks rather than a word — use `logo-enter`."
+  - "The word should only rise out of its line, with no accent — use `mask-reveal-up`."
+  - "The ending should be quiet, without any bounce — use `soft-blur-in`."
+---
+
+<ComponentPreview name="period-drop" />
+
+<InstallBlock name="period-drop" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { AbsoluteFill, Composition } from "remotion";
+import { PeriodDrop } from "@/components/remocn/period-drop";
+
+const EndCard = () => (
+  <AbsoluteFill style={{ backgroundColor: "#0a0a0a" }}>
+    <PeriodDrop text="remocn" dotColor="#ff4d1a" />
+  </AbsoluteFill>
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="PeriodDrop"
+    component={EndCard}
+    durationInFrames={75}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Each letter rises out of a clip at its line over 12 frames, two frames apart.
+At frame 20 the dot drops from above the frame and lands at frame 32 on the
+baseline right after the last letter. It bounces twice, each time leaving at
+0.35 of its previous speed, and comes to rest at frame 47.
+
+The dot stretches with its speed in flight and squashes on each impact, keeping
+its area. The stretch tops out at 1.3× and the squash at 0.78×; later impacts
+squash less. That is well past the 2–4% squash the motion principles suggest
+for UI, on purpose: the bounce is the effect.
+
+The dot is an inline element after the word, so it lands wherever the word
+ends without measuring it. The component paints no background and centers the
+word in its parent. Sizes scale with `height / 720`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "text",
+      type: "string",
+      default: "\"remocn\"",
+      description: "The word before the period",
+    },
+    {
+      name: "fontSize",
+      type: "number",
+      default: "160",
+      description: "Font size in reference px at 720p",
+    },
+    {
+      name: "fontWeight",
+      type: "number",
+      default: "800",
+      description: "Font weight",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "Inter",
+      description: "Font family",
+    },
+    {
+      name: "color",
+      type: "string",
+      default: "\"#fafafa\"",
+      description: "Word color",
+    },
+    {
+      name: "dotColor",
+      type: "string",
+      default: "\"#D97757\"",
+      description: "Color of the period",
+    },
+    {
+      name: "dotSize",
+      type: "number",
+      default: "0.2",
+      description: "Period diameter in em",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Timeline speed multiplier",
+    },
+    {
+      name: "className",
+      type: "string",
+      description: "Optional className passed to the wrapper",
+    },
+  ]}
+/>

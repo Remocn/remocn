@@ -1,0 +1,177 @@
+---
+title: Trim Burst
+description: Short strokes shoot out from a point and vanish in flight, each start chasing its end, to punctuate a click, a landing number or a beat
+component: trim-burst
+vibe: clean
+length: 18
+useWhen:
+  - "A click, tap or toggle needs a quick punctuation mark, a ring of strokes that zips out from the point and is gone in about half a second."
+  - "A number, badge or icon lands and the moment deserves a small flat accent around it, with the strokes born just outside the element."
+  - "The same accent fires many times in one video, so it has to stay thin, one color and transparent over any scene."
+avoidWhen:
+  - "The moment is a celebration that should shower the frame with color — use `confetti`."
+  - "The burst is the main event, an opener that takes over the frame and clears it for a title — use `radial-burst`."
+  - "The lines should trail a moving element or converge on a point from the frame edges rather than burst out of it — use `speed-lines`."
+  - "One line should draw itself along a course, like a live underline or a connector — use `squiggle`."
+  - "The emphasis should look hand-drawn on paper rather than clean vector — use `scribble-circle`."
+---
+
+<ComponentPreview name="trim-burst" />
+
+<InstallBlock name="trim-burst" />
+
+## Usage
+
+`TrimBurst` is a punctuation accent. A ring of short straight strokes shoots
+out from a point and vanishes in flight. Each stroke is animated like Trim
+Paths in After Effects, with its own curve for each end. The end, the outer
+point, shoots out on a fast ease-out and brakes hard at its final distance.
+The start, the inner point, holds for about three frames, then chases the end
+on a smoother ease-in-out and catches up. So the stroke grows, travels near
+full length, and shrinks to nothing at its outer distance. Lengths, angles and
+launch times vary slightly per stroke from `seed`, so the ring never reads as
+a rigid asterisk.
+
+```tsx
+import { Backdrop } from "@/components/remocn/backdrop";
+import { TrimBurst } from "@/components/remocn/trim-burst";
+
+export const Accent = () => (
+  <Backdrop
+    fill={{ type: "color", value: "#002fa7" }}
+    padding={0}
+    radius={0}
+    shadow=""
+  >
+    <TrimBurst />
+  </Backdrop>
+);
+```
+
+The component fills its parent, paints no background, and draws into one SVG,
+so it composites over any scene. `x` and `y` place the burst center as
+fractions of the composition. `innerRadius`, `reach`, `strokeLength` and
+`weight` are pixels at a 720px-tall composition and scale with the height. The
+same props look the same at 720p, 1080p and 4K. Everything derives from the
+Remotion frame and the seed, so seeking and rendering are deterministic.
+
+### On a moment
+
+Start the burst on the event frame: put it in a `Sequence` that begins there
+and center it on the element it punctuates. Set `innerRadius` just outside the
+element so the strokes are born at its edge. Here a badge springs in and
+reaches full size around frame 6, and the burst fires on that frame.
+`trimBurstLength` covers the whole burst at the default `jitter` and `speed`,
+so it is a safe `Sequence` duration.
+
+```tsx
+import { Sequence, spring, useCurrentFrame, useVideoConfig } from "remotion";
+import { Backdrop } from "@/components/remocn/backdrop";
+import { TrimBurst, trimBurstLength } from "@/components/remocn/trim-burst";
+
+const LAND = 6;
+
+const Badge = () => {
+  const frame = useCurrentFrame();
+  const { fps, height } = useVideoConfig();
+  const size = 72 * (height / 720);
+  const scale = spring({ frame, fps, config: { damping: 14, stiffness: 160 } });
+
+  return (
+    <div
+      style={{
+        position: "absolute",
+        left: "70%",
+        top: "40%",
+        width: size,
+        height: size,
+        borderRadius: "50%",
+        background: "#ffffff",
+        transform: `translate(-50%, -50%) scale(${scale})`,
+      }}
+    />
+  );
+};
+
+export const BadgeLanding = () => (
+  <Backdrop
+    fill={{ type: "color", value: "#002fa7" }}
+    padding={0}
+    radius={0}
+    shadow=""
+  >
+    <Badge />
+    <Sequence from={LAND} durationInFrames={trimBurstLength}>
+      <TrimBurst x={0.7} y={0.4} innerRadius={48} reach={40} />
+    </Sequence>
+  </Backdrop>
+);
+```
+
+The badge is 72px wide and overshoots to about 81px, so an `innerRadius` of 48
+keeps every stroke clear of it. `left` and `top` use the same fractions as `x`
+and `y`, so the burst stays centered on the badge at any composition size.
+
+## Timing
+
+At 30 fps, `speed={1}` and the defaults:
+
+| Frames | Motion |
+| --- | --- |
+| 0 | Nothing is drawn; every stroke still sits on the inner radius |
+| 0–3 | Strokes launch one after another in a seeded order |
+| 1–7 | Each end covers 36% of its reach one frame after launch and 60% after two, while its start holds near the inner radius, so the stroke grows |
+| 4–9 | Strokes run near full length and travel outward as the ends brake and the starts pick up speed |
+| 7–18 | Each start zips into its braking tip, and the stroke vanishes at the outer distance |
+| 18–42 | The docs preview holds an empty frame before it loops |
+
+A stroke lives 15 frames. Its start holds for about three frames, then
+follows its own ease-in-out: it moves fastest around frame 9 and lands on the
+end at frame 15, the frame the end arrives. At the defaults the stroke peaks
+at about 77% of `reach` near frame 5 and travels near that length for a few
+frames before it shrinks.
+
+`strokeLength` is a soft cap on that length. On their own, the two curves open
+a stroke to about 85% of `reach`, so the default of 56 only trims the peak. Set
+`strokeLength` well below that, for short dashes on a long `reach`, and the
+start is pulled along behind the end: each stroke travels as a dash of that
+length, then its start zips it shut.
+
+`trimBurstLength` is 18: the 15-frame stroke plus a launch spread of
+`6 × jitter` frames. `getTrimBurstTimeline({ jitter, count })` returns those
+parts. `getTrimBurstDuration({ speed, jitter, count, delay })` returns the
+preview length, which adds a 24-frame empty hold. `delay` counts composition
+frames before the burst fires. `speed` scales the motion, so at `speed={2}`
+the burst lasts 9 frames. For another frame rate, multiply by `fps / 30`.
+
+## Variations
+
+`spread` below 360 turns the ring into a fan centered on `rotation`, measured
+clockwise from 12 o'clock. For example, `spread={100}` with `count={5}` fans
+five strokes upward over a number. `dots` adds a small dot just past each tip.
+It pops 4 frames after its stroke launches, overshoots by 7%, and shrinks to
+nothing as the stroke closes. `jitter={0}` gives a rigid ring that launches all
+at once, and `jitter={1}` spreads the launches over 6 frames. `cap="butt"`
+gives the strokes flat ends.
+
+<PropsTable title="Props"
+  rows={[
+    { name: "x", type: "number", default: "0.5", description: "Burst center as a fraction of the composition width" },
+    { name: "y", type: "number", default: "0.5", description: "Burst center as a fraction of the composition height" },
+    { name: "count", type: "number", default: "8", description: "Number of strokes, rounded and clamped to 1–32" },
+    { name: "innerRadius", type: "number", default: "16", description: "Distance from the center where strokes are born, in px at 720p; set it just outside the element" },
+    { name: "reach", type: "number", default: "64", description: "How far each end travels past the inner radius, in px at 720p" },
+    { name: "strokeLength", type: "number", default: "56", description: "Soft cap on the stroke length in px at 720p; the free chase peaks near 85% of reach, and lower values turn strokes into short dashes that travel before they zip shut" },
+    { name: "weight", type: "number", default: "2", description: "Stroke width in px at 720p, clamped to 0.25–24" },
+    { name: "rotation", type: "number", default: "0", description: "Direction of the first stroke, or the center of a fan, in degrees clockwise from 12 o'clock" },
+    { name: "spread", type: "number", default: "360", description: "360 for a full ring, or the angle of a fan centered on rotation" },
+    { name: "jitter", type: "number", default: "0.5", description: "Seeded variation from 0 to 1; offsets each angle by up to a quarter of the spacing, shortens strokes by up to 45% and spreads launches over up to 6 frames" },
+    { name: "dots", type: "boolean", default: "false", description: "Adds a small dot just past each tip that pops and shrinks with its stroke" },
+    { name: "cap", type: '"round" | "butt"', default: '"round"', description: "Stroke line cap" },
+    { name: "color", type: "string", default: '"#ffffff"', description: "Stroke and dot color" },
+    { name: "seed", type: "number", default: "1", description: "Seeds the per-stroke angles, lengths and launch order" },
+    { name: "delay", type: "number", default: "0", description: "Composition frames to wait before the burst fires" },
+    { name: "speed", type: "number", default: "1", description: "Playback multiplier; 0 never fires" },
+    { name: "className", type: "string", description: "Optional class name on the full-frame root" },
+  ]}
+/>

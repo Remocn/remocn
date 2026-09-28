@@ -1,0 +1,128 @@
+---
+title: Path Ride
+description: A line draws itself along a curve with the text riding behind its head, then the curve pulls taut and the text settles on a straight, centered baseline
+component: path-ride
+vibe: playful
+length: 70
+useWhen:
+  - "A tagline or a short phrase should travel across the frame before it settles, leading the eye from one side to the other."
+  - "You want text on a path, with each letter turned to the curve, and a clean readable line at the end."
+  - "The motion should follow a custom route: pass any SVG path in 1280×720 space."
+avoidWhen:
+  - "The line should be an accent on its own, with no text riding it — use `squiggle`."
+  - "The text should loop around a closed ring — use `ring-text`."
+  - "The text should scroll in a straight strip — use `infinite-marquee`."
+---
+
+<ComponentPreview name="path-ride" />
+
+<InstallBlock name="path-ride" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { AbsoluteFill, Composition } from "remotion";
+import { PathRide } from "@/components/remocn/path-ride";
+
+const Tagline = () => (
+  <AbsoluteFill style={{ backgroundColor: "#ff4d1a" }}>
+    <PathRide
+      text="Follow the line"
+      color="#111111"
+      lineColor="#fafafa"
+      path="M 120 560 C 360 120 560 120 640 360 S 920 600 1160 160"
+    />
+  </AbsoluteFill>
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="PathRide"
+    component={Tagline}
+    durationInFrames={96}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The line draws along `path` over 40 frames with a dot at its head. The text
+trails the head, last letter first, and every letter stands on the curve,
+turned to its tangent and lifted clear of the line. Letters fade in over their
+first half-em on the curve.
+
+From frame 50 the curve pulls taut: every point of the path moves toward a
+straight baseline, where arc length maps one to one onto x, so the text keeps
+its spacing while the line and the letters straighten together. The line then
+erases from its tail, and by frame 70 the text rests alone, centered on the
+frame.
+
+`path` is an SVG path in a 1280×720 reference frame, centered and scaled to the
+composition; positions are sampled along it once. Letter widths and the
+baseline are measured from the loaded font. Sizes scale with `height / 720`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "text",
+      type: "string",
+      default: "\"Follow the line\"",
+      description: "The text that rides the line",
+    },
+    {
+      name: "path",
+      type: "string",
+      default: "S-curve across the frame",
+      description: "SVG path data in 1280×720 reference space. It should be longer than the text",
+    },
+    {
+      name: "fontSize",
+      type: "number",
+      default: "44",
+      description: "Font size in reference px at 720p",
+    },
+    {
+      name: "fontWeight",
+      type: "number",
+      default: "700",
+      description: "Font weight",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "Inter",
+      description: "Font family",
+    },
+    {
+      name: "color",
+      type: "string",
+      default: "\"#fafafa\"",
+      description: "Text color",
+    },
+    {
+      name: "lineColor",
+      type: "string",
+      default: "\"#D97757\"",
+      description: "Line and head dot color",
+    },
+    {
+      name: "lineWidth",
+      type: "number",
+      default: "3",
+      description: "Line width in reference px",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Timeline speed multiplier",
+    },
+    {
+      name: "className",
+      type: "string",
+      description: "Optional className passed to the wrapper",
+    },
+  ]}
+/>

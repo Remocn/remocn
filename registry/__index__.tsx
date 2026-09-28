@@ -590,6 +590,106 @@ const registry: Record<string, RegistryEntry> = {
         (m) => m.stretchInConfig,
       ),
   },
+  "selection-snap": {
+    load: () =>
+      import("@/registry/remocn/selection-snap").then((m) => ({
+        default: m.SelectionSnap,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/selection-snap/config").then(
+        (m) => m.selectionSnapConfig,
+      ),
+  },
+  "echo-stack": {
+    load: () =>
+      import("@/registry/remocn/echo-stack").then((m) => ({
+        default: m.EchoStack,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/echo-stack/config").then(
+        (m) => m.echoStackConfig,
+      ),
+  },
+  "type-wall": {
+    load: () =>
+      import("@/registry/remocn/type-wall").then((m) => ({
+        default: m.TypeWall,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/type-wall/config").then(
+        (m) => m.typeWallConfig,
+      ),
+  },
+  "ring-text": {
+    load: () =>
+      import("@/registry/remocn/ring-text").then((m) => ({
+        default: m.RingText,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/ring-text/config").then(
+        (m) => m.ringTextConfig,
+      ),
+  },
+  "period-drop": {
+    load: () =>
+      import("@/registry/remocn/period-drop").then((m) => ({
+        default: m.PeriodDrop,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/period-drop/config").then(
+        (m) => m.periodDropConfig,
+      ),
+  },
+  "outline-trace": {
+    load: () =>
+      import("@/registry/remocn/outline-trace").then((m) => ({
+        default: m.OutlineTrace,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/outline-trace/config").then(
+        (m) => m.outlineTraceConfig,
+      ),
+  },
+  "glyph-anatomy": {
+    load: () =>
+      import("@/registry/remocn/glyph-anatomy").then((m) => ({
+        default: m.GlyphAnatomy,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/glyph-anatomy/config").then(
+        (m) => m.glyphAnatomyConfig,
+      ),
+  },
+  "stripe-type": {
+    load: () =>
+      import("@/registry/remocn/stripe-type").then((m) => ({
+        default: m.StripeType,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/stripe-type/config").then(
+        (m) => m.stripeTypeConfig,
+      ),
+  },
+  "path-ride": {
+    load: () =>
+      import("@/registry/remocn/path-ride").then((m) => ({
+        default: m.PathRide,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/path-ride/config").then(
+        (m) => m.pathRideConfig,
+      ),
+  },
+  "type-repeater": {
+    load: () =>
+      import("@/registry/remocn/type-repeater").then((m) => ({
+        default: m.TypeRepeater,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/type-repeater/config").then(
+        (m) => m.typeRepeaterConfig,
+      ),
+  },
   "chromatic-wave": {
     load: () =>
       import("@/registry/remocn/chromatic-wave").then((m) => ({
@@ -688,6 +788,16 @@ const registry: Record<string, RegistryEntry> = {
     loadConfig: () =>
       import("@/registry/remocn/glass-code-walk/config").then(
         (m) => m.glassCodeWalkConfig,
+      ),
+  },
+  "code-morph": {
+    load: () =>
+      import("@/registry/remocn/code-morph").then((m) => ({
+        default: m.CodeMorph,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/code-morph/config").then(
+        (m) => m.codeMorphConfig,
       ),
   },
   "shader-mesh-gradient": {
@@ -878,6 +988,16 @@ const registry: Record<string, RegistryEntry> = {
     loadConfig: () =>
       import("@/registry/remocn/simulated-cursor/config").then(
         (m) => m.simulatedCursorConfig,
+      ),
+  },
+  keystroke: {
+    load: () =>
+      import("@/registry/remocn/keystroke").then((m) => ({
+        default: m.Keystroke,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/keystroke/config").then(
+        (m) => m.keystrokeConfig,
       ),
   },
   "swirl-dissolve": {
@@ -2376,6 +2496,64 @@ const registry: Record<string, RegistryEntry> = {
         (m) => m.radialBurstConfig,
       ),
   },
+  "bauhaus-build": {
+    load: () =>
+      import("@/registry/remocn/bauhaus-build").then((m) => ({
+        default: m.BauhausBuild,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/bauhaus-build/config").then(
+        (m) => m.bauhausBuildConfig,
+      ),
+  },
+  "mondrian-split": {
+    load: () =>
+      import("@/registry/remocn/mondrian-split").then((m) => ({
+        default: m.MondrianSplit,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/mondrian-split/config").then(
+        (m) => m.mondrianSplitConfig,
+      ),
+  },
+  "truchet-flip": {
+    load: () =>
+      import("@/registry/remocn/truchet-flip").then((m) => ({
+        default: m.TruchetFlip,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/truchet-flip/config").then(
+        (m) => m.truchetFlipConfig,
+      ),
+  },
+  "trim-burst": {
+    load: () =>
+      import("@/registry/remocn/trim-burst").then((m) => ({
+        default: m.TrimBurst,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/trim-burst/config").then(
+        (m) => m.trimBurstConfig,
+      ),
+  },
+  "speed-lines": {
+    load: () =>
+      import("@/registry/remocn/speed-lines").then((m) => ({
+        default: m.SpeedLines,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/speed-lines/config").then(
+        (m) => m.speedLinesConfig,
+      ),
+  },
+  squiggle: {
+    load: () =>
+      import("@/registry/remocn/squiggle").then((m) => ({
+        default: m.Squiggle,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/squiggle/config").then((m) => m.squiggleConfig),
+  },
   confetti: {
     load: () =>
       import("@/registry/remocn/confetti").then((m) => ({
@@ -2528,6 +2706,16 @@ const registry: Record<string, RegistryEntry> = {
       })),
     loadConfig: () =>
       import("@/registry/remocn/opencode/config").then((m) => m.opencodeConfig),
+  },
+  "agent-run": {
+    load: () =>
+      import("@/registry/remocn/agent-run").then((m) => ({
+        default: m.AgentRun,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/agent-run/config").then(
+        (m) => m.agentRunConfig,
+      ),
   },
   button: {
     load: () =>
