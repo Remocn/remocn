@@ -492,8 +492,7 @@ export function getMondrianSplitLayout({
           (cell) =>
             cell.slot === slot &&
             touches(nodes[cell.index].box, nodes[index].box),
-        ) &&
-        !(slot === "red" && touches(nodes[index].box, targetBox)),
+        ) && !(slot === "red" && touches(nodes[index].box, targetBox)),
     );
     const choice = clean ?? free[0];
     if (choice) painted.push({ index: choice.index, slot });

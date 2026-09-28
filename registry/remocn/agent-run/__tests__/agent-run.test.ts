@@ -1,9 +1,9 @@
 import { describe, expect, it } from "bun:test";
 import { getDefaults, resolveControls } from "@/lib/customizer-config";
 import {
+  type AgentRunModel,
   agentRunDefaults,
   agentRunLength,
-  type AgentRunModel,
   defaultAgentRun,
   estimateAgentRunWidth,
   fitAgentRunChips,

@@ -2270,7 +2270,9 @@ function Bubble({
         transform: `translateY(${bubble.lift}px)`,
       }}
     >
-      {bubble.lines.map((line, index) => <div key={index}>{line}</div>)}
+      {bubble.lines.map((line, index) => (
+        <div key={index}>{line}</div>
+      ))}
     </div>
   );
 }
@@ -2619,9 +2621,7 @@ export function AgentRun({
             >
               <Bubble bubble={state.bubble} palette={palette} />
               <Status status={state.status} palette={palette} />
-              {state.plan ? (
-                <Plan plan={state.plan} palette={palette} />
-              ) : null}
+              {state.plan ? <Plan plan={state.plan} palette={palette} /> : null}
               {state.tools ? (
                 <Tools tools={state.tools} palette={palette} />
               ) : null}

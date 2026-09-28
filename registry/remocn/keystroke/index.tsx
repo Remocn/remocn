@@ -414,11 +414,7 @@ const accentOf = (value: string | undefined) =>
 const modOf = (platform: KeystrokePlatform): Modifier =>
   platform === "mac" ? "meta" : "ctrl";
 
-function eased(
-  frames: number,
-  duration: number,
-  curve: (t: number) => number,
-) {
+function eased(frames: number, duration: number, curve: (t: number) => number) {
   if (Number.isNaN(frames) || frames <= 0) return 0;
   if (frames >= duration) return 1;
   return curve(frames / duration);

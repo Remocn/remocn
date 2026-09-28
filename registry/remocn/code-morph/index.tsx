@@ -1018,17 +1018,19 @@ function rowsOf(count: number, opacity: (row: number) => number) {
 
 function restingTokens(layout: CodeMorphLayout, version: number) {
   const { tokens } = layout.versions[version];
-  return tokens.map((token, j): CodeMorphRenderToken => ({
-    key: `${version}:${j}`,
-    text: token.text,
-    kind: token.kind,
-    role: "rest",
-    line: token.line,
-    col: token.col,
-    opacity: 1,
-    scale: 1,
-    blur: 0,
-  }));
+  return tokens.map(
+    (token, j): CodeMorphRenderToken => ({
+      key: `${version}:${j}`,
+      text: token.text,
+      kind: token.kind,
+      role: "rest",
+      line: token.line,
+      col: token.col,
+      opacity: 1,
+      scale: 1,
+      blur: 0,
+    }),
+  );
 }
 
 function morphFrame(

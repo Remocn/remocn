@@ -405,9 +405,7 @@ describe("keystroke keys", () => {
     expect(legends("mod+k")).toEqual([["command", "K"]]);
     expect(legends("mod+k", "windows")).toEqual([["Ctrl", "K"]]);
     expect(legends("shift+mod+p")).toEqual([["shift", "command", "P"]]);
-    expect(legends("shift+mod+p", "windows")).toEqual([
-      ["Ctrl", "Shift", "P"],
-    ]);
+    expect(legends("shift+mod+p", "windows")).toEqual([["Ctrl", "Shift", "P"]]);
     expect(legends("enter")).toEqual([["return"]]);
     expect(legends("return", "windows")).toEqual([["Enter"]]);
     expect(legends("mod+backspace")).toEqual([["command", "delete"]]);
