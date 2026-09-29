@@ -2,16 +2,17 @@
 
 import {
   installInStudio,
+  isInsideStudio,
   type StudioElementPayload,
   setStudioDragData,
 } from "@remotion/studio-protocol";
 import { GripVerticalIcon, Loader2Icon } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Remotion } from "@/components/ui/svgs/remotion";
 import { useTrackEvent } from "@/lib/analytics";
 
-type Status = "idle" | "pending" | "error";
+type Status = "idle" | "pending" | "success" | "error";
 
 export function StudioActions({
   name,
@@ -23,7 +24,14 @@ export function StudioActions({
   const trackEvent = useTrackEvent();
   const [status, setStatus] = useState<Status>("idle");
   const [message, setMessage] = useState<string | null>(null);
+  const [isEmbeddedInStudio, setIsEmbeddedInStudio] = useState<boolean | null>(
+    null,
+  );
   const resetTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useLayoutEffect(() => {
+    setIsEmbeddedInStudio(isInsideStudio());
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -38,7 +46,10 @@ export function StudioActions({
     trackEvent("studio_install_clicked", { component: name });
     const result = await installInStudio({ payload });
     if (result.success) {
-      setStatus("idle");
+      setStatus("success");
+      setMessage(
+        `Sent to Remotion Studio${result.target.projectName === null ? "" : ` (${result.target.projectName})`}.`,
+      );
     } else {
       setStatus("error");
       setMessage(result.message);
@@ -77,19 +88,23 @@ export function StudioActions({
         ) : (
           <Remotion className="size-3.5" />
         )}
-        Add to Remotion Studio
+        {status === "success"
+          ? "Sent to Remotion Studio"
+          : "Add to Remotion Studio"}
       </Button>
-      <Button
-        variant="outline"
-        size="icon-sm"
-        draggable
-        onDragStart={handleDragStart}
-        aria-label="Drag into Remotion Studio"
-        title="Drag into Remotion Studio"
-        className="cursor-grab text-muted-foreground hover:text-foreground active:cursor-grabbing"
-      >
-        <GripVerticalIcon className="size-3.5" />
-      </Button>
+      {isEmbeddedInStudio === false ? (
+        <Button
+          variant="outline"
+          size="icon-sm"
+          draggable
+          onDragStart={handleDragStart}
+          aria-label="Drag into Remotion Studio"
+          title="Drag into Remotion Studio"
+          className="cursor-grab text-muted-foreground hover:text-foreground active:cursor-grabbing"
+        >
+          <GripVerticalIcon className="size-3.5" />
+        </Button>
+      ) : null}
     </div>
   );
 }

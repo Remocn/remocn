@@ -12,7 +12,7 @@ import { componentMetaSchema } from "./lib/docs-schema";
 export const docs = defineDocs({
   dir: "content/docs",
   docs: {
-    schema: pageSchema.extend(componentMetaSchema.shape),
+    schema: pageSchema.safeExtend(componentMetaSchema.shape),
     postprocess: {
       includeProcessedMarkdown: true,
     },
