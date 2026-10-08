@@ -2,6 +2,7 @@
 
 import { animate, motion, useMotionValue } from "motion/react";
 import { type ReactNode, useEffect, useRef } from "react";
+import { StudioBar } from "@/components/studio-bar";
 import { useScroll } from "@/hooks/use-scroll";
 import { cn } from "@/lib/utils";
 
@@ -83,6 +84,7 @@ export function StickyHeaderShell({ children }: { children: ReactNode }) {
         style={{ y }}
         className="fixed inset-x-0 top-0 z-40"
       >
+        <StudioBar collapsed={scrolled} />
         <div
           className={cn(
             "transition-[height,background-color,box-shadow] duration-300",
@@ -96,7 +98,7 @@ export function StickyHeaderShell({ children }: { children: ReactNode }) {
           </div>
         </div>
       </motion.header>
-      <div aria-hidden className="h-16" />
+      <div aria-hidden className="h-26 in-data-[studio-bar=dismissed]:h-16" />
     </>
   );
 }

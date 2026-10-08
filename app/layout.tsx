@@ -4,6 +4,7 @@ import { ThemeProvider } from "next-themes";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import "./globals.css";
 import { OpenPanelComponent } from "@openpanel/nextjs";
+import { STUDIO_BAR_SCRIPT } from "@/lib/studio-bar";
 import { cn } from "@/lib/utils";
 import { ThemeShortcut } from "./theme-shortcut";
 
@@ -74,6 +75,12 @@ export default function RootLayout({
         inter.variable,
       )}
     >
+      <head>
+        <script
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: restores the dismissed studio bar before first paint
+          dangerouslySetInnerHTML={{ __html: STUDIO_BAR_SCRIPT }}
+        />
+      </head>
       <body className="min-h-full flex flex-col">
         <NuqsAdapter>
           <ThemeProvider

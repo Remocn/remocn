@@ -17,7 +17,9 @@ export type CtaId =
   | "hero_templates_badge"
   | "how_it_works_setup"
   | "final_cta"
-  | "github_header";
+  | "github_header"
+  | "studio_bar"
+  | "footer_external";
 
 type AnalyticsEvents = {
   install_command_copied: {
