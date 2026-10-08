@@ -1,0 +1,111 @@
+---
+title: Dim Progress
+description: The whole phrase sits on screen dimmed and each word brightens the moment it is spoken, with no motion at all
+component: caption-dim-progress
+vibe: clean
+length: transcript-driven
+useWhen:
+  - "Captions have to be read rather than watched — tutorials, explainers, accessibility-first edits where nothing should move."
+  - "You want the viewer to read ahead while still seeing exactly where the voice is, without a colour or an animation competing with the footage."
+avoidWhen:
+  - "You want the position of the voice to feel physical, filling through each word at speaking pace — use `caption-karaoke`."
+  - "You want a coloured marker that travels from word to word — use `caption-underline` or `caption-highlight-box`."
+  - "The phrase should stay completely static, with no per-word change at all — use `caption-subtitle`."
+---
+
+<ComponentPreview name="caption-dim-progress" />
+
+<InstallBlock name="caption-dim-progress" />
+
+## Usage
+
+`CaptionDimProgress` shows the whole page at once with every upcoming word
+dimmed. As the voice reaches a word it brightens to full strength and stays
+there, so the bright part of the line is always what has been said. Nothing
+moves and nothing changes colour, which keeps the captions calm over busy
+footage. The component renders only the text block, so place it inside your own
+`AbsoluteFill` — see [Positioning](/docs/captions/getting-started/positioning).
+
+```tsx
+import { AbsoluteFill } from "remotion";
+import { CaptionDimProgress } from "@/components/remocn/caption-dim-progress";
+import captions from "./captions.json";
+
+export const MyScene = () => (
+  <AbsoluteFill
+    style={{
+      justifyContent: "flex-end",
+      alignItems: "center",
+      paddingBottom: 108,
+      paddingInline: 192,
+    }}
+  >
+    <CaptionDimProgress captions={captions} dimOpacity={0.35} />
+  </AbsoluteFill>
+);
+```
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "captions",
+      type: "Caption[]",
+      default: "—",
+      description:
+        "The timed transcript, in the `Caption` shape from `@remotion/captions`. Times are relative to the start of the surrounding `Sequence`.",
+    },
+    {
+      name: "combineTokensWithinMilliseconds",
+      type: "number",
+      default: "1200",
+      description:
+        "How much speech one page may span before the next word starts a new page. Pages also break at the end of a sentence and on any pause of at least `holdMs` (300 ms minimum).",
+    },
+    {
+      name: "holdMs",
+      type: "number",
+      default: "600",
+      description:
+        "How long a page stays after its last word when the next page is not already due. It fades out at the end of the hold.",
+    },
+    {
+      name: "dimOpacity",
+      type: "number",
+      default: "0.35",
+      description:
+        "Opacity of words the voice has not reached yet. Each word brightens to full over about 90ms as it is spoken.",
+    },
+    {
+      name: "fontSize",
+      type: "number",
+      default: "64",
+      description: "Font size in pixels.",
+    },
+    {
+      name: "fontWeight",
+      type: "number",
+      default: "800",
+      description: "Font weight. The font itself is inherited.",
+    },
+    {
+      name: "color",
+      type: "string",
+      default: "\"#ffffff\"",
+      description: "Text colour, the same for spoken and upcoming words.",
+    },
+    {
+      name: "shadow",
+      type: "boolean",
+      default: "true",
+      description:
+        "A tight text shadow that keeps the caption legible over bright footage.",
+    },
+    {
+      name: "className",
+      type: "string",
+      default: "—",
+      description:
+        "Classes for the text block — width, font family, `uppercase`.",
+    },
+  ]}
+/>

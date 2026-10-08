@@ -44,6 +44,23 @@ const tree: Root = {
     },
     {
       type: "folder",
+      name: "Captions",
+      children: [
+        {
+          type: "folder",
+          name: "Getting Started",
+          children: [
+            {
+              type: "page",
+              name: "Introduction",
+              url: "/docs/captions/getting-started/introduction",
+            },
+          ],
+        },
+      ],
+    },
+    {
+      type: "folder",
       name: "Templates",
       children: [
         {
@@ -88,8 +105,21 @@ describe("splitDocsTree", () => {
     expect(urls.some((url) => url.startsWith("/docs/icons"))).toBe(false);
     expect(urls.some((url) => url.startsWith("/docs/shaders"))).toBe(false);
     expect(urls.some((url) => url.startsWith("/docs/filters"))).toBe(false);
+    expect(urls.some((url) => url.startsWith("/docs/captions"))).toBe(false);
     expect(urls.some((url) => url.startsWith("/docs/templates"))).toBe(false);
     expect(urls.some((url) => url.startsWith("/docs/ui"))).toBe(false);
+  });
+
+  it("routes captions pages only into the captions branch", () => {
+    const { captions, filters } = splitDocsTree(tree);
+    expect(collectUrls(captions.children)).toEqual([
+      "/docs/captions/getting-started/introduction",
+    ]);
+    expect(
+      collectUrls(filters.children).some((url) =>
+        url.startsWith("/docs/captions"),
+      ),
+    ).toBe(false);
   });
 
   it("keeps shaders, templates, and icons in separate branches", () => {
@@ -110,12 +140,20 @@ describe("splitDocsTree", () => {
   });
 
   it("gives every branch a distinct, stable $id", () => {
-    const { components, primitives, shaders, filters, templates, icons } =
-      splitDocsTree(tree);
+    const {
+      components,
+      primitives,
+      shaders,
+      filters,
+      captions,
+      templates,
+      icons,
+    } = splitDocsTree(tree);
     expect(components.$id).toBe("docs-tab-components");
     expect(primitives.$id).toBe("docs-tab-primitives");
     expect(shaders.$id).toBe("docs-tab-shaders");
     expect(filters.$id).toBe("docs-tab-filters");
+    expect(captions.$id).toBe("docs-tab-captions");
     expect(templates.$id).toBe("docs-tab-templates");
     expect(icons.$id).toBe("docs-tab-icons");
     expect(
@@ -124,10 +162,11 @@ describe("splitDocsTree", () => {
         primitives.$id,
         shaders.$id,
         filters.$id,
+        captions.$id,
         templates.$id,
         icons.$id,
       ]).size,
-    ).toBe(6);
+    ).toBe(7);
   });
 
   it("does not mutate the source tree", () => {
@@ -139,9 +178,17 @@ describe("splitDocsTree", () => {
 });
 
 describe("getActiveDocsTab", () => {
-  it("places Templates immediately after Filters", () => {
+  it("places Captions after Filters and Templates after Captions", () => {
     const labels = DOCS_TABS.map((tab) => tab.label);
-    expect(labels.indexOf("Templates")).toBe(labels.indexOf("Filters") + 1);
+    expect(labels.indexOf("Captions")).toBe(labels.indexOf("Filters") + 1);
+    expect(labels.indexOf("Templates")).toBe(labels.indexOf("Captions") + 1);
+  });
+
+  it("selects the captions tab for captions paths", () => {
+    expect(getActiveDocsTab("/docs/captions")).toBe("captions");
+    expect(
+      getActiveDocsTab("/docs/captions/getting-started/introduction"),
+    ).toBe("captions");
   });
 
   it("selects the templates tab for template paths", () => {

@@ -1,0 +1,120 @@
+---
+title: Weight
+description: The word being spoken swells from a light weight to a heavy one and relaxes as the voice moves on, with no layout shift
+component: caption-weight
+vibe: premium
+length: transcript-driven
+useWhen:
+  - "You want captions that follow the voice with typography alone — no colour change, no box, just the active word gaining weight."
+  - "The brand leans on a single variable typeface and a weight shift is the most on-brand emphasis available."
+avoidWhen:
+  - "You need emphasis that reads at a glance on small vertical screens — use `caption-active-pop`, which adds colour and scale."
+  - "The font has only one or two static weights — the ramp will step. Use `caption-karaoke`, which works with any font."
+  - "There is no voiceover and the text is scripted — use `word-stream`."
+---
+
+<ComponentPreview name="caption-weight" />
+
+<InstallBlock name="caption-weight" />
+
+## Usage
+
+`CaptionWeight` takes a timed transcript and renders only the text block, so
+place it inside your own `AbsoluteFill`. See [Positioning](/docs/captions/getting-started/positioning)
+for safe placements and [Get a transcript](/docs/captions/getting-started/get-a-transcript)
+for producing `captions.json`.
+
+Each word reserves the width of its heaviest weight, so the line never moves
+while a word gains weight. The ramp is only as smooth as the weights your font
+has: a variable font interpolates every step, a static family snaps to the
+nearest loaded weight. With `@remotion/google-fonts`, load the variable
+version of the family so every weight in between exists.
+
+```tsx
+import { loadVariableFont } from "@remotion/google-fonts/Inter";
+import { AbsoluteFill } from "remotion";
+import { CaptionWeight } from "@/components/remocn/caption-weight";
+import captions from "./captions.json";
+
+const { fontFamily } = loadVariableFont("normal", { subsets: ["latin"] });
+
+export const MyScene = () => (
+  <AbsoluteFill
+    style={{
+      justifyContent: "flex-end",
+      alignItems: "center",
+      paddingBottom: 108,
+      paddingInline: 192,
+    }}
+  >
+    <div style={{ fontFamily }}>
+      <CaptionWeight captions={captions} />
+    </div>
+  </AbsoluteFill>
+);
+```
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "captions",
+      type: "Caption[]",
+      default: "—",
+      description:
+        "The timed transcript, in the `Caption` shape from `@remotion/captions`. Times are relative to the start of the surrounding `Sequence`.",
+    },
+    {
+      name: "combineTokensWithinMilliseconds",
+      type: "number",
+      default: "1200",
+      description:
+        "How much speech one page may span before the next word starts a new page. Pages also break at the end of a sentence and on any pause of at least `holdMs` (300 ms minimum).",
+    },
+    {
+      name: "holdMs",
+      type: "number",
+      default: "600",
+      description:
+        "How long a page stays after its last word when the next page is not already due. It fades out at the end of the hold.",
+    },
+    {
+      name: "fontSize",
+      type: "number",
+      default: "64",
+      description: "Font size in pixels.",
+    },
+    {
+      name: "fontWeight",
+      type: "number",
+      default: "400",
+      description: "Resting weight of every word that is not being spoken.",
+    },
+    {
+      name: "activeWeight",
+      type: "number",
+      default: "900",
+      description:
+        "Weight the spoken word ramps to over about 150ms, then relaxes from when the next word starts.",
+    },
+    {
+      name: "color",
+      type: "string",
+      default: "\"#ffffff\"",
+      description: "Text colour.",
+    },
+    {
+      name: "shadow",
+      type: "boolean",
+      default: "true",
+      description:
+        "A tight text shadow that keeps the caption legible over bright footage.",
+    },
+    {
+      name: "className",
+      type: "string",
+      default: "—",
+      description:
+        "Classes for the text block — width, font family, `uppercase`.",
+    },
+  ]}
+/>

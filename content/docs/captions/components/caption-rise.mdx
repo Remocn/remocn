@@ -1,0 +1,105 @@
+---
+title: Rise
+description: Each word slides up out of a mask at its baseline the moment it is spoken, with no bounce and no scale
+component: caption-rise
+vibe: clean
+length: transcript-driven
+useWhen:
+  - "Editorial video, interviews or a brand film where the captions should feel typeset — words rise into a fixed line with a confident ease-out and nothing extra."
+  - "You want motion that reads as precise rather than playful — each word is revealed by a hard mask edge instead of a fade or a spring."
+avoidWhen:
+  - "The video is playful short-form and wants energy — use `caption-bounce-in`."
+  - "The tone is soft and dreamy rather than crisp — use `caption-blur-in`, which resolves each word out of focus."
+  - "The text is a scripted title with no voiceover — use `per-word-crossfade` or `word-stream`."
+---
+
+<ComponentPreview name="caption-rise" />
+
+<InstallBlock name="caption-rise" />
+
+## Usage
+
+`CaptionRise` takes a timed transcript and renders only the text block, so
+place it inside your own `AbsoluteFill`. Every word sits in its own mask and
+rises into place from below its baseline at its own start time. The space for
+the whole phrase is reserved from the first word, so the line never reflows as
+it builds. See [Positioning](/docs/captions/getting-started/positioning) for
+safe placements and [Get a transcript](/docs/captions/getting-started/get-a-transcript)
+for producing `captions.json`.
+
+```tsx
+import { AbsoluteFill } from "remotion";
+import { CaptionRise } from "@/components/remocn/caption-rise";
+import captions from "./captions.json";
+
+export const MyScene = () => (
+  <AbsoluteFill
+    style={{
+      justifyContent: "flex-end",
+      alignItems: "center",
+      paddingBottom: 108,
+      paddingInline: 192,
+    }}
+  >
+    <CaptionRise captions={captions} />
+  </AbsoluteFill>
+);
+```
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "captions",
+      type: "Caption[]",
+      default: "—",
+      description:
+        "The timed transcript, in the `Caption` shape from `@remotion/captions`. Times are relative to the start of the surrounding `Sequence`.",
+    },
+    {
+      name: "combineTokensWithinMilliseconds",
+      type: "number",
+      default: "1200",
+      description:
+        "How much speech one page may span before the next word starts a new page. Pages also break at the end of a sentence and on any pause of at least `holdMs` (300 ms minimum).",
+    },
+    {
+      name: "holdMs",
+      type: "number",
+      default: "600",
+      description:
+        "How long a page stays after its last word when the next page is not already due. It fades out at the end of the hold instead of hanging through the pause.",
+    },
+    {
+      name: "fontSize",
+      type: "number",
+      default: "64",
+      description: "Font size in pixels.",
+    },
+    {
+      name: "fontWeight",
+      type: "number",
+      default: "800",
+      description: "Font weight. The font itself is inherited.",
+    },
+    {
+      name: "color",
+      type: "string",
+      default: "\"#ffffff\"",
+      description: "Text colour.",
+    },
+    {
+      name: "shadow",
+      type: "boolean",
+      default: "true",
+      description:
+        "A tight text shadow that keeps the caption legible over bright footage. It sits inside the word mask, so it is clipped with the word while it rises.",
+    },
+    {
+      name: "className",
+      type: "string",
+      default: "—",
+      description:
+        "Classes for the text block — width, font family, `uppercase`.",
+    },
+  ]}
+/>

@@ -20,6 +20,7 @@ export const componentMetaSchema = z.object({
       z.int().positive(),
       z.literal("state-driven"),
       z.literal("sustained"),
+      z.literal("transcript-driven"),
     ])
     .optional(),
   useWhen: z.array(z.string()).optional(),

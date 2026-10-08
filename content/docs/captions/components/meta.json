@@ -1,0 +1,26 @@
+{
+  "title": "Captions",
+  "collapsible": false,
+  "pages": [
+    "caption-karaoke",
+    "caption-highlight-box",
+    "caption-active-pop",
+    "caption-underline",
+    "caption-dim-progress",
+    "caption-weight",
+    "caption-outline",
+    "caption-word-pop",
+    "caption-bounce-in",
+    "caption-blur-in",
+    "caption-rise",
+    "caption-typewriter",
+    "caption-scramble",
+    "caption-slot",
+    "caption-stack",
+    "caption-subtitle",
+    "caption-marker",
+    "caption-emoji",
+    "caption-speaker"
+  ],
+  "icon": "ClosedCaptionIcon"
+}

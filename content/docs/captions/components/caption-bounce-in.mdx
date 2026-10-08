@@ -1,0 +1,112 @@
+---
+title: Bounce In
+description: Each word springs up into place with a little overshoot the moment it is spoken, and the phrase builds word by word
+component: caption-bounce-in
+vibe: playful
+length: transcript-driven
+useWhen:
+  - "Short-form video with an energetic voice — each word lands with a small hop, so the captions feel as lively as the delivery."
+  - "The viewer should hear and see each word arrive together — nothing is on screen before it is said, and the line builds in place without shifting."
+avoidWhen:
+  - "The tone is calm or premium and a bounce would feel cheap — use `caption-blur-in`, which resolves each word out of focus instead."
+  - "The video is editorial or brand-led and wants clean, confident motion — use `caption-rise`, which slides words up from a baseline mask with no overshoot."
+  - "There is no voiceover and the words are scripted on-screen copy — use `word-stream`."
+---
+
+<ComponentPreview name="caption-bounce-in" />
+
+<InstallBlock name="caption-bounce-in" />
+
+## Usage
+
+`CaptionBounceIn` takes a timed transcript and renders only the text block, so
+place it inside your own `AbsoluteFill`. Every word stays hidden until its own
+start time, then springs up from just below its slot. The space for the whole
+phrase is reserved from the first word, so the line never reflows as it builds.
+See [Positioning](/docs/captions/getting-started/positioning) for safe placements
+and [Get a transcript](/docs/captions/getting-started/get-a-transcript) for
+producing `captions.json`.
+
+```tsx
+import { AbsoluteFill } from "remotion";
+import { CaptionBounceIn } from "@/components/remocn/caption-bounce-in";
+import captions from "./captions.json";
+
+export const MyScene = () => (
+  <AbsoluteFill
+    style={{
+      justifyContent: "flex-end",
+      alignItems: "center",
+      paddingBottom: 108,
+      paddingInline: 192,
+    }}
+  >
+    <CaptionBounceIn captions={captions} />
+  </AbsoluteFill>
+);
+```
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "captions",
+      type: "Caption[]",
+      default: "—",
+      description:
+        "The timed transcript, in the `Caption` shape from `@remotion/captions`. Times are relative to the start of the surrounding `Sequence`.",
+    },
+    {
+      name: "bounce",
+      type: "number",
+      default: "0.6",
+      description:
+        "How much each word overshoots before it settles, from 0 (lands without overshoot) to 1 (a pronounced hop).",
+    },
+    {
+      name: "combineTokensWithinMilliseconds",
+      type: "number",
+      default: "1200",
+      description:
+        "How much speech one page may span before the next word starts a new page. Pages also break at the end of a sentence and on any pause of at least `holdMs` (300 ms minimum).",
+    },
+    {
+      name: "holdMs",
+      type: "number",
+      default: "600",
+      description:
+        "How long a page stays after its last word when the next page is not already due. It fades out at the end of the hold instead of hanging through the pause.",
+    },
+    {
+      name: "fontSize",
+      type: "number",
+      default: "64",
+      description: "Font size in pixels.",
+    },
+    {
+      name: "fontWeight",
+      type: "number",
+      default: "800",
+      description: "Font weight. The font itself is inherited.",
+    },
+    {
+      name: "color",
+      type: "string",
+      default: "\"#ffffff\"",
+      description: "Text colour.",
+    },
+    {
+      name: "shadow",
+      type: "boolean",
+      default: "true",
+      description:
+        "A tight text shadow that keeps the caption legible over bright footage.",
+    },
+    {
+      name: "className",
+      type: "string",
+      default: "—",
+      description:
+        "Classes for the text block — width, font family, `uppercase`.",
+    },
+  ]}
+/>

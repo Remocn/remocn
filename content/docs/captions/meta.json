@@ -1,0 +1,6 @@
+{
+  "title": "Captions",
+  "collapsible": false,
+  "pages": ["getting-started", "components"],
+  "icon": "ClosedCaptionIcon"
+}

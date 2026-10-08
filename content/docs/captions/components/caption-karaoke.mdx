@@ -1,0 +1,107 @@
+---
+title: Karaoke
+description: Each word fills with colour left to right exactly as it is spoken, with the whole phrase readable before the voice reaches it
+component: caption-karaoke
+vibe: social
+length: transcript-driven
+useWhen:
+  - "A voiceover or talking head needs captions and the viewer should be able to read ahead — the full phrase is on screen, the fill only shows where the voice is."
+  - "The pace of the speech is part of the point — a slow word fills slowly and a quick one snaps, so the captions carry the rhythm of the delivery."
+avoidWhen:
+  - "There is no voiceover and the text is scripted — use `word-stream`, which paces phrases with its own timing."
+  - "You want letters typed out on their own clock rather than following a recording — use `typewriter`."
+---
+
+<ComponentPreview name="caption-karaoke" />
+
+<InstallBlock name="caption-karaoke" />
+
+## Usage
+
+`CaptionKaraoke` takes a timed transcript and renders only the text block, so
+place it inside your own `AbsoluteFill`. See [Positioning](/docs/captions/getting-started/positioning)
+for safe placements and [Get a transcript](/docs/captions/getting-started/get-a-transcript)
+for producing `captions.json`.
+
+```tsx
+import { AbsoluteFill } from "remotion";
+import { CaptionKaraoke } from "@/components/remocn/caption-karaoke";
+import captions from "./captions.json";
+
+export const MyScene = () => (
+  <AbsoluteFill
+    style={{
+      justifyContent: "flex-end",
+      alignItems: "center",
+      paddingBottom: 108,
+      paddingInline: 192,
+    }}
+  >
+    <CaptionKaraoke captions={captions} />
+  </AbsoluteFill>
+);
+```
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "captions",
+      type: "Caption[]",
+      default: "—",
+      description:
+        "The timed transcript, in the `Caption` shape from `@remotion/captions`. Times are relative to the start of the surrounding `Sequence`.",
+    },
+    {
+      name: "combineTokensWithinMilliseconds",
+      type: "number",
+      default: "1200",
+      description:
+        "How much speech one page may span before the next word starts a new page. Pages also break at the end of a sentence and on any pause of at least `holdMs` (300 ms minimum).",
+    },
+    {
+      name: "holdMs",
+      type: "number",
+      default: "600",
+      description:
+        "How long a page stays after its last word when the next page is not already due. It fades out at the end of the hold instead of hanging through the pause.",
+    },
+    {
+      name: "fontSize",
+      type: "number",
+      default: "64",
+      description: "Font size in pixels.",
+    },
+    {
+      name: "fontWeight",
+      type: "number",
+      default: "800",
+      description: "Font weight. The font itself is inherited.",
+    },
+    {
+      name: "color",
+      type: "string",
+      default: "\"#ffffff\"",
+      description: "Colour of words the voice has not reached yet.",
+    },
+    {
+      name: "activeColor",
+      type: "string",
+      default: "\"#facc15\"",
+      description: "Colour that fills each word as it is spoken.",
+    },
+    {
+      name: "shadow",
+      type: "boolean",
+      default: "true",
+      description:
+        "A tight text shadow that keeps the caption legible over bright footage.",
+    },
+    {
+      name: "className",
+      type: "string",
+      default: "—",
+      description:
+        "Classes for the text block — width, font family, `uppercase`.",
+    },
+  ]}
+/>

@@ -54,6 +54,7 @@
     "@openpanel/sdk": "^1.3.1",
     "@paper-design/shaders-react": "0.0.76",
     "@remotion/bundler": "4.0.530",
+    "@remotion/captions": "4.0.530",
     "@remotion/google-fonts": "4.0.530",
     "@remotion/paths": "4.0.530",
     "@remotion/player": "4.0.530",

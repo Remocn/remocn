@@ -1,0 +1,123 @@
+---
+title: Underline
+description: A bar slides under the word being spoken, travelling from word to word while the text itself stays untouched
+component: caption-underline
+vibe: clean
+length: transcript-driven
+useWhen:
+  - "You want to show where the voice is with the lightest possible mark — the words keep their colour and only a thin bar moves beneath them."
+  - "The brand colour should carry the captions without flooding the text, such as a single accent line under otherwise neutral type."
+avoidWhen:
+  - "You want the active word itself to be loud, on a solid plate that travels with the voice — use `caption-highlight-box`."
+  - "You want no moving mark at all, just upcoming words dimmed until they are spoken — use `caption-dim-progress`."
+  - "Only chosen keywords should get a mark, drawn on as they are said — use `caption-marker`."
+---
+
+<ComponentPreview name="caption-underline" />
+
+<InstallBlock name="caption-underline" />
+
+## Usage
+
+`CaptionUnderline` shows the whole page and keeps a single bar under the word
+being spoken. When the voice moves on, the bar slides across to the next word
+and stretches or shrinks to its width, so the eye follows one continuous mark
+rather than a flicker of separate ones. On the first word of a page the bar
+grows in from the left. The component renders only the text block, so place it
+inside your own `AbsoluteFill` — see [Positioning](/docs/captions/getting-started/positioning).
+
+```tsx
+import { AbsoluteFill } from "remotion";
+import { CaptionUnderline } from "@/components/remocn/caption-underline";
+import captions from "./captions.json";
+
+export const MyScene = () => (
+  <AbsoluteFill
+    style={{
+      justifyContent: "flex-end",
+      alignItems: "center",
+      paddingBottom: 108,
+      paddingInline: 192,
+    }}
+  >
+    <CaptionUnderline captions={captions} underlineColor="#facc15" />
+  </AbsoluteFill>
+);
+```
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "captions",
+      type: "Caption[]",
+      default: "—",
+      description:
+        "The timed transcript, in the `Caption` shape from `@remotion/captions`. Times are relative to the start of the surrounding `Sequence`.",
+    },
+    {
+      name: "combineTokensWithinMilliseconds",
+      type: "number",
+      default: "1200",
+      description:
+        "How much speech one page may span before the next word starts a new page. Pages also break at the end of a sentence and on any pause of at least `holdMs` (300 ms minimum).",
+    },
+    {
+      name: "holdMs",
+      type: "number",
+      default: "600",
+      description:
+        "How long a page stays after its last word when the next page is not already due. It fades out at the end of the hold.",
+    },
+    {
+      name: "underlineColor",
+      type: "string",
+      default: "\"#facc15\"",
+      description: "Colour of the bar under the active word.",
+    },
+    {
+      name: "thickness",
+      type: "number",
+      default: "0.08",
+      description: "Bar thickness in em, so it scales with the font size.",
+    },
+    {
+      name: "underlineOffset",
+      type: "number",
+      default: "0.02",
+      description:
+        "Gap in em between the bottom of the word's line box and the bar. Negative values pull it up toward the baseline.",
+    },
+    {
+      name: "fontSize",
+      type: "number",
+      default: "64",
+      description: "Font size in pixels.",
+    },
+    {
+      name: "fontWeight",
+      type: "number",
+      default: "800",
+      description: "Font weight. The font itself is inherited.",
+    },
+    {
+      name: "color",
+      type: "string",
+      default: "\"#ffffff\"",
+      description: "Text colour. It does not change as words are spoken.",
+    },
+    {
+      name: "shadow",
+      type: "boolean",
+      default: "true",
+      description:
+        "A tight text shadow that keeps the caption legible over bright footage.",
+    },
+    {
+      name: "className",
+      type: "string",
+      default: "—",
+      description:
+        "Classes for the text block — width, font family, `uppercase`.",
+    },
+  ]}
+/>

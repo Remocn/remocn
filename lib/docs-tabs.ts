@@ -10,6 +10,7 @@ export type DocsTabId =
   | "primitives"
   | "shaders"
   | "filters"
+  | "captions"
   | "templates"
   | "icons";
 
@@ -36,6 +37,11 @@ export const DOCS_TABS: DocsTab[] = [
     id: "filters",
     label: "Filters",
     href: "/docs/filters/getting-started/introduction",
+  },
+  {
+    id: "captions",
+    label: "Captions",
+    href: "/docs/captions/getting-started/introduction",
   },
   {
     id: "templates",
@@ -76,6 +82,14 @@ function isFiltersPath(pathname: string): boolean {
   );
 }
 
+const CAPTIONS_PREFIX = "/docs/captions";
+
+function isCaptionsPath(pathname: string): boolean {
+  return (
+    pathname === CAPTIONS_PREFIX || pathname.startsWith(`${CAPTIONS_PREFIX}/`)
+  );
+}
+
 const TEMPLATES_PREFIX = "/docs/templates";
 
 function isTemplatesPath(pathname: string): boolean {
@@ -93,6 +107,7 @@ function isIconsPath(pathname: string): boolean {
 export function getActiveDocsTab(pathname: string): DocsTabId {
   if (isShadersPath(pathname)) return "shaders";
   if (isFiltersPath(pathname)) return "filters";
+  if (isCaptionsPath(pathname)) return "captions";
   if (isTemplatesPath(pathname)) return "templates";
   if (isIconsPath(pathname)) return "icons";
   if (isPrimitivesPath(pathname)) return "primitives";
@@ -134,6 +149,7 @@ function sectionNodeMatcher(prefix: string): (node: Node) => boolean {
 
 const isShadersNode = sectionNodeMatcher(SHADERS_PREFIX);
 const isFiltersNode = sectionNodeMatcher(FILTERS_PREFIX);
+const isCaptionsNode = sectionNodeMatcher(CAPTIONS_PREFIX);
 const isTemplatesNode = sectionNodeMatcher(TEMPLATES_PREFIX);
 const isIconsNode = sectionNodeMatcher(ICONS_PREFIX);
 
@@ -173,6 +189,7 @@ export function splitDocsTree(tree: Root): {
   primitives: Root;
   shaders: Root;
   filters: Root;
+  captions: Root;
   templates: Root;
   icons: Root;
 } {
@@ -185,6 +202,7 @@ export function splitDocsTree(tree: Root): {
           !isPrimitivesNode(node) &&
           !isShadersNode(node) &&
           !isFiltersNode(node) &&
+          !isCaptionsNode(node) &&
           !isTemplatesNode(node) &&
           !isIconsNode(node),
       ),
@@ -203,6 +221,11 @@ export function splitDocsTree(tree: Root): {
       ...tree,
       $id: "docs-tab-filters",
       children: hoistPrimitives(tree.children.filter(isFiltersNode)),
+    },
+    captions: {
+      ...tree,
+      $id: "docs-tab-captions",
+      children: hoistPrimitives(tree.children.filter(isCaptionsNode)),
     },
     templates: {
       ...tree,

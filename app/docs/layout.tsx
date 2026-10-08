@@ -23,8 +23,15 @@ export default async function Layout({ children }: { children: ReactNode }) {
   // `withNewBadges`), then split it into the Components / Primitives tab trees
   // (see `splitDocsTree`). Both run on the server; `DocsShell` picks the tree
   // matching the active tab by pathname so each category owns its own sidebar.
-  const { components, primitives, shaders, filters, templates, icons } =
-    splitDocsTree(withNewBadges(source.pageTree));
+  const {
+    components,
+    primitives,
+    shaders,
+    filters,
+    captions,
+    templates,
+    icons,
+  } = splitDocsTree(withNewBadges(source.pageTree));
 
   return (
     // fumadocs search + sidebar context lives here (docs-only) instead of the
@@ -42,6 +49,7 @@ export default async function Layout({ children }: { children: ReactNode }) {
         primitivesTree={primitives}
         shadersTree={shaders}
         filtersTree={filters}
+        captionsTree={captions}
         templatesTree={templates}
         iconsTree={icons}
         componentCount={componentCount}

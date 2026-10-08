@@ -182,7 +182,12 @@ Don't dump components — compose one story. When asked to build a full video ("
    `<TransitionSeries>` skeleton.
 4. **Pick each beat's component** from `https://remocn.dev/llms-components.txt`; match the `vibe` tag
    to the brand and budget its `Sequence` per Canvas & timing above.
-5. **Check the quality bar** — one accent, sentence-case kinetic type, real content, no glow halos, no
+5. **Caption the voice** — if the video has a voiceover or a talking head, transcribe it
+   (`https://remocn.dev/docs/captions/getting-started/get-a-transcript.md`), pick a `caption-*` from the
+   Captions table in the component index, and place it per
+   `https://remocn.dev/docs/captions/getting-started/positioning.md`. Scripted on-screen text with no
+   audio stays typography.
+6. **Check the quality bar** — one accent, sentence-case kinetic type, real content, no glow halos, no
    feature-list enumeration. See `references/anatomy.md` §3.
 
 ## Reference
