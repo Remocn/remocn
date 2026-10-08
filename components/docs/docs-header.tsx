@@ -3,6 +3,7 @@ import {
   HeaderActions,
   HeaderLogo,
 } from "@/app/(home)/components/header-parts";
+import { StudioBar } from "@/components/studio-bar";
 import { NAV_LINKS } from "@/config/site";
 
 /**
@@ -33,23 +34,26 @@ import { NAV_LINKS } from "@/config/site";
  */
 export function DocsHeader() {
   return (
-    <header className="relative z-40 h-16 w-full border-b border-border bg-background/70 backdrop-blur-xl">
-      <div className="mx-auto flex h-16 w-full max-w-(--fd-layout-width) items-center [--fd-layout-width:97rem] md:[--fd-sidebar-width:268px] xl:[--fd-toc-width:268px]">
-        <div className="flex shrink-0 items-center px-6 md:w-(--fd-sidebar-width)">
-          <HeaderLogo />
-        </div>
-        <div className="flex min-w-0 flex-1 items-center">
-          <div className="mx-auto flex w-full max-w-[900px] items-center justify-between px-4 md:px-6 xl:px-8">
-            <NavDesktop links={NAV_LINKS} className="-ml-4" />
-            <div className="xl:hidden">
-              <HeaderActions />
+    <>
+      <StudioBar />
+      <header className="relative z-40 h-16 w-full border-b border-border bg-background/70 backdrop-blur-xl">
+        <div className="mx-auto flex h-16 w-full max-w-(--fd-layout-width) items-center [--fd-layout-width:97rem] md:[--fd-sidebar-width:268px] xl:[--fd-toc-width:268px]">
+          <div className="flex shrink-0 items-center px-6 md:w-(--fd-sidebar-width)">
+            <HeaderLogo />
+          </div>
+          <div className="flex min-w-0 flex-1 items-center">
+            <div className="mx-auto flex w-full max-w-[900px] items-center justify-between px-4 md:px-6 xl:px-8">
+              <NavDesktop links={NAV_LINKS} className="-ml-4" />
+              <div className="xl:hidden">
+                <HeaderActions />
+              </div>
             </div>
           </div>
+          <div className="hidden shrink-0 items-center justify-end pe-4 xl:flex xl:w-(--fd-toc-width)">
+            <HeaderActions />
+          </div>
         </div>
-        <div className="hidden shrink-0 items-center justify-end pe-4 xl:flex xl:w-(--fd-toc-width)">
-          <HeaderActions />
-        </div>
-      </div>
-    </header>
+      </header>
+    </>
   );
 }
