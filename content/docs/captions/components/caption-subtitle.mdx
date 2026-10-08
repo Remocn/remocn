@@ -1,0 +1,123 @@
+---
+title: Subtitle
+description: Classic broadcast subtitles, a whole phrase on a translucent plate, with no word-level animation at all
+component: caption-subtitle
+vibe: clean
+length: transcript-driven
+useWhen:
+  - "Explainers, interviews and talking heads where the captions should be read, not watched — the accessibility-first option."
+  - "Long sentences and dense information, where a full phrase on screen reads faster than words arriving one at a time."
+avoidWhen:
+  - "Short-form social video that needs the caption to carry energy — use `caption-karaoke` or `caption-active-pop`."
+  - "One short line at a time that keeps moving with the speaker — use `caption-slot`."
+  - "On-screen copy with no voiceover — use `word-stream`."
+---
+
+<ComponentPreview name="caption-subtitle" />
+
+<InstallBlock name="caption-subtitle" />
+
+## Usage
+
+`CaptionSubtitle` is the subtitle you know from broadcast and streaming: a
+whole phrase at a time, balanced across its lines, sitting on a tight
+translucent plate that follows each line rather than one big box. Nothing
+animates inside a phrase. A new phrase replaces the previous one on a hard
+cut, and only fades in or out around silences.
+
+Keep subtitles to two lines. The component wraps and balances its lines but
+does not limit them, so give the block a width that fits two lines of your
+longest phrase, or lower `combineTokensWithinMilliseconds` for shorter phrases.
+
+The component renders only the text block. See [Positioning](/docs/captions/getting-started/positioning)
+for safe placements and [Get a transcript](/docs/captions/getting-started/get-a-transcript)
+for producing `captions.json`.
+
+```tsx
+import { AbsoluteFill } from "remotion";
+import { CaptionSubtitle } from "@/components/remocn/caption-subtitle";
+import captions from "./captions.json";
+
+export const MyScene = () => (
+  <AbsoluteFill
+    style={{
+      justifyContent: "flex-end",
+      alignItems: "center",
+      paddingBottom: 108,
+      paddingInline: 384,
+    }}
+  >
+    <CaptionSubtitle captions={captions} />
+  </AbsoluteFill>
+);
+```
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "captions",
+      type: "Caption[]",
+      default: "—",
+      description:
+        "The timed transcript, in the `Caption` shape from `@remotion/captions`. Times are relative to the start of the surrounding `Sequence`.",
+    },
+    {
+      name: "combineTokensWithinMilliseconds",
+      type: "number",
+      default: "2500",
+      description:
+        "How much speech one subtitle may span. Sized for a full phrase. Subtitles also break at the end of a sentence and on any pause of at least `holdMs` (300 ms minimum).",
+    },
+    {
+      name: "holdMs",
+      type: "number",
+      default: "600",
+      description:
+        "How long a subtitle stays after its last word when the next one is not already due. It fades out at the end of the hold.",
+    },
+    {
+      name: "fontSize",
+      type: "number",
+      default: "44",
+      description: "Font size in pixels.",
+    },
+    {
+      name: "fontWeight",
+      type: "number",
+      default: "600",
+      description: "Font weight. The font itself is inherited.",
+    },
+    {
+      name: "color",
+      type: "string",
+      default: "\"#ffffff\"",
+      description: "Text colour.",
+    },
+    {
+      name: "box",
+      type: "boolean",
+      default: "true",
+      description:
+        "Draw a translucent plate behind each line. When off, a text shadow keeps the subtitle legible instead.",
+    },
+    {
+      name: "boxColor",
+      type: "string",
+      default: "\"#000000\"",
+      description: "Colour of the plate.",
+    },
+    {
+      name: "boxOpacity",
+      type: "number",
+      default: "0.72",
+      description: "Opacity of the plate, from 0 to 1.",
+    },
+    {
+      name: "className",
+      type: "string",
+      default: "—",
+      description:
+        "Classes for the text block — width, font family.",
+    },
+  ]}
+/>

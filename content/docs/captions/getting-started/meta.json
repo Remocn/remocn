@@ -1,0 +1,6 @@
+{
+  "title": "Getting Started",
+  "collapsible": false,
+  "pages": ["introduction", "get-a-transcript", "positioning"],
+  "icon": "Rocket01Icon"
+}

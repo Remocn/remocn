@@ -1,0 +1,122 @@
+---
+title: Cube
+description: Each new phrase turns into view as the next face of a 3D cube, the previous phrase rotating up and away on a horizontal hinge
+component: caption-cube
+vibe: playful
+length: transcript-driven
+useWhen:
+  - "Punchy social or explainer video where each phrase change should feel like a physical beat — the caption turns over with the speaker instead of swapping."
+  - "Space is tight and the caption must stay one line tall, with all the motion happening at the phrase boundary rather than word by word."
+avoidWhen:
+  - "The phrase change should be a flat roll with no depth — use `caption-slot`."
+  - "Pages are long or need two lines — the cube turns a single line; use `caption-subtitle`."
+  - "The viewer should see which word is being spoken — use `caption-karaoke` or `caption-active-pop`."
+---
+
+<ComponentPreview name="caption-cube" />
+
+<InstallBlock name="caption-cube" />
+
+## Usage
+
+`CaptionCube` moves at the page level. Every page is a face of a cube hinged
+along the line: when the next phrase starts, the cube turns, the old phrase
+rotating up and away while the new one comes round from below. After a silence
+the line turns away on its own and the next phrase turns in fresh. Words inside
+a page stay still; switch on `tintActive` to colour the word being spoken.
+
+The cube turns one line, so the text never wraps. The default
+`combineTokensWithinMilliseconds` of 800 keeps pages to three or four words;
+raise it only if the longest phrase still fits your frame on one line.
+
+The component renders only the text block. See [Positioning](/docs/captions/getting-started/positioning)
+for safe placements and [Get a transcript](/docs/captions/getting-started/get-a-transcript)
+for producing `captions.json`.
+
+```tsx
+import { AbsoluteFill } from "remotion";
+import { CaptionCube } from "@/components/remocn/caption-cube";
+import captions from "./captions.json";
+
+export const MyScene = () => (
+  <AbsoluteFill
+    style={{
+      justifyContent: "flex-end",
+      alignItems: "center",
+      paddingBottom: 108,
+      paddingInline: 192,
+    }}
+  >
+    <CaptionCube captions={captions} />
+  </AbsoluteFill>
+);
+```
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "captions",
+      type: "Caption[]",
+      default: "—",
+      description:
+        "The timed transcript, in the `Caption` shape from `@remotion/captions`. Times are relative to the start of the surrounding `Sequence`.",
+    },
+    {
+      name: "combineTokensWithinMilliseconds",
+      type: "number",
+      default: "800",
+      description:
+        "How much speech one page may span before the next word starts a new page. Pages also break at the end of a sentence and on any pause of at least `holdMs` (300 ms minimum).",
+    },
+    {
+      name: "holdMs",
+      type: "number",
+      default: "600",
+      description:
+        "How long a page stays after its last word when the next page is not already due. It turns away at the end of the hold instead of hanging through the pause.",
+    },
+    {
+      name: "fontSize",
+      type: "number",
+      default: "64",
+      description: "Font size in pixels.",
+    },
+    {
+      name: "fontWeight",
+      type: "number",
+      default: "800",
+      description: "Font weight. The font itself is inherited.",
+    },
+    {
+      name: "color",
+      type: "string",
+      default: "\"#ffffff\"",
+      description: "Text colour.",
+    },
+    {
+      name: "tintActive",
+      type: "boolean",
+      default: "false",
+      description: "Colour the word being spoken with `activeColor`.",
+    },
+    {
+      name: "activeColor",
+      type: "string",
+      default: "\"#facc15\"",
+      description: "Colour of the spoken word when `tintActive` is on.",
+    },
+    {
+      name: "shadow",
+      type: "boolean",
+      default: "true",
+      description:
+        "A tight text shadow that keeps the caption legible over bright footage.",
+    },
+    {
+      name: "className",
+      type: "string",
+      default: "—",
+      description: "Classes for the text block — font family, `uppercase`.",
+    },
+  ]}
+/>

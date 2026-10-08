@@ -1,0 +1,132 @@
+---
+title: Outline
+description: Heavy-stroked captions that stay readable over any footage, with the spoken word switching to a contrast colour and nothing else moving
+component: caption-outline
+vibe: social
+length: transcript-driven
+useWhen:
+  - "Captions sit over busy, bright or fast-cut footage — the thick outline keeps every word readable without a plate or a shadow."
+  - "You want the bold YouTube Shorts caption look where the spoken word is marked by colour alone, so the eye can read along without anything jumping."
+avoidWhen:
+  - "The spoken word should also spring in scale — use `caption-active-pop`, the motion counterpart of this style."
+  - "The tone is calm or editorial and a heavy outline would shout — use `caption-subtitle`."
+  - "The marker should be a box travelling behind the spoken word rather than a colour change — use `caption-highlight-box`."
+---
+
+<ComponentPreview name="caption-outline" />
+
+<InstallBlock name="caption-outline" />
+
+## Usage
+
+`CaptionOutline` takes a timed transcript and renders only the text block, so
+place it inside your own `AbsoluteFill`. Every letter carries a heavy stroke
+painted under its fill, and the word being spoken switches to `activeColor`.
+Nothing scales or moves inside the page, which keeps the line rock-steady for
+reading. See [Positioning](/docs/captions/getting-started/positioning) for safe
+placements and [Get a transcript](/docs/captions/getting-started/get-a-transcript)
+for producing `captions.json`.
+
+```tsx
+import { AbsoluteFill } from "remotion";
+import { CaptionOutline } from "@/components/remocn/caption-outline";
+import captions from "./captions.json";
+
+export const MyScene = () => (
+  <AbsoluteFill
+    style={{
+      justifyContent: "flex-end",
+      alignItems: "center",
+      paddingBottom: 108,
+      paddingInline: 192,
+    }}
+  >
+    <CaptionOutline captions={captions} />
+  </AbsoluteFill>
+);
+```
+
+The look is at its strongest in caps with a heavy display face. Load one with
+`@remotion/google-fonts` and pass `className="uppercase"` along with it.
+
+```tsx
+import { loadFont } from "@remotion/google-fonts/Anton";
+
+const { fontFamily } = loadFont();
+
+export const Caps = () => (
+  <div style={{ fontFamily }}>
+    <CaptionOutline captions={captions} className="uppercase" fontWeight={400} />
+  </div>
+);
+```
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "captions",
+      type: "Caption[]",
+      default: "—",
+      description:
+        "The timed transcript, in the `Caption` shape from `@remotion/captions`. Times are relative to the start of the surrounding `Sequence`.",
+    },
+    {
+      name: "activeColor",
+      type: "string",
+      default: "\"#facc15\"",
+      description: "Fill colour of the word being spoken.",
+    },
+    {
+      name: "strokeColor",
+      type: "string",
+      default: "\"#000000\"",
+      description: "Colour of the outline around every letter.",
+    },
+    {
+      name: "strokeWidth",
+      type: "number",
+      default: "0.12",
+      description:
+        "How far the outline reaches outside each letter, in em. The stroke is painted under the fill, so it never eats into the letterforms.",
+    },
+    {
+      name: "combineTokensWithinMilliseconds",
+      type: "number",
+      default: "1200",
+      description:
+        "How much speech one page may span before the next word starts a new page. Pages also break at the end of a sentence and on any pause of at least `holdMs` (300 ms minimum).",
+    },
+    {
+      name: "holdMs",
+      type: "number",
+      default: "600",
+      description:
+        "How long a page stays after its last word when the next page is not already due. It fades out at the end of the hold instead of hanging through the pause.",
+    },
+    {
+      name: "fontSize",
+      type: "number",
+      default: "64",
+      description: "Font size in pixels.",
+    },
+    {
+      name: "fontWeight",
+      type: "number",
+      default: "800",
+      description: "Font weight. The font itself is inherited.",
+    },
+    {
+      name: "color",
+      type: "string",
+      default: "\"#ffffff\"",
+      description: "Fill colour of words that are not being spoken.",
+    },
+    {
+      name: "className",
+      type: "string",
+      default: "—",
+      description:
+        "Classes for the text block — width, font family, `uppercase`.",
+    },
+  ]}
+/>

@@ -1,0 +1,117 @@
+---
+title: Redact
+description: The whole phrase starts blacked out like a declassified file, and each bar pulls away the moment its word is spoken
+component: caption-redact
+vibe: tech
+length: transcript-driven
+useWhen:
+  - "Investigative, true-crime or reveal-style storytelling where the line should feel withheld until the speaker says it out loud."
+  - "You want the viewer to see the shape and length of the whole phrase up front, with the words uncovered in time with the voice."
+avoidWhen:
+  - "The phrase should be readable before the voice reaches it — use `caption-dim-progress`, which shows every word dimmed instead of hidden."
+  - "Words should decode rather than uncover — use `caption-scramble`."
+  - "Part of the picture needs hiding for privacy, not the caption — use `pixelate-region`."
+---
+
+<ComponentPreview name="caption-redact" />
+
+<InstallBlock name="caption-redact" />
+
+## Usage
+
+`CaptionRedact` takes a timed transcript and renders only the text block, so
+place it inside your own `AbsoluteFill`. When a page appears, every word is
+hidden under a solid bar sized to it. As each word is spoken its bar retracts
+from the left edge toward the right, taking as long as the word itself with a
+180 ms floor, and the text underneath is uncovered behind it. Bars for words
+the voice has not reached stay in place, so the page reads like a document
+being declassified line by line. See
+[Positioning](/docs/captions/getting-started/positioning) for safe placements
+and [Get a transcript](/docs/captions/getting-started/get-a-transcript) for
+producing `captions.json`.
+
+```tsx
+import { AbsoluteFill } from "remotion";
+import { CaptionRedact } from "@/components/remocn/caption-redact";
+import captions from "./captions.json";
+
+export const MyScene = () => (
+  <AbsoluteFill
+    style={{
+      justifyContent: "flex-end",
+      alignItems: "center",
+      paddingBottom: 108,
+      paddingInline: 192,
+    }}
+  >
+    <CaptionRedact captions={captions} />
+  </AbsoluteFill>
+);
+```
+
+The bars are opaque on purpose, so they read over any footage. On very dark
+footage, set `barColor` to a light value so the redaction stays visible.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "captions",
+      type: "Caption[]",
+      default: "—",
+      description:
+        "The timed transcript, in the `Caption` shape from `@remotion/captions`. Times are relative to the start of the surrounding `Sequence`.",
+    },
+    {
+      name: "barColor",
+      type: "string",
+      default: "\"#0a0a0a\"",
+      description: "Colour of the redaction bars.",
+    },
+    {
+      name: "combineTokensWithinMilliseconds",
+      type: "number",
+      default: "1200",
+      description:
+        "How much speech one page may span before the next word starts a new page. Pages also break at the end of a sentence and on any pause of at least `holdMs` (300 ms minimum).",
+    },
+    {
+      name: "holdMs",
+      type: "number",
+      default: "600",
+      description:
+        "How long a page stays after its last word when the next page is not already due. It fades out at the end of the hold instead of hanging through the pause.",
+    },
+    {
+      name: "fontSize",
+      type: "number",
+      default: "64",
+      description: "Font size in pixels.",
+    },
+    {
+      name: "fontWeight",
+      type: "number",
+      default: "800",
+      description: "Font weight. The font itself is inherited.",
+    },
+    {
+      name: "color",
+      type: "string",
+      default: "\"#ffffff\"",
+      description: "Colour of the uncovered words.",
+    },
+    {
+      name: "shadow",
+      type: "boolean",
+      default: "true",
+      description:
+        "A tight text shadow that keeps uncovered words legible over bright footage.",
+    },
+    {
+      name: "className",
+      type: "string",
+      default: "—",
+      description:
+        "Classes for the text block — width, font family, `uppercase`.",
+    },
+  ]}
+/>

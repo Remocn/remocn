@@ -1,0 +1,130 @@
+---
+title: Prosody
+description: Word size follows the delivery, so drawn-out words land large and rushed words stay small, and the rhythm of the voice is visible with the sound off
+component: caption-prosody
+vibe: playful
+length: transcript-driven
+useWhen:
+  - "The way something is said matters as much as what is said — a slow, stretched word reads as emphasis and a quick aside shrinks, so the captions carry the speaker's rhythm without audio."
+  - "You want expressive kinetic type that comes from the recording itself rather than from a hand-picked keyword list."
+avoidWhen:
+  - "You want to choose which word is emphasised yourself — use `caption-stack`, which enlarges the keywords you pass."
+  - "The captions should read calmly at one size — use `caption-karaoke` or `caption-subtitle`."
+  - "There is no voiceover and the text is scripted — use `word-stream`."
+---
+
+<ComponentPreview name="caption-prosody" />
+
+<InstallBlock name="caption-prosody" />
+
+## Usage
+
+`CaptionProsody` sizes every word by how long the speaker spent on each of its
+letters, measured against the rest of the page. A word held twice as long as
+the page's typical pace grows to `maxScale`, one said twice as fast shrinks to
+`minScale`, and everything in between scales smoothly. Sizes are fixed when a
+page starts, so the line never reflows: words then appear at the moment they
+are spoken, and the word being spoken takes `activeColor`.
+
+The effect comes straight from the transcript timing, so it is only as
+expressive as the timestamps are precise — word-level timestamps from
+whisper.cpp or the OpenAI API work best. The component renders only the text
+block; see [Positioning](/docs/captions/getting-started/positioning) and
+[Get a transcript](/docs/captions/getting-started/get-a-transcript).
+
+```tsx
+import { AbsoluteFill } from "remotion";
+import { CaptionProsody } from "@/components/remocn/caption-prosody";
+import captions from "./captions.json";
+
+export const MyScene = () => (
+  <AbsoluteFill
+    style={{
+      justifyContent: "flex-end",
+      alignItems: "center",
+      paddingBottom: 108,
+      paddingInline: 192,
+    }}
+  >
+    <CaptionProsody captions={captions} />
+  </AbsoluteFill>
+);
+```
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "captions",
+      type: "Caption[]",
+      default: "—",
+      description:
+        "The timed transcript, in the `Caption` shape from `@remotion/captions`. Times are relative to the start of the surrounding `Sequence`.",
+    },
+    {
+      name: "minScale",
+      type: "number",
+      default: "0.75",
+      description:
+        "Size of a word said twice as fast as the page's typical pace, relative to `fontSize`.",
+    },
+    {
+      name: "maxScale",
+      type: "number",
+      default: "1.6",
+      description:
+        "Size of a word held twice as long as the page's typical pace, relative to `fontSize`.",
+    },
+    {
+      name: "combineTokensWithinMilliseconds",
+      type: "number",
+      default: "1200",
+      description:
+        "How much speech one page may span before the next word starts a new page. Pages also break at the end of a sentence and on any pause of at least `holdMs` (300 ms minimum).",
+    },
+    {
+      name: "holdMs",
+      type: "number",
+      default: "600",
+      description:
+        "How long a page stays after its last word when the next page is not already due. It fades out at the end of the hold.",
+    },
+    {
+      name: "fontSize",
+      type: "number",
+      default: "64",
+      description: "Base font size in pixels; a word at the typical pace renders at this size.",
+    },
+    {
+      name: "fontWeight",
+      type: "number",
+      default: "800",
+      description: "Font weight. The font itself is inherited.",
+    },
+    {
+      name: "color",
+      type: "string",
+      default: "\"#ffffff\"",
+      description: "Colour of every word that is not being spoken right now.",
+    },
+    {
+      name: "activeColor",
+      type: "string",
+      default: "\"#facc15\"",
+      description: "Colour of the word being spoken.",
+    },
+    {
+      name: "shadow",
+      type: "boolean",
+      default: "true",
+      description:
+        "A tight text shadow that keeps the caption legible over bright footage.",
+    },
+    {
+      name: "className",
+      type: "string",
+      default: "—",
+      description:
+        "Classes for the text block — width, font family, `uppercase`.",
+    },
+  ]}
+/>

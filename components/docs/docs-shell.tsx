@@ -44,6 +44,7 @@ export function DocsShell({
   primitivesTree,
   shadersTree,
   filtersTree,
+  captionsTree,
   templatesTree,
   iconsTree,
   componentCount,
@@ -53,6 +54,7 @@ export function DocsShell({
   primitivesTree: Root;
   shadersTree: Root;
   filtersTree: Root;
+  captionsTree: Root;
   templatesTree: Root;
   iconsTree: Root;
   componentCount: number;
@@ -81,6 +83,7 @@ export function DocsShell({
     primitives: primitivesTree,
     shaders: shadersTree,
     filters: filtersTree,
+    captions: captionsTree,
     templates: templatesTree,
     icons: iconsTree,
   };

@@ -1,0 +1,129 @@
+---
+title: Emoji
+description: An emoji pops up above a chosen word the moment it is spoken and stays until the phrase leaves
+component: caption-emoji
+vibe: playful
+length: transcript-driven
+useWhen:
+  - "Short-form social video where a few words deserve a visual punchline — an emoji lands on the beat the word is said."
+  - "You want playful emphasis that adds to the text instead of restyling it, so the caption stays readable."
+avoidWhen:
+  - "The video is a calm explainer or a product walkthrough — use `caption-subtitle`, which keeps attention on the words."
+  - "You want the spoken word itself to stand out rather than an add-on above it — use `caption-active-pop`."
+  - "You want the key words marked inside the line rather than decorated — use `caption-marker`."
+---
+
+<ComponentPreview name="caption-emoji" />
+
+<InstallBlock name="caption-emoji" />
+
+## Usage
+
+`CaptionEmoji` takes a timed transcript and a map from words to emoji, and
+renders only the text block, so place it inside your own `AbsoluteFill`. See
+[Positioning](/docs/captions/getting-started/positioning) for safe placements and
+[Get a transcript](/docs/captions/getting-started/get-a-transcript) for producing
+`captions.json`.
+
+Keys in `emoji` match whole spoken words, ignoring case and punctuation, so
+`sound` also fires on "Sound." in the transcript. The emoji sits above its word
+without moving the line, so keep pages to a single line — the default page
+window does — or an emoji on the second line will overlap the first.
+
+```tsx
+import { AbsoluteFill } from "remotion";
+import { CaptionEmoji } from "@/components/remocn/caption-emoji";
+import captions from "./captions.json";
+
+const emoji = {
+  thing: "👀",
+  lose: "📉",
+  three: "⏱️",
+  captions: "💬",
+  sound: "🔇",
+};
+
+export const MyScene = () => (
+  <AbsoluteFill
+    style={{
+      justifyContent: "flex-end",
+      alignItems: "center",
+      paddingBottom: 108,
+      paddingInline: 192,
+    }}
+  >
+    <CaptionEmoji captions={captions} emoji={emoji} />
+  </AbsoluteFill>
+);
+```
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "captions",
+      type: "Caption[]",
+      default: "—",
+      description:
+        "The timed transcript, in the `Caption` shape from `@remotion/captions`. Times are relative to the start of the surrounding `Sequence`.",
+    },
+    {
+      name: "emoji",
+      type: "Record<string, string>",
+      default: "{}",
+      description:
+        "Word to emoji. Matched per spoken word, ignoring case and punctuation.",
+    },
+    {
+      name: "emojiSize",
+      type: "number",
+      default: "0.9",
+      description: "Emoji size relative to the caption font size, in em.",
+    },
+    {
+      name: "combineTokensWithinMilliseconds",
+      type: "number",
+      default: "1200",
+      description:
+        "How much speech one page may span before the next word starts a new page. Pages also break at the end of a sentence and on any pause of at least `holdMs` (300 ms minimum).",
+    },
+    {
+      name: "holdMs",
+      type: "number",
+      default: "600",
+      description:
+        "How long a page stays after its last word when the next page is not already due. It fades out at the end of the hold.",
+    },
+    {
+      name: "fontSize",
+      type: "number",
+      default: "64",
+      description: "Font size in pixels.",
+    },
+    {
+      name: "fontWeight",
+      type: "number",
+      default: "800",
+      description: "Font weight. The font itself is inherited.",
+    },
+    {
+      name: "color",
+      type: "string",
+      default: "\"#ffffff\"",
+      description: "Text colour.",
+    },
+    {
+      name: "shadow",
+      type: "boolean",
+      default: "true",
+      description:
+        "A tight text shadow that keeps the caption legible over bright footage.",
+    },
+    {
+      name: "className",
+      type: "string",
+      default: "—",
+      description:
+        "Classes for the text block — width, font family, `uppercase`.",
+    },
+  ]}
+/>

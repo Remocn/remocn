@@ -1,0 +1,132 @@
+---
+title: Stack
+description: Kinetic captions stacked a couple of words per line, with the keyword of each page set large on its own line
+component: caption-stack
+vibe: playful
+length: transcript-driven
+useWhen:
+  - "Short-form video where the captions are part of the design — each page reads as a small typographic poster, and the word that matters is the biggest thing on it."
+  - "You know which words carry the message and want them to land harder than the rest — pass them as `keywords` and each one takes a line of its own."
+avoidWhen:
+  - "The voice should be followed one word at a time in the middle of the frame — use `caption-word-pop`."
+  - "Captions must sit quietly in the bottom third and never grow taller than a line or two — use `caption-subtitle`."
+  - "Every word should arrive the same way with no hierarchy — use `caption-bounce-in`, which builds a single line in place."
+---
+
+<ComponentPreview name="caption-stack" />
+
+<InstallBlock name="caption-stack" />
+
+## Usage
+
+`CaptionStack` takes a timed transcript and renders only the text block, so
+place it inside your own `AbsoluteFill`. Each page is laid out once as centered
+lines of about two words, and every word rises into its slot at the moment it
+is spoken. A word listed in `keywords` breaks out onto its own line at
+`emphasisScale` times the font size. Without `keywords`, the longest word on
+each page takes that role. See [Positioning](/docs/captions/getting-started/positioning)
+for safe placements and [Get a transcript](/docs/captions/getting-started/get-a-transcript)
+for producing `captions.json`.
+
+```tsx
+import { AbsoluteFill } from "remotion";
+import { CaptionStack } from "@/components/remocn/caption-stack";
+import captions from "./captions.json";
+
+export const MyScene = () => (
+  <AbsoluteFill
+    style={{
+      justifyContent: "flex-end",
+      alignItems: "center",
+      paddingBottom: 108,
+      paddingInline: 192,
+    }}
+  >
+    <CaptionStack
+      captions={captions}
+      keywords={["thing", "lose", "three", "captions", "sound"]}
+    />
+  </AbsoluteFill>
+);
+```
+
+Keywords match whole words, ignoring case and punctuation, so `"sound"` also
+catches `Sound,` and `sound.` in the transcript.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "captions",
+      type: "Caption[]",
+      default: "—",
+      description:
+        "The timed transcript, in the `Caption` shape from `@remotion/captions`. Times are relative to the start of the surrounding `Sequence`.",
+    },
+    {
+      name: "keywords",
+      type: "string[]",
+      default: "—",
+      description:
+        "Words that get their own enlarged line. Matched per word, ignoring case and punctuation. When omitted, the longest word on each page is emphasised instead.",
+    },
+    {
+      name: "emphasisScale",
+      type: "number",
+      default: "1.7",
+      description:
+        "Font size of an emphasised line relative to `fontSize`. It is a real font size, so the stack is laid out once and never reflows.",
+    },
+    {
+      name: "emphasisColor",
+      type: "string",
+      default: "\"#facc15\"",
+      description: "Colour of the emphasised word.",
+    },
+    {
+      name: "combineTokensWithinMilliseconds",
+      type: "number",
+      default: "1600",
+      description:
+        "How much speech one page may span before the next word starts a new page. Pages also break at the end of a sentence and on any pause of at least `holdMs` (300 ms minimum).",
+    },
+    {
+      name: "holdMs",
+      type: "number",
+      default: "600",
+      description:
+        "How long a page stays after its last word when the next page is not already due. It fades out at the end of the hold instead of hanging through the pause.",
+    },
+    {
+      name: "fontSize",
+      type: "number",
+      default: "64",
+      description: "Font size of the regular lines in pixels.",
+    },
+    {
+      name: "fontWeight",
+      type: "number",
+      default: "800",
+      description: "Font weight. The font itself is inherited.",
+    },
+    {
+      name: "color",
+      type: "string",
+      default: "\"#ffffff\"",
+      description: "Colour of the regular words.",
+    },
+    {
+      name: "shadow",
+      type: "boolean",
+      default: "true",
+      description:
+        "A tight text shadow that keeps the caption legible over bright footage.",
+    },
+    {
+      name: "className",
+      type: "string",
+      default: "—",
+      description:
+        "Classes for the text block — width, font family, `uppercase`.",
+    },
+  ]}
+/>

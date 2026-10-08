@@ -1,0 +1,135 @@
+---
+title: Stamp
+description: Plain captions where the words that matter slam down as a rubber stamp the moment they are spoken
+component: caption-stamp
+vibe: playful
+length: transcript-driven
+useWhen:
+  - "A punchy explainer or reaction video where one word per phrase should land with impact — the stamp hits on exactly that word, in time with the voice."
+  - "You want a hand-made, printed accent on top of an ordinary readable caption line, with no keyword list needed to get started."
+avoidWhen:
+  - "The emphasis should feel drawn rather than struck — use `caption-marker`, which swipes a highlighter behind the keyword."
+  - "Every word should get the accent as it is spoken, not one per phrase — use `caption-active-pop`."
+  - "The keyword should grow out of the layout instead of landing on top of it — use `caption-stack`."
+---
+
+<ComponentPreview name="caption-stamp" />
+
+<InstallBlock name="caption-stamp" />
+
+## Usage
+
+`CaptionStamp` takes a timed transcript and renders only the text block, so
+place it inside your own `AbsoluteFill`. Words read as a plain caption line
+until a keyword is spoken. Then the word slams down in `stampColor` inside a
+thin stamp frame, dropping from almost twice its size in under a tenth of a
+second, settling at its own slight angle and leaving a rough, speckled ink
+print. Without `keywords`, the longest word on each page is stamped, so the
+style works on a raw transcript. See
+[Positioning](/docs/captions/getting-started/positioning) for safe placements
+and [Get a transcript](/docs/captions/getting-started/get-a-transcript) for
+producing `captions.json`.
+
+```tsx
+import { AbsoluteFill } from "remotion";
+import { CaptionStamp } from "@/components/remocn/caption-stamp";
+import captions from "./captions.json";
+
+export const MyScene = () => (
+  <AbsoluteFill
+    style={{
+      justifyContent: "flex-end",
+      alignItems: "center",
+      paddingBottom: 108,
+      paddingInline: 192,
+    }}
+  >
+    <CaptionStamp
+      captions={captions}
+      keywords={["thing", "lose", "three", "captions", "sound"]}
+    />
+  </AbsoluteFill>
+);
+```
+
+Keywords match whole words, ignoring case and punctuation. The stamp frame sits
+over the word without taking up extra room, so the line never shifts when it
+lands.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "captions",
+      type: "Caption[]",
+      default: "—",
+      description:
+        "The timed transcript, in the `Caption` shape from `@remotion/captions`. Times are relative to the start of the surrounding `Sequence`.",
+    },
+    {
+      name: "keywords",
+      type: "string[]",
+      default: "—",
+      description:
+        "Words that get stamped. Matched per word, ignoring case and punctuation. When omitted, the longest word on each page is stamped.",
+    },
+    {
+      name: "stampColor",
+      type: "string",
+      default: "\"#ef4444\"",
+      description: "Ink colour of the stamped word and its frame.",
+    },
+    {
+      name: "texture",
+      type: "boolean",
+      default: "true",
+      description:
+        "Roughens the stamp edges and knocks small speckles out of the ink, like a real rubber stamp.",
+    },
+    {
+      name: "combineTokensWithinMilliseconds",
+      type: "number",
+      default: "1200",
+      description:
+        "How much speech one page may span before the next word starts a new page. Pages also break at the end of a sentence and on any pause of at least `holdMs` (300 ms minimum).",
+    },
+    {
+      name: "holdMs",
+      type: "number",
+      default: "600",
+      description:
+        "How long a page stays after its last word when the next page is not already due. It fades out at the end of the hold instead of hanging through the pause.",
+    },
+    {
+      name: "fontSize",
+      type: "number",
+      default: "64",
+      description: "Font size in pixels.",
+    },
+    {
+      name: "fontWeight",
+      type: "number",
+      default: "800",
+      description: "Font weight. The font itself is inherited.",
+    },
+    {
+      name: "color",
+      type: "string",
+      default: "\"#ffffff\"",
+      description: "Colour of the words that are not stamped.",
+    },
+    {
+      name: "shadow",
+      type: "boolean",
+      default: "true",
+      description:
+        "A tight text shadow that keeps the plain words legible over bright footage.",
+    },
+    {
+      name: "className",
+      type: "string",
+      default: "—",
+      description:
+        "Classes for the text block — width, font family, `uppercase`.",
+    },
+  ]}
+/>

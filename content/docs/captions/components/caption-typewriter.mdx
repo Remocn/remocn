@@ -1,0 +1,115 @@
+---
+title: Typewriter
+description: Each word types out character by character at the pace it is spoken, with a caret that blinks while the speaker pauses
+component: caption-typewriter
+vibe: tech
+length: transcript-driven
+useWhen:
+  - "A voiceover walks through a terminal, an editor or a technical product, and the captions should feel typed rather than printed."
+  - "The delivery has deliberate pauses you want the viewer to feel — the caret blinks in the gaps and starts typing again with the next word."
+avoidWhen:
+  - "The text is scripted on-screen copy with no recording behind it — use `typewriter`, which types on its own clock."
+  - "The viewer should be able to read ahead of the voice — use `caption-karaoke`, which shows the whole phrase and fills it as it is spoken."
+  - "The video needs calm, broadcast-style subtitles — use `caption-subtitle`."
+---
+
+<ComponentPreview name="caption-typewriter" />
+
+<InstallBlock name="caption-typewriter" />
+
+## Usage
+
+`CaptionTypewriter` types each word out while it is being said: the characters
+of a word are spread across that word's duration, so a drawn-out word types
+slowly and a quick one snaps in. Characters that have not been typed yet still
+hold their space, so the line never shifts as it builds. The caret sits after
+the last typed character, steady while a word is being typed and blinking
+through pauses and holds.
+
+The component renders only the text block. See [Positioning](/docs/captions/getting-started/positioning)
+for safe placements and [Get a transcript](/docs/captions/getting-started/get-a-transcript)
+for producing `captions.json`.
+
+```tsx
+import { AbsoluteFill } from "remotion";
+import { CaptionTypewriter } from "@/components/remocn/caption-typewriter";
+import captions from "./captions.json";
+
+export const MyScene = () => (
+  <AbsoluteFill
+    style={{
+      justifyContent: "flex-end",
+      alignItems: "center",
+      paddingBottom: 108,
+      paddingInline: 192,
+    }}
+  >
+    <CaptionTypewriter captions={captions} className="font-mono" />
+  </AbsoluteFill>
+);
+```
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "captions",
+      type: "Caption[]",
+      default: "—",
+      description:
+        "The timed transcript, in the `Caption` shape from `@remotion/captions`. Times are relative to the start of the surrounding `Sequence`.",
+    },
+    {
+      name: "combineTokensWithinMilliseconds",
+      type: "number",
+      default: "1200",
+      description:
+        "How much speech one page may span before the next word starts a new page. Pages also break at the end of a sentence and on any pause of at least `holdMs` (300 ms minimum).",
+    },
+    {
+      name: "holdMs",
+      type: "number",
+      default: "600",
+      description:
+        "How long a page stays after its last word when the next page is not already due. The caret keeps blinking through the hold, then the page fades out.",
+    },
+    {
+      name: "fontSize",
+      type: "number",
+      default: "64",
+      description: "Font size in pixels.",
+    },
+    {
+      name: "fontWeight",
+      type: "number",
+      default: "800",
+      description: "Font weight. The font itself is inherited.",
+    },
+    {
+      name: "color",
+      type: "string",
+      default: "\"#ffffff\"",
+      description: "Colour of the typed text and the caret.",
+    },
+    {
+      name: "caret",
+      type: "boolean",
+      default: "true",
+      description:
+        "Show a caret after the last typed character — steady while typing, blinking while the speaker pauses.",
+    },
+    {
+      name: "shadow",
+      type: "boolean",
+      default: "true",
+      description:
+        "A tight text shadow that keeps the caption legible over bright footage.",
+    },
+    {
+      name: "className",
+      type: "string",
+      default: "—",
+      description:
+        "Classes for the text block — width, font family, `uppercase`.",
+    },
+  ]}
+/>

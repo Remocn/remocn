@@ -1,0 +1,133 @@
+---
+title: Highlight Box
+description: A solid box travels behind the word being spoken, sliding from word to word as the voice moves on
+component: caption-highlight-box
+vibe: social
+length: transcript-driven
+useWhen:
+  - "Short-form video where the caption has to be read at a glance — a solid block behind the spoken word is the loudest way to say where the voice is."
+  - "The footage is busy or bright and the active word needs its own background to stay readable."
+avoidWhen:
+  - "You want the voice's progress inside each word rather than a jump from word to word — use `caption-karaoke`."
+  - "A solid block would fight the picture and colour alone is enough — use `caption-active-pop`."
+  - "There is no voiceover and the text is scripted — use `word-stream`."
+---
+
+<ComponentPreview name="caption-highlight-box" />
+
+<InstallBlock name="caption-highlight-box" />
+
+## Usage
+
+`CaptionHighlightBox` shows the whole page and moves a rounded box behind the
+word being spoken. When the voice reaches the next word the box slides and
+resizes onto it instead of popping, so the eye follows one shape across the
+line. The text sitting on the box switches to `activeColor` as the box arrives.
+
+It renders only the text block, so place it inside your own `AbsoluteFill`. See
+[Positioning](/docs/captions/getting-started/positioning) for safe placements
+and [Get a transcript](/docs/captions/getting-started/get-a-transcript) for
+producing `captions.json`.
+
+```tsx
+import { AbsoluteFill } from "remotion";
+import { CaptionHighlightBox } from "@/components/remocn/caption-highlight-box";
+import captions from "./captions.json";
+
+export const MyScene = () => (
+  <AbsoluteFill
+    style={{
+      justifyContent: "flex-end",
+      alignItems: "center",
+      paddingBottom: 108,
+      paddingInline: 192,
+    }}
+  >
+    <CaptionHighlightBox captions={captions} boxColor="#facc15" />
+  </AbsoluteFill>
+);
+```
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "captions",
+      type: "Caption[]",
+      default: "—",
+      description:
+        "The timed transcript, in the `Caption` shape from `@remotion/captions`. Times are relative to the start of the surrounding `Sequence`.",
+    },
+    {
+      name: "combineTokensWithinMilliseconds",
+      type: "number",
+      default: "1200",
+      description:
+        "How much speech one page may span before the next word starts a new page. Pages also break at the end of a sentence and on any pause of at least `holdMs` (300 ms minimum).",
+    },
+    {
+      name: "holdMs",
+      type: "number",
+      default: "600",
+      description:
+        "How long a page stays after its last word when the next page is not already due. It fades out at the end of the hold instead of hanging through the pause.",
+    },
+    {
+      name: "fontSize",
+      type: "number",
+      default: "64",
+      description: "Font size in pixels.",
+    },
+    {
+      name: "fontWeight",
+      type: "number",
+      default: "800",
+      description: "Font weight. The font itself is inherited.",
+    },
+    {
+      name: "color",
+      type: "string",
+      default: "\"#ffffff\"",
+      description: "Colour of the words off the box.",
+    },
+    {
+      name: "activeColor",
+      type: "string",
+      default: "\"#0a0a0a\"",
+      description:
+        "Colour of the word sitting on the box. Pick something that contrasts with `boxColor`.",
+    },
+    {
+      name: "boxColor",
+      type: "string",
+      default: "\"#facc15\"",
+      description: "Fill of the travelling box.",
+    },
+    {
+      name: "boxRadius",
+      type: "number",
+      default: "0.16",
+      description: "Corner radius of the box, in em of the font size.",
+    },
+    {
+      name: "boxPadding",
+      type: "number",
+      default: "0.14",
+      description:
+        "How far the box extends past the word on each side, in em of the font size.",
+    },
+    {
+      name: "shadow",
+      type: "boolean",
+      default: "true",
+      description:
+        "A tight text shadow on the words off the box, so they stay legible over bright footage.",
+    },
+    {
+      name: "className",
+      type: "string",
+      default: "—",
+      description:
+        "Classes for the text block — width, font family, `uppercase`.",
+    },
+  ]}
+/>

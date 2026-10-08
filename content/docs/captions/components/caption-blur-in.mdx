@@ -1,0 +1,112 @@
+---
+title: Blur In
+description: Each word resolves out of a soft blur the moment it is spoken, for captions that arrive quietly
+component: caption-blur-in
+vibe: premium
+length: transcript-driven
+useWhen:
+  - "Calm narration, a product film or a launch video where the captions should feel considered rather than loud — words come into focus instead of jumping in."
+  - "The voice and the text should arrive together without drawing the eye away from the footage — the motion is all softness, no travel."
+avoidWhen:
+  - "The video is short-form and high-energy — use `caption-bounce-in`, which gives each word a springy hop."
+  - "You want crisp, editorial motion with a hard edge — use `caption-rise`, which slides words up from a baseline mask."
+  - "The viewer should be able to read the whole phrase ahead of the voice — use `caption-karaoke`, which shows the full page and fills it as it is spoken."
+---
+
+<ComponentPreview name="caption-blur-in" />
+
+<InstallBlock name="caption-blur-in" />
+
+## Usage
+
+`CaptionBlurIn` takes a timed transcript and renders only the text block, so
+place it inside your own `AbsoluteFill`. Every word stays hidden until its own
+start time, then resolves from a blur into sharp focus while it fades up. The
+space for the whole phrase is reserved from the first word, so the line never
+reflows as it builds. See [Positioning](/docs/captions/getting-started/positioning)
+for safe placements and [Get a transcript](/docs/captions/getting-started/get-a-transcript)
+for producing `captions.json`.
+
+```tsx
+import { AbsoluteFill } from "remotion";
+import { CaptionBlurIn } from "@/components/remocn/caption-blur-in";
+import captions from "./captions.json";
+
+export const MyScene = () => (
+  <AbsoluteFill
+    style={{
+      justifyContent: "flex-end",
+      alignItems: "center",
+      paddingBottom: 108,
+      paddingInline: 192,
+    }}
+  >
+    <CaptionBlurIn captions={captions} />
+  </AbsoluteFill>
+);
+```
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "captions",
+      type: "Caption[]",
+      default: "—",
+      description:
+        "The timed transcript, in the `Caption` shape from `@remotion/captions`. Times are relative to the start of the surrounding `Sequence`.",
+    },
+    {
+      name: "blur",
+      type: "number",
+      default: "12",
+      description:
+        "Blur radius in pixels each word starts from before it comes into focus.",
+    },
+    {
+      name: "combineTokensWithinMilliseconds",
+      type: "number",
+      default: "1200",
+      description:
+        "How much speech one page may span before the next word starts a new page. Pages also break at the end of a sentence and on any pause of at least `holdMs` (300 ms minimum).",
+    },
+    {
+      name: "holdMs",
+      type: "number",
+      default: "600",
+      description:
+        "How long a page stays after its last word when the next page is not already due. It fades out at the end of the hold instead of hanging through the pause.",
+    },
+    {
+      name: "fontSize",
+      type: "number",
+      default: "64",
+      description: "Font size in pixels.",
+    },
+    {
+      name: "fontWeight",
+      type: "number",
+      default: "800",
+      description: "Font weight. The font itself is inherited.",
+    },
+    {
+      name: "color",
+      type: "string",
+      default: "\"#ffffff\"",
+      description: "Text colour.",
+    },
+    {
+      name: "shadow",
+      type: "boolean",
+      default: "true",
+      description:
+        "A tight text shadow that keeps the caption legible over bright footage.",
+    },
+    {
+      name: "className",
+      type: "string",
+      default: "—",
+      description:
+        "Classes for the text block — width, font family, `uppercase`.",
+    },
+  ]}
+/>

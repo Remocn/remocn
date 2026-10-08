@@ -1,0 +1,117 @@
+---
+title: Drop
+description: Each word falls into place from above and bounces as it lands the moment it is spoken, and the whole phrase drops out of frame when the speaker pauses
+component: caption-drop
+vibe: playful
+length: transcript-driven
+useWhen:
+  - "Short-form or playful video where the captions should have weight — words land with a bounce and a slight tilt that settles, like they were dropped onto the line."
+  - "Pauses should be felt — instead of fading, the phrase falls out of frame word by word when the speaker stops."
+avoidWhen:
+  - "You want words to pop up from below with a small hop rather than fall from above — use `caption-bounce-in`."
+  - "The tone is calm, premium or editorial — use `caption-blur-in` or `caption-rise`."
+  - "There is no voiceover and the words are scripted on-screen copy — use `word-stream`."
+---
+
+<ComponentPreview name="caption-drop" />
+
+<InstallBlock name="caption-drop" />
+
+## Usage
+
+`CaptionDrop` takes a timed transcript and renders only the text block, so place
+it inside your own `AbsoluteFill`. Every word stays hidden until its own start
+time, then falls from above with a little random tilt and bounces as it lands.
+The space for the whole phrase is reserved from the first word, so the line
+never reflows. When the speaker pauses long enough for the page to leave, the
+words fall out downward one after another instead of fading. See
+[Positioning](/docs/captions/getting-started/positioning) for safe placements
+and [Get a transcript](/docs/captions/getting-started/get-a-transcript) for
+producing `captions.json`.
+
+```tsx
+import { AbsoluteFill } from "remotion";
+import { CaptionDrop } from "@/components/remocn/caption-drop";
+import captions from "./captions.json";
+
+export const MyScene = () => (
+  <AbsoluteFill
+    style={{
+      justifyContent: "flex-end",
+      alignItems: "center",
+      paddingBottom: 108,
+      paddingInline: 192,
+    }}
+  >
+    <CaptionDrop captions={captions} />
+  </AbsoluteFill>
+);
+```
+
+Words fall from about one and a half lines above their slot, so leave that much
+room above the block if something sits directly over it.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "captions",
+      type: "Caption[]",
+      default: "—",
+      description:
+        "The timed transcript, in the `Caption` shape from `@remotion/captions`. Times are relative to the start of the surrounding `Sequence`.",
+    },
+    {
+      name: "bounce",
+      type: "number",
+      default: "0.6",
+      description:
+        "How much each word bounces on landing, from 0 (settles without bouncing) to 1 (a lively rebound).",
+    },
+    {
+      name: "combineTokensWithinMilliseconds",
+      type: "number",
+      default: "1200",
+      description:
+        "How much speech one page may span before the next word starts a new page. Pages also break at the end of a sentence and on any pause of at least `holdMs` (300 ms minimum).",
+    },
+    {
+      name: "holdMs",
+      type: "number",
+      default: "600",
+      description:
+        "How long a page stays after its last word when the next page is not already due. At the end of the hold the words fall out of frame.",
+    },
+    {
+      name: "fontSize",
+      type: "number",
+      default: "64",
+      description: "Font size in pixels.",
+    },
+    {
+      name: "fontWeight",
+      type: "number",
+      default: "800",
+      description: "Font weight. The font itself is inherited.",
+    },
+    {
+      name: "color",
+      type: "string",
+      default: "\"#ffffff\"",
+      description: "Text colour.",
+    },
+    {
+      name: "shadow",
+      type: "boolean",
+      default: "true",
+      description:
+        "A tight text shadow that keeps the caption legible over bright footage.",
+    },
+    {
+      name: "className",
+      type: "string",
+      default: "—",
+      description:
+        "Classes for the text block — width, font family, `uppercase`.",
+    },
+  ]}
+/>

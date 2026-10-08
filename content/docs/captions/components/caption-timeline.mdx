@@ -1,0 +1,139 @@
+---
+title: Timeline
+description: The whole transcript laid out on a scrolling time strip that slides under a fixed playhead, so every pause shows up as space between words
+component: caption-timeline
+vibe: tech
+length: transcript-driven
+useWhen:
+  - "The video is about audio, editing or timing — a podcast clip, a voice tool, a recording workflow — and the captions should look like a track being played back."
+  - "You want the viewer to see the rhythm of the speech, with pauses as gaps and upcoming words visible ahead of the playhead."
+avoidWhen:
+  - "The captions need to be read comfortably for a long time — a moving strip is harder to follow; use `caption-subtitle` or `caption-teleprompter`."
+  - "You want one short phrase at a time rather than a continuous strip — use `caption-karaoke` or `caption-slot`."
+  - "There is no voiceover and the text is scripted — use `word-stream`."
+---
+
+<ComponentPreview name="caption-timeline" />
+
+<InstallBlock name="caption-timeline" />
+
+## Usage
+
+`CaptionTimeline` places every word of the transcript on a horizontal strip at
+a position proportional to when it is spoken, `pxPerSecond` apart, and scrolls
+the strip so the current moment sits under a fixed playhead. A pause in the
+speech becomes empty space on the strip; when words come faster than the strip
+can fit them, they are pushed apart so they never overlap. Words ahead of the
+playhead are dimmed to `upcomingOpacity` and light up as the playhead reaches
+them, and both ends of the strip fade out.
+
+The strip is not paged, so `combineTokensWithinMilliseconds` and `holdMs` have
+no effect, and it stays on screen for the whole transcript. Give it a fixed
+`width` in composition pixels and place it yourself — see
+[Positioning](/docs/captions/getting-started/positioning) and
+[Get a transcript](/docs/captions/getting-started/get-a-transcript).
+
+```tsx
+import { AbsoluteFill } from "remotion";
+import { CaptionTimeline } from "@/components/remocn/caption-timeline";
+import captions from "./captions.json";
+
+export const MyScene = () => (
+  <AbsoluteFill
+    style={{
+      justifyContent: "flex-end",
+      alignItems: "center",
+      paddingBottom: 108,
+    }}
+  >
+    <CaptionTimeline captions={captions} width={1600} />
+  </AbsoluteFill>
+);
+```
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "captions",
+      type: "Caption[]",
+      default: "—",
+      description:
+        "The timed transcript, in the `Caption` shape from `@remotion/captions`. Times are relative to the start of the surrounding `Sequence`.",
+    },
+    {
+      name: "width",
+      type: "number",
+      default: "1100",
+      description: "Width of the visible strip in composition pixels.",
+    },
+    {
+      name: "pxPerSecond",
+      type: "number",
+      default: "260",
+      description:
+        "How far apart one second of speech is on the strip — also the scroll speed during pauses.",
+    },
+    {
+      name: "playheadPosition",
+      type: "number",
+      default: "0.35",
+      description:
+        "Where the playhead sits across the strip, from 0 (left edge) to 1 (right edge).",
+    },
+    {
+      name: "playheadColor",
+      type: "string",
+      default: "\"#facc15\"",
+      description: "Colour of the playhead line.",
+    },
+    {
+      name: "upcomingOpacity",
+      type: "number",
+      default: "0.4",
+      description: "Opacity of words the playhead has not reached yet.",
+    },
+    {
+      name: "fontSize",
+      type: "number",
+      default: "64",
+      description: "Font size in pixels.",
+    },
+    {
+      name: "fontWeight",
+      type: "number",
+      default: "800",
+      description: "Font weight. The font itself is inherited.",
+    },
+    {
+      name: "color",
+      type: "string",
+      default: "\"#ffffff\"",
+      description: "Text colour.",
+    },
+    {
+      name: "shadow",
+      type: "boolean",
+      default: "true",
+      description:
+        "A tight text shadow that keeps the caption legible over bright footage.",
+    },
+    {
+      name: "combineTokensWithinMilliseconds",
+      type: "number",
+      default: "—",
+      description: "Accepted for API parity with other caption styles; unused, since the strip is not paged.",
+    },
+    {
+      name: "holdMs",
+      type: "number",
+      default: "—",
+      description: "Accepted for API parity with other caption styles; unused, since the strip never leaves the screen.",
+    },
+    {
+      name: "className",
+      type: "string",
+      default: "—",
+      description: "Classes for the strip — font family, `uppercase`.",
+    },
+  ]}
+/>

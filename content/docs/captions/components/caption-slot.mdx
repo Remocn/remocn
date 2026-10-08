@@ -1,0 +1,117 @@
+---
+title: Slot
+description: One short line at a time, each new phrase rolling up into place as the previous one rolls out the top
+component: caption-slot
+vibe: playful
+length: transcript-driven
+useWhen:
+  - "Fast talking-head or social video where the caption should keep moving with the speaker without words animating individually."
+  - "Space is tight — the caption is always exactly one line tall, so it never grows into the subject or the platform UI."
+avoidWhen:
+  - "The viewer should see which word is being spoken — use `caption-karaoke` or `caption-active-pop`."
+  - "Long, calm sentences that need to stay readable as a whole — use `caption-subtitle`."
+  - "There is no voiceover and the phrases are scripted — use `word-stream`."
+---
+
+<ComponentPreview name="caption-slot" />
+
+<InstallBlock name="caption-slot" />
+
+## Usage
+
+`CaptionSlot` moves at the page level, not the word level. The caption sits in
+a window exactly one line tall: when the next phrase starts, it rolls up into
+the window while the previous phrase rolls out the top, like a slot-machine
+reel. After a silence the line rolls out upward on its own and the next one
+rolls in from below.
+
+The line never wraps, so keep pages short. The default
+`combineTokensWithinMilliseconds` of 800 gives three or four words per page;
+raise it only if your font and frame still fit the longest phrase on one line.
+
+The component renders only the text block. See [Positioning](/docs/captions/getting-started/positioning)
+for safe placements and [Get a transcript](/docs/captions/getting-started/get-a-transcript)
+for producing `captions.json`.
+
+```tsx
+import { AbsoluteFill } from "remotion";
+import { CaptionSlot } from "@/components/remocn/caption-slot";
+import captions from "./captions.json";
+
+export const MyScene = () => (
+  <AbsoluteFill
+    style={{
+      justifyContent: "flex-end",
+      alignItems: "center",
+      paddingBottom: 108,
+      paddingInline: 192,
+    }}
+  >
+    <CaptionSlot captions={captions} />
+  </AbsoluteFill>
+);
+```
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "captions",
+      type: "Caption[]",
+      default: "—",
+      description:
+        "The timed transcript, in the `Caption` shape from `@remotion/captions`. Times are relative to the start of the surrounding `Sequence`.",
+    },
+    {
+      name: "combineTokensWithinMilliseconds",
+      type: "number",
+      default: "800",
+      description:
+        "How much speech one page may span. Kept low so every page fits on a single line. Pages also break at the end of a sentence and on any pause of at least `holdMs` (300 ms minimum).",
+    },
+    {
+      name: "holdMs",
+      type: "number",
+      default: "600",
+      description:
+        "How long a line stays after its last word when the next one is not already due. It rolls out upward at the end of the hold.",
+    },
+    {
+      name: "fontSize",
+      type: "number",
+      default: "64",
+      description: "Font size in pixels.",
+    },
+    {
+      name: "fontWeight",
+      type: "number",
+      default: "800",
+      description: "Font weight. The font itself is inherited.",
+    },
+    {
+      name: "color",
+      type: "string",
+      default: "\"#ffffff\"",
+      description: "Text colour.",
+    },
+    {
+      name: "activeColor",
+      type: "string",
+      default: "—",
+      description:
+        "Optional tint for the word being spoken. Leave it unset for a single-colour line.",
+    },
+    {
+      name: "shadow",
+      type: "boolean",
+      default: "true",
+      description:
+        "A tight text shadow that keeps the caption legible over bright footage.",
+    },
+    {
+      name: "className",
+      type: "string",
+      default: "—",
+      description: "Classes for the text block — font family, `uppercase`.",
+    },
+  ]}
+/>

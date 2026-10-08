@@ -1,0 +1,109 @@
+---
+title: Label Maker
+description: Each phrase is punched letter by letter into a strip of embossing tape at the pace it is spoken, the tape feeding out as the words arrive
+component: caption-label-maker
+vibe: paper
+length: transcript-driven
+useWhen:
+  - "A handmade, analog or DIY video wants captions with a physical object behind them — the tape is the legibility, so it reads over any footage."
+  - "The voice should feel like it is being written down — letters are pressed one at a time, so slow words punch slowly and quick ones rattle out."
+avoidWhen:
+  - "You want typed characters with a caret and no surface behind them — use `caption-typewriter`."
+  - "The video is clean or premium and a craft object would feel off-brand — use `caption-rise` or `caption-subtitle`."
+  - "Pages run long — a label is one line, so keep phrases short or use `caption-subtitle`, which balances two lines."
+---
+
+<ComponentPreview name="caption-label-maker" />
+
+<InstallBlock name="caption-label-maker" />
+
+## Usage
+
+`CaptionLabelMaker` takes a timed transcript and renders only the text block, so
+place it inside your own `AbsoluteFill`. Each page is a single strip of tape,
+tilted slightly. Letters are punched one by one across each word's duration,
+with a small press on every letter, and the tape grows from left to right with
+them. The space for the whole label is reserved when the page starts, so the
+strip never shifts. See [Positioning](/docs/captions/getting-started/positioning)
+for safe placements and [Get a transcript](/docs/captions/getting-started/get-a-transcript)
+for producing `captions.json`.
+
+```tsx
+import { AbsoluteFill } from "remotion";
+import { CaptionLabelMaker } from "@/components/remocn/caption-label-maker";
+import captions from "./captions.json";
+
+export const MyScene = () => (
+  <AbsoluteFill
+    style={{
+      justifyContent: "flex-end",
+      alignItems: "center",
+      paddingBottom: 108,
+      paddingInline: 192,
+    }}
+  >
+    <CaptionLabelMaker captions={captions} />
+  </AbsoluteFill>
+);
+```
+
+A label never wraps, so the default page window is shorter than other styles.
+Embossing tape reads best with a heavy, slightly condensed font and
+`className="uppercase"`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "captions",
+      type: "Caption[]",
+      default: "—",
+      description:
+        "The timed transcript, in the `Caption` shape from `@remotion/captions`. Times are relative to the start of the surrounding `Sequence`.",
+    },
+    {
+      name: "tapeColor",
+      type: "string",
+      default: "\"#18181b\"",
+      description: "Colour of the embossing tape.",
+    },
+    {
+      name: "combineTokensWithinMilliseconds",
+      type: "number",
+      default: "1000",
+      description:
+        "How much speech one page may span before the next word starts a new page. Pages also break at the end of a sentence and on any pause of at least `holdMs` (300 ms minimum).",
+    },
+    {
+      name: "holdMs",
+      type: "number",
+      default: "600",
+      description:
+        "How long a page stays after its last word when the next page is not already due. It fades out at the end of the hold instead of hanging through the pause.",
+    },
+    {
+      name: "fontSize",
+      type: "number",
+      default: "64",
+      description: "Font size in pixels.",
+    },
+    {
+      name: "fontWeight",
+      type: "number",
+      default: "800",
+      description: "Font weight. The font itself is inherited.",
+    },
+    {
+      name: "color",
+      type: "string",
+      default: "\"#ffffff\"",
+      description: "Colour of the embossed letters.",
+    },
+    {
+      name: "className",
+      type: "string",
+      default: "—",
+      description:
+        "Classes for the text block — font family, `uppercase`.",
+    },
+  ]}
+/>

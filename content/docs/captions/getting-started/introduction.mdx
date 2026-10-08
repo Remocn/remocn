@@ -1,0 +1,142 @@
+---
+title: Introduction
+description: Subtitles rendered from a timed transcript, word by word, in sync with a real voiceover
+---
+
+A caption takes a transcript with a start and end time on every word and turns it into an animated text block that follows the voice. It groups the words into short pages, shows one page at a time, and animates the word being spoken right now.
+
+```tsx
+import captions from "./captions.json";
+import { CaptionKaraoke } from "@/components/remocn/caption-karaoke";
+
+export const Subtitles = () => <CaptionKaraoke captions={captions} />;
+```
+
+## Captions are not typography
+
+[Word Stream](/docs/typography/word-stream), [Typewriter](/docs/typography/typewriter) and [Per-Word Crossfade](/docs/typography/per-word-crossfade) animate text you script yourself, on timing they invent. A caption has no timing of its own: every word lands when the speaker says it, because the transcript says so. That is what `length: transcript-driven` means in the docs metadata.
+
+Reach for typography when the words are on-screen copy. Reach for a caption when the words are someone talking.
+
+## Installation
+
+Install the caption runtime with the Remotion CLI first. It installs the version that matches your `remotion`, which is why the registry items do not pin it.
+
+```bash
+npx remotion add @remotion/captions
+```
+
+Then add a caption style.
+
+```bash
+npx shadcn@latest add @remocn/caption-karaoke
+```
+
+## The shared API
+
+Every `caption-*` component accepts the same base props, so switching styles is a one-line change.
+
+<PropsTable title="Base props"
+  rows={[
+    {
+      name: "captions",
+      type: "Caption[]",
+      default: "—",
+      description:
+        "Timed words from @remotion/captions, each one { text, startMs, endMs, timestampMs, confidence }.",
+    },
+    {
+      name: "combineTokensWithinMilliseconds",
+      type: "number",
+      default: "per style",
+      description:
+        "How much speech one page holds. Higher values put more words on a page. A page also ends at the end of a sentence and on any pause of at least holdMs (300 ms minimum).",
+    },
+    {
+      name: "holdMs",
+      type: "number",
+      default: "600",
+      description:
+        "A page leaves this long after its last word ends, or when the next page starts, whichever comes first.",
+    },
+    {
+      name: "fontSize",
+      type: "number",
+      default: "per style",
+      description: "Font size in composition pixels.",
+    },
+    {
+      name: "fontWeight",
+      type: "number",
+      default: "per style",
+      description: "Font weight.",
+    },
+    {
+      name: "color",
+      type: "string",
+      default: "per style",
+      description: "Text color.",
+    },
+    {
+      name: "className",
+      type: "string",
+      default: "—",
+      description: "Classes on the text block.",
+    },
+  ]}
+/>
+
+On top of these, each style adds its own props, such as the color of the active word.
+
+[Get a transcript](/docs/captions/getting-started/get-a-transcript) shows how to produce `captions` from an audio file.
+
+## Composition length
+
+A caption runs as long as the transcript does. Size the composition from the last word with `calculateMetadata`, plus the hold, so the video never cuts the final page short.
+
+```tsx
+import { Composition } from "remotion";
+import captions from "./captions.json";
+import { Subtitles } from "./subtitles";
+
+const FPS = 30;
+const HOLD_MS = 600;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="Subtitles"
+    component={Subtitles}
+    fps={FPS}
+    width={1080}
+    height={1920}
+    durationInFrames={1}
+    calculateMetadata={() => ({
+      durationInFrames: Math.ceil(
+        ((captions[captions.length - 1].endMs + HOLD_MS) / 1000) * FPS,
+      ),
+    })}
+  />
+);
+```
+
+## Placement
+
+A caption renders only its text block. It does not position itself in the frame, so you decide where the block sits. [Positioning](/docs/captions/getting-started/positioning) has the safe zones for landscape and vertical video.
+
+## Fonts and casing
+
+A caption inherits its font, so it matches the rest of your video. Load a typeface with `@remotion/google-fonts` and set it on a wrapper, or pass a font class through `className`.
+
+```tsx
+import { loadFont } from "@remotion/google-fonts/Montserrat";
+
+const { fontFamily } = loadFont("normal", { weights: ["800"] });
+
+export const Subtitles = () => (
+  <div style={{ fontFamily }}>
+    <CaptionKaraoke captions={captions} />
+  </div>
+);
+```
+
+Text keeps the casing of the transcript. Add `className="uppercase"` when a style reads better in caps.

@@ -7,7 +7,7 @@ export const SITE_URL = "https://remocn.dev";
 type DocPage = InferPageType<typeof source>;
 
 export function formatLength(
-  length: number | "state-driven" | "sustained",
+  length: number | "state-driven" | "sustained" | "transcript-driven",
 ): string {
   return typeof length === "string" ? length : `${length}f @ 30fps`;
 }

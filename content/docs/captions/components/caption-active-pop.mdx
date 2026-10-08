@@ -1,0 +1,120 @@
+---
+title: Active Pop
+description: The word being spoken turns to the accent colour and springs up in scale, then settles back as the voice moves on
+component: caption-active-pop
+vibe: social
+length: transcript-driven
+useWhen:
+  - "A talking head or voiceover needs the everyday short-form caption look — the full phrase on screen with the spoken word lifting out of it."
+  - "You want the active word marked without covering the footage behind it with a solid shape."
+avoidWhen:
+  - "One word should own the whole frame at a time — use `caption-word-pop`."
+  - "The highlight has to read over busy footage from across the room — use `caption-highlight-box`."
+  - "There is no voiceover and the text is scripted — use `word-stream`."
+---
+
+<ComponentPreview name="caption-active-pop" />
+
+<InstallBlock name="caption-active-pop" />
+
+## Usage
+
+`CaptionActivePop` shows the whole page in the base colour. The word being
+spoken switches to `activeColor` and springs up to `popScale`, then eases back
+down and returns to the base colour once the next word takes over. The scale is
+a transform, so the neighbouring words never shift.
+
+It renders only the text block, so place it inside your own `AbsoluteFill`. See
+[Positioning](/docs/captions/getting-started/positioning) for safe placements
+and [Get a transcript](/docs/captions/getting-started/get-a-transcript) for
+producing `captions.json`.
+
+```tsx
+import { AbsoluteFill } from "remotion";
+import { CaptionActivePop } from "@/components/remocn/caption-active-pop";
+import captions from "./captions.json";
+
+export const MyScene = () => (
+  <AbsoluteFill
+    style={{
+      justifyContent: "flex-end",
+      alignItems: "center",
+      paddingBottom: 108,
+      paddingInline: 192,
+    }}
+  >
+    <CaptionActivePop captions={captions} />
+  </AbsoluteFill>
+);
+```
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "captions",
+      type: "Caption[]",
+      default: "—",
+      description:
+        "The timed transcript, in the `Caption` shape from `@remotion/captions`. Times are relative to the start of the surrounding `Sequence`.",
+    },
+    {
+      name: "combineTokensWithinMilliseconds",
+      type: "number",
+      default: "1200",
+      description:
+        "How much speech one page may span before the next word starts a new page. Pages also break at the end of a sentence and on any pause of at least `holdMs` (300 ms minimum).",
+    },
+    {
+      name: "holdMs",
+      type: "number",
+      default: "600",
+      description:
+        "How long a page stays after its last word when the next page is not already due. It fades out at the end of the hold instead of hanging through the pause.",
+    },
+    {
+      name: "fontSize",
+      type: "number",
+      default: "64",
+      description: "Font size in pixels.",
+    },
+    {
+      name: "fontWeight",
+      type: "number",
+      default: "800",
+      description: "Font weight. The font itself is inherited.",
+    },
+    {
+      name: "color",
+      type: "string",
+      default: "\"#ffffff\"",
+      description: "Colour of every word that is not being spoken.",
+    },
+    {
+      name: "activeColor",
+      type: "string",
+      default: "\"#facc15\"",
+      description: "Colour of the word being spoken.",
+    },
+    {
+      name: "popScale",
+      type: "number",
+      default: "1.12",
+      description:
+        "How large the spoken word grows. Keep it modest — past about 1.25 the word starts to crowd its neighbours.",
+    },
+    {
+      name: "shadow",
+      type: "boolean",
+      default: "true",
+      description:
+        "A tight text shadow that keeps the caption legible over bright footage.",
+    },
+    {
+      name: "className",
+      type: "string",
+      default: "—",
+      description:
+        "Classes for the text block — width, font family, `uppercase`.",
+    },
+  ]}
+/>
