@@ -2573,6 +2573,485 @@
       "type": "registry:component"
     },
     {
+      "name": "caption-core",
+      "title": "Caption Core",
+      "description": "The timing engine every caption style shares: pages a timed transcript, finds the word being spoken and how far into it the voice is, and decides when a page leaves the screen.",
+      "dependencies": ["remotion", "@remotion/captions"],
+      "files": [
+        {
+          "path": "registry/remocn/caption-core/index.ts",
+          "type": "registry:lib",
+          "target": "lib/remocn/caption-core.ts"
+        }
+      ],
+      "type": "registry:lib"
+    },
+    {
+      "name": "caption-karaoke",
+      "title": "Caption Karaoke",
+      "description": "Transcript captions where each word fills with colour left to right exactly as it is spoken, the whole phrase readable before the voice reaches it.",
+      "dependencies": ["remotion", "@remotion/captions"],
+      "registryDependencies": ["@remocn/caption-core"],
+      "files": [
+        {
+          "path": "registry/remocn/caption-karaoke/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/caption-karaoke.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "caption-highlight-box",
+      "title": "Caption Highlight Box",
+      "description": "A solid box travels behind the word being spoken, sliding from word to word as the voice moves on.",
+      "dependencies": ["remotion", "@remotion/captions"],
+      "registryDependencies": ["@remocn/caption-core"],
+      "files": [
+        {
+          "path": "registry/remocn/caption-highlight-box/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/caption-highlight-box.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "caption-active-pop",
+      "title": "Caption Active Pop",
+      "description": "The word being spoken turns to the accent colour and springs up in scale, then settles back as the voice moves on.",
+      "dependencies": ["remotion", "@remotion/captions"],
+      "registryDependencies": ["@remocn/caption-core"],
+      "files": [
+        {
+          "path": "registry/remocn/caption-active-pop/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/caption-active-pop.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "caption-word-pop",
+      "title": "Caption Word Pop",
+      "description": "One large word at a time, each popping in on a spring the moment it is spoken.",
+      "dependencies": ["remotion", "@remotion/captions"],
+      "registryDependencies": ["@remocn/caption-core"],
+      "files": [
+        {
+          "path": "registry/remocn/caption-word-pop/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/caption-word-pop.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "caption-bounce-in",
+      "title": "Caption Bounce In",
+      "description": "Each word springs up into place with a little overshoot the moment it is spoken, and the phrase builds word by word.",
+      "dependencies": ["remotion", "@remotion/captions"],
+      "registryDependencies": ["@remocn/caption-core"],
+      "files": [
+        {
+          "path": "registry/remocn/caption-bounce-in/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/caption-bounce-in.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "caption-blur-in",
+      "title": "Caption Blur In",
+      "description": "Each word resolves out of a soft blur the moment it is spoken, for captions that arrive quietly.",
+      "dependencies": ["remotion", "@remotion/captions"],
+      "registryDependencies": ["@remocn/caption-core"],
+      "files": [
+        {
+          "path": "registry/remocn/caption-blur-in/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/caption-blur-in.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "caption-rise",
+      "title": "Caption Rise",
+      "description": "Each word slides up out of a mask at its baseline the moment it is spoken, with no bounce and no scale.",
+      "dependencies": ["remotion", "@remotion/captions"],
+      "registryDependencies": ["@remocn/caption-core"],
+      "files": [
+        {
+          "path": "registry/remocn/caption-rise/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/caption-rise.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "caption-typewriter",
+      "title": "Caption Typewriter",
+      "description": "Each word types out character by character at the pace it is spoken, with a caret that blinks while the speaker pauses.",
+      "dependencies": ["remotion", "@remotion/captions"],
+      "registryDependencies": ["@remocn/caption-core"],
+      "files": [
+        {
+          "path": "registry/remocn/caption-typewriter/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/caption-typewriter.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "caption-slot",
+      "title": "Caption Slot",
+      "description": "One short line at a time, each new phrase rolling up into place as the previous one rolls out the top.",
+      "dependencies": ["remotion", "@remotion/captions"],
+      "registryDependencies": ["@remocn/caption-core"],
+      "files": [
+        {
+          "path": "registry/remocn/caption-slot/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/caption-slot.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "caption-subtitle",
+      "title": "Caption Subtitle",
+      "description": "Classic broadcast subtitles, a whole phrase on a translucent plate, with no word-level animation at all.",
+      "dependencies": ["remotion", "@remotion/captions"],
+      "registryDependencies": ["@remocn/caption-core"],
+      "files": [
+        {
+          "path": "registry/remocn/caption-subtitle/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/caption-subtitle.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "caption-dim-progress",
+      "title": "Caption Dim Progress",
+      "description": "The whole phrase sits on screen dimmed and each word brightens the moment it is spoken, with no motion at all.",
+      "dependencies": ["remotion", "@remotion/captions"],
+      "registryDependencies": ["@remocn/caption-core"],
+      "files": [
+        {
+          "path": "registry/remocn/caption-dim-progress/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/caption-dim-progress.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "caption-underline",
+      "title": "Caption Underline",
+      "description": "A bar slides under the word being spoken, travelling from word to word while the text itself stays untouched.",
+      "dependencies": ["remotion", "@remotion/captions"],
+      "registryDependencies": ["@remocn/caption-core"],
+      "files": [
+        {
+          "path": "registry/remocn/caption-underline/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/caption-underline.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "caption-scramble",
+      "title": "Caption Scramble",
+      "description": "Each word arrives as random glyphs at the moment it is spoken and decodes left to right into the real letters.",
+      "dependencies": ["remotion", "@remotion/captions"],
+      "registryDependencies": ["@remocn/caption-core"],
+      "files": [
+        {
+          "path": "registry/remocn/caption-scramble/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/caption-scramble.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "caption-weight",
+      "title": "Caption Weight",
+      "description": "The word being spoken swells from a light weight to a heavy one and relaxes as the voice moves on, with no layout shift.",
+      "dependencies": ["remotion", "@remotion/captions"],
+      "registryDependencies": ["@remocn/caption-core"],
+      "files": [
+        {
+          "path": "registry/remocn/caption-weight/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/caption-weight.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "caption-emoji",
+      "title": "Caption Emoji",
+      "description": "An emoji pops up above a chosen word the moment it is spoken and stays until the phrase leaves.",
+      "dependencies": ["remotion", "@remotion/captions"],
+      "registryDependencies": ["@remocn/caption-core"],
+      "files": [
+        {
+          "path": "registry/remocn/caption-emoji/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/caption-emoji.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "caption-speaker",
+      "title": "Caption Speaker",
+      "description": "Dialogue captions where every phrase takes its speaker's colour, so a conversation reads like a script.",
+      "dependencies": ["remotion", "@remotion/captions"],
+      "registryDependencies": ["@remocn/caption-core"],
+      "files": [
+        {
+          "path": "registry/remocn/caption-speaker/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/caption-speaker.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "caption-stack",
+      "title": "Caption Stack",
+      "description": "Kinetic captions stacked a couple of words per line, with the keyword of each page set large on its own line.",
+      "dependencies": ["remotion", "@remotion/captions"],
+      "registryDependencies": ["@remocn/caption-core"],
+      "files": [
+        {
+          "path": "registry/remocn/caption-stack/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/caption-stack.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "caption-outline",
+      "title": "Caption Outline",
+      "description": "Heavy-stroked captions that stay readable over any footage, with the spoken word switching to a contrast colour and nothing else moving.",
+      "dependencies": ["remotion", "@remotion/captions"],
+      "registryDependencies": ["@remocn/caption-core"],
+      "files": [
+        {
+          "path": "registry/remocn/caption-outline/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/caption-outline.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "caption-marker",
+      "title": "Caption Marker",
+      "description": "Plain captions where the words that matter get a highlighter swipe the moment they are spoken.",
+      "dependencies": ["remotion", "@remotion/captions"],
+      "registryDependencies": ["@remocn/caption-core"],
+      "files": [
+        {
+          "path": "registry/remocn/caption-marker/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/caption-marker.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "caption-stamp",
+      "title": "Caption Stamp",
+      "description": "Plain captions where the words that matter slam down as a rubber stamp the moment they are spoken.",
+      "dependencies": ["remotion", "@remotion/captions"],
+      "registryDependencies": ["@remocn/caption-core"],
+      "files": [
+        {
+          "path": "registry/remocn/caption-stamp/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/caption-stamp.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "caption-handwrite",
+      "title": "Caption Handwrite",
+      "description": "Each word is inked in by hand from left to right at the pace it is spoken, every word sitting at its own slight angle.",
+      "dependencies": ["remotion", "@remotion/captions"],
+      "registryDependencies": ["@remocn/caption-core"],
+      "files": [
+        {
+          "path": "registry/remocn/caption-handwrite/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/caption-handwrite.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "caption-redact",
+      "title": "Caption Redact",
+      "description": "The whole phrase starts blacked out like a declassified file, and each bar pulls away the moment its word is spoken.",
+      "dependencies": ["remotion", "@remotion/captions"],
+      "registryDependencies": ["@remocn/caption-core"],
+      "files": [
+        {
+          "path": "registry/remocn/caption-redact/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/caption-redact.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "caption-prosody",
+      "title": "Caption Prosody",
+      "description": "Word size follows the delivery, so drawn-out words land large and rushed words stay small, and the rhythm of the voice is visible with the sound off.",
+      "dependencies": ["remotion", "@remotion/captions"],
+      "registryDependencies": ["@remocn/caption-core"],
+      "files": [
+        {
+          "path": "registry/remocn/caption-prosody/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/caption-prosody.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "caption-timeline",
+      "title": "Caption Timeline",
+      "description": "The whole transcript laid out on a scrolling time strip that slides under a fixed playhead, so every pause shows up as space between words.",
+      "dependencies": ["remotion", "@remotion/captions"],
+      "registryDependencies": ["@remocn/caption-core"],
+      "files": [
+        {
+          "path": "registry/remocn/caption-timeline/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/caption-timeline.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "caption-teleprompter",
+      "title": "Caption Teleprompter",
+      "description": "The whole transcript scrolls smoothly through a short window with the current line centred, past lines fading above and the next line waiting below.",
+      "dependencies": ["remotion", "@remotion/captions"],
+      "registryDependencies": ["@remocn/caption-core"],
+      "files": [
+        {
+          "path": "registry/remocn/caption-teleprompter/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/caption-teleprompter.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "caption-knockout",
+      "title": "Caption Knockout",
+      "description": "A solid plate with the words cut clean through it, each word punching out the moment it is spoken so the footage shows through the letters.",
+      "dependencies": ["remotion", "@remotion/captions"],
+      "registryDependencies": ["@remocn/caption-core"],
+      "files": [
+        {
+          "path": "registry/remocn/caption-knockout/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/caption-knockout.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "caption-slice",
+      "title": "Caption Slice",
+      "description": "Each word arrives cut in two, the top half sliding in from the left and the bottom from the right, locking together the moment it is spoken.",
+      "dependencies": ["remotion", "@remotion/captions"],
+      "registryDependencies": ["@remocn/caption-core"],
+      "files": [
+        {
+          "path": "registry/remocn/caption-slice/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/caption-slice.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "caption-cube",
+      "title": "Caption Cube",
+      "description": "Each new phrase turns into view as the next face of a 3D cube, the previous phrase rotating up and away on a horizontal hinge.",
+      "dependencies": ["remotion", "@remotion/captions"],
+      "registryDependencies": ["@remocn/caption-core"],
+      "files": [
+        {
+          "path": "registry/remocn/caption-cube/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/caption-cube.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "caption-split-flap",
+      "title": "Caption Split Flap",
+      "description": "Every letter sits on its own flap tile and clatters through a few characters before landing the moment the word is spoken, like a station departure board.",
+      "dependencies": ["remotion", "@remotion/captions"],
+      "registryDependencies": ["@remocn/caption-core"],
+      "files": [
+        {
+          "path": "registry/remocn/caption-split-flap/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/caption-split-flap.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "caption-label-maker",
+      "title": "Caption Label Maker",
+      "description": "Each phrase is punched letter by letter into a strip of embossing tape at the pace it is spoken, the tape feeding out as the words arrive.",
+      "dependencies": ["remotion", "@remotion/captions"],
+      "registryDependencies": ["@remocn/caption-core"],
+      "files": [
+        {
+          "path": "registry/remocn/caption-label-maker/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/caption-label-maker.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
+      "name": "caption-drop",
+      "title": "Caption Drop",
+      "description": "Each word falls into place from above and bounces as it lands the moment it is spoken, and the whole phrase drops out of frame when the speaker pauses.",
+      "dependencies": ["remotion", "@remotion/captions"],
+      "registryDependencies": ["@remocn/caption-core"],
+      "files": [
+        {
+          "path": "registry/remocn/caption-drop/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/caption-drop.tsx"
+        }
+      ],
+      "type": "registry:component"
+    },
+    {
       "name": "remocn-ui",
       "title": "remocn UI Core",
       "description": "Shared timeline-fold hook, theme context, and color math for remocn UI primitives.",

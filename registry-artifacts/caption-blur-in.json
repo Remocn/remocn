@@ -1,0 +1,17 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "caption-blur-in",
+  "title": "Caption Blur In",
+  "description": "Each word resolves out of a soft blur the moment it is spoken, for captions that arrive quietly.",
+  "dependencies": ["remotion", "@remotion/captions"],
+  "registryDependencies": ["@remocn/caption-core"],
+  "files": [
+    {
+      "path": "registry/remocn/caption-blur-in/index.tsx",
+      "content": "\"use client\";\n\nimport { Fragment } from \"react\";\nimport { Easing, interpolate } from \"remotion\";\nimport {\n  type CaptionBaseProps,\n  DEFAULT_HOLD_MS,\n  getExitWindowMs,\n  groupCaptionWords,\n  useCaptions,\n} from \"@/lib/remocn/caption-core\";\n\nexport interface CaptionBlurInProps extends CaptionBaseProps {\n  blur?: number;\n  shadow?: boolean;\n}\n\nconst EXIT_MS = 220;\nconst RESOLVE_MS = 220;\nconst LEGIBILITY_SHADOW =\n  \"0 2px 3px rgba(0, 0, 0, 0.5), 0 4px 16px rgba(0, 0, 0, 0.35)\";\n\nconst resolveEasing = Easing.bezier(0.25, 0.6, 0.3, 1);\n\nexport function CaptionBlurIn({\n  captions,\n  combineTokensWithinMilliseconds = 1200,\n  holdMs = DEFAULT_HOLD_MS,\n  fontSize = 64,\n  fontWeight = 800,\n  color = \"#ffffff\",\n  blur = 12,\n  shadow = true,\n  className,\n}: CaptionBlurInProps) {\n  const state = useCaptions({\n    captions,\n    combineTokensWithinMilliseconds,\n    holdMs,\n  });\n  if (!state) return null;\n\n  const exit = state.endsInSilence\n    ? interpolate(\n        state.untilEndMs,\n        [0, getExitWindowMs(state, EXIT_MS)],\n        [0, 1],\n        {\n          extrapolateLeft: \"clamp\",\n          extrapolateRight: \"clamp\",\n        },\n      )\n    : 1;\n\n  return (\n    <div\n      className={className}\n      style={{\n        fontSize,\n        fontWeight,\n        color,\n        lineHeight: 1.2,\n        textAlign: \"center\",\n        opacity: exit,\n      }}\n    >\n      {groupCaptionWords(state.tokens).map((word, w) => (\n        <Fragment key={`${state.pageIndex}-${word[0].index}`}>\n          {w > 0 && \" \"}\n          <span style={{ display: \"inline-block\", whiteSpace: \"nowrap\" }}>\n            {word.map(({ index, token }) => {\n              const sinceMs = state.timeMs - token.fromMs;\n              const p =\n                sinceMs < 0\n                  ? 0\n                  : interpolate(sinceMs, [0, RESOLVE_MS], [0, 1], {\n                      easing: resolveEasing,\n                      extrapolateLeft: \"clamp\",\n                      extrapolateRight: \"clamp\",\n                    });\n              const radius = (1 - p) * blur;\n              return (\n                <span\n                  key={index}\n                  style={{\n                    display: \"inline-block\",\n                    opacity: p,\n                    filter: radius > 0.01 ? `blur(${radius}px)` : undefined,\n                    textShadow: shadow ? LEGIBILITY_SHADOW : undefined,\n                  }}\n                >\n                  {token.text}\n                </span>\n              );\n            })}\n          </span>\n        </Fragment>\n      ))}\n    </div>\n  );\n}\n",
+      "type": "registry:component",
+      "target": "components/remocn/caption-blur-in.tsx"
+    }
+  ],
+  "type": "registry:component"
+}

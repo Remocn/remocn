@@ -1,0 +1,17 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "caption-subtitle",
+  "title": "Caption Subtitle",
+  "description": "Classic broadcast subtitles, a whole phrase on a translucent plate, with no word-level animation at all.",
+  "dependencies": ["remotion", "@remotion/captions"],
+  "registryDependencies": ["@remocn/caption-core"],
+  "files": [
+    {
+      "path": "registry/remocn/caption-subtitle/index.tsx",
+      "content": "\"use client\";\n\nimport { interpolate } from \"remotion\";\nimport {\n  type CaptionBaseProps,\n  DEFAULT_HOLD_MS,\n  getExitWindowMs,\n  useCaptions,\n} from \"@/lib/remocn/caption-core\";\n\nexport interface CaptionSubtitleProps extends CaptionBaseProps {\n  box?: boolean;\n  boxColor?: string;\n  boxOpacity?: number;\n}\n\nconst ENTER_MS = 120;\nconst EXIT_MS = 160;\nconst LEGIBILITY_SHADOW =\n  \"0 2px 3px rgba(0, 0, 0, 0.5), 0 4px 16px rgba(0, 0, 0, 0.35)\";\n\nexport function CaptionSubtitle({\n  captions,\n  combineTokensWithinMilliseconds = 2500,\n  holdMs = DEFAULT_HOLD_MS,\n  fontSize = 44,\n  fontWeight = 600,\n  color = \"#ffffff\",\n  box = true,\n  boxColor = \"#000000\",\n  boxOpacity = 0.72,\n  className,\n}: CaptionSubtitleProps) {\n  const state = useCaptions({\n    captions,\n    combineTokensWithinMilliseconds,\n    holdMs,\n  });\n  if (!state) return null;\n\n  const enter = state.previous\n    ? 1\n    : interpolate(state.sinceStartMs, [0, ENTER_MS], [0, 1], {\n        extrapolateLeft: \"clamp\",\n        extrapolateRight: \"clamp\",\n      });\n  const exit = state.endsInSilence\n    ? interpolate(\n        state.untilEndMs,\n        [0, getExitWindowMs(state, EXIT_MS)],\n        [0, 1],\n        {\n          extrapolateLeft: \"clamp\",\n          extrapolateRight: \"clamp\",\n        },\n      )\n    : 1;\n  const opacityPercent = Math.round(Math.min(1, Math.max(0, boxOpacity)) * 100);\n\n  return (\n    <div\n      className={className}\n      style={{\n        fontSize,\n        fontWeight,\n        color,\n        lineHeight: 1.4,\n        textAlign: \"center\",\n        textWrap: \"balance\",\n        opacity: Math.min(enter, exit),\n      }}\n    >\n      <span\n        style={\n          box\n            ? {\n                backgroundColor: `color-mix(in srgb, ${boxColor} ${opacityPercent}%, transparent)`,\n                padding: \"0.06em 0.36em\",\n                borderRadius: \"0.16em\",\n                boxDecorationBreak: \"clone\",\n                WebkitBoxDecorationBreak: \"clone\",\n              }\n            : { textShadow: LEGIBILITY_SHADOW }\n        }\n      >\n        {state.page.text}\n      </span>\n    </div>\n  );\n}\n",
+      "type": "registry:component",
+      "target": "components/remocn/caption-subtitle.tsx"
+    }
+  ],
+  "type": "registry:component"
+}
