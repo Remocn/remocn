@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { useTrackEvent } from "@/lib/analytics";
 
-const HERO_BADGE_HREF = "/changelog#2026-09-26-motion-graphics";
+const HERO_BADGE_HREF = "/docs/captions/getting-started/introduction";
 
 export function HeroBadge() {
   const trackEvent = useTrackEvent();
@@ -27,7 +27,7 @@ export function HeroBadge() {
       }
     >
       <span className="font-semibold text-foreground">Introducing</span>
-      <span className="text-foreground">Motion Graphics</span>
+      <span className="text-foreground">Captions</span>
       <ArrowRight
         className="size-3 transition-transform group-hover:translate-x-0.5"
         aria-hidden="true"
