@@ -1,0 +1,126 @@
+---
+title: Handwrite
+description: Each word is inked in by hand from left to right at the pace it is spoken, every word sitting at its own slight angle
+component: caption-handwrite
+vibe: paper
+length: transcript-driven
+useWhen:
+  - "A personal, journal-like video — vlog, founder story, voice memo — where the captions should feel written by the speaker rather than typeset."
+  - "The speaker's pace matters: a drawn-out word is inked slowly and a quick one in a flick, so the writing follows the voice."
+avoidWhen:
+  - "There is no voiceover and the handwritten line is scripted on-screen copy — use `handwrite`."
+  - "You want the reveal to read as typed rather than written — use `caption-typewriter`."
+  - "The captions should stay plain and readable at small sizes over busy footage — use `caption-subtitle`."
+---
+
+<ComponentPreview name="caption-handwrite" />
+
+<InstallBlock name="caption-handwrite" />
+
+## Usage
+
+`CaptionHandwrite` takes a timed transcript and renders only the text block, so
+place it inside your own `AbsoluteFill`. Each word stays invisible, with its
+space already reserved, until it is spoken. Then ink runs across it from left to
+right behind a soft leading edge, taking as long as the word itself, with a
+200 ms floor so short words are still written rather than flashed. Every word
+gets its own small tilt and baseline lift, and every letter its own slant, so
+the line never looks set in type. `wobble` scales all of that, and `0` writes
+perfectly straight.
+
+The effect reads best in a handwriting face. The font is inherited, so load
+one with `@remotion/google-fonts` and set it on a wrapper. See
+[Positioning](/docs/captions/getting-started/positioning) for safe placements
+and [Get a transcript](/docs/captions/getting-started/get-a-transcript) for
+producing `captions.json`.
+
+```tsx
+import { loadFont } from "@remotion/google-fonts/Caveat";
+import { AbsoluteFill } from "remotion";
+import { CaptionHandwrite } from "@/components/remocn/caption-handwrite";
+import captions from "./captions.json";
+
+const { fontFamily } = loadFont("normal", {
+  subsets: ["latin"],
+  weights: ["700"],
+});
+
+export const MyScene = () => (
+  <AbsoluteFill
+    style={{
+      justifyContent: "flex-end",
+      alignItems: "center",
+      paddingBottom: 108,
+      paddingInline: 192,
+      fontFamily,
+    }}
+  >
+    <CaptionHandwrite captions={captions} fontSize={80} fontWeight={700} />
+  </AbsoluteFill>
+);
+```
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "captions",
+      type: "Caption[]",
+      default: "—",
+      description:
+        "The timed transcript, in the `Caption` shape from `@remotion/captions`. Times are relative to the start of the surrounding `Sequence`.",
+    },
+    {
+      name: "wobble",
+      type: "number",
+      default: "1",
+      description:
+        "Scales the per-word tilt and baseline lift and the per-letter slant. `0` is straight, `2` is a loose scrawl.",
+    },
+    {
+      name: "combineTokensWithinMilliseconds",
+      type: "number",
+      default: "1200",
+      description:
+        "How much speech one page may span before the next word starts a new page. Pages also break at the end of a sentence and on any pause of at least `holdMs` (300 ms minimum).",
+    },
+    {
+      name: "holdMs",
+      type: "number",
+      default: "600",
+      description:
+        "How long a page stays after its last word when the next page is not already due. It fades out at the end of the hold instead of hanging through the pause.",
+    },
+    {
+      name: "fontSize",
+      type: "number",
+      default: "64",
+      description: "Font size in pixels.",
+    },
+    {
+      name: "fontWeight",
+      type: "number",
+      default: "800",
+      description: "Font weight. The font itself is inherited.",
+    },
+    {
+      name: "color",
+      type: "string",
+      default: "\"#ffffff\"",
+      description: "Ink colour.",
+    },
+    {
+      name: "shadow",
+      type: "boolean",
+      default: "true",
+      description:
+        "A tight text shadow that keeps the writing legible over bright footage.",
+    },
+    {
+      name: "className",
+      type: "string",
+      default: "—",
+      description:
+        "Classes for the text block — width, font family, `uppercase`.",
+    },
+  ]}
+/>

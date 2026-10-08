@@ -1,37 +1,30 @@
 "use client";
 
 import { AbsoluteFill, useVideoConfig } from "remotion";
-import {
-  CAPTION_FIXTURE_TEXT,
-  previewCaptions,
-} from "@/components/docs/examples/caption-fixture";
-import { CaptionStack } from "@/registry/remocn/caption-stack";
+import { previewCaptions } from "@/components/docs/examples/caption-fixture";
+import { CaptionRedact } from "@/registry/remocn/caption-redact";
 
-const PREVIEW_KEYWORDS = ["thing", "lose", "three", "captions", "sound"];
-
-interface CaptionStackExampleProps {
+interface CaptionRedactExampleProps {
   captions?: string;
   fontSize?: number;
   fontWeight?: number;
   color?: string;
-  emphasisColor?: string;
-  emphasisScale?: number;
+  barColor?: string;
   combineTokensWithinMilliseconds?: number;
   holdMs?: number;
   shadow?: boolean;
 }
 
-export function CaptionStackExampleScene({
+export function CaptionRedactExampleScene({
   captions,
   fontSize,
   fontWeight,
   color,
-  emphasisColor,
-  emphasisScale,
+  barColor,
   combineTokensWithinMilliseconds,
   holdMs,
   shadow,
-}: CaptionStackExampleProps) {
+}: CaptionRedactExampleProps) {
   const { width, height } = useVideoConfig();
   return (
     <AbsoluteFill
@@ -42,18 +35,12 @@ export function CaptionStackExampleScene({
         paddingInline: width * 0.1,
       }}
     >
-      <CaptionStack
+      <CaptionRedact
         captions={previewCaptions(captions)}
-        keywords={
-          captions === undefined || captions.trim() === CAPTION_FIXTURE_TEXT
-            ? PREVIEW_KEYWORDS
-            : undefined
-        }
         fontSize={fontSize}
         fontWeight={fontWeight}
         color={color}
-        emphasisColor={emphasisColor}
-        emphasisScale={emphasisScale}
+        barColor={barColor}
         combineTokensWithinMilliseconds={combineTokensWithinMilliseconds}
         holdMs={holdMs}
         shadow={shadow}
@@ -62,32 +49,25 @@ export function CaptionStackExampleScene({
   );
 }
 
-export const captionStackExampleCode = (
+export const captionRedactExampleCode = (
   values: Record<string, unknown>,
 ): string => {
   const fontSize = (values.fontSize as number) ?? 64;
   const fontWeight = (values.fontWeight as number) ?? 800;
   const color = (values.color as string) ?? "#ffffff";
-  const emphasisColor = (values.emphasisColor as string) ?? "#facc15";
-  const emphasisScale = (values.emphasisScale as number) ?? 1.7;
-  const combine = (values.combineTokensWithinMilliseconds as number) ?? 1600;
+  const barColor = (values.barColor as string) ?? "#0a0a0a";
+  const combine = (values.combineTokensWithinMilliseconds as number) ?? 1200;
   const holdMs = (values.holdMs as number) ?? 600;
   const shadow = (values.shadow as boolean) ?? true;
-  const keywordsLine =
-    typeof values.captions !== "string" ||
-    values.captions.trim() === CAPTION_FIXTURE_TEXT
-      ? `      keywords={[${PREVIEW_KEYWORDS.map((k) => `"${k}"`).join(", ")}]}\n`
-      : "";
   const extra = [
-    emphasisScale !== 1.7 ? `      emphasisScale={${emphasisScale}}` : null,
-    combine !== 1600
+    combine !== 1200
       ? `      combineTokensWithinMilliseconds={${combine}}`
       : null,
     holdMs !== 600 ? `      holdMs={${holdMs}}` : null,
     shadow ? null : "      shadow={false}",
   ].filter(Boolean);
   return `import { AbsoluteFill } from "remotion";
-import { CaptionStack } from "@/components/remocn/caption-stack";
+import { CaptionRedact } from "@/components/remocn/caption-redact";
 import captions from "./captions.json";
 
 export const MyScene = () => (
@@ -99,12 +79,12 @@ export const MyScene = () => (
       paddingInline: 192,
     }}
   >
-    <CaptionStack
+    <CaptionRedact
       captions={captions}
-${keywordsLine}      fontSize={${fontSize}}
+      fontSize={${fontSize}}
       fontWeight={${fontWeight}}
       color="${color}"
-      emphasisColor="${emphasisColor}"
+      barColor="${barColor}"
 ${extra.length > 0 ? `${extra.join("\n")}\n` : ""}    />
   </AbsoluteFill>
 );`;

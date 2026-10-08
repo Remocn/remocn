@@ -3367,6 +3367,140 @@ const registry: Record<string, RegistryEntry> = {
         (m) => m.captionMarkerConfig,
       ),
   },
+  "caption-stamp": {
+    load: () =>
+      import("@/components/docs/examples/caption-stamp-example").then((m) => ({
+        default: m.CaptionStampExampleScene,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/caption-stamp/config").then(
+        (m) => m.captionStampConfig,
+      ),
+  },
+  "caption-handwrite": {
+    load: () =>
+      import("@/components/docs/examples/caption-handwrite-example").then(
+        (m) => ({
+          default: m.CaptionHandwriteExampleScene,
+        }),
+      ),
+    loadConfig: () =>
+      import("@/registry/remocn/caption-handwrite/config").then(
+        (m) => m.captionHandwriteConfig,
+      ),
+  },
+  "caption-redact": {
+    load: () =>
+      import("@/components/docs/examples/caption-redact-example").then((m) => ({
+        default: m.CaptionRedactExampleScene,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/caption-redact/config").then(
+        (m) => m.captionRedactConfig,
+      ),
+  },
+  "caption-prosody": {
+    load: () =>
+      import("@/components/docs/examples/caption-prosody-example").then(
+        (m) => ({
+          default: m.CaptionProsodyExampleScene,
+        }),
+      ),
+    loadConfig: () =>
+      import("@/registry/remocn/caption-prosody/config").then(
+        (m) => m.captionProsodyConfig,
+      ),
+  },
+  "caption-timeline": {
+    load: () =>
+      import("@/components/docs/examples/caption-timeline-example").then(
+        (m) => ({
+          default: m.CaptionTimelineExampleScene,
+        }),
+      ),
+    loadConfig: () =>
+      import("@/registry/remocn/caption-timeline/config").then(
+        (m) => m.captionTimelineConfig,
+      ),
+  },
+  "caption-teleprompter": {
+    load: () =>
+      import("@/components/docs/examples/caption-teleprompter-example").then(
+        (m) => ({
+          default: m.CaptionTeleprompterExampleScene,
+        }),
+      ),
+    loadConfig: () =>
+      import("@/registry/remocn/caption-teleprompter/config").then(
+        (m) => m.captionTeleprompterConfig,
+      ),
+  },
+  "caption-knockout": {
+    load: () =>
+      import("@/components/docs/examples/caption-knockout-example").then(
+        (m) => ({
+          default: m.CaptionKnockoutExampleScene,
+        }),
+      ),
+    loadConfig: () =>
+      import("@/registry/remocn/caption-knockout/config").then(
+        (m) => m.captionKnockoutConfig,
+      ),
+  },
+  "caption-slice": {
+    load: () =>
+      import("@/components/docs/examples/caption-slice-example").then((m) => ({
+        default: m.CaptionSliceExampleScene,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/caption-slice/config").then(
+        (m) => m.captionSliceConfig,
+      ),
+  },
+  "caption-cube": {
+    load: () =>
+      import("@/components/docs/examples/caption-cube-example").then((m) => ({
+        default: m.CaptionCubeExampleScene,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/caption-cube/config").then(
+        (m) => m.captionCubeConfig,
+      ),
+  },
+  "caption-split-flap": {
+    load: () =>
+      import("@/components/docs/examples/caption-split-flap-example").then(
+        (m) => ({
+          default: m.CaptionSplitFlapExampleScene,
+        }),
+      ),
+    loadConfig: () =>
+      import("@/registry/remocn/caption-split-flap/config").then(
+        (m) => m.captionSplitFlapConfig,
+      ),
+  },
+  "caption-label-maker": {
+    load: () =>
+      import("@/components/docs/examples/caption-label-maker-example").then(
+        (m) => ({
+          default: m.CaptionLabelMakerExampleScene,
+        }),
+      ),
+    loadConfig: () =>
+      import("@/registry/remocn/caption-label-maker/config").then(
+        (m) => m.captionLabelMakerConfig,
+      ),
+  },
+  "caption-drop": {
+    load: () =>
+      import("@/components/docs/examples/caption-drop-example").then((m) => ({
+        default: m.CaptionDropExampleScene,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/caption-drop/config").then(
+        (m) => m.captionDropConfig,
+      ),
+  },
 };
 
 const configCache = new Map<string, Promise<ResolvedComponentConfig>>();

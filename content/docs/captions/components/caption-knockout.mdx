@@ -1,0 +1,118 @@
+---
+title: Knockout
+description: A solid plate with the words cut clean through it, each word punching out the moment it is spoken so the footage shows through the letters
+component: caption-knockout
+vibe: premium
+length: transcript-driven
+useWhen:
+  - "The footage is worth seeing and you want the caption to frame it rather than cover it — the letters are windows onto whatever plays behind them."
+  - "A bold, graphic caption for brand or launch video where a block of colour is part of the look, with the speech punching holes through it as it goes."
+avoidWhen:
+  - "The footage behind is flat or the same tone as the plate — the holes vanish; use `caption-subtitle`, whose plate carries solid text."
+  - "The viewer should read ahead of the voice in plain type — use `caption-karaoke` or `caption-dim-progress`."
+  - "You want a box that follows the spoken word instead of a plate behind the whole phrase — use `caption-highlight-box`."
+---
+
+<ComponentPreview name="caption-knockout" />
+
+<InstallBlock name="caption-knockout" />
+
+## Usage
+
+`CaptionKnockout` draws one solid plate behind the phrase and cuts the words
+out of it. A cut is a real hole: whatever sits behind the caption in your
+composition shows through the letters, so put it over footage, a shader or a
+moving background. Words the voice has not reached yet are still mostly
+plate; each one punches through the moment it is spoken.
+
+The cut is an SVG mask, so any `plateColor` works, light or dark. The holes are
+drawn with the font inherited from the caption, so load your typeface the same
+way you would for any other caption style.
+
+The component renders only the text block. See [Positioning](/docs/captions/getting-started/positioning)
+for safe placements and [Get a transcript](/docs/captions/getting-started/get-a-transcript)
+for producing `captions.json`.
+
+```tsx
+import { AbsoluteFill } from "remotion";
+import { CaptionKnockout } from "@/components/remocn/caption-knockout";
+import captions from "./captions.json";
+
+export const MyScene = () => (
+  <AbsoluteFill
+    style={{
+      justifyContent: "flex-end",
+      alignItems: "center",
+      paddingBottom: 108,
+      paddingInline: 192,
+    }}
+  >
+    <CaptionKnockout captions={captions} />
+  </AbsoluteFill>
+);
+```
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "captions",
+      type: "Caption[]",
+      default: "—",
+      description:
+        "The timed transcript, in the `Caption` shape from `@remotion/captions`. Times are relative to the start of the surrounding `Sequence`.",
+    },
+    {
+      name: "combineTokensWithinMilliseconds",
+      type: "number",
+      default: "1200",
+      description:
+        "How much speech one page may span before the next word starts a new page. Pages also break at the end of a sentence and on any pause of at least `holdMs` (300 ms minimum).",
+    },
+    {
+      name: "holdMs",
+      type: "number",
+      default: "600",
+      description:
+        "How long a page stays after its last word when the next page is not already due. It fades out at the end of the hold instead of hanging through the pause.",
+    },
+    {
+      name: "fontSize",
+      type: "number",
+      default: "64",
+      description: "Font size in pixels.",
+    },
+    {
+      name: "fontWeight",
+      type: "number",
+      default: "800",
+      description:
+        "Font weight. Heavy weights cut wider holes and show more of the footage.",
+    },
+    {
+      name: "plateColor",
+      type: "string",
+      default: "\"#ffffff\"",
+      description: "Colour of the plate the words are cut out of.",
+    },
+    {
+      name: "upcomingOpacity",
+      type: "number",
+      default: "0.15",
+      description:
+        "How far a word the voice has not reached yet already shows through, from 0 (solid plate) to 1 (fully cut).",
+    },
+    {
+      name: "radius",
+      type: "number",
+      default: "0.16",
+      description: "Corner radius of the plate, in em.",
+    },
+    {
+      name: "className",
+      type: "string",
+      default: "—",
+      description:
+        "Classes for the text block — width, font family, `uppercase`.",
+    },
+  ]}
+/>
