@@ -1,9 +1,9 @@
+import { captionDimProgressExampleCode } from "@/components/docs/examples/caption-dim-progress-example";
 import {
   CAPTION_FIXTURE,
   previewCaptionsDuration,
   previewTailMs,
 } from "@/components/docs/examples/caption-fixture";
-import { captionDimProgressExampleCode } from "@/components/docs/examples/caption-dim-progress-example";
 import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
 
 export const captionDimProgressConfig: ComponentConfig = {

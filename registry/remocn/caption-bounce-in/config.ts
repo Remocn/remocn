@@ -1,9 +1,9 @@
+import { captionBounceInExampleCode } from "@/components/docs/examples/caption-bounce-in-example";
 import {
   CAPTION_FIXTURE,
   previewCaptionsDuration,
   previewTailMs,
 } from "@/components/docs/examples/caption-fixture";
-import { captionBounceInExampleCode } from "@/components/docs/examples/caption-bounce-in-example";
 import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
 
 export const captionBounceInConfig: ComponentConfig = {

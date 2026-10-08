@@ -1,9 +1,9 @@
+import { captionCubeExampleCode } from "@/components/docs/examples/caption-cube-example";
 import {
   CAPTION_FIXTURE,
   previewCaptionsDuration,
   previewTailMs,
 } from "@/components/docs/examples/caption-fixture";
-import { captionCubeExampleCode } from "@/components/docs/examples/caption-cube-example";
 import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
 
 export const captionCubeConfig: ComponentConfig = {

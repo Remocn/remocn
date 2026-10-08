@@ -1,9 +1,9 @@
+import { captionDropExampleCode } from "@/components/docs/examples/caption-drop-example";
 import {
   CAPTION_FIXTURE,
   previewCaptionsDuration,
   previewTailMs,
 } from "@/components/docs/examples/caption-fixture";
-import { captionDropExampleCode } from "@/components/docs/examples/caption-drop-example";
 import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
 
 export const captionDropConfig: ComponentConfig = {

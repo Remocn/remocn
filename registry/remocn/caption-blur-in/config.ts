@@ -1,9 +1,9 @@
+import { captionBlurInExampleCode } from "@/components/docs/examples/caption-blur-in-example";
 import {
   CAPTION_FIXTURE,
   previewCaptionsDuration,
   previewTailMs,
 } from "@/components/docs/examples/caption-fixture";
-import { captionBlurInExampleCode } from "@/components/docs/examples/caption-blur-in-example";
 import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
 
 export const captionBlurInConfig: ComponentConfig = {

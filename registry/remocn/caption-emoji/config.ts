@@ -1,9 +1,9 @@
+import { captionEmojiExampleCode } from "@/components/docs/examples/caption-emoji-example";
 import {
   CAPTION_FIXTURE,
   previewCaptionsDuration,
   previewTailMs,
 } from "@/components/docs/examples/caption-fixture";
-import { captionEmojiExampleCode } from "@/components/docs/examples/caption-emoji-example";
 import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
 
 export const captionEmojiConfig: ComponentConfig = {
