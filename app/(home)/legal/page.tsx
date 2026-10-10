@@ -32,7 +32,7 @@ export const metadata: Metadata = {
   },
 };
 
-const LAST_UPDATED = "July 24, 2026";
+const LAST_UPDATED = "October 10, 2026";
 
 export default function LegalPage() {
   return (
@@ -106,6 +106,35 @@ export default function LegalPage() {
               </a>
               .
             </p>
+
+            <h3 id="plugin">The plugin and MCP server</h3>
+            <p>
+              The remocn plugin for Claude Code and Codex and the MCP server at{" "}
+              <code>remocn.dev/mcp</code> need no account and collect no
+              personal data.
+            </p>
+            <ul>
+              <li>
+                <strong>MCP server.</strong> The server is stateless. It answers
+                each request from the public component catalog and does not
+                store or log what you send it: search queries, video briefs and
+                component props are used to build the answer and then discarded.
+                The standard access logs described above apply, as for the rest
+                of the site.
+              </li>
+              <li>
+                <strong>Previews in chat.</strong> Component previews shown
+                inside Claude or ChatGPT load pages from{" "}
+                <code>remocn.dev/embed</code>. Those pages run no analytics, so
+                the props in their address are not recorded.
+              </li>
+              <li>
+                <strong>The plugin.</strong> Its skills run on your machine,
+                inside your agent. They read public documentation and registry
+                files from remocn.dev and install packages from npm. Nothing
+                about your project or your prompts is sent to us.
+              </li>
+            </ul>
 
             <h3>Third-party services</h3>
             <ul>
