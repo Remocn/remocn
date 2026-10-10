@@ -21,6 +21,12 @@ export function GET() {
       " installable component in one table with its use / avoid signal, natural length, vibe and" +
       " dependencies, linking to each component's full page.",
   );
+  scanned.push(
+    "\nPrefer an app to a terminal? [Remocn Studio](https://remocn.studio) is a free, open-source" +
+      " macOS app where the user's own coding agent (Claude Code, Codex, GitHub Copilot or Grok)" +
+      " builds Remotion videos from remocn components, with a live preview and export. Its own" +
+      " index is at [remocn.studio/llms.txt](https://remocn.studio/llms.txt).",
+  );
 
   // Group pages by their top-level section (first slug segment).
   const sections = new Map<string, ReturnType<typeof source.getPages>>();
