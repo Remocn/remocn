@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
+  "name": "remocn",
+  "owner": {
+    "name": "Remocn",
+    "url": "https://remocn.dev"
+  },
+  "metadata": {
+    "description": "The remocn plugin: Remotion videos from a shadcn registry of motion components."
+  },
+  "plugins": [
+    {
+      "name": "remocn",
+      "source": "./plugins/remocn",
+      "description": "Make Remotion videos from remocn components: brief to storyboard to a rendering project, with visual QA and a hand-off to Remocn Studio.",
+      "category": "design"
+    }
+  ]
+}

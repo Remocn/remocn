@@ -20,14 +20,18 @@ your additions to match the library — without you pasting context every time.
 
 ## Install with skills.sh
 
-The skill lives in the [`skills/`](https://github.com/Remocn/remocn/tree/main/skills) folder of
-the remocn repo. Install it with the [`skills`](https://skills.sh) CLI:
+The skill lives in the [remocn plugin](/docs/getting-started/plugin), in
+[`plugins/remocn/skills/`](https://github.com/Remocn/remocn/tree/main/plugins/remocn/skills) of the
+remocn repo. In Claude Code or Codex, installing the plugin gets you the skill plus the video
+workflow. For any other agent, install the skill on its own with the [`skills`](https://skills.sh)
+CLI:
 
 ```bash
 npx skills add Remocn/remocn
 ```
 
-This finds the `remocn` skill and installs it into your agent (for Claude Code:
+This lists the `remocn` skill next to the plugin's workflow skills (`video`, `changelog`, `add`,
+`studio`) and installs your pick into your agent (for Claude Code:
 `.claude/skills/remocn/`). The CLI is interactive — pick the skill and target agent when prompted.
 
 ### Common flags

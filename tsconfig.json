@@ -191,5 +191,10 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": ["node_modules", "out", "**/__tests__/**"]
+  "exclude": [
+    "node_modules",
+    "out",
+    "**/__tests__/**",
+    "plugins/remocn/skills/studio/assets"
+  ]
 }

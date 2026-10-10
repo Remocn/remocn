@@ -1,0 +1,5 @@
+schema_version: "1.1"
+name: scene-review-fixtures
+tags: [review]
+context:
+  scaffold_script: scaffold.sh

@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "remocn",
+  "displayName": "remocn",
+  "version": "0.1.0",
+  "description": "Make Remotion videos from remocn components: brief to storyboard to a rendering project, with visual QA and a hand-off to Remocn Studio.",
+  "author": {
+    "name": "Remocn",
+    "url": "https://remocn.dev"
+  },
+  "homepage": "https://remocn.dev/docs/getting-started/plugin",
+  "repository": "https://github.com/Remocn/remocn",
+  "license": "MIT",
+  "keywords": ["remotion", "video", "shadcn", "motion", "animation"],
+  "icon": "./assets/icon.png",
+  "documentationUrl": "https://remocn.dev/docs/getting-started/plugin",
+  "supportUrl": "https://github.com/Remocn/remocn/issues",
+  "privacyPolicyUrl": "https://remocn.dev/legal#privacy",
+  "termsOfServiceUrl": "https://remocn.dev/legal#terms"
+}

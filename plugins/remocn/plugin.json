@@ -1,0 +1,37 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "remocn",
+  "version": "0.1.0",
+  "description": "Make Remotion videos from remocn components: brief to storyboard to a rendering project, with visual QA and a hand-off to Remocn Studio.",
+  "author": {
+    "name": "Remocn",
+    "url": "https://remocn.dev"
+  },
+  "homepage": "https://remocn.dev/docs/getting-started/plugin",
+  "repository": "https://github.com/Remocn/remocn",
+  "license": "MIT",
+  "keywords": ["remotion", "video", "shadcn", "motion", "animation"],
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "remocn",
+        "shortDescription": "Remotion videos from ready-made remocn components",
+        "longDescription": "Pick components from the remocn registry, plan a storyboard, install with shadcn and compose a Remotion video that renders. Works in a coding agent with a terminal; in chat it searches components and plans videos through the remocn.dev MCP server.",
+        "developerName": "Remocn",
+        "category": "Design",
+        "capabilities": ["Read", "Write"],
+        "websiteURL": "https://remocn.dev",
+        "privacyPolicyURL": "https://remocn.dev/legal#privacy",
+        "termsOfServiceURL": "https://remocn.dev/legal#terms",
+        "defaultPrompt": [
+          "Make a 30-second product demo video for my app with remocn.",
+          "Turn the last release of this repo into a changelog video.",
+          "Find a remocn transition for a fast, techy cut."
+        ],
+        "brandColor": "#2A3033",
+        "composerIcon": "./assets/icon.png",
+        "logo": "./assets/icon.png"
+      }
+    }
+  }
+}

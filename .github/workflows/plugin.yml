@@ -1,0 +1,51 @@
+name: Plugin
+
+on:
+  pull_request:
+    paths:
+      - "plugins/remocn/**"
+      - ".claude-plugin/**"
+      - "lib/plugin-scripts.test.ts"
+  push:
+    branches: [main]
+    paths:
+      - "plugins/remocn/**"
+      - ".claude-plugin/**"
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: npm install -g @anthropic-ai/claude-code
+      - run: claude plugin validate --strict plugins/remocn
+      - run: claude plugin validate --strict .
+      # The Claude and Agent Plugins manifests must agree on the release.
+      - run: |
+          test "$(jq -r .version plugins/remocn/plugin.json)" = "$(jq -r .version plugins/remocn/.claude-plugin/plugin.json)"
+      - run: bun test lib/plugin-scripts.test.ts
+
+  evals:
+    needs: validate
+    runs-on: ubuntu-latest
+    env:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+    steps:
+      - if: env.ANTHROPIC_API_KEY == ''
+        run: echo "::notice::ANTHROPIC_API_KEY is not set, so plugin evals are skipped."
+      - if: env.ANTHROPIC_API_KEY != ''
+        uses: actions/checkout@v4
+      - if: env.ANTHROPIC_API_KEY != ''
+        run: npm install -g @anthropic-ai/claude-code
+      # One run per case, no baseline arm: a regression signal at about $4 a
+      # run. Pinned model, so a model rollout isn't read as a plugin change.
+      - if: env.ANTHROPIC_API_KEY != ''
+        run: >-
+          claude plugin eval plugins/remocn
+          --trust-plugin --no-publish --scaffold
+          --runs 1 --ablation none --model sonnet -j 4
+          --max-cost-usd 10
+          --allow-tools "WebFetch(domain:remocn.dev)"

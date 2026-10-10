@@ -99,6 +99,9 @@ export default function RootLayout({
           trackScreenViews
           trackAttributes
           trackOutgoingLinks
+          // /embed/* runs inside MCP App iframes in chat hosts; its URL carries
+          // the user's props, so nothing there is tracked.
+          filter="function () { return !window.location.pathname.startsWith('/embed/'); }"
         />
       </body>
     </html>

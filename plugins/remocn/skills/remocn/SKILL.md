@@ -1,11 +1,13 @@
 ---
 name: remocn
 description: >
-  Build Remotion videos with remocn — copy-paste animation components and timeline-driven
-  UI primitives from a shadcn registry. Use when composing a video or scene in a Remotion
-  project, adding a single animation, transition, background, or UI-block sim, or reaching
-  for a video-ready UI primitive (button, dialog, command menu). Activate for polished
-  Remotion video work even when remocn isn't named.
+  Pick, install and compose remocn components: ready-made Remotion animations, transitions,
+  backgrounds, captions, UI primitives and video templates from a shadcn registry. Use when
+  building a video or scene out of prebuilt parts (product demo, launch, changelog, intro,
+  social clip), adding an animation, transition or background to a Remotion project, or
+  choosing between components. Activate for polished Remotion video work even when remocn
+  isn't named. Works alongside the Remotion skills: questions about the Remotion API itself
+  (interpolate, spring, Sequence, rendering, config) belong to them, not to this skill.
 ---
 
 # remocn
@@ -168,10 +170,20 @@ https://remocn.dev/docs/craft/anti-patterns.md
 General Remotion rules (no `Math.random()`, no `setInterval`, animate `transform` not `top`/`left`,
 load fonts before render) live in the `remotion-best-practices` skill.
 
+## Working alongside the Remotion skills
+
+remocn is the component layer on top of Remotion, not a second guide to it. When Remotion's own
+skills are installed (`remotion-create`, `remotion-render`, `remotion-best-practices`), let them
+answer how Remotion works — project setup, the animation API, rendering, config — and use this
+skill for what to put on screen: which remocn component, how long it runs, how beats chain. Don't
+restate Remotion API docs here or in your answer; point to those skills or to remotion.dev.
+
 ## Composing a video
 
 Don't dump components — compose one story. When asked to build a full video ("make a product demo",
-"changelog video", "intro for my landing"):
+"changelog video", "intro for my landing") and the `video` skill from the remocn plugin is installed,
+follow it: it runs the whole brief → storyboard → install → compose → review flow below and hands
+the result to Remocn Studio. Otherwise:
 
 1. **Decide the strategy** — ready template vs compose from components vs build a new component. See
    `references/anatomy.md` §1.
