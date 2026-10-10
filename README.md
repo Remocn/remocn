@@ -35,6 +35,16 @@ Set up a new Remotion video project in this folder, then install the remocn agen
 
 When a browser tab opens with an empty video player, you're ready. Pick a [guide](https://remocn.dev/docs/guides) and make it yours.
 
+## Plugin for Claude Code and Codex
+
+The [remocn plugin](https://remocn.dev/docs/getting-started/plugin) bundles the skill with a `/remocn:video` workflow: brief → storyboard → install → compose → visual check → open in [Remocn Studio](https://remocn.studio).
+
+```text
+/plugin install remocn --marketplace Remocn/remocn
+```
+
+In Codex: `codex plugin marketplace add Remocn/remocn`, then `codex plugin add remocn@remocn`.
+
 ## Sponsors
 
 remocn is free and MIT-licensed. These sponsors keep the registry growing and the renders fast.

@@ -204,12 +204,12 @@ describe("component pages carry selection metadata", () => {
 });
 
 describe("the agent skill points at pages that exist", () => {
-  const skillSources = [...new Glob("skills/**/*.md").scanSync(".")].map(
-    (file) => ({
-      file,
-      text: readFileSync(file, "utf8"),
-    }),
-  );
+  const skillSources = [
+    ...new Glob("plugins/remocn/**/*.md").scanSync("."),
+  ].map((file) => ({
+    file,
+    text: readFileSync(file, "utf8"),
+  }));
 
   const urls = skillSources.flatMap(({ file, text }) =>
     [...text.matchAll(/https:\/\/remocn\.dev(\/[^\s`)"']*)/g)].map((m) => ({
@@ -248,7 +248,9 @@ describe("the agent skill points at pages that exist", () => {
 
   it("no longer ships a bundled component catalog", () => {
     const catalog = [
-      ...new Glob("skills/remocn/references/components/**").scanSync("."),
+      ...new Glob(
+        "plugins/remocn/skills/remocn/references/components/**",
+      ).scanSync("."),
     ];
 
     expect(catalog).toEqual([]);

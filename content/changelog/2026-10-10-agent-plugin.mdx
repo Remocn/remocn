@@ -1,0 +1,21 @@
+---
+title: Plugin for Claude Code and Codex
+date: 2026-10-10
+---
+
+remocn now ships as a plugin for Claude Code and Codex. Type `/remocn:video` and a one-line brief: the agent reads your repo for content, picks an archetype and plans a storyboard with a frame budget for every beat, then waits for your go-ahead. After that it installs the components, writes the video, renders stills to check the frames, and offers to open the project in [Remocn Studio](https://remocn.studio) to tweak and export. [Plugin](/docs/getting-started/plugin) has the install commands and everything inside.
+
+### New
+
+- `/remocn:video`, `/remocn:changelog`, `/remocn:add` and `/remocn:studio`: the video workflow, a release video from your git history, one component at a time, and the Remocn Studio hand-off.
+- Two agents for Claude Code: `video-director` plans the storyboard, `scene-reviewer` looks at rendered stills and reports clipped text, empty frames and low contrast.
+- A remote MCP server at `https://remocn.dev/mcp` for component search, component pages, video plans and live previews, including in claude.ai and ChatGPT as a custom connector.
+
+### Improvements
+
+- The agent skill moved into the plugin, at `plugins/remocn/skills/remocn`. `npx skills add Remocn/remocn` still installs it, now next to the plugin's workflow skills.
+- The skill's description now leaves Remotion API questions to Remotion's own skills, so the two work side by side.
+
+### Fixes
+
+- `remocn-ui` now installs `@types/culori`, so a fresh project typechecks after the first UI primitive.
