@@ -4,12 +4,14 @@ on:
   pull_request:
     paths:
       - "plugins/remocn/**"
+      - "evals/remocn/**"
       - ".claude-plugin/**"
       - "lib/plugin-scripts.test.ts"
   push:
     branches: [main]
     paths:
       - "plugins/remocn/**"
+      - "evals/remocn/**"
       - ".claude-plugin/**"
 
 jobs:
@@ -44,7 +46,7 @@ jobs:
       # run. Pinned model, so a model rollout isn't read as a plugin change.
       - if: env.ANTHROPIC_API_KEY != ''
         run: >-
-          claude plugin eval plugins/remocn
+          claude plugin eval .
           --trust-plugin --no-publish --scaffold
           --runs 1 --ablation none --model sonnet -j 4
           --max-cost-usd 10

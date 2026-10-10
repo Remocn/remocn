@@ -1,4 +1,5 @@
 ---
+plugins: ["../../../plugins/remocn"]
 max_turns: 20
 timeout_seconds: 600
 tags: [review]

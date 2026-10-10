@@ -1,4 +1,5 @@
 ---
+plugins: ["../../../plugins/remocn"]
 max_turns: 30
 timeout_seconds: 600
 tags: [storyboard, pricing-reveal]

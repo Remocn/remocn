@@ -28,7 +28,7 @@ The changelog archetype holds a version and a short list of changes. Video copy 
 
 - Pick the 3–5 changes a user would notice. Drop chores, refactors, dependency bumps and CI.
 - One line each, sentence case, under about 40 characters, starting with what the user gets
-  ("Export to vertical video", not "feat(export): add 9:16 preset").
+  ("Vertical video for Shorts and Reels", not "feat(render): add 9:16 preset").
 - Group into New / Improved / Fixed only when there are enough lines to need it.
 
 If you collected the lines from the repo, show the version and the lines and wait for edits before

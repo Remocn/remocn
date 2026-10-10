@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "remocn",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Make Remotion videos from remocn components: brief to storyboard to a rendering project, with visual QA and a hand-off to Remocn Studio.",
   "author": {
     "name": "Remocn",
