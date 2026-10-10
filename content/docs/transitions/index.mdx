@@ -40,10 +40,22 @@ Pure CSS-transform physics, no dependencies beyond Remotion.
 
 ## Shader
 
-Textured, organic transitions driven by frame-synced shaders. They install `@paper-design/shaders-react`.
+Textured, organic transitions driven by frame-synced shaders. Most use `@paper-design/shaders-react`; Shader Seam and Shader Spiral Pass use a local OpenShaders export.
 
 <ComponentCardGrid
   items={[
+    {
+      name: "ShaderSpiralPass",
+      description: "Fly into a luminous spiral and emerge through its center into the next scene",
+      status: "stable",
+      href: "/docs/transitions/shader-spiral-pass",
+    },
+    {
+      name: "ShaderSeam",
+      description: "Dissolve an OpenShaders material in place to uncover the next scene",
+      status: "stable",
+      href: "/docs/transitions/shader-seam",
+    },
     {
       name: "GrainDissolve",
       description: "Disintegrate the outgoing scene into soft grainy shapes and condense the next out of the noise",

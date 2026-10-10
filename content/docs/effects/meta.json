@@ -3,6 +3,9 @@
   "defaultOpen": true,
   "pages": [
     "index",
+    "keystroke",
+    "cursor-gravity",
+    "radial-burst",
     "tv-power-off",
     "confetti",
     "paper-wobble",
@@ -10,5 +13,6 @@
     "scribble-circle",
     "crumple-toss",
     "simulated-cursor"
-  ]
+  ],
+  "icon": "SparklesIcon"
 }

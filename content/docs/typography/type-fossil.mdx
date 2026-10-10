@@ -1,0 +1,95 @@
+---
+title: Type Fossil
+description: A readable word carries layers of fine contours, revises itself, then compresses into a clean typographic imprint
+component: type-fossil
+vibe: premium
+length: 174
+useWhen:
+  - "A creative process should move from earlier wording to a finished idea."
+  - "A title needs a sculptural contour effect that resolves into clean typography."
+avoidWhen:
+  - "Letters must morph individually between phrases — use kinetic-morph-text."
+  - "Long paragraphs need to be read; this composition is built for words and short phrases."
+---
+
+<ComponentPreview name="type-fossil" />
+
+<InstallBlock name="type-fossil" />
+
+## Usage
+
+A solid word sits in front of fine offset contours, forming a typographic slice.
+Earlier versions replace one another with a clean wipe. Every contour carries
+the same wording as the foreground. After the last revision, the slice's depth
+compresses, the lettering straightens, and a crisp final imprint remains.
+
+```tsx
+import { TypeFossil } from "@/components/remocn/type-fossil";
+
+export const Scene = () => <TypeFossil />;
+```
+
+All shapes render in one SVG with bounded parallel offsets. The foreground
+stays opaque. During a revision, complementary clipping regions replace the
+old text with the new text without a transparent crossfade. No assets, shaders,
+font downloads, or simulation state are required.
+
+## Your revisions
+
+`text` is the final copy. Separate `drafts` with `|` or newlines; up to twelve
+non-empty drafts are used. Each revision receives a full beat, and the preview
+automatically adjusts its duration. Empty drafts animate just the final word's
+contours. Empty final text leaves only the background.
+
+```tsx
+<TypeFossil
+  text="Clarity"
+  drafts="What if | Less | Closer"
+  layers={20}
+  depth={110}
+  color="#fffaf0"
+  accentColor="#e8ef9b"
+  backgroundColor="#32153c"
+/>
+```
+
+`layers` sets contour density. `depth` sets the slice's total thickness, which
+remains bounded when the layer count changes. Long copy conservatively shrinks
+to fit without stretching glyphs. A centered 1280 × 720 SVG scales into other
+aspect ratios; portrait leaves extra space above and below.
+
+## Timing
+
+Default sequence at 30 fps and `speed={1}`:
+
+| Frames | Motion |
+| --- | --- |
+| 0–16 | Contour thickness opens up behind the first word |
+| 20–28 | Idea → Maybe |
+| 38–46 | Maybe → Try |
+| 56–64 | Try → Almost |
+| 74–82 | Almost → Again |
+| 92–100 | Again → Closer |
+| 110–118 | Closer → Form |
+| 126–174 | Contours compress and lettering straightens |
+| 174–208 | Finished word holds |
+
+Revisions start every 18 reference frames (0.6 seconds at 30 fps), with an
+8-frame wipe. Each additional draft adds 18 frames. `typeFossilLength` is the
+last moving frame at default props. Use `getTypeFossilDuration({ drafts, speed })`
+for the actual duration including the 34-frame final hold. It returns frames
+at 30 fps; multiply by `fps / 30` and round up for another frame rate.
+
+<PropsTable title="Props" rows={[
+  { name: "text", type: "string", default: '"Form"', description: "Final word or short phrase" },
+  { name: "drafts", type: "string", default: '"Idea | Maybe | Try | Almost | Again | Closer"', description: "Earlier versions separated by | or newlines; up to twelve" },
+  { name: "layers", type: "number", default: "16", description: "Contour count, rounded and clamped to 4–24" },
+  { name: "depth", type: "number", default: "100", description: "Slice thickness, clamped to 50–150 reference units" },
+  { name: "fontSize", type: "number", default: "220", description: "Maximum font size; copy shrinks to fit" },
+  { name: "fontWeight", type: "number | string", default: "600", description: "Font weight from 100 to 900" },
+  { name: "color", type: "string", default: '"#302b26"', description: "Solid foreground lettering" },
+  { name: "accentColor", type: "string", default: '"#a800b7"', description: "Contours" },
+  { name: "backgroundColor", type: "string", default: '"#eeeae2"', description: "Stage background; accepts transparent" },
+  { name: "speed", type: "number", default: "1", description: "Playback multiplier; zero or negative freezes the initial pose" },
+  { name: "className", type: "string", description: "Class on the full-frame root" },
+]} />

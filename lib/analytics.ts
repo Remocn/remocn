@@ -13,9 +13,13 @@ export type CtaId =
   | "hero_start"
   | "hero_showcases"
   | "hero_saas_typography_badge"
+  | "hero_motion_graphics_badge"
+  | "hero_templates_badge"
   | "how_it_works_setup"
   | "final_cta"
-  | "github_header";
+  | "github_header"
+  | "studio_bar"
+  | "footer_external";
 
 type AnalyticsEvents = {
   install_command_copied: {

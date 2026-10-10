@@ -11,5 +11,6 @@
     "onboarding-stepper-flow",
     "ai-prompt-flow",
     "settings-toggle-flow"
-  ]
+  ],
+  "icon": "DashboardSquare01Icon"
 }

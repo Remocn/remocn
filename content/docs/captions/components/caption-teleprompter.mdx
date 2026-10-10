@@ -1,0 +1,136 @@
+---
+title: Teleprompter
+description: The whole transcript scrolls smoothly through a short window with the current line centred, past lines fading above and the next line waiting below
+component: caption-teleprompter
+vibe: clean
+length: transcript-driven
+useWhen:
+  - "The speech is long and continuous — an explainer, a talk, a narrated walkthrough — and the viewer benefits from seeing the line before and the line after."
+  - "You want calm, reading-first captions that never cut or pop, only glide from one line to the next."
+avoidWhen:
+  - "You want one phrase at a time that replaces the last — use `caption-subtitle` for broadcast-style pages or `caption-slot` for a one-line roll."
+  - "The captions should feel energetic and social — use `caption-karaoke` or `caption-highlight-box`."
+  - "There is no voiceover and the text is scripted — use `word-stream`."
+---
+
+<ComponentPreview name="caption-teleprompter" />
+
+<InstallBlock name="caption-teleprompter" />
+
+## Usage
+
+`CaptionTeleprompter` turns the transcript into lines — the same paging every
+caption style uses, with `combineTokensWithinMilliseconds` setting how much
+speech one line holds — and stacks all of them in a window `visibleLines` tall.
+As each line starts, the stack glides so that line sits in the middle of the
+window. Inside the current line, words the voice has not reached yet are
+dimmed to `upcomingOpacity`; the lines above and below rest at `pastOpacity`
+and `futureOpacity`, and the window fades out at its top and bottom edges.
+
+Nothing ever leaves the screen: the teleprompter stays for the whole
+transcript, so `holdMs` only decides how long a silence must be to start a new
+line. The window takes the width you give it and wraps long lines, so place it
+inside a container with the width you want — see
+[Positioning](/docs/captions/getting-started/positioning) and
+[Get a transcript](/docs/captions/getting-started/get-a-transcript).
+
+```tsx
+import { AbsoluteFill } from "remotion";
+import { CaptionTeleprompter } from "@/components/remocn/caption-teleprompter";
+import captions from "./captions.json";
+
+export const MyScene = () => (
+  <AbsoluteFill
+    style={{
+      justifyContent: "center",
+      alignItems: "stretch",
+      paddingInline: 192,
+    }}
+  >
+    <CaptionTeleprompter captions={captions} />
+  </AbsoluteFill>
+);
+```
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "captions",
+      type: "Caption[]",
+      default: "—",
+      description:
+        "The timed transcript, in the `Caption` shape from `@remotion/captions`. Times are relative to the start of the surrounding `Sequence`.",
+    },
+    {
+      name: "visibleLines",
+      type: "number",
+      default: "3",
+      description:
+        "Height of the window, in lines. The current line always sits in the middle.",
+    },
+    {
+      name: "pastOpacity",
+      type: "number",
+      default: "0.35",
+      description: "Opacity of lines that have already been spoken.",
+    },
+    {
+      name: "futureOpacity",
+      type: "number",
+      default: "0.35",
+      description: "Opacity of lines still to come.",
+    },
+    {
+      name: "upcomingOpacity",
+      type: "number",
+      default: "0.55",
+      description:
+        "Opacity of words in the current line that the voice has not reached yet.",
+    },
+    {
+      name: "combineTokensWithinMilliseconds",
+      type: "number",
+      default: "1500",
+      description:
+        "How much speech one line may span before the next word starts a new line. Lines also break at the end of a sentence and on any pause of at least `holdMs` (300 ms minimum).",
+    },
+    {
+      name: "holdMs",
+      type: "number",
+      default: "600",
+      description:
+        "The pause length that starts a new line. Lines never fade out — the teleprompter stays on screen for the whole transcript.",
+    },
+    {
+      name: "fontSize",
+      type: "number",
+      default: "64",
+      description: "Font size in pixels.",
+    },
+    {
+      name: "fontWeight",
+      type: "number",
+      default: "800",
+      description: "Font weight. The font itself is inherited.",
+    },
+    {
+      name: "color",
+      type: "string",
+      default: "\"#ffffff\"",
+      description: "Text colour.",
+    },
+    {
+      name: "shadow",
+      type: "boolean",
+      default: "true",
+      description:
+        "A tight text shadow that keeps the caption legible over bright footage.",
+    },
+    {
+      name: "className",
+      type: "string",
+      default: "—",
+      description: "Classes for the window — width, font family, `uppercase`.",
+    },
+  ]}
+/>

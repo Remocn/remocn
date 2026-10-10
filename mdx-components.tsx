@@ -17,6 +17,7 @@ import { InstallAll } from "@/components/docs/install-all";
 import { InstallBlock } from "@/components/docs/install-block";
 import { PropsTable } from "@/components/docs/props-table";
 import { UiComponentPreview } from "@/components/docs/ui-component-preview";
+import { Frame, FramePanel } from "@/components/ui/frame";
 import { cn } from "@/lib/utils";
 
 /**
@@ -50,6 +51,19 @@ function Pre({ className, ...props }: ComponentProps<"pre">) {
       )}
       {...props}
     />
+  );
+}
+
+function Figure(props: ComponentProps<"figure">) {
+  if (!("data-rehype-pretty-code-figure" in props)) {
+    return <figure {...props} />;
+  }
+  return (
+    <Frame className="not-prose my-6">
+      <FramePanel className="overflow-hidden p-0 [&>figure]:my-0">
+        <figure {...props} />
+      </FramePanel>
+    </Frame>
   );
 }
 
@@ -100,6 +114,7 @@ export function getMDXComponents(components?: MDXComponents): MDXComponents {
   return {
     ...(defaultMdxComponents as MDXComponents),
     pre: Pre,
+    figure: Figure,
     figcaption: Figcaption,
     code: Code,
 

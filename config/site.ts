@@ -1,3 +1,4 @@
+import type { CtaId } from "@/lib/analytics";
 import remocnRegistry from "@/registry/remocn/registry.json";
 import remocnIconsRegistry from "@/registry/remocn-icons/registry.json";
 import remocnUiRegistry from "@/registry/remocn-ui/registry.json";
@@ -13,6 +14,8 @@ export const GITHUB_URL = "https://github.com/Remocn/remocn";
 export const X_URL = "https://x.com/_remocn";
 
 export const THREADS_URL = "https://www.threads.com/@_remocn";
+
+export const STUDIO_URL = "https://remocn.studio";
 
 export const SUPPORT_EMAIL = "kapish@remocn.dev";
 
@@ -46,13 +49,24 @@ export type NavLink = {
   label: string;
   /** Hidden on mobile (matches the existing `hidden sm:inline` pattern). */
   smOnly?: boolean;
+  external?: boolean;
 };
+
+export function externalLinkProps(link: NavLink, cta: CtaId) {
+  if (!link.external) return {};
+  return {
+    target: "_blank",
+    rel: "noreferrer",
+    "data-track": "cta_clicked",
+    "data-cta": cta,
+    "data-destination": link.href,
+  };
+}
 
 // Единый источник топ-навигации для landing / sponsors / docs.
 export const NAV_LINKS: NavLink[] = [
   { href: "/docs/typography", label: "Components" },
   { href: "/docs/shaders/getting-started/introduction", label: "Shaders" },
-  { href: "/docs/icons/gallery", label: "Icons" },
   { href: "/showcases", label: "Showcases" },
   { href: "/blog", label: "Blog" },
   { href: "/sponsors", label: "Sponsors" },
@@ -64,20 +78,20 @@ export const NAV_LINKS: NavLink[] = [
  * tag another menu item — no component changes needed. See `withNewBadges`.
  */
 export const NEW_BADGE_PATHS = new Set<string>([
-  "/docs/layout/stage",
-  "/docs/typography/caret-swap",
-  "/docs/typography/centered-word-build",
-  "/docs/typography/fog-rise",
-  "/docs/typography/gradient-scale-cut-text",
-  "/docs/typography/inline-pill-takeover",
-  "/docs/typography/outline-fill-track-text",
-  "/docs/typography/shadow-sweep-text",
-  "/docs/typography/sheen-slide-in",
-  "/docs/typography/squeeze-in",
-  "/docs/typography/typed-split-wipe",
-  "/docs/typography/word-push",
-  "/docs/typography/word-stream",
-  "/docs/typography/zoom-words",
+  "/docs/motion-graphics/bauhaus-build",
+  "/docs/motion-graphics/mondrian-split",
+  "/docs/motion-graphics/truchet-flip",
+  "/docs/motion-graphics/trim-burst",
+  "/docs/motion-graphics/speed-lines",
+  "/docs/motion-graphics/squiggle",
+  "/docs/effects/keystroke",
+  "/docs/ui-blocks/code-morph",
+  "/docs/ai/agent-run",
+  "/docs/typography/selection-snap",
+  "/docs/typography/echo-stack",
+  "/docs/typography/type-wall",
+  "/docs/typography/ring-text",
+  "/docs/typography/period-drop",
 ]);
 
 export type FooterGroup = {
@@ -105,6 +119,7 @@ export const FOOTER_GROUPS: FooterGroup[] = [
   {
     label: "Project",
     links: [
+      { href: STUDIO_URL, label: "Studio", external: true },
       { href: "/showcases", label: "Showcases" },
       { href: "/sponsors", label: "Sponsors" },
       { href: "/legal", label: "Privacy & Terms" },

@@ -1,0 +1,114 @@
+---
+title: Slice
+description: Each word arrives cut in two, the top half sliding in from the left and the bottom from the right, locking together the moment it is spoken
+component: caption-slice
+vibe: tech
+length: transcript-driven
+useWhen:
+  - "Tech, product or launch video where the captions should feel engineered — every word assembles itself on cue instead of fading in."
+  - "You want word-by-word arrival with a sharp, horizontal energy that stays out of the subject's way vertically."
+avoidWhen:
+  - "The arrival should be soft and quiet — use `caption-blur-in`."
+  - "Words should land with playful overshoot — use `caption-bounce-in`."
+  - "You want a clean editorial reveal with no sideways motion — use `caption-rise`."
+---
+
+<ComponentPreview name="caption-slice" />
+
+<InstallBlock name="caption-slice" />
+
+## Usage
+
+`CaptionSlice` builds the phrase word by word as it is spoken. Each word is cut
+horizontally through the middle of the line: at the moment the voice reaches
+it, the top half slides in from the left and the bottom half from the right,
+and the two lock into one clean word. Words the voice has not reached yet keep
+their space, so the line never shifts as it builds.
+
+The component renders only the text block. See [Positioning](/docs/captions/getting-started/positioning)
+for safe placements and [Get a transcript](/docs/captions/getting-started/get-a-transcript)
+for producing `captions.json`.
+
+```tsx
+import { AbsoluteFill } from "remotion";
+import { CaptionSlice } from "@/components/remocn/caption-slice";
+import captions from "./captions.json";
+
+export const MyScene = () => (
+  <AbsoluteFill
+    style={{
+      justifyContent: "flex-end",
+      alignItems: "center",
+      paddingBottom: 108,
+      paddingInline: 192,
+    }}
+  >
+    <CaptionSlice captions={captions} />
+  </AbsoluteFill>
+);
+```
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "captions",
+      type: "Caption[]",
+      default: "—",
+      description:
+        "The timed transcript, in the `Caption` shape from `@remotion/captions`. Times are relative to the start of the surrounding `Sequence`.",
+    },
+    {
+      name: "combineTokensWithinMilliseconds",
+      type: "number",
+      default: "1200",
+      description:
+        "How much speech one page may span before the next word starts a new page. Pages also break at the end of a sentence and on any pause of at least `holdMs` (300 ms minimum).",
+    },
+    {
+      name: "holdMs",
+      type: "number",
+      default: "600",
+      description:
+        "How long a page stays after its last word when the next page is not already due. It fades out at the end of the hold instead of hanging through the pause.",
+    },
+    {
+      name: "fontSize",
+      type: "number",
+      default: "64",
+      description: "Font size in pixels.",
+    },
+    {
+      name: "fontWeight",
+      type: "number",
+      default: "800",
+      description: "Font weight. The font itself is inherited.",
+    },
+    {
+      name: "color",
+      type: "string",
+      default: "\"#ffffff\"",
+      description: "Text colour.",
+    },
+    {
+      name: "distance",
+      type: "number",
+      default: "0.6",
+      description:
+        "How far each half starts from its final place, in em. Larger values read as a harder cut.",
+    },
+    {
+      name: "shadow",
+      type: "boolean",
+      default: "true",
+      description:
+        "A tight text shadow that keeps the caption legible over bright footage.",
+    },
+    {
+      name: "className",
+      type: "string",
+      default: "—",
+      description:
+        "Classes for the text block — width, font family, `uppercase`.",
+    },
+  ]}
+/>

@@ -1,0 +1,134 @@
+---
+title: Speaker
+description: Dialogue captions where every phrase takes its speaker's colour, so a conversation reads like a script
+component: caption-speaker
+vibe: social
+length: transcript-driven
+useWhen:
+  - "An interview, podcast clip or two-person demo where the viewer has to know who is talking without seeing their mouth."
+  - "Your transcript already has speaker labels from diarization and you want them to carry through to the screen."
+avoidWhen:
+  - "Only one person speaks — use `caption-karaoke`, which spends the colour on the voice's progress instead."
+  - "You want plain, neutral subtitles for an explainer — use `caption-subtitle`."
+  - "There is no voiceover and the text is scripted — use `word-stream`."
+---
+
+<ComponentPreview name="caption-speaker" />
+
+<InstallBlock name="caption-speaker" />
+
+## Usage
+
+`CaptionSpeaker` reads the same `Caption[]` as every caption style, with one
+extra optional field per word, `speaker`. A page never mixes two speakers: a
+change of speaker always starts a new page, which then renders in that
+speaker's colour. Words the voice has not reached yet sit dimmed and come up to
+full strength as they are said.
+
+Colours are assigned automatically in the order speakers first appear. Pin them
+with `speakerColors` so the same person keeps the same colour across videos.
+Words with no `speaker` use `color`. The component renders only the text block,
+so place it inside your own `AbsoluteFill` — see
+[Positioning](/docs/captions/getting-started/positioning).
+
+```tsx
+import { AbsoluteFill } from "remotion";
+import { CaptionSpeaker } from "@/components/remocn/caption-speaker";
+import captions from "./captions.json";
+
+export const MyScene = () => (
+  <AbsoluteFill
+    style={{
+      justifyContent: "flex-end",
+      alignItems: "center",
+      paddingBottom: 108,
+      paddingInline: 192,
+    }}
+  >
+    <CaptionSpeaker
+      captions={captions}
+      speakerColors={{ host: "#facc15", guest: "#38bdf8" }}
+    />
+  </AbsoluteFill>
+);
+```
+
+Speaker labels come from diarization in your speech-to-text service. ElevenLabs
+Speech-to-Text with diarization turned on labels every word with a
+`speaker_id`. Convert the response with the recipe in
+[Get a transcript](/docs/captions/getting-started/get-a-transcript), then add
+each word's label to the caption that starts at the same time, as `speaker`.
+Any label works — `"host"`, `"speaker_0"`, a name — as long as it stays the
+same for the same person.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "captions",
+      type: "(Caption & { speaker?: string })[]",
+      default: "—",
+      description:
+        "The timed transcript, in the `Caption` shape from `@remotion/captions`, with an optional `speaker` label per word. Times are relative to the start of the surrounding `Sequence`.",
+    },
+    {
+      name: "speakerColors",
+      type: "Record<string, string>",
+      default: "—",
+      description:
+        "Colour per speaker label. Speakers left out get the next colour of the built-in palette, in order of first appearance.",
+    },
+    {
+      name: "upcomingOpacity",
+      type: "number",
+      default: "0.4",
+      description:
+        "Opacity of words the voice has not reached yet. Each word comes up to full strength over 100ms as it is spoken.",
+    },
+    {
+      name: "combineTokensWithinMilliseconds",
+      type: "number",
+      default: "1200",
+      description:
+        "How much speech one page may span before the next word starts a new page. Pages also break at the end of a sentence, on a change of speaker and on any pause of at least `holdMs` (300 ms minimum).",
+    },
+    {
+      name: "holdMs",
+      type: "number",
+      default: "600",
+      description:
+        "How long a page stays after its last word when the next page is not already due. It fades out at the end of the hold.",
+    },
+    {
+      name: "fontSize",
+      type: "number",
+      default: "64",
+      description: "Font size in pixels.",
+    },
+    {
+      name: "fontWeight",
+      type: "number",
+      default: "800",
+      description: "Font weight. The font itself is inherited.",
+    },
+    {
+      name: "color",
+      type: "string",
+      default: "\"#ffffff\"",
+      description: "Colour of words that carry no `speaker` label.",
+    },
+    {
+      name: "shadow",
+      type: "boolean",
+      default: "true",
+      description:
+        "A tight text shadow that keeps the caption legible over bright footage.",
+    },
+    {
+      name: "className",
+      type: "string",
+      default: "—",
+      description:
+        "Classes for the text block — width, font family, `uppercase`.",
+    },
+  ]}
+/>

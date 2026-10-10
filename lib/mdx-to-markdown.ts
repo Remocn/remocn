@@ -300,6 +300,8 @@ export function mdxToMarkdown(src: string, siteUrl: string): string {
           let replacement = "";
           if (tag === "InstallBlock" && typeof attrs.name === "string") {
             replacement = [
+              "## Installation",
+              "",
               "```bash",
               `npx shadcn@latest add @remocn/${attrs.name}`,
               "```",
@@ -308,6 +310,9 @@ export function mdxToMarkdown(src: string, siteUrl: string): string {
             replacement = ["```bash", INSTALL_ALL_COMMAND, "```"].join("\n");
           } else if (tag === "PropsTable") {
             replacement = renderPropsTable(attrs.rows);
+            if (typeof attrs.title === "string") {
+              replacement = `## ${attrs.title}\n\n${replacement}`;
+            }
           } else if (tag === "ComponentCardGrid") {
             replacement = renderCardGrid(attrs.items, siteUrl);
           } else if (tag === "Dependencies") {

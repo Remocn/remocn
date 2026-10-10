@@ -33,6 +33,8 @@ import { halftonePrintConfig } from "@/registry/remocn/halftone-print/config";
 import { hologramConfig } from "@/registry/remocn/hologram/config";
 import { particleDissolveConfig } from "@/registry/remocn/particle-dissolve/config";
 import { pixelateRegionConfig } from "@/registry/remocn/pixelate-region/config";
+import { RushType } from "@/registry/remocn/rush-type";
+import { rushTypeConfig } from "@/registry/remocn/rush-type/config";
 import { securityCamConfig } from "@/registry/remocn/security-cam/config";
 import { sustainedGlitchConfig } from "@/registry/remocn/sustained-glitch/config";
 import { underwaterRippleConfig } from "@/registry/remocn/underwater-ripple/config";
@@ -84,6 +86,7 @@ const SCENES: Record<
   "camera-lens": { Scene: CameraLensExampleScene, config: cameraLensConfig },
   "security-cam": { Scene: SecurityCamExampleScene, config: securityCamConfig },
   hologram: { Scene: HologramExampleScene, config: hologramConfig },
+  "rush-type": { Scene: RushType, config: rushTypeConfig },
 };
 
 function makeStage(Scene: ComponentType) {

@@ -1,6 +1,7 @@
 import { formatLength, SITE_URL } from "@/lib/get-llm-text";
 import remocnRegistry from "@/registry/remocn/registry.json";
 import iconsRegistry from "@/registry/remocn-icons/registry.json";
+import templatesRegistry from "@/registry/remocn-templates/registry.json";
 import remocnUiRegistry from "@/registry/remocn-ui/registry.json";
 import { source } from "@/source";
 
@@ -10,6 +11,7 @@ const TIERS = [
   { tier: "remocn", items: remocnRegistry.items },
   { tier: "remocn-ui", items: remocnUiRegistry.items },
   { tier: "remocn-icons", items: iconsRegistry.items },
+  { tier: "remocn-template", items: templatesRegistry.items },
 ] as const;
 
 type RegistryFacts = { tier: string; deps: string[] };
@@ -60,7 +62,9 @@ export function GET() {
     "time on top when the element should stay on screen after it settles. `state-driven` means the",
     "component renders purely from its `state` prop and has no duration of its own. `sustained` means",
     "the component wraps a scene and lasts exactly as long as that scene does — budget no frames for",
-    "it and pass it no `state`.",
+    "it and pass it no `state`. `transcript-driven` means the component renders from a timed",
+    "transcript (`captions: Caption[]`) and has no duration of its own — the `Sequence` must last at",
+    "least until the last word's `endMs`.",
     "`Vibe` is the tonal tag; match it to the brand rather than mixing freely.",
   ];
 

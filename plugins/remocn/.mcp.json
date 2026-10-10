@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "remocn": {
+      "type": "http",
+      "url": "https://remocn.dev/mcp"
+    }
+  }
+}

@@ -12,11 +12,10 @@ avoidWhen:
   - "There is only one static phrase to reveal — use `per-word-crossfade` for a single calm word-by-word entrance."
   - "You need a two-state before/after text swap rather than a stream — use `value-swap` or `strikethrough-replace`."
   - "The text is a multi-line paragraph — use `line-by-line-slide` or `mask-reveal-up` for line-level reveals."
+  - "The words follow a real voiceover — use `caption-karaoke` or another style from the Captions tab, which times every word from a transcript instead of inventing the pace."
 ---
 
 <ComponentPreview name="word-stream" />
-
-## Installation
 
 <InstallBlock name="word-stream" />
 
@@ -79,9 +78,7 @@ export const RemotionRoot = () => (
 
 `wordGap` is the number of frames between word reveals — match it to the speaking pace of the narration (at 30fps, `wordGap={6}` is 5 words per second). `hold` controls how long a finished phrase stays before the next one starts. The exported `wordStreamLength(text, wordGap, hold)` helper returns the frame on which the last word finishes resolving — use it as the lower bound of the `Sequence`.
 
-## Props
-
-<PropsTable
+<PropsTable title="Props"
   rows={[
     {
       name: "text",

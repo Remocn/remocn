@@ -3,8 +3,10 @@
   "defaultOpen": true,
   "pages": [
     "index",
+    "search-reveal",
     "glass-code-block",
     "glass-code-walk",
+    "code-morph",
     "terminal-simulator",
     "terminal-cursor-zoom",
     "animated-line-chart",
@@ -13,5 +15,6 @@
     "polaroid",
     "check-list",
     "reel"
-  ]
+  ],
+  "icon": "DashboardSquare01Icon"
 }

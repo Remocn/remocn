@@ -78,6 +78,7 @@ export function AgentWindowViz({ play }: VizProps) {
 }
 
 const LOG_LINES = ["installing skill", "starting preview"];
+const PROMPT = "Set up a remocn project";
 
 export function PromptTypingViz({ play }: VizProps) {
   const reduced = useReducedMotion();
@@ -87,9 +88,7 @@ export function PromptTypingViz({ play }: VizProps) {
     return (
       <WindowFrame label="~/demo-video">
         <div className="flex h-full flex-col gap-2">
-          <p className="font-mono text-xs text-foreground">
-            › Set up a remocn project
-          </p>
+          <p className="font-mono text-xs text-foreground">› {PROMPT}</p>
           {LOG_LINES.map((line) => (
             <p
               key={line}
@@ -110,7 +109,14 @@ export function PromptTypingViz({ play }: VizProps) {
           <span className="shrink-0 text-muted-foreground/50">›</span>
           <motion.span
             className="overflow-hidden whitespace-nowrap text-foreground will-change-[width]"
-            animate={{ width: ["0%", "100%", "100%", "100%"] }}
+            animate={{
+              width: [
+                "0ch",
+                `${PROMPT.length}ch`,
+                `${PROMPT.length}ch`,
+                `${PROMPT.length}ch`,
+              ],
+            }}
             transition={{
               duration: LOOP,
               times: [0, 0.32, 0.92, 1],
@@ -118,7 +124,7 @@ export function PromptTypingViz({ play }: VizProps) {
               ease: "linear",
             }}
           >
-            Set up a remocn project
+            {PROMPT}
           </motion.span>
           <Caret active />
         </div>

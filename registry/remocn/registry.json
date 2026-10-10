@@ -354,6 +354,20 @@
       ]
     },
     {
+      "name": "rush-type",
+      "type": "registry:component",
+      "title": "Rush Type",
+      "description": "A resting white word blasts through vertical scale motion, separating into energy-conserving RGB shutter trails before the next word resolves.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "rush-type/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/rush-type.tsx"
+        }
+      ]
+    },
+    {
       "name": "extrude-pop",
       "type": "registry:component",
       "title": "Extrude Pop",
@@ -420,6 +434,20 @@
           "path": "short-slide-right/index.tsx",
           "type": "registry:component",
           "target": "components/remocn/short-slide-right.tsx"
+        }
+      ]
+    },
+    {
+      "name": "kinetic-morph-text",
+      "type": "registry:component",
+      "title": "Kinetic Morph Text",
+      "description": "Letters lift, rotate, and softly reshape into editable phrases with sampled outline trails.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "kinetic-morph-text/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/kinetic-morph-text.tsx"
         }
       ]
     },
@@ -1480,6 +1508,20 @@
       ]
     },
     {
+      "name": "radial-burst",
+      "type": "registry:component",
+      "title": "Radial Burst",
+      "description": "Sculptural ribbons twist into a tilted ring and sweep outward through contour echoes for an expressive product introduction.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "radial-burst/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/radial-burst.tsx"
+        }
+      ]
+    },
+    {
       "name": "confetti",
       "type": "registry:component",
       "title": "Confetti",
@@ -2148,6 +2190,864 @@
           "path": "glitch-cut/index.tsx",
           "type": "registry:component",
           "target": "components/remocn/glitch-cut.tsx"
+        }
+      ]
+    },
+    {
+      "name": "search-reveal",
+      "type": "registry:component",
+      "title": "Search Reveal",
+      "description": "Expanding construction circles snap into a search pill, type editable text, and reveal an abstract graphic panel.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "search-reveal/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/search-reveal.tsx"
+        }
+      ]
+    },
+    {
+      "name": "cursor-gravity",
+      "type": "registry:component",
+      "title": "Cursor Gravity",
+      "description": "A rounded triangular cursor tugs a button out of the screen edge with pulsed elastic resistance.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "cursor-gravity/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/cursor-gravity.tsx"
+        }
+      ]
+    },
+    {
+      "name": "type-fossil",
+      "type": "registry:component",
+      "title": "Type Fossil",
+      "description": "A readable word carries layers of fine contours, revises itself, then compresses into a clean typographic imprint.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "type-fossil/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/type-fossil.tsx"
+        }
+      ]
+    },
+    {
+      "name": "shader-seam",
+      "type": "registry:component",
+      "title": "Shader Seam",
+      "description": "Dissolve a stationary OpenShaders material to uncover the next scene.",
+      "dependencies": ["remotion", "@remotion/transitions"],
+      "files": [
+        {
+          "path": "shader-seam/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/shader-seam.tsx"
+        }
+      ]
+    },
+    {
+      "name": "shader-text-reveal",
+      "type": "registry:component",
+      "title": "Shader Text Reveal",
+      "description": "Reveal words through the original OpenShaders hero shader, then settle into white type.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "shader-text-reveal/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/shader-text-reveal.tsx"
+        }
+      ]
+    },
+    {
+      "name": "inline-word-roll",
+      "type": "registry:component",
+      "title": "Inline Word Roll",
+      "description": "Roll through words beside a fixed prefix with accelerating timing and smoothly centered width.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "inline-word-roll/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/inline-word-roll.tsx"
+        }
+      ]
+    },
+    {
+      "name": "shader-light-tunnel",
+      "type": "registry:component",
+      "title": "Light Tunnel",
+      "description": "Fly straight through a tunnel made from the original OpenShaders hero shader.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "shader-light-tunnel/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/shader-light-tunnel.tsx"
+        }
+      ]
+    },
+    {
+      "name": "shader-spiral-pass",
+      "type": "registry:component",
+      "title": "Shader Spiral Pass",
+      "description": "Accelerate into the hero spiral and emerge through its soft center into the next scene.",
+      "dependencies": ["remotion", "@remotion/transitions"],
+      "registryDependencies": ["@remocn/shader-light-tunnel"],
+      "files": [
+        {
+          "path": "shader-spiral-pass/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/shader-spiral-pass.tsx"
+        }
+      ]
+    },
+    {
+      "name": "truchet-flip",
+      "type": "registry:component",
+      "title": "Truchet Flip",
+      "description": "Quarter-circle Truchet tiles snap a quarter turn as a wave crosses the grid, rerouting continuous lines until they settle into concentric loops, a calm field, or a circle of small rings.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "truchet-flip/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/truchet-flip.tsx"
+        }
+      ]
+    },
+    {
+      "name": "mondrian-split",
+      "type": "registry:component",
+      "title": "Mondrian Split",
+      "description": "Black lines cut the frame into a seeded De Stijl grid, primaries wipe into its cells, the grid reflows like rubber, and one cell pushes its own lines out past the edges to become a clean color field or the next scene.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "mondrian-split/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/mondrian-split.tsx"
+        }
+      ]
+    },
+    {
+      "name": "bauhaus-build",
+      "type": "registry:component",
+      "title": "Bauhaus Build",
+      "description": "Flat Bauhaus circles, arcs, squares and bars tumble corner over corner on a hidden grid into an asymmetric frieze, then rebuild into two friezes around an open band for the title.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "bauhaus-build/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/bauhaus-build.tsx"
+        }
+      ]
+    },
+    {
+      "name": "squiggle",
+      "type": "registry:component",
+      "title": "Squiggle",
+      "description": "A flat line draws itself along a straight course as a traveling wave whose crests swim forward and calm down as the head runs out, in wave, zigzag, loop or coil shapes, then erases toward its end point.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "squiggle/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/squiggle.tsx"
+        }
+      ]
+    },
+    {
+      "name": "speed-lines",
+      "type": "registry:component",
+      "title": "Speed Lines",
+      "description": "Parallel streaks trail an element as it flies in at its real speed, the element stretching with that speed and landing with a squash and a small bounce as the streaks die, or radial lines rush in from the frame edges and snap onto one point for a manga-style impact frame.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "speed-lines/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/speed-lines.tsx"
+        }
+      ]
+    },
+    {
+      "name": "trim-burst",
+      "type": "registry:component",
+      "title": "Trim Burst",
+      "description": "A ring of short straight strokes shoots out from a point like Trim Paths: each end races ahead on a hard-braking ease-out while its start holds, then chases it on a smoother ease-in-out, so every stroke grows, travels and zips shut at its outer distance.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "trim-burst/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/trim-burst.tsx"
+        }
+      ]
+    },
+    {
+      "name": "keystroke",
+      "type": "registry:component",
+      "title": "Keystroke",
+      "description": "Physical keycaps rise in for each shortcut, press in real order with the modifiers held while the letter taps, spring back with a small capped overshoot, and leave after an idle hold, firing on the same frames as the remocn-ui steps they trigger.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "keystroke/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/keystroke.tsx"
+        }
+      ]
+    },
+    {
+      "name": "code-morph",
+      "type": "registry:component",
+      "title": "Code Morph",
+      "description": "A flat code editor that morphs between versions of a file, gliding each surviving token to its new line and column while removed code dissolves and new code fades in.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "code-morph/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/code-morph.tsx"
+        }
+      ]
+    },
+    {
+      "name": "agent-run",
+      "type": "registry:component",
+      "title": "Agent Run",
+      "description": "Animated brand-neutral AI agent run — a Thinking status and short plan, tool calls whose spinners close into checks while a timer counts real seconds, then a markdown answer with citations and a code block that streams in irregular token bursts. Light/dark themes.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "agent-run/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/agent-run.tsx"
+        }
+      ]
+    },
+    {
+      "name": "selection-snap",
+      "type": "registry:component",
+      "title": "Selection Snap",
+      "description": "A thin word in a loose viewfinder snaps into a design-tool selection while it goes from Thin to Black, pops its handles and counts up a size badge.",
+      "dependencies": ["remotion", "@remotion/google-fonts"],
+      "files": [
+        {
+          "path": "selection-snap/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/selection-snap.tsx"
+        }
+      ]
+    },
+    {
+      "name": "echo-stack",
+      "type": "registry:component",
+      "title": "Echo Stack",
+      "description": "A word focuses in at the center while outline copies of it unfold above and below and keep drifting, like the one clear line on a spinning drum.",
+      "dependencies": ["remotion", "@remotion/google-fonts"],
+      "files": [
+        {
+          "path": "echo-stack/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/echo-stack.tsx"
+        }
+      ]
+    },
+    {
+      "name": "type-wall",
+      "type": "registry:component",
+      "title": "Type Wall",
+      "description": "Rows of one word fill the frame, run in alternating directions at different speeds in heavy, narrow and outline faces, with an accent band through the middle.",
+      "dependencies": ["remotion", "@remotion/google-fonts"],
+      "files": [
+        {
+          "path": "type-wall/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/type-wall.tsx"
+        }
+      ]
+    },
+    {
+      "name": "ring-text",
+      "type": "registry:component",
+      "title": "Ring Text",
+      "description": "Text runs around a tilted 3D band that spins, reading on the near side and mirrored on the far side.",
+      "dependencies": ["remotion", "@remotion/google-fonts"],
+      "files": [
+        {
+          "path": "ring-text/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/ring-text.tsx"
+        }
+      ]
+    },
+    {
+      "name": "period-drop",
+      "type": "registry:component",
+      "title": "Period Drop",
+      "description": "A word rises out of its line, then a colored dot falls from above the frame, bounces with squash and stretch, and settles as the period.",
+      "dependencies": ["remotion", "@remotion/google-fonts"],
+      "files": [
+        {
+          "path": "period-drop/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/period-drop.tsx"
+        }
+      ]
+    },
+    {
+      "name": "outline-trace",
+      "type": "registry:component",
+      "title": "Outline Trace",
+      "description": "Every glyph contour draws itself as a stroke, letter by letter, then the fill wipes up inside each letter and the stroke fades into it.",
+      "dependencies": ["remotion", "opentype.js"],
+      "files": [
+        {
+          "path": "outline-trace/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/outline-trace.tsx"
+        }
+      ]
+    },
+    {
+      "name": "glyph-anatomy",
+      "type": "registry:component",
+      "title": "Glyph Anatomy",
+      "description": "A word builds as in a font editor, with metric guides, anchors along each contour and Bézier handles that pull straight segments into curves before the glyphs fill.",
+      "dependencies": ["remotion", "opentype.js", "@remotion/google-fonts"],
+      "files": [
+        {
+          "path": "glyph-anatomy/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/glyph-anatomy.tsx"
+        }
+      ]
+    },
+    {
+      "name": "stripe-type",
+      "type": "registry:component",
+      "title": "Stripe Type",
+      "description": "A word cut into horizontal bands, as in the IBM logo, slides together from alternating sides and locks, then can pass on through.",
+      "dependencies": ["remotion", "@remotion/google-fonts"],
+      "files": [
+        {
+          "path": "stripe-type/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/stripe-type.tsx"
+        }
+      ]
+    },
+    {
+      "name": "path-ride",
+      "type": "registry:component",
+      "title": "Path Ride",
+      "description": "A line draws itself along a curve with the text riding behind its head, then the curve pulls taut and the text settles on a straight, centered baseline.",
+      "dependencies": ["remotion", "@remotion/google-fonts", "@remotion/paths"],
+      "files": [
+        {
+          "path": "path-ride/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/path-ride.tsx"
+        }
+      ]
+    },
+    {
+      "name": "type-repeater",
+      "type": "registry:component",
+      "title": "Type Repeater",
+      "description": "An After Effects style repeater on a word, where copies unfold into a tunnel, a spiral or a fan behind it, breathe, then fold back into the word.",
+      "dependencies": ["remotion", "@remotion/google-fonts"],
+      "files": [
+        {
+          "path": "type-repeater/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/type-repeater.tsx"
+        }
+      ]
+    },
+    {
+      "name": "caption-core",
+      "type": "registry:lib",
+      "title": "Caption Core",
+      "description": "The timing engine every caption style shares: pages a timed transcript, finds the word being spoken and how far into it the voice is, and decides when a page leaves the screen.",
+      "dependencies": ["remotion", "@remotion/captions"],
+      "files": [
+        {
+          "path": "caption-core/index.ts",
+          "type": "registry:lib",
+          "target": "lib/remocn/caption-core.ts"
+        }
+      ]
+    },
+    {
+      "name": "caption-karaoke",
+      "type": "registry:component",
+      "title": "Caption Karaoke",
+      "description": "Transcript captions where each word fills with colour left to right exactly as it is spoken, the whole phrase readable before the voice reaches it.",
+      "dependencies": ["remotion", "@remotion/captions"],
+      "registryDependencies": ["@remocn/caption-core"],
+      "files": [
+        {
+          "path": "caption-karaoke/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/caption-karaoke.tsx"
+        }
+      ]
+    },
+    {
+      "name": "caption-highlight-box",
+      "type": "registry:component",
+      "title": "Caption Highlight Box",
+      "description": "A solid box travels behind the word being spoken, sliding from word to word as the voice moves on.",
+      "dependencies": ["remotion", "@remotion/captions"],
+      "registryDependencies": ["@remocn/caption-core"],
+      "files": [
+        {
+          "path": "caption-highlight-box/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/caption-highlight-box.tsx"
+        }
+      ]
+    },
+    {
+      "name": "caption-active-pop",
+      "type": "registry:component",
+      "title": "Caption Active Pop",
+      "description": "The word being spoken turns to the accent colour and springs up in scale, then settles back as the voice moves on.",
+      "dependencies": ["remotion", "@remotion/captions"],
+      "registryDependencies": ["@remocn/caption-core"],
+      "files": [
+        {
+          "path": "caption-active-pop/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/caption-active-pop.tsx"
+        }
+      ]
+    },
+    {
+      "name": "caption-word-pop",
+      "type": "registry:component",
+      "title": "Caption Word Pop",
+      "description": "One large word at a time, each popping in on a spring the moment it is spoken.",
+      "dependencies": ["remotion", "@remotion/captions"],
+      "registryDependencies": ["@remocn/caption-core"],
+      "files": [
+        {
+          "path": "caption-word-pop/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/caption-word-pop.tsx"
+        }
+      ]
+    },
+    {
+      "name": "caption-bounce-in",
+      "type": "registry:component",
+      "title": "Caption Bounce In",
+      "description": "Each word springs up into place with a little overshoot the moment it is spoken, and the phrase builds word by word.",
+      "dependencies": ["remotion", "@remotion/captions"],
+      "registryDependencies": ["@remocn/caption-core"],
+      "files": [
+        {
+          "path": "caption-bounce-in/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/caption-bounce-in.tsx"
+        }
+      ]
+    },
+    {
+      "name": "caption-blur-in",
+      "type": "registry:component",
+      "title": "Caption Blur In",
+      "description": "Each word resolves out of a soft blur the moment it is spoken, for captions that arrive quietly.",
+      "dependencies": ["remotion", "@remotion/captions"],
+      "registryDependencies": ["@remocn/caption-core"],
+      "files": [
+        {
+          "path": "caption-blur-in/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/caption-blur-in.tsx"
+        }
+      ]
+    },
+    {
+      "name": "caption-rise",
+      "type": "registry:component",
+      "title": "Caption Rise",
+      "description": "Each word slides up out of a mask at its baseline the moment it is spoken, with no bounce and no scale.",
+      "dependencies": ["remotion", "@remotion/captions"],
+      "registryDependencies": ["@remocn/caption-core"],
+      "files": [
+        {
+          "path": "caption-rise/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/caption-rise.tsx"
+        }
+      ]
+    },
+    {
+      "name": "caption-typewriter",
+      "type": "registry:component",
+      "title": "Caption Typewriter",
+      "description": "Each word types out character by character at the pace it is spoken, with a caret that blinks while the speaker pauses.",
+      "dependencies": ["remotion", "@remotion/captions"],
+      "registryDependencies": ["@remocn/caption-core"],
+      "files": [
+        {
+          "path": "caption-typewriter/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/caption-typewriter.tsx"
+        }
+      ]
+    },
+    {
+      "name": "caption-slot",
+      "type": "registry:component",
+      "title": "Caption Slot",
+      "description": "One short line at a time, each new phrase rolling up into place as the previous one rolls out the top.",
+      "dependencies": ["remotion", "@remotion/captions"],
+      "registryDependencies": ["@remocn/caption-core"],
+      "files": [
+        {
+          "path": "caption-slot/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/caption-slot.tsx"
+        }
+      ]
+    },
+    {
+      "name": "caption-subtitle",
+      "type": "registry:component",
+      "title": "Caption Subtitle",
+      "description": "Classic broadcast subtitles, a whole phrase on a translucent plate, with no word-level animation at all.",
+      "dependencies": ["remotion", "@remotion/captions"],
+      "registryDependencies": ["@remocn/caption-core"],
+      "files": [
+        {
+          "path": "caption-subtitle/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/caption-subtitle.tsx"
+        }
+      ]
+    },
+    {
+      "name": "caption-dim-progress",
+      "type": "registry:component",
+      "title": "Caption Dim Progress",
+      "description": "The whole phrase sits on screen dimmed and each word brightens the moment it is spoken, with no motion at all.",
+      "dependencies": ["remotion", "@remotion/captions"],
+      "registryDependencies": ["@remocn/caption-core"],
+      "files": [
+        {
+          "path": "caption-dim-progress/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/caption-dim-progress.tsx"
+        }
+      ]
+    },
+    {
+      "name": "caption-underline",
+      "type": "registry:component",
+      "title": "Caption Underline",
+      "description": "A bar slides under the word being spoken, travelling from word to word while the text itself stays untouched.",
+      "dependencies": ["remotion", "@remotion/captions"],
+      "registryDependencies": ["@remocn/caption-core"],
+      "files": [
+        {
+          "path": "caption-underline/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/caption-underline.tsx"
+        }
+      ]
+    },
+    {
+      "name": "caption-scramble",
+      "type": "registry:component",
+      "title": "Caption Scramble",
+      "description": "Each word arrives as random glyphs at the moment it is spoken and decodes left to right into the real letters.",
+      "dependencies": ["remotion", "@remotion/captions"],
+      "registryDependencies": ["@remocn/caption-core"],
+      "files": [
+        {
+          "path": "caption-scramble/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/caption-scramble.tsx"
+        }
+      ]
+    },
+    {
+      "name": "caption-weight",
+      "type": "registry:component",
+      "title": "Caption Weight",
+      "description": "The word being spoken swells from a light weight to a heavy one and relaxes as the voice moves on, with no layout shift.",
+      "dependencies": ["remotion", "@remotion/captions"],
+      "registryDependencies": ["@remocn/caption-core"],
+      "files": [
+        {
+          "path": "caption-weight/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/caption-weight.tsx"
+        }
+      ]
+    },
+    {
+      "name": "caption-emoji",
+      "type": "registry:component",
+      "title": "Caption Emoji",
+      "description": "An emoji pops up above a chosen word the moment it is spoken and stays until the phrase leaves.",
+      "dependencies": ["remotion", "@remotion/captions"],
+      "registryDependencies": ["@remocn/caption-core"],
+      "files": [
+        {
+          "path": "caption-emoji/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/caption-emoji.tsx"
+        }
+      ]
+    },
+    {
+      "name": "caption-speaker",
+      "type": "registry:component",
+      "title": "Caption Speaker",
+      "description": "Dialogue captions where every phrase takes its speaker's colour, so a conversation reads like a script.",
+      "dependencies": ["remotion", "@remotion/captions"],
+      "registryDependencies": ["@remocn/caption-core"],
+      "files": [
+        {
+          "path": "caption-speaker/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/caption-speaker.tsx"
+        }
+      ]
+    },
+    {
+      "name": "caption-stack",
+      "type": "registry:component",
+      "title": "Caption Stack",
+      "description": "Kinetic captions stacked a couple of words per line, with the keyword of each page set large on its own line.",
+      "dependencies": ["remotion", "@remotion/captions"],
+      "registryDependencies": ["@remocn/caption-core"],
+      "files": [
+        {
+          "path": "caption-stack/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/caption-stack.tsx"
+        }
+      ]
+    },
+    {
+      "name": "caption-outline",
+      "type": "registry:component",
+      "title": "Caption Outline",
+      "description": "Heavy-stroked captions that stay readable over any footage, with the spoken word switching to a contrast colour and nothing else moving.",
+      "dependencies": ["remotion", "@remotion/captions"],
+      "registryDependencies": ["@remocn/caption-core"],
+      "files": [
+        {
+          "path": "caption-outline/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/caption-outline.tsx"
+        }
+      ]
+    },
+    {
+      "name": "caption-marker",
+      "type": "registry:component",
+      "title": "Caption Marker",
+      "description": "Plain captions where the words that matter get a highlighter swipe the moment they are spoken.",
+      "dependencies": ["remotion", "@remotion/captions"],
+      "registryDependencies": ["@remocn/caption-core"],
+      "files": [
+        {
+          "path": "caption-marker/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/caption-marker.tsx"
+        }
+      ]
+    },
+    {
+      "name": "caption-stamp",
+      "type": "registry:component",
+      "title": "Caption Stamp",
+      "description": "Plain captions where the words that matter slam down as a rubber stamp the moment they are spoken.",
+      "dependencies": ["remotion", "@remotion/captions"],
+      "registryDependencies": ["@remocn/caption-core"],
+      "files": [
+        {
+          "path": "caption-stamp/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/caption-stamp.tsx"
+        }
+      ]
+    },
+    {
+      "name": "caption-handwrite",
+      "type": "registry:component",
+      "title": "Caption Handwrite",
+      "description": "Each word is inked in by hand from left to right at the pace it is spoken, every word sitting at its own slight angle.",
+      "dependencies": ["remotion", "@remotion/captions"],
+      "registryDependencies": ["@remocn/caption-core"],
+      "files": [
+        {
+          "path": "caption-handwrite/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/caption-handwrite.tsx"
+        }
+      ]
+    },
+    {
+      "name": "caption-redact",
+      "type": "registry:component",
+      "title": "Caption Redact",
+      "description": "The whole phrase starts blacked out like a declassified file, and each bar pulls away the moment its word is spoken.",
+      "dependencies": ["remotion", "@remotion/captions"],
+      "registryDependencies": ["@remocn/caption-core"],
+      "files": [
+        {
+          "path": "caption-redact/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/caption-redact.tsx"
+        }
+      ]
+    },
+    {
+      "name": "caption-prosody",
+      "type": "registry:component",
+      "title": "Caption Prosody",
+      "description": "Word size follows the delivery, so drawn-out words land large and rushed words stay small, and the rhythm of the voice is visible with the sound off.",
+      "dependencies": ["remotion", "@remotion/captions"],
+      "registryDependencies": ["@remocn/caption-core"],
+      "files": [
+        {
+          "path": "caption-prosody/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/caption-prosody.tsx"
+        }
+      ]
+    },
+    {
+      "name": "caption-timeline",
+      "type": "registry:component",
+      "title": "Caption Timeline",
+      "description": "The whole transcript laid out on a scrolling time strip that slides under a fixed playhead, so every pause shows up as space between words.",
+      "dependencies": ["remotion", "@remotion/captions"],
+      "registryDependencies": ["@remocn/caption-core"],
+      "files": [
+        {
+          "path": "caption-timeline/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/caption-timeline.tsx"
+        }
+      ]
+    },
+    {
+      "name": "caption-teleprompter",
+      "type": "registry:component",
+      "title": "Caption Teleprompter",
+      "description": "The whole transcript scrolls smoothly through a short window with the current line centred, past lines fading above and the next line waiting below.",
+      "dependencies": ["remotion", "@remotion/captions"],
+      "registryDependencies": ["@remocn/caption-core"],
+      "files": [
+        {
+          "path": "caption-teleprompter/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/caption-teleprompter.tsx"
+        }
+      ]
+    },
+    {
+      "name": "caption-knockout",
+      "type": "registry:component",
+      "title": "Caption Knockout",
+      "description": "A solid plate with the words cut clean through it, each word punching out the moment it is spoken so the footage shows through the letters.",
+      "dependencies": ["remotion", "@remotion/captions"],
+      "registryDependencies": ["@remocn/caption-core"],
+      "files": [
+        {
+          "path": "caption-knockout/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/caption-knockout.tsx"
+        }
+      ]
+    },
+    {
+      "name": "caption-slice",
+      "type": "registry:component",
+      "title": "Caption Slice",
+      "description": "Each word arrives cut in two, the top half sliding in from the left and the bottom from the right, locking together the moment it is spoken.",
+      "dependencies": ["remotion", "@remotion/captions"],
+      "registryDependencies": ["@remocn/caption-core"],
+      "files": [
+        {
+          "path": "caption-slice/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/caption-slice.tsx"
+        }
+      ]
+    },
+    {
+      "name": "caption-cube",
+      "type": "registry:component",
+      "title": "Caption Cube",
+      "description": "Each new phrase turns into view as the next face of a 3D cube, the previous phrase rotating up and away on a horizontal hinge.",
+      "dependencies": ["remotion", "@remotion/captions"],
+      "registryDependencies": ["@remocn/caption-core"],
+      "files": [
+        {
+          "path": "caption-cube/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/caption-cube.tsx"
+        }
+      ]
+    },
+    {
+      "name": "caption-split-flap",
+      "type": "registry:component",
+      "title": "Caption Split Flap",
+      "description": "Every letter sits on its own flap tile and clatters through a few characters before landing the moment the word is spoken, like a station departure board.",
+      "dependencies": ["remotion", "@remotion/captions"],
+      "registryDependencies": ["@remocn/caption-core"],
+      "files": [
+        {
+          "path": "caption-split-flap/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/caption-split-flap.tsx"
+        }
+      ]
+    },
+    {
+      "name": "caption-label-maker",
+      "type": "registry:component",
+      "title": "Caption Label Maker",
+      "description": "Each phrase is punched letter by letter into a strip of embossing tape at the pace it is spoken, the tape feeding out as the words arrive.",
+      "dependencies": ["remotion", "@remotion/captions"],
+      "registryDependencies": ["@remocn/caption-core"],
+      "files": [
+        {
+          "path": "caption-label-maker/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/caption-label-maker.tsx"
+        }
+      ]
+    },
+    {
+      "name": "caption-drop",
+      "type": "registry:component",
+      "title": "Caption Drop",
+      "description": "Each word falls into place from above and bounces as it lands the moment it is spoken, and the whole phrase drops out of frame when the speaker pauses.",
+      "dependencies": ["remotion", "@remotion/captions"],
+      "registryDependencies": ["@remocn/caption-core"],
+      "files": [
+        {
+          "path": "caption-drop/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/caption-drop.tsx"
         }
       ]
     }

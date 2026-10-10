@@ -12,11 +12,10 @@ avoidWhen:
   - "The whole phrase must fit the frame at rest — use `per-word-crossfade` or `word-stream`."
   - "You need character-by-character typing with a caret — use `typewriter`."
   - "The camera language should be a real 2.5D move over a scene rather than a text close-up — use `stage`."
+  - "One spoken word at a time from a voiceover — use `caption-word-pop`, which follows the transcript timing."
 ---
 
 <ComponentPreview name="zoom-words" />
-
-## Installation
 
 <InstallBlock name="zoom-words" />
 
@@ -81,9 +80,7 @@ export const RemotionRoot = () => (
 
 The exported `zoomWordsLength(text, wordGap)` helper returns the frame on which the camera settles after the last word — cut to the next scene at or shortly after it.
 
-## Props
-
-<PropsTable
+<PropsTable title="Props"
   rows={[
     {
       name: "text",

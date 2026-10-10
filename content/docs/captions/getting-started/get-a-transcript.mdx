@@ -1,0 +1,141 @@
+---
+title: Get a transcript
+description: Turn a voiceover into the timed Caption array every caption component reads
+---
+
+Every caption reads `Caption[]` from `@remotion/captions`, one entry per word with its start and end time in milliseconds. Pick whichever speech-to-text source you already use; each recipe below ends with the same array.
+
+Transcription runs once, outside the video. Save the result as JSON next to your composition and render from that file.
+
+## whisper.cpp, locally
+
+Free and offline. `@remotion/install-whisper-cpp` downloads whisper.cpp and a model, then transcribes a 16 kHz WAV file.
+
+```bash
+npx remotion add @remotion/install-whisper-cpp
+npx remotion ffmpeg -i voiceover.mp4 -ar 16000 voiceover.wav -y
+```
+
+```ts
+import path from "node:path";
+import {
+  downloadWhisperModel,
+  installWhisperCpp,
+  toCaptions,
+  transcribe,
+} from "@remotion/install-whisper-cpp";
+
+const whisperPath = path.join(process.cwd(), "whisper.cpp");
+
+await installWhisperCpp({ to: whisperPath, version: "1.5.5" });
+await downloadWhisperModel({ model: "medium.en", folder: whisperPath });
+
+const whisperCppOutput = await transcribe({
+  model: "medium.en",
+  whisperPath,
+  whisperCppVersion: "1.5.5",
+  inputPath: path.join(process.cwd(), "voiceover.wav"),
+  tokenLevelTimestamps: true,
+});
+
+const { captions } = toCaptions({ whisperCppOutput });
+```
+
+## OpenAI Whisper API
+
+Request `verbose_json` with word timestamps, then convert the response.
+
+```bash
+npx remotion add @remotion/openai-whisper
+```
+
+```ts
+import fs from "node:fs";
+import OpenAI from "openai";
+import { openAiWhisperApiToCaptions } from "@remotion/openai-whisper";
+
+const openai = new OpenAI();
+
+const transcription = await openai.audio.transcriptions.create({
+  file: fs.createReadStream("voiceover.mp3"),
+  model: "whisper-1",
+  response_format: "verbose_json",
+  timestamp_granularities: ["word"],
+});
+
+const { captions } = openAiWhisperApiToCaptions({ transcription });
+```
+
+## ElevenLabs
+
+Pass the JSON returned by ElevenLabs Speech-to-Text, either the API response or a segmented JSON export.
+
+```bash
+npx remotion add @remotion/elevenlabs
+```
+
+```ts
+import fs from "node:fs";
+import { elevenLabsTranscriptToCaptions } from "@remotion/elevenlabs";
+
+const transcript = JSON.parse(fs.readFileSync("transcript.json", "utf8"));
+
+const { captions } = elevenLabsTranscriptToCaptions({ transcript });
+```
+
+## Existing subtitles
+
+Already have an `.srt` file? Parse it directly.
+
+```ts
+import fs from "node:fs";
+import { parseSrt } from "@remotion/captions";
+
+const { captions } = parseSrt({
+  input: fs.readFileSync("voiceover.srt", "utf8"),
+});
+```
+
+An `.srt` file times whole lines, not single words, so styles that animate the active word move one line at a time.
+
+## Save and load
+
+Write the array to disk once:
+
+```ts
+fs.writeFileSync("src/captions.json", JSON.stringify(captions, null, 2));
+```
+
+Then import it where you render:
+
+```tsx
+import captions from "./captions.json";
+import { CaptionKaraoke } from "@/components/remocn/caption-karaoke";
+
+export const Subtitles = () => <CaptionKaraoke captions={captions} />;
+```
+
+For long transcripts, keep the JSON in `public/` and fetch it in `calculateMetadata`, so it stays out of your bundle and sets the duration at the same time.
+
+```tsx
+import type { Caption } from "@remotion/captions";
+import { type CalculateMetadataFunction, staticFile } from "remotion";
+
+type Props = { captions: Caption[] };
+
+const FPS = 30;
+const HOLD_MS = 600;
+
+export const calculateMetadata: CalculateMetadataFunction<Props> = async ({
+  props,
+}) => {
+  const response = await fetch(staticFile("captions.json"));
+  const captions: Caption[] = await response.json();
+  const last = captions[captions.length - 1];
+
+  return {
+    durationInFrames: Math.ceil(((last.endMs + HOLD_MS) / 1000) * FPS),
+    props: { ...props, captions },
+  };
+};
+```

@@ -1,0 +1,107 @@
+---
+title: Word Pop
+description: One large word at a time, each popping in on a spring the moment it is spoken
+component: caption-word-pop
+vibe: playful
+length: transcript-driven
+useWhen:
+  - "Punchy short-form talking heads where every word should hit — one word fills the centre of the frame and the next replaces it on the beat."
+  - "Fast speech where a full phrase would flicker past too quickly to read anyway."
+avoidWhen:
+  - "The viewer needs to read ahead of the voice — use `caption-karaoke`, which keeps the whole phrase on screen."
+  - "Long or reading-heavy content such as explainers and interviews — use `caption-subtitle`."
+  - "Punchy scripted words with no recording behind them — use `zoom-words`."
+---
+
+<ComponentPreview name="caption-word-pop" />
+
+<InstallBlock name="caption-word-pop" />
+
+## Usage
+
+`CaptionWordPop` puts one word on screen at a time. Each word pops in from
+`popScale` on a spring with a small overshoot and is replaced the moment the
+next word is spoken. After the last word of a sentence it holds, then fades out
+instead of hanging through the pause.
+
+It renders only the text block. One-word captions read best in the middle of the
+frame, where the eye already is — see [Positioning](/docs/captions/getting-started/positioning)
+for the centred recipe and [Get a transcript](/docs/captions/getting-started/get-a-transcript)
+for producing `captions.json`.
+
+```tsx
+import { AbsoluteFill } from "remotion";
+import { CaptionWordPop } from "@/components/remocn/caption-word-pop";
+import captions from "./captions.json";
+
+export const MyScene = () => (
+  <AbsoluteFill style={{ justifyContent: "center", alignItems: "center" }}>
+    <CaptionWordPop captions={captions} />
+  </AbsoluteFill>
+);
+```
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "captions",
+      type: "Caption[]",
+      default: "—",
+      description:
+        "The timed transcript, in the `Caption` shape from `@remotion/captions`. Times are relative to the start of the surrounding `Sequence`.",
+    },
+    {
+      name: "combineTokensWithinMilliseconds",
+      type: "number",
+      default: "0",
+      description:
+        "How much speech one page may span. At 0 every word is its own page; raise it to pop two or three short words in together.",
+    },
+    {
+      name: "holdMs",
+      type: "number",
+      default: "600",
+      description:
+        "How long a word stays after it ends when the next word is not already due. It fades out at the end of the hold instead of hanging through the pause.",
+    },
+    {
+      name: "fontSize",
+      type: "number",
+      default: "96",
+      description: "Font size in pixels.",
+    },
+    {
+      name: "fontWeight",
+      type: "number",
+      default: "800",
+      description: "Font weight. The font itself is inherited.",
+    },
+    {
+      name: "color",
+      type: "string",
+      default: "\"#ffffff\"",
+      description: "Text colour.",
+    },
+    {
+      name: "popScale",
+      type: "number",
+      default: "0.6",
+      description:
+        "The scale each word starts from before the spring carries it to full size.",
+    },
+    {
+      name: "shadow",
+      type: "boolean",
+      default: "true",
+      description:
+        "A tight text shadow that keeps the caption legible over bright footage.",
+    },
+    {
+      name: "className",
+      type: "string",
+      default: "—",
+      description:
+        "Classes for the text block — width, font family, `uppercase`.",
+    },
+  ]}
+/>

@@ -1,0 +1,143 @@
+import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import { getTrimBurstDuration } from ".";
+
+const numberOf = (value: unknown) =>
+  typeof value === "number" ? value : undefined;
+
+function durationOf(values: Record<string, unknown>) {
+  return getTrimBurstDuration({
+    count: numberOf(values.count),
+    jitter: numberOf(values.jitter),
+    delay: numberOf(values.delay),
+    speed: numberOf(values.speed),
+  });
+}
+
+export const trimBurstConfig: ComponentConfig = {
+  componentName: "TrimBurst",
+  importPath: "@/components/remocn/trim-burst",
+  controls: {
+    count: {
+      type: "number",
+      default: 8,
+      min: 1,
+      max: 24,
+      step: 1,
+      description: "Strokes",
+      hiddenFromList: false,
+    },
+    innerRadius: {
+      type: "number",
+      default: 16,
+      min: 0,
+      max: 160,
+      step: 1,
+      description: "Inner radius",
+      hiddenFromList: false,
+    },
+    reach: {
+      type: "number",
+      default: 64,
+      min: 8,
+      max: 240,
+      step: 1,
+      description: "Reach",
+      hiddenFromList: false,
+    },
+    strokeLength: {
+      type: "number",
+      default: 56,
+      min: 4,
+      max: 200,
+      step: 1,
+      description: "Stroke length",
+      hiddenFromList: false,
+    },
+    weight: {
+      type: "number",
+      default: 2,
+      min: 0.5,
+      max: 8,
+      step: 0.5,
+      description: "Stroke weight",
+      hiddenFromList: false,
+    },
+    rotation: {
+      type: "number",
+      default: 0,
+      min: -180,
+      max: 180,
+      step: 1,
+      description: "Rotation",
+      hiddenFromList: false,
+    },
+    spread: {
+      type: "number",
+      default: 360,
+      min: 15,
+      max: 360,
+      step: 5,
+      description: "Spread",
+      hiddenFromList: false,
+    },
+    jitter: {
+      type: "number",
+      default: 0.5,
+      min: 0,
+      max: 1,
+      step: 0.05,
+      description: "Jitter",
+      hiddenFromList: false,
+    },
+    dots: { type: "boolean", default: false, description: "Tip dots" },
+    cap: {
+      type: "enum",
+      default: "round",
+      variants: { round: {}, butt: {} },
+      description: "Caps",
+    },
+    color: { type: "color", default: "#ffffff", description: "Line color" },
+    seed: {
+      type: "number",
+      default: 1,
+      min: 1,
+      max: 99,
+      step: 1,
+      description: "Seed",
+      hiddenFromList: false,
+    },
+    delay: {
+      type: "number",
+      default: 0,
+      min: 0,
+      max: 30,
+      step: 1,
+      description: "Delay",
+      hiddenFromList: false,
+    },
+    x: {
+      type: "number",
+      default: 0.5,
+      min: 0,
+      max: 1,
+      step: 0.01,
+      description: "Center x",
+      hiddenFromList: false,
+    },
+    y: {
+      type: "number",
+      default: 0.5,
+      min: 0,
+      max: 1,
+      step: 0.01,
+      description: "Center y",
+      hiddenFromList: false,
+    },
+  },
+  durationInFrames: 42,
+  getDurationInFrames: durationOf,
+  fps: FPS,
+  compositionWidth: W,
+  compositionHeight: H,
+  previewBackdrop: { type: "color", value: "#002fa7" },
+};

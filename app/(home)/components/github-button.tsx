@@ -13,7 +13,7 @@ export async function GithubButton() {
       data-track="cta_clicked"
       data-cta="github_header"
       data-destination={GITHUB_URL}
-      className="inline-flex h-9 items-center gap-2 rounded-full  border-border px-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+      className="inline-flex h-9 items-center gap-2 rounded-full px-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
     >
       <GitHubIcon className="size-4" />
       {stars !== null && (

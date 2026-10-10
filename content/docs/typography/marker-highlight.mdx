@@ -12,11 +12,10 @@ avoidWhen:
   - "You want a subtle color-only emphasis with no visible background — use `inline-highlight` for a clean color-shift with no marker block."
   - "The entire sentence is new text that needs to enter the scene — both highlight components are emphasis tools, not entrances; use `mask-reveal-up` or `per-word-crossfade` for full reveals."
   - "The scene tone is minimal or premium and a bold painted marker would clash — use `inline-highlight` for a quieter callout."
+  - "The emphasis should land the moment a speaker says the word — use `caption-marker`, which swipes keywords from a timed transcript."
 ---
 
 <ComponentPreview name="marker-highlight" />
-
-## Installation
 
 <InstallBlock name="marker-highlight" />
 
@@ -48,9 +47,7 @@ export const RemotionRoot = () => (
 );
 ```
 
-## Props
-
-<PropsTable
+<PropsTable title="Props"
   rows={[
     {
       name: "before",

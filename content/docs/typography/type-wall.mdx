@@ -1,0 +1,119 @@
+---
+title: Type Wall
+description: Rows of one word fill the frame, run in alternating directions at different speeds in heavy, narrow and outline faces, with an accent band through the middle
+component: type-wall
+vibe: playful
+length: sustained
+useWhen:
+  - "A loud full-screen beat for one word, such as a section title, a manifesto word or a transition card."
+  - "A busy, graphic backdrop behind a short overlay that should read as pure energy."
+  - "You want kinetic poster typography that runs for as long as the scene needs."
+avoidWhen:
+  - "One strip of scrolling text is enough, as a ticker or a separator — use `infinite-marquee`."
+  - "The rows should recede in perspective rather than fill the frame flat — use `perspective-marquee`."
+  - "A single word should stay readable at the center with quieter repeats — use `echo-stack`."
+---
+
+<ComponentPreview name="type-wall" />
+
+<InstallBlock name="type-wall" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { AbsoluteFill, Composition } from "remotion";
+import { TypeWall } from "@/components/remocn/type-wall";
+
+const Wall = () => (
+  <AbsoluteFill style={{ backgroundColor: "#2b3bff" }}>
+    <TypeWall text="MOTION" accent="#ff4d1a" accentText="#111111" />
+  </AbsoluteFill>
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="TypeWall"
+    component={Wall}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Rows are `fontSize` tall and stack without gaps from the center row outward
+until the frame is covered. Faces alternate between heavy Inter, narrow Anton
+and outline Inter; Anton is scaled so its capitals match Inter's cap height.
+The center row runs on the `accent` band. Neighbors run in opposite
+directions, and each row gets its own speed and starting phase from `seed`, so
+the wall never lines up into columns.
+
+On the way in, each row wipes open from the side it enters and streams a few
+tokens past before it slows to cruise, staggered two frames per row from the
+center outward. The band grows from the middle over frames 6 to 20. After
+that the wall runs for as long as the sequence lasts.
+
+The wall is the one component of this set that defaults to capitals: the
+effect is a wall of type. Each row loops by moving whole tokens, so it never
+measures text. The component fills its parent and paints no background
+outside the band.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "text",
+      type: "string",
+      default: "\"MOTION\"",
+      description: "The word repeated in every row",
+    },
+    {
+      name: "separator",
+      type: "string",
+      default: "\"·\"",
+      description: "Glyph between repeats",
+    },
+    {
+      name: "fontSize",
+      type: "number",
+      default: "64",
+      description: "Row height in reference px at 720p",
+    },
+    {
+      name: "color",
+      type: "string",
+      default: "\"#fafafa\"",
+      description: "Text and outline color",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#D97757\"",
+      description: "Band behind the center row",
+    },
+    {
+      name: "accentText",
+      type: "string",
+      default: "\"#0a0a0a\"",
+      description: "Text color on the band",
+    },
+    {
+      name: "seed",
+      type: "number",
+      default: "7",
+      description: "Seed for each row's speed and phase",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Timeline speed multiplier",
+    },
+    {
+      name: "className",
+      type: "string",
+      description: "Optional className passed to the wrapper",
+    },
+  ]}
+/>

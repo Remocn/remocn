@@ -1,0 +1,70 @@
+---
+title: Positioning
+description: Where to put the caption block in landscape and vertical video, with safe-zone numbers
+---
+
+A caption renders only its text block and never positions itself. Wrap it in an `AbsoluteFill` and place it there, so one caption style works in any frame.
+
+## Keep the block still
+
+Pick one position and keep it for the whole video. Viewers find the caption once and read it from the same place; a block that jumps between pages makes them search for it every time.
+
+## Landscape, 16:9
+
+Use the bottom third, centered, with the block no wider than 80% of the frame. In a 1920×1080 composition, that is 108px off the bottom edge and a maximum width of 1536px.
+
+```tsx
+import { AbsoluteFill } from "remotion";
+
+export const Subtitles = () => (
+  <AbsoluteFill
+    style={{
+      justifyContent: "flex-end",
+      alignItems: "center",
+      paddingBottom: 108,
+    }}
+  >
+    <div style={{ maxWidth: 1536, textAlign: "center" }}>
+      <CaptionKaraoke captions={captions} />
+    </div>
+  </AbsoluteFill>
+);
+```
+
+## Vertical, 9:16
+
+TikTok, Reels and Shorts cover the bottom of the frame with the description and account name, and the right edge with the like, comment and share column. Keep the caption above the first and clear of the second.
+
+In a 1080×1920 composition, put the block 540px off the bottom edge (28% of the height) with 160px of padding on both sides, which leaves a 760px-wide column in the middle.
+
+```tsx
+import { AbsoluteFill } from "remotion";
+
+export const Subtitles = () => (
+  <AbsoluteFill
+    style={{
+      justifyContent: "flex-end",
+      alignItems: "center",
+      paddingBottom: 540,
+      paddingLeft: 160,
+      paddingRight: 160,
+    }}
+  >
+    <div style={{ maxWidth: 760, textAlign: "center" }}>
+      <CaptionKaraoke captions={captions} />
+    </div>
+  </AbsoluteFill>
+);
+```
+
+## Center
+
+Styles that show one word at a time read best in the middle of the frame, where the eye already is. Center the block on both axes.
+
+```tsx
+<AbsoluteFill style={{ justifyContent: "center", alignItems: "center" }}>
+  <CaptionKaraoke captions={captions} />
+</AbsoluteFill>
+```
+
+A centered caption covers the subject, so keep it for talking-head footage where the face sits higher or for videos with no subject behind the text.

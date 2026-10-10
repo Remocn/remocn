@@ -1,0 +1,117 @@
+---
+title: Scramble
+description: Each word arrives as random glyphs at the moment it is spoken and decodes left to right into the real letters
+component: caption-scramble
+vibe: tech
+length: transcript-driven
+useWhen:
+  - "The video is about software, security, AI or data and the captions should feel like a terminal decoding the voice as it speaks."
+  - "You want each word to land with a little texture but the phrase to settle into plain, readable type a moment later."
+avoidWhen:
+  - "The tone is calm or editorial and the glyph noise would read as a glitch — use `caption-rise` or `caption-blur-in`."
+  - "You want characters to appear one by one in order rather than decode from noise — use `caption-typewriter`."
+  - "The text is scripted on-screen copy with no voiceover behind it — use `word-stream`."
+---
+
+<ComponentPreview name="caption-scramble" />
+
+<InstallBlock name="caption-scramble" />
+
+## Usage
+
+`CaptionScramble` keeps each word hidden until the voice reaches it. The word
+then appears as random glyphs that resolve into the real letters from left to
+right, taking as long as the word is spoken for, capped at 300ms, so short words
+snap and long ones decode visibly. The glyphs re-roll every two frames and are
+seeded from the frame, so every render is identical. The real word reserves its
+space from the start, so the line never shifts while it builds. The component
+renders only the text block, so place it inside your own `AbsoluteFill` — see
+[Positioning](/docs/captions/getting-started/positioning).
+
+```tsx
+import { AbsoluteFill } from "remotion";
+import { CaptionScramble } from "@/components/remocn/caption-scramble";
+import captions from "./captions.json";
+
+export const MyScene = () => (
+  <AbsoluteFill
+    style={{
+      justifyContent: "flex-end",
+      alignItems: "center",
+      paddingBottom: 108,
+      paddingInline: 192,
+    }}
+  >
+    <CaptionScramble captions={captions} />
+  </AbsoluteFill>
+);
+```
+
+A monospaced font keeps the decoding glyphs exactly as wide as the letters they
+replace. With a proportional font the glyphs can run slightly past the word for a
+frame or two while it resolves.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "captions",
+      type: "Caption[]",
+      default: "—",
+      description:
+        "The timed transcript, in the `Caption` shape from `@remotion/captions`. Times are relative to the start of the surrounding `Sequence`.",
+    },
+    {
+      name: "combineTokensWithinMilliseconds",
+      type: "number",
+      default: "1200",
+      description:
+        "How much speech one page may span before the next word starts a new page. Pages also break at the end of a sentence and on any pause of at least `holdMs` (300 ms minimum).",
+    },
+    {
+      name: "holdMs",
+      type: "number",
+      default: "600",
+      description:
+        "How long a page stays after its last word when the next page is not already due. It fades out at the end of the hold.",
+    },
+    {
+      name: "glyphColor",
+      type: "string",
+      default: "\"#a3a3a3\"",
+      description:
+        "Colour of the glyphs that have not resolved yet. Resolved letters use `color`.",
+    },
+    {
+      name: "fontSize",
+      type: "number",
+      default: "64",
+      description: "Font size in pixels.",
+    },
+    {
+      name: "fontWeight",
+      type: "number",
+      default: "800",
+      description: "Font weight. The font itself is inherited.",
+    },
+    {
+      name: "color",
+      type: "string",
+      default: "\"#ffffff\"",
+      description: "Colour of resolved letters.",
+    },
+    {
+      name: "shadow",
+      type: "boolean",
+      default: "true",
+      description:
+        "A tight text shadow that keeps the caption legible over bright footage.",
+    },
+    {
+      name: "className",
+      type: "string",
+      default: "—",
+      description:
+        "Classes for the text block — width, font family, `uppercase`.",
+    },
+  ]}
+/>

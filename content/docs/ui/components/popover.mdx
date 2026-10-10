@@ -20,8 +20,6 @@ A state atom whose appearance (`closed`, `opened`) is a pure function of the `st
 
 The hover-card pattern (a rich profile card that appears on hover) is this component driven by hover timing: use `usePopoverTransition` with steps that match when a `Cursor` arrives at and leaves the anchor.
 
-## Installation
-
 <InstallBlock name="popover" />
 
 <Note>
@@ -148,9 +146,7 @@ Placement is the caller's responsibility. The popover renders inline — wrap it
 
 For `"bottom"`, use `top: "calc(100% + 12px)"` instead. For `"left"` / `"right"`, use `right: "calc(100% + 12px)"` / `left: "calc(100% + 12px)"` and adjust vertical alignment to `top: "50%"` with `translateY(-50%)`.
 
-## Props
-
-<PropsTable
+<PropsTable title="Props"
   rows={[
     {
       name: "state",

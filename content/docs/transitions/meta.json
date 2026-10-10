@@ -5,6 +5,8 @@
     "index",
     "grain-dissolve",
     "wave-wipe",
+    "shader-seam",
+    "shader-spiral-pass",
     "ripple-zoom",
     "warp-dissolve",
     "swirl-dissolve",
@@ -27,5 +29,6 @@
     "displacement",
     "slide-swap",
     "spring-settle"
-  ]
+  ],
+  "icon": "TransitionRightIcon"
 }

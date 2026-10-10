@@ -1,11 +1,14 @@
+import { ArrowUpRight } from "lucide-react";
 import Link from "next/link";
 import {
+  externalLinkProps,
   FOOTER_GROUPS,
   GITHUB_URL,
   SUPPORT_EMAIL,
   THREADS_URL,
   X_URL,
 } from "@/config/site";
+import { cn } from "@/lib/utils";
 import { GitHubIcon } from "./github-icon";
 import { HeaderLogo } from "./header-parts";
 import { ThreadsIcon } from "./threads-icon";
@@ -53,8 +56,19 @@ export function SiteFooter() {
                   {group.label}
                 </span>
                 {group.links.map((link) => (
-                  <Link key={link.href} href={link.href} className={LINK_CLASS}>
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    {...externalLinkProps(link, "footer_external")}
+                    className={cn(
+                      LINK_CLASS,
+                      link.external && "inline-flex items-center gap-0.5",
+                    )}
+                  >
                     {link.label}
+                    {link.external && (
+                      <ArrowUpRight className="size-3.5" aria-hidden="true" />
+                    )}
                   </Link>
                 ))}
               </nav>

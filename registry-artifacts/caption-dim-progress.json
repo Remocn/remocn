@@ -1,0 +1,17 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "caption-dim-progress",
+  "title": "Caption Dim Progress",
+  "description": "The whole phrase sits on screen dimmed and each word brightens the moment it is spoken, with no motion at all.",
+  "dependencies": ["remotion", "@remotion/captions"],
+  "registryDependencies": ["@remocn/caption-core"],
+  "files": [
+    {
+      "path": "registry/remocn/caption-dim-progress/index.tsx",
+      "content": "\"use client\";\n\nimport { Fragment } from \"react\";\nimport { Easing, interpolate } from \"remotion\";\nimport {\n  type CaptionBaseProps,\n  DEFAULT_HOLD_MS,\n  getExitWindowMs,\n  groupCaptionWords,\n  useCaptions,\n} from \"@/lib/remocn/caption-core\";\n\nexport interface CaptionDimProgressProps extends CaptionBaseProps {\n  dimOpacity?: number;\n  shadow?: boolean;\n}\n\nconst ENTER_MS = 160;\nconst EXIT_MS = 220;\nconst RISE_EM = 0.14;\nconst BRIGHTEN_MS = 90;\nconst LEGIBILITY_SHADOW =\n  \"0 2px 3px rgba(0, 0, 0, 0.5), 0 4px 16px rgba(0, 0, 0, 0.35)\";\n\nconst enterEasing = Easing.bezier(0.2, 0.8, 0.2, 1);\n\nconst clamp = {\n  extrapolateLeft: \"clamp\",\n  extrapolateRight: \"clamp\",\n} as const;\n\nexport function CaptionDimProgress({\n  captions,\n  combineTokensWithinMilliseconds = 1200,\n  holdMs = DEFAULT_HOLD_MS,\n  fontSize = 64,\n  fontWeight = 800,\n  color = \"#ffffff\",\n  dimOpacity = 0.35,\n  shadow = true,\n  className,\n}: CaptionDimProgressProps) {\n  const state = useCaptions({\n    captions,\n    combineTokensWithinMilliseconds,\n    holdMs,\n  });\n  if (!state) return null;\n\n  const enter = interpolate(\n    state.previous ? ENTER_MS : state.sinceStartMs,\n    [0, ENTER_MS],\n    [0, 1],\n    {\n      ...clamp,\n      easing: enterEasing,\n    },\n  );\n  const exit = state.endsInSilence\n    ? interpolate(\n        state.untilEndMs,\n        [0, getExitWindowMs(state, EXIT_MS)],\n        [0, 1],\n        clamp,\n      )\n    : 1;\n\n  return (\n    <div\n      className={className}\n      style={{\n        fontSize,\n        fontWeight,\n        color,\n        lineHeight: 1.2,\n        textAlign: \"center\",\n        opacity: Math.min(enter, exit),\n        transform: `translateY(${(1 - enter) * RISE_EM}em)`,\n      }}\n    >\n      {groupCaptionWords(state.tokens).map((word, w) => (\n        <Fragment key={`${state.pageIndex}-${word[0].index}`}>\n          {w > 0 && \" \"}\n          <span style={{ display: \"inline-block\", whiteSpace: \"nowrap\" }}>\n            {word.map(({ index, token }) => (\n              <span\n                key={index}\n                style={{\n                  opacity: interpolate(\n                    state.timeMs - token.fromMs,\n                    [0, BRIGHTEN_MS],\n                    [dimOpacity, 1],\n                    clamp,\n                  ),\n                  textShadow: shadow ? LEGIBILITY_SHADOW : undefined,\n                }}\n              >\n                {token.text}\n              </span>\n            ))}\n          </span>\n        </Fragment>\n      ))}\n    </div>\n  );\n}\n",
+      "type": "registry:component",
+      "target": "components/remocn/caption-dim-progress.tsx"
+    }
+  ],
+  "type": "registry:component"
+}

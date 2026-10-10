@@ -1,0 +1,344 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry.json",
+  "name": "remocn-templates",
+  "homepage": "https://remocn.dev",
+  "items": [
+    {
+      "name": "release-teaser",
+      "title": "Release Teaser",
+      "type": "registry:component",
+      "description": "A 16-second cinematic release teaser with center-out typography, a procedural dimensional mark, moving edge light, and an independent fictional identity.",
+      "dependencies": ["remotion", "@fontsource/inter"],
+      "files": [
+        {
+          "path": "release-teaser/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/release-teaser/index.tsx"
+        },
+        {
+          "path": "release-teaser/content.ts",
+          "type": "registry:component",
+          "target": "components/remocn/templates/release-teaser/content.ts"
+        },
+        {
+          "path": "release-teaser/motion.ts",
+          "type": "registry:component",
+          "target": "components/remocn/templates/release-teaser/motion.ts"
+        },
+        {
+          "path": "release-teaser/geometry.ts",
+          "type": "registry:component",
+          "target": "components/remocn/templates/release-teaser/geometry.ts"
+        },
+        {
+          "path": "release-teaser/background.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/release-teaser/background.tsx"
+        },
+        {
+          "path": "release-teaser/ui.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/release-teaser/ui.tsx"
+        },
+        {
+          "path": "release-teaser/scenes/statement.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/release-teaser/scenes/statement.tsx"
+        },
+        {
+          "path": "release-teaser/scenes/closing.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/release-teaser/scenes/closing.tsx"
+        }
+      ]
+    },
+    {
+      "name": "brand-guidelines",
+      "title": "Brand Guidelines",
+      "type": "registry:component",
+      "description": "An independent 17.9-second identity film with a geometric mark, sliding palette, kinetic type specimens, and original object photography.",
+      "dependencies": ["remotion", "@fontsource/manrope", "@fontsource/inter"],
+      "registryDependencies": ["@remocn/caret"],
+      "files": [
+        {
+          "path": "brand-guidelines/assets.ts",
+          "type": "registry:component",
+          "target": "components/remocn/templates/brand-guidelines/assets.ts"
+        },
+        {
+          "path": "brand-guidelines/content.ts",
+          "type": "registry:component",
+          "target": "components/remocn/templates/brand-guidelines/content.ts"
+        },
+        {
+          "path": "brand-guidelines/motion.ts",
+          "type": "registry:component",
+          "target": "components/remocn/templates/brand-guidelines/motion.ts"
+        },
+        {
+          "path": "brand-guidelines/ui.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/brand-guidelines/ui.tsx"
+        },
+        {
+          "path": "brand-guidelines/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/brand-guidelines/index.tsx"
+        },
+        {
+          "path": "brand-guidelines/scenes/identity.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/brand-guidelines/scenes/identity.tsx"
+        },
+        {
+          "path": "brand-guidelines/scenes/palette.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/brand-guidelines/scenes/palette.tsx"
+        },
+        {
+          "path": "brand-guidelines/scenes/typography.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/brand-guidelines/scenes/typography.tsx"
+        },
+        {
+          "path": "brand-guidelines/scenes/collage.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/brand-guidelines/scenes/collage.tsx"
+        },
+        {
+          "path": "brand-guidelines/scenes/closing.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/brand-guidelines/scenes/closing.tsx"
+        }
+      ]
+    },
+    {
+      "name": "workflow-console",
+      "title": "Workflow Console",
+      "type": "registry:component",
+      "description": "An independent 46.8-second release automation demo with typed commands, environment diagrams, pipeline metrics, and an original node mark.",
+      "dependencies": [
+        "remotion",
+        "@fontsource/inter",
+        "@fontsource/roboto-mono"
+      ],
+      "registryDependencies": ["@remocn/typed-split-wipe", "@remocn/caret"],
+      "files": [
+        {
+          "path": "workflow-console/content.ts",
+          "type": "registry:component",
+          "target": "components/remocn/templates/workflow-console/content.ts"
+        },
+        {
+          "path": "workflow-console/countries.ts",
+          "type": "registry:component",
+          "target": "components/remocn/templates/workflow-console/countries.ts"
+        },
+        {
+          "path": "workflow-console/motion.ts",
+          "type": "registry:component",
+          "target": "components/remocn/templates/workflow-console/motion.ts"
+        },
+        {
+          "path": "workflow-console/ui.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/workflow-console/ui.tsx"
+        },
+        {
+          "path": "workflow-console/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/workflow-console/index.tsx"
+        },
+        {
+          "path": "workflow-console/scenes/intro.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/workflow-console/scenes/intro.tsx"
+        },
+        {
+          "path": "workflow-console/scenes/commands.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/workflow-console/scenes/commands.tsx"
+        },
+        {
+          "path": "workflow-console/scenes/terminal.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/workflow-console/scenes/terminal.tsx"
+        },
+        {
+          "path": "workflow-console/scenes/geography.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/workflow-console/scenes/geography.tsx"
+        },
+        {
+          "path": "workflow-console/scenes/tools.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/workflow-console/scenes/tools.tsx"
+        },
+        {
+          "path": "workflow-console/scenes/responses.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/workflow-console/scenes/responses.tsx"
+        },
+        {
+          "path": "workflow-console/scenes/titles.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/workflow-console/scenes/titles.tsx"
+        },
+        {
+          "path": "workflow-console/scenes/chart.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/workflow-console/scenes/chart.tsx"
+        },
+        {
+          "path": "workflow-console/scenes/mark.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/workflow-console/scenes/mark.tsx"
+        }
+      ]
+    },
+    {
+      "name": "launch-anything",
+      "title": "Product Showcase",
+      "type": "registry:component",
+      "description": "An independent 26.7-second editorial product film with forest-green accents, original photography, seven editable demos, and geometric marks.",
+      "dependencies": ["remotion", "@fontsource/manrope"],
+      "registryDependencies": ["@remocn/shader-text-reveal"],
+      "files": [
+        {
+          "path": "launch-anything/assets.ts",
+          "type": "registry:component",
+          "target": "components/remocn/templates/launch-anything/assets.ts"
+        },
+        {
+          "path": "launch-anything/content.ts",
+          "type": "registry:component",
+          "target": "components/remocn/templates/launch-anything/content.ts"
+        },
+        {
+          "path": "launch-anything/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/launch-anything/index.tsx"
+        },
+        {
+          "path": "launch-anything/motion.ts",
+          "type": "registry:component",
+          "target": "components/remocn/templates/launch-anything/motion.ts"
+        },
+        {
+          "path": "launch-anything/screens.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/launch-anything/screens.tsx"
+        },
+        {
+          "path": "launch-anything/ui.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/launch-anything/ui.tsx"
+        },
+        {
+          "path": "launch-anything/scenes/opening.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/launch-anything/scenes/opening.tsx"
+        },
+        {
+          "path": "launch-anything/scenes/action.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/launch-anything/scenes/action.tsx"
+        },
+        {
+          "path": "launch-anything/scenes/portal.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/launch-anything/scenes/portal.tsx"
+        },
+        {
+          "path": "launch-anything/scenes/showcase.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/launch-anything/scenes/showcase.tsx"
+        },
+        {
+          "path": "launch-anything/scenes/proof.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/launch-anything/scenes/proof.tsx"
+        },
+        {
+          "path": "launch-anything/scenes/industry.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/launch-anything/scenes/industry.tsx"
+        },
+        {
+          "path": "launch-anything/scenes/space.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/launch-anything/scenes/space.tsx"
+        },
+        {
+          "path": "launch-anything/scenes/closing.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/launch-anything/scenes/closing.tsx"
+        },
+        {
+          "path": "launch-anything/scenes/action-frame.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/launch-anything/scenes/action-frame.tsx"
+        }
+      ]
+    },
+    {
+      "name": "fomo-limit-orders",
+      "type": "registry:component",
+      "title": "Order Flow",
+      "description": "An independent 18-second trading-interface demo with fictional market data, graphite and amber styling, an original stepped mark, and editable camera choreography.",
+      "dependencies": ["remotion", "@fontsource/manrope"],
+      "files": [
+        {
+          "path": "fomo-limit-orders/content.ts",
+          "type": "registry:component",
+          "target": "components/remocn/templates/fomo-limit-orders/content.ts"
+        },
+        {
+          "path": "fomo-limit-orders/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/fomo-limit-orders/index.tsx"
+        },
+        {
+          "path": "fomo-limit-orders/motion.ts",
+          "type": "registry:component",
+          "target": "components/remocn/templates/fomo-limit-orders/motion.ts"
+        },
+        {
+          "path": "fomo-limit-orders/scenes/closing.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/fomo-limit-orders/scenes/closing.tsx"
+        },
+        {
+          "path": "fomo-limit-orders/scenes/confirmation.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/fomo-limit-orders/scenes/confirmation.tsx"
+        },
+        {
+          "path": "fomo-limit-orders/scenes/opening.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/fomo-limit-orders/scenes/opening.tsx"
+        },
+        {
+          "path": "fomo-limit-orders/scenes/phone.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/fomo-limit-orders/scenes/phone.tsx"
+        },
+        {
+          "path": "fomo-limit-orders/scenes/price.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/fomo-limit-orders/scenes/price.tsx"
+        },
+        {
+          "path": "fomo-limit-orders/scenes/slider.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/fomo-limit-orders/scenes/slider.tsx"
+        },
+        {
+          "path": "fomo-limit-orders/ui.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/fomo-limit-orders/ui.tsx"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,245 @@
+---
+title: Select Menu
+description: A vertical option list whose highlight slides between selections on the timeline
+component: select-menu
+vibe: clean
+length: 128
+useWhen:
+  - "A vertical single-choice menu where one option is highlighted and the highlight should glide smoothly between options as the selection changes."
+  - "Game-style menus and product-demo navigation where the selection is driven from the Remotion timeline (fully controlled — no real interaction)."
+  - "Replacing stacked radio rows when a sliding highlight + left accent bar reads better than individual dots."
+avoidWhen:
+  - "Options must open a reveal panel — use `select` instead."
+  - "You need grouped actions that open from a trigger button — use `dropdown-menu` instead."
+  - "Options are sequential numbered steps — use `stepper` instead."
+---
+
+<UiComponentPreview name="select-menu" />
+
+A vertical option list where exactly one row is highlighted. The highlight (background + left accent bar) slides smoothly between rows as the selection changes. Its appearance is a pure function of the props you give it — `selectedIndex`/`state` snap, or `style` from `useSelectMenuTransition` slides. Fully controlled: there are no interaction handlers, so it is safe to drive entirely from the Remotion timeline.
+
+<InstallBlock name="select-menu" />
+
+<Note>
+Installing `select-menu` automatically installs the shared `remocn-ui` core (`lib/remocn-ui/`) via `registryDependencies`. You do not need to install it separately.
+</Note>
+
+## States
+
+`SelectMenuState` is:
+
+```ts
+type SelectMenuState = string;
+```
+
+The state is the selected option's value — one of the strings in the `options` array. When the selection changes, the highlight bar slides to the selected row and the label brightens and thickens as the highlight arrives.
+
+## Snap usage (simple path)
+
+Pass `selectedIndex` directly — the component snaps instantly to that visual. Useful for static previews or when you drive selection from your own logic:
+
+```tsx
+import { SelectMenu } from "@/components/remocn/select-menu";
+
+export const Scene = () => (
+  <SelectMenu
+    options={["New Game", "Continue", "Settings", "Quit"]}
+    selectedIndex={1}
+  />
+);
+```
+
+You can also pass the value directly via `state`:
+
+```tsx
+import { SelectMenu } from "@/components/remocn/select-menu";
+
+export const Scene = () => (
+  <SelectMenu
+    options={["New Game", "Continue", "Settings", "Quit"]}
+    state="Settings"
+  />
+);
+```
+
+To drive selection from the timeline with **no animation** (snaps on change), use `useCurrentState`:
+
+```tsx
+import { useCurrentState } from "@/lib/remocn-ui";
+import { SelectMenu } from "@/components/remocn/select-menu";
+
+export const Scene = () => {
+  const state = useCurrentState(
+    [
+      { at: 24, state: "Continue" },
+      { at: 48, state: "Settings" },
+      { at: 72, state: "Quit" },
+    ],
+    "New Game",
+  );
+
+  return (
+    <SelectMenu
+      options={["New Game", "Continue", "Settings", "Quit"]}
+      state={state}
+    />
+  );
+};
+```
+
+Each `at` is a **Sequence-local authored frame**. State persists between steps: `Continue` at frame 24 keeps that row highlighted until `Settings` fires at frame 48. See [Concepts](/docs/ui/concepts) for the full `useCurrentState` API.
+
+## Smooth transitions (opt-in)
+
+Selection changes via `selectedIndex`/`state` snap with no animation. For a smoothly sliding highlight, use `useSelectMenuTransition` from the copied `use-select-menu-transition.ts` file. It reads the frame, interpolates between selection presets, and returns a resolved `SelectMenuStyle` — pass it to the `style` prop:
+
+```tsx
+import { SelectMenu } from "@/components/remocn/select-menu";
+import { useSelectMenuTransition } from "@/components/remocn/use-select-menu-transition";
+
+export const Scene = () => {
+  const style = useSelectMenuTransition([
+    { at: 24, state: "Continue", duration: 14 },
+    { at: 48, state: "Settings", duration: 14 },
+    { at: 72, state: "Quit", duration: 14 },
+  ]);
+
+  return (
+    <SelectMenu
+      style={style}
+      options={["New Game", "Continue", "Settings", "Quit"]}
+    />
+  );
+};
+```
+
+The `duration` field on each step overrides the file's `DEFAULT_DURATION` for that specific transition. To globally tune timing and easing, edit `use-select-menu-transition.ts` directly in your project — that file is yours (shadcn "own your code" philosophy).
+
+`style` takes precedence over `selectedIndex`/`state` when both are provided. So when you drive the menu from the timeline, thread your selection through the **steps** (or a `clickAt`), not through the `selectedIndex` prop — otherwise the prop is silently ignored:
+
+```tsx
+// ✅ The highlight is driven by the timeline.
+const style = useSelectMenuTransition([
+  { at: 24, state: "Continue", duration: 14 },
+  { at: 48, state: "Settings", duration: 14 },
+]);
+
+// ❌ These are ignored whenever `style` is present.
+<SelectMenu style={style} selectedIndex={2} />
+```
+
+## Click / selected effect
+
+The smooth path can also "click" a row — the same press→selected feel as `select`'s items. Add `clickAt` (an authored frame, matching your steps' `at` values) to `useSelectMenuTransition`. When the indicator reaches that frame, the row it rests on presses (a quick scale dip and a brief darkening of the highlight), then settles into the selected state as a check mark fades in on its right edge:
+
+```tsx
+export const Scene = () => {
+  // The highlight arrives at "Settings" at frame 52, rests a beat, then the
+  // press→selected click fires at frame 60 and holds — the check stays until
+  // the next step moves the highlight away.
+  const style = useSelectMenuTransition(
+    [
+      { at: 0, state: "New Game", duration: 12 },
+      { at: 20, state: "Continue", duration: 12 },
+      { at: 40, state: "Settings", duration: 12 },
+      { at: 64, state: "New Game", duration: 16 },
+    ],
+    { clickAt: 60, clickDuration: 14 },
+  );
+
+  return <SelectMenu style={style} />;
+};
+```
+
+The click window is split by two fields: `press` (transient) ramps 0→1 across the first ~40% of the window and back to 0 (the scale dip + darkening), while `selectProgress` (selectedness) rises 0→1 over the release so the check fades in as the row settles. `clickDuration` tunes that window; if you omit it, `DEFAULT_DURATION` is used.
+
+The check appears **only on the row the indicator rests on**: it fades in as that row settles, and disappears the instant the indicator moves away — it is never shown on intermediate rows mid-glide. Coordinate `clickAt` to fire after your arrival step for the best feel.
+
+By default `selectProgress` stays at `1` once the row is selected (the check persists until a later step moves the highlight away). For a selecting cycle that must **restart** cleanly — e.g. a looping preview — pass `hold` (frames to keep the row selected) and `decayDuration` (frames to ease the check back off on that same row), then snap the highlight back to the first option with a hard `duration: 0` step. The tick fades out before the cut, so it is never seen on the first row or anywhere else:
+
+```tsx
+const style = useSelectMenuTransition(
+  [
+    { at: 0, state: "New Game", duration: 12 },
+    { at: 20, state: "Continue", duration: 12 },
+    { at: 40, state: "Settings", duration: 12 },
+    // Instant restart — no glide back through the intermediate rows.
+    // Settle at 52, click at 56 (14f) → selected at 70, hold to 90,
+    // check fades over 90..98, then jump back to New Game.
+    { at: 98, state: "New Game", duration: 0 },
+  ],
+  { clickAt: 56, hold: 20, decayDuration: 8 },
+);
+```
+
+The snap path always renders the selected row fully chosen: `selectMenuStyle` reports `selectProgress: 1` and `press: 0`, so a row chosen via `selectedIndex`/`state` shows its check mark immediately, with no press.
+
+## Sliding highlight and variants
+
+`SelectMenuStyle` carries two animated fields plus the per-row emphasis from the indicator position:
+
+| Field | Meaning |
+|---|---|
+| `indicatorOffset` | Float row index — where the highlight sits. Interpolating it glides the bar between rows with no jump. |
+| `press` | Transient 0..1 press depth of the row under the indicator — a quick scale dip and highlight darkening while it is clicked. `0` at rest. |
+| `selectProgress` | 0..1 selectedness — rises as the release settles the check mark in, holds at `1` while selected, eases back to `0` after a `hold`/`decayDuration` cycle. |
+
+`useSelectMenuTransition` interpolates all three. The same `indicatorOffset` drives per-row label emphasis, so each label brightens and thickens as the highlight arrives and fades as it leaves.
+
+The `variant` prop chooses between two clean looks:
+
+| `variant` | Look | Use case |
+|---|---|---|
+| `"soft"` | Rounded outlined panel; the selected row fills with the theme accent and a primary left accent bar | Product demos, dashboards, tooling |
+| `"solid"` | No outline; the selected row fills with the theme primary color and a contrasting accent bar | Game-style menus, bold CTA moments |
+
+The left accent bar is 3px and rides on the highlighted row's left edge — it is part of the sliding layer, so it glides too.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "options",
+      type: "string[]",
+      default: "[\"New Game\", \"Continue\", \"Settings\", \"Quit\"]",
+      description: "The menu items, top to bottom — one row per entry. Any number of options is supported; the 4-item default is just the demo set.",
+    },
+    {
+      name: "selectedIndex",
+      type: "number",
+      default: "0",
+      description: "Snap path (index). Index of the highlighted row. Selection changes snap — no automatic animation.",
+    },
+    {
+      name: "state",
+      type: "string",
+      description: "Snap path (value). Value of the highlighted row, resolved against options. Ignored when selectedIndex is set.",
+    },
+    {
+      name: "style",
+      type: "SelectMenuStyle",
+      description: "Resolved animated visual (smooth path). Pass an interpolated SelectMenuStyle from useSelectMenuTransition — the sliding highlight (indicatorOffset), the transient press (press), and the press→selected click/selected effect (selectProgress). Takes precedence over selectedIndex/state when provided.",
+    },
+    {
+      name: "variant",
+      type: "\"soft\" | \"solid\"",
+      default: "\"soft\"",
+      description: "Highlight style — soft (accent fill + outline panel) for product demos, solid (primary fill) for game-style menus.",
+    },
+    {
+      name: "align",
+      type: "\"start\" | \"center\" | \"end\"",
+      default: "\"center\"",
+      description: "Aligns the menu within the composition frame.",
+    },
+    {
+      name: "theme",
+      type: "Partial<RemocnTheme>",
+      description: "Per-component theme override. Merges with the active RemocnUIProvider theme and the mode defaults. Must be concrete oklch/hex/rgb values — not CSS custom properties.",
+    },
+    {
+      name: "className",
+      type: "string",
+      description: "Optional className passed to the select-menu element.",
+    },
+  ]}
+/>

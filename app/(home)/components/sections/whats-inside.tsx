@@ -8,19 +8,38 @@ import {
   Type,
   Waves,
 } from "lucide-react";
-import { motion, useInView, useReducedMotion } from "motion/react";
+import {
+  AnimatePresence,
+  animate,
+  motion,
+  useInView,
+  useMotionValue,
+  useMotionValueEvent,
+  useReducedMotion,
+  useTransform,
+} from "motion/react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { type ComponentType, useRef } from "react";
-import { SPRING_SOFT } from "@/config/site";
+import { type ComponentType, useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { SectionHeading } from "../section-heading";
 
-// The shader viz is the only tile that pulls @remotion/player + the shader
+// The shader viz is the only scene that pulls @remotion/player + the shader
 // runtime. Load it client-only so that weight leaves the initial landing
-// bundle; the tile is below the fold and its text/links stay server-rendered.
+// bundle; the track labels and links stay server-rendered.
 const ShadersViz = dynamic(
   () => import("./shaders-viz").then((m) => ({ default: m.ShadersViz })),
+  {
+    ssr: false,
+    loading: () => <div className="absolute inset-0 bg-muted/20" />,
+  },
+);
+
+// Same deal for the transitions scene — a real registry transition
+// (zoomBlur in a TransitionSeries) playing in @remotion/player.
+const TransitionsViz = dynamic(
+  () =>
+    import("./transitions-viz").then((m) => ({ default: m.TransitionsViz })),
   {
     ssr: false,
     loading: () => <div className="absolute inset-0 bg-muted/20" />,
@@ -31,6 +50,8 @@ const EYEBROW = "What’s inside";
 const TITLE = "Five kinds of building blocks";
 const LEAD =
   "Every remocn component belongs to one of these families. Your agent composes them on the timeline, one scene at a time.";
+
+const FPS = 30;
 
 interface VizProps {
   play: boolean;
@@ -70,74 +91,6 @@ function TypographyViz({ play }: VizProps) {
           {ch}
         </motion.span>
       ))}
-    </div>
-  );
-}
-
-function TransitionsViz({ play }: VizProps) {
-  const reduced = useReducedMotion();
-  const active = play && !reduced;
-
-  if (!active) {
-    return (
-      <div className="absolute inset-0 flex items-center justify-center bg-foreground">
-        <span className="font-mono text-3xl font-medium text-background">
-          02
-        </span>
-      </div>
-    );
-  }
-
-  const times = [0, 0.28, 0.42, 0.58, 0.72, 1];
-  const loop = {
-    duration: 3.4,
-    times,
-    repeat: Number.POSITIVE_INFINITY,
-    ease: "easeInOut" as const,
-  };
-
-  return (
-    <div className="absolute inset-0 overflow-hidden">
-      <motion.div
-        className="absolute inset-0 flex items-center justify-center bg-muted/50 will-change-[transform,opacity,filter]"
-        animate={{
-          opacity: [1, 1, 0, 0, 1, 1],
-          scale: [1, 1, 1.06, 0.97, 1, 1],
-          filter: [
-            "blur(0px) brightness(1)",
-            "blur(0px) brightness(1)",
-            "blur(14px) brightness(1.3)",
-            "blur(14px) brightness(1.25)",
-            "blur(0px) brightness(1)",
-            "blur(0px) brightness(1)",
-          ],
-        }}
-        transition={loop}
-      >
-        <span className="font-mono text-3xl font-medium text-muted-foreground">
-          01
-        </span>
-      </motion.div>
-      <motion.div
-        className="absolute inset-0 flex items-center justify-center bg-foreground will-change-[transform,opacity,filter]"
-        animate={{
-          opacity: [0, 0, 1, 1, 0, 0],
-          scale: [0.97, 0.97, 1, 1, 1.06, 0.97],
-          filter: [
-            "blur(14px) brightness(1.25)",
-            "blur(14px) brightness(1.25)",
-            "blur(0px) brightness(1)",
-            "blur(0px) brightness(1)",
-            "blur(14px) brightness(1.3)",
-            "blur(14px) brightness(1.25)",
-          ],
-        }}
-        transition={loop}
-      >
-        <span className="font-mono text-3xl font-medium text-background">
-          02
-        </span>
-      </motion.div>
     </div>
   );
 }
@@ -218,16 +171,19 @@ function UiPrimitivesViz({ play }: VizProps) {
   );
 }
 
-interface Category {
+interface Clip {
   title: string;
   description: string;
   href: string;
   icon: ComponentType<{ className?: string }>;
   Viz: ComponentType<VizProps>;
-  span: string;
+  /** Clip length in timeline seconds — sets its share of the track width. */
+  seconds: number;
+  /** Screen-studio-style saturated track color for the pill. */
+  fill: string;
 }
 
-const CATEGORIES: Category[] = [
+const CLIPS: Clip[] = [
   {
     title: "Typography",
     description:
@@ -235,7 +191,8 @@ const CATEGORIES: Category[] = [
     href: "/docs/typography",
     icon: Type,
     Viz: TypographyViz,
-    span: "lg:col-span-3",
+    seconds: 3.5,
+    fill: "oklch(0.62 0.12 60)",
   },
   {
     title: "Shaders",
@@ -244,7 +201,8 @@ const CATEGORIES: Category[] = [
     href: "/docs/shaders/getting-started/introduction",
     icon: Waves,
     Viz: ShadersViz,
-    span: "lg:col-span-3",
+    seconds: 3,
+    fill: "oklch(0.54 0.14 285)",
   },
   {
     title: "Transitions",
@@ -252,7 +210,8 @@ const CATEGORIES: Category[] = [
     href: "/docs/transitions",
     icon: Shuffle,
     Viz: TransitionsViz,
-    span: "lg:col-span-2",
+    seconds: 2,
+    fill: "oklch(0.57 0.1 220)",
   },
   {
     title: "Animated Icons",
@@ -260,7 +219,8 @@ const CATEGORIES: Category[] = [
     href: "/docs/icons/gallery",
     icon: Sparkles,
     Viz: AnimatedIconsViz,
-    span: "lg:col-span-2",
+    seconds: 2,
+    fill: "oklch(0.58 0.1 150)",
   },
   {
     title: "UI Primitives",
@@ -269,66 +229,97 @@ const CATEGORIES: Category[] = [
     href: "/docs/ui",
     icon: Component,
     Viz: UiPrimitivesViz,
-    span: "sm:col-span-2 lg:col-span-2",
+    seconds: 2.5,
+    fill: "oklch(0.54 0.13 330)",
   },
 ];
 
-function CategoryCard({ category }: { category: Category }) {
-  const ref = useRef<HTMLElement>(null);
-  const inView = useInView(ref, { amount: 0.4 });
-  const reduced = useReducedMotion();
-  const { Viz, icon: Icon } = category;
+const TOTAL_SECONDS = CLIPS.reduce((sum, clip) => sum + clip.seconds, 0);
+/** Cumulative clip start times, as 0–1 fractions of the whole track. */
+const CLIP_STARTS = CLIPS.reduce<number[]>((starts, _, i) => {
+  starts.push(
+    i === 0 ? 0 : starts[i - 1] + CLIPS[i - 1].seconds / TOTAL_SECONDS,
+  );
+  return starts;
+}, []);
 
+function clipIndexAt(progress: number) {
+  for (let i = CLIP_STARTS.length - 1; i >= 0; i--) {
+    if (progress >= CLIP_STARTS[i]) return i;
+  }
+  return 0;
+}
+
+function formatTimecode(seconds: number) {
+  const frames = Math.round(seconds * FPS);
+  return `${Math.floor(frames / FPS)}:${String(frames % FPS).padStart(2, "0")}`;
+}
+
+const RULER_STEPS = 13;
+
+function TimelineRuler() {
   return (
-    <div className={cn("h-full", category.span)}>
-      <Link
-        href={category.href}
-        aria-label={`Explore ${category.title}`}
-        className="group block h-full rounded-3xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
-      >
-        <motion.div whileHover="hover" className="h-full">
-          <motion.article
-            ref={ref}
-            variants={reduced ? undefined : { hover: { y: -4 } }}
-            transition={SPRING_SOFT}
-            className="surface-card relative flex h-full flex-col overflow-hidden rounded-3xl"
+    <div
+      aria-hidden
+      className="relative flex h-6 select-none items-end border-b border-border/60"
+    >
+      {Array.from({ length: RULER_STEPS + 1 }, (_, i) => {
+        const seconds = (TOTAL_SECONDS / RULER_STEPS) * i;
+        return (
+          <div
+            key={i}
+            className="absolute bottom-0 flex flex-col items-start gap-1"
+            style={{ left: `${(i / RULER_STEPS) * 100}%` }}
           >
-            <div
-              aria-hidden
-              className="pointer-events-none relative flex h-40 select-none items-center justify-center overflow-hidden border-b border-border bg-muted/20 sm:h-44"
-            >
-              <Viz play={inView} />
-            </div>
-            <div className="flex flex-1 flex-col p-5 sm:p-6">
-              <div className="flex items-center gap-2">
-                <Icon
-                  aria-hidden
-                  className="size-4 shrink-0 text-muted-foreground"
-                />
-                <h3 className="text-base font-semibold tracking-tight text-foreground">
-                  {category.title}
-                </h3>
-                <ArrowUpRight
-                  aria-hidden
-                  className="ml-auto size-4 shrink-0 text-muted-foreground/40 transition-colors group-hover:text-foreground"
-                />
-              </div>
-              <p className="mt-2 text-sm leading-relaxed text-pretty text-muted-foreground">
-                {category.description}
-              </p>
-            </div>
-          </motion.article>
-        </motion.div>
-      </Link>
+            {i % 2 === 0 && i < RULER_STEPS && (
+              <span className="font-mono text-[10px] leading-none text-muted-foreground/50 tabular-nums">
+                {formatTimecode(seconds)}
+              </span>
+            )}
+            <span
+              className={cn("w-px bg-border", i % 2 === 0 ? "h-2" : "h-1")}
+            />
+          </div>
+        );
+      })}
     </div>
   );
 }
 
 export function WhatsInside() {
+  const sectionRef = useRef<HTMLElement>(null);
+  const inView = useInView(sectionRef, { amount: 0.3 });
+  const reduced = useReducedMotion();
+
+  const progress = useMotionValue(0);
+  const playheadLeft = useTransform(progress, (v) => `${v * 100}%`);
+  const [playheadIndex, setPlayheadIndex] = useState(0);
+  const [hoverIndex, setHoverIndex] = useState<number | null>(null);
+
+  useMotionValueEvent(progress, "change", (v) => {
+    const idx = clipIndexAt(v);
+    if (idx !== playheadIndex) setPlayheadIndex(idx);
+  });
+
+  useEffect(() => {
+    if (!inView || reduced) return;
+    const controls = animate(progress, [0, 1], {
+      duration: TOTAL_SECONDS,
+      ease: "linear",
+      repeat: Number.POSITIVE_INFINITY,
+    });
+    return () => controls.stop();
+  }, [inView, reduced, progress]);
+
+  const activeIndex = hoverIndex ?? playheadIndex;
+  const activeClip = CLIPS[activeIndex];
+  const ActiveViz = activeClip.Viz;
+
   return (
     <section
+      ref={sectionRef}
       id="whats-inside"
-      className="relative py-14 sm:py-20 [content-visibility:auto] [contain-intrinsic-size:auto_640px]"
+      className="relative py-14 sm:py-20 [content-visibility:auto] [contain-intrinsic-size:auto_760px]"
     >
       <div className="section">
         <SectionHeading
@@ -338,10 +329,106 @@ export function WhatsInside() {
           animated={false}
         />
 
-        <div className="mt-10 grid grid-cols-1 gap-4 sm:mt-12 sm:grid-cols-2 sm:gap-5 lg:grid-cols-6 lg:gap-6">
-          {CATEGORIES.map((category) => (
-            <CategoryCard key={category.title} category={category} />
-          ))}
+        {/* Monitor — the preview canvas above the timeline, editor-style. */}
+        <div className="relative mt-10 h-56 overflow-hidden rounded-2xl border border-border bg-muted/20 sm:mt-12 sm:h-72">
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div
+              key={activeClip.title}
+              initial={reduced ? false : { opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={reduced ? undefined : { opacity: 0 }}
+              transition={{ duration: 0.18, ease: "easeOut" }}
+              className="pointer-events-none absolute inset-0 flex select-none items-center justify-center"
+            >
+              <ActiveViz play={inView} />
+            </motion.div>
+          </AnimatePresence>
+        </div>
+
+        <div className="mt-6 overflow-x-auto">
+          <div className="relative min-w-[640px]">
+            <TimelineRuler />
+
+            <div className="relative mt-2">
+              {/* Playhead spans the ruler gap and the track. */}
+              {!reduced && (
+                <motion.div
+                  aria-hidden
+                  className="pointer-events-none absolute -top-8 bottom-0 z-10 flex flex-col items-center"
+                  style={{ left: playheadLeft }}
+                >
+                  <span className="size-2 shrink-0 rounded-[2px] bg-primary" />
+                  <span className="w-px flex-1 bg-primary" />
+                </motion.div>
+              )}
+
+              <div className="flex gap-1.5">
+                {CLIPS.map((clip, i) => {
+                  const active = i === activeIndex;
+                  const Icon = clip.icon;
+                  return (
+                    <Link
+                      key={clip.title}
+                      href={clip.href}
+                      aria-label={`Explore ${clip.title}`}
+                      style={{
+                        flexGrow: clip.seconds,
+                        flexBasis: 0,
+                        backgroundColor: clip.fill,
+                      }}
+                      onMouseEnter={() => setHoverIndex(i)}
+                      onMouseLeave={() => setHoverIndex(null)}
+                      onFocus={() => setHoverIndex(i)}
+                      onBlur={() => setHoverIndex(null)}
+                      className={cn(
+                        "group relative flex h-12 min-w-0 flex-col items-center justify-center gap-0.5 overflow-hidden rounded-xl px-3 transition-[opacity,filter] duration-200 sm:h-14",
+                        "inset-shadow-[0_1px_0_--theme(--color-white/25%)]",
+                        active
+                          ? "opacity-100"
+                          : "opacity-55 saturate-75 hover:opacity-80",
+                        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
+                      )}
+                    >
+                      <span className="flex min-w-0 items-center gap-1.5">
+                        <Icon
+                          aria-hidden
+                          className="size-3.5 shrink-0 text-white/80"
+                        />
+                        <span className="truncate text-xs font-medium text-white">
+                          {clip.title}
+                        </span>
+                      </span>
+                      <span className="font-mono text-[10px] leading-none text-white/60 tabular-nums">
+                        {clip.seconds.toFixed(1)}s
+                      </span>
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="mt-4 flex min-h-12 items-start justify-between gap-4">
+              <motion.p
+                key={activeClip.title}
+                initial={reduced ? false : { opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.2, ease: "easeOut" }}
+                className="max-w-xl text-sm leading-relaxed text-pretty text-muted-foreground"
+              >
+                <span className="font-medium text-foreground">
+                  {activeClip.title}
+                </span>{" "}
+                — {activeClip.description}
+              </motion.p>
+              <Link
+                href={activeClip.href}
+                className="inline-flex shrink-0 items-center gap-1 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:text-foreground focus-visible:outline-none"
+              >
+                Explore
+                <ArrowUpRight aria-hidden className="size-4" />
+              </Link>
+            </div>
+          </div>
         </div>
       </div>
     </section>

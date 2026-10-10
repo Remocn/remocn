@@ -21,7 +21,7 @@ import { DocsTabs } from "@/components/docs/docs-tabs";
 export function DocsTabsBar() {
   return (
     <div className="sticky top-0 z-30 h-11 w-full border-b border-border bg-background/70 backdrop-blur-xl">
-      <div className="mx-auto flex h-11 w-full max-w-(--fd-layout-width) items-stretch px-4 [--fd-layout-width:97rem]">
+      <div className="mx-auto flex h-11 w-full max-w-(--fd-layout-width) items-stretch px-6 [--fd-layout-width:97rem]">
         <DocsTabs className="-ml-3" />
       </div>
     </div>

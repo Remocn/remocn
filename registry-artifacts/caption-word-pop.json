@@ -1,0 +1,17 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "caption-word-pop",
+  "title": "Caption Word Pop",
+  "description": "One large word at a time, each popping in on a spring the moment it is spoken.",
+  "dependencies": ["remotion", "@remotion/captions"],
+  "registryDependencies": ["@remocn/caption-core"],
+  "files": [
+    {
+      "path": "registry/remocn/caption-word-pop/index.tsx",
+      "content": "\"use client\";\n\nimport { Fragment } from \"react\";\nimport { interpolate, spring, useVideoConfig } from \"remotion\";\nimport {\n  type CaptionBaseProps,\n  DEFAULT_HOLD_MS,\n  getExitWindowMs,\n  groupCaptionWords,\n  useCaptions,\n} from \"@/lib/remocn/caption-core\";\n\nexport interface CaptionWordPopProps extends CaptionBaseProps {\n  popScale?: number;\n  shadow?: boolean;\n}\n\nconst FADE_MS = 50;\nconst EXIT_MS = 180;\nconst LEGIBILITY_SHADOW =\n  \"0 2px 3px rgba(0, 0, 0, 0.5), 0 4px 16px rgba(0, 0, 0, 0.35)\";\n\nconst POP_SPRING = { damping: 11, stiffness: 240, mass: 0.6 };\n\nconst clamp = {\n  extrapolateLeft: \"clamp\",\n  extrapolateRight: \"clamp\",\n} as const;\n\nexport function CaptionWordPop({\n  captions,\n  combineTokensWithinMilliseconds = 0,\n  holdMs = DEFAULT_HOLD_MS,\n  fontSize = 96,\n  fontWeight = 800,\n  color = \"#ffffff\",\n  popScale = 0.6,\n  shadow = true,\n  className,\n}: CaptionWordPopProps) {\n  const { fps } = useVideoConfig();\n  const state = useCaptions({\n    captions,\n    combineTokensWithinMilliseconds,\n    holdMs,\n  });\n  if (!state) return null;\n\n  const pop = spring({\n    frame: (state.sinceStartMs / 1000) * fps,\n    fps,\n    config: POP_SPRING,\n  });\n  const fadeIn = state.previous\n    ? 1\n    : interpolate(state.sinceStartMs, [0, FADE_MS], [0, 1], clamp);\n  const exit = state.endsInSilence\n    ? interpolate(\n        state.untilEndMs,\n        [0, getExitWindowMs(state, EXIT_MS)],\n        [0, 1],\n        clamp,\n      )\n    : 1;\n\n  return (\n    <div\n      className={className}\n      style={{\n        fontSize,\n        fontWeight,\n        color,\n        lineHeight: 1.1,\n        textAlign: \"center\",\n        opacity: Math.min(fadeIn, exit),\n        transform: `scale(${popScale + (1 - popScale) * pop})`,\n        textShadow: shadow ? LEGIBILITY_SHADOW : undefined,\n      }}\n    >\n      {groupCaptionWords(state.tokens).map((word, w) => (\n        <Fragment key={`${state.pageIndex}-${word[0].index}`}>\n          {w > 0 && \" \"}\n          <span style={{ display: \"inline-block\", whiteSpace: \"nowrap\" }}>\n            {word.map(({ index, token }) => (\n              <span key={index}>{token.text}</span>\n            ))}\n          </span>\n        </Fragment>\n      ))}\n    </div>\n  );\n}\n",
+      "type": "registry:component",
+      "target": "components/remocn/caption-word-pop.tsx"
+    }
+  ],
+  "type": "registry:component"
+}

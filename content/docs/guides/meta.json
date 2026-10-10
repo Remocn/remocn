@@ -8,10 +8,17 @@
     "launch-video",
     "feature-announcement",
     "showcase-reel",
+    "teaser",
+    "product-demo",
+    "changelog-video",
     "---Practices---",
     "how-a-video-is-built",
     "directing-your-agent",
     "words-on-screen",
-    "your-brand"
-  ]
+    "your-brand",
+    "music-and-sound",
+    "one-video-three-formats",
+    "exporting-your-video"
+  ],
+  "icon": "BookOpen01Icon"
 }

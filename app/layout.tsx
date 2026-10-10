@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Manrope, Outfit } from "next/font/google";
+import { Geist, Geist_Mono, Manrope } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import "./globals.css";
 import { OpenPanelComponent } from "@openpanel/nextjs";
+import { STUDIO_BAR_SCRIPT } from "@/lib/studio-bar";
 import { cn } from "@/lib/utils";
 import { ThemeShortcut } from "./theme-shortcut";
 
@@ -16,11 +17,6 @@ const geistSans = Geist({
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-const outfit = Outfit({
-  variable: "--font-display",
   subsets: ["latin"],
 });
 
@@ -75,11 +71,16 @@ export default function RootLayout({
         "antialiased",
         geistSans.variable,
         geistMono.variable,
-        outfit.variable,
         "font-sans",
         inter.variable,
       )}
     >
+      <head>
+        <script
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: restores the dismissed studio bar before first paint
+          dangerouslySetInnerHTML={{ __html: STUDIO_BAR_SCRIPT }}
+        />
+      </head>
       <body className="min-h-full flex flex-col">
         <NuqsAdapter>
           <ThemeProvider
@@ -98,6 +99,9 @@ export default function RootLayout({
           trackScreenViews
           trackAttributes
           trackOutgoingLinks
+          // /embed/* runs inside MCP App iframes in chat hosts; its URL carries
+          // the user's props, so nothing there is tracked.
+          filter="function () { return !window.location.pathname.startsWith('/embed/'); }"
         />
       </body>
     </html>

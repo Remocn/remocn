@@ -9,6 +9,7 @@
     "ui",
     "shaders",
     "filters",
+    "captions",
     "icons",
     "ui-blocks",
     "ai",
@@ -16,6 +17,7 @@
     "social",
     "templates",
     "effects",
+    "motion-graphics",
     "compositions"
   ]
 }

@@ -1,0 +1,44 @@
+---
+title: Captions
+date: 2026-10-08
+---
+
+A new Captions tab with thirty-one subtitle styles that follow a real voiceover. Each one reads a timed transcript in the `Caption` shape from `@remotion/captions`, splits it into short pages, and animates every word the moment it is spoken. Whisper, the OpenAI API, ElevenLabs or an existing `.srt` file all produce that transcript, and [Get a transcript](/docs/captions/getting-started/get-a-transcript) has a recipe for each. Every style renders only its text block, so you place it yourself, and [Positioning](/docs/captions/getting-started/positioning) has the safe zones for landscape and vertical video.
+
+<ChangelogPreview name="caption-karaoke" />
+
+### New components
+
+- [Karaoke](/docs/captions/components/caption-karaoke) — each word fills with colour left to right exactly as it is spoken, with the whole phrase readable before the voice reaches it.
+- [Highlight Box](/docs/captions/components/caption-highlight-box) — a solid box travels behind the word being spoken, sliding from word to word as the voice moves on.
+- [Active Pop](/docs/captions/components/caption-active-pop) — the spoken word turns to the accent colour and springs up in scale, then settles back.
+- [Underline](/docs/captions/components/caption-underline) — a bar slides under the word being spoken while the text itself stays untouched.
+- [Dim Progress](/docs/captions/components/caption-dim-progress) — the whole phrase sits dimmed and each word brightens as it is spoken, with no motion at all.
+- [Weight](/docs/captions/components/caption-weight) — the spoken word swells from a light weight to a heavy one without shifting the line.
+- [Outline](/docs/captions/components/caption-outline) — heavy-stroked captions that stay readable over any footage, with the spoken word switching to a contrast colour.
+- [Word Pop](/docs/captions/components/caption-word-pop) — one large word at a time, each popping in on a spring.
+- [Bounce In](/docs/captions/components/caption-bounce-in) — each word springs into place with a little overshoot and the phrase builds word by word.
+- [Blur In](/docs/captions/components/caption-blur-in) — each word resolves out of a soft blur, for captions that arrive quietly.
+- [Rise](/docs/captions/components/caption-rise) — each word slides up out of a mask at its baseline, with no bounce and no scale.
+- [Typewriter](/docs/captions/components/caption-typewriter) — each word types out at the pace it is spoken, with a caret that blinks through pauses.
+- [Scramble](/docs/captions/components/caption-scramble) — each word arrives as random glyphs and decodes left to right into the real letters.
+- [Slot](/docs/captions/components/caption-slot) — one short line at a time, each new phrase rolling up as the previous one rolls out.
+- [Stack](/docs/captions/components/caption-stack) — kinetic captions stacked a couple of words per line, with each page's keyword set large on its own line.
+- [Subtitle](/docs/captions/components/caption-subtitle) — classic broadcast subtitles on a translucent plate, with no word-level animation.
+- [Marker](/docs/captions/components/caption-marker) — the words that matter get a highlighter swipe the moment they are spoken.
+- [Emoji](/docs/captions/components/caption-emoji) — an emoji pops up above a chosen word when it is spoken and stays until the phrase leaves.
+- [Speaker](/docs/captions/components/caption-speaker) — dialogue captions where every phrase takes its speaker's colour.
+- [Prosody](/docs/captions/components/caption-prosody) — word size follows the delivery, so drawn-out words land large and rushed words stay small.
+- [Timeline](/docs/captions/components/caption-timeline) — the whole transcript slides under a fixed playhead on a time strip, so every pause shows up as space.
+- [Teleprompter](/docs/captions/components/caption-teleprompter) — the transcript scrolls through a short window with the current line centred.
+- [Split Flap](/docs/captions/components/caption-split-flap) — every letter clatters through a few characters on its own flap tile before landing, like a departure board.
+- [Label Maker](/docs/captions/components/caption-label-maker) — each phrase is punched letter by letter into a strip of embossing tape.
+- [Drop](/docs/captions/components/caption-drop) — each word falls into place and bounces, and the phrase drops out of frame when the speaker pauses.
+- [Stamp](/docs/captions/components/caption-stamp) — the words that matter slam down as a rubber stamp.
+- [Handwrite](/docs/captions/components/caption-handwrite) — each word is inked in by hand at the pace it is spoken.
+- [Redact](/docs/captions/components/caption-redact) — the phrase starts blacked out and each bar pulls away as its word is spoken.
+- [Knockout](/docs/captions/components/caption-knockout) — a solid plate with the words cut clean through it, so the footage shows through the letters.
+- [Slice](/docs/captions/components/caption-slice) — each word arrives cut in two, the halves sliding in from opposite sides and locking together.
+- [Cube](/docs/captions/components/caption-cube) — each new phrase turns into view as the next face of a 3D cube.
+
+<ChangelogPreview name="caption-highlight-box" />

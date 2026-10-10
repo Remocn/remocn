@@ -1,9 +1,9 @@
 ---
 title: AI
-description: Animated AI tool interfaces — chat composers and CLI welcome screens that type a prompt
+description: Animated AI tool interfaces — chat composers and CLI welcome screens that type a prompt, and an agent run that streams the answer
 ---
 
-Recreations of the interfaces people open every day to talk to AI — chat composers and coding-agent CLIs. Each one types a prompt on the timeline and shares the same `useTypewriter` hook and `caret` primitive.
+Recreations of the interfaces people open every day to talk to AI. The chat composers and coding-agent CLIs type a prompt on the timeline and share the same `useTypewriter` hook and `caret` primitive. Agent Run is brand-neutral and shows what happens after Enter — tool calls and a streamed answer.
 
 ## Chat composers
 
@@ -45,6 +45,19 @@ Recreations of the interfaces people open every day to talk to AI — chat compo
       description: "OpenCode TUI welcome screen — types a query into the input below the wordmark",
       status: "stable",
       href: "/docs/ai/opencode",
+    },
+  ]}
+/>
+
+## Agent runs
+
+<ComponentCardGrid
+  items={[
+    {
+      name: "AgentRun",
+      description: "Brand-neutral agent run — tool calls resolve against a real-seconds timer, then the markdown answer streams in bursts",
+      status: "stable",
+      href: "/docs/ai/agent-run",
     },
   ]}
 />

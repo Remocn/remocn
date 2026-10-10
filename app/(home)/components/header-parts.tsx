@@ -38,13 +38,27 @@ export function HeaderLogo() {
   );
 }
 
-export function HeaderActions() {
+export function HeaderActions({ cta = false }: { cta?: boolean }) {
   return (
     <div className="flex items-center gap-2">
       <div className="hidden sm:block">
         <GithubButton />
       </div>
       <ThemeToggle />
+      {cta && (
+        <Link
+          href="/docs/getting-started/introduction"
+          data-track="cta_clicked"
+          data-cta="get_started_header"
+          data-destination="/docs/getting-started/introduction"
+          className={cn(
+            buttonVariants({ size: "sm" }),
+            "hidden h-9 rounded-full px-4 sm:inline-flex",
+          )}
+        >
+          Get started
+        </Link>
+      )}
 
       <Sheet>
         <SheetTrigger

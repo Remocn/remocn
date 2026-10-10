@@ -1,9 +1,11 @@
-import { Renderer, Program, Mesh, Color, Triangle } from 'ogl';
-import React, { useEffect, useRef, useMemo, useCallback } from 'react';
+import { Color, Mesh, Program, Renderer, Triangle } from "ogl";
+import type React from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 
 type Vec2 = [number, number];
 
-export interface FaultyTerminalProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface FaultyTerminalProps
+  extends React.HTMLAttributes<HTMLDivElement> {
   scale?: number;
   gridMul?: Vec2;
   digitSize?: number;
@@ -116,13 +118,10 @@ float pattern(vec2 p, out vec2 q, out vec2 r) {
   return fbm(p + r);
 }
 
-float digit(vec2 p){
-    vec2 grid = uGridMul * 15.0;
-    vec2 s = floor(p * grid) / grid;
-    p = p * grid;
+float cellIntensity(vec2 s){
     vec2 q, r;
     float intensity = pattern(s * 0.1, q, r) * 1.3 - 0.03;
-    
+
     if(uUseMouse > 0.5){
         vec2 mouseWorld = uMouse * uScale;
         float distToMouse = distance(s, mouseWorld);
@@ -141,7 +140,13 @@ float digit(vec2 p){
         float fadeAlpha = smoothstep(0.0, 1.0, cellProgress);
         intensity *= fadeAlpha;
     }
-    
+
+    return intensity;
+}
+
+float digit(vec2 p, float intensity){
+    vec2 grid = uGridMul * 15.0;
+    p = p * grid;
     p = fract(p);
     p *= uDigitSize;
     
@@ -186,12 +191,16 @@ vec3 getColor(vec2 p){
       p.x += extra;
     }
 
-    float middle = digit(p);
-    
+    vec2 grid = uGridMul * 15.0;
+    vec2 s = floor(p * grid) / grid;
+    float intensity = cellIntensity(s);
+
+    float middle = digit(p, intensity);
+
     const float off = 0.002;
-    float sum = digit(p + vec2(-off, -off)) + digit(p + vec2(0.0, -off)) + digit(p + vec2(off, -off)) +
-                digit(p + vec2(-off, 0.0)) + digit(p + vec2(0.0, 0.0)) + digit(p + vec2(off, 0.0)) +
-                digit(p + vec2(-off, off)) + digit(p + vec2(0.0, off)) + digit(p + vec2(off, off));
+    float sum = digit(p + vec2(-off, -off), intensity) + digit(p + vec2(0.0, -off), intensity) + digit(p + vec2(off, -off), intensity) +
+                digit(p + vec2(-off, 0.0), intensity) + digit(p, intensity) + digit(p + vec2(off, 0.0), intensity) +
+                digit(p + vec2(-off, off), intensity) + digit(p + vec2(0.0, off), intensity) + digit(p + vec2(off, off), intensity);
     
     vec3 baseColor = vec3(0.9) * middle + sum * 0.1 * vec3(1.0) * bar;
     return baseColor;
@@ -241,14 +250,18 @@ void main() {
 `;
 
 function hexToRgb(hex: string): [number, number, number] {
-  let h = hex.replace('#', '').trim();
+  let h = hex.replace("#", "").trim();
   if (h.length === 3)
     h = h
-      .split('')
-      .map(c => c + c)
-      .join('');
+      .split("")
+      .map((c) => c + c)
+      .join("");
   const num = parseInt(h.slice(0, 6), 16);
-  return [((num >> 16) & 255) / 255, ((num >> 8) & 255) / 255, (num & 255) / 255];
+  return [
+    ((num >> 16) & 255) / 255,
+    ((num >> 8) & 255) / 255,
+    (num & 255) / 255,
+  ];
 }
 
 export default function FaultyTerminal({
@@ -264,7 +277,7 @@ export default function FaultyTerminal({
   chromaticAberration = 0,
   dither = 0,
   curvature = 0.2,
-  tint = '#ffffff',
+  tint = "#ffffff",
   mouseReact = true,
   mouseStrength = 0.2,
   dpr = Math.min(window.devicePixelRatio || 1, 2),
@@ -288,7 +301,10 @@ export default function FaultyTerminal({
 
   const tintVec = useMemo(() => hexToRgb(tint), [tint]);
 
-  const ditherValue = useMemo(() => (typeof dither === 'boolean' ? (dither ? 1 : 0) : dither), [dither]);
+  const ditherValue = useMemo(
+    () => (typeof dither === "boolean" ? (dither ? 1 : 0) : dither),
+    [dither],
+  );
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
     const ctn = containerRef.current;
@@ -299,6 +315,7 @@ export default function FaultyTerminal({
     mouseRef.current = { x, y };
   }, []);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: timeOffset is only read in cleanup to reseed the ref — recreating the WebGL context on its change is not wanted
   useEffect(() => {
     const ctn = containerRef.current;
     if (!ctn) return;
@@ -316,7 +333,11 @@ export default function FaultyTerminal({
       uniforms: {
         iTime: { value: 0 },
         iResolution: {
-          value: new Color(gl.canvas.width, gl.canvas.height, gl.canvas.width / gl.canvas.height)
+          value: new Color(
+            gl.canvas.width,
+            gl.canvas.height,
+            gl.canvas.width / gl.canvas.height,
+          ),
         },
         uScale: { value: scale },
 
@@ -331,15 +352,18 @@ export default function FaultyTerminal({
         uCurvature: { value: curvature },
         uTint: { value: new Color(tintVec[0], tintVec[1], tintVec[2]) },
         uMouse: {
-          value: new Float32Array([smoothMouseRef.current.x, smoothMouseRef.current.y])
+          value: new Float32Array([
+            smoothMouseRef.current.x,
+            smoothMouseRef.current.y,
+          ]),
         },
         uMouseStrength: { value: mouseStrength },
         uUseMouse: { value: mouseReact ? 1 : 0 },
         uPageLoadProgress: { value: pageLoadAnimation ? 0 : 1 },
         uUsePageLoadAnimation: { value: pageLoadAnimation ? 1 : 0 },
         uBrightness: { value: brightness },
-        uLightMode: { value: lightMode ? 1 : 0 }
-      }
+        uLightMode: { value: lightMode ? 1 : 0 },
+      },
     });
     programRef.current = program;
 
@@ -351,7 +375,7 @@ export default function FaultyTerminal({
       program.uniforms.iResolution.value = new Color(
         gl.canvas.width,
         gl.canvas.height,
-        gl.canvas.width / gl.canvas.height
+        gl.canvas.width / gl.canvas.height,
       );
     }
 
@@ -395,17 +419,38 @@ export default function FaultyTerminal({
 
       renderer.render({ scene: mesh });
     };
+
+    let inViewport = true;
+    const syncRunning = () => {
+      const shouldRun = inViewport && !document.hidden;
+      if (shouldRun && rafRef.current === 0) {
+        rafRef.current = requestAnimationFrame(update);
+      } else if (!shouldRun && rafRef.current !== 0) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = 0;
+      }
+    };
+    const intersectionObserver = new IntersectionObserver(([entry]) => {
+      inViewport = entry.isIntersecting;
+      syncRunning();
+    });
+    intersectionObserver.observe(ctn);
+    document.addEventListener("visibilitychange", syncRunning);
+
     rafRef.current = requestAnimationFrame(update);
     ctn.appendChild(gl.canvas);
 
-    if (mouseReact) ctn.addEventListener('mousemove', handleMouseMove);
+    if (mouseReact) ctn.addEventListener("mousemove", handleMouseMove);
 
     return () => {
       cancelAnimationFrame(rafRef.current);
+      rafRef.current = 0;
+      intersectionObserver.disconnect();
+      document.removeEventListener("visibilitychange", syncRunning);
       resizeObserver.disconnect();
-      if (mouseReact) ctn.removeEventListener('mousemove', handleMouseMove);
+      if (mouseReact) ctn.removeEventListener("mousemove", handleMouseMove);
       if (gl.canvas.parentElement === ctn) ctn.removeChild(gl.canvas);
-      gl.getExtension('WEBGL_lose_context')?.loseContext();
+      gl.getExtension("WEBGL_lose_context")?.loseContext();
       loadAnimationStartRef.current = 0;
       timeOffsetRef.current = timeOffset ?? Math.random() * 100;
     };
@@ -429,10 +474,15 @@ export default function FaultyTerminal({
     pageLoadAnimation,
     brightness,
     lightMode,
-    handleMouseMove
+    handleMouseMove,
   ]);
 
   return (
-    <div ref={containerRef} className={`w-full h-full relative overflow-hidden ${className}`} style={style} {...rest} />
+    <div
+      ref={containerRef}
+      className={`w-full h-full relative overflow-hidden ${className}`}
+      style={style}
+      {...rest}
+    />
   );
 }

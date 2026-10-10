@@ -1,0 +1,77 @@
+---
+title: Product demo
+description: A ~50-second video where your product is on camera doing its job — one flow, start to finish
+---
+
+This is the video where your product does the talking. A recreated app screen acts out your core flow — something is clicked, the UI responds, the result lands — pixel-perfect and scripted, which is why it looks better than any screen recording. No cursor hunting for a button, no loading spinners, no stray notifications. In the [Feature announcement](/docs/guides/feature-announcement) this is one beat called the demo; here that beat grows into the whole video.
+
+## The storyboard
+
+1. **The setup** — one line naming who this is for and the job to be done.
+2. **The screen appears** — your app UI slides in, calm, no action yet. Let the viewer see where they are.
+3. **Step one** — the flow begins: something is clicked or typed, the UI responds.
+4. **Step two** — the next step of the same flow, given room to be seen.
+5. **Step three** — the last step; the flow completes on camera.
+6. **The payoff** — the outcome on screen, plus one line saying what just happened in the user's terms.
+7. **The close** — a terminal types your install command or URL, then your logo.
+
+The three flow steps are most of the runtime. Everything else frames them.
+
+## Your words
+
+- **Product name**
+- **Setup line** — who this is for and the job, one sentence
+- **The one flow** — told as three steps, each a short sentence describing what happens on screen ("the user pastes a link", "a preview builds itself", "the share button lights up")
+- **Payoff line** — what the user just got, in their words
+- **Install command or URL** — one, not both
+- **Closing line**
+- **Accent color** — one hex value; optional, the default lime looks good
+
+Pick one flow. A demo that shows three features demos none — the viewer should finish the video able to retell the flow from memory. If your product has three flows worth showing, that's three videos.
+
+Have a logo? Drop the SVG into the project folder and mention the file name in the prompt. No logo — your agent will use the product name as a wordmark.
+
+Struggling with the lines? [Words on screen](/docs/guides/words-on-screen) is the cheat sheet.
+
+## The prompt
+
+```text
+I'm making a product demo video with remocn (remocn.dev).
+
+Build a ~50-second, 1920×1080, 30fps demo video for <PRODUCT NAME> in this
+Remotion project, using remocn components — install anything you need with
+`npx shadcn add @remocn/<name>`:
+
+1. Setup — one calm line: "<SETUP LINE>".
+2. The screen — a recreated app screen for <PRODUCT NAME> slides in and
+   settles. No action yet — just the interface at rest.
+3. Step one — <FLOW STEP 1>. Show the interaction and the UI responding.
+4. Step two — <FLOW STEP 2>. Same screen, the flow continuing.
+5. Step three — <FLOW STEP 3>. The flow completes on camera.
+6. Payoff — the outcome stays on screen while one line lands:
+   "<PAYOFF LINE>".
+7. Close — a terminal line that types itself: `<INSTALL COMMAND OR URL>`,
+   then my logo (<LOGO FILE, or: use the product name as a wordmark>) with
+   a closing line: "<CLOSING LINE>".
+
+The app screen is the star: recreate a clean, believable version of my UI
+and script every interaction — deliberate clicks, typing that a viewer can
+follow, responses that land with a beat of rest. Give the three flow steps
+the most screen time. Style: warm dark background (#141318), off-white
+text, one accent color <ACCENT COLOR>, Manrope. Keep transitions restrained
+— the screen holds still, the flow moves. Use my copy exactly as written.
+```
+
+## Directing the result
+
+- "Step two goes by too fast — I can't see what was clicked."
+- "The screen should look more like my app — here's a screenshot."
+- "Hold the payoff longer before the close."
+- "The typing is too quick — slow it to a human pace."
+- "Cut straight from the setup line to the screen."
+
+More directing vocabulary: [Directing your agent](/docs/guides/directing-your-agent).
+
+## Get the file
+
+Ask your agent: **"Render the video."** You'll get an `.mp4` in the project folder, ready to post.

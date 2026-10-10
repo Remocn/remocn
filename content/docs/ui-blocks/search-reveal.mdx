@@ -1,0 +1,93 @@
+---
+title: Search Reveal
+description: Construction circles expand into a search field, type your product name, and reveal an abstract graphic panel
+component: search-reveal
+vibe: premium
+length: 90
+useWhen:
+  - "A product introduction should begin with a search for its name."
+  - "A short geometric opening should resolve into a familiar interface element."
+  - "A search scene needs editable copy and palette without external assets."
+avoidWhen:
+  - "Words should fly and morph between phrases — use `kinetic-morph-text`."
+  - "The opening should stay entirely abstract — use `radial-burst`."
+  - "Typing should resemble a command-line session — use `terminal-simulator`."
+---
+
+<ComponentPreview name="search-reveal" />
+
+<InstallBlock name="search-reveal" />
+
+## Usage
+
+Two fine construction circles expand, then snap into a short white dash.
+The dash stretches into a search pill, types `remocn`, and reveals a purple
+panel with contour rings and graphic accents. Corner markers follow the
+field and then the expanding panel.
+
+```tsx
+import { SearchReveal } from "@/components/remocn/search-reveal";
+
+export const Intro = () => <SearchReveal text="remocn" />;
+```
+
+This is a simulated search interface for video. It does not accept keyboard
+input or perform a search. Edit the text through props or the preview controls.
+All motion and cursor timing come from the Remotion frame; no assets, fonts,
+CSS animation clocks, or network requests are required.
+
+## Timing
+
+At 30 fps and the default speed:
+
+| Frames | Motion |
+| --- | --- |
+| 0–25 | Overlapping circles expand beyond the frame |
+| 26–48 | Short dash stretches and levels into a search field |
+| 52–78 | Caret appears and `remocn` types one character at a time |
+| 56–90 | Graphic panel expands from the field into a rectangle |
+| 90–108 | Final pose holds with the caret hidden |
+
+`searchRevealLength` is 90 frames for the default copy. Longer text or slower
+typing extends the animation. `getSearchRevealDuration({ text, framesPerCharacter,
+speed })` returns the full preview duration, including an 18-frame hold, at
+30 fps. For another frame rate, multiply by `fps / 30` and round up. The docs
+preview updates its duration automatically. After completion the final pose
+stays visible, ready for a cut to the next scene.
+
+## Minimal variation
+
+```tsx
+<SearchReveal
+  text="Find your next idea"
+  fieldWidth={640}
+  showPanel={false}
+  showGuides={false}
+  framesPerCharacter={3}
+/>
+```
+
+The scene scales to fit the composition while retaining its proportions.
+Long copy automatically reduces its font size to fit the field. Typing keeps
+Unicode grapheme clusters intact. `reducedMotion` immediately displays the
+finished composition, suitable when a host opts into a static preview.
+
+<PropsTable title="Props"
+  rows={[
+    { name: "text", type: "string", default: '"remocn"', description: "Search copy, revealed one grapheme at a time" },
+    { name: "fieldWidth", type: "number", default: "464", description: "Final field width at 1280×720, clamped to 320–640" },
+    { name: "fontSize", type: "number", default: "34", description: "Maximum text size, clamped to 18–54 and reduced for long copy" },
+    { name: "framesPerCharacter", type: "number", default: "4", description: "Typing interval at 30 fps, clamped to 1–12" },
+    { name: "showPanel", type: "boolean", default: "true", description: "Reveal the abstract graphic panel behind the field" },
+    { name: "showGuides", type: "boolean", default: "true", description: "Show construction ticks, corner crosses, and fine guide lines" },
+    { name: "color", type: "string", default: '"#26232b"', description: "Text, caret, and corner markers" },
+    { name: "fieldColor", type: "string", default: '"#ffffff"', description: "Search field and contour ring color" },
+    { name: "ringColor", type: "string", default: '"#cbc5cf"', description: "Construction circles, guide lines, and search icon" },
+    { name: "panelColor", type: "string", default: '"#a800b7"', description: "Graphic panel background, remocn primary purple" },
+    { name: "accentColor", type: "string", default: '"#e8f99a"', description: "Flower and graphic accents" },
+    { name: "backgroundColor", type: "string", default: '"#f5f1f5"', description: "Full-frame background; accepts transparent" },
+    { name: "speed", type: "number", default: "1", description: "Playback multiplier; zero freezes the opening frame" },
+    { name: "reducedMotion", type: "boolean", default: "false", description: "Show the static finished composition" },
+    { name: "className", type: "string", description: "Optional full-frame root class" },
+  ]}
+/>

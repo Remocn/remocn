@@ -1,0 +1,68 @@
+---
+title: Teaser
+description: The ~15-second pre-launch video — something is coming, here is its name, here is the date
+---
+
+The teaser is the shortest video in these guides. Fifteen seconds, one job: something is coming, here is its name, here is the date or the waitlist link. You make it before launch day — when there's nothing to demo yet and the whole point is the itch. Short is the feature: a fifteen-second teaser loops well in a feed and earns rewatches. Resist adding beats.
+
+## The storyboard
+
+1. **The itch** — one line naming the problem or the hunger. No product yet.
+2. **The tease** — a second line promising something is coming. Still no name.
+3. **The reveal** — the product name lands, with one quiet line on what it is.
+4. **The date** — the launch date, or "Join the waitlist", big and alone.
+5. **The lockup** — your logo or wordmark and the URL.
+
+Five beats is the ceiling. If you're tempted to add a sixth, you're making a [Launch video](/docs/guides/launch-video) — save it for launch day.
+
+## Your words
+
+Six blanks, and most of them are one line:
+
+- **Product name**
+- **Two tease lines** — six words or fewer each; the first names the itch, the second promises relief
+- **What-it-is line** — one plain line for under the name
+- **The date or CTA** — "March 12" or "Join the waitlist"
+- **The URL**
+- **Accent color** — one hex value; optional, the default lime looks good
+
+Have a logo? Drop the SVG into the project folder and mention the file name in the prompt. No logo — your agent will use the product name as a wordmark.
+
+Struggling with the lines? [Words on screen](/docs/guides/words-on-screen) is the cheat sheet.
+
+## The prompt
+
+```text
+I'm making a pre-launch teaser with remocn (remocn.dev).
+
+Build a ~15-second, 1920×1080, 30fps teaser for <PRODUCT NAME> in this
+Remotion project, using remocn components — install anything you need with
+`npx shadcn add @remocn/<name>`:
+
+1. The itch — one line lands alone: "<TEASE LINE 1>".
+2. The tease — the second line takes its place: "<TEASE LINE 2>".
+3. The reveal — "<PRODUCT NAME>" lands big, uncovered by a swirling shader
+   transition (shader-swirl as a transition cover), with one quiet line
+   under it: "<WHAT-IT-IS LINE>".
+4. The date — "<DATE OR CTA>" alone on screen, big.
+5. The lockup — my logo (<LOGO FILE, or: use the product name as a wordmark>)
+   with the URL underneath: "<URL>".
+
+Style: warm dark background (#141318), off-white text, one accent color
+<ACCENT COLOR>, Manrope. One quiet shader-simplex-noise field runs behind the
+entire video with a radial scrim for readability. Five beats, no filler —
+each beat holds just long enough to read. Use my copy exactly as written.
+```
+
+## Directing the result
+
+- "The tease lines go by too fast — hold each one longer."
+- "The reveal should hit harder — bigger, faster in."
+- "Put the date in the accent color."
+- "Tighten it to twelve seconds."
+
+More directing vocabulary: [Directing your agent](/docs/guides/directing-your-agent).
+
+## Get the file
+
+Ask your agent: **"Render the video."** You'll get an `.mp4` in the project folder, ready to post.

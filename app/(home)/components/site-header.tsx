@@ -8,7 +8,7 @@ export function SiteHeader() {
     <StickyHeaderShell>
       <HeaderLogo />
       <NavDesktop links={NAV_LINKS} />
-      <HeaderActions />
+      <HeaderActions cta />
     </StickyHeaderShell>
   );
 }

@@ -1,0 +1,137 @@
+---
+title: Echo Stack
+description: A word focuses in at the center while outline copies of it unfold above and below and keep drifting, like the one clear line on a spinning drum
+component: echo-stack
+vibe: premium
+length: 26
+useWhen:
+  - "A one-word statement (a value, a promise) should hold the screen for a while and still feel alive."
+  - "You want repetition to add weight to a word without adding any other text."
+  - "A beat in a sequence of single words, where each word gets the same treatment and only the text changes."
+avoidWhen:
+  - "The word should just appear and stay still — use `focus-blur-resolve`."
+  - "The repeats should run sideways as a strip of text — use `infinite-marquee`."
+  - "The screen should fill with rows of text rather than a column around one word — use `type-wall`."
+---
+
+<ComponentPreview name="echo-stack" />
+
+<InstallBlock name="echo-stack" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { AbsoluteFill, Composition } from "remotion";
+import { EchoStack } from "@/components/remocn/echo-stack";
+
+const Beat = () => (
+  <AbsoluteFill style={{ backgroundColor: "#0a0a0a" }}>
+    <EchoStack text="Bold." />
+  </AbsoluteFill>
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="EchoStack"
+    component={Beat}
+    durationInFrames={120}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The word focuses in over 14 frames. From frame 8 the echoes unfold out of it:
+the column starts compressed and opens to its full pitch by frame 26. After
+that the column keeps scrolling one row every `cycle` frames in `direction`,
+and loops without a seam. Echoes are hidden while they pass behind the word
+and fade out toward the edges, so only about `echoes` rows show on each side.
+
+The echo outline is built from the filled glyphs with an SVG filter rather than
+a text stroke. Variable fonts keep overlapping contours inside letters like M
+and K, and a text stroke draws them. The component paints no background and
+centers the word in its parent. Sizes scale with `height / 720`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "text",
+      type: "string",
+      default: "\"Bold.\"",
+      description: "The word at the center",
+    },
+    {
+      name: "fontSize",
+      type: "number",
+      default: "170",
+      description: "Font size in reference px at 720p",
+    },
+    {
+      name: "fontWeight",
+      type: "number",
+      default: "800",
+      description: "Font weight",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "Inter",
+      description: "Font family",
+    },
+    {
+      name: "color",
+      type: "string",
+      default: "\"#fafafa\"",
+      description: "Color of the main word",
+    },
+    {
+      name: "echoColor",
+      type: "string",
+      default: "same as color",
+      description: "Outline color of the echoes",
+    },
+    {
+      name: "echoes",
+      type: "number",
+      default: "3",
+      description: "Echo rows on each side before they fade out",
+    },
+    {
+      name: "echoOpacity",
+      type: "number",
+      default: "0.35",
+      description: "Opacity of the nearest echo",
+    },
+    {
+      name: "strokeWidth",
+      type: "number",
+      default: "1.5",
+      description: "Echo outline width in reference px",
+    },
+    {
+      name: "direction",
+      type: "\"up\" | \"down\"",
+      default: "\"up\"",
+      description: "Which way the column drifts",
+    },
+    {
+      name: "cycle",
+      type: "number",
+      default: "60",
+      description: "Frames for the column to move one row",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Timeline speed multiplier",
+    },
+    {
+      name: "className",
+      type: "string",
+      description: "Optional className passed to the wrapper",
+    },
+  ]}
+/>

@@ -1,0 +1,70 @@
+import {
+  type ComponentConfig,
+  enumVariants,
+  FONT_WEIGHT_OPTIONS,
+  FPS,
+  H,
+  W,
+} from "@/lib/customizer-config";
+import { getTypeFossilDuration, typeFossilDefaultDrafts } from ".";
+export const typeFossilConfig: ComponentConfig = {
+  componentName: "TypeFossil",
+  importPath: "@/components/remocn/type-fossil",
+  controls: {
+    text: { type: "text-content", default: "Form", description: "Final word" },
+    drafts: {
+      type: "text-content",
+      default: typeFossilDefaultDrafts,
+      description: "Drafts (separate with |)",
+    },
+    layers: {
+      type: "number",
+      default: 16,
+      min: 4,
+      max: 24,
+      step: 1,
+      description: "Contour layers",
+      hiddenFromList: false,
+    },
+    depth: {
+      type: "number",
+      default: 100,
+      min: 50,
+      max: 150,
+      step: 5,
+      description: "Slice depth",
+      hiddenFromList: false,
+    },
+    fontSize: {
+      type: "number",
+      default: 220,
+      min: 24,
+      max: 300,
+      step: 1,
+      description: "Font size",
+      hiddenFromList: false,
+    },
+    fontWeight: {
+      type: "enum",
+      default: "600",
+      variants: enumVariants(FONT_WEIGHT_OPTIONS),
+      description: "Font weight",
+    },
+    color: { type: "color", default: "#302b26", description: "Ink" },
+    accentColor: {
+      type: "color",
+      default: "#a800b7",
+      description: "Contours",
+    },
+    backgroundColor: {
+      type: "color",
+      default: "#eeeae2",
+      description: "Background",
+    },
+  },
+  durationInFrames: getTypeFossilDuration(),
+  getDurationInFrames: (values) => getTypeFossilDuration(values),
+  fps: FPS,
+  compositionWidth: W,
+  compositionHeight: H,
+};

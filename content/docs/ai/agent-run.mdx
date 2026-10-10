@@ -1,0 +1,219 @@
+---
+title: Agent Run
+description: A brand-neutral AI agent run that thinks, calls tools against a real-seconds timer and streams a markdown answer in bursts
+component: agent-run
+vibe: tech
+length: 310
+useWhen:
+  - "A product demo needs the beat after the prompt, where an AI agent plans, calls tools and lands on a specific answer."
+  - "The video should prove real work happened, with tool calls resolving one by one while a timer counts real seconds."
+  - "The AI feature is your own, so the interface must stay brand-neutral with one accent color."
+  - "The reply is a short markdown answer with a heading, bullets, a small code block or citations that must read clearly on the final frame."
+avoidWhen:
+  - "The scene is a prompt being typed into a recognizable chat product — use `claude-chat` or `chat-gpt` instead."
+  - "The agent is a coding CLI in a terminal — use `claude-code` or `terminal-simulator`."
+  - "Only a code snippet should appear or change, with no chat around it — use `code-morph` or `glass-code-block`."
+  - "A single line should type itself out with no interface around it — use `typewriter`."
+---
+
+<ComponentPreview name="agent-run" />
+
+<InstallBlock name="agent-run" />
+
+## Usage
+
+`AgentRun` is the part of an AI product video that happens after the prompt.
+The panel shows the prompt someone just sent, a `Thinking` status over a
+short plan, then tool calls that resolve one after another while the header
+timer counts real seconds. Then the answer streams in as markdown, in bursts.
+It is brand-neutral: neutral surfaces, one accent for the running spinners and
+the citation chips, and a light or dark theme.
+
+```tsx
+import { Backdrop } from "@/components/remocn/backdrop";
+import { AgentRun } from "@/components/remocn/agent-run";
+
+export const AgentScene = () => (
+  <Backdrop
+    fill={{ type: "color", value: "#ececea" }}
+    padding={0}
+    radius={0}
+    shadow=""
+  >
+    <AgentRun />
+  </Backdrop>
+);
+```
+
+The component paints no background and centers its panel in the parent.
+Sizes are reference pixels at a 720px-tall frame. They scale by
+`height / 720`, capped so the 800px panel and its margins fit the width. The
+panel height follows the frame, so square and vertical compositions show more
+of the run at once. Everything derives from the Remotion frame and the seed,
+so seeking and rendering are deterministic.
+
+The component uses the system font stack. If your project loads Inter and
+JetBrains Mono, for example with `@remotion/google-fonts`, it picks them up.
+
+### Your own run
+
+Pass a `run`: the prompt, a short plan, the tool steps with their real
+durations in seconds, and the answer as markdown. The answer supports these:
+
+- `#` and `##` headings
+- paragraphs
+- `-` bullets
+- `**bold**` and inline code
+- `[n]` citations
+- fenced code blocks
+
+`getAgentRunDuration(run)` returns the composition length. If you also pass
+`seed`, `compression` or `speed` to the component, pass the same values as the
+second argument.
+
+```tsx
+import { Composition } from "remotion";
+import { Backdrop } from "@/components/remocn/backdrop";
+import {
+  AgentRun,
+  type AgentRunScript,
+  getAgentRunDuration,
+} from "@/components/remocn/agent-run";
+
+const run: AgentRunScript = {
+  title: "Pro plan churn",
+  prompt: "Which Pro accounts are likely to churn this month?",
+  plan: [
+    "Pull weekly active seats for every Pro account",
+    "Compare them with renewal dates and support load",
+  ],
+  steps: [
+    {
+      icon: "database",
+      name: "Run SQL",
+      detail: "active seats by account, last 60 days",
+      duration: 2.6,
+    },
+    {
+      icon: "book",
+      name: "Read 9 sources",
+      duration: 1.8,
+      sources: [
+        "CRM notes",
+        "Support tickets",
+        "Renewal calendar",
+        "billing.example.com",
+        "Usage report",
+        "QBR decks",
+        "Churn survey",
+        "Seat audit",
+        "Pricing page",
+      ],
+    },
+  ],
+  answer: [
+    "## 14 Pro accounts are at risk",
+    "",
+    "Active seats fell below 40% on 14 accounts that renew within 30 days [1].",
+    "",
+    "- 9 of them opened a billing ticket this month [2]",
+    "- 3 lost the admin who set up their workspace",
+    "",
+    "**Next:** send the list to account managers today.",
+  ].join("\n"),
+};
+
+const ChurnScene = () => (
+  <Backdrop
+    fill={{ type: "color", value: "#0a0a0a" }}
+    padding={0}
+    radius={0}
+    shadow=""
+  >
+    <AgentRun run={run} theme="dark" accentColor="#22c55e" />
+  </Backdrop>
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="ChurnScene"
+    component={ChurnScene}
+    durationInFrames={getAgentRunDuration(run)}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+## Timing
+
+At 30 fps with the default run, `seed={1}`, `compression={3}` and `speed={1}`:
+
+| Frames | Beat |
+| --- | --- |
+| 0–14 | The panel fades up 14px, and the prompt bubble follows at 4–14 |
+| 16 | The run starts: the timer reads 0.0s and `Thinking` fades in with its shimmer |
+| 30–48 | The three plan lines stream in bursts |
+| 56–64 | `Thinking` settles into `Thought for 4s` as the timer passes 4.0s |
+| 61–75 | Query analytics runs, and its spinner closes into a check beside `1.4s` |
+| 80–103 | Run SQL, 2.3s on the timer |
+| 108–120 | Search logs, 1.1s |
+| 125–157 | Read 12 sources, 3.2s; five source chips and a `+7` chip pop in at 129–148 |
+| 165–178 | The heading streams in body style, then takes heading style when its line completes at 170 |
+| 177–257 | The paragraph with its citations, then three bullets; the column starts gliding up at 201 |
+| 262–275 | The code panel opens on its fence and four lines stream inside |
+| 280–294 | The fix line lands, and the run ends at 294 with the timer at 27.7s |
+| 294–310 | The header spinner closes into a check and the last chunk finishes fading; the column has glided 279px up |
+| 310–355 | The docs preview holds the finished answer |
+
+The answer arrives in chunks of 1–6 tokens that land on whole frames, 1–4
+frames apart. Now and then a pause adds 4–7 more frames, and each new markdown
+block starts on a fresh chunk after a 2–4 frame beat. Each chunk fades in over
+5 frames. So the text comes in bursts, never at a constant rate per
+character. `seed` changes the rhythm but not the content.
+
+Every line's position is fixed in advance, and content only grows at the
+bottom. The column follows it with overlapping smoothstep glides of 24 frames,
+each starting 16 frames before its content arrives. A glide is three quarters
+done when its line lands, so a burst of new lines lands in view and nothing
+jumps.
+
+`compression` sets how many real seconds pass per video second. A tool call
+lasts `duration / compression` on screen, clamped to 12–120 frames. The timer
+always advances by the step's real `duration`, so the rows and the header
+agree. `agentRunLength` is 310, the component's own motion for the default
+run. `getAgentRunDuration(run, { seed, compression, speed })` adds a 45-frame
+hold and scales the motion by `speed`.
+
+<PropsTable title="Props"
+  rows={[
+    { name: "run", type: "AgentRunScript", default: "defaultAgentRun", description: "The prompt, plan, tool steps and markdown answer; see the tables below" },
+    { name: "theme", type: '"light" | "dark"', default: '"light"', description: "Neutral panel theme" },
+    { name: "accentColor", type: "string", default: '"#2563eb"', description: "The one accent, used for running spinners and citation chips; any CSS color" },
+    { name: "compression", type: "number", default: "3", description: "Real seconds per video second, clamped to 0.25–20; tool calls last duration / compression on screen, clamped to 12–120 frames" },
+    { name: "seed", type: "number", default: "1", description: "Seeds the chunk sizes, intervals and pauses of the plan and answer streams" },
+    { name: "speed", type: "number", default: "1", description: "Playback multiplier; 0 freezes the first frame" },
+    { name: "className", type: "string", description: "Optional class name on the full-frame root" },
+  ]}
+/>
+
+<PropsTable title="AgentRunScript"
+  rows={[
+    { name: "title", type: "string", description: "Thread title in the panel header" },
+    { name: "prompt", type: "string", description: "The message the user sent, shown as the bubble" },
+    { name: "plan", type: "string[]", description: "Two or three short plan lines that stream under Thinking" },
+    { name: "steps", type: "AgentRunStep[]", description: "Tool calls, run one after another" },
+    { name: "answer", type: "string", description: "Markdown answer with # and ## headings, paragraphs, - bullets, bold, inline code, [n] citations and fenced code" },
+  ]}
+/>
+
+<PropsTable title="AgentRunStep"
+  rows={[
+    { name: "name", type: "string", description: "Tool name, such as Run SQL" },
+    { name: "detail", type: "string", description: "Short argument shown muted after the name" },
+    { name: "duration", type: "number", description: "Real seconds; the timer advances by exactly this much during the step" },
+    { name: "icon", type: '"chart" | "database" | "search" | "book" | "globe" | "terminal" | "file"', default: '"book" with sources, else "terminal"', description: "Lucide icon for the row" },
+    { name: "sources", type: "string[]", description: "Source labels; chips pop in during the step and the rest collapse into a +N chip" },
+  ]}
+/>

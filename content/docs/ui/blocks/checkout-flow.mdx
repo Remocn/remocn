@@ -18,8 +18,6 @@ avoidWhen:
 
 A composition scene rendered as a real checkout card. The card and its fields blur-in in sequence, then a cursor flips the billing toggle monthly → yearly, types the card number, ticks the terms checkbox, and presses Pay through loading to success — finishing with a success toast. A pure orchestrator: every animated channel comes from a composed primitive's transition hook.
 
-## Installation
-
 <InstallBlock name="checkout-flow" />
 
 <Note>
@@ -41,9 +39,7 @@ Installing `checkout-flow` automatically installs the shared `remocn-ui` core an
 
 The card surface fades in place (frames 0–18), then the header and each field blur-in staggered, all settling by frame 58. At frame 64 the cursor clicks the Yearly segment and the toggle thumb slides to it. At frame 96 the cursor focuses the card-number field, which types in from frame 100 to 140, then settles to its static filled state as the cursor leaves at 150 — the same frame the terms checkbox is clicked and ticks. At frame 180 the cursor presses Pay: hover → press → loading (186) → success (224). The success toast slides in at frame 224 and auto-dismisses at frame 286.
 
-## Props
-
-<PropsTable
+<PropsTable title="Props"
   rows={[
     {
       name: "title",

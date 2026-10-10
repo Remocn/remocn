@@ -25,6 +25,25 @@ const clamp = {
 };
 const wipeEasing = Easing.inOut(Easing.quad);
 
+export function getTypedSplitWipeText(
+  text: string,
+  frame: number,
+  typeFrames: number,
+) {
+  const characters = Array.from(text);
+  const typedLength = interpolate(
+    frame,
+    [0, Math.max(typeFrames, 0.001)],
+    [0, characters.length],
+    clamp,
+  );
+  const visibleLength = Math.min(
+    characters.length,
+    Math.max(frame >= 0 ? 1 : 0, Math.floor(typedLength) + 1),
+  );
+  return characters.slice(0, visibleLength).join("");
+}
+
 export function TypedSplitWipe({
   prefix,
   anchor,
@@ -42,19 +61,8 @@ export function TypedSplitWipe({
 }: TypedSplitWipeProps) {
   const frame = useCurrentFrame() * speed;
   const fullText = [prefix, anchor, suffix].filter(Boolean).join(" ");
-  const safeTypeFrames = Math.max(typeFrames, 0.001);
   const safeExitFrames = Math.max(exitFrames, 0.001);
-  const typedLength = interpolate(
-    frame,
-    [0, safeTypeFrames],
-    [0, fullText.length],
-    clamp,
-  );
-  const visibleLength = Math.min(
-    fullText.length,
-    Math.max(frame >= 0 ? 1 : 0, Math.floor(typedLength) + 1),
-  );
-  const typedText = fullText.slice(0, visibleLength);
+  const typedText = getTypedSplitWipeText(fullText, frame, typeFrames);
   const suffixWords = suffix.trim().split(/\s+/).filter(Boolean);
 
   const textStyle: CSSProperties = {

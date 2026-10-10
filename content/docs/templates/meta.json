@@ -1,0 +1,11 @@
+{
+  "title": "Templates",
+  "collapsible": false,
+  "pages": [
+    "release-teaser",
+    "brand-guidelines",
+    "workflow-console",
+    "launch-anything",
+    "fomo-limit-orders"
+  ]
+}

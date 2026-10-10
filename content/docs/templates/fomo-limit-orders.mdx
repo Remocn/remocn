@@ -1,0 +1,93 @@
+---
+title: Order Flow
+description: An independent trading-interface demo with fictional data, amber controls, and precise camera choreography
+component: fomo-limit-orders
+vibe: premium
+length: 554
+useWhen:
+  - "You want a complete trading-interface demo built from editable React and SVG layers."
+  - "You need close-up UI choreography, a slider morph, and an order confirmation."
+avoidWhen:
+  - "You need a general product launch story; use `launch-anything`."
+  - "You only need a text transition; use `word-push`."
+---
+
+<ComponentPreview name="fomo-limit-orders" />
+
+<InstallBlock name="fomo-limit-orders" />
+
+**Order Flow** is an 18.47-second product template with graphite surfaces, amber controls,
+an original stepped mark, and a fictional market called **DEMO**. Six editable scenes
+move from a product introduction through a phone interface, exit-price control,
+confirmation, and closing identity. The sample figures are illustrative, not live market data.
+
+The composition is **1108 frames at 60 fps**, **1920×1080**. Everything is React and SVG;
+no reference footage, external logos, or soundtrack is included.
+
+## Usage
+
+```tsx
+import { Composition } from "remotion";
+import {
+  OrderFlow, FOMO_FRAMES, FOMO_FPS, FOMO_WIDTH, FOMO_HEIGHT,
+} from "@/components/remocn/templates/fomo-limit-orders";
+
+export const Root = () => (
+  <Composition
+    id="OrderFlow"
+    component={OrderFlow}
+    durationInFrames={FOMO_FRAMES}
+    fps={FOMO_FPS}
+    width={FOMO_WIDTH}
+    height={FOMO_HEIGHT}
+    defaultProps={{}}
+  />
+);
+```
+
+## Customize
+
+```tsx
+<OrderFlow
+  brandName="Your product"
+  accentColor="#e8b45a"
+  content={{
+    intro: "New in your workspace",
+    ticker: "DEMO",
+    assetName: "Example Market",
+    limitPrice: "$82.00",
+    action: "Set an exit price",
+    closing: "Your price. Your next move.",
+  }}
+/>
+```
+
+`content.ts` holds the text and market figures. `theme` overrides `ink`, `panel`,
+`paper`, `accent`, and `positive`; `accentColor` is a shortcut for the accent.
+The code-native mark lives in `ui.tsx`. `motion.ts` contains timings and camera curves.
+Use short copy for the close-up interface shots.
+
+| Scene | Time |
+| --- | --- |
+| Opening | 0–2.70s |
+| Phone | 2.70–8.00s |
+| Slider | 8.00–10.90s |
+| Price | 10.90–12.60s |
+| Confirmation | 12.60–14.15s |
+| Closing | 14.15–18.47s |
+
+Audio is optional: provide `audioSrc` and `volume` for your own licensed soundtrack.
+The template is silent by default. Bundled Manrope works offline.
+
+## Compatibility and preview
+
+The registry ID `fomo-limit-orders`, the `FomoLimitOrders` export, and existing props
+remain supported. `OrderFlow` is the preferred export; existing imports do not break.
+
+```bash
+bun run studio:fomo
+bun run review:independent-templates --only=order-flow
+bun run render:independent-templates --only=order-flow
+```
+
+The independent render writes `out/order-flow.mp4`.

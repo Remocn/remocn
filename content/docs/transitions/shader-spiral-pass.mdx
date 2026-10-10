@@ -1,0 +1,79 @@
+---
+title: Shader Spiral Pass
+description: Fly into the hero spiral and emerge through its soft center into the next scene
+component: shader-spiral-pass
+vibe: premium
+length: 72
+useWhen:
+  - "A scene change should feel like flying through the center of a luminous spiral."
+  - "A product reveal needs a fast, centered shader journey with a soft exit."
+avoidWhen:
+  - "You need a continuous background without a scene change — use `shader-light-tunnel`."
+  - "A subtle camera push is enough — use `push-through`."
+---
+
+<ComponentPreview name="shader-spiral-pass" />
+
+<InstallBlock name="shader-spiral-pass" />
+
+## Usage
+
+`shaderSpiralPass()` covers the outgoing scene with the original hero spiral,
+accelerates the camera straight toward its center, then opens a feathered exit
+onto the next scene. The vanishing point remains centered throughout the move.
+The incoming scene settles as the tunnel passes beyond the frame.
+
+The transition reuses [Light Tunnel](/docs/shaders/components/shader-light-tunnel),
+including its fast inward flow, rotating ribbons, fixed color phase, halftone
+and soft center. Installing the transition installs that dependency as well.
+
+```tsx
+import { TransitionSeries, linearTiming } from "@remotion/transitions";
+import { shaderSpiralPass } from "@/components/remocn/shader-spiral-pass";
+
+export const MyVideo = () => (
+  <TransitionSeries>
+    <TransitionSeries.Sequence durationInFrames={120}>
+      <SceneA />
+    </TransitionSeries.Sequence>
+    <TransitionSeries.Transition
+      timing={linearTiming({ durationInFrames: 72 })}
+      presentation={shaderSpiralPass({ spirals: 3, zoom: 14 })}
+    />
+    <TransitionSeries.Sequence durationInFrames={120}>
+      <SceneB />
+    </TransitionSeries.Sequence>
+  </TransitionSeries>
+);
+```
+
+Use `linearTiming`: camera acceleration, shader coverage and the exit are built
+into the presentation. The default transition takes 72 frames (2.4 seconds at
+30 fps); the preview includes holds before and after it. Give both scenes their
+own opaque backgrounds for a complete scene exchange.
+
+## Props
+
+<PropsTable rows={[
+  { name: "speed", type: "number", default: "1", description: "Shader flow rate, clamped to 0–5. At 0 the material clock stops, but the camera and scene transition still follow presentation progress." },
+  { name: "spirals", type: "number", default: "3", description: "Hero ribbon repetitions, rounded and clamped to 1–6." },
+  { name: "twist", type: "number", default: "0.7", description: "Spiral winding and circular motion, clamped to 0–2." },
+  { name: "zoom", type: "number", default: "14", description: "Camera magnification reached during the pass, clamped to 2–24." },
+  { name: "softness", type: "number", default: "0.12", description: "Maximum exit feather width as a fraction of the shorter composition dimension, clamped to 0.02–0.3. Also capped at 12% of the current opening radius to keep the scene inside the exit." },
+  { name: "timeOffset", type: "number", default: "0", description: "Initial shader time in seconds." },
+]} />
+
+## Rendering
+
+WebGL2 renders the opaque spiral, and a radial mask on the incoming React scene
+confines it to the central exit. The mask stays in screen space while the scene
+scales inside it. Its narrow feather lies inside the opening, so text cannot
+show through the surrounding ribbons. The exit opens during the final 36% of
+the transition. Scenes remain ordinary HTML layers; no screenshots,
+HTML capture or network textures are needed. The outgoing scene is exchanged
+only after the shader fully covers it. The exit expands beyond the diagonal
+of the composition, leaving no shader residue at the end in landscape or portrait.
+
+Time and camera movement derive from transition progress and duration. Seeking
+reproduces the same frame. GPU resources are disposed when the presentation
+ends; WebGL allocation and compilation failures produce explicit render errors.

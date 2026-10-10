@@ -19,8 +19,6 @@ avoidWhen:
 
 A state atom representing a complete select dropdown: a trigger button and a panel of selectable items. Its appearance (opened, closed) is a pure function of the `state` prop. Pass a state directly or drive it from the Remotion timeline via `useCurrentState`. The component reads no frame — only the state value you give it. The panel reveals below the trigger with opacity, scale, and vertical translation animations.
 
-## Installation
-
 <InstallBlock name="select" />
 
 <Note>
@@ -120,9 +118,7 @@ Preview a single SelectItem:
 
 When you install `select`, the `select-item` atom is automatically pulled in via `registryDependencies` — no separate install needed. The `Select` container derives each row's state from the `selectedIndex`, `highlightedIndex`, and `pressedIndex` props, or you can override a row's visual with `itemStyles`.
 
-## Props
-
-<PropsTable
+<PropsTable title="Props"
   rows={[
     {
       name: "state",

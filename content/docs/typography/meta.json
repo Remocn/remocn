@@ -3,6 +3,9 @@
   "defaultOpen": true,
   "pages": [
     "index",
+    "inline-word-roll",
+    "shader-text-reveal",
+    "type-fossil",
     "soft-blur-in",
     "per-character-rise",
     "bottom-up-letters",
@@ -27,12 +30,14 @@
     "shadow-sweep-text",
     "outline-fill-track-text",
     "gradient-scale-cut-text",
+    "rush-type",
     "fade-through",
     "shared-axis-y",
     "shared-axis-z",
     "strikethrough-replace",
     "short-slide-right",
     "kinetic-center-build",
+    "kinetic-morph-text",
     "kinetic-warp",
     "short-slide-down",
     "staggered-fade-up",
@@ -58,6 +63,17 @@
     "perspective-squeeze",
     "extrude-pop",
     "chromatic-wave",
-    "stretch-in"
-  ]
+    "stretch-in",
+    "selection-snap",
+    "echo-stack",
+    "type-wall",
+    "ring-text",
+    "period-drop",
+    "outline-trace",
+    "glyph-anatomy",
+    "stripe-type",
+    "path-ride",
+    "type-repeater"
+  ],
+  "icon": "TextFontIcon"
 }

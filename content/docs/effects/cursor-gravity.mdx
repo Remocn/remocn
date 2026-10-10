@@ -1,0 +1,87 @@
+---
+title: Cursor Gravity
+description: A rounded triangular cursor tugs a button out of the screen edge with pulsed elastic resistance
+component: cursor-gravity
+vibe: playful
+length: 151
+useWhen:
+  - "An empty scene should reveal a call to action through a physical pulling gesture."
+  - "A button needs to feel extracted from beyond the frame with tension, recoil, and release."
+avoidWhen:
+  - "A cursor must accurately demonstrate an existing interface — use simulated-cursor."
+  - "Two complete scenes need to swap — this reveals one element rather than replacing the whole frame."
+---
+
+<ComponentPreview name="cursor-gravity" />
+
+<InstallBlock name="cursor-gravity" />
+
+## Usage
+
+An empty scene. A soft triangular cursor arrives from below, approaches the
+right edge and catches a hidden button. Two quick tugs pull its leading edge
+into view, pause under load, and recoil. The button's back remains outside the
+frame, stretching the surface into a narrow neck. A final pull frees the whole
+button, which settles at center as the cursor exits below.
+
+```tsx
+import { CursorGravity } from "@/components/remocn/cursor-gravity";
+
+export const Scene = () => <CursorGravity label="Create something" />;
+```
+
+`Tension` controls the recoil and surface deformation. The cursor’s rear bows backward under each tug while its tip stays at the
+attachment point, then springs back as the effort releases. The pulse is in the
+movement itself: a fast pull, a short hold, a small release, then a stronger
+pull. All motion is frame-driven, including the spring and cursor shape.
+
+## Custom content
+
+The button has a 300 × 88 reference-pixel content slot. Supply `children` to
+replace its label and arrow with your own content. The surrounding surface is
+still the elastic button; text remains unstretched as it travels with the
+material. Use compact content that fits the slot.
+
+```tsx
+<CursorGravity color="#e8ef9b" backgroundColor="#201426" tension={1.2}>
+  <span style={{ fontSize: 26 }}>Start creating ↗</span>
+</CursorGravity>
+```
+
+The composition's actual right edge is always the extraction boundary,
+including in portrait and square renders. Element sizes scale with the smaller
+of `width / 1280` and `height / 720`. A transparent background lets the button
+appear over an existing scene.
+
+## Timing
+
+Reference frames at 30 fps and `speed={1}`:
+
+| Frames | Motion |
+| --- | --- |
+| 0–10 | Empty scene |
+| 10–39 | Triangular cursor enters from below |
+| 39–48 | Cursor approaches and catches the right edge |
+| 48–70 | First tug, hold, and recoil |
+| 70–94 | Stronger second tug, hold, and recoil |
+| 94–132 | Final pull; the trailing edge releases and springs inward |
+| 132–151 | Button settles; cursor finishes exiting below |
+| 151–180 | Centered button holds |
+
+`cursorGravityLength` is 151, when the reveal and cursor exit have finished.
+`getCursorGravityDuration({ speed })` includes the final hold and returns
+frames at 30 fps. Multiply by `fps / 30` and round up for another frame rate.
+Playback duration in seconds is consistent across frame rates. The final
+button stays in place after the sequence ends.
+
+<PropsTable title="Props" rows={[
+  { name: "children", type: "ReactNode", description: "Replace the label and arrow; fits a 300 × 88 content slot" },
+  { name: "label", type: "string", default: '"Create something"', description: "Default button label; long text truncates; ignored with children" },
+  { name: "tension", type: "number", default: "1", description: "Elastic neck deformation and recoil, clamped to 0–1.5" },
+  { name: "cursorColor", type: "string", default: '"#fffaf0"', description: "Rounded triangular cursor and short attachment thread" },
+  { name: "color", type: "string", default: '"#fffaf0"', description: "Elastic button surface" },
+  { name: "textColor", type: "string", default: '"#32153c"', description: "Button label and arrow" },
+  { name: "backgroundColor", type: "string", default: '"#a800b7"', description: "Full-frame background; accepts transparent" },
+  { name: "speed", type: "number", default: "1", description: "Time multiplier; zero or negative freezes the empty initial frame" },
+  { name: "className", type: "string", description: "Class on the full-frame root" },
+]} />

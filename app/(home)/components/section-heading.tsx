@@ -9,7 +9,6 @@ import { FadeUp } from "./fade-up";
  * An optional `action` slot sits inline on the right at desktop widths.
  */
 export function SectionHeading({
-  eyebrow,
   title,
   lead,
   action,

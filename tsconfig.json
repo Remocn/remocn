@@ -20,6 +20,12 @@
       }
     ],
     "paths": {
+      "@/components/remocn/typed-split-wipe": [
+        "./registry/remocn/typed-split-wipe/index.tsx"
+      ],
+      "@/components/remocn/shader-text-reveal": [
+        "./registry/remocn/shader-text-reveal/index.tsx"
+      ],
       "@/lib/remocn-icons": ["./registry/remocn-icons/icons-core/index.ts"],
       "@/lib/remocn-ui": ["./registry/remocn-ui/core/index.ts"],
       "@/lib/remocn-ui/*": ["./registry/remocn-ui/core/*"],
@@ -28,6 +34,7 @@
       "@/lib/remocn/canvas-presentation": [
         "./registry/remocn/canvas-presentation/index.tsx"
       ],
+      "@/lib/remocn/caption-core": ["./registry/remocn/caption-core/index.ts"],
       "@/components/remocn/brush": ["./registry/remocn/brush/index.tsx"],
       "@/components/remocn/handwrite": [
         "./registry/remocn/handwrite/index.tsx"
@@ -70,6 +77,9 @@
       ],
       "@/components/remocn/use-select-item-transition": [
         "./registry/remocn-ui/select-item/use-select-item-transition.ts"
+      ],
+      "@/components/remocn/use-select-menu-transition": [
+        "./registry/remocn-ui/select-menu/use-select-menu-transition.ts"
       ],
       "@/components/remocn/use-slider-transition": [
         "./registry/remocn-ui/slider/use-slider-transition.ts"
@@ -135,6 +145,9 @@
       "@/components/remocn/shader-grain-gradient": [
         "./registry/remocn/shader-grain-gradient/index.tsx"
       ],
+      "@/components/remocn/shader-light-tunnel": [
+        "./registry/remocn/shader-light-tunnel/index.tsx"
+      ],
       "@/components/remocn/shader-warp": [
         "./registry/remocn/shader-warp/index.tsx"
       ],
@@ -161,7 +174,13 @@
       ],
       "@/components/remocn/reel": ["./registry/remocn/reel/index.tsx"],
       "@/components/remocn/*": ["./registry/remocn-ui/*/index.tsx"],
-      "@/*": ["./*"]
+      "@/*": ["./*"],
+      "@/components/remocn/word-push": [
+        "./registry/remocn/word-push/index.tsx"
+      ],
+      "@/components/remocn/radial-burst": [
+        "./registry/remocn/radial-burst/index.tsx"
+      ]
     }
   },
   "include": [
@@ -172,5 +191,10 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": ["node_modules", "out", "**/__tests__/**"]
+  "exclude": [
+    "node_modules",
+    "out",
+    "**/__tests__/**",
+    "plugins/remocn/skills/studio/assets"
+  ]
 }

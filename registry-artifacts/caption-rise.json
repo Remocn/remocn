@@ -1,0 +1,17 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "caption-rise",
+  "title": "Caption Rise",
+  "description": "Each word slides up out of a mask at its baseline the moment it is spoken, with no bounce and no scale.",
+  "dependencies": ["remotion", "@remotion/captions"],
+  "registryDependencies": ["@remocn/caption-core"],
+  "files": [
+    {
+      "path": "registry/remocn/caption-rise/index.tsx",
+      "content": "\"use client\";\n\nimport { Fragment } from \"react\";\nimport { Easing, interpolate } from \"remotion\";\nimport {\n  type CaptionBaseProps,\n  DEFAULT_HOLD_MS,\n  getExitWindowMs,\n  groupCaptionWords,\n  useCaptions,\n} from \"@/lib/remocn/caption-core\";\n\nexport interface CaptionRiseProps extends CaptionBaseProps {\n  shadow?: boolean;\n}\n\nconst EXIT_MS = 220;\nconst RISE_MS = 260;\nconst START_EM = 1.6;\nconst CLIP = \"inset(-0.2em -0.6em -0.35em -0.6em)\";\nconst LEGIBILITY_SHADOW =\n  \"0 2px 3px rgba(0, 0, 0, 0.5), 0 4px 16px rgba(0, 0, 0, 0.35)\";\n\nconst riseEasing = Easing.bezier(0.16, 1, 0.3, 1);\n\nexport function CaptionRise({\n  captions,\n  combineTokensWithinMilliseconds = 1200,\n  holdMs = DEFAULT_HOLD_MS,\n  fontSize = 64,\n  fontWeight = 800,\n  color = \"#ffffff\",\n  shadow = true,\n  className,\n}: CaptionRiseProps) {\n  const state = useCaptions({\n    captions,\n    combineTokensWithinMilliseconds,\n    holdMs,\n  });\n  if (!state) return null;\n\n  const exit = state.endsInSilence\n    ? interpolate(\n        state.untilEndMs,\n        [0, getExitWindowMs(state, EXIT_MS)],\n        [0, 1],\n        {\n          extrapolateLeft: \"clamp\",\n          extrapolateRight: \"clamp\",\n        },\n      )\n    : 1;\n\n  return (\n    <div\n      className={className}\n      style={{\n        fontSize,\n        fontWeight,\n        color,\n        lineHeight: 1.2,\n        textAlign: \"center\",\n        opacity: exit,\n      }}\n    >\n      {groupCaptionWords(state.tokens).map((word, w) => (\n        <Fragment key={`${state.pageIndex}-${word[0].index}`}>\n          {w > 0 && \" \"}\n          <span style={{ display: \"inline-block\", whiteSpace: \"nowrap\" }}>\n            {word.map(({ index, token }) => {\n              const sinceMs = state.timeMs - token.fromMs;\n              const p =\n                sinceMs < 0\n                  ? 0\n                  : interpolate(sinceMs, [0, RISE_MS], [0, 1], {\n                      easing: riseEasing,\n                      extrapolateLeft: \"clamp\",\n                      extrapolateRight: \"clamp\",\n                    });\n              return (\n                <span\n                  key={index}\n                  style={{\n                    display: \"inline-block\",\n                    clipPath: CLIP,\n                  }}\n                >\n                  <span\n                    style={{\n                      display: \"inline-block\",\n                      opacity: sinceMs < 0 ? 0 : 1,\n                      transform: `translateY(${(1 - p) * START_EM}em)`,\n                      textShadow: shadow ? LEGIBILITY_SHADOW : undefined,\n                    }}\n                  >\n                    {token.text}\n                  </span>\n                </span>\n              );\n            })}\n          </span>\n        </Fragment>\n      ))}\n    </div>\n  );\n}\n",
+      "type": "registry:component",
+      "target": "components/remocn/caption-rise.tsx"
+    }
+  ],
+  "type": "registry:component"
+}

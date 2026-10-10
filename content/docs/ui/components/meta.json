@@ -24,6 +24,7 @@
     "radio",
     "resizable",
     "select",
+    "select-menu",
     "skeleton",
     "skeleton-block",
     "slider",
@@ -35,5 +36,6 @@
     "toggle-group",
     "tooltip",
     "typing-indicator"
-  ]
+  ],
+  "icon": "ToggleOnIcon"
 }

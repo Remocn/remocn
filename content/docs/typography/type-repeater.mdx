@@ -1,0 +1,132 @@
+---
+title: Type Repeater
+description: An After Effects style repeater on a word, where copies unfold into a tunnel, a spiral or a fan behind it, breathe, then fold back into the word
+component: type-repeater
+vibe: playful
+length: 90
+useWhen:
+  - "One word should hit hard for a beat, with repetition giving it depth and energy around a still, readable center."
+  - "You want a motion-graphics flourish for a title card, a section break or a loop."
+  - "A single word needs a backdrop made from itself, in the word's color stepping to an accent."
+avoidWhen:
+  - "The repeats should stack in a quiet vertical column above and below the word — use `echo-stack`."
+  - "The whole frame should fill with scrolling rows of the word — use `type-wall`."
+  - "The word should be carried by a spinning 3D band — use `ring-text`."
+---
+
+<ComponentPreview name="type-repeater" />
+
+<InstallBlock name="type-repeater" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { AbsoluteFill, Composition } from "remotion";
+import { TypeRepeater } from "@/components/remocn/type-repeater";
+
+const Beat = () => (
+  <AbsoluteFill style={{ backgroundColor: "#ff4d1a" }}>
+    <TypeRepeater text="Repeat" mode="tunnel" color="#111111" accent="#fafafa" />
+  </AbsoluteFill>
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="TypeRepeater"
+    component={Beat}
+    durationInFrames={100}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Copy 0 is the word itself and never moves. Every further copy gets one more
+step of the mode's transform, scaled by the spread:
+
+- `tunnel` grows each copy by 1.2× around the center, a zoom tunnel behind the
+  word.
+- `spiral` grows each copy by 1.1× and turns it 12°.
+- `fan` turns copies 11° to alternating sides around a pivot below the word.
+
+The word comes in over ten frames. The spread opens over frames 10 to 34 with
+a small overshoot, breathes by 6% until frame 70, and folds back to zero by
+frame 90. Copies step from `color` toward `accent` and fade with their index.
+With `outline` on, the copies are outlines built from their filled glyphs by
+an SVG filter, which keeps the variable font's overlapping contours out of
+sight.
+
+The component paints no background and centers the word in its parent. Sizes
+scale with `height / 720`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "text",
+      type: "string",
+      default: "\"Repeat\"",
+      description: "The word to repeat",
+    },
+    {
+      name: "mode",
+      type: "\"tunnel\" | \"spiral\" | \"fan\"",
+      default: "\"tunnel\"",
+      description: "The repeater transform",
+    },
+    {
+      name: "copies",
+      type: "number",
+      default: "12",
+      description: "Number of copies including the word",
+    },
+    {
+      name: "fontSize",
+      type: "number",
+      default: "110",
+      description: "Font size in reference px at 720p",
+    },
+    {
+      name: "fontWeight",
+      type: "number",
+      default: "800",
+      description: "Font weight",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "Inter",
+      description: "Font family",
+    },
+    {
+      name: "color",
+      type: "string",
+      default: "\"#fafafa\"",
+      description: "Color of the word and the first copies",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#D97757\"",
+      description: "Color the last copy steps to",
+    },
+    {
+      name: "outline",
+      type: "boolean",
+      default: "true",
+      description: "Draw the copies as outlines",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Timeline speed multiplier",
+    },
+    {
+      name: "className",
+      type: "string",
+      description: "Optional className passed to the wrapper",
+    },
+  ]}
+/>

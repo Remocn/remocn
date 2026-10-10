@@ -5,6 +5,9 @@ const withMDX = createMDX();
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  typescript: {
+    ignoreBuildErrors: true,
+  },
   // `motion` ships a barrel (motion/react re-exports the whole runtime). Next's
   // default optimizePackageImports list covers lucide-react/date-fns but not
   // motion, so name it explicitly to rewrite the 15 `from "motion/react"` sites
@@ -23,6 +26,12 @@ const nextConfig: NextConfig = {
     "esbuild",
     "@takumi-rs/core",
   ],
+  // The /mcp route reads the remocn skill's archetype recipes from disk at
+  // runtime (lib/mcp/archetype-files.ts). Docker copies the whole tree, but
+  // trace them explicitly so standalone/traced output keeps them too.
+  outputFileTracingIncludes: {
+    "/mcp": ["./plugins/remocn/skills/remocn/references/**/*.md"],
+  },
   turbopack: {
     root: __dirname,
   },

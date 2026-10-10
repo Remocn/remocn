@@ -1,0 +1,102 @@
+---
+title: Plugin
+description: Install the remocn plugin for Claude Code or Codex. It turns a one-line brief into a Remotion video built from remocn components, checks the frames, and opens the result in Remocn Studio.
+---
+
+The remocn plugin packages everything an AI agent needs to make a video with remocn: the
+[agent skill](/docs/getting-started/agent-skill), a step-by-step video workflow, two helper agents,
+and a connection to this site's component catalog. One install works in Claude Code and in Codex.
+
+```text
+/remocn:video 30-second product demo for Tasklane, a shared task inbox for small teams
+```
+
+The agent reads your repo for content, plans a storyboard and waits for your go-ahead. Then it
+installs the components, writes the video, renders stills to check how it looks, and offers to open
+the project in [Remocn Studio](https://remocn.studio) for tweaking and export.
+
+## Install
+
+### Claude Code
+
+```text
+/plugin install remocn --marketplace Remocn/remocn
+```
+
+Or from your shell:
+
+```bash
+claude plugin marketplace add Remocn/remocn
+claude plugin install remocn@remocn
+```
+
+### Codex
+
+```bash
+codex plugin marketplace add Remocn/remocn
+codex plugin add remocn@remocn
+```
+
+## What's inside
+
+| Part | What it does |
+|---|---|
+| `/remocn:video <brief>` | The main workflow: brief → archetype → storyboard → install → compose → visual check → hand-off. Stops after the storyboard so you can change direction before any code is written |
+| `/remocn:changelog [range]` | Collects a release from git tags, commits or merged pull requests, writes it as short on-screen lines, and builds a changelog video |
+| `/remocn:add <name>` | Installs one component, reads its docs page, and places it in a `Sequence` with the right length |
+| `/remocn:studio` | Prepares the project for Remocn Studio and opens it there |
+| `remocn` skill | The [agent skill](/docs/getting-started/agent-skill): component tiers, timing rules, composition recipes. Loads on its own for any video work |
+| `video-director` agent | Plans the storyboard: one beat per row, a component per beat, frame budgets that hit the target length |
+| `scene-reviewer` agent | Renders stills at key frames of every beat and checks them for clipped text, empty frames, low contrast and jumps between beats |
+| `remocn` MCP server | Connects to `https://remocn.dev/mcp` for component search, component pages, video plans and live previews |
+
+The agents run in Claude Code. In Codex the video workflow does the same planning and checking
+itself.
+
+## Plugin or skill
+
+The bare skill (`npx skills add Remocn/remocn`) teaches an agent how remocn works and leaves the
+workflow to you. The plugin adds the workflow on top: the storyboard step, project setup, visual
+checks and the Studio hand-off. Both read the same catalog live from this site, and the plugin
+includes the skill, so install one or the other.
+
+The plugin works alongside Remotion's own skills. Remotion's skills answer how Remotion works; the
+remocn plugin decides what goes on screen.
+
+## Project setup it handles
+
+remocn assumes a Remotion project. When the folder is empty, `/remocn:video` creates one with
+`npx create-video --blank`. In either case it then makes three small, visible edits so components
+install and render:
+
+- `components.json` with the `@remocn` registry, because `shadcn init` doesn't recognise Remotion
+  projects
+- the `@/*` path in `tsconfig.json`
+- the same `@/` alias in `remotion.config.ts`, because Remotion's bundler doesn't read tsconfig
+  paths
+
+Videos are written to `src/videos/<slug>/index.tsx` and export a `meta` object with the
+dimensions, frame rate and duration. That layout is what Remocn Studio opens, and it registers each
+video as a composition with id `<slug>` in Remotion Studio too. In a project you already have, the
+agent says which files it will touch and asks first.
+
+## Open in Remocn Studio
+
+Remocn Studio is a desktop app for macOS and Linux that previews a Remotion project live, lets you
+tune elements by hand, and exports mp4. After a video is built, the plugin asks whether to open it
+there:
+
+- **Studio installed:** the plugin starts it and tells you which folder to pick with **Open Folder**
+  (⌘O).
+- **Not installed:** you get the download link and the same steps for afterwards.
+- **Windows:** Studio isn't available, so the plugin skips the offer. Preview with
+  `npx remotion studio` and render with `npx remotion render <slug>`.
+
+The project already carries Studio's manifest (`.remocn/project.json`), so it opens as-is.
+
+## In claude.ai and ChatGPT
+
+Chat apps have no terminal, so the plugin can't install components there. What does work is the
+catalog connection: add `https://remocn.dev/mcp` as a custom connector to search components, read
+their pages, plan a video and preview components inline. Then take the plan to Claude Code or Codex
+to build it.

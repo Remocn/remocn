@@ -1,0 +1,170 @@
+---
+title: Squiggle
+description: A flat line draws itself along a straight course while its wave swims forward and calms, then erases toward the end
+component: squiggle
+vibe: clean
+length: 66
+useWhen:
+  - "A word, a number, or a button needs a live underline or accent on the frame it lands, such as a click, a count finishing, or a beat."
+  - "Two elements should be connected, or two parts of a video separated, by a line that draws itself with energy instead of a static rule."
+  - "A flat vector accent in one brand color is needed many times per video, with no assets, fonts, or texture."
+avoidWhen:
+  - "The underline should look hand-drawn, with ink grain and stop-motion poses — use `ink-underline`."
+  - "The moment needs short lines bursting out of a point, like a click or a pop, rather than one line along a course — use `trim-burst`."
+  - "The accent should convey speed, with streaks rushing past an element — use `speed-lines`."
+  - "The element should be circled rather than underlined or linked — use `scribble-circle`."
+---
+
+<ComponentPreview name="squiggle" />
+
+<InstallBlock name="squiggle" />
+
+## Usage
+
+`Squiggle` draws one flat line along a straight course. The course starts at
+`x, y`, given as fractions of the composition, and runs `length` reference px
+at `angle`. The line is a traveling wave, and its shape is recomputed on every
+frame. While the head runs out, the crests swim forward along the line and
+the amplitude relaxes from lively to calm. After a short hold, the tail erases
+toward the end point. Both ends stay pinned to the course, so the line leaves
+its start and meets its end along the course direction.
+
+```tsx
+import { Backdrop } from "@/components/remocn/backdrop";
+import { Squiggle } from "@/components/remocn/squiggle";
+
+export const Accent = () => (
+  <Backdrop
+    fill={{ type: "color", value: "#002fa7" }}
+    padding={0}
+    radius={0}
+    shadow=""
+  >
+    <Squiggle />
+  </Backdrop>
+);
+```
+
+The component is an overlay. Its root fills the parent box, paints no
+background, and ignores the pointer, so it composites over any scene. Sizes
+are reference px at a 720px-tall composition and scale with `height / 720`,
+like `confetti`, so the same props look the same at 720p, 1080p and 4K. Every
+value derives from the Remotion frame, so seeking and rendering are
+deterministic.
+
+### On a moment
+
+Put the squiggle in a `Sequence` that starts on the event frame, next to the
+element it accents. Here the beat to stress is frame 18. The line fires on
+that frame, draws under the word, and stays. Positions are fractions of the
+frame and the length is in reference px, so convert the word's box with the
+composition size.
+
+```tsx
+import { AbsoluteFill, Sequence, useVideoConfig } from "remotion";
+import { Backdrop } from "@/components/remocn/backdrop";
+import { Squiggle } from "@/components/remocn/squiggle";
+
+const WORD = { left: 530, top: 290, width: 220, height: 88 };
+
+export const Headline = () => {
+  const { width, height } = useVideoConfig();
+
+  return (
+    <Backdrop
+      fill={{ type: "color", value: "#002fa7" }}
+      padding={0}
+      radius={0}
+      shadow=""
+    >
+      <AbsoluteFill>
+        <div
+          style={{
+            position: "absolute",
+            left: WORD.left,
+            top: WORD.top,
+            width: WORD.width,
+            lineHeight: `${WORD.height}px`,
+            textAlign: "center",
+            color: "#fafafa",
+            fontSize: 72,
+            fontWeight: 600,
+          }}
+        >
+          faster
+        </div>
+      </AbsoluteFill>
+      <Sequence from={18}>
+        <Squiggle
+          x={WORD.left / width}
+          y={(WORD.top + WORD.height + 10) / height}
+          length={(WORD.width * 720) / height}
+          erase={false}
+        />
+      </Sequence>
+    </Backdrop>
+  );
+};
+```
+
+To link two elements, start at the first one. Set `angle` to
+`Math.atan2(dy, dx) * 180 / Math.PI`, and pass the distance between them,
+converted to reference px, as `length`. To stagger several accents inside one
+`Sequence`, give them different `delay` values.
+
+## Timing
+
+At 30 fps with `speed={1}` and the default props:
+
+| Frames | Motion |
+| --- | --- |
+| 0 | Nothing is drawn |
+| 0–24 | The head runs out along the line on an ease-out, with 16% drawn on frame 1 and 80% by frame 8 |
+| 0–36 | The wave swims forward 1.5 cycles and the amplitude eases from `amplitude` to `amplitude × (1 − settle)` |
+| 36–48 | The settled line holds still for `hold` frames |
+| 48–66 | The tail erases toward the end point on an ease-in-out, and the pattern drifts another half cycle |
+| 66–80 | The preview stays empty, then loops |
+
+The head moves along the arc length, so a loop or a coil takes as long to draw
+as a plain wave. The crests start at about 6 px per frame and slow to rest by
+frame 36, after the head has landed. The amplitude only ever decreases, so the
+line never overshoots its calm shape.
+
+`squiggleLength` is 66, the frame where the tail reaches the end point. With
+`erase={false}` the motion ends at frame 36 and the line stays.
+`getSquiggleTimeline({ hold, erase })` returns every beat.
+`getSquiggleDuration({ speed, delay, hold, erase })` returns the preview
+length, the motion plus a short rest before the loop: 80 frames by default
+and 60 without the erase. `delay` counts composition frames before the draw
+starts and does not scale with `speed`. `hold` is part of the motion and does.
+For another frame rate, multiply the beat frames by `fps / 30`.
+
+## Variations
+
+`shape="zigzag"` draws sharp corners with miter joins. `shape="loops"` turns
+the wave into a cursive chain of loops, and `shape="coil"` into a spring seen
+from the side. Both sit on the left of the drawing direction, so they stand
+above a line drawn left to right. To hang them below, draw from the other end
+with `angle={180}`. As the phase swims, the loops roll forward like a wheel
+and the coil crawls like a turning screw. `settle={0}` keeps the lively
+height to the end, and `settle={1}` calms any shape into a straight line.
+
+<PropsTable title="Props"
+  rows={[
+    { name: "shape", type: '"wave" | "zigzag" | "loops" | "coil"', default: '"wave"', description: "Smooth sine, sharp triangle, cursive loop chain, or a spring seen from the side" },
+    { name: "x", type: "number", default: "0.375", description: "Start of the course as a 0..1 fraction of the composition width; the default centers the default line on a 16:9 frame" },
+    { name: "y", type: "number", default: "0.5", description: "Start of the course as a 0..1 fraction of the composition height" },
+    { name: "length", type: "number", default: "320", description: "Course length in reference px at a 720px-tall composition" },
+    { name: "angle", type: "number", default: "0", description: "Course direction in degrees; 0 runs right and positive values turn clockwise" },
+    { name: "amplitude", type: "number", default: "14", description: "Half-height of the wave when the draw starts, in reference px" },
+    { name: "wavelength", type: "number", default: "48", description: "Course distance of one cycle in reference px, at least 8" },
+    { name: "weight", type: "number", default: "3", description: "Stroke width in reference px, with round caps" },
+    { name: "color", type: "string", default: '"#ffffff"', description: "Stroke color" },
+    { name: "settle", type: "number", default: "0.5", description: "Share of the amplitude that calms away, from 0 to 1; 1 settles into a straight line" },
+    { name: "hold", type: "number", default: "12", description: "Frames at 30 fps that the settled line rests before the erase" },
+    { name: "erase", type: "boolean", default: "true", description: "Erases the line toward its end point after the hold; false keeps it on screen" },
+    { name: "delay", type: "number", default: "0", description: "Composition frames before the head leaves the start point" },
+    { name: "speed", type: "number", default: "1", description: "Playback multiplier; 0 freezes before anything is drawn" },
+    { name: "className", type: "string", description: "Optional class name on the full-frame root" },
+  ]}
+/>

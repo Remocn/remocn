@@ -1,0 +1,22 @@
+---
+title: Hero shader light tunnel
+date: 2026-09-09
+---
+
+### New components
+
+[Light Tunnel](/docs/shaders/components/shader-light-tunnel) projects the original
+@remocn OpenShaders hero field into a tunnel with straight forward travel.
+The original colors, silk folds and halftone remain intact. The folds rotate
+around a fixed central vanishing point, making the circular motion visible
+throughout the tunnel. Three repetitions of the hero ribbons fill the tunnel
+with more spiral lines. Controls adjust flight speed, spiral motion, spiral
+count, depth and exposure. The hero's material phase stays fixed so its color
+cycle does not dim the ribbons during motion. Light folds stream inward toward
+the center on top of the circular motion, with a fast inward flow inspired by
+the reference clip's 1–3 second tunnel sequence.
+
+The center blends into a soft blur, removing the outlined dark circle at the
+vanishing point while keeping the outer ribbons sharp.
+
+<ChangelogPreview name="shader-light-tunnel" />

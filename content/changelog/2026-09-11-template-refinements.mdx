@@ -1,0 +1,27 @@
+---
+title: Introducing Remocn Templates
+date: 2026-09-11
+---
+
+Start with a complete, editable Remotion video. Remocn Templates bring together scenes, transitions, and motion so you can customize the content and make the result your own.
+
+### Templates
+
+- [Release Teaser](/docs/templates/release-teaser) — a focused product release reveal.
+- [Brand Guidelines](/docs/templates/brand-guidelines) — a brand presentation with typography, colors, and imagery.
+- [Workflow Console](/docs/templates/workflow-console) — a command-driven demo with execution logs and performance charts.
+- [Product Showcase](/docs/templates/launch-anything) — a product story with a button-to-frame transition and interface scenes.
+- [Order Flow](/docs/templates/fomo-limit-orders) — a trading feature demo with editable content and styling.
+
+### Improvements
+
+- [Workflow Console](/docs/templates/workflow-console) now has its own registry ID, import path, and Studio composition name. The former X Ads MCP identifier is retired.
+- [Product Showcase](/docs/templates/launch-anything) keeps the action button close to its headline. Clicking moves the same surface to the center and morphs it continuously into the next scene's frame.
+
+### Fixes
+
+- Workflow Console's chart bars grow from a fixed baseline using transforms instead of animated layout heights; labels retain their proportions throughout the zoom.
+- Workflow Console's recommendation camera uses transform-only motion and a continuous pan with eased zoom, removing layout stepping and the abrupt zoom-start velocity change.
+- Workflow Console's execution log now wipes away completely before the rollout response, instead of stopping at a partially clipped panel.
+- Command carets align vertically with their text. A dedicated inner viewport clips and scrolls long commands without letting them cross the border.
+- Introducing Product and Studio Launch have been removed from the installable catalog. Historical changelog entries remain available without broken live previews.

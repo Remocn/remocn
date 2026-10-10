@@ -1,0 +1,130 @@
+---
+title: Product Showcase
+description: An editorial product film with forest-green accents, original photography, and seven editable demos
+component: launch-anything
+vibe: premium
+length: 800
+useWhen:
+  - "You want a complete 26.7-second product film with editable text and demonstrations."
+  - "Your portfolio needs a continuous laptop camera move through seven product examples."
+avoidWhen:
+  - "You want to introduce a complete visual identity; use `brand-guidelines`."
+  - "You only need a chrome headline; use `shader-text-reveal`."
+---
+
+<ComponentPreview name="launch-anything" />
+
+<InstallBlock name="launch-anything" />
+
+**Product Showcase** is an independent editorial film in cream and forest green.
+Chrome words open onto a sunlit gallery, a code-native laptop, and seven original
+product demos. A geometric symbol field and architectural linework lead into
+ceramic sculptures, a garden courtyard, an editable address, and a frame-shaped mark.
+
+The composition is **1600 frames at 60 fps**, **1920×1080**, **26.67 seconds**.
+Four original AI-generated photographic plates are embedded for offline use.
+The default identities, symbols, and UI examples do not use reference brands or
+real partner logos. Sample metrics are illustrative, not customer claims.
+
+## Usage
+
+```tsx
+import { Composition } from "remotion";
+import {
+  ProductShowcase, LAUNCH_FRAMES, LAUNCH_FPS, LAUNCH_WIDTH, LAUNCH_HEIGHT,
+} from "@/components/remocn/templates/launch-anything";
+
+export const Root = () => (
+  <Composition
+    id="ProductShowcase"
+    component={ProductShowcase}
+    durationInFrames={LAUNCH_FRAMES}
+    fps={LAUNCH_FPS}
+    width={LAUNCH_WIDTH}
+    height={LAUNCH_HEIGHT}
+    defaultProps={{}}
+  />
+);
+```
+
+## Customize
+
+```tsx
+import { staticFile } from "remotion";
+
+<ProductShowcase
+  opening="Good"
+  subject="ideas"
+  brandUrl="yourproduct.example"
+  accentColor="#245744"
+  content={{
+    proof: "Your work.\nA clearer view.",
+    industry: "Built around you",
+    promise: "Made to be yours.",
+    integrations: ["Files", "Messages", "Calendar"],
+  }}
+  screenImages={{
+    dashboard: staticFile("product-dashboard.png"),
+    shoppers: staticFile("mobile-app.png"),
+  }}
+  logoSrc={staticFile("your-mark.svg")}
+/>
+```
+
+`content` overrides the headlines, shop copy, connection message, and integration
+names. `screenImages` replaces any of the seven demos. For compatibility their
+keys remain `dashboard`, `shoppers`, `exchange`, `builder`, `trading`, `loyalty`,
+and `integrations`; the defaults now show a workspace, object catalog, connected tools,
+brief builder, project review, layered notes, and generic integrations.
+
+Screen images use `object-fit: cover`; approximately 1.52:1 images fit best.
+The defaults are animated interface layers, not screenshots.
+`logos` replaces the floating geometric symbol field, and `logoSrc` replaces
+the closing mark. No partner endorsement is implied by the defaults.
+
+The legacy `media` keys map to the new plates:
+
+| Key | Default image |
+| --- | --- |
+| `desk` | Sunlit workbench |
+| `horizon` | Plaster and travertine gallery |
+| `rocket` | Green ceramic sculptures |
+| `earth` | Garden courtyard |
+
+The laptop is drawn in `scenes/showcase.tsx`, independently of the desk photo.
+Keep clear space in the center of a replacement workbench image.
+Use short copy to preserve the montage rhythm. The chrome intro requires WebGL2.
+
+`audioSrc` and `volume` support your own licensed soundtrack.
+The template is silent by default; no reference audio is distributed.
+
+## Scene timing
+
+| Scene | Time | Editable layers |
+| --- | --- | --- |
+| Opening | 0–3.80s | Chrome words, gallery, headline |
+| Action | 3.80–5.90s | Sliding headline, glass button, pointer |
+| Portal | 5.90–7.33s | Rounded aperture and green color sweep |
+| Showcase | 7.33–15.12s | Laptop camera move, seven demos |
+| Symbol field | 15.12–17.02s | Geometric marks and two-line headline |
+| Architecture | 17.02–20.22s | Linework and two title beats |
+| Editorial cuts | 20.22–21.55s | Sculptures, courtyard, headline |
+| Address | 21.55–23.72s | Typed label and green light sweep |
+| Mark | 23.72–26.67s | Slow frame-mark scale-down |
+
+`motion.ts` owns the cut points and camera curve. `scenes/` contains the shots;
+`screens.tsx` contains the product demos. Animation is frame-driven and seek-safe.
+
+## Compatibility and preview
+
+The registry ID `launch-anything`, `LaunchAnything` export, media keys, and
+existing props remain supported. `ProductShowcase` is the preferred export.
+
+```bash
+bun run studio:launch-anything
+bun run review:independent-templates --only=product-showcase
+bun run render:independent-templates --only=product-showcase
+```
+
+The independent render writes `out/product-showcase.mp4`. The existing Studio
+entry includes controls for copy, colors, media, logos, screens, and audio.

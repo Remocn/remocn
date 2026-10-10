@@ -1,0 +1,31 @@
+{
+  "savedAt": "2026-09-09T11:57:45.083Z",
+  "viewportHeight": 927,
+  "values": {
+    "theme": "dark",
+    "maskOnly": false,
+    "offsetTop": -388,
+    "height": 150,
+    "vignette": true,
+    "vignetteW": 92,
+    "vignetteH": 68,
+    "vignetteX": 50,
+    "vignetteY": 58,
+    "vignetteSolid": 14,
+    "vignetteFade": 84,
+    "vertical": true,
+    "verticalTop": 4,
+    "verticalIn": 30,
+    "verticalOut": 88,
+    "verticalEnd": 100,
+    "well": true,
+    "wellW": 44,
+    "wellH": 30,
+    "wellX": 50,
+    "wellY": 31,
+    "wellClear": 46,
+    "wellSolid": 92
+  },
+  "className": "absolute inset-x-0 -top-[388px] h-[150vh] [mask-composite:intersect] [mask-image:radial-gradient(ellipse_92%_68%_at_50%_58%,_black_14%,_transparent_84%),linear-gradient(to_bottom,_transparent_4%,_black_30%,_black_88%,_transparent_100%),radial-gradient(ellipse_44%_30%_at_50%_31%,_transparent_46%,_black_92%)]",
+  "maskImage": "radial-gradient(ellipse 92% 68% at 50% 58%, black 14%, transparent 84%), linear-gradient(to bottom, transparent 4%, black 30%, black 88%, transparent 100%), radial-gradient(ellipse 44% 30% at 50% 31%, transparent 46%, black 92%)"
+}

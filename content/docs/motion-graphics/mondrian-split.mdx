@@ -1,0 +1,142 @@
+---
+title: Mondrian Split
+description: Black lines cut the frame into a De Stijl grid, primaries fill the cells, the grid reflows like rubber, and one cell grows until it is the frame
+component: mondrian-split
+vibe: playful
+length: 133
+useWhen:
+  - "A launch, section break, or product intro needs a bold, flat geometric opener that ends on a clean color field for the title."
+  - "The next scene should appear inside the composition and then take over the frame, so the cut reads as part of the artwork."
+  - "An editorial or design-led brand wants a De Stijl look in its own palette, line weight, and composition seed."
+avoidWhen:
+  - "The opener should feel round and energetic rather than rectilinear — use `radial-burst`."
+  - "Both scenes should stay whole on screen while the cut happens, with no graphic interlude — use `slide-swap` or `whip-pan`."
+  - "The old picture itself should break into blocks and set down as the new one — use `grid-wave`."
+---
+
+<ComponentPreview name="mondrian-split" />
+
+<InstallBlock name="mondrian-split" />
+
+## Usage
+
+`MondrianSplit` is a De Stijl composition that builds itself and then becomes
+the cut. Black lines cut the frame one at a time, each one splitting a single
+cell, until the frame is a balanced grid of a few large planes and several
+small ones. A few cells wipe in with primaries. After a short hold, lines slide
+to new positions and every cell they touch stretches or shrinks with them, like
+a rubber grid. The lines around the expanding cell only ever slide inward, so
+it is squeezed just before it takes over. Then that cell, the largest plane by
+default, pushes its own lines out past the frame edges until it is the frame.
+
+```tsx
+import { Backdrop } from "@/components/remocn/backdrop";
+import { MondrianSplit } from "@/components/remocn/mondrian-split";
+
+export const Opener = () => (
+  <Backdrop
+    fill={{ type: "color", value: "#f3efe6" }}
+    padding={0}
+    radius={0}
+    shadow=""
+  >
+    <MondrianSplit />
+  </Backdrop>
+);
+```
+
+The component paints no background: open cells show whatever is behind it, so
+the backdrop supplies the paper. Without children the expanding cell is a flat
+`fieldColor` field, and the last frame is a clean color for the title that
+follows. The grid is built in composition pixels and cut across its long side,
+so it recomposes for 16:9, 1:1 and 9:16 instead of stretching. Every value
+comes from the Remotion frame and the seed, so seeking and rendering are
+deterministic.
+
+### Carry the next scene
+
+Pass the next scene as children. It appears inside the expanding cell as that
+cell fills, stays framed by the cell while the grid reflows, and owns the frame
+once the lines are gone. The scene is clipped, never scaled. Children see the
+same frame as the component, so keep the scene inside `MondrianSplit` for as
+long as it should play.
+
+```tsx
+import { Backdrop } from "@/components/remocn/backdrop";
+import { MondrianSplit } from "@/components/remocn/mondrian-split";
+
+export const Handoff = () => (
+  <Backdrop
+    fill={{ type: "color", value: "#f3efe6" }}
+    padding={0}
+    radius={0}
+    shadow=""
+  >
+    <MondrianSplit seed={12} splits={9}>
+      <ProductScene />
+    </MondrianSplit>
+  </Backdrop>
+);
+```
+
+Place it over the outgoing scene instead of a backdrop and the open cells keep
+showing that scene while the expanding cell carries the next one in.
+
+## Timing
+
+At 30 fps with the default seven splits and `speed={1}`:
+
+| Frames | Motion |
+| --- | --- |
+| 0–3 | Empty frame |
+| 3–43 | Seven lines cut the frame one at a time, five frames apart |
+| 40–53 | Blue and yellow wipe into two cells |
+| 50–62 | The expanding cell fills with `fieldColor`; children are revealed here |
+| 62–76 | Hold on the finished composition |
+| 76–106 | Three lines slide to new positions, dragging every cell they bound and squeezing the expanding cell |
+| 102–133 | The expanding cell's lines pull in, then push out past the frame edges |
+| 133–145 | Hold on the field or the next scene |
+
+`mondrianSplitLength` is 133 frames, the point where the expanding cell covers
+the frame. `getMondrianSplitDuration({ speed, splits })` adds the 12-frame hold
+and returns frames at 30 fps; multiply by `fps / 30` for another frame rate.
+More splits lengthen the build, so use `getMondrianSplitTimeline({ splits })`
+to place a title against the reveal or the end.
+
+## Variations
+
+`seed` picks the composition, and raising `splits` refines the same grid
+rather than replacing it. `expandCell` ranks cells by size: `0` expands the
+largest plane, higher values hand the frame over from a smaller cell. Set
+`fieldColor="transparent"` to push the grid off and hand back to whatever is
+behind it.
+
+```tsx
+<MondrianSplit
+  seed={21}
+  splits={10}
+  lineWeight={10}
+  expandCell={2}
+  redColor="#e4572e"
+  yellowColor="#f3c63f"
+  blueColor="#2e5aa7"
+  fieldColor="#121212"
+/>
+```
+
+<PropsTable title="Props"
+  rows={[
+    { name: "children", type: "React.ReactNode", description: "Scene shown inside the expanding cell from the moment it fills. It shares the component's frame and is all that remains after the push" },
+    { name: "seed", type: "number", default: "7", description: "Composition seed; every seed gives a different balanced grid" },
+    { name: "splits", type: "number", default: "7", description: "Number of lines, clamped to 3–12, so the grid has one more cell than this" },
+    { name: "lineWeight", type: "number", default: "14", description: "Line thickness at a 720px reference on the shorter side, clamped to 2–48" },
+    { name: "expandCell", type: "number", default: "0", description: "Which cell takes over the frame, ranked by size: 0 is the largest, 1 the next, and so on" },
+    { name: "lineColor", type: "string", default: '"#121212"', description: "Line color" },
+    { name: "redColor", type: "string", default: '"#d62d20"', description: "Fill for the red slot" },
+    { name: "yellowColor", type: "string", default: '"#f4c20d"', description: "Fill for the yellow slot" },
+    { name: "blueColor", type: "string", default: '"#1f4e9e"', description: "Fill for the blue slot" },
+    { name: "fieldColor", type: "string", default: '"#d62d20"', description: "Expanding cell and final frame color, painted under children; transparent hands back to the backdrop" },
+    { name: "speed", type: "number", default: "1", description: "Playback multiplier; 0 freezes the empty first frame" },
+    { name: "className", type: "string", description: "Optional class name on the full-frame root" },
+  ]}
+/>

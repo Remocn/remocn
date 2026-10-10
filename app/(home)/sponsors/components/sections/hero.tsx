@@ -2,7 +2,7 @@ import { ArrowRight, ArrowUpRight } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { FadeUp } from "../../../components/fade-up";
-import { HeroPhosphorBg } from "../../../components/hero-phosphor-bg";
+import { HeroTerminalBg } from "../../../components/hero-terminal-bg";
 
 const OPENPANEL_DASHBOARD_URL = "https://op.kapish.dev/share/overview/hRpldJ";
 const INTRO_GATE = "sponsors-intro";
@@ -41,15 +41,14 @@ function OpenPanelLogo({ className }: { className?: string }) {
 
 export function Hero() {
   return (
-    <section className="relative isolate pt-24 pb-4 sm:pt-28 sm:pb-6">
+    <section className="relative isolate pt-20 pb-4 sm:pt-24 sm:pb-6">
       <div aria-hidden className="absolute inset-0 -z-10">
-        <div className="absolute inset-0 bg-grid-fade" />
-        <HeroPhosphorBg variant="field" />
+        <HeroTerminalBg />
       </div>
       <div className="section">
         <div className="flex flex-col items-center text-center">
           <FadeUp gate={INTRO_GATE} delay={0.06}>
-            <p className="mb-3 font-mono text-xs font-medium text-muted-foreground">
+            <p className="mb-3 font-mono text-xs font-medium text-muted-foreground [text-shadow:0_0_10px_var(--background),0_0_20px_var(--background)]">
               Sponsors
             </p>
           </FadeUp>
@@ -59,7 +58,7 @@ export function Hero() {
             </h1>
           </FadeUp>
           <FadeUp gate={INTRO_GATE} delay={0.16}>
-            <p className="mt-6 max-w-2xl text-pretty text-base leading-relaxed text-muted-foreground sm:text-lg">
+            <p className="mt-6 max-w-2xl text-pretty text-base leading-relaxed text-foreground [text-shadow:0_0_10px_var(--background),0_0_20px_var(--background)] sm:text-lg">
               remocn is open-source and free. Your sponsorship helps us spend
               more time building premium animations and keeping the project
               alive.
@@ -80,9 +79,9 @@ export function Hero() {
                 />
               </Button>
               <Button
-                variant="outline"
+                variant="secondary"
                 size="lg"
-                className="h-11 gap-2 rounded-full px-5 text-sm"
+                className="h-11 gap-2 rounded-full px-5 text-sm font-medium"
                 render={
                   // biome-ignore lint/a11y/useAnchorContent: Base UI render prop merges the button children into this anchor
                   <a

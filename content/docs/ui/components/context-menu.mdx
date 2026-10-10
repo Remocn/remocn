@@ -18,8 +18,6 @@ avoidWhen:
 
 A state atom representing a context menu panel. Its appearance (`opened`, `closed`) is a pure function of the `state` prop. Pass a state directly or drive it from the Remotion timeline via `useCurrentState`. The component reads no frame — only the state value you give it. Unlike `DropdownMenu`, there is no built-in trigger — the context menu opens at the cursor click point and the **caller** positions it there. The panel grows from its top-left corner (the click point) with opacity, scale, and vertical lift.
 
-## Installation
-
 <InstallBlock name="context-menu" />
 
 <Note>
@@ -172,9 +170,7 @@ const rowStyle = useDropdownMenuItemTransition([{ at: 0, state: rowState }]);
 <ContextMenu style={menuStyle} itemStyles={[undefined, rowStyle, undefined, undefined]} />
 ```
 
-## Props
-
-<PropsTable
+<PropsTable title="Props"
   rows={[
     {
       name: "state",

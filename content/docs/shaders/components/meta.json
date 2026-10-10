@@ -2,6 +2,7 @@
   "title": "Shaders",
   "collapsible": false,
   "pages": [
+    "shader-light-tunnel",
     "shader-mesh-gradient",
     "shader-grain-gradient",
     "shader-warp",
@@ -24,5 +25,6 @@
     "shader-gem-smoke",
     "shader-strata",
     "shader-weave"
-  ]
+  ],
+  "icon": "ColorsIcon"
 }

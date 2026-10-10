@@ -2,8 +2,10 @@
 
 import type { Root } from "fumadocs-core/page-tree";
 import { DocsLayout } from "fumadocs-ui/layouts/docs";
+import { SearchTrigger } from "fumadocs-ui/layouts/shared/slots/search-trigger";
 import { usePathname } from "next/navigation";
-import type { ReactNode } from "react";
+import { type ReactNode, useMemo } from "react";
+import { DocsSearchTrigger } from "@/components/docs/docs-search-trigger";
 import { getActiveDocsTab } from "@/lib/docs-tabs";
 import { baseOptions } from "@/lib/layout.shared";
 
@@ -11,8 +13,8 @@ import { baseOptions } from "@/lib/layout.shared";
  * Renders the Fumadocs `DocsLayout` with the sidebar tree that matches the
  * active docs tab. Both trees are built once on the server (in `app/docs/layout`)
  * and handed down; this client shell only picks between them by pathname, so the
- * Components and Primitives tabs each get their own sidebar without moving any
- * files or changing URLs. The page body arrives as server-rendered `children`,
+ * Each docs category gets its own sidebar without moving files or changing
+ * URLs. The page body arrives as server-rendered `children`,
  * so the RSC boundary stays intact — only the layout chrome is client-rendered.
  *
  * The `DocsLayout` props mirror the previous server layout: the custom
@@ -42,16 +44,37 @@ export function DocsShell({
   primitivesTree,
   shadersTree,
   filtersTree,
+  captionsTree,
+  templatesTree,
   iconsTree,
+  componentCount,
   children,
 }: {
   componentsTree: Root;
   primitivesTree: Root;
   shadersTree: Root;
   filtersTree: Root;
+  captionsTree: Root;
+  templatesTree: Root;
   iconsTree: Root;
+  componentCount: number;
   children: ReactNode;
 }) {
+  const searchTriggerFull = useMemo(() => {
+    function SearchTriggerFull({
+      hideIfDisabled,
+    }: {
+      hideIfDisabled?: boolean;
+    }) {
+      return (
+        <DocsSearchTrigger
+          count={componentCount}
+          hideIfDisabled={hideIfDisabled}
+        />
+      );
+    }
+    return SearchTriggerFull;
+  }, [componentCount]);
   const pathname = usePathname();
   const activeTab = getActiveDocsTab(pathname);
   const isIcons = activeTab === "icons";
@@ -60,6 +83,8 @@ export function DocsShell({
     primitives: primitivesTree,
     shaders: shadersTree,
     filters: filtersTree,
+    captions: captionsTree,
+    templates: templatesTree,
     icons: iconsTree,
   };
   const tree = trees[activeTab];
@@ -70,6 +95,9 @@ export function DocsShell({
       {...baseOptions()}
       nav={{ enabled: false }}
       searchToggle={{ enabled: true }}
+      slots={{
+        searchTrigger: { sm: SearchTrigger, full: searchTriggerFull },
+      }}
       themeSwitch={{ enabled: false }}
       sidebar={{ collapsible: false, enabled: !isIcons }}
       containerProps={{

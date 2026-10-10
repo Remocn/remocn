@@ -1,0 +1,90 @@
+---
+title: Light Tunnel
+description: Fly straight through the original OpenShaders hero field mapped into a light tunnel
+component: shader-light-tunnel
+vibe: premium
+length: 90
+useWhen:
+  - "A title reveal or product intro needs a luminous forward flight through a tunnel."
+  - "Light ribbons should have perspective, depth and soft atmospheric glow."
+avoidWhen:
+  - "A quiet background should leave attention on dense UI — use `shader-mesh-gradient`."
+  - "You need a flat liquid distortion instead of forward flight — use `shader-warp`."
+---
+
+<ComponentPreview name="shader-light-tunnel" />
+
+<InstallBlock name="shader-light-tunnel" />
+
+## Usage
+
+The original [@remocn OpenShaders shader](https://openshaders.com/@remocn) from the
+site's hero is projected onto a cylindrical tunnel. Its field equations, colors,
+silk folds and halftone texture are preserved. The adapter changes the field's
+sampling coordinates to create perspective and forward travel. The hero's
+material phase is held fixed, keeping its colors and brightness stable instead
+of cycling through darker phases. Movement comes from the tunnel mapping.
+
+The camera follows a fixed straight axis. The vanishing point stays centered;
+there is no lateral movement or camera roll. Twist winds the material around
+the tube and rotates its folds continuously around the center, while depth
+controls its perspective mapping. At the default settings, the material's
+pattern rotates by about 75 degrees per second. The hero ribbons repeat three
+times around the tunnel by default; `spirals` adjusts their density without
+changing the rotation speed. Folds also travel radially inward, so the light
+streams into the center as it rotates. At default speed, a fold reaches one
+tenth of its starting radius in about one second, independently of rotation.
+This inward flow remains visible with
+`twist={0}` and freezes along with rotation at `speed={0}`.
+
+```tsx
+import { AbsoluteFill } from "remotion";
+import { ShaderLightTunnel } from "@/components/remocn/shader-light-tunnel";
+
+export const Intro = () => (
+  <AbsoluteFill>
+    <ShaderLightTunnel speed={1} twist={0.7} spirals={3} glow={1} />
+    <AbsoluteFill
+      style={{
+        justifyContent: "center",
+        alignItems: "center",
+        color: "white",
+        fontFamily: "Arial, sans-serif",
+        fontSize: 72,
+      }}
+    >
+      Your next idea.
+    </AbsoluteFill>
+  </AbsoluteFill>
+);
+```
+
+The component fills the composition with an opaque background. Overlay titles or
+other React layers separately. The preview runs for 90 frames at 30 fps; the
+shader can run for any duration. It does not automatically fade in or out, and
+the camera path is continuous rather than a seamless loop.
+
+## Props
+
+<PropsTable rows={[
+  { name: "speed", type: "number", default: "1", description: "Forward travel and shader animation rate; clamped to 0–5. At 0 the tunnel is frozen at timeOffset." },
+  { name: "twist", type: "number", default: "0.7", description: "Spiral winding and circular motion of the material; clamped to 0–2. At 0, circular motion stops while forward travel continues." },
+  { name: "spirals", type: "number", default: "3", description: "Repetitions of the hero ribbons around the tunnel. Rounded to an integer and clamped to 1–6; 1 restores the original density." },
+  { name: "glow", type: "number", default: "1", description: "Brightness of the hero material after halftone; clamped to 0–3." },
+  { name: "depth", type: "number", default: "1", description: "Perspective depth scale; clamped to 0.5–2. Higher values show a deeper section of the tunnel." },
+  { name: "timeOffset", type: "number", default: "0", description: "Starting shader time in seconds. Select another part of the camera path." },
+]} />
+
+## Rendering
+
+The original hero field is rendered into an offscreen texture with the tunnel
+coordinate mapping, followed by the original halftone pass. Exposure is applied
+after halftone. A local Gaussian blur softens the vanishing point, blending
+the field's colors instead of masking out a dark circle. Its influence falls
+off smoothly, keeping the outer ribbons and halftone texture sharp.
+No textures are downloaded and no additional shader package is required.
+
+Time comes exclusively from `useCurrentFrame()` and `fps`, so seeking and offline
+renders reproduce the same frame. WebGL2 is required; allocation, compilation
+and context errors fail explicitly. GPU resources are released when the
+component unmounts, and its render target is resized with the composition.

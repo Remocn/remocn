@@ -12,11 +12,10 @@ avoidWhen:
   - "The transition should be a single-block fade with no word-level staging — use `fade-through` for a unified opacity swap instead."
   - "You want the incoming words to build upward or slide in rather than drift-and-fade — use `line-by-line-slide` or `mask-reveal-up` for directional entrances."
   - "There is no outgoing text (first entrance only) — use `micro-scale-fade` or `per-character-rise` for a standalone reveal without a `fromText`."
+  - "The phrases are spoken subtitles timed to audio — use `caption-subtitle` or another caption style, which pages a real transcript."
 ---
 
 <ComponentPreview name="per-word-crossfade" />
-
-## Installation
 
 <InstallBlock name="per-word-crossfade" />
 
@@ -90,9 +89,7 @@ export const RemotionRoot = () => (
 );
 ```
 
-## Props
-
-<PropsTable
+<PropsTable title="Props"
   rows={[
     {
       name: "fromText",

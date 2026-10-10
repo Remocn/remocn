@@ -49,6 +49,8 @@ export interface ComponentConfig {
    */
   dimensions?: { width: number; height: number };
   durationInFrames: number;
+  /** Optional duration for edited copy/timing in the interactive docs preview. */
+  getDurationInFrames?: (values: Record<string, unknown>) => number;
   fps: number;
   compositionWidth: number;
   compositionHeight: number;
@@ -109,7 +111,7 @@ export const SHARED_CONTROLS: InteractivitySchema = {
 };
 
 /** Components that opt out of the shared `speed` control entirely. */
-const NO_SHARED_SPEED = new Set(["backdrop", "stage"]);
+const NO_SHARED_SPEED = new Set(["backdrop", "stage", "fomo-limit-orders"]);
 
 /**
  * Components whose animation rides a shared progress driver that must reach its
@@ -151,7 +153,7 @@ export function resolveSchema(
   schema: InteractivitySchema,
 ): InteractivitySchema {
   const out: InteractivitySchema = { ...schema, ...SHARED_CONTROLS };
-  if (NO_SHARED_SPEED.has(slug)) {
+  if (NO_SHARED_SPEED.has(slug) || slug.startsWith("caption-")) {
     delete out.speed;
     return out;
   }
@@ -160,10 +162,24 @@ export function resolveSchema(
   return out;
 }
 
+function captionsToText(captions: readonly unknown[] | undefined): string {
+  return (captions ?? [])
+    .map((caption) =>
+      caption &&
+      typeof caption === "object" &&
+      "text" in caption &&
+      typeof caption.text === "string"
+        ? caption.text.trim()
+        : "",
+    )
+    .filter(Boolean)
+    .join(" ");
+}
+
 /**
  * Converts one schema field into the customizer's internal control shape.
  * Returns null for field types the docs customizer does not render
- * (`hidden`, transform fields, captions, …).
+ * (`hidden`, transform fields, …).
  */
 export function schemaFieldToControl(
   field: InteractivitySchemaField,
@@ -192,6 +208,12 @@ export function schemaFieldToControl(
       return {
         type: "color",
         default: field.default,
+        label: field.description ?? "",
+      };
+    case "remotion-captions":
+      return {
+        type: "text",
+        default: captionsToText(field.default),
         label: field.description ?? "",
       };
     case "boolean":

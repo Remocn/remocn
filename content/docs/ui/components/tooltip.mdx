@@ -18,8 +18,6 @@ avoidWhen:
 
 A state atom whose appearance (`hidden`, `visible`) is a pure function of the `state` prop. Pass a state directly or drive it from the Remotion timeline via `useCurrentState`. The component reads no frame — only the state value you give it. The tooltip fades in at 0.96 scale, slides 4 px toward the anchor, and rests fully visible; `hidden` reverses the motion. Placement is the caller's responsibility — the tooltip renders inline and the caller wraps it in an absolutely-positioned anchor div.
 
-## Installation
-
 <InstallBlock name="tooltip" />
 
 <Note>
@@ -144,9 +142,7 @@ Placement is the caller's responsibility. The tooltip renders inline — wrap it
 
 For `"bottom"`, use `top: "calc(100% + 12px)"` instead. For `"left"` / `"right"`, use `right: "calc(100% + 12px)"` / `left: "calc(100% + 12px)"` and adjust vertical alignment to `top: "50%"` with `translateY(-50%)`.
 
-## Props
-
-<PropsTable
+<PropsTable title="Props"
   rows={[
     {
       name: "label",

@@ -68,7 +68,7 @@ function serialize(value: unknown, indent: string): string {
   }
   const entries = Object.entries(value as Record<string, unknown>);
   if (entries.length === 0) return "{}";
-  const inner = indent + "  ";
+  const inner = `${indent}  `;
   const lines = entries.map(([k, v]) => {
     const key = IDENT.test(k) ? k : JSON.stringify(k);
     return `${inner}${key}: ${serialize(v, inner)},`;

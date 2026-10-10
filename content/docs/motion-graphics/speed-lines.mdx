@@ -1,0 +1,217 @@
+---
+title: Speed Lines
+description: Parallel streaks trail an element at its real speed and die as it lands with a squash and a small bounce, or radial lines snap onto one point for a manga impact frame
+component: speed-lines
+vibe: playful
+length: 31
+useWhen:
+  - "An element should make a sharp entrance, such as a card, logo, or number that flies in fast, stretches with its speed, and lands with weight, overshooting a little and squashing on impact, while streaks trail it and die as it lands."
+  - "A landing, a number hitting its final value, or a strong beat needs a brief manga-style impact frame of lines converging on one point."
+  - "A flat, recolorable accent should repeat many times in one video without shaders, blur, or images."
+avoidWhen:
+  - "The landing needs a small burst of strokes popping outward from the point rather than lines converging from the frame edges — use `trim-burst`."
+  - "The whole scene should change with a fast camera move rather than one element flying in — use `whip-pan`."
+  - "The element should be circled by hand rather than hit with motion — use `scribble-circle`."
+---
+
+<ComponentPreview name="speed-lines" />
+
+<InstallBlock name="speed-lines" />
+
+## Usage
+
+`SpeedLines` is a motion accent with two modes. In `trail` mode it wraps an
+element and flies its center from `from` to `to`. The element leaves from rest,
+peaks mid-flight and crosses the target still moving at 45% of its top speed.
+A damped spring catches it there: it overshoots by 3.5% of the flight, swings
+back once with a small echo and settles exactly on `to`. `bounce` sets how much
+momentum carries into the landing, and `bounce={0}` stops it dead on the
+target.
+
+The element also changes shape with its motion. While it moves, it stretches
+along its path in proportion to its speed, up to 1.3×, and narrows across it,
+so its area stays the same. Past the target it squashes, down to 0.8× along the
+path and wider across, and rounds out again as the spring pulls it back.
+`squash` scales the deformation, and `squash={0}` keeps the element rigid.
+
+Short parallel streaks shoot past behind it. The element's real velocity drives
+them, as the difference between this frame's position and the previous
+frame's, bounce included. Streaks exist only while the element is fast, each
+one's length is proportional to the speed, and they run parallel to the path.
+Each spawns at a seeded lane across the element's width and slides back like
+air rushing past. As the element brakes, every streak shortens. The last ones
+die on the frame after contact, so the overshoot and the swing back draw none.
+
+```tsx
+import { Backdrop } from "@/components/remocn/backdrop";
+import { SpeedLines } from "@/components/remocn/speed-lines";
+
+export const Entrance = () => (
+  <Backdrop
+    fill={{ type: "color", value: "#002fa7" }}
+    padding={0}
+    radius={0}
+    shadow=""
+  >
+    <SpeedLines
+      from={{ x: -0.25, y: 0.5 }}
+      to={{ x: 0.5, y: 0.5 }}
+      spread={80}
+    >
+      <div
+        style={{
+          padding: "20px 36px",
+          borderRadius: 20,
+          background: "#ffffff",
+          color: "#002fa7",
+          fontFamily: "Inter, sans-serif",
+          fontSize: 40,
+          fontWeight: 600,
+        }}
+      >
+        Shipped
+      </div>
+    </SpeedLines>
+  </Backdrop>
+);
+```
+
+The component fills its parent and paints no background, so it composites over
+any scene. Put it in a full-frame layer. Set `spread` to the element's size
+across the direction of travel, so the streaks leave from behind its silhouette.
+Without children, trail mode flies a disc of diameter `spread`, as in the
+preview. Sizes are reference px at 720p and scale with the composition height.
+Everything derives from the frame and the seed, so seeking and rendering are
+deterministic.
+
+The squash and stretch scale the element around its own center, turned to the
+direction of travel, so it works for any `from` and `to` and the element never
+drifts off its landing point. It deforms children too, text included. For a
+text-heavy card, lower `squash` to about 0.25.
+
+### On a landing
+
+`focus` is an impact frame. Radial lines rush in from the edges of the frame,
+snap onto the point `x`, `y` three frames later, hold for about five frames,
+then retract and vanish. They never come closer to the point than `spread`.
+`getSpeedLinesTimeline` returns `impact`: the contact frame of a trail, where
+the element crosses `to` and the spring takes over, and the snap frame of a
+focus. Start the focus that many frames early, and its lines converge while the
+card flies in and snap on the frame it lands, as the card starts to squash.
+The focus layer comes first, so its rays pass behind the card.
+
+```tsx
+import { Sequence } from "remotion";
+import { Backdrop } from "@/components/remocn/backdrop";
+import {
+  getSpeedLinesTimeline,
+  SpeedLines,
+} from "@/components/remocn/speed-lines";
+
+const ENTER = 20;
+const LAND = ENTER + getSpeedLinesTimeline().impact;
+const FOCUS = getSpeedLinesTimeline({ mode: "focus" }).impact;
+
+export const RevenueBeat = () => (
+  <Backdrop
+    fill={{ type: "color", value: "#0a0a0a" }}
+    padding={0}
+    radius={0}
+    shadow=""
+  >
+    <Sequence from={LAND - FOCUS}>
+      <SpeedLines mode="focus" x={0.5} y={0.5} spread={160} />
+    </Sequence>
+    <Sequence from={ENTER}>
+      <SpeedLines
+        from={{ x: -0.3, y: 0.5 }}
+        to={{ x: 0.5, y: 0.5 }}
+        spread={120}
+      >
+        <div
+          style={{
+            padding: "28px 44px",
+            borderRadius: 24,
+            background: "#fafafa",
+            color: "#0a0a0a",
+            fontFamily: "Inter, sans-serif",
+            fontSize: 64,
+            fontWeight: 600,
+            fontVariantNumeric: "tabular-nums",
+          }}
+        >
+          $128k
+        </div>
+      </SpeedLines>
+    </Sequence>
+  </Backdrop>
+);
+```
+
+For a smaller landing, put `trim-burst` on the same point at `LAND` instead of
+the focus.
+
+## Timing
+
+At 30 fps and `speed={1}`, trail mode with the default `duration={14}`,
+`bounce={0.5}`, `squash={0.5}` and a 960 px flight:
+
+| Frames | Motion |
+| --- | --- |
+| 0 | The element waits at `from`; no streaks yet |
+| 0–4 | Launch; streaks appear once the element passes 5 px per frame, and it stretches as it speeds up |
+| 4–11 | Cruise up to 93 px per frame, stretched up to 1.25× along the path; streaks reach 1.6 frames of travel |
+| 11–14 | Braking; the stretch eases and every streak shortens with the speed |
+| 14 | Contact with `to` (`impact`) at 45% of the top speed; streaks are gone from frame 15 |
+| 16 | Overshoot peak, 34 px (3.5%) past the target, squashed to 0.83× along the path and 1.21× across |
+| 16–21 | Swings back through the target and rounds out |
+| 22 | Echo, 3 px short of the target |
+| 26–31 | Visually at rest from 26, exactly on `to` at 31 (`end`) |
+
+Focus mode:
+
+| Frames | Motion |
+| --- | --- |
+| 0–3 | Rays rush in from the frame edges and accelerate |
+| 3 | Impact: every ray snaps to its closest point, 1–1.6× `spread` away |
+| 3–8 | Hold; the inner ends ease back out by up to 12% |
+| 8–13 | Rays retract to the edges in a seeded order and vanish |
+
+- `speedLinesLength` is 31, the frame where the default trail settles exactly.
+- `getSpeedLinesTimeline({ mode, duration, bounce })` returns `impact` and
+  `end`. For a trail, `impact` is `duration` and `end` adds the landing: 6
+  frames at `bounce={0}`, 17 at the default and 29 at `bounce={1}`. For a
+  focus, they are 3 and 13.
+- `bounce` sets the overshoot: 1.1% of the flight at 0, 3.5% at 0.5 and 7.2% at
+  1, which also swings back 14 px short of the target. The overshoot grows with
+  the arrival speed, so a shorter `duration` lands harder: 8.3% at 6 frames,
+  1.2% at 40.
+- `getSpeedLinesDuration({ mode, duration, bounce, delay, speed })` returns the
+  preview length, which adds a 24-frame hold: 55 frames for trail and 37 for
+  focus.
+- `delay` counts composition frames before the motion and is not scaled by
+  `speed`. At another speed or frame rate, divide the motion frames by `speed`
+  and multiply by `fps / 30`. A higher `speed` also draws longer streaks,
+  because the element really moves faster.
+
+<PropsTable title="Props"
+  rows={[
+    { name: "mode", type: '"trail" | "focus"', default: '"trail"', description: "Streaks behind a moving element, or an impact frame of converging lines" },
+    { name: "from", type: "{ x: number; y: number }", default: "{ x: -0.25, y: 0.5 }", description: "Trail start of the element's center as fractions of the composition; off-screen values are fine" },
+    { name: "to", type: "{ x: number; y: number }", default: "{ x, y }", description: "Trail landing point; falls back to the x, y point" },
+    { name: "x", type: "number", default: "0.5", description: "Accent point as a fraction of the width: the focus center, and the trail landing point when to is not set" },
+    { name: "y", type: "number", default: "0.5", description: "Accent point as a fraction of the height" },
+    { name: "count", type: "number", default: "12", description: "Streaks spawned per flight in trail, about a third alive at once; rays in focus. Clamped to 1–64" },
+    { name: "weight", type: "number", default: "2", description: "Stroke width in reference px, clamped to 0.5–12; caps are round" },
+    { name: "spread", type: "number", default: "96", description: "Trail: width of the streak band across the path, and the fallback disc diameter. Focus: the closest the rays come to the point. Reference px, clamped to 8–480" },
+    { name: "duration", type: "number", default: "14", description: "Trail frames from launch to contact at 30 fps, clamped to 4–120; the landing adds 6–29 frames depending on bounce" },
+    { name: "bounce", type: "number", default: "0.5", description: "Momentum carried into the landing, 0–1. At 0 the element stops dead on the target; at 0.5 it overshoots 3.5% of the flight and swings back once; at 1 it overshoots 7.2% with a visible echo" },
+    { name: "squash", type: "number", default: "0.5", description: "Squash and stretch, 0–1. The element stretches along its path with its speed, up to 1.3×, and squashes past the target, down to 0.8×, keeping its area. 0 keeps it rigid" },
+    { name: "color", type: "string", default: '"#ffffff"', description: "Streaks, rays and the fallback disc" },
+    { name: "seed", type: "number", default: "1", description: "Seeds streak timing, lanes and lengths, and ray angles and radii" },
+    { name: "delay", type: "number", default: "0", description: "Composition frames before the motion starts; not scaled by speed" },
+    { name: "speed", type: "number", default: "1", description: "Playback multiplier; 0 freezes the first frame" },
+    { name: "children", type: "ReactNode", description: "The element trail moves and deforms, or places on the focus point; without it, trail flies a disc, and null draws the streaks alone" },
+    { name: "className", type: "string", description: "Optional class name on the full-frame root" },
+  ]}
+/>

@@ -1,0 +1,122 @@
+---
+title: Selection Snap
+description: A thin word in a loose viewfinder snaps into a design-tool selection while it goes from Thin to Black, pops its handles and counts up a size badge
+component: selection-snap
+vibe: tech
+length: 38
+useWhen:
+  - "A single word should read as something being designed: a design tool, a component library, a type or layout feature."
+  - "You want a weight change to carry the beat — the word grows from Thin to Black inside the frame instead of just appearing."
+  - "The title needs a precise, UI-flavored accent (selection box, handles, a W × H readout) without building any interface chrome."
+avoidWhen:
+  - "The word should enter with physical motion rather than change in place — use `stretch-in`."
+  - "A plain, quiet reveal is enough and the design-tool look would distract — use `soft-blur-in`."
+  - "The text is a full sentence; the selection frames one short word and reads poorly around a line — use `kinetic-center-build`."
+---
+
+<ComponentPreview name="selection-snap" />
+
+<InstallBlock name="selection-snap" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { AbsoluteFill, Composition } from "remotion";
+import { SelectionSnap } from "@/components/remocn/selection-snap";
+
+const Title = () => (
+  <AbsoluteFill style={{ backgroundColor: "#0a0a0a" }}>
+    <SelectionSnap text="Frame" accent="#ff4d1a" selectionColor="#3d5afe" />
+  </AbsoluteFill>
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="SelectionSnap"
+    component={Title}
+    durationInFrames={75}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The word starts at `fromWeight` inside four corner brackets. Around frame 14
+the frame snaps tight with a small overshoot while the weight runs to
+`toWeight` and the color turns to `accent`. The bracket arms grow along the
+edges until they close into a one-pixel box, the eight handles pop in corners
+first, and the badge counts up to the snapped box size in reference px.
+
+The weight is continuous because Inter from `@remotion/google-fonts` is one
+variable file: the component drives `font-variation-settings`. The box is a
+wrapper around the text, so it follows the word as it widens. With a static
+`fontFamily` the weight steps through the faces you load instead of gliding.
+
+The component paints no background and centers the word in its parent. Sizes
+are reference px at a 720px-tall composition and scale with `height / 720`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "text",
+      type: "string",
+      default: "\"Frame\"",
+      description: "The word inside the selection. One short word reads best",
+    },
+    {
+      name: "fontSize",
+      type: "number",
+      default: "150",
+      description: "Font size in reference px at 720p",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "Inter",
+      description: "Font family. Use a variable font for a continuous weight change",
+    },
+    {
+      name: "fromWeight / toWeight",
+      type: "number",
+      default: "100 / 900",
+      description: "Weight before and after the snap",
+    },
+    {
+      name: "color",
+      type: "string",
+      default: "\"#fafafa\"",
+      description: "Text color before the snap",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#D97757\"",
+      description: "Text color after the snap",
+    },
+    {
+      name: "selectionColor",
+      type: "string",
+      default: "\"#0d99ff\"",
+      description: "Brackets, box, handle borders and badge",
+    },
+    {
+      name: "badge",
+      type: "boolean",
+      default: "true",
+      description: "Show the W × H badge under the box",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Timeline speed multiplier",
+    },
+    {
+      name: "className",
+      type: "string",
+      description: "Optional className passed to the wrapper",
+    },
+  ]}
+/>

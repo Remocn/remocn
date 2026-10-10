@@ -1,0 +1,133 @@
+---
+title: Marker
+description: Plain captions where the words that matter get a highlighter swipe the moment they are spoken
+component: caption-marker
+vibe: paper
+length: transcript-driven
+useWhen:
+  - "Talking-head or explainer video where a few words carry the point — the marker lands on exactly those words, in time with the voice, and leaves the rest calm."
+  - "You want the hand-made feel of a highlighter pen on top of an ordinary, readable caption line."
+avoidWhen:
+  - "Every word should be marked as it is spoken, not just the keywords — use `caption-highlight-box`, whose box travels across the whole phrase."
+  - "There is no voiceover and the highlighted line is scripted on-screen copy — use `marker-highlight`."
+  - "You want the spoken position shown on every word without singling any out — use `caption-karaoke`."
+---
+
+<ComponentPreview name="caption-marker" />
+
+<InstallBlock name="caption-marker" />
+
+## Usage
+
+`CaptionMarker` takes a timed transcript and renders only the text block, so
+place it inside your own `AbsoluteFill`. Words read as a plain caption line
+until a word from `keywords` is spoken. Then a slightly tilted highlighter band
+draws behind it from left to right, taking as long as the word itself, and the
+covered letters switch to `markerTextColor` so they stay readable on the band.
+The band stays until the page leaves. Without `keywords`, nothing is marked.
+See [Positioning](/docs/captions/getting-started/positioning) for safe
+placements and [Get a transcript](/docs/captions/getting-started/get-a-transcript)
+for producing `captions.json`.
+
+```tsx
+import { AbsoluteFill } from "remotion";
+import { CaptionMarker } from "@/components/remocn/caption-marker";
+import captions from "./captions.json";
+
+export const MyScene = () => (
+  <AbsoluteFill
+    style={{
+      justifyContent: "flex-end",
+      alignItems: "center",
+      paddingBottom: 108,
+      paddingInline: 192,
+    }}
+  >
+    <CaptionMarker
+      captions={captions}
+      keywords={["thing", "lose", "three", "captions", "sound"]}
+    />
+  </AbsoluteFill>
+);
+```
+
+Keywords match whole words, ignoring case and punctuation, so `"sound"` also
+catches `Sound,` and `sound.` in the transcript.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "captions",
+      type: "Caption[]",
+      default: "—",
+      description:
+        "The timed transcript, in the `Caption` shape from `@remotion/captions`. Times are relative to the start of the surrounding `Sequence`.",
+    },
+    {
+      name: "keywords",
+      type: "string[]",
+      default: "—",
+      description:
+        "Words that get the highlighter. Matched per word, ignoring case and punctuation. When omitted, no word is marked.",
+    },
+    {
+      name: "markerColor",
+      type: "string",
+      default: "\"#facc15\"",
+      description: "Colour of the highlighter band.",
+    },
+    {
+      name: "markerTextColor",
+      type: "string",
+      default: "\"#0a0a0a\"",
+      description:
+        "Colour of the letters the band has covered, so a marked word stays readable.",
+    },
+    {
+      name: "combineTokensWithinMilliseconds",
+      type: "number",
+      default: "1200",
+      description:
+        "How much speech one page may span before the next word starts a new page. Pages also break at the end of a sentence and on any pause of at least `holdMs` (300 ms minimum).",
+    },
+    {
+      name: "holdMs",
+      type: "number",
+      default: "600",
+      description:
+        "How long a page stays after its last word when the next page is not already due. It fades out at the end of the hold instead of hanging through the pause.",
+    },
+    {
+      name: "fontSize",
+      type: "number",
+      default: "64",
+      description: "Font size in pixels.",
+    },
+    {
+      name: "fontWeight",
+      type: "number",
+      default: "800",
+      description: "Font weight. The font itself is inherited.",
+    },
+    {
+      name: "color",
+      type: "string",
+      default: "\"#ffffff\"",
+      description: "Colour of unmarked words.",
+    },
+    {
+      name: "shadow",
+      type: "boolean",
+      default: "true",
+      description:
+        "A tight text shadow that keeps unmarked words legible over bright footage. It fades out under a word as the band covers it.",
+    },
+    {
+      name: "className",
+      type: "string",
+      default: "—",
+      description:
+        "Classes for the text block — width, font family, `uppercase`.",
+    },
+  ]}
+/>

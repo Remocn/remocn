@@ -1,0 +1,74 @@
+---
+title: Inline Word Roll
+description: Switch words beside a fixed prefix with an accelerating vertical roll
+component: inline-word-roll
+vibe: clean
+length: 75
+useWhen:
+  - "A headline keeps its opening phrase while cycling through audiences, benefits or outcomes."
+  - "Different word lengths should smoothly recenter the whole line during each switch."
+avoidWhen:
+  - "Every new word should remain in the sentence — use `word-push`."
+  - "Entire phrases should transform letter by letter — use `kinetic-morph-text`."
+---
+
+<ComponentPreview name="inline-word-roll" />
+
+<InstallBlock name="inline-word-roll" />
+
+## Usage
+
+The prefix remains on the baseline while the changing word rolls upward through
+a softly masked slot. The next word arrives from below. The whole line smoothly
+recenters as the word width changes, and successive switches get closer together.
+The first word starts readable and the final word stays on screen.
+
+```tsx
+import { AbsoluteFill } from "remotion";
+import { InlineWordRoll } from "@/components/remocn/inline-word-roll";
+
+export const Headline = () => (
+  <AbsoluteFill style={{ background: "#000" }}>
+    <InlineWordRoll
+      prefix="Looking for"
+      text="leads | customers | subscribers | appointments | demos | quotes | registrants | trials | conversions"
+      suffix="?"
+    />
+  </AbsoluteFill>
+);
+```
+
+The default sequence finishes moving at frame 75. The demo adds a 30-frame final
+hold. All durations use composition frames; at 30 fps the movement takes about
+2.5 seconds. Set `acceleration={1}` for a steady pace. Faster intervals never
+become shorter than the roll itself, so transitions cannot overlap.
+
+Words and phrases are separated by `|` or newlines. Spaces inside a phrase are
+preserved. Empty entries are ignored. The component has a transparent background;
+add your own scene or texture behind it.
+
+## Props
+
+<PropsTable rows={[
+  { name: "prefix", type: "string", default: '"Looking for"', description: "Text that stays on the baseline. Its horizontal position follows the changing total width." },
+  { name: "text", type: "string", default: '"leads | customers | … | conversions"', description: "Words or phrases separated by | or newlines." },
+  { name: "suffix", type: "string", default: '"?"', description: "Appended to every changing word and rolls with it." },
+  { name: "fontSize", type: "number", default: "60", description: "Font size in composition pixels. The whole line scales down to fit the longest phrase within 84% of frame width." },
+  { name: "fontFamily", type: "string", default: '"Arial, Helvetica, sans-serif"', description: "Font family. Load custom font faces in your composition; measurement waits for the selected face." },
+  { name: "fontWeight", type: "number", default: "400", description: "Font weight." },
+  { name: "color", type: "string", default: '"#f5f5f5"', description: "Text color." },
+  { name: "interval", type: "number", default: "12", description: "Initial frames between switch starts. Also the first-word hold; never shorter than transitionFrames." },
+  { name: "acceleration", type: "number", default: "0.9", description: "Multiplier for each following interval, clamped to 0.5–1. Lower values accelerate faster; 1 gives constant timing." },
+  { name: "transitionFrames", type: "number", default: "6", description: "Duration of each upward roll, clamped to at least 1 frame." },
+]} />
+
+For custom sequences, `getInlineWordRollDuration({ text, interval, acceleration,
+transitionFrames })` returns the number of frames until the last word settles.
+Add your desired hold when choosing the composition or Sequence duration.
+A single phrase needs no transition and returns 0.
+
+Widths are measured in unscaled composition pixels after fonts load and again
+when the text or font changes, preserving layout inside resized Players.
+The same scale is used for every word, preventing font-size jumps. All movement
+comes from Remotion frames; seeking directly to a switch reproduces the same
+layout. No CSS animation clock or WebGL context is required.

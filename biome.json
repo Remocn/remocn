@@ -13,7 +13,8 @@
       "!.next",
       "!dist",
       "!build",
-      "!.claude/skills"
+      "!.claude/skills",
+      "!plugins/remocn/skills/studio/assets"
     ]
   },
   "formatter": {

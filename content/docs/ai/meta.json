@@ -1,5 +1,14 @@
 {
   "title": "AI",
   "defaultOpen": false,
-  "pages": ["index", "claude-chat", "chat-gpt", "v0", "claude-code", "opencode"]
+  "pages": [
+    "index",
+    "claude-chat",
+    "chat-gpt",
+    "v0",
+    "claude-code",
+    "opencode",
+    "agent-run"
+  ],
+  "icon": "ArtificialIntelligence04Icon"
 }

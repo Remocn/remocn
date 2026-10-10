@@ -18,8 +18,6 @@ avoidWhen:
 
 A state atom representing a searchable select: a text-input trigger and a panel of filtered options. Its appearance (`opened`, `closed`) is a pure function of the `state` prop. Pass a state directly or drive it from the Remotion timeline via `useCurrentState`. The component reads no frame — only the state value you give it. The panel reveals below the trigger with opacity, scale, and vertical lift animations. The trigger reuses the Input visual presets; the panel rows reuse the SelectItem atom.
 
-## Installation
-
 <InstallBlock name="combobox" />
 
 <Note>
@@ -167,9 +165,7 @@ const itemStyle = useSelectItemTransition([
 <Combobox style={panelStyle} itemStyles={[itemStyle]} />
 ```
 
-## Props
-
-<PropsTable
+<PropsTable title="Props"
   rows={[
     {
       name: "state",

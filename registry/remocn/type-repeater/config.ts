@@ -1,0 +1,56 @@
+import {
+  type ComponentConfig,
+  enumVariants,
+  FPS,
+  H,
+  W,
+} from "@/lib/customizer-config";
+
+export const typeRepeaterConfig: ComponentConfig = {
+  componentName: "TypeRepeater",
+  importPath: "@/components/remocn/type-repeater",
+  controls: {
+    text: { type: "text-content", default: "Repeat", description: "Text" },
+    mode: {
+      type: "enum",
+      default: "tunnel",
+      variants: enumVariants(["tunnel", "spiral", "fan"]),
+      description: "Mode",
+    },
+    color: { type: "color", default: "#111111", description: "Word color" },
+    accent: { type: "color", default: "#fafafa", description: "Last copy" },
+    copies: {
+      type: "number",
+      default: 12,
+      min: 2,
+      max: 24,
+      step: 1,
+      description: "Copies",
+      hiddenFromList: false,
+    },
+    fontSize: {
+      type: "number",
+      default: 110,
+      min: 40,
+      max: 240,
+      step: 2,
+      description: "Font size",
+      hiddenFromList: false,
+    },
+    fontWeight: {
+      type: "number",
+      default: 800,
+      min: 100,
+      max: 900,
+      step: 50,
+      description: "Weight",
+      hiddenFromList: false,
+    },
+    outline: { type: "boolean", default: true, description: "Outline copies" },
+  },
+  durationInFrames: 100,
+  fps: FPS,
+  compositionWidth: W,
+  compositionHeight: H,
+  previewBackdrop: { type: "color", value: "#ff4d1a" },
+};

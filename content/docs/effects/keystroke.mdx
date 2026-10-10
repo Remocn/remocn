@@ -1,0 +1,174 @@
+---
+title: Keystroke
+description: Physical keycaps that press, hold and spring back in real order, a shortcut overlay for keyboard-first product demos
+component: keystroke
+vibe: tech
+length: 166
+useWhen:
+  - "A product demo shows a keyboard-first flow, such as a command palette, an editor or a triage queue, and the viewer should see the keys behind each action."
+  - "A shortcut should land on the same frame as the UI it triggers, so the keystroke and a remocn-ui state step share one frame number."
+  - "A launch or changelog video introduces new shortcuts and should show them as real keys, with the modifiers held while the letter taps."
+avoidWhen:
+  - "The interaction is pointing and clicking rather than pressing shortcuts — use `simulated-cursor`."
+  - "The viewer should read text being typed into a field or a terminal, not individual shortcuts — use `typewriter`."
+  - "The shortcut only needs to appear as a static hint next to a menu item — use `command-menu`."
+---
+
+<ComponentPreview name="keystroke" />
+
+<InstallBlock name="keystroke" />
+
+## Usage
+
+`Keystroke` is the keyboard counterpart of `simulated-cursor`. For each
+shortcut, physical keycaps rise in near the bottom of the frame and press in
+real order. The modifiers go down first and stay down while the letter taps,
+then come up after it. Each keytop sinks into its base, so the side wall
+shortens and the contact shadow tightens. On release it springs back with a small
+overshoot, and the legend of a key that is down turns the accent color. The
+caps leave together after an idle hold. When the next shortcut arrives, the
+previous one slides back and dims before it leaves.
+
+```tsx
+import { Backdrop } from "@/components/remocn/backdrop";
+import { Keystroke } from "@/components/remocn/keystroke";
+
+export const ShortcutOverlay = () => (
+  <Backdrop
+    fill={{ type: "color", value: "#e9e9e5" }}
+    padding={0}
+    radius={0}
+    shadow=""
+  >
+    <Keystroke />
+  </Backdrop>
+);
+```
+
+The component paints no background, so it composites over any scene.
+`theme="light"` draws off-white caps on a light-gray wall, and `theme="dark"`
+draws graphite caps. `platform="mac"` draws the glyphs ⌘ ⌥ ⇧ ⌃ ↩ ⌫ ⎋ ⇥, and
+`platform="windows"` writes Ctrl, Alt, Shift and Enter on wider caps. `x` and
+`y` place the center of the row as fractions of the frame. `size` is the
+keycap height in reference pixels at 720p and scales with the composition
+height, so the caps look the same at 1080p and 4K. In a vertical video, pass a
+smaller `size`.
+
+### Your own shortcuts
+
+Each step is `{ at, keys, hold }`. `at` is the frame the shortcut fires: the
+frame its last key bottoms out. It uses the same Sequence-local frames as the
+`at` of a remocn-ui step, so a keystroke and the UI it opens can share one
+number. Everything before the click is scheduled backward from `at`.
+
+```tsx
+import { Backdrop } from "@/components/remocn/backdrop";
+import { CommandMenu } from "@/components/remocn/command-menu";
+import { Keystroke } from "@/components/remocn/keystroke";
+import { useCurrentState } from "@/lib/remocn-ui";
+
+const OPEN = 24;
+const CLOSE = 96;
+
+export const PaletteDemo = () => {
+  const state = useCurrentState(
+    [
+      { at: OPEN, state: "opened" },
+      { at: CLOSE, state: "closed" },
+    ],
+    "closed",
+  );
+
+  return (
+    <Backdrop
+      fill={{ type: "color", value: "#f4f4f2" }}
+      padding={0}
+      radius={0}
+      shadow=""
+    >
+      <CommandMenu state={state} />
+      <Keystroke
+        steps={[
+          { at: OPEN, keys: "mod+k" },
+          { at: CLOSE, keys: "esc" },
+        ]}
+      />
+    </Backdrop>
+  );
+};
+```
+
+`keys` is a combo joined with `+` (`"mod+k"`, `"shift+mod+p"`, `"enter"`) or a
+sequence of combos separated by spaces (`"g i"` presses G, then I). A sequence
+fires on its last key, and a subtle "then" joins its chords. `mod` is ⌘ on mac
+and Ctrl on windows. The other modifiers are `shift`, `alt`/`option`,
+`ctrl`/`control`, `cmd`/`meta` (Win on windows) and `fn`. They are always
+drawn and pressed in the platform's standard order. Named keys include `enter`, `esc`, `tab`,
+`space`, `backspace`, `delete`, the arrows (`up`, `down`, `left`, `right`),
+`f1` to `f24`, and `plus` for a plus key. Any other single character is drawn
+as its uppercase letter.
+
+## Timing
+
+At 30 fps with `speed={1}` and the default steps, `mod+k` on 20, `g i` on 78
+and `shift+mod+p` on 114:
+
+| Frames | Motion |
+| --- | --- |
+| 0–7 | Empty frame |
+| 7–18 | ⌘ and K rise in and settle |
+| 14–20 | ⌘ goes down, then K; ⌘K fires on 20 |
+| 28–41 | K springs up on 28, ⌘ on 31 |
+| 48–58 | G rises in while ⌘K slides back and dims; G fires on 58 |
+| 61–69 | ⌘K leaves |
+| 66–76 | G springs up |
+| 68–78 | "then" and I rise in, the row re-centers and G dims; G then I fires on 78 |
+| 86–96 | I springs up |
+| 98–114 | ⇧, ⌘ and P rise in as G then I slides back, then go down 3 frames apart; ⇧⌘P fires on 114 |
+| 116–124 | G then I leaves |
+| 122–138 | P, ⌘ and ⇧ spring up in reverse order |
+| 158–166 | ⇧⌘P leaves after its linger |
+| 166–180 | Empty hold |
+
+Each key takes 3 frames to go down. Keys in a combo start 3 frames apart and
+come up 3 frames apart, last down first up. The chord stays down for its
+`hold` (8 frames by default). The release lands exactly on rest 10 frames
+later. The caps start rising before `at`: 10 frames for a single key, 13 for a
+two-key combo, 16 for three, and 30 for `g i`. `getKeystrokeLeadIn(keys, hold)`
+returns that lead-in, so leave at least that much before the first `at` in a
+Sequence. After the last key comes up, a group waits `linger` frames (30 by
+default), then leaves over 8 frames. A group pushed back by a newer one leaves
+sooner, 18 frames after the push. If its keys are still down at the push, the
+18 frames count from its last key-up instead, so its release still plays. At
+most two groups hold the screen: a third arrival sends the oldest off at once.
+
+`keystrokeLength` is 166, the frame the default content has left.
+`getKeystrokeDuration({ steps, linger, speed, fps })` returns the frames your
+own steps need, plus a 14-frame tail. `at`, `hold` and `linger` are frames of
+your composition, exactly like remocn-ui `at`. The press and release motion
+keeps the same timing in seconds at any frame rate.
+
+<PropsTable title="Props"
+  rows={[
+    { name: "steps", type: "KeystrokeStep[]", default: "three-step flow", description: "Shortcuts in order, each { at, keys, hold? }; the default is ⌘K, G then I, ⇧⌘P" },
+    { name: "platform", type: '"mac" | "windows"', default: '"mac"', description: "Resolves mod to ⌘ or Ctrl and draws glyph or word legends" },
+    { name: "theme", type: '"light" | "dark"', default: '"light"', description: "Off-white caps on a light-gray wall, or graphite caps" },
+    { name: "accent", type: "string", default: '"#0a84ff"', description: "Legend color of a key while it is down" },
+    { name: "x", type: "number", default: "0.5", description: "Row center as a fraction of the frame width" },
+    { name: "y", type: "number", default: "0.86", description: "Row center as a fraction of the frame height" },
+    { name: "size", type: "number", default: "64", description: "Keycap height and 1u key width in reference px at 720p, clamped to 8–400" },
+    { name: "linger", type: "number", default: "30", description: "Frames the caps stay after the last key comes up, before they leave" },
+    { name: "speed", type: "number", default: "1", description: "Playback multiplier applied to the frame, like remocn-ui; 0 never fires" },
+    { name: "className", type: "string", description: "Optional class name on the full-frame root" },
+  ]}
+/>
+
+### KeystrokeStep
+
+<PropsTable
+  rows={[
+    { name: "at", type: "number", required: true, description: "Sequence-local frame the shortcut fires, when its last key bottoms out" },
+    { name: "keys", type: "string", required: true, description: "A combo such as \"shift+mod+p\", or chords separated by spaces such as \"g i\"" },
+    { name: "hold", type: "number", default: "8", description: "Frames the chord stays down after it fires" },
+  ]}
+/>

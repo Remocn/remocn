@@ -24,7 +24,7 @@ function CardPreview({ item }: { item: CardItem }) {
   const preview = slug ? previewManifest[slug] : undefined;
   const playerRef = useRef<PlayerRef>(null);
 
-  useAutoplay(playerRef);
+  const { containerRef } = useAutoplay(playerRef);
 
   if (!entry || !preview) {
     return (
@@ -35,7 +35,7 @@ function CardPreview({ item }: { item: CardItem }) {
   }
 
   return (
-    <div className="size-full">
+    <div ref={containerRef} className="size-full">
       <Player
         ref={playerRef}
         lazyComponent={entry.load}

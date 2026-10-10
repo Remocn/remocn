@@ -16,14 +16,15 @@ Solo builders и маленькие команды (1-2 чел), фронтен�
 
 - `app/` — Next.js App Router. `app/(home)/` — landing и standalone-страницы (`sponsors`, `changelog`), `app/docs/` — Fumadocs, `app/r/` — раздача registry-артефактов, `app/api/` — рендер и прочие endpoints
 - `content/docs/` — MDX документации (fumadocs collection `docs`), `content/changelog/` — записи ченджлога (flat collection `changelog`)
-- `registry/` — исходники компонентов: `remocn/` (анимации, переходы, backgrounds), `remocn-ui/` (UI-примитивы), `remocn-icons/` (иконки). У каждого неймспейса свой `registry.json`; `registry/__index__.tsx` — отдельный реестр превью для сайта
+- `registry/` — исходники компонентов: `remocn/` (анимации, переходы, backgrounds), `remocn-ui/` (UI-примитивы), `remocn-icons/` (иконки), `remocn-templates/` (готовые видео). У каждого неймспейса свой `registry.json`; `registry/__index__.tsx` — отдельный реестр превью для сайта
 - `registry-artifacts/` — собранный shadcn-registry (`bun run registry:build`), коммитится в репозиторий
 - `components/`, `lib/`, `config/`, `hooks/` — код сайта
 
-## Два уровня компонентов
+## Уровни компонентов
 
 - **Primitives** — отдельные анимации, переходы, backgrounds
 - **Compositions** — готовые сцены, собранные из primitives
+- **Templates** — полные видео, которые можно установить и использовать as-is
 
 ## Ключевые решения
 
@@ -39,7 +40,7 @@ Solo builders и маленькие команды (1-2 чел), фронтен�
 
 Доки описывают компоненты и для людей, и для AI-агентов. Скилл `remocn` не хранит свою копию каталога, а читает документацию по URL, поэтому страница компонента — единственное место, где живут его пропсы, пример и сигнал выбора.
 
-- Каждый item из трёх `registry.json` обязан иметь страницу с `component: <name>` во frontmatter. Исключения перечислены в `UNDOCUMENTED` в `lib/docs-meta.test.ts` и требуют причины — это либы, внутренние примитивы и sub-item'ы, свёрнутые в страницу контейнера. Иконки документируются галереей, а не страницей на штуку
+- Каждый item из registry обязан иметь страницу с `component: <name>` во frontmatter. Исключения перечислены в `UNDOCUMENTED` в `lib/docs-meta.test.ts` и требуют причины — это либы, внутренние примитивы и sub-item'ы, свёрнутые в страницу контейнера. Иконки документируются галереей, а не страницей на штуку
 - Frontmatter компонента: `component`, `vibe` (одно из семи значений в `lib/docs-schema.ts`), `length`, `useWhen` и `avoidWhen` — списки строк в двойных кавычках. Поля машинные, на странице не рендерятся
 - `length` — кадры **собственного движения** компонента при 30fps: у перехода это значение для `linearTiming`/`springTiming`, у остальных — момент, когда анимация закончилась. Это нижняя граница `Sequence`, а не длина бита: холд сверху добавляется отдельно. Поэтому `length` намеренно расходится с `durationInFrames` в `config.ts` — там длина демо-композиции вместе с холдом. `"state-driven"` — компонент рендерится из пропа `state` и своей длительности не имеет
 - В `avoidWhen` называй компонент-замену в бэктиках. Тест валит сборку, если такого имени нет в registry

@@ -1,0 +1,95 @@
+---
+title: Shader Seam
+description: Reveal an OpenShaders material, then dissolve it in place to uncover the next scene
+component: shader-seam
+vibe: premium
+length: 60
+useWhen:
+  - "An OpenShaders material should dissolve in place to reveal the next scene."
+  - "A scene change needs an organic disappearance without directional travel."
+avoidWhen:
+  - "A minimal typographic cut is enough — use `caret-wipe`."
+  - "The scenes themselves should be distorted at pixel level — use `displacement`."
+---
+
+<ComponentPreview name="shader-seam" />
+
+<InstallBlock name="shader-seam" />
+
+## Usage
+
+`shaderSeam()` reveals a stationary shader across the frame, exchanges the scenes
+while it is fully opaque, then dissolves it along its own brightness and a soft
+organic texture. Dark areas disappear first; luminous folds linger briefly.
+The shader stays at its original position, rotation and scale throughout.
+The default material is the original [@remocn OpenShaders shader](https://openshaders.com/@remocn),
+including its colored silk field and halftone dots.
+
+```tsx
+import { TransitionSeries, linearTiming } from "@remotion/transitions";
+import { shaderSeam } from "@/components/remocn/shader-seam";
+
+export const MyVideo = () => (
+  <TransitionSeries>
+    <TransitionSeries.Sequence durationInFrames={108}>
+      <SceneA />
+    </TransitionSeries.Sequence>
+    <TransitionSeries.Transition
+      timing={linearTiming({ durationInFrames: 60 })}
+      presentation={shaderSeam({ softness: 0.18, detail: 0.65 })}
+    />
+    <TransitionSeries.Sequence durationInFrames={108}>
+      <SceneB />
+    </TransitionSeries.Sequence>
+  </TransitionSeries>
+);
+```
+
+The shader and dissolve use WebGL2. The scenes remain ordinary React layers;
+they switch beneath the opaque material, so no HTML capture or experimental
+browser flag is needed. The shader is local and adds no network request or extra package.
+Give each scene its own background when you want an opaque cut. Transparent
+areas reveal the composition backdrop. WebGL2 is required; unavailable WebGL or
+invalid shader code produces an explicit render error.
+
+## Props
+
+<PropsTable rows={[
+  { name: "softness", type: "number", default: "0.18", description: "Softness of the dissolve boundary; clamped to 0.02–0.4." },
+  { name: "detail", type: "number", default: "0.65", description: "Organic variation mixed with the shader's brightness; clamped to 0–1. At 0, the dissolve follows brightness alone." },
+  { name: "speed", type: "number", default: "0", description: "Internal shader evolution speed. The default keeps the material still while it dissolves. Set above 0 to animate the shader itself." },
+  { name: "timeOffset", type: "number", default: "0", description: "Starting shader time in seconds. Pick another moment in the same material." },
+  { name: "shader", type: "OpenShaderSource", default: "remocnOpenShader", description: "Local OpenShaders GLSL field and optional postprocessing pass." },
+]} />
+
+## Use another OpenShaders material
+
+Open a profile in [Explore](https://openshaders.com/explore) and select
+**Copy code → React · WebGL**. Copy the exported `FIELD_SHADER` string and, if
+present, `RARITY_SHADER` into a local module. Preserve the source attribution.
+The transition uses the GLSL strings directly; it does not run the exported
+component's animation loop.
+
+```tsx
+import type { OpenShaderSource } from "@/components/remocn/shader-seam";
+import { FIELD_SHADER, RARITY_SHADER } from "./my-openshader";
+
+const material: OpenShaderSource = {
+  field: FIELD_SHADER,
+  postprocess: RARITY_SHADER, // Omit for a plain field.
+};
+
+const transition = shaderSeam({ shader: material, softness: 0.2 });
+```
+
+This adapter supports a self-contained WebGL2 field with OpenShaders' standard
+uniforms (`iResolution`, `iTime`, background colors and `uLightMode`) and an
+optional postprocessing pass reading `tScene`. It renders in dark mode with a
+neutral tilt. Exports needing extra textures, such as the ASCII glyph atlas,
+need an additional adapter and are rejected with a named error. WebGPU source
+and arbitrary profile URLs are not accepted as GLSL.
+
+Use `linearTiming` to supply the transition clock. Appearance, opaque scene
+exchange and dissolution are built into the presentation. The dissolve texture
+is static and shader time comes from progress and duration, so seeking to the
+same frame reproduces the same result.

@@ -18,8 +18,6 @@ avoidWhen:
 
 A motion atom that reads `useCurrentFrame` directly and produces N dots bouncing with staggered sine offsets. No state prop — the animation runs continuously as long as the component is mounted on the timeline. Drop it into any bubble or container to signal that a message is being composed.
 
-## Installation
-
 <InstallBlock name="typing-indicator" />
 
 <Note>
@@ -45,9 +43,7 @@ export const Scene = () => (
 
 The helper `typingDotOffset(frame, index, opts)` is exported for cases where you want to drive individual dot positions from your own layout.
 
-## Props
-
-<PropsTable
+<PropsTable title="Props"
   rows={[
     {
       name: "dotCount",
