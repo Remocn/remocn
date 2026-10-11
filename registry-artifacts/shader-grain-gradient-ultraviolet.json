@@ -1,0 +1,19 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "shader-grain-gradient-ultraviolet",
+  "title": "Shader Grain Gradient Ultraviolet",
+  "description": "Electric magenta and blue blob morphing on ultraviolet black.",
+  "registryDependencies": ["@remocn/shader-grain-gradient"],
+  "files": [
+    {
+      "path": "registry/remocn/shader-grain-gradient-ultraviolet/index.tsx",
+      "content": "\"use client\";\n\nimport {\n  ShaderGrainGradient,\n  type ShaderGrainGradientProps,\n} from \"@/components/remocn/shader-grain-gradient\";\n\n// Ultraviolet: electric magenta and blue blob morphing on ultraviolet black.\n// A preset of ShaderGrainGradient. The whole look lives in the object below, so tune\n// it freely. Props you pass override the preset, except `speed`, which scales\n// the preset's own speed instead of replacing it.\n\nexport const shaderGrainGradientUltravioletPreset = {\n  speed: 1,\n  shape: \"blob\",\n  colorBack: \"#0d0221\",\n  colors: [\"#2b2bff\", \"#ff2bd6\", \"#00f0ff\"],\n  softness: 0.5,\n  intensity: 0.45,\n  noise: 0.25,\n} satisfies ShaderGrainGradientProps;\n\nexport function ShaderGrainGradientUltraviolet({\n  speed = 1,\n  ...props\n}: ShaderGrainGradientProps) {\n  return (\n    <ShaderGrainGradient\n      {...shaderGrainGradientUltravioletPreset}\n      {...props}\n      speed={shaderGrainGradientUltravioletPreset.speed * speed}\n    />\n  );\n}\n",
+      "type": "registry:component",
+      "target": "components/remocn/shader-grain-gradient-ultraviolet.tsx"
+    }
+  ],
+  "meta": {
+    "presetOf": "shader-grain-gradient"
+  },
+  "type": "registry:component"
+}

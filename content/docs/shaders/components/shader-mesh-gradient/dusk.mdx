@@ -1,0 +1,45 @@
+---
+title: Dusk
+description: Mesh Gradient preset. Violet dusk with coral and peach light drifting through deep indigo
+component: shader-mesh-gradient-dusk
+vibe: premium
+length: 150
+useWhen:
+  - "An evening, end-of-day mood behind a launch title or a closing card."
+  - "Foreground is light text or a bright product shot that needs a dark field around it."
+  - "You want a finished Mesh Gradient look without tuning the palette and parameters yourself."
+avoidWhen:
+  - "The video must use your brand colors — start from `shader-mesh-gradient` and set `colors`."
+  - "You want a lighter, contrasting mood from the same shader — use `shader-mesh-gradient-peach`."
+---
+
+<ComponentPreview name="shader-mesh-gradient-dusk" />
+
+<InstallBlock name="shader-mesh-gradient-dusk" />
+
+Installs [Mesh Gradient](/docs/shaders/components/shader-mesh-gradient) as a dependency. This file only fixes its look: the preset object at the top holds every value, so edit it in place to make the preset your own.
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { ShaderMeshGradientDusk } from "@/components/remocn/shader-mesh-gradient-dusk";
+
+export const RemotionRoot = () => (
+  <Composition
+    id="ShaderMeshGradientDusk"
+    component={ShaderMeshGradientDusk}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+ShaderMeshGradientDusk takes the same props as `ShaderMeshGradient`. Props you pass override the preset, except `speed`, which scales the preset's own pace: `speed={2}` is twice as fast as the preset, whatever its base speed.
+
+## Credits
+
+Shader by [paper-design/shaders](https://github.com/paper-design/shaders).

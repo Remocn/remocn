@@ -691,6 +691,159 @@
       "type": "registry:component"
     },
     {
+      "name": "shader-mesh-gradient-dusk",
+      "title": "Shader Mesh Gradient Dusk",
+      "description": "Violet dusk with coral and peach light drifting through deep indigo.",
+      "registryDependencies": ["@remocn/shader-mesh-gradient"],
+      "files": [
+        {
+          "path": "registry/remocn/shader-mesh-gradient-dusk/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/shader-mesh-gradient-dusk.tsx"
+        }
+      ],
+      "meta": {
+        "presetOf": "shader-mesh-gradient"
+      },
+      "type": "registry:component"
+    },
+    {
+      "name": "shader-mesh-gradient-lagoon",
+      "title": "Shader Mesh Gradient Lagoon",
+      "description": "Bright aqua and teal shallows with a deep-blue undertow.",
+      "registryDependencies": ["@remocn/shader-mesh-gradient"],
+      "files": [
+        {
+          "path": "registry/remocn/shader-mesh-gradient-lagoon/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/shader-mesh-gradient-lagoon.tsx"
+        }
+      ],
+      "meta": {
+        "presetOf": "shader-mesh-gradient"
+      },
+      "type": "registry:component"
+    },
+    {
+      "name": "shader-mesh-gradient-peach",
+      "title": "Shader Mesh Gradient Peach",
+      "description": "Warm peach and cream glow with a whisper of film grain.",
+      "registryDependencies": ["@remocn/shader-mesh-gradient"],
+      "files": [
+        {
+          "path": "registry/remocn/shader-mesh-gradient-peach/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/shader-mesh-gradient-peach.tsx"
+        }
+      ],
+      "meta": {
+        "presetOf": "shader-mesh-gradient"
+      },
+      "type": "registry:component"
+    },
+    {
+      "name": "shader-mesh-gradient-aurora",
+      "title": "Shader Mesh Gradient Aurora",
+      "description": "Cyan and violet ribbons swirling out of a near-black sky.",
+      "registryDependencies": ["@remocn/shader-mesh-gradient"],
+      "files": [
+        {
+          "path": "registry/remocn/shader-mesh-gradient-aurora/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/shader-mesh-gradient-aurora.tsx"
+        }
+      ],
+      "meta": {
+        "presetOf": "shader-mesh-gradient"
+      },
+      "type": "registry:component"
+    },
+    {
+      "name": "shader-mesh-gradient-lavender",
+      "title": "Shader Mesh Gradient Lavender",
+      "description": "Soft lilac and pink haze with grain-softened edges.",
+      "registryDependencies": ["@remocn/shader-mesh-gradient"],
+      "files": [
+        {
+          "path": "registry/remocn/shader-mesh-gradient-lavender/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/shader-mesh-gradient-lavender.tsx"
+        }
+      ],
+      "meta": {
+        "presetOf": "shader-mesh-gradient"
+      },
+      "type": "registry:component"
+    },
+    {
+      "name": "shader-mesh-gradient-ember",
+      "title": "Shader Mesh Gradient Ember",
+      "description": "Molten orange and amber pooling in dark oxblood.",
+      "registryDependencies": ["@remocn/shader-mesh-gradient"],
+      "files": [
+        {
+          "path": "registry/remocn/shader-mesh-gradient-ember/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/shader-mesh-gradient-ember.tsx"
+        }
+      ],
+      "meta": {
+        "presetOf": "shader-mesh-gradient"
+      },
+      "type": "registry:component"
+    },
+    {
+      "name": "shader-mesh-gradient-mint",
+      "title": "Shader Mesh Gradient Mint",
+      "description": "Airy mint and sky-blue pastel wash around a deeper green core.",
+      "registryDependencies": ["@remocn/shader-mesh-gradient"],
+      "files": [
+        {
+          "path": "registry/remocn/shader-mesh-gradient-mint/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/shader-mesh-gradient-mint.tsx"
+        }
+      ],
+      "meta": {
+        "presetOf": "shader-mesh-gradient"
+      },
+      "type": "registry:component"
+    },
+    {
+      "name": "shader-mesh-gradient-synthwave",
+      "title": "Shader Mesh Gradient Synthwave",
+      "description": "Night-purple field lit by a warm coral sunset glow.",
+      "registryDependencies": ["@remocn/shader-mesh-gradient"],
+      "files": [
+        {
+          "path": "registry/remocn/shader-mesh-gradient-synthwave/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/shader-mesh-gradient-synthwave.tsx"
+        }
+      ],
+      "meta": {
+        "presetOf": "shader-mesh-gradient"
+      },
+      "type": "registry:component"
+    },
+    {
+      "name": "shader-mesh-gradient-ink",
+      "title": "Shader Mesh Gradient Ink",
+      "description": "Monochrome ink folds in charcoal and silver with grain.",
+      "registryDependencies": ["@remocn/shader-mesh-gradient"],
+      "files": [
+        {
+          "path": "registry/remocn/shader-mesh-gradient-ink/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/shader-mesh-gradient-ink.tsx"
+        }
+      ],
+      "meta": {
+        "presetOf": "shader-mesh-gradient"
+      },
+      "type": "registry:component"
+    },
+    {
       "name": "shader-grain-gradient",
       "title": "Shader Grain Gradient",
       "description": "Grainy multi-stop gradient that drifts slowly with film-grain texture over the blend.",
@@ -702,6 +855,159 @@
           "target": "components/remocn/shader-grain-gradient.tsx"
         }
       ],
+      "type": "registry:component"
+    },
+    {
+      "name": "shader-grain-gradient-sunrise",
+      "title": "Shader Grain Gradient Sunrise",
+      "description": "Grainy wave of coral and gold rising over a plum night.",
+      "registryDependencies": ["@remocn/shader-grain-gradient"],
+      "files": [
+        {
+          "path": "registry/remocn/shader-grain-gradient-sunrise/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/shader-grain-gradient-sunrise.tsx"
+        }
+      ],
+      "meta": {
+        "presetOf": "shader-grain-gradient"
+      },
+      "type": "registry:component"
+    },
+    {
+      "name": "shader-grain-gradient-nebula",
+      "title": "Shader Grain Gradient Nebula",
+      "description": "Magenta and cyan glow blooming from the corners of deep space.",
+      "registryDependencies": ["@remocn/shader-grain-gradient"],
+      "files": [
+        {
+          "path": "registry/remocn/shader-grain-gradient-nebula/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/shader-grain-gradient-nebula.tsx"
+        }
+      ],
+      "meta": {
+        "presetOf": "shader-grain-gradient"
+      },
+      "type": "registry:component"
+    },
+    {
+      "name": "shader-grain-gradient-orb",
+      "title": "Shader Grain Gradient Orb",
+      "description": "Large grainy sphere in periwinkle, violet and pink.",
+      "registryDependencies": ["@remocn/shader-grain-gradient"],
+      "files": [
+        {
+          "path": "registry/remocn/shader-grain-gradient-orb/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/shader-grain-gradient-orb.tsx"
+        }
+      ],
+      "meta": {
+        "presetOf": "shader-grain-gradient"
+      },
+      "type": "registry:component"
+    },
+    {
+      "name": "shader-grain-gradient-horizon",
+      "title": "Shader Grain Gradient Horizon",
+      "description": "Peach horizon band rolling between navy and pale sky.",
+      "registryDependencies": ["@remocn/shader-grain-gradient"],
+      "files": [
+        {
+          "path": "registry/remocn/shader-grain-gradient-horizon/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/shader-grain-gradient-horizon.tsx"
+        }
+      ],
+      "meta": {
+        "presetOf": "shader-grain-gradient"
+      },
+      "type": "registry:component"
+    },
+    {
+      "name": "shader-grain-gradient-blush",
+      "title": "Shader Grain Gradient Blush",
+      "description": "Pastel pink and apricot blob morphing on warm off-white.",
+      "registryDependencies": ["@remocn/shader-grain-gradient"],
+      "files": [
+        {
+          "path": "registry/remocn/shader-grain-gradient-blush/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/shader-grain-gradient-blush.tsx"
+        }
+      ],
+      "meta": {
+        "presetOf": "shader-grain-gradient"
+      },
+      "type": "registry:component"
+    },
+    {
+      "name": "shader-grain-gradient-tide",
+      "title": "Shader Grain Gradient Tide",
+      "description": "Teal ripple ring pulsing out of a dark sea-green core.",
+      "registryDependencies": ["@remocn/shader-grain-gradient"],
+      "files": [
+        {
+          "path": "registry/remocn/shader-grain-gradient-tide/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/shader-grain-gradient-tide.tsx"
+        }
+      ],
+      "meta": {
+        "presetOf": "shader-grain-gradient"
+      },
+      "type": "registry:component"
+    },
+    {
+      "name": "shader-grain-gradient-arcade",
+      "title": "Shader Grain Gradient Arcade",
+      "description": "Retro grainy dots in orange, yellow and green on black.",
+      "registryDependencies": ["@remocn/shader-grain-gradient"],
+      "files": [
+        {
+          "path": "registry/remocn/shader-grain-gradient-arcade/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/shader-grain-gradient-arcade.tsx"
+        }
+      ],
+      "meta": {
+        "presetOf": "shader-grain-gradient"
+      },
+      "type": "registry:component"
+    },
+    {
+      "name": "shader-grain-gradient-dune",
+      "title": "Shader Grain Gradient Dune",
+      "description": "Sandy grain wave in tan, caramel and rust.",
+      "registryDependencies": ["@remocn/shader-grain-gradient"],
+      "files": [
+        {
+          "path": "registry/remocn/shader-grain-gradient-dune/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/shader-grain-gradient-dune.tsx"
+        }
+      ],
+      "meta": {
+        "presetOf": "shader-grain-gradient"
+      },
+      "type": "registry:component"
+    },
+    {
+      "name": "shader-grain-gradient-ultraviolet",
+      "title": "Shader Grain Gradient Ultraviolet",
+      "description": "Electric magenta and blue blob morphing on ultraviolet black.",
+      "registryDependencies": ["@remocn/shader-grain-gradient"],
+      "files": [
+        {
+          "path": "registry/remocn/shader-grain-gradient-ultraviolet/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/shader-grain-gradient-ultraviolet.tsx"
+        }
+      ],
+      "meta": {
+        "presetOf": "shader-grain-gradient"
+      },
       "type": "registry:component"
     },
     {
@@ -719,6 +1025,159 @@
       "type": "registry:component"
     },
     {
+      "name": "shader-warp-silk",
+      "title": "Shader Warp Silk",
+      "description": "Violet and pink liquid silk folding in slow waves.",
+      "registryDependencies": ["@remocn/shader-warp"],
+      "files": [
+        {
+          "path": "registry/remocn/shader-warp-silk/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/shader-warp-silk.tsx"
+        }
+      ],
+      "meta": {
+        "presetOf": "shader-warp"
+      },
+      "type": "registry:component"
+    },
+    {
+      "name": "shader-warp-sunset",
+      "title": "Shader Warp Sunset",
+      "description": "Marbled coral, peach and wine flowing like warm liquid.",
+      "registryDependencies": ["@remocn/shader-warp"],
+      "files": [
+        {
+          "path": "registry/remocn/shader-warp-sunset/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/shader-warp-sunset.tsx"
+        }
+      ],
+      "meta": {
+        "presetOf": "shader-warp"
+      },
+      "type": "registry:component"
+    },
+    {
+      "name": "shader-warp-ocean",
+      "title": "Shader Warp Ocean",
+      "description": "Glossy aqua currents traced with dark ink edges.",
+      "registryDependencies": ["@remocn/shader-warp"],
+      "files": [
+        {
+          "path": "registry/remocn/shader-warp-ocean/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/shader-warp-ocean.tsx"
+        }
+      ],
+      "meta": {
+        "presetOf": "shader-warp"
+      },
+      "type": "registry:component"
+    },
+    {
+      "name": "shader-warp-marble",
+      "title": "Shader Warp Marble",
+      "description": "Cream and charcoal marble veins swirling together.",
+      "registryDependencies": ["@remocn/shader-warp"],
+      "files": [
+        {
+          "path": "registry/remocn/shader-warp-marble/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/shader-warp-marble.tsx"
+        }
+      ],
+      "meta": {
+        "presetOf": "shader-warp"
+      },
+      "type": "registry:component"
+    },
+    {
+      "name": "shader-warp-acid",
+      "title": "Shader Warp Acid",
+      "description": "Loud lime and cyan fluid swirling over black.",
+      "registryDependencies": ["@remocn/shader-warp"],
+      "files": [
+        {
+          "path": "registry/remocn/shader-warp-acid/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/shader-warp-acid.tsx"
+        }
+      ],
+      "meta": {
+        "presetOf": "shader-warp"
+      },
+      "type": "registry:component"
+    },
+    {
+      "name": "shader-warp-cream",
+      "title": "Shader Warp Cream",
+      "description": "Soft peach-to-coral cream gradient with a gentle drift.",
+      "registryDependencies": ["@remocn/shader-warp"],
+      "files": [
+        {
+          "path": "registry/remocn/shader-warp-cream/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/shader-warp-cream.tsx"
+        }
+      ],
+      "meta": {
+        "presetOf": "shader-warp"
+      },
+      "type": "registry:component"
+    },
+    {
+      "name": "shader-warp-deep-sea",
+      "title": "Shader Warp Deep Sea",
+      "description": "Diagonal teal bands rippling through midnight blue.",
+      "registryDependencies": ["@remocn/shader-warp"],
+      "files": [
+        {
+          "path": "registry/remocn/shader-warp-deep-sea/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/shader-warp-deep-sea.tsx"
+        }
+      ],
+      "meta": {
+        "presetOf": "shader-warp"
+      },
+      "type": "registry:component"
+    },
+    {
+      "name": "shader-warp-rose-gold",
+      "title": "Shader Warp Rose Gold",
+      "description": "Satin rose-gold folds with a soft sheen.",
+      "registryDependencies": ["@remocn/shader-warp"],
+      "files": [
+        {
+          "path": "registry/remocn/shader-warp-rose-gold/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/shader-warp-rose-gold.tsx"
+        }
+      ],
+      "meta": {
+        "presetOf": "shader-warp"
+      },
+      "type": "registry:component"
+    },
+    {
+      "name": "shader-warp-storm",
+      "title": "Shader Warp Storm",
+      "description": "Deep violet and lavender storm of marbled fluid.",
+      "registryDependencies": ["@remocn/shader-warp"],
+      "files": [
+        {
+          "path": "registry/remocn/shader-warp-storm/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/shader-warp-storm.tsx"
+        }
+      ],
+      "meta": {
+        "presetOf": "shader-warp"
+      },
+      "type": "registry:component"
+    },
+    {
       "name": "shader-swirl",
       "title": "Shader Swirl",
       "description": "Concentric bands swirling around a center point.",
@@ -730,6 +1189,159 @@
           "target": "components/remocn/shader-swirl.tsx"
         }
       ],
+      "type": "registry:component"
+    },
+    {
+      "name": "shader-swirl-candy",
+      "title": "Shader Swirl Candy",
+      "description": "Pastel pink, lilac and sky-blue spiral, soft and sweet.",
+      "registryDependencies": ["@remocn/shader-swirl"],
+      "files": [
+        {
+          "path": "registry/remocn/shader-swirl-candy/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/shader-swirl-candy.tsx"
+        }
+      ],
+      "meta": {
+        "presetOf": "shader-swirl"
+      },
+      "type": "registry:component"
+    },
+    {
+      "name": "shader-swirl-sunburst",
+      "title": "Shader Swirl Sunburst",
+      "description": "Retro cream and orange bands sweeping in from above.",
+      "registryDependencies": ["@remocn/shader-swirl"],
+      "files": [
+        {
+          "path": "registry/remocn/shader-swirl-sunburst/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/shader-swirl-sunburst.tsx"
+        }
+      ],
+      "meta": {
+        "presetOf": "shader-swirl"
+      },
+      "type": "registry:component"
+    },
+    {
+      "name": "shader-swirl-hypno",
+      "title": "Shader Swirl Hypno",
+      "description": "High-contrast black and white hypnotic spiral.",
+      "registryDependencies": ["@remocn/shader-swirl"],
+      "files": [
+        {
+          "path": "registry/remocn/shader-swirl-hypno/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/shader-swirl-hypno.tsx"
+        }
+      ],
+      "meta": {
+        "presetOf": "shader-swirl"
+      },
+      "type": "registry:component"
+    },
+    {
+      "name": "shader-swirl-neon",
+      "title": "Shader Swirl Neon",
+      "description": "Neon teal, purple and pink vortex around a dark core.",
+      "registryDependencies": ["@remocn/shader-swirl"],
+      "files": [
+        {
+          "path": "registry/remocn/shader-swirl-neon/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/shader-swirl-neon.tsx"
+        }
+      ],
+      "meta": {
+        "presetOf": "shader-swirl"
+      },
+      "type": "registry:component"
+    },
+    {
+      "name": "shader-swirl-tide",
+      "title": "Shader Swirl Tide",
+      "description": "Silky blue bands twisting into a deep navy whirlpool.",
+      "registryDependencies": ["@remocn/shader-swirl"],
+      "files": [
+        {
+          "path": "registry/remocn/shader-swirl-tide/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/shader-swirl-tide.tsx"
+        }
+      ],
+      "meta": {
+        "presetOf": "shader-swirl"
+      },
+      "type": "registry:component"
+    },
+    {
+      "name": "shader-swirl-citrus",
+      "title": "Shader Swirl Citrus",
+      "description": "Juicy yellow, pink and green bands spiralling on cream.",
+      "registryDependencies": ["@remocn/shader-swirl"],
+      "files": [
+        {
+          "path": "registry/remocn/shader-swirl-citrus/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/shader-swirl-citrus.tsx"
+        }
+      ],
+      "meta": {
+        "presetOf": "shader-swirl"
+      },
+      "type": "registry:component"
+    },
+    {
+      "name": "shader-swirl-ember",
+      "title": "Shader Swirl Ember",
+      "description": "Gold and orange fire bands spinning around a dark core.",
+      "registryDependencies": ["@remocn/shader-swirl"],
+      "files": [
+        {
+          "path": "registry/remocn/shader-swirl-ember/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/shader-swirl-ember.tsx"
+        }
+      ],
+      "meta": {
+        "presetOf": "shader-swirl"
+      },
+      "type": "registry:component"
+    },
+    {
+      "name": "shader-swirl-lilac",
+      "title": "Shader Swirl Lilac",
+      "description": "Dreamy lilac and baby-blue swirl around a dark eye.",
+      "registryDependencies": ["@remocn/shader-swirl"],
+      "files": [
+        {
+          "path": "registry/remocn/shader-swirl-lilac/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/shader-swirl-lilac.tsx"
+        }
+      ],
+      "meta": {
+        "presetOf": "shader-swirl"
+      },
+      "type": "registry:component"
+    },
+    {
+      "name": "shader-swirl-retro",
+      "title": "Shader Swirl Retro",
+      "description": "Seventies spiral in orange, sand and teal.",
+      "registryDependencies": ["@remocn/shader-swirl"],
+      "files": [
+        {
+          "path": "registry/remocn/shader-swirl-retro/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/shader-swirl-retro.tsx"
+        }
+      ],
+      "meta": {
+        "presetOf": "shader-swirl"
+      },
       "type": "registry:component"
     },
     {

@@ -41,6 +41,18 @@ export const RemotionRoot = () => (
 );
 ```
 
+## Presets
+
+Ready-made looks, each a standalone registry item that pulls in `shader-swirl` as a dependency. Install one and drop it in like the base shader. Props you pass override the preset, and `speed` scales the preset's own pace instead of replacing it.
+
+<ShaderPresets base="shader-swirl" />
+
+```tsx
+import { ShaderSwirlCandy } from "@/components/remocn/shader-swirl-candy";
+
+export const Background = () => <ShaderSwirlCandy />;
+```
+
 ## Credits
 
 Shader by [paper-design/shaders](https://github.com/paper-design/shaders).

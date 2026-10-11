@@ -1,0 +1,19 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "shader-grain-gradient-arcade",
+  "title": "Shader Grain Gradient Arcade",
+  "description": "Retro grainy dots in orange, yellow and green on black.",
+  "registryDependencies": ["@remocn/shader-grain-gradient"],
+  "files": [
+    {
+      "path": "registry/remocn/shader-grain-gradient-arcade/index.tsx",
+      "content": "\"use client\";\n\nimport {\n  ShaderGrainGradient,\n  type ShaderGrainGradientProps,\n} from \"@/components/remocn/shader-grain-gradient\";\n\n// Arcade: retro grainy dots in orange, yellow and green on black.\n// A preset of ShaderGrainGradient. The whole look lives in the object below, so tune\n// it freely. Props you pass override the preset, except `speed`, which scales\n// the preset's own speed instead of replacing it.\n\nexport const shaderGrainGradientArcadePreset = {\n  speed: 1,\n  shape: \"dots\",\n  colorBack: \"#111111\",\n  colors: [\"#ff5e3a\", \"#ffd23f\", \"#3bceac\", \"#0ead69\"],\n  softness: 0.8,\n  intensity: 0.6,\n  noise: 0.35,\n  scale: 0.6,\n} satisfies ShaderGrainGradientProps;\n\nexport function ShaderGrainGradientArcade({\n  speed = 1,\n  ...props\n}: ShaderGrainGradientProps) {\n  return (\n    <ShaderGrainGradient\n      {...shaderGrainGradientArcadePreset}\n      {...props}\n      speed={shaderGrainGradientArcadePreset.speed * speed}\n    />\n  );\n}\n",
+      "type": "registry:component",
+      "target": "components/remocn/shader-grain-gradient-arcade.tsx"
+    }
+  ],
+  "meta": {
+    "presetOf": "shader-grain-gradient"
+  },
+  "type": "registry:component"
+}

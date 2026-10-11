@@ -1,0 +1,19 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "shader-grain-gradient-orb",
+  "title": "Shader Grain Gradient Orb",
+  "description": "Large grainy sphere in periwinkle, violet and pink.",
+  "registryDependencies": ["@remocn/shader-grain-gradient"],
+  "files": [
+    {
+      "path": "registry/remocn/shader-grain-gradient-orb/index.tsx",
+      "content": "\"use client\";\n\nimport {\n  ShaderGrainGradient,\n  type ShaderGrainGradientProps,\n} from \"@/components/remocn/shader-grain-gradient\";\n\n// Orb: large grainy sphere in periwinkle, violet and pink.\n// A preset of ShaderGrainGradient. The whole look lives in the object below, so tune\n// it freely. Props you pass override the preset, except `speed`, which scales\n// the preset's own speed instead of replacing it.\n\nexport const shaderGrainGradientOrbPreset = {\n  speed: 1,\n  shape: \"sphere\",\n  colorBack: \"#0a0a12\",\n  colors: [\"#4f7cff\", \"#b06bff\", \"#ffd1f0\"],\n  softness: 0.6,\n  intensity: 0.3,\n  noise: 0.15,\n} satisfies ShaderGrainGradientProps;\n\nexport function ShaderGrainGradientOrb({\n  speed = 1,\n  ...props\n}: ShaderGrainGradientProps) {\n  return (\n    <ShaderGrainGradient\n      {...shaderGrainGradientOrbPreset}\n      {...props}\n      speed={shaderGrainGradientOrbPreset.speed * speed}\n    />\n  );\n}\n",
+      "type": "registry:component",
+      "target": "components/remocn/shader-grain-gradient-orb.tsx"
+    }
+  ],
+  "meta": {
+    "presetOf": "shader-grain-gradient"
+  },
+  "type": "registry:component"
+}

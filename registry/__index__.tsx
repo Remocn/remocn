@@ -810,6 +810,96 @@ const registry: Record<string, RegistryEntry> = {
         (m) => m.shaderMeshGradientConfig,
       ),
   },
+  "shader-mesh-gradient-dusk": {
+    load: () =>
+      import("@/registry/remocn/shader-mesh-gradient-dusk").then((m) => ({
+        default: m.ShaderMeshGradientDusk,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/shader-mesh-gradient-dusk/config").then(
+        (m) => m.shaderMeshGradientDuskConfig,
+      ),
+  },
+  "shader-mesh-gradient-lagoon": {
+    load: () =>
+      import("@/registry/remocn/shader-mesh-gradient-lagoon").then((m) => ({
+        default: m.ShaderMeshGradientLagoon,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/shader-mesh-gradient-lagoon/config").then(
+        (m) => m.shaderMeshGradientLagoonConfig,
+      ),
+  },
+  "shader-mesh-gradient-peach": {
+    load: () =>
+      import("@/registry/remocn/shader-mesh-gradient-peach").then((m) => ({
+        default: m.ShaderMeshGradientPeach,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/shader-mesh-gradient-peach/config").then(
+        (m) => m.shaderMeshGradientPeachConfig,
+      ),
+  },
+  "shader-mesh-gradient-aurora": {
+    load: () =>
+      import("@/registry/remocn/shader-mesh-gradient-aurora").then((m) => ({
+        default: m.ShaderMeshGradientAurora,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/shader-mesh-gradient-aurora/config").then(
+        (m) => m.shaderMeshGradientAuroraConfig,
+      ),
+  },
+  "shader-mesh-gradient-lavender": {
+    load: () =>
+      import("@/registry/remocn/shader-mesh-gradient-lavender").then((m) => ({
+        default: m.ShaderMeshGradientLavender,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/shader-mesh-gradient-lavender/config").then(
+        (m) => m.shaderMeshGradientLavenderConfig,
+      ),
+  },
+  "shader-mesh-gradient-ember": {
+    load: () =>
+      import("@/registry/remocn/shader-mesh-gradient-ember").then((m) => ({
+        default: m.ShaderMeshGradientEmber,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/shader-mesh-gradient-ember/config").then(
+        (m) => m.shaderMeshGradientEmberConfig,
+      ),
+  },
+  "shader-mesh-gradient-mint": {
+    load: () =>
+      import("@/registry/remocn/shader-mesh-gradient-mint").then((m) => ({
+        default: m.ShaderMeshGradientMint,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/shader-mesh-gradient-mint/config").then(
+        (m) => m.shaderMeshGradientMintConfig,
+      ),
+  },
+  "shader-mesh-gradient-synthwave": {
+    load: () =>
+      import("@/registry/remocn/shader-mesh-gradient-synthwave").then((m) => ({
+        default: m.ShaderMeshGradientSynthwave,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/shader-mesh-gradient-synthwave/config").then(
+        (m) => m.shaderMeshGradientSynthwaveConfig,
+      ),
+  },
+  "shader-mesh-gradient-ink": {
+    load: () =>
+      import("@/registry/remocn/shader-mesh-gradient-ink").then((m) => ({
+        default: m.ShaderMeshGradientInk,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/shader-mesh-gradient-ink/config").then(
+        (m) => m.shaderMeshGradientInkConfig,
+      ),
+  },
   "shader-grain-gradient": {
     load: () =>
       import("@/registry/remocn/shader-grain-gradient").then((m) => ({
@@ -818,6 +908,98 @@ const registry: Record<string, RegistryEntry> = {
     loadConfig: () =>
       import("@/registry/remocn/shader-grain-gradient/config").then(
         (m) => m.shaderGrainGradientConfig,
+      ),
+  },
+  "shader-grain-gradient-sunrise": {
+    load: () =>
+      import("@/registry/remocn/shader-grain-gradient-sunrise").then((m) => ({
+        default: m.ShaderGrainGradientSunrise,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/shader-grain-gradient-sunrise/config").then(
+        (m) => m.shaderGrainGradientSunriseConfig,
+      ),
+  },
+  "shader-grain-gradient-nebula": {
+    load: () =>
+      import("@/registry/remocn/shader-grain-gradient-nebula").then((m) => ({
+        default: m.ShaderGrainGradientNebula,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/shader-grain-gradient-nebula/config").then(
+        (m) => m.shaderGrainGradientNebulaConfig,
+      ),
+  },
+  "shader-grain-gradient-orb": {
+    load: () =>
+      import("@/registry/remocn/shader-grain-gradient-orb").then((m) => ({
+        default: m.ShaderGrainGradientOrb,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/shader-grain-gradient-orb/config").then(
+        (m) => m.shaderGrainGradientOrbConfig,
+      ),
+  },
+  "shader-grain-gradient-horizon": {
+    load: () =>
+      import("@/registry/remocn/shader-grain-gradient-horizon").then((m) => ({
+        default: m.ShaderGrainGradientHorizon,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/shader-grain-gradient-horizon/config").then(
+        (m) => m.shaderGrainGradientHorizonConfig,
+      ),
+  },
+  "shader-grain-gradient-blush": {
+    load: () =>
+      import("@/registry/remocn/shader-grain-gradient-blush").then((m) => ({
+        default: m.ShaderGrainGradientBlush,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/shader-grain-gradient-blush/config").then(
+        (m) => m.shaderGrainGradientBlushConfig,
+      ),
+  },
+  "shader-grain-gradient-tide": {
+    load: () =>
+      import("@/registry/remocn/shader-grain-gradient-tide").then((m) => ({
+        default: m.ShaderGrainGradientTide,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/shader-grain-gradient-tide/config").then(
+        (m) => m.shaderGrainGradientTideConfig,
+      ),
+  },
+  "shader-grain-gradient-arcade": {
+    load: () =>
+      import("@/registry/remocn/shader-grain-gradient-arcade").then((m) => ({
+        default: m.ShaderGrainGradientArcade,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/shader-grain-gradient-arcade/config").then(
+        (m) => m.shaderGrainGradientArcadeConfig,
+      ),
+  },
+  "shader-grain-gradient-dune": {
+    load: () =>
+      import("@/registry/remocn/shader-grain-gradient-dune").then((m) => ({
+        default: m.ShaderGrainGradientDune,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/shader-grain-gradient-dune/config").then(
+        (m) => m.shaderGrainGradientDuneConfig,
+      ),
+  },
+  "shader-grain-gradient-ultraviolet": {
+    load: () =>
+      import("@/registry/remocn/shader-grain-gradient-ultraviolet").then(
+        (m) => ({
+          default: m.ShaderGrainGradientUltraviolet,
+        }),
+      ),
+    loadConfig: () =>
+      import("@/registry/remocn/shader-grain-gradient-ultraviolet/config").then(
+        (m) => m.shaderGrainGradientUltravioletConfig,
       ),
   },
   "shader-warp": {
@@ -830,6 +1012,96 @@ const registry: Record<string, RegistryEntry> = {
         (m) => m.shaderWarpConfig,
       ),
   },
+  "shader-warp-silk": {
+    load: () =>
+      import("@/registry/remocn/shader-warp-silk").then((m) => ({
+        default: m.ShaderWarpSilk,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/shader-warp-silk/config").then(
+        (m) => m.shaderWarpSilkConfig,
+      ),
+  },
+  "shader-warp-sunset": {
+    load: () =>
+      import("@/registry/remocn/shader-warp-sunset").then((m) => ({
+        default: m.ShaderWarpSunset,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/shader-warp-sunset/config").then(
+        (m) => m.shaderWarpSunsetConfig,
+      ),
+  },
+  "shader-warp-ocean": {
+    load: () =>
+      import("@/registry/remocn/shader-warp-ocean").then((m) => ({
+        default: m.ShaderWarpOcean,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/shader-warp-ocean/config").then(
+        (m) => m.shaderWarpOceanConfig,
+      ),
+  },
+  "shader-warp-marble": {
+    load: () =>
+      import("@/registry/remocn/shader-warp-marble").then((m) => ({
+        default: m.ShaderWarpMarble,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/shader-warp-marble/config").then(
+        (m) => m.shaderWarpMarbleConfig,
+      ),
+  },
+  "shader-warp-acid": {
+    load: () =>
+      import("@/registry/remocn/shader-warp-acid").then((m) => ({
+        default: m.ShaderWarpAcid,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/shader-warp-acid/config").then(
+        (m) => m.shaderWarpAcidConfig,
+      ),
+  },
+  "shader-warp-cream": {
+    load: () =>
+      import("@/registry/remocn/shader-warp-cream").then((m) => ({
+        default: m.ShaderWarpCream,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/shader-warp-cream/config").then(
+        (m) => m.shaderWarpCreamConfig,
+      ),
+  },
+  "shader-warp-deep-sea": {
+    load: () =>
+      import("@/registry/remocn/shader-warp-deep-sea").then((m) => ({
+        default: m.ShaderWarpDeepSea,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/shader-warp-deep-sea/config").then(
+        (m) => m.shaderWarpDeepSeaConfig,
+      ),
+  },
+  "shader-warp-rose-gold": {
+    load: () =>
+      import("@/registry/remocn/shader-warp-rose-gold").then((m) => ({
+        default: m.ShaderWarpRoseGold,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/shader-warp-rose-gold/config").then(
+        (m) => m.shaderWarpRoseGoldConfig,
+      ),
+  },
+  "shader-warp-storm": {
+    load: () =>
+      import("@/registry/remocn/shader-warp-storm").then((m) => ({
+        default: m.ShaderWarpStorm,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/shader-warp-storm/config").then(
+        (m) => m.shaderWarpStormConfig,
+      ),
+  },
   "shader-swirl": {
     load: () =>
       import("@/registry/remocn/shader-swirl").then((m) => ({
@@ -838,6 +1110,96 @@ const registry: Record<string, RegistryEntry> = {
     loadConfig: () =>
       import("@/registry/remocn/shader-swirl/config").then(
         (m) => m.shaderSwirlConfig,
+      ),
+  },
+  "shader-swirl-candy": {
+    load: () =>
+      import("@/registry/remocn/shader-swirl-candy").then((m) => ({
+        default: m.ShaderSwirlCandy,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/shader-swirl-candy/config").then(
+        (m) => m.shaderSwirlCandyConfig,
+      ),
+  },
+  "shader-swirl-sunburst": {
+    load: () =>
+      import("@/registry/remocn/shader-swirl-sunburst").then((m) => ({
+        default: m.ShaderSwirlSunburst,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/shader-swirl-sunburst/config").then(
+        (m) => m.shaderSwirlSunburstConfig,
+      ),
+  },
+  "shader-swirl-hypno": {
+    load: () =>
+      import("@/registry/remocn/shader-swirl-hypno").then((m) => ({
+        default: m.ShaderSwirlHypno,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/shader-swirl-hypno/config").then(
+        (m) => m.shaderSwirlHypnoConfig,
+      ),
+  },
+  "shader-swirl-neon": {
+    load: () =>
+      import("@/registry/remocn/shader-swirl-neon").then((m) => ({
+        default: m.ShaderSwirlNeon,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/shader-swirl-neon/config").then(
+        (m) => m.shaderSwirlNeonConfig,
+      ),
+  },
+  "shader-swirl-tide": {
+    load: () =>
+      import("@/registry/remocn/shader-swirl-tide").then((m) => ({
+        default: m.ShaderSwirlTide,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/shader-swirl-tide/config").then(
+        (m) => m.shaderSwirlTideConfig,
+      ),
+  },
+  "shader-swirl-citrus": {
+    load: () =>
+      import("@/registry/remocn/shader-swirl-citrus").then((m) => ({
+        default: m.ShaderSwirlCitrus,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/shader-swirl-citrus/config").then(
+        (m) => m.shaderSwirlCitrusConfig,
+      ),
+  },
+  "shader-swirl-ember": {
+    load: () =>
+      import("@/registry/remocn/shader-swirl-ember").then((m) => ({
+        default: m.ShaderSwirlEmber,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/shader-swirl-ember/config").then(
+        (m) => m.shaderSwirlEmberConfig,
+      ),
+  },
+  "shader-swirl-lilac": {
+    load: () =>
+      import("@/registry/remocn/shader-swirl-lilac").then((m) => ({
+        default: m.ShaderSwirlLilac,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/shader-swirl-lilac/config").then(
+        (m) => m.shaderSwirlLilacConfig,
+      ),
+  },
+  "shader-swirl-retro": {
+    load: () =>
+      import("@/registry/remocn/shader-swirl-retro").then((m) => ({
+        default: m.ShaderSwirlRetro,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/shader-swirl-retro/config").then(
+        (m) => m.shaderSwirlRetroConfig,
       ),
   },
   "shader-water": {

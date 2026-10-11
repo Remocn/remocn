@@ -41,6 +41,18 @@ export const RemotionRoot = () => (
 );
 ```
 
+## Presets
+
+Ready-made looks, each a standalone registry item that pulls in `shader-mesh-gradient` as a dependency. Install one and drop it in like the base shader. Props you pass override the preset, and `speed` scales the preset's own pace instead of replacing it.
+
+<ShaderPresets base="shader-mesh-gradient" />
+
+```tsx
+import { ShaderMeshGradientDusk } from "@/components/remocn/shader-mesh-gradient-dusk";
+
+export const Background = () => <ShaderMeshGradientDusk />;
+```
+
 ## Credits
 
 Shader by [paper-design/shaders](https://github.com/paper-design/shaders).
