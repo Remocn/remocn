@@ -1,0 +1,19 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "shader-warp-acid",
+  "title": "Shader Warp Acid",
+  "description": "Loud lime and cyan fluid swirling over black.",
+  "registryDependencies": ["@remocn/shader-warp"],
+  "files": [
+    {
+      "path": "registry/remocn/shader-warp-acid/index.tsx",
+      "content": "\"use client\";\n\nimport {\n  ShaderWarp,\n  type ShaderWarpProps,\n} from \"@/components/remocn/shader-warp\";\n\n// Acid: loud lime and cyan fluid swirling over black.\n// A preset of ShaderWarp. The whole look lives in the object below, so tune\n// it freely. Props you pass override the preset, except `speed`, which scales\n// the preset's own speed instead of replacing it.\n\nexport const shaderWarpAcidPreset = {\n  speed: 3,\n  shape: \"checks\",\n  colors: [\"#0a0a0a\", \"#c6ff00\", \"#00e5ff\"],\n  proportion: 0.5,\n  softness: 0.3,\n  distortion: 0.2,\n  swirl: 0.7,\n  swirlIterations: 8,\n  shapeScale: 0.3,\n} satisfies ShaderWarpProps;\n\nexport function ShaderWarpAcid({ speed = 1, ...props }: ShaderWarpProps) {\n  return (\n    <ShaderWarp\n      {...shaderWarpAcidPreset}\n      {...props}\n      speed={shaderWarpAcidPreset.speed * speed}\n    />\n  );\n}\n",
+      "type": "registry:component",
+      "target": "components/remocn/shader-warp-acid.tsx"
+    }
+  ],
+  "meta": {
+    "presetOf": "shader-warp"
+  },
+  "type": "registry:component"
+}

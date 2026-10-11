@@ -1,0 +1,19 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "shader-warp-marble",
+  "title": "Shader Warp Marble",
+  "description": "Cream and charcoal marble veins swirling together.",
+  "registryDependencies": ["@remocn/shader-warp"],
+  "files": [
+    {
+      "path": "registry/remocn/shader-warp-marble/index.tsx",
+      "content": "\"use client\";\n\nimport {\n  ShaderWarp,\n  type ShaderWarpProps,\n} from \"@/components/remocn/shader-warp\";\n\n// Marble: cream and charcoal marble veins swirling together.\n// A preset of ShaderWarp. The whole look lives in the object below, so tune\n// it freely. Props you pass override the preset, except `speed`, which scales\n// the preset's own speed instead of replacing it.\n\nexport const shaderWarpMarblePreset = {\n  speed: 2,\n  shape: \"edge\",\n  colors: [\"#f5f3ee\", \"#c9c3b8\", \"#2b2b2b\"],\n  proportion: 0.3,\n  softness: 0.4,\n  distortion: 0.25,\n  swirl: 0.9,\n  swirlIterations: 10,\n  shapeScale: 0.8,\n} satisfies ShaderWarpProps;\n\nexport function ShaderWarpMarble({ speed = 1, ...props }: ShaderWarpProps) {\n  return (\n    <ShaderWarp\n      {...shaderWarpMarblePreset}\n      {...props}\n      speed={shaderWarpMarblePreset.speed * speed}\n    />\n  );\n}\n",
+      "type": "registry:component",
+      "target": "components/remocn/shader-warp-marble.tsx"
+    }
+  ],
+  "meta": {
+    "presetOf": "shader-warp"
+  },
+  "type": "registry:component"
+}

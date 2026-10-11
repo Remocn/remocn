@@ -1,0 +1,45 @@
+---
+title: Deep Sea
+description: Warp preset. Diagonal teal bands rippling through midnight blue
+component: shader-warp-deep-sea
+vibe: tech
+length: 150
+useWhen:
+  - "A rhythmic, banded background with steady directional motion."
+  - "Foreground is light text or a bright product shot that needs a dark field around it."
+  - "You want a finished Warp look without tuning the palette and parameters yourself."
+avoidWhen:
+  - "The video must use your brand colors — start from `shader-warp` and set `colors`."
+  - "You want a lighter, contrasting mood from the same shader — use `shader-warp-sunset`."
+---
+
+<ComponentPreview name="shader-warp-deep-sea" />
+
+<InstallBlock name="shader-warp-deep-sea" />
+
+Installs [Warp](/docs/shaders/components/shader-warp) as a dependency. This file only fixes its look: the preset object at the top holds every value, so edit it in place to make the preset your own.
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { ShaderWarpDeepSea } from "@/components/remocn/shader-warp-deep-sea";
+
+export const RemotionRoot = () => (
+  <Composition
+    id="ShaderWarpDeepSea"
+    component={ShaderWarpDeepSea}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+ShaderWarpDeepSea takes the same props as `ShaderWarp`. Props you pass override the preset, except `speed`, which scales the preset's own pace: `speed={2}` is twice as fast as the preset, whatever its base speed.
+
+## Credits
+
+Shader by [paper-design/shaders](https://github.com/paper-design/shaders).

@@ -1,0 +1,45 @@
+---
+title: Sunrise
+description: Grain Gradient preset. Grainy wave of coral and gold rising over a plum night
+component: shader-grain-gradient-sunrise
+vibe: premium
+length: 150
+useWhen:
+  - "A rising, hopeful moment such as a launch day or a new chapter."
+  - "Foreground is light text or a bright product shot that needs a dark field around it."
+  - "You want a finished Grain Gradient look without tuning the palette and parameters yourself."
+avoidWhen:
+  - "The video must use your brand colors — start from `shader-grain-gradient` and set `colors`."
+  - "You want a lighter, contrasting mood from the same shader — use `shader-grain-gradient-tide`."
+---
+
+<ComponentPreview name="shader-grain-gradient-sunrise" />
+
+<InstallBlock name="shader-grain-gradient-sunrise" />
+
+Installs [Grain Gradient](/docs/shaders/components/shader-grain-gradient) as a dependency. This file only fixes its look: the preset object at the top holds every value, so edit it in place to make the preset your own.
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { ShaderGrainGradientSunrise } from "@/components/remocn/shader-grain-gradient-sunrise";
+
+export const RemotionRoot = () => (
+  <Composition
+    id="ShaderGrainGradientSunrise"
+    component={ShaderGrainGradientSunrise}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+ShaderGrainGradientSunrise takes the same props as `ShaderGrainGradient`. Props you pass override the preset, except `speed`, which scales the preset's own pace: `speed={2}` is twice as fast as the preset, whatever its base speed.
+
+## Credits
+
+Shader by [paper-design/shaders](https://github.com/paper-design/shaders).

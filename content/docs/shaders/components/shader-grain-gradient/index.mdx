@@ -41,6 +41,18 @@ export const RemotionRoot = () => (
 );
 ```
 
+## Presets
+
+Ready-made looks, each a standalone registry item that pulls in `shader-grain-gradient` as a dependency. Install one and drop it in like the base shader. Props you pass override the preset, and `speed` scales the preset's own pace instead of replacing it.
+
+<ShaderPresets base="shader-grain-gradient" />
+
+```tsx
+import { ShaderGrainGradientSunrise } from "@/components/remocn/shader-grain-gradient-sunrise";
+
+export const Background = () => <ShaderGrainGradientSunrise />;
+```
+
 ## Credits
 
 Shader by [paper-design/shaders](https://github.com/paper-design/shaders).

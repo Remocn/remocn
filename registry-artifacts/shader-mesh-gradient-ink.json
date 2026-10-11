@@ -1,0 +1,19 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "shader-mesh-gradient-ink",
+  "title": "Shader Mesh Gradient Ink",
+  "description": "Monochrome ink folds in charcoal and silver with grain.",
+  "registryDependencies": ["@remocn/shader-mesh-gradient"],
+  "files": [
+    {
+      "path": "registry/remocn/shader-mesh-gradient-ink/index.tsx",
+      "content": "\"use client\";\n\nimport {\n  ShaderMeshGradient,\n  type ShaderMeshGradientProps,\n} from \"@/components/remocn/shader-mesh-gradient\";\n\n// Ink: monochrome ink folds in charcoal and silver with grain.\n// A preset of ShaderMeshGradient. The whole look lives in the object below, so tune\n// it freely. Props you pass override the preset, except `speed`, which scales\n// the preset's own speed instead of replacing it.\n\nexport const shaderMeshGradientInkPreset = {\n  speed: 1,\n  colors: [\"#0b0b0f\", \"#f4f4f5\", \"#6b6b76\"],\n  distortion: 1,\n  swirl: 0.25,\n  grainOverlay: 0.15,\n  rotation: 90,\n} satisfies ShaderMeshGradientProps;\n\nexport function ShaderMeshGradientInk({\n  speed = 1,\n  ...props\n}: ShaderMeshGradientProps) {\n  return (\n    <ShaderMeshGradient\n      {...shaderMeshGradientInkPreset}\n      {...props}\n      speed={shaderMeshGradientInkPreset.speed * speed}\n    />\n  );\n}\n",
+      "type": "registry:component",
+      "target": "components/remocn/shader-mesh-gradient-ink.tsx"
+    }
+  ],
+  "meta": {
+    "presetOf": "shader-mesh-gradient"
+  },
+  "type": "registry:component"
+}

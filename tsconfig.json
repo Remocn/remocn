@@ -151,6 +151,9 @@
       "@/components/remocn/shader-warp": [
         "./registry/remocn/shader-warp/index.tsx"
       ],
+      "@/components/remocn/shader-mesh-gradient": [
+        "./registry/remocn/shader-mesh-gradient/index.tsx"
+      ],
       "@/components/remocn/ascii-dissolve": [
         "./registry/remocn/ascii-dissolve/index.tsx"
       ],

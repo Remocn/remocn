@@ -1,0 +1,19 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "shader-warp-storm",
+  "title": "Shader Warp Storm",
+  "description": "Deep violet and lavender storm of marbled fluid.",
+  "registryDependencies": ["@remocn/shader-warp"],
+  "files": [
+    {
+      "path": "registry/remocn/shader-warp-storm/index.tsx",
+      "content": "\"use client\";\n\nimport {\n  ShaderWarp,\n  type ShaderWarpProps,\n} from \"@/components/remocn/shader-warp\";\n\n// Storm: deep violet and lavender storm of marbled fluid.\n// A preset of ShaderWarp. The whole look lives in the object below, so tune\n// it freely. Props you pass override the preset, except `speed`, which scales\n// the preset's own speed instead of replacing it.\n\nexport const shaderWarpStormPreset = {\n  speed: 3,\n  shape: \"edge\",\n  colors: [\"#0b0620\", \"#3b1d8f\", \"#8f5cff\", \"#e0d4ff\"],\n  proportion: 0.5,\n  softness: 1,\n  distortion: 0.3,\n  swirl: 1,\n  swirlIterations: 10,\n  shapeScale: 0.4,\n} satisfies ShaderWarpProps;\n\nexport function ShaderWarpStorm({ speed = 1, ...props }: ShaderWarpProps) {\n  return (\n    <ShaderWarp\n      {...shaderWarpStormPreset}\n      {...props}\n      speed={shaderWarpStormPreset.speed * speed}\n    />\n  );\n}\n",
+      "type": "registry:component",
+      "target": "components/remocn/shader-warp-storm.tsx"
+    }
+  ],
+  "meta": {
+    "presetOf": "shader-warp"
+  },
+  "type": "registry:component"
+}

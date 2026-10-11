@@ -1,5 +1,6 @@
 import JSON5 from "json5";
 import { INSTALL_ALL_COMMAND } from "@/config/site";
+import { presetsOf } from "@/lib/shader-presets";
 
 type AttrValue =
   | string
@@ -42,6 +43,7 @@ const SELF_CLOSING_WIDGETS = new Set([
   "PropsTable",
   "Dependencies",
   "ComponentCardGrid",
+  "ShaderPresets",
 ]);
 
 function skipQuoted(src: string, start: number): number {
@@ -187,6 +189,15 @@ function renderCardGrid(items: unknown, siteUrl: string): string {
     .join("\n");
 }
 
+function renderShaderPresets(base: string, siteUrl: string): string {
+  return presetsOf(base)
+    .map(
+      (item) =>
+        `- [\`${item.name}\`](${siteUrl}${item.href}) — ${item.description} Install: \`npx shadcn@latest add @remocn/${item.name}\``,
+    )
+    .join("\n");
+}
+
 function renderDependencies(items: unknown): string {
   if (!Array.isArray(items) || items.length === 0) return "";
   return `Requires: ${items.map((i) => `\`${String(i)}\``).join(", ")}`;
@@ -315,6 +326,11 @@ export function mdxToMarkdown(src: string, siteUrl: string): string {
             }
           } else if (tag === "ComponentCardGrid") {
             replacement = renderCardGrid(attrs.items, siteUrl);
+          } else if (
+            tag === "ShaderPresets" &&
+            typeof attrs.base === "string"
+          ) {
+            replacement = renderShaderPresets(attrs.base, siteUrl);
           } else if (tag === "Dependencies") {
             replacement = renderDependencies(attrs.items);
           }
