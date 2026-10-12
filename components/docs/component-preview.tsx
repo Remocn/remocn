@@ -26,9 +26,11 @@ import { StudioActions } from "./studio-actions";
 export function ComponentPreview({
   name,
   studioElement,
+  layout,
 }: {
   name: string;
   studioElement?: StudioElementPayload;
+  layout: "caption-picker" | null;
 }) {
   const entry = registry[name];
 
@@ -43,10 +45,21 @@ export function ComponentPreview({
   return (
     <Suspense
       fallback={
-        <div className="not-prose mb-6 aspect-[1.9/1] w-full animate-pulse rounded-2xl bg-muted" />
+        <div
+          className={
+            layout === "caption-picker"
+              ? "min-h-0 flex-1 animate-pulse rounded-lg bg-muted"
+              : "not-prose mb-6 aspect-[1.9/1] w-full animate-pulse rounded-2xl bg-muted"
+          }
+        />
       }
     >
-      <Preview name={name} load={entry.load} studioElement={studioElement} />
+      <Preview
+        name={name}
+        load={entry.load}
+        studioElement={studioElement}
+        layout={layout}
+      />
     </Suspense>
   );
 }
@@ -55,9 +68,11 @@ function Preview({
   name,
   load,
   studioElement,
+  layout,
 }: {
   name: string;
   studioElement?: StudioElementPayload;
+  layout: "caption-picker" | null;
   // biome-ignore lint/suspicious/noExplicitAny: dynamically-loaded Remotion composition, props shape varies per component
   load: () => Promise<{ default: React.ComponentType<any> }>;
 }) {
@@ -86,6 +101,15 @@ function Preview({
   );
 
   const code = useMemo(() => generateCode(config, values), [config, values]);
+  const installPayload = useMemo(() => {
+    if (!studioElement?.element.isCaptionStyle) return studioElement;
+    // The generated transcript comes from Studio, never from the demo fixture.
+    const { captions: _captions, ...styleProps } = values;
+    return {
+      ...studioElement,
+      element: { ...studioElement.element, initialProps: styleProps },
+    } as StudioElementPayload;
+  }, [studioElement, values]);
 
   const [copied, setCopied] = useState(false);
   const handleCopyLink = () => {
@@ -128,6 +152,80 @@ function Preview({
     );
   };
 
+  const preview = (
+    <PreviewStage
+      name={name}
+      load={load}
+      inputProps={values}
+      durationInFrames={
+        config.getDurationInFrames?.(values) ?? config.durationInFrames
+      }
+      fps={config.fps}
+      compositionWidth={config.compositionWidth}
+      compositionHeight={config.compositionHeight}
+      previewBackdrop={config.previewBackdrop}
+      className={
+        layout === "caption-picker"
+          ? "h-full aspect-auto rounded-md"
+          : "rounded-none"
+      }
+    />
+  );
+
+  if (layout === "caption-picker") {
+    return (
+      <Tabs
+        defaultValue="preview"
+        className="min-h-0 flex-1 gap-0 overflow-hidden rounded-lg border border-border"
+      >
+        <div className="flex shrink-0 items-center justify-between gap-2 border-b border-border px-2 py-1.5">
+          <TabsList aria-label="Caption style details" className="h-7! p-0.5">
+            <TabsTrigger value="preview" className="px-2 text-xs">
+              Preview
+            </TabsTrigger>
+            <TabsTrigger value="options" className="px-2 text-xs">
+              Options
+            </TabsTrigger>
+          </TabsList>
+          {installPayload ? (
+            <StudioActions name={name} payload={installPayload} />
+          ) : null}
+        </div>
+        <TabsContent value="preview" className="min-h-0 overflow-hidden p-2">
+          {preview}
+        </TabsContent>
+        <TabsContent value="options" className="min-h-0 overflow-y-auto p-2">
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <span className="text-xs text-muted-foreground">
+              Apply options with Use / Update style.
+            </span>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              onClick={handleReset}
+              disabled={isDefault}
+              aria-label="Reset style options"
+              title="Reset style options"
+            >
+              <RotateCcwIcon className="size-3.5" />
+            </Button>
+          </div>
+          <div data-caption-options>
+            <ComponentCustomizer
+              controls={Object.fromEntries(
+                Object.entries(config.controls).filter(
+                  ([key]) => key !== "captions",
+                ),
+              )}
+              values={values as Record<string, unknown>}
+              onChange={handleCustomizeChange}
+            />
+          </div>
+        </TabsContent>
+      </Tabs>
+    );
+  }
+
   return (
     <div className="not-prose mb-6 flex w-full flex-col gap-4">
       <Frame>
@@ -137,26 +235,13 @@ function Preview({
               <TabsTrigger value="preview">Preview</TabsTrigger>
               <TabsTrigger value="code">Code</TabsTrigger>
             </TabsList>
-            {studioElement ? (
-              <StudioActions name={name} payload={studioElement} />
+            {installPayload ? (
+              <StudioActions name={name} payload={installPayload} />
             ) : null}
           </FrameHeader>
           <FramePanel className="overflow-hidden p-0">
             <TabsContent value="preview" className="mt-0">
-              <PreviewStage
-                name={name}
-                load={load}
-                inputProps={values}
-                durationInFrames={
-                  config.getDurationInFrames?.(values) ??
-                  config.durationInFrames
-                }
-                fps={config.fps}
-                compositionWidth={config.compositionWidth}
-                compositionHeight={config.compositionHeight}
-                previewBackdrop={config.previewBackdrop}
-                className="rounded-none"
-              />
+              {preview}
             </TabsContent>
             <TabsContent value="code" className="mt-0">
               <CodeBlock code={code} />
