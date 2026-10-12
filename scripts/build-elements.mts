@@ -527,6 +527,9 @@ for (const file of readdirSync(ARTIFACTS_DIR).sort()) {
     dimensions,
     durationInFrames,
     installationMode,
+    ...(regDeps.includes("@remocn/caption-core")
+      ? { isCaptionStyle: true }
+      : {}),
   });
 
   writeFileSync(
