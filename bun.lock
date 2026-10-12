@@ -21,7 +21,7 @@
         "@remotion/paths": "4.0.530",
         "@remotion/player": "4.0.530",
         "@remotion/renderer": "4.0.530",
-        "@remotion/studio-protocol": "4.0.530",
+        "@remotion/studio-protocol": "4.0.535",
         "@remotion/transitions": "4.0.530",
         "@remotion/zod-types": "4.0.530",
         "@shadcn/react": "^0.1.0",
@@ -501,7 +501,7 @@
 
     "@remotion/studio": ["@remotion/studio@4.0.530", "", { "dependencies": { "@jridgewell/trace-mapping": "0.3.31", "@remotion/canvas": "4.0.530", "@remotion/captions": "4.0.530", "@remotion/codemods": "4.0.530", "@remotion/elevenlabs": "4.0.530", "@remotion/media": "4.0.530", "@remotion/media-utils": "4.0.530", "@remotion/openai-whisper": "4.0.530", "@remotion/paths": "4.0.530", "@remotion/player": "4.0.530", "@remotion/renderer": "4.0.530", "@remotion/studio-protocol": "4.0.530", "@remotion/studio-shared": "4.0.530", "@remotion/timeline-utils": "4.0.530", "@remotion/web-renderer": "4.0.530", "@remotion/zod-types": "4.0.530", "@tanstack/react-virtual": "3.14.9", "mediabunny": "1.56.1", "memfs": "3.4.3", "open": "8.4.2", "prismjs": "1.30.0", "remotion": "4.0.530", "semver": "7.5.3", "zod": "4.5.4" }, "peerDependencies": { "@remotion/video-matting": "4.0.530", "@remotion/whisper-webgpu": "4.0.530", "react": ">=16.8.0", "react-dom": ">=16.8.0" }, "optionalPeers": ["@remotion/video-matting", "@remotion/whisper-webgpu"] }, "sha512-Yki1b9nT3uWhVhzjASVH3AaWGEE4rqIRAoAHo67FCOgXSROpwWMNOc7AECPTsdVF8xyaI113hgYsACwsRv1ziQ=="],
 
-    "@remotion/studio-protocol": ["@remotion/studio-protocol@4.0.530", "", { "dependencies": { "zod": "4.5.4" } }, "sha512-vHhvU0aKVFrQa7SWBFTEd9m2kiyZtgsf8dxzkO7h5JhzCyJBN1SGmxukjptt/ok5BFYWyixNBAnTyic12T3oww=="],
+    "@remotion/studio-protocol": ["@remotion/studio-protocol@4.0.535", "", { "dependencies": { "zod": "4.5.4" } }, "sha512-yPMMlrAcz8K79HyILMGtIvH+6x00c8KuBHpLCD3BSCDEXNqp20IOgoBVI8AZZD82vO1f90Jv3ePenRI2kVhL5Q=="],
 
     "@remotion/studio-server": ["@remotion/studio-server@4.0.530", "", { "dependencies": { "@babel/parser": "7.24.1", "@babel/types": "7.24.0", "@remotion/bundler": "4.0.530", "@remotion/codemods": "4.0.530", "@remotion/renderer": "4.0.530", "@remotion/studio-protocol": "4.0.530", "@remotion/studio-shared": "4.0.530", "@svgr/core": "8.1.0", "@svgr/plugin-jsx": "8.1.0", "kiwi-schema": "0.5.0", "memfs": "3.4.3", "open": "8.4.2", "recast": "0.23.21", "remotion": "4.0.530", "semver": "7.5.3", "zod": "4.5.4" } }, "sha512-VCa1lh7/qyeW5UtXhU6g65RpCbjBYG0tDF4aY6zxCNjCLmQUUEHiDST/pGhnm1nCAT/bQW3SUynitrw5yn/Afg=="],
 
@@ -1801,11 +1801,17 @@
 
     "@radix-ui/react-primitive/@radix-ui/react-slot": ["@radix-ui/react-slot@1.2.3", "", { "dependencies": { "@radix-ui/react-compose-refs": "1.1.2" }, "peerDependencies": { "@types/react": "*", "react": "^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc" }, "optionalPeers": ["@types/react"] }, "sha512-aeNmHnBxbi2St0au6VBVC7JXFlhLlOnvIIlePNniyUNAClzmtAUEY8/pBiK3iHjufOlwA+c20/8jngo7xcrg8A=="],
 
+    "@remotion/codemods/@remotion/studio-protocol": ["@remotion/studio-protocol@4.0.530", "", { "dependencies": { "zod": "4.5.4" } }, "sha512-vHhvU0aKVFrQa7SWBFTEd9m2kiyZtgsf8dxzkO7h5JhzCyJBN1SGmxukjptt/ok5BFYWyixNBAnTyic12T3oww=="],
+
     "@remotion/codemods/recast": ["recast@0.23.21", "", { "dependencies": { "ast-types": "^0.16.1", "esprima": "~4.0.0", "source-map": "~0.6.1", "tiny-invariant": "^1.3.3", "tslib": "^2.0.1" } }, "sha512-mFAyJq9vUbSTARLZUvAEf1z3YxlvAwswbmxMx2mPA/MSm4KmpwvwvhsH/NIrZhyOuwD60Lzyw2qh83uCbgTPYw=="],
 
     "@remotion/renderer/execa": ["execa@5.1.1", "", { "dependencies": { "cross-spawn": "^7.0.3", "get-stream": "^6.0.0", "human-signals": "^2.1.0", "is-stream": "^2.0.0", "merge-stream": "^2.0.0", "npm-run-path": "^4.0.1", "onetime": "^5.1.2", "signal-exit": "^3.0.3", "strip-final-newline": "^2.0.0" } }, "sha512-8uSpZZocAZRBAPIEINJj3Lo9HyGitllczc27Eh5YYojjMFMn8yHMDMaUHE2Jqfq05D/wucwI4JGURyXt1vchyg=="],
 
+    "@remotion/studio/@remotion/studio-protocol": ["@remotion/studio-protocol@4.0.530", "", { "dependencies": { "zod": "4.5.4" } }, "sha512-vHhvU0aKVFrQa7SWBFTEd9m2kiyZtgsf8dxzkO7h5JhzCyJBN1SGmxukjptt/ok5BFYWyixNBAnTyic12T3oww=="],
+
     "@remotion/studio/open": ["open@8.4.2", "", { "dependencies": { "define-lazy-prop": "^2.0.0", "is-docker": "^2.1.1", "is-wsl": "^2.2.0" } }, "sha512-7x81NCL719oNbsq/3mh+hVrAWmFuEYUqrq/Iw3kUzH8ReypT9QQ0BLoJS7/G9k6N81XjW4qHWtjWwe/9eLy1EQ=="],
+
+    "@remotion/studio-server/@remotion/studio-protocol": ["@remotion/studio-protocol@4.0.530", "", { "dependencies": { "zod": "4.5.4" } }, "sha512-vHhvU0aKVFrQa7SWBFTEd9m2kiyZtgsf8dxzkO7h5JhzCyJBN1SGmxukjptt/ok5BFYWyixNBAnTyic12T3oww=="],
 
     "@remotion/studio-server/open": ["open@8.4.2", "", { "dependencies": { "define-lazy-prop": "^2.0.0", "is-docker": "^2.1.1", "is-wsl": "^2.2.0" } }, "sha512-7x81NCL719oNbsq/3mh+hVrAWmFuEYUqrq/Iw3kUzH8ReypT9QQ0BLoJS7/G9k6N81XjW4qHWtjWwe/9eLy1EQ=="],
 
