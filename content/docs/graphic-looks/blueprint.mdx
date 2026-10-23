@@ -1,0 +1,98 @@
+---
+title: Blueprint
+description: A product wipes left to right into a technical drawing with a blueprint grid, white linework, dimension lines and a red callout
+component: blueprint
+vibe: tech
+length: 45
+useWhen:
+  - "A hardware or product launch should show the object as an engineering drawing: measured, labelled and precise."
+  - "One feature of the product deserves a callout, like a sensor, a port or a button."
+  - "The scene should switch from a glossy product shot to a technical one in a single readable move."
+avoidWhen:
+  - "The product should come apart into labelled layers instead of being measured — use `exploded-view`."
+  - "The reveal should show what is inside the device rather than its outline — use `x-ray-scan`."
+  - "The subject is a word whose outlines should draw themselves — use `outline-trace`."
+---
+
+<ComponentPreview name="blueprint" />
+
+<InstallBlock name="blueprint" />
+
+## Usage
+
+`Blueprint` is a full-frame scene. It opens on the product over a plain ground.
+A glowing scan edge wipes left to right and leaves a technical drawing behind
+it: a blue sheet with a minor and major grid, the product traced in white
+lines, dashed center lines, extension and dimension lines with architectural
+ticks, size labels, a title block, and a red callout ring with a lettered
+bubble.
+
+```tsx
+import { Blueprint } from "@/components/remocn/blueprint";
+
+export const Spec = () => <Blueprint />;
+```
+
+Without children it draws a red phone-shaped device with a sensor dot. Pass
+your product as children to convert it instead. The children are centered at
+47% across and 46% down the frame. Behind the wipe, an SVG filter turns them
+into linework: their silhouette edge plus the edges of their dark details.
+
+```tsx
+import { Img, staticFile } from "remotion";
+import { Blueprint } from "@/components/remocn/blueprint";
+
+export const Speaker = () => (
+  <Blueprint
+    box={[0.22, 0.56]}
+    calloutAt={[0.5, 0.2]}
+    labels={{
+      width: "98 mm",
+      height: "203 mm",
+      callout: "TWEETER",
+      title: "DWG S-02  SCALE 1:2",
+    }}
+  >
+    <Img src={staticFile("speaker.png")} style={{ height: 400 }} />
+  </Blueprint>
+);
+```
+
+The dimension lines measure `box`, not your children. `box` is the measured
+rectangle as fractions of the frame width and height, centered on the same
+point as the children, so size it to match the product. `calloutAt` places the
+callout ring as fractions of that box. The label and bubble go to the left of
+the product when the callout text fits there, and above it otherwise.
+
+## Timing
+
+At 30 fps and `speed={1}`:
+
+| Frames | Motion |
+| --- | --- |
+| 6–24 | The scan edge wipes left to right and lays down the blue grid |
+| 8–28 | The product's linework draws in |
+| 22–28 | Extension lines grow out from the box |
+| 24–32 | Dimension lines grow from their centers; the ticks land at the end |
+| 30–36 | Size labels and the title block fade in |
+| 32–40 | The callout ring and leader line draw |
+| 36–42 | The callout bubble pops with an overshoot |
+| 38–44 | The callout text fades in |
+
+`blueprintLength` is 45. After that the drawing holds still. `speed` scales the
+whole timeline.
+
+<PropsTable title="Props"
+  rows={[
+    { name: "children", type: "React.ReactNode", description: "Product to convert; its silhouette and dark details become white linework. Without it a red device is drawn" },
+    { name: "box", type: "[number, number]", default: "[0.17, 0.6]", description: "Measured box around the product as fractions of the frame [width, height]; the dimension lines measure this box" },
+    { name: "calloutAt", type: "[number, number]", default: "[0.5, 0.11]", description: "Point the callout ring marks, as fractions of the box [x, y]" },
+    { name: "labels", type: "{ width?: string; height?: string; callout?: string; title?: string }", default: '{ width: "71.6 mm", height: "147.5 mm", callout: "SENSOR", title: "DWG A-01  SCALE 1:1" }', description: "Dimension labels, callout text and title block; missing keys keep their defaults" },
+    { name: "blueprintColor", type: "string", default: '"#173C8F"', description: "Blueprint sheet color" },
+    { name: "lineColor", type: "string", default: '"#FFFFFF"', description: "Linework, grid, labels and scan edge color" },
+    { name: "calloutColor", type: "string", default: '"#E5322D"', description: "Callout ring, leader and bubble color" },
+    { name: "background", type: "string", default: '"#FFFFFF"', description: "Ground behind the product before the wipe" },
+    { name: "productColor", type: "string", default: '"#E5322D"', description: "Color of the default device; ignored with children" },
+    { name: "speed", type: "number", default: "1", description: "Playback multiplier" },
+  ]}
+/>

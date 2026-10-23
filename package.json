@@ -33,6 +33,7 @@
     "manifest:build": "bun scripts/build-preview-manifest.mts && biome format --write registry/__manifest__.ts",
     "manifest:check": "bun run manifest:build && git diff --quiet -- registry/__manifest__.ts || (echo 'registry/__manifest__.ts is out of sync with registry config sources. Run: bun run manifest:build and commit the result.' && exit 1)",
     "studio": "remotion studio",
+    "studio:motion-pack": "remotion studio src/remotion/motion-pack-root.tsx",
     "remotion:browser": "bun scripts/ensure-browser.mts",
     "bundle:remotion": "bun scripts/bundle-remotion.mts",
     "render:demos": "bun scripts/render-demos.mts",

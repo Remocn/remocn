@@ -1,0 +1,136 @@
+---
+title: Parallax Depth
+description: A layered landscape trucks sideways with a gentle push-in, near layers sliding faster than far ones, through a pinhole camera you can fill with your own layers
+component: parallax-depth
+vibe: premium
+length: 60
+useWhen:
+  - "An opener or a quiet beat needs a cinematic establishing shot, a slow sideways camera move across a sun and hills."
+  - "You have a few flat layers, such as a backdrop, a product shot and a headline, and want them to read as one scene with real depth."
+  - "A title or tagline needs a calm moving bed behind it for about two seconds."
+avoidWhen:
+  - "The subject is a screenshot, recording or long page the camera should travel across — use `stage`."
+  - "The subject should hold its size while the space behind it stretches — use `dolly-zoom`."
+  - "You only need a slow push-in on an existing scene so no frame sits still — use `drift`."
+---
+
+<ComponentPreview name="parallax-depth" />
+
+<InstallBlock name="parallax-depth" />
+
+## Usage
+
+`ParallaxDepth` is a full-frame camera shot. Every layer sits at a depth, and
+a pinhole camera trucks sideways across them while it pushes in a little. Both
+the sideways offset and the push-in scale fall off with `1 / depth`, so near
+layers slide past quickly, far layers barely move, and the scene reads as 3D
+without any 3D engine. With no props it renders a seeded landscape: a sun at
+depth 9 and three hill ridges at depths 6, 2.6 and 1.2.
+
+```tsx
+import { ParallaxDepth } from "@/components/remocn/parallax-depth";
+
+export const Opener = () => (
+  <ParallaxDepth skyColor="#0B1020" sunColor="#F5B83D" />
+);
+```
+
+The camera travels the whole move in 60 frames on a slow-in, slow-out curve
+and is centered at the midpoint, so the scene starts offset to one side and
+ends offset to the other. `distance` sets the total sideways travel at depth 1
+as a fraction of the frame width, `push` the push-in in depth units, and
+`direction={-1}` trucks left instead of right.
+
+### Your own layers
+
+Pass `layers` to replace the landscape. Each layer is a full-frame node and a
+depth: 1 is nearest, larger values move less, and anything below 0.2 is
+clamped. Layers are sorted far to near, so array order does not matter.
+`skyColor` still paints the background behind them.
+
+```tsx
+import type { ReactNode } from "react";
+import { AbsoluteFill, Img, staticFile } from "remotion";
+import { ParallaxDepth } from "@/components/remocn/parallax-depth";
+
+const Centered = ({ children }: { children: ReactNode }) => (
+  <AbsoluteFill style={{ alignItems: "center", justifyContent: "center" }}>
+    {children}
+  </AbsoluteFill>
+);
+
+export const ProductShot = () => (
+  <ParallaxDepth
+    distance={0.3}
+    push={0.1}
+    skyColor="#0B1020"
+    layers={[
+      {
+        depth: 6,
+        content: (
+          <Centered>
+            <div
+              style={{
+                width: 520,
+                height: 520,
+                borderRadius: "50%",
+                background: "#1D2A5A",
+              }}
+            />
+          </Centered>
+        ),
+      },
+      {
+        depth: 2.5,
+        content: (
+          <Centered>
+            <Img src={staticFile("phone.png")} style={{ height: 480 }} />
+          </Centered>
+        ),
+      },
+      {
+        depth: 1,
+        content: (
+          <AbsoluteFill style={{ justifyContent: "flex-end", padding: 64 }}>
+            <h1 style={{ color: "white", fontSize: 72, margin: 0 }}>
+              Ship it today
+            </h1>
+          </AbsoluteFill>
+        ),
+      },
+    ]}
+  />
+);
+```
+
+A layer at depth 1 shifts by `distance / 2` of the frame width at each end of
+the move, 320px at 1280px wide with the default `distance` of 0.5. Keep
+edge-to-edge content wider than the frame, or keep near layers small and
+centered, so its edges never come into view.
+
+## Timing
+
+At 30 fps and `speed={1}`:
+
+| Frames | Motion |
+| --- | --- |
+| 0 | The camera sits half of `distance` to one side |
+| 0–60 | The camera trucks across and pushes in on one eased curve, fastest around frame 20 |
+| 60+ | The shot holds on its final framing |
+
+`speed` scales the move, so `speed={2}` finishes in 30 frames. For another
+frame rate the move still takes two seconds.
+
+<PropsTable title="Props"
+  rows={[
+    { name: "layers", type: "ParallaxDepthLayer[]", description: "Custom layers, each { content: ReactNode; depth: number }. Falls back to the built-in sun and hills" },
+    { name: "distance", type: "number", default: "0.5", description: "Total sideways camera travel at depth 1, as a fraction of the frame width" },
+    { name: "push", type: "number", default: "0.16", description: "Push-in toward the scene over the move, in depth units" },
+    { name: "direction", type: "1 | -1", default: "1", description: "1 trucks the camera right, -1 left" },
+    { name: "colors", type: "Partial<ParallaxDepthColors>", default: '{ sky: "#111111", sun: "#E5322D", far: "#2C2C2C", mid: "#555555", near: "#8E8E8E" }', description: "Sky background, sun and the three hill ridges from far to near; merged over the defaults. The flat color props below win over it" },
+    { name: "skyColor", type: "string", default: '"#111111"', description: "Sky background; overrides colors.sky" },
+    { name: "sunColor", type: "string", default: '"#E5322D"', description: "Sun color; overrides colors.sun" },
+    { name: "seed", type: "number", default: "3", description: "Seeds the hill ridge shapes" },
+    { name: "speed", type: "number", default: "1", description: "Playback multiplier" },
+  ]}
+/>

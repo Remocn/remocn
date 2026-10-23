@@ -1,0 +1,68 @@
+---
+title: Camera & Physics
+description: Full-frame shots built on a simulated camera or a small physics engine, from parallax trucks and a dolly zoom to falling bodies and a cloth yank
+---
+
+Each piece here owns the whole frame. The camera shots project a small 3D scene through a pinhole camera, and the physics pieces run a deterministic simulation once and play it back, so seeking and rendering always land on the same frame. Most ship with a built-in subject and accept your own content as children or layers.
+
+## Camera
+
+<ComponentCardGrid
+  items={[
+    {
+      name: "Parallax Depth",
+      description: "A layered landscape trucks sideways with a gentle push-in, near layers sliding faster than far ones",
+      status: "stable",
+      href: "/docs/camera/parallax-depth",
+    },
+    {
+      name: "Dolly Zoom",
+      description: "The vertigo shot: a corridor stretches while the subject in the middle keeps its exact size",
+      status: "stable",
+      href: "/docs/camera/dolly-zoom",
+    },
+    {
+      name: "Turntable",
+      description: "A product card with real thickness spins through front, edge and back with face shading and a floor shadow",
+      status: "stable",
+      href: "/docs/camera/turntable",
+    },
+    {
+      name: "Tiny Planet",
+      description: "A flat skyline bends into a tiny planet, then keeps turning beside the sun",
+      status: "stable",
+      href: "/docs/camera/tiny-planet",
+    },
+    {
+      name: "Exploded View",
+      description: "An isometric stack of slabs springs apart with leader lines and labels, then clicks back together",
+      status: "stable",
+      href: "/docs/camera/exploded-view",
+    },
+  ]}
+/>
+
+## Physics
+
+<ComponentCardGrid
+  items={[
+    {
+      name: "Gravity Pile",
+      description: "Seeded shapes rain down, bounce off the floor and each other, and settle into a heap",
+      status: "stable",
+      href: "/docs/camera/gravity-pile",
+    },
+    {
+      name: "Cloth Reveal",
+      description: "A simulated satin sheet is yanked off your content from one corner, folding and fluttering out of frame",
+      status: "stable",
+      href: "/docs/camera/cloth-reveal",
+    },
+    {
+      name: "Impact Shake",
+      description: "Heavy content slams down with a squash, a damped camera jolt, a two-frame RGB split and a dust kick",
+      status: "stable",
+      href: "/docs/camera/impact-shake",
+    },
+  ]}
+/>

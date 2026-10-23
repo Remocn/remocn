@@ -1,0 +1,99 @@
+---
+title: Pendulum Wave
+description: A row of pendulums with tuned periods drifts from a straight line into travelling waves and braids, then realigns, as a seamless loop
+component: pendulum-wave
+vibe: clean
+length: sustained
+useWhen:
+  - "A scene needs a calm, hypnotic background loop that is clearly rule-based, with order dissolving into waves and snapping back into a line."
+  - "A section about timing, rhythm, sync or periodic systems needs a visual that literally shows phases drifting apart and realigning."
+  - "The loop has to repeat without a seam for as long as the shot lasts, at a known period."
+avoidWhen:
+  - "The loop should be a dense, organic texture rather than a row of distinct objects — use `flow-field`."
+  - "The scene needs a one-shot accent that fires and clears rather than a running loop — use `trim-burst`."
+  - "The background should be soft color rather than drawn geometry — use `shader-mesh-gradient`."
+  - "The rhythm should read as a structure that builds and settles — use `truchet-flip`."
+---
+
+<ComponentPreview name="pendulum-wave" />
+
+<InstallBlock name="pendulum-wave" />
+
+## Usage
+
+`PendulumWave` is the classic pendulum wave demo seen from the side. A row of
+bobs swings up and down along vertical tracks. Pendulum `i` makes
+`cycles + i` full swings per loop, so each one is slightly faster than its
+left neighbor. At frame 0 every bob sits at the top of its track. The row
+then slides into a travelling wave, breaks into braids and two- and
+three-row patterns, and lines up again at the top on the last frame of the
+loop.
+
+A red line threads through the bobs as a smooth curve, so the wave reads as
+one shape. Each bob leaves a faint smear of its last four frames, and bobs
+low on the track are drawn up to 22% larger than bobs at the top, a small
+depth cue. The faint guides are a center line, a dotted track per pendulum
+and a tick at each end of every track.
+
+```tsx
+import { PendulumWave } from "@/components/remocn/pendulum-wave";
+
+export const RhythmBed = () => <PendulumWave />;
+```
+
+The component fills its parent and paints its own `background`. The row
+spans the middle 80% of the width and the bobs travel 30% of the height above
+and below the center line. Strokes and bob sizes scale with the composition,
+so 16:9, 1:1 and 9:16 look alike. Every frame is computed directly from the
+Remotion frame, so seeking and rendering are deterministic.
+
+## Timing
+
+At 30 fps, `speed={1}` and the defaults (`cycles={10}`, `loopFrames={450}`):
+
+| Frames | Motion |
+| --- | --- |
+| 0 | All 15 bobs line up at the top of their tracks |
+| 0–90 | The line peels into a travelling wave, fastest bobs on the right |
+| 90–220 | The wave tightens into braids and short-lived row patterns |
+| 112 | Bobs repeat in groups of four: top, center, bottom, center |
+| 225 | Bobs alternate top and bottom in a two-row zigzag |
+| 225–450 | The sequence plays back in mirror order |
+| 450 | All bobs line up at the top again, identical to frame 0 |
+
+The loop period is `loopFrames / speed` frames: 450 frames, 15 seconds, at
+the defaults. At `loopFrames / k` the bobs repeat in groups of `k` along the
+row, so the patterns land on predictable frames. The loop closes exactly only when `cycles` is a
+whole number. For a seamless background, make the `Sequence` a multiple of
+the period, or wrap the component in a Remotion `<Loop>` of that length.
+
+```tsx
+import { Loop } from "remotion";
+import { PendulumWave } from "@/components/remocn/pendulum-wave";
+
+export const Background = () => (
+  <Loop durationInFrames={300}>
+    <PendulumWave count={21} cycles={8} loopFrames={300} showGuides={false} />
+  </Loop>
+);
+```
+
+## Variations
+
+Raise `count` for a denser, faster-braiding row. Lower `cycles` for slower
+swings; the difference between neighbors stays one swing per loop, so the
+patterns keep the same timing. `showGuides={false}` leaves only the bobs and
+the wave line. Set `accent` to `background` to hide the line.
+
+<PropsTable title="Props"
+  rows={[
+    { name: "count", type: "number", default: "15", description: "Number of pendulums, rounded, minimum 2" },
+    { name: "cycles", type: "number", default: "10", description: "Full swings of the slowest pendulum per loop; pendulum i makes cycles + i. Use a whole number for a seamless loop" },
+    { name: "loopFrames", type: "number", default: "450", description: "Frames until every pendulum realigns at the top" },
+    { name: "showGuides", type: "boolean", default: "true", description: "Draws the center line, dotted tracks and end ticks" },
+    { name: "background", type: "string", default: '"#111111"', description: "Background fill" },
+    { name: "color", type: "string", default: '"#FFFFFF"', description: "Bobs, smears and guides" },
+    { name: "accent", type: "string", default: '"#E5322D"', description: "The wave line threaded through the bobs" },
+    { name: "speed", type: "number", default: "1", description: "Playback multiplier; the loop period is loopFrames / speed" },
+  ]}
+/>

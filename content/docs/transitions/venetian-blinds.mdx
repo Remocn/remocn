@@ -1,0 +1,92 @@
+---
+title: Venetian Blinds
+description: Split the outgoing scene into horizontal slats that turn edge-on in a staggered ripple to reveal the next one
+component: venetian-blinds
+vibe: premium
+length: 26
+useWhen:
+  - "You want a graphic, editorial cut with visible structure, like a magazine spread or a brand reel."
+  - "The outgoing scene is a full-bleed image or a bold layout that looks good sliced into strips."
+  - "Consecutive cuts need variety: direction switches between top-down, bottom-up and center-out."
+avoidWhen:
+  - "The scene is a heavy React subtree: the outgoing scene is painted once per slat; keep slats low or use `fade-through`."
+  - "The cut should feel like a camera move rather than a graphic device; use `push-through`."
+  - "You want the slats to carry glitch energy instead of a clean turn; use `glitch-cut`."
+---
+
+<ComponentPreview name="venetian-blinds" />
+
+<InstallBlock name="venetian-blinds" />
+
+## Usage
+
+`venetianBlinds()` is a Remotion transition presentation. Pass it to a
+`TransitionSeries.Transition` between two sequences. The outgoing scene is cut
+into `slats` horizontal strips. Each strip rotates around its own horizontal
+axis until it is edge-on, picking up `shadeColor` as it turns away from the
+light, and fades out just before it becomes a hairline. The strips start one
+after another in a ripple whose spread is set by `stagger`. Behind them the
+incoming scene settles from a slight 1.06 zoom to rest.
+
+```tsx
+import { TransitionSeries, linearTiming } from "@remotion/transitions";
+import { venetianBlinds } from "@/components/remocn/venetian-blinds";
+
+export const MyVideo = () => (
+  <TransitionSeries>
+    <TransitionSeries.Sequence durationInFrames={70}>
+      <SceneA />
+    </TransitionSeries.Sequence>
+    <TransitionSeries.Transition
+      timing={linearTiming({ durationInFrames: 26 })}
+      presentation={venetianBlinds({ direction: "center" })}
+    />
+    <TransitionSeries.Sequence durationInFrames={70}>
+      <SceneB />
+    </TransitionSeries.Sequence>
+  </TransitionSeries>
+);
+```
+
+The outgoing scene is rendered once per slat (12 copies by default), so render
+cost grows with `slats`. Keep the outgoing scene light, or lower `slats`, if
+renders slow down.
+
+## Variations
+
+- `direction: "top-down"` (default) starts at the top slat, `"bottom-up"` at the bottom, `"center"` opens from the middle outward.
+- `stagger: 0` turns every slat at once. Higher values stretch the ripple; at 0.9 each slat gets only a tenth of the transition to turn.
+- A lighter `shadeColor` such as `"#FFFFFF"` makes the slats catch light instead of falling into shadow.
+
+## Props
+
+`venetianBlinds(props)` accepts:
+
+<PropsTable
+  rows={[
+    {
+      name: "slats",
+      type: "number",
+      default: "12",
+      description: "Number of horizontal slats. Rounded, minimum 1.",
+    },
+    {
+      name: "stagger",
+      type: "number",
+      default: "0.55",
+      description: "Share of the transition spent rippling across the slats, 0 to 0.9.",
+    },
+    {
+      name: "direction",
+      type: '"top-down" | "bottom-up" | "center"',
+      default: '"top-down"',
+      description: "Which slat turns first.",
+    },
+    {
+      name: "shadeColor",
+      type: "string",
+      default: '"#000000"',
+      description: "Tint a slat picks up as it turns edge-on.",
+    },
+  ]}
+/>

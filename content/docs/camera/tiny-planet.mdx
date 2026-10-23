@@ -1,0 +1,70 @@
+---
+title: Tiny Planet
+description: A seeded flat skyline bends into a tiny planet through a polar remap, then keeps turning beside a red sun
+component: tiny-planet
+vibe: playful
+length: 40
+useWhen:
+  - "A story about a city, a community or a global product needs a playful world-building beat."
+  - "An opener should turn an ordinary flat scene into something surprising in about a second."
+  - "A title needs a slowly turning backdrop that can hold for as long as the beat lasts."
+avoidWhen:
+  - "The city should rise out of a grid tile by tile instead of bending — use `isometric-build`."
+  - "You want a calm cinematic landscape with depth, not a stylized planet — use `parallax-depth`."
+  - "The background should be abstract and stay out of the way of the copy — use `shader-mesh-gradient`."
+---
+
+<ComponentPreview name="tiny-planet" />
+
+<InstallBlock name="tiny-planet" />
+
+## Usage
+
+`TinyPlanet` draws a seeded two-row skyline with lit windows and spires on a
+flat horizon, then bends it into a circle like the tiny planet effect in
+360° photography. The strip is exactly as long as the planet's circumference,
+so it closes without a seam. While it bends the planet shrinks to fit the
+frame and the sun drifts up and to the right. Once closed, the planet turns at
+a steady rate for as long as the sequence lasts.
+
+```tsx
+import { TinyPlanet } from "@/components/remocn/tiny-planet";
+
+export const Hometown = () => (
+  <TinyPlanet buildings={32} seed={9} sunColor="#F5B83D" />
+);
+```
+
+`buildings` is the front row count (minimum 4); the back row gets 80% of
+that. `seed` changes widths, heights, spires and windows. `spin` is the final
+turning rate in degrees per frame at 30 fps, and `spin={0}` leaves the planet
+still once it closes.
+
+## Timing
+
+At 30 fps and `speed={1}`:
+
+| Frames | Motion |
+| --- | --- |
+| 0–8 | The flat skyline holds |
+| 8–40 | The skyline bends into a planet on an ease-in-out, fastest around frame 24 |
+| 26–40 | The spin eases in while the strip closes |
+| 40+ | The planet turns at `spin` degrees per frame for as long as the sequence lasts |
+
+`length` covers the bend. Give the sequence a few extra seconds if you want
+the turning planet to hold behind a title. `speed` scales the whole timeline,
+including the spin rate.
+
+<PropsTable title="Props"
+  rows={[
+    { name: "buildings", type: "number", default: "26", description: "Buildings in the front row, minimum 4; the back row gets 80% as many" },
+    { name: "seed", type: "number", default: "4", description: "Seeds building widths, heights, spires and windows" },
+    { name: "spin", type: "number", default: "0.7", description: "Planet spin once bent, in degrees per frame at 30 fps" },
+    { name: "colors", type: "Partial<TinyPlanetColors>", default: '{ sky: "#111111", ground: "#262626", near: "#FFFFFF", far: "#6B6B6B", window: "#111111", sun: "#E5322D" }', description: "Sky background, ground, front and back building rows, windows and sun; merged over the defaults. The flat color props below win over it" },
+    { name: "skyColor", type: "string", default: '"#111111"', description: "Sky background; overrides colors.sky" },
+    { name: "sunColor", type: "string", default: '"#E5322D"', description: "Sun color; overrides colors.sun" },
+    { name: "buildingColor", type: "string", default: '"#FFFFFF"', description: "Front building row; overrides colors.near" },
+    { name: "groundColor", type: "string", default: '"#262626"', description: "Ground color; overrides colors.ground" },
+    { name: "speed", type: "number", default: "1", description: "Playback multiplier" },
+  ]}
+/>

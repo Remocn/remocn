@@ -1,0 +1,111 @@
+---
+title: Paper Tear
+description: Rip the frame down the middle and fling both halves apart with fibrous torn edges, revealing the scene underneath
+component: paper-tear
+vibe: paper
+length: 36
+useWhen:
+  - "A reveal should land as a physical hit: a product, a headline or a price punching through the old scene."
+  - "The video already uses a paper or collage look and the cut should stay in that material."
+  - "One big moment in the video deserves an impact; the shake, flash and debris sell it."
+avoidWhen:
+  - "The cut is routine and repeats often: the impact gets old fast; use `fade-through` or `whip-pan`."
+  - "You want the old scene to destroy itself more slowly and organically; use `ember-burn`."
+  - "The page should turn over rather than tear; use `page-turn`."
+---
+
+<ComponentPreview name="paper-tear" />
+
+<InstallBlock name="paper-tear" />
+
+## Usage
+
+`paperTear()` is a Remotion transition presentation. Pass it to a
+`TransitionSeries.Transition` between two sequences. The outgoing scene behaves
+like a printed sheet: it trembles and leans toward camera, then a jagged rip
+runs from top to bottom in a couple of frames. At the moment the rip completes
+the camera jolts, a flash runs along the seam and paper scraps blow out of it.
+Both halves then spring apart, pivoting on the frame edges so their torn sides
+swing toward camera. Each half has a fibrous `edgeColor` border and casts a
+shadow on the incoming scene, which is punched toward camera and settles back.
+
+The rip shape comes from `seed` and `roughness` and is fully deterministic, so
+the same seed always tears the same way.
+
+```tsx
+import { TransitionSeries, linearTiming } from "@remotion/transitions";
+import { paperTear } from "@/components/remocn/paper-tear";
+
+export const MyVideo = () => (
+  <TransitionSeries>
+    <TransitionSeries.Sequence durationInFrames={70}>
+      <SceneA />
+    </TransitionSeries.Sequence>
+    <TransitionSeries.Transition
+      timing={linearTiming({ durationInFrames: 36 })}
+      presentation={paperTear({ seed: 3, roughness: 0.7 })}
+    />
+    <TransitionSeries.Sequence durationInFrames={70}>
+      <SceneB />
+    </TransitionSeries.Sequence>
+  </TransitionSeries>
+);
+```
+
+The outgoing scene is rendered up to three times per frame (two torn halves
+plus an intact copy below the running rip), so it costs more than a plain
+wipe.
+
+## Timing
+
+| Progress | What happens |
+| --- | --- |
+| 0 to 0.2 | The sheet strains: tremble and a slight lean toward camera |
+| 0.2 to 0.28 | The rip runs from top to bottom |
+| 0.28 | Impact: shake, seam flash, debris |
+| 0.28 to 1 | The halves spring apart, the incoming scene settles |
+
+## Variations
+
+- `impact: 0` turns off the shake, flash and debris for a quiet tear.
+- `impact: 2` doubles the shake and debris travel for a louder hit.
+- `roughness: 0` gives a smooth wavy rip, `1` a ragged zig-zag.
+
+## Props
+
+`paperTear(props)` accepts:
+
+<PropsTable
+  rows={[
+    {
+      name: "impact",
+      type: "number",
+      default: "1",
+      description: "Strength of the impact: shake, flash, debris and the incoming punch. 0 turns them off.",
+    },
+    {
+      name: "seed",
+      type: "number | string",
+      default: "7",
+      description: "Seed for the shape of the rip and the debris.",
+    },
+    {
+      name: "edgeColor",
+      type: "string",
+      default: '"#FFFFFF"',
+      description: "Color of the fibrous torn edge, the seam flash and the debris.",
+    },
+    {
+      name: "roughness",
+      type: "number",
+      default: "0.5",
+      description: "How jagged the rip is, 0 to 1.",
+    },
+    {
+      name: "shadowColor",
+      type: "string",
+      default: '"rgba(0, 0, 0, 0.45)"',
+      description: "Shadow the torn halves cast on the incoming scene.",
+    },
+  ]}
+/>

@@ -3863,6 +3863,390 @@ const registry: Record<string, RegistryEntry> = {
         (m) => m.captionDropConfig,
       ),
   },
+  "iris-wipe": {
+    load: () =>
+      import("@/components/docs/examples/iris-wipe-example").then((m) => ({
+        default: m.IrisWipeExampleScene,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/iris-wipe/config").then(
+        (m) => m.irisWipeConfig,
+      ),
+  },
+  "venetian-blinds": {
+    load: () =>
+      import("@/components/docs/examples/venetian-blinds-example").then(
+        (m) => ({
+          default: m.VenetianBlindsExampleScene,
+        }),
+      ),
+    loadConfig: () =>
+      import("@/registry/remocn/venetian-blinds/config").then(
+        (m) => m.venetianBlindsConfig,
+      ),
+  },
+  "paper-tear": {
+    load: () =>
+      import("@/components/docs/examples/paper-tear-example").then((m) => ({
+        default: m.PaperTearExampleScene,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/paper-tear/config").then(
+        (m) => m.paperTearConfig,
+      ),
+  },
+  "pixel-sort": {
+    load: () =>
+      import("@/components/docs/examples/pixel-sort-example").then((m) => ({
+        default: m.PixelSortExampleScene,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/pixel-sort/config").then(
+        (m) => m.pixelSortConfig,
+      ),
+  },
+  "light-leak": {
+    load: () =>
+      import("@/components/docs/examples/light-leak-example").then((m) => ({
+        default: m.LightLeakExampleScene,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/light-leak/config").then(
+        (m) => m.lightLeakConfig,
+      ),
+  },
+  hyperspace: {
+    load: () =>
+      import("@/components/docs/examples/hyperspace-example").then((m) => ({
+        default: m.HyperspaceExampleScene,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/hyperspace/config").then(
+        (m) => m.hyperspaceConfig,
+      ),
+  },
+  "orbit-lock": {
+    load: () =>
+      import("@/components/docs/examples/orbit-lock-example").then((m) => ({
+        default: m.OrbitLockExampleScene,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/orbit-lock/config").then(
+        (m) => m.orbitLockConfig,
+      ),
+  },
+  "puzzle-snap": {
+    load: () =>
+      import("@/components/docs/examples/puzzle-snap-example").then((m) => ({
+        default: m.PuzzleSnapExampleScene,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/puzzle-snap/config").then(
+        (m) => m.puzzleSnapConfig,
+      ),
+  },
+  spotlight: {
+    load: () =>
+      import("@/components/docs/examples/spotlight-example").then((m) => ({
+        default: m.SpotlightExampleScene,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/spotlight/config").then(
+        (m) => m.spotlightConfig,
+      ),
+  },
+  "neon-sign": {
+    load: () =>
+      import("@/registry/remocn/neon-sign").then((m) => ({
+        default: m.NeonSign,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/neon-sign/config").then(
+        (m) => m.neonSignConfig,
+      ),
+  },
+  inflate: {
+    load: () =>
+      import("@/components/docs/examples/inflate-example").then((m) => ({
+        default: m.InflateExampleScene,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/inflate/config").then((m) => m.inflateConfig),
+  },
+  "liquid-fill": {
+    load: () =>
+      import("@/components/docs/examples/liquid-fill-example").then((m) => ({
+        default: m.LiquidFillExampleScene,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/liquid-fill/config").then(
+        (m) => m.liquidFillConfig,
+      ),
+  },
+  "accordion-unfold": {
+    load: () =>
+      import("@/components/docs/examples/accordion-unfold-example").then(
+        (m) => ({
+          default: m.AccordionUnfoldExampleScene,
+        }),
+      ),
+    loadConfig: () =>
+      import("@/registry/remocn/accordion-unfold/config").then(
+        (m) => m.accordionUnfoldConfig,
+      ),
+  },
+  "anamorphic-flare": {
+    load: () =>
+      import("@/components/docs/examples/anamorphic-flare-example").then(
+        (m) => ({
+          default: m.AnamorphicFlareExampleScene,
+        }),
+      ),
+    loadConfig: () =>
+      import("@/registry/remocn/anamorphic-flare/config").then(
+        (m) => m.anamorphicFlareConfig,
+      ),
+  },
+  "pendulum-wave": {
+    load: () =>
+      import("@/registry/remocn/pendulum-wave").then((m) => ({
+        default: m.PendulumWave,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/pendulum-wave/config").then(
+        (m) => m.pendulumWaveConfig,
+      ),
+  },
+  "flow-field": {
+    load: () =>
+      import("@/registry/remocn/flow-field").then((m) => ({
+        default: m.FlowField,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/flow-field/config").then(
+        (m) => m.flowFieldConfig,
+      ),
+  },
+  "isometric-build": {
+    load: () =>
+      import("@/registry/remocn/isometric-build").then((m) => ({
+        default: m.IsometricBuild,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/isometric-build/config").then(
+        (m) => m.isometricBuildConfig,
+      ),
+  },
+  "life-grid": {
+    load: () =>
+      import("@/registry/remocn/life-grid").then((m) => ({
+        default: m.LifeGrid,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/life-grid/config").then(
+        (m) => m.lifeGridConfig,
+      ),
+  },
+  "string-art": {
+    load: () =>
+      import("@/registry/remocn/string-art").then((m) => ({
+        default: m.StringArt,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/string-art/config").then(
+        (m) => m.stringArtConfig,
+      ),
+  },
+  "topo-lines": {
+    load: () =>
+      import("@/registry/remocn/topo-lines").then((m) => ({
+        default: m.TopoLines,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/topo-lines/config").then(
+        (m) => m.topoLinesConfig,
+      ),
+  },
+  phyllotaxis: {
+    load: () =>
+      import("@/registry/remocn/phyllotaxis").then((m) => ({
+        default: m.Phyllotaxis,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/phyllotaxis/config").then(
+        (m) => m.phyllotaxisConfig,
+      ),
+  },
+  "parallax-depth": {
+    load: () =>
+      import("@/components/docs/examples/parallax-depth-example").then((m) => ({
+        default: m.ParallaxDepthExampleScene,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/parallax-depth/config").then(
+        (m) => m.parallaxDepthConfig,
+      ),
+  },
+  "dolly-zoom": {
+    load: () =>
+      import("@/components/docs/examples/dolly-zoom-example").then((m) => ({
+        default: m.DollyZoomExampleScene,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/dolly-zoom/config").then(
+        (m) => m.dollyZoomConfig,
+      ),
+  },
+  turntable: {
+    load: () =>
+      import("@/components/docs/examples/turntable-example").then((m) => ({
+        default: m.TurntableExampleScene,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/turntable/config").then(
+        (m) => m.turntableConfig,
+      ),
+  },
+  "tiny-planet": {
+    load: () =>
+      import("@/components/docs/examples/tiny-planet-example").then((m) => ({
+        default: m.TinyPlanetExampleScene,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/tiny-planet/config").then(
+        (m) => m.tinyPlanetConfig,
+      ),
+  },
+  "exploded-view": {
+    load: () =>
+      import("@/components/docs/examples/exploded-view-example").then((m) => ({
+        default: m.ExplodedViewExampleScene,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/exploded-view/config").then(
+        (m) => m.explodedViewConfig,
+      ),
+  },
+  "gravity-pile": {
+    load: () =>
+      import("@/components/docs/examples/gravity-pile-example").then((m) => ({
+        default: m.GravityPileExampleScene,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/gravity-pile/config").then(
+        (m) => m.gravityPileConfig,
+      ),
+  },
+  "cloth-reveal": {
+    load: () =>
+      import("@/components/docs/examples/cloth-reveal-example").then((m) => ({
+        default: m.ClothRevealExampleScene,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/cloth-reveal/config").then(
+        (m) => m.clothRevealConfig,
+      ),
+  },
+  "impact-shake": {
+    load: () =>
+      import("@/components/docs/examples/impact-shake-example").then((m) => ({
+        default: m.ImpactShakeExampleScene,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/impact-shake/config").then(
+        (m) => m.impactShakeConfig,
+      ),
+  },
+  "riso-print": {
+    load: () =>
+      import("@/components/docs/examples/riso-print-example").then((m) => ({
+        default: m.RisoPrintExampleScene,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/riso-print/config").then(
+        (m) => m.risoPrintConfig,
+      ),
+  },
+  "line-boil": {
+    load: () =>
+      import("@/components/docs/examples/line-boil-example").then((m) => ({
+        default: m.LineBoilExampleScene,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/line-boil/config").then(
+        (m) => m.lineBoilConfig,
+      ),
+  },
+  blueprint: {
+    load: () =>
+      import("@/registry/remocn/blueprint").then((m) => ({
+        default: m.Blueprint,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/blueprint/config").then(
+        (m) => m.blueprintConfig,
+      ),
+  },
+  "duotone-beat": {
+    load: () =>
+      import("@/registry/remocn/duotone-beat").then((m) => ({
+        default: m.DuotoneBeat,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/duotone-beat/config").then(
+        (m) => m.duotoneBeatConfig,
+      ),
+  },
+  "comic-panels": {
+    load: () =>
+      import("@/components/docs/examples/comic-panels-example").then((m) => ({
+        default: m.ComicPanelsExampleScene,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/comic-panels/config").then(
+        (m) => m.comicPanelsConfig,
+      ),
+  },
+  "long-shadow": {
+    load: () =>
+      import("@/registry/remocn/long-shadow").then((m) => ({
+        default: m.LongShadow,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/long-shadow/config").then(
+        (m) => m.longShadowConfig,
+      ),
+  },
+  synthwave: {
+    load: () =>
+      import("@/components/docs/examples/synthwave-example").then((m) => ({
+        default: m.SynthwaveExampleScene,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/synthwave/config").then(
+        (m) => m.synthwaveConfig,
+      ),
+  },
+  "brick-mosaic": {
+    load: () =>
+      import("@/registry/remocn/brick-mosaic").then((m) => ({
+        default: m.BrickMosaic,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/brick-mosaic/config").then(
+        (m) => m.brickMosaicConfig,
+      ),
+  },
+  "x-ray-scan": {
+    load: () =>
+      import("@/components/docs/examples/x-ray-scan-example").then((m) => ({
+        default: m.XRayScanExampleScene,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/x-ray-scan/config").then(
+        (m) => m.xRayScanConfig,
+      ),
+  },
 };
 
 const configCache = new Map<string, Promise<ResolvedComponentConfig>>();

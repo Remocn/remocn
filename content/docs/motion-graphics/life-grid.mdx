@@ -1,0 +1,97 @@
+---
+title: Life Grid
+description: Conway's Game of Life runs on a seeded grid, newborn cells flashing in the accent and dying cells shrinking away
+component: life-grid
+vibe: tech
+length: sustained
+useWhen:
+  - "A tech, AI or simulation story needs a background that visibly computes, with rule-based structures forming, colliding and dying."
+  - "A pixel-grid look should stay alive behind a title for as long as the shot runs, without a visible loop point."
+  - "A scene about emergence, growth or systems needs a literal, recognisable reference."
+avoidWhen:
+  - "The grid should be a pattern that resolves into a clean structure — use `truchet-flip`."
+  - "The cells should rebuild a specific logo or image — use `brick-mosaic`."
+  - "The motion should feel organic and continuous rather than stepped — use `flow-field`."
+  - "Text should resolve out of scrambled characters — use `matrix-decode`."
+---
+
+<ComponentPreview name="life-grid" />
+
+<InstallBlock name="life-grid" />
+
+## Usage
+
+`LifeGrid` plays Conway's Game of Life. A seeded first generation fills a
+`density` share of the cells, and every next generation follows the standard
+rules: a live cell with two or three live neighbors survives, and an empty
+cell with exactly three is born. The board wraps at the edges, so patterns
+leave one side and come back on the other, and the border never runs dry.
+
+The step between generations is animated. A newborn cell pops in as an
+accent tile with a small overshoot, then a tile in `color` grows from its
+center and covers it. A dying cell shrinks to nothing in the first 60% of the
+step. Surviving cells hold still. A faint lattice marks the empty cells.
+
+```tsx
+import { LifeGrid } from "@/components/remocn/life-grid";
+
+export const Simulation = () => <LifeGrid />;
+```
+
+The component fills its parent and paints its own `background`. `cols` sets
+the number of columns, the row count follows the composition aspect ratio,
+and the square board is centered. Generations are computed once per seed,
+grid size and density and cached for the render, so every frame is
+deterministic and cheap after the first.
+
+## Timing
+
+At 30 fps, `speed={1}` and `framesPerGeneration={5}`:
+
+| Frames | Motion |
+| --- | --- |
+| 0–5 | The seeded first generation holds still |
+| 5 | Generation 1 begins: newborns pop in as accent tiles, dying cells start to shrink |
+| 5–8 | Dying cells shrink away |
+| 7–10 | The core of each newborn grows over its accent tile |
+| every 5 frames | The next generation starts |
+
+The simulation runs for as long as the composition: it precomputes
+`durationInFrames × speed / framesPerGeneration` generations. It has no loop
+point. Over a long run the board can settle into still lifes and blinkers;
+try another `seed` or a higher `density` if a seed calms down too early.
+
+## Variations
+
+Fewer `cols` gives big, readable cells; more gives a fine texture.
+`framesPerGeneration` slows the simulation for a calmer bed; at 1 the board
+churns every frame. `showGrid={false}` removes the lattice, and `gap={0}`
+merges neighboring cells into solid shapes.
+
+```tsx
+<LifeGrid
+  cols={24}
+  density={0.3}
+  framesPerGeneration={8}
+  gap={0.08}
+  showGrid={false}
+  background="#f6f5f1"
+  color="#171717"
+  accent="#2f6bff"
+/>
+```
+
+<PropsTable title="Props"
+  rows={[
+    { name: "cols", type: "number", default: "48", description: "Columns, rounded, minimum 4; rows follow the frame aspect ratio" },
+    { name: "density", type: "number", default: "0.24", description: "Share of cells alive in the seeded first generation, 0 to 1" },
+    { name: "framesPerGeneration", type: "number", default: "5", description: "Frames each generation is held, minimum 1" },
+    { name: "gap", type: "number", default: "0.16", description: "Gap between tiles as a fraction of the cell" },
+    { name: "showGrid", type: "boolean", default: "true", description: "Draws the faint lattice of empty cells" },
+    { name: "seed", type: "number", default: "7", description: "Seeds the first generation" },
+    { name: "background", type: "string", default: '"#111111"', description: "Background fill" },
+    { name: "color", type: "string", default: '"#FFFFFF"', description: "Living cells and the lattice" },
+    { name: "accent", type: "string", default: '"#E5322D"', description: "Flash color of newborn cells" },
+    { name: "speed", type: "number", default: "1", description: "Playback multiplier; 0 holds the first generation" },
+  ]}
+/>

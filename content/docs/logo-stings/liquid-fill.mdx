@@ -1,0 +1,94 @@
+---
+title: Liquid Fill
+description: A drop falls into an outlined mark and liquid rises with a sloshing surface and bubbles until the mark is solid
+component: liquid-fill
+vibe: clean
+length: 49
+useWhen:
+  - "A beverage, fintech or utility brand wants a reveal about filling up, loading or topping off."
+  - "Your mark is a simple closed shape you can express as one SVG path, and the sting should fill it."
+  - "You want a calm build with a clear payoff, the mark turning solid around frame 34."
+avoidWhen:
+  - "Your logo is a detailed image rather than a single closed shape — wrap it with `spotlight` or `orbit-lock`."
+  - "Letters, not a mark, should draw as outlines and then fill — use `outline-trace`."
+  - "The mark should feel bouncy and soft rather than fluid — use `inflate`."
+  - "You need a fluid look as a looping background, not a reveal — use `shader-water`."
+---
+
+<ComponentPreview name="liquid-fill" />
+
+<InstallBlock name="liquid-fill" />
+
+## Usage
+
+`LiquidFill` draws an outlined mark and fills it. A single drop falls in from
+above and lands on the floor of the shape. Liquid rises from the bottom with a
+surface that sloshes on two sine waves, dips where the drop splashed, and calms
+as it climbs. A few bubbles rise through it. When the liquid reaches the top,
+the outline turns the liquid color and the bubbles and surface line fade, so
+the mark reads as solid. Then the mark slides left and your wordmark wipes in
+on its right.
+
+```tsx
+import { LiquidFill } from "@/components/remocn/liquid-fill";
+
+export const LogoSting = () => (
+  <LiquidFill liquidColor="#E5322D" outlineColor="#FFFFFF">
+    <span
+      style={{
+        fontSize: 104,
+        fontWeight: 800,
+        letterSpacing: "-0.04em",
+        color: "#FFFFFF",
+      }}
+    >
+      remocn
+    </span>
+  </LiquidFill>
+);
+```
+
+Pass only the wordmark as `children`. Without `children` the mark stays
+centered and no slide happens. The mark is 24% of the shorter side of the
+composition (173px at 720p).
+
+### Custom shape
+
+`shape` is SVG path data drawn in a 100×100 box. The liquid is clipped to it
+and the outline is stroked along it, 3 units wide. Keep the shape inside about
+2–98 on both axes so the stroke is not cut off, and make it one closed path,
+since the drop lands at the center bottom.
+
+```tsx
+<LiquidFill shape="M 50 4 A 46 46 0 1 1 49.9 4 Z" liquidColor="#2F6BFF">
+  <Wordmark />
+</LiquidFill>
+```
+
+## Timing
+
+At 30 fps and `speed={1}`:
+
+| Frames | Motion |
+| --- | --- |
+| 0–5 | Outline fades in |
+| 0–9 | The drop falls and stretches as it speeds up |
+| 9–34 | Liquid rises from the floor to over the top; the splash and sloshing decay as it climbs |
+| 11–34 | Bubbles rise and pop at the surface |
+| 32–37 | Outline turns the liquid color; surface line and bubbles fade |
+| 36–47 | The mark slides from the center to the left |
+| 38–49 | The wordmark wipes in from the left |
+
+The docs preview runs 78 frames. `speed` scales the timeline.
+
+<PropsTable title="Props"
+  rows={[
+    { name: "children", type: "ReactNode", description: "Wordmark revealed to the right of the mark once it is full. Without it the mark settles alone in the center" },
+    { name: "shape", type: "string", default: "rounded square", description: "Mark outline as SVG path data in a 100×100 box" },
+    { name: "liquidColor", type: "string", default: '"#E5322D"', description: "Drop and liquid color; also the final outline color" },
+    { name: "outlineColor", type: "string", default: '"#FFFFFF"', description: "Outline color while the mark is filling" },
+    { name: "bubbleColor", type: "string", default: '"#FFFFFF"', description: "Bubble outline color" },
+    { name: "backgroundColor", type: "string", default: '"#111111"', description: "Full-frame background" },
+    { name: "speed", type: "number", default: "1", description: "Playback multiplier" },
+  ]}
+/>

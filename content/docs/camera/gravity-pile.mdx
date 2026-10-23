@@ -1,0 +1,107 @@
+---
+title: Gravity Pile
+description: Seeded circles, squares and triangles rain down, bounce off the floor and each other, and settle into a heap, with optional content of your own landing on top
+component: gravity-pile
+vibe: playful
+length: 64
+useWhen:
+  - "A beat about volume should feel physical, such as a pile of tasks, tickets or features."
+  - "Your own icons or logos should drop onto a heap and land last, on top."
+  - "A playful transition beat or bumper needs real bounces rather than hand-keyed ones."
+avoidWhen:
+  - "The moment is a celebration that should shower the frame with color — use `confetti`."
+  - "Icons should scatter over a cut to hide a scene change — use `icon-scatter`."
+  - "Pieces should fly together into a logo instead of falling into a heap — use `puzzle-snap`."
+---
+
+<ComponentPreview name="gravity-pile" />
+
+<InstallBlock name="gravity-pile" />
+
+## Usage
+
+`GravityPile` runs a small rigid-body simulation. Bodies spawn in a tall
+column above the frame, fall under gravity, bounce off a floor at 90% of the
+frame height and off each other, and stack with contact friction so the heap
+holds its shape instead of flowing apart. One body is painted in the accent
+color. Late in the fall the simulation bleeds off energy so the heap comes
+fully to rest, then it sleeps and nothing creeps.
+
+```tsx
+import { GravityPile } from "@/components/remocn/gravity-pile";
+
+export const Backlog = () => (
+  <GravityPile count={40} seed={12} accentColor="#3D7BFF" />
+);
+```
+
+Every body collides as a circle with a radius between 3.6% and 6.8% of the
+frame height, so squares and triangles rest on each other a little loosely.
+`colors.shapes` cycles through its list for the plain bodies. `seed` changes
+sizes, kinds, colors and spawn positions.
+
+### Dropping your own content
+
+`items` turns the last bodies into your own nodes. They spawn highest, so they
+land last and end up on top of the heap. Each item is centered in a square box
+the size of its body's diameter, 52 to 98px at 720p, and rotates with it, so
+round content fits best.
+
+```tsx
+import { Img, staticFile } from "remotion";
+import { GravityPile } from "@/components/remocn/gravity-pile";
+
+const Logo = ({ src }: { src: string }) => (
+  <Img
+    src={staticFile(src)}
+    style={{ width: "100%", height: "100%", borderRadius: "50%" }}
+  />
+);
+
+export const Integrations = () => (
+  <GravityPile
+    count={30}
+    items={[
+      <Logo key="a" src="slack.png" />,
+      <Logo key="b" src="github.png" />,
+      <Logo key="c" src="linear.png" />,
+    ]}
+  />
+);
+```
+
+`count` includes the items, and at most `count` items are used.
+
+## Timing
+
+At 30 fps, `speed={1}` and `gravity={1}`:
+
+| Frames | Motion |
+| --- | --- |
+| 0–20 | The first bodies fall into frame and hit the floor |
+| 20–46 | The rest of the column lands, bounces and stacks |
+| 46–64 | The heap loses its remaining energy and comes to rest |
+| 64+ | The heap sleeps and holds still |
+
+Weaker gravity slows the rain, so the heap settles later: the settle phase
+starts at `46 / √gravity`, about frame 65 at `gravity={0.5}`. The simulation
+records 150 frames, after which the last frame holds.
+
+The simulation is precomputed once per `count`, `seed`, `gravity`, number of
+items and composition size, and every frame reads it back. Contacts are
+checked between every pair of bodies, so the cost grows with the square of
+`count`; a few dozen bodies is instant, but a few hundred will stall the first
+render.
+
+<PropsTable title="Props"
+  rows={[
+    { name: "count", type: "number", default: "30", description: "Number of falling bodies, including items" },
+    { name: "seed", type: "number", default: "7", description: "Seeds body sizes, kinds, colors and spawn positions" },
+    { name: "gravity", type: "number", default: "1", description: "Gravity multiplier; lower values fall slower and settle later" },
+    { name: "items", type: "ReactNode[]", description: "Nodes dropped as round bodies; they spawn last and land on top of the heap" },
+    { name: "colors", type: "Partial<GravityPileColors>", default: '{ background: "#111111", shapes: ["#FFFFFF", "#C9C9C9", "#7A7A7A"], accent: "#E5322D", floor: "#FFFFFF" }', description: "Background, the palette cycled across shapes, the one accent body and the floor line; merged over the defaults. The flat color props below win over it" },
+    { name: "accentColor", type: "string", default: '"#E5322D"', description: "The one accent body; overrides colors.accent" },
+    { name: "backgroundColor", type: "string", default: '"#111111"', description: "Background; overrides colors.background" },
+    { name: "speed", type: "number", default: "1", description: "Playback multiplier" },
+  ]}
+/>

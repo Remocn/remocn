@@ -1,0 +1,112 @@
+---
+title: Hyperspace
+description: Stretch a starfield into radial streaks, tunnel forward through the scene and land on the next one through a white flash
+component: hyperspace
+vibe: tech
+length: 56
+useWhen:
+  - "A launch, release or \"what's next\" moment should feel like a jump to somewhere new."
+  - "The video is tech or sci-fi flavored and can carry a big, showy transition once."
+  - "You want a long build-up into the cut: the stars spool up for most of the transition before the flash."
+avoidWhen:
+  - "The cut needs to be quick: the jump takes 56 frames to read; use `zoom-blur` or `whip-pan`."
+  - "You want a spiral or shader tunnel instead of streaking stars; use `shader-spiral-pass`."
+  - "The video is calm or editorial; use `fade-through` or `focus-pull`."
+---
+
+<ComponentPreview name="hyperspace" />
+
+<InstallBlock name="hyperspace" />
+
+## Usage
+
+`hyperspace()` is a Remotion transition presentation. Pass it to a
+`TransitionSeries.Transition` between two sequences. A starfield fades in over
+the outgoing scene, which dims and pushes forward. The stars drift slowly, then
+surge outward from the center as their streaks stretch with speed, and the
+frame ramps to `flashColor` at 62% of the transition. The incoming scene lands
+under the flash: the flash holds for a beat and dissolves while the scene eases
+out of a slight zoom and blur, with a few streaks still coasting past.
+
+The star layout is deterministic. Each scene renders once; the stars are one SVG
+with up to `stars` lines, and the arrival adds a CSS blur for its first frames.
+
+```tsx
+import { TransitionSeries, linearTiming } from "@remotion/transitions";
+import { hyperspace } from "@/components/remocn/hyperspace";
+
+export const MyVideo = () => (
+  <TransitionSeries>
+    <TransitionSeries.Sequence durationInFrames={90}>
+      <SceneA />
+    </TransitionSeries.Sequence>
+    <TransitionSeries.Transition
+      timing={linearTiming({ durationInFrames: 56 })}
+      presentation={hyperspace()}
+    />
+    <TransitionSeries.Sequence durationInFrames={90}>
+      <SceneB />
+    </TransitionSeries.Sequence>
+  </TransitionSeries>
+);
+```
+
+## Timing
+
+| Progress | What happens |
+| --- | --- |
+| 0 to 0.62 | Stars fade in and spool up, the scene dims and pushes forward |
+| 0.45 to 0.62 | Flash ramps up to full |
+| 0.62 | Cut to the incoming scene under the flash |
+| 0.62 to 1 | Flash dissolves, the scene settles out of zoom and blur |
+
+## Variations
+
+- `flash: false` swaps the white-out for a hard cut through the streaks at 62%.
+- `accentRatio: 0` keeps every streak in `streakColor`; raise it to tint more stars with `accentColor`.
+- Fewer `stars` (80 to 120) gives a sparser, calmer jump.
+
+## Props
+
+`hyperspace(props)` accepts:
+
+<PropsTable
+  rows={[
+    {
+      name: "stars",
+      type: "number",
+      default: "260",
+      description: "Number of stars in the field.",
+    },
+    {
+      name: "streakColor",
+      type: "string",
+      default: '"#FFFFFF"',
+      description: "Main streak color.",
+    },
+    {
+      name: "accentColor",
+      type: "string",
+      default: '"#E5322D"',
+      description: "Color of the occasional tinted streak.",
+    },
+    {
+      name: "accentRatio",
+      type: "number",
+      default: "0.14",
+      description: "Share of stars drawn in accentColor, 0 to 1.",
+    },
+    {
+      name: "flash",
+      type: "boolean",
+      default: "true",
+      description: "Flash at the cut. false gives a hard cut through the streaks.",
+    },
+    {
+      name: "flashColor",
+      type: "string",
+      default: '"#FFFFFF"',
+      description: "Flash color.",
+    },
+  ]}
+/>

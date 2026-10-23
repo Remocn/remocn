@@ -1,0 +1,76 @@
+---
+title: Anamorphic Flare
+description: A point of light stretches into a cinematic horizontal streak that sweeps the frame and reveals the logo behind it
+component: anamorphic-flare
+vibe: premium
+length: 40
+useWhen:
+  - "A film, studio, automotive or premium product needs a cinematic opener with a lens-flare look."
+  - "Your logo is an image or component you already have, and it should be wiped in by light rather than redrawn."
+  - "You want a fast left-to-right sweep that has a centered logo fully revealed by about frame 20."
+avoidWhen:
+  - "The light should search and land on the logo like a stage light — use `spotlight`."
+  - "You want warm light flooding a cut between two scenes, not a logo reveal — use `light-leak`."
+  - "The moment calls for a kinetic impact rather than a sweep — use `orbit-lock`."
+  - "Text, not a logo, should get a single shine across it — use `shimmer-sweep`."
+---
+
+<ComponentPreview name="anamorphic-flare" />
+
+<InstallBlock name="anamorphic-flare" />
+
+## Usage
+
+`AnamorphicFlare` starts with a point of light near the left edge. It ignites,
+stretches into a long horizontal streak with a hot core line and a tinted
+glow, and sweeps across the frame. Your logo is revealed behind the head of
+the streak through a soft-edged mask, so it appears left to right in the
+light's wake. Ghost orbs sit mirrored across the frame center and slide the
+opposite way, like real lens reflections. After the streak exits, a faint
+tinted line is left across the frame.
+
+```tsx
+import { Img, staticFile } from "remotion";
+import { AnamorphicFlare } from "@/components/remocn/anamorphic-flare";
+
+export const LogoSting = () => (
+  <AnamorphicFlare tint="#E5322D" coreColor="#FFFFFF">
+    <Img src={staticFile("logo.svg")} style={{ height: 120 }} />
+  </AnamorphicFlare>
+);
+```
+
+`children` are centered in the frame at their own size. `y` moves the streak
+vertically as a fraction of the height; the logo stays centered, so keep `y`
+within the logo's height for the reveal to read as the light uncovering it.
+The streak layer uses `mix-blend-mode: screen`, so it brightens the logo where
+they overlap and works best on dark backgrounds. Ghost positions, sizes and
+opacities come from Remotion's seeded `random()`, so the same `seed` always
+renders the same frames.
+
+## Timing
+
+At 30 fps and `speed={1}`:
+
+| Frames | Motion |
+| --- | --- |
+| 0–6 | The point of light ignites at 7% of the width |
+| 0–12 | The streak stretches from a point to 130% of the frame width |
+| 4–26 | The head sweeps from 7% to 112% of the width, revealing the logo behind it |
+| 20–28 | The streak, bloom and ghosts fade out |
+| 24–40 | A faint tinted line fades up across the frame and holds |
+
+The docs preview runs 70 frames. `speed` scales the timeline.
+
+<PropsTable title="Props"
+  rows={[
+    { name: "children", type: "ReactNode", description: "Lockup revealed behind the streak, centered in the frame. Without it a placeholder lockup (a rounded mark and the word remocn) is shown" },
+    { name: "tint", type: "string", default: '"#E5322D"', description: "Color of the streak glow, bloom, ghosts and the residual line" },
+    { name: "coreColor", type: "string", default: '"#FFFFFF"', description: "Hot core line and the center of the bloom" },
+    { name: "backgroundColor", type: "string", default: '"#111111"', description: "Full-frame background" },
+    { name: "ghosts", type: "number", default: "4", description: "Number of ghost orbs mirrored across the frame center, rounded" },
+    { name: "y", type: "number", default: "0.5", description: "Vertical position of the streak, 0 to 1" },
+    { name: "seed", type: "number", default: "2", description: "Seeds the ghost positions, sizes and opacities" },
+    { name: "speed", type: "number", default: "1", description: "Playback multiplier" },
+  ]}
+/>
