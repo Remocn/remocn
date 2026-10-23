@@ -1,0 +1,103 @@
+---
+title: Topo Lines
+description: Topographic contour lines around a few seeded peaks breathe and drift, with index contours and one line picked out in the accent, as a seamless loop
+component: topo-lines
+vibe: clean
+length: sustained
+useWhen:
+  - "A title, quote or section card needs a quiet line texture behind it that moves slowly enough to read over."
+  - "A story about terrain, exploration, maps, depth or data layers needs a survey-map look."
+  - "The background has to loop without a seam for any length of shot, in any brand color."
+avoidWhen:
+  - "The backdrop should be flowing strands rather than closed contours — use `flow-field`."
+  - "The layers should read as horizontal sediment rather than a map — use `shader-strata`."
+  - "The background should be soft color with no lines — use `shader-mesh-gradient`."
+  - "The scene needs a rule-based geometric loop with distinct objects — use `pendulum-wave`."
+---
+
+<ComponentPreview name="topo-lines" />
+
+<InstallBlock name="topo-lines" />
+
+## Usage
+
+`TopoLines` draws the contour map of a seeded height field. The terrain is a
+few cone-shaped peaks spread around the center, blended so they share outer
+rings without creases, plus a little low ripple. Contours are evenly spaced
+like a survey map. Every few contours an index line is drawn heavier, and
+one contour is picked out in `accent`.
+
+The terrain moves slowly. Each peak drifts on a small orbit, swells and
+shrinks by about 5%, and its outline rotates through gentle two- and
+three-lobed bulges. The rings tighten, merge, and pull apart, and after one
+loop the field is back where it started.
+
+```tsx
+import { TopoLines } from "@/components/remocn/topo-lines";
+
+export const MapBed = () => <TopoLines />;
+```
+
+The component fills its parent and paints its own `background`. The terrain
+is laid out in units of the short side, so the peaks keep their shape at
+16:9, 1:1 and 9:16, and line widths are in px at 720p. The contours are
+traced with marching squares on a sampling grid each frame; everything comes
+from the Remotion frame and the seed, so renders are deterministic.
+
+## Timing
+
+The terrain repeats every `loopFrames / speed` frames, 300 frames (10
+seconds) at the defaults. The last frame flows into the first without a
+seam, so a `Sequence` of any multiple of the period, or a Remotion `<Loop>`
+of that length, plays as a continuous background. There is no build-up:
+frame 0 already shows the full map.
+
+## Performance
+
+`resolution` is the number of sampling cells across the short side. The
+default of 90 samples about 14,600 points per frame at 16:9; doubling it
+quadruples the work. Lower it for drafts, raise it only if contours look
+faceted at a large output size.
+
+## Contours
+
+`levels` contours are spread evenly over the same fixed height range, so
+more levels means tighter spacing. They are counted from 0 at the lowest. `highlight` picks the accent contour
+by that count, and `-1` turns it off. `indexEvery={4}` makes every fourth
+contour an index line; `0` turns index lines off. The accent wins when both
+apply to the same contour.
+
+## Variations
+
+`peaks={1}` gives a single hill of nested rings; three reads best as a
+landscape. More `levels` tighten the spacing for a busier map.
+
+```tsx
+<TopoLines
+  levels={24}
+  peaks={2}
+  highlight={14}
+  indexEvery={5}
+  loopFrames={450}
+  background="#f1eee7"
+  color="#3b3a36"
+  accent="#d97757"
+  seed={6}
+/>
+```
+
+<PropsTable title="Props"
+  rows={[
+    { name: "levels", type: "number", default: "16", description: "Number of contours, rounded, minimum 1" },
+    { name: "peaks", type: "number", default: "3", description: "Peaks in the height field, rounded; 1 to 3 reads best" },
+    { name: "highlight", type: "number", default: "9", description: "Contour drawn in the accent, counted from 0 at the lowest; -1 disables it" },
+    { name: "indexEvery", type: "number", default: "4", description: "Every n-th contour is a heavier index line; 0 disables them" },
+    { name: "resolution", type: "number", default: "90", description: "Sampling cells across the short side, minimum 20; higher is smoother and slower" },
+    { name: "loopFrames", type: "number", default: "300", description: "Frames per seamless loop of the terrain" },
+    { name: "seed", type: "number", default: "2", description: "Seeds the peak layout, their motion and the ripples" },
+    { name: "background", type: "string", default: '"#111111"', description: "Background fill" },
+    { name: "color", type: "string", default: '"#FFFFFF"', description: "Contour and index line color" },
+    { name: "accent", type: "string", default: '"#E5322D"', description: "Color of the highlighted contour" },
+    { name: "speed", type: "number", default: "1", description: "Playback multiplier; the loop period is loopFrames / speed" },
+  ]}
+/>

@@ -1,0 +1,90 @@
+---
+title: Duotone Beat
+description: A two-ink halftone portrait that swaps its ink pair on every beat, punches in on the downbeat and shows a bar indicator
+component: duotone-beat
+vibe: social
+length: sustained
+useWhen:
+  - "A speaker, artist or team portrait should hit on the beat of a track, poster-style, for a promo or social cut."
+  - "The edit is cut to music at a known BPM and the visual should flash through brand color pairs in time."
+  - "A photo needs a bold two-color print treatment that keeps moving instead of sitting as a still."
+avoidWhen:
+  - "The print look should hold steady on a live scene with full color separation — use `halftone-print`."
+  - "The image should print once and settle, without a beat — use `riso-print`."
+  - "The beat should drive a camera jolt on heavy content rather than a color swap — use `impact-shake`."
+---
+
+<ComponentPreview name="duotone-beat" />
+
+<InstallBlock name="duotone-beat" />
+
+## Usage
+
+`DuotoneBeat` is a full-frame scene. It takes a portrait, drops it to
+grayscale, optionally screens it into halftone dots, and maps the tones onto
+two inks: shadows to the first ink, highlights to the second. On every beat it
+switches to the next ink pair in `palettes` and punches the image in with a
+small scale kick that decays over a few frames. The first beat of each bar
+gets the full `punch`, the others a third of it. A row of squares in the lower
+left marks the beat within the bar, next to a BPM label.
+
+```tsx
+import { staticFile } from "remotion";
+import { DuotoneBeat } from "@/components/remocn/duotone-beat";
+
+export const Speaker = () => (
+  <DuotoneBeat
+    src={staticFile("speaker.jpg")}
+    bpm={124}
+    palettes={[
+      ["#0B0B45", "#FFD23F"],
+      ["#0B0B45", "#FF5D8F"],
+      ["#FF5D8F", "#FFFFFF"],
+    ]}
+  />
+);
+```
+
+Without `src` it draws a head-and-shoulders silhouette that rises into frame.
+With `src` the image covers the frame and settles from 112% to 100% scale over
+the first 12 frames. Palette colors must be hex (`#rgb` or `#rrggbb`), since
+they are parsed into a lookup table for an SVG filter.
+
+## Timing
+
+The beat length is `1800 / bpm` frames at 30 fps when `bpm` is set, and
+`beatFrames` otherwise. The default of 15 frames is 120 BPM. Beats are counted
+in real time, so `bpm` stays in sync with the music at any composition frame
+rate.
+
+| Frames | Motion |
+| --- | --- |
+| 0–12 | The silhouette rises into place, or the image settles from 112% scale |
+| Each beat | The ink pair changes and the image punches in, decaying over about 10 frames |
+| Each downbeat | The punch is three times stronger |
+
+The look has no end: it keeps cycling for as long as the sequence runs. Start
+the sequence on a downbeat of your track so the punches land on the music.
+`speed` also speeds up the beat, while the BPM label keeps showing the nominal
+tempo, so prefer `bpm` to sync with a track.
+
+## Notes
+
+`halftone` is the dot pitch in px at 720p. Larger values give coarser, more
+graphic dots, and `0` keeps smooth duotone gradients. The whole frame,
+including the white ground, passes through the duotone filter, so the ground
+takes the highlight ink.
+
+<PropsTable title="Props"
+  rows={[
+    { name: "src", type: "string", description: "Portrait image URL, covering the frame. Without it a silhouette is drawn" },
+    { name: "palettes", type: "[string, string][]", default: "4 pairs of #111111, #FFFFFF and #E5322D", description: "Ink pairs [shadow, highlight], one per beat, cycled. Hex colors only" },
+    { name: "beatFrames", type: "number", default: "15", description: "Frames per beat at 30 fps; ignored when bpm is set" },
+    { name: "bpm", type: "number", description: "Tempo in beats per minute; overrides beatFrames" },
+    { name: "beatsPerBar", type: "number", default: "4", description: "Beats per bar; the first beat of each bar gets the full punch" },
+    { name: "punch", type: "number", default: "0.07", description: "Scale added on the downbeat; other beats get a third of it" },
+    { name: "showIndicator", type: "boolean", default: "true", description: "Shows the beat squares and BPM label in the lower left" },
+    { name: "halftone", type: "number", default: "8", description: "Halftone dot pitch in px at 720p; 0 keeps smooth tones" },
+    { name: "speed", type: "number", default: "1", description: "Playback multiplier, including the beat rate" },
+  ]}
+/>

@@ -1,0 +1,114 @@
+---
+title: String Art
+description: Threads are strung around a ring of pins as a times table, then the multiplier morphs the figure from a cardioid through a nephroid and beyond
+component: string-art
+vibe: tech
+length: 288
+useWhen:
+  - "A math, algorithm or engineering story needs a precise generative figure that builds itself and then transforms."
+  - "An intro or section break should draw something intricate from simple rules, with a readable label that shows the rule."
+  - "A background needs fine linework that keeps a slow accent sweep running after the figure lands."
+avoidWhen:
+  - "The figure should be a natural spiral of dots rather than straight threads — use `phyllotaxis`."
+  - "The scene needs a looping background with no build-up — use `flow-field`."
+  - "The linework should look like a technical drawing of a product — use `blueprint`."
+  - "The data is real and should be read as a chart — use `animated-line-chart`."
+---
+
+<ComponentPreview name="string-art" />
+
+<InstallBlock name="string-art" />
+
+## Usage
+
+`StringArt` draws a modular times table. `pins` points sit on a ring, and a
+thread runs from every pin `i` to pin `k × i`, wrapping around the ring. For
+`k = 2` the threads envelope a cardioid, for `k = 3` a nephroid, and for
+`k = 4` a three-cusp epicycloid. Pin 0 sits on the left, so the figures are
+symmetric about the horizontal axis.
+
+The pins fade in first. Then the threads are strung one pin after another,
+each growing from its pin to its target. After a short pause the multiplier
+walks from `from` to `to` one whole step at a time: each step eases through
+the in-between tables, which morph smoothly, and then holds on the clean
+figure. A short band of threads in `accent` rides along the stringing head
+and keeps circling the ring after the figure lands. A monospaced label in
+the corner shows the running rule, `i → k · i mod pins`.
+
+```tsx
+import { StringArt } from "@/components/remocn/string-art";
+
+export const TimesTable = () => <StringArt />;
+```
+
+The component fills its parent and paints its own `background`. The ring
+radius is 42% of the short side, centered, and strokes scale with the
+composition. All geometry comes from the Remotion frame, so renders are
+deterministic.
+
+## Timing
+
+At 30 fps, `speed={1}` and the defaults (`from={2}`, `to={4}`):
+
+| Frames | Motion |
+| --- | --- |
+| 0–12 | The pins fade in |
+| 0–60 | Threads are strung one pin after another, easing in and out, into a cardioid |
+| 50–66 | The label fades in |
+| 60–84 | The cardioid holds |
+| 84–168 | The multiplier eases from 2 to 3; the figure morphs into a nephroid |
+| 168–204 | The nephroid holds |
+| 204–288 | The multiplier eases from 3 to 4 |
+| 288 | The three-cusp figure lands and holds |
+| 60 onward | The accent band circles the ring at 0.9 pins per frame, a lap every 222 frames |
+
+`stringFrames` sets the stringing time and `morphFrames` the whole morph.
+The morph starts 24 frames after the stringing ends and is divided into one
+equal share per whole step between `from` and `to`. Each share spends 70%
+easing and 30% holding. The figure stops changing at
+`stringFrames + 24 + morphFrames − 0.3 × share` frames, 288 at the defaults,
+and the docs preview adds a short hold at 340. Divide by `speed` for faster
+playback. Only the accent band keeps moving after that; set `sweep={0}` for
+a fully still end frame.
+
+If `to − from` is not a whole number, the holds land on equal fractions of
+the span rather than on whole multipliers.
+
+## Variations
+
+`from={1}` starts from the empty table and grows the cardioid out of
+nothing. Higher multipliers give more cusps: `to={6}` ends on a five-cusp
+figure. Fewer `pins` show individual threads; more give a solid envelope.
+`showLabel={false}` drops the corner label.
+
+```tsx
+<StringArt
+  pins={300}
+  from={3}
+  to={6}
+  morphFrames={360}
+  threadOpacity={0.3}
+  showLabel={false}
+  background="#0b1020"
+  color="#c9d4ff"
+  accent="#ffd166"
+/>
+```
+
+<PropsTable title="Props"
+  rows={[
+    { name: "pins", type: "number", default: "200", description: "Pins around the ring, rounded, minimum 8" },
+    { name: "from", type: "number", default: "2", description: "Multiplier at the start; 2 draws a cardioid" },
+    { name: "to", type: "number", default: "4", description: "Multiplier at the end; 3 is a nephroid, 4 a three-cusp epicycloid" },
+    { name: "stringFrames", type: "number", default: "60", description: "Frames for the threads to be strung, one pin after another" },
+    { name: "morphFrames", type: "number", default: "240", description: "Frames for the multiplier to walk from from to to, holds included" },
+    { name: "sweep", type: "number", default: "0.08", description: "Length of the accent band as a share of all threads; 0 disables it" },
+    { name: "sweepSpeed", type: "number", default: "0.9", description: "Pins per frame the accent band travels once the threads are strung" },
+    { name: "threadOpacity", type: "number", default: "0.42", description: "Thread opacity, 0 to 1" },
+    { name: "showLabel", type: "boolean", default: "true", description: "Shows the running multiplier in the bottom-left corner" },
+    { name: "background", type: "string", default: '"#111111"', description: "Background fill" },
+    { name: "color", type: "string", default: '"#FFFFFF"', description: "Threads, pins and label text" },
+    { name: "accent", type: "string", default: '"#E5322D"', description: "Accent band and the arrow in the label" },
+    { name: "speed", type: "number", default: "1", description: "Playback multiplier" },
+  ]}
+/>

@@ -1,0 +1,98 @@
+---
+title: Long Shadow
+description: A flat icon pops in and casts a long shadow to the frame edge, then the light swings and the shadow sweeps around on a spring
+component: long-shadow
+vibe: clean
+length: 48
+useWhen:
+  - "A flat icon, badge or logo mark should get the classic flat-design long shadow, with a little motion in it."
+  - "A success, feature or app icon beat needs a calm, clean accent that fills the frame without extra elements."
+  - "You want depth on a flat mark without lighting it in 3D."
+avoidWhen:
+  - "The subject is a word that should rise out of the plane on a solid 3D body — use `extrude-pop`."
+  - "A line of text should be uncovered and wiped by moving shadows — use `shadow-sweep-text`."
+  - "The mark should land with a heavy impact rather than a soft pop — use `impact-shake`."
+---
+
+<ComponentPreview name="long-shadow" />
+
+<InstallBlock name="long-shadow" />
+
+## Usage
+
+`LongShadow` is a full-frame scene. The icon springs in from nothing at the
+center of the frame. Its shadow grows out of it until it reaches the frame
+edge, a solid band the exact shape of the icon's silhouette. Then the light
+swings, and the shadow sweeps from `angleFrom` to `angleTo` on a soft spring
+that overshoots a little before it settles.
+
+```tsx
+import { LongShadow } from "@/components/remocn/long-shadow";
+
+export const Done = () => <LongShadow />;
+```
+
+Without children it shows a red check badge. Pass a flat icon or mark as
+children to cast its shadow instead. The children are centered, and the
+shadow is built from their alpha, so any opaque shape works: an SVG, an image
+with transparency or plain text.
+
+```tsx
+import { LongShadow } from "@/components/remocn/long-shadow";
+
+export const AppIcon = () => (
+  <LongShadow
+    angleFrom={30}
+    angleTo={150}
+    shadowColor="#1F4FD1"
+    background="#2D6BE5"
+    fade={0.6}
+  >
+    <div
+      style={{
+        width: 240,
+        height: 240,
+        borderRadius: 56,
+        background: "#FFFFFF",
+      }}
+    />
+  </LongShadow>
+);
+```
+
+Angles are in degrees, clockwise from the right: `0` casts the shadow to the
+right and `90` casts it down. `fade` fades the shadow toward its far end,
+from `0` for a solid band to `1` for a shadow that disappears at the edge.
+
+## Timing
+
+At 30 fps and `speed={1}`:
+
+| Frames | Motion |
+| --- | --- |
+| 0–19 | The icon and its shadow spring in from zero scale |
+| 7–22 | The shadow grows out to the frame edge at `angleFrom` |
+| 24–48 | The light swings and the shadow sweeps to `angleTo`, overshooting slightly |
+
+`longShadowLength` is 48, the frame the swing settles. `speed` scales the whole
+timeline.
+
+## Notes
+
+The shadow is an SVG filter that stacks 1023 offset copies of the silhouette
+in ten doubling passes, then softens the steps with a hair of blur. It covers
+the full frame, so expect slower renders than a plain scene, especially at 4K.
+
+<PropsTable title="Props"
+  rows={[
+    { name: "children", type: "React.ReactNode", description: "Flat icon or mark that casts the shadow, centered. Without it a red check badge is shown" },
+    { name: "angleFrom", type: "number", default: "45", description: "Shadow direction before the swing, in degrees clockwise from the right" },
+    { name: "angleTo", type: "number", default: "135", description: "Shadow direction after the swing" },
+    { name: "shadowColor", type: "string", default: '"#ECEAE6"', description: "Shadow color" },
+    { name: "background", type: "string", default: '"#FFFFFF"', description: "Background color" },
+    { name: "fade", type: "number", default: "0", description: "Fades the shadow toward its far end, 0 to 1" },
+    { name: "iconColor", type: "string", default: '"#E5322D"', description: "Disc color of the default badge; ignored with children" },
+    { name: "checkColor", type: "string", default: '"#FFFFFF"', description: "Check mark color of the default badge; ignored with children" },
+    { name: "speed", type: "number", default: "1", description: "Playback multiplier" },
+  ]}
+/>

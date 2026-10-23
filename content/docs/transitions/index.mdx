@@ -134,6 +134,51 @@ Kinetic, interface-flavored transitions — typed wipes, scattering icons, and m
   ]}
 />
 
+## Graphic Cuts
+
+Bold, showy cuts built from plain CSS and SVG: shapes, slats, torn paper, streaks and light. No dependencies beyond Remotion.
+
+<ComponentCardGrid
+  items={[
+    {
+      name: "IrisWipe",
+      description: "Close a cartoon iris on the subject, hold it as a dot, then open it on the next scene",
+      status: "stable",
+      href: "/docs/transitions/iris-wipe",
+    },
+    {
+      name: "VenetianBlinds",
+      description: "Turn the outgoing scene edge-on in staggered horizontal slats to reveal the next one",
+      status: "stable",
+      href: "/docs/transitions/venetian-blinds",
+    },
+    {
+      name: "PaperTear",
+      description: "Rip the frame down the middle and fling both torn halves apart on impact",
+      status: "stable",
+      href: "/docs/transitions/paper-tear",
+    },
+    {
+      name: "PixelSort",
+      description: "Melt the scene into glowing vertical streaks and drop the next one in column by column",
+      status: "stable",
+      href: "/docs/transitions/pixel-sort",
+    },
+    {
+      name: "LightLeak",
+      description: "Drift a warm analog light leak across the frame and hard-cut under its blow-out",
+      status: "stable",
+      href: "/docs/transitions/light-leak",
+    },
+    {
+      name: "Hyperspace",
+      description: "Stretch a starfield into streaks, tunnel forward and land on the next scene through a flash",
+      status: "stable",
+      href: "/docs/transitions/hyperspace",
+    },
+  ]}
+/>
+
 ## Canvas
 
 Pixel-level transitions. These read the actual pixels of both scenes through the experimental html-in-canvas browser API and post-process them per frame, which is what makes tearing, burning, and shattering possible at all. Chrome 149+ behind `chrome://flags/#canvas-draw-element` shows the real effect; every other browser degrades to a CSS approximation of the same edit, so previews and renders never break.

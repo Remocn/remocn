@@ -1,0 +1,84 @@
+---
+title: Dolly Zoom
+description: The vertigo shot, a corridor with a red door stretches deeper while the subject in the middle keeps its exact size
+component: dolly-zoom
+vibe: premium
+length: 36
+useWhen:
+  - "A realization or a turning point in the story needs one unsettling, cinematic beat."
+  - "A logo, product or figure should stay perfectly still while the space around it warps."
+  - "A dark, dramatic tone fits, such as a problem statement before the reveal."
+avoidWhen:
+  - "You need to move from one scene to the next, not a held shot — use `push-through`."
+  - "The move should feel calm and simply show depth — use `parallax-depth`."
+  - "The subject is a UI screen the camera should move across — use `stage`."
+---
+
+<ComponentPreview name="dolly-zoom" />
+
+<InstallBlock name="dolly-zoom" />
+
+## Usage
+
+`DollyZoom` renders a perspective corridor with a red door at the far end and
+a standing figure in the middle. Over the move the camera dollies toward the
+figure while the focal length shortens at exactly the same rate, so the figure
+never changes size while the corridor stretches away behind it, the way the
+shot works in film. Floor tiles, ceiling lights and frame lines fade with
+distance, and a vignette darkens the corners.
+
+```tsx
+import { DollyZoom } from "@/components/remocn/dolly-zoom";
+
+export const Vertigo = () => <DollyZoom />;
+```
+
+`intensity` sets how far the camera travels, from 0 (no move) to 2. At 1 the
+camera ends at about 37% of its starting distance. `reverse` plays the same
+move backward: the corridor starts stretched and compresses toward the
+subject.
+
+### Your own subject
+
+Children replace the figure. They are centered in the frame and are not
+scaled, which is what keeps them steady.
+
+```tsx
+import { Img, staticFile } from "remotion";
+import { DollyZoom } from "@/components/remocn/dolly-zoom";
+
+export const LogoVertigo = () => (
+  <DollyZoom intensity={1.4} doorColor="#3D7BFF">
+    <Img src={staticFile("logo.svg")} style={{ height: 160 }} />
+  </DollyZoom>
+);
+```
+
+The built-in figure stands on the floor. Children sit at the frame center
+instead, so a tall subject may overlap the floor line; that is usually fine
+for a logo or a word.
+
+## Timing
+
+At 30 fps and `speed={1}`:
+
+| Frames | Motion |
+| --- | --- |
+| 0–4 | The shot holds on the starting framing |
+| 4–36 | The camera dollies in while zooming out on one eased curve, fastest around frame 16 |
+| 36+ | The shot holds on the stretched corridor |
+
+`speed` scales the move, so `speed={2}` ends at frame 18.
+
+<PropsTable title="Props"
+  rows={[
+    { name: "children", type: "ReactNode", description: "Subject held at a constant size in the frame center. Defaults to a standing figure" },
+    { name: "intensity", type: "number", default: "1", description: "How far the camera dollies in, 0 to 2" },
+    { name: "reverse", type: "boolean", default: "false", description: "Plays the move backward so the corridor compresses toward the subject" },
+    { name: "colors", type: "Partial<DollyZoomColors>", default: '{ background: "#0B0B0B", wall: "#1B1B1B", wallAlt: "#151515", floor: "#262626", floorAlt: "#1D1D1D", line: "#FFFFFF", light: "#FFFFFF", door: "#E5322D", figure: "#FFFFFF" }', description: "Corridor, line, ceiling light, door and figure colors; merged over the defaults. The flat color props below win over it" },
+    { name: "doorColor", type: "string", default: '"#E5322D"', description: "Door color; overrides colors.door" },
+    { name: "figureColor", type: "string", default: '"#FFFFFF"', description: "Default figure color; overrides colors.figure" },
+    { name: "lineColor", type: "string", default: '"#FFFFFF"', description: "Corridor edge lines; overrides colors.line" },
+    { name: "speed", type: "number", default: "1", description: "Playback multiplier" },
+  ]}
+/>

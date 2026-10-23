@@ -3662,6 +3662,538 @@
           "target": "components/remocn/caption-drop.tsx"
         }
       ]
+    },
+    {
+      "name": "iris-wipe",
+      "type": "registry:component",
+      "title": "Iris Wipe",
+      "description": "An old-cartoon iris closes on the subject, holds a beat as a dot, then opens on the next scene.",
+      "dependencies": ["remotion", "@remotion/transitions"],
+      "files": [
+        {
+          "path": "iris-wipe/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/iris-wipe.tsx"
+        }
+      ]
+    },
+    {
+      "name": "venetian-blinds",
+      "type": "registry:component",
+      "title": "Venetian Blinds",
+      "description": "The outgoing scene splits into horizontal slats that turn edge-on in a staggered ripple, revealing the next scene behind them.",
+      "dependencies": ["remotion", "@remotion/transitions"],
+      "files": [
+        {
+          "path": "venetian-blinds/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/venetian-blinds.tsx"
+        }
+      ]
+    },
+    {
+      "name": "paper-tear",
+      "type": "registry:component",
+      "title": "Paper Tear",
+      "description": "A jagged rip runs down the frame, then both halves peel apart on a spring with white fibrous torn edges, revealing the scene underneath.",
+      "dependencies": ["remotion", "@remotion/transitions"],
+      "files": [
+        {
+          "path": "paper-tear/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/paper-tear.tsx"
+        }
+      ]
+    },
+    {
+      "name": "pixel-sort",
+      "type": "registry:component",
+      "title": "Pixel Sort",
+      "description": "The scene melts into seeded vertical streaks like glitch-art pixel sorting, then the next scene's columns fall in and snap into place.",
+      "dependencies": ["remotion", "@remotion/transitions"],
+      "files": [
+        {
+          "path": "pixel-sort/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/pixel-sort.tsx"
+        }
+      ]
+    },
+    {
+      "name": "light-leak",
+      "type": "registry:component",
+      "title": "Light Leak",
+      "description": "A warm analog light leak drifts in from an edge and blows the frame out to near-white at the cut, then cools off to reveal the next scene.",
+      "dependencies": ["remotion", "@remotion/transitions"],
+      "files": [
+        {
+          "path": "light-leak/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/light-leak.tsx"
+        }
+      ]
+    },
+    {
+      "name": "orbit-lock",
+      "type": "registry:component",
+      "title": "Orbit Lock",
+      "description": "Three moons ride tilted, shrinking orbits into a red core that bursts into a ring flash and springs the logo into place.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "orbit-lock/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/orbit-lock.tsx"
+        }
+      ]
+    },
+    {
+      "name": "puzzle-snap",
+      "type": "registry:component",
+      "title": "Puzzle Snap",
+      "description": "Geometric pieces spin in from scattered positions and magnet-snap into a mark with a spark burst, then the mark slides aside for the wordmark.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "puzzle-snap/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/puzzle-snap.tsx"
+        }
+      ]
+    },
+    {
+      "name": "spotlight",
+      "type": "registry:component",
+      "title": "Spotlight",
+      "description": "A soft spotlight cone searches the dark stage, overshoots, and lands on the logo before the house lights lift.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "spotlight/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/spotlight.tsx"
+        }
+      ]
+    },
+    {
+      "name": "neon-sign",
+      "type": "registry:component",
+      "title": "Neon Sign",
+      "description": "A glass neon tube stutters alive segment by segment with a hot white core and wall glow, buzzes off once, then holds lit.",
+      "dependencies": ["remotion", "@remotion/paths"],
+      "files": [
+        {
+          "path": "neon-sign/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/neon-sign.tsx"
+        }
+      ]
+    },
+    {
+      "name": "inflate",
+      "type": "registry:component",
+      "title": "Inflate",
+      "description": "A deflated red sliver puffs up like a balloon toy, overshoots, squashes wide and settles into a glossy rounded mark.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "inflate/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/inflate.tsx"
+        }
+      ]
+    },
+    {
+      "name": "liquid-fill",
+      "type": "registry:component",
+      "title": "Liquid Fill",
+      "description": "A drop falls into an outlined mark and liquid rises with a sloshing, damping surface and bubbles until the mark is solid.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "liquid-fill/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/liquid-fill.tsx"
+        }
+      ]
+    },
+    {
+      "name": "accordion-unfold",
+      "type": "registry:component",
+      "title": "Accordion Unfold",
+      "description": "A tight paper zigzag unfolds sideways into a flat card with the logo printed across it.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "accordion-unfold/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/accordion-unfold.tsx"
+        }
+      ]
+    },
+    {
+      "name": "anamorphic-flare",
+      "type": "registry:component",
+      "title": "Anamorphic Flare",
+      "description": "A point of light grows into a cinematic anamorphic streak that sweeps the frame and reveals the logo in its wake.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "anamorphic-flare/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/anamorphic-flare.tsx"
+        }
+      ]
+    },
+    {
+      "name": "pendulum-wave",
+      "type": "registry:component",
+      "title": "Pendulum Wave",
+      "description": "A row of pendulums with tuned periods drifts from a straight line into waves and braids, then realigns for a seamless loop.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "pendulum-wave/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/pendulum-wave.tsx"
+        }
+      ]
+    },
+    {
+      "name": "flow-field",
+      "type": "registry:component",
+      "title": "Flow Field",
+      "description": "Hundreds of particles ride a seeded noise field, leaving silky fading trails in a seamless loop.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "flow-field/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/flow-field.tsx"
+        }
+      ]
+    },
+    {
+      "name": "isometric-build",
+      "type": "registry:component",
+      "title": "Isometric Build",
+      "description": "An isometric tile grid springs up row by row into a stepped block sculpture with one accent tower, then holds.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "isometric-build/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/isometric-build.tsx"
+        }
+      ]
+    },
+    {
+      "name": "life-grid",
+      "type": "registry:component",
+      "title": "Life Grid",
+      "description": "Conway's Game of Life plays out on a seeded grid, with newborn cells flashing in the accent.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "life-grid/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/life-grid.tsx"
+        }
+      ]
+    },
+    {
+      "name": "string-art",
+      "type": "registry:component",
+      "title": "String Art",
+      "description": "Threads string a ring of pins times-table style while the multiplier morphs from cardioid to nephroid and beyond.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "string-art/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/string-art.tsx"
+        }
+      ]
+    },
+    {
+      "name": "topo-lines",
+      "type": "registry:component",
+      "title": "Topo Lines",
+      "description": "Topographic contour lines around a few seeded peaks breathe and shift in a seamless loop, one contour picked out in the accent color.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "topo-lines/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/topo-lines.tsx"
+        }
+      ]
+    },
+    {
+      "name": "phyllotaxis",
+      "type": "registry:component",
+      "title": "Phyllotaxis",
+      "description": "Seeds spiral out at the golden angle into a sunflower head, then an accent Fibonacci arm pulses outward.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "phyllotaxis/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/phyllotaxis.tsx"
+        }
+      ]
+    },
+    {
+      "name": "hyperspace",
+      "type": "registry:component",
+      "title": "Hyperspace",
+      "description": "A deterministic starfield stretches into radial streaks, the scene tunnels forward and a white flash at the cut reveals the next scene.",
+      "dependencies": ["remotion", "@remotion/transitions"],
+      "files": [
+        {
+          "path": "hyperspace/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/hyperspace.tsx"
+        }
+      ]
+    },
+    {
+      "name": "parallax-depth",
+      "type": "registry:component",
+      "title": "Parallax Depth",
+      "description": "A flat landscape built from depth layers trucks sideways with a gentle push-in, near layers sliding faster than far ones.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "parallax-depth/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/parallax-depth.tsx"
+        }
+      ]
+    },
+    {
+      "name": "dolly-zoom",
+      "type": "registry:component",
+      "title": "Dolly Zoom",
+      "description": "The vertigo shot: a perspective corridor with a red door stretches deeper while the subject in the center holds its exact size.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "dolly-zoom/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/dolly-zoom.tsx"
+        }
+      ]
+    },
+    {
+      "name": "turntable",
+      "type": "registry:component",
+      "title": "Turntable",
+      "description": "A product card spins on an invisible turntable through front, edge and back in real 3D, with face shading and a breathing floor shadow.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "turntable/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/turntable.tsx"
+        }
+      ]
+    },
+    {
+      "name": "gravity-pile",
+      "type": "registry:component",
+      "title": "Gravity Pile",
+      "description": "Seeded circles, squares and triangles rain down, bounce off the floor and each other, and settle into a heap.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "gravity-pile/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/gravity-pile.tsx"
+        }
+      ]
+    },
+    {
+      "name": "cloth-reveal",
+      "type": "registry:component",
+      "title": "Cloth Reveal",
+      "description": "A satin sheet draped over the content is yanked from one corner, folding and fluttering as a simulated cloth before it clears the frame.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "cloth-reveal/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/cloth-reveal.tsx"
+        }
+      ]
+    },
+    {
+      "name": "exploded-view",
+      "type": "registry:component",
+      "title": "Exploded View",
+      "description": "An isometric stack of slabs springs apart with leader lines and labels, holds, then clicks back together.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "exploded-view/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/exploded-view.tsx"
+        }
+      ]
+    },
+    {
+      "name": "tiny-planet",
+      "type": "registry:component",
+      "title": "Tiny Planet",
+      "description": "A seeded flat skyline bends into a tiny planet through a polar remap, then slowly spins beside a red sun.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "tiny-planet/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/tiny-planet.tsx"
+        }
+      ]
+    },
+    {
+      "name": "impact-shake",
+      "type": "registry:component",
+      "title": "Impact Shake",
+      "description": "Heavy content slams in from above with squash, a damped camera jolt, a two-frame RGB split and dust puffs kicking out sideways.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "impact-shake/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/impact-shake.tsx"
+        }
+      ]
+    },
+    {
+      "name": "riso-print",
+      "type": "registry:component",
+      "title": "Riso Print",
+      "description": "A two-ink risograph print: the accent plate slides in off-register, wobbles and settles a hair out of alignment over grainy paper.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "riso-print/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/riso-print.tsx"
+        }
+      ]
+    },
+    {
+      "name": "line-boil",
+      "type": "registry:component",
+      "title": "Line Boil",
+      "description": "A hand-drawn outline boils like a cel animation, redrawn every few frames with a varying pen weight, then fills with color while it keeps boiling.",
+      "dependencies": ["remotion", "@remotion/paths"],
+      "files": [
+        {
+          "path": "line-boil/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/line-boil.tsx"
+        }
+      ]
+    },
+    {
+      "name": "blueprint",
+      "type": "registry:component",
+      "title": "Blueprint",
+      "description": "The product wipes left to right into a technical drawing: blueprint grid, white linework, dimension lines with ticks, labels and a red callout.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "blueprint/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/blueprint.tsx"
+        }
+      ]
+    },
+    {
+      "name": "duotone-beat",
+      "type": "registry:component",
+      "title": "Duotone Beat",
+      "description": "A two-ink halftone portrait swaps its ink pair on every beat, with a punch-in on the downbeat and a bar indicator.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "duotone-beat/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/duotone-beat.tsx"
+        }
+      ]
+    },
+    {
+      "name": "comic-panels",
+      "type": "registry:component",
+      "title": "Comic Panels",
+      "description": "The frame cracks into a three-panel comic page with speed lines, red halftone and a starburst, then the action panel bursts into a full-frame POW.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "comic-panels/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/comic-panels.tsx"
+        }
+      ]
+    },
+    {
+      "name": "long-shadow",
+      "type": "registry:component",
+      "title": "Long Shadow",
+      "description": "A flat icon casts a long shadow to the frame edge, then the light swings and the shadow sweeps around on a spring.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "long-shadow/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/long-shadow.tsx"
+        }
+      ]
+    },
+    {
+      "name": "synthwave",
+      "type": "registry:component",
+      "title": "Synthwave",
+      "description": "A retro neon horizon: a scrolling perspective grid, a rising striped sun and mountain ranges that slide in.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "synthwave/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/synthwave.tsx"
+        }
+      ]
+    },
+    {
+      "name": "brick-mosaic",
+      "type": "registry:component",
+      "title": "Brick Mosaic",
+      "description": "Toy bricks drop in row by row from the bottom with a tiny bounce, rebuilding a pixel-art logo on a baseplate.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "brick-mosaic/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/brick-mosaic.tsx"
+        }
+      ]
+    },
+    {
+      "name": "x-ray-scan",
+      "type": "registry:component",
+      "title": "X-Ray Scan",
+      "description": "A glowing scanner bar sweeps across a device, turning the shell dark and revealing white-line internals with one part in red.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "x-ray-scan/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/x-ray-scan.tsx"
+        }
+      ]
     }
   ]
 }

@@ -1,0 +1,69 @@
+---
+title: Spotlight
+description: A soft stage spotlight searches the dark, overshoots, lands on the logo, and the house lights come up
+component: spotlight
+vibe: premium
+length: 50
+useWhen:
+  - "A launch, keynote or event video should open with a theatrical reveal, the logo waiting in the dark until the light finds it."
+  - "Your logo is an image or component you already have, and the sting should light it rather than redraw it."
+  - "You want a slower, confident reveal with an obvious landing beat around frame 26."
+avoidWhen:
+  - "The light should be a horizontal lens streak with a cinematic film feel — use `anamorphic-flare`."
+  - "The reveal needs energy and an impact hit rather than a search — use `orbit-lock`."
+  - "You need light rays as a looping background bed, not a one-shot reveal — use `shader-god-rays`."
+  - "The scene is a product screen on a stage with a moving camera, not a logo — use `stage`."
+---
+
+<ComponentPreview name="spotlight" />
+
+<InstallBlock name="spotlight" />
+
+## Usage
+
+`Spotlight` puts your logo on a dark stage, dimmed almost to black. A soft
+cone of light hangs from above the top edge with a pool on the floor. It
+searches the left side, swings past the logo to the right, then springs back
+and lands on center. The logo brightens as the beam covers it, and once the
+beam settles the house lights come up: a faint ambient glow fills the stage,
+the beam eases off, and the logo holds at full brightness.
+
+```tsx
+import { Img, staticFile } from "remotion";
+import { Spotlight } from "@/components/remocn/spotlight";
+
+export const LogoSting = () => (
+  <Spotlight beamColor="#FFFFFF" stageColor="#111111">
+    <Img src={staticFile("logo.svg")} style={{ height: 120 }} />
+  </Spotlight>
+);
+```
+
+`children` are centered in the frame at their own size. Lighting is a CSS
+`brightness()` filter on the children, so it works on images, SVG and text
+alike, and their colors are never tinted by `beamColor`. The beam is drawn in
+one SVG with a Gaussian blur and scales with the composition.
+
+## Timing
+
+At 30 fps and `speed={1}`:
+
+| Frames | Motion |
+| --- | --- |
+| 0–5 | Beam fades on at the left of the stage |
+| 0–12 | Beam searches from 14% to 27% of the width |
+| 12–26 | Beam swings across, overshooting the logo to 74% |
+| 26–49 | Beam springs back, passes center slightly and settles on the logo |
+| 38–50 | House lights: ambient glow comes up, beam drops to 65%, the logo reaches full brightness |
+
+The docs preview runs 80 frames. `speed` scales the timeline.
+
+<PropsTable title="Props"
+  rows={[
+    { name: "children", type: "ReactNode", description: "Lockup the beam lands on, centered in the frame. Without it a placeholder lockup (a rounded mark and the word remocn) is shown" },
+    { name: "dim", type: "number", default: "0.16", description: "Brightness of the unlit lockup, 0 to 1" },
+    { name: "beamColor", type: "string", default: '"#FFFFFF"', description: "Light cone, floor pool and ambient glow" },
+    { name: "stageColor", type: "string", default: '"#111111"', description: "Full-frame stage behind everything" },
+    { name: "speed", type: "number", default: "1", description: "Playback multiplier" },
+  ]}
+/>

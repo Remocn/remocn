@@ -1,0 +1,83 @@
+---
+title: Puzzle Snap
+description: Geometric pieces spin in from scattered positions and snap into a mark with sparks, then the wordmark slides out beside it
+component: puzzle-snap
+vibe: playful
+length: 38
+useWhen:
+  - "You have a wordmark but no animated mark, and the sting should build a simple geometric mark for you."
+  - "The brand is friendly or modular, and pieces clicking together tell that story."
+  - "You want four small hits in a row to sync clicks or a rhythmic sound to, one per piece."
+avoidWhen:
+  - "Your real logo must appear exactly as designed — the mark here is a fixed set of shapes, so wrap your own logo with `orbit-lock` or `spotlight`."
+  - "The brand is calm or luxurious and the snapping reads as too toy-like — use `anamorphic-flare`."
+  - "You want flat shapes tumbling into a full-frame frieze rather than a compact mark — use `bauhaus-build`."
+  - "The mark should feel soft and squishy rather than mechanical — use `inflate`."
+---
+
+<ComponentPreview name="puzzle-snap" />
+
+<InstallBlock name="puzzle-snap" />
+
+## Usage
+
+`PuzzleSnap` draws its own mark: a quarter circle, a dot, a wedge and a small
+rounded square on a 2×2 grid. Each piece starts far off at a seeded angle,
+drifts in while it spins, then gets yanked onto its slot over three frames and
+throws a ring of six sparks. When the last piece lands the whole mark punches,
+then slides left while your wordmark wipes in on its right.
+
+```tsx
+import { PuzzleSnap } from "@/components/remocn/puzzle-snap";
+
+export const LogoSting = () => (
+  <PuzzleSnap primaryColor="#E5322D" secondaryColor="#FFFFFF">
+    <span
+      style={{
+        fontSize: 104,
+        fontWeight: 800,
+        letterSpacing: "-0.04em",
+        color: "#FFFFFF",
+      }}
+    >
+      remocn
+    </span>
+  </PuzzleSnap>
+);
+```
+
+Pass only the wordmark as `children`, not a full lockup: the mark is the
+sting's own drawing. Without `children` the mark stays centered and no slide
+happens. The mark is 20% of the shorter side of the composition (144px at
+720p), and the wordmark keeps its own size. Positions come from Remotion's
+seeded `random()`, so the same `seed` always renders the same frames.
+
+## Timing
+
+At 30 fps, `speed={1}` and `square` on:
+
+| Frames | Motion |
+| --- | --- |
+| 0–9 | Pieces launch one every 3 frames and fade in over 3 frames |
+| 0–22 | Each piece drifts in for 10 frames with an ease-out, then snaps the last stretch in 3 frames |
+| 13, 16, 19, 22 | Contact frames; each throws a spark ring that lasts 8 frames |
+| 22–38 | The mark punches from 108% and springs back to full size |
+| 24–35 | The mark slides from the center to the left |
+| 26–37 | The wordmark wipes in from the left |
+
+With `square={false}` there are three pieces and everything after the last
+contact starts 3 frames earlier. The docs preview runs 66 frames. `speed`
+scales the timeline.
+
+<PropsTable title="Props"
+  rows={[
+    { name: "children", type: "ReactNode", description: "Wordmark revealed to the right of the assembled mark. Without it the mark settles alone in the center" },
+    { name: "square", type: "boolean", default: "true", description: "Include the small square piece; false builds the mark from three pieces" },
+    { name: "seed", type: "number", default: "3", description: "Seeds the start angle, distance and spin of each piece" },
+    { name: "primaryColor", type: "string", default: '"#E5322D"', description: "Quarter circle and square" },
+    { name: "secondaryColor", type: "string", default: '"#FFFFFF"', description: "Dot and wedge" },
+    { name: "sparkColor", type: "string", default: '"#FFFFFF"', description: "Spark lines at each contact" },
+    { name: "backgroundColor", type: "string", default: '"#111111"', description: "Full-frame background" },
+    { name: "speed", type: "number", default: "1", description: "Playback multiplier" },
+  ]}
+/>

@@ -1,0 +1,102 @@
+---
+title: Phyllotaxis
+description: Seeds spiral out at the golden angle into a sunflower head, then one Fibonacci arm turns accent and pulses outward while the head slowly turns
+component: phyllotaxis
+vibe: clean
+length: 74
+useWhen:
+  - "An opener or section break should grow something natural and precise in about two seconds, then keep a gentle idle motion."
+  - "A story about growth, nature, design systems or the golden ratio needs a literal, recognisable pattern."
+  - "One element of many needs to be singled out, with the accent arm drawing the eye along a spiral path."
+avoidWhen:
+  - "The figure should be built from straight threads and morph between shapes — use `string-art`."
+  - "The dots should orbit on concentric rings as a shader background — use `shader-dot-orbit`."
+  - "The moment calls for a one-shot burst that clears the frame — use `radial-burst`."
+  - "The scene needs a texture with no focal point — use `flow-field`."
+---
+
+<ComponentPreview name="phyllotaxis" />
+
+<InstallBlock name="phyllotaxis" />
+
+## Usage
+
+`Phyllotaxis` places seeds the way a sunflower head does: seed `i` sits at
+`i × 137.508°`, the golden angle, at a radius proportional to `√i`. The
+seeds pop in from the center outward, each with a small overshoot, and the
+outer ones are drawn a little larger.
+
+When the head is grown, every `arm`-th seed turns `accent` and swells
+slightly, and a faint accent line connects them. With a Fibonacci number
+these seeds line up into one spiral arm. Then a soft pulse travels outward
+along the arm again and again, swelling each seed as it passes. The whole
+head turns slowly the entire time.
+
+```tsx
+import { Phyllotaxis } from "@/components/remocn/phyllotaxis";
+
+export const Growth = () => <Phyllotaxis />;
+```
+
+The component fills its parent and paints its own `background`. The head is
+centered and its outer edge sits at 44% of the short side, so it keeps its
+framing at any aspect ratio. Everything comes from the Remotion frame, so
+renders are deterministic.
+
+## Timing
+
+At 30 fps, `speed={1}` and the defaults:
+
+| Frames | Motion |
+| --- | --- |
+| 0–70 | Seeds pop in from the center outward; seed `i` starts at `growFrames × √(i / count)` and pops over 10 frames |
+| 60–74 | The arm seeds turn accent, swell by 25% and the spine line fades in |
+| 70–115 | The first pulse travels from the center to the rim |
+| every 45 frames | The next pulse starts |
+| 0 onward | The head turns at `rotation` degrees per second |
+
+The square-root schedule moves the reveal front outward at a steady radial
+speed, so the dense center does not flash in at once. The build is complete
+at `growFrames + 14` frames, 74 at the defaults; after
+that the pulse repeats every `pulseFrames` frames for as long as the
+`Sequence` runs. The docs preview shows two pulses, 165 frames. Divide by
+`speed` for faster playback; `rotation` is in degrees per second and scales
+with `speed` as well.
+
+The pulse cycle is seamless on its own. With the default `rotation` the head
+keeps turning, so the idle never repeats exactly; set `rotation={0}` for a
+loop of `pulseFrames` frames after frame 70.
+
+## Variations
+
+`arm` picks which seeds form the accent spiral. Fibonacci numbers (8, 13, 21,
+34, 55) give a clean spiral arm; other values give curved spokes or scattered
+dots. Lower `count` and raise `size` for a bold, graphic head with few
+seeds.
+
+```tsx
+<Phyllotaxis
+  count={180}
+  size={1.4}
+  arm={13}
+  rotation={-6}
+  background="#f6f1e7"
+  color="#3d2c1e"
+  accent="#e09f3e"
+/>
+```
+
+<PropsTable title="Props"
+  rows={[
+    { name: "count", type: "number", default: "420", description: "Number of seeds, rounded, minimum 1" },
+    { name: "size", type: "number", default: "1", description: "Seed size multiplier" },
+    { name: "growFrames", type: "number", default: "60", description: "Frames until the last seed starts to pop in" },
+    { name: "pulseFrames", type: "number", default: "45", description: "Frames per pulse along the accent arm once grown" },
+    { name: "arm", type: "number", default: "21", description: "Every n-th seed forms the accent arm; a Fibonacci number reads as one spiral" },
+    { name: "rotation", type: "number", default: "4", description: "Rotation of the head in degrees per second; 0 holds still, negative turns the other way" },
+    { name: "background", type: "string", default: '"#111111"', description: "Background fill" },
+    { name: "color", type: "string", default: '"#FFFFFF"', description: "Seed color" },
+    { name: "accent", type: "string", default: '"#E5322D"', description: "Arm seeds and spine line" },
+    { name: "speed", type: "number", default: "1", description: "Playback multiplier" },
+  ]}
+/>

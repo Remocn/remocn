@@ -1,0 +1,67 @@
+import { lineBoilExampleCode } from "@/components/docs/examples/line-boil-example";
+import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+
+export const lineBoilConfig: ComponentConfig = {
+  componentName: "LineBoil",
+  importPath: "@/components/remocn/line-boil",
+  controls: {
+    boilEvery: {
+      type: "number",
+      default: 3,
+      min: 1,
+      max: 8,
+      step: 1,
+      description: "Boil every",
+      hiddenFromList: false,
+    },
+    drawings: {
+      type: "number",
+      default: 3,
+      min: 1,
+      max: 8,
+      step: 1,
+      description: "Drawings",
+      hiddenFromList: false,
+    },
+    amplitude: {
+      type: "number",
+      default: 1,
+      min: 0,
+      max: 3,
+      step: 0.1,
+      description: "Wobble",
+      hiddenFromList: false,
+    },
+    strokeWidth: {
+      type: "number",
+      default: 9,
+      min: 2,
+      max: 24,
+      step: 1,
+      description: "Line weight",
+      hiddenFromList: false,
+    },
+    size: {
+      type: "number",
+      default: 0.66,
+      min: 0.2,
+      max: 0.9,
+      step: 0.02,
+      description: "Size",
+      hiddenFromList: false,
+    },
+    line: { type: "color", default: "#111111", description: "Line" },
+    fill: { type: "color", default: "#E5322D", description: "Fill" },
+    background: {
+      type: "color",
+      default: "#FFFFFF",
+      description: "Background",
+    },
+  },
+  durationInFrames: 90,
+  fps: FPS,
+  compositionWidth: W,
+  compositionHeight: H,
+  previewBackdrop: { type: "color", value: "#FFFFFF" },
+  snippet: lineBoilExampleCode,
+};

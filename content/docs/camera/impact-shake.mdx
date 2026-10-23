@@ -1,0 +1,89 @@
+---
+title: Impact Shake
+description: Heavy content slams down from above with a squash, a damped camera jolt, a two-frame RGB split and dust puffs kicking out sideways
+component: impact-shake
+vibe: social
+length: 30
+useWhen:
+  - "A launch word, a price or a logo should land like it weighs a ton."
+  - "A hype edit or a social teaser needs one hard-hitting beat on the drop."
+  - "A single word should own the frame, with the whole camera reacting to its arrival."
+avoidWhen:
+  - "The landing only needs a light accent around a small element — use `trim-burst`."
+  - "The element should fly in sideways with motion streaks — use `speed-lines`."
+  - "The jolt should hide a cut between two scenes — use `lens-zoom`."
+---
+
+<ComponentPreview name="impact-shake" />
+
+<InstallBlock name="impact-shake" />
+
+## Usage
+
+`ImpactShake` drops its subject from above the frame on pure acceleration,
+stretching it taller as it falls. On the impact frame the subject squashes
+wide and springs back, the whole camera jolts and settles on a damped shake,
+red and blue copies split apart for two frames, the frame flashes faintly, and
+dust puffs and small chips kick out sideways along the floor line. With no
+children it drops the word in `text`.
+
+```tsx
+import { ImpactShake } from "@/components/remocn/impact-shake";
+
+export const Drop = () => <ImpactShake text="NOW LIVE" intensity={1.2} />;
+```
+
+`intensity` scales the shake, the split, the flash and the dust spread, from
+0 to 2; the squash stops growing above 1. `impact` is the frame, at 30 fps,
+when the subject hits, so a larger value makes a longer fall. `seed` changes
+the shake phase and the dust pattern.
+
+### Your own subject
+
+Children replace the word. They are centered in the frame, and the dust
+kicks out from a floor line at 62% of the frame height, which lines up with
+the bottom of the default word. Size the subject so its base sits near that
+line.
+
+```tsx
+import { Img, staticFile } from "remotion";
+import { ImpactShake } from "@/components/remocn/impact-shake";
+
+export const LogoDrop = () => (
+  <ImpactShake backgroundColor="#0B0B0B">
+    <Img src={staticFile("logo.svg")} style={{ height: 180 }} />
+  </ImpactShake>
+);
+```
+
+During the two split frames the subject renders three times, the two extra
+copies tinted through an SVG color filter. `colors.splitA` and
+`colors.splitB` must be `#RRGGBB` hex. The flash uses the foreground color.
+
+## Timing
+
+At 30 fps, `speed={1}` and the default `impact` of 7:
+
+| Frames | Motion |
+| --- | --- |
+| 0–7 | The subject falls in from above, accelerating and stretching |
+| 7 | Impact: squash, camera jolt, flash and dust burst |
+| 7–9 | Red and blue copies split apart and close |
+| 7–20 | The camera shake decays to nothing |
+| 7–30 | Dust hangs and fades, and the squash wobble settles |
+
+`speed` scales the timeline, so `speed={2}` lands at about frame 4.
+
+<PropsTable title="Props"
+  rows={[
+    { name: "children", type: "ReactNode", description: "The heavy subject. Defaults to a big word set from text" },
+    { name: "text", type: "string", default: '"LAUNCH"', description: "Word used when no children are passed" },
+    { name: "intensity", type: "number", default: "1", description: "Shake, split, flash and dust strength, 0 to 2" },
+    { name: "impact", type: "number", default: "7", description: "Frame at 30 fps when the subject hits" },
+    { name: "colors", type: "Partial<ImpactShakeColors>", default: '{ background: "#111111", foreground: "#FFFFFF", splitA: "#FF2A2A", splitB: "#2A6BFF", dust: "#D9D9D9" }', description: "Background, default word and flash, the two RGB split tints (#RRGGBB) and dust; merged over the defaults. The flat color props below win over it" },
+    { name: "foregroundColor", type: "string", default: '"#FFFFFF"', description: "Default word and flash; overrides colors.foreground" },
+    { name: "backgroundColor", type: "string", default: '"#111111"', description: "Background; overrides colors.background" },
+    { name: "seed", type: "number", default: "1", description: "Seeds the shake phase and the dust pattern" },
+    { name: "speed", type: "number", default: "1", description: "Playback multiplier" },
+  ]}
+/>

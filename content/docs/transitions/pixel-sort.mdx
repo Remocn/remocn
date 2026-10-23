@@ -1,0 +1,84 @@
+---
+title: Pixel Sort
+description: Melt the scene into glowing vertical streaks like glitch-art pixel sorting, then drop the next scene in column by column
+component: pixel-sort
+vibe: tech
+length: 30
+useWhen:
+  - "The video has a glitch, generative or data-art look and the cut should feel like the image is being processed."
+  - "A tech or AI product needs a transition that reads as digital rather than physical."
+  - "You want a cut with lots of vertical motion to contrast with sideways camera moves elsewhere."
+avoidWhen:
+  - "The scenes are heavy React subtrees: each scene is painted once per column; lower columns or use `dither-dissolve`."
+  - "You want a short, violent digital cut instead of a melt; use `glitch-cut`."
+  - "The brand is calm or editorial; use `fade-through` or `venetian-blinds`."
+---
+
+<ComponentPreview name="pixel-sort" />
+
+<InstallBlock name="pixel-sort" />
+
+## Usage
+
+`pixelSort()` is a Remotion transition presentation. Pass it to a
+`TransitionSeries.Transition` between two sequences. The frame is sliced into
+`columns` vertical strips. Each outgoing strip melts downward: it stretches from
+a seeded point in the column while a bright `streakColor` smear builds over it,
+with every column starting at a slightly different time. Halfway through, the
+incoming scene falls in from above column by column as stretched streaks that
+snap into the real image with a small overshoot.
+
+The per-column timing, stretch and glow come from `seed`, so the result is
+deterministic.
+
+```tsx
+import { TransitionSeries, linearTiming } from "@remotion/transitions";
+import { pixelSort } from "@/components/remocn/pixel-sort";
+
+export const MyVideo = () => (
+  <TransitionSeries>
+    <TransitionSeries.Sequence durationInFrames={70}>
+      <SceneA />
+    </TransitionSeries.Sequence>
+    <TransitionSeries.Transition
+      timing={linearTiming({ durationInFrames: 30 })}
+      presentation={pixelSort({ columns: 32 })}
+    />
+    <TransitionSeries.Sequence durationInFrames={70}>
+      <SceneB />
+    </TransitionSeries.Sequence>
+  </TransitionSeries>
+);
+```
+
+This is the heaviest transition in its group: both scenes are rendered once per
+column, so the default 40 columns means up to 80 copies of your scenes on a
+transition frame. Keep scenes light, or drop `columns` to 16 to 24 if renders
+slow down. Fewer, wider columns also read more blocky and graphic.
+
+## Props
+
+`pixelSort(props)` accepts:
+
+<PropsTable
+  rows={[
+    {
+      name: "columns",
+      type: "number",
+      default: "40",
+      description: "Number of vertical columns the frame is sliced into. Rounded, minimum 2.",
+    },
+    {
+      name: "seed",
+      type: "number | string",
+      default: "5",
+      description: "Seed for per-column melt amount, glow and timing.",
+    },
+    {
+      name: "streakColor",
+      type: "string",
+      default: '"#FFFFFF"',
+      description: "Color of the bright smeared streaks.",
+    },
+  ]}
+/>

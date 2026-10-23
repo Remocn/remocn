@@ -1,0 +1,75 @@
+---
+title: Exploded View
+description: An isometric stack of slabs springs apart with leader lines and labels, holds, then clicks back together
+component: exploded-view
+vibe: tech
+length: 50
+useWhen:
+  - "An architecture or a product stack should be explained layer by layer, such as interface, engine, storage and hardware."
+  - "One layer of a system is the point of the story and should be called out in brand color."
+  - "A technical explainer needs a clean diagram beat that comes apart and snaps back into one product."
+avoidWhen:
+  - "The object should turn to show its front and back rather than come apart — use `turntable`."
+  - "The scene should grow a whole city of towers from a grid — use `isometric-build`."
+  - "The layers are numbers to compare rather than parts of one thing — use `animated-bar-chart`."
+---
+
+<ComponentPreview name="exploded-view" />
+
+<InstallBlock name="exploded-view" />
+
+## Usage
+
+`ExplodedView` draws a stack of square slabs in isometric projection, left of
+center. The slabs spring apart from the top down, each one leaving a beat
+after the one above it. A leader line then draws out from each slab to the
+right, and a numbered label slides in at its end. After a short hold the
+labels retract, the slabs spring shut, and the stack gives a small downward
+knock as it clicks together.
+
+```tsx
+import { ExplodedView } from "@/components/remocn/exploded-view";
+
+export const Stack = () => (
+  <ExplodedView
+    layers={3}
+    labels={["Edge", "Runtime", "Database"]}
+    highlight={2}
+  />
+);
+```
+
+`layers` is clamped to 2–6. `labels` are listed top slab first and numbered
+`01`, `02` and so on; a slab with no label gets no leader line. `highlight`
+picks the slab painted in the highlight colors, counted from the top starting
+at 0; an index past the last slab highlights nothing. The labels use Inter
+with a system fallback.
+
+## Timing
+
+At 30 fps and `speed={1}`, with 4 slabs:
+
+| Frames | Motion |
+| --- | --- |
+| 3–20 | Slabs spring apart from the top down, 1.5 frames apart, overshoot and settle |
+| 14–32 | Leader lines draw out, 2.5 frames apart per slab |
+| 19–35 | Labels slide in and fade up at the end of each line |
+| 33–38 | Lines and labels retract |
+| 38–46 | The slabs spring shut |
+| 43–50 | The stack knocks down and settles |
+
+All labels are on screen together for only a few frames before they retract
+at frame 33. If they need longer, slow the whole piece with `speed={0.5}`,
+which doubles every time in the table.
+
+<PropsTable title="Props"
+  rows={[
+    { name: "layers", type: "number", default: "4", description: "Number of slabs, rounded and clamped to 2–6" },
+    { name: "labels", type: "string[]", default: '["Interface", "Engine", "Storage", "Hardware"]', description: "One label per slab, top slab first; missing entries get no leader line" },
+    { name: "highlight", type: "number", default: "1", description: "Index of the highlighted slab, counted from the top starting at 0" },
+    { name: "colors", type: "Partial<ExplodedViewColors>", default: '{ background: "#111111", top: "#F4F4F4", left: "#A6A6A6", right: "#747474", highlightTop: "#E5322D", highlightLeft: "#B5231F", highlightRight: "#8A1A17", line: "#FFFFFF", label: "#FFFFFF" }', description: "Background, the three visible faces of a slab and of the highlighted slab, leader lines and labels; merged over the defaults. The flat color props below win over it" },
+    { name: "backgroundColor", type: "string", default: '"#111111"', description: "Background; overrides colors.background" },
+    { name: "labelColor", type: "string", default: '"#FFFFFF"', description: "Label text; overrides colors.label" },
+    { name: "speed", type: "number", default: "1", description: "Playback multiplier" },
+  ]}
+/>
