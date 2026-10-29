@@ -23,14 +23,23 @@ import registry, { loadComponentConfig } from "@/registry/__index__";
 import { ComponentCustomizer } from "./component-customizer";
 import { StudioActions } from "./studio-actions";
 
+type PickerHeader = {
+  start: React.ReactNode;
+  title: string;
+  end?: React.ReactNode;
+};
+
 export function ComponentPreview({
   name,
   studioElement,
   layout,
+  header,
 }: {
   name: string;
   studioElement?: StudioElementPayload;
   layout: "caption-picker" | null;
+  /** Caption picker only: the header row around the style's actions. */
+  header?: PickerHeader;
 }) {
   const entry = registry[name];
 
@@ -48,7 +57,7 @@ export function ComponentPreview({
         <div
           className={
             layout === "caption-picker"
-              ? "min-h-0 flex-1 animate-pulse rounded-lg bg-muted"
+              ? "min-h-0 flex-1 animate-pulse rounded-2xl bg-muted"
               : "not-prose mb-6 aspect-[1.9/1] w-full animate-pulse rounded-2xl bg-muted"
           }
         />
@@ -59,6 +68,7 @@ export function ComponentPreview({
         load={entry.load}
         studioElement={studioElement}
         layout={layout}
+        header={header}
       />
     </Suspense>
   );
@@ -69,10 +79,12 @@ function Preview({
   load,
   studioElement,
   layout,
+  header,
 }: {
   name: string;
   studioElement?: StudioElementPayload;
   layout: "caption-picker" | null;
+  header?: PickerHeader;
   // biome-ignore lint/suspicious/noExplicitAny: dynamically-loaded Remotion composition, props shape varies per component
   load: () => Promise<{ default: React.ComponentType<any> }>;
 }) {
@@ -152,7 +164,7 @@ function Preview({
     );
   };
 
-  const preview = (
+  const stage = (className: string, controls = true) => (
     <PreviewStage
       name={name}
       load={load}
@@ -164,65 +176,62 @@ function Preview({
       compositionWidth={config.compositionWidth}
       compositionHeight={config.compositionHeight}
       previewBackdrop={config.previewBackdrop}
-      className={
-        layout === "caption-picker"
-          ? "h-full aspect-auto rounded-md"
-          : "rounded-none"
-      }
+      className={className}
+      controls={controls}
     />
   );
+  const studioActions = installPayload ? (
+    <StudioActions name={name} payload={installPayload} />
+  ) : null;
 
+  // Remotion Studio's caption picker is a small fixed panel (~600x290), so
+  // everything has to fit without scrolling the page: one header row with the
+  // actions, then the preview beside compact options. The transcript control
+  // is hidden: Studio supplies the captions.
   if (layout === "caption-picker") {
     return (
-      <Tabs
-        defaultValue="preview"
-        className="min-h-0 flex-1 gap-0 overflow-hidden rounded-lg border border-border"
-      >
-        <div className="flex shrink-0 items-center justify-between gap-2 border-b border-border px-2 py-1.5">
-          <TabsList aria-label="Caption style details" className="h-7! p-0.5">
-            <TabsTrigger value="preview" className="px-2 text-xs">
-              Preview
-            </TabsTrigger>
-            <TabsTrigger value="options" className="px-2 text-xs">
-              Options
-            </TabsTrigger>
-          </TabsList>
-          {installPayload ? (
-            <StudioActions name={name} payload={installPayload} />
-          ) : null}
-        </div>
-        <TabsContent value="preview" className="min-h-0 overflow-hidden p-2">
-          {preview}
-        </TabsContent>
-        <TabsContent value="options" className="min-h-0 overflow-y-auto p-2">
-          <div className="mb-2 flex items-center justify-between gap-2">
-            <span className="text-xs text-muted-foreground">
-              Apply options with Use / Update style.
-            </span>
+      <div className="flex min-h-0 flex-1 flex-col gap-2">
+        <div className="grid shrink-0 grid-cols-[1fr_auto_1fr] items-center gap-2">
+          <div className="justify-self-start">{header?.start}</div>
+          <h1 className="min-w-0 truncate text-center text-sm font-semibold tracking-tight">
+            {header?.title}
+          </h1>
+          <div className="flex items-center gap-1 justify-self-end">
+            {header?.end}
             <Button
               variant="ghost"
               size="icon-sm"
               onClick={handleReset}
               disabled={isDefault}
-              aria-label="Reset style options"
-              title="Reset style options"
+              aria-label="Reset options"
+              title="Reset options"
+              className="text-muted-foreground hover:text-foreground disabled:opacity-40"
             >
               <RotateCcwIcon className="size-3.5" />
             </Button>
+            {studioActions}
           </div>
-          <div data-caption-options>
-            <ComponentCustomizer
-              controls={Object.fromEntries(
-                Object.entries(config.controls).filter(
-                  ([key]) => key !== "captions",
-                ),
-              )}
-              values={values as Record<string, unknown>}
-              onChange={handleCustomizeChange}
-            />
+        </div>
+        <div className="flex min-h-0 flex-1 gap-3">
+          <div className="surface-card aspect-video w-[40%] shrink-0 self-start overflow-hidden rounded-xl">
+            {stage("aspect-auto h-full rounded-none", false)}
           </div>
-        </TabsContent>
-      </Tabs>
+          <div className="@container min-h-0 flex-1 overflow-x-hidden overflow-y-auto [scrollbar-color:color-mix(in_oklab,currentColor_25%,transparent)_transparent] [scrollbar-width:thin]">
+            <div className="[&>div]:grid-cols-1 @min-[280px]:[&>div]:grid-cols-2">
+              <ComponentCustomizer
+                density="compact"
+                controls={Object.fromEntries(
+                  Object.entries(config.controls).filter(
+                    ([key]) => key !== "captions",
+                  ),
+                )}
+                values={values as Record<string, unknown>}
+                onChange={handleCustomizeChange}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
     );
   }
 
@@ -235,13 +244,11 @@ function Preview({
               <TabsTrigger value="preview">Preview</TabsTrigger>
               <TabsTrigger value="code">Code</TabsTrigger>
             </TabsList>
-            {installPayload ? (
-              <StudioActions name={name} payload={installPayload} />
-            ) : null}
+            {studioActions}
           </FrameHeader>
           <FramePanel className="overflow-hidden p-0">
             <TabsContent value="preview" className="mt-0">
-              {preview}
+              {stage("rounded-none")}
             </TabsContent>
             <TabsContent value="code" className="mt-0">
               <CodeBlock code={code} />

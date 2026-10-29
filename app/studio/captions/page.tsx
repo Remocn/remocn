@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 
 export default function CaptionStylesPage() {
   return (
-    <Suspense fallback={<div className="h-dvh bg-[#1f2428]" />}>
+    <Suspense fallback={<div className="h-dvh bg-background" />}>
       <StudioCaptionPicker />
     </Suspense>
   );
