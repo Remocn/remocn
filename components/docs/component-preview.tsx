@@ -23,12 +23,23 @@ import registry, { loadComponentConfig } from "@/registry/__index__";
 import { ComponentCustomizer } from "./component-customizer";
 import { StudioActions } from "./studio-actions";
 
+type PickerHeader = {
+  start: React.ReactNode;
+  title: string;
+  end?: React.ReactNode;
+};
+
 export function ComponentPreview({
   name,
   studioElement,
+  layout,
+  header,
 }: {
   name: string;
   studioElement?: StudioElementPayload;
+  layout: "caption-picker" | null;
+  /** Caption picker only: the header row around the style's actions. */
+  header?: PickerHeader;
 }) {
   const entry = registry[name];
 
@@ -43,10 +54,22 @@ export function ComponentPreview({
   return (
     <Suspense
       fallback={
-        <div className="not-prose mb-6 aspect-[1.9/1] w-full animate-pulse rounded-2xl bg-muted" />
+        <div
+          className={
+            layout === "caption-picker"
+              ? "min-h-0 flex-1 animate-pulse rounded-2xl bg-muted"
+              : "not-prose mb-6 aspect-[1.9/1] w-full animate-pulse rounded-2xl bg-muted"
+          }
+        />
       }
     >
-      <Preview name={name} load={entry.load} studioElement={studioElement} />
+      <Preview
+        name={name}
+        load={entry.load}
+        studioElement={studioElement}
+        layout={layout}
+        header={header}
+      />
     </Suspense>
   );
 }
@@ -55,9 +78,13 @@ function Preview({
   name,
   load,
   studioElement,
+  layout,
+  header,
 }: {
   name: string;
   studioElement?: StudioElementPayload;
+  layout: "caption-picker" | null;
+  header?: PickerHeader;
   // biome-ignore lint/suspicious/noExplicitAny: dynamically-loaded Remotion composition, props shape varies per component
   load: () => Promise<{ default: React.ComponentType<any> }>;
 }) {
@@ -86,6 +113,15 @@ function Preview({
   );
 
   const code = useMemo(() => generateCode(config, values), [config, values]);
+  const installPayload = useMemo(() => {
+    if (!studioElement?.element.isCaptionStyle) return studioElement;
+    // The generated transcript comes from Studio, never from the demo fixture.
+    const { captions: _captions, ...styleProps } = values;
+    return {
+      ...studioElement,
+      element: { ...studioElement.element, initialProps: styleProps },
+    } as StudioElementPayload;
+  }, [studioElement, values]);
 
   const [copied, setCopied] = useState(false);
   const handleCopyLink = () => {
@@ -128,6 +164,77 @@ function Preview({
     );
   };
 
+  const stage = (className: string, controls = true) => (
+    <PreviewStage
+      name={name}
+      load={load}
+      inputProps={values}
+      durationInFrames={
+        config.getDurationInFrames?.(values) ?? config.durationInFrames
+      }
+      fps={config.fps}
+      compositionWidth={config.compositionWidth}
+      compositionHeight={config.compositionHeight}
+      previewBackdrop={config.previewBackdrop}
+      className={className}
+      controls={controls}
+    />
+  );
+  const studioActions = installPayload ? (
+    <StudioActions name={name} payload={installPayload} />
+  ) : null;
+
+  // Remotion Studio's caption picker is a small fixed panel (~600x290), so
+  // everything has to fit without scrolling the page: one header row with the
+  // actions, then the preview beside compact options. The transcript control
+  // is hidden: Studio supplies the captions.
+  if (layout === "caption-picker") {
+    return (
+      <div className="flex min-h-0 flex-1 flex-col gap-2">
+        <div className="grid shrink-0 grid-cols-[1fr_auto_1fr] items-center gap-2">
+          <div className="justify-self-start">{header?.start}</div>
+          <h1 className="min-w-0 truncate text-center text-sm font-semibold tracking-tight">
+            {header?.title}
+          </h1>
+          <div className="flex items-center gap-1 justify-self-end">
+            {header?.end}
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              onClick={handleReset}
+              disabled={isDefault}
+              aria-label="Reset options"
+              title="Reset options"
+              className="text-muted-foreground hover:text-foreground disabled:opacity-40"
+            >
+              <RotateCcwIcon className="size-3.5" />
+            </Button>
+            {studioActions}
+          </div>
+        </div>
+        <div className="flex min-h-0 flex-1 gap-3">
+          <div className="surface-card aspect-video w-[40%] shrink-0 self-start overflow-hidden rounded-xl">
+            {stage("aspect-auto h-full rounded-none", false)}
+          </div>
+          <div className="@container min-h-0 flex-1 overflow-x-hidden overflow-y-auto [scrollbar-color:color-mix(in_oklab,currentColor_25%,transparent)_transparent] [scrollbar-width:thin]">
+            <div className="[&>div]:grid-cols-1 @min-[280px]:[&>div]:grid-cols-2">
+              <ComponentCustomizer
+                density="compact"
+                controls={Object.fromEntries(
+                  Object.entries(config.controls).filter(
+                    ([key]) => key !== "captions",
+                  ),
+                )}
+                values={values as Record<string, unknown>}
+                onChange={handleCustomizeChange}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="not-prose mb-6 flex w-full flex-col gap-4">
       <Frame>
@@ -137,26 +244,11 @@ function Preview({
               <TabsTrigger value="preview">Preview</TabsTrigger>
               <TabsTrigger value="code">Code</TabsTrigger>
             </TabsList>
-            {studioElement ? (
-              <StudioActions name={name} payload={studioElement} />
-            ) : null}
+            {studioActions}
           </FrameHeader>
           <FramePanel className="overflow-hidden p-0">
             <TabsContent value="preview" className="mt-0">
-              <PreviewStage
-                name={name}
-                load={load}
-                inputProps={values}
-                durationInFrames={
-                  config.getDurationInFrames?.(values) ??
-                  config.durationInFrames
-                }
-                fps={config.fps}
-                compositionWidth={config.compositionWidth}
-                compositionHeight={config.compositionHeight}
-                previewBackdrop={config.previewBackdrop}
-                className="rounded-none"
-              />
+              {stage("rounded-none")}
             </TabsContent>
             <TabsContent value="code" className="mt-0">
               <CodeBlock code={code} />

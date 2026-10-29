@@ -15,8 +15,21 @@ import type { ControlConfig, ControlType } from "@/lib/customizer-config";
 import { cn } from "@/lib/utils";
 
 /** Shared pill surface so every non-slider control matches the elastic slider. */
+// `customizer-pill` is a hook for the compact density below.
 const PILL =
-  "flex h-9 items-center gap-3 rounded-xl control-surface px-3 text-sm transition-colors";
+  "customizer-pill flex h-9 items-center gap-3 rounded-xl control-surface px-3 text-sm transition-colors";
+
+// Compact density for tight hosts (Remotion Studio's caption picker): shorter
+// pills and sliders, smaller type. Scoped here so every control type follows.
+const COMPACT = [
+  "gap-1.5",
+  "[&_.customizer-pill]:h-7 [&_.customizer-pill]:gap-2 [&_.customizer-pill]:rounded-lg [&_.customizer-pill]:px-2.5 [&_.customizer-pill]:text-xs [&_.customizer-pill]:whitespace-nowrap [&_.customizer-pill>:first-child]:min-w-0 [&_.customizer-pill>:first-child]:truncate",
+  "[&_.customizer-pill_input]:text-xs [&_.customizer-pill_span]:text-xs",
+  // The swatch already shows the colour; the hex would crowd out the label.
+  "[&_.customizer-pill_span.uppercase]:hidden",
+  "[&_[data-slot=elastic-slider]]:[--elastic-slider-height:--spacing(7)] [&_[data-slot=elastic-slider]]:[--elastic-slider-radius:var(--radius-lg)]",
+  "[&_[data-slot=elastic-slider-label]]:text-xs [&_[data-slot=elastic-slider-value]]:text-xs",
+].join(" ");
 
 /** Strip trailing zeros so the value reads like the reference (1, 0.8, 0.1). */
 function formatNumber(v: number) {
@@ -229,13 +242,20 @@ export function ComponentCustomizer({
   controls,
   values,
   onChange,
+  density = "default",
 }: {
   controls: ControlConfig;
   values: Record<string, unknown>;
   onChange: (key: string, value: unknown) => void;
+  density?: "default" | "compact";
 }) {
   return (
-    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+    <div
+      className={cn(
+        "grid gap-3 sm:grid-cols-2 lg:grid-cols-3",
+        density === "compact" && COMPACT,
+      )}
+    >
       {Object.entries(controls).map(([key, ctrl]) => (
         <Control
           key={key}
