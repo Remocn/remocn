@@ -41,7 +41,7 @@ export function SiteHeader({
       className="relative z-40 overflow-x-clip"
       style={headerLayoutVars(HEADER_LAYOUT)}
     >
-      <LandingMenu className="group/header relative mx-auto flex w-full max-w-content items-center justify-between gap-4 px-4 xl:gap-2 py-3 md:px-10 lg:pt-(--hdr-top) lg:pb-0 xl:px-0">
+      <LandingMenu className="group/header relative mx-auto flex w-full max-w-(--docs-frame) items-center justify-between gap-4 px-4 xl:gap-2 py-3 md:px-10 lg:pt-(--hdr-top) lg:pb-0 xl:px-(--docs-gutter)">
         <HeaderPill />
         <div
           className={cn(
