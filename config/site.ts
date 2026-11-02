@@ -99,6 +99,7 @@ export const FOOTER_LINKS: NavLink[] = [
   { href: "/changelog", label: "Changelog" },
   { href: STUDIO_URL, label: "Studio", external: true },
   { href: "/sponsors", label: "Sponsors" },
+  { href: "/inspired-by", label: "Inspired by" },
   { href: GITHUB_URL, label: "GitHub", external: true },
   { href: X_URL, label: "X", external: true },
 ];
