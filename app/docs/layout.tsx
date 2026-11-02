@@ -45,15 +45,14 @@ export default function Layout({ children }: { children: ReactNode }) {
           className="contents"
           style={docsLayoutVars(DOCS_LAYOUT)}
         >
-          {/* The docs grid is wider than the landing column: at `xl` the
-            shared header stretches to the docs frame (`lib/docs-layout.ts`), and sits
-            20px from the top like the docs artboards (28px on the landing). */}
-          <div className="lg:[&>header>div]:pt-5 xl:[&>header>div]:max-w-(--docs-frame) xl:[&>header>div]:px-(--docs-gutter)">
+          {/* The header sits 20px from the top like the docs artboards (28px
+            on the landing). */}
+          <div className="lg:[&>header>div]:pt-5">
             <SiteHeader mobileAction={<HeaderSearch />} />
           </div>
           <DocsShell models={models}>{children}</DocsShell>
-          {/* Same frame for the footer, with the docs' hairline on top. */}
-          <div className="border-hairline lg:border-t lg:pt-7 lg:[&>footer]:pb-8 xl:[&_.landing-container]:max-w-(--docs-frame) xl:[&_.landing-container]:px-(--docs-gutter)">
+          {/* The footer gets the docs' hairline on top. */}
+          <div className="border-hairline lg:border-t lg:pt-7 lg:[&>footer]:pb-8">
             <SiteFooter />
           </div>
         </div>

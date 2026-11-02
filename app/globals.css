@@ -343,9 +343,8 @@
   @apply mx-auto w-full max-w-6xl px-4 sm:px-6 min-[1440px]:max-w-5xl;
 }
 
-/* Landing container: 1240px content inside the 100px desktop gutter. */
 .landing-container {
-  @apply mx-auto w-full max-w-content px-5 md:px-10 xl:px-0;
+  @apply mx-auto w-full max-w-(--docs-frame) px-5 md:px-10 xl:px-(--docs-gutter);
 }
 
 .control-surface {
