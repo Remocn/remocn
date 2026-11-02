@@ -1,53 +1,45 @@
-import { AlertTriangleIcon, InfoIcon } from "lucide-react";
+import { InfoIcon, TriangleAlertIcon } from "lucide-react";
 import type { ReactNode } from "react";
-import { MINT, PEACH } from "@/config/site";
 import { cn } from "@/lib/utils";
+import { BLOCK_SPACING } from "./blocks/spacing";
 
-function CalloutBase({
+/**
+ * Muted aside with an icon tile. Inline code and links inside get the same
+ * treatment as in prose, since callouts opt out of typeset.
+ */
+function Callout({
   icon,
   title,
   children,
-  accent,
-  className,
 }: {
   icon: ReactNode;
   title?: string;
   children: ReactNode;
-  /** Pastel accent that tints the border + icon (matches the landing palette). */
-  accent?: string;
-  className?: string;
 }) {
   return (
-    <div
+    <aside
       className={cn(
-        "surface-card not-prose my-6 flex max-w-3xl gap-3 rounded-2xl px-4 py-3 text-sm",
-        className,
+        "not-prose flex items-start gap-3.5 rounded-cta bg-surface-muted py-3.5 pr-[18px] pl-3.5",
+        BLOCK_SPACING,
       )}
-      style={
-        accent
-          ? {
-              borderColor: `color-mix(in oklab, ${accent} 40%, var(--color-border))`,
-            }
-          : undefined
-      }
     >
-      <div
-        className="mt-0.5 shrink-0 text-muted-foreground"
-        style={
-          accent
-            ? {
-                color: `color-mix(in oklab, ${accent} 72%, var(--color-foreground))`,
-              }
-            : undefined
-        }
-      >
+      <span className="flex size-9 shrink-0 items-center justify-center rounded-[10px] bg-surface text-foreground">
         {icon}
+      </span>
+      <div
+        className={cn(
+          "min-w-0 flex-1 pt-[7px] text-small leading-[22px] text-body",
+          "[&_p+p]:mt-2",
+          "[&_a]:font-medium [&_a]:text-foreground [&_a]:underline [&_a]:decoration-divider [&_a]:underline-offset-[3px] [&_a:hover]:decoration-foreground",
+          "[&_code]:box-decoration-clone [&_code]:rounded-tag [&_code]:bg-surface [&_code]:px-1.5 [&_code]:py-px [&_code]:font-mono [&_code]:text-[12.5px] [&_code]:text-foreground [&_code]:shadow-[0_0_0_1px_var(--color-hairline)]",
+        )}
+      >
+        {title ? (
+          <p className="mb-0.5 font-medium text-foreground">{title}</p>
+        ) : null}
+        {children}
       </div>
-      <div className="flex-1 space-y-1 leading-relaxed">
-        {title && <div className="font-medium text-foreground">{title}</div>}
-        <div className="text-muted-foreground [&>p]:m-0">{children}</div>
-      </div>
-    </div>
+    </aside>
   );
 }
 
@@ -59,13 +51,12 @@ export function Note({
   children: ReactNode;
 }) {
   return (
-    <CalloutBase
-      icon={<InfoIcon className="size-4" />}
+    <Callout
+      icon={<InfoIcon className="size-[18px]" strokeWidth={1.8} />}
       title={title}
-      accent={MINT}
     >
       {children}
-    </CalloutBase>
+    </Callout>
   );
 }
 
@@ -77,12 +68,11 @@ export function Warning({
   children: ReactNode;
 }) {
   return (
-    <CalloutBase
-      icon={<AlertTriangleIcon className="size-4" />}
+    <Callout
+      icon={<TriangleAlertIcon className="size-[18px]" strokeWidth={1.8} />}
       title={title}
-      accent={PEACH}
     >
       {children}
-    </CalloutBase>
+    </Callout>
   );
 }

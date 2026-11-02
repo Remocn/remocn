@@ -44,4 +44,5 @@ export const waveWipeConfig: ComponentConfig = {
   compositionHeight: H,
   previewBackdrop: { type: "color", value: "#141318" },
   snippet: waveWipeExampleCode,
+  card: { backdrop: true },
 };

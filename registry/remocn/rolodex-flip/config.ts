@@ -31,4 +31,5 @@ export const rolodexFlipConfig: ComponentConfig = {
   compositionHeight: H,
   previewBackdrop: { type: "color", value: "#141318" },
   snippet: rolodexFlipExampleCode,
+  card: { props: { color: "#0E1012" } },
 };

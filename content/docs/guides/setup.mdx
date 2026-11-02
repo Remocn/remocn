@@ -3,11 +3,26 @@ title: Setup
 description: One-time setup for making videos with an AI agent — about ten minutes
 ---
 
+import { GuidePrompt } from "@/components/docs/guides/prompt-block";
+import { GuideAgentPicker } from "@/components/docs/guides/setup/agent-picker";
+import { GuideChecklist, GuideStep } from "@/components/docs/guides/setup/checklist";
+import { GuidePluginAside, GuideReadyRow, GuideStudioPreview } from "@/components/docs/guides/setup/studio-preview";
+
 You need two things: an AI coding agent and an empty folder.
 
-**1. Get an agent.** We recommend [Claude Code](/docs/ai/claude-code) — also works with [ChatGPT](/docs/ai/chat-gpt), [opencode](/docs/ai/opencode) and others.
+<GuideChecklist title="One-time setup" description="About ten minutes, all copy-paste." done={1} total={2}>
 
-**2. Open the agent in an empty folder and paste:**
+<GuideStep state="done" title="Get an agent">
+
+We recommend [Claude Code](/docs/ai/claude-code) — also works with [ChatGPT](/docs/ai/chat-gpt), [opencode](/docs/ai/opencode) and others.
+
+<GuideAgentPicker />
+
+</GuideStep>
+
+<GuideStep state="current" step={2} title="Open the agent in an empty folder and paste:">
+
+<GuidePrompt>
 
 ```text
 Set up a new Remotion video project in this folder, then install the remocn
@@ -15,7 +30,30 @@ agent skill: npx skills add Remocn/remocn --yes. When you're done, start the
 preview studio so I can watch the video while we work.
 ```
 
-In Claude Code or Codex you can install the [remocn plugin](/docs/getting-started/plugin) instead of
-the skill, then start any video with `/remocn:video` and a one-line brief.
+</GuidePrompt>
 
-When a browser tab opens with an empty video player, you're ready. Pick a [guide](/docs/guides) and make it yours.
+<GuidePluginAside>
+
+**Or use the [plugin](/docs/getting-started/plugin)** in Claude Code or Codex, instead of the skill.
+
+Then start any video with `/remocn:video` and a one-line brief.
+
+</GuidePluginAside>
+
+</GuideStep>
+
+<GuideStep state="next" title="You're ready">
+
+When a browser tab opens with an empty video player, you're ready. Pick a guide and make it yours.
+
+<GuideStudioPreview />
+
+<GuideReadyRow>
+
+Finished videos you can make yours — pick one, fill in your words, paste a prompt. [Pick a guide](/docs/guides)
+
+</GuideReadyRow>
+
+</GuideStep>
+
+</GuideChecklist>

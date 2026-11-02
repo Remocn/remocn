@@ -51,4 +51,5 @@ export const chromaticWaveConfig: ComponentConfig = {
   fps: FPS,
   compositionWidth: W,
   compositionHeight: H,
+  card: { props: { background: "transparent" } },
 };

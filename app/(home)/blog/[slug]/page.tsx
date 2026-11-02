@@ -1,12 +1,20 @@
-import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { blog } from "@/.source/server";
 import { GuideVideo } from "@/components/docs/guide-video";
-import { blogDateFormatter, blogSlug } from "@/lib/blog";
-import { sortByDateDesc } from "@/lib/changelog";
+import { blogSlug } from "@/lib/blog";
+import { cn } from "@/lib/utils";
 import { getMDXComponents } from "@/mdx-components";
+import { landingButtonVariants } from "../../components/landing/ui/landing-button";
+import { CopyTextButton } from "../../components/site-page/copy-text-button";
+import { pageHeaderButton } from "../../components/site-page/page-header";
+import { MorePosts } from "../components/more-posts";
+import { PostIndexNav } from "../components/post-index-nav";
+import { PostMeta } from "../components/post-meta";
+import { ScreeningPlayer } from "../components/screening-player";
+import { POST_KIND_LABEL } from "../lib/post-types";
+import { getBlogPosts } from "../lib/posts";
 
 type PageProps = { params: Promise<{ slug: string }> };
 
@@ -54,87 +62,97 @@ export async function generateMetadata({
 
 const postComponents = { ...getMDXComponents(), GuideVideo };
 
+const MORE_POSTS = 3;
+
 export default async function BlogPostPage({ params }: PageProps) {
   const { slug } = await params;
   const post = getPost(slug);
   if (!post) notFound();
 
-  const iso = post.date.toISOString().slice(0, 10);
+  const posts = await getBlogPosts();
+  const index = posts.findIndex((item) => item.slug === slug);
+  const summary = posts[index];
+  const more = [...posts.slice(index + 1), ...posts.slice(0, index)].slice(
+    0,
+    MORE_POSTS,
+  );
+  const headings = post.toc.filter((item) => item.depth <= 3);
   const MDX = post.body;
-  const sorted = sortByDateDesc(blog);
-  const index = sorted.findIndex((p) => blogSlug(p) === slug);
-  const next = index === -1 ? undefined : sorted[index + 1];
 
   return (
-    <section className="pt-10 pb-24 sm:pt-14">
-      <div className="section flex flex-col gap-8">
-        <Link
-          href="/blog"
-          className="group relative inline-flex w-fit items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors before:absolute before:inset-x-0 before:-inset-y-2 before:content-[''] hover:text-foreground"
-        >
-          <ArrowLeft
-            className="size-4 transition-transform group-hover:-translate-x-0.5"
-            aria-hidden="true"
+    <>
+      <article>
+        <header className="landing-container flex flex-col gap-5 pt-12 pb-8 md:pt-20 md:pb-12 xl:pt-28 xl:pb-14">
+          <Link
+            href="/blog"
+            className={cn(
+              landingButtonVariants({ variant: "secondary" }),
+              pageHeaderButton,
+              "self-start",
+            )}
+          >
+            <span aria-hidden="true" className="text-primary">
+              ←
+            </span>
+            Blog
+          </Link>
+          <PostMeta
+            iso={summary.iso}
+            date={summary.dateLabel}
+            tag={POST_KIND_LABEL[summary.kind]}
+            className="pt-3"
           />
-          Blog
-        </Link>
-
-        {post.video ? (
-          <GuideVideo
-            src={post.video}
-            poster={post.videoPoster}
-            label={post.title}
-          />
-        ) : null}
-
-        <div className="flex flex-col gap-3">
-          <h1 className="text-balance text-3xl font-semibold leading-[1.1] tracking-tight text-foreground sm:text-4xl">
+          <h1 className="max-w-[920px] text-[34px] leading-[38px] tracking-heading text-balance text-foreground md:text-h3">
             {post.title}
           </h1>
-          <time
-            dateTime={iso}
-            className="font-mono text-xs font-medium text-muted-foreground"
-          >
-            {blogDateFormatter.format(post.date)}
-          </time>
-        </div>
+          <p className="max-w-[680px] text-[18px] leading-[26px] text-muted-foreground text-pretty md:text-lead">
+            {post.description}
+          </p>
+        </header>
 
-        <div className="typeset typeset-docs max-w-2xl">
-          <MDX components={postComponents} />
-        </div>
-
-        <div className="max-w-2xl border-t border-border pt-8">
-          {next ? (
-            <>
-              <p className="font-mono text-xs font-medium text-muted-foreground">
-                Read next
-              </p>
-              <Link
-                href={`/blog/${blogSlug(next)}`}
-                className="group mt-3 flex flex-col gap-1"
-              >
-                <span className="text-balance text-lg font-semibold tracking-tight text-foreground group-hover:underline">
-                  {next.title}
-                </span>
-                <span className="text-pretty text-sm leading-relaxed text-muted-foreground">
-                  {next.description}
-                </span>
-              </Link>
-            </>
-          ) : (
-            <Link
-              href="/blog"
-              className="group relative inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors before:absolute before:inset-x-0 before:-inset-y-2 before:content-[''] hover:text-foreground"
-            >
-              <ArrowLeft
-                className="size-4 transition-transform group-hover:-translate-x-0.5"
-                aria-hidden="true"
+        <div className="landing-container xl:flex xl:gap-[120px]">
+          <div className="flex min-w-0 flex-col gap-10 md:gap-14 xl:w-[820px] xl:shrink-0">
+            {summary.video && (
+              <ScreeningPlayer
+                src={summary.video}
+                poster={summary.poster}
+                label={post.title}
+                duration={summary.duration}
+                beats={summary.beats.length}
               />
-              All posts
-            </Link>
+            )}
+            <div className="typeset typeset-docs max-w-[680px]">
+              <MDX components={postComponents} />
+            </div>
+          </div>
+
+          {(headings.length > 0 || summary.prompt) && (
+            <aside className="hidden w-[300px] shrink-0 flex-col gap-7 self-start xl:sticky xl:top-8 xl:flex">
+              {headings.length > 0 && <PostIndexNav headings={headings} />}
+              {summary.prompt && (
+                <div className="flex flex-col gap-3.5 px-2">
+                  <p className="text-small text-muted-foreground">
+                    The brief behind this cut, ready to paste into your agent.
+                  </p>
+                  <CopyTextButton
+                    text={summary.prompt}
+                    copiedLabel="Prompt copied"
+                    className={cn(
+                      landingButtonVariants({ variant: "secondary" }),
+                      pageHeaderButton,
+                      "self-start",
+                    )}
+                  >
+                    Copy the prompt
+                  </CopyTextButton>
+                </div>
+              )}
+            </aside>
           )}
         </div>
-      </div>
-    </section>
+      </article>
+
+      <MorePosts posts={more} />
+    </>
   );
 }

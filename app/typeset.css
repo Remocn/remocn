@@ -6,8 +6,9 @@
  * 1. Every escape-hatch guard also excludes .not-prose: fumadocs internals
  *    (tabs, cards, code block chrome) and the existing doc widgets opt out
  *    via not-prose in markup we cannot or do not want to change.
- * 2. The .typeset-docs preset block at the end of the file holds the docs
- *    surface rhythm variables.
+ * 2. The .typeset-docs block at the end of the file holds the docs article
+ *    styles (rhythm, headings, inline code, tables) and the CodeFrame token
+ *    rules.
  */
 
 @layer components {
@@ -99,8 +100,6 @@
       font-size: 0.8125em;
       line-height: 1.5;
       font-weight: 500;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
       color: var(--typeset-muted);
       margin-block-start: calc(var(--typeset-flow) / 0.8125);
     }
@@ -311,9 +310,6 @@
       border-radius: var(--radius, 0.5em);
       padding: 0.75em 1em;
       overflow-x: auto;
-      scrollbar-width: thin;
-      scrollbar-color: color-mix(in oklab, currentColor 25%, transparent)
-        transparent;
       margin-block-start: calc(var(--typeset-flow) / 0.875);
       margin-block-end: 0;
     }
@@ -516,10 +512,179 @@
   }
 }
 
+/*
+ * Docs article (Paper "Docs Shell — V1 Refined"): 16/26 body copy in the body
+ * colour, 26/32 medium section headings 48px below the previous block, 20px
+ * between blocks (24px on phones), inline code as a small white chip. Custom
+ * MDX blocks are `not-prose` and follow the same rhythm through
+ * `components/docs/blocks/spacing.ts`.
+ */
 @layer components {
   .typeset-docs {
     --typeset-size: 1em;
-    --typeset-leading: 1.75;
-    --typeset-flow: 1.25em;
+    --typeset-leading: 1.625;
+    --typeset-flow: 20px;
+    font-size: 1rem;
+    color: var(--color-body);
+
+    @media (max-width: 47.999rem) {
+      --typeset-leading: 1.5;
+      --typeset-flow: 24px;
+    }
+  }
+
+  .typeset-docs
+    *:not(
+      :where(
+          .not-typeset,
+          .not-prose,
+          [data-not-typeset],
+          .not-typeset *,
+          .not-prose *,
+          [data-not-typeset] *
+        )
+    ) {
+    &:where(h2, h3, h4) {
+      font-weight: 500;
+      letter-spacing: -0.02em;
+      scroll-margin-block-start: 96px;
+    }
+    &:where(h2) {
+      font-size: 26px;
+      line-height: 32px;
+      margin-block-start: 48px;
+    }
+    &:where(h3) {
+      font-size: 20px;
+      line-height: 28px;
+      margin-block-start: 32px;
+    }
+    &:where(h4) {
+      font-size: 17px;
+      line-height: 24px;
+      margin-block-start: 24px;
+    }
+    &:where(h2 + *) {
+      margin-block-start: 16px;
+
+      @media (max-width: 47.999rem) {
+        margin-block-start: 14px;
+      }
+    }
+    &:where(h3 + *, h4 + *) {
+      margin-block-start: 12px;
+    }
+
+    &:where(strong, b) {
+      color: var(--color-foreground);
+      font-weight: 500;
+    }
+
+    &:where(a) {
+      color: var(--color-foreground);
+      text-decoration-color: var(--color-divider);
+      text-underline-offset: 3px;
+      border-radius: 4px;
+      transition: text-decoration-color 150ms ease-out;
+    }
+    &:where(a:hover) {
+      text-decoration-color: var(--color-foreground);
+    }
+
+    &:where(:not(pre) > code) {
+      background-color: var(--color-surface);
+      box-shadow: 0 0 0 1px var(--color-hairline);
+      color: var(--color-foreground);
+      font-size: 0.8125em;
+      border-radius: var(--radius-tag);
+      padding: 0.15em 0.4em;
+      box-decoration-break: clone;
+    }
+
+    &:where(ul, ol) {
+      padding-inline-start: 1.25em;
+    }
+    &:where(li) {
+      margin-block-start: 6px;
+      padding-inline-start: 0.25em;
+    }
+    &:where(ul > li)::marker,
+    &:where(ol > li)::marker {
+      color: var(--color-subtle);
+    }
+
+    &:where(blockquote) {
+      border-inline-start-color: var(--color-divider);
+      color: var(--color-muted-foreground);
+    }
+    &:where(hr) {
+      border-block-start-color: var(--color-hairline);
+      margin-block-start: 48px;
+    }
+  }
+
+  /* Markdown tables sit in a card like the props table. */
+  .typeset-docs .docs-table {
+    margin-block-start: var(--typeset-flow);
+    overflow-x: auto;
+    border: 1px solid var(--color-hairline);
+    border-radius: var(--radius-card);
+    background-color: var(--color-surface);
+
+    & table {
+      width: 100%;
+      margin: 0;
+      border: 0;
+      font-size: 14px;
+      line-height: 21px;
+    }
+    & thead th {
+      height: 40px;
+      padding: 0 20px;
+      background-color: var(--color-surface-muted);
+      color: var(--color-foreground);
+      font-size: 13px;
+      line-height: 16px;
+      font-weight: 500;
+    }
+    & :is(tbody, tfoot) :is(td, th) {
+      padding: 14px 20px;
+      border-block-start: 1px solid var(--color-hairline);
+    }
+    & :is(th, td):first-child {
+      padding-inline-start: 20px;
+    }
+  }
+
+  .typeset-docs > :where(:first-child) {
+    margin-block-start: 0;
+  }
+}
+
+/*
+ * Code inside `CodeFrame` (components/docs/blocks/code-frame.tsx) always uses
+ * the dark Vesper tokens, one 22px line per row and no line numbers. The
+ * !important flags outrank the theme-switching shiki rules in globals.css
+ * (important declarations in a layer beat unlayered ones).
+ */
+@layer components {
+  [data-code-frame] code {
+    display: grid;
+    font-family: var(--font-mono);
+    font-variant-ligatures: none;
+  }
+  [data-code-frame] [data-line] {
+    display: block;
+    width: auto;
+    /* biome-ignore lint/complexity/noImportantStyles: outranks the unlayered [data-line] padding in globals.css */
+    padding-block: 0 !important;
+  }
+  [data-code-frame] [data-line] span {
+    /* biome-ignore lint/complexity/noImportantStyles: outranks the theme-switching shiki colours in globals.css */
+    color: var(--shiki-dark, #fafafa) !important;
+  }
+  [data-code-frame] [data-line]:empty::before,
+  [data-code-frame] .line:empty::before {
+    content: " ";
   }
 }

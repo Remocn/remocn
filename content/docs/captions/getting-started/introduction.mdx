@@ -3,34 +3,94 @@ title: Introduction
 description: Subtitles rendered from a timed transcript, word by word, in sync with a real voiceover
 ---
 
-A caption takes a transcript with a start and end time on every word and turns it into an animated text block that follows the voice. It groups the words into short pages, shows one page at a time, and animates the word being spoken right now.
+import { CaptionHero } from "@/components/docs/index/libraries/caption-hero";
+import { HowItWorks } from "@/components/docs/index/libraries/how-it-works";
+import { LibraryGallery } from "@/components/docs/index/libraries/library-gallery";
+import { RuntimeCommand } from "@/components/docs/index/libraries/runtime-command";
+import { TranscriptSources } from "@/components/docs/index/libraries/transcript-sources";
 
-```tsx
+<CaptionHero name="caption-karaoke" photo="/reel/reel-3.jpg" />
+
+<HowItWorks
+  steps={[
+    {
+      title: "Get a transcript",
+      body: "Transcribe once, outside the video, with whichever speech-to-text you already use.",
+    },
+    {
+      title: "Save it as JSON",
+      body: "Every source ends in the same Caption[] array. Keep it next to your composition.",
+    },
+    {
+      title: "Pick a style",
+      body: "Every style shares the same base props, so switching looks is a one-line change.",
+    },
+  ]}
+>
+
+## How it works
+
+A caption takes a transcript with a start and end time on every word and turns it into a text block that follows the voice. It groups words into short pages, shows one page at a time and animates the word being spoken.
+
+</HowItWorks>
+
+<TranscriptSources
+  title="Where the transcript comes from"
+  note="Each ends in the same Caption[]"
+  sources={[
+    {
+      title: "whisper.cpp, locally",
+      body: "Free and offline. Transcribes a 16 kHz WAV file.",
+      code: "@remotion/install-whisper-cpp",
+    },
+    {
+      title: "OpenAI Whisper API",
+      body: "Request verbose JSON with word timestamps.",
+      code: "@remotion/openai-whisper",
+    },
+    {
+      title: "ElevenLabs",
+      body: "The Speech-to-Text response or a segmented export.",
+      code: "@remotion/elevenlabs",
+    },
+    {
+      title: "Existing subtitles",
+      body: "Parse an .srt file. Lines are timed, not single words.",
+      code: "parseSrt()",
+    },
+  ]}
+/>
+
+<RuntimeCommand command="npx remotion add @remotion/captions">
+  Install the caption runtime first, so it matches your Remotion version:
+</RuntimeCommand>
+
+<InstallBlock name="caption-karaoke" />
+
+```tsx title="subtitles.tsx"
 import captions from "./captions.json";
 import { CaptionKaraoke } from "@/components/remocn/caption-karaoke";
 
 export const Subtitles = () => <CaptionKaraoke captions={captions} />;
 ```
 
+<Note title="Works in Remotion Studio">
+Remotion Studio 4.0.535 and newer can transcribe a video and caption it for you. Every style here is a Studio caption style: add the remocn library while Studio is running and pick a look in the Styles tab of Generate captions.
+</Note>
+
+<LibraryGallery kind="caption">
+
+## All caption styles
+
+Every tile reads the same transcript and shows the word being spoken right now.
+
+</LibraryGallery>
+
 ## Captions are not typography
 
 [Word Stream](/docs/typography/word-stream), [Typewriter](/docs/typography/typewriter) and [Per-Word Crossfade](/docs/typography/per-word-crossfade) animate text you script yourself, on timing they invent. A caption has no timing of its own: every word lands when the speaker says it, because the transcript says so. That is what `length: transcript-driven` means in the docs metadata.
 
 Reach for typography when the words are on-screen copy. Reach for a caption when the words are someone talking.
-
-## Installation
-
-Install the caption runtime with the Remotion CLI first. It installs the version that matches your `remotion`, which is why the registry items do not pin it.
-
-```bash
-npx remotion add @remotion/captions
-```
-
-Then add a caption style.
-
-```bash
-npx shadcn@latest add @remocn/caption-karaoke
-```
 
 ## The shared API
 

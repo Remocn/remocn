@@ -1,0 +1,285 @@
+{
+  "frame": {
+    "float": 10,
+    "floatPeriod": 9,
+    "floatTilt": 1,
+    "parallax": 29,
+    "depthSpread": 0.15
+  },
+  "swap": {
+    "set": "live",
+    "mode": "sync",
+    "transition": "cut",
+    "stagger": 140,
+    "duration": 900,
+    "cell": 3,
+    "band": 0.28,
+    "passes": 1,
+    "dim": 0.25
+  },
+  "play": {
+    "speed": 1,
+    "loopGap": 1.2
+  },
+  "live": [
+    [
+      {
+        "name": "shader-dithering",
+        "start": 0,
+        "zoom": 1,
+        "end": "run",
+        "background": "#0E1012",
+        "radius": 0.25,
+        "cut": "auto",
+        "props": {}
+      },
+      {
+        "name": "caption-cube",
+        "start": 0,
+        "zoom": 1,
+        "end": "hold",
+        "background": "#262626",
+        "radius": 0.25,
+        "cut": "auto",
+        "props": {}
+      },
+      {
+        "name": "check-list",
+        "start": 0,
+        "zoom": 1.4,
+        "end": "hold",
+        "background": "#f1eee7",
+        "radius": 0.25,
+        "cut": "auto",
+        "props": {}
+      },
+      {
+        "name": "chromatic-wave",
+        "start": 0,
+        "zoom": 1,
+        "end": "hold",
+        "background": "#0E1012",
+        "radius": 0.25,
+        "cut": "auto",
+        "props": {}
+      },
+      {
+        "name": "kinetic-center-build",
+        "start": 0,
+        "zoom": 1,
+        "end": "hold",
+        "background": "#ffffff",
+        "radius": 0.25,
+        "cut": "auto",
+        "props": {}
+      },
+      {
+        "name": "echo-stack",
+        "start": 0,
+        "zoom": 0.75,
+        "end": "hold",
+        "background": "#0a0a0a",
+        "radius": 0.25,
+        "cut": "auto",
+        "props": {}
+      }
+    ],
+    [
+      {
+        "name": "shader-text-reveal",
+        "start": 0,
+        "zoom": 1,
+        "end": "run",
+        "background": "#000000",
+        "radius": 0.25,
+        "cut": "auto",
+        "props": {}
+      },
+      {
+        "name": "shader-caustics",
+        "start": 0,
+        "zoom": 1,
+        "end": "run",
+        "background": "#0E1012",
+        "radius": 0.25,
+        "cut": "auto",
+        "props": {}
+      },
+      {
+        "name": "terminal-simulator",
+        "start": 0,
+        "zoom": 1.35,
+        "end": "hold",
+        "background": "#050505",
+        "radius": 0.25,
+        "cut": "auto",
+        "props": {}
+      },
+      {
+        "name": "perspective-marquee",
+        "start": 0,
+        "zoom": 1,
+        "end": "hold",
+        "background": "#050505",
+        "radius": 0.25,
+        "cut": "auto",
+        "props": {}
+      },
+      {
+        "name": "whip-pan",
+        "start": 0,
+        "zoom": 1,
+        "end": "hold",
+        "background": "#141318",
+        "radius": 0.25,
+        "cut": "auto",
+        "props": {}
+      },
+      {
+        "name": "github-stars",
+        "start": 0,
+        "zoom": 1,
+        "end": "hold",
+        "background": "#F4F4F5",
+        "radius": 0.25,
+        "cut": "auto",
+        "props": {
+          "orientation": "vertical"
+        }
+      }
+    ],
+    [
+      {
+        "name": "shader-grain-gradient",
+        "start": 0,
+        "zoom": 1,
+        "end": "run",
+        "background": "#12020F",
+        "radius": 0.25,
+        "cut": "auto",
+        "props": {
+          "colors": ["#A800B7", "#F472B6", "#3B0764"],
+          "colorBack": "#12020F",
+          "intensity": 0.35,
+          "noise": 0.25
+        }
+      },
+      {
+        "name": "matrix-decode",
+        "start": 0,
+        "zoom": 1,
+        "end": "hold",
+        "background": "#0E1012",
+        "radius": 0.25,
+        "cut": "auto",
+        "props": {}
+      },
+      {
+        "name": "page-turn",
+        "start": 0,
+        "zoom": 1,
+        "end": "hold",
+        "background": "#f1eee7",
+        "radius": 0.25,
+        "cut": "auto",
+        "props": {}
+      },
+      {
+        "name": "speed-lines",
+        "start": 0,
+        "zoom": 1,
+        "end": "hold",
+        "background": "#002fa7",
+        "radius": 0.25,
+        "cut": "auto",
+        "props": {}
+      },
+      {
+        "name": "stripe-type",
+        "start": 0,
+        "zoom": 1,
+        "end": "hold",
+        "background": "#2b3bff",
+        "radius": 0.25,
+        "cut": "auto",
+        "props": {}
+      },
+      {
+        "name": "kinetic-warp",
+        "start": 0,
+        "zoom": 0.5,
+        "end": "hold",
+        "background": "#0E1012",
+        "radius": 0.25,
+        "cut": "auto",
+        "props": {}
+      }
+    ],
+    [
+      {
+        "name": "shader-mesh-gradient",
+        "start": 0,
+        "zoom": 1,
+        "end": "run",
+        "background": "#3B0764",
+        "radius": 0.25,
+        "cut": "auto",
+        "props": {
+          "colors": ["#A800B7", "#F5D0FE", "#3B0764", "#E879F9"],
+          "distortion": 0.8,
+          "swirl": 0.3
+        }
+      },
+      {
+        "name": "bauhaus-build",
+        "start": 0,
+        "zoom": 1,
+        "end": "hold",
+        "background": "#f1eee7",
+        "radius": 0.25,
+        "cut": "auto",
+        "props": {}
+      },
+      {
+        "name": "caption-drop",
+        "start": 0,
+        "zoom": 1,
+        "end": "hold",
+        "background": "#262626",
+        "radius": 0.25,
+        "cut": "auto",
+        "props": {}
+      },
+      {
+        "name": "word-stream",
+        "start": 0,
+        "zoom": 1,
+        "end": "hold",
+        "background": "#ffffff",
+        "radius": 0.25,
+        "cut": "auto",
+        "props": {}
+      },
+      {
+        "name": "caption-word-pop",
+        "start": 0,
+        "zoom": 1,
+        "end": "hold",
+        "background": "#262626",
+        "radius": 0.25,
+        "cut": "auto",
+        "props": {}
+      },
+      {
+        "name": "centered-word-build",
+        "start": 0,
+        "zoom": 0.65,
+        "end": "loop",
+        "background": "radial-gradient(circle at 50% 108%, #ffd77a 0%, #ff6840 31%, #f13d21 78%)",
+        "radius": 0.25,
+        "cut": "auto",
+        "props": {}
+      }
+    ]
+  ]
+}

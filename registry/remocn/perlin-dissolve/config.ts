@@ -31,4 +31,5 @@ export const perlinDissolveConfig: ComponentConfig = {
   compositionHeight: H,
   previewBackdrop: { type: "color", value: "#141318" },
   snippet: perlinDissolveExampleCode,
+  card: { backdrop: true },
 };

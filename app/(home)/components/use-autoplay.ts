@@ -1,7 +1,9 @@
 import type { PlayerRef } from "@remotion/player";
 import { useIntersectionObserver } from "@uidotdev/usehooks";
 import { type RefObject, useCallback, useEffect, useRef } from "react";
+import { usePrefersReducedMotion } from "@/lib/use-prefers-reduced-motion";
 
+/** Plays the player while it is near the viewport; never under reduced motion. */
 export function useAutoplay(
   playerRef: RefObject<PlayerRef | null>,
   enabled = true,
@@ -12,6 +14,7 @@ export function useAutoplay(
     rootMargin: "200px",
   });
 
+  const reducedMotion = usePrefersReducedMotion();
   const attached = useRef(false);
   const containerRef = useCallback(
     (node: Element | null) => {
@@ -22,6 +25,10 @@ export function useAutoplay(
   );
 
   useEffect(() => {
+    if (reducedMotion) {
+      playerRef.current?.pause();
+      return;
+    }
     if (!enabled) return;
 
     const visible = attached.current ? Boolean(entry?.isIntersecting) : true;
@@ -44,7 +51,7 @@ export function useAutoplay(
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [enabled, entry, playerRef]);
+  }, [enabled, reducedMotion, entry, playerRef]);
 
   return { containerRef };
 }

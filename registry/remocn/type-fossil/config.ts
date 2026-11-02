@@ -67,4 +67,5 @@ export const typeFossilConfig: ComponentConfig = {
   fps: FPS,
   compositionWidth: W,
   compositionHeight: H,
+  card: { props: { backgroundColor: "transparent" } },
 };

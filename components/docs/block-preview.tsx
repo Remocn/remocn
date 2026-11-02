@@ -1,53 +1,36 @@
 "use client";
 
-import { CodeBlock } from "@/components/docs/code-block";
-import { PreviewStage } from "@/lib/ui-preview-internals";
+import { DocsPlayer } from "./blocks/player/docs-player";
+import { UnknownBlock } from "./blocks/player/player-fallback";
+import { BLOCK_SPACING } from "./blocks/spacing";
 import { blockExamples } from "./examples/blocks";
 
+const NO_PROPS = {};
 /**
- * Controls-free preview for composition blocks. A THIN wrapper over
- * `PreviewStage` (`lib/ui-preview-internals.tsx` — owns lazy-mount + autoplay)
- * plus the shared `CodeBlock`: the live scene Player above, the copyable scene
- * snippet below. No Tabs, no customizer, no nuqs, no controls.
- *
- * Replaces both the vestigial `LiveExample` and `UiComponentPreview` for the
- * blocks tier — blocks have no `registry[name]` config and no honored knobs, so
- * the heavier ui-tier widget does not apply (see §0B.7).
+ * Composition blocks: the live scene and its copyable snippet behind the
+ * Preview / Code tabs. Blocks have no registry config, so no customizer.
  */
-
-/** Shared "Unknown component" fallback — matches the existing docs widgets. */
-function UnknownComponent({ name }: { name: string }) {
-  return (
-    <div className="not-prose mb-6 rounded-lg border border-fd-border p-4 text-sm text-fd-muted-foreground">
-      Unknown block: <code>{name}</code>
-    </div>
-  );
-}
-
 export function BlockPreview({ name }: { name: string }) {
   const entry = blockExamples[name];
-
-  if (!entry) {
-    return <UnknownComponent name={name} />;
-  }
+  if (!entry) return <UnknownBlock kind="block" name={name} />;
 
   // The code field may be a string or a zero-arg function; normalize to string.
   const code = typeof entry.code === "function" ? entry.code() : entry.code;
 
   return (
-    <div className="not-prose mb-6 flex w-full flex-col gap-4">
-      <PreviewStage
-        name={name}
-        Component={entry.Component}
-        inputProps={{}}
-        durationInFrames={entry.durationInFrames}
-        fps={entry.fps}
-        compositionWidth={entry.width}
-        compositionHeight={entry.height}
-        previewBackdrop={entry.previewBackdrop}
-      />
-
-      <CodeBlock code={code} />
-    </div>
+    <DocsPlayer
+      name={name}
+      code={code}
+      className={BLOCK_SPACING}
+      composition={{
+        Component: entry.Component,
+        inputProps: NO_PROPS,
+        durationInFrames: entry.durationInFrames,
+        fps: entry.fps,
+        compositionWidth: entry.width,
+        compositionHeight: entry.height,
+        previewBackdrop: entry.previewBackdrop,
+      }}
+    />
   );
 }

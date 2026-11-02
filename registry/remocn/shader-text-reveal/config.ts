@@ -42,4 +42,5 @@ export const shaderTextRevealConfig: ComponentConfig = {
   compositionWidth: W,
   compositionHeight: H,
   previewBackdrop: { type: "color", value: "#000000" },
+  card: { backdrop: true },
 };

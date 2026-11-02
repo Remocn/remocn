@@ -3,42 +3,103 @@ title: Feature announcement
 description: A ~40-second release video that shows the feature working — the one we shipped remocn/ui with
 ---
 
+import { GuideNotes, GuideMoreLink } from "@/components/docs/guides/director-notes";
+import { GuideCount } from "@/components/docs/guides/guide-ui";
+import { GuideNote } from "@/components/docs/guides/note";
+import { GuidePrompt } from "@/components/docs/guides/prompt-block";
+import { GuideRenderCard } from "@/components/docs/guides/render-card";
+import { GuideBeatList, GuideStoryboard } from "@/components/docs/guides/storyboard";
+import { GuideFacts } from "@/components/docs/guides/video-facts";
+import { GuideWords } from "@/components/docs/guides/words-form";
+
 <GuideVideo
   src="https://cdn.remocn.dev/videos/remocn-ui.mp4"
   poster="https://cdn.remocn.dev/posters/remocn-ui.png"
+  label="The remocn/ui feature announcement"
+  duration={40}
+/>
+
+<GuideFacts
+  facts={[
+    { value: "~40 s", label: "running time" },
+    { value: "8 beats", label: "the demo gets the most time" },
+    { value: "1920×1080", label: "30 fps, landscape" },
+  ]}
 />
 
 This is the video we announced remocn/ui with. A launch video sells the whole product; a feature announcement sells one release — and it earns its runtime by showing the feature work, not by talking about it. Eight beats, about forty seconds, and the demo beat gets the most screen time.
 
-## The storyboard
+## The storyboard<GuideCount n={8} />
 
-1. **The moments** — three quick situations your users know, swapping in one spot, then the problem lands in one line.
+<GuideStoryboard
+  beats={[
+    { label: "Moments", seconds: 6, look: "words" },
+    { label: "Reveal", seconds: 4, look: "swirl" },
+    { label: "Mechanism", seconds: 4, look: "slide" },
+    { label: "Demo", seconds: 10, look: "screen" },
+    { label: "Breadth", seconds: 5, look: "montage" },
+    { label: "Value", seconds: 4, look: "stack" },
+    { label: "Install", seconds: 4, look: "terminal" },
+    { label: "Outro", seconds: 3, look: "logo" },
+  ]}
+/>
+
+<GuideBeatList>
+
+1. **The moments** — Three quick situations your users know, swapping in one spot, then the problem lands in one line.
 2. **The reveal** — "Meet &lt;Feature&gt;", with your one-line promise.
-3. **The mechanism** — the single idea behind the feature, one calm beat.
-4. **The demo** — the feature acting on camera: a fake app screen doing the real thing. The longest part of the video.
-5. **The breadth** — a fast montage of what else ships in this release.
-6. **The value** — three claims stack up.
-7. **The install** — a terminal types your command or call to action.
-8. **The outro** — your logo, one quiet closing line.
+3. **The mechanism** — The single idea behind the feature, one calm beat.
+4. **The demo** — The feature acting on camera: a fake app screen doing the real thing. The longest part of the video.
+5. **The breadth** — A fast montage of what else ships in this release.
+6. **The value** — Three claims stack up.
+7. **The install** — A terminal types your command or call to action.
+8. **The outro** — Your logo, one quiet closing line.
 
-## Your words
+</GuideBeatList>
+
+## Your words<GuideCount n={10} />
 
 Ten blanks:
 
+<GuideWords
+  examples={[
+    { blank: ["<FEATURE NAME>"] },
+    { blank: ["<MOMENT 1>", "<MOMENT 2>", "<MOMENT 3>"] },
+    { blank: ["<PROBLEM LINE>"] },
+    { blank: ["<PROMISE LINE>"] },
+    { blank: ["<MECHANISM LINE>"] },
+    { blank: ["<DEMO ACTIONS>"] },
+    { blank: ["<OTHER ITEMS>"] },
+    { blank: ["<THREE CLAIMS>"] },
+    { blank: ["<COMMAND OR CTA>"] },
+    { blank: ["<CLOSING LINE>"] },
+  ]}
+>
+
 - **Feature name**
-- **Three moments** — situations where users need it, two to four words each
-- **Problem line** — the claim that lands after the moments
-- **Promise line** — what changes now, one sentence
-- **Mechanism line** — how it works, one plain sentence
-- **Demo actions** — two or three things we should watch happen ("a dialog opens, a menu filters, a form fills itself")
-- **What else ships** — three to six short names; skip this beat if the release is one thing
+- **Three moments** — Situations where users need it, two to four words each
+- **Problem line** — The claim that lands after the moments
+- **Promise line** — What changes now, one sentence
+- **Mechanism line** — How it works, one plain sentence
+- **Demo actions** — Two or three things we should watch happen ("a dialog opens, a menu filters, a form fills itself")
+- **What else ships** — Three to six short names; skip this beat if the release is one thing
 - **Three value claims**
 - **Install command or CTA**
 - **Closing line**
 
+</GuideWords>
+
+<GuideNote icon="image">
+
 Struggling with the lines? [Words on screen](/docs/guides/words-on-screen) is the cheat sheet.
 
+</GuideNote>
+
 ## The prompt
+
+Paste it into your agent with your words in place of the highlighted blanks.
+
+<GuidePrompt>
 
 ```text
 I'm making a feature announcement video with remocn (remocn.dev).
@@ -67,15 +128,29 @@ entire video with a radial scrim. Keep transitions restrained — crossfades,
 plus one signature transition at the reveal. Use my copy exactly as written.
 ```
 
+</GuidePrompt>
+
 ## Directing the result
+
+<GuideNotes>
 
 - "The demo is too fast — I can't follow what the screen does."
 - "Give the reveal more room to breathe."
 - "Cut the breadth montage — this release is one thing."
 - "The hook moments should swap faster."
 
+</GuideNotes>
+
+<GuideMoreLink>
+
 More directing vocabulary: [Directing your agent](/docs/guides/directing-your-agent).
+
+</GuideMoreLink>
 
 ## Get the file
 
-Ask your agent: **"Render the video."** You'll get an `.mp4` in the project folder, ready to post.
+<GuideRenderCard prompt="Render the video.">
+
+You'll get an `.mp4` in the project folder, ready to post.
+
+</GuideRenderCard>

@@ -15,6 +15,8 @@ export interface PreviewManifestEntry {
   compositionHeight: number;
   previewBackdrop?: BackdropFill;
   defaults: Record<string, unknown>;
+  /** Index-card overrides on top of `defaults` (see ComponentConfig.card). */
+  card?: { props?: Record<string, unknown>; fit?: boolean; backdrop?: boolean };
 }
 
 export const previewManifest: Record<string, PreviewManifestEntry> = {
@@ -119,6 +121,11 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       cellSize: 22,
       speed: 1,
     },
+    card: {
+      props: {
+        colorFront: "#0E1012",
+      },
+    },
   },
   "ascii-render": {
     durationInFrames: 90,
@@ -136,6 +143,11 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       ink: "#9dff9d",
       intensity: 1,
       speed: 1,
+    },
+    card: {
+      props: {
+        ink: "#0E1012",
+      },
     },
   },
   backdrop: {
@@ -292,6 +304,12 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       holdMs: 600,
       shadow: true,
     },
+    card: {
+      props: {
+        color: "#0E1012",
+        activeColor: "#0E1012",
+      },
+    },
   },
   "caption-blur-in": {
     durationInFrames: 279,
@@ -313,6 +331,11 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       holdMs: 600,
       shadow: true,
     },
+    card: {
+      props: {
+        color: "#0E1012",
+      },
+    },
   },
   "caption-bounce-in": {
     durationInFrames: 279,
@@ -333,6 +356,11 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       combineTokensWithinMilliseconds: 1200,
       holdMs: 600,
       shadow: true,
+    },
+    card: {
+      props: {
+        color: "#0E1012",
+      },
     },
   },
   "caption-cube": {
@@ -356,6 +384,12 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       holdMs: 600,
       shadow: true,
     },
+    card: {
+      props: {
+        color: "#0E1012",
+        activeColor: "#0E1012",
+      },
+    },
   },
   "caption-dim-progress": {
     durationInFrames: 279,
@@ -376,6 +410,11 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       combineTokensWithinMilliseconds: 1200,
       holdMs: 600,
       shadow: true,
+    },
+    card: {
+      props: {
+        color: "#0E1012",
+      },
     },
   },
   "caption-drop": {
@@ -398,6 +437,11 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       holdMs: 600,
       shadow: true,
     },
+    card: {
+      props: {
+        color: "#0E1012",
+      },
+    },
   },
   "caption-emoji": {
     durationInFrames: 279,
@@ -419,6 +463,11 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       holdMs: 600,
       shadow: true,
     },
+    card: {
+      props: {
+        color: "#0E1012",
+      },
+    },
   },
   "caption-handwrite": {
     durationInFrames: 279,
@@ -439,6 +488,11 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       combineTokensWithinMilliseconds: 1200,
       holdMs: 600,
       shadow: true,
+    },
+    card: {
+      props: {
+        color: "#0E1012",
+      },
     },
   },
   "caption-highlight-box": {
@@ -464,6 +518,12 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       holdMs: 600,
       shadow: true,
     },
+    card: {
+      props: {
+        color: "#0E1012",
+        boxColor: "#0E1012",
+      },
+    },
   },
   "caption-karaoke": {
     durationInFrames: 279,
@@ -485,6 +545,12 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       holdMs: 600,
       shadow: true,
     },
+    card: {
+      props: {
+        color: "#0E1012",
+        activeColor: "#0E1012",
+      },
+    },
   },
   "caption-knockout": {
     durationInFrames: 279,
@@ -505,6 +571,11 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       combineTokensWithinMilliseconds: 1200,
       holdMs: 600,
     },
+    card: {
+      props: {
+        plateColor: "#0E1012",
+      },
+    },
   },
   "caption-label-maker": {
     durationInFrames: 279,
@@ -524,6 +595,11 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       tapeColor: "#18181b",
       combineTokensWithinMilliseconds: 1000,
       holdMs: 600,
+    },
+    card: {
+      props: {
+        color: "#0E1012",
+      },
     },
   },
   "caption-marker": {
@@ -547,6 +623,12 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       holdMs: 600,
       shadow: true,
     },
+    card: {
+      props: {
+        color: "#0E1012",
+        markerColor: "#0E1012",
+      },
+    },
   },
   "caption-outline": {
     durationInFrames: 279,
@@ -568,6 +650,12 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       strokeWidth: 0.12,
       combineTokensWithinMilliseconds: 1200,
       holdMs: 600,
+    },
+    card: {
+      props: {
+        color: "#0E1012",
+        activeColor: "#0E1012",
+      },
     },
   },
   "caption-prosody": {
@@ -592,6 +680,12 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       holdMs: 600,
       shadow: true,
     },
+    card: {
+      props: {
+        color: "#0E1012",
+        activeColor: "#0E1012",
+      },
+    },
   },
   "caption-redact": {
     durationInFrames: 279,
@@ -613,6 +707,11 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       holdMs: 600,
       shadow: true,
     },
+    card: {
+      props: {
+        color: "#0E1012",
+      },
+    },
   },
   "caption-rise": {
     durationInFrames: 279,
@@ -632,6 +731,11 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       combineTokensWithinMilliseconds: 1200,
       holdMs: 600,
       shadow: true,
+    },
+    card: {
+      props: {
+        color: "#0E1012",
+      },
     },
   },
   "caption-scramble": {
@@ -654,6 +758,11 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       holdMs: 600,
       shadow: true,
     },
+    card: {
+      props: {
+        color: "#0E1012",
+      },
+    },
   },
   "caption-slice": {
     durationInFrames: 279,
@@ -675,6 +784,11 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       holdMs: 600,
       shadow: true,
     },
+    card: {
+      props: {
+        color: "#0E1012",
+      },
+    },
   },
   "caption-slot": {
     durationInFrames: 279,
@@ -694,6 +808,11 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       combineTokensWithinMilliseconds: 800,
       holdMs: 600,
       shadow: true,
+    },
+    card: {
+      props: {
+        color: "#0E1012",
+      },
     },
   },
   "caption-speaker": {
@@ -735,6 +854,11 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       combineTokensWithinMilliseconds: 1000,
       holdMs: 600,
     },
+    card: {
+      props: {
+        color: "#0E1012",
+      },
+    },
   },
   "caption-stack": {
     durationInFrames: 279,
@@ -756,6 +880,12 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       combineTokensWithinMilliseconds: 1600,
       holdMs: 600,
       shadow: true,
+    },
+    card: {
+      props: {
+        color: "#0E1012",
+        emphasisColor: "#0E1012",
+      },
     },
   },
   "caption-stamp": {
@@ -779,6 +909,11 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       holdMs: 600,
       shadow: true,
     },
+    card: {
+      props: {
+        color: "#0E1012",
+      },
+    },
   },
   "caption-subtitle": {
     durationInFrames: 279,
@@ -800,6 +935,11 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       box: true,
       boxColor: "#000000",
       boxOpacity: 0.72,
+    },
+    card: {
+      props: {
+        color: "#0E1012",
+      },
     },
   },
   "caption-teleprompter": {
@@ -825,6 +965,11 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       holdMs: 600,
       shadow: true,
     },
+    card: {
+      props: {
+        color: "#0E1012",
+      },
+    },
   },
   "caption-timeline": {
     durationInFrames: 279,
@@ -848,6 +993,12 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       upcomingOpacity: 0.4,
       shadow: true,
     },
+    card: {
+      props: {
+        color: "#0E1012",
+        playheadColor: "#0E1012",
+      },
+    },
   },
   "caption-typewriter": {
     durationInFrames: 279,
@@ -868,6 +1019,11 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       holdMs: 600,
       caret: true,
       shadow: true,
+    },
+    card: {
+      props: {
+        color: "#0E1012",
+      },
     },
   },
   "caption-underline": {
@@ -892,6 +1048,12 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       holdMs: 600,
       shadow: true,
     },
+    card: {
+      props: {
+        color: "#0E1012",
+        underlineColor: "#0E1012",
+      },
+    },
   },
   "caption-weight": {
     durationInFrames: 279,
@@ -913,6 +1075,11 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       holdMs: 600,
       shadow: true,
     },
+    card: {
+      props: {
+        color: "#0E1012",
+      },
+    },
   },
   "caption-word-pop": {
     durationInFrames: 279,
@@ -933,6 +1100,11 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       combineTokensWithinMilliseconds: 0,
       holdMs: 600,
       shadow: true,
+    },
+    card: {
+      props: {
+        color: "#0E1012",
+      },
     },
   },
   caret: {
@@ -987,6 +1159,11 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       caretWidth: 3,
       speed: 1,
     },
+    card: {
+      props: {
+        caretColor: "#0E1012",
+      },
+    },
   },
   "centered-word-build": {
     durationInFrames: 75,
@@ -1011,6 +1188,11 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       color: "#fff3df",
       fontWeight: "400",
       speed: 1,
+    },
+    card: {
+      props: {
+        color: "#0E1012",
+      },
     },
   },
   "chat-gpt": {
@@ -1096,6 +1278,12 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       maxDisplacementPx: 39,
       turbulentAmount: 130,
       speed: 1,
+    },
+    card: {
+      props: {
+        fill: "#0E1012",
+        background: "transparent",
+      },
     },
   },
   "claude-chat": {
@@ -1313,6 +1501,13 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       backgroundColor: "#a800b7",
       speed: 1,
     },
+    card: {
+      props: {
+        color: "#0E1012",
+        backgroundColor: "transparent",
+        cursorColor: "#0E1012",
+      },
+    },
   },
   dialog: {
     durationInFrames: 120,
@@ -1452,6 +1647,12 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       cycle: 60,
       speed: 1,
     },
+    card: {
+      props: {
+        color: "#0E1012",
+        echoColor: "#0E1012",
+      },
+    },
   },
   "ecosystem-constellation": {
     durationInFrames: 240,
@@ -1505,6 +1706,11 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       extrudeAngleDeg: -58.6,
       extrudeEndFrame: 48,
       speed: 1,
+    },
+    card: {
+      props: {
+        faceColor: "#0E1012",
+      },
     },
   },
   "fade-through": {
@@ -1699,6 +1905,11 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       keepPoints: false,
       speed: 1,
     },
+    card: {
+      props: {
+        color: "#0E1012",
+      },
+    },
   },
   "gooey-morph": {
     durationInFrames: 120,
@@ -1717,6 +1928,11 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       displaceAmount: 20,
       barTravelFrames: 30,
       speed: 1,
+    },
+    card: {
+      props: {
+        fill: "#0E1012",
+      },
     },
   },
   "gradient-scale-cut-text": {
@@ -1744,6 +1960,12 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       backgroundColor: "#000000",
       fontWeight: "700",
       speed: 1,
+    },
+    card: {
+      props: {
+        gradientEnd: "#0E1012",
+        backgroundColor: "transparent",
+      },
     },
   },
   "grain-dissolve": {
@@ -1797,6 +2019,11 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       misregistration: 1.2,
       paperTint: "#f4efe4",
       speed: 1,
+    },
+    card: {
+      props: {
+        paperTint: "#0E1012",
+      },
     },
   },
   "hand-count": {
@@ -1859,6 +2086,11 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       flicker: 1,
       intensity: 1,
       speed: 1,
+    },
+    card: {
+      props: {
+        tint: "#0E1012",
+      },
     },
   },
   "icon-activity": {
@@ -2843,6 +3075,11 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       flyDistance: 260,
       speed: 1,
     },
+    card: {
+      props: {
+        color: "#0E1012",
+      },
+    },
   },
   "icon-search": {
     durationInFrames: 75,
@@ -3407,6 +3644,12 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       fontWeight: "400",
       speed: 1,
     },
+    card: {
+      props: {
+        color: "#0E1012",
+        pillColor: "#0E1012",
+      },
+    },
   },
   "inline-word-roll": {
     durationInFrames: 105,
@@ -3427,6 +3670,11 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       transitionFrames: 6,
       color: "#f5f5f5",
       speed: 1,
+    },
+    card: {
+      props: {
+        color: "#0E1012",
+      },
     },
   },
   input: {
@@ -3505,6 +3753,12 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       backgroundColor: "#a800b7",
       speed: 1,
     },
+    card: {
+      props: {
+        color: "#0E1012",
+        backgroundColor: "transparent",
+      },
+    },
   },
   "kinetic-warp": {
     durationInFrames: 120,
@@ -3522,6 +3776,11 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       layerScale: 480,
       keyframeStride: 20,
       speed: 1,
+    },
+    card: {
+      props: {
+        textColor: "#0E1012",
+      },
     },
   },
   "launch-anything": {
@@ -3770,6 +4029,13 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       fontWeight: "700",
       speed: 1,
     },
+    card: {
+      props: {
+        color: "#0E1012",
+        outlineColor: "#0E1012",
+        backgroundColor: "transparent",
+      },
+    },
   },
   "outline-trace": {
     durationInFrames: 75,
@@ -3881,6 +4147,11 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       lineWidth: 3,
       speed: 1,
     },
+    card: {
+      props: {
+        lineColor: "#0E1012",
+      },
+    },
   },
   "per-character-rise": {
     durationInFrames: 60,
@@ -3936,6 +4207,11 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       dotSize: 0.2,
       speed: 1,
     },
+    card: {
+      props: {
+        color: "#0E1012",
+      },
+    },
   },
   "perlin-dissolve": {
     durationInFrames: 116,
@@ -3951,6 +4227,9 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       colorBack: "#141318",
       softness: 0.1,
       speed: 1,
+    },
+    card: {
+      backdrop: true,
     },
   },
   "perspective-marquee": {
@@ -3973,6 +4252,11 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       fadeColor: "#050505",
       speed: 1,
     },
+    card: {
+      props: {
+        color: "#0E1012",
+      },
+    },
   },
   "perspective-squeeze": {
     durationInFrames: 225,
@@ -3991,6 +4275,11 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       lowerFontFamily: "Impact, 'Arial Narrow', sans-serif",
       lineGap: 50,
       speed: 1,
+    },
+    card: {
+      props: {
+        fill: "#0E1012",
+      },
     },
   },
   "pixelate-region": {
@@ -4092,6 +4381,13 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       backgroundColor: "#a800b7",
       loop: false,
       speed: 1,
+    },
+    card: {
+      props: {
+        color: "#0E1012",
+        backgroundColor: "transparent",
+        accentColor: "#a800b7",
+      },
     },
   },
   radio: {
@@ -4246,6 +4542,11 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       flipDuration: 10,
       speed: 1,
     },
+    card: {
+      props: {
+        color: "#0E1012",
+      },
+    },
   },
   "rush-type": {
     durationInFrames: 104,
@@ -4267,6 +4568,9 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       restDuration: 12,
       peakHoldDuration: 3,
       speed: 1,
+    },
+    card: {
+      backdrop: true,
     },
   },
   "scale-down-fade": {
@@ -4327,6 +4631,12 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       backgroundColor: "#f5f1f5",
       reducedMotion: false,
       speed: 1,
+    },
+    card: {
+      props: {
+        backgroundColor: "transparent",
+        fieldColor: "#ffffff",
+      },
     },
   },
   "security-cam": {
@@ -4412,6 +4722,11 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       toWeight: 900,
       badge: true,
       speed: 1,
+    },
+    card: {
+      props: {
+        color: "#0E1012",
+      },
     },
   },
   "shader-caustics": {
@@ -4709,6 +5024,9 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       intensity: 1,
       speed: 1,
     },
+    card: {
+      backdrop: true,
+    },
   },
   "shader-voronoi": {
     durationInFrames: 150,
@@ -4782,6 +5100,9 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       shadowColor: "#030012",
       fontWeight: "700",
       speed: 1,
+    },
+    card: {
+      backdrop: true,
     },
   },
   "shared-axis-y": {
@@ -4923,6 +5244,11 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       size: 32,
       speed: 1,
     },
+    card: {
+      props: {
+        color: "#0E1012",
+      },
+    },
   },
   skeleton: {
     durationInFrames: 120,
@@ -4966,6 +5292,9 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       outDistance: 0.1,
       slideFrames: 30,
       speed: 1,
+    },
+    card: {
+      backdrop: true,
     },
   },
   slider: {
@@ -5055,6 +5384,11 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       color: "#ffffff",
       seed: 1,
       speed: 1,
+    },
+    card: {
+      props: {
+        color: "#0E1012",
+      },
     },
   },
   spinner: {
@@ -5148,6 +5482,11 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       delay: 0,
       speed: 1,
     },
+    card: {
+      props: {
+        color: "#0E1012",
+      },
+    },
   },
   stage: {
     durationInFrames: 300,
@@ -5216,6 +5555,11 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       vertexLagFrames: 3.5,
       speed: 1,
     },
+    card: {
+      props: {
+        fill: "#0E1012",
+      },
+    },
   },
   "strikethrough-replace": {
     durationInFrames: 120,
@@ -5252,6 +5596,11 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       hold: 30,
       exit: true,
       speed: 1,
+    },
+    card: {
+      props: {
+        color: "#0E1012",
+      },
     },
   },
   "sustained-glitch": {
@@ -5466,6 +5815,11 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       y: 0.5,
       speed: 1,
     },
+    card: {
+      props: {
+        color: "#0E1012",
+      },
+    },
   },
   "truchet-flip": {
     durationInFrames: 120,
@@ -5489,6 +5843,12 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       loop: false,
       speed: 1,
     },
+    card: {
+      props: {
+        color: "#0E1012",
+        secondaryColor: "#0E1012",
+      },
+    },
   },
   "tv-power-off": {
     durationInFrames: 62,
@@ -5505,6 +5865,11 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       afterglow: 1,
       phosphor: "#d8ecff",
       speed: 1,
+    },
+    card: {
+      props: {
+        phosphor: "#0E1012",
+      },
     },
   },
   "type-fossil": {
@@ -5523,6 +5888,11 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       accentColor: "#a800b7",
       backgroundColor: "#eeeae2",
       speed: 1,
+    },
+    card: {
+      props: {
+        backgroundColor: "transparent",
+      },
     },
   },
   "type-repeater": {
@@ -5545,6 +5915,11 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       outline: true,
       speed: 1,
     },
+    card: {
+      props: {
+        accent: "#0E1012",
+      },
+    },
   },
   "type-wall": {
     durationInFrames: 150,
@@ -5564,6 +5939,11 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       fontSize: 64,
       seed: 7,
       speed: 1,
+    },
+    card: {
+      props: {
+        color: "#0E1012",
+      },
     },
   },
   "typed-split-wipe": {
@@ -5588,6 +5968,11 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       color: "#e8e8e8",
       fontWeight: "400",
       speed: 1,
+    },
+    card: {
+      props: {
+        color: "#0E1012",
+      },
     },
   },
   typewriter: {
@@ -5671,6 +6056,11 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       direction: "up",
       speed: 1,
     },
+    card: {
+      props: {
+        color: "#0E1012",
+      },
+    },
   },
   "vhs-filter": {
     durationInFrames: 90,
@@ -5720,6 +6110,9 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       noise: 0.4,
       colorBack: "#141318",
       speed: 1,
+    },
+    card: {
+      backdrop: true,
     },
   },
   "whip-pan": {
@@ -5865,6 +6258,11 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       color: "#cfc2ff",
       fontWeight: "400",
       speed: 1,
+    },
+    card: {
+      props: {
+        color: "#0E1012",
+      },
     },
   },
 };

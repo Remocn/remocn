@@ -225,6 +225,26 @@ function findClosingTag(src: string, tag: string, from: number): number {
   return -1;
 }
 
+/**
+ * Length of an MDX `import` statement starting at `start` (the page's own
+ * component imports; never inside code fences, which are copied verbatim).
+ */
+function importLength(src: string, start: number): number {
+  const statement = /^import\s[\s\S]*?\sfrom\s+["'][^"']+["'];?[ \t]*\n?/.exec(
+    src.slice(start),
+  );
+  return statement ? statement[0].length : 0;
+}
+
+/** After a dropped widget, don't leave a second blank line behind. */
+function skipBlankAfterDrop(src: string, i: number, out: string): number {
+  let next = i;
+  if (out.endsWith("\n\n") || out === "") {
+    while (src[next] === "\n") next += 1;
+  }
+  return next;
+}
+
 export function stripFrontmatter(src: string): string {
   if (!src.startsWith("---")) return src;
   const end = src.indexOf("\n---", 3);
@@ -257,6 +277,12 @@ export function mdxToMarkdown(src: string, siteUrl: string): string {
             : src.length;
         out += src.slice(i, blockEnd);
         i = blockEnd;
+        continue;
+      }
+
+      const imported = importLength(src, i);
+      if (imported) {
+        i += imported;
         continue;
       }
     }
@@ -293,7 +319,7 @@ export function mdxToMarkdown(src: string, siteUrl: string): string {
 
           if (DROPPED_WIDGETS.has(tag)) {
             i = tagEnd.end;
-            while (src[i] === "\n" && src[i + 1] === "\n") i += 1;
+            i = skipBlankAfterDrop(src, i, out);
             continue;
           }
 
@@ -322,6 +348,35 @@ export function mdxToMarkdown(src: string, siteUrl: string): string {
           out += replacement;
           i = tagEnd.end;
           continue;
+        }
+      }
+
+      // Any other component (guide and index blocks): its markdown children
+      // are the content, so keep those and drop the tags. A string `title`
+      // is kept as a bold line; self-closing ones are visual only.
+      if (tag) {
+        const tagEnd = findTagEnd(src, i + 1 + tag.length);
+        if (tagEnd?.selfClosing) {
+          i = tagEnd.end;
+          i = skipBlankAfterDrop(src, i, out);
+          continue;
+        }
+        if (tagEnd) {
+          const closeIndex = findClosingTag(src, tag, tagEnd.end);
+          if (closeIndex !== -1) {
+            const attrs = parseAttrs(
+              src.slice(i + 1 + tag.length, tagEnd.end - 1),
+            );
+            const inner = mdxToMarkdown(
+              src.slice(tagEnd.end, closeIndex),
+              siteUrl,
+            ).trim();
+            const title =
+              typeof attrs.title === "string" ? `**${attrs.title}**\n\n` : "";
+            out += `${title}${inner}`;
+            i = closeIndex + `</${tag}>`.length;
+            continue;
+          }
         }
       }
     }

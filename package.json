@@ -73,6 +73,7 @@
     "fumadocs-core": "^16.7.10",
     "fumadocs-mdx": "^14.2.11",
     "fumadocs-ui": "^16.7.10",
+    "geist": "1.8.2",
     "jotai": "^2.19.1",
     "json5": "^2.2.3",
     "lucide-react": "^1.7.0",

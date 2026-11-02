@@ -277,8 +277,6 @@ export function getDocsSponsors(): Sponsor[] {
   return getSponsorsFor("docs");
 }
 
-export type BillingMode = "monthly" | "one-time";
-
 export type Tier = {
   id: "builder" | "partner" | "featured";
   price: number;
@@ -287,8 +285,8 @@ export type Tier = {
   perks: string[];
   highlighted: boolean;
   badge?: string;
+  /** Creem checkout for the monthly subscription. */
   monthlyUrl: string;
-  oneTimeUrl: string;
 };
 
 export const tiers: Tier[] = [
@@ -304,7 +302,6 @@ export const tiers: Tier[] = [
     ],
     highlighted: false,
     monthlyUrl: "https://www.creem.io/payment/prod_6fpKhXCzk9KkbA4FSUzGIU",
-    oneTimeUrl: "https://www.creem.io/payment/prod_1C3cCbVoYsDPJrdlDhrhSG",
   },
   {
     id: "partner",
@@ -319,7 +316,6 @@ export const tiers: Tier[] = [
     ],
     highlighted: false,
     monthlyUrl: "https://www.creem.io/payment/prod_6tdCLqKgSA14P0IEVZ2GaG",
-    oneTimeUrl: "https://www.creem.io/payment/prod_2sb9zG2oJn232utqh5TN1S",
   },
   {
     id: "featured",
@@ -334,6 +330,5 @@ export const tiers: Tier[] = [
     highlighted: true,
     badge: "Front page",
     monthlyUrl: "https://www.creem.io/payment/prod_1PtwNGZVHfXZgChBSCwmJA",
-    oneTimeUrl: "https://www.creem.io/payment/prod_66n8fHDfCVmwSNswCHL5OH",
   },
 ];

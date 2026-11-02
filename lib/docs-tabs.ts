@@ -1,7 +1,8 @@
 import type { Node, Root } from "fumadocs-core/page-tree";
 
 /**
- * The docs are split into top-level category tabs surfaced in `DocsHeader`.
+ * The docs are split into top-level libraries, switched from the sidebar's
+ * library switcher.
  * Each tab owns its own sidebar tree (see {@link splitDocsTree}); the split is
  * purely a view over the existing Fumadocs page tree.
  */
@@ -46,7 +47,7 @@ export const DOCS_TABS: DocsTab[] = [
   {
     id: "templates",
     label: "Templates",
-    href: "/docs/templates/launch-anything",
+    href: "/docs/templates",
   },
   {
     id: "icons",
@@ -171,15 +172,11 @@ function hoistPrimitives(nodes: Node[]): Node[] {
  * Splits the Fumadocs page tree into category tab trees. Immutable — the source
  * `Root` (shared across requests) is never mutated; each branch is a shallow
  * copy with a filtered `children` list, so order is preserved within each tab.
- * Compose after {@link withNewBadges} so the badge decoration survives the split.
+ * The docs layout turns each branch into a sidebar model, and the docs page
+ * uses the branch for its breadcrumb and prev/next.
  *
- * Each branch gets a DISTINCT, stable `$id`. This is load-bearing: fumadocs'
- * `TreeContextProvider` memoizes the active tree with
- * `useMemo(() => rawTree, [rawTree.$id ?? rawTree])`. The source root's `$id` is
- * the literal "root", so two plain shallow copies would share it — the memo dep
- * would never change when `DocsShell` swaps trees on a tab switch, freezing the
- * sidebar on the first tab until a full page reload. Distinct ids make the dep
- * differ per tab so the sidebar updates client-side.
+ * Each branch gets a distinct, stable `$id` (`docs-tab-<id>`), so anything
+ * keyed on the tree id treats the libraries as different trees.
  *
  * The Primitives branch is additionally hoisted (see {@link hoistPrimitives}) so
  * the remocn-ui pages render at the sidebar root without a wrapping "UI" label.

@@ -1,19 +1,75 @@
 ---
 title: Introduction
-description: shadcn-style primitives scripted on the Remotion timeline
+description: Familiar shadcn components rebuilt for Remotion. You declare what state a component is in and when, and it renders that state as a pure function of the frame.
 ---
 
-The `ui` tier brings familiar shadcn components — Button, Input, Checkbox, Switch, Spinner — into Remotion video. Instead of responding to mouse events, their interactions are **scripted on the timeline**: you declare what state a component is in and when, and it renders that state as a deterministic pure function of `useCurrentFrame()`.
+import { AtomCard, AtomCards, AtomsSection } from "@/components/docs/index/primitives/atom-cards";
+import { InstallWrites } from "@/components/docs/index/primitives/install-writes";
+import { RuntimeRules } from "@/components/docs/index/primitives/runtime-rules";
+import { TimelineDemo } from "@/components/docs/index/primitives/timeline-demo";
+import { UiBlocks } from "@/components/docs/index/primitives/ui-blocks";
+import { UiComponents } from "@/components/docs/index/primitives/ui-components";
 
-No `useState`. No event handlers. No CSS transitions. Every pixel is a function of the current frame — which is exactly what Remotion's headless per-frame renderer requires.
+<TimelineDemo />
 
 ## What makes this different from regular shadcn
 
 In a browser, a button enters its loading state because the user clicked. In a video, it enters that state because you authored `{ at: 35, state: "loading" }`. The component looks identical; the wiring is completely different.
 
-This also means you get things that are impossible in a real UI: scrub backward through a form fill, play a button click at half speed, or loop a checkbox toggle indefinitely — all without any special setup.
+This also means you get things that are impossible in a real UI: scrub backward through a form fill, play a button click at half speed, or loop a checkbox toggle indefinitely, all without any special setup.
 
-## Where to go next
+<RuntimeRules not={["useState", "onClick", "transition:"]} only="useCurrentFrame()" />
 
-- [Concepts](/docs/ui/concepts) — the mental model: two kinds of atom, timeline hooks, states, theming, and core exports.
-- [Installation](/docs/ui/installation) — add your first component to a Remotion project.
+<AtomsSection concepts="/docs/ui/concepts">
+
+## Two kinds of atom
+
+Every primitive is one of two shapes. Knowing which tells you where the frame is read and how timing reaches the component.
+
+</AtomsSection>
+
+<AtomCards>
+
+<AtomCard
+  title="State atoms"
+  meta="Snap or smooth"
+  code={`{ at: 12, state: "hover" }`}
+  items={["button", "input", "checkbox", "switch"]}
+>
+  Pure visual functions of state and theme. They never read the frame; the state comes from a prop, `useCurrentState`, or a transition hook like `useButtonTransition`.
+</AtomCard>
+
+<AtomCard
+  title="Motion atoms"
+  meta="Loop on the frame"
+  code="<Caret blink={!tw.typing} />"
+  items={["spinner", "caret", "typing-indicator"]}
+>
+  Loop on `useCurrentFrame()` with no discrete states. No `Date`, no `Math.random`, no `requestAnimationFrame`, so they stay safe in the headless renderer.
+</AtomCard>
+
+</AtomCards>
+
+## Install your first primitive
+
+Remotion must already be set up. The shared remocn-ui core installs automatically as a registry dependency, so you only name the component you want.
+
+<InstallBlock name="button" />
+
+<InstallWrites name="button" />
+
+<UiComponents featured={["cursor", "command-menu", "toast", "dialog", "switch", "slider", "tooltip", "typing-indicator"]}>
+
+## Components
+
+The pieces a product demo is made of: a cursor that clicks, a menu that opens, a toast that lands. Each one copies into `components/remocn/` with its transition hook.
+
+</UiComponents>
+
+<UiBlocks>
+
+## Blocks
+
+Complete, shippable scenes built from these primitives. Each block orchestrates the cursor, fields and feedback into one coherent story you can drop into a Sequence.
+
+</UiBlocks>

@@ -50,6 +50,13 @@ export type NavLink = {
   /** Hidden on mobile (matches the existing `hidden sm:inline` pattern). */
   smOnly?: boolean;
   external?: boolean;
+  /** Small pink tag after the label (e.g. "New" on Studio). */
+  badge?: string;
+  /**
+   * Path prefix that marks this link as the current page. Defaults to `href`;
+   * `null` never marks it (deep links into a section another link owns).
+   */
+  current?: string | null;
 };
 
 export function externalLinkProps(link: NavLink, cta: CtaId) {
@@ -65,11 +72,17 @@ export function externalLinkProps(link: NavLink, cta: CtaId) {
 
 // Единый источник топ-навигации для landing / sponsors / docs.
 export const NAV_LINKS: NavLink[] = [
-  { href: "/docs/typography", label: "Components" },
-  { href: "/docs/shaders/getting-started/introduction", label: "Shaders" },
+  // Every docs page highlights Docs, Components and Templates included.
+  {
+    href: "/docs/getting-started/introduction",
+    label: "Docs",
+    current: "/docs",
+  },
+  { href: "/docs/typography", label: "Components", current: null },
+  { href: "/docs/templates", label: "Templates", current: null },
   { href: "/showcases", label: "Showcases" },
-  { href: "/blog", label: "Blog" },
   { href: "/sponsors", label: "Sponsors" },
+  { href: STUDIO_URL, label: "Studio", external: true, badge: "New" },
 ];
 
 /**
@@ -94,35 +107,12 @@ export const NEW_BADGE_PATHS = new Set<string>([
   "/docs/typography/period-drop",
 ]);
 
-export type FooterGroup = {
-  label: string;
-  links: NavLink[];
-};
-
-export const FOOTER_GROUPS: FooterGroup[] = [
-  {
-    label: "Registry",
-    links: [
-      { href: "/docs/typography", label: "Components" },
-      { href: "/docs/shaders/getting-started/introduction", label: "Shaders" },
-      { href: "/docs/icons/gallery", label: "Icons" },
-    ],
-  },
-  {
-    label: "Learn",
-    links: [
-      { href: "/docs/getting-started/introduction", label: "Docs" },
-      { href: "/blog", label: "Blog" },
-      { href: "/changelog", label: "Changelog" },
-    ],
-  },
-  {
-    label: "Project",
-    links: [
-      { href: STUDIO_URL, label: "Studio", external: true },
-      { href: "/showcases", label: "Showcases" },
-      { href: "/sponsors", label: "Sponsors" },
-      { href: "/legal", label: "Privacy & Terms" },
-    ],
-  },
+// Flat footer row: site pages first, then the external profiles.
+export const FOOTER_LINKS: NavLink[] = [
+  { href: "/docs/getting-started/introduction", label: "Docs" },
+  { href: "/changelog", label: "Changelog" },
+  { href: STUDIO_URL, label: "Studio", external: true },
+  { href: "/sponsors", label: "Sponsors" },
+  { href: GITHUB_URL, label: "GitHub", external: true },
+  { href: X_URL, label: "X", external: true },
 ];

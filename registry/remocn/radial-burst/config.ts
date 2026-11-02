@@ -86,4 +86,5 @@ export const radialBurstConfig: ComponentConfig = {
   fps: FPS,
   compositionWidth: W,
   compositionHeight: H,
+  card: { props: { backgroundColor: "transparent", accentColor: "#a800b7" } },
 };

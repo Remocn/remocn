@@ -3,7 +3,15 @@ title: One video, three formats
 description: Every recipe builds a horizontal video — Reels, Shorts and TikTok want vertical, and you re-cut instead of rebuilding
 ---
 
+import { GuideCount } from "@/components/docs/guides/guide-ui";
+import { GuideDefinitions } from "@/components/docs/guides/practice/definition-table";
+import { GuideFormatFrames } from "@/components/docs/guides/practice/format-frames";
+import { GuideQuote } from "@/components/docs/guides/practice/phrase-list";
+import { GuidePrompt } from "@/components/docs/guides/prompt-block";
+
 Every recipe on this site builds a horizontal video — 16:9, the shape of YouTube, X and your landing page. But Reels, Shorts and TikTok want vertical (9:16), and some feeds like square (1:1). You don't make three videos. You make one, then re-cut it.
+
+<GuideFormatFrames />
 
 ## Finish horizontal first
 
@@ -13,23 +21,35 @@ Direct the horizontal version all the way to done — the words, the pacing, the
 
 When the horizontal version is the one you'd publish, the whole ask is one sentence:
 
+<GuidePrompt copyLabel="Copy" size="lg">
+
 ```text
 Make a vertical 9:16 version of this video, keeping every beat.
 ```
 
+</GuidePrompt>
+
 Your agent reflows the same video into the new shape. Same words, same order, same timing — a taller stage.
 
-## What breaks in vertical
+## What breaks in vertical<GuideCount n={3} />
 
 A vertical frame is narrow, and a few things won't survive the move. Watch for them and direct in plain sentences:
 
-- **Long lines wrap or shrink.** A line that sat comfortably across a wide frame now breaks in half or gets small. Don't ask for a smaller font — shorten the line. [Words on screen](/docs/guides/words-on-screen) has the rules; vertical just enforces them harder.
-- **Side-by-side layouts stack.** Anything that sat left-and-right should now sit top-and-bottom. Say it directly: "Stack the two panels vertically."
-- **Keep the important content in the middle.** Platform UI — captions, buttons, your own handle — covers the top and bottom edges of a vertical video. Tell your agent: "Keep text and logos in the middle of the frame, away from the top and bottom edges."
+<GuideDefinitions>
+
+- **Long lines wrap or shrink** — A line that sat comfortably across a wide frame now breaks in half or gets small. Don't ask for a smaller font — shorten the line. [Words on screen](/docs/guides/words-on-screen) has the rules; vertical just enforces them harder.
+- **Side-by-side layouts stack** — Anything that sat left-and-right should now sit top-and-bottom. Say it directly: "Stack the two panels vertically."
+- **Keep the important content in the middle** — Platform UI — captions, buttons, your own handle — covers the top and bottom edges of a vertical video. Tell your agent: "Keep text and logos in the middle of the frame, away from the top and bottom edges."
+
+</GuideDefinitions>
 
 ## Square
 
-Same move, one line: "Make a square 1:1 version, keeping every beat." Square sits between the two shapes and mostly just works.
+Same move, one line:
+
+<GuideQuote>"Make a square 1:1 version, keeping every beat."</GuideQuote>
+
+Square sits between the two shapes and mostly just works.
 
 ## Watch each one through
 

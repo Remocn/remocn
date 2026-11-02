@@ -3,308 +3,131 @@ title: Typography
 description: Text effects, reveals, and kinetic type for Remotion
 ---
 
+import { CategoryIndex } from "@/components/docs/index/category/category-index";
+import { ComponentGroup } from "@/components/docs/index/category/component-group";
+
 Every way text can move, fade, glitch, or stretch across the screen. From quiet word-by-word reveals to full-bleed marquees and RGB glitches.
+
+<CategoryIndex section="/docs/typography">
+
+<ComponentGroup
+  items={[
+    "inline-word-roll",
+    "shader-text-reveal",
+    "type-fossil",
+    "soft-blur-in",
+    "per-character-rise",
+    "bottom-up-letters",
+    "top-down-letters",
+    "spring-scale-in",
+    "micro-scale-fade",
+    "scale-down-fade",
+    "blur-out-up",
+    "focus-blur-resolve",
+    "line-by-line-slide",
+    "staggered-fade-up",
+    "mask-reveal-up",
+    "tracking-in",
+  ]}
+>
 
 ## Reveals
 
-<ComponentCardGrid
+</ComponentGroup>
+
+<ComponentGroup
   items={[
-    {
-      name: "Inline Word Roll",
-      description: "Roll words upward beside a fixed prefix, smoothly recentering as their widths change",
-      status: "stable",
-      href: "/docs/typography/inline-word-roll",
-    },
-    {
-      name: "Shader Text Reveal",
-      description: "The original OpenShaders hero material reveals words, then settles into white type",
-      status: "stable",
-      href: "/docs/typography/shader-text-reveal",
-    },
-    {
-      name: "Type Fossil",
-      description: "Readable revisions with fine contour layers that compress into one clean typographic imprint",
-      status: "stable",
-      href: "/docs/typography/type-fossil",
-    },
-    {
-      name: "SoftBlurIn",
-      description: "Per-character fade-in with a gentle blur and upward motion",
-      status: "stable",
-      href: "/docs/typography/soft-blur-in",
-    },
-    {
-      name: "PerCharacterRise",
-      description: "Letters slide up from below with no blur — crisp and kinetic",
-      status: "stable",
-      href: "/docs/typography/per-character-rise",
-    },
-    {
-      name: "BottomUpLetters",
-      description: "Letters rise from below in a pronounced staircase, one symbol at a time",
-      status: "stable",
-      href: "/docs/typography/bottom-up-letters",
-    },
-    {
-      name: "TopDownLetters",
-      description: "Letters descend from above in a pronounced staircase, one symbol at a time",
-      status: "stable",
-      href: "/docs/typography/top-down-letters",
-    },
-    {
-      name: "SpringScaleIn",
-      description: "Words pop in with a soft overshoot scale, like a spring settling",
-      status: "stable",
-      href: "/docs/typography/spring-scale-in",
-    },
-    {
-      name: "MicroScaleFade",
-      description: "A calm, tiny scale pop for subtle premium polish",
-      status: "stable",
-      href: "/docs/typography/micro-scale-fade",
-    },
-    {
-      name: "ScaleDownFade",
-      description: "Subtle premium settle-in with a restrained scale-down fade on exit",
-      status: "stable",
-      href: "/docs/typography/scale-down-fade",
-    },
-    {
-      name: "BlurOutUp",
-      description: "Words arrive clean and depart upward with increasing blur",
-      status: "stable",
-      href: "/docs/typography/blur-out-up",
-    },
-    {
-      name: "FocusBlurResolve",
-      description: "A premium focus pull from heavy blur to crisp text, then a soft blur-out exit",
-      status: "stable",
-      href: "/docs/typography/focus-blur-resolve",
-    },
-    {
-      name: "LineByLineSlide",
-      description: "Each line slides in from the left with a staggered flow",
-      status: "stable",
-      href: "/docs/typography/line-by-line-slide",
-    },
-    {
-      name: "StaggeredFadeUp",
-      description: "Words rise from below with a soft cascading delay",
-      status: "stable",
-      href: "/docs/typography/staggered-fade-up",
-    },
-    {
-      name: "MaskRevealUp",
-      description: "Lines reveal upward with a soft masked feel and compact stagger",
-      status: "stable",
-      href: "/docs/typography/mask-reveal-up",
-    },
-    {
-      name: "TrackingIn",
-      description: "Letter-spacing collapses from wide to normal with a spring snap",
-      status: "stable",
-      href: "/docs/typography/tracking-in",
-    },
+    "inline-highlight",
+    "marker-highlight",
+    "shimmer-sweep",
   ]}
-/>
+>
 
 ## Highlights
 
-<ComponentCardGrid
+</ComponentGroup>
+
+<ComponentGroup
   items={[
-    {
-      name: "InlineHighlight",
-      description: "Animates one word inside a sentence from a base color to a brand color",
-      status: "stable",
-      href: "/docs/typography/inline-highlight",
-    },
-    {
-      name: "MarkerHighlight",
-      description: "Marker bar sweeps in behind a phrase, optionally inverting the text color",
-      status: "stable",
-      href: "/docs/typography/marker-highlight",
-    },
-    {
-      name: "ShimmerSweep",
-      description: "Bright gradient sweeps across dim text, lighting it up",
-      status: "stable",
-      href: "/docs/typography/shimmer-sweep",
-    },
+    "typewriter",
+    "slot-machine-roll",
   ]}
-/>
+>
 
 ## Dynamic Text
 
-<ComponentCardGrid
+</ComponentGroup>
+
+<ComponentGroup
   items={[
-    {
-      name: "Typewriter",
-      description: "Character-by-character text reveal with a deterministic blinking cursor",
-      status: "stable",
-      href: "/docs/typography/typewriter",
-    },
-    {
-      name: "SlotMachineRoll",
-      description: "Numbers and characters roll into place like a casino reel",
-      status: "stable",
-      href: "/docs/typography/slot-machine-roll",
-    },
+    "matrix-decode",
+    "rgb-glitch-text",
   ]}
-/>
+>
 
 ## Tech & Glitch
 
-<ComponentCardGrid
+</ComponentGroup>
+
+<ComponentGroup
   items={[
-    {
-      name: "MatrixDecode",
-      description: "Random characters scramble and resolve into the target string",
-      status: "stable",
-      href: "/docs/typography/matrix-decode",
-    },
-    {
-      name: "RGBGlitchText",
-      description: "Three-channel RGB split with a brief horizontal jitter",
-      status: "stable",
-      href: "/docs/typography/rgb-glitch-text",
-    },
+    "per-word-crossfade",
+    "fade-through",
+    "shared-axis-y",
+    "shared-axis-z",
   ]}
-/>
+>
 
 ## Text Transitions
 
 Swap one phrase for another with motion.
 
-<ComponentCardGrid
+</ComponentGroup>
+
+<ComponentGroup
   items={[
-    {
-      name: "PerWordCrossfade",
-      description: "One phrase fades out as the next fades in, word by word",
-      status: "stable",
-      href: "/docs/typography/per-word-crossfade",
-    },
-    {
-      name: "FadeThrough",
-      description: "Old text fades out as new fades in, Material-style",
-      status: "stable",
-      href: "/docs/typography/fade-through",
-    },
-    {
-      name: "SharedAxisY",
-      description: "Per-word hard-cut staircase for sharp editorial swaps",
-      status: "stable",
-      href: "/docs/typography/shared-axis-y",
-    },
-    {
-      name: "SharedAxisZ",
-      description: "Scale-based depth transition for focus shifts",
-      status: "stable",
-      href: "/docs/typography/shared-axis-z",
-    },
+    "short-slide-right",
+    "kinetic-center-build",
+    "short-slide-down",
   ]}
-/>
+>
 
 ## Kinetic
 
 Word-by-word builds with motion and momentum.
 
-<ComponentCardGrid
+</ComponentGroup>
+
+<ComponentGroup
   items={[
-    {
-      name: "ShortSlideRight",
-      description: "The whole phrase glides in from the left while words reveal in sequence",
-      status: "stable",
-      href: "/docs/typography/short-slide-right",
-    },
-    {
-      name: "KineticCenterBuild",
-      description: "Words enter from the right and push the line until the phrase locks centered",
-      status: "stable",
-      href: "/docs/typography/kinetic-center-build",
-    },
-    {
-      name: "ShortSlideDown",
-      description: "Words drop in from above and stack into a centered composition",
-      status: "stable",
-      href: "/docs/typography/short-slide-down",
-    },
+    "selection-snap",
+    "echo-stack",
+    "type-wall",
+    "ring-text",
+    "period-drop",
   ]}
-/>
+>
 
 ## Showreel
 
 Heavy display type that snaps, echoes and spins on flat color fields.
 
-<ComponentCardGrid
+</ComponentGroup>
+
+<ComponentGroup
   items={[
-    {
-      name: "Selection Snap",
-      description: "A thin word snaps into a design-tool selection while it goes from Thin to Black",
-      status: "stable",
-      href: "/docs/typography/selection-snap",
-    },
-    {
-      name: "Echo Stack",
-      description: "A word focuses in while outline copies drift above and below it",
-      status: "stable",
-      href: "/docs/typography/echo-stack",
-    },
-    {
-      name: "Type Wall",
-      description: "Rows of one word fill the frame in alternating directions and faces",
-      status: "stable",
-      href: "/docs/typography/type-wall",
-    },
-    {
-      name: "Ring Text",
-      description: "Text runs around a tilted 3D band that spins",
-      status: "stable",
-      href: "/docs/typography/ring-text",
-    },
-    {
-      name: "Period Drop",
-      description: "A dot falls, bounces with squash and stretch, and settles as the period",
-      status: "stable",
-      href: "/docs/typography/period-drop",
-    },
+    "outline-trace",
+    "glyph-anatomy",
+    "stripe-type",
+    "path-ride",
+    "type-repeater",
   ]}
-/>
+>
 
 ## Vector type
 
 Type built the way a motion designer builds it: trim paths on real glyph outlines, a font editor's points and handles, striped type, text on a path and a repeater.
 
-<ComponentCardGrid
-  items={[
-    {
-      name: "Outline Trace",
-      description: "Every glyph contour draws itself as a stroke, then the fill wipes up inside each letter",
-      status: "stable",
-      href: "/docs/typography/outline-trace",
-    },
-    {
-      name: "Glyph Anatomy",
-      description: "Anchors and Bézier handles pull straight segments into curves before the word fills",
-      status: "stable",
-      href: "/docs/typography/glyph-anatomy",
-    },
-    {
-      name: "Stripe Type",
-      description: "Horizontal bands slide in from alternating sides and lock into a striped word",
-      status: "stable",
-      href: "/docs/typography/stripe-type",
-    },
-    {
-      name: "Path Ride",
-      description: "Text rides a self-drawing curve, then the curve pulls taut into a straight line",
-      status: "stable",
-      href: "/docs/typography/path-ride",
-    },
-    {
-      name: "Type Repeater",
-      description: "Copies of a word unfold into a tunnel, a spiral or a fan, then fold back",
-      status: "stable",
-      href: "/docs/typography/type-repeater",
-    },
-  ]}
-/>
+</ComponentGroup>
+
+</CategoryIndex>

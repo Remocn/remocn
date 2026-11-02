@@ -3,9 +3,38 @@ title: Introduction
 description: Pixel-level treatments you hold over a whole scene, built on the experimental html-in-canvas browser API
 ---
 
-A filter wraps a scene and re-reads its pixels every frame. Put your scene inside one and it comes out as tape footage, as a CRT display, as halftone print — the treatment stays on for as long as the scene runs.
+import { FiltersHero } from "@/components/docs/index/libraries/filter-hero-section";
+import { HowItWorks } from "@/components/docs/index/libraries/how-it-works";
+import { LibraryGallery } from "@/components/docs/index/libraries/library-gallery";
 
-```tsx
+<FiltersHero filterLabel="<VhsFilter>" tags={["Sustained, no progress"]} />
+
+<HowItWorks
+  steps={[
+    {
+      title: "Wrap the scene",
+      body: "Put your scene inside the filter. No progress to drive, no second scene, no state to pass.",
+    },
+    {
+      title: "It holds, never drifts",
+      body: "Motion inside is a pure function of the frame. Frame 600 looks like frame 60, detail elsewhere.",
+    },
+    {
+      title: "Nest to stack looks",
+      body: "The innermost filter runs first. Keep the one that bends geometry outermost.",
+    },
+  ]}
+>
+
+## How it works
+
+A filter wraps a scene and re-reads its pixels every frame. Put your scene inside one and it comes out as tape footage, as a CRT display, as halftone print, for as long as the scene runs.
+
+</HowItWorks>
+
+<InstallBlock name="vhs-filter" />
+
+```tsx title="scene.tsx"
 import { VhsFilter } from "@/components/remocn/vhs-filter";
 
 export const Scene = () => (
@@ -15,32 +44,16 @@ export const Scene = () => (
 );
 ```
 
-## Filters are not transitions
-
-Both categories sit on the same html-in-canvas foundation, but they answer different questions.
-
-A transition covers a cut. It has a progress, it runs between two scenes, and it is over in a dozen frames. A filter has no progress and no second scene: it is a look, and it lasts exactly as long as the scene it wraps. That is what `length: sustained` means in the docs metadata — budget no frames for a filter and pass it no `state`, just wrap the scene and let it run.
-
-Reach for a transition when the effect should live at the edit. Reach for a filter when the effect is the scene's material.
-
-## What a filter can do that CSS cannot
-
-A CSS `filter` can only work with the colour already under each pixel: blur it, tint it, raise its contrast. It cannot read somewhere else. Every filter here does exactly that — it writes each output pixel from a *different* source coordinate.
-
-That is the whole reason the category needs a browser API instead of a stylesheet. Chroma that bleeds sideways off an edge, a frame curved around a CRT's glass, a cell that collapses to the average colour of everything inside it, a picture seen through moving water — none of them are reachable by blending what is already in place.
-
-## Motion, and why it never drifts
-
-A filter has to be able to sit on a scene for its whole duration, so whatever moves inside it — tape wobble, ripple phase, noise — is a pure function of the current frame. It oscillates and never trends: come back at frame 600 and the look is the same as at frame 60, with the detail in a different place.
-
-That also makes the output deterministic. Nothing is simulated forward from a previous frame and no wall-clock time is read, so parallel and server-side renders produce identical pixels.
-
-## Browser support
+<Note title="Filters are not transitions">
+A transition covers a cut: it has a progress, runs between two scenes and is over in a dozen frames. A filter has no progress and no second scene. It is a look, and it lasts exactly as long as the scene it wraps, which is what `length: sustained` means in the docs metadata. Reach for a filter when the effect is the scene's material.
+</Note>
 
 <CanvasFilterNote />
 
-## Composing filters
+<LibraryGallery kind="filter">
 
-Filters wrap, so they nest, and the innermost one is applied first. Each level costs another capture and another shader pass, so keep stacks shallow and put the filter that changes geometry — a warp, a curvature — outermost, where it can bend everything the inner ones produced.
+## All filters
 
-Browse the individual filters in the sidebar to preview each one and grab its install command.
+Every tile is the same frame, run through a different filter.
+
+</LibraryGallery>
