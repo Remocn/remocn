@@ -1,15 +1,34 @@
-import { activeSponsors, getLandingSponsors } from "@/config/sponsors";
+import {
+  activeSponsors,
+  getLandingSponsors,
+  openSponsorSlots,
+} from "@/config/sponsors";
 import { cn } from "@/lib/utils";
-import { SponsorCarousel } from "./sponsors-strip/sponsor-carousel";
+import {
+  type CarouselItem,
+  SponsorCarousel,
+} from "./sponsors-strip/sponsor-carousel";
 import {
   PinnedSponsorCell,
   SponsorButton,
 } from "./sponsors-strip/sponsor-cells";
 
 const pinned = activeSponsors.find((sponsor) => sponsor.tier === "legendary");
-const rotating = getLandingSponsors().filter(
-  (sponsor) => sponsor.id !== pinned?.id,
+const rotating = withOpenSlots(
+  getLandingSponsors().filter((sponsor) => sponsor.id !== pinned?.id),
 );
+/**
+ * Spreads the open slots through the rotation (positions 3, 5, 7) so each
+ * carousel column gets one and they don't all show at the same step.
+ */
+function withOpenSlots(sponsors: CarouselItem[]): CarouselItem[] {
+  const items = [...sponsors];
+  openSponsorSlots().forEach((slot, index) => {
+    items.splice(Math.min(3 + index * 2, items.length), 0, slot);
+  });
+  return items;
+}
+
 const teamCount = activeSponsors.length;
 
 const MOBILE_CELLS = [
@@ -72,7 +91,7 @@ export function SponsorsStrip() {
           className="mt-4 flex h-20 overflow-x-auto border-y border-secondary [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
           {pinned && <PinnedSponsorCell sponsor={pinned} />}
-          <SponsorCarousel sponsors={rotating} cellClassNames={MOBILE_CELLS} />
+          <SponsorCarousel items={rotating} cellClassNames={MOBILE_CELLS} />
         </div>
       </div>
 
@@ -83,7 +102,7 @@ export function SponsorsStrip() {
       >
         <StripLead />
         {pinned && <PinnedSponsorCell sponsor={pinned} />}
-        <SponsorCarousel sponsors={rotating} cellClassNames={DESKTOP_CELLS} />
+        <SponsorCarousel items={rotating} cellClassNames={DESKTOP_CELLS} />
         <div className="ml-4 shrink-0">
           <SponsorButton />
         </div>

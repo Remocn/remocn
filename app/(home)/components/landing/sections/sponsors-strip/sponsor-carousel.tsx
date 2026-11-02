@@ -3,7 +3,7 @@
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import type { Sponsor } from "@/config/sponsors";
+import type { OpenSponsorSlot, Sponsor } from "@/config/sponsors";
 import { cn } from "@/lib/utils";
 import { CELL } from "./sponsor-cells";
 import { SponsorLogo } from "./sponsor-logo";
@@ -25,20 +25,31 @@ const FADE = {
   exit: { opacity: 0 },
 };
 
-function dealColumns(sponsors: Sponsor[], count: number) {
+export type CarouselItem = Sponsor | OpenSponsorSlot;
+
+function dealColumns(items: CarouselItem[], count: number) {
   return Array.from({ length: count }, (_, column) =>
-    sponsors.filter((_, index) => index % count === column),
+    items.filter((_, index) => index % count === column),
+  );
+}
+
+/** An unsold slot: links to /sponsors in the same cell a logo would fill. */
+function OpenSlot() {
+  return (
+    <span className="text-small whitespace-nowrap text-muted-foreground lg:text-ui">
+      Your logo here
+    </span>
   );
 }
 
 export function SponsorCarousel({
-  sponsors,
+  items,
   cellClassNames,
 }: {
-  sponsors: Sponsor[];
+  items: CarouselItem[];
   cellClassNames: string[];
 }) {
-  const columns = dealColumns(sponsors, cellClassNames.length);
+  const columns = dealColumns(items, cellClassNames.length);
   const [step, setStep] = useState(0);
   const [held, setHeld] = useState(false);
   const [inView, setInView] = useState(false);
@@ -72,14 +83,15 @@ export function SponsorCarousel({
   }, [held, inView, pageVisible]);
 
   return columns.map((column, index) => {
-    const sponsor = column[step % column.length];
+    const item = column[step % column.length];
+    const open = "open" in item;
     return (
       <Link
         key={column[0].id}
         ref={index === 0 ? firstCell : undefined}
-        href={sponsor.website}
-        target="_blank"
-        rel="noreferrer"
+        href={open ? "/sponsors" : item.website}
+        target={open ? undefined : "_blank"}
+        rel={open ? undefined : "noreferrer"}
         onPointerEnter={() => setHeld(true)}
         onPointerLeave={() => setHeld(false)}
         onFocus={() => setHeld(true)}
@@ -92,12 +104,12 @@ export function SponsorCarousel({
       >
         <AnimatePresence initial={false} mode="popLayout">
           <motion.span
-            key={sponsor.id}
+            key={item.id}
             {...motionSet}
             transition={{ duration: 0.5, ease: EASE, delay: index * WAVE_S }}
             className="flex items-center justify-center"
           >
-            <SponsorLogo sponsor={sponsor} />
+            {open ? <OpenSlot /> : <SponsorLogo sponsor={item} />}
           </motion.span>
         </AnimatePresence>
       </Link>

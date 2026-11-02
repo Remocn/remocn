@@ -58,6 +58,7 @@ export const sponsors: Sponsor[] = (
       customStyles: "opacity-100 grayscale-0 dark:[filter:invert(1)]",
       isPaste: false,
       layout: "row",
+      placements: [],
     },
     {
       id: "aceternity",
@@ -70,6 +71,7 @@ export const sponsors: Sponsor[] = (
       customStyles: "opacity-90",
       isPaste: false,
       layout: "row",
+      placements: [],
     },
     {
       id: "vidrush",
@@ -80,6 +82,7 @@ export const sponsors: Sponsor[] = (
       tier: "featured",
       customStyles: "opacity-90 max-w-full",
       isPaste: false,
+      placements: [],
     },
     {
       id: "21st",
@@ -267,6 +270,18 @@ function getSponsorsFor(placement: SponsorPlacement): Sponsor[] {
       (sponsor.placements ?? TIER_PLACEMENTS[sponsor.tier]).includes(placement),
     )
     .sort((a, b) => TIER_RANK[a.tier] - TIER_RANK[b.tier]);
+}
+
+/** Empty "Your logo here" slots in the landing carousel, linking to /sponsors. */
+export const OPEN_SPONSOR_SLOTS = 3;
+
+export type OpenSponsorSlot = { id: string; open: true };
+
+export function openSponsorSlots(): OpenSponsorSlot[] {
+  return Array.from({ length: OPEN_SPONSOR_SLOTS }, (_, index) => ({
+    id: `open-slot-${index + 1}`,
+    open: true,
+  }));
 }
 
 export function getLandingSponsors(): Sponsor[] {

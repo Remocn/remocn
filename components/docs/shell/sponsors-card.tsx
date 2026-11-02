@@ -6,29 +6,33 @@ import { getDocsSponsors, type Sponsor } from "@/config/sponsors";
 import { cn } from "@/lib/utils";
 import { ArrowIcon } from "./docs-icons";
 
-/** Wordmark heights (px) from the rail artboard; the rest sit at 16px. */
-const WORDMARK_HEIGHT: Record<string, number> = {
-  neon: 22,
-  vidrush: 14,
-};
-
 /**
- * Width of a local logo drawn `height` px tall, from the SVG viewBox or the
- * PNG header, so the image's size attributes match what's drawn (next/image
- * warns otherwise).
+ * Every logo is fit into the same box: as tall as the box allows, unless that
+ * would run past its width. Long wordmarks fill the width, compact marks the
+ * height, and none reads larger than the box.
  */
-function widthAt(src: string, height: number): number {
+const LOGO_BOX = { width: 100, height: 20 };
+
+/** Width/height of a local logo, from the SVG viewBox or the PNG header. */
+function aspectOf(src: string): number {
   if (src.startsWith("/") && src.endsWith(".png")) {
     const png = readFileSync(path.join(process.cwd(), "public", src));
-    return Math.round((height * png.readUInt32BE(16)) / png.readUInt32BE(20));
+    return png.readUInt32BE(16) / png.readUInt32BE(20);
   }
   if (src.startsWith("/") && src.endsWith(".svg")) {
     const svg = readFileSync(path.join(process.cwd(), "public", src), "utf8");
     const box =
       /viewBox="[\d.-]+[\s,]+[\d.-]+[\s,]+([\d.]+)[\s,]+([\d.]+)"/.exec(svg);
-    if (box) return Math.round((height * Number(box[1])) / Number(box[2]));
+    if (box) return Number(box[1]) / Number(box[2]);
   }
-  return height * 5;
+  return 5;
+}
+
+/** Drawn size of a logo fit into the shared box; attributes match it. */
+function logoSize(src: string): { width: number; height: number } {
+  const aspect = aspectOf(src);
+  const height = Math.min(LOGO_BOX.height, LOGO_BOX.width / aspect);
+  return { width: Math.round(height * aspect), height: Math.round(height) };
 }
 
 /** The card is always dark: prefer a `-dark` logo, else whiten the light one. */
@@ -47,8 +51,9 @@ function darkLogo(sponsor: Sponsor): { src: string; invert: boolean } {
 function SponsorLogo({ sponsor }: { sponsor: Sponsor }) {
   const logo = darkLogo(sponsor);
   const mark = sponsor.displayName && sponsor.layout === "row";
-  const height = mark ? 15 : (WORDMARK_HEIGHT[sponsor.id] ?? 16);
-  const width = mark ? 15 : widthAt(logo.src, height);
+  const { width, height } = mark
+    ? { width: 15, height: 15 }
+    : logoSize(logo.src);
   return (
     <a
       href={sponsor.website}
