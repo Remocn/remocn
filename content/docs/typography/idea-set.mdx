@@ -1,0 +1,86 @@
+---
+title: Idea Set
+description: "Two ruled lines rise in light italic, then change typeface letter by letter while one phrase turns accent-colored."
+component: idea-set
+vibe: clean
+length: 106
+useWhen:
+  - "A two-line rough-to-finished beat where the second line is the payoff."
+  - "A product story that should feel typeset, with the voice shifting from sketch to polished."
+avoidWhen:
+  - "One line should change voice mid-line without rules or a ledger look — use `mono-voice`."
+  - "You only need a clean masked reveal with no typeface change — use `mask-reveal-up`."
+  - "The change should read as a visible edit of old text into new — use `diff-swap`."
+---
+
+<ComponentPreview name="idea-set" />
+
+<InstallBlock name="idea-set" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { IdeaSet } from "@/components/remocn/idea-set";
+
+const IdeaSetScene = () => <IdeaSet lines={["Rough cut.", "Launch day."]} highlight="Launch day." />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="IdeaSet"
+    component={IdeaSetScene}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Each line rises out of a mask above a hairline rule in light italic. After `hold` frames the glyphs flip one by one to mono, then to medium sans, and the `highlight` phrase takes the accent color. Pass your own `lines`, and set `highlight` to text that appears in them. It ships light and dark.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "lines",
+      type: "string[]",
+      default: "[\"Napkin sketch.\", \"Keynote opener.\"]",
+      description: "Lines of text, each set on its own ruled row.",
+    },
+    {
+      name: "highlight",
+      type: "string",
+      default: "\"Keynote opener.\"",
+      description: "Phrase that turns accent-colored in the final typeface; must match line text.",
+    },
+    {
+      name: "hold",
+      type: "number",
+      default: "18",
+      description: "Frames to rest between each typeface change.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Accent color; overrides the theme accent.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark palette.",
+    },
+  ]}
+/>

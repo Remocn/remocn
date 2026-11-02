@@ -1,0 +1,124 @@
+---
+title: Reels Feed
+description: "A vertical phone feed opens a story, answers a poll, swipes to a reel and a double-tap heart bursts"
+component: reels-feed
+vibe: social
+length: 280
+useWhen:
+  - "A social-media launch beat showing your content in a stories-and-reels style phone feed."
+  - "Demonstrating engagement: a poll answer, a swipe to a reel, then a double-tap like with the count ticking up."
+  - "A vertical clip that wants chapter captions (Story, Poll, Reel) over a phone mockup."
+avoidWhen:
+  - "You want several phone screens side by side — use `phone-trio`."
+  - "The video is a single scrolling app screen — use `phone-scroll`."
+  - "You want a swipeable card deck instead of a feed — use `swipe-deck`."
+---
+
+<ComponentPreview name="reels-feed" />
+
+<InstallBlock name="reels-feed" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition, staticFile } from "remotion";
+import { ReelsFeed } from "@/components/remocn/reels-feed";
+
+const ReelsFeedScene = () => (
+  <ReelsFeed
+    account="yourbrand"
+    stories={[{ src: staticFile("story-1.png") }, { src: staticFile("story-2.png") }]}
+    reelSrc={staticFile("reel.png")}
+    pollQuestion="Shipping this week?"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="ReelsFeed"
+    component={ReelsFeedScene}
+    durationInFrames={300}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A phone frame rises in beside three chapter headlines (Story, Poll, Reel). A tap on a story ring opens up to three stories with progress bars, a poll vote is cast, then a swipe moves to a reel where a double-tap bursts a heart and the like count ticks from `likes[0]` to `likes[1]`. Pass your own `stories` and `reelSrc` image URLs (up to three stories) plus `pollQuestion`, `pollOptions` and `account`. Without images it draws built-in art. Ships light and dark via `theme`.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "account",
+      type: "string",
+      default: "\"remocn\"",
+      description: "Account name shown in the story row and reel.",
+    },
+    {
+      name: "stories",
+      type: "ReelsStory[]",
+      default: "[]",
+      description: "Story frames, each with an optional image `src`.",
+    },
+    {
+      name: "reelSrc",
+      type: "string",
+      description: "Image URL shown as the reel. Omit for built-in art.",
+    },
+    {
+      name: "pollQuestion",
+      type: "string",
+      default: "\"Shipping a launch video this week?\"",
+      description: "Question shown on the poll sticker.",
+    },
+    {
+      name: "pollOptions",
+      type: "[string, string]",
+      default: "[\"Yes, this week\", \"Not yet\"]",
+      description: "The two poll answers.",
+    },
+    {
+      name: "likes",
+      type: "[string, string]",
+      default: "[\"12.4K\", \"12.5K\"]",
+      description: "Like count before and after the double-tap.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"light\" | \"dark\"",
+      default: "\"light\"",
+      description: "Color scheme. Ships light and dark.",
+    },
+    {
+      name: "lines",
+      type: "[string, string, string]",
+      description: "Three headlines, one per chapter: Story, Poll, Reel.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "gradients.sh preset id for the animated ground.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the ground shader parameters.",
+    },
+  ]}
+/>

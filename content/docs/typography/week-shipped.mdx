@@ -1,0 +1,77 @@
+---
+title: Week Shipped
+description: "A week-recap list rolls day by day in heavy type, each day followed by what shipped."
+component: week-shipped
+vibe: playful
+length: 116
+useWhen:
+  - "A weekly changelog video that recaps what shipped each day."
+  - "A sprint-review beat where each day maps to one deliverable."
+  - "A build-in-public recap that ends with a rest day or a final surprise."
+avoidWhen:
+  - "Each item needs a longer description or screenshot — use `changelog-scroll`."
+  - "The list is features, not days, and should show as chips — use `feature-chips-flow`."
+  - "You want a counted-down series rather than a week — use `nonstop`."
+---
+
+<ComponentPreview name="week-shipped" />
+
+<InstallBlock name="week-shipped" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { WeekShipped } from "@/components/remocn/week-shipped";
+
+const WeekShippedScene = () => (
+  <WeekShipped entries={[{ day: "Monday,", item: "captions that keep up." }, { day: "Tuesday,", item: "shaders you can scrub." }]} />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="WeekShipped"
+    component={WeekShippedScene}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Each entry rolls in as a day name followed by its shipped item, stepping through the week at a fitted pace. Pass `entries` with `day` and `item` for each line. It ships in light and dark through the `theme` prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "entries",
+      type: "WeekShippedEntry[]",
+      default: "DEFAULT_ENTRIES",
+      description: "List of `{ day, item }` pairs, one per line.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Accent color override; falls back to the theme accent.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background color override; falls back to the theme background.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark; picks the palette.",
+    },
+  ]}
+/>

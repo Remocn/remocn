@@ -1,0 +1,81 @@
+---
+title: Chunk Stack
+description: "\"learn motion by making it\" stacks one word per line with a yellow highlighter on \"making\""
+component: chunk-stack
+vibe: playful
+length: 94
+useWhen:
+  - "A short slogan where each word gets its own line and one word is marked with a highlighter."
+  - "A bold, readable statement for a social-style cut."
+avoidWhen:
+  - "You want one giant word filling the frame — use `edge-fit`."
+  - "You want words slamming in with condensed caps — use `full-bleed-type`."
+---
+
+<ComponentPreview name="chunk-stack" />
+
+<InstallBlock name="chunk-stack" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { ChunkStack } from "@/components/remocn/chunk-stack";
+
+const ChunkStackScene = () => (
+  <ChunkStack text="learn motion by making it" highlight="making" />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="ChunkStack"
+    component={ChunkStackScene}
+    durationInFrames={130}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The phrase rises into a stack, one word per line, then a highlighter bar opens behind the chosen word. Pass `text` and `highlight`; it ships light and dark.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "text",
+      type: "string",
+      default: "\"learn motion by making it\"",
+      description: "Phrase stacked one word per line.",
+    },
+    {
+      name: "highlight",
+      type: "string",
+      default: "\"making\"",
+      description: "Word marked with the highlighter.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Accent colour (any CSS colour).",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Overrides the theme background colour.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier; above 1 plays faster.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Colour scheme; ships light and dark.",
+    },
+  ]}
+/>

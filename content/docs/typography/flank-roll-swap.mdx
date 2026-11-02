@@ -1,0 +1,100 @@
+---
+title: Flank Roll Swap
+description: "Two flanking words roll into new words around a photo placed in the middle of the line."
+component: flank-roll-swap
+vibe: premium
+length: 88
+useWhen:
+  - "A release announcement that swaps a studio name for an out-now line around a hero image."
+  - "A brand beat that needs a picture inside the sentence, not behind it."
+  - "A launch-day title card with a call to a URL."
+avoidWhen:
+  - "You have no images and want a plain text swap — use `width-lock`."
+  - "The photo should sit behind the text as a fill — use `photo-fill-type`."
+  - "You want the headline to change by shifting layout, not rolling — use `layout-swap`."
+---
+
+<ComponentPreview name="flank-roll-swap" />
+
+<InstallBlock name="flank-roll-swap" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { FlankRollSwap } from "@/components/remocn/flank-roll-swap";
+
+const FlankRollSwapScene = () => (
+  <FlankRollSwap from={["Remocn", "Studio"]} to={["Out now", "on remocn.dev"]} accentWord="remocn.dev" images={["/photos/hero.jpg"]} />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="FlankRollSwap"
+    component={FlankRollSwapScene}
+    durationInFrames={126}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A two-part line sits on either side of an image, then each side rolls letter by letter into the `to` pair while the pictures cycle. The default photos use `staticFile(...)` paths that only exist in the remocn repo, so pass your own URLs in `images`.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop. It ships in light and dark through the `theme` prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "from",
+      type: "[string, string]",
+      default: "[\"Remocn\", \"Studio\"]",
+      description: "Left and right words shown first.",
+    },
+    {
+      name: "to",
+      type: "[string, string]",
+      default: "[\"Out now\", \"on remocn.dev\"]",
+      description: "Left and right words they roll into.",
+    },
+    {
+      name: "accentWord",
+      type: "string",
+      default: "\"remocn.dev\"",
+      description: "Word in `to` tinted with the accent color.",
+    },
+    {
+      name: "images",
+      type: "string[]",
+      description: "Image URLs cycled in the middle; defaults to repo-only files.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Accent color override; falls back to the theme accent.",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color override; falls back to the theme ink.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark; picks the palette.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "Gradient ground preset id for the backdrop.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Partial gradient parameters that tweak the chosen ground preset.",
+    },
+  ]}
+/>

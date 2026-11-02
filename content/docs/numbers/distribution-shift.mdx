@@ -1,0 +1,91 @@
+---
+title: Distribution Shift
+description: "A latency distribution curve collapses left while 120ms and -86% appear"
+component: distribution-shift
+vibe: data
+length: 160
+useWhen:
+  - "A latency or load-time beat where a wide distribution visibly collapses to a faster one."
+  - "A performance claim that needs the percent change shown alongside the new value."
+  - "An engineering-flavored launch scene that proves a speedup with a curve, not just a number."
+avoidWhen:
+  - "You have two groups of individual samples to compare — use `beeswarm`."
+  - "You want lanes racing to a finish line — use `benchmark-race`."
+  - "You only need the headline multiplier — use `compact-stat`."
+---
+
+<ComponentPreview name="distribution-shift" />
+
+<InstallBlock name="distribution-shift" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { DistributionShift } from "@/components/remocn/distribution-shift";
+
+const DistributionShiftScene = () => (
+  <DistributionShift before={840} after={120} unit="ms" label="p99 latency" />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="DistributionShift"
+    component={DistributionShiftScene}
+    durationInFrames={170}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A bell-shaped latency curve rises with a marker at its slow tail, then morphs left and tightens as the marker slides to the new value and the percent change appears. Pass `before` and `after` in the same `unit`, plus a `label` for the metric. Ships dark and light via `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "before",
+      type: "number",
+      default: "840",
+      description: "Starting value, such as p99 latency.",
+    },
+    {
+      name: "after",
+      type: "number",
+      default: "120",
+      description: "Final value after the improvement.",
+    },
+    {
+      name: "unit",
+      type: "string",
+      default: "\"ms\"",
+      description: "Unit appended to the values.",
+    },
+    {
+      name: "label",
+      type: "string",
+      default: "\"p99 latency\"",
+      description: "Name of the measured metric.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for the hero element.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Dark or light palette.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier.",
+    },
+  ]}
+/>

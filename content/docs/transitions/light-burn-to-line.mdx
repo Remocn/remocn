@@ -1,0 +1,109 @@
+---
+title: Light Burn to Line
+description: "A browser scene burns down to a bright line of light that opens onto a closing headline and button"
+component: light-burn-to-line
+vibe: premium
+length: 36
+useWhen:
+  - "A closing beat where a busy product screen should resolve into one calm line and a call to action."
+  - "A launch video that moves from feature proof to a final statement with a dramatic, cinematic light burn."
+  - "You want the outgoing UI to read as consumed by light rather than wiped or faded."
+avoidWhen:
+  - "The cut must be quick and clean — a light burn needs about 36 frames; use `flash-sweep` for a faster light swap."
+  - "The scenes are bright and low-contrast so the burn will wash out — use `light-leak`."
+  - "You only need a gentle line reveal without the burn — use `hairline-open`."
+---
+
+<ComponentPreview name="light-burn-to-line" />
+
+<InstallBlock name="light-burn-to-line" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { LightBurnToLineDemo } from "@/components/remocn/light-burn-to-line";
+
+const LightBurnToLineDemoScene = () => (
+  <LightBurnToLineDemo
+    line="Now ship your first film."
+    cta="Start free"
+    url="remocn.dev/new"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="LightBurnToLineDemo"
+    component={LightBurnToLineDemoScene}
+    durationInFrames={126}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Scene A is a browser window with a chat, a check and a few product shots. The window burns into soft discs of light that gather and travel into a horizontal line, which then opens onto scene B: a closing headline with a call-to-action pill and a URL. Pass `line`, `cta` and `url` for the ending; it ships light and dark.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark palette for both scenes",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Accent color; defaults to the theme accent",
+    },
+    {
+      name: "line",
+      type: "string",
+      default: "\"Now ship your first film.\"",
+      description: "Closing headline in scene B",
+    },
+    {
+      name: "cta",
+      type: "string",
+      default: "\"Start free\"",
+      description: "Label of the call-to-action pill",
+    },
+    {
+      name: "url",
+      type: "string",
+      default: "\"remocn.dev/new\"",
+      description: "URL text shown in scene B",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "Preset id for the scene A gradients.sh shader ground",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the scene A shader parameters",
+    },
+    {
+      name: "groundB",
+      type: "GshPresetId",
+      description: "Preset id for the scene B gradients.sh shader ground",
+    },
+    {
+      name: "groundParamsB",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the scene B shader parameters",
+    },
+    {
+      name: "transition",
+      type: "LightBurnToLineProps",
+      description: "Overrides for the transition presentation props",
+    },
+  ]}
+/>

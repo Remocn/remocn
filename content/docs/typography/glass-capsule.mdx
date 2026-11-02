@@ -1,0 +1,78 @@
+---
+title: Glass Capsule
+description: "A glass capsule slides over the focus word of a two-line headline and magnifies it in italic."
+component: glass-capsule
+vibe: premium
+length: 94
+useWhen:
+  - "A headline where one key word should be magnified and re-styled as the point."
+  - "A premium title with a glass lens effect drawing attention to a single word."
+avoidWhen:
+  - "You want a flat highlight instead of glass - use `marker-highlight`."
+  - "You want the whole line to change - use `blur-out-up`."
+  - "You want a simple underline - use `inline-highlight`."
+---
+
+<ComponentPreview name="glass-capsule" />
+
+<InstallBlock name="glass-capsule" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { GlassCapsule } from "@/components/remocn/glass-capsule";
+
+const GlassCapsuleScene = () => (
+  <GlassCapsule lines={["Launch films", "that move."]} focus="move" accent="#3B5BFD" />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="GlassCapsule"
+    component={GlassCapsuleScene}
+    durationInFrames={140}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The two lines rise in, then a glass capsule glides over `focus`, magnifies it and swaps it to a serif italic while the capsule glows. Pass `lines` and `focus` (a word that appears in them); it ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "lines",
+      type: "string[]",
+      default: "[\"Launch films\", \"that move.\"]",
+      description: "Headline lines, shown top to bottom",
+    },
+    {
+      name: "focus",
+      type: "string",
+      default: "\"move\"",
+      description: "Word the glass capsule magnifies; must appear in lines",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color (any valid CSS color)",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark palettes",
+    },
+  ]}
+/>

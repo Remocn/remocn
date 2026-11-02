@@ -1,0 +1,93 @@
+---
+title: Price Page
+description: "A list of fine-print pricing lines drops away one by one until a huge price and a note remain."
+component: price-page
+vibe: clean
+length: 138
+useWhen:
+  - "A pricing beat that joins to the message that the product is free or simple."
+  - "A comedic setup where complicated plan details are visibly deleted to leave one number."
+  - "A short closing statement under a huge price, such as a one-line promise."
+avoidWhen:
+  - "You want a receipt that totals to a single line - use `the-tab`."
+  - "The old price should be struck through and replaced - use `price-slate`."
+  - "A single word needs several short glosses instead - use `free-as-in`."
+---
+
+<ComponentPreview name="price-page" />
+
+<InstallBlock name="price-page" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { PricePage } from "@/components/remocn/price-page";
+
+const PricePageScene = () => <PricePage lines={["Starter, Pro, Team, Enterprise", "Per seat, per month", "Overage fees may apply"]} price="Free." />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="PricePage"
+    component={PricePageScene}
+    durationInFrames={180}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A small label tops a stack of fine-print pricing lines; the lines drop out one by one in a scrambled order until the list is gone, then a huge price lands and a note fades in beneath it. Pass `lines`, `price` and `note`. The timing stretches to the composition length, so give it about 180 frames. It ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "label",
+      type: "string",
+      default: "\"Pricing\"",
+      description: "Small label above the list.",
+    },
+    {
+      name: "lines",
+      type: "string[]",
+      default: "DEFAULT_LINES",
+      description: "Fine-print lines that exit one by one.",
+    },
+    {
+      name: "price",
+      type: "string",
+      default: "\"Free.\"",
+      description: "The huge price that remains.",
+    },
+    {
+      name: "note",
+      type: "string",
+      default: "\"That’s the whole pricing page.\"",
+      description: "Closing line under the price.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Color of the price; defaults to the theme accent.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Stage background color; overrides the theme ground.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark palette.",
+    },
+  ]}
+/>

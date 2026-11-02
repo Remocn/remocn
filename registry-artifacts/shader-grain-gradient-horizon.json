@@ -1,0 +1,19 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "shader-grain-gradient-horizon",
+  "title": "Shader Grain Gradient Horizon",
+  "description": "Peach horizon band rolling between navy and pale sky.",
+  "registryDependencies": ["@remocn/shader-grain-gradient"],
+  "files": [
+    {
+      "path": "registry/remocn/shader-grain-gradient-horizon/index.tsx",
+      "content": "\"use client\";\n\nimport {\n  ShaderGrainGradient,\n  type ShaderGrainGradientProps,\n} from \"@/components/remocn/shader-grain-gradient\";\n\n// Horizon: peach horizon band rolling between navy and pale sky.\n// A preset of ShaderGrainGradient. The whole look lives in the object below, so tune\n// it freely. Props you pass override the preset, except `speed`, which scales\n// the preset's own speed instead of replacing it.\n\nexport const shaderGrainGradientHorizonPreset = {\n  speed: 1,\n  shape: \"wave\",\n  colorBack: \"#0b1d3a\",\n  colors: [\"#ff8a5b\", \"#ffcf87\", \"#9ad0ff\"],\n  softness: 0.9,\n  intensity: 0.15,\n  noise: 0.25,\n  rotation: 180,\n} satisfies ShaderGrainGradientProps;\n\nexport function ShaderGrainGradientHorizon({\n  speed = 1,\n  ...props\n}: ShaderGrainGradientProps) {\n  return (\n    <ShaderGrainGradient\n      {...shaderGrainGradientHorizonPreset}\n      {...props}\n      speed={shaderGrainGradientHorizonPreset.speed * speed}\n    />\n  );\n}\n",
+      "type": "registry:component",
+      "target": "components/remocn/shader-grain-gradient-horizon.tsx"
+    }
+  ],
+  "meta": {
+    "presetOf": "shader-grain-gradient"
+  },
+  "type": "registry:component"
+}

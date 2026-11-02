@@ -1,0 +1,83 @@
+---
+title: Hairline Open
+description: "A hairline of light draws across the frame and opens like a slit onto the next serif statement"
+component: hairline-open
+vibe: premium
+length: 78
+useWhen:
+  - "A calm, editorial swap between two statements, such as a plan and its result."
+  - "A premium beat that should feel like a curtain opening rather than a wipe."
+  - "A title-to-title change in a product launch video with a thin line of light as the hinge."
+avoidWhen:
+  - "You want a screenshot or product scene revealed inside the slit — use `slit-reveal`."
+  - "The opening should be a thick band across the middle — use `band-open`."
+  - "The cut must be fast and energetic — use `flash-sweep`."
+---
+
+<ComponentPreview name="hairline-open" />
+
+<InstallBlock name="hairline-open" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { HairlineOpen } from "@/components/remocn/hairline-open";
+
+const HairlineOpenScene = () => (
+  <HairlineOpen
+    from="Write the story"
+    to="Ship the film"
+    accent="#3B5BFD"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="HairlineOpen"
+    component={HairlineOpenScene}
+    durationInFrames={105}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The `from` statement sits on the stage. A hairline of light draws across the middle, shears slightly, then opens like a slit as the outgoing scene splits away, revealing the `to` statement on a soft gradient. Pass `from` and `to` as short text or any React node; it ships light and dark and settles by frame 78.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "from",
+      type: "React.ReactNode",
+      default: "\"Write the story\"",
+      description: "Outgoing statement: a short headline or any React node",
+    },
+    {
+      name: "to",
+      type: "React.ReactNode",
+      default: "\"Ship the film\"",
+      description: "Incoming statement: a short headline or any React node",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color used by the scenes",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark stage",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier for the whole timeline",
+    },
+  ]}
+/>

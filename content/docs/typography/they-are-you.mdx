@@ -1,0 +1,95 @@
+---
+title: They Are You
+description: "Short statements about someone rise one by one, then the leading They flips to an accent You in each."
+component: they-are-you
+vibe: playful
+length: 93
+useWhen:
+  - "An audience-recognition beat that describes the viewer in the third person, then turns it on them."
+  - "A short list of two to four traits or situations that should land as this is you."
+avoidWhen:
+  - "You want a list of audiences ending in a big and you — use `and-you`."
+  - "The list is credits pointing at one person — use `crew-of-one`."
+  - "A single phrase should turn on its last word — use `turnabout`."
+---
+
+<ComponentPreview name="they-are-you" />
+
+<InstallBlock name="they-are-you" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { TheyAreYou } from "@/components/remocn/they-are-you";
+
+const TheyAreYouScene = () => (
+  <TheyAreYou
+    facts={[
+      "They write React for a living.",
+      "They have a launch on Monday.",
+      "They have never touched a timeline.",
+    ]}
+    from="They"
+    to="You"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="TheyAreYou"
+    component={TheyAreYouScene}
+    durationInFrames={160}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Each fact rises in with its leading `from` word (They by default) in medium weight. After a beat the leading words flip one by one to the `to` word (You) in the accent color. Each fact must begin with the `from` word to flip; pass `facts`, `from` and `to`. It ships light and dark.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "facts",
+      type: "string[]",
+      description: "Statements that each begin with the from word.",
+    },
+    {
+      name: "from",
+      type: "string",
+      default: "\"They\"",
+      description: "Leading word that gets replaced, such as They.",
+    },
+    {
+      name: "to",
+      type: "string",
+      default: "\"You\"",
+      description: "Replacement word shown in the accent color, such as You.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Color of the replacement word; overrides the theme accent.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark palette.",
+    },
+  ]}
+/>

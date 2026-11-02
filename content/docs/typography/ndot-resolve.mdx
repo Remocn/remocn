@@ -1,0 +1,80 @@
+---
+title: Ndot Resolve
+description: "A headline scans in as a dot-matrix face, then refreshes letter by letter into solid type."
+component: ndot-resolve
+vibe: tech
+length: 83
+useWhen:
+  - "A tech or hardware flavored title that should look like a display refreshing to final type."
+  - "A tagline where one emphasis word gets the accent as the text resolves."
+avoidWhen:
+  - "You want a decode effect with scrambled characters - use `matrix-decode`."
+  - "You want a glitch treatment - use `rgb-glitch-text`."
+  - "You want a calm blur resolve - use `focus-blur-resolve`."
+---
+
+<ComponentPreview name="ndot-resolve" />
+
+<InstallBlock name="ndot-resolve" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { NdotResolve } from "@/components/remocn/ndot-resolve";
+
+const NdotResolveScene = () => (
+  <NdotResolve text="Less noise. More launch." emphasis="launch" accent="#3B5BFD" />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="NdotResolve"
+    component={NdotResolveScene}
+    durationInFrames={135}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The headline appears row by row as dot-matrix glyphs, then a wipe converts each letter to solid type in sequence, with `emphasis` in the accent. Pass `text` and `emphasis`; it ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "text",
+      type: "string",
+      default: "\"Less noise. More launch.\"",
+      description: "Headline. Use \"\\n\" to force line breaks; otherwise it is balanced.",
+      description: "Headline shown as dots, then solid type",
+    },
+    {
+      name: "emphasis",
+      type: "string",
+      default: "\"launch\"",
+      description: "Word that stays in dots, in the gradient. Empty string = none.",
+      description: "Word in the text shown in the accent color",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color (any valid CSS color)",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark palettes",
+    },
+  ]}
+/>

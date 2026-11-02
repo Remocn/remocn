@@ -1,0 +1,105 @@
+---
+title: Card Create
+description: "A phone app prints a new debit card, cycles finishes, engraves a name and adds it to the wallet"
+component: card-create
+vibe: premium
+length: 352
+useWhen:
+  - "A fintech launch beat showing how fast a user can issue and personalise a virtual or physical card."
+  - "A mobile banking or spend-management demo that needs a tactile, step-by-step card setup."
+  - "A vertical or square social cut where a phone mockup carries the story, with a caption line per step."
+avoidWhen:
+  - "The moment is sending money, not issuing a card — use `money-send`, which confirms a payment with a receipt."
+  - "You want the phone to land on a subscription upsell — use `mobile-paywall`, which selects a plan and confirms."
+---
+
+<ComponentPreview name="card-create" />
+
+<InstallBlock name="card-create" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { CardCreate } from "@/components/remocn/card-create";
+
+const CardCreateScene = () => (
+  <CardCreate holder="Alex Rivera" last4="9034" accent="#3B5BFD" />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="CardCreate"
+    component={CardCreateScene}
+    durationInFrames={370}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A phone slot prints a new card, a cursor taps through finish swatches, the holder name is engraved, the card flips and its full number scrambles into view, then it joins the wallet stack with a toast. Five caption lines beside the phone mark each beat. Pass `holder`, `last4`, `colors` with matching `finishes`, and `lines` to make it yours. The `theme` prop ships light and dark.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "holder",
+      type: "string",
+      default: "\"Maya Chen\"",
+      description: "Name engraved on the new card.",
+    },
+    {
+      name: "last4",
+      type: "string",
+      default: "\"4821\"",
+      description: "Last four digits of the card number.",
+    },
+    {
+      name: "colors",
+      type: "string[]",
+      description: "Swatch colors. The card prints in the first, then taps through the next three.",
+    },
+    {
+      name: "finishes",
+      type: "string[]",
+      description: "Finish names matching each swatch color, in the same order.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for taps, highlights and buttons.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"light\" | \"dark\"",
+      default: "\"dark\"",
+      description: "Light or dark phone and background styling.",
+    },
+    {
+      name: "lines",
+      type: "[string, string, string, string, string]",
+      description: "Five caption lines beside the phone, one per beat.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "Preset id for the shader background.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the shader background parameters.",
+    },
+  ]}
+/>

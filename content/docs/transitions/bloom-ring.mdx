@@ -1,0 +1,120 @@
+---
+title: Bloom Ring
+description: "A ring of warm, striped light blooms outward from the center and swaps a headline for a logo scene"
+component: bloom-ring
+vibe: premium
+length: 30
+useWhen:
+  - "A hero beat where a headline resolves into the brand mark with an expanding burst of warm light."
+  - "Closing a launch video: the last claim blooms away to reveal the logo and tagline."
+  - "You want a glowing, graphic reveal that radiates from a chosen point rather than wiping across the frame."
+avoidWhen:
+  - "You want a crisp geometric reveal with no glow — use `ring-cut`."
+  - "The reveal should expand from an impact point with a sharper shockwave — use `ring-burst`."
+  - "The outgoing scene is bright and busy and the warm bloom will clash with it — use `light-leak`."
+---
+
+<ComponentPreview name="bloom-ring" />
+
+<InstallBlock name="bloom-ring" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { BloomRingDemo } from "@/components/remocn/bloom-ring";
+
+const BloomRingDemoScene = () => (
+  <BloomRingDemo
+    lead="Your store goes live"
+    accentLine="in fifteen minutes."
+    tagline="Launch films, built from blocks you own."
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="BloomRingDemo"
+    component={BloomRingDemoScene}
+    durationInFrames={126}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Scene A rises in a two-line headline, a lead plus an accent line. A ring of blurred, striped warm cells blooms outward from the center, swaps the scene, and fades, leaving scene B: the Remocn mark with a tagline. Pass `lead`, `accentLine` and `tagline` for the copy and `ring` to tune the origin and colors; it ships light and dark.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark palette for both scenes",
+    },
+    {
+      name: "lead",
+      type: "string",
+      default: "\"Your store goes live\"",
+      description: "First line of the scene A headline",
+    },
+    {
+      name: "accentLine",
+      type: "string",
+      default: "\"in fifteen minutes.\"",
+      description: "Accent line under the lead in scene A",
+    },
+    {
+      name: "tagline",
+      type: "string",
+      default: "\"Launch films, built from blocks you own.\"",
+      description: "Tagline shown under the logo in scene B",
+    },
+    {
+      name: "ring",
+      type: "BloomRingProps",
+      description: "Overrides for colors, origin, cell size, stripe and seed",
+    },
+    {
+      name: "groundA",
+      type: "GshPresetId",
+      description: "Preset id for the scene A gradients.sh shader ground",
+    },
+    {
+      name: "groundAParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the scene A shader parameters",
+    },
+    {
+      name: "groundB",
+      type: "GshPresetId",
+      description: "Preset id for the scene B gradients.sh shader ground",
+    },
+    {
+      name: "groundBParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the scene B shader parameters",
+    },
+    {
+      name: "sceneA",
+      type: "number",
+      default: "BLOOM_RING_DEMO.sceneA",
+      description: "Scene A length in frames",
+    },
+    {
+      name: "sceneB",
+      type: "number",
+      default: "BLOOM_RING_DEMO.sceneB",
+      description: "Scene B length in frames",
+    },
+    {
+      name: "transition",
+      type: "number",
+      default: "BLOOM_RING_DEMO.transition",
+      description: "Transition length in frames",
+    },
+  ]}
+/>

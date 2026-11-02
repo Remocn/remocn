@@ -1,0 +1,126 @@
+---
+title: Glow Born Card
+description: "A glow condenses into an import dialog next to a split headline, then a field types and a button confirms."
+component: glow-born-card
+vibe: tech
+length: 112
+useWhen:
+  - "A feature beat introducing an import or connect flow, where the headline splits open to make room for the dialog."
+  - "A dialog should feel born from light rather than slid in, with a typed field and a confirm press."
+  - "A product launch video needs one polished form moment with a clear before and after headline."
+avoidWhen:
+  - "The dialog should simply appear inside a live UI flow — use `dialog`."
+  - "You want a multi-step sign-up with several screens — use `signup-flow`."
+  - "A file is the thing being added, not a text field — use `drop-upload`."
+---
+
+<ComponentPreview name="glow-born-card" />
+
+<InstallBlock name="glow-born-card" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { GlowBornCard } from "@/components/remocn/glow-born-card";
+
+const GlowBornCardScene = () => (
+  <GlowBornCard
+    before="Or import a scene from"
+    after="your repo"
+    title="Import from repository"
+    value="lumen-labs/launch"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="GlowBornCard"
+    component={GlowBornCardScene}
+    durationInFrames={136}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A headline reads `before` and `after` while a glow ignites in the gap and condenses into a card. A field types the `value`, the button presses, and a done state pops in. Pass your own `before`, `after`, `title`, `label` and `value`; it ships light and dark through `theme`.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color scheme. Ships light and dark.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#45f0d6\"",
+      description: "Color of the glow that forms the card.",
+    },
+    {
+      name: "primary",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Color of the primary action button.",
+    },
+    {
+      name: "before",
+      type: "string",
+      default: "\"Or import a scene from\"",
+      description: "Headline text to the left of the card.",
+    },
+    {
+      name: "after",
+      type: "string",
+      default: "\"your repo\"",
+      description: "Headline text to the right of the card.",
+    },
+    {
+      name: "title",
+      type: "string",
+      default: "\"Import from repository\"",
+      description: "Card title.",
+    },
+    {
+      name: "label",
+      type: "string",
+      default: "\"Repository\"",
+      description: "Label above the input field.",
+    },
+    {
+      name: "value",
+      type: "string",
+      default: "\"lumen-labs/launch\"",
+      description: "Text that types into the field.",
+    },
+    {
+      name: "hint",
+      type: "string",
+      default: "\"Public or private, any branch\"",
+      description: "Helper text under the field.",
+    },
+    {
+      name: "branch",
+      type: "string",
+      default: "\"main · 214 commits · 3h ago\"",
+      description: "Meta line shown in the card footer.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "Shader preset id for the animated background.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Partial shader parameters that override the ground preset.",
+    },
+  ]}
+/>

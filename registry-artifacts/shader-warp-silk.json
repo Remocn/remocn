@@ -1,0 +1,19 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "shader-warp-silk",
+  "title": "Shader Warp Silk",
+  "description": "Violet and pink liquid silk folding in slow waves.",
+  "registryDependencies": ["@remocn/shader-warp"],
+  "files": [
+    {
+      "path": "registry/remocn/shader-warp-silk/index.tsx",
+      "content": "\"use client\";\n\nimport {\n  ShaderWarp,\n  type ShaderWarpProps,\n} from \"@/components/remocn/shader-warp\";\n\n// Silk: violet and pink liquid silk folding in slow waves.\n// A preset of ShaderWarp. The whole look lives in the object below, so tune\n// it freely. Props you pass override the preset, except `speed`, which scales\n// the preset's own speed instead of replacing it.\n\nexport const shaderWarpSilkPreset = {\n  speed: 2,\n  shape: \"edge\",\n  colors: [\"#1b1033\", \"#6d3bd8\", \"#f5a3ff\", \"#fde7ff\"],\n  proportion: 0.45,\n  softness: 1,\n  distortion: 0.15,\n  swirl: 0.6,\n  swirlIterations: 8,\n  shapeScale: 0.5,\n} satisfies ShaderWarpProps;\n\nexport function ShaderWarpSilk({ speed = 1, ...props }: ShaderWarpProps) {\n  return (\n    <ShaderWarp\n      {...shaderWarpSilkPreset}\n      {...props}\n      speed={shaderWarpSilkPreset.speed * speed}\n    />\n  );\n}\n",
+      "type": "registry:component",
+      "target": "components/remocn/shader-warp-silk.tsx"
+    }
+  ],
+  "meta": {
+    "presetOf": "shader-warp"
+  },
+  "type": "registry:component"
+}

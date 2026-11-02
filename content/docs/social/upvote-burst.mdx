@@ -1,0 +1,132 @@
+---
+title: Upvote Burst
+description: "A launch leaderboard ranks products, your row climbs past rivals to number one and a badge stamps in"
+component: upvote-burst
+vibe: playful
+length: 103
+useWhen:
+  - "A launch-day ranking beat where your product overtakes rivals as votes tick up."
+  - "Showing a vote or upvote count rising while a cursor presses the button."
+  - "Ending a launch video on a \"Product of the day\" style badge."
+avoidWhen:
+  - "The list is a generic ranked table with no vote button or badge — use `leaderboard-climb`."
+  - "You only want the rank to move up a chart — use `rank-climb`."
+  - "The win is a repository star count — use `github-stars`."
+---
+
+<ComponentPreview name="upvote-burst" />
+
+<InstallBlock name="upvote-burst" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { UpvoteBurst } from "@/components/remocn/upvote-burst";
+
+const UpvoteBurstScene = () => (
+  <UpvoteBurst
+    product={{ name: "Kitebase", tagline: "Launch videos from code", topic: "Video" }}
+    startRank={4}
+    startVotes={380}
+    endVotes={1300}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="UpvoteBurst"
+    component={UpvoteBurstScene}
+    durationInFrames={135}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A leaderboard sheet slides in with your `product` at `startRank`. A cursor presses the upvote, the vote count climbs from `startVotes` to `endVotes`, your row swaps past each rival above it, and a `badgeLabel` stamp lands with captions. Pass `product` and `rivals` (name, tagline, topic, optional `src` image) and the vote numbers. Ships light and dark via `theme`.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "product",
+      type: "UpvoteProduct",
+      default: "DEFAULT_PRODUCT",
+      description: "Your product row: name, tagline, topic, optional color, glyph, src.",
+    },
+    {
+      name: "rivals",
+      type: "UpvoteRival[]",
+      default: "DEFAULT_RIVALS",
+      description: "Competing rows above and below, each with a vote count.",
+    },
+    {
+      name: "startRank",
+      type: "number",
+      default: "5",
+      description: "Rank your product starts at, before climbing to first.",
+    },
+    {
+      name: "startVotes",
+      type: "number",
+      default: "412",
+      description: "Vote count shown when the count starts to climb.",
+    },
+    {
+      name: "endVotes",
+      type: "number",
+      default: "1342",
+      description: "Vote count after the climb; must beat the top rival.",
+    },
+    {
+      name: "title",
+      type: "string",
+      default: "\"Top products launching today\"",
+      description: "Heading at the top of the sheet.",
+    },
+    {
+      name: "dateLabel",
+      type: "string",
+      default: "\"Thu, Oct 23\"",
+      description: "Date label in the sheet header.",
+    },
+    {
+      name: "badgeLabel",
+      type: "string",
+      default: "\"Product of the day\"",
+      description: "Text on the final badge stamp.",
+    },
+    {
+      name: "theme",
+      type: "\"light\" | \"dark\"",
+      default: "\"light\"",
+      description: "Color scheme. Ships light and dark.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Color of your product tile and the vote button.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "gradients.sh preset id for the animated ground.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the ground shader parameters.",
+    },
+  ]}
+/>

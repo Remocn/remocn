@@ -1,0 +1,87 @@
+---
+title: Share Donut
+description: "A gradient donut sweeps around to 38% with competitor shares labeled outside"
+component: share-donut
+vibe: data
+length: 96
+useWhen:
+  - "A market-share or usage-share beat where one slice, such as 38%, is the headline."
+  - "A poll or survey result where your option should detach and glow against grey competitors."
+  - "A parts-of-a-whole scene with four or five labeled segments."
+avoidWhen:
+  - "You want rectangles sized by value with room for labels — use `treemap-split`."
+  - "You want shares shifting across several years — use `stacked-shift`."
+  - "You want loose bubbles instead of a ring — use `bubble-pack`."
+---
+
+<ComponentPreview name="share-donut" />
+
+<InstallBlock name="share-donut" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { ShareDonut } from "@/components/remocn/share-donut";
+
+const ShareDonutScene = () => (
+  <ShareDonut
+    highlight={0}
+    segments={[
+      { label: "remocn", value: 38 },
+      { label: "Kitebase", value: 24 },
+      { label: "Lumen", value: 17 },
+      { label: "Other", value: 21 },
+    ]}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="ShareDonut"
+    component={ShareDonutScene}
+    durationInFrames={140}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A gradient donut sweeps around one segment after another, then the highlighted slice detaches, the rest dim, and its percentage counts up in the center. Pass `segments` (label and value) and `highlight`, the index of the hero slice. Ships dark and light via `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "segments",
+      type: "DonutSegment[]",
+      default: "DEFAULT_SEGMENTS",
+      description: "Slices of the donut, each with a label and value.",
+    },
+    {
+      name: "highlight",
+      type: "number",
+      default: "0",
+      description: "Index of the hero slice that gets the gradient.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for the hero element.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Dark or light palette.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier.",
+    },
+  ]}
+/>

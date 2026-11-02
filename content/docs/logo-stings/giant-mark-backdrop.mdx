@@ -1,0 +1,88 @@
+---
+title: Giant Mark Backdrop
+description: "A small wordmark balloons into a giant backdrop while a prompt card pops in and types."
+component: giant-mark-backdrop
+vibe: premium
+length: 110
+useWhen:
+  - "A prompt-to-video or AI-assistant beat where the typed request lands on a giant brand backdrop."
+  - "A closing lockup that needs the logo huge behind a mock input card."
+  - "A vertical or square cut of a launch film; the layout re-flows for tall frames."
+avoidWhen:
+  - "You want a plain logo reveal with no UI card — use `introducing`."
+  - "The prompt should resolve into the brand through a network of nodes — use `neural-pulse`."
+  - "You only need a tagline under a quiet logo — use `first-light`."
+---
+
+<ComponentPreview name="giant-mark-backdrop" />
+
+<InstallBlock name="giant-mark-backdrop" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { GiantMarkBackdrop } from "@/components/remocn/giant-mark-backdrop";
+
+const GiantMarkBackdropScene = () => (
+  <GiantMarkBackdrop
+    prompt="Make a launch film for our v2 release"
+    placeholder="Describe your launch film"
+    theme="dark"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="GiantMarkBackdrop"
+    component={GiantMarkBackdropScene}
+    durationInFrames={126}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The wordmark appears small on a shader ground, then a flood of colour rises as the mark balloons into a giant backdrop. A prompt card pops in, types the prompt and lights its send button. Pass `prompt` and `placeholder` to match your product and `accent` for your colour; the wordmark is the baked-in remocn logo. Ships light and dark.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Dark or light palette and ground.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Colour of the wordmark, caret and send button.",
+    },
+    {
+      name: "prompt",
+      type: "string",
+      default: "\"Make a launch film for our v2 release\"",
+      description: "Text typed into the card.",
+    },
+    {
+      name: "placeholder",
+      type: "string",
+      default: "\"Describe your launch film\"",
+      description: "Greyed hint shown in the card before typing starts.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "Shader preset id for the gradients.sh background ground.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Custom shader parameters for the ground, used instead of the theme default.",
+    },
+  ]}
+/>

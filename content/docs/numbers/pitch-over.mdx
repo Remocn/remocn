@@ -1,0 +1,105 @@
+---
+title: Pitch Over
+description: "A big number counts up above a ruler of ticks while a marker slides along it."
+component: pitch-over
+vibe: tech
+length: 86
+useWhen:
+  - "A measured value, such as frames rendered or seconds saved, that should feel gauged against a scale."
+  - "A technical or engineering stat beat with a one-line caption under the ruler."
+  - "A count that finishes with a small mechanical flourish before the caption arrives."
+avoidWhen:
+  - "You want a dimension-line comparison of two values - use `measure-dim`."
+  - "The year or version is the star and should be scrubbed to - use `ruler-scrub`."
+  - "A plain count with no scale device is enough - use `compact-stat`."
+---
+
+<ComponentPreview name="pitch-over" />
+
+<InstallBlock name="pitch-over" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { PitchOver } from "@/components/remocn/pitch-over";
+
+const PitchOverScene = () => <PitchOver value={7200} label="Frames rendered, T+04:00" />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="PitchOver"
+    component={PitchOverScene}
+    durationInFrames={120}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A large number counts up while a ruler of major and minor ticks draws beneath it; at the end a marker turns and slides along the ruler, then a caption fades in below. Pass `value` with `decimals`, `prefix` or `suffix` as needed, and `label`; `accent` colors the marker. It ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "value",
+      type: "number",
+      default: "7200",
+      description: "The number the count lands on.",
+    },
+    {
+      name: "from",
+      type: "number",
+      default: "0",
+      description: "Starting number of the count.",
+    },
+    {
+      name: "decimals",
+      type: "number",
+      default: "0",
+      description: "Decimal places shown while counting.",
+    },
+    {
+      name: "prefix",
+      type: "string",
+      default: "\"\"",
+      description: "Text before the number.",
+    },
+    {
+      name: "suffix",
+      type: "string",
+      default: "\"\"",
+      description: "Text after the number.",
+    },
+    {
+      name: "label",
+      type: "string",
+      default: "\"Frames rendered, T+04:00\"",
+      description: "Caption that fades in under the ruler.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Color of the ruler marker; defaults to the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Stage background color; overrides the theme ground.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark palette.",
+    },
+  ]}
+/>

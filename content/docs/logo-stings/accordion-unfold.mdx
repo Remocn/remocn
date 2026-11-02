@@ -1,0 +1,82 @@
+---
+title: Accordion Unfold
+description: A tight paper zigzag unfolds sideways into a flat card with the logo printed across it
+component: accordion-unfold
+vibe: paper
+length: 26
+useWhen:
+  - "A print, stationery, travel or editorial brand wants a tactile reveal, like opening a folded brochure or map."
+  - "Your logo should sit on a card or label rather than float on the background."
+  - "You want a quick, quiet sting that settles flat by frame 26 and leaves a clean card to hold on."
+avoidWhen:
+  - "The logo should float freely on the background instead of on a card — use `spotlight` or `anamorphic-flare`."
+  - "You want a stop-motion paper feel with hand-placed jitter — use `paper-sticker`."
+  - "The paper motion is a scene change, not a logo reveal — use `page-turn`."
+  - "The content should be revealed by pulling a cloth off it — use `cloth-reveal`."
+---
+
+<ComponentPreview name="accordion-unfold" />
+
+<InstallBlock name="accordion-unfold" />
+
+## Usage
+
+`AccordionUnfold` prints your logo across a paper card, then folds the card
+into vertical pleats. It starts as a tight zigzag and opens sideways on a
+smooth spring with no overshoot, staying centered as it widens. Pleats facing
+away from the light are shaded and the ones facing it catch a faint
+highlight, so the folds read in 3D. When the card is flat it switches to a
+single plain card, so no seams are left in the hold.
+
+```tsx
+import { Img, staticFile } from "remotion";
+import { AccordionUnfold } from "@/components/remocn/accordion-unfold";
+
+export const LogoSting = () => (
+  <AccordionUnfold color="#FFFFFF" panels={6}>
+    <Img src={staticFile("logo-dark.svg")} style={{ height: 96 }} />
+  </AccordionUnfold>
+);
+```
+
+`children` are centered on the card, and each pleat shows its own slice of
+them, so the logo folds with the paper. Use a version of your logo that reads
+on `color`: the default card is white, so a dark logo works best. The card is
+66% of the frame width, capped at 130% of the height, and 40% of the frame
+height tall, capped at 40% of its width. Children larger than the card are
+cropped at its edges.
+
+The fold uses CSS 3D transforms (`rotateY` with `preserve-3d`), which Remotion
+renders in Chrome as expected.
+
+## Timing
+
+At 30 fps and `speed={1}`:
+
+| Frames | Motion |
+| --- | --- |
+| 0–3 | The folded card fades in |
+| 0–6 | The card lifts from 92% to full scale |
+| 4–26 | The pleats open on a spring and the card lies flat |
+
+The docs preview runs 66 frames to hold the flat card. `speed` scales the
+timeline.
+
+## Variations
+
+Fewer `panels` gives wide, slow pleats; 10 or more gives a tight concertina.
+`foldAngle` sets how closed the card starts: near 89 it starts as a thin
+strip, 30–45 starts half open for a gentler move. `shade={0}` removes the fold
+shading for a flat graphic look.
+
+<PropsTable title="Props"
+  rows={[
+    { name: "children", type: "ReactNode", description: "Lockup printed across the card; use a color that reads on the card. Without it a placeholder lockup (a rounded mark and the word remocn) is shown" },
+    { name: "panels", type: "number", default: "6", description: "Number of vertical pleats, rounded, minimum 2" },
+    { name: "foldAngle", type: "number", default: "82", description: "Fold angle of each pleat at the start, in degrees" },
+    { name: "shade", type: "number", default: "0.55", description: "Darkness of the pleats facing away from the light, 0 to 1" },
+    { name: "color", type: "string", default: '"#FFFFFF"', description: "Paper color of the card" },
+    { name: "backgroundColor", type: "string", default: '"#111111"', description: "Full-frame background" },
+    { name: "speed", type: "number", default: "1", description: "Playback multiplier" },
+  ]}
+/>

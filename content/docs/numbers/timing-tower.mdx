@@ -1,0 +1,102 @@
+---
+title: Timing Tower
+description: "A racing timing tower reorders lap by lap until the hero reaches P1, then settles into a poster with the gap."
+component: timing-tower
+vibe: data
+length: 143
+useWhen:
+  - "A we-moved-up-the-ranking beat with a motorsport feel."
+  - "A competitive comparison told as overtakes against named rivals."
+  - "A closing poster showing the winner and its gap to second place."
+avoidWhen:
+  - "You rank products in a plain list — use `rank-climb`."
+  - "Two timers race side by side — use `timer-duel`."
+  - "A single lap time should freeze with a delta — use `split-flash`."
+---
+
+<ComponentPreview name="timing-tower" />
+
+<InstallBlock name="timing-tower" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { TimingTower } from "@/components/remocn/timing-tower";
+
+const TimingTowerScene = () => (
+  <TimingTower code="RMC" lap={41} laps={58} interval="+12.408" intervalLabel="Gap to P2" />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="TimingTower"
+    component={TimingTowerScene}
+    durationInFrames={165}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The tower wipes in with ten cars, then the hero car passes the car ahead each lap while the gaps rewrite, until it turns purple at P1. The tower then peels off and a poster with the code and the interval counts in. Pass `code`, `field`, `lap`, `laps`, `interval` and `intervalLabel`; it ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "code",
+      type: "string",
+      default: "\"RMC\"",
+      description: "Three-letter code of the hero car that climbs to P1.",
+    },
+    {
+      name: "field",
+      type: "string[]",
+      description: "The nine other cars, leader first. The hero starts behind the seventh.",
+    },
+    {
+      name: "lap",
+      type: "number",
+      default: "41",
+      description: "Lap the tower opens on. One lap ticks per overtake.",
+    },
+    {
+      name: "laps",
+      type: "number",
+      default: "58",
+      description: "Race distance shown after the slash in the lap counter.",
+    },
+    {
+      name: "interval",
+      type: "string",
+      default: "\"+12.408\"",
+      description: "Gap to P2 shown on the final poster.",
+    },
+    {
+      name: "intervalLabel",
+      type: "string",
+      default: "\"Gap to P2\"",
+      description: "Small label over the poster interval.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Color of the live dot in the tower header.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color theme, \"dark\" or \"light\".",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+  ]}
+/>

@@ -1,0 +1,77 @@
+---
+title: Chevron Run
+description: "A wall of chevrons locks into one giant gradient chevron, then a figure and serif caption drop in."
+component: chevron-run
+vibe: premium
+length: 108
+useWhen:
+  - "A growth stat, such as a percentage increase, that deserves an upward, momentum-driven entrance."
+  - "A premium hero beat with a big gradient shape framing the number."
+  - "A beat where a caption in italic serif should soften a loud numeral."
+avoidWhen:
+  - "The number should come from a graph that draws itself - use `growth-line`."
+  - "You want an arrow that zigzags beside a multiplier - use `flow-arrow`."
+  - "A plain figure with a caption is enough - use `compact-stat`."
+---
+
+<ComponentPreview name="chevron-run" />
+
+<InstallBlock name="chevron-run" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { ChevronRun } from "@/components/remocn/chevron-run";
+
+const ChevronRunScene = () => <ChevronRun value="+312%" caption="growth since launch" />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="ChevronRun"
+    component={ChevronRunScene}
+    durationInFrames={140}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A full-frame wall of up-chevrons races upward in staggered columns, then column by column brakes and locks into one giant chevron that fuses solid in a gradient. The figure drops into the cut-out under it and a serif caption follows. Pass `value` and `caption`. It ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "value",
+      type: "string",
+      default: "\"+312%\"",
+      description: "The figure that lands under the giant chevron.",
+    },
+    {
+      name: "caption",
+      type: "string",
+      default: "\"growth since launch\"",
+      description: "Serif italic line under the figure.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color of the chevron gradient.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark palette.",
+    },
+  ]}
+/>

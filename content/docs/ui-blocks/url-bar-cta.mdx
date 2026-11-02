@@ -1,0 +1,148 @@
+---
+title: URL Bar CTA
+description: "A URL bar types an address and docks into a browser window, then a landing page loads in."
+component: url-bar-cta
+vibe: clean
+length: 72
+useWhen:
+  - "A call-to-action beat that ends on a web address and the page it opens."
+  - "A launch video that should show the site actually loading, with a headline, body and primary button."
+  - "A closing scene that pairs a landing page with an install command."
+avoidWhen:
+  - "You only need an address-like search pill that types and reveals a panel — use `search-reveal`."
+  - "The destination is a mobile app listing, not a web page — use `app-store-listing`."
+  - "You want to tour inside an existing page screenshot — use `screenshot-tour`."
+---
+
+<ComponentPreview name="url-bar-cta" />
+
+<InstallBlock name="url-bar-cta" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { UrlBarCta } from "@/components/remocn/url-bar-cta";
+
+const UrlBarCtaScene = () => (
+  <UrlBarCta
+    url="remocn.dev"
+    headline="Ship your launch video this afternoon."
+    cta="Browse components"
+    image="/clip-thumb.jpg"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="UrlBarCta"
+    component={UrlBarCtaScene}
+    durationInFrames={120}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A large address bar types the `url` with a suggestion list, presses Enter and docks into the toolbar of a browser window. The landing page then fades up with the `headline`, `body`, a `cta` button, an install `command` and a clip card. Pass your own `url`, `headline`, `body`, `cta` and `command`, an `image` for the clip card, or `children` to replace the page. The default clip image is a `staticFile` that only exists in the remocn repo. It ships light and dark through `theme`. The length depends on the `url` length and `typingSpeed`.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "url",
+      type: "string",
+      default: "\"remocn.dev\"",
+      description: "Address typed into the bar.",
+    },
+    {
+      name: "children",
+      type: "React.ReactNode",
+      description: "Custom page content. Replaces the built-in landing page.",
+    },
+    {
+      name: "typingSpeed",
+      type: "number",
+      default: "1",
+      description: "Typing speed multiplier for the address.",
+    },
+    {
+      name: "showCursor",
+      type: "boolean",
+      default: "true",
+      description: "Show the blinking text caret in the address bar.",
+    },
+    {
+      name: "suggestionTitle",
+      type: "string",
+      default: "\"Launch videos from components\"",
+      description: "Title shown on the first suggestion row.",
+    },
+    {
+      name: "headline",
+      type: "string",
+      default: "\"Ship your launch video this afternoon.\"",
+      description: "Headline of the landing page.",
+    },
+    {
+      name: "body",
+      type: "string",
+      default: "\"Remotion components you install with one command and own the code.\"",
+      description: "Body text under the headline.",
+    },
+    {
+      name: "cta",
+      type: "string",
+      default: "\"Browse components\"",
+      description: "Label of the primary button.",
+    },
+    {
+      name: "command",
+      type: "string",
+      default: "\"npx shadcn add remocn/zoom-blur\"",
+      description: "Install command shown on the page.",
+    },
+    {
+      name: "image",
+      type: "string",
+      description: "Image shown in the clip card. Defaults to a repo-only file.",
+    },
+    {
+      name: "clipName",
+      type: "string",
+      default: "\"Zoom Blur\"",
+      description: "Name shown on the clip card.",
+    },
+    {
+      name: "theme",
+      type: "\"light\" | \"dark\"",
+      default: "\"light\"",
+      description: "Color scheme. Ships light and dark.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for the button and highlights.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "Shader preset id for the animated background.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Partial shader parameters that override the ground preset.",
+    },
+  ]}
+/>

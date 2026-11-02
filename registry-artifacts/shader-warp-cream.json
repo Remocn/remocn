@@ -1,0 +1,19 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "shader-warp-cream",
+  "title": "Shader Warp Cream",
+  "description": "Soft peach-to-coral cream gradient with a gentle drift.",
+  "registryDependencies": ["@remocn/shader-warp"],
+  "files": [
+    {
+      "path": "registry/remocn/shader-warp-cream/index.tsx",
+      "content": "\"use client\";\n\nimport {\n  ShaderWarp,\n  type ShaderWarpProps,\n} from \"@/components/remocn/shader-warp\";\n\n// Cream: soft peach-to-coral cream gradient with a gentle drift.\n// A preset of ShaderWarp. The whole look lives in the object below, so tune\n// it freely. Props you pass override the preset, except `speed`, which scales\n// the preset's own speed instead of replacing it.\n\nexport const shaderWarpCreamPreset = {\n  speed: 2,\n  shape: \"edge\",\n  colors: [\"#fff3e8\", \"#ffb199\", \"#ff6f61\"],\n  proportion: 0.55,\n  softness: 1.5,\n  distortion: 0.1,\n  swirl: 0.4,\n  swirlIterations: 5,\n  shapeScale: 0.7,\n} satisfies ShaderWarpProps;\n\nexport function ShaderWarpCream({ speed = 1, ...props }: ShaderWarpProps) {\n  return (\n    <ShaderWarp\n      {...shaderWarpCreamPreset}\n      {...props}\n      speed={shaderWarpCreamPreset.speed * speed}\n    />\n  );\n}\n",
+      "type": "registry:component",
+      "target": "components/remocn/shader-warp-cream.tsx"
+    }
+  ],
+  "meta": {
+    "presetOf": "shader-warp"
+  },
+  "type": "registry:component"
+}

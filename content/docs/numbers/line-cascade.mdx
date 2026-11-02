@@ -1,0 +1,79 @@
+---
+title: Line Cascade
+description: "A large figure is drawn from cascading gradient lines that pile up and snap into place, with a caption."
+component: line-cascade
+vibe: premium
+length: 124
+useWhen:
+  - "A hero number beat where the figure should feel built from raw material rather than faded in."
+  - "A count of shipped items or users used as a poster stat with a one-line caption."
+  - "A launch beat with a gradient-heavy, poster-like look that stays legible once settled."
+avoidWhen:
+  - "The number must be readable from the first frame — use `compact-stat`."
+  - "You want the number to count up — use `tall-count`."
+  - "The figure carries a decimal and a multiplier sign — use `lean-count`."
+---
+
+<ComponentPreview name="line-cascade" />
+
+<InstallBlock name="line-cascade" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { LineCascade } from "@/components/remocn/line-cascade";
+
+const LineCascadeScene = () => (
+  <LineCascade value="240" caption="launch films rendered with remocn today" />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="LineCascade"
+    component={LineCascadeScene}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Gradient lines rain down and land as flutes on a floor, drawing the figure's strokes until they snap into the solid numeral and a caption rises beneath. Pass `value` (digits plus a few symbols such as `.`, `+`, `%` and `k`) and `caption`; it ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "value",
+      type: "string",
+      default: "\"240\"",
+      description: "Figure to draw, digits plus a few symbols such as dot, plus and percent.",
+    },
+    {
+      name: "caption",
+      type: "string",
+      default: "\"launch films rendered with remocn today\"",
+      description: "Small line of text that rises under the figure.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for highlights and small marks.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color theme, \"dark\" or \"light\".",
+    },
+  ]}
+/>

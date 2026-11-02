@@ -1,0 +1,108 @@
+---
+title: Tall Count
+description: "A tall condensed figure counts up beside a short caption while its width opens and it lifts into place."
+component: tall-count
+vibe: premium
+length: 78
+useWhen:
+  - "A percentage-gain headline such as +240 percent."
+  - "A growth claim with a short supporting caption."
+  - "A bold stat beat in a vertical or poster-style video."
+avoidWhen:
+  - "The headline is a multiplier — use `lean-count`."
+  - "The figure is a huge raw count — use `carry-count`."
+  - "The number sits inside a sentence — use `stat-inline`."
+---
+
+<ComponentPreview name="tall-count" />
+
+<InstallBlock name="tall-count" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { TallCount } from "@/components/remocn/tall-count";
+
+const TallCountScene = () => (
+  <TallCount value={240} prefix="+" suffix="%" label="more watch time on launch posts that move" />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="TallCount"
+    component={TallCountScene}
+    durationInFrames={120}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The caption rises in while the figure counts from `from` to `value`, growing wider as it goes, then springs up into place. Prefix and suffix such as plus and percent are part of the figure. Pass `value`, `prefix`, `suffix` and `label`; it ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "value",
+      type: "number",
+      default: "240",
+      description: "Final number the figure counts up to.",
+    },
+    {
+      name: "from",
+      type: "number",
+      default: "0",
+      description: "Number the count starts from.",
+    },
+    {
+      name: "decimals",
+      type: "number",
+      default: "0",
+      description: "Decimal places shown while counting.",
+    },
+    {
+      name: "prefix",
+      type: "string",
+      default: "\"+\"",
+      description: "Text drawn before the number.",
+    },
+    {
+      name: "suffix",
+      type: "string",
+      default: "\"%\"",
+      description: "Text drawn after the number.",
+    },
+    {
+      name: "label",
+      type: "string",
+      default: "\"more watch time on launch posts that move\"",
+      description: "Caption that rises in beside the figure.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for highlights and small marks.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background color override. Pass \"transparent\" to composite over other layers.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color theme, \"dark\" or \"light\".",
+    },
+  ]}
+/>

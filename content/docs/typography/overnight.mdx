@@ -1,0 +1,87 @@
+---
+title: Overnight
+description: "Three timestamped story lines play as a night panel descends and a morning panel rises over an evening ground."
+component: overnight
+vibe: paper
+length: 150
+useWhen:
+  - "A founder or customer story with a deadline that plays out across one evening, night and morning."
+  - "A before, during and after beat where each stage deserves its own timestamp and mood."
+avoidWhen:
+  - "Each story line should drift across the frame on its own — use `story-dip`."
+  - "You only need a single timestamped line on one ground — use `crunch`."
+  - "The text is a person quote with an attribution — use `said-who`."
+---
+
+<ComponentPreview name="overnight" />
+
+<InstallBlock name="overnight" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { Overnight } from "@/components/remocn/overnight";
+
+const OvernightScene = () => (
+  <Overnight
+    evening={{ slug: "Thursday, 6:00 PM", line: "The launch was at nine the next morning." }}
+    night={{ slug: "Friday, 12:50 AM", line: "The demo video was still a blank file." }}
+    morning={{ slug: "Friday, 8:55 AM", line: "The demo went up before the post did." }}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="Overnight"
+    component={OvernightScene}
+    durationInFrames={180}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+An evening line sits under a timestamp on a warm ground. A dark night panel then descends over it and the night line rises in, before a bright morning panel sweeps up from the bottom and the morning line lands in dark ink. Pass `evening`, `night` and `morning` as `{ slug, line }`. It ships light and dark; 150 frames is measured for a 16:9 frame at 180 frames.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "evening",
+      type: "{ slug: string; line: string }",
+      default: "DEFAULT_EVENING",
+      description: "First beat: a timestamp and the line shown on the warm ground.",
+    },
+    {
+      name: "night",
+      type: "{ slug: string; line: string }",
+      default: "DEFAULT_NIGHT",
+      description: "Second beat: shown on the dark panel that descends.",
+    },
+    {
+      name: "morning",
+      type: "{ slug: string; line: string }",
+      default: "DEFAULT_MORNING",
+      description: "Third beat: shown on the bright panel that rises.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Timestamp color and the morning panel color; overrides the theme.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark palette.",
+    },
+  ]}
+/>

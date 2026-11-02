@@ -1,0 +1,88 @@
+---
+title: Slit Reveal
+description: "A point of light draws a hairline that opens onto a product scene, with a glow ring below"
+component: slit-reveal
+vibe: premium
+length: 132
+useWhen:
+  - "Introducing a product with a title that rides a line of light before the screen is revealed."
+  - "A cinematic opener where a screenshot or UI scene should appear through a slit."
+  - "A reveal that can open either as a letterbox or sideways, depending on the aspect of the scene."
+avoidWhen:
+  - "You only need to swap two text statements — use `hairline-open`."
+  - "The reveal should be a thick title band rather than a thin slit — use `band-open`."
+  - "You need a quick cut between two existing shots, not a reveal — use `flash-sweep`."
+---
+
+<ComponentPreview name="slit-reveal" />
+
+<InstallBlock name="slit-reveal" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { SlitReveal } from "@/components/remocn/slit-reveal";
+
+const SlitRevealScene = () => (
+  <SlitReveal
+    title="Introducing remocn"
+    src="/images/app-screenshot.png"
+    opening="letterbox"
+    accent="#3B5BFD"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="SlitReveal"
+    component={SlitRevealScene}
+    durationInFrames={160}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A point of light draws out into a hairline with the `title` riding on it. The line then opens like a slit, letterbox style or sideways, onto the scene you pass as `children` or `src`, which settles out of a soft blur. Without either it shows a built-in product mock. With `opening="letterbox"` the reveal settles by frame 132, and sideways by frame 152.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "title",
+      type: "string",
+      default: "\"Introducing remocn\"",
+      description: "Line of type that rides the hairline before it opens",
+    },
+    {
+      name: "children",
+      type: "React.ReactNode",
+      description: "Scene revealed in the slit; wins over src",
+    },
+    {
+      name: "src",
+      type: "string",
+      description: "Screenshot revealed in the slit, filled to cover",
+    },
+    {
+      name: "opening",
+      type: "\"letterbox\" | \"sideways\"",
+      default: "\"letterbox\"",
+      description: "Letterbox opens top and bottom; sideways rolls the line upright",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Color of the light and the default product mock",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier for the whole timeline",
+    },
+  ]}
+/>

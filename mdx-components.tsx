@@ -16,6 +16,7 @@ import { IconsGallery } from "@/components/docs/icons-gallery";
 import { InstallAll } from "@/components/docs/install-all";
 import { InstallBlock } from "@/components/docs/install-block";
 import { PropsTable } from "@/components/docs/props-table";
+import { ShaderPresets } from "@/components/docs/shader-presets";
 import { UiComponentPreview } from "@/components/docs/ui-component-preview";
 import { cn } from "@/lib/utils";
 
@@ -104,6 +105,7 @@ export function getMDXComponents(components?: MDXComponents): MDXComponents {
     ComponentCardGrid,
     IconsGallery,
     GuideVideo,
+    ShaderPresets,
 
     ...components,
   };

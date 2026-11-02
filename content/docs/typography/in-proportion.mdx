@@ -1,0 +1,81 @@
+---
+title: In Proportion
+description: "Each worry builds word by word, shrinks to a dim note, and a bigger accent reply answers it."
+component: in-proportion
+vibe: playful
+length: 180
+useWhen:
+  - "An objection-handling beat where each customer worry is answered by a bigger, brighter reply."
+  - "FAQ-style launch copy with two or three doubts, each resolved in one line."
+avoidWhen:
+  - "There is only one question and one answer — use `answer-first`."
+  - "A single hesitation should be met with one short reply — use `no-buts`."
+  - "The reply is a testimonial rather than a rebuttal — use `overheard`."
+---
+
+<ComponentPreview name="in-proportion" />
+
+<InstallBlock name="in-proportion" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { InProportion } from "@/components/remocn/in-proportion";
+
+const InProportionScene = () => (
+  <InProportion
+    pairs={[
+      { worry: "It will look templated.", answer: "It will look like your app." },
+      { worry: "I will drown in keyframes.", answer: "You will write a component." },
+    ]}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="InProportion"
+    component={InProportionScene}
+    durationInFrames={200}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A worry builds word by word in large white type, then shrinks into a dimmed note in the top corner while the answer rises in the accent color along the bottom. The next pair repeats. Pass `pairs` as `{ worry, answer }` objects; timing compresses to fit the composition and leaves about 18% hold at the end. It ships light and dark.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "pairs",
+      type: "{ worry: string; answer: string }[]",
+      default: "DEFAULT_PAIRS",
+      description: "Worry and answer pairs, played in order; two or three work best.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Color of the answer text; overrides the theme accent.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark palette.",
+    },
+  ]}
+/>

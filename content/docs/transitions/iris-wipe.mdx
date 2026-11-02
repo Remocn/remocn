@@ -1,0 +1,92 @@
+---
+title: Iris Wipe
+description: Close a cartoon iris on the subject, hold it as a dot for a beat, then open it on the next scene
+component: iris-wipe
+vibe: playful
+length: 36
+useWhen:
+  - "You want an old-cartoon \"that's all\" beat: the iris closes on a subject, lingers, and reopens somewhere new."
+  - "The outgoing scene has a clear focal point you can aim the iris at with centerX and centerY."
+  - "A chapter or section break needs a playful full stop rather than a seamless cut."
+avoidWhen:
+  - "The tone is serious or premium: the iris reads as a gag; use `fade-through` or `focus-pull`."
+  - "The cut should feel fast and kinetic: the iris spends half its length closing; use `whip-pan`."
+  - "You want the next scene to grow out of a shape with texture rather than a clean circle; use `smoke-dissolve`."
+---
+
+<ComponentPreview name="iris-wipe" />
+
+<InstallBlock name="iris-wipe" />
+
+## Usage
+
+`irisWipe()` is a Remotion transition presentation. Pass it to a
+`TransitionSeries.Transition` between two sequences. The first half of the
+transition closes a circle on the outgoing scene: it rushes in from outside the
+frame, slows into a small dot of `holdRadius`, then snaps shut. Everything
+outside the circle is filled with `color`. The second half opens a circle on the
+incoming scene from the same center. The closing radius follows one continuous
+curve, so the iris never fully stops between the rush and the hold.
+
+Both scenes render once per frame, so it is as cheap as a transition gets.
+
+```tsx
+import { TransitionSeries, linearTiming } from "@remotion/transitions";
+import { irisWipe } from "@/components/remocn/iris-wipe";
+
+export const MyVideo = () => (
+  <TransitionSeries>
+    <TransitionSeries.Sequence durationInFrames={70}>
+      <SceneA />
+    </TransitionSeries.Sequence>
+    <TransitionSeries.Transition
+      timing={linearTiming({ durationInFrames: 36 })}
+      presentation={irisWipe({ centerX: 0.62, centerY: 0.4 })}
+    />
+    <TransitionSeries.Sequence durationInFrames={70}>
+      <SceneB />
+    </TransitionSeries.Sequence>
+  </TransitionSeries>
+);
+```
+
+## Timing
+
+| Progress | What happens |
+| --- | --- |
+| 0 to 0.5 | Iris closes on the outgoing scene, lingers as a dot, snaps shut |
+| 0.5 | Frame is fully `color` |
+| 0.5 to 1 | Iris opens on the incoming scene from the same center |
+
+## Props
+
+`irisWipe(props)` accepts:
+
+<PropsTable
+  rows={[
+    {
+      name: "color",
+      type: "string",
+      default: '"#000000"',
+      description: "Fill shown outside the iris while it is closed.",
+    },
+    {
+      name: "centerX",
+      type: "number",
+      default: "0.5",
+      description: "Horizontal iris center, 0 (left) to 1 (right).",
+    },
+    {
+      name: "centerY",
+      type: "number",
+      default: "0.5",
+      description: "Vertical iris center, 0 (top) to 1 (bottom).",
+    },
+    {
+      name: "holdRadius",
+      type: "number",
+      default: "12",
+      description: "Radius of the held dot, in CSS circle() percent of the frame (150 covers the whole frame). 0 skips the hold and closes straight down.",
+    },
+  ]}
+/>

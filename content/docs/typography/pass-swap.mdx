@@ -1,0 +1,89 @@
+---
+title: Pass Swap
+description: "An object sweeps across the frame and each pass swaps the headline to the next line."
+component: pass-swap
+vibe: clean
+length: 122
+useWhen:
+  - "A three-line pitch where each beat is punctuated by a moving object."
+  - "A product reveal where a cutout sweeps through the headline."
+  - "A rhythmic launch hook with a clear final poster frame."
+avoidWhen:
+  - "You want focus pulls between lines, not a moving object — use `focus-front-swap`."
+  - "Lines should shift layout without any object — use `layout-swap`."
+  - "Only one word should change — use `pinned-word`."
+---
+
+<ComponentPreview name="pass-swap" />
+
+<InstallBlock name="pass-swap" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { PassSwap } from "@/components/remocn/pass-swap";
+
+const PassSwapScene = () => (
+  <PassSwap lines={["Copy the code.", "Own every frame.", "Ship the film."]} shape="disc" />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="PassSwap"
+    component={PassSwapScene}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A slab or disc crosses the frame, and every pass replaces the headline with the next entry in `lines`. Pass `lines`, and use `src` with a transparent PNG to sweep your own product cutout instead of the built-in shape. It ships in light and dark through the `theme` prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "lines",
+      type: "string[]",
+      description: "Headlines in order; each pass of the object swaps to the next one.",
+    },
+    {
+      name: "shape",
+      type: "\"slab\" | \"disc\" | \"mixed\"",
+      default: "\"mixed\"",
+      description: "Object when no `src` is given; \"mixed\" alternates slab and disc per pass.",
+    },
+    {
+      name: "src",
+      type: "string",
+      description: "A product cutout (transparent PNG) to sweep instead of the shape.",
+    },
+    {
+      name: "accentLastWord",
+      type: "boolean",
+      default: "true",
+      description: "Fill the last word of the final line with the object gradient.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color override; falls back to the theme accent.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark; picks the palette.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+  ]}
+/>

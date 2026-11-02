@@ -1,0 +1,93 @@
+---
+title: A to Z
+description: "An alphabet gag where a big letter column rolls from A to Z and lands on a final entry"
+component: a-to-z
+vibe: playful
+length: 128
+useWhen:
+  - "A feature-list beat framed as an alphabet, where each item starts with the next letter and the finale lands on Z."
+  - "A playful closing line that rolls through a few real features and ends on a punchline entry."
+  - "A bold full-bleed color moment where the big letter column and the text column roll together."
+avoidWhen:
+  - "The items are not alphabetical or the alphabet joke does not fit — use `index-list`."
+  - "You want a rolling effect on a single value, not a letter column — use `slot-machine-roll`."
+  - "You need a plain stacked list of features without the roll — use `staggered-fade-up`."
+---
+
+<ComponentPreview name="a-to-z" />
+
+<InstallBlock name="a-to-z" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { AToZ } from "@/components/remocn/a-to-z";
+
+const AToZScene = () => (
+  <AToZ
+    entries={["animations.", "brand fonts.", "captions."]}
+    finale="zero lock-in."
+    connector="is for"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="AToZ"
+    component={AToZScene}
+    durationInFrames={165}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A huge letter column and a text column roll together: each entry shows its first letter with the connector, for example "A is for any aspect ratio.", ticking through the list. After the last entry the letters flick through the gap to the finale, and a slower roll lands on it. Pass `entries` in alphabetical order, plus `finale` and `connector`; it ships light and dark through `theme`, and the pacing stretches to fit the composition's duration (128 frames at the default 165).
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "entries",
+      type: "string[]",
+      default: "DEFAULT_ENTRIES",
+      description: "Items in alphabetical order; each one's first letter drives the big column.",
+    },
+    {
+      name: "finale",
+      type: "string",
+      default: "\"zero lock-in.\"",
+      description: "Last entry, rolled in after the letters flick through to its letter.",
+    },
+    {
+      name: "connector",
+      type: "string",
+      default: "\"is for\"",
+      description: "Short phrase between the letter and each entry.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Field color in dark, letter color in light; defaults to orange.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Stage color, or `\"transparent\"` to composite over other layers.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark.",
+    },
+  ]}
+/>

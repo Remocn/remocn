@@ -1,0 +1,116 @@
+---
+title: Riso Print
+description: Print a subject in two risograph inks, with the accent plate sliding in off-register and settling a hair out of alignment over grainy paper
+component: riso-print
+vibe: paper
+length: 34
+useWhen:
+  - "A title card, poster or logo should arrive as if it came off a two-color risograph, with visible misregistration and ink speckle."
+  - "The brand has two inks and the scene should read as a zine, flyer or gig poster rather than a screen."
+  - "You want the print to keep a little life after it lands: the accent plate keeps a small stop-motion wobble."
+avoidWhen:
+  - "An existing live scene, photo or video should be re-screened as a printed page for its whole duration — use `halftone-print`."
+  - "The print should pulse to music and swap its ink pair on every beat — use `duotone-beat`."
+  - "Only one element should feel hand-placed on paper while the rest stays clean — use `paper-wobble`."
+---
+
+<ComponentPreview name="riso-print" />
+
+<InstallBlock name="riso-print" />
+
+## Usage
+
+`RisoPrint` is a full-frame scene. It renders its subject twice, once per ink
+plate, and multiplies both plates onto a paper ground. The key plate presses
+onto the paper first. The accent plate slides in from the lower left on a
+loose spring, overshoots, and settles a few pixels off register. Both plates
+are speckled with seeded noise where the ink failed to take, and a paper tooth
+texture sits over everything.
+
+```tsx
+import { RisoPrint } from "@/components/remocn/riso-print";
+
+export const Poster = () => <RisoPrint />;
+```
+
+Without children it prints a built-in geometric poster. Pass children to print
+your own subject. Children are centered in the frame and rendered once per
+plate.
+
+### Separating your subject into plates
+
+Each plate picks up ink by color channel, like a separation:
+
+| Color in your subject | Key plate | Accent plate |
+| --- | --- | --- |
+| Black | Yes | Yes, overprinting into a rich black |
+| Red, `#FF0000` | No | Yes |
+| Cyan or green, `#00FFFF`, `#00FF00` | Yes | No |
+| White or transparent | No | No |
+
+The key plate takes everything without red, and the accent plate takes
+everything without green. So paint the subject in these flat separation colors,
+not in the final inks. The final inks come from `keyInk` and `accentInk` (or
+the `inks` tuple).
+
+```tsx
+import { RisoPrint } from "@/components/remocn/riso-print";
+
+export const ZineCover = () => (
+  <RisoPrint keyInk="#1F3A93" accentInk="#FF4F64" paper="#F4EFE4">
+    <div style={{ display: "flex", alignItems: "center", gap: 56 }}>
+      <div
+        style={{
+          width: 300,
+          height: 300,
+          borderRadius: "50%",
+          background: "#FF0000",
+        }}
+      />
+      <span style={{ fontSize: 180, fontWeight: 900, color: "#00FFFF" }}>
+        ZINE
+      </span>
+    </div>
+  </RisoPrint>
+);
+```
+
+Here the circle prints only in pink and the word only in blue. Black text would
+print in both plates and show the accent plate's offset as a pink fringe.
+
+## Timing
+
+At 30 fps and `speed={1}`:
+
+| Frames | Motion |
+| --- | --- |
+| 0–8 | The key plate presses in: it fades in and shrinks from 103.5% to 100% |
+| 4–8 | The accent plate fades in while it starts to slide |
+| 4–33 | The accent plate springs from the lower left, rotated −4°, overshoots and settles at `offset` with a 0.35° skew |
+| 26–34 | The stop-motion wobble fades in |
+| 34+ | The print holds. The accent plate jumps to a new seeded position every 4 frames, within `jitter` pixels |
+
+The wobble never stops, so the hold stays alive. Set `jitter={0}` for a still
+hold. `speed` scales the whole timeline. Pixel props are pixels at 720p and
+scale with the composition height.
+
+## Notes
+
+Both plates and the paper run SVG filters with fractal noise over the full
+frame, so this look renders slower than a plain scene. The noise is seeded,
+so every frame is deterministic.
+
+<PropsTable title="Props"
+  rows={[
+    { name: "children", type: "React.ReactNode", description: "Subject to print, centered and rendered once per plate. Without it a geometric poster is printed" },
+    { name: "keyInk", type: "string", default: '"#111111"', description: "Key ink. Overrides inks[0] when set" },
+    { name: "accentInk", type: "string", default: '"#E5322D"', description: "Accent ink. Overrides inks[1] when set" },
+    { name: "inks", type: "[string, string]", default: '["#111111", "#E5322D"]', description: "Key ink and accent ink as a tuple; keyInk and accentInk take precedence" },
+    { name: "paper", type: "string", default: '"#F2F0EA"', description: "Paper color behind the inks" },
+    { name: "offset", type: "[number, number]", default: "[7, -5]", description: "Final misregistration of the accent plate in px at 720p" },
+    { name: "grain", type: "number", default: "0.5", description: "Ink speckle and paper tooth, clamped to 0–1" },
+    { name: "jitter", type: "number", default: "1.2", description: "Stop-motion wobble of the accent plate after it settles, in px at 720p; 0 disables it" },
+    { name: "marks", type: "boolean", default: "true", description: "Prints registration marks in the four corners on both plates" },
+    { name: "speed", type: "number", default: "1", description: "Playback multiplier" },
+  ]}
+/>

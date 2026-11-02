@@ -1,0 +1,138 @@
+---
+title: Voice Agent
+description: "A voice agent call transcript streams, handles an interruption and books a table"
+component: voice-agent
+vibe: tech
+length: 322
+useWhen:
+  - "A launch video for a voice AI product that needs to show a live call, the agent being cut off mid-sentence and a tool call completing."
+  - "A beat proving the agent takes real action, ending on a booking summary card with a confirmation code."
+  - "A customer-support or concierge automation demo where the call ends in a structured outcome."
+avoidWhen:
+  - "The product is a text chat assistant, not a call — use `chat-flow` instead."
+  - "You want an AI answer with citations rather than a spoken conversation — use `ai-answer-sources` instead."
+  - "You only need a short kinetic text line about voice, no call UI — use `mono-voice` instead."
+---
+
+<ComponentPreview name="voice-agent" />
+
+<InstallBlock name="voice-agent" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { VoiceAgent } from "@/components/remocn/voice-agent";
+
+const VoiceAgentScene = () => (
+  <VoiceAgent
+    agentName="Ava"
+    callerName="Maya Chen"
+    summaryStatus="Booked"
+    accent="#3B5BFD"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="VoiceAgent"
+    component={VoiceAgentScene}
+    durationInFrames={340}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A call window opens with live speaking bars for the agent and the caller. Turns stream word by word, one is interrupted mid-sentence, a tool call runs and resolves, the call ends and a summary card lands. Pass your own `turns`, names and `summary` rows to retell the call. It ships light and dark through the `theme` prop.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "agentName",
+      type: "string",
+      default: "\"Ava\"",
+      description: "Name of the voice agent shown in the call header.",
+    },
+    {
+      name: "agentRole",
+      type: "string",
+      default: "\"Fernway concierge\"",
+      description: "Short role line under the agent name.",
+    },
+    {
+      name: "callerName",
+      type: "string",
+      default: "\"Maya Chen\"",
+      description: "Name of the person on the other end of the call.",
+    },
+    {
+      name: "callerLine",
+      type: "string",
+      default: "\"+1 (415) ••• 0192\"",
+      description: "Caller phone line or subtitle under the caller name.",
+    },
+    {
+      name: "turns",
+      type: "VoiceTurn[]",
+      default: "DEFAULT_TURNS",
+      description: "Ordered transcript turns: speaker, text, optional interruption point and tool call.",
+    },
+    {
+      name: "summaryTitle",
+      type: "string",
+      default: "\"Call summary\"",
+      description: "Heading of the summary card shown after the call.",
+    },
+    {
+      name: "summaryStatus",
+      type: "string",
+      default: "\"Booked\"",
+      description: "Green status word next to the summary title.",
+    },
+    {
+      name: "summary",
+      type: "VoiceSummaryRow[]",
+      default: "DEFAULT_SUMMARY",
+      description: "Label and value rows on the summary card; `mono` sets monospace values.",
+    },
+    {
+      name: "startSeconds",
+      type: "number",
+      default: "41",
+      description: "Seconds already on the call clock when the clip starts.",
+    },
+    {
+      name: "theme",
+      type: "\"light\" | \"dark\"",
+      default: "\"light\"",
+      description: "Light or dark window styling.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for the agent and active states.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "Gradient shader preset id for the background.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the shader preset parameters.",
+    },
+  ]}
+/>

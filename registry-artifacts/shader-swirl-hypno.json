@@ -1,0 +1,19 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "shader-swirl-hypno",
+  "title": "Shader Swirl Hypno",
+  "description": "High-contrast black and white hypnotic spiral.",
+  "registryDependencies": ["@remocn/shader-swirl"],
+  "files": [
+    {
+      "path": "registry/remocn/shader-swirl-hypno/index.tsx",
+      "content": "\"use client\";\n\nimport {\n  ShaderSwirl,\n  type ShaderSwirlProps,\n} from \"@/components/remocn/shader-swirl\";\n\n// Hypno: high-contrast black and white hypnotic spiral.\n// A preset of ShaderSwirl. The whole look lives in the object below, so tune\n// it freely. Props you pass override the preset, except `speed`, which scales\n// the preset's own speed instead of replacing it.\n\nexport const shaderSwirlHypnoPreset = {\n  speed: 1,\n  colorBack: \"#0b0b0b\",\n  colors: [\"#f5f5f5\"],\n  bandCount: 6,\n  twist: 0.25,\n  softness: 0,\n  noise: 0,\n  center: 0,\n} satisfies ShaderSwirlProps;\n\nexport function ShaderSwirlHypno({ speed = 1, ...props }: ShaderSwirlProps) {\n  return (\n    <ShaderSwirl\n      {...shaderSwirlHypnoPreset}\n      {...props}\n      speed={shaderSwirlHypnoPreset.speed * speed}\n    />\n  );\n}\n",
+      "type": "registry:component",
+      "target": "components/remocn/shader-swirl-hypno.tsx"
+    }
+  ],
+  "meta": {
+    "presetOf": "shader-swirl"
+  },
+  "type": "registry:component"
+}

@@ -1,0 +1,106 @@
+---
+title: Swipe Deck
+description: "A card deck is swiped right, left and up, then an It's a match modal lands with an install button."
+component: swipe-deck
+vibe: playful
+length: 156
+useWhen:
+  - "A discovery or matching app launch where swiping is the core mechanic."
+  - "A product that curates options (templates, styles, tools) and ends in a clear pick."
+  - "A vertical cut with three captions, one per swipe beat."
+avoidWhen:
+  - "You want a store page and install flow — use `app-store-listing`."
+  - "You want a reward screen with counters — use `streak-reward`."
+  - "You want a stack that fans out of a pile without gestures — use `card-fan`."
+---
+
+<ComponentPreview name="swipe-deck" />
+
+<InstallBlock name="swipe-deck" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { SwipeDeck } from "@/components/remocn/swipe-deck";
+
+const SwipeDeckScene = () => (
+  <SwipeDeck
+    matchWith="Acme"
+    initials="MC"
+    lines={["Swipe right on what fits.", "Skip the rest.", "Install the match."]}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="SwipeDeck"
+    component={SwipeDeckScene}
+    durationInFrames={180}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A phone shows a stack of cards: the cursor swipes the first right to like it, the second left to skip it and the third up to super-like it, then an It's a match modal pops in with two avatars, a heart and an Install button. Pass `cards` (title, meta, chips, and a `scene` or `src`), `matchWith` and `initials`; `lines` are the three captions beside the phone. Ships dark by default and light.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "cards",
+      type: "SwipeCard[]",
+      default: "DEFAULT_CARDS",
+      description: "Deck cards; the first three are swiped, the fourth sits underneath",
+    },
+    {
+      name: "matchWith",
+      type: "string",
+      default: "\"remocn\"",
+      description: "Name shown in the match modal",
+    },
+    {
+      name: "initials",
+      type: "string",
+      default: "\"MC\"",
+      description: "Initials on the viewer avatar in the match modal",
+    },
+    {
+      name: "lines",
+      type: "[string, string, string]",
+      description: "Three captions beside the phone, one per beat",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for highlights, buttons and progress",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline",
+    },
+    {
+      name: "theme",
+      type: "\"light\" | \"dark\"",
+      default: "\"dark\"",
+      description: "Light or dark palette",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "gradients.sh preset id for the backdrop shader",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the backdrop shader parameters",
+    },
+  ]}
+/>

@@ -1,0 +1,89 @@
+---
+title: Caret Letter
+description: "A blinking caret types a word, then slides in and morphs into the missing letter"
+component: caret-letter
+vibe: paper
+length: 180
+useWhen:
+  - "A brand or product-name reveal where a text caret becomes one letter of the name."
+  - "A clean intro beat where typing leads into a short descriptive line under the word."
+  - "A paper-light title card that wants a small, precise typographic gag."
+avoidWhen:
+  - "You just need a typed line with no morph — use `typewriter`."
+  - "The caret should swap one word for another — use `caret-swap`."
+  - "You want a caret that wipes content on or off instead of becoming a letter — use `caret-wipe`."
+---
+
+<ComponentPreview name="caret-letter" />
+
+<InstallBlock name="caret-letter" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { CaretLetter } from "@/components/remocn/caret-letter";
+
+const CaretLetterScene = () => (
+  <CaretLetter
+    word="launch"
+    stemIndex={0}
+    subline="Ship the demo video in an afternoon."
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="CaretLetter"
+    component={CaretLetterScene}
+    durationInFrames={225}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A caret blinks in and types the word except for one letter, slides over to that spot, the word opens to make room, and the caret morphs into the letter, then a grey subline fades in. Pass `word` and `stemIndex` (the letter the caret turns into; pick a plain stem such as l, I or 1), plus `subline` and `accent`. It ships light and dark through `theme`, defaulting to light.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "word",
+      type: "string",
+      default: "\"launch\"",
+      description: "The word; the caret types every letter except the stem.",
+    },
+    {
+      name: "stemIndex",
+      type: "number",
+      default: "0",
+      description: "Index of the letter the caret becomes; pick a plain stem such as l or I.",
+    },
+    {
+      name: "subline",
+      type: "string",
+      default: "\"Animated components for your next release.\"",
+      description: "Small grey line under the word.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Color of the caret and of the letter it becomes.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"light\"",
+      description: "Ships light and dark.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier.",
+    },
+  ]}
+/>

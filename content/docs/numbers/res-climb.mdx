@@ -1,0 +1,94 @@
+---
+title: Res Climb
+description: "A number resolves from coarse blocks through sharper resolutions into a crisp glowing figure with a caption."
+component: res-climb
+vibe: premium
+length: 70
+useWhen:
+  - "A beat about quality, scale or fidelity where the number should literally sharpen into focus."
+  - "A count-free stat such as 200+ that should arrive as a staged resolution upgrade."
+  - "A hero figure with a small eyebrow above and a caption below, glowing on a dark ground."
+avoidWhen:
+  - "You need the digits to roll from a lower value to a higher one - use `packed-count`."
+  - "The figure should resolve out of a line pattern instead of pixels - use `moire-reveal`."
+  - "You want a painted, tile-by-tile pixel reveal - use `raster-paint`."
+---
+
+<ComponentPreview name="res-climb" />
+
+<InstallBlock name="res-climb" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { ResClimb } from "@/components/remocn/res-climb";
+
+const ResClimbScene = () => <ResClimb value="200+" eyebrow="Component registry" label="components, ready to drop in" />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="ResClimb"
+    component={ResClimbScene}
+    durationInFrames={115}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A big number first appears as a coarse block grid, then re-renders through a few sharper resolutions in quick snaps until it lands crisp in a blue gradient. A small eyebrow sits above and a caption fades in below. Pass `value` as a string such as "200+", plus `label` and `eyebrow`; `steps` sets the grid resolutions. It ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "value",
+      type: "string",
+      default: "\"200+\"",
+      description: "The figure to resolve, as a string such as 200+.",
+    },
+    {
+      name: "label",
+      type: "string",
+      default: "\"components, ready to drop in\"",
+      description: "Caption under the figure.",
+    },
+    {
+      name: "eyebrow",
+      type: "string",
+      default: "\"remocn registry\"",
+      description: "Small line above the figure.",
+    },
+    {
+      name: "steps",
+      type: "number[]",
+      default: "[7, 14, 28]",
+      description: "Pixel-grid rows per cap height for each coarse stage; up to 4.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Main color of the figure gradient.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Stage background color; overrides the theme ground.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark palette.",
+    },
+  ]}
+/>

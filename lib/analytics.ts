@@ -14,6 +14,7 @@ export type CtaId =
   | "hero_showcases"
   | "hero_saas_typography_badge"
   | "hero_motion_graphics_badge"
+  | "hero_motion_pack_badge"
   | "hero_templates_badge"
   | "how_it_works_setup"
   | "final_cta"

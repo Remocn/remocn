@@ -1,0 +1,90 @@
+---
+title: Cloth Reveal
+description: A satin sheet draped over your content is yanked from one corner, folding and fluttering as a simulated cloth before it clears the frame
+component: cloth-reveal
+vibe: premium
+length: 34
+useWhen:
+  - "A logo, product or headline should be unveiled like a launch-event reveal."
+  - "The video opens on a covered shape so the viewer waits a beat for what is underneath."
+  - "A single premium reveal is the payoff of the video and can afford a heavier render."
+avoidWhen:
+  - "The reveal is a move from one scene to the next rather than content under a sheet — use `page-turn`."
+  - "A light should search the dark stage and land on the logo — use `spotlight`."
+  - "Lines of text only need to rise into place — use `mask-reveal-up`."
+---
+
+<ComponentPreview name="cloth-reveal" />
+
+<InstallBlock name="cloth-reveal" />
+
+## Usage
+
+`ClothReveal` covers its children with a sheet of cloth. The sheet rests on a
+soft bump in the middle, as if draped over the hidden object, with seeded
+folds and waves so it never looks ironed. On the tug frame a hand pinches one
+corner, lifts it, and yanks it off-frame with growing speed. The rest of the
+sheet follows as a mass-spring cloth: it peels up, folds over to show its
+darker underside, flutters, and casts a soft shadow on the content below.
+
+```tsx
+import { ClothReveal } from "@/components/remocn/cloth-reveal";
+
+export const Unveil = () => (
+  <ClothReveal direction="right" clothColor="#1F3A93" undersideColor="#0E1C4A">
+    <YourLogo />
+  </ClothReveal>
+);
+```
+
+Children are centered in the frame on top of `background`. `direction` picks
+the corner and the pull:
+
+| `direction` | Corner | Pull |
+| --- | --- | --- |
+| `right` | Top right | Right and slightly up |
+| `left` | Top left | Left and slightly up |
+| `up` | Top right | Up and to the right |
+| `down` | Bottom left | Down and to the left |
+
+`delay` is the tug frame at 30 fps. `seed` changes the fold pattern and
+waves of the resting sheet.
+
+`clothColor` and `undersideColor` are parsed as hex (`#RGB` or `#RRGGBB`)
+to light the cloth per vertex, so CSS names, `rgb()` and gradients are not
+supported.
+
+## Timing
+
+At 30 fps, `speed={1}` and the default `delay` of 6:
+
+| Frames | Motion |
+| --- | --- |
+| 0–6 | The sheet rests over the content |
+| 6–15 | The corner lifts as the pull starts |
+| 15–28 | The yank speeds up; the sheet peels back, folds and flutters |
+| 28–34 | The trailing edge clears the frame |
+| 34+ | The content holds, uncovered |
+
+The cloth is simulated for 72 frames at 30 fps, which covers any `delay` up to
+about 38. `speed` scales the timeline after the simulation, so it does not
+change how the cloth moves.
+
+This is one of the heavier components in the registry. The simulation, a
+40×24 grid with 12 constraint passes per step, runs once per composition size,
+`direction`, `delay` and `seed`. Each frame then draws about 900 shaded SVG
+quads through two blur filters. Expect slower renders than a CSS-only reveal,
+and use it once as the payoff rather than on every scene.
+
+<PropsTable title="Props"
+  rows={[
+    { name: "children", type: "ReactNode", description: "Content hidden under the sheet, centered in the frame. Without it a placeholder lockup (a rounded mark and the word remocn) is shown" },
+    { name: "clothColor", type: "string", default: '"#E5322D"', description: "Top side of the cloth, as #RGB or #RRGGBB" },
+    { name: "undersideColor", type: "string", default: '"#8E1A16"', description: "Underside tint seen where the sheet folds over, as #RGB or #RRGGBB" },
+    { name: "background", type: "string", default: '"#111111"', description: "Background behind the children" },
+    { name: "direction", type: '"right" | "left" | "up" | "down"', default: '"right"', description: "Which way the sheet is yanked" },
+    { name: "delay", type: "number", default: "6", description: "Frame at 30 fps when the tug starts" },
+    { name: "seed", type: "number", default: "2", description: "Seeds the folds and waves of the resting sheet" },
+    { name: "speed", type: "number", default: "1", description: "Playback multiplier" },
+  ]}
+/>

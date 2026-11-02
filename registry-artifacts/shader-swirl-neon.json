@@ -1,0 +1,19 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "shader-swirl-neon",
+  "title": "Shader Swirl Neon",
+  "description": "Neon teal, purple and pink vortex around a dark core.",
+  "registryDependencies": ["@remocn/shader-swirl"],
+  "files": [
+    {
+      "path": "registry/remocn/shader-swirl-neon/index.tsx",
+      "content": "\"use client\";\n\nimport {\n  ShaderSwirl,\n  type ShaderSwirlProps,\n} from \"@/components/remocn/shader-swirl\";\n\n// Neon: neon teal, purple and pink vortex around a dark core.\n// A preset of ShaderSwirl. The whole look lives in the object below, so tune\n// it freely. Props you pass override the preset, except `speed`, which scales\n// the preset's own speed instead of replacing it.\n\nexport const shaderSwirlNeonPreset = {\n  speed: 1,\n  colorBack: \"#07001a\",\n  colors: [\"#00f5d4\", \"#9b5de5\", \"#f15bb5\"],\n  bandCount: 4,\n  twist: 0.25,\n  softness: 0.6,\n  noise: 0.2,\n  center: 0,\n} satisfies ShaderSwirlProps;\n\nexport function ShaderSwirlNeon({ speed = 1, ...props }: ShaderSwirlProps) {\n  return (\n    <ShaderSwirl\n      {...shaderSwirlNeonPreset}\n      {...props}\n      speed={shaderSwirlNeonPreset.speed * speed}\n    />\n  );\n}\n",
+      "type": "registry:component",
+      "target": "components/remocn/shader-swirl-neon.tsx"
+    }
+  ],
+  "meta": {
+    "presetOf": "shader-swirl"
+  },
+  "type": "registry:component"
+}

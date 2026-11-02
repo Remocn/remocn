@@ -1,0 +1,88 @@
+---
+title: We Call It
+description: "Short descriptive lines build up to a large product name introduced by a lead-in phrase."
+component: we-call-it
+vibe: paper
+length: 164
+useWhen:
+  - "A category-naming beat where several loose descriptions resolve into one name."
+  - "A launch film moment that finally says what the product is called."
+  - "A positioning scene that builds a list before the payoff."
+avoidWhen:
+  - "You need the name defined like a dictionary entry — use `verbed`."
+  - "The payoff is a time phrase rather than a name — use `on-approach`."
+  - "You want the name placed in a fill-in-the-blank frame — use `your-name-here`."
+---
+
+<ComponentPreview name="we-call-it" />
+
+<InstallBlock name="we-call-it" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { WeCallIt } from "@/components/remocn/we-call-it";
+
+const WeCallItScene = () => (
+  <WeCallIt descriptions={["Scenes you install like components.", "Edits that land as commits."]} lead="We call it a" name="video registry." />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="WeCallIt"
+    component={WeCallItScene}
+    durationInFrames={210}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Description lines stack up one at a time, then a lead-in phrase lands and the big name appears word by word. Pass `descriptions`, `lead` and `name` to name your own thing. It ships in light and dark through the `theme` prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "descriptions",
+      type: "string[]",
+      description: "Lines that build up before the name.",
+    },
+    {
+      name: "lead",
+      type: "string",
+      default: "\"We call it a\"",
+      description: "Lead-in phrase shown before the name.",
+    },
+    {
+      name: "name",
+      type: "string",
+      default: "\"video registry.\"",
+      description: "Large name revealed at the end.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Accent color override; falls back to the theme accent.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background color override; falls back to the theme background.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark; picks the palette.",
+    },
+  ]}
+/>

@@ -1,0 +1,124 @@
+---
+title: UI Callout
+description: "Callout cards appear one by one beside a product screenshot, each with a pulsing marker on its target."
+component: ui-callout
+vibe: clean
+length: 105
+useWhen:
+  - "Explaining three or so parts of a screen, each with a short title and body."
+  - "A walkthrough over a static screenshot where annotations should arrive on a fixed beat."
+  - "A tidy, editorial annotation look in either tooltip cards or compact pills."
+avoidWhen:
+  - "The camera should travel into each region instead of annotating — use `screenshot-tour`."
+  - "A single detail needs a framed highlight — use `bracket-focus`."
+  - "You want a live tooltip inside a UI flow — use `tooltip`."
+---
+
+<ComponentPreview name="ui-callout" />
+
+<InstallBlock name="ui-callout" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { UiCallout } from "@/components/remocn/ui-callout";
+
+const UiCalloutScene = () => (
+  <UiCallout
+    src="/screens/dashboard.png"
+    screenshotWidth={1440}
+    screenshotHeight={900}
+    callouts={[{ x: 358, y: 113, title: "Status at a glance", body: "Every issue shows its state." }]}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="UiCallout"
+    component={UiCalloutScene}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A screenshot window rises in and callouts arrive in turn, each pinned to a target point with a pulsing marker and a card or pill that holds its `title` and `body`. Earlier callouts fold away as the next lands. Pass your own screenshot through `src` or `children`, with `screenshotWidth` and `screenshotHeight`, and list `callouts` whose x and y are in screenshot pixels. With neither `src` nor `children` it shows a built-in issue-tracker mock. It ships light and dark through `theme`.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "callouts",
+      type: "{ x: number; y: number; title: string; body?: string; side?: 'top' | 'bottom' | 'left' | 'right'; delay?: number }[]",
+      default: "DEFAULT_CALLOUTS",
+      description: "Callouts to show. x and y are target points in screenshot pixels.",
+    },
+    {
+      name: "variant",
+      type: "\"tooltip\" | \"pill\"",
+      default: "\"tooltip\"",
+      description: "Callout look, tooltip cards or compact pills.",
+    },
+    {
+      name: "src",
+      type: "string",
+      description: "Screenshot URL. Replaces the built-in mock.",
+    },
+    {
+      name: "children",
+      type: "React.ReactNode",
+      description: "Custom screen content. Used when src is not set.",
+    },
+    {
+      name: "screenshotWidth",
+      type: "number",
+      default: "MOCK_W",
+      description: "Natural width of the screenshot in pixels.",
+    },
+    {
+      name: "screenshotHeight",
+      type: "number",
+      default: "MOCK_H",
+      description: "Natural height of the screenshot in pixels.",
+    },
+    {
+      name: "stagger",
+      type: "number",
+      default: "30",
+      description: "Frames between callouts when none sets its own delay.",
+    },
+    {
+      name: "theme",
+      type: "\"light\" | \"dark\"",
+      default: "\"light\"",
+      description: "Color scheme. Ships light and dark.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color of markers and highlights.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "Shader preset id for the animated background.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Partial shader parameters that override the ground preset.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+  ]}
+/>

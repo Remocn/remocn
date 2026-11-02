@@ -1,0 +1,83 @@
+---
+title: Squeeze Out
+description: "Condensed text squeezes out line by line and relaxes into its full width."
+component: squeeze-out
+vibe: clean
+length: 64
+useWhen:
+  - "A headline that should feel pressed out and then settling, like a fresh print."
+  - "A short statement over several lines where you want a steady line-by-line rhythm."
+  - "A tagline with one or two words to call out in the accent color."
+avoidWhen:
+  - "You want lines sliding up with a mask - use `mask-reveal-up`."
+  - "Each line should slide in as a whole, not squeeze glyph by glyph - use `line-by-line-slide`."
+  - "The text should appear as if typed - use `typewriter`."
+---
+
+<ComponentPreview name="squeeze-out" />
+
+<InstallBlock name="squeeze-out" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { SqueezeOut } from "@/components/remocn/squeeze-out";
+
+const SqueezeOutScene = () => (
+  <SqueezeOut text="Freshly pressed frames." highlight="frames" />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="SqueezeOut"
+    component={SqueezeOutScene}
+    durationInFrames={120}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Each glyph leaves its line as a narrow squeezed shape and relaxes into full width, with lines starting in overlap from top to bottom. The text is balanced across up to five lines automatically. Pass `text`, and `highlight` with words to set in the accent color. It takes a `theme` prop and ships light and dark.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "text",
+      type: "string",
+      default: "\"Freshly pressed frames.\"",
+      description: "The line to squeeze out; wraps across up to five lines.",
+    },
+    {
+      name: "highlight",
+      type: "string",
+      default: "\"\"",
+      description: "Space-separated words to set in the accent color.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Color of highlighted words; defaults to the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Override the background color; use \"transparent\" to composite over your own.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark ground; the component ships both.",
+    },
+  ]}
+/>

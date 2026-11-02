@@ -1,0 +1,79 @@
+---
+title: Axis Flex
+description: "A gradient word flexes its width and weight like an elastic variable font, then snaps to a final style"
+component: axis-flex
+vibe: playful
+length: 124
+useWhen:
+  - "A beat about flexibility or range, where a single word shows off a variable font's width and weight."
+  - "A type-forward title card that needs a lively intro before settling into a clean wide word."
+  - "A product line that pairs a flexing headline word with a short narrow subline underneath."
+avoidWhen:
+  - "You only want a weight swell across the letters with no width change — use `weight-wave`."
+  - "You want to show different typefaces rather than one family flexing — use `font-cycle`."
+  - "The word should simply fade or slide in without a wave — use `soft-blur-in`."
+---
+
+<ComponentPreview name="axis-flex" />
+
+<InstallBlock name="axis-flex" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { AxisFlex } from "@/components/remocn/axis-flex";
+
+const AxisFlexScene = () => (
+  <AxisFlex word="flexible" line="One font, every mood" accent="#3B5BFD" />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="AxisFlex"
+    component={AxisFlexScene}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Each letter rides an equalizer wave between a light condensed cut and a wide medium cut, so the word breathes in width and weight. At frame 84 the letters snap one by one to the final style with a spring, then the narrow second line squeezes in underneath. Pass `word` and `line`; it ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "word",
+      type: "string",
+      default: "\"elastic\"",
+      description: "The word that flexes.",
+    },
+    {
+      name: "line",
+      type: "string",
+      default: "\"One family, every width\"",
+      description: "Second line, set in the narrow cut under the word.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color blended into the word's gradient fill.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier.",
+    },
+  ]}
+/>

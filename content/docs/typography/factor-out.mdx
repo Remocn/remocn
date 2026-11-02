@@ -1,0 +1,81 @@
+---
+title: Factor Out
+description: "Three short imperatives stack above a big blue \"in your editor.\""
+component: factor-out
+vibe: clean
+length: 153
+useWhen:
+  - "A feature beat where several actions share one location, tool or result."
+  - "A list of three short imperatives that should resolve into one claim."
+  - "A where-it-happens line, such as in your editor or in your repo."
+avoidWhen:
+  - "The lines are separate claims to be dimmed toward one — use `what-sticks`."
+  - "You want three single feature words with notes — use `feature-trio`."
+  - "You need a long list of steps to be folded away — use `chore-fold`."
+---
+
+<ComponentPreview name="factor-out" />
+
+<InstallBlock name="factor-out" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { FactorOut } from "@/components/remocn/factor-out";
+
+const FactorOutScene = () => <FactorOut heads={["Write the scenes", "Pick the colors", "Fix the typos"]} tail="in your editor." />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="FactorOut"
+    component={FactorOutScene}
+    durationInFrames={190}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Short imperative lines enter one by one and align, then the shared tail merges out of them: lines collapse one at a time until a single stack sits above a big tail phrase. Pass `heads` (the repeated beginnings) and `tail` (the shared ending).
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "heads",
+      type: "string[]",
+      default: "DEFAULT_HEADS",
+      description: "Short repeated lines that stack, one per row.",
+    },
+    {
+      name: "tail",
+      type: "string",
+      default: "DEFAULT_TAIL",
+      description: "Shared ending shown large after the lines merge.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Color of the tail phrase; defaults to the theme accent.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Stage fill color; pass \"transparent\" to overlay your own footage.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color scheme; ships dark and light.",
+    },
+  ]}
+/>

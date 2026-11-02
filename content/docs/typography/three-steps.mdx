@@ -1,0 +1,91 @@
+---
+title: Three Steps
+description: "Three large numerals light up along a line as a dot travels, each with a title and detail."
+component: three-steps
+vibe: clean
+length: 118
+useWhen:
+  - "A how-it-works beat that explains the product in three steps, such as install, compose, render."
+  - "A process summary that ends on a single outcome line for the last step."
+avoidWhen:
+  - "You have a longer feature list that needs rows and a highlight — use `index-list`."
+  - "You want three one-word features with notes and progress ticks — use `feature-trio`."
+  - "The steps should read like indented code lines — use `indent-steps`."
+---
+
+<ComponentPreview name="three-steps" />
+
+<InstallBlock name="three-steps" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { ThreeSteps } from "@/components/remocn/three-steps";
+
+const ThreeStepsScene = () => (
+  <ThreeSteps
+    steps={[
+      { title: "Install", detail: "Add a scene with the CLI" },
+      { title: "Compose", detail: "Arrange scenes in React" },
+      { title: "Render", detail: "Export an MP4" },
+    ]}
+    outcome="Your launch video, shipped"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="ThreeSteps"
+    component={ThreeStepsScene}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A line draws across the frame and ghost numerals appear, then a dot travels along it, lighting each numeral in a gradient as its title and detail rise in. The final step also shows the `outcome` in serif italic. Pass `steps` as `{ title, detail? }`, an `eyebrow` label, and the `outcome`. It ships light and dark; three steps fit best.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "steps",
+      type: "{ title: string; detail?: string }[]",
+      default: "DEFAULT_STEPS",
+      description: "Steps left to right, each with a title and optional detail.",
+    },
+    {
+      name: "eyebrow",
+      type: "string",
+      default: "\"How it works\"",
+      description: "Small caps label above the line.",
+    },
+    {
+      name: "outcome",
+      type: "string",
+      default: "\"Your launch video, shipped\"",
+      description: "Serif italic line shown under the last step.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Color of the outcome line.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark palette.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+  ]}
+/>

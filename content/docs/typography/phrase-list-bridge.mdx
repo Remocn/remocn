@@ -1,0 +1,109 @@
+---
+title: Phrase List Bridge
+description: "A phrase splits as a floating list deals in, a highlight picks one row, and it closes back in."
+component: phrase-list-bridge
+vibe: clean
+length: 116
+useWhen:
+  - "A beat that shows many options and then lands on one, such as browsing scenes and choosing a favorite."
+  - "A sentence whose middle word should be filled by a picked item from a short list."
+avoidWhen:
+  - "You only want a pill to expand inside a sentence, with no list — use `inline-pill-takeover`."
+  - "A video tile should slot into a gap in the sentence — use `word-gap-media`."
+  - "You want rows of feature chips that cluster around a logo — use `feature-chips-flow`."
+---
+
+<ComponentPreview name="phrase-list-bridge" />
+
+<InstallBlock name="phrase-list-bridge" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { PhraseListBridge } from "@/components/remocn/phrase-list-bridge";
+
+const PhraseListBridgeScene = () => (
+  <PhraseListBridge
+    left="Pick from"
+    right="ready-made scenes"
+    items={["Hero intro", "Feature tour", "Pricing beat", "Closing card"]}
+    pickedIndex={1}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="PhraseListBridge"
+    component={PhraseListBridgeScene}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The `left` and `right` phrases appear as one line, then split apart as a floating panel deals in your `items` between them. A highlight steps down to the row at `pickedIndex`, which turns accent-colored with a check while the other rows fall away, and the panel closes into a chip that bridges the two phrases. Pass `left`, `right`, up to eight `items`, and `pickedIndex`; the default items are remocn component names. It ships light and dark, each over a gradient ground.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop. It ships light and dark.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "left",
+      type: "string",
+      default: "\"Browse through\"",
+      description: "Text on the left of the final line.",
+    },
+    {
+      name: "right",
+      type: "string",
+      default: "\"ready-made scenes\"",
+      description: "Text on the right of the final line.",
+    },
+    {
+      name: "items",
+      type: "string[]",
+      description: "List rows shown in the panel; only the first eight are used.",
+    },
+    {
+      name: "pickedIndex",
+      type: "number",
+      default: "2",
+      description: "Zero-based index of the row that gets picked.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Color of the picked row and the final chip.",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Base background color behind the gradient ground.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark palette.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "Gradient shader preset id for the background.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the gradient shader parameters.",
+    },
+  ]}
+/>

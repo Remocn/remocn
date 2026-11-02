@@ -22,6 +22,7 @@ const UNDOCUMENTED: Record<string, string> = {
   "dropdown-menu-item": "folds into the dropdown-menu page",
   "command-menu-item": "folds into the command-menu page",
   "icons-core": "shared icon runtime",
+  gsh: "shared gradients.sh shader engine behind the gradient grounds",
 };
 
 function isIcon(name: string): boolean {
@@ -262,9 +263,14 @@ describe("navigation lists every page", () => {
     const missing: string[] = [];
     for (const page of pages) {
       if (typeof page.frontmatter.component !== "string") continue;
-      const dir = page.file.slice(0, page.file.lastIndexOf("/"));
+      let dir = page.file.slice(0, page.file.lastIndexOf("/"));
+      let slug = basename(page.file, ".mdx");
+      // A folder's index page is listed by its folder name in the parent meta.
+      if (slug === "index") {
+        slug = basename(dir);
+        dir = dir.slice(0, dir.lastIndexOf("/"));
+      }
       const meta = JSON.parse(readFileSync(`${dir}/meta.json`, "utf8"));
-      const slug = basename(page.file, ".mdx");
       if (!(meta.pages as string[]).includes(slug)) missing.push(page.file);
     }
 

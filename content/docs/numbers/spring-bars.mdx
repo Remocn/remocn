@@ -1,0 +1,95 @@
+---
+title: Spring Bars
+description: "Bars spring up with overshoot, one gradient bar highlighted under a 3.4x stat"
+component: spring-bars
+vibe: data
+length: 127
+useWhen:
+  - "A comparison beat where one bar should win, such as the stiffest or strongest option of several."
+  - "A product-strength claim, such as 3.4x, shown with springy bars that settle under load."
+  - "A playful bar chart where physical bounce supports the message."
+avoidWhen:
+  - "You need labeled category axes and real units — use `log-rescale`."
+  - "You want an LED, retro bar style — use `pixel-bars`."
+  - "You want a bar that breaks through a target — use `off-the-charts`."
+---
+
+<ComponentPreview name="spring-bars" />
+
+<InstallBlock name="spring-bars" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { SpringBars } from "@/components/remocn/spring-bars";
+
+const SpringBarsScene = () => (
+  <SpringBars
+    values={[0.58, 0.72, 0.52, 0.66, 0.97, 0.62, 0.7]}
+    accentIndex={4}
+    value="3.4×"
+    caption="Least sag under the same load"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="SpringBars"
+    component={SpringBarsScene}
+    durationInFrames={160}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Bars drop in as coiled springs and compress to their heights with a bounce, then the chart morphs so the highlighted bar becomes a gradient hero under its stat and caption. Pass `values` (relative heights from 0 to 1), `accentIndex`, `value` and `caption`. Ships dark and light via `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "values",
+      type: "number[]",
+      description: "Relative bar heights from 0 to 1; defaults to seven bars.",
+    },
+    {
+      name: "accentIndex",
+      type: "number",
+      default: "4",
+      description: "Index of the bar that becomes the hero.",
+    },
+    {
+      name: "value",
+      type: "string",
+      default: "\"3.4×\"",
+      description: "The hero stat, such as 3.4x.",
+    },
+    {
+      name: "caption",
+      type: "string",
+      default: "\"Least sag under the same load\"",
+      description: "Line under the hero stat.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for the hero element.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Dark or light palette.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier.",
+    },
+  ]}
+/>

@@ -1,0 +1,58 @@
+---
+title: Mesh Gradient
+description: WebGL mesh gradient backdrop driven per-frame for deterministic Remotion renders
+component: shader-mesh-gradient
+vibe: premium
+length: 150
+useWhen:
+  - "You need a quality, production-grade gradient backdrop."
+  - "A hero or title scene wants slow, living color motion behind foreground text without competing for attention."
+  - "The brand palette is soft/dark and you want the gradient to lead only when you override `colors`."
+avoidWhen:
+  - "You want a structured, geometric background — use `shader-dot-orbit` or `shader-voronoi`."
+  - "The shader must animate on a wall clock rather than the timeline — these wrappers are frame-driven by design; that is what keeps renders deterministic."
+  - "You need a static, single-frame image — a solid `backdrop` fill is lighter."
+---
+
+<ComponentPreview name="shader-mesh-gradient" />
+
+<InstallBlock name="shader-mesh-gradient" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { ShaderMeshGradient } from "@/components/remocn/shader-mesh-gradient";
+
+const ShaderMeshGradientScene = () => (
+  <ShaderMeshGradient speed={1} distortion={0.6} swirl={0.1} />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="ShaderMeshGradient"
+    component={ShaderMeshGradientScene}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+## Presets
+
+Ready-made looks, each a standalone registry item that pulls in `shader-mesh-gradient` as a dependency. Install one and drop it in like the base shader. Props you pass override the preset, and `speed` scales the preset's own pace instead of replacing it.
+
+<ShaderPresets base="shader-mesh-gradient" />
+
+```tsx
+import { ShaderMeshGradientDusk } from "@/components/remocn/shader-mesh-gradient-dusk";
+
+export const Background = () => <ShaderMeshGradientDusk />;
+```
+
+## Credits
+
+Shader by [paper-design/shaders](https://github.com/paper-design/shaders).

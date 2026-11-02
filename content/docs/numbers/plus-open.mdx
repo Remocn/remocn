@@ -1,0 +1,90 @@
+---
+title: Plus Open
+description: "A figure with a plus sign rises in, then the plus opens like a door onto the next statement."
+component: plus-open
+vibe: premium
+length: 106
+useWhen:
+  - "A transition from a count such as 150 updates into the first line of a release recap."
+  - "A release-notes beat where a number teases what follows."
+  - "A chapter opener where a plus sign is the visual hinge between two statements."
+avoidWhen:
+  - "You want a static headline stat — use `compact-stat`."
+  - "You want the count itself to animate — use `tall-count`."
+  - "The next beat is a table of facts — use `spec-sheet`."
+---
+
+<ComponentPreview name="plus-open" />
+
+<InstallBlock name="plus-open" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { PlusOpen } from "@/components/remocn/plus-open";
+
+const PlusOpenScene = () => (
+  <PlusOpen value="150" label="updates in this release" next="Here’s everything new." />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="PlusOpen"
+    component={PlusOpenScene}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The figure rises in and a plus sign spins into place beside it, arms extending. The plus then opens, splitting the frame to reveal the next statement over a soft aurora ground. Pass `value`, `label` and `next`; it ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "value",
+      type: "string",
+      default: "\"150\"",
+      description: "Figure shown before the plus sign.",
+    },
+    {
+      name: "label",
+      type: "string",
+      default: "\"updates in this release\"",
+      description: "Small line under the figure before the plus opens.",
+    },
+    {
+      name: "next",
+      type: "string",
+      default: "\"Here’s everything new.\"",
+      description: "Statement revealed word by word once the plus opens.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for highlights and small marks.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background color override. Pass \"transparent\" to composite over other layers.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color theme, \"dark\" or \"light\".",
+    },
+  ]}
+/>

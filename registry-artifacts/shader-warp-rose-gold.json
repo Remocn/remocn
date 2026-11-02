@@ -1,0 +1,19 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "shader-warp-rose-gold",
+  "title": "Shader Warp Rose Gold",
+  "description": "Satin rose-gold folds with a soft sheen.",
+  "registryDependencies": ["@remocn/shader-warp"],
+  "files": [
+    {
+      "path": "registry/remocn/shader-warp-rose-gold/index.tsx",
+      "content": "\"use client\";\n\nimport {\n  ShaderWarp,\n  type ShaderWarpProps,\n} from \"@/components/remocn/shader-warp\";\n\n// Rose Gold: satin rose-gold folds with a soft sheen.\n// A preset of ShaderWarp. The whole look lives in the object below, so tune\n// it freely. Props you pass override the preset, except `speed`, which scales\n// the preset's own speed instead of replacing it.\n\nexport const shaderWarpRoseGoldPreset = {\n  speed: 3,\n  shape: \"checks\",\n  colors: [\"#2a1515\", \"#b76e79\", \"#f6d1c1\"],\n  proportion: 0.5,\n  softness: 1,\n  distortion: 0.1,\n  swirl: 0.9,\n  swirlIterations: 6,\n  shapeScale: 0.25,\n  scale: 2,\n} satisfies ShaderWarpProps;\n\nexport function ShaderWarpRoseGold({ speed = 1, ...props }: ShaderWarpProps) {\n  return (\n    <ShaderWarp\n      {...shaderWarpRoseGoldPreset}\n      {...props}\n      speed={shaderWarpRoseGoldPreset.speed * speed}\n    />\n  );\n}\n",
+      "type": "registry:component",
+      "target": "components/remocn/shader-warp-rose-gold.tsx"
+    }
+  ],
+  "meta": {
+    "presetOf": "shader-warp"
+  },
+  "type": "registry:component"
+}

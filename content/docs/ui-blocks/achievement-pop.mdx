@@ -1,0 +1,85 @@
+---
+title: Achievement Pop
+description: "Achievement toasts unlock one after another in a stack, the last a rare card, then a total and wordmark land."
+component: achievement-pop
+vibe: playful
+length: 112
+useWhen:
+  - "A milestones or gamification beat showing a user unlocking several achievements in sequence."
+  - "A launch recap where three accomplishments each carry a rarity label and a point value."
+  - "A playful moment that ends on a total score and a brand mark."
+avoidWhen:
+  - "A single big milestone number is the point — use `milestone-roll`."
+  - "You want a lightweight notification sliding in and out — use `toast`."
+  - "The beat is about ranking people or items rather than unlocking — use `leaderboard-climb`."
+---
+
+<ComponentPreview name="achievement-pop" />
+
+<InstallBlock name="achievement-pop" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { AchievementPop } from "@/components/remocn/achievement-pop";
+
+const AchievementPopScene = () => (
+  <AchievementPop
+    achievements={[{ label: "Unlocked · 64% of makers", title: "Shipped in one day", points: 100, icon: "trophy" }, { label: "Rare · 1.8% of makers", title: "Launch video shipped", points: 250, icon: "star" }]}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="AchievementPop"
+    component={AchievementPopScene}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Up to three achievement pills pop in one at a time, each with an icon, a rarity label, a title and points, while the stack shifts up and a total counts. After the last pill the camera pushes in and a wordmark lands. Pass your own `achievements`; it ships light and dark through `theme`.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "achievements",
+      type: "{ label: string; title: string; points: number; icon?: 'trophy' | 'bolt' | 'star' }[]",
+      description: "Up to three achievements. Icon is trophy, bolt or star.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color scheme. Ships light and dark.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "Shader preset id for the animated background.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Partial shader parameters that override the ground preset.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Declared but not used by the current source.",
+    },
+  ]}
+/>

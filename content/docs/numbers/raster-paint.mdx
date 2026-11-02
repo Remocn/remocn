@@ -1,0 +1,79 @@
+---
+title: Raster Paint
+description: "A pixelated figure is painted tile by tile in warm to blue colors as a scan line crosses it."
+component: raster-paint
+vibe: playful
+length: 90
+useWhen:
+  - "A big multiplier such as 10x that should feel like it is being rendered on screen."
+  - "A render-speed or graphics-themed beat."
+  - "A playful stat reveal with a retro raster feel."
+avoidWhen:
+  - "You need a crisp, clean stat from the first frame — use `compact-stat`."
+  - "The figure should assemble out of loose squares — use `number-mosaic`."
+  - "The reveal should scrub a ruler to a year — use `ruler-scrub`."
+---
+
+<ComponentPreview name="raster-paint" />
+
+<InstallBlock name="raster-paint" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { RasterPaint } from "@/components/remocn/raster-paint";
+
+const RasterPaintScene = () => (
+  <RasterPaint title="10x" label="Faster renders in remocn 2.0" />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="RasterPaint"
+    component={RasterPaintScene}
+    durationInFrames={120}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A scan line sweeps down the frame, painting the pixelated figure tile by tile, with a warm to blue gradient trailing behind it. A label fades in once the scan is done. Pass `title` and `label`; it ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "title",
+      type: "string",
+      default: "\"10x\"",
+      description: "Figure that gets painted, as text.",
+    },
+    {
+      name: "label",
+      type: "string",
+      default: "\"Faster renders in remocn 2.0\"",
+      description: "Small line that fades in under the figure.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for highlights and small marks.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color theme, \"dark\" or \"light\".",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+  ]}
+/>

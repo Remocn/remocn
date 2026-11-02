@@ -1,0 +1,106 @@
+---
+title: Ride Tracking
+description: "A phone map draws a route, the car drives it while the ETA falls, and an arrival check lands."
+component: ride-tracking
+vibe: clean
+length: 244
+useWhen:
+  - "A mobility, delivery or logistics launch where the beat is watch-it-come-to-you."
+  - "A vertical cut with three captions: book, track, arrive."
+  - "A scene where an ETA counting down is the hook."
+avoidWhen:
+  - "You want a lock-screen countdown instead of a map — use `live-activity`."
+  - "You want a payment confirmation with a receipt — use `money-send`."
+  - "You want a store listing and install flow — use `app-store-listing`."
+---
+
+<ComponentPreview name="ride-tracking" />
+
+<InstallBlock name="ride-tracking" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { RideTracking } from "@/components/remocn/ride-tracking";
+
+const RideTrackingScene = () => (
+  <RideTracking
+    eta={4}
+    pickup="214 Linden St"
+    lines={["Book it in one tap.", "Watch it come to you.", "Your ride is here."]}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="RideTracking"
+    component={RideTrackingScene}
+    durationInFrames={270}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A phone shows a map where the route draws, a trip card slides up with the driver and car, and the car follows the route while the ETA counts down from `eta` minutes. It ends on an arrival check. Pass `driver` (name, rating, car, plate), `pickup` and `eta`; `lines` are the three captions beside the phone. Ships light and dark.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "driver",
+      type: "RideDriver",
+      default: "DEFAULT_DRIVER",
+      description: "Driver card: name, initials, rating, trips, car and plate",
+    },
+    {
+      name: "eta",
+      type: "number",
+      default: "4",
+      description: "Starting ETA in minutes; counts down to arrival",
+    },
+    {
+      name: "pickup",
+      type: "string",
+      default: "\"214 Linden St\"",
+      description: "Pickup street shown on the pin and in the sheet",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#276EF1\"",
+      description: "Accent color for highlights, buttons and progress",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline",
+    },
+    {
+      name: "theme",
+      type: "\"light\" | \"dark\"",
+      default: "\"light\"",
+      description: "Light or dark palette",
+    },
+    {
+      name: "lines",
+      type: "[string, string, string]",
+      description: "Three captions beside the phone: route, drive, arrival",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "gradients.sh preset id for the backdrop shader",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the backdrop shader parameters",
+    },
+  ]}
+/>

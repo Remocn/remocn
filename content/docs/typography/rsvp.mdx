@@ -1,0 +1,101 @@
+---
+title: Rsvp
+description: "A big invitation headline, then a what, when and where table that builds up to an accent install command."
+component: rsvp
+vibe: playful
+length: 117
+useWhen:
+  - "A launch or event invite that spells out what, when and where, ending on how to join."
+  - "A closing call to action presented as a short itinerary, with the final row as a command or link."
+avoidWhen:
+  - "You want a thank-you sign-off followed by a P.S. line — use `post-script`."
+  - "You only need a bold release announcement line — use `embargo-lift`."
+  - "The last beat is a countdown to going live — use `drop-timer`."
+---
+
+<ComponentPreview name="rsvp" />
+
+<InstallBlock name="rsvp" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { Rsvp } from "@/components/remocn/rsvp";
+
+const RsvpScene = () => (
+  <Rsvp
+    headline="You are invited."
+    fields={[
+      { label: "What", value: "The 2.0 launch film" },
+      { label: "When", value: "Tuesday, 9 AM" },
+    ]}
+    rsvp="acme.dev/launch"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="Rsvp"
+    component={RsvpScene}
+    durationInFrames={180}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The `headline` rises word by word, then rows of label and value (the `fields`) build below it, ending on an accent row labeled `rsvpLabel` that shows the `rsvp` text and pulls focus as the other rows dim. The default `rsvp` is a remocn install command, so pass your own link or command. It ships light and dark.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "headline",
+      type: "string",
+      default: "\"You’re invited.\"",
+      description: "Large invitation line at the top.",
+    },
+    {
+      name: "fields",
+      type: "{ label: string; value: string }[]",
+      default: "DEFAULT_FIELDS",
+      description: "Label and value rows shown under the headline.",
+    },
+    {
+      name: "rsvpLabel",
+      type: "string",
+      default: "\"RSVP\"",
+      description: "Label of the final, accent-colored row.",
+    },
+    {
+      name: "rsvp",
+      type: "string",
+      default: "\"npx shadcn add @remocn/whip-pan\"",
+      description: "Text of the final row, such as a link or command; empty hides the row.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Color of the labels and the final row.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark palette.",
+    },
+  ]}
+/>

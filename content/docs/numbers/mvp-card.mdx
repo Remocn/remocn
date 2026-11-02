@@ -1,0 +1,102 @@
+---
+title: MVP Card
+description: "A player card slams open beside a giant gradient MVP word while three stats count up on the card."
+component: mvp-card
+vibe: playful
+length: 62
+useWhen:
+  - "A community or contributor spotlight styled like a sports award card."
+  - "A launch beat that celebrates a person, team or product as the MVP of the release."
+  - "Three headline stats that should count up inside a card, one of them counting down."
+avoidWhen:
+  - "The beat is a ranking against competitors — use `timing-tower`."
+  - "You only need a single stat — use `compact-stat`."
+  - "You want a head-to-head result — use `score-bug`."
+---
+
+<ComponentPreview name="mvp-card" />
+
+<InstallBlock name="mvp-card" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { MvpCard } from "@/components/remocn/mvp-card";
+
+const MvpCardScene = () => (
+  <MvpCard title="MVP" role="Carry" number="01" stats={[{ value: 12.4, decimals: 1, label: "Renders / min" }, { value: 100, suffix: "%", label: "Uptime" }]} />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="MvpCard"
+    component={MvpCardScene}
+    durationInFrames={105}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The card slams up and opens from its centre line, the giant title rises letter by letter behind it, and the logo, role and event lines slide in. Three stats then count in a stagger. Pass `title`, `kicker`, `event`, `role`, `number` and `stats`; it ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "title",
+      type: "string",
+      default: "\"MVP\"",
+      description: "The huge word behind the card.",
+    },
+    {
+      name: "kicker",
+      type: "string",
+      default: "\"Most valuable player\"",
+      description: "Small label at the top right.",
+    },
+    {
+      name: "event",
+      type: "string",
+      default: "\"Grand final 2026\"",
+      description: "Event line under the kicker.",
+    },
+    {
+      name: "role",
+      type: "string",
+      default: "\"Carry\"",
+      description: "Role tag next to the logo on the card.",
+    },
+    {
+      name: "number",
+      type: "string",
+      default: "\"01\"",
+      description: "Player number shown in the portrait corner.",
+    },
+    {
+      name: "stats",
+      type: "MvpStat[]",
+      description: "Stat rows that count up inside the card; set from above value to count down.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Small markers such as the kicker tick and stat ticks.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color theme, \"dark\" or \"light\".",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+  ]}
+/>

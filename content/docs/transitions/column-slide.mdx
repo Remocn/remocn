@@ -1,0 +1,90 @@
+---
+title: Column Slide
+description: "Vertical columns slide across in a stagger and swap one headline for another"
+component: column-slide
+vibe: clean
+length: 66
+useWhen:
+  - "A clean, rhythmic swap between two headlines such as a plan and its launch."
+  - "A beat that needs a graphic, architectural cut with a clear tempo."
+  - "A chapter title change where the whole frame should visibly move, not just fade."
+avoidWhen:
+  - "You want horizontal bands instead of vertical columns — use `band-shift`."
+  - "The scenes are full UI shots rather than headlines — use `color-bars`."
+  - "A single smooth push is enough — use `slide-swap`."
+---
+
+<ComponentPreview name="column-slide" />
+
+<InstallBlock name="column-slide" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { ColumnSlide } from "@/components/remocn/column-slide";
+
+const ColumnSlideScene = () => (
+  <ColumnSlide
+    from="Plan the launch"
+    to="Launch day"
+    columns={5}
+    accent="#3B5BFD"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="ColumnSlide"
+    component={ColumnSlideScene}
+    durationInFrames={96}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The `from` headline sits on the stage. Between 3 and 7 vertical columns, set by `columns`, then slide across in a stagger, each carrying a slice of both headlines, and the new scene settles with a slight scale-down. Pass `from` and `to` as short strings; it ships light and dark and the move finishes at frame 66.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "from",
+      type: "string",
+      default: "\"Plan the launch\"",
+      description: "Outgoing headline",
+    },
+    {
+      name: "to",
+      type: "string",
+      default: "\"Launch day\"",
+      description: "Incoming headline",
+    },
+    {
+      name: "columns",
+      type: "number",
+      default: "5",
+      description: "Number of vertical columns, clamped between 3 and 7",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color used by the scenes",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark stage",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier for the whole timeline",
+    },
+  ]}
+/>

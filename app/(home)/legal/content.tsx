@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { GITHUB_URL, SUPPORT_EMAIL } from "@/config/site";
 
-export const LAST_UPDATED = "July 24, 2026";
+export const LAST_UPDATED = "October 10, 2026";
 
 export type LegalItem = { title: ReactNode; body: ReactNode };
 
@@ -99,6 +99,37 @@ export const LEGAL_PARTS: LegalPart[] = [
         ),
       },
       {
+        id: "plugin",
+        title: "The plugin and MCP server",
+        body: (
+          <>
+            The remocn plugin for Claude Code and Codex and the MCP server at{" "}
+            <code>remocn.dev/mcp</code> need no account and collect no personal
+            data.
+          </>
+        ),
+        items: [
+          {
+            title: "MCP server.",
+            body: "The server is stateless. It answers each request from the public component catalog and does not store or log what you send it: search queries, video briefs and component props are used to build the answer and then discarded. The standard access logs described above apply, as for the rest of the site.",
+          },
+          {
+            title: "Previews in chat.",
+            body: (
+              <>
+                Component previews shown inside Claude or ChatGPT load pages
+                from <code>remocn.dev/embed</code>. Those pages run no
+                analytics, so the props in their address are not recorded.
+              </>
+            ),
+          },
+          {
+            title: "The plugin.",
+            body: "Its skills run on your machine, inside your agent. They read public documentation and registry files from remocn.dev and install packages from npm. Nothing about your project or your prompts is sent to us.",
+          },
+        ],
+      },
+      {
         id: "third-party-services",
         title: "Third-party services",
         rows: [
@@ -187,7 +218,7 @@ export const LEGAL_PARTS: LegalPart[] = [
   },
 ];
 
-/** Flat, numbered list of sections (01–10) for the index and the article. */
+/** Flat, numbered list of sections (01–11) for the index and the article. */
 export const LEGAL_INDEX = LEGAL_PARTS.flatMap((part) => part.sections).map(
   (section, index) => ({
     id: section.id,

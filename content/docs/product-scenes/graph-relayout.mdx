@@ -1,0 +1,96 @@
+---
+title: Graph Relayout
+description: "A node graph rearranges itself through several layouts as nodes slide, appear and reconnect"
+component: graph-relayout
+vibe: tech
+length: 130
+useWhen:
+  - "A beat explaining how one prompt fans out into many outputs, with the pipeline reshaping at each step."
+  - "A node-based workflow product showing the same graph adapting to different use cases."
+  - "A feature video where a cursor drags nodes and the whole flow visibly re-lays itself out."
+avoidWhen:
+  - "You only need one prompt trailing dotted lines into a fixed chain of steps — use `node-trail`."
+  - "The nodes should be a build-it-yourself canvas rather than a re-layout — use `flow-builder`."
+  - "The result should be an actual app being generated — use `prompt-to-app`."
+---
+
+<ComponentPreview name="graph-relayout" />
+
+<InstallBlock name="graph-relayout" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { GraphRelayout } from "@/components/remocn/graph-relayout";
+
+const GraphRelayoutScene = () => (
+  <GraphRelayout theme="light" kicker="Workflow" cursorName="Sam" />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="GraphRelayout"
+    component={GraphRelayoutScene}
+    durationInFrames={158}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A graph starts with a prompt node and a short chain, then each layout step moves nodes into new positions while a named cursor drags one of them, with nodes entering, leaving and edges rewiring. Each layout carries a title that changes as the graph does. Pass `layouts` (positions and edges per step) with a `catalog` of node specs to describe your own pipeline; `kicker` and `cursorName` set the label and cursor tag. It ships light and dark through `theme`.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark interface.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Accent color for edges and highlights.",
+    },
+    {
+      name: "catalog",
+      type: "Record<string, GraphNodeSpec>",
+      default: "DEFAULT_CATALOG",
+      description: "Node specs by id: label, icons, tint, columns, input text.",
+    },
+    {
+      name: "layouts",
+      type: "GraphLayout[]",
+      default: "DEFAULT_LAYOUTS",
+      description: "Ordered layouts: title, node positions (0 to 1), edges, optional note.",
+    },
+    {
+      name: "kicker",
+      type: "string",
+      default: "\"Use case\"",
+      description: "Small label shown above each layout title.",
+    },
+    {
+      name: "cursorName",
+      type: "string",
+      default: "\"Mia\"",
+      description: "Name tag on the dragging cursor.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "Gradient shader preset for the background.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the shader preset parameters.",
+    },
+  ]}
+/>

@@ -1,0 +1,22 @@
+{
+  "title": "Graphic Looks",
+  "defaultOpen": true,
+  "pages": [
+    "index",
+    "riso-print",
+    "line-boil",
+    "blueprint",
+    "duotone-beat",
+    "comic-panels",
+    "long-shadow",
+    "synthwave",
+    "brick-mosaic",
+    "x-ray-scan",
+    "------",
+    "embossed-mark",
+    "fluted-glass",
+    "frosted-clear",
+    "led-ticker"
+  ],
+  "icon": "PaintBoardIcon"
+}

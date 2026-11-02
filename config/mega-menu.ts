@@ -24,8 +24,15 @@ const humanize = (slug: string) =>
 
 const COMPONENT_CATEGORIES: MegaMenuItem[] = [
   { label: "Typography", href: "/docs/typography", preview: "soft-blur-in" },
+  { label: "Numbers & Stats", href: "/docs/numbers", preview: "zero-stretch" },
   { label: "Layout", href: "/docs/layout", preview: "drift" },
   { label: "UI", href: "/docs/ui", preview: "accordion" },
+  {
+    label: "Product Scenes",
+    href: "/docs/product-scenes",
+    preview: "live-dashboard",
+  },
+  { label: "Media & Collage", href: "/docs/media", preview: "shards-to-grid" },
   {
     label: "Transitions",
     href: "/docs/transitions",
@@ -36,6 +43,13 @@ const COMPONENT_CATEGORIES: MegaMenuItem[] = [
     label: "Motion Graphics",
     href: "/docs/motion-graphics",
     preview: "bauhaus-build",
+  },
+  { label: "Logo Stings", href: "/docs/logo-stings", preview: "neon-sign" },
+  { label: "Camera & Physics", href: "/docs/camera", preview: "dolly-zoom" },
+  {
+    label: "Graphic Looks",
+    href: "/docs/graphic-looks",
+    preview: "riso-print",
   },
   {
     label: "Filters",

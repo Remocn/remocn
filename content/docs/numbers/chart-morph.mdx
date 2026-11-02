@@ -1,0 +1,94 @@
+---
+title: Chart Morph
+description: "A segmented ring unrolls into bars, tips into columns, then collapses into an area line chart ending on 46k."
+component: chart-morph
+vibe: data
+length: 155
+useWhen:
+  - "A data reveal where the same numbers should visibly transform from a ring into a trend chart."
+  - "A monthly growth beat that ends on one big last value, such as 46k renders in May."
+  - "A scene where the chart itself is the showpiece and needs a satisfying shape-shifting move."
+avoidWhen:
+  - "You just need a clean line that draws on — use `growth-line`."
+  - "You want a glowing sparkline next to a stat — use `sparkline-thread`."
+  - "You need bars that overshoot with spring physics — use `spring-bars`."
+---
+
+<ComponentPreview name="chart-morph" />
+
+<InstallBlock name="chart-morph" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { ChartMorph } from "@/components/remocn/chart-morph";
+
+const ChartMorphScene = () => (
+  <ChartMorph
+    suffix="k"
+    caption="renders in May"
+    data={[
+      { label: "Jan", value: 12 },
+      { label: "Feb", value: 18 },
+      { label: "Mar", value: 23 },
+      { label: "Apr", value: 31 },
+      { label: "May", value: 46 },
+    ]}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="ChartMorph"
+    component={ChartMorphScene}
+    durationInFrames={182}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A segmented ring unrolls into a stacked bar, the segments tip upright into columns, and the columns collapse into a line chart with an area fill that ends on the last value. Pass `data` (label and value per point), `suffix` for the unit, and `caption` for the line under the value. Ships dark and light via `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "data",
+      type: "ChartMorphDatum[]",
+      default: "DEFAULT_DATA",
+      description: "Points to plot, in order; the last one is the hero value.",
+    },
+    {
+      name: "suffix",
+      type: "string",
+      default: "\"k\"",
+      description: "Unit appended to the final value.",
+    },
+    {
+      name: "caption",
+      type: "string",
+      description: "Line under the value; defaults to renders in the last label.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for the hero element.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Dark or light palette.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier.",
+    },
+  ]}
+/>

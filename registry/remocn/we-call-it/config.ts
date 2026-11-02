@@ -1,0 +1,40 @@
+import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+
+export const weCallItConfig: ComponentConfig = {
+  componentName: "WeCallIt",
+  importPath: "@/components/remocn/we-call-it",
+  controls: {
+    theme: {
+      type: "enum",
+      default: "dark",
+      variants: {
+        dark: {},
+        light: {},
+      },
+      description: "Theme",
+    },
+    lead: {
+      type: "text-content",
+      default: "We call it a",
+      description: "Lead",
+    },
+    name: {
+      type: "text-content",
+      default: "video registry.",
+      description: "Name",
+    },
+    speed: {
+      type: "number",
+      default: 1,
+      min: 0.25,
+      max: 4,
+      step: 0.25,
+      description: "Speed",
+      hiddenFromList: false,
+    },
+  },
+  durationInFrames: 210,
+  fps: FPS,
+  compositionWidth: W,
+  compositionHeight: H,
+};

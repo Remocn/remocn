@@ -1,0 +1,86 @@
+---
+title: Treemap Split
+description: "A treemap splits into category tiles, the biggest tile in gradient with a 38% label"
+component: treemap-split
+vibe: data
+length: 130
+useWhen:
+  - "A catalog or usage breakdown where one category, such as 38%, is the headline and the rest are context."
+  - "A beat that should show how a whole divides into labeled categories."
+  - "A scene with up to ten categories where the biggest tile gets the gradient and a label."
+avoidWhen:
+  - "You want a ring with a single percentage in the center — use `share-donut`."
+  - "You want free-floating bubbles instead of tiles — use `bubble-pack`."
+  - "You want shares changing across years — use `stacked-shift`."
+---
+
+<ComponentPreview name="treemap-split" />
+
+<InstallBlock name="treemap-split" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { TreemapSplit } from "@/components/remocn/treemap-split";
+
+const TreemapSplitScene = () => (
+  <TreemapSplit
+    items={[
+      { label: "Captions", value: 38 },
+      { label: "Transitions", value: 16 },
+      { label: "Text", value: 12 },
+      { label: "Shaders", value: 8 },
+      { label: "Icons", value: 6 },
+    ]}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="TreemapSplit"
+    component={TreemapSplitScene}
+    durationInFrames={175}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A rectangle splits recursively with drawn lines into category tiles, then the highlighted tile fills with gradient, the rest dim, and its share counts up with its label. Pass `items` (label and value, up to ten) and optionally `highlight`, the index of the hero item; it defaults to the largest. Ships dark and light via `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "items",
+      type: "TreemapItem[]",
+      default: "DEFAULT_ITEMS",
+      description: "Up to ten categories; tile area follows value.",
+    },
+    {
+      name: "highlight",
+      type: "number",
+      description: "Index in items of the hero tile; defaults to the largest.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for the hero element.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Dark or light palette.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier.",
+    },
+  ]}
+/>

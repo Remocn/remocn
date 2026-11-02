@@ -1,0 +1,49 @@
+---
+title: Camera & Physics
+description: Full-frame shots built on a simulated camera or a small physics engine, from parallax trucks and a dolly zoom to falling bodies and a cloth yank
+---
+
+import { CategoryIndex } from "@/components/docs/index/category/category-index";
+import { ComponentGroup } from "@/components/docs/index/category/component-group";
+
+Each piece here owns the whole frame. The camera shots project a small 3D scene through a pinhole camera, and the physics pieces run a deterministic simulation once and play it back, so seeking and rendering always land on the same frame. Most ship with a built-in subject and accept your own content as children or layers.
+
+<CategoryIndex section="/docs/camera">
+
+<ComponentGroup
+  items={[
+    "parallax-depth",
+    "dolly-zoom",
+    "turntable",
+    "tiny-planet",
+    "exploded-view",
+  ]}
+>
+
+## Camera
+
+</ComponentGroup>
+
+<ComponentGroup
+  items={[
+    "gravity-pile",
+    "cloth-reveal",
+    "impact-shake",
+  ]}
+>
+
+## Physics
+
+</ComponentGroup>
+
+<ComponentGroup
+  items={[
+    "layered-cutout",
+  ]}
+>
+
+## 
+
+</ComponentGroup>
+
+</CategoryIndex>

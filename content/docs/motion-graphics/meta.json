@@ -8,7 +8,26 @@
     "truchet-flip",
     "trim-burst",
     "speed-lines",
-    "squiggle"
+    "squiggle",
+    "pendulum-wave",
+    "flow-field",
+    "isometric-build",
+    "life-grid",
+    "string-art",
+    "topo-lines",
+    "phyllotaxis",
+    "---Dots & particles---",
+    "dot-field-morph",
+    "flock-form",
+    "ring-align",
+    "---Lines & paths---",
+    "chord-ring",
+    "fourier-sum",
+    "path-search",
+    "---Generative---",
+    "pattern-tile",
+    "---Shapes---",
+    "venn-merge"
   ],
   "icon": "GeometricShapes01Icon"
 }

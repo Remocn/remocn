@@ -1,0 +1,81 @@
+---
+title: No Buts
+description: "A muted objection builds in the corner and a larger reply answers it, repeating, with the last reply in accent."
+component: no-buts
+vibe: playful
+length: 226
+useWhen:
+  - "An objection-handling beat where each hesitation gets a short, confident reply."
+  - "A friendly closing exchange that ends on an inviting line like go on, we will wait."
+avoidWhen:
+  - "The objection should shrink into a note and stay visible while the answer builds — use `in-proportion`."
+  - "There is a single question and a single answer — use `answer-first`."
+  - "The reply is a quoted line from a person rather than your voice — use `overheard`."
+---
+
+<ComponentPreview name="no-buts" />
+
+<InstallBlock name="no-buts" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { NoButs } from "@/components/remocn/no-buts";
+
+const NoButsScene = () => (
+  <NoButs
+    exchanges={[
+      { objection: "But I am not a designer.", reply: "You do not need to be." },
+      { objection: "But…", reply: "Go on. We will wait." },
+    ]}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="NoButs"
+    component={NoButsScene}
+    durationInFrames={255}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Each exchange builds a muted objection word by word at the top right, then a larger reply along the bottom left; the next exchange pushes the previous one away, and the final reply turns the accent color. Pass `exchanges` as `{ objection, reply }` pairs. Timing compresses to fit the composition; 226 frames is the uncompressed length of the three defaults. It ships light and dark.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "exchanges",
+      type: "{ objection: string; reply: string }[]",
+      default: "DEFAULT_EXCHANGES",
+      description: "Objection and reply pairs, played in order.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Color of the final reply; overrides the theme accent.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark palette.",
+    },
+  ]}
+/>

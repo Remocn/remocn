@@ -1,0 +1,90 @@
+---
+title: Ring Cut
+description: "Concentric colored rings expand from a chosen point and the last ring carries in the next scene"
+component: ring-cut
+vibe: premium
+length: 57
+useWhen:
+  - "Swapping a short statement for a logo or closing line with a circular reveal from a chosen point."
+  - "A cut that should originate from a button, a cursor position or a corner of the frame."
+  - "A clean graphic transition with ring lines, not a blur or a glow."
+avoidWhen:
+  - "You want a soft glow of light rather than hard rings — use `bloom-ring`."
+  - "You want a burst of filled color rings from the center — use `ring-burst`."
+  - "A single shape growing out of the text is a better fit — use `shape-cut`."
+---
+
+<ComponentPreview name="ring-cut" />
+
+<InstallBlock name="ring-cut" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { RingCut } from "@/components/remocn/ring-cut";
+
+const RingCutScene = () => (
+  <RingCut
+    from="One idea"
+    to="Now live"
+    origin={{ x: 0.2, y: 0.74 }}
+    accent="#3B5BFD"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="RingCut"
+    component={RingCutScene}
+    durationInFrames={96}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The `from` headline holds, then a sequence of rings in alternating tones and thin lines expands from `origin`. The last ring carries the `to` scene across the frame and it settles into place; `to="remocn"` sets the remocn logo. Place `origin` as fractions of the frame, for example on the control that triggers the cut. With the default origin the scene settles by frame 57.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "from",
+      type: "string",
+      default: "\"One idea\"",
+      description: "Outgoing headline",
+    },
+    {
+      name: "to",
+      type: "string",
+      default: "\"remocn\"",
+      description: "Incoming headline; remocn sets the logo",
+    },
+    {
+      name: "origin",
+      type: "{ x: number; y: number }",
+      default: "{ x: 0.2, y: 0.74 }",
+      description: "Center of the expanding rings as fractions of the frame",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color used by the scenes",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark stage",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier for the whole timeline",
+    },
+  ]}
+/>

@@ -1,0 +1,79 @@
+---
+title: Anagram Shuffle
+description: "The letters of one word slide into new positions to spell its anagram."
+component: anagram-shuffle
+vibe: playful
+length: 116
+useWhen:
+  - "A clever hook where two related words share the same letters, such as a product's before and after."
+  - "A playful word-play beat in a brand or naming reveal."
+  - "A short one-word transformation used as a section opener."
+avoidWhen:
+  - "The words differ by a letter or two per step — use `word-ladder`."
+  - "The new word is unrelated and should just replace the old one — use `ruby-press`."
+  - "You want a typo corrected in place — use `typo-fix`."
+---
+
+<ComponentPreview name="anagram-shuffle" />
+
+<InstallBlock name="anagram-shuffle" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { AnagramShuffle } from "@/components/remocn/anagram-shuffle";
+
+const AnagramShuffleScene = () => (
+  <AnagramShuffle from="listen" to="silent" accent="#3B5BFD" />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="AnagramShuffle"
+    component={AnagramShuffleScene}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The `from` word shows, then each letter glides to its place in the `to` word. Both words must use the same letters, so pass a matching `from` and `to` pair. It ships in light and dark through the `theme` prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "from",
+      type: "string",
+      default: "\"listen\"",
+      description: "Starting word.",
+    },
+    {
+      name: "to",
+      type: "string",
+      default: "\"silent\"",
+      description: "Anagram of `from` that letters move into.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color override; falls back to the theme accent.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark; picks the palette.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+  ]}
+/>

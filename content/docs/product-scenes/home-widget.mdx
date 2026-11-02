@@ -1,0 +1,124 @@
+---
+title: Home Widget
+description: "A phone home screen jiggles, a widget is picked from the gallery and dropped in, and its numbers count up."
+component: home-widget
+vibe: playful
+length: 256
+useWhen:
+  - "A launch for an app with a home-screen widget where setup should look effortless."
+  - "A feature announcement that ends on live data (a counter and weekly bars) instead of a static icon."
+  - "A short vertical clip with three off-device lines: edit, pick a size, glance."
+avoidWhen:
+  - "You want a lock-screen status that counts down in real time — use `live-activity`."
+  - "The scene is a store page and install flow — use `app-store-listing`."
+  - "You want incoming alerts piling up instead — use `notification-avalanche`."
+---
+
+<ComponentPreview name="home-widget" />
+
+<InstallBlock name="home-widget" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { HomeWidget } from "@/components/remocn/home-widget";
+
+const HomeWidgetScene = () => (
+  <HomeWidget
+    appName="Acme"
+    widgetName="Renders"
+    size="medium"
+    bars={[42, 58, 36, 70, 64, 88, 76]}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="HomeWidget"
+    component={HomeWidgetScene}
+    durationInFrames={290}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The home screen icons jiggle, the plus opens a widget gallery, the cursor picks a size and the widget lands on the page. Its headline number then counts up and the last bar grows live. Set `size` to `small` or `medium`, `stat` for the number and `bars` for the week; `lines` are the three captions beside the phone. Ships light (daytime wallpaper) and dark (dusk).
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "appName",
+      type: "string",
+      default: "\"remocn\"",
+      description: "Name on the placed app icon",
+    },
+    {
+      name: "widgetName",
+      type: "string",
+      default: "\"Renders\"",
+      description: "Widget name in the gallery",
+    },
+    {
+      name: "widgetDescription",
+      type: "string",
+      default: "\"Track renders and views at a glance.\"",
+      description: "Description line under the widget in the gallery",
+    },
+    {
+      name: "size",
+      type: "\"small\" | \"medium\"",
+      default: "\"medium\"",
+      description: "Widget size picked in the gallery",
+    },
+    {
+      name: "stat",
+      type: "{ label: string; from: number; to: number; delta: string }",
+      description: "Headline stat: label, count-up range and delta text",
+    },
+    {
+      name: "bars",
+      type: "number[]",
+      default: "[42, 58, 36, 70, 64, 88, 76]",
+      description: "Seven daily values; the last bar grows live",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for highlights, buttons and progress",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline",
+    },
+    {
+      name: "theme",
+      type: "\"light\" | \"dark\"",
+      default: "\"light\"",
+      description: "Light or dark palette",
+    },
+    {
+      name: "lines",
+      type: "[string, string, string]",
+      description: "Three captions beside the phone, one per beat",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "gradients.sh preset id for the backdrop shader",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the backdrop shader parameters",
+    },
+  ]}
+/>

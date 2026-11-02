@@ -1,0 +1,81 @@
+---
+title: Fine Print Up
+description: "\"No account and no watermark. Ever.\" in a big serif with tiny fine print at the bottom"
+component: fine-print-up
+vibe: premium
+length: 221
+useWhen:
+  - "A terms or licensing beat where each promise turns into a line of fine print."
+  - "A reassurance sequence that ends with a short, confident closing line."
+  - "A list of three short claims that should be remembered, then archived."
+avoidWhen:
+  - "You want claims to dim toward one highlight instead of moving to the footer — use `what-sticks`."
+  - "You have a single license promise in big type — use `plain-license`."
+  - "The claims are three benefit words — use `feature-trio`."
+---
+
+<ComponentPreview name="fine-print-up" />
+
+<InstallBlock name="fine-print-up" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { FinePrintUp } from "@/components/remocn/fine-print-up";
+
+const FinePrintUpScene = () => <FinePrintUp lines={["Every component you install is a file you own.", "No account and no watermark. Ever."]} closing="That’s all the fine print." />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="FinePrintUp"
+    component={FinePrintUpScene}
+    durationInFrames={300}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Each line is set big in turn with a star mark, then shrinks and travels down to the fine print at the bottom of the frame, and finally the closing line lands big. Pass `lines` (the claims) and `closing`; it spaces the lines to fit the composition length.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "lines",
+      type: "string[]",
+      default: "DEFAULT_LINES",
+      description: "Claims set big first, then moved to the fine print.",
+    },
+    {
+      name: "closing",
+      type: "string",
+      default: "\"That’s all the fine print.\"",
+      description: "Final big line shown after the fine print is built.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Color of the star marks; defaults to the theme accent.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Stage fill color; pass \"transparent\" to overlay your own footage.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color scheme; ships dark and light.",
+    },
+  ]}
+/>

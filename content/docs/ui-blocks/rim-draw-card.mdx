@@ -1,0 +1,147 @@
+---
+title: Rim Draw Card
+description: "A line of light draws a card's rim, which then fills with a command chip, typed field and save press."
+component: rim-draw-card
+vibe: tech
+length: 114
+useWhen:
+  - "A feature beat about saving reusable instructions or a custom skill, shown as a card that builds itself."
+  - "A settings or configuration card should be introduced with a dramatic edge-light draw before its fields appear."
+  - "A short headline plus a slash command needs to hand off to the form it opens."
+avoidWhen:
+  - "The card is already on screen and you only want a light orbiting its edge — use `border-beam`."
+  - "You need a full multi-screen settings flow with toggles — use `settings-toggle-flow`."
+  - "A plain modal opening is enough — use `dialog`."
+---
+
+<ComponentPreview name="rim-draw-card" />
+
+<InstallBlock name="rim-draw-card" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { RimDrawCard } from "@/components/remocn/rim-draw-card";
+
+const RimDrawCardScene = () => (
+  <RimDrawCard
+    line="Just tell it once."
+    command="/brand-voice"
+    title="Brand voice"
+    uses={["Launch posts", "Changelog", "Release emails"]}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="RimDrawCard"
+    component={RimDrawCardScene}
+    durationInFrames={138}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A headline `line` and a slash `command` chip lead in, then a beam of light draws around a card's rim. The card fills with a title, a field that types the `instructions`, usage chips and a preview, and the save button presses to show `done`. Pass your own `line`, `command`, `title`, `instructions` and `uses`; it ships light and dark through `theme`.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color scheme. Ships light and dark.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Color of the drawn rim light. Defaults depend on theme.",
+    },
+    {
+      name: "primary",
+      type: "string",
+      description: "Color of the save button. Defaults depend on theme.",
+    },
+    {
+      name: "line",
+      type: "string",
+      default: "\"Just tell it once.\"",
+      description: "Headline shown beside the card.",
+    },
+    {
+      name: "command",
+      type: "string",
+      default: "\"/brand-voice\"",
+      description: "Slash command shown in the chip.",
+    },
+    {
+      name: "title",
+      type: "string",
+      default: "\"Brand voice\"",
+      description: "Card title.",
+    },
+    {
+      name: "subtitle",
+      type: "string",
+      default: "\"Used every time you write launch copy.\"",
+      description: "Line of text under the card title.",
+    },
+    {
+      name: "label",
+      type: "string",
+      default: "\"Instructions\"",
+      description: "Label above the instructions field.",
+    },
+    {
+      name: "instructions",
+      type: "string",
+      default: "\"Short, calm sentences. Name the feature first, then what it saves you.\"",
+      description: "Text that types into the field.",
+    },
+    {
+      name: "action",
+      type: "string",
+      default: "\"Save skill\"",
+      description: "Label of the save button.",
+    },
+    {
+      name: "limit",
+      type: "number",
+      default: "600",
+      description: "Character limit shown beside the field.",
+    },
+    {
+      name: "done",
+      type: "string",
+      default: "\"Saved\"",
+      description: "Label the button shows after the press.",
+    },
+    {
+      name: "uses",
+      type: "string[]",
+      description: "Chips listing where the saved item is used.",
+    },
+    {
+      name: "preview",
+      type: "string",
+      default: "\"Scenes now render three times faster. Ship the reel tonight.\"",
+      description: "Sample output text shown in the preview box.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "Shader preset id for the animated background.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Partial shader parameters that override the ground preset.",
+    },
+  ]}
+/>

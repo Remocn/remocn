@@ -1,0 +1,96 @@
+---
+title: Versus Split
+description: "A diagonal split frames remocn against the old way with stat rows for time, cost and rounds"
+component: versus-split
+vibe: playful
+length: 66
+useWhen:
+  - "A head-to-head beat that pits the product against the old way on a diagonal split with a tale-of-the-tape of time, cost and effort."
+  - "A fight-poster style comparison where the winning side lights up and the opponent dims."
+  - "A short stat-by-stat contrast with three rows of paired values and a clear winner."
+avoidWhen:
+  - "The contest should read as a football-style scoreline — use `score-bug`."
+  - "You only compare one measurement on a shared axis — use `measure-dim`."
+  - "You compare across many attributes at once and want an overlay shape — use `radar-compare`."
+---
+
+<ComponentPreview name="versus-split" />
+
+<InstallBlock name="versus-split" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { VersusSplit } from "@/components/remocn/versus-split";
+
+const VersusSplitScene = () => (
+  <VersusSplit
+    away="The old way"
+    stats={[
+      { label: "Time to ship", home: "1 day", away: "3 weeks" },
+      { label: "Cost", home: "$0", away: "$12K" },
+    ]}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="VersusSplit"
+    component={VersusSplitScene}
+    durationInFrames={105}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The frame splits on a diagonal, both halves slam in and meet on a flashing seam, and a VS mark drops onto it. Stat rows then land one by one with the remocn value on the left and the opponent value on the right, and a gradient wipe lights the remocn half while the other side dims. Pass `away`, the two labels and `stats` as label, home and away strings. It ships light and dark through the `theme` prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "away",
+      type: "string",
+      default: "\"The old way\"",
+      description: "The opponent, set in condensed caps on the right half. The left half is always the remocn logo.",
+    },
+    {
+      name: "homeLabel",
+      type: "string",
+      default: "\"Challenger\"",
+      description: "Small label over the logo.",
+    },
+    {
+      name: "awayLabel",
+      type: "string",
+      default: "\"Title holder\"",
+      description: "Small label over the opponent.",
+    },
+    {
+      name: "stats",
+      type: "VersusStat[]",
+      description: "Tale-of-the-tape rows, both sides land at once. Three read best.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "The marker on the seam plates.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier; 1 is the designed pace.",
+    },
+  ]}
+/>

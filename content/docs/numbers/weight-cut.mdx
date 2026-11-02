@@ -1,0 +1,117 @@
+---
+title: Weight Cut
+description: "A heavy figure counts down to a small value as its strokes thin to a light weight."
+component: weight-cut
+vibe: data
+length: 82
+useWhen:
+  - "A size or weight stat, such as kilobytes saved, where the type itself should get lighter as the number shrinks."
+  - "A data beat with a small unit suffix beside the figure and an eyebrow plus caption in a column."
+  - "A before-and-after reduction that deserves a typographic metaphor."
+avoidWhen:
+  - "The number should grow rather than shrink - use `lean-count`."
+  - "You want a draining tank effect for a countdown - use `slim-count`."
+  - "A tall, condensed gradient figure suits the brand better - use `tall-count`."
+---
+
+<ComponentPreview name="weight-cut" />
+
+<InstallBlock name="weight-cut" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { WeightCut } from "@/components/remocn/weight-cut";
+
+const WeightCutScene = () => <WeightCut value={6.8} from={94} suffix="KB" eyebrow="Per scene, gzipped" label="Lighter than your logo file." />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="WeightCut"
+    component={WeightCutScene}
+    durationInFrames={120}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A heavy figure counts down from `from` to `value` while its stroke weight thins from bold to light, and a small unit suffix sits beside it. An eyebrow and a caption stack in a column next to the figure. Pass `value`, `from`, `suffix`, `eyebrow` and `label`; `lightWeight` sets the final stroke weight and `accent` colors the suffix. It ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "value",
+      type: "number",
+      default: "6.8",
+      description: "The number the count lands on.",
+    },
+    {
+      name: "from",
+      type: "number",
+      default: "94",
+      description: "Starting number; the figure is heaviest here.",
+    },
+    {
+      name: "decimals",
+      type: "number",
+      default: "1",
+      description: "Decimal places shown.",
+    },
+    {
+      name: "prefix",
+      type: "string",
+      default: "\"\"",
+      description: "Text before the number.",
+    },
+    {
+      name: "suffix",
+      type: "string",
+      default: "\"KB\"",
+      description: "Small unit text beside the figure.",
+    },
+    {
+      name: "eyebrow",
+      type: "string",
+      default: "\"Per scene, gzipped\"",
+      description: "Small line above the caption.",
+    },
+    {
+      name: "label",
+      type: "string",
+      default: "\"Lighter than your logo file.\"",
+      description: "Caption in the side column.",
+    },
+    {
+      name: "lightWeight",
+      type: "number",
+      default: "100",
+      description: "Final stroke weight, snapped to 100 through 500.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Color of the suffix; defaults to the theme accent.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Stage background color; overrides the theme ground.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark palette.",
+    },
+  ]}
+/>

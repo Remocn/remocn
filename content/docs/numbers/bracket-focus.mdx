@@ -1,0 +1,77 @@
+---
+title: Bracket Focus
+description: "Viewfinder brackets fly in and snap tight around a big value over a dotted grid, with a tag chip."
+component: bracket-focus
+vibe: tech
+length: 62
+useWhen:
+  - "A metric that should feel measured or captured, such as render time or latency."
+  - "A technical beat where a value is framed like a camera subject with a small tag."
+  - "A launch stat that benefits from a dotted-grid ground and a gentle dimming of everything else."
+avoidWhen:
+  - "You want a crosshair lock on a chart peak - use `crosshair-lock`."
+  - "The number should count up before it lands - use `lumen-count`."
+  - "A bold gradient headline number is the look - use `magnitude-push`."
+---
+
+<ComponentPreview name="bracket-focus" />
+
+<InstallBlock name="bracket-focus" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { BracketFocus } from "@/components/remocn/bracket-focus";
+
+const BracketFocusScene = () => <BracketFocus subject="1.8s" tag="Render time" />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="BracketFocus"
+    component={BracketFocusScene}
+    durationInFrames={120}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A dotted grid ripples in around a big value, and four viewfinder corner brackets fly in from the edges of the frame and snap tight around it with a springy settle. A tag chip and a size readout appear and the background dims around the focus. Pass `subject` and `tag`; `accent` colors the highlights. It ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "subject",
+      type: "string",
+      default: "\"1.8s\"",
+      description: "The value framed by the brackets.",
+    },
+    {
+      name: "tag",
+      type: "string",
+      default: "\"Render time\"",
+      description: "Small chip text that names the value.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for the highlights.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark palette.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier.",
+    },
+  ]}
+/>

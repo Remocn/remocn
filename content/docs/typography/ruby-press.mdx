@@ -1,0 +1,94 @@
+---
+title: Ruby Press
+description: "A word in a sentence is pressed out and replaced from a list, with small glosses above."
+component: ruby-press
+vibe: clean
+length: 134
+useWhen:
+  - "A claim like subtitles for every market where the time frame keeps shrinking."
+  - "A localization or speed beat that cycles through variations of one phrase."
+  - "A sentence with one swappable noun and a short annotation per option."
+avoidWhen:
+  - "The swapped words need a stable width — use `width-lock`."
+  - "A word should be selected and retyped like an editor — use `select-replace`."
+  - "The slot should be an inline roll — use `inline-word-roll`."
+---
+
+<ComponentPreview name="ruby-press" />
+
+<InstallBlock name="ruby-press" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { RubyPress } from "@/components/remocn/ruby-press";
+
+const RubyPressScene = () => (
+  <RubyPress before="Subtitles for every market in" words={["a fortnight", "a morning", "one render"]} after="." />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="RubyPress"
+    component={RubyPressScene}
+    durationInFrames={170}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Each entry in `words` is pressed down and swapped for the next inside a sentence built from `before` and `after`, with a small gloss rising above each. Pass `before`, `words` and `after`. It ships in light and dark through the `theme` prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "before",
+      type: "string",
+      default: "\"Subtitles for every market in\"",
+      description: "Text before the swapping word.",
+    },
+    {
+      name: "words",
+      type: "string[]",
+      description: "Words pressed in order.",
+    },
+    {
+      name: "after",
+      type: "string",
+      default: "\".\"",
+      description: "Text after the swapping word.",
+    },
+    {
+      name: "hold",
+      type: "number",
+      default: "14",
+      description: "Frames each state stays on screen before the next one.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Accent color override; falls back to the theme accent.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background color override; falls back to the theme background.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark; picks the palette.",
+    },
+  ]}
+/>

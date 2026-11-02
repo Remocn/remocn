@@ -1,0 +1,88 @@
+---
+title: On Approach
+description: "A fixed lead phrase stays while a time phrase swaps down to the closing word today."
+component: on-approach
+vibe: clean
+length: 114
+useWhen:
+  - "A launch countdown beat, such as in June, next week, tomorrow, today."
+  - "A scene where a fixed phrase meets a shrinking time horizon."
+  - "A short reveal that ends on the launch-day word."
+avoidWhen:
+  - "The cycling word should stop at several named stops — use `layover`, which plays almost the same."
+  - "Place words should pull in with a slower hold — use `pull-in`."
+  - "You want a counter that ticks to zero — use `nonstop`."
+---
+
+<ComponentPreview name="on-approach" />
+
+<InstallBlock name="on-approach" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { OnApproach } from "@/components/remocn/on-approach";
+
+const OnApproachScene = () => (
+  <OnApproach lead="Wheels up" steps={["in June.", "next week.", "tomorrow.", "today."]} interval={30} />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="OnApproach"
+    component={OnApproachScene}
+    durationInFrames={160}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The `lead` phrase holds still while each entry in `steps` swaps in, counting closer to the last one. Pass `lead`, `steps` and `interval` to set the countdown. It ships in light and dark through the `theme` prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "lead",
+      type: "string",
+      default: "\"Wheels up\"",
+      description: "Phrase that stays in place.",
+    },
+    {
+      name: "steps",
+      type: "string[]",
+      description: "Time phrases swapped in order.",
+    },
+    {
+      name: "interval",
+      type: "number",
+      default: "30",
+      description: "Frames between swaps.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Accent color override; falls back to the theme accent.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background color override; falls back to the theme background.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark; picks the palette.",
+    },
+  ]}
+/>

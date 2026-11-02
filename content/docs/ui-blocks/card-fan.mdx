@@ -1,0 +1,107 @@
+---
+title: Card Fan
+description: "A stack of colored format cards fans out, one card lifts forward, and a caption writes in below."
+component: card-fan
+vibe: playful
+length: 98
+useWhen:
+  - "Presenting a handful of formats, templates or plans as a hand of cards with one highlighted."
+  - "A stats beat where a short title and caption frame which option is the most popular."
+  - "A playful, tactile way to introduce two to six named options."
+avoidWhen:
+  - "The options should swipe through one at a time like a deck — use `swipe-deck`."
+  - "You need a dense grid of feature tiles rather than a fan — use `bento-build`."
+  - "Three feature headings in a row are enough — use `feature-trio`."
+---
+
+<ComponentPreview name="card-fan" />
+
+<InstallBlock name="card-fan" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { CardFan } from "@/components/remocn/card-fan";
+
+const CardFanScene = () => (
+  <CardFan
+    title="Your top formats"
+    accentWord={2}
+    pick={1}
+    caption="Launch films are 41% of this month’s renders"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="CardFan"
+    component={CardFanScene}
+    durationInFrames={132}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A title writes in while a stack of cards drops, fans out, and lifts the `pick` card forward. A caption then writes in word by word. Pass your own `title` (with `accentWord` tinting one word), up to six `cards`, the `pick` index and the `caption`; it ships light and dark through `theme`.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "title",
+      type: "string",
+      default: "\"Your top formats\"",
+      description: "Title above the fan.",
+    },
+    {
+      name: "accentWord",
+      type: "number",
+      default: "2",
+      description: "Index of the title word shown in the accent color.",
+    },
+    {
+      name: "cards",
+      type: "{ label: string; color: string; meta?: string; glyph?: 'launch' | 'list' | 'play' | 'cursor' | 'spark' }[]",
+      default: "DEFAULT_CARDS",
+      description: "Two to six cards. Glyph is one of launch, list, play, cursor, spark.",
+    },
+    {
+      name: "pick",
+      type: "number",
+      default: "0",
+      description: "Zero-based index of the card that lifts forward.",
+    },
+    {
+      name: "caption",
+      type: "string",
+      default: "\"Launch films are 41% of this month’s renders\"",
+      description: "Line of text written in under the fan.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color scheme. Ships light and dark.",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color override.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "Shader preset id for the animated background.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Partial shader parameters that override the ground preset.",
+    },
+  ]}
+/>

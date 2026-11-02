@@ -1,0 +1,76 @@
+import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+
+export const weightWaveConfig: ComponentConfig = {
+  componentName: "WeightWave",
+  importPath: "@/components/remocn/weight-wave",
+  controls: {
+    theme: {
+      type: "enum",
+      default: "dark",
+      variants: {
+        dark: {},
+        light: {},
+      },
+      description: "Theme",
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    text: {
+      type: "text-content",
+      default: "Made to move.",
+      description: "Text",
+    },
+    from: {
+      type: "number",
+      default: 100,
+      min: 0,
+      max: 300,
+      step: 1,
+      description: "From",
+      hiddenFromList: false,
+    },
+    peak: {
+      type: "number",
+      default: 500,
+      min: 0,
+      max: 1500,
+      step: 1,
+      description: "Peak",
+      hiddenFromList: false,
+    },
+    settle: {
+      type: "number",
+      default: 460,
+      min: 0,
+      max: 1380,
+      step: 1,
+      description: "Settle",
+      hiddenFromList: false,
+    },
+    waves: {
+      type: "number",
+      default: 2,
+      min: 0,
+      max: 10,
+      step: 1,
+      description: "Waves",
+      hiddenFromList: false,
+    },
+    speed: {
+      type: "number",
+      default: 1,
+      min: 0.25,
+      max: 4,
+      step: 0.25,
+      description: "Speed",
+      hiddenFromList: false,
+    },
+  },
+  durationInFrames: 165,
+  fps: FPS,
+  compositionWidth: W,
+  compositionHeight: H,
+};

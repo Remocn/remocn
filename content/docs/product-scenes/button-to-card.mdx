@@ -1,0 +1,111 @@
+---
+title: Button to Card
+description: "A button expands into a store card row with product images, prices and status"
+component: button-to-card
+vibe: premium
+length: 162
+useWhen:
+  - "A storefront-builder launch beat showing how an Add item button becomes a finished product listing."
+  - "A catalogue or inventory tool demo where a new item is created, given an image and goes live."
+  - "A hero morph where a single pill button transforms into a full row of product cards."
+avoidWhen:
+  - "You want the product grid to grow into a full admin app with sidebar — use `grid-to-app`."
+  - "The beat is a shopper adding to a cart rather than a merchant adding a product — use `cart-add`."
+---
+
+<ComponentPreview name="button-to-card" />
+
+<InstallBlock name="button-to-card" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { ButtonToCard } from "@/components/remocn/button-to-card";
+
+const ButtonToCardScene = () => (
+  <ButtonToCard
+    buttonLabel="Add a product"
+    name="Linen throw"
+    price="$72.00"
+    storeName="Hearth & Co"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="ButtonToCard"
+    component={ButtonToCardScene}
+    durationInFrames={162}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A pill button presses and morphs into a product form that types the name and price. A cursor drags an image into the media slot, saves, and the card shrinks into a row of product tiles with a store header and a Live status. Pass `buttonLabel`, `name`, `price`, `others` (the other tiles), `storeName`, and your own `images`, because the default images use `staticFile(...)` paths that only exist in the remocn repo. The `theme` prop ships dark and light.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Dark or light card and background styling.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#f2552c\"",
+      description: "Accent color for the button and status highlights.",
+    },
+    {
+      name: "buttonLabel",
+      type: "string",
+      default: "\"Add an item\"",
+      description: "Text on the starting pill button.",
+    },
+    {
+      name: "name",
+      type: "string",
+      default: "\"Ceramic pitcher\"",
+      description: "Name typed into the new product card.",
+    },
+    {
+      name: "price",
+      type: "string",
+      default: "\"$48.00\"",
+      description: "Price typed into the new product card, with currency symbol.",
+    },
+    {
+      name: "images",
+      type: "string[]",
+      description: "Product image URLs: the new item's image first, then the others.",
+    },
+    {
+      name: "others",
+      type: "{ name: string; price: string }[]",
+      description: "Other products shown beside the new one, as name and price pairs.",
+    },
+    {
+      name: "storeName",
+      type: "string",
+      default: "\"Studio Goods\"",
+      description: "Store name shown in the header and catalogue title.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "Preset id for the shader background.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the shader background parameters.",
+    },
+  ]}
+/>

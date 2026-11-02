@@ -1,0 +1,98 @@
+---
+title: Beta Thanks
+description: "\"Remocn is out\" with a green \"out\", thanking the beta testers below"
+component: beta-thanks
+vibe: clean
+length: 94
+useWhen:
+  - "A thanks-to-testers or early-access closing beat in a release video."
+  - "A status announcement where one word, like beta, moves into the logo lockup."
+  - "A short logo plus status line before a final call to action."
+avoidWhen:
+  - "You are announcing a launch with a long list of features — use `embargo-lift`."
+  - "You want a simple closing line with no logo — use `plain-license`."
+  - "You want a thanks and next-step card — use `post-script`."
+---
+
+<ComponentPreview name="beta-thanks" />
+
+<InstallBlock name="beta-thanks" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { BetaThanks } from "@/components/remocn/beta-thanks";
+
+const BetaThanksScene = () => <BetaThanks tag="beta" status="is out." before="Thank you," after="testers." />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="BetaThanks"
+    component={BetaThanksScene}
+    durationInFrames={130}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The logo and a small tag appear, the tag lifts out and slides into place beside the logo as the status word lands, then a thank-you line fades in below. Pass `tag`, `status`, `before` and `after`, or a `logo` node of your own; it speeds up to fit shorter compositions.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "logo",
+      type: "React.ReactNode",
+      description: "Custom logo node; defaults to the remocn logo.",
+    },
+    {
+      name: "tag",
+      type: "string",
+      default: "\"beta\"",
+      description: "Small tag that lifts out and slides next to the logo.",
+    },
+    {
+      name: "status",
+      type: "string",
+      default: "\"is out.\"",
+      description: "Status line that lands beside the logo.",
+    },
+    {
+      name: "before",
+      type: "string",
+      default: "\"Thank you,\"",
+      description: "First half of the thank-you line.",
+    },
+    {
+      name: "after",
+      type: "string",
+      default: "\"testers.\"",
+      description: "Second half of the thank-you line.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Color of the tag and status; defaults to the theme accent.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Stage fill color; pass \"transparent\" to overlay your own footage.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color scheme; ships dark and light.",
+    },
+  ]}
+/>

@@ -1,0 +1,45 @@
+---
+title: Marble
+description: Warp preset. Cream and charcoal marble veins swirling together
+component: shader-warp-marble
+vibe: premium
+length: 150
+useWhen:
+  - "An editorial, material-like backdrop in neutral cream and charcoal."
+  - "The frame is light, so dark foreground text and UI stay readable on top."
+  - "You want a finished Warp look without tuning the palette and parameters yourself."
+avoidWhen:
+  - "The video must use your brand colors — start from `shader-warp` and set `colors`."
+  - "You want a darker, contrasting mood from the same shader — use `shader-warp-acid`."
+---
+
+<ComponentPreview name="shader-warp-marble" />
+
+<InstallBlock name="shader-warp-marble" />
+
+Installs [Warp](/docs/shaders/components/shader-warp) as a dependency. This file only fixes its look: the preset object at the top holds every value, so edit it in place to make the preset your own.
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { ShaderWarpMarble } from "@/components/remocn/shader-warp-marble";
+
+export const RemotionRoot = () => (
+  <Composition
+    id="ShaderWarpMarble"
+    component={ShaderWarpMarble}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+ShaderWarpMarble takes the same props as `ShaderWarp`. Props you pass override the preset, except `speed`, which scales the preset's own pace: `speed={2}` is twice as fast as the preset, whatever its base speed.
+
+## Credits
+
+Shader by [paper-design/shaders](https://github.com/paper-design/shaders).

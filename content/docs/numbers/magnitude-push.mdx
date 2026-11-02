@@ -1,0 +1,90 @@
+---
+title: Magnitude Push
+description: "A figure grows digit by digit, each push zooming the camera out, then a caption lands beneath."
+component: magnitude-push
+vibe: premium
+length: 114
+useWhen:
+  - "A scale claim like 1000x or 10,000 where the number of digits is the point."
+  - "A hero stat that should feel like it keeps growing past the frame."
+  - "A before-and-after beat where one big multiplier answers a pain point named in the label."
+avoidWhen:
+  - "The number is a plain count that should tick up smoothly — use `tall-count`."
+  - "You want the number to appear in one piece — use `compact-stat`."
+  - "The result is a small decimal multiplier — use `lean-count`."
+---
+
+<ComponentPreview name="magnitude-push" />
+
+<InstallBlock name="magnitude-push" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { MagnitudePush } from "@/components/remocn/magnitude-push";
+
+const MagnitudePushScene = () => (
+  <MagnitudePush value="1000" suffix="×" label="fewer keyframes to set by hand" />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="MagnitudePush"
+    component={MagnitudePushScene}
+    durationInFrames={130}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The first digit rises alone, then every further digit pushes in with a spring while the camera pulls back to keep the whole figure in frame. A caption settles last. Pass `value`, `suffix` and `label`; it ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "value",
+      type: "string",
+      default: "\"1000\"",
+      description: "Figure as a string; each character after the first pushes in.",
+    },
+    {
+      name: "suffix",
+      type: "string",
+      default: "\"×\"",
+      description: "Text drawn after the figure, such as a multiplier sign.",
+    },
+    {
+      name: "label",
+      type: "string",
+      default: "\"fewer keyframes to set by hand\"",
+      description: "Caption that rises in word by word under the figure.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for highlights and small marks.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background color override. Pass \"transparent\" to composite over other layers.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color theme, \"dark\" or \"light\".",
+    },
+  ]}
+/>

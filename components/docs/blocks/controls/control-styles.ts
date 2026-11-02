@@ -2,9 +2,11 @@
  * Shared surfaces for the customizer controls on the dark player panel: a
  * 36px tile (44px on phones) with the label on the left and the value on the
  * right, a lighter fill on hover and a fuchsia ring while editing.
+ * `customizer-control` is a hook for the compact density in
+ * `ComponentCustomizer`.
  */
 export const CONTROL =
-  "relative flex h-9 min-w-0 items-center justify-between gap-3 overflow-hidden rounded-tile bg-white/5 px-3 text-caption leading-[17px] font-medium transition-colors duration-150 hover:bg-white/8 max-md:h-11 max-md:text-small max-md:leading-[18px]";
+  "customizer-control relative flex h-9 min-w-0 items-center justify-between gap-3 overflow-hidden rounded-tile bg-white/5 px-3 text-caption leading-[17px] font-medium transition-colors duration-150 hover:bg-white/8 max-md:h-11 max-md:text-small max-md:leading-[18px]";
 
 export const CONTROL_FOCUS =
   "focus-within:ring-[1.5px] focus-within:ring-primary-bright focus-within:ring-inset";

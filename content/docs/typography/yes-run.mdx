@@ -1,0 +1,83 @@
+---
+title: Yes Run
+description: "A string of short questions is each answered with the same bold Yes tag on bright orange."
+component: yes-run
+vibe: playful
+length: 130
+useWhen:
+  - "An objections-handling beat that says yes to a run of product questions."
+  - "A rapid feature checklist such as vertical, captions, your fonts."
+  - "A playful pricing or capability scene with a repeated answer."
+avoidWhen:
+  - "Each answer is different and longer — use `which-means`."
+  - "You want a two-line contrast rather than a list — use `less-more`."
+  - "Items should be listed as chips — use `feature-chips-flow`."
+---
+
+<ComponentPreview name="yes-run" />
+
+<InstallBlock name="yes-run" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { YesRun } from "@/components/remocn/yes-run";
+
+const YesRunScene = () => (
+  <YesRun questions={["Vertical?", "Captions?", "Your fonts?"]} answer="Yes." />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="YesRun"
+    component={YesRunScene}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Each question in `questions` is answered by the `answer` tag landing next to it, quickening as they go. Pass `questions` and `answer` to answer your own FAQ. It ships in light and dark through the `theme` prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "questions",
+      type: "string[]",
+      default: "DEFAULT_QUESTIONS",
+      description: "Short questions answered in turn.",
+    },
+    {
+      name: "answer",
+      type: "string",
+      default: "\"Yes.\"",
+      description: "Answer shown on the tag.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Accent color override; falls back to the theme accent.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background color override; falls back to the theme background.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark; picks the palette.",
+    },
+  ]}
+/>

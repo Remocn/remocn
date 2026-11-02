@@ -1,0 +1,89 @@
+---
+title: Pixel Bars
+description: "LED-style pixel bars climb, the last column lighting orange and blue to +64%"
+component: pixel-bars
+vibe: data
+length: 81
+useWhen:
+  - "A short growth beat in a retro LED style, where the last column passes the rest and lands a stat."
+  - "A quarter-over-quarter claim such as +64% that needs a compact chart and a big number."
+  - "A fast scene with a tech or arcade flavor rather than a polished editorial chart."
+avoidWhen:
+  - "You want smooth springy bars with an overshoot — use `spring-bars`."
+  - "You need labeled categories on the axis — use `log-rescale`."
+  - "You want a bold stat with no chart — use `compact-stat`."
+---
+
+<ComponentPreview name="pixel-bars" />
+
+<InstallBlock name="pixel-bars" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { PixelBars } from "@/components/remocn/pixel-bars";
+
+const PixelBarsScene = () => (
+  <PixelBars
+    values={[31, 38, 35, 44, 41, 50, 84]}
+    metric="+64%"
+    label="this quarter"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="PixelBars"
+    component={PixelBarsScene}
+    durationInFrames={115}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Columns of LED-style pixels light up bar by bar; the last column climbs past the previous best, turns orange and blue, and the metric counts up beside the chart. Pass `values` (one number per column), `metric` and `label`. Ships dark and light via `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "values",
+      type: "number[]",
+      default: "DEFAULT_VALUES",
+      description: "One number per column; the last is the hero.",
+    },
+    {
+      name: "label",
+      type: "string",
+      default: "\"this quarter\"",
+      description: "Small line under the metric.",
+    },
+    {
+      name: "metric",
+      type: "string",
+      default: "\"+64%\"",
+      description: "The big stat that counts up, such as +64%.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for the hero element.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Dark or light palette.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier.",
+    },
+  ]}
+/>

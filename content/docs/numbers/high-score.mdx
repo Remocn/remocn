@@ -1,0 +1,94 @@
+---
+title: High Score
+description: "A pixel arcade table inserts a new top entry, 'NEW HIGH SCORE', above four lower scores"
+component: high-score
+vibe: playful
+length: 128
+useWhen:
+  - "A launch beat that frames shipping as beating the old record, with a player climbing an arcade leaderboard to the top slot."
+  - "A playful gaming-flavoured teaser where a new score slams in as the headline 'NEW HIGH SCORE'."
+  - "A milestone moment where the product overtakes a ranked list of rivals before a closing logo."
+avoidWhen:
+  - "The rank change should read as a real-world leaderboard or product ranking, not a retro arcade — use `rank-climb`."
+  - "You want a single hero number counting up with no table around it — use `combo-counter`."
+  - "The scene needs a calm, premium tone rather than pixel-arcade energy — use `stat-sequence`."
+---
+
+<ComponentPreview name="high-score" />
+
+<InstallBlock name="high-score" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { HighScore } from "@/components/remocn/high-score";
+
+const HighScoreScene = () => <HighScore player="YOU" playerScore={999990} flash="NEW HIGH SCORE" />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="HighScore"
+    component={HighScoreScene}
+    durationInFrames={165}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A pixel-font leaderboard slides in, then a new score races up the table, shoving each row down as it overtakes it. At the top the score lands with a shake, the initials type in behind a block cursor and a flash line slams in before the logo rises. Pass `rows` for the existing scores, plus `player`, `playerScore` and `flash` to make it yours. It ships light and dark through the `theme` prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "rows",
+      type: "HighScoreEntry[]",
+      description: "The table before the new run, best first. Up to five rows are shown.",
+    },
+    {
+      name: "player",
+      type: "string",
+      default: "\"RMC\"",
+      description: "Initials typed in once the new score lands at the top.",
+    },
+    {
+      name: "playerScore",
+      type: "number",
+      default: "999990",
+      description: "The new score. Should beat the current #1.",
+    },
+    {
+      name: "title",
+      type: "string",
+      default: "\"HIGH SCORES\"",
+      description: "Small table title shown before the flash.",
+    },
+    {
+      name: "flash",
+      type: "string",
+      default: "\"NEW HIGH SCORE\"",
+      description: "The flash that replaces the title once the initials are in.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Small cursor block while the initials are typed.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier; 1 is the designed pace.",
+    },
+  ]}
+/>

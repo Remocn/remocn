@@ -1,3 +1,4 @@
+import newDocs from "@/config/new-docs.json";
 import type { CtaId } from "@/lib/analytics";
 import remocnRegistry from "@/registry/remocn/registry.json";
 import remocnIconsRegistry from "@/registry/remocn-icons/registry.json";
@@ -87,25 +88,10 @@ export const NAV_LINKS: NavLink[] = [
 
 /**
  * Docs whose sidebar menu item should carry the animated "NEW" badge. Keyed by
- * the page's docs URL (the Fumadocs page-tree `item.url`). Add a path here to
- * tag another menu item — no component changes needed. See `withNewBadges`.
+ * the page's docs URL (the Fumadocs page-tree `item.url`). The list lives in
+ * `config/new-docs.json`: add or remove a path there to tag a menu item.
  */
-export const NEW_BADGE_PATHS = new Set<string>([
-  "/docs/motion-graphics/bauhaus-build",
-  "/docs/motion-graphics/mondrian-split",
-  "/docs/motion-graphics/truchet-flip",
-  "/docs/motion-graphics/trim-burst",
-  "/docs/motion-graphics/speed-lines",
-  "/docs/motion-graphics/squiggle",
-  "/docs/effects/keystroke",
-  "/docs/ui-blocks/code-morph",
-  "/docs/ai/agent-run",
-  "/docs/typography/selection-snap",
-  "/docs/typography/echo-stack",
-  "/docs/typography/type-wall",
-  "/docs/typography/ring-text",
-  "/docs/typography/period-drop",
-]);
+export const NEW_BADGE_PATHS = new Set<string>(newDocs);
 
 // Flat footer row: site pages first, then the external profiles.
 export const FOOTER_LINKS: NavLink[] = [

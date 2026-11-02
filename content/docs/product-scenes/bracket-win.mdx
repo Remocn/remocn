@@ -1,0 +1,89 @@
+---
+title: Bracket Win
+description: "A tournament bracket resolves match by match until remocn is crowned CHAMPION"
+component: bracket-win
+vibe: playful
+length: 90
+useWhen:
+  - "A launch hook framed as a competition, where the product wins every round and ends on a champion plate."
+  - "A short poster-style beat celebrating a win, award or number one result with a bold gradient burst."
+  - "A video that needs a quick, high-energy payoff after a build-up of rivals or alternatives."
+avoidWhen:
+  - "The win is a ranking climb up a list, not a bracket — use `upvote-burst` instead."
+  - "You want bracket-shaped framing around a product name with no match play — use `bracket-index` instead."
+  - "You need a data-rich dashboard to prove results — use `live-dashboard` instead."
+---
+
+<ComponentPreview name="bracket-win" />
+
+<InstallBlock name="bracket-win" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { BracketWin } from "@/components/remocn/bracket-win";
+
+const BracketWinScene = () => (
+  <BracketWin title="CHAMPION" caption="Season one" theme="dark" />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="BracketWin"
+    component={BracketWinScene}
+    durationInFrames={125}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Eight slots slide in, quarterfinals, semifinals and the final resolve in turn with scores ticking in, then the final node bursts into a gradient plate that slams in the champion title and logo. Pass your own `opponents`, `title`, `caption` and `rounds` labels. It ships dark and light through the `theme` prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "opponents",
+      type: "string[]",
+      description: "Seven opponent names in bracket order; the product holds the top-left seed.",
+    },
+    {
+      name: "title",
+      type: "string",
+      default: "\"Champion\"",
+      description: "Word on the champion plate.",
+    },
+    {
+      name: "caption",
+      type: "string",
+      default: "\"Playoffs 2026 · 8 teams · 0 maps dropped\"",
+      description: "Small line shown under the champion plate.",
+    },
+    {
+      name: "rounds",
+      type: "[string, string, string]",
+      description: "Three round labels: quarterfinal, semifinal and final.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Color of the winner ticks on matches the product is not in.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Dark or light stage styling.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+  ]}
+/>

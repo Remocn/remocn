@@ -1,0 +1,89 @@
+---
+title: Sparkline Thread
+description: "A glowing sparkline climbs to a point while +212% counts up beside it"
+component: sparkline-thread
+vibe: data
+length: 116
+useWhen:
+  - "A compact growth beat where a glowing trend line ends on a point and a +% stat counts up."
+  - "A weekly or monthly usage trend with 8 to 16 data points and a single headline number."
+  - "A quiet analytics scene that should feel more like a dashboard than a full chart."
+avoidWhen:
+  - "You want a full chart with milestones and a big endpoint — use `growth-line`."
+  - "You want labeled bars rather than a line — use `spring-bars`."
+  - "You want the chart to reshape into something else — use `chart-morph`."
+---
+
+<ComponentPreview name="sparkline-thread" />
+
+<InstallBlock name="sparkline-thread" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { SparklineThread } from "@/components/remocn/sparkline-thread";
+
+const SparklineThreadScene = () => (
+  <SparklineThread
+    values={[20, 26, 24, 35, 34, 49, 56, 64, 77]}
+    metric="+212%"
+    label="weekly renders"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="SparklineThread"
+    component={SparklineThreadScene}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Data points pop in, a glowing thread draws through them and thickens into an area fill, then a bloom at the last point leads to the metric counting up with its label. Pass `values` (one number per point), `metric` and `label`. Ships dark and light via `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "values",
+      type: "number[]",
+      default: "DEFAULT_VALUES",
+      description: "Data points along the line, in order.",
+    },
+    {
+      name: "metric",
+      type: "string",
+      default: "\"+212%\"",
+      description: "The stat that counts up, such as +212%.",
+    },
+    {
+      name: "label",
+      type: "string",
+      default: "\"weekly renders\"",
+      description: "Line under the metric.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for the hero element.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Dark or light palette.",
+    },
+  ]}
+/>

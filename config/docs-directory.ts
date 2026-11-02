@@ -45,6 +45,7 @@ export const GUIDES = {
 
 export const CATEGORIES = [
   { segment: "typography", label: "Typography", href: "/docs/typography" },
+  { segment: "numbers", label: "Numbers & stats", href: "/docs/numbers" },
   { segment: "ui", label: "UI", href: "/docs/ui" },
   { segment: "transitions", label: "Transitions", href: "/docs/transitions" },
   {
@@ -62,7 +63,20 @@ export const CATEGORIES = [
     label: "Motion graphics",
     href: "/docs/motion-graphics",
   },
+  { segment: "logo-stings", label: "Logo stings", href: "/docs/logo-stings" },
+  { segment: "camera", label: "Camera & physics", href: "/docs/camera" },
+  {
+    segment: "graphic-looks",
+    label: "Graphic looks",
+    href: "/docs/graphic-looks",
+  },
   { segment: "ui-blocks", label: "UI blocks", href: "/docs/ui-blocks" },
+  {
+    segment: "product-scenes",
+    label: "Product scenes",
+    href: "/docs/product-scenes",
+  },
+  { segment: "media", label: "Media & collage", href: "/docs/media" },
   { segment: "effects", label: "Effects", href: "/docs/effects" },
   {
     segment: "filters",

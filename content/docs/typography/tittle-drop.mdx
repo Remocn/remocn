@@ -1,0 +1,83 @@
+---
+title: Tittle Drop
+description: "Dots of the i and j drop in last onto 'Ship it in minutes.' on a light ground"
+component: tittle-drop
+vibe: paper
+length: 175
+useWhen:
+  - "A hero line for a launch video where a small, witty typographic detail makes the headline memorable."
+  - "A calm product tagline beat with a supporting subline that appears after the main line lands."
+  - "A title that contains several i or j letters, so the dots have places to hop."
+avoidWhen:
+  - "The headline has no i, j or trailing full stop, so nothing lands — use `per-word-crossfade`."
+  - "You need a fast, high-energy opener rather than a slow playful build — use `staggered-fade-up`."
+  - "The line is long or multi-line, where the dot queue would drag — use `line-by-line-slide`."
+---
+
+<ComponentPreview name="tittle-drop" />
+
+<InstallBlock name="tittle-drop" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { TittleDrop } from "@/components/remocn/tittle-drop";
+
+const TittleDropScene = () => <TittleDrop title="Ship it in minutes." subline="Launch videos from ready-made Remotion components." accent="#3B5BFD" />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="TittleDrop"
+    component={TittleDropScene}
+    durationInFrames={225}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The headline fades in word by word with its i and j dots missing, while a bubble of dots waits above. The dots hop down one at a time onto the letters, the last one becoming the full stop, then the subline fades in. Pass `title`, `subline` and `accent`; it ships light and dark.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "title",
+      type: "string",
+      default: "\"Ship it in minutes.\"",
+      description: "Headline text; every i and j is set dotless and a trailing period stays open.",
+    },
+    {
+      name: "subline",
+      type: "string",
+      default: "\"Launch videos from ready-made Remotion components.\"",
+      description: "Small grey line under the headline.",
+    },
+    {
+      name: "accentDot",
+      type: "number",
+      default: "-1",
+      description: "Which landing dot takes the accent (0-based, negative counts from the end).",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Color of the accented dot.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"light\"",
+      description: "Color scheme; ships light and dark.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier for the whole timeline.",
+    },
+  ]}
+/>

@@ -1,0 +1,77 @@
+---
+title: Frosted Clear
+description: "A frosted glass card clears outward from its center to show a large stat with a kicker"
+component: frosted-clear
+vibe: premium
+length: 100
+useWhen:
+  - "Revealing one headline number (\"10x\") with a short label after building suspense behind frosted glass."
+  - "A premium stat beat that needs a glass surface and a subtle edge highlight."
+  - "A feature announcement that starts unreadable and resolves into a clear message."
+avoidWhen:
+  - "The reveal should use ribbed glass that slides away — use `fluted-glass`."
+  - "You need several stats in a row — use `stat-sequence`."
+  - "You want a plain big number with a small caption — use `compact-stat`."
+---
+
+<ComponentPreview name="frosted-clear" />
+
+<InstallBlock name="frosted-clear" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { FrostedClear } from "@/components/remocn/frosted-clear";
+
+const FrostedClearScene = () => <FrostedClear title="10×" kicker="Faster renders" />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="FrostedClear"
+    component={FrostedClearScene}
+    durationInFrames={130}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A rounded frosted panel blurs a gradient scene and a big `title` behind it. A clear circle opens from the center of the panel with a glinting edge, the content settles and the panel border returns. Pass a short `title` (for example "10×") and a `kicker`. Ships dark and light via `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "title",
+      type: "string",
+      default: "\"10×\"",
+      description: "Large stat or headline in the center.",
+    },
+    {
+      name: "kicker",
+      type: "string",
+      default: "\"Faster renders\"",
+      description: "Small label under the title.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Color tint in the background ground.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color scheme. Ships dark and light.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+  ]}
+/>

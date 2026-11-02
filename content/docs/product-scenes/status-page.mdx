@@ -1,0 +1,108 @@
+---
+title: Status Page
+description: "A status page builds 90-day uptime strips, resolves its banner, then a cursor hovers two incident bars."
+component: status-page
+vibe: clean
+length: 220
+useWhen:
+  - "A reliability or infrastructure launch beat that needs to show transparent uptime history."
+  - "A trust-and-security scene where two incidents are inspected and the banner flips to resolved."
+  - "A product-update video for a hosted service where the status page itself is the proof point."
+avoidWhen:
+  - "You want live, ticking metrics and an activity feed — use `live-dashboard`."
+  - "The story is a deploy going live, not an incident history — use `deploy-pipeline`."
+  - "You need a rollout with guardrail charts and a toggle — use `feature-flag-rollout`."
+---
+
+<ComponentPreview name="status-page" />
+
+<InstallBlock name="status-page" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { StatusPage } from "@/components/remocn/status-page";
+
+const StatusPageScene = () => (
+  <StatusPage brand="Acme" url="status.acme.dev" year={2026} />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="StatusPage"
+    component={StatusPageScene}
+    durationInFrames={240}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A status card builds a row of 90-day uptime bars per service, and the banner flips from an active incident to a resolved check. The cursor then arcs in to hover one incident bar, slides to a second to show its tooltip, and leaves. Pass `brand`, `url` and `components` (each with `uptime` and `incidents`) to describe your services; `hover` pins the first bar. Ships light and dark.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "brand",
+      type: "string",
+      default: "\"remocn\"",
+      description: "Service name in the page header",
+    },
+    {
+      name: "url",
+      type: "string",
+      default: "\"status.remocn.dev\"",
+      description: "Status page address shown in the header",
+    },
+    {
+      name: "components",
+      type: "StatusComponent[]",
+      default: "DEFAULT_COMPONENTS",
+      description: "Services with an uptime figure and a list of incidents",
+    },
+    {
+      name: "hover",
+      type: "{ component: number; day: number }",
+      description: "Component index and day index of the first hovered bar",
+    },
+    {
+      name: "year",
+      type: "number",
+      default: "2026",
+      description: "Year used in the incident date labels",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for highlights, buttons and progress",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline",
+    },
+    {
+      name: "theme",
+      type: "\"light\" | \"dark\"",
+      default: "\"light\"",
+      description: "Light or dark palette",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "gradients.sh preset id for the backdrop shader",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the backdrop shader parameters",
+    },
+  ]}
+/>

@@ -1,0 +1,81 @@
+---
+title: Spine Turn
+description: "Titles rise in large, then turn 90 degrees to become book spines along the bottom rule."
+component: spine-turn
+vibe: clean
+length: 138
+useWhen:
+  - "An agenda or chapter sequence where each title hands off to the next and stacks as a spine."
+  - "A clean explainer that needs to show progress through three or four sections."
+  - "A recap beat where earlier points shrink into a growing row while the newest one stays large."
+avoidWhen:
+  - "You want a numbered list that highlights row by row — use `index-list`."
+  - "Each step needs its own full beat with a number — use `three-steps`."
+  - "The titles should just replace each other with no history — use `fade-through`."
+---
+
+<ComponentPreview name="spine-turn" />
+
+<InstallBlock name="spine-turn" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { SpineTurn } from "@/components/remocn/spine-turn";
+
+const SpineTurnScene = () => <SpineTurn titles={["Kickoff", "Deep dive", "Wrap-up"]} hold={26} />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="SpineTurn"
+    component={SpineTurnScene}
+    durationInFrames={170}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Each title rises in large over a hairline rule, holds, then rotates 90 degrees and shrinks into a spine at the bottom while the next title enters. The last title stays large. Pass `titles` and `hold`; `accent` and `background` override the colors, and it ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "titles",
+      type: "string[]",
+      default: "[\"Kickoff\", \"Deep dive\", \"Wrap-up\"]",
+      description: "Titles in order; each turns into a spine except the last.",
+    },
+    {
+      name: "hold",
+      type: "number",
+      default: "26",
+      description: "Frames each title holds before it turns.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Hero title color. Defaults to the theme accent.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Stage color. Use \"transparent\" to composite over other layers.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark ground; ships both.",
+    },
+  ]}
+/>

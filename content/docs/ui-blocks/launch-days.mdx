@@ -1,0 +1,128 @@
+---
+title: Launch Days
+description: "A strip of day panels rises, then one widens into a big numbered card with its title and description."
+component: launch-days
+vibe: premium
+length: 63
+useWhen:
+  - "A launch-week announcement where one day is spotlighted among a week of upcoming features."
+  - "A schedule or roadmap beat needing an editorial feel: numbered day, big title, short description."
+  - "Chaining several days in a row, using `from` to move the highlight from one panel to the next."
+avoidWhen:
+  - "You are listing release notes as a scrolling feed — use `changelog-scroll`."
+  - "The beat is about one date, not a week — use `launch-date`."
+  - "You only need three feature headings side by side — use `feature-trio`."
+---
+
+<ComponentPreview name="launch-days" />
+
+<InstallBlock name="launch-days" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { LaunchDays } from "@/components/remocn/launch-days";
+
+const LaunchDaysScene = () => (
+  <LaunchDays
+    week="Launch Week 01"
+    active={2}
+    days={[{ day: "Mon", title: "Captions" }, { day: "Tue", title: "Transitions" }, { day: "Wed", title: "Templates", description: "Whole launch films you own." }]}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="LaunchDays"
+    component={LaunchDaysScene}
+    durationInFrames={105}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A header reads the `week` name while the day panels rise in a strip. The `active` day widens into a card showing its number, title and description under a `label` pill, and the other days shrink to slivers. Pass your own `days`, `week` and `active`; set `from` to start with another day lit and swap to `active`. It ships light and dark through `theme`.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "week",
+      type: "string",
+      default: "\"Launch Week 01\"",
+      description: "Header text shown above the strip.",
+    },
+    {
+      name: "label",
+      type: "string",
+      default: "\"New today\"",
+      description: "Small pill on the active card, such as New today.",
+    },
+    {
+      name: "days",
+      type: "{ day: string; title: string; description?: string }[]",
+      default: "DEFAULT_DAYS",
+      description: "Two to seven days, each with a short day name, title and description.",
+    },
+    {
+      name: "active",
+      type: "number",
+      default: "2",
+      description: "Zero-based index of the day that expands.",
+    },
+    {
+      name: "from",
+      type: "number",
+      description: "Zero-based index of the day lit first. Swaps to active.",
+    },
+    {
+      name: "revealUpcoming",
+      type: "boolean",
+      default: "false",
+      description: "Show titles of the collapsed days as well.",
+    },
+    {
+      name: "logo",
+      type: "React.ReactNode",
+      description: "Header logo node. Pass null to hide it.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color of the active card.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Solid background. Use 'transparent' to drop the ground.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color scheme. Ships light and dark.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "Shader preset id for the animated background.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Partial shader parameters that override the ground preset.",
+    },
+  ]}
+/>

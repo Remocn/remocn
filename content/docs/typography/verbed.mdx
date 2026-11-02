@@ -1,0 +1,119 @@
+---
+title: Verbed
+description: "A dictionary entry defines a product name as a noun, then as a verb, with inflections and an example."
+component: verbed
+vibe: paper
+length: 174
+useWhen:
+  - "A brand-voice beat where the product name has become a verb among users."
+  - "An about-the-name scene that explains what the product is and what it means to use it."
+  - "A playful intro that frames the product in dictionary form."
+avoidWhen:
+  - "You want a short punchy name reveal with no explanation — use `we-call-it`."
+  - "The scene has a single definition line — use `which-means`."
+  - "You want a multi-paragraph statement of beliefs — use `whole-page`."
+---
+
+<ComponentPreview name="verbed" />
+
+<InstallBlock name="verbed" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { Verbed } from "@/components/remocn/verbed";
+
+const VerbedScene = () => (
+  <Verbed headword="remocn" nounSense="a set of video scenes you copy into your repo." verbSense="to make the launch film in the same pull request." />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="Verbed"
+    component={VerbedScene}
+    durationInFrames={200}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A headword with pronunciation appears with its noun sense, then turns into its verb sense, inflections and an example sentence. Set `headword`, `nounSense`, `verbSense` and `example` to define your own product. It ships in light and dark through the `theme` prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "headword",
+      type: "string",
+      default: "\"remocn\"",
+      description: "The word being defined.",
+    },
+    {
+      name: "pronunciation",
+      type: "string",
+      default: "\"/rem-uh-kun/\"",
+      description: "Pronunciation line under the headword.",
+    },
+    {
+      name: "nounLabel",
+      type: "string",
+      default: "\"noun\"",
+      description: "Part-of-speech label for the first sense.",
+    },
+    {
+      name: "verbLabel",
+      type: "string",
+      default: "\"verb\"",
+      description: "Part-of-speech label for the second sense.",
+    },
+    {
+      name: "nounSense",
+      type: "string",
+      default: "\"a set of video scenes you copy into your repo and edit like any other code.\"",
+      description: "Definition text for the noun sense.",
+    },
+    {
+      name: "verbSense",
+      type: "string",
+      default: "\"to make the launch film in the same pull request as the feature.\"",
+      description: "Definition text for the verb sense.",
+    },
+    {
+      name: "inflections",
+      type: "string[]",
+      default: "[\"remocns\", \"remocned\", \"remocning\"]",
+      description: "Inflected forms shown after the verb sense.",
+    },
+    {
+      name: "example",
+      type: "string",
+      default: "\"We remocned the changelog before lunch.\"",
+      description: "Example sentence using the word as a verb.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Accent color override; falls back to the theme accent.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background color override; falls back to the theme background.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark; picks the palette.",
+    },
+  ]}
+/>

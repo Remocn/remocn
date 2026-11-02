@@ -1,0 +1,88 @@
+---
+title: Gravity Grid
+description: "A grid bends into a gravity well as a mass falls, and the logo lands at its bottom."
+component: gravity-grid
+vibe: tech
+length: 112
+useWhen:
+  - "A physics-flavoured reveal for a platform with weight and gravity as the metaphor."
+  - "A 3D-feeling logo landing that stays a flat graphic."
+  - "A tech launch where the logo needs a caption line beneath."
+avoidWhen:
+  - "A calm, flat reveal is enough — use `first-light`."
+  - "A dotted route should lead to the logo — use `paper-plane`."
+  - "The logo should be built from nodes — use `neural-pulse`."
+---
+
+<ComponentPreview name="gravity-grid" />
+
+<InstallBlock name="gravity-grid" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { GravityGrid } from "@/components/remocn/gravity-grid";
+
+const GravityGridScene = () => (
+  <GravityGrid
+    name="remocn"
+    caption="Launch videos, in components."
+    accent="#3B5BFD"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="GravityGrid"
+    component={GravityGridScene}
+    durationInFrames={200}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A perspective grid recedes into the distance, a mass falls and bends it into a gravity well, and on impact the logo and `name` land at the bottom with `caption` beneath. Pass `name` or `logo`, and `caption`. Ships light and dark.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "logo",
+      type: "React.ReactNode",
+      description: "Replaces the remocn logo at the bottom of the well.",
+    },
+    {
+      name: "name",
+      type: "string",
+      default: "\"remocn\"",
+      description: "Name set beside the logo.",
+    },
+    {
+      name: "caption",
+      type: "string",
+      default: "\"Launch videos, in components.\"",
+      description: "Small line under the name; empty hides it.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent colour for the mark and highlights; any CSS colour.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier for the whole timeline; 1 is normal speed.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Dark or light palette and ground.",
+    },
+  ]}
+/>

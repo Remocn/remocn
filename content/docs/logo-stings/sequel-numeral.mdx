@@ -1,0 +1,94 @@
+---
+title: Sequel Numeral
+description: "The wordmark opens beside a giant numeral that drops in and grows, with a part-two tagline."
+component: sequel-numeral
+vibe: premium
+length: 98
+useWhen:
+  - "A v2 or sequel announcement where the version number is the hero."
+  - "A launch of a second season, edition or generation of a product."
+  - "An out-now end card for a release."
+avoidWhen:
+  - "The name matters more than the number — use `introducing`."
+  - "You want a countdown ending in the logo — use `glyph-matrix`."
+  - "A plain tagline close with no numeral — use `first-light`."
+---
+
+<ComponentPreview name="sequel-numeral" />
+
+<InstallBlock name="sequel-numeral" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { SequelNumeral } from "@/components/remocn/sequel-numeral";
+
+const SequelNumeralScene = () => (
+  <SequelNumeral
+    name="remocn"
+    numeral="2"
+    tagline="Part two. Out now."
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="SequelNumeral"
+    component={SequelNumeralScene}
+    durationInFrames={140}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The name appears with a small superscript numeral, which drops and swells into a giant numeral beside it before the tagline fades in. Pass `name`, `numeral` and `tagline`; `accent` colours the numeral and is red by default. Ships light and dark.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "name",
+      type: "string",
+      default: "\"remocn\"",
+      description: "Product name shown beside the numeral.",
+    },
+    {
+      name: "numeral",
+      type: "string",
+      default: "\"2\"",
+      description: "Numeral or short text that grows into the hero.",
+    },
+    {
+      name: "tagline",
+      type: "string",
+      default: "\"Part two. Out now.\"",
+      description: "Line that fades in under the lockup.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "RED",
+      description: "Colour of the giant numeral.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Stage fill colour; overrides the theme background.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier for the whole timeline; 1 is normal speed.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Dark or light palette and ground.",
+    },
+  ]}
+/>

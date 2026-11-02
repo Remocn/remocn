@@ -1,0 +1,125 @@
+---
+title: Feature Headline
+description: "A tag pill opens from the left, then a headline rises word by word with a supporting subhead."
+component: feature-headline
+vibe: premium
+length: 39
+useWhen:
+  - "A feature spotlight with a New tag, a one-line headline and a short subhead."
+  - "A chapter title in a product tour that should enter and leave cleanly."
+avoidWhen:
+  - "You need a centered cinematic title with no tag - use `tracking-in`."
+  - "You want only a bare text exit - use `blur-out-up`."
+  - "The headline needs a typed feel - use `typewriter`."
+---
+
+<ComponentPreview name="feature-headline" />
+
+<InstallBlock name="feature-headline" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { FeatureHeadline } from "@/components/remocn/feature-headline";
+
+const FeatureHeadlineScene = () => (
+  <FeatureHeadline
+    tag="New"
+    label="Captions"
+    headline="Captions that move with every word."
+    highlight="every word"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="FeatureHeadline"
+    component={FeatureHeadlineScene}
+    durationInFrames={90}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A pill with a tag and label opens, the headline words rise in turn with `highlight` in the accent, and the subhead fades in; with `exit` on, everything lifts away in the last frames of the Sequence. Pass `tag`, `label`, `headline`, `highlight` and `subhead`; it ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "tag",
+      type: "string",
+      default: "\"New\"",
+      description: "Short chip at the start of the pill. Empty string hides it.",
+      description: "Short badge text inside the pill, such as New",
+    },
+    {
+      name: "label",
+      type: "string",
+      default: "\"Captions\"",
+      description: "Feature name in the pill. Empty string hides the pill.",
+      description: "Pill label; empty hides the pill",
+    },
+    {
+      name: "headline",
+      type: "string",
+      default: "\"Captions that move with every word.\"",
+      description: "One or two lines. A \"\\n\" forces a break.",
+      description: "Main headline; words rise in one by one",
+    },
+    {
+      name: "highlight",
+      type: "string",
+      default: "\"every word\"",
+      description: "Phrase inside `headline` that carries the gradient.",
+      description: "Phrase inside the headline shown in the accent color",
+    },
+    {
+      name: "subhead",
+      type: "string",
+      default: "\"31 transcript-driven caption styles, ready to drop into any video.\"",
+      description: "Supporting line under the headline; empty to hide",
+    },
+    {
+      name: "align",
+      type: "\"left\" | \"center\"",
+      default: "\"left\"",
+      description: "Text alignment: left or center",
+    },
+    {
+      name: "exit",
+      type: "boolean",
+      default: "true",
+      description: "Leave through the masks over the last 12 frames of the composition.",
+      description: "Play an exit animation in the last frames",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color (any valid CSS color)",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Stage fill. \"transparent\" drops the stage.",
+      description: "Overrides the theme's stage color",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier.",
+      description: "Playback speed multiplier",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark palettes",
+    },
+  ]}
+/>

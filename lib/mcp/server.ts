@@ -50,6 +50,12 @@ const READ_ONLY = {
   openWorldHint: false,
 } as const;
 
+// The title goes in the annotations too: the directory and clients on the
+// 2025-03-26 spec read `annotations.title`, newer ones the tool's own `title`.
+function readOnly(title: string) {
+  return { ...READ_ONLY, title };
+}
+
 type TextResult = {
   content: { type: "text"; text: string }[];
   structuredContent?: Record<string, unknown>;
@@ -211,7 +217,7 @@ export function createRemocnMcpServer(): McpServer {
           .describe("Max motion length in frames @30fps"),
         limit: z.number().int().min(1).max(MAX_LIMIT).optional(),
       }),
-      annotations: READ_ONLY,
+      annotations: readOnly("Search remocn components"),
     },
     async ({ query, vibe, maxLength, limit }) => {
       const results = searchComponents(getCatalog().records, {
@@ -251,7 +257,7 @@ export function createRemocnMcpServer(): McpServer {
           .max(MAX_NAME)
           .describe("Component name, e.g. 'kinetic-center-build'"),
       }),
-      annotations: READ_ONLY,
+      annotations: readOnly("Get a remocn component's docs"),
     },
     async ({ name }) => {
       const record = resolveComponent(name);
@@ -289,7 +295,7 @@ export function createRemocnMcpServer(): McpServer {
           .optional()
           .describe("Target length; picks the closest recipe variant"),
       }),
-      annotations: READ_ONLY,
+      annotations: readOnly("Plan a remocn video"),
       _meta: { ui: { resourceUri: PREVIEW_RESOURCE_URI } },
     },
     async ({ brief, archetype, durationSeconds }) => {
@@ -438,7 +444,7 @@ export function createRemocnMcpServer(): McpServer {
           .optional()
           .describe("Props merged over the component's demo defaults"),
       }),
-      annotations: READ_ONLY,
+      annotations: readOnly("Preview a remocn component"),
       _meta: { ui: { resourceUri: PREVIEW_RESOURCE_URI } },
     },
     async ({ name, props }) => {

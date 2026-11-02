@@ -29,6 +29,7 @@
       "@/lib/remocn-icons": ["./registry/remocn-icons/icons-core/index.ts"],
       "@/lib/remocn-ui": ["./registry/remocn-ui/core/index.ts"],
       "@/lib/remocn-ui/*": ["./registry/remocn-ui/core/*"],
+      "@/lib/remocn/gsh/*": ["./registry/remocn/gsh/*"],
       "@/lib/remocn/stop-motion": ["./registry/remocn/stop-motion/index.ts"],
       "@/lib/remocn/scene-motion": ["./registry/remocn/scene-motion/index.ts"],
       "@/lib/remocn/canvas-presentation": [
@@ -150,6 +151,9 @@
       ],
       "@/components/remocn/shader-warp": [
         "./registry/remocn/shader-warp/index.tsx"
+      ],
+      "@/components/remocn/shader-mesh-gradient": [
+        "./registry/remocn/shader-mesh-gradient/index.tsx"
       ],
       "@/components/remocn/ascii-dissolve": [
         "./registry/remocn/ascii-dissolve/index.tsx"

@@ -1,0 +1,81 @@
+---
+title: Changed Mind
+description: "A big serif pull quote, \"The only tool I use now.\", with a solo-founder attribution"
+component: changed-mind
+vibe: premium
+length: 140
+useWhen:
+  - "A testimonial that shows a customer's opinion evolving over time, with one quote edited in place."
+  - "A before-and-after claim where only a few words change between versions."
+  - "A founder or user story beat in a launch film, set in an editorial serif."
+avoidWhen:
+  - "You have several different testimonials from different people — use `quote-hero`."
+  - "You only need one static pull quote with an attribution — use `said-who`."
+  - "The quotes share almost no words, so nothing carries over between steps — use `overheard`."
+---
+
+<ComponentPreview name="changed-mind" />
+
+<InstallBlock name="changed-mind" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { ChangedMind } from "@/components/remocn/changed-mind";
+
+const ChangedMindScene = () => <ChangedMind name="Ines Vargas, solo founder" steps={[{ quote: "Another tool I won’t use.", when: "on day one" }, { quote: "The only tool I use now.", when: "two months in" }]} />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="ChangedMind"
+    component={ChangedMindScene}
+    durationInFrames={170}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A big serif quote types in word by word, then twice rewrites itself: shared words glide to their new spots while changed words swap and glow in the accent color, with the time tag under the attribution updating each time. Pass `steps` (quote and when pairs) and `name`; it ships light and dark, and spaces the steps to fit the composition length.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "steps",
+      type: "ChangedMindStep[]",
+      default: "DEFAULT_STEPS",
+      description: "Quotes with a time tag each; shared words carry across.",
+    },
+    {
+      name: "name",
+      type: "string",
+      default: "\"Ines Vargas, solo founder\"",
+      description: "Attribution line shown under the quote.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Color for the words that changed; defaults to the theme accent.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Stage fill color; pass \"transparent\" to overlay your own footage.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color scheme; ships dark and light.",
+    },
+  ]}
+/>

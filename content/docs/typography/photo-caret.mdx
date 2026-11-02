@@ -1,0 +1,109 @@
+---
+title: Photo Caret
+description: "A multi-line headline types word by word with a hopping caret while product photos float around it."
+component: photo-caret
+vibe: premium
+length: 91
+useWhen:
+  - "A brand statement that should be written live with photos orbiting the text."
+  - "A personal or lifestyle launch beat where imagery supports the line."
+avoidWhen:
+  - "You have no photos to place around the text - use `cooling-type`."
+  - "You want a plain typed line - use `typewriter`."
+  - "You want the photos to be the focus - use `cover-ring`."
+---
+
+<ComponentPreview name="photo-caret" />
+
+<InstallBlock name="photo-caret" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { PhotoCaret } from "@/components/remocn/photo-caret";
+
+const PhotoCaretScene = () => (
+  <PhotoCaret
+    text="Your launch, / your name / on it."
+    accentWord="it."
+    src={staticFile("shots/hero.jpg")}
+    images={[staticFile("shots/one.jpg"), staticFile("shots/two.jpg")]}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="PhotoCaret"
+    component={PhotoCaretScene}
+    durationInFrames={126}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A caret hops from word to word as the headline types, with an image tile and floating photos popping in around it, and the accent word lands last. Pass `text` (use ' / ' for line breaks), `accentWord`, and your own `src` and `images` since the default photos only exist in the remocn repo; it ships light and dark through `theme`.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "text",
+      type: "string",
+      default: "\"Your launch, / your name / on it.\"",
+      description: "Headline; ' / ' marks line breaks",
+    },
+    {
+      name: "accentWord",
+      type: "string",
+      default: "\"it.\"",
+      description: "Word shown in the accent color; defaults to the last",
+    },
+    {
+      name: "src",
+      type: "string",
+      description: "Main image tile next to the text; pass your own",
+    },
+    {
+      name: "images",
+      type: "string[]",
+      description: "Floating photo URLs around the text; pass your own",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Color of the accent word and caret",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color override",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark palettes",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "Gradient ground preset id",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Partial gradient parameters to tune the ground",
+    },
+    {
+      name: "firstStep",
+      type: "number",
+      default: "12",
+      description: "Frames before the second word; later steps speed up",
+    },
+  ]}
+/>

@@ -1,0 +1,83 @@
+---
+title: Hex Fill
+description: "A honeycomb of hexagons fills with gradient cells around a ring up to a percentage reading."
+component: hex-fill
+vibe: data
+length: 110
+useWhen:
+  - "A percentage stat, such as cache hit rate, where the filled share of a grid is the visual."
+  - "A data beat where the number should count up in step with cells filling."
+  - "A tech-flavored stat with a one-line label beside the grid."
+avoidWhen:
+  - "The share should be a ring sweep - use `share-donut`."
+  - "The share should be a square grid of dots - use `unit-grid`."
+  - "Tiles should split by category size - use `treemap-split`."
+---
+
+<ComponentPreview name="hex-fill" />
+
+<InstallBlock name="hex-fill" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { HexFill } from "@/components/remocn/hex-fill";
+
+const HexFillScene = () => <HexFill value={86} label="of renders served from cache" rings={7} />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="HexFill"
+    component={HexFillScene}
+    durationInFrames={140}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A honeycomb of outlined hexagons appears ring by ring, then cells pop in with a gradient in a sweep around the circle up to the percentage, while a large reading counts up beside it with a label. Pass `value` as a percent from 0 to 100, plus `label`; `rings` sets the grid size. It ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "value",
+      type: "number",
+      default: "86",
+      description: "Percentage to fill, from 0 to 100.",
+    },
+    {
+      name: "label",
+      type: "string",
+      default: "\"of renders served from cache\"",
+      description: "Caption beside the reading.",
+    },
+    {
+      name: "rings",
+      type: "number",
+      default: "7",
+      description: "Rings of hexagons, from 3 to 10.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color of the fill gradient.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark palette.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier.",
+    },
+  ]}
+/>

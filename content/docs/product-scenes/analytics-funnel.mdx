@@ -1,0 +1,120 @@
+---
+title: Analytics Funnel
+description: "An activation funnel chart steps down while a tooltip shows breakdowns"
+component: analytics-funnel
+vibe: data
+length: 125
+useWhen:
+  - "An analytics or growth product launch that needs to show a conversion funnel with real-looking drop-off per step."
+  - "An experiment beat where a cursor flips a toggle and the bars morph from the control to the new variant, with an uplift badge."
+  - "A feature video that ends on a tooltip with a per-platform breakdown of one funnel step."
+avoidWhen:
+  - "You want a single chart line growing to a headline value — use `chart-morph` instead."
+  - "The story is a live revenue dashboard with a feed, not a funnel — use `live-dashboard` instead."
+  - "You only need big count-up numbers with no chart — use `stat-sequence` instead."
+---
+
+<ComponentPreview name="analytics-funnel" />
+
+<InstallBlock name="analytics-funnel" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { AnalyticsFunnel } from "@/components/remocn/analytics-funnel";
+
+const AnalyticsFunnelScene = () => (
+  <AnalyticsFunnel
+    title="Activation funnel"
+    variantLabel="New onboarding"
+    tooltipStep={2}
+    theme="dark"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="AnalyticsFunnel"
+    component={AnalyticsFunnelScene}
+    durationInFrames={165}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A funnel chart window grows its bars step by step, then a cursor clicks a variant toggle and the bars morph from control to variant with an uplift badge. A tooltip then opens on one step with a breakdown. Pass your own `steps` (control and variant counts), `title` and `breakdown`. It ships light and dark through the `theme` prop.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "steps",
+      type: "FunnelStep[]",
+      default: "DEFAULT_STEPS",
+      description: "Funnel steps with label, event name, and control and variant counts.",
+    },
+    {
+      name: "title",
+      type: "string",
+      default: "\"Activation funnel\"",
+      description: "Chart title in the window header.",
+    },
+    {
+      name: "variantLabel",
+      type: "string",
+      default: "\"New onboarding\"",
+      description: "Label of the variant toggle the cursor clicks.",
+    },
+    {
+      name: "tooltipStep",
+      type: "number",
+      default: "2",
+      description: "Zero-based index of the step that gets the tooltip.",
+    },
+    {
+      name: "breakdown",
+      type: "FunnelBreakdownRow[]",
+      default: "DEFAULT_BREAKDOWN",
+      description: "Tooltip rows: a label and its share from 0 to 1.",
+    },
+    {
+      name: "dateRange",
+      type: "string",
+      default: "\"Last 30 days\"",
+      description: "Date range label shown in the header.",
+    },
+    {
+      name: "theme",
+      type: "\"light\" | \"dark\"",
+      default: "\"light\"",
+      description: "Light or dark window styling.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for the variant bars and toggle.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "Gradient shader preset id for the background.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the shader preset parameters.",
+    },
+  ]}
+/>

@@ -1,0 +1,87 @@
+---
+title: Double Take
+description: "\"Read that again.\" above an oversized pink \"One person\" on blue"
+component: double-take
+vibe: playful
+length: 134
+useWhen:
+  - "A surprising claim that deserves a second look, such as a team-size or time-to-make stat."
+  - "A sentence where one phrase is the whole point and should be highlighted after a rewind."
+  - "A playful beat that tells the viewer to read it again."
+avoidWhen:
+  - "The surprise is the answer to a question — use `answer-first`."
+  - "You want a phrase lifted out of a sentence as a title — use `hidden-word`."
+  - "The line should rewrite itself instead of rewinding — use `changed-mind`."
+---
+
+<ComponentPreview name="double-take" />
+
+<InstallBlock name="double-take" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { DoubleTake } from "@/components/remocn/double-take";
+
+const DoubleTakeScene = () => <DoubleTake text="One person wrote this entire launch video over a single lunch break." focus="One person" cue="Read that again." />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="DoubleTake"
+    component={DoubleTakeScene}
+    durationInFrames={160}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A line crawls in word by word, stops, then rewinds and zooms back onto one phrase, which lights up in the accent color over a small cue line. Pass `text`, `focus` (the phrase to land on) and `cue`; it compresses to fit the composition length.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "text",
+      type: "string",
+      default: "\"One person wrote this entire launch video over a single lunch break.\"",
+      description: "The full sentence that crawls in.",
+    },
+    {
+      name: "focus",
+      type: "string",
+      default: "\"One person\"",
+      description: "Phrase the view rewinds and zooms to.",
+    },
+    {
+      name: "cue",
+      type: "string",
+      default: "\"Read that again.\"",
+      description: "Small line shown above the highlighted phrase.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Color of the highlighted phrase; defaults to the theme accent.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Stage fill color; pass \"transparent\" to overlay your own footage.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color scheme; ships dark and light.",
+    },
+  ]}
+/>

@@ -1,0 +1,78 @@
+---
+title: Select Replace
+description: "A phrase is selected like text in an editor, deleted, and replaced with new styled words."
+component: select-replace
+vibe: tech
+length: 130
+useWhen:
+  - "An editor-style beat that rewrites a slow plan into a fast one."
+  - "A copy-change demo where two phrases are corrected in sequence."
+  - "A dev or writing tool scene that mimics a real text selection."
+avoidWhen:
+  - "A single misspelling should be fixed in place — use `typo-fix`."
+  - "The change should read as a code diff — use `diff-swap`."
+  - "Words should be inserted into a sentence, not replaced — use `word-insert`."
+---
+
+<ComponentPreview name="select-replace" />
+
+<InstallBlock name="select-replace" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { SelectReplace } from "@/components/remocn/select-replace";
+
+const SelectReplaceScene = () => (
+  <SelectReplace text="Draft it next week." edits={[{ from: "Draft", to: "Ship" }, { from: "next week", to: "tonight" }]} />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="SelectReplace"
+    component={SelectReplaceScene}
+    durationInFrames={170}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The `text` shows, then each `edits` item selects a `from` phrase and swaps in its `to` replacement with a highlight. Pass `text` and `edits` with the phrases you want changed. It ships in light and dark through the `theme` prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "text",
+      type: "string",
+      default: "\"Draft it next week.\"",
+      description: "Starting sentence containing every `from` phrase.",
+    },
+    {
+      name: "edits",
+      type: "SelectReplaceEdit[]",
+      description: "List of `{ from, to }` replacements applied in order.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color override; falls back to the theme accent.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark; picks the palette.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+  ]}
+/>

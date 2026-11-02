@@ -1,0 +1,75 @@
+---
+title: Coy Denial
+description: "A huge \"Don't check the site at nine.\" with a sheepish \"(Do.)\" tucked into the corner"
+component: coy-denial
+vibe: playful
+length: 144
+useWhen:
+  - "A teaser where a loud denial is quietly undone by a tiny aside."
+  - "A comedic beat in a launch video, pairing a statement with its contradiction."
+  - "A short back-to-back sequence of two or three denial and aside pairs."
+avoidWhen:
+  - "The punchline is an attribution below a quote — use `deadpan-box`."
+  - "You want the answer to come first, big — use `answer-first`."
+  - "You need a hesitant start answered by a bold reply — use `no-buts`."
+---
+
+<ComponentPreview name="coy-denial" />
+
+<InstallBlock name="coy-denial" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { CoyDenial } from "@/components/remocn/coy-denial";
+
+const CoyDenialScene = () => <CoyDenial rounds={[{ say: "Nothing is launching on Thursday.", aside: "(Something is.)" }]} />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="CoyDenial"
+    component={CoyDenialScene}
+    durationInFrames={180}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A big statement builds word by word, then a sheepish parenthetical aside appears in the corner that contradicts it; the round exits and the next one follows. Pass `rounds` (say and aside pairs); it fits the pace to the composition length.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "rounds",
+      type: "CoyDenialRound[]",
+      default: "DEFAULT_ROUNDS",
+      description: "Statement and aside pairs, played in turn.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Color of the corner aside; defaults to the theme accent.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Stage fill color; pass \"transparent\" to overlay your own footage.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color scheme; ships dark and light.",
+    },
+  ]}
+/>

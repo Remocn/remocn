@@ -1,0 +1,139 @@
+---
+title: Calendar Pick
+description: "A month calendar picks a launch day, tagging dates with small event labels"
+component: calendar-pick
+vibe: clean
+length: 168
+useWhen:
+  - "A launch-date beat where a month grid fades in, a cursor clicks one day and an event label with a time range is typed into it."
+  - "A scheduling or booking moment, such as picking a demo day, that needs a realistic UI feel over a soft gradient ground."
+  - "A portrait or landscape teaser that ends on a headline like 'Launch day, booked.' beside the highlighted date."
+avoidWhen:
+  - "You only want to announce a date with a calendar drawing itself and a glowing ring — use `launch-date`."
+  - "You need a live countdown to the date rather than a picked day — use `countdown`."
+  - "You want to show a year or number landing on a ruler — use `ruler-scrub`."
+---
+
+<ComponentPreview name="calendar-pick" />
+
+<InstallBlock name="calendar-pick" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { CalendarPick } from "@/components/remocn/calendar-pick";
+
+const CalendarPickScene = () => (
+  <CalendarPick
+    title="Launch day, booked."
+    month="June"
+    year="2026"
+    pickDay={18}
+    eventLabel="Launch"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="CalendarPick"
+    component={CalendarPickScene}
+    durationInFrames={168}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A tilted month calendar rises in and the day cells fade in row by row while the camera pushes toward one day. A cursor glides in and clicks it, the cell opens into an input that types a time range, then floods with the accent colour and shows an event label. Pass `month`, `year`, `firstWeekday`, `daysInMonth`, `pickDay` and `timeRange` to fit your date. It ships light and dark through the `theme` prop and has no `speed` prop.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#F26A2E\"",
+      description: "Colour of the picked day, today ring and busy-day marks.",
+    },
+    {
+      name: "title",
+      type: "string",
+      default: "\"Launch day, booked.\"",
+      description: "Headline shown beside the calendar once the day is booked.",
+    },
+    {
+      name: "month",
+      type: "string",
+      default: "\"June\"",
+      description: "Month name in the calendar header.",
+    },
+    {
+      name: "year",
+      type: "string",
+      default: "\"2026\"",
+      description: "Year shown next to the month name.",
+    },
+    {
+      name: "firstWeekday",
+      type: "number",
+      default: "0",
+      description: "Column of the 1st: 0 is Monday, 6 is Sunday.",
+    },
+    {
+      name: "daysInMonth",
+      type: "number",
+      default: "30",
+      description: "Number of days to draw in the grid.",
+    },
+    {
+      name: "today",
+      type: "number",
+      default: "9",
+      description: "Day number outlined as today.",
+    },
+    {
+      name: "pickDay",
+      type: "number",
+      default: "18",
+      description: "Day number the cursor clicks and the event lands on.",
+    },
+    {
+      name: "timeRange",
+      type: "string",
+      default: "\"10:00 AM – 4:00 PM\"",
+      description: "Text typed into the opened day, e.g. '10:00 AM – 4:00 PM'.",
+    },
+    {
+      name: "eventLabel",
+      type: "string",
+      default: "\"Launch\"",
+      description: "Short label shown inside the picked day.",
+    },
+    {
+      name: "busyDays",
+      type: "number[]",
+      default: "[3, 11, 12, 22, 25, 29]",
+      description: "Day numbers that get a small busy marker.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "Gradient shader preset id for the background; theme picks one by default.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Optional overrides for the background gradient parameters.",
+    },
+  ]}
+/>

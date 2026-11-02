@@ -1,0 +1,77 @@
+---
+title: Abacus Count
+description: "Abacus beads slide along their rods to count up to 48,216"
+component: abacus-count
+vibe: playful
+length: 160
+useWhen:
+  - "A usage-stat beat where a number such as renders this week is counted up on abacus rods before it appears in big type."
+  - "A playful, tactile milestone figure that needs a physical counting metaphor instead of a rolling odometer."
+  - "A numbers beat with a short caption that fades in once the final digit lands."
+avoidWhen:
+  - "You want digits that roll like a live odometer — use `live-ticker`."
+  - "You want a number that adds with visible carries between columns — use `carry-count`."
+  - "You want a clean, minimal figure with no illustration — use `compact-stat`."
+---
+
+<ComponentPreview name="abacus-count" />
+
+<InstallBlock name="abacus-count" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { AbacusCount } from "@/components/remocn/abacus-count";
+
+const AbacusCountScene = () => <AbacusCount value={48216} label="renders this week" />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="AbacusCount"
+    component={AbacusCountScene}
+    durationInFrames={165}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Rods and beads fade in beside a large readout. Beads slide along each rod in springy steps, carrying over into the next rod, while the matching digit in the readout updates and the leading digit takes a gradient. A caption fades in after the last step. Pass `value` up to 999,999 and `label`. It ships light and dark through the `theme` prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "value",
+      type: "number",
+      default: "48216",
+      description: "The final number, 0 to 999,999. More digits add more rods.",
+    },
+    {
+      name: "label",
+      type: "string",
+      default: "\"renders this week\"",
+      description: "Caption under the readout.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Colour of the small marker dot before the caption.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier; 1 is the designed pace.",
+    },
+  ]}
+/>

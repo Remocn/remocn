@@ -1,0 +1,119 @@
+---
+title: Lean Count
+description: "A heavy figure counts up in a few surges, each snapping its slant, beside a short label."
+component: lean-count
+vibe: premium
+length: 76
+useWhen:
+  - "A benchmark beat where a multiplier like 3.2x lands as the headline result of the video."
+  - "A speed-up or improvement stat that should feel punchy and kinetic rather than calm."
+  - "A poster-style stat with a short label pinned top-left and the number anchored bottom-right."
+avoidWhen:
+  - "The figure is a large integer that should roll like an odometer — use `carry-count`."
+  - "You need a calm static headline number with no motion on the digits — use `compact-stat`."
+  - "Several stats should appear one after another — use `stat-sequence`."
+---
+
+<ComponentPreview name="lean-count" />
+
+<InstallBlock name="lean-count" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { LeanCount } from "@/components/remocn/lean-count";
+
+const LeanCountScene = () => (
+  <LeanCount value={3.2} suffix="×" label="Faster renders on the laptop you already own." />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="LeanCount"
+    component={LeanCountScene}
+    durationInFrames={130}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The label words rise in while the figure counts from `from` up to `value` in `steps` surges, each surge swinging the slant from leaning back to leaning forward. The suffix is drawn in the accent color. Pass `value`, `suffix` and `label` to make it yours; it ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "value",
+      type: "number",
+      default: "3.2",
+      description: "Final number the figure counts up to.",
+    },
+    {
+      name: "from",
+      type: "number",
+      default: "1",
+      description: "Number the count starts from.",
+    },
+    {
+      name: "decimals",
+      type: "number",
+      default: "1",
+      description: "Decimal places shown while counting.",
+    },
+    {
+      name: "prefix",
+      type: "string",
+      default: "\"\"",
+      description: "Text drawn before the number, such as a currency sign.",
+    },
+    {
+      name: "suffix",
+      type: "string",
+      default: "\"×\"",
+      description: "Text drawn after the number, in the accent color.",
+    },
+    {
+      name: "label",
+      type: "string",
+      default: "\"Faster renders on the laptop you already own.\"",
+      description: "Short sentence that rises in word by word at the top left.",
+    },
+    {
+      name: "lean",
+      type: "number",
+      default: "14",
+      description: "Slant angle in degrees at the extremes of each surge.",
+    },
+    {
+      name: "steps",
+      type: "number",
+      default: "3",
+      description: "Number of count surges the figure is split into.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Accent color for highlights and small marks.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background color override. Pass \"transparent\" to composite over other layers.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color theme, \"dark\" or \"light\".",
+    },
+  ]}
+/>

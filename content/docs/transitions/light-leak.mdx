@@ -1,0 +1,89 @@
+---
+title: Light Leak
+description: Drift a warm analog light leak across the frame, blow it out at the cut and cool off on the next scene
+component: light-leak
+vibe: premium
+length: 20
+useWhen:
+  - "The video has a film, lifestyle or nostalgic look and the cut should feel like light hitting the negative."
+  - "You want a warm, soft cut between two scenes that otherwise would hard-cut, such as a montage of shots."
+  - "The palette can be tuned to the brand: the leak takes any list of colors."
+avoidWhen:
+  - "The video is a crisp UI or data piece where a warm burn looks out of place; use `fade-through`."
+  - "You want the cut to feel like a camera move rather than light; use `whip-pan`."
+  - "The scenes are both very bright: the blow-out loses contrast; use `focus-pull`."
+---
+
+<ComponentPreview name="light-leak" />
+
+<InstallBlock name="light-leak" />
+
+## Usage
+
+`lightLeak()` is a Remotion transition presentation. Pass it to a
+`TransitionSeries.Transition` between two sequences. A set of soft colored
+flares drifts in from the `origin` edge and screen-blends over the picture
+while the scene brightens. At the midpoint the frame peaks close to the last
+color in `colors` and the scenes hard-cut underneath that blow-out. The leak
+then keeps drifting across and cools off on the incoming scene.
+
+Both scenes render once per frame. The cut is hidden by the blow-out, so it
+works best short: 16 to 24 frames.
+
+```tsx
+import { TransitionSeries, linearTiming } from "@remotion/transitions";
+import { lightLeak } from "@/components/remocn/light-leak";
+
+export const MyVideo = () => (
+  <TransitionSeries>
+    <TransitionSeries.Sequence durationInFrames={70}>
+      <SceneA />
+    </TransitionSeries.Sequence>
+    <TransitionSeries.Transition
+      timing={linearTiming({ durationInFrames: 20 })}
+      presentation={lightLeak({ origin: "right" })}
+    />
+    <TransitionSeries.Sequence durationInFrames={70}>
+      <SceneB />
+    </TransitionSeries.Sequence>
+  </TransitionSeries>
+);
+```
+
+## Colors
+
+`colors` is a list, warmest first. The flares cycle through every color except
+the last, and the last one is the blow-out tint the frame flashes to at the
+cut. A single color is used for both the flares and the blow-out, and an empty
+list falls back to the default palette.
+
+```tsx
+lightLeak({ colors: ["#7C3AED", "#2563EB", "#22D3EE", "#F0F9FF"] });
+```
+
+## Props
+
+`lightLeak(props)` accepts:
+
+<PropsTable
+  rows={[
+    {
+      name: "colors",
+      type: "string[]",
+      default: '["#FF5A1F", "#E5322D", "#FFB347", "#FFF3E0"]',
+      description: "Leak colors, warmest first. The last one is the blow-out tint.",
+    },
+    {
+      name: "origin",
+      type: '"left" | "right" | "top" | "bottom"',
+      default: '"left"',
+      description: "Edge the leak drifts in from.",
+    },
+    {
+      name: "intensity",
+      type: "number",
+      default: "1",
+      description: "Strength of the leak, the brightening and the blow-out, 0 to 1.",
+    },
+  ]}
+/>

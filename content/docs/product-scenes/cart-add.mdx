@@ -1,0 +1,172 @@
+---
+title: Cart Add
+description: "A shop page picks a color and size, then a cart drawer slides in with Checkout"
+component: cart-add
+vibe: clean
+length: 168
+useWhen:
+  - "An e-commerce or storefront-builder launch beat showing a product page turning into a sale."
+  - "A checkout-flow demo that should show variant selection, add to cart and a free-shipping progress bar."
+  - "A product-photo-led ad where your own images swap in per color option."
+avoidWhen:
+  - "The story starts at payment, not the product page — use `coupon-apply`, which works on an order summary."
+  - "You want a store admin or catalogue view instead of the shopper side — use `grid-to-app`."
+---
+
+<ComponentPreview name="cart-add" />
+
+<InstallBlock name="cart-add" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { CartAdd } from "@/components/remocn/cart-add";
+
+const CartAddScene = () => (
+  <CartAdd product="Trail Jacket" brand="northline" pickColor={2} accent="#3B5BFD" />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="CartAdd"
+    component={CartAddScene}
+    durationInFrames={200}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A product page appears, a cursor picks a color swatch and a size, the price updates, and clicking Add to cart flies a thumbnail into a cart drawer that slides in with a free-shipping bar and Checkout button. Pass `product`, `colors`, `sizes` (label and price), and `images` (one per color) to match your shop. The `theme` prop ships light and dark.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "brand",
+      type: "string",
+      default: "\"fernway\"",
+      description: "Brand name shown in the header and on the product.",
+    },
+    {
+      name: "product",
+      type: "string",
+      default: "\"Summit Bottle\"",
+      description: "Product name shown on the page and in the cart.",
+    },
+    {
+      name: "category",
+      type: "string",
+      default: "\"Drinkware\"",
+      description: "Small category label above the product name.",
+    },
+    {
+      name: "description",
+      type: "string",
+      default: "\"Double-wall steel keeps drinks cold for 24 hours. Leak-proof cap, powder-coat finish that never sweats.\"",
+      description: "Product description paragraph shown on the page.",
+    },
+    {
+      name: "rating",
+      type: "number",
+      default: "4.8",
+      description: "Rating shown next to the review count.",
+    },
+    {
+      name: "reviews",
+      type: "string",
+      default: "\"2,184\"",
+      description: "Review count text, for example 2,184.",
+    },
+    {
+      name: "colors",
+      type: "CartColor[]",
+      default: "DEFAULT_COLORS",
+      description: "Color options as name and swatch pairs.",
+    },
+    {
+      name: "sizes",
+      type: "CartSize[]",
+      default: "DEFAULT_SIZES",
+      description: "Size options with a label and numeric price each.",
+    },
+    {
+      name: "startColor",
+      type: "number",
+      default: "0",
+      description: "Index of the color selected at the start.",
+    },
+    {
+      name: "pickColor",
+      type: "number",
+      default: "1",
+      description: "Index of the color the cursor picks.",
+    },
+    {
+      name: "startSize",
+      type: "number",
+      default: "1",
+      description: "Index of the size selected at the start.",
+    },
+    {
+      name: "pickSize",
+      type: "number",
+      default: "2",
+      description: "Index of the size the cursor picks.",
+    },
+    {
+      name: "images",
+      type: "string[]",
+      description: "Product image URLs, one per color. Defaults to a drawn illustration.",
+    },
+    {
+      name: "currency",
+      type: "string",
+      default: "\"$\"",
+      description: "Currency symbol placed before prices.",
+    },
+    {
+      name: "freeShippingAt",
+      type: "number",
+      default: "75",
+      description: "Order total that unlocks free shipping in the drawer bar.",
+    },
+    {
+      name: "theme",
+      type: "\"light\" | \"dark\"",
+      default: "\"light\"",
+      description: "Light or dark page and drawer styling.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for selection, buttons and the progress bar.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "Preset id for the shader background.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the shader background parameters.",
+    },
+    {
+      name: "url",
+      type: "string",
+      description: "Declared in the props type but not used by the component.",
+    },
+  ]}
+/>

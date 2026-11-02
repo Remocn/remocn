@@ -1,0 +1,77 @@
+---
+title: Flow Arrow
+description: "A dotted gradient arrow zigzags upward beside a 3x growth stat"
+component: flow-arrow
+vibe: data
+length: 122
+useWhen:
+  - "A growth stat such as 3x where an upward dotted arrow should carry the energy."
+  - "A short momentum beat with one metric and one label, no axes."
+  - "A teaser moment where particles stream into a rising arrow before the number lands."
+avoidWhen:
+  - "You need real data on axes — use `growth-line`."
+  - "You want a bold multiplier on its own — use `compact-stat`."
+  - "You need a glowing trend that draws to a point — use `sparkline-thread`."
+---
+
+<ComponentPreview name="flow-arrow" />
+
+<InstallBlock name="flow-arrow" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { FlowArrow } from "@/components/remocn/flow-arrow";
+
+const FlowArrowScene = () => <FlowArrow metric="3×" label="faster growth" />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="FlowArrow"
+    component={FlowArrowScene}
+    durationInFrames={155}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Dotted particles stream into a zigzag arrow that climbs diagonally, then a gradient sweep lands the metric and its label. Pass `metric` (for example 3x) and `label`. Ships dark and light via `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "metric",
+      type: "string",
+      default: "\"3×\"",
+      description: "The big number or multiplier that lands.",
+    },
+    {
+      name: "label",
+      type: "string",
+      default: "\"faster growth\"",
+      description: "Short phrase under the metric.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for the hero element.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Dark or light palette.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier.",
+    },
+  ]}
+/>

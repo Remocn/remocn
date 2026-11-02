@@ -1,0 +1,72 @@
+---
+title: Word Stack
+description: "Caps words push up into a tight poster stack, and the last one turns into a serif gradient italic"
+component: word-stack
+vibe: premium
+length: 99
+useWhen:
+  - "A manifesto or tagline beat of five to seven short words that builds one word at a time into a poster."
+  - "A closing statement where the final word should stand apart in a serif italic with a gradient sheen."
+  - "A vertical portrait or square layout where a stacked headline fills the frame."
+avoidWhen:
+  - "The words should appear in place, one at a time, without a scrolling stack — use `zoom-words`."
+  - "The line is a sentence that must stay on one line — use `line-by-line-slide`."
+  - "You want a soft, low-energy entrance rather than hard pushes — use `staggered-fade-up`."
+---
+
+<ComponentPreview name="word-stack" />
+
+<InstallBlock name="word-stack" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { WordStack } from "@/components/remocn/word-stack";
+
+const WordStackScene = () => (
+  <WordStack words={["Write", "it", "once", "ship", "it", "everywhere"]} />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="WordStack"
+    component={WordStackScene}
+    durationInFrames={140}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Each word pushes in from below on its own beat, and the earlier words in the stack shift up and out to make room. The last word swaps to a serif italic with a gradient sheen that slowly drifts while the poster holds. Pass `words` as a list of short words; it ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "words",
+      type: "string[]",
+      description: "Words pushed into the stack in order; the last one turns serif italic.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color mixed into the closing word's gradient.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier.",
+    },
+  ]}
+/>

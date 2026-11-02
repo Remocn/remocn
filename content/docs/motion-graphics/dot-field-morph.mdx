@@ -1,0 +1,85 @@
+---
+title: Dot Field Morph
+description: "A drifting field of dots swirls into icon shapes, then gathers into the logo"
+component: dot-field-morph
+vibe: tech
+length: 206
+useWhen:
+  - "A feature tour where each capability is an icon formed from dots, ending on your logo."
+  - "A logo reveal that needs a longer build than a single entrance, with labelled stages."
+  - "An abstract intro for a tech or AI product on a dark or light ground."
+avoidWhen:
+  - "You want birds flying into an arrow and then the mark — use `flock-form`."
+  - "The particles should come from a counter or waitlist — use `waitlist-swarm`."
+  - "You want a quick dissolve of an existing element into particles — use `particle-dissolve`."
+---
+
+<ComponentPreview name="dot-field-morph" />
+
+<InstallBlock name="dot-field-morph" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { DotFieldMorph } from "@/components/remocn/dot-field-morph";
+
+const DotFieldMorphScene = () => (
+  <DotFieldMorph labels={["Animations", "Transitions", "Captions", ""]} count={2000} />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="DotFieldMorph"
+    component={DotFieldMorphScene}
+    durationInFrames={250}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A scattered field of dots drifts, then swirls into the first shape, holds with a caption, and morphs through the next shapes until the last one, the wordmark, holds. Pass `shapes` (SVG path data or parts, stroked or filled) and matching `labels`; with the default set it shows three icons then the remocn wordmark. Ships dark and light via `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "shapes",
+      type: "DotShape[]",
+      default: "DEFAULT_SHAPES",
+      description: "Shapes in order after the scattered field; the last one holds.",
+    },
+    {
+      name: "labels",
+      type: "string[]",
+      default: "DEFAULT_LABELS",
+      description: "Optional caption under each shape, same order. Empty string for none.",
+    },
+    {
+      name: "count",
+      type: "number",
+      default: "2000",
+      description: "Number of dots; 1,500 to 2,500 reads as a field.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Color of accent-flagged parts of a shape.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color scheme. Ships dark and light.",
+    },
+  ]}
+/>

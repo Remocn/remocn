@@ -1,0 +1,99 @@
+---
+title: Packed Count
+description: "A counter climbs with digits packing tight, then a blue fill sweeps across it under a caption."
+component: packed-count
+vibe: clean
+length: 110
+useWhen:
+  - "A large audience number, such as views, replays or downloads, that should gain a digit at a time."
+  - "A clean one-number beat with a single caption line above it."
+  - "A count that starts small and visibly spreads wider as new places join."
+avoidWhen:
+  - "The figure should lean forward with italic energy - use `lean-count`."
+  - "Trailing digit groups should fade quieter than the first - use `diminuendo`."
+  - "The number should hard-cut upward instead of rolling - use `smash-count`."
+---
+
+<ComponentPreview name="packed-count" />
+
+<InstallBlock name="packed-count" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { PackedCount } from "@/components/remocn/packed-count";
+
+const PackedCountScene = () => <PackedCount value={41900} from={120} label="replays on a single launch clip" />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="PackedCount"
+    component={PackedCountScene}
+    durationInFrames={130}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Digits rise out of a mask as the counter climbs from a small start, packing tight and gaining a place each time a new digit joins. A caption slides in above at the start, and once the count lands a blue fill sweeps across the figure digit by digit. Pass `value`, `from` and `label`; `accent` recolors the fill. It ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "value",
+      type: "number",
+      default: "41900",
+      description: "The number the count lands on.",
+    },
+    {
+      name: "from",
+      type: "number",
+      default: "120",
+      description: "Starting number the count climbs from.",
+    },
+    {
+      name: "prefix",
+      type: "string",
+      default: "\"\"",
+      description: "Text before the number.",
+    },
+    {
+      name: "suffix",
+      type: "string",
+      default: "\"\"",
+      description: "Text after the number.",
+    },
+    {
+      name: "label",
+      type: "string",
+      default: "\"replays on a single launch clip\"",
+      description: "Caption above the number.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Color of the final fill sweep; defaults to a sky blue.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Stage background color; overrides the theme ground.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark palette.",
+    },
+  ]}
+/>

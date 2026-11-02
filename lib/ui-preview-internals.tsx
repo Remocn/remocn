@@ -62,6 +62,7 @@ export function PreviewStage({
   compositionHeight,
   previewBackdrop,
   className,
+  controls = true,
 }: {
   name: string;
   // biome-ignore lint/suspicious/noExplicitAny: dynamically-loaded Remotion composition, props shape varies per component
@@ -75,6 +76,8 @@ export function PreviewStage({
   compositionHeight: number;
   previewBackdrop?: BackdropFill;
   className?: string;
+  /** Player control bar. Without it a click still toggles playback. */
+  controls?: boolean;
 }) {
   const [mounted, setMounted] = useState(false);
   const frameRef = useRef<HTMLDivElement>(null);
@@ -199,7 +202,8 @@ export function PreviewStage({
             compositionWidth={compositionWidth}
             compositionHeight={compositionHeight}
             style={{ width: "100%", height: "100%" }}
-            controls
+            controls={controls}
+            clickToPlay
             loop
             // Browsers block autoplay with sound; the controls' volume
             // button turns it back on.

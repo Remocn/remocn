@@ -1,0 +1,90 @@
+---
+title: Line Boil
+description: A hand-drawn outline draws itself, boils on threes like a cel animation, and fills with color while it keeps boiling
+component: line-boil
+vibe: playful
+length: 40
+useWhen:
+  - "A simple mark, icon or shape should feel hand-animated, with the restless line of traditional cel animation."
+  - "A playful explainer or kids-friendly scene needs a hero shape that draws itself and then stays alive on screen."
+  - "You have the shape as SVG path data and want it drawn, filled and boiling without keyframing anything."
+avoidWhen:
+  - "The thing being drawn is a word or a font's glyph outlines — use `outline-trace`."
+  - "The line should circle or mark up an existing part of the frame rather than be the subject — use `scribble-circle`."
+  - "Handwritten text should appear letter by letter — use `handwrite`."
+  - "Existing content should just feel hand-placed and jittery, without being redrawn — use `paper-wobble`."
+---
+
+<ComponentPreview name="line-boil" />
+
+<InstallBlock name="line-boil" />
+
+## Usage
+
+`LineBoil` is a full-frame scene. It draws a closed outline with a pen that
+tapers in and out and varies its pressure along the stroke, then fills the
+shape with color. The line never sits still. Like a cel animation shot "on
+threes", the whole drawing is retraced every few frames with a slightly
+different wobble, cycling through a small set of drawings.
+
+```tsx
+import { LineBoil } from "@/components/remocn/line-boil";
+
+export const Star = () => <LineBoil />;
+```
+
+Pass `path` to draw your own shape. It takes SVG path data in any coordinate
+space. The outline is sampled at 160 points along its length, scaled so its
+longer side is `size` of the frame's short side, and centered. Use one closed
+outline: separate subpaths and holes are joined into one continuous stroke.
+
+```tsx
+import { LineBoil } from "@/components/remocn/line-boil";
+
+const heart =
+  "M 50 88 C 20 66 4 48 4 30 C 4 14 16 4 30 4 C 40 4 47 10 50 18 C 53 10 60 4 70 4 C 84 4 96 14 96 30 C 96 48 80 66 50 88 Z";
+
+export const Heart = () => (
+  <LineBoil
+    path={heart}
+    line="#1C1A17"
+    fill="#FF8FB1"
+    background="#FFF6E9"
+    boilEvery={2}
+  />
+);
+```
+
+The fill boils with its own seed and a stronger wobble than the line, so the
+color slips a little past the outline the way a cel fill does.
+
+## Timing
+
+At 30 fps and `speed={1}`:
+
+| Frames | Motion |
+| --- | --- |
+| 0–22 | The pen draws the outline along the path on an ease-in-out, with tapered ends |
+| 28–40 | The fill grows from the shape's center with a small overshoot |
+| 40+ | The finished drawing keeps boiling |
+
+`lineBoilLength` is 40, the frame the fill lands. The boil runs from frame 0
+and never stops: a new drawing every `boilEvery` frames, cycling through
+`drawings` variations. `speed` scales the draw, the fill and the boil rate
+together.
+
+<PropsTable title="Props"
+  rows={[
+    { name: "path", type: "string", default: "5-point star", description: "Closed outline as SVG path data in any coordinate space, fitted to the frame" },
+    { name: "boilEvery", type: "number", default: "3", description: "Frames each drawing holds before the next one" },
+    { name: "drawings", type: "number", default: "3", description: "Number of distinct drawings the boil cycles through" },
+    { name: "amplitude", type: "number", default: "1", description: "Wobble strength; 1 is a gentle hand-drawn boil, 0 is a steady line" },
+    { name: "strokeWidth", type: "number", default: "9", description: "Base line weight in px at 720p; pen pressure varies it along the stroke" },
+    { name: "size", type: "number", default: "0.66", description: "Size of the shape's longer side as a fraction of the frame's short side" },
+    { name: "line", type: "string", default: '"#111111"', description: "Outline color. Overrides colors.line when set" },
+    { name: "fill", type: "string", default: '"#E5322D"', description: "Shape fill. Overrides colors.fill when set" },
+    { name: "background", type: "string", default: '"#FFFFFF"', description: "Background color. Overrides colors.background when set" },
+    { name: "colors", type: "{ line?: string; fill?: string; background?: string }", default: '{ line: "#111111", fill: "#E5322D", background: "#FFFFFF" }', description: "The same colors as one object; the flat props above take precedence, missing keys keep their defaults" },
+    { name: "speed", type: "number", default: "1", description: "Playback multiplier" },
+  ]}
+/>

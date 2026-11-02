@@ -1,0 +1,91 @@
+---
+title: Moves Up
+description: "A roadmap list under Now, Next and Later where each shipped item exits and the rest move up and grow."
+component: moves-up
+vibe: clean
+length: 152
+useWhen:
+  - "A roadmap beat showing what is shipping now and what is coming next."
+  - "A changelog or progress moment where finished items should visibly leave and the queue advances."
+avoidWhen:
+  - "Items are unfinished verbs that fill in and carry dates — use `half-built`."
+  - "You want a column of claims that dim until one is highlighted — use `what-sticks`."
+  - "A scrolling list of changes with one enlarged entry is enough — use `changelog-scroll`."
+---
+
+<ComponentPreview name="moves-up" />
+
+<InstallBlock name="moves-up" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { MovesUp } from "@/components/remocn/moves-up";
+
+const MovesUpScene = () => (
+  <MovesUp
+    items={["Captions", "Voiceover", "Vertical cuts", "Brand kits", "Templates"]}
+    shipped="live"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="MovesUp"
+    component={MovesUpScene}
+    durationInFrames={180}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The first three `items` settle under the Now, Next and Later labels at descending sizes. Every item past the third then advances the queue: the current Now item gets a `shipped` tag and exits upward while the others move up and enlarge. Pass five or more `items` to see movement; timing adapts to the composition length, and 152 frames is the uncompressed length for five items. It ships light and dark.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "items",
+      type: "string[]",
+      default: "DEFAULT_ITEMS",
+      description: "Roadmap items in order; the first three show, the rest queue behind them.",
+    },
+    {
+      name: "labels",
+      type: "[string, string, string]",
+      default: "[\"Now\", \"Next\", \"Later\"]",
+      description: "Three row labels, for the current, next and later rows.",
+    },
+    {
+      name: "shipped",
+      type: "string",
+      default: "\"shipped\"",
+      description: "Tag shown beside an item as it ships.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Color of the Now label and the shipped tag.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark palette.",
+    },
+  ]}
+/>

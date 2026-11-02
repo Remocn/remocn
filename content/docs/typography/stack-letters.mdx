@@ -1,0 +1,71 @@
+---
+title: Stack Letters
+description: "Letters tumble and stack into place to spell a caps word over a warm gradient"
+component: stack-letters
+vibe: clean
+length: 106
+useWhen:
+  - "A one-word title card for a release or milestone where the letters should physically land."
+  - "A playful, tactile reveal of a product or feature name over a warm gradient."
+  - "A cold open that needs a single heavy beat before the real content starts."
+avoidWhen:
+  - "The message is a full sentence or several words — use `word-stack` for a stacked poster."
+  - "You want a calm, polished word reveal with no physics — use `bottom-up-letters`."
+  - "You need the text to stay readable for a long hold while it animates — use `per-character-rise`."
+---
+
+<ComponentPreview name="stack-letters" />
+
+<InstallBlock name="stack-letters" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { StackLetters } from "@/components/remocn/stack-letters";
+
+const StackLettersScene = () => <StackLetters word="SHIPPED" accent="#3B5BFD" />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="StackLetters"
+    component={StackLettersScene}
+    durationInFrames={135}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Letters drop in one by one and stack into a tower, which rocks and topples; each letter then tumbles and lands in a row that spells the word, ticking a ground rule as it lands. Pass `word` (a short caps word works best) and `accent`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "word",
+      type: "string",
+      default: "\"STACK\"",
+      description: "The word to stack; short caps words fit best.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Color of the landing ticks on the ground rule.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color scheme; ships dark and light.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier for the whole timeline.",
+    },
+  ]}
+/>

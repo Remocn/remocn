@@ -1,0 +1,92 @@
+---
+title: Year in Review
+description: "A five-chapter story card walks through yearly stats and ends on a share button tap"
+component: year-in-review
+vibe: playful
+length: 448
+useWhen:
+  - "A year-in-review or wrapped recap for a product, with videos shipped, top feature and builder rank."
+  - "A personalised stats story for a vertical clip, one chapter title per slide."
+  - "Closing a recap with a shareable summary card and a tap on a share button."
+avoidWhen:
+  - "You want a short stats beat with large counting numbers — use `stat-sequence`."
+  - "The recap is a streak or daily-habit reward — use `streak-reward`."
+  - "You want progress rings for goals instead of a slide story — use `activity-rings`."
+---
+
+<ComponentPreview name="year-in-review" />
+
+<InstallBlock name="year-in-review" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { YearInReview } from "@/components/remocn/year-in-review";
+
+const YearInReviewScene = () => (
+  <YearInReview
+    stats={{ year: "2026", product: "Kitebase", videos: 42, percentile: 3 }}
+    device="phone"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="YearInReview"
+    component={YearInReviewScene}
+    durationInFrames={480}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A phone (or flat card) plays five slides with a chapter rail: your year, videos shipped, top component, builder rank and a share card whose button gets tapped. Override any field of `stats` (year, product, videos, topComponent, runnersUp, percentile, minutes, crew, url) and rename the chapters with `chapters`. It has a single look and no `theme` prop.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "stats",
+      type: "Partial<YearInReviewStats>",
+      description: "Partial stats to override: year, product, videos, topComponent and more.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "device",
+      type: "\"phone\" | \"card\"",
+      default: "\"phone\"",
+      description: "Show the story in a phone frame or as a flat card.",
+    },
+    {
+      name: "chapters",
+      type: "string[]",
+      description: "Five chapter titles shown on the progress rail.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "gradients.sh preset id for the animated ground.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the ground shader parameters.",
+    },
+  ]}
+/>

@@ -1,0 +1,105 @@
+---
+title: X-Ray Scan
+description: A glowing scanner bar sweeps across a device and reveals its white-line internals, with one part marked in red
+component: x-ray-scan
+vibe: tech
+length: 32
+useWhen:
+  - "A hardware launch should show what is inside the device: the board, the battery, the chip that matters."
+  - "One internal part is the story, like a new chip or a bigger battery, and should be singled out in the brand color."
+  - "The reveal should read as a single clean scanner pass, left to right or top to bottom."
+avoidWhen:
+  - "The product should come apart into labelled layers — use `exploded-view`."
+  - "The product should be measured and annotated from the outside — use `blueprint`."
+  - "The subject should read as a printed poster rather than a device scan — use `riso-print`."
+---
+
+<ComponentPreview name="x-ray-scan" />
+
+<InstallBlock name="x-ray-scan" />
+
+## Usage
+
+`XRayScan` is a full-frame scene. It starts on the outside of a device. A thin
+glowing bar sweeps across it, and behind the bar the shell is gone: the device
+shows as white linework on a dark plate, with one part highlighted in the
+accent color. A freshly exposed band just behind the bar glows brighter and
+fades as the bar moves on.
+
+```tsx
+import { XRayScan } from "@/components/remocn/x-ray-scan";
+
+export const Inside = () => <XRayScan />;
+```
+
+Without `outside` and `inside` it draws the back of a phone and its internals:
+the camera array, the logic board with the SoC in the accent color, the
+battery with a wireless charging coil, and the speaker grille. `direction`
+picks a left-to-right or a top-to-bottom sweep.
+
+### Your own layers
+
+Pass `outside` and `inside` to scan your own product. Both are full-frame
+layers stacked on each other, so draw them in the same coordinates, for
+example as two aligned images.
+
+```tsx
+import { AbsoluteFill, Img, staticFile } from "remotion";
+import { XRayScan } from "@/components/remocn/x-ray-scan";
+
+export const Watch = () => (
+  <XRayScan
+    direction="vertical"
+    outside={
+      <AbsoluteFill style={{ alignItems: "center", justifyContent: "center" }}>
+        <Img src={staticFile("watch-front.png")} style={{ height: 560 }} />
+      </AbsoluteFill>
+    }
+    inside={
+      <AbsoluteFill style={{ alignItems: "center", justifyContent: "center" }}>
+        <Img src={staticFile("watch-xray.png")} style={{ height: 560 }} />
+      </AbsoluteFill>
+    }
+  />
+);
+```
+
+The sweep is sized to the default device, a centered box 80% of the frame
+height tall and about 39% of the height wide. The bar starts 12% of the frame
+width before that box and stops 12% past it, or 10% of the frame height for a
+vertical sweep. Content outside that span never
+changes: before the start it shows the inside layer from the first frame, and
+past the end it keeps the outside layer. Keep custom products centered and
+about that size.
+
+## Timing
+
+At 30 fps and `speed={1}`:
+
+| Frames | Motion |
+| --- | --- |
+| 0–5 | The outside of the device holds |
+| 5–32 | The bar sweeps across on an ease-in-out, revealing the inside |
+| 32+ | The bar is gone and the inside holds |
+
+`xRayScanLength` is 32. `speed` scales the sweep.
+
+## Notes
+
+The inside layer renders twice: once as the revealed view and once under a
+glow filter for the bright band behind the bar. Heavy custom `inside` content
+costs twice.
+
+<PropsTable title="Props"
+  rows={[
+    { name: "outside", type: "React.ReactNode", description: "Full-frame exterior shown ahead of the bar. Defaults to the back of a phone" },
+    { name: "inside", type: "React.ReactNode", description: "Full-frame interior revealed behind the bar. Defaults to white-line phone internals" },
+    { name: "direction", type: '"horizontal" | "vertical"', default: '"horizontal"', description: "Horizontal sweeps left to right, vertical sweeps top to bottom" },
+    { name: "shell", type: "string", default: '"#E5322D"', description: "Shell of the default device. Overrides colors.shell when set" },
+    { name: "accent", type: "string", default: '"#E5322D"', description: "Highlighted part inside the default device. Overrides colors.accent when set" },
+    { name: "line", type: "string", default: '"#FFFFFF"', description: "Interior linework and the scan bar. Overrides colors.line when set" },
+    { name: "background", type: "string", default: '"#111111"', description: "Frame background. Overrides colors.background when set" },
+    { name: "colors", type: "{ background?, shell?, detail?, xray?, line?, accent?: string }", default: '{ background: "#111111", shell: "#E5322D", detail: "#111111", xray: "#07080A", line: "#FFFFFF", accent: "#E5322D" }', description: "All colors as one object: frame background, default shell and its camera bump, x-ray plate, linework and scan bar, highlighted part. The flat props above take precedence, missing keys keep their defaults; shell, detail, xray and accent only affect the default device" },
+    { name: "speed", type: "number", default: "1", description: "Playback multiplier" },
+  ]}
+/>

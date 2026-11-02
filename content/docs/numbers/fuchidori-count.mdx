@@ -1,0 +1,110 @@
+---
+title: Fuchidori Count
+description: "A sticker-style counter whose digits gain stacked red outline borders, landing on 4,096"
+component: fuchidori-count
+vibe: playful
+length: 76
+useWhen:
+  - "A sticker-style stat beat where a number counts up and gains a stacked outline border each time it passes a power of ten."
+  - "A Japanese-caption-inspired figure such as 4,096 with a vertical caption, for a playful social or creator launch."
+  - "A stat scene that should feel layered and graphic, with custom border colours to match a brand."
+avoidWhen:
+  - "You want a plain figure with no outline effect — use `compact-stat`."
+  - "You want the count to land with a camera flash — use `flash-count`."
+  - "You want digits whose weight and colour change while they churn — use `churn-count`."
+---
+
+<ComponentPreview name="fuchidori-count" />
+
+<InstallBlock name="fuchidori-count" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { FuchidoriCount } from "@/components/remocn/fuchidori-count";
+
+const FuchidoriCountScene = () => <FuchidoriCount value={4096} from={1} label="captions styled without opening an editor" maxBorders={4} />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="FuchidoriCount"
+    component={FuchidoriCountScene}
+    durationInFrames={120}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A large number rises into place and counts from `from` to `value` on a log-like curve. Each time it crosses a power of ten a new outline ring springs out around the glyphs, up to `maxBorders` rings, alternating through the border colours. A vertical caption fades in beside it. Pass `value`, `from`, `label`, `maxBorders` and optionally `colors`. It ships light and dark through the `theme` prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "value",
+      type: "number",
+      default: "4096",
+      description: "The final number the count lands on.",
+    },
+    {
+      name: "from",
+      type: "number",
+      default: "1",
+      description: "The number the count starts from, at least 1.",
+    },
+    {
+      name: "prefix",
+      type: "string",
+      default: "\"\"",
+      description: "Text placed before the number, such as a currency sign.",
+    },
+    {
+      name: "suffix",
+      type: "string",
+      default: "\"\"",
+      description: "Text placed after the number, such as a unit.",
+    },
+    {
+      name: "label",
+      type: "string",
+      default: "\"captions styled without opening an editor\"",
+      description: "Vertical caption beside the number.",
+    },
+    {
+      name: "maxBorders",
+      type: "number",
+      default: "4",
+      description: "Most outline rings drawn, one per power of ten crossed.",
+    },
+    {
+      name: "colors",
+      type: "string[]",
+      description: "Ring colours, used in order and repeated. Defaults to accent and the ink colour.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Colour of the first ring and the caption text.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Stage colour; pass 'transparent' to layer over other footage.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier; 1 is the designed pace.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark.",
+    },
+  ]}
+/>

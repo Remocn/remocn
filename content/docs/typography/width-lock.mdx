@@ -1,0 +1,95 @@
+---
+title: Width Lock
+description: "A condensed line keeps a fixed width while one word swaps through a list."
+component: width-lock
+vibe: clean
+length: 143
+useWhen:
+  - "A claim with one slot that cycles through deliverables, such as trailer, captions, launch video."
+  - "A headline where layout must not jump when the word changes."
+  - "A short sentence that lists several use cases."
+avoidWhen:
+  - "The swapped word should be pressed with annotations — use `ruby-press`."
+  - "One word stays and the rest swap — use `pinned-word`."
+  - "Words should arrive from a spread-out position — use `pull-in`."
+---
+
+<ComponentPreview name="width-lock" />
+
+<InstallBlock name="width-lock" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { WidthLock } from "@/components/remocn/width-lock";
+
+const WidthLockScene = () => (
+  <WidthLock before="Ship the" words={["trailer", "captions", "launch video"]} after="by tonight." />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="WidthLock"
+    component={WidthLockScene}
+    durationInFrames={170}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The line holds a constant width while the middle word swaps through each entry in `words`. Pass `before`, `words` and `after`, and set `hold` for how long each word stays. It ships in light and dark through the `theme` prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "before",
+      type: "string",
+      default: "\"Ship the\"",
+      description: "Text before the swapping word.",
+    },
+    {
+      name: "words",
+      type: "string[]",
+      description: "Words swapped in order.",
+    },
+    {
+      name: "after",
+      type: "string",
+      default: "\"by tonight.\"",
+      description: "Text after the swapping word.",
+    },
+    {
+      name: "hold",
+      type: "number",
+      default: "30",
+      description: "Frames each state stays on screen before the next one.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color override; falls back to the theme accent.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background color override; falls back to the theme background.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark; picks the palette.",
+    },
+  ]}
+/>

@@ -1,0 +1,81 @@
+---
+title: Scrub Reveal
+description: "A dim paragraph climbs as a soft front brightens it word by word, with one phrase in gradient italic."
+component: scrub-reveal
+vibe: premium
+length: 142
+useWhen:
+  - "A manifesto or value statement that should read like scrolling through a page and lighting up as you go."
+  - "A short paragraph where one key phrase deserves an editorial italic gradient treatment."
+avoidWhen:
+  - "You want a light sheen sweeping across muted text instead of a reading scrub — use `shimmer-sweep`."
+  - "The key phrase should get a marker block behind it — use `marker-highlight`."
+  - "You want a soft blurred fade-in of the whole line — use `soft-blur-in`."
+---
+
+<ComponentPreview name="scrub-reveal" />
+
+<InstallBlock name="scrub-reveal" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { ScrubReveal } from "@/components/remocn/scrub-reveal";
+
+const ScrubRevealScene = () => (
+  <ScrubReveal
+    text="Every frame is code. Every cut is yours. Ship the film your product deserves."
+    highlight="Every cut is yours."
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="ScrubReveal"
+    component={ScrubRevealScene}
+    durationInFrames={172}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A dim paragraph sits low in the frame and climbs while a soft front brightens it word by word, like a trackpad scroll. The `highlight` phrase inside `text` switches to a serif italic filled with a gradient, and at the end the plain words settle back a step. Pass your own `text` and a `highlight` that appears in it, or an empty string for none. It ships light and dark.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "text",
+      type: "string",
+      default: "\"Every frame is code. Every cut is yours. Ship the film your product deserves.\"",
+      description: "The statement. Each word brightens as the reveal front passes it.",
+    },
+    {
+      name: "highlight",
+      type: "string",
+      default: "\"Every cut is yours.\"",
+      description: "A phrase inside `text` that turns to an italic serif and lights up in a\ngradient. Pass \"\" for none.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Final stop of the highlight gradient.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark palette.",
+    },
+  ]}
+/>

@@ -1,0 +1,77 @@
+---
+title: Spotlight Text
+description: "A spotlight travels across a dark headline, 'Launch videos, in code.', with a mono eyebrow"
+component: spotlight-text
+vibe: tech
+length: 132
+useWhen:
+  - "A tech or developer-tool headline revealed by a spotlight that travels across dark type."
+  - "An opener with a tiny mono eyebrow label above a one-line title."
+avoidWhen:
+  - "You want a bright band of shine over visible text — use `shimmer-sweep`."
+  - "The headline wraps over several lines — use `line-by-line-slide`."
+---
+
+<ComponentPreview name="spotlight-text" />
+
+<InstallBlock name="spotlight-text" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { SpotlightText } from "@/components/remocn/spotlight-text";
+
+const SpotlightTextScene = () => (
+  <SpotlightText title="Launch videos, in code." eyebrow="remocn 2.0" />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="SpotlightText"
+    component={SpotlightTextScene}
+    durationInFrames={180}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A soft spotlight enters and glides across the single-line headline, lighting it as it passes and widening until the whole line is lit. Pass `title` and `eyebrow`; it ships light and dark.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "title",
+      type: "string",
+      default: "\"Launch videos, in code.\"",
+      description: "The headline the light travels across. One line.",
+    },
+    {
+      name: "eyebrow",
+      type: "string",
+      default: "\"remocn 2.0\"",
+      description: "Tiny mono label above the headline's left edge. Empty to hide.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Faint tint at the rim of the spotlight, and the eyebrow marker.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Colour scheme; ships light and dark.",
+    },
+  ]}
+/>

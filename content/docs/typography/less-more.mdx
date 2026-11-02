@@ -1,0 +1,83 @@
+---
+title: Less More
+description: "A dimmed line is set against a bright accent line that lands below it."
+component: less-more
+vibe: clean
+length: 104
+useWhen:
+  - "A short manifesto beat that sets old effort against new payoff."
+  - "A two-line contrast in a pricing or positioning scene."
+  - "A quick tagline that needs hierarchy, with the weaker idea dimmed."
+avoidWhen:
+  - "You have a longer list of points to step through — use `what-sticks`."
+  - "The contrast should show as an edit — use `diff-swap`."
+  - "A word should flip rather than a full line — use `pinned-word`."
+---
+
+<ComponentPreview name="less-more" />
+
+<InstallBlock name="less-more" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { LessMore } from "@/components/remocn/less-more";
+
+const LessMoreScene = () => (
+  <LessMore less="Less explaining." more="More showing." />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="LessMore"
+    component={LessMoreScene}
+    durationInFrames={130}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The `less` line enters and fades back while the `more` line lands below it in the accent color. Pass `less` and `more` for your own contrast pair. It ships in light and dark through the `theme` prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "less",
+      type: "string",
+      default: "\"Less explaining.\"",
+      description: "Line that dims.",
+    },
+    {
+      name: "more",
+      type: "string",
+      default: "\"More showing.\"",
+      description: "Line that lands in the accent color.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Accent color override; falls back to the theme accent.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background color override; falls back to the theme background.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark; picks the palette.",
+    },
+  ]}
+/>

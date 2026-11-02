@@ -1,0 +1,85 @@
+---
+title: Number Split
+description: "A big total splits down a bracket into colored bars, each with its own count and label."
+component: number-split
+vibe: data
+length: 110
+useWhen:
+  - "A catalog or library count that should break down into categories."
+  - "A usage or pricing total that splits into a few named components."
+  - "A launch beat where the headline number needs proof of what it is made of."
+avoidWhen:
+  - "The parts should read as proportions of a whole — use `share-donut`."
+  - "You only have one number — use `compact-stat`."
+  - "The split should shift across years as a stacked bar — use `stacked-shift`."
+---
+
+<ComponentPreview name="number-split" />
+
+<InstallBlock name="number-split" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { NumberSplit } from "@/components/remocn/number-split";
+
+const NumberSplitScene = () => (
+  <NumberSplit total="300+" label="components" parts={[{ label: "animations", value: 120 }, { label: "transitions", value: 90 }]} />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="NumberSplit"
+    component={NumberSplitScene}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The total sits large, a gradient bar slides in beneath it and splits into segments joined by a bracket, then each part counts up with its label. Pass `total`, `label` and `parts`; it ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "total",
+      type: "string",
+      default: "\"300+\"",
+      description: "Large figure shown at the top, as text.",
+    },
+    {
+      name: "label",
+      type: "string",
+      default: "\"components\"",
+      description: "Word shown next to the total.",
+    },
+    {
+      name: "parts",
+      type: "SplitPart[]",
+      default: "DEFAULT_PARTS",
+      description: "Category counts, each drawn as a colored bar with a label.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for highlights and small marks.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color theme, \"dark\" or \"light\".",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+  ]}
+/>

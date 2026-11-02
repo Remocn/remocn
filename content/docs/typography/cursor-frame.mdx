@@ -1,0 +1,74 @@
+---
+title: Cursor Frame
+description: "A selection frame with handles and a size badge is dragged and resized around a headline, rewrapping it."
+component: cursor-frame
+vibe: clean
+length: 184
+useWhen:
+  - "A design-tool style beat where the headline is selected, moved and resized live."
+  - "A product video about layout or editing that should show the text responding to a frame."
+avoidWhen:
+  - "You want the headline to just appear - use `staggered-fade-up`."
+  - "You want a typing effect rather than a drag interaction - use `typewriter`."
+  - "You want a highlighter pass over a phrase - use `marker-highlight`."
+---
+
+<ComponentPreview name="cursor-frame" />
+
+<InstallBlock name="cursor-frame" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { CursorFrame } from "@/components/remocn/cursor-frame";
+
+const CursorFrameScene = () => (
+  <CursorFrame title="Launch videos, in code." theme="light" accent="#3B5BFD" />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="CursorFrame"
+    component={CursorFrameScene}
+    durationInFrames={230}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Words fade in, a cursor presses and drags a selection frame over them, then resizes it so the headline rewraps onto two lines before the frame clears. Pass `title` for the headline; it ships light and dark through `theme` and defaults to light.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "title",
+      type: "string",
+      default: "\"Launch videos, in code.\"",
+      description: "The headline set inside the text frame.",
+      description: "Headline that gets selected and rewrapped",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Selection colour: frame, handles and the size badge.",
+      description: "Accent color (any valid CSS color)",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"light\"",
+      description: "Ships light and dark palettes",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier",
+    },
+  ]}
+/>

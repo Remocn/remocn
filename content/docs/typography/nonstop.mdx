@@ -1,0 +1,89 @@
+---
+title: Nonstop
+description: "A labeled counter rolls down from a number to zero and resolves into a big no-stops phrase."
+component: nonstop
+vibe: clean
+length: 169
+useWhen:
+  - "A beat about a shorter path, such as steps removed between idea and export."
+  - "A countdown-to-zero joke where fewer stops is the selling point."
+  - "A simple stat reveal that ends on a bold promise."
+avoidWhen:
+  - "You need a time phrase leading to today — use `on-approach`."
+  - "You want a general number animation — use `number-wheel`."
+  - "You want a numbered rolling stat without a payoff phrase — use `rolling-number`."
+---
+
+<ComponentPreview name="nonstop" />
+
+<InstallBlock name="nonstop" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { Nonstop } from "@/components/remocn/nonstop";
+
+const NonstopScene = () => (
+  <Nonstop label="From idea to export" from={3} unit="stops" />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="Nonstop"
+    component={NonstopScene}
+    durationInFrames={185}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A label sits above a counter that rolls down from `from` to zero beside `unit`, then the line resolves into the large phrase. Pass `label`, `from` and `unit` to count your own steps. It ships in light and dark through the `theme` prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "label",
+      type: "string",
+      default: "\"From idea to export\"",
+      description: "Small line above the counter.",
+    },
+    {
+      name: "from",
+      type: "number",
+      default: "3",
+      description: "Number the counter starts from.",
+    },
+    {
+      name: "unit",
+      type: "string",
+      default: "\"stops\"",
+      description: "Unit label next to the counter.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Accent color override; falls back to the theme accent.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background color override; falls back to the theme background.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark; picks the palette.",
+    },
+  ]}
+/>

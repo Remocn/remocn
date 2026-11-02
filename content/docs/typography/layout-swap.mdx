@@ -1,0 +1,101 @@
+---
+title: Layout Swap
+description: "Headlines swap by shifting layout, each new line growing out of the one before."
+component: layout-swap
+vibe: clean
+length: 132
+useWhen:
+  - "A feature headline that builds from one noun to a full promise."
+  - "A launch hook where each version of the sentence adds to the last."
+  - "A multi-step message that should read as one growing sentence."
+avoidWhen:
+  - "Only one word changes inside a fixed sentence — use `pinned-word`."
+  - "The words flip order and meaning — use `turnabout`."
+  - "You want each swap triggered by an object crossing — use `pass-swap`."
+---
+
+<ComponentPreview name="layout-swap" />
+
+<InstallBlock name="layout-swap" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { LayoutSwap } from "@/components/remocn/layout-swap";
+
+const LayoutSwapScene = () => (
+  <LayoutSwap headlines={["Animations.", "Animations, transitions, backgrounds."]} highlight="backgrounds." align="left" />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="LayoutSwap"
+    component={LayoutSwapScene}
+    durationInFrames={170}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Each headline in `headlines` replaces the last by sliding its shared words into the new layout, and the `highlight` phrase lands in the accent color. Pass `headlines` and tune `hold` and `move` for pacing. It ships in light and dark through the `theme` prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "headlines",
+      type: "string[]",
+      description: "Headlines in order; each builds on the previous.",
+    },
+    {
+      name: "highlight",
+      type: "string",
+      default: "\"ready to install.\"",
+      description: "Phrase in the last headline lit in the accent color.",
+    },
+    {
+      name: "align",
+      type: "\"center\" | \"left\"",
+      default: "\"center\"",
+      description: "Text alignment of the headline block.",
+    },
+    {
+      name: "hold",
+      type: "number",
+      default: "28",
+      description: "Frames each headline holds before moving.",
+    },
+    {
+      name: "move",
+      type: "number",
+      default: "28",
+      description: "Frames the layout shift between headlines takes.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color override; falls back to the theme accent.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background color override; falls back to the theme background.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark; picks the palette.",
+    },
+  ]}
+/>

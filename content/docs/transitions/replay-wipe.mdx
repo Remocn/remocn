@@ -1,0 +1,93 @@
+---
+title: Replay Wipe
+description: "A broadcast stinger wipes from a live shot to a slow-motion replay and back"
+component: replay-wipe
+vibe: tech
+length: 102
+useWhen:
+  - "A sports or event style recap in a launch video, cutting from a live moment to its replay."
+  - "A high-energy cut between two shots that should feel like a TV graphics package."
+  - "Highlighting one moment twice, once at speed and once in slow motion."
+avoidWhen:
+  - "The scenes need a quiet or editorial change — use `hairline-open`."
+  - "You want a lateral camera move between shots — use `whip-pan`."
+  - "You need a single clean swap with no stinger graphic — use `slide-swap`."
+---
+
+<ComponentPreview name="replay-wipe" />
+
+<InstallBlock name="replay-wipe" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { ReplayWipe } from "@/components/remocn/replay-wipe";
+
+const ReplayWipeScene = () => (
+  <ReplayWipe
+    accent="#3B5BFD"
+    wipeAt={[26, 84]}
+    wipeLength={18}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="ReplayWipe"
+    component={ReplayWipeScene}
+    durationInFrames={132}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A huge LIVE frame with a ticking clock holds, then a stinger carrying the remocn R mark spins across on a fluted gradient streak and wipes to the Replay shot in slow motion, then wipes back. Pass your own shots as `from` and `to`, set the frames with `wipeAt` and tune the stinger with `wipeLength`; it ships light and dark.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "from",
+      type: "React.ReactNode",
+      description: "Shot before the first wipe; defaults to a Live broadcast frame",
+    },
+    {
+      name: "to",
+      type: "React.ReactNode",
+      description: "Shot after the first wipe; defaults to a slow-motion Replay frame",
+    },
+    {
+      name: "wipeAt",
+      type: "number[]",
+      default: "[26, 84]",
+      description: "Frames where a wipe starts; shots alternate from, to, from",
+    },
+    {
+      name: "wipeLength",
+      type: "number",
+      default: "18",
+      description: "Frames the stinger takes to cross the frame",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Color of the live marker in the default shot",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark palette",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier for the whole timeline",
+    },
+  ]}
+/>

@@ -1,0 +1,95 @@
+---
+title: Lumen Count
+description: "A glowing number counts up with a soft floor reflection and a caption beneath it."
+component: lumen-count
+vibe: premium
+length: 86
+useWhen:
+  - "A hero beat where one big metric, such as a component or user count, should glow on a dark stage."
+  - "A count that grows by orders of magnitude, since it climbs on a log curve from a small start."
+  - "A one-number beat that wants a soft floor reflection and a single caption line underneath."
+avoidWhen:
+  - "The number should land with a hard, punchy cut instead of a smooth glow - use `smash-count`."
+  - "You want a chrome, studio-lit look on a figure with a plus sign - use `studio-reflection`."
+  - "Several stats need to count in one beat - use `stat-sequence`."
+---
+
+<ComponentPreview name="lumen-count" />
+
+<InstallBlock name="lumen-count" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { LumenCount } from "@/components/remocn/lumen-count";
+
+const LumenCountScene = () => <LumenCount value={200} suffix="+" label="components for your launch video" />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="LumenCount"
+    component={LumenCountScene}
+    durationInFrames={120}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A big number counts up on a dark stage while its fill brightens from dim to a glowing gradient, flares once on arrival and casts a soft reflection on the floor; the caption fades in underneath. Pass `value` and `label`, plus optional `suffix` and `eyebrow`. It ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "value",
+      type: "number",
+      default: "200",
+      description: "The number the count lands on.",
+    },
+    {
+      name: "from",
+      type: "number",
+      default: "1",
+      description: "Starting number; the count climbs on a log curve from here.",
+    },
+    {
+      name: "suffix",
+      type: "string",
+      default: "\"\"",
+      description: "Text appended to the number, such as a plus sign.",
+    },
+    {
+      name: "label",
+      type: "string",
+      default: "\"components, ready to light up your launch video\"",
+      description: "Caption under the number.",
+    },
+    {
+      name: "eyebrow",
+      type: "string",
+      default: "\"\"",
+      description: "Small line above the number; hidden when empty.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Base color of the glow gradient.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark palette.",
+    },
+  ]}
+/>

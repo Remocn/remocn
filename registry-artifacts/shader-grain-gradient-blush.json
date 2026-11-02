@@ -1,0 +1,19 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "shader-grain-gradient-blush",
+  "title": "Shader Grain Gradient Blush",
+  "description": "Pastel pink and apricot blob morphing on warm off-white.",
+  "registryDependencies": ["@remocn/shader-grain-gradient"],
+  "files": [
+    {
+      "path": "registry/remocn/shader-grain-gradient-blush/index.tsx",
+      "content": "\"use client\";\n\nimport {\n  ShaderGrainGradient,\n  type ShaderGrainGradientProps,\n} from \"@/components/remocn/shader-grain-gradient\";\n\n// Blush: pastel pink and apricot blob morphing on warm off-white.\n// A preset of ShaderGrainGradient. The whole look lives in the object below, so tune\n// it freely. Props you pass override the preset, except `speed`, which scales\n// the preset's own speed instead of replacing it.\n\nexport const shaderGrainGradientBlushPreset = {\n  speed: 1,\n  shape: \"blob\",\n  colorBack: \"#fff4ef\",\n  colors: [\"#ffb3c6\", \"#ffd6a5\", \"#cdb4ff\"],\n  softness: 0.9,\n  intensity: 0.2,\n  noise: 0.12,\n} satisfies ShaderGrainGradientProps;\n\nexport function ShaderGrainGradientBlush({\n  speed = 1,\n  ...props\n}: ShaderGrainGradientProps) {\n  return (\n    <ShaderGrainGradient\n      {...shaderGrainGradientBlushPreset}\n      {...props}\n      speed={shaderGrainGradientBlushPreset.speed * speed}\n    />\n  );\n}\n",
+      "type": "registry:component",
+      "target": "components/remocn/shader-grain-gradient-blush.tsx"
+    }
+  ],
+  "meta": {
+    "presetOf": "shader-grain-gradient"
+  },
+  "type": "registry:component"
+}

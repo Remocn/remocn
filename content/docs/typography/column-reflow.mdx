@@ -1,0 +1,82 @@
+---
+title: Column Reflow
+description: "A justified paragraph reflows its column width, redistributing lines with even word spacing"
+component: column-reflow
+vibe: paper
+length: 90
+useWhen:
+  - "A beat about layout, responsiveness or editorial typography where the text itself reflows."
+  - "A paragraph that should demonstrate how content adapts to a new width."
+  - "A calm body-text moment with one emphasized word."
+avoidWhen:
+  - "You need a short punchy headline rather than a paragraph — use `soft-blur-in`."
+  - "You want a paragraph to set itself into a column once — use `tagline-justify`."
+  - "The text should be revealed line by line — use `line-by-line-slide`."
+---
+
+<ComponentPreview name="column-reflow" />
+
+<InstallBlock name="column-reflow" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { ColumnReflow } from "@/components/remocn/column-reflow";
+
+const ColumnReflowScene = () => <ColumnReflow text="Good motion starts with good typography." accentWord="typography" direction="widen" />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="ColumnReflow"
+    component={ColumnReflowScene}
+    durationInFrames={120}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A justified serif paragraph sits in a column, then the column widens (or narrows) while words glide to new lines and the spacing is redistributed evenly, ending with one accent word in italic. Pass `text`, `accentWord` and `direction`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "text",
+      type: "string",
+      default: "DEFAULT_TEXT",
+      description: "The paragraph to set and reflow.",
+    },
+    {
+      name: "accentWord",
+      type: "string",
+      default: "\"room\"",
+      description: "Word set in accent color and italic.",
+    },
+    {
+      name: "direction",
+      type: "\"widen\" | \"narrow\"",
+      default: "\"widen\"",
+      description: "Whether the column starts narrow and widens, or the reverse.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color scheme; ships dark and light.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier for the whole timeline.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Color of the accent word; also tints the glow.",
+    },
+  ]}
+/>

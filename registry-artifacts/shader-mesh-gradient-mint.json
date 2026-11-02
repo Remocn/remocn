@@ -1,0 +1,19 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "shader-mesh-gradient-mint",
+  "title": "Shader Mesh Gradient Mint",
+  "description": "Airy mint and sky-blue pastel wash around a deeper green core.",
+  "registryDependencies": ["@remocn/shader-mesh-gradient"],
+  "files": [
+    {
+      "path": "registry/remocn/shader-mesh-gradient-mint/index.tsx",
+      "content": "\"use client\";\n\nimport {\n  ShaderMeshGradient,\n  type ShaderMeshGradientProps,\n} from \"@/components/remocn/shader-mesh-gradient\";\n\n// Mint: airy mint and sky-blue pastel wash around a deeper green core.\n// A preset of ShaderMeshGradient. The whole look lives in the object below, so tune\n// it freely. Props you pass override the preset, except `speed`, which scales\n// the preset's own speed instead of replacing it.\n\nexport const shaderMeshGradientMintPreset = {\n  speed: 1,\n  colors: [\"#f2fff8\", \"#9ff2c8\", \"#3dd6a0\", \"#c7f0ff\", \"#1fae8c\"],\n  distortion: 0.8,\n  swirl: 0.2,\n  rotation: 180,\n} satisfies ShaderMeshGradientProps;\n\nexport function ShaderMeshGradientMint({\n  speed = 1,\n  ...props\n}: ShaderMeshGradientProps) {\n  return (\n    <ShaderMeshGradient\n      {...shaderMeshGradientMintPreset}\n      {...props}\n      speed={shaderMeshGradientMintPreset.speed * speed}\n    />\n  );\n}\n",
+      "type": "registry:component",
+      "target": "components/remocn/shader-mesh-gradient-mint.tsx"
+    }
+  ],
+  "meta": {
+    "presetOf": "shader-mesh-gradient"
+  },
+  "type": "registry:component"
+}

@@ -1,0 +1,83 @@
+---
+title: Ko Count
+description: "A ten-count of hard-cut numerals ends in a full-frame gradient word slam with a serif subline."
+component: ko-count
+vibe: playful
+length: 98
+useWhen:
+  - "A launch beat that builds suspense with a quick count to ten before a big verdict word."
+  - "A punchy opener where the final word should land like an impact frame with camera shake."
+  - "A competitive or 'we beat the old way' moment that ends on a one-line serif punchline and the logo."
+avoidWhen:
+  - "You want a smooth numeric count-up of a metric, not a dramatic count — use `number-wheel`."
+  - "The countdown leads to a live date or URL rather than a verdict word — use `drop-timer`."
+  - "The tone is calm and understated, not an impact slam — use `cool-down`."
+---
+
+<ComponentPreview name="ko-count" />
+
+<InstallBlock name="ko-count" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { KoCount } from "@/components/remocn/ko-count";
+
+const KoCountScene = () => <KoCount word="Shipped" subline="The old workflow did not get up." />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="KoCount"
+    component={KoCountScene}
+    durationInFrames={130}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Numerals one to ten hard-cut in with tightening gaps, each as a different crop and tilt, then the word slams in from large with a short knockout flash and shake. A serif subline wipes in and the logo rises. Pass `word`, `subline` and `label` to make it yours; it ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "word",
+      type: "string",
+      default: "\"Knockout\"",
+      description: "The full-frame word that slams in after the count.",
+    },
+    {
+      name: "subline",
+      type: "string",
+      default: "\"The old workflow did not get up.\"",
+      description: "Serif italic line that wipes in under the word.",
+    },
+    {
+      name: "label",
+      type: "string",
+      default: "\"The count\"",
+      description: "Small label next to the count, bottom left.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Color of the count ticks.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark ground; ships both.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier.",
+    },
+  ]}
+/>

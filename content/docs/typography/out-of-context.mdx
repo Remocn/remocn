@@ -1,0 +1,82 @@
+---
+title: Out of Context
+description: "A bold claim stacks line by line, then a pulled-out phrase finishes it in the accent color."
+component: out-of-context
+vibe: playful
+length: 86
+useWhen:
+  - "A punchy slogan where the final phrase flips the meaning, such as Stop making launch videos by hand."
+  - "A two-part statement with a setup claim and a short colored punchline."
+avoidWhen:
+  - "The text is a single short word - use `spring-scale-in`."
+  - "You want a calm blur entrance - use `soft-blur-in`."
+  - "You want text to replace in place - use `strikethrough-replace`."
+---
+
+<ComponentPreview name="out-of-context" />
+
+<InstallBlock name="out-of-context" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { OutOfContext } from "@/components/remocn/out-of-context";
+
+const OutOfContextScene = () => (
+  <OutOfContext claim={"Stop making\nlaunch videos"} rest="by hand." />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="OutOfContext"
+    component={OutOfContextScene}
+    durationInFrames={130}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The claim lines fly in, one drops out of alignment and is pulled across the frame, and the closing phrase arrives in the accent color. Pass `claim` (newlines split lines) and `rest` for the closing phrase; it ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "claim",
+      type: "string",
+      default: "\"Stop making\\nlaunch videos\"",
+      description: "Setup lines; newlines split rows",
+    },
+    {
+      name: "rest",
+      type: "string",
+      default: "\"by hand.\"",
+      description: "Closing phrase shown in the accent color",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Accent color (any valid CSS color)",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Overrides the theme's stage color",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark palettes",
+    },
+  ]}
+/>

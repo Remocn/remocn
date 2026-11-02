@@ -1,0 +1,83 @@
+---
+title: Bounce Logo
+description: "The wordmark bounces around the frame like an old DVD logo until it hits the corner and resolves."
+component: bounce-logo
+vibe: playful
+length: 150
+useWhen:
+  - "A playful, meme-aware sting for a casual product or community video."
+  - "A tongue-in-cheek brand moment that ends on a clean lockup and a line."
+  - "A longer sting that rewards the viewer when the logo hits the corner."
+avoidWhen:
+  - "You need a serious, premium reveal — use `first-light`."
+  - "The playful beat is a banner and stat, not a logo — use `play-of-the-game`."
+  - "You want a short click instead of a long bounce — use `snap-click`."
+---
+
+<ComponentPreview name="bounce-logo" />
+
+<InstallBlock name="bounce-logo" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { BounceLogo } from "@/components/remocn/bounce-logo";
+
+const BounceLogoScene = () => (
+  <BounceLogo
+    brand="remocn"
+    line="Hit the corner."
+    accent="#3B5BFD"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="BounceLogo"
+    component={BounceLogoScene}
+    durationInFrames={168}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The wordmark bounces off the frame edges on a path solved backwards so the final hit always lands in a corner, where it blooms, glides to the centre as the lockup and `line` rises beneath. Pass `brand` and `line`. Ships light and dark.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "brand",
+      type: "string",
+      default: "\"remocn\"",
+      description: "Wordmark that bounces; remocn renders the real logo.",
+    },
+    {
+      name: "line",
+      type: "string",
+      default: "\"Hit the corner.\"",
+      description: "Line under the final lockup; empty hides it.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent colour for the mark and highlights; any CSS colour.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Dark or light palette and ground.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier for the whole timeline; 1 is normal speed.",
+    },
+  ]}
+/>

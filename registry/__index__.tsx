@@ -810,6 +810,96 @@ const registry: Record<string, RegistryEntry> = {
         (m) => m.shaderMeshGradientConfig,
       ),
   },
+  "shader-mesh-gradient-dusk": {
+    load: () =>
+      import("@/registry/remocn/shader-mesh-gradient-dusk").then((m) => ({
+        default: m.ShaderMeshGradientDusk,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/shader-mesh-gradient-dusk/config").then(
+        (m) => m.shaderMeshGradientDuskConfig,
+      ),
+  },
+  "shader-mesh-gradient-lagoon": {
+    load: () =>
+      import("@/registry/remocn/shader-mesh-gradient-lagoon").then((m) => ({
+        default: m.ShaderMeshGradientLagoon,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/shader-mesh-gradient-lagoon/config").then(
+        (m) => m.shaderMeshGradientLagoonConfig,
+      ),
+  },
+  "shader-mesh-gradient-peach": {
+    load: () =>
+      import("@/registry/remocn/shader-mesh-gradient-peach").then((m) => ({
+        default: m.ShaderMeshGradientPeach,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/shader-mesh-gradient-peach/config").then(
+        (m) => m.shaderMeshGradientPeachConfig,
+      ),
+  },
+  "shader-mesh-gradient-aurora": {
+    load: () =>
+      import("@/registry/remocn/shader-mesh-gradient-aurora").then((m) => ({
+        default: m.ShaderMeshGradientAurora,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/shader-mesh-gradient-aurora/config").then(
+        (m) => m.shaderMeshGradientAuroraConfig,
+      ),
+  },
+  "shader-mesh-gradient-lavender": {
+    load: () =>
+      import("@/registry/remocn/shader-mesh-gradient-lavender").then((m) => ({
+        default: m.ShaderMeshGradientLavender,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/shader-mesh-gradient-lavender/config").then(
+        (m) => m.shaderMeshGradientLavenderConfig,
+      ),
+  },
+  "shader-mesh-gradient-ember": {
+    load: () =>
+      import("@/registry/remocn/shader-mesh-gradient-ember").then((m) => ({
+        default: m.ShaderMeshGradientEmber,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/shader-mesh-gradient-ember/config").then(
+        (m) => m.shaderMeshGradientEmberConfig,
+      ),
+  },
+  "shader-mesh-gradient-mint": {
+    load: () =>
+      import("@/registry/remocn/shader-mesh-gradient-mint").then((m) => ({
+        default: m.ShaderMeshGradientMint,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/shader-mesh-gradient-mint/config").then(
+        (m) => m.shaderMeshGradientMintConfig,
+      ),
+  },
+  "shader-mesh-gradient-synthwave": {
+    load: () =>
+      import("@/registry/remocn/shader-mesh-gradient-synthwave").then((m) => ({
+        default: m.ShaderMeshGradientSynthwave,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/shader-mesh-gradient-synthwave/config").then(
+        (m) => m.shaderMeshGradientSynthwaveConfig,
+      ),
+  },
+  "shader-mesh-gradient-ink": {
+    load: () =>
+      import("@/registry/remocn/shader-mesh-gradient-ink").then((m) => ({
+        default: m.ShaderMeshGradientInk,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/shader-mesh-gradient-ink/config").then(
+        (m) => m.shaderMeshGradientInkConfig,
+      ),
+  },
   "shader-grain-gradient": {
     load: () =>
       import("@/registry/remocn/shader-grain-gradient").then((m) => ({
@@ -818,6 +908,98 @@ const registry: Record<string, RegistryEntry> = {
     loadConfig: () =>
       import("@/registry/remocn/shader-grain-gradient/config").then(
         (m) => m.shaderGrainGradientConfig,
+      ),
+  },
+  "shader-grain-gradient-sunrise": {
+    load: () =>
+      import("@/registry/remocn/shader-grain-gradient-sunrise").then((m) => ({
+        default: m.ShaderGrainGradientSunrise,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/shader-grain-gradient-sunrise/config").then(
+        (m) => m.shaderGrainGradientSunriseConfig,
+      ),
+  },
+  "shader-grain-gradient-nebula": {
+    load: () =>
+      import("@/registry/remocn/shader-grain-gradient-nebula").then((m) => ({
+        default: m.ShaderGrainGradientNebula,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/shader-grain-gradient-nebula/config").then(
+        (m) => m.shaderGrainGradientNebulaConfig,
+      ),
+  },
+  "shader-grain-gradient-orb": {
+    load: () =>
+      import("@/registry/remocn/shader-grain-gradient-orb").then((m) => ({
+        default: m.ShaderGrainGradientOrb,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/shader-grain-gradient-orb/config").then(
+        (m) => m.shaderGrainGradientOrbConfig,
+      ),
+  },
+  "shader-grain-gradient-horizon": {
+    load: () =>
+      import("@/registry/remocn/shader-grain-gradient-horizon").then((m) => ({
+        default: m.ShaderGrainGradientHorizon,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/shader-grain-gradient-horizon/config").then(
+        (m) => m.shaderGrainGradientHorizonConfig,
+      ),
+  },
+  "shader-grain-gradient-blush": {
+    load: () =>
+      import("@/registry/remocn/shader-grain-gradient-blush").then((m) => ({
+        default: m.ShaderGrainGradientBlush,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/shader-grain-gradient-blush/config").then(
+        (m) => m.shaderGrainGradientBlushConfig,
+      ),
+  },
+  "shader-grain-gradient-tide": {
+    load: () =>
+      import("@/registry/remocn/shader-grain-gradient-tide").then((m) => ({
+        default: m.ShaderGrainGradientTide,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/shader-grain-gradient-tide/config").then(
+        (m) => m.shaderGrainGradientTideConfig,
+      ),
+  },
+  "shader-grain-gradient-arcade": {
+    load: () =>
+      import("@/registry/remocn/shader-grain-gradient-arcade").then((m) => ({
+        default: m.ShaderGrainGradientArcade,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/shader-grain-gradient-arcade/config").then(
+        (m) => m.shaderGrainGradientArcadeConfig,
+      ),
+  },
+  "shader-grain-gradient-dune": {
+    load: () =>
+      import("@/registry/remocn/shader-grain-gradient-dune").then((m) => ({
+        default: m.ShaderGrainGradientDune,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/shader-grain-gradient-dune/config").then(
+        (m) => m.shaderGrainGradientDuneConfig,
+      ),
+  },
+  "shader-grain-gradient-ultraviolet": {
+    load: () =>
+      import("@/registry/remocn/shader-grain-gradient-ultraviolet").then(
+        (m) => ({
+          default: m.ShaderGrainGradientUltraviolet,
+        }),
+      ),
+    loadConfig: () =>
+      import("@/registry/remocn/shader-grain-gradient-ultraviolet/config").then(
+        (m) => m.shaderGrainGradientUltravioletConfig,
       ),
   },
   "shader-warp": {
@@ -830,6 +1012,96 @@ const registry: Record<string, RegistryEntry> = {
         (m) => m.shaderWarpConfig,
       ),
   },
+  "shader-warp-silk": {
+    load: () =>
+      import("@/registry/remocn/shader-warp-silk").then((m) => ({
+        default: m.ShaderWarpSilk,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/shader-warp-silk/config").then(
+        (m) => m.shaderWarpSilkConfig,
+      ),
+  },
+  "shader-warp-sunset": {
+    load: () =>
+      import("@/registry/remocn/shader-warp-sunset").then((m) => ({
+        default: m.ShaderWarpSunset,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/shader-warp-sunset/config").then(
+        (m) => m.shaderWarpSunsetConfig,
+      ),
+  },
+  "shader-warp-ocean": {
+    load: () =>
+      import("@/registry/remocn/shader-warp-ocean").then((m) => ({
+        default: m.ShaderWarpOcean,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/shader-warp-ocean/config").then(
+        (m) => m.shaderWarpOceanConfig,
+      ),
+  },
+  "shader-warp-marble": {
+    load: () =>
+      import("@/registry/remocn/shader-warp-marble").then((m) => ({
+        default: m.ShaderWarpMarble,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/shader-warp-marble/config").then(
+        (m) => m.shaderWarpMarbleConfig,
+      ),
+  },
+  "shader-warp-acid": {
+    load: () =>
+      import("@/registry/remocn/shader-warp-acid").then((m) => ({
+        default: m.ShaderWarpAcid,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/shader-warp-acid/config").then(
+        (m) => m.shaderWarpAcidConfig,
+      ),
+  },
+  "shader-warp-cream": {
+    load: () =>
+      import("@/registry/remocn/shader-warp-cream").then((m) => ({
+        default: m.ShaderWarpCream,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/shader-warp-cream/config").then(
+        (m) => m.shaderWarpCreamConfig,
+      ),
+  },
+  "shader-warp-deep-sea": {
+    load: () =>
+      import("@/registry/remocn/shader-warp-deep-sea").then((m) => ({
+        default: m.ShaderWarpDeepSea,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/shader-warp-deep-sea/config").then(
+        (m) => m.shaderWarpDeepSeaConfig,
+      ),
+  },
+  "shader-warp-rose-gold": {
+    load: () =>
+      import("@/registry/remocn/shader-warp-rose-gold").then((m) => ({
+        default: m.ShaderWarpRoseGold,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/shader-warp-rose-gold/config").then(
+        (m) => m.shaderWarpRoseGoldConfig,
+      ),
+  },
+  "shader-warp-storm": {
+    load: () =>
+      import("@/registry/remocn/shader-warp-storm").then((m) => ({
+        default: m.ShaderWarpStorm,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/shader-warp-storm/config").then(
+        (m) => m.shaderWarpStormConfig,
+      ),
+  },
   "shader-swirl": {
     load: () =>
       import("@/registry/remocn/shader-swirl").then((m) => ({
@@ -838,6 +1110,96 @@ const registry: Record<string, RegistryEntry> = {
     loadConfig: () =>
       import("@/registry/remocn/shader-swirl/config").then(
         (m) => m.shaderSwirlConfig,
+      ),
+  },
+  "shader-swirl-candy": {
+    load: () =>
+      import("@/registry/remocn/shader-swirl-candy").then((m) => ({
+        default: m.ShaderSwirlCandy,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/shader-swirl-candy/config").then(
+        (m) => m.shaderSwirlCandyConfig,
+      ),
+  },
+  "shader-swirl-sunburst": {
+    load: () =>
+      import("@/registry/remocn/shader-swirl-sunburst").then((m) => ({
+        default: m.ShaderSwirlSunburst,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/shader-swirl-sunburst/config").then(
+        (m) => m.shaderSwirlSunburstConfig,
+      ),
+  },
+  "shader-swirl-hypno": {
+    load: () =>
+      import("@/registry/remocn/shader-swirl-hypno").then((m) => ({
+        default: m.ShaderSwirlHypno,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/shader-swirl-hypno/config").then(
+        (m) => m.shaderSwirlHypnoConfig,
+      ),
+  },
+  "shader-swirl-neon": {
+    load: () =>
+      import("@/registry/remocn/shader-swirl-neon").then((m) => ({
+        default: m.ShaderSwirlNeon,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/shader-swirl-neon/config").then(
+        (m) => m.shaderSwirlNeonConfig,
+      ),
+  },
+  "shader-swirl-tide": {
+    load: () =>
+      import("@/registry/remocn/shader-swirl-tide").then((m) => ({
+        default: m.ShaderSwirlTide,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/shader-swirl-tide/config").then(
+        (m) => m.shaderSwirlTideConfig,
+      ),
+  },
+  "shader-swirl-citrus": {
+    load: () =>
+      import("@/registry/remocn/shader-swirl-citrus").then((m) => ({
+        default: m.ShaderSwirlCitrus,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/shader-swirl-citrus/config").then(
+        (m) => m.shaderSwirlCitrusConfig,
+      ),
+  },
+  "shader-swirl-ember": {
+    load: () =>
+      import("@/registry/remocn/shader-swirl-ember").then((m) => ({
+        default: m.ShaderSwirlEmber,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/shader-swirl-ember/config").then(
+        (m) => m.shaderSwirlEmberConfig,
+      ),
+  },
+  "shader-swirl-lilac": {
+    load: () =>
+      import("@/registry/remocn/shader-swirl-lilac").then((m) => ({
+        default: m.ShaderSwirlLilac,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/shader-swirl-lilac/config").then(
+        (m) => m.shaderSwirlLilacConfig,
+      ),
+  },
+  "shader-swirl-retro": {
+    load: () =>
+      import("@/registry/remocn/shader-swirl-retro").then((m) => ({
+        default: m.ShaderSwirlRetro,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/shader-swirl-retro/config").then(
+        (m) => m.shaderSwirlRetroConfig,
       ),
   },
   "shader-water": {
@@ -3499,6 +3861,5210 @@ const registry: Record<string, RegistryEntry> = {
     loadConfig: () =>
       import("@/registry/remocn/caption-drop/config").then(
         (m) => m.captionDropConfig,
+      ),
+  },
+  "iris-wipe": {
+    load: () =>
+      import("@/components/docs/examples/iris-wipe-example").then((m) => ({
+        default: m.IrisWipeExampleScene,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/iris-wipe/config").then(
+        (m) => m.irisWipeConfig,
+      ),
+  },
+  "venetian-blinds": {
+    load: () =>
+      import("@/components/docs/examples/venetian-blinds-example").then(
+        (m) => ({
+          default: m.VenetianBlindsExampleScene,
+        }),
+      ),
+    loadConfig: () =>
+      import("@/registry/remocn/venetian-blinds/config").then(
+        (m) => m.venetianBlindsConfig,
+      ),
+  },
+  "paper-tear": {
+    load: () =>
+      import("@/components/docs/examples/paper-tear-example").then((m) => ({
+        default: m.PaperTearExampleScene,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/paper-tear/config").then(
+        (m) => m.paperTearConfig,
+      ),
+  },
+  "pixel-sort": {
+    load: () =>
+      import("@/components/docs/examples/pixel-sort-example").then((m) => ({
+        default: m.PixelSortExampleScene,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/pixel-sort/config").then(
+        (m) => m.pixelSortConfig,
+      ),
+  },
+  "light-leak": {
+    load: () =>
+      import("@/components/docs/examples/light-leak-example").then((m) => ({
+        default: m.LightLeakExampleScene,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/light-leak/config").then(
+        (m) => m.lightLeakConfig,
+      ),
+  },
+  hyperspace: {
+    load: () =>
+      import("@/components/docs/examples/hyperspace-example").then((m) => ({
+        default: m.HyperspaceExampleScene,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/hyperspace/config").then(
+        (m) => m.hyperspaceConfig,
+      ),
+  },
+  "orbit-lock": {
+    load: () =>
+      import("@/components/docs/examples/orbit-lock-example").then((m) => ({
+        default: m.OrbitLockExampleScene,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/orbit-lock/config").then(
+        (m) => m.orbitLockConfig,
+      ),
+  },
+  "puzzle-snap": {
+    load: () =>
+      import("@/components/docs/examples/puzzle-snap-example").then((m) => ({
+        default: m.PuzzleSnapExampleScene,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/puzzle-snap/config").then(
+        (m) => m.puzzleSnapConfig,
+      ),
+  },
+  spotlight: {
+    load: () =>
+      import("@/components/docs/examples/spotlight-example").then((m) => ({
+        default: m.SpotlightExampleScene,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/spotlight/config").then(
+        (m) => m.spotlightConfig,
+      ),
+  },
+  "neon-sign": {
+    load: () =>
+      import("@/registry/remocn/neon-sign").then((m) => ({
+        default: m.NeonSign,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/neon-sign/config").then(
+        (m) => m.neonSignConfig,
+      ),
+  },
+  inflate: {
+    load: () =>
+      import("@/components/docs/examples/inflate-example").then((m) => ({
+        default: m.InflateExampleScene,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/inflate/config").then((m) => m.inflateConfig),
+  },
+  "liquid-fill": {
+    load: () =>
+      import("@/components/docs/examples/liquid-fill-example").then((m) => ({
+        default: m.LiquidFillExampleScene,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/liquid-fill/config").then(
+        (m) => m.liquidFillConfig,
+      ),
+  },
+  "accordion-unfold": {
+    load: () =>
+      import("@/components/docs/examples/accordion-unfold-example").then(
+        (m) => ({
+          default: m.AccordionUnfoldExampleScene,
+        }),
+      ),
+    loadConfig: () =>
+      import("@/registry/remocn/accordion-unfold/config").then(
+        (m) => m.accordionUnfoldConfig,
+      ),
+  },
+  "anamorphic-flare": {
+    load: () =>
+      import("@/components/docs/examples/anamorphic-flare-example").then(
+        (m) => ({
+          default: m.AnamorphicFlareExampleScene,
+        }),
+      ),
+    loadConfig: () =>
+      import("@/registry/remocn/anamorphic-flare/config").then(
+        (m) => m.anamorphicFlareConfig,
+      ),
+  },
+  "pendulum-wave": {
+    load: () =>
+      import("@/registry/remocn/pendulum-wave").then((m) => ({
+        default: m.PendulumWave,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/pendulum-wave/config").then(
+        (m) => m.pendulumWaveConfig,
+      ),
+  },
+  "flow-field": {
+    load: () =>
+      import("@/registry/remocn/flow-field").then((m) => ({
+        default: m.FlowField,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/flow-field/config").then(
+        (m) => m.flowFieldConfig,
+      ),
+  },
+  "isometric-build": {
+    load: () =>
+      import("@/registry/remocn/isometric-build").then((m) => ({
+        default: m.IsometricBuild,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/isometric-build/config").then(
+        (m) => m.isometricBuildConfig,
+      ),
+  },
+  "life-grid": {
+    load: () =>
+      import("@/registry/remocn/life-grid").then((m) => ({
+        default: m.LifeGrid,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/life-grid/config").then(
+        (m) => m.lifeGridConfig,
+      ),
+  },
+  "string-art": {
+    load: () =>
+      import("@/registry/remocn/string-art").then((m) => ({
+        default: m.StringArt,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/string-art/config").then(
+        (m) => m.stringArtConfig,
+      ),
+  },
+  "topo-lines": {
+    load: () =>
+      import("@/registry/remocn/topo-lines").then((m) => ({
+        default: m.TopoLines,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/topo-lines/config").then(
+        (m) => m.topoLinesConfig,
+      ),
+  },
+  phyllotaxis: {
+    load: () =>
+      import("@/registry/remocn/phyllotaxis").then((m) => ({
+        default: m.Phyllotaxis,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/phyllotaxis/config").then(
+        (m) => m.phyllotaxisConfig,
+      ),
+  },
+  "parallax-depth": {
+    load: () =>
+      import("@/components/docs/examples/parallax-depth-example").then((m) => ({
+        default: m.ParallaxDepthExampleScene,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/parallax-depth/config").then(
+        (m) => m.parallaxDepthConfig,
+      ),
+  },
+  "dolly-zoom": {
+    load: () =>
+      import("@/components/docs/examples/dolly-zoom-example").then((m) => ({
+        default: m.DollyZoomExampleScene,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/dolly-zoom/config").then(
+        (m) => m.dollyZoomConfig,
+      ),
+  },
+  turntable: {
+    load: () =>
+      import("@/components/docs/examples/turntable-example").then((m) => ({
+        default: m.TurntableExampleScene,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/turntable/config").then(
+        (m) => m.turntableConfig,
+      ),
+  },
+  "tiny-planet": {
+    load: () =>
+      import("@/components/docs/examples/tiny-planet-example").then((m) => ({
+        default: m.TinyPlanetExampleScene,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/tiny-planet/config").then(
+        (m) => m.tinyPlanetConfig,
+      ),
+  },
+  "exploded-view": {
+    load: () =>
+      import("@/components/docs/examples/exploded-view-example").then((m) => ({
+        default: m.ExplodedViewExampleScene,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/exploded-view/config").then(
+        (m) => m.explodedViewConfig,
+      ),
+  },
+  "gravity-pile": {
+    load: () =>
+      import("@/components/docs/examples/gravity-pile-example").then((m) => ({
+        default: m.GravityPileExampleScene,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/gravity-pile/config").then(
+        (m) => m.gravityPileConfig,
+      ),
+  },
+  "cloth-reveal": {
+    load: () =>
+      import("@/components/docs/examples/cloth-reveal-example").then((m) => ({
+        default: m.ClothRevealExampleScene,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/cloth-reveal/config").then(
+        (m) => m.clothRevealConfig,
+      ),
+  },
+  "impact-shake": {
+    load: () =>
+      import("@/components/docs/examples/impact-shake-example").then((m) => ({
+        default: m.ImpactShakeExampleScene,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/impact-shake/config").then(
+        (m) => m.impactShakeConfig,
+      ),
+  },
+  "riso-print": {
+    load: () =>
+      import("@/components/docs/examples/riso-print-example").then((m) => ({
+        default: m.RisoPrintExampleScene,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/riso-print/config").then(
+        (m) => m.risoPrintConfig,
+      ),
+  },
+  "line-boil": {
+    load: () =>
+      import("@/components/docs/examples/line-boil-example").then((m) => ({
+        default: m.LineBoilExampleScene,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/line-boil/config").then(
+        (m) => m.lineBoilConfig,
+      ),
+  },
+  blueprint: {
+    load: () =>
+      import("@/registry/remocn/blueprint").then((m) => ({
+        default: m.Blueprint,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/blueprint/config").then(
+        (m) => m.blueprintConfig,
+      ),
+  },
+  "duotone-beat": {
+    load: () =>
+      import("@/registry/remocn/duotone-beat").then((m) => ({
+        default: m.DuotoneBeat,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/duotone-beat/config").then(
+        (m) => m.duotoneBeatConfig,
+      ),
+  },
+  "comic-panels": {
+    load: () =>
+      import("@/components/docs/examples/comic-panels-example").then((m) => ({
+        default: m.ComicPanelsExampleScene,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/comic-panels/config").then(
+        (m) => m.comicPanelsConfig,
+      ),
+  },
+  "long-shadow": {
+    load: () =>
+      import("@/registry/remocn/long-shadow").then((m) => ({
+        default: m.LongShadow,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/long-shadow/config").then(
+        (m) => m.longShadowConfig,
+      ),
+  },
+  synthwave: {
+    load: () =>
+      import("@/components/docs/examples/synthwave-example").then((m) => ({
+        default: m.SynthwaveExampleScene,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/synthwave/config").then(
+        (m) => m.synthwaveConfig,
+      ),
+  },
+  "brick-mosaic": {
+    load: () =>
+      import("@/registry/remocn/brick-mosaic").then((m) => ({
+        default: m.BrickMosaic,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/brick-mosaic/config").then(
+        (m) => m.brickMosaicConfig,
+      ),
+  },
+  "x-ray-scan": {
+    load: () =>
+      import("@/components/docs/examples/x-ray-scan-example").then((m) => ({
+        default: m.XRayScanExampleScene,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/x-ray-scan/config").then(
+        (m) => m.xRayScanConfig,
+      ),
+  },
+  "toolbar-unfurl": {
+    load: () =>
+      import("@/registry/remocn/toolbar-unfurl").then((m) => ({
+        default: m.ToolbarUnfurl,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/toolbar-unfurl/config").then(
+        (m) => m.toolbarUnfurlConfig,
+      ),
+  },
+  "glyph-relay": {
+    load: () =>
+      import("@/registry/remocn/glyph-relay").then((m) => ({
+        default: m.GlyphRelay,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/glyph-relay/config").then(
+        (m) => m.glyphRelayConfig,
+      ),
+  },
+  "press-warp-dive": {
+    load: () =>
+      import("@/registry/remocn/press-warp-dive").then((m) => ({
+        default: m.PressWarpDiveDemo,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/press-warp-dive/config").then(
+        (m) => m.pressWarpDiveConfig,
+      ),
+  },
+  "giant-mark-backdrop": {
+    load: () =>
+      import("@/registry/remocn/giant-mark-backdrop").then((m) => ({
+        default: m.GiantMarkBackdrop,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/giant-mark-backdrop/config").then(
+        (m) => m.giantMarkBackdropConfig,
+      ),
+  },
+  "macro-tab-name": {
+    load: () =>
+      import("@/registry/remocn/macro-tab-name").then((m) => ({
+        default: m.MacroTabName,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/macro-tab-name/config").then(
+        (m) => m.macroTabNameConfig,
+      ),
+  },
+  "cta-collapse-mark": {
+    load: () =>
+      import("@/registry/remocn/cta-collapse-mark").then((m) => ({
+        default: m.CtaCollapseMark,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/cta-collapse-mark/config").then(
+        (m) => m.ctaCollapseMarkConfig,
+      ),
+  },
+  "node-trail": {
+    load: () =>
+      import("@/registry/remocn/node-trail").then((m) => ({
+        default: m.NodeTrail,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/node-trail/config").then(
+        (m) => m.nodeTrailConfig,
+      ),
+  },
+  "graph-relayout": {
+    load: () =>
+      import("@/registry/remocn/graph-relayout").then((m) => ({
+        default: m.GraphRelayout,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/graph-relayout/config").then(
+        (m) => m.graphRelayoutConfig,
+      ),
+  },
+  "letter-gate": {
+    load: () =>
+      import("@/registry/remocn/letter-gate").then((m) => ({
+        default: m.LetterGateDemo,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/letter-gate/config").then(
+        (m) => m.letterGateConfig,
+      ),
+  },
+  "device-grows-around": {
+    load: () =>
+      import("@/registry/remocn/device-grows-around").then((m) => ({
+        default: m.DeviceGrowsAround,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/device-grows-around/config").then(
+        (m) => m.deviceGrowsAroundConfig,
+      ),
+  },
+  "send-fountain": {
+    load: () =>
+      import("@/registry/remocn/send-fountain").then((m) => ({
+        default: m.SendFountain,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/send-fountain/config").then(
+        (m) => m.sendFountainConfig,
+      ),
+  },
+  "glow-born-card": {
+    load: () =>
+      import("@/registry/remocn/glow-born-card").then((m) => ({
+        default: m.GlowBornCard,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/glow-born-card/config").then(
+        (m) => m.glowBornCardConfig,
+      ),
+  },
+  "multi-file-drop": {
+    load: () =>
+      import("@/registry/remocn/multi-file-drop").then((m) => ({
+        default: m.MultiFileDrop,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/multi-file-drop/config").then(
+        (m) => m.multiFileDropConfig,
+      ),
+  },
+  "rim-draw-card": {
+    load: () =>
+      import("@/registry/remocn/rim-draw-card").then((m) => ({
+        default: m.RimDrawCard,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/rim-draw-card/config").then(
+        (m) => m.rimDrawCardConfig,
+      ),
+  },
+  "heat-drain-reveal": {
+    load: () =>
+      import("@/registry/remocn/heat-drain-reveal").then((m) => ({
+        default: m.HeatDrainReveal,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/heat-drain-reveal/config").then(
+        (m) => m.heatDrainRevealConfig,
+      ),
+  },
+  "tile-snake-loader": {
+    load: () =>
+      import("@/registry/remocn/tile-snake-loader").then((m) => ({
+        default: m.TileSnakeLoader,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/tile-snake-loader/config").then(
+        (m) => m.tileSnakeLoaderConfig,
+      ),
+  },
+  "photo-caret": {
+    load: () =>
+      import("@/registry/remocn/photo-caret").then((m) => ({
+        default: m.PhotoCaret,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/photo-caret/config").then(
+        (m) => m.photoCaretConfig,
+      ),
+  },
+  "flank-roll-swap": {
+    load: () =>
+      import("@/registry/remocn/flank-roll-swap").then((m) => ({
+        default: m.FlankRollSwap,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/flank-roll-swap/config").then(
+        (m) => m.flankRollSwapConfig,
+      ),
+  },
+  "light-burn-to-line": {
+    load: () =>
+      import("@/registry/remocn/light-burn-to-line").then((m) => ({
+        default: m.LightBurnToLineDemo,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/light-burn-to-line/config").then(
+        (m) => m.lightBurnToLineConfig,
+      ),
+  },
+  "hot-slab-morph": {
+    load: () =>
+      import("@/registry/remocn/hot-slab-morph").then((m) => ({
+        default: m.HotSlabMorphDemo,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/hot-slab-morph/config").then(
+        (m) => m.hotSlabMorphConfig,
+      ),
+  },
+  "noise-forge-sting": {
+    load: () =>
+      import("@/registry/remocn/noise-forge-sting").then((m) => ({
+        default: m.NoiseForgeSting,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/noise-forge-sting/config").then(
+        (m) => m.noiseForgeStingConfig,
+      ),
+  },
+  "glyph-block-decode": {
+    load: () =>
+      import("@/registry/remocn/glyph-block-decode").then((m) => ({
+        default: m.GlyphBlockDecode,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/glyph-block-decode/config").then(
+        (m) => m.glyphBlockDecodeConfig,
+      ),
+  },
+  "word-burst-cards": {
+    load: () =>
+      import("@/registry/remocn/word-burst-cards").then((m) => ({
+        default: m.WordBurstCards,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/word-burst-cards/config").then(
+        (m) => m.wordBurstCardsConfig,
+      ),
+  },
+  "cooling-type": {
+    load: () =>
+      import("@/registry/remocn/cooling-type").then((m) => ({
+        default: m.CoolingType,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/cooling-type/config").then(
+        (m) => m.coolingTypeConfig,
+      ),
+  },
+  "focus-front-swap": {
+    load: () =>
+      import("@/registry/remocn/focus-front-swap").then((m) => ({
+        default: m.FocusFrontSwap,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/focus-front-swap/config").then(
+        (m) => m.focusFrontSwapConfig,
+      ),
+  },
+  "macro-letter-pan": {
+    load: () =>
+      import("@/registry/remocn/macro-letter-pan").then((m) => ({
+        default: m.MacroLetterPan,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/macro-letter-pan/config").then(
+        (m) => m.macroLetterPanConfig,
+      ),
+  },
+  "focus-pan-text": {
+    load: () =>
+      import("@/registry/remocn/focus-pan-text").then((m) => ({
+        default: m.FocusPanText,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/focus-pan-text/config").then(
+        (m) => m.focusPanTextConfig,
+      ),
+  },
+  "card-swipe-cover": {
+    load: () =>
+      import("@/registry/remocn/card-swipe-cover").then((m) => ({
+        default: m.CardSwipeCoverDemo,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/card-swipe-cover/config").then(
+        (m) => m.cardSwipeCoverConfig,
+      ),
+  },
+  "caret-collapse": {
+    load: () =>
+      import("@/registry/remocn/caret-collapse").then((m) => ({
+        default: m.CaretCollapseDemo,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/caret-collapse/config").then(
+        (m) => m.caretCollapseConfig,
+      ),
+  },
+  "bloom-ring": {
+    load: () =>
+      import("@/registry/remocn/bloom-ring").then((m) => ({
+        default: m.BloomRingDemo,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/bloom-ring/config").then(
+        (m) => m.bloomRingConfig,
+      ),
+  },
+  "beam-sweep": {
+    load: () =>
+      import("@/registry/remocn/beam-sweep").then((m) => ({
+        default: m.BeamSweepDemo,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/beam-sweep/config").then(
+        (m) => m.beamSweepConfig,
+      ),
+  },
+  "disc-pop": {
+    load: () =>
+      import("@/registry/remocn/disc-pop").then((m) => ({
+        default: m.DiscPopDemo,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/disc-pop/config").then((m) => m.discPopConfig),
+  },
+  "strobe-montage": {
+    load: () =>
+      import("@/registry/remocn/strobe-montage").then((m) => ({
+        default: m.StrobeMontage,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/strobe-montage/config").then(
+        (m) => m.strobeMontageConfig,
+      ),
+  },
+  "band-open": {
+    load: () =>
+      import("@/registry/remocn/band-open").then((m) => ({
+        default: m.BandOpen,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/band-open/config").then(
+        (m) => m.bandOpenConfig,
+      ),
+  },
+  "headline-to-line": {
+    load: () =>
+      import("@/registry/remocn/headline-to-line").then((m) => ({
+        default: m.HeadlineToLine,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/headline-to-line/config").then(
+        (m) => m.headlineToLineConfig,
+      ),
+  },
+  "word-gap-media": {
+    load: () =>
+      import("@/registry/remocn/word-gap-media").then((m) => ({
+        default: m.WordGapMedia,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/word-gap-media/config").then(
+        (m) => m.wordGapMediaConfig,
+      ),
+  },
+  "caret-dolly": {
+    load: () =>
+      import("@/registry/remocn/caret-dolly").then((m) => ({
+        default: m.CaretDolly,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/caret-dolly/config").then(
+        (m) => m.caretDollyConfig,
+      ),
+  },
+  "card-push-line": {
+    load: () =>
+      import("@/registry/remocn/card-push-line").then((m) => ({
+        default: m.CardPushLine,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/card-push-line/config").then(
+        (m) => m.cardPushLineConfig,
+      ),
+  },
+  "phrase-list-bridge": {
+    load: () =>
+      import("@/registry/remocn/phrase-list-bridge").then((m) => ({
+        default: m.PhraseListBridge,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/phrase-list-bridge/config").then(
+        (m) => m.phraseListBridgeConfig,
+      ),
+  },
+  "word-pullback": {
+    load: () =>
+      import("@/registry/remocn/word-pullback").then((m) => ({
+        default: m.WordPullback,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/word-pullback/config").then(
+        (m) => m.wordPullbackConfig,
+      ),
+  },
+  "figure-reels": {
+    load: () =>
+      import("@/registry/remocn/figure-reels").then((m) => ({
+        default: m.FigureReels,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/figure-reels/config").then(
+        (m) => m.figureReelsConfig,
+      ),
+  },
+  "figure-to-label": {
+    load: () =>
+      import("@/registry/remocn/figure-to-label").then((m) => ({
+        default: m.FigureToLabel,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/figure-to-label/config").then(
+        (m) => m.figureToLabelConfig,
+      ),
+  },
+  "drop-upload": {
+    load: () =>
+      import("@/registry/remocn/drop-upload").then((m) => ({
+        default: m.DropUpload,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/drop-upload/config").then(
+        (m) => m.dropUploadConfig,
+      ),
+  },
+  "macro-click": {
+    load: () =>
+      import("@/registry/remocn/macro-click").then((m) => ({
+        default: m.MacroClick,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/macro-click/config").then(
+        (m) => m.macroClickConfig,
+      ),
+  },
+  "calendar-pick": {
+    load: () =>
+      import("@/registry/remocn/calendar-pick").then((m) => ({
+        default: m.CalendarPick,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/calendar-pick/config").then(
+        (m) => m.calendarPickConfig,
+      ),
+  },
+  "button-to-card": {
+    load: () =>
+      import("@/registry/remocn/button-to-card").then((m) => ({
+        default: m.ButtonToCard,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/button-to-card/config").then(
+        (m) => m.buttonToCardConfig,
+      ),
+  },
+  "prompt-swell": {
+    load: () =>
+      import("@/registry/remocn/prompt-swell").then((m) => ({
+        default: m.PromptSwell,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/prompt-swell/config").then(
+        (m) => m.promptSwellConfig,
+      ),
+  },
+  "grid-to-app": {
+    load: () =>
+      import("@/registry/remocn/grid-to-app").then((m) => ({
+        default: m.GridToApp,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/grid-to-app/config").then(
+        (m) => m.gridToAppConfig,
+      ),
+  },
+  "leaderboard-climb": {
+    load: () =>
+      import("@/registry/remocn/leaderboard-climb").then((m) => ({
+        default: m.LeaderboardClimb,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/leaderboard-climb/config").then(
+        (m) => m.leaderboardClimbConfig,
+      ),
+  },
+  "phone-trio": {
+    load: () =>
+      import("@/registry/remocn/phone-trio").then((m) => ({
+        default: m.PhoneTrio,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/phone-trio/config").then(
+        (m) => m.phoneTrioConfig,
+      ),
+  },
+  "photo-halo": {
+    load: () =>
+      import("@/registry/remocn/photo-halo").then((m) => ({
+        default: m.PhotoHalo,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/photo-halo/config").then(
+        (m) => m.photoHaloConfig,
+      ),
+  },
+  "cover-ring": {
+    load: () =>
+      import("@/registry/remocn/cover-ring").then((m) => ({
+        default: m.CoverRing,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/cover-ring/config").then(
+        (m) => m.coverRingConfig,
+      ),
+  },
+  "card-fan": {
+    load: () =>
+      import("@/registry/remocn/card-fan").then((m) => ({
+        default: m.CardFan,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/card-fan/config").then((m) => m.cardFanConfig),
+  },
+  "tilt-settle-list": {
+    load: () =>
+      import("@/registry/remocn/tilt-settle-list").then((m) => ({
+        default: m.TiltSettleList,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/tilt-settle-list/config").then(
+        (m) => m.tiltSettleListConfig,
+      ),
+  },
+  "shards-to-grid": {
+    load: () =>
+      import("@/registry/remocn/shards-to-grid").then((m) => ({
+        default: m.ShardsToGrid,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/shards-to-grid/config").then(
+        (m) => m.shardsToGridConfig,
+      ),
+  },
+  "stat-rail": {
+    load: () =>
+      import("@/registry/remocn/stat-rail").then((m) => ({
+        default: m.StatRail,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/stat-rail/config").then(
+        (m) => m.statRailConfig,
+      ),
+  },
+  "panel-split": {
+    load: () =>
+      import("@/registry/remocn/panel-split").then((m) => ({
+        default: m.PanelSplit,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/panel-split/config").then(
+        (m) => m.panelSplitConfig,
+      ),
+  },
+  "flood-sting": {
+    load: () =>
+      import("@/registry/remocn/flood-sting").then((m) => ({
+        default: m.FloodSting,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/flood-sting/config").then(
+        (m) => m.floodStingConfig,
+      ),
+  },
+  "riddle-clues": {
+    load: () =>
+      import("@/registry/remocn/riddle-clues").then((m) => ({
+        default: m.RiddleClues,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/riddle-clues/config").then(
+        (m) => m.riddleCluesConfig,
+      ),
+  },
+  "coy-denial": {
+    load: () =>
+      import("@/registry/remocn/coy-denial").then((m) => ({
+        default: m.CoyDenial,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/coy-denial/config").then(
+        (m) => m.coyDenialConfig,
+      ),
+  },
+  "peek-shut": {
+    load: () =>
+      import("@/registry/remocn/peek-shut").then((m) => ({
+        default: m.PeekShut,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/peek-shut/config").then(
+        (m) => m.peekShutConfig,
+      ),
+  },
+  "no-buts": {
+    load: () =>
+      import("@/registry/remocn/no-buts").then((m) => ({
+        default: m.NoButs,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/no-buts/config").then((m) => m.noButsConfig),
+  },
+  "in-proportion": {
+    load: () =>
+      import("@/registry/remocn/in-proportion").then((m) => ({
+        default: m.InProportion,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/in-proportion/config").then(
+        (m) => m.inProportionConfig,
+      ),
+  },
+  exactly: {
+    load: () =>
+      import("@/registry/remocn/exactly").then((m) => ({
+        default: m.Exactly,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/exactly/config").then((m) => m.exactlyConfig),
+  },
+  "which-means": {
+    load: () =>
+      import("@/registry/remocn/which-means").then((m) => ({
+        default: m.WhichMeans,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/which-means/config").then(
+        (m) => m.whichMeansConfig,
+      ),
+  },
+  "chore-fold": {
+    load: () =>
+      import("@/registry/remocn/chore-fold").then((m) => ({
+        default: m.ChoreFold,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/chore-fold/config").then(
+        (m) => m.choreFoldConfig,
+      ),
+  },
+  "name-gloss": {
+    load: () =>
+      import("@/registry/remocn/name-gloss").then((m) => ({
+        default: m.NameGloss,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/name-gloss/config").then(
+        (m) => m.nameGlossConfig,
+      ),
+  },
+  "price-page": {
+    load: () =>
+      import("@/registry/remocn/price-page").then((m) => ({
+        default: m.PricePage,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/price-page/config").then(
+        (m) => m.pricePageConfig,
+      ),
+  },
+  "free-as-in": {
+    load: () =>
+      import("@/registry/remocn/free-as-in").then((m) => ({
+        default: m.FreeAsIn,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/free-as-in/config").then(
+        (m) => m.freeAsInConfig,
+      ),
+  },
+  "the-tab": {
+    load: () =>
+      import("@/registry/remocn/the-tab").then((m) => ({
+        default: m.TheTab,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/the-tab/config").then((m) => m.theTabConfig),
+  },
+  "not-yet": {
+    load: () =>
+      import("@/registry/remocn/not-yet").then((m) => ({
+        default: m.NotYet,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/not-yet/config").then((m) => m.notYetConfig),
+  },
+  "moves-up": {
+    load: () =>
+      import("@/registry/remocn/moves-up").then((m) => ({
+        default: m.MovesUp,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/moves-up/config").then((m) => m.movesUpConfig),
+  },
+  "half-built": {
+    load: () =>
+      import("@/registry/remocn/half-built").then((m) => ({
+        default: m.HalfBuilt,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/half-built/config").then(
+        (m) => m.halfBuiltConfig,
+      ),
+  },
+  "what-sticks": {
+    load: () =>
+      import("@/registry/remocn/what-sticks").then((m) => ({
+        default: m.WhatSticks,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/what-sticks/config").then(
+        (m) => m.whatSticksConfig,
+      ),
+  },
+  "tldr-on-top": {
+    load: () =>
+      import("@/registry/remocn/tldr-on-top").then((m) => ({
+        default: m.TldrOnTop,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/tldr-on-top/config").then(
+        (m) => m.tldrOnTopConfig,
+      ),
+  },
+  "factor-out": {
+    load: () =>
+      import("@/registry/remocn/factor-out").then((m) => ({
+        default: m.FactorOut,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/factor-out/config").then(
+        (m) => m.factorOutConfig,
+      ),
+  },
+  "post-script": {
+    load: () =>
+      import("@/registry/remocn/post-script").then((m) => ({
+        default: m.PostScript,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/post-script/config").then(
+        (m) => m.postScriptConfig,
+      ),
+  },
+  rsvp: {
+    load: () =>
+      import("@/registry/remocn/rsvp").then((m) => ({
+        default: m.Rsvp,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/rsvp/config").then((m) => m.rsvpConfig),
+  },
+  "your-name-here": {
+    load: () =>
+      import("@/registry/remocn/your-name-here").then((m) => ({
+        default: m.YourNameHere,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/your-name-here/config").then(
+        (m) => m.yourNameHereConfig,
+      ),
+  },
+  verbed: {
+    load: () =>
+      import("@/registry/remocn/verbed").then((m) => ({
+        default: m.Verbed,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/verbed/config").then((m) => m.verbedConfig),
+  },
+  "pitch-blanks": {
+    load: () =>
+      import("@/registry/remocn/pitch-blanks").then((m) => ({
+        default: m.PitchBlanks,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/pitch-blanks/config").then(
+        (m) => m.pitchBlanksConfig,
+      ),
+  },
+  "we-call-it": {
+    load: () =>
+      import("@/registry/remocn/we-call-it").then((m) => ({
+        default: m.WeCallIt,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/we-call-it/config").then(
+        (m) => m.weCallItConfig,
+      ),
+  },
+  crunch: {
+    load: () =>
+      import("@/registry/remocn/crunch").then((m) => ({
+        default: m.Crunch,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/crunch/config").then((m) => m.crunchConfig),
+  },
+  overnight: {
+    load: () =>
+      import("@/registry/remocn/overnight").then((m) => ({
+        default: m.Overnight,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/overnight/config").then(
+        (m) => m.overnightConfig,
+      ),
+  },
+  "story-dip": {
+    load: () =>
+      import("@/registry/remocn/story-dip").then((m) => ({
+        default: m.StoryDip,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/story-dip/config").then(
+        (m) => m.storyDipConfig,
+      ),
+  },
+  "out-of-context": {
+    load: () =>
+      import("@/registry/remocn/out-of-context").then((m) => ({
+        default: m.OutOfContext,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/out-of-context/config").then(
+        (m) => m.outOfContextConfig,
+      ),
+  },
+  "answer-first": {
+    load: () =>
+      import("@/registry/remocn/answer-first").then((m) => ({
+        default: m.AnswerFirst,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/answer-first/config").then(
+        (m) => m.answerFirstConfig,
+      ),
+  },
+  "double-take": {
+    load: () =>
+      import("@/registry/remocn/double-take").then((m) => ({
+        default: m.DoubleTake,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/double-take/config").then(
+        (m) => m.doubleTakeConfig,
+      ),
+  },
+  turnabout: {
+    load: () =>
+      import("@/registry/remocn/turnabout").then((m) => ({
+        default: m.Turnabout,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/turnabout/config").then(
+        (m) => m.turnaboutConfig,
+      ),
+  },
+  "run-on": {
+    load: () =>
+      import("@/registry/remocn/run-on").then((m) => ({
+        default: m.RunOn,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/run-on/config").then((m) => m.runOnConfig),
+  },
+  "loop-break": {
+    load: () =>
+      import("@/registry/remocn/loop-break").then((m) => ({
+        default: m.LoopBreak,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/loop-break/config").then(
+        (m) => m.loopBreakConfig,
+      ),
+  },
+  "crew-of-one": {
+    load: () =>
+      import("@/registry/remocn/crew-of-one").then((m) => ({
+        default: m.CrewOfOne,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/crew-of-one/config").then(
+        (m) => m.crewOfOneConfig,
+      ),
+  },
+  "they-are-you": {
+    load: () =>
+      import("@/registry/remocn/they-are-you").then((m) => ({
+        default: m.TheyAreYou,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/they-are-you/config").then(
+        (m) => m.theyAreYouConfig,
+      ),
+  },
+  "and-you": {
+    load: () =>
+      import("@/registry/remocn/and-you").then((m) => ({
+        default: m.AndYou,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/and-you/config").then((m) => m.andYouConfig),
+  },
+  "edit-ripple": {
+    load: () =>
+      import("@/registry/remocn/edit-ripple").then((m) => ({
+        default: m.EditRipple,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/edit-ripple/config").then(
+        (m) => m.editRippleConfig,
+      ),
+  },
+  "script-cut": {
+    load: () =>
+      import("@/registry/remocn/script-cut").then((m) => ({
+        default: m.ScriptCut,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/script-cut/config").then(
+        (m) => m.scriptCutConfig,
+      ),
+  },
+  "known-terms": {
+    load: () =>
+      import("@/registry/remocn/known-terms").then((m) => ({
+        default: m.KnownTerms,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/known-terms/config").then(
+        (m) => m.knownTermsConfig,
+      ),
+  },
+  "changed-mind": {
+    load: () =>
+      import("@/registry/remocn/changed-mind").then((m) => ({
+        default: m.ChangedMind,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/changed-mind/config").then(
+        (m) => m.changedMindConfig,
+      ),
+  },
+  "said-who": {
+    load: () =>
+      import("@/registry/remocn/said-who").then((m) => ({
+        default: m.SaidWho,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/said-who/config").then((m) => m.saidWhoConfig),
+  },
+  overheard: {
+    load: () =>
+      import("@/registry/remocn/overheard").then((m) => ({
+        default: m.Overheard,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/overheard/config").then(
+        (m) => m.overheardConfig,
+      ),
+  },
+  "baton-word": {
+    load: () =>
+      import("@/registry/remocn/baton-word").then((m) => ({
+        default: m.BatonWord,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/baton-word/config").then(
+        (m) => m.batonWordConfig,
+      ),
+  },
+  "cue-word": {
+    load: () =>
+      import("@/registry/remocn/cue-word").then((m) => ({
+        default: m.CueWord,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/cue-word/config").then((m) => m.cueWordConfig),
+  },
+  "cut-off": {
+    load: () =>
+      import("@/registry/remocn/cut-off").then((m) => ({
+        default: m.CutOff,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/cut-off/config").then((m) => m.cutOffConfig),
+  },
+  "beta-thanks": {
+    load: () =>
+      import("@/registry/remocn/beta-thanks").then((m) => ({
+        default: m.BetaThanks,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/beta-thanks/config").then(
+        (m) => m.betaThanksConfig,
+      ),
+  },
+  "embargo-lift": {
+    load: () =>
+      import("@/registry/remocn/embargo-lift").then((m) => ({
+        default: m.EmbargoLift,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/embargo-lift/config").then(
+        (m) => m.embargoLiftConfig,
+      ),
+  },
+  "plain-license": {
+    load: () =>
+      import("@/registry/remocn/plain-license").then((m) => ({
+        default: m.PlainLicense,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/plain-license/config").then(
+        (m) => m.plainLicenseConfig,
+      ),
+  },
+  "keep-words": {
+    load: () =>
+      import("@/registry/remocn/keep-words").then((m) => ({
+        default: m.KeepWords,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/keep-words/config").then(
+        (m) => m.keepWordsConfig,
+      ),
+  },
+  "whole-page": {
+    load: () =>
+      import("@/registry/remocn/whole-page").then((m) => ({
+        default: m.WholePage,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/whole-page/config").then(
+        (m) => m.wholePageConfig,
+      ),
+  },
+  "fine-print-up": {
+    load: () =>
+      import("@/registry/remocn/fine-print-up").then((m) => ({
+        default: m.FinePrintUp,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/fine-print-up/config").then(
+        (m) => m.finePrintUpConfig,
+      ),
+  },
+  "looks-like-this": {
+    load: () =>
+      import("@/registry/remocn/looks-like-this").then((m) => ({
+        default: m.LooksLikeThis,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/looks-like-this/config").then(
+        (m) => m.looksLikeThisConfig,
+      ),
+  },
+  "shot-answers": {
+    load: () =>
+      import("@/registry/remocn/shot-answers").then((m) => ({
+        default: m.ShotAnswers,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/shot-answers/config").then(
+        (m) => m.shotAnswersConfig,
+      ),
+  },
+  "up-close": {
+    load: () =>
+      import("@/registry/remocn/up-close").then((m) => ({
+        default: m.UpClose,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/up-close/config").then((m) => m.upCloseConfig),
+  },
+  "yes-run": {
+    load: () =>
+      import("@/registry/remocn/yes-run").then((m) => ({
+        default: m.YesRun,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/yes-run/config").then((m) => m.yesRunConfig),
+  },
+  "week-shipped": {
+    load: () =>
+      import("@/registry/remocn/week-shipped").then((m) => ({
+        default: m.WeekShipped,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/week-shipped/config").then(
+        (m) => m.weekShippedConfig,
+      ),
+  },
+  "a-to-z": {
+    load: () =>
+      import("@/registry/remocn/a-to-z").then((m) => ({
+        default: m.AToZ,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/a-to-z/config").then((m) => m.aToZConfig),
+  },
+  "carry-count": {
+    load: () =>
+      import("@/registry/remocn/carry-count").then((m) => ({
+        default: m.CarryCount,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/carry-count/config").then(
+        (m) => m.carryCountConfig,
+      ),
+  },
+  "chunk-stack": {
+    load: () =>
+      import("@/registry/remocn/chunk-stack").then((m) => ({
+        default: m.ChunkStack,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/chunk-stack/config").then(
+        (m) => m.chunkStackConfig,
+      ),
+  },
+  "spell-out": {
+    load: () =>
+      import("@/registry/remocn/spell-out").then((m) => ({
+        default: m.SpellOut,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/spell-out/config").then(
+        (m) => m.spellOutConfig,
+      ),
+  },
+  "feather-settle": {
+    load: () =>
+      import("@/registry/remocn/feather-settle").then((m) => ({
+        default: m.FeatherSettle,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/feather-settle/config").then(
+        (m) => m.featherSettleConfig,
+      ),
+  },
+  "churn-count": {
+    load: () =>
+      import("@/registry/remocn/churn-count").then((m) => ({
+        default: m.ChurnCount,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/churn-count/config").then(
+        (m) => m.churnCountConfig,
+      ),
+  },
+  "bug-dock": {
+    load: () =>
+      import("@/registry/remocn/bug-dock").then((m) => ({
+        default: m.BugDock,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/bug-dock/config").then((m) => m.bugDockConfig),
+  },
+  "two-hit": {
+    load: () =>
+      import("@/registry/remocn/two-hit").then((m) => ({
+        default: m.TwoHit,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/two-hit/config").then((m) => m.twoHitConfig),
+  },
+  "absorb-stack": {
+    load: () =>
+      import("@/registry/remocn/absorb-stack").then((m) => ({
+        default: m.AbsorbStack,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/absorb-stack/config").then(
+        (m) => m.absorbStackConfig,
+      ),
+  },
+  layover: {
+    load: () =>
+      import("@/registry/remocn/layover").then((m) => ({
+        default: m.Layover,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/layover/config").then((m) => m.layoverConfig),
+  },
+  nonstop: {
+    load: () =>
+      import("@/registry/remocn/nonstop").then((m) => ({
+        default: m.Nonstop,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/nonstop/config").then((m) => m.nonstopConfig),
+  },
+  "on-approach": {
+    load: () =>
+      import("@/registry/remocn/on-approach").then((m) => ({
+        default: m.OnApproach,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/on-approach/config").then(
+        (m) => m.onApproachConfig,
+      ),
+  },
+  "negation-drop": {
+    load: () =>
+      import("@/registry/remocn/negation-drop").then((m) => ({
+        default: m.NegationDrop,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/negation-drop/config").then(
+        (m) => m.negationDropConfig,
+      ),
+  },
+  "weight-cut": {
+    load: () =>
+      import("@/registry/remocn/weight-cut").then((m) => ({
+        default: m.WeightCut,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/weight-cut/config").then(
+        (m) => m.weightCutConfig,
+      ),
+  },
+  "hook-uncurl": {
+    load: () =>
+      import("@/registry/remocn/hook-uncurl").then((m) => ({
+        default: m.HookUncurl,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/hook-uncurl/config").then(
+        (m) => m.hookUncurlConfig,
+      ),
+  },
+  diminuendo: {
+    load: () =>
+      import("@/registry/remocn/diminuendo").then((m) => ({
+        default: m.Diminuendo,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/diminuendo/config").then(
+        (m) => m.diminuendoConfig,
+      ),
+  },
+  "core-sum": {
+    load: () =>
+      import("@/registry/remocn/core-sum").then((m) => ({
+        default: m.CoreSum,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/core-sum/config").then((m) => m.coreSumConfig),
+  },
+  "cool-down": {
+    load: () =>
+      import("@/registry/remocn/cool-down").then((m) => ({
+        default: m.CoolDown,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/cool-down/config").then(
+        (m) => m.coolDownConfig,
+      ),
+  },
+  "idea-set": {
+    load: () =>
+      import("@/registry/remocn/idea-set").then((m) => ({
+        default: m.IdeaSet,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/idea-set/config").then((m) => m.ideaSetConfig),
+  },
+  "row-count": {
+    load: () =>
+      import("@/registry/remocn/row-count").then((m) => ({
+        default: m.RowCount,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/row-count/config").then(
+        (m) => m.rowCountConfig,
+      ),
+  },
+  "spine-turn": {
+    load: () =>
+      import("@/registry/remocn/spine-turn").then((m) => ({
+        default: m.SpineTurn,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/spine-turn/config").then(
+        (m) => m.spineTurnConfig,
+      ),
+  },
+  "packed-count": {
+    load: () =>
+      import("@/registry/remocn/packed-count").then((m) => ({
+        default: m.PackedCount,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/packed-count/config").then(
+        (m) => m.packedCountConfig,
+      ),
+  },
+  "less-more": {
+    load: () =>
+      import("@/registry/remocn/less-more").then((m) => ({
+        default: m.LessMore,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/less-more/config").then(
+        (m) => m.lessMoreConfig,
+      ),
+  },
+  "times-turn": {
+    load: () =>
+      import("@/registry/remocn/times-turn").then((m) => ({
+        default: m.TimesTurn,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/times-turn/config").then(
+        (m) => m.timesTurnConfig,
+      ),
+  },
+  "stripe-count": {
+    load: () =>
+      import("@/registry/remocn/stripe-count").then((m) => ({
+        default: m.StripeCount,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/stripe-count/config").then(
+        (m) => m.stripeCountConfig,
+      ),
+  },
+  "window-trail": {
+    load: () =>
+      import("@/registry/remocn/window-trail").then((m) => ({
+        default: m.WindowTrail,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/window-trail/config").then(
+        (m) => m.windowTrailConfig,
+      ),
+  },
+  "fuchidori-count": {
+    load: () =>
+      import("@/registry/remocn/fuchidori-count").then((m) => ({
+        default: m.FuchidoriCount,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/fuchidori-count/config").then(
+        (m) => m.fuchidoriCountConfig,
+      ),
+  },
+  "ruby-press": {
+    load: () =>
+      import("@/registry/remocn/ruby-press").then((m) => ({
+        default: m.RubyPress,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/ruby-press/config").then(
+        (m) => m.rubyPressConfig,
+      ),
+  },
+  "tategaki-turn": {
+    load: () =>
+      import("@/registry/remocn/tategaki-turn").then((m) => ({
+        default: m.TategakiTurn,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/tategaki-turn/config").then(
+        (m) => m.tategakiTurnConfig,
+      ),
+  },
+  "pitch-over": {
+    load: () =>
+      import("@/registry/remocn/pitch-over").then((m) => ({
+        default: m.PitchOver,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/pitch-over/config").then(
+        (m) => m.pitchOverConfig,
+      ),
+  },
+  "hot-stage": {
+    load: () =>
+      import("@/registry/remocn/hot-stage").then((m) => ({
+        default: m.HotStage,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/hot-stage/config").then(
+        (m) => m.hotStageConfig,
+      ),
+  },
+  "first-light": {
+    load: () =>
+      import("@/registry/remocn/first-light").then((m) => ({
+        default: m.FirstLight,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/first-light/config").then(
+        (m) => m.firstLightConfig,
+      ),
+  },
+  "flash-count": {
+    load: () =>
+      import("@/registry/remocn/flash-count").then((m) => ({
+        default: m.FlashCount,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/flash-count/config").then(
+        (m) => m.flashCountConfig,
+      ),
+  },
+  "pull-in": {
+    load: () =>
+      import("@/registry/remocn/pull-in").then((m) => ({
+        default: m.PullIn,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/pull-in/config").then((m) => m.pullInConfig),
+  },
+  "gear-shift": {
+    load: () =>
+      import("@/registry/remocn/gear-shift").then((m) => ({
+        default: m.GearShift,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/gear-shift/config").then(
+        (m) => m.gearShiftConfig,
+      ),
+  },
+  "slide-doors": {
+    load: () =>
+      import("@/registry/remocn/slide-doors").then((m) => ({
+        default: m.SlideDoors,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/slide-doors/config").then(
+        (m) => m.slideDoorsConfig,
+      ),
+  },
+  "lean-count": {
+    load: () =>
+      import("@/registry/remocn/lean-count").then((m) => ({
+        default: m.LeanCount,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/lean-count/config").then(
+        (m) => m.leanCountConfig,
+      ),
+  },
+  "shed-weight": {
+    load: () =>
+      import("@/registry/remocn/shed-weight").then((m) => ({
+        default: m.ShedWeight,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/shed-weight/config").then(
+        (m) => m.shedWeightConfig,
+      ),
+  },
+  "serif-rise": {
+    load: () =>
+      import("@/registry/remocn/serif-rise").then((m) => ({
+        default: m.SerifRise,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/serif-rise/config").then(
+        (m) => m.serifRiseConfig,
+      ),
+  },
+  "module-count": {
+    load: () =>
+      import("@/registry/remocn/module-count").then((m) => ({
+        default: m.ModuleCount,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/module-count/config").then(
+        (m) => m.moduleCountConfig,
+      ),
+  },
+  "roman-edition": {
+    load: () =>
+      import("@/registry/remocn/roman-edition").then((m) => ({
+        default: m.RomanEdition,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/roman-edition/config").then(
+        (m) => m.romanEditionConfig,
+      ),
+  },
+  "single-stroke": {
+    load: () =>
+      import("@/registry/remocn/single-stroke").then((m) => ({
+        default: m.SingleStroke,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/single-stroke/config").then(
+        (m) => m.singleStrokeConfig,
+      ),
+  },
+  "slim-count": {
+    load: () =>
+      import("@/registry/remocn/slim-count").then((m) => ({
+        default: m.SlimCount,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/slim-count/config").then(
+        (m) => m.slimCountConfig,
+      ),
+  },
+  "squeeze-out": {
+    load: () =>
+      import("@/registry/remocn/squeeze-out").then((m) => ({
+        default: m.SqueezeOut,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/squeeze-out/config").then(
+        (m) => m.squeezeOutConfig,
+      ),
+  },
+  "edge-fit": {
+    load: () =>
+      import("@/registry/remocn/edge-fit").then((m) => ({
+        default: m.EdgeFit,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/edge-fit/config").then((m) => m.edgeFitConfig),
+  },
+  "smash-count": {
+    load: () =>
+      import("@/registry/remocn/smash-count").then((m) => ({
+        default: m.SmashCount,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/smash-count/config").then(
+        (m) => m.smashCountConfig,
+      ),
+  },
+  "sequel-numeral": {
+    load: () =>
+      import("@/registry/remocn/sequel-numeral").then((m) => ({
+        default: m.SequelNumeral,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/sequel-numeral/config").then(
+        (m) => m.sequelNumeralConfig,
+      ),
+  },
+  "menu-pick": {
+    load: () =>
+      import("@/registry/remocn/menu-pick").then((m) => ({
+        default: m.MenuPick,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/menu-pick/config").then(
+        (m) => m.menuPickConfig,
+      ),
+  },
+  "press-stat": {
+    load: () =>
+      import("@/registry/remocn/press-stat").then((m) => ({
+        default: m.PressStat,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/press-stat/config").then(
+        (m) => m.pressStatConfig,
+      ),
+  },
+  "unmask-line": {
+    load: () =>
+      import("@/registry/remocn/unmask-line").then((m) => ({
+        default: m.UnmaskLine,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/unmask-line/config").then(
+        (m) => m.unmaskLineConfig,
+      ),
+  },
+  "point-hop": {
+    load: () =>
+      import("@/registry/remocn/point-hop").then((m) => ({
+        default: m.PointHop,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/point-hop/config").then(
+        (m) => m.pointHopConfig,
+      ),
+  },
+  "mono-settle": {
+    load: () =>
+      import("@/registry/remocn/mono-settle").then((m) => ({
+        default: m.MonoSettle,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/mono-settle/config").then(
+        (m) => m.monoSettleConfig,
+      ),
+  },
+  "uncomment-line": {
+    load: () =>
+      import("@/registry/remocn/uncomment-line").then((m) => ({
+        default: m.UncommentLine,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/uncomment-line/config").then(
+        (m) => m.uncommentLineConfig,
+      ),
+  },
+  "enhance-count": {
+    load: () =>
+      import("@/registry/remocn/enhance-count").then((m) => ({
+        default: m.EnhanceCount,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/enhance-count/config").then(
+        (m) => m.enhanceCountConfig,
+      ),
+  },
+  "mono-voice": {
+    load: () =>
+      import("@/registry/remocn/mono-voice").then((m) => ({
+        default: m.MonoVoice,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/mono-voice/config").then(
+        (m) => m.monoVoiceConfig,
+      ),
+  },
+  "beat-count": {
+    load: () =>
+      import("@/registry/remocn/beat-count").then((m) => ({
+        default: m.BeatCount,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/beat-count/config").then(
+        (m) => m.beatCountConfig,
+      ),
+  },
+  "magnitude-push": {
+    load: () =>
+      import("@/registry/remocn/magnitude-push").then((m) => ({
+        default: m.MagnitudePush,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/magnitude-push/config").then(
+        (m) => m.magnitudePushConfig,
+      ),
+  },
+  "prompt-restyle": {
+    load: () =>
+      import("@/registry/remocn/prompt-restyle").then((m) => ({
+        default: m.PromptRestyle,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/prompt-restyle/config").then(
+        (m) => m.promptRestyleConfig,
+      ),
+  },
+  "block-swap": {
+    load: () =>
+      import("@/registry/remocn/block-swap").then((m) => ({
+        default: m.BlockSwap,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/block-swap/config").then(
+        (m) => m.blockSwapConfig,
+      ),
+  },
+  "rewrite-bars": {
+    load: () =>
+      import("@/registry/remocn/rewrite-bars").then((m) => ({
+        default: m.RewriteBars,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/rewrite-bars/config").then(
+        (m) => m.rewriteBarsConfig,
+      ),
+  },
+  "long-vowel": {
+    load: () =>
+      import("@/registry/remocn/long-vowel").then((m) => ({
+        default: m.LongVowel,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/long-vowel/config").then(
+        (m) => m.longVowelConfig,
+      ),
+  },
+  "compact-stat": {
+    load: () =>
+      import("@/registry/remocn/compact-stat").then((m) => ({
+        default: m.CompactStat,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/compact-stat/config").then(
+        (m) => m.compactStatConfig,
+      ),
+  },
+  "plus-open": {
+    load: () =>
+      import("@/registry/remocn/plus-open").then((m) => ({
+        default: m.PlusOpen,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/plus-open/config").then(
+        (m) => m.plusOpenConfig,
+      ),
+  },
+  "res-climb": {
+    load: () =>
+      import("@/registry/remocn/res-climb").then((m) => ({
+        default: m.ResClimb,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/res-climb/config").then(
+        (m) => m.resClimbConfig,
+      ),
+  },
+  "filler-cut": {
+    load: () =>
+      import("@/registry/remocn/filler-cut").then((m) => ({
+        default: m.FillerCut,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/filler-cut/config").then(
+        (m) => m.fillerCutConfig,
+      ),
+  },
+  "stem-stretch": {
+    load: () =>
+      import("@/registry/remocn/stem-stretch").then((m) => ({
+        default: m.StemStretch,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/stem-stretch/config").then(
+        (m) => m.stemStretchConfig,
+      ),
+  },
+  "pulse-line": {
+    load: () =>
+      import("@/registry/remocn/pulse-line").then((m) => ({
+        default: m.PulseLine,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/pulse-line/config").then(
+        (m) => m.pulseLineConfig,
+      ),
+  },
+  "lumen-count": {
+    load: () =>
+      import("@/registry/remocn/lumen-count").then((m) => ({
+        default: m.LumenCount,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/lumen-count/config").then(
+        (m) => m.lumenCountConfig,
+      ),
+  },
+  "width-lock": {
+    load: () =>
+      import("@/registry/remocn/width-lock").then((m) => ({
+        default: m.WidthLock,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/width-lock/config").then(
+        (m) => m.widthLockConfig,
+      ),
+  },
+  "tall-count": {
+    load: () =>
+      import("@/registry/remocn/tall-count").then((m) => ({
+        default: m.TallCount,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/tall-count/config").then(
+        (m) => m.tallCountConfig,
+      ),
+  },
+  "pinned-word": {
+    load: () =>
+      import("@/registry/remocn/pinned-word").then((m) => ({
+        default: m.PinnedWord,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/pinned-word/config").then(
+        (m) => m.pinnedWordConfig,
+      ),
+  },
+  "zero-stretch": {
+    load: () =>
+      import("@/registry/remocn/zero-stretch").then((m) => ({
+        default: m.ZeroStretch,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/zero-stretch/config").then(
+        (m) => m.zeroStretchConfig,
+      ),
+  },
+  "wake-wipe": {
+    load: () =>
+      import("@/registry/remocn/wake-wipe").then((m) => ({
+        default: m.WakeWipe,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/wake-wipe/config").then(
+        (m) => m.wakeWipeConfig,
+      ),
+  },
+  "comet-headline": {
+    load: () =>
+      import("@/registry/remocn/comet-headline").then((m) => ({
+        default: m.CometHeadline,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/comet-headline/config").then(
+        (m) => m.cometHeadlineConfig,
+      ),
+  },
+  "indent-steps": {
+    load: () =>
+      import("@/registry/remocn/indent-steps").then((m) => ({
+        default: m.IndentSteps,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/indent-steps/config").then(
+        (m) => m.indentStepsConfig,
+      ),
+  },
+  "point-expand": {
+    load: () =>
+      import("@/registry/remocn/point-expand").then((m) => ({
+        default: m.PointExpand,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/point-expand/config").then(
+        (m) => m.pointExpandConfig,
+      ),
+  },
+  "layout-swap": {
+    load: () =>
+      import("@/registry/remocn/layout-swap").then((m) => ({
+        default: m.LayoutSwap,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/layout-swap/config").then(
+        (m) => m.layoutSwapConfig,
+      ),
+  },
+  "acronym-expand": {
+    load: () =>
+      import("@/registry/remocn/acronym-expand").then((m) => ({
+        default: m.AcronymExpand,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/acronym-expand/config").then(
+        (m) => m.acronymExpandConfig,
+      ),
+  },
+  "diff-swap": {
+    load: () =>
+      import("@/registry/remocn/diff-swap").then((m) => ({
+        default: m.DiffSwap,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/diff-swap/config").then(
+        (m) => m.diffSwapConfig,
+      ),
+  },
+  "heat-trace": {
+    load: () =>
+      import("@/registry/remocn/heat-trace").then((m) => ({
+        default: m.HeatTrace,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/heat-trace/config").then(
+        (m) => m.heatTraceConfig,
+      ),
+  },
+  "thin-slab": {
+    load: () =>
+      import("@/registry/remocn/thin-slab").then((m) => ({
+        default: m.ThinSlab,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/thin-slab/config").then(
+        (m) => m.thinSlabConfig,
+      ),
+  },
+  "stat-inline": {
+    load: () =>
+      import("@/registry/remocn/stat-inline").then((m) => ({
+        default: m.StatInline,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/stat-inline/config").then(
+        (m) => m.statInlineConfig,
+      ),
+  },
+  "launch-days": {
+    load: () =>
+      import("@/registry/remocn/launch-days").then((m) => ({
+        default: m.LaunchDays,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/launch-days/config").then(
+        (m) => m.launchDaysConfig,
+      ),
+  },
+  "cut-stat": {
+    load: () =>
+      import("@/registry/remocn/cut-stat").then((m) => ({
+        default: m.CutStat,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/cut-stat/config").then((m) => m.cutStatConfig),
+  },
+  "slash-wipe": {
+    load: () =>
+      import("@/registry/remocn/slash-wipe").then((m) => ({
+        default: m.SlashWipe,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/slash-wipe/config").then(
+        (m) => m.slashWipeConfig,
+      ),
+  },
+  "light-signature": {
+    load: () =>
+      import("@/registry/remocn/light-signature").then((m) => ({
+        default: m.LightSignature,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/light-signature/config").then(
+        (m) => m.lightSignatureConfig,
+      ),
+  },
+  "studio-reflection": {
+    load: () =>
+      import("@/registry/remocn/studio-reflection").then((m) => ({
+        default: m.StudioReflection,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/studio-reflection/config").then(
+        (m) => m.studioReflectionConfig,
+      ),
+  },
+  "flick-swap": {
+    load: () =>
+      import("@/registry/remocn/flick-swap").then((m) => ({
+        default: m.FlickSwap,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/flick-swap/config").then(
+        (m) => m.flickSwapConfig,
+      ),
+  },
+  introducing: {
+    load: () =>
+      import("@/registry/remocn/introducing").then((m) => ({
+        default: m.Introducing,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/introducing/config").then(
+        (m) => m.introducingConfig,
+      ),
+  },
+  "feature-headline": {
+    load: () =>
+      import("@/registry/remocn/feature-headline").then((m) => ({
+        default: m.FeatureHeadline,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/feature-headline/config").then(
+        (m) => m.featureHeadlineConfig,
+      ),
+  },
+  "before-after": {
+    load: () =>
+      import("@/registry/remocn/before-after").then((m) => ({
+        default: m.BeforeAfter,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/before-after/config").then(
+        (m) => m.beforeAfterConfig,
+      ),
+  },
+  "feature-trio": {
+    load: () =>
+      import("@/registry/remocn/feature-trio").then((m) => ({
+        default: m.FeatureTrio,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/feature-trio/config").then(
+        (m) => m.featureTrioConfig,
+      ),
+  },
+  "magnet-letters": {
+    load: () =>
+      import("@/registry/remocn/magnet-letters").then((m) => ({
+        default: m.MagnetLetters,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/magnet-letters/config").then(
+        (m) => m.magnetLettersConfig,
+      ),
+  },
+  "ruler-align": {
+    load: () =>
+      import("@/registry/remocn/ruler-align").then((m) => ({
+        default: m.RulerAlign,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/ruler-align/config").then(
+        (m) => m.rulerAlignConfig,
+      ),
+  },
+  "scissors-cut": {
+    load: () =>
+      import("@/registry/remocn/scissors-cut").then((m) => ({
+        default: m.ScissorsCut,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/scissors-cut/config").then(
+        (m) => m.scissorsCutConfig,
+      ),
+  },
+  "tittle-drop": {
+    load: () =>
+      import("@/registry/remocn/tittle-drop").then((m) => ({
+        default: m.TittleDrop,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/tittle-drop/config").then(
+        (m) => m.tittleDropConfig,
+      ),
+  },
+  "cursor-frame": {
+    load: () =>
+      import("@/registry/remocn/cursor-frame").then((m) => ({
+        default: m.CursorFrame,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/cursor-frame/config").then(
+        (m) => m.cursorFrameConfig,
+      ),
+  },
+  "caret-letter": {
+    load: () =>
+      import("@/registry/remocn/caret-letter").then((m) => ({
+        default: m.CaretLetter,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/caret-letter/config").then(
+        (m) => m.caretLetterConfig,
+      ),
+  },
+  "point-intro": {
+    load: () =>
+      import("@/registry/remocn/point-intro").then((m) => ({
+        default: m.PointIntro,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/point-intro/config").then(
+        (m) => m.pointIntroConfig,
+      ),
+  },
+  "grid-cell": {
+    load: () =>
+      import("@/registry/remocn/grid-cell").then((m) => ({
+        default: m.GridCell,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/grid-cell/config").then(
+        (m) => m.gridCellConfig,
+      ),
+  },
+  "spotlight-text": {
+    load: () =>
+      import("@/registry/remocn/spotlight-text").then((m) => ({
+        default: m.SpotlightText,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/spotlight-text/config").then(
+        (m) => m.spotlightTextConfig,
+      ),
+  },
+  "border-beam": {
+    load: () =>
+      import("@/registry/remocn/border-beam").then((m) => ({
+        default: m.BorderBeam,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/border-beam/config").then(
+        (m) => m.borderBeamConfig,
+      ),
+  },
+  "walkout-name": {
+    load: () =>
+      import("@/registry/remocn/walkout-name").then((m) => ({
+        default: m.WalkoutName,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/walkout-name/config").then(
+        (m) => m.walkoutNameConfig,
+      ),
+  },
+  "ko-count": {
+    load: () =>
+      import("@/registry/remocn/ko-count").then((m) => ({
+        default: m.KoCount,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/ko-count/config").then((m) => m.koCountConfig),
+  },
+  "play-of-the-game": {
+    load: () =>
+      import("@/registry/remocn/play-of-the-game").then((m) => ({
+        default: m.PlayOfTheGame,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/play-of-the-game/config").then(
+        (m) => m.playOfTheGameConfig,
+      ),
+  },
+  "t-minus": {
+    load: () =>
+      import("@/registry/remocn/t-minus").then((m) => ({
+        default: m.TMinus,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/t-minus/config").then((m) => m.tMinusConfig),
+  },
+  "max-q": {
+    load: () =>
+      import("@/registry/remocn/max-q").then((m) => ({
+        default: m.MaxQ,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/max-q/config").then((m) => m.maxQConfig),
+  },
+  "landing-confirmed": {
+    load: () =>
+      import("@/registry/remocn/landing-confirmed").then((m) => ({
+        default: m.LandingConfirmed,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/landing-confirmed/config").then(
+        (m) => m.landingConfirmedConfig,
+      ),
+  },
+  "drop-timer": {
+    load: () =>
+      import("@/registry/remocn/drop-timer").then((m) => ({
+        default: m.DropTimer,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/drop-timer/config").then(
+        (m) => m.dropTimerConfig,
+      ),
+  },
+  "sold-out": {
+    load: () =>
+      import("@/registry/remocn/sold-out").then((m) => ({
+        default: m.SoldOut,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/sold-out/config").then((m) => m.soldOutConfig),
+  },
+  "got-em": {
+    load: () =>
+      import("@/registry/remocn/got-em").then((m) => ({
+        default: m.GotEm,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/got-em/config").then((m) => m.gotEmConfig),
+  },
+  "ipo-open": {
+    load: () =>
+      import("@/registry/remocn/ipo-open").then((m) => ({
+        default: m.IpoOpen,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/ipo-open/config").then((m) => m.ipoOpenConfig),
+  },
+  "candle-rally": {
+    load: () =>
+      import("@/registry/remocn/candle-rally").then((m) => ({
+        default: m.CandleRally,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/candle-rally/config").then(
+        (m) => m.candleRallyConfig,
+      ),
+  },
+  "chevron-run": {
+    load: () =>
+      import("@/registry/remocn/chevron-run").then((m) => ({
+        default: m.ChevronRun,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/chevron-run/config").then(
+        (m) => m.chevronRunConfig,
+      ),
+  },
+  "high-score": {
+    load: () =>
+      import("@/registry/remocn/high-score").then((m) => ({
+        default: m.HighScore,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/high-score/config").then(
+        (m) => m.highScoreConfig,
+      ),
+  },
+  "boss-bar": {
+    load: () =>
+      import("@/registry/remocn/boss-bar").then((m) => ({
+        default: m.BossBar,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/boss-bar/config").then((m) => m.bossBarConfig),
+  },
+  "achievement-pop": {
+    load: () =>
+      import("@/registry/remocn/achievement-pop").then((m) => ({
+        default: m.AchievementPop,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/achievement-pop/config").then(
+        (m) => m.achievementPopConfig,
+      ),
+  },
+  "kill-feed": {
+    load: () =>
+      import("@/registry/remocn/kill-feed").then((m) => ({
+        default: m.KillFeed,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/kill-feed/config").then(
+        (m) => m.killFeedConfig,
+      ),
+  },
+  "mvp-card": {
+    load: () =>
+      import("@/registry/remocn/mvp-card").then((m) => ({
+        default: m.MvpCard,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/mvp-card/config").then((m) => m.mvpCardConfig),
+  },
+  "bracket-win": {
+    load: () =>
+      import("@/registry/remocn/bracket-win").then((m) => ({
+        default: m.BracketWin,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/bracket-win/config").then(
+        (m) => m.bracketWinConfig,
+      ),
+  },
+  "timing-tower": {
+    load: () =>
+      import("@/registry/remocn/timing-tower").then((m) => ({
+        default: m.TimingTower,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/timing-tower/config").then(
+        (m) => m.timingTowerConfig,
+      ),
+  },
+  "shot-clock": {
+    load: () =>
+      import("@/registry/remocn/shot-clock").then((m) => ({
+        default: m.ShotClock,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/shot-clock/config").then(
+        (m) => m.shotClockConfig,
+      ),
+  },
+  "speed-trap": {
+    load: () =>
+      import("@/registry/remocn/speed-trap").then((m) => ({
+        default: m.SpeedTrap,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/speed-trap/config").then(
+        (m) => m.speedTrapConfig,
+      ),
+  },
+  "crash-zoom": {
+    load: () =>
+      import("@/registry/remocn/crash-zoom").then((m) => ({
+        default: m.CrashZoom,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/crash-zoom/config").then(
+        (m) => m.crashZoomConfig,
+      ),
+  },
+  "pov-setup": {
+    load: () =>
+      import("@/registry/remocn/pov-setup").then((m) => ({
+        default: m.PovSetup,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/pov-setup/config").then(
+        (m) => m.povSetupConfig,
+      ),
+  },
+  "speedrun-timer": {
+    load: () =>
+      import("@/registry/remocn/speedrun-timer").then((m) => ({
+        default: m.SpeedrunTimer,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/speedrun-timer/config").then(
+        (m) => m.speedrunTimerConfig,
+      ),
+  },
+  "round-slam": {
+    load: () =>
+      import("@/registry/remocn/round-slam").then((m) => ({
+        default: m.RoundSlam,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/round-slam/config").then(
+        (m) => m.roundSlamConfig,
+      ),
+  },
+  "level-up": {
+    load: () =>
+      import("@/registry/remocn/level-up").then((m) => ({
+        default: m.LevelUp,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/level-up/config").then((m) => m.levelUpConfig),
+  },
+  "combo-counter": {
+    load: () =>
+      import("@/registry/remocn/combo-counter").then((m) => ({
+        default: m.ComboCounter,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/combo-counter/config").then(
+        (m) => m.comboCounterConfig,
+      ),
+  },
+  "hook-punch": {
+    load: () =>
+      import("@/registry/remocn/hook-punch").then((m) => ({
+        default: m.HookPunch,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/hook-punch/config").then(
+        (m) => m.hookPunchConfig,
+      ),
+  },
+  "milestone-roll": {
+    load: () =>
+      import("@/registry/remocn/milestone-roll").then((m) => ({
+        default: m.MilestoneRoll,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/milestone-roll/config").then(
+        (m) => m.milestoneRollConfig,
+      ),
+  },
+  "duet-split": {
+    load: () =>
+      import("@/registry/remocn/duet-split").then((m) => ({
+        default: m.DuetSplit,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/duet-split/config").then(
+        (m) => m.duetSplitConfig,
+      ),
+  },
+  "intelligence-glow": {
+    load: () =>
+      import("@/registry/remocn/intelligence-glow").then((m) => ({
+        default: m.IntelligenceGlow,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/intelligence-glow/config").then(
+        (m) => m.intelligenceGlowConfig,
+      ),
+  },
+  "ghost-complete": {
+    load: () =>
+      import("@/registry/remocn/ghost-complete").then((m) => ({
+        default: m.GhostComplete,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/ghost-complete/config").then(
+        (m) => m.ghostCompleteConfig,
+      ),
+  },
+  "query-cascade": {
+    load: () =>
+      import("@/registry/remocn/query-cascade").then((m) => ({
+        default: m.QueryCascade,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/query-cascade/config").then(
+        (m) => m.queryCascadeConfig,
+      ),
+  },
+  "liquid-word": {
+    load: () =>
+      import("@/registry/remocn/liquid-word").then((m) => ({
+        default: m.LiquidWord,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/liquid-word/config").then(
+        (m) => m.liquidWordConfig,
+      ),
+  },
+  "oval-type": {
+    load: () =>
+      import("@/registry/remocn/oval-type").then((m) => ({
+        default: m.OvalType,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/oval-type/config").then(
+        (m) => m.ovalTypeConfig,
+      ),
+  },
+  "live-ticker": {
+    load: () =>
+      import("@/registry/remocn/live-ticker").then((m) => ({
+        default: m.LiveTicker,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/live-ticker/config").then(
+        (m) => m.liveTickerConfig,
+      ),
+  },
+  "ticker-tape": {
+    load: () =>
+      import("@/registry/remocn/ticker-tape").then((m) => ({
+        default: m.TickerTape,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/ticker-tape/config").then(
+        (m) => m.tickerTapeConfig,
+      ),
+  },
+  "price-slate": {
+    load: () =>
+      import("@/registry/remocn/price-slate").then((m) => ({
+        default: m.PriceSlate,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/price-slate/config").then(
+        (m) => m.priceSlateConfig,
+      ),
+  },
+  "score-bug": {
+    load: () =>
+      import("@/registry/remocn/score-bug").then((m) => ({
+        default: m.ScoreBug,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/score-bug/config").then(
+        (m) => m.scoreBugConfig,
+      ),
+  },
+  "versus-split": {
+    load: () =>
+      import("@/registry/remocn/versus-split").then((m) => ({
+        default: m.VersusSplit,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/versus-split/config").then(
+        (m) => m.versusSplitConfig,
+      ),
+  },
+  "replay-wipe": {
+    load: () =>
+      import("@/registry/remocn/replay-wipe").then((m) => ({
+        default: m.ReplayWipe,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/replay-wipe/config").then(
+        (m) => m.replayWipeConfig,
+      ),
+  },
+  "bass-drop": {
+    load: () =>
+      import("@/registry/remocn/bass-drop").then((m) => ({
+        default: m.BassDrop,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/bass-drop/config").then(
+        (m) => m.bassDropConfig,
+      ),
+  },
+  "escalate-cards": {
+    load: () =>
+      import("@/registry/remocn/escalate-cards").then((m) => ({
+        default: m.EscalateCards,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/escalate-cards/config").then(
+        (m) => m.escalateCardsConfig,
+      ),
+  },
+  "flip-sting": {
+    load: () =>
+      import("@/registry/remocn/flip-sting").then((m) => ({
+        default: m.FlipSting,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/flip-sting/config").then(
+        (m) => m.flipStingConfig,
+      ),
+  },
+  "lights-out": {
+    load: () =>
+      import("@/registry/remocn/lights-out").then((m) => ({
+        default: m.LightsOut,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/lights-out/config").then(
+        (m) => m.lightsOutConfig,
+      ),
+  },
+  "italic-speed": {
+    load: () =>
+      import("@/registry/remocn/italic-speed").then((m) => ({
+        default: m.ItalicSpeed,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/italic-speed/config").then(
+        (m) => m.italicSpeedConfig,
+      ),
+  },
+  "split-flash": {
+    load: () =>
+      import("@/registry/remocn/split-flash").then((m) => ({
+        default: m.SplitFlash,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/split-flash/config").then(
+        (m) => m.splitFlashConfig,
+      ),
+  },
+  "dynamic-letter": {
+    load: () =>
+      import("@/registry/remocn/dynamic-letter").then((m) => ({
+        default: m.DynamicLetter,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/dynamic-letter/config").then(
+        (m) => m.dynamicLetterConfig,
+      ),
+  },
+  "snap-click": {
+    load: () =>
+      import("@/registry/remocn/snap-click").then((m) => ({
+        default: m.SnapClick,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/snap-click/config").then(
+        (m) => m.snapClickConfig,
+      ),
+  },
+  "scrub-reveal": {
+    load: () =>
+      import("@/registry/remocn/scrub-reveal").then((m) => ({
+        default: m.ScrubReveal,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/scrub-reveal/config").then(
+        (m) => m.scrubRevealConfig,
+      ),
+  },
+  "aspect-slit": {
+    load: () =>
+      import("@/registry/remocn/aspect-slit").then((m) => ({
+        default: m.AspectSlit,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/aspect-slit/config").then(
+        (m) => m.aspectSlitConfig,
+      ),
+  },
+  "parallax-lockup": {
+    load: () =>
+      import("@/registry/remocn/parallax-lockup").then((m) => ({
+        default: m.ParallaxLockup,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/parallax-lockup/config").then(
+        (m) => m.parallaxLockupConfig,
+      ),
+  },
+  "deadpan-box": {
+    load: () =>
+      import("@/registry/remocn/deadpan-box").then((m) => ({
+        default: m.DeadpanBox,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/deadpan-box/config").then(
+        (m) => m.deadpanBoxConfig,
+      ),
+  },
+  "stripe-mask": {
+    load: () =>
+      import("@/registry/remocn/stripe-mask").then((m) => ({
+        default: m.StripeMask,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/stripe-mask/config").then(
+        (m) => m.stripeMaskConfig,
+      ),
+  },
+  "full-bleed-type": {
+    load: () =>
+      import("@/registry/remocn/full-bleed-type").then((m) => ({
+        default: m.FullBleedType,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/full-bleed-type/config").then(
+        (m) => m.fullBleedTypeConfig,
+      ),
+  },
+  "rep-stack": {
+    load: () =>
+      import("@/registry/remocn/rep-stack").then((m) => ({
+        default: m.RepStack,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/rep-stack/config").then(
+        (m) => m.repStackConfig,
+      ),
+  },
+  "title-converge": {
+    load: () =>
+      import("@/registry/remocn/title-converge").then((m) => ({
+        default: m.TitleConverge,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/title-converge/config").then(
+        (m) => m.titleConvergeConfig,
+      ),
+  },
+  "macro-pan": {
+    load: () =>
+      import("@/registry/remocn/macro-pan").then((m) => ({
+        default: m.MacroPan,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/macro-pan/config").then(
+        (m) => m.macroPanConfig,
+      ),
+  },
+  "split-match": {
+    load: () =>
+      import("@/registry/remocn/split-match").then((m) => ({
+        default: m.SplitMatch,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/split-match/config").then(
+        (m) => m.splitMatchConfig,
+      ),
+  },
+  "bounce-logo": {
+    load: () =>
+      import("@/registry/remocn/bounce-logo").then((m) => ({
+        default: m.BounceLogo,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/bounce-logo/config").then(
+        (m) => m.bounceLogoConfig,
+      ),
+  },
+  "glyph-matrix": {
+    load: () =>
+      import("@/registry/remocn/glyph-matrix").then((m) => ({
+        default: m.GlyphMatrix,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/glyph-matrix/config").then(
+        (m) => m.glyphMatrixConfig,
+      ),
+  },
+  "ndot-resolve": {
+    load: () =>
+      import("@/registry/remocn/ndot-resolve").then((m) => ({
+        default: m.NdotResolve,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/ndot-resolve/config").then(
+        (m) => m.ndotResolveConfig,
+      ),
+  },
+  "shape-morph-o": {
+    load: () =>
+      import("@/registry/remocn/shape-morph-o").then((m) => ({
+        default: m.ShapeMorphO,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/shape-morph-o/config").then(
+        (m) => m.shapeMorphOConfig,
+      ),
+  },
+  "axis-flex": {
+    load: () =>
+      import("@/registry/remocn/axis-flex").then((m) => ({
+        default: m.AxisFlex,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/axis-flex/config").then(
+        (m) => m.axisFlexConfig,
+      ),
+  },
+  "blink-cut": {
+    load: () =>
+      import("@/registry/remocn/blink-cut").then((m) => ({
+        default: m.BlinkCut,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/blink-cut/config").then(
+        (m) => m.blinkCutConfig,
+      ),
+  },
+  "word-acts": {
+    load: () =>
+      import("@/registry/remocn/word-acts").then((m) => ({
+        default: m.WordActs,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/word-acts/config").then(
+        (m) => m.wordActsConfig,
+      ),
+  },
+  "depth-headline": {
+    load: () =>
+      import("@/registry/remocn/depth-headline").then((m) => ({
+        default: m.DepthHeadline,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/depth-headline/config").then(
+        (m) => m.depthHeadlineConfig,
+      ),
+  },
+  "speed-ramp-word": {
+    load: () =>
+      import("@/registry/remocn/speed-ramp-word").then((m) => ({
+        default: m.SpeedRampWord,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/speed-ramp-word/config").then(
+        (m) => m.speedRampWordConfig,
+      ),
+  },
+  "pass-swap": {
+    load: () =>
+      import("@/registry/remocn/pass-swap").then((m) => ({
+        default: m.PassSwap,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/pass-swap/config").then(
+        (m) => m.passSwapConfig,
+      ),
+  },
+  "photo-fill-type": {
+    load: () =>
+      import("@/registry/remocn/photo-fill-type").then((m) => ({
+        default: m.PhotoFillType,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/photo-fill-type/config").then(
+        (m) => m.photoFillTypeConfig,
+      ),
+  },
+  "bracket-index": {
+    load: () =>
+      import("@/registry/remocn/bracket-index").then((m) => ({
+        default: m.BracketIndex,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/bracket-index/config").then(
+        (m) => m.bracketIndexConfig,
+      ),
+  },
+  "select-replace": {
+    load: () =>
+      import("@/registry/remocn/select-replace").then((m) => ({
+        default: m.SelectReplace,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/select-replace/config").then(
+        (m) => m.selectReplaceConfig,
+      ),
+  },
+  "wrapped-squash": {
+    load: () =>
+      import("@/registry/remocn/wrapped-squash").then((m) => ({
+        default: m.WrappedSquash,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/wrapped-squash/config").then(
+        (m) => m.wrappedSquashConfig,
+      ),
+  },
+  "rubberband-word": {
+    load: () =>
+      import("@/registry/remocn/rubberband-word").then((m) => ({
+        default: m.RubberbandWord,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/rubberband-word/config").then(
+        (m) => m.rubberbandWordConfig,
+      ),
+  },
+  "story-text": {
+    load: () =>
+      import("@/registry/remocn/story-text").then((m) => ({
+        default: m.StoryText,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/story-text/config").then(
+        (m) => m.storyTextConfig,
+      ),
+  },
+  "anagram-shuffle": {
+    load: () =>
+      import("@/registry/remocn/anagram-shuffle").then((m) => ({
+        default: m.AnagramShuffle,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/anagram-shuffle/config").then(
+        (m) => m.anagramShuffleConfig,
+      ),
+  },
+  "word-ladder": {
+    load: () =>
+      import("@/registry/remocn/word-ladder").then((m) => ({
+        default: m.WordLadder,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/word-ladder/config").then(
+        (m) => m.wordLadderConfig,
+      ),
+  },
+  "hidden-word": {
+    load: () =>
+      import("@/registry/remocn/hidden-word").then((m) => ({
+        default: m.HiddenWord,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/hidden-word/config").then(
+        (m) => m.hiddenWordConfig,
+      ),
+  },
+  "column-reflow": {
+    load: () =>
+      import("@/registry/remocn/column-reflow").then((m) => ({
+        default: m.ColumnReflow,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/column-reflow/config").then(
+        (m) => m.columnReflowConfig,
+      ),
+  },
+  "word-insert": {
+    load: () =>
+      import("@/registry/remocn/word-insert").then((m) => ({
+        default: m.WordInsert,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/word-insert/config").then(
+        (m) => m.wordInsertConfig,
+      ),
+  },
+  "typo-fix": {
+    load: () =>
+      import("@/registry/remocn/typo-fix").then((m) => ({
+        default: m.TypoFix,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/typo-fix/config").then((m) => m.typoFixConfig),
+  },
+  "font-cycle": {
+    load: () =>
+      import("@/registry/remocn/font-cycle").then((m) => ({
+        default: m.FontCycle,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/font-cycle/config").then(
+        (m) => m.fontCycleConfig,
+      ),
+  },
+  "case-flip": {
+    load: () =>
+      import("@/registry/remocn/case-flip").then((m) => ({
+        default: m.CaseFlip,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/case-flip/config").then(
+        (m) => m.caseFlipConfig,
+      ),
+  },
+  "path-text": {
+    load: () =>
+      import("@/registry/remocn/path-text").then((m) => ({
+        default: m.PathText,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/path-text/config").then(
+        (m) => m.pathTextConfig,
+      ),
+  },
+  "ellipsis-resolve": {
+    load: () =>
+      import("@/registry/remocn/ellipsis-resolve").then((m) => ({
+        default: m.EllipsisResolve,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/ellipsis-resolve/config").then(
+        (m) => m.ellipsisResolveConfig,
+      ),
+  },
+  "letter-relay": {
+    load: () =>
+      import("@/registry/remocn/letter-relay").then((m) => ({
+        default: m.LetterRelay,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/letter-relay/config").then(
+        (m) => m.letterRelayConfig,
+      ),
+  },
+  "stack-letters": {
+    load: () =>
+      import("@/registry/remocn/stack-letters").then((m) => ({
+        default: m.StackLetters,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/stack-letters/config").then(
+        (m) => m.stackLettersConfig,
+      ),
+  },
+  "weight-wave": {
+    load: () =>
+      import("@/registry/remocn/weight-wave").then((m) => ({
+        default: m.WeightWave,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/weight-wave/config").then(
+        (m) => m.weightWaveConfig,
+      ),
+  },
+  "kerning-snap": {
+    load: () =>
+      import("@/registry/remocn/kerning-snap").then((m) => ({
+        default: m.KerningSnap,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/kerning-snap/config").then(
+        (m) => m.kerningSnapConfig,
+      ),
+  },
+  "baseline-drop": {
+    load: () =>
+      import("@/registry/remocn/baseline-drop").then((m) => ({
+        default: m.BaselineDrop,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/baseline-drop/config").then(
+        (m) => m.baselineDropConfig,
+      ),
+  },
+  "scan-reveal": {
+    load: () =>
+      import("@/registry/remocn/scan-reveal").then((m) => ({
+        default: m.ScanReveal,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/scan-reveal/config").then(
+        (m) => m.scanRevealConfig,
+      ),
+  },
+  "beam-split": {
+    load: () =>
+      import("@/registry/remocn/beam-split").then((m) => ({
+        default: m.BeamSplit,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/beam-split/config").then(
+        (m) => m.beamSplitConfig,
+      ),
+  },
+  "strobe-words": {
+    load: () =>
+      import("@/registry/remocn/strobe-words").then((m) => ({
+        default: m.StrobeWords,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/strobe-words/config").then(
+        (m) => m.strobeWordsConfig,
+      ),
+  },
+  "torn-edge": {
+    load: () =>
+      import("@/registry/remocn/torn-edge").then((m) => ({
+        default: m.TornEdge,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/torn-edge/config").then(
+        (m) => m.tornEdgeConfig,
+      ),
+  },
+  "squircle-wave": {
+    load: () =>
+      import("@/registry/remocn/squircle-wave").then((m) => ({
+        default: m.SquircleWave,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/squircle-wave/config").then(
+        (m) => m.squircleWaveConfig,
+      ),
+  },
+  "ring-burst": {
+    load: () =>
+      import("@/registry/remocn/ring-burst").then((m) => ({
+        default: m.RingBurst,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/ring-burst/config").then(
+        (m) => m.ringBurstConfig,
+      ),
+  },
+  "band-shift": {
+    load: () =>
+      import("@/registry/remocn/band-shift").then((m) => ({
+        default: m.BandShift,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/band-shift/config").then(
+        (m) => m.bandShiftConfig,
+      ),
+  },
+  "tile-wave": {
+    load: () =>
+      import("@/registry/remocn/tile-wave").then((m) => ({
+        default: m.TileWave,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/tile-wave/config").then(
+        (m) => m.tileWaveConfig,
+      ),
+  },
+  "glass-capsule": {
+    load: () =>
+      import("@/registry/remocn/glass-capsule").then((m) => ({
+        default: m.GlassCapsule,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/glass-capsule/config").then(
+        (m) => m.glassCapsuleConfig,
+      ),
+  },
+  "dot-type": {
+    load: () =>
+      import("@/registry/remocn/dot-type").then((m) => ({
+        default: m.DotType,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/dot-type/config").then((m) => m.dotTypeConfig),
+  },
+  "flock-form": {
+    load: () =>
+      import("@/registry/remocn/flock-form").then((m) => ({
+        default: m.FlockForm,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/flock-form/config").then(
+        (m) => m.flockFormConfig,
+      ),
+  },
+  "ring-align": {
+    load: () =>
+      import("@/registry/remocn/ring-align").then((m) => ({
+        default: m.RingAlign,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/ring-align/config").then(
+        (m) => m.ringAlignConfig,
+      ),
+  },
+  "word-stack": {
+    load: () =>
+      import("@/registry/remocn/word-stack").then((m) => ({
+        default: m.WordStack,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/word-stack/config").then(
+        (m) => m.wordStackConfig,
+      ),
+  },
+  "split-word": {
+    load: () =>
+      import("@/registry/remocn/split-word").then((m) => ({
+        default: m.SplitWord,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/split-word/config").then(
+        (m) => m.splitWordConfig,
+      ),
+  },
+  "counter-reveal": {
+    load: () =>
+      import("@/registry/remocn/counter-reveal").then((m) => ({
+        default: m.CounterReveal,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/counter-reveal/config").then(
+        (m) => m.counterRevealConfig,
+      ),
+  },
+  "slit-scan": {
+    load: () =>
+      import("@/registry/remocn/slit-scan").then((m) => ({
+        default: m.SlitScan,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/slit-scan/config").then(
+        (m) => m.slitScanConfig,
+      ),
+  },
+  "moire-reveal": {
+    load: () =>
+      import("@/registry/remocn/moire-reveal").then((m) => ({
+        default: m.MoireReveal,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/moire-reveal/config").then(
+        (m) => m.moireRevealConfig,
+      ),
+  },
+  "thread-weave": {
+    load: () =>
+      import("@/registry/remocn/thread-weave").then((m) => ({
+        default: m.ThreadWeave,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/thread-weave/config").then(
+        (m) => m.threadWeaveConfig,
+      ),
+  },
+  "fourier-sum": {
+    load: () =>
+      import("@/registry/remocn/fourier-sum").then((m) => ({
+        default: m.FourierSum,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/fourier-sum/config").then(
+        (m) => m.fourierSumConfig,
+      ),
+  },
+  "cell-divide": {
+    load: () =>
+      import("@/registry/remocn/cell-divide").then((m) => ({
+        default: m.CellDivide,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/cell-divide/config").then(
+        (m) => m.cellDivideConfig,
+      ),
+  },
+  "hex-fill": {
+    load: () =>
+      import("@/registry/remocn/hex-fill").then((m) => ({
+        default: m.HexFill,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/hex-fill/config").then((m) => m.hexFillConfig),
+  },
+  "log-rescale": {
+    load: () =>
+      import("@/registry/remocn/log-rescale").then((m) => ({
+        default: m.LogRescale,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/log-rescale/config").then(
+        (m) => m.logRescaleConfig,
+      ),
+  },
+  "off-the-charts": {
+    load: () =>
+      import("@/registry/remocn/off-the-charts").then((m) => ({
+        default: m.OffTheCharts,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/off-the-charts/config").then(
+        (m) => m.offTheChartsConfig,
+      ),
+  },
+  "shape-pack": {
+    load: () =>
+      import("@/registry/remocn/shape-pack").then((m) => ({
+        default: m.ShapePack,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/shape-pack/config").then(
+        (m) => m.shapePackConfig,
+      ),
+  },
+  "pattern-tile": {
+    load: () =>
+      import("@/registry/remocn/pattern-tile").then((m) => ({
+        default: m.PatternTile,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/pattern-tile/config").then(
+        (m) => m.patternTileConfig,
+      ),
+  },
+  "line-cascade": {
+    load: () =>
+      import("@/registry/remocn/line-cascade").then((m) => ({
+        default: m.LineCascade,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/line-cascade/config").then(
+        (m) => m.lineCascadeConfig,
+      ),
+  },
+  "hatch-shade": {
+    load: () =>
+      import("@/registry/remocn/hatch-shade").then((m) => ({
+        default: m.HatchShade,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/hatch-shade/config").then(
+        (m) => m.hatchShadeConfig,
+      ),
+  },
+  "path-search": {
+    load: () =>
+      import("@/registry/remocn/path-search").then((m) => ({
+        default: m.PathSearch,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/path-search/config").then(
+        (m) => m.pathSearchConfig,
+      ),
+  },
+  "transit-lines": {
+    load: () =>
+      import("@/registry/remocn/transit-lines").then((m) => ({
+        default: m.TransitLines,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/transit-lines/config").then(
+        (m) => m.transitLinesConfig,
+      ),
+  },
+  "slope-chart": {
+    load: () =>
+      import("@/registry/remocn/slope-chart").then((m) => ({
+        default: m.SlopeChart,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/slope-chart/config").then(
+        (m) => m.slopeChartConfig,
+      ),
+  },
+  ridgeline: {
+    load: () =>
+      import("@/registry/remocn/ridgeline").then((m) => ({
+        default: m.Ridgeline,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/ridgeline/config").then(
+        (m) => m.ridgelineConfig,
+      ),
+  },
+  beeswarm: {
+    load: () =>
+      import("@/registry/remocn/beeswarm").then((m) => ({
+        default: m.Beeswarm,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/beeswarm/config").then((m) => m.beeswarmConfig),
+  },
+  "chart-morph": {
+    load: () =>
+      import("@/registry/remocn/chart-morph").then((m) => ({
+        default: m.ChartMorph,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/chart-morph/config").then(
+        (m) => m.chartMorphConfig,
+      ),
+  },
+  "dumbbell-shift": {
+    load: () =>
+      import("@/registry/remocn/dumbbell-shift").then((m) => ({
+        default: m.DumbbellShift,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/dumbbell-shift/config").then(
+        (m) => m.dumbbellShiftConfig,
+      ),
+  },
+  "stacked-shift": {
+    load: () =>
+      import("@/registry/remocn/stacked-shift").then((m) => ({
+        default: m.StackedShift,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/stacked-shift/config").then(
+        (m) => m.stackedShiftConfig,
+      ),
+  },
+  "tally-marks": {
+    load: () =>
+      import("@/registry/remocn/tally-marks").then((m) => ({
+        default: m.TallyMarks,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/tally-marks/config").then(
+        (m) => m.tallyMarksConfig,
+      ),
+  },
+  "abacus-count": {
+    load: () =>
+      import("@/registry/remocn/abacus-count").then((m) => ({
+        default: m.AbacusCount,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/abacus-count/config").then(
+        (m) => m.abacusCountConfig,
+      ),
+  },
+  "fraction-split": {
+    load: () =>
+      import("@/registry/remocn/fraction-split").then((m) => ({
+        default: m.FractionSplit,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/fraction-split/config").then(
+        (m) => m.fractionSplitConfig,
+      ),
+  },
+  "balance-beam": {
+    load: () =>
+      import("@/registry/remocn/balance-beam").then((m) => ({
+        default: m.BalanceBeam,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/balance-beam/config").then(
+        (m) => m.balanceBeamConfig,
+      ),
+  },
+  "domino-run": {
+    load: () =>
+      import("@/registry/remocn/domino-run").then((m) => ({
+        default: m.DominoRun,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/domino-run/config").then(
+        (m) => m.dominoRunConfig,
+      ),
+  },
+  "spring-bars": {
+    load: () =>
+      import("@/registry/remocn/spring-bars").then((m) => ({
+        default: m.SpringBars,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/spring-bars/config").then(
+        (m) => m.springBarsConfig,
+      ),
+  },
+  "dot-sort": {
+    load: () =>
+      import("@/registry/remocn/dot-sort").then((m) => ({
+        default: m.DotSort,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/dot-sort/config").then((m) => m.dotSortConfig),
+  },
+  "flow-arrow": {
+    load: () =>
+      import("@/registry/remocn/flow-arrow").then((m) => ({
+        default: m.FlowArrow,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/flow-arrow/config").then(
+        (m) => m.flowArrowConfig,
+      ),
+  },
+  "dot-map": {
+    load: () =>
+      import("@/registry/remocn/dot-map").then((m) => ({
+        default: m.DotMap,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/dot-map/config").then((m) => m.dotMapConfig),
+  },
+  "sankey-flow": {
+    load: () =>
+      import("@/registry/remocn/sankey-flow").then((m) => ({
+        default: m.SankeyFlow,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/sankey-flow/config").then(
+        (m) => m.sankeyFlowConfig,
+      ),
+  },
+  "branch-tree": {
+    load: () =>
+      import("@/registry/remocn/branch-tree").then((m) => ({
+        default: m.BranchTree,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/branch-tree/config").then(
+        (m) => m.branchTreeConfig,
+      ),
+  },
+  "chord-ring": {
+    load: () =>
+      import("@/registry/remocn/chord-ring").then((m) => ({
+        default: m.ChordRing,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/chord-ring/config").then(
+        (m) => m.chordRingConfig,
+      ),
+  },
+  "waterfall-chart": {
+    load: () =>
+      import("@/registry/remocn/waterfall-chart").then((m) => ({
+        default: m.WaterfallChart,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/waterfall-chart/config").then(
+        (m) => m.waterfallChartConfig,
+      ),
+  },
+  "galton-stack": {
+    load: () =>
+      import("@/registry/remocn/galton-stack").then((m) => ({
+        default: m.GaltonStack,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/galton-stack/config").then(
+        (m) => m.galtonStackConfig,
+      ),
+  },
+  "bubble-pack": {
+    load: () =>
+      import("@/registry/remocn/bubble-pack").then((m) => ({
+        default: m.BubblePack,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/bubble-pack/config").then(
+        (m) => m.bubblePackConfig,
+      ),
+  },
+  "treemap-split": {
+    load: () =>
+      import("@/registry/remocn/treemap-split").then((m) => ({
+        default: m.TreemapSplit,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/treemap-split/config").then(
+        (m) => m.treemapSplitConfig,
+      ),
+  },
+  "venn-merge": {
+    load: () =>
+      import("@/registry/remocn/venn-merge").then((m) => ({
+        default: m.VennMerge,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/venn-merge/config").then(
+        (m) => m.vennMergeConfig,
+      ),
+  },
+  "fluted-glass": {
+    load: () =>
+      import("@/registry/remocn/fluted-glass").then((m) => ({
+        default: m.FlutedGlass,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/fluted-glass/config").then(
+        (m) => m.flutedGlassConfig,
+      ),
+  },
+  "frosted-clear": {
+    load: () =>
+      import("@/registry/remocn/frosted-clear").then((m) => ({
+        default: m.FrostedClear,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/frosted-clear/config").then(
+        (m) => m.frostedClearConfig,
+      ),
+  },
+  "embossed-mark": {
+    load: () =>
+      import("@/registry/remocn/embossed-mark").then((m) => ({
+        default: m.EmbossedMark,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/embossed-mark/config").then(
+        (m) => m.embossedMarkConfig,
+      ),
+  },
+  "halftone-cut": {
+    load: () =>
+      import("@/registry/remocn/halftone-cut").then((m) => ({
+        default: m.HalftoneCut,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/halftone-cut/config").then(
+        (m) => m.halftoneCutConfig,
+      ),
+  },
+  "column-slide": {
+    load: () =>
+      import("@/registry/remocn/column-slide").then((m) => ({
+        default: m.ColumnSlide,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/column-slide/config").then(
+        (m) => m.columnSlideConfig,
+      ),
+  },
+  "ring-cut": {
+    load: () =>
+      import("@/registry/remocn/ring-cut").then((m) => ({
+        default: m.RingCut,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/ring-cut/config").then((m) => m.ringCutConfig),
+  },
+  "quadtree-mark": {
+    load: () =>
+      import("@/registry/remocn/quadtree-mark").then((m) => ({
+        default: m.QuadtreeMark,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/quadtree-mark/config").then(
+        (m) => m.quadtreeMarkConfig,
+      ),
+  },
+  "raster-paint": {
+    load: () =>
+      import("@/registry/remocn/raster-paint").then((m) => ({
+        default: m.RasterPaint,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/raster-paint/config").then(
+        (m) => m.rasterPaintConfig,
+      ),
+  },
+  "pixel-bars": {
+    load: () =>
+      import("@/registry/remocn/pixel-bars").then((m) => ({
+        default: m.PixelBars,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/pixel-bars/config").then(
+        (m) => m.pixelBarsConfig,
+      ),
+  },
+  "bracket-focus": {
+    load: () =>
+      import("@/registry/remocn/bracket-focus").then((m) => ({
+        default: m.BracketFocus,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/bracket-focus/config").then(
+        (m) => m.bracketFocusConfig,
+      ),
+  },
+  "crosshair-lock": {
+    load: () =>
+      import("@/registry/remocn/crosshair-lock").then((m) => ({
+        default: m.CrosshairLock,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/crosshair-lock/config").then(
+        (m) => m.crosshairLockConfig,
+      ),
+  },
+  "measure-dim": {
+    load: () =>
+      import("@/registry/remocn/measure-dim").then((m) => ({
+        default: m.MeasureDim,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/measure-dim/config").then(
+        (m) => m.measureDimConfig,
+      ),
+  },
+  "three-steps": {
+    load: () =>
+      import("@/registry/remocn/three-steps").then((m) => ({
+        default: m.ThreeSteps,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/three-steps/config").then(
+        (m) => m.threeStepsConfig,
+      ),
+  },
+  "number-split": {
+    load: () =>
+      import("@/registry/remocn/number-split").then((m) => ({
+        default: m.NumberSplit,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/number-split/config").then(
+        (m) => m.numberSplitConfig,
+      ),
+  },
+  "radial-bars": {
+    load: () =>
+      import("@/registry/remocn/radial-bars").then((m) => ({
+        default: m.RadialBars,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/radial-bars/config").then(
+        (m) => m.radialBarsConfig,
+      ),
+  },
+  "radar-compare": {
+    load: () =>
+      import("@/registry/remocn/radar-compare").then((m) => ({
+        default: m.RadarCompare,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/radar-compare/config").then(
+        (m) => m.radarCompareConfig,
+      ),
+  },
+  "concentric-scale": {
+    load: () =>
+      import("@/registry/remocn/concentric-scale").then((m) => ({
+        default: m.ConcentricScale,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/concentric-scale/config").then(
+        (m) => m.concentricScaleConfig,
+      ),
+  },
+  "changelog-scroll": {
+    load: () =>
+      import("@/registry/remocn/changelog-scroll").then((m) => ({
+        default: m.ChangelogScroll,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/changelog-scroll/config").then(
+        (m) => m.changelogScrollConfig,
+      ),
+  },
+  "waveform-title": {
+    load: () =>
+      import("@/registry/remocn/waveform-title").then((m) => ({
+        default: m.WaveformTitle,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/waveform-title/config").then(
+        (m) => m.waveformTitleConfig,
+      ),
+  },
+  "line-relief": {
+    load: () =>
+      import("@/registry/remocn/line-relief").then((m) => ({
+        default: m.LineRelief,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/line-relief/config").then(
+        (m) => m.lineReliefConfig,
+      ),
+  },
+  "sparkline-thread": {
+    load: () =>
+      import("@/registry/remocn/sparkline-thread").then((m) => ({
+        default: m.SparklineThread,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/sparkline-thread/config").then(
+        (m) => m.sparklineThreadConfig,
+      ),
+  },
+  "area-compare": {
+    load: () =>
+      import("@/registry/remocn/area-compare").then((m) => ({
+        default: m.AreaCompare,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/area-compare/config").then(
+        (m) => m.areaCompareConfig,
+      ),
+  },
+  "rank-climb": {
+    load: () =>
+      import("@/registry/remocn/rank-climb").then((m) => ({
+        default: m.RankClimb,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/rank-climb/config").then(
+        (m) => m.rankClimbConfig,
+      ),
+  },
+  "time-breakdown": {
+    load: () =>
+      import("@/registry/remocn/time-breakdown").then((m) => ({
+        default: m.TimeBreakdown,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/time-breakdown/config").then(
+        (m) => m.timeBreakdownConfig,
+      ),
+  },
+  "index-list": {
+    load: () =>
+      import("@/registry/remocn/index-list").then((m) => ({
+        default: m.IndexList,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/index-list/config").then(
+        (m) => m.indexListConfig,
+      ),
+  },
+  "grid-snap-poster": {
+    load: () =>
+      import("@/registry/remocn/grid-snap-poster").then((m) => ({
+        default: m.GridSnapPoster,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/grid-snap-poster/config").then(
+        (m) => m.gridSnapPosterConfig,
+      ),
+  },
+  "spec-sheet": {
+    load: () =>
+      import("@/registry/remocn/spec-sheet").then((m) => ({
+        default: m.SpecSheet,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/spec-sheet/config").then(
+        (m) => m.specSheetConfig,
+      ),
+  },
+  "toggle-on": {
+    load: () =>
+      import("@/registry/remocn/toggle-on").then((m) => ({
+        default: m.ToggleOn,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/toggle-on/config").then(
+        (m) => m.toggleOnConfig,
+      ),
+  },
+  "rotary-dial": {
+    load: () =>
+      import("@/registry/remocn/rotary-dial").then((m) => ({
+        default: m.RotaryDial,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/rotary-dial/config").then(
+        (m) => m.rotaryDialConfig,
+      ),
+  },
+  "uptime-strip": {
+    load: () =>
+      import("@/registry/remocn/uptime-strip").then((m) => ({
+        default: m.UptimeStrip,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/uptime-strip/config").then(
+        (m) => m.uptimeStripConfig,
+      ),
+  },
+  "quadrant-plot": {
+    load: () =>
+      import("@/registry/remocn/quadrant-plot").then((m) => ({
+        default: m.QuadrantPlot,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/quadrant-plot/config").then(
+        (m) => m.quadrantPlotConfig,
+      ),
+  },
+  streamgraph: {
+    load: () =>
+      import("@/registry/remocn/streamgraph").then((m) => ({
+        default: m.Streamgraph,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/streamgraph/config").then(
+        (m) => m.streamgraphConfig,
+      ),
+  },
+  "clock-sweep": {
+    load: () =>
+      import("@/registry/remocn/clock-sweep").then((m) => ({
+        default: m.ClockSweep,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/clock-sweep/config").then(
+        (m) => m.clockSweepConfig,
+      ),
+  },
+  "ruler-scrub": {
+    load: () =>
+      import("@/registry/remocn/ruler-scrub").then((m) => ({
+        default: m.RulerScrub,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/ruler-scrub/config").then(
+        (m) => m.rulerScrubConfig,
+      ),
+  },
+  "timer-duel": {
+    load: () =>
+      import("@/registry/remocn/timer-duel").then((m) => ({
+        default: m.TimerDuel,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/timer-duel/config").then(
+        (m) => m.timerDuelConfig,
+      ),
+  },
+  "contribution-heatmap": {
+    load: () =>
+      import("@/registry/remocn/contribution-heatmap").then((m) => ({
+        default: m.ContributionHeatmap,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/contribution-heatmap/config").then(
+        (m) => m.contributionHeatmapConfig,
+      ),
+  },
+  "distribution-shift": {
+    load: () =>
+      import("@/registry/remocn/distribution-shift").then((m) => ({
+        default: m.DistributionShift,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/distribution-shift/config").then(
+        (m) => m.distributionShiftConfig,
+      ),
+  },
+  "share-donut": {
+    load: () =>
+      import("@/registry/remocn/share-donut").then((m) => ({
+        default: m.ShareDonut,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/share-donut/config").then(
+        (m) => m.shareDonutConfig,
+      ),
+  },
+  "unit-grid": {
+    load: () =>
+      import("@/registry/remocn/unit-grid").then((m) => ({
+        default: m.UnitGrid,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/unit-grid/config").then(
+        (m) => m.unitGridConfig,
+      ),
+  },
+  "led-ticker": {
+    load: () =>
+      import("@/registry/remocn/led-ticker").then((m) => ({
+        default: m.LedTicker,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/led-ticker/config").then(
+        (m) => m.ledTickerConfig,
+      ),
+  },
+  "ripple-mark": {
+    load: () =>
+      import("@/registry/remocn/ripple-mark").then((m) => ({
+        default: m.RippleMark,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/ripple-mark/config").then(
+        (m) => m.rippleMarkConfig,
+      ),
+  },
+  "poster-crop": {
+    load: () =>
+      import("@/registry/remocn/poster-crop").then((m) => ({
+        default: m.PosterCrop,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/poster-crop/config").then(
+        (m) => m.posterCropConfig,
+      ),
+  },
+  "collab-lockup": {
+    load: () =>
+      import("@/registry/remocn/collab-lockup").then((m) => ({
+        default: m.CollabLockup,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/collab-lockup/config").then(
+        (m) => m.collabLockupConfig,
+      ),
+  },
+  "tagline-justify": {
+    load: () =>
+      import("@/registry/remocn/tagline-justify").then((m) => ({
+        default: m.TaglineJustify,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/tagline-justify/config").then(
+        (m) => m.taglineJustifyConfig,
+      ),
+  },
+  "shape-cut": {
+    load: () =>
+      import("@/registry/remocn/shape-cut").then((m) => ({
+        default: m.ShapeCut,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/shape-cut/config").then(
+        (m) => m.shapeCutConfig,
+      ),
+  },
+  "hairline-open": {
+    load: () =>
+      import("@/registry/remocn/hairline-open").then((m) => ({
+        default: m.HairlineOpen,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/hairline-open/config").then(
+        (m) => m.hairlineOpenConfig,
+      ),
+  },
+  "diagonal-split": {
+    load: () =>
+      import("@/registry/remocn/diagonal-split").then((m) => ({
+        default: m.DiagonalSplit,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/diagonal-split/config").then(
+        (m) => m.diagonalSplitConfig,
+      ),
+  },
+  "slit-reveal": {
+    load: () =>
+      import("@/registry/remocn/slit-reveal").then((m) => ({
+        default: m.SlitReveal,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/slit-reveal/config").then(
+        (m) => m.slitRevealConfig,
+      ),
+  },
+  "wireframe-to-final": {
+    load: () =>
+      import("@/registry/remocn/wireframe-to-final").then((m) => ({
+        default: m.WireframeToFinal,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/wireframe-to-final/config").then(
+        (m) => m.wireframeToFinalConfig,
+      ),
+  },
+  "dot-field-morph": {
+    load: () =>
+      import("@/registry/remocn/dot-field-morph").then((m) => ({
+        default: m.DotFieldMorph,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/dot-field-morph/config").then(
+        (m) => m.dotFieldMorphConfig,
+      ),
+  },
+  "feature-chips-flow": {
+    load: () =>
+      import("@/registry/remocn/feature-chips-flow").then((m) => ({
+        default: m.FeatureChipsFlow,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/feature-chips-flow/config").then(
+        (m) => m.featureChipsFlowConfig,
+      ),
+  },
+  "version-hero": {
+    load: () =>
+      import("@/registry/remocn/version-hero").then((m) => ({
+        default: m.VersionHero,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/version-hero/config").then(
+        (m) => m.versionHeroConfig,
+      ),
+  },
+  "benchmark-race": {
+    load: () =>
+      import("@/registry/remocn/benchmark-race").then((m) => ({
+        default: m.BenchmarkRace,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/benchmark-race/config").then(
+        (m) => m.benchmarkRaceConfig,
+      ),
+  },
+  "dot-globe": {
+    load: () =>
+      import("@/registry/remocn/dot-globe").then((m) => ({
+        default: m.DotGlobe,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/dot-globe/config").then(
+        (m) => m.dotGlobeConfig,
+      ),
+  },
+  "waitlist-swarm": {
+    load: () =>
+      import("@/registry/remocn/waitlist-swarm").then((m) => ({
+        default: m.WaitlistSwarm,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/waitlist-swarm/config").then(
+        (m) => m.waitlistSwarmConfig,
+      ),
+  },
+  "signal-resolve": {
+    load: () =>
+      import("@/registry/remocn/signal-resolve").then((m) => ({
+        default: m.SignalResolve,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/signal-resolve/config").then(
+        (m) => m.signalResolveConfig,
+      ),
+  },
+  "keycap-press": {
+    load: () =>
+      import("@/registry/remocn/keycap-press").then((m) => ({
+        default: m.KeycapPress,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/keycap-press/config").then(
+        (m) => m.keycapPressConfig,
+      ),
+  },
+  "launch-date": {
+    load: () =>
+      import("@/registry/remocn/launch-date").then((m) => ({
+        default: m.LaunchDate,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/launch-date/config").then(
+        (m) => m.launchDateConfig,
+      ),
+  },
+  "light-trail-write": {
+    load: () =>
+      import("@/registry/remocn/light-trail-write").then((m) => ({
+        default: m.LightTrailWrite,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/light-trail-write/config").then(
+        (m) => m.lightTrailWriteConfig,
+      ),
+  },
+  "color-bars": {
+    load: () =>
+      import("@/registry/remocn/color-bars").then((m) => ({
+        default: m.ColorBars,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/color-bars/config").then(
+        (m) => m.colorBarsConfig,
+      ),
+  },
+  "grid-montage": {
+    load: () =>
+      import("@/registry/remocn/grid-montage").then((m) => ({
+        default: m.GridMontage,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/grid-montage/config").then(
+        (m) => m.gridMontageConfig,
+      ),
+  },
+  "stat-sequence": {
+    load: () =>
+      import("@/registry/remocn/stat-sequence").then((m) => ({
+        default: m.StatSequence,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/stat-sequence/config").then(
+        (m) => m.statSequenceConfig,
+      ),
+  },
+  "quote-hero": {
+    load: () =>
+      import("@/registry/remocn/quote-hero").then((m) => ({
+        default: m.QuoteHero,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/quote-hero/config").then(
+        (m) => m.quoteHeroConfig,
+      ),
+  },
+  "activity-rings": {
+    load: () =>
+      import("@/registry/remocn/activity-rings").then((m) => ({
+        default: m.ActivityRings,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/activity-rings/config").then(
+        (m) => m.activityRingsConfig,
+      ),
+  },
+  "glass-lens": {
+    load: () =>
+      import("@/registry/remocn/glass-lens").then((m) => ({
+        default: m.GlassLens,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/glass-lens/config").then(
+        (m) => m.glassLensConfig,
+      ),
+  },
+  "pill-morph": {
+    load: () =>
+      import("@/registry/remocn/pill-morph").then((m) => ({
+        default: m.PillMorph,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/pill-morph/config").then(
+        (m) => m.pillMorphConfig,
+      ),
+  },
+  "layered-cutout": {
+    load: () =>
+      import("@/registry/remocn/layered-cutout").then((m) => ({
+        default: m.LayeredCutout,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/layered-cutout/config").then(
+        (m) => m.layeredCutoutConfig,
+      ),
+  },
+  "neural-pulse": {
+    load: () =>
+      import("@/registry/remocn/neural-pulse").then((m) => ({
+        default: m.NeuralPulse,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/neural-pulse/config").then(
+        (m) => m.neuralPulseConfig,
+      ),
+  },
+  "bokeh-title": {
+    load: () =>
+      import("@/registry/remocn/bokeh-title").then((m) => ({
+        default: m.BokehTitle,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/bokeh-title/config").then(
+        (m) => m.bokehTitleConfig,
+      ),
+  },
+  "block-city": {
+    load: () =>
+      import("@/registry/remocn/block-city").then((m) => ({
+        default: m.BlockCity,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/block-city/config").then(
+        (m) => m.blockCityConfig,
+      ),
+  },
+  "flash-sweep": {
+    load: () =>
+      import("@/registry/remocn/flash-sweep").then((m) => ({
+        default: m.FlashSweep,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/flash-sweep/config").then(
+        (m) => m.flashSweepConfig,
+      ),
+  },
+  "logo-construct": {
+    load: () =>
+      import("@/registry/remocn/logo-construct").then((m) => ({
+        default: m.LogoConstruct,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/logo-construct/config").then(
+        (m) => m.logoConstructConfig,
+      ),
+  },
+  "ink-bloom": {
+    load: () =>
+      import("@/registry/remocn/ink-bloom").then((m) => ({
+        default: m.InkBloom,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/ink-bloom/config").then(
+        (m) => m.inkBloomConfig,
+      ),
+  },
+  "gravity-grid": {
+    load: () =>
+      import("@/registry/remocn/gravity-grid").then((m) => ({
+        default: m.GravityGrid,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/gravity-grid/config").then(
+        (m) => m.gravityGridConfig,
+      ),
+  },
+  "number-mosaic": {
+    load: () =>
+      import("@/registry/remocn/number-mosaic").then((m) => ({
+        default: m.NumberMosaic,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/number-mosaic/config").then(
+        (m) => m.numberMosaicConfig,
+      ),
+  },
+  "growth-line": {
+    load: () =>
+      import("@/registry/remocn/growth-line").then((m) => ({
+        default: m.GrowthLine,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/growth-line/config").then(
+        (m) => m.growthLineConfig,
+      ),
+  },
+  countdown: {
+    load: () =>
+      import("@/registry/remocn/countdown").then((m) => ({
+        default: m.Countdown,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/countdown/config").then(
+        (m) => m.countdownConfig,
+      ),
+  },
+  "paper-plane": {
+    load: () =>
+      import("@/registry/remocn/paper-plane").then((m) => ({
+        default: m.PaperPlane,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/paper-plane/config").then(
+        (m) => m.paperPlaneConfig,
+      ),
+  },
+  "chaos-to-order": {
+    load: () =>
+      import("@/registry/remocn/chaos-to-order").then((m) => ({
+        default: m.ChaosToOrder,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/chaos-to-order/config").then(
+        (m) => m.chaosToOrderConfig,
+      ),
+  },
+  "notification-avalanche": {
+    load: () =>
+      import("@/registry/remocn/notification-avalanche").then((m) => ({
+        default: m.NotificationAvalanche,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/notification-avalanche/config").then(
+        (m) => m.notificationAvalancheConfig,
+      ),
+  },
+  "phone-scroll": {
+    load: () =>
+      import("@/registry/remocn/phone-scroll").then((m) => ({
+        default: m.PhoneScroll,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/phone-scroll/config").then(
+        (m) => m.phoneScrollConfig,
+      ),
+  },
+  "screenshot-tour": {
+    load: () =>
+      import("@/registry/remocn/screenshot-tour").then((m) => ({
+        default: m.ScreenshotTour,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/screenshot-tour/config").then(
+        (m) => m.screenshotTourConfig,
+      ),
+  },
+  "ui-callout": {
+    load: () =>
+      import("@/registry/remocn/ui-callout").then((m) => ({
+        default: m.UiCallout,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/ui-callout/config").then(
+        (m) => m.uiCalloutConfig,
+      ),
+  },
+  "theme-flip": {
+    load: () =>
+      import("@/registry/remocn/theme-flip").then((m) => ({
+        default: m.ThemeFlip,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/theme-flip/config").then(
+        (m) => m.themeFlipConfig,
+      ),
+  },
+  "testimonial-stack": {
+    load: () =>
+      import("@/registry/remocn/testimonial-stack").then((m) => ({
+        default: m.TestimonialStack,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/testimonial-stack/config").then(
+        (m) => m.testimonialStackConfig,
+      ),
+  },
+  "upvote-burst": {
+    load: () =>
+      import("@/registry/remocn/upvote-burst").then((m) => ({
+        default: m.UpvoteBurst,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/upvote-burst/config").then(
+        (m) => m.upvoteBurstConfig,
+      ),
+  },
+  "bento-build": {
+    load: () =>
+      import("@/registry/remocn/bento-build").then((m) => ({
+        default: m.BentoBuild,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/bento-build/config").then(
+        (m) => m.bentoBuildConfig,
+      ),
+  },
+  "pricing-reveal": {
+    load: () =>
+      import("@/registry/remocn/pricing-reveal").then((m) => ({
+        default: m.PricingReveal,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/pricing-reveal/config").then(
+        (m) => m.pricingRevealConfig,
+      ),
+  },
+  "url-bar-cta": {
+    load: () =>
+      import("@/registry/remocn/url-bar-cta").then((m) => ({
+        default: m.UrlBarCta,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/url-bar-cta/config").then(
+        (m) => m.urlBarCtaConfig,
+      ),
+  },
+  "table-filter": {
+    load: () =>
+      import("@/registry/remocn/table-filter").then((m) => ({
+        default: m.TableFilter,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/table-filter/config").then(
+        (m) => m.tableFilterConfig,
+      ),
+  },
+  "flow-builder": {
+    load: () =>
+      import("@/registry/remocn/flow-builder").then((m) => ({
+        default: m.FlowBuilder,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/flow-builder/config").then(
+        (m) => m.flowBuilderConfig,
+      ),
+  },
+  "multiplayer-cursors": {
+    load: () =>
+      import("@/registry/remocn/multiplayer-cursors").then((m) => ({
+        default: m.MultiplayerCursors,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/multiplayer-cursors/config").then(
+        (m) => m.multiplayerCursorsConfig,
+      ),
+  },
+  "channel-reactions": {
+    load: () =>
+      import("@/registry/remocn/channel-reactions").then((m) => ({
+        default: m.ChannelReactions,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/channel-reactions/config").then(
+        (m) => m.channelReactionsConfig,
+      ),
+  },
+  "deploy-pipeline": {
+    load: () =>
+      import("@/registry/remocn/deploy-pipeline").then((m) => ({
+        default: m.DeployPipeline,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/deploy-pipeline/config").then(
+        (m) => m.deployPipelineConfig,
+      ),
+  },
+  "live-dashboard": {
+    load: () =>
+      import("@/registry/remocn/live-dashboard").then((m) => ({
+        default: m.LiveDashboard,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/live-dashboard/config").then(
+        (m) => m.liveDashboardConfig,
+      ),
+  },
+  "file-dropzone": {
+    load: () =>
+      import("@/registry/remocn/file-dropzone").then((m) => ({
+        default: m.FileDropzone,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/file-dropzone/config").then(
+        (m) => m.fileDropzoneConfig,
+      ),
+  },
+  "calendar-booking": {
+    load: () =>
+      import("@/registry/remocn/calendar-booking").then((m) => ({
+        default: m.CalendarBooking,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/calendar-booking/config").then(
+        (m) => m.calendarBookingConfig,
+      ),
+  },
+  "ai-image-grid": {
+    load: () =>
+      import("@/registry/remocn/ai-image-grid").then((m) => ({
+        default: m.AiImageGrid,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/ai-image-grid/config").then(
+        (m) => m.aiImageGridConfig,
+      ),
+  },
+  "device-morph": {
+    load: () =>
+      import("@/registry/remocn/device-morph").then((m) => ({
+        default: m.DeviceMorph,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/device-morph/config").then(
+        (m) => m.deviceMorphConfig,
+      ),
+  },
+  "pr-merge": {
+    load: () =>
+      import("@/registry/remocn/pr-merge").then((m) => ({
+        default: m.PrMerge,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/pr-merge/config").then((m) => m.prMergeConfig),
+  },
+  "status-page": {
+    load: () =>
+      import("@/registry/remocn/status-page").then((m) => ({
+        default: m.StatusPage,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/status-page/config").then(
+        (m) => m.statusPageConfig,
+      ),
+  },
+  "video-call": {
+    load: () =>
+      import("@/registry/remocn/video-call").then((m) => ({
+        default: m.VideoCall,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/video-call/config").then(
+        (m) => m.videoCallConfig,
+      ),
+  },
+  "invite-team": {
+    load: () =>
+      import("@/registry/remocn/invite-team").then((m) => ({
+        default: m.InviteTeam,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/invite-team/config").then(
+        (m) => m.inviteTeamConfig,
+      ),
+  },
+  "timeline-editor": {
+    load: () =>
+      import("@/registry/remocn/timeline-editor").then((m) => ({
+        default: m.TimelineEditor,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/timeline-editor/config").then(
+        (m) => m.timelineEditorConfig,
+      ),
+  },
+  "ride-tracking": {
+    load: () =>
+      import("@/registry/remocn/ride-tracking").then((m) => ({
+        default: m.RideTracking,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/ride-tracking/config").then(
+        (m) => m.rideTrackingConfig,
+      ),
+  },
+  "mobile-paywall": {
+    load: () =>
+      import("@/registry/remocn/mobile-paywall").then((m) => ({
+        default: m.MobilePaywall,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/mobile-paywall/config").then(
+        (m) => m.mobilePaywallConfig,
+      ),
+  },
+  "sheet-formula": {
+    load: () =>
+      import("@/registry/remocn/sheet-formula").then((m) => ({
+        default: m.SheetFormula,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/sheet-formula/config").then(
+        (m) => m.sheetFormulaConfig,
+      ),
+  },
+  "whats-new-modal": {
+    load: () =>
+      import("@/registry/remocn/whats-new-modal").then((m) => ({
+        default: m.WhatsNewModal,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/whats-new-modal/config").then(
+        (m) => m.whatsNewModalConfig,
+      ),
+  },
+  "money-send": {
+    load: () =>
+      import("@/registry/remocn/money-send").then((m) => ({
+        default: m.MoneySend,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/money-send/config").then(
+        (m) => m.moneySendConfig,
+      ),
+  },
+  "stock-scrub": {
+    load: () =>
+      import("@/registry/remocn/stock-scrub").then((m) => ({
+        default: m.StockScrub,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/stock-scrub/config").then(
+        (m) => m.stockScrubConfig,
+      ),
+  },
+  "card-create": {
+    load: () =>
+      import("@/registry/remocn/card-create").then((m) => ({
+        default: m.CardCreate,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/card-create/config").then(
+        (m) => m.cardCreateConfig,
+      ),
+  },
+  "reels-feed": {
+    load: () =>
+      import("@/registry/remocn/reels-feed").then((m) => ({
+        default: m.ReelsFeed,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/reels-feed/config").then(
+        (m) => m.reelsFeedConfig,
+      ),
+  },
+  "swipe-deck": {
+    load: () =>
+      import("@/registry/remocn/swipe-deck").then((m) => ({
+        default: m.SwipeDeck,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/swipe-deck/config").then(
+        (m) => m.swipeDeckConfig,
+      ),
+  },
+  "streak-reward": {
+    load: () =>
+      import("@/registry/remocn/streak-reward").then((m) => ({
+        default: m.StreakReward,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/streak-reward/config").then(
+        (m) => m.streakRewardConfig,
+      ),
+  },
+  "rating-laurel": {
+    load: () =>
+      import("@/registry/remocn/rating-laurel").then((m) => ({
+        default: m.RatingLaurel,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/rating-laurel/config").then(
+        (m) => m.ratingLaurelConfig,
+      ),
+  },
+  "ai-answer-sources": {
+    load: () =>
+      import("@/registry/remocn/ai-answer-sources").then((m) => ({
+        default: m.AiAnswerSources,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/ai-answer-sources/config").then(
+        (m) => m.aiAnswerSourcesConfig,
+      ),
+  },
+  "now-playing": {
+    load: () =>
+      import("@/registry/remocn/now-playing").then((m) => ({
+        default: m.NowPlaying,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/now-playing/config").then(
+        (m) => m.nowPlayingConfig,
+      ),
+  },
+  "year-in-review": {
+    load: () =>
+      import("@/registry/remocn/year-in-review").then((m) => ({
+        default: m.YearInReview,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/year-in-review/config").then(
+        (m) => m.yearInReviewConfig,
+      ),
+  },
+  "video-watch-page": {
+    load: () =>
+      import("@/registry/remocn/video-watch-page").then((m) => ({
+        default: m.VideoWatchPage,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/video-watch-page/config").then(
+        (m) => m.videoWatchPageConfig,
+      ),
+  },
+  "voice-agent": {
+    load: () =>
+      import("@/registry/remocn/voice-agent").then((m) => ({
+        default: m.VoiceAgent,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/voice-agent/config").then(
+        (m) => m.voiceAgentConfig,
+      ),
+  },
+  "prompt-to-app": {
+    load: () =>
+      import("@/registry/remocn/prompt-to-app").then((m) => ({
+        default: m.PromptToApp,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/prompt-to-app/config").then(
+        (m) => m.promptToAppConfig,
+      ),
+  },
+  "browser-extension": {
+    load: () =>
+      import("@/registry/remocn/browser-extension").then((m) => ({
+        default: m.BrowserExtension,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/browser-extension/config").then(
+        (m) => m.browserExtensionConfig,
+      ),
+  },
+  "app-store-listing": {
+    load: () =>
+      import("@/registry/remocn/app-store-listing").then((m) => ({
+        default: m.AppStoreListing,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/app-store-listing/config").then(
+        (m) => m.appStoreListingConfig,
+      ),
+  },
+  "live-activity": {
+    load: () =>
+      import("@/registry/remocn/live-activity").then((m) => ({
+        default: m.LiveActivity,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/live-activity/config").then(
+        (m) => m.liveActivityConfig,
+      ),
+  },
+  "home-widget": {
+    load: () =>
+      import("@/registry/remocn/home-widget").then((m) => ({
+        default: m.HomeWidget,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/home-widget/config").then(
+        (m) => m.homeWidgetConfig,
+      ),
+  },
+  "cart-add": {
+    load: () =>
+      import("@/registry/remocn/cart-add").then((m) => ({
+        default: m.CartAdd,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/cart-add/config").then((m) => m.cartAddConfig),
+  },
+  "coupon-apply": {
+    load: () =>
+      import("@/registry/remocn/coupon-apply").then((m) => ({
+        default: m.CouponApply,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/coupon-apply/config").then(
+        (m) => m.couponApplyConfig,
+      ),
+  },
+  "invoice-paid": {
+    load: () =>
+      import("@/registry/remocn/invoice-paid").then((m) => ({
+        default: m.InvoicePaid,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/invoice-paid/config").then(
+        (m) => m.invoicePaidConfig,
+      ),
+  },
+  "roadmap-timeline": {
+    load: () =>
+      import("@/registry/remocn/roadmap-timeline").then((m) => ({
+        default: m.RoadmapTimeline,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/roadmap-timeline/config").then(
+        (m) => m.roadmapTimelineConfig,
+      ),
+  },
+  "analytics-funnel": {
+    load: () =>
+      import("@/registry/remocn/analytics-funnel").then((m) => ({
+        default: m.AnalyticsFunnel,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/analytics-funnel/config").then(
+        (m) => m.analyticsFunnelConfig,
+      ),
+  },
+  "world-signups": {
+    load: () =>
+      import("@/registry/remocn/world-signups").then((m) => ({
+        default: m.WorldSignups,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/world-signups/config").then(
+        (m) => m.worldSignupsConfig,
+      ),
+  },
+  "social-scheduler": {
+    load: () =>
+      import("@/registry/remocn/social-scheduler").then((m) => ({
+        default: m.SocialScheduler,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/social-scheduler/config").then(
+        (m) => m.socialSchedulerConfig,
+      ),
+  },
+  "feature-flag-rollout": {
+    load: () =>
+      import("@/registry/remocn/feature-flag-rollout").then((m) => ({
+        default: m.FeatureFlagRollout,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/feature-flag-rollout/config").then(
+        (m) => m.featureFlagRolloutConfig,
       ),
   },
 };

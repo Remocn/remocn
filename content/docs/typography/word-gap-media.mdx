@@ -1,0 +1,110 @@
+---
+title: Word Gap Media
+description: "A video tile slots into the gap between \"Launch all\" and \"of this\""
+component: word-gap-media
+vibe: premium
+length: 142
+useWhen:
+  - "A beat where media tiles slot into a gap inside a sentence, such as showing the screens behind the claim."
+  - "A product showcase that cycles three or four images with captions inside the headline."
+avoidWhen:
+  - "You only need a headline with no imagery — use `staggered-fade-up`."
+  - "You want one giant word with the camera pulling back — use `word-pullback`."
+---
+
+<ComponentPreview name="word-gap-media" />
+
+<InstallBlock name="word-gap-media" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { WordGapMedia } from "@/components/remocn/word-gap-media";
+
+const WordGapMediaScene = () => (
+  <WordGapMedia before="Launch all" after="of this" images={["/shots/hero.jpg", "/shots/gallery.jpg"]} aspects={[0.8, 1.36]} captions={["Hero", "Gallery"]} />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="WordGapMedia"
+    component={WordGapMediaScene}
+    durationInFrames={168}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A sentence is split around a gap and a media tile opens inside it, cycling through your images with progress bars and captions. By default it uses `staticFile` images that only exist in the remocn repo, so pass your own `images` (public paths or full URLs). It ships light and dark.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "before",
+      type: "string",
+      default: "\"Launch all\"",
+      description: "Text before the gap.",
+    },
+    {
+      name: "after",
+      type: "string",
+      default: "\"of this\"",
+      description: "Text after the gap.",
+    },
+    {
+      name: "images",
+      type: "string[]",
+      default: "DEFAULT_IMAGES",
+      description: "Image paths or URLs cycled through the tile.",
+    },
+    {
+      name: "aspects",
+      type: "number[]",
+      default: "DEFAULT_ASPECTS",
+      description: "Aspect ratio (width over height) for each image.",
+    },
+    {
+      name: "captions",
+      type: "string[]",
+      default: "DEFAULT_CAPTIONS",
+      description: "Label shown for each image.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Accent colour (any CSS colour).",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text colour (any CSS colour).",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Overrides the theme background colour.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Colour scheme; ships light and dark.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "Gradient preset used for the backdrop.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the gradient preset parameters.",
+    },
+  ]}
+/>

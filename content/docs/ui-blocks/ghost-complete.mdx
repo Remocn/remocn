@@ -1,0 +1,112 @@
+---
+title: Ghost Complete
+description: "A sentence types in an editor card, grey ghost text suggests the rest, and each suggestion fills in as accepted."
+component: ghost-complete
+vibe: tech
+length: 89
+useWhen:
+  - "An AI autocomplete or writing-assistant feature where the suggestion appears as ghost text before being accepted."
+  - "A product beat that shows a short phrase finishing itself, then continuing onto a new line."
+  - "A developer or writer tool that needs a clear Tab-to-accept moment."
+avoidWhen:
+  - "The prompt goes to a chat, not an inline editor — use `ai-prompt-flow`."
+  - "Plain typing with no suggestions is enough — use `typewriter`."
+  - "You want a caret that swaps one phrase for another — use `caret-swap`."
+---
+
+<ComponentPreview name="ghost-complete" />
+
+<InstallBlock name="ghost-complete" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { GhostComplete } from "@/components/remocn/ghost-complete";
+
+const GhostCompleteScene = () => (
+  <GhostComplete
+    title="Launch notes"
+    typed="Ship the"
+    suggestions={["launch video", "\nbefore lunch."]}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="GhostComplete"
+    component={GhostCompleteScene}
+    durationInFrames={135}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A card titled `title` types the `typed` text, then each entry in `suggestions` appears as grey ghost text and fills in with a Tab press. A suggestion starting with a newline continues on a second line. Pass your own `typed` text and `suggestions`; it ships light and dark through `theme`.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "title",
+      type: "string",
+      default: "\"Launch notes\"",
+      description: "Title in the editor card header.",
+    },
+    {
+      name: "typed",
+      type: "string",
+      default: "\"Ship the\"",
+      description: "Text typed before the first suggestion.",
+    },
+    {
+      name: "suggestions",
+      type: "string[]",
+      default: "[\"launch video\", \"\\nbefore lunch.\"]",
+      description: "Ghost suggestions accepted in order. A leading newline starts a new line.",
+    },
+    {
+      name: "keepLastFill",
+      type: "boolean",
+      default: "true",
+      description: "Keep the last accepted suggestion in the fill color.",
+    },
+    {
+      name: "showLogo",
+      type: "boolean",
+      default: "true",
+      description: "Show the built-in wordmark.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color scheme. Ships light and dark.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "Shader preset id for the animated background.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Partial shader parameters that override the ground preset.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Declared but not used by the current source.",
+    },
+  ]}
+/>

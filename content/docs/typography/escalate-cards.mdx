@@ -1,0 +1,89 @@
+---
+title: Escalate Cards
+description: "Cards flash one word each, accelerating until the last word fills the frame over a date"
+component: escalate-cards
+vibe: premium
+length: 65
+useWhen:
+  - "A rapid build-up where single words flash on cards, faster each time, until the last fills the frame."
+  - "A date reveal under a final word for a launch announcement."
+avoidWhen:
+  - "You want a countdown clock — use `drop-timer`."
+  - "You want slams of condensed caps without cards — use `full-bleed-type`."
+---
+
+<ComponentPreview name="escalate-cards" />
+
+<InstallBlock name="escalate-cards" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { EscalateCards } from "@/components/remocn/escalate-cards";
+
+const EscalateCardsScene = () => (
+  <EscalateCards words={["ONE", "CODEBASE", "EVERY", "LAUNCH"]} date="OCTOBER 30" accel={0.6} />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="EscalateCards"
+    component={EscalateCardsScene}
+    durationInFrames={130}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+One word per card flashes in, each card shorter than the last, until the final word fills the frame and a date cuts in under it. Pass `words`, `date`, `firstBeat` and `accel`; it ships light and dark.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "words",
+      type: "string[]",
+      default: "[\"ONE\", \"CODEBASE\", \"EVERY\", \"LAUNCH\"]",
+      description: "One word per card, smallest first. The last one fills the frame and holds.",
+    },
+    {
+      name: "date",
+      type: "string",
+      default: "\"OCTOBER 30\"",
+      description: "Small line that cuts in under the last card. Pass \"\" to hide.",
+    },
+    {
+      name: "firstBeat",
+      type: "number",
+      default: "26",
+      description: "Length of the first card in frames. Every next card is shorter.",
+    },
+    {
+      name: "accel",
+      type: "number",
+      default: "0.6",
+      description: "Each card lasts this share of the one before: below 1 the cuts accelerate.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent colour (any CSS colour).",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Colour scheme; ships light and dark.",
+    },
+  ]}
+/>

@@ -1,0 +1,81 @@
+import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+
+export const gearShiftConfig: ComponentConfig = {
+  componentName: "GearShift",
+  importPath: "@/components/remocn/gear-shift",
+  controls: {
+    theme: {
+      type: "enum",
+      default: "dark",
+      variants: {
+        dark: {},
+        light: {},
+      },
+      description: "Theme",
+    },
+    prefix: {
+      type: "text-content",
+      default: "",
+      description: "Prefix",
+    },
+    suffix: {
+      type: "text-content",
+      default: "",
+      description: "Suffix",
+    },
+    label: {
+      type: "text-content",
+      default: "scenes in one launch film",
+      description: "Label",
+    },
+    value: {
+      type: "number",
+      default: 42,
+      min: 0,
+      max: 126,
+      step: 1,
+      description: "Value",
+      hiddenFromList: false,
+    },
+    from: {
+      type: "number",
+      default: 0,
+      min: 0,
+      max: 10,
+      step: 1,
+      description: "From",
+      hiddenFromList: false,
+    },
+    decimals: {
+      type: "number",
+      default: 0,
+      min: 0,
+      max: 10,
+      step: 1,
+      description: "Decimals",
+      hiddenFromList: false,
+    },
+    gears: {
+      type: "number",
+      default: 4,
+      min: 0,
+      max: 12,
+      step: 1,
+      description: "Gears",
+      hiddenFromList: false,
+    },
+    speed: {
+      type: "number",
+      default: 1,
+      min: 0.25,
+      max: 4,
+      step: 0.25,
+      description: "Speed",
+      hiddenFromList: false,
+    },
+  },
+  durationInFrames: 120,
+  fps: FPS,
+  compositionWidth: W,
+  compositionHeight: H,
+};

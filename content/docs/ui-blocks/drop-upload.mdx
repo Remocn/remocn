@@ -1,0 +1,113 @@
+---
+title: Drop Upload
+description: "A file card drops into a zone, becomes an upload row, fills a progress bar and ends on a check."
+component: drop-upload
+vibe: clean
+length: 128
+useWhen:
+  - "A feature beat about importing a document, with the full drop, progress and success arc."
+  - "A dashboard or docs tool needs a clean upload moment with the file name, type and size visible."
+  - "A portrait cut should also show recent uploads under the active one."
+avoidWhen:
+  - "Several files go in at once and each resolves in turn — use `multi-file-drop`."
+  - "You need a full dropzone UI with a list of results — use `file-dropzone`."
+  - "Only a progress bar filling is needed with no file — use `progress`."
+---
+
+<ComponentPreview name="drop-upload" />
+
+<InstallBlock name="drop-upload" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { DropUpload } from "@/components/remocn/drop-upload";
+
+const DropUploadScene = () => (
+  <DropUpload
+    title="Drop in your launch notes"
+    fileName="launch-notes.md"
+    fileKind="MD"
+    fileSize="2.4 MB"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="DropUpload"
+    component={DropUploadScene}
+    durationInFrames={162}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A drop zone appears with a title and hint, a file card flies in and drops, then collapses into an upload row. A progress bar fills and the row ends on a check mark. Pass your own `title`, `fileName`, `fileKind`, `fileSize` and `hint`; the `history` rows only show in portrait. It ships light and dark through `theme`.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color scheme. Ships light and dark.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for the drop zone, progress and check.",
+    },
+    {
+      name: "title",
+      type: "string",
+      default: "\"Drop in your launch notes\"",
+      description: "Heading above the drop zone.",
+    },
+    {
+      name: "fileName",
+      type: "string",
+      default: "\"launch-notes.md\"",
+      description: "Name of the dropped file.",
+    },
+    {
+      name: "fileKind",
+      type: "string",
+      default: "\"MD\"",
+      description: "File type badge, such as MD or PDF.",
+    },
+    {
+      name: "fileSize",
+      type: "string",
+      default: "\"2.4 MB\"",
+      description: "File size text.",
+    },
+    {
+      name: "hint",
+      type: "string",
+      default: "\"MD, PDF or ZIP · up to 50 MB\"",
+      description: "Helper text inside the drop zone.",
+    },
+    {
+      name: "history",
+      type: "{ name: string; kind: string; size: string; ago: string }[]",
+      description: "Earlier uploads listed below. Shown in portrait only.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "Shader preset id for the animated background.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Partial shader parameters that override the ground preset.",
+    },
+  ]}
+/>

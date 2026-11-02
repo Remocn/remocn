@@ -1,0 +1,19 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "shader-grain-gradient-nebula",
+  "title": "Shader Grain Gradient Nebula",
+  "description": "Magenta and cyan glow blooming from the corners of deep space.",
+  "registryDependencies": ["@remocn/shader-grain-gradient"],
+  "files": [
+    {
+      "path": "registry/remocn/shader-grain-gradient-nebula/index.tsx",
+      "content": "\"use client\";\n\nimport {\n  ShaderGrainGradient,\n  type ShaderGrainGradientProps,\n} from \"@/components/remocn/shader-grain-gradient\";\n\n// Nebula: magenta and cyan glow blooming from the corners of deep space.\n// A preset of ShaderGrainGradient. The whole look lives in the object below, so tune\n// it freely. Props you pass override the preset, except `speed`, which scales\n// the preset's own speed instead of replacing it.\n\nexport const shaderGrainGradientNebulaPreset = {\n  speed: 1,\n  shape: \"corners\",\n  colorBack: \"#05010f\",\n  colors: [\"#7a2cff\", \"#ff4ecd\", \"#2ec5ff\"],\n  softness: 1,\n  intensity: 0.7,\n  noise: 0.2,\n  scale: 0.6,\n} satisfies ShaderGrainGradientProps;\n\nexport function ShaderGrainGradientNebula({\n  speed = 1,\n  ...props\n}: ShaderGrainGradientProps) {\n  return (\n    <ShaderGrainGradient\n      {...shaderGrainGradientNebulaPreset}\n      {...props}\n      speed={shaderGrainGradientNebulaPreset.speed * speed}\n    />\n  );\n}\n",
+      "type": "registry:component",
+      "target": "components/remocn/shader-grain-gradient-nebula.tsx"
+    }
+  ],
+  "meta": {
+    "presetOf": "shader-grain-gradient"
+  },
+  "type": "registry:component"
+}

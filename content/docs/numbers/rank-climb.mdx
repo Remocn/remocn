@@ -1,0 +1,103 @@
+---
+title: Rank Climb
+description: "A ranked list reorders as the brand climbs from a low position to number one, with vote counts."
+component: rank-climb
+vibe: social
+length: 140
+useWhen:
+  - "A launch-day beat showing the product reaching the top of a ranking."
+  - "A leaderboard climb where other entries step aside one by one."
+  - "A social-proof moment with an eyebrow and a short caption on the win."
+avoidWhen:
+  - "You show a live race with gaps and laps — use `timing-tower`."
+  - "You show a new top entry in an arcade table — use `high-score`."
+  - "You show growth over time on a curve — use `growth-line`."
+---
+
+<ComponentPreview name="rank-climb" />
+
+<InstallBlock name="rank-climb" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { RankClimb } from "@/components/remocn/rank-climb";
+
+const RankClimbScene = () => (
+  <RankClimb brand="remocn" from={8} to={1} eyebrow="Product of the day" caption="on the leaderboard" />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="RankClimb"
+    component={RankClimbScene}
+    durationInFrames={175}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The list builds, then the brand's row overtakes the rows above it one at a time, speeding up, until it lands at the target rank and the win callout settles. Pass `items` (label and votes), `brand` (a label from the list), `from`, `to`, `eyebrow` and `caption`; it ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "items",
+      type: "RankItem[]",
+      default: "DEFAULT_ITEMS",
+      description: "Entries with label and vote count; the brand row is picked from these.",
+    },
+    {
+      name: "brand",
+      type: "string",
+      default: "\"remocn\"",
+      description: "Label of the entry that climbs.",
+    },
+    {
+      name: "from",
+      type: "number",
+      default: "8",
+      description: "Starting rank of the brand, 1 is the top.",
+    },
+    {
+      name: "to",
+      type: "number",
+      default: "1",
+      description: "Final rank of the brand.",
+    },
+    {
+      name: "eyebrow",
+      type: "string",
+      default: "\"Product of the day\"",
+      description: "Small line above the winning rank.",
+    },
+    {
+      name: "caption",
+      type: "string",
+      default: "\"on Product Hunt\"",
+      description: "Line shown beside the final rank.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for highlights and small marks.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color theme, \"dark\" or \"light\".",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+  ]}
+/>

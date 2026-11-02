@@ -1,0 +1,114 @@
+---
+title: Send Fountain
+description: "A launch board dashboard fills with a video, signup bars, a metric and asset tiles"
+component: send-fountain
+vibe: tech
+length: 144
+useWhen:
+  - "A launch beat where one prompt turns into a finished dashboard filled with a video, a metric and asset tiles."
+  - "An AI builder or no-code product demo that needs to show a single request producing a whole workspace."
+  - "A vertical or landscape hero shot of a product generating its own launch board."
+avoidWhen:
+  - "You want a prompt to become a full app screen, not a dashboard of tiles — use `prompt-to-app`."
+  - "The beat is only about a live stats panel with a chart and activity feed — use `live-dashboard`."
+  - "You just need a cursor click to expand a card — use `button-to-card`."
+---
+
+<ComponentPreview name="send-fountain" />
+
+<InstallBlock name="send-fountain" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { SendFountain } from "@/components/remocn/send-fountain";
+
+const SendFountainScene = () => (
+  <SendFountain prompt="Build a launch dashboard for the v2 release" stat={47200} statDelta="+18%" />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="SendFountain"
+    component={SendFountainScene}
+    durationInFrames={144}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A prompt bar types a request and presses send, the answer ejects as six cards that fly up and snap into a launch-board window, then a metric ticks up and signup avatars and a live badge arrive. Pass `prompt`, `appTitle`, `heroTitle`, `stat` with `statLabel` and `statDelta` to make it yours, and `images` with your own pictures for the hero and cover cards (the default image files only exist in the remocn repo). It ships light and dark through `theme`.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Visual theme; ships dark and light.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#ff5a1f\"",
+      description: "Accent color for the send button and highlights.",
+    },
+    {
+      name: "prompt",
+      type: "string",
+      default: "\"Build a launch dashboard for the v2 release\"",
+      description: "Request typed into the prompt bar.",
+    },
+    {
+      name: "appTitle",
+      type: "string",
+      default: "\"Launch board\"",
+      description: "Title shown in the app window chrome.",
+    },
+    {
+      name: "heroTitle",
+      type: "string",
+      default: "\"Launch film\"",
+      description: "Title of the large video card.",
+    },
+    {
+      name: "stat",
+      type: "number",
+      default: "47200",
+      description: "Final value of the headline metric.",
+    },
+    {
+      name: "statLabel",
+      type: "string",
+      default: "\"Weekly active\"",
+      description: "Label under the headline metric.",
+    },
+    {
+      name: "statDelta",
+      type: "string",
+      default: "\"+18%\"",
+      description: "Change badge shown next to the metric.",
+    },
+    {
+      name: "images",
+      type: "string[]",
+      description: "Image URLs for the hero and cover cards; defaults ship with remocn only.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "Preset id for the gradients.sh background shader.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the shader parameters of the chosen ground.",
+    },
+  ]}
+/>

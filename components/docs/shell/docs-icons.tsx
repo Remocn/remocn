@@ -111,6 +111,28 @@ const GROUP_PATHS: Record<string, ReactNode> = {
       <path d="M14 12v-1.5h6V12M17 10.5V19M15.5 19h3" />
     </>
   ),
+  numbers: (
+    <>
+      <path d="M4 20.5h16" />
+      <rect x="5" y="12" width="3.5" height="8.5" rx="1" />
+      <rect x="10.25" y="7" width="3.5" height="13.5" rx="1" />
+      <rect x="15.5" y="3.5" width="3.5" height="17" rx="1" />
+    </>
+  ),
+  "product-scenes": (
+    <>
+      <rect x="2.5" y="4" width="19" height="14" rx="2.5" />
+      <path d="M2.5 8h19M8 21h8M12 18v3" />
+      <circle cx="5" cy="6" r=".5" />
+    </>
+  ),
+  media: (
+    <>
+      <rect x="3" y="3.5" width="18" height="17" rx="3" />
+      <circle cx="9" cy="9" r="1.75" />
+      <path d="m3 16.5 5-4.5 4 3.5 3-2.5 6 5" />
+    </>
+  ),
   "ui-blocks": (
     <>
       <rect x="3.5" y="3.5" width="7" height="9" rx="2" />

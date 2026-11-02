@@ -1,0 +1,87 @@
+---
+title: Churn Count
+description: "A huge frame counter reaches 72,960 under a small blue caption on black"
+component: churn-count
+vibe: data
+length: 97
+useWhen:
+  - "A huge-figure beat where a counter races up and the changing digits flash thin and blue before settling at full weight."
+  - "A throughput claim such as frames played back live that needs a monumental number with a small caption beside it."
+  - "A scene layered over footage or a gradient, using a transparent background."
+avoidWhen:
+  - "You want a slower number that builds with carries — use `carry-count`."
+  - "You want a number with a spring landing and a punch — use `smash-count`."
+  - "You want a number that rolls its digits like a live feed — use `live-ticker`."
+---
+
+<ComponentPreview name="churn-count" />
+
+<InstallBlock name="churn-count" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { ChurnCount } from "@/components/remocn/churn-count";
+
+const ChurnCountScene = () => <ChurnCount value={72960} label="frames played back live, straight from your props" />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="ChurnCount"
+    component={ChurnCountScene}
+    durationInFrames={130}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A giant number sits at the bottom right and counts from `from` to `value` with a fast ease-out. Digits that are still changing are drawn thin and in the accent colour, then thicken back to full weight as they settle. A small caption fades in beside it. Pass `value`, `from` and `label`. It ships light and dark through the `theme` prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "value",
+      type: "number",
+      default: "72960",
+      description: "The final number the count lands on.",
+    },
+    {
+      name: "from",
+      type: "number",
+      default: "0",
+      description: "The number the count starts from.",
+    },
+    {
+      name: "label",
+      type: "string",
+      default: "\"frames played back live, straight from your props\"",
+      description: "Small caption beside the figure.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Colour of digits while they are still changing. Hex value expected.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Stage colour; pass 'transparent' to layer over other footage.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier; 1 is the designed pace.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark.",
+    },
+  ]}
+/>

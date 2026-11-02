@@ -1,0 +1,112 @@
+---
+title: Node Trail
+description: "A prompt node trails dotted lines to workflow nodes one by one, then the camera pulls back to the board"
+component: node-trail
+vibe: tech
+length: 154
+useWhen:
+  - "A beat showing one typed prompt expanding into a multi-step pipeline such as script, scenes, render, publish."
+  - "An automation or agent product introducing its workflow canvas with a closing one-line headline."
+  - "A launch video that needs to explain a chain of stages without a full UI walkthrough."
+avoidWhen:
+  - "The graph should reshuffle between several layouts rather than grow once — use `graph-relayout`."
+  - "You want a finished app to appear from the prompt, not a pipeline diagram — use `prompt-to-app`."
+  - "The viewer should watch a prompt animate inside a chat composer — use `ai-prompt-flow`."
+---
+
+<ComponentPreview name="node-trail" />
+
+<InstallBlock name="node-trail" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { NodeTrail } from "@/components/remocn/node-trail";
+
+const NodeTrailScene = () => (
+  <NodeTrail
+    prompt="A teaser for our spring release"
+    headline="One prompt. Every format."
+    boardName="spring-release.flow"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="NodeTrail"
+    component={NodeTrailScene}
+    durationInFrames={193}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A prompt field types your text and is pressed, then dotted lines draw out to each step node in turn, each arriving with a pop. The camera then pulls back to reveal the whole board with its name, and the headline rises in. Pass `prompt`, `steps` (label, icons, tint, columns), `headline`, and `boardName` to make it yours. It ships light and dark through `theme`.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark interface.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Accent color for the prompt and trails.",
+    },
+    {
+      name: "prompt",
+      type: "string",
+      default: "DEFAULT_PROMPT",
+      description: "The text typed into the prompt node.",
+    },
+    {
+      name: "placeholder",
+      type: "string",
+      default: "\"Describe your launch\"",
+      description: "Placeholder shown in the prompt before typing.",
+    },
+    {
+      name: "promptLabel",
+      type: "string",
+      default: "\"Prompt\"",
+      description: "Label above the prompt node.",
+    },
+    {
+      name: "steps",
+      type: "NodeTrailStep[]",
+      default: "DEFAULT_STEPS",
+      description: "Nodes the trail visits: label, icons, tint, columns.",
+    },
+    {
+      name: "headline",
+      type: "string",
+      default: "\"From one prompt to every screen.\"",
+      description: "Closing headline shown after the camera pulls back.",
+    },
+    {
+      name: "boardName",
+      type: "string",
+      default: "\"launch-film.flow\"",
+      description: "File name shown on the board chrome.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "Gradient shader preset for the background.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the shader preset parameters.",
+    },
+  ]}
+/>

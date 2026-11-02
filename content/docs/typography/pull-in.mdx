@@ -1,0 +1,89 @@
+---
+title: Pull in
+description: "A fixed lead phrase stays while spaced-out place words pull into view one after another."
+component: pull-in
+vibe: clean
+length: 183
+useWhen:
+  - "A platform-coverage beat, such as now in vertical, 4K and your codebase."
+  - "A where-it-works list that should feel like arrivals."
+  - "A short supporting line under a hero that names several targets."
+avoidWhen:
+  - "You want a time-based countdown — use `on-approach`, which plays almost the same way."
+  - "The slot should stay a fixed width — use `width-lock`."
+  - "A word cycles through stops to a final word — use `layover`."
+---
+
+<ComponentPreview name="pull-in" />
+
+<InstallBlock name="pull-in" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { PullIn } from "@/components/remocn/pull-in";
+
+const PullInScene = () => (
+  <PullIn lead="Now in" places={["vertical.", "4K.", "your codebase."]} hold={24} />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="PullIn"
+    component={PullInScene}
+    durationInFrames={175}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The `lead` phrase holds while each entry in `places` pulls into view from a wide spread and then departs for the next. Pass `lead` and `places`, and tune `hold` for pace. It ships in light and dark through the `theme` prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "lead",
+      type: "string",
+      default: "\"Now in\"",
+      description: "Phrase that stays in place.",
+    },
+    {
+      name: "places",
+      type: "string[]",
+      default: "[\"vertical.\", \"4K.\", \"your codebase.\"]",
+      description: "Words pulled into view in order.",
+    },
+    {
+      name: "hold",
+      type: "number",
+      default: "24",
+      description: "Frames each state stays on screen before the next one.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Accent color override; falls back to the theme accent.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background color override; falls back to the theme background.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark; picks the palette.",
+    },
+  ]}
+/>

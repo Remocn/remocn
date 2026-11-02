@@ -1,0 +1,109 @@
+---
+title: Multiplayer Cursors
+description: "Collaborator cursors drop stickies, select cards and comment on a shared board"
+component: multiplayer-cursors
+vibe: playful
+length: 260
+useWhen:
+  - "A collaboration launch beat where several named cursors work on one shared board at once."
+  - "A whiteboard, design or planning tool demo showing real-time teamwork."
+  - "A product tour moment that needs stickies, selection, dragging and comments in a single shot."
+avoidWhen:
+  - "The beat is a chat thread with reactions and replies — use `channel-reactions`."
+  - "You only want one cursor moving through a task flow — use `flow-builder`."
+  - "You want a single teammate invite and confirmation — use `invite-team`."
+---
+
+<ComponentPreview name="multiplayer-cursors" />
+
+<InstallBlock name="multiplayer-cursors" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { MultiplayerCursors } from "@/components/remocn/multiplayer-cursors";
+
+const MultiplayerCursorsScene = () => (
+  <MultiplayerCursors boardTitle="Launch plan" stickyText="Record the hero demo by Friday" commentText="Love this. Ship it Friday." />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="MultiplayerCursors"
+    component={MultiplayerCursorsScene}
+    durationInFrames={270}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Four named cursors join a board: the first drops a sticky and types into it, the second marquee-selects a card, the third drags a shape, and the fourth leaves a typed comment. Pass `collaborators`, `boardTitle`, `stickyText` and `commentText` to make it yours. It ships light and dark through `theme`.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "collaborators",
+      type: "Collaborator[]",
+      default: "DEFAULT_COLLABORATORS",
+      description: "Four collaborators in order: sticky, select, drag, comment.",
+    },
+    {
+      name: "boardTitle",
+      type: "string",
+      default: "\"Launch plan\"",
+      description: "Title shown in the board header.",
+    },
+    {
+      name: "headline",
+      type: "string",
+      default: "\"Plan the launch together\"",
+      description: "Large line above the board in the 9:16 layout.",
+    },
+    {
+      name: "stickyText",
+      type: "string",
+      default: "\"Record the hero demo by Friday\"",
+      description: "Text typed into the dropped sticky note.",
+    },
+    {
+      name: "commentText",
+      type: "string",
+      default: "\"Love this. Ship it Friday.\"",
+      description: "Text typed into the comment bubble.",
+    },
+    {
+      name: "theme",
+      type: "\"light\" | \"dark\"",
+      default: "\"light\"",
+      description: "Visual theme; ships light and dark.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for highlights and controls.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "Preset id for the gradients.sh background shader.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the shader parameters of the chosen ground.",
+    },
+  ]}
+/>

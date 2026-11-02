@@ -1,0 +1,89 @@
+---
+title: Tally Marks
+description: "Hand-drawn tally marks fill rows, straighten into neat groups and resolve into a counted total."
+component: tally-marks
+vibe: paper
+length: 152
+useWhen:
+  - "A paper or hand-made beat where a big count should be earned one stroke at a time."
+  - "A launch-day total, such as videos rendered, that should read as counted by hand before it turns digital."
+  - "A slower, tactile stat beat with a label under a gradient numeral."
+avoidWhen:
+  - "You need the number to arrive fast and clean - use `compact-stat`."
+  - "The number should be built from drawn pen strokes of its own digits - use `single-stroke`."
+  - "A pixel field organizing into the number is the look - use `number-mosaic`."
+---
+
+<ComponentPreview name="tally-marks" />
+
+<InstallBlock name="tally-marks" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { TallyMarks } from "@/components/remocn/tally-marks";
+
+const TallyMarksScene = () => <TallyMarks value={1240} label="videos rendered on launch day" />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="TallyMarks"
+    component={TallyMarksScene}
+    durationInFrames={180}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Hand-drawn tally strokes scratch in across the frame while the camera drifts over them, then straighten into neat tally groups before collapsing into a gradient total with a label beneath. Pass `value` and `label`; `rows` and `groupsPerRow` size the tally field and `accent` colors the numeral. It ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "value",
+      type: "number",
+      default: "1240",
+      description: "The total the tally resolves into.",
+    },
+    {
+      name: "label",
+      type: "string",
+      default: "\"videos rendered on launch day\"",
+      description: "Caption under the total.",
+    },
+    {
+      name: "rows",
+      type: "number",
+      default: "4",
+      description: "How many rows of tally groups.",
+    },
+    {
+      name: "groupsPerRow",
+      type: "number",
+      default: "9",
+      description: "How many tally groups sit in each row.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "End color of the numeral gradient.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark palette.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier.",
+    },
+  ]}
+/>

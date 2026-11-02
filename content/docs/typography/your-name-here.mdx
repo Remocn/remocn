@@ -1,0 +1,101 @@
+---
+title: Your Name Here
+description: "A launch-film caption has a slot where the brand name is swapped in for the viewer's own."
+component: your-name-here
+vibe: playful
+length: 146
+useWhen:
+  - "A template-style beat that tells the viewer to drop in their own product name."
+  - "A call-to-action scene near the end of a demo that invites the viewer to make their own film."
+  - "A swap-one-prop pitch where the placeholder itself is the joke."
+avoidWhen:
+  - "The change is a whole headline, not a name slot — use `layout-swap`."
+  - "One word inside a sentence should cycle through options — use `width-lock`."
+  - "You want the name revealed after build-up lines — use `we-call-it`."
+---
+
+<ComponentPreview name="your-name-here" />
+
+<InstallBlock name="your-name-here" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { YourNameHere } from "@/components/remocn/your-name-here";
+
+const YourNameHereScene = () => (
+  <YourNameHere lead="A launch film for" slot="yourProduct" brand="Acme" note="Swap one prop. The film is yours." />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="YourNameHere"
+    component={YourNameHereScene}
+    durationInFrames={180}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A lead-in line runs to a highlighted slot that swaps from `slot` to `brand`, then a closing note lands below. Pass `lead`, `brand`, `slot` and `note` to personalize it. It ships in light and dark through the `theme` prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "lead",
+      type: "string",
+      default: "\"A launch film for\"",
+      description: "Text before the slot.",
+    },
+    {
+      name: "brand",
+      type: "string",
+      default: "\"remocn\"",
+      description: "Name that replaces the placeholder.",
+    },
+    {
+      name: "slot",
+      type: "string",
+      default: "\"yourProduct\"",
+      description: "Placeholder text shown first.",
+    },
+    {
+      name: "end",
+      type: "string",
+      default: "\".\"",
+      description: "Closing punctuation after the name.",
+    },
+    {
+      name: "note",
+      type: "string",
+      default: "\"Swap one prop. The film is yours.\"",
+      description: "Caption shown under the main line.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Accent color override; falls back to the theme accent.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background color override; falls back to the theme background.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark; picks the palette.",
+    },
+  ]}
+/>

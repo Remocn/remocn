@@ -1,0 +1,89 @@
+---
+title: Launch Date
+description: "A calendar month draws itself, days sweep on and the launch date glows in a ring"
+component: launch-date
+vibe: premium
+length: 170
+useWhen:
+  - "A date-announcement beat where a calendar month draws itself, the launch day lights up and the date resolves into a clean numeric lockup."
+  - "A save-the-date teaser that ends on a month.day stamp with a short 'Coming soon' line."
+  - "A launch video that needs the date shown prominently, in either month-first or day-first order."
+avoidWhen:
+  - "You want a cursor clicking a day and typing an event into a realistic calendar UI — use `calendar-pick`."
+  - "You want the build-up as a 3-2-1 count instead of a date — use `countdown`."
+  - "The year alone is the message and it should land on a scale — use `ruler-scrub`."
+---
+
+<ComponentPreview name="launch-date" />
+
+<InstallBlock name="launch-date" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { LaunchDate } from "@/components/remocn/launch-date";
+
+const LaunchDateScene = () => (
+  <LaunchDate
+    date={{ month: 10, day: 30, year: 2026 }}
+    label="Coming soon"
+    order="month-day"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="LaunchDate"
+    component={LaunchDateScene}
+    durationInFrames={195}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A calendar month draws itself line by line and the days sweep on until the launch day lights up. The camera pushes in, a ring is drawn around that day, and the day glides into a large lockup where the ring becomes the full stop between day and month. A label fades in underneath. Pass `date` as month, day and year, `label` and `order`. It ships light and dark through the `theme` prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "date",
+      type: "LaunchDateValue",
+      default: "{ month: 10, day: 30, year: 2026 }",
+      description: "Launch date as month (1-12), day and year. Month and day are clamped to valid values.",
+    },
+    {
+      name: "label",
+      type: "string",
+      default: "\"Coming soon\"",
+      description: "Short line under the lockup.",
+    },
+    {
+      name: "order",
+      type: "\"month-day\" | \"day-month\"",
+      default: "\"month-day\"",
+      description: "\"month-day\" renders 10.30, \"day-month\" renders 30.10.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Colour of the ring, glow and highlights around the launch day.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier; 1 is the designed pace.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark.",
+    },
+  ]}
+/>

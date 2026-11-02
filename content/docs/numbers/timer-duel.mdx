@@ -1,0 +1,101 @@
+---
+title: Timer Duel
+description: "Two stopwatch timers run side by side, the faster one ending on 38x faster"
+component: timer-duel
+vibe: data
+length: 138
+useWhen:
+  - "A speed-comparison beat where two stopwatches start together and the faster one stops first, with a big multiplier left on screen."
+  - "A before-and-after time claim, such as hours by hand against minutes with the product, shown as two running clocks."
+  - "A short, literal 'we are faster' moment that needs no chart, only two clocks and a delta."
+avoidWhen:
+  - "The two values should be shown as one slab that physically squeezes — use `thin-slab`."
+  - "You need more than two contenders racing on a shared clock — use `benchmark-race`."
+  - "You want a sports-broadcast framing with a final scoreline — use `score-bug`."
+---
+
+<ComponentPreview name="timer-duel" />
+
+<InstallBlock name="timer-duel" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { TimerDuel } from "@/components/remocn/timer-duel";
+
+const TimerDuelScene = () => (
+  <TimerDuel
+    before={2718.4}
+    after={70.9}
+    beforeLabel="Before"
+    afterLabel="With remocn"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="TimerDuel"
+    component={TimerDuelScene}
+    durationInFrames={170}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Two stopwatch readouts start together. The faster one stops first and lights up in the accent colour, then the slower one runs on, slows and freezes dimmed. The row rises and a large multiplier such as '38x faster' lands below it. Pass `before` and `after` in seconds, and `beforeLabel` and `afterLabel` to name the two clocks. It ships light and dark through the `theme` prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "before",
+      type: "number",
+      default: "2718.4",
+      description: "Duration of the slower run, in seconds.",
+    },
+    {
+      name: "after",
+      type: "number",
+      default: "70.9",
+      description: "Duration of the faster run, in seconds.",
+    },
+    {
+      name: "beforeLabel",
+      type: "string",
+      default: "\"Before\"",
+      description: "Label under the slower clock.",
+    },
+    {
+      name: "afterLabel",
+      type: "string",
+      default: "\"With remocn\"",
+      description: "Label under the faster clock.",
+    },
+    {
+      name: "delta",
+      type: "string",
+      description: "Text of the big result line. Defaults to the computed ratio, e.g. '38× faster'.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Colour of the faster clock once it stops.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier; 1 is the designed pace.",
+    },
+  ]}
+/>

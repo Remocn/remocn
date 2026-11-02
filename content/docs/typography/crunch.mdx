@@ -1,0 +1,87 @@
+---
+title: Crunch
+description: "A timestamped story line, \"It shipped, with time to ...\", fades in over a dark brown ground"
+component: crunch
+vibe: paper
+length: 170
+useWhen:
+  - "A short story beat about a deadline, told in timestamped lines that build pressure."
+  - "A problem-to-relief arc where the middle line should feel cramped."
+  - "A narrative intro to a product where the last line is the resolution."
+avoidWhen:
+  - "You want several timestamped lines drifting past rather than one squeeze — use `story-dip`."
+  - "The story is a single dated line — use `overnight`."
+  - "You need a plain statement with no narrative arc — use `soft-blur-in`."
+---
+
+<ComponentPreview name="crunch" />
+
+<InstallBlock name="crunch" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { Crunch } from "@/components/remocn/crunch";
+
+const CrunchScene = () => <Crunch setup={{ slug: "Monday, 10:00 AM", line: "Maya had a launch on Friday." }} snag={{ slug: "Thursday, 11:40 PM", line: "Nine hours left, and still no video." }} />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="Crunch"
+    component={CrunchScene}
+    durationInFrames={180}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A timestamped story plays in three beats: a setup line fades out, a tense snag line sits in a column that squeezes tighter and tighter, then the walls release and a calm resolution line arrives. Pass `setup`, `snag` and `resolution`, each with a `slug` (timestamp) and `line`; beats stretch with the composition length.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "setup",
+      type: "StoryBeat",
+      default: "DEFAULT_SETUP",
+      description: "First beat: a timestamp slug and a line.",
+    },
+    {
+      name: "snag",
+      type: "StoryBeat",
+      default: "DEFAULT_SNAG",
+      description: "Middle beat shown in the squeezing column.",
+    },
+    {
+      name: "resolution",
+      type: "StoryBeat",
+      default: "DEFAULT_RESOLUTION",
+      description: "Final beat that arrives after the release.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Color for the slug and resolution; defaults to the theme accent.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Stage fill color; pass \"transparent\" to overlay your own footage.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color scheme; ships dark and light.",
+    },
+  ]}
+/>

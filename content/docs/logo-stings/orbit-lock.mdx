@@ -1,0 +1,84 @@
+---
+title: Orbit Lock
+description: Moons ride tilted, shrinking orbits into a core that bursts into a ring flash, and the logo springs into place
+component: orbit-lock
+vibe: tech
+length: 50
+useWhen:
+  - "A tech, AI or infrastructure product needs an opener or closer where the logo arrives out of a small physical event."
+  - "You want a sting with a clear impact frame to sync a sound hit to, at frame 30."
+  - "Your lockup is a logo you already have as an image or component, and the sting should frame it, not redraw it."
+avoidWhen:
+  - "Several partner or integration logos should arrive together as a group — use `logo-enter`."
+  - "The reveal should feel cinematic and calm rather than kinetic — use `anamorphic-flare` or `spotlight`."
+  - "The brand is a word with no mark and the reveal should be pure type — use `mask-reveal-up` or `spring-scale-in`."
+  - "The moment should explode outward to clear the frame for a title, with no logo at the end — use `radial-burst`."
+---
+
+<ComponentPreview name="orbit-lock" />
+
+<InstallBlock name="orbit-lock" />
+
+## Usage
+
+`OrbitLock` fills the frame with its background and draws a small red core
+with a few moons circling it on tilted orbits. The orbits shrink on an
+ease-in curve while the moons speed up, each one trailing a tapered ribbon.
+Moons on the far side of an orbit pass behind the core. At frame 30 the moons
+hit the core: it flashes to `flashColor`, swells and pops, a ring shoots out,
+and your logo springs in from 55% scale with a small overshoot.
+
+```tsx
+import { Img, staticFile } from "remotion";
+import { OrbitLock } from "@/components/remocn/orbit-lock";
+
+export const LogoSting = () => (
+  <OrbitLock moons={3} tilt={64}>
+    <Img src={staticFile("logo.svg")} style={{ height: 120 }} />
+  </OrbitLock>
+);
+```
+
+`children` are centered in the frame and rendered at their own size; the sting
+does not resize them. The core, orbits and moons scale with the shorter side
+of the composition, so the look is the same at 720p and 4K. Everything derives
+from the frame, so seeking and rendering are deterministic.
+
+## Timing
+
+At 30 fps and `speed={1}`:
+
+| Frames | Motion |
+| --- | --- |
+| 0–5 | Core, moons and faint orbit guides fade in |
+| 0–30 | Orbits collapse toward the core while the moons spin 1.9 turns; the core swells by up to 30% near the end |
+| 28–31 | Core color shifts to `flashColor` |
+| 30–36 | Core bursts outward and shrinks to nothing |
+| 30–46 | Ring flash expands and fades |
+| 33–36 | Logo fades in |
+| 33–50 | Logo springs from 55% to full size, peaking near 107% around frame 40 |
+
+Give the sequence about 30 extra frames after frame 50 to hold the logo. The
+docs preview runs 78 frames. `speed` scales the whole timeline, so at
+`speed={2}` the impact lands on frame 15. `speed={0}` freezes on the first,
+empty frame.
+
+## Variations
+
+`moons={1}` gives a single, cleaner orbit; 5 or more turns it into a busy
+atom. `tilt={0}` draws flat circles, and values toward 85 flatten the orbits
+into near edge-on lines. For a light theme, set `backgroundColor` light and
+`moonColor` and `flashColor` dark so the trails and ring still read.
+
+<PropsTable title="Props"
+  rows={[
+    { name: "children", type: "ReactNode", description: "Logo revealed after the impact, centered in the frame. Without it a placeholder lockup (a rounded mark and the word remocn) is shown" },
+    { name: "moons", type: "number", default: "3", description: "Number of moons, rounded, minimum 1" },
+    { name: "tilt", type: "number", default: "64", description: "Orbit tilt in degrees, clamped to 0–85; 0 is a flat circle" },
+    { name: "coreColor", type: "string", default: '"#E5322D"', description: "Core fill before the impact" },
+    { name: "moonColor", type: "string", default: '"#FFFFFF"', description: "Moons, their trails and the orbit guides" },
+    { name: "flashColor", type: "string", default: '"#FFFFFF"', description: "Core color at impact and the expanding ring" },
+    { name: "backgroundColor", type: "string", default: '"#111111"', description: "Full-frame background" },
+    { name: "speed", type: "number", default: "1", description: "Playback multiplier; 0 freezes on the first frame" },
+  ]}
+/>

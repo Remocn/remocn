@@ -1,0 +1,125 @@
+---
+title: Phone Trio
+description: "Three phones rise side by side: a profile, a scrolling photo feed and a banner announcing the portfolio is live."
+component: phone-trio
+vibe: premium
+length: 104
+useWhen:
+  - "A portfolio, creator or personal-brand launch that needs profile, feed and notification in one frame."
+  - "A premium editorial hero with a bold headline and one accent-colored word."
+  - "A reveal that ends on a we-are-live banner dropping onto a phone."
+avoidWhen:
+  - "You only need one phone and a long scrolling screen — use `phone-scroll`."
+  - "The story is install and download progress — use `app-store-listing`."
+  - "The product is a desktop web app, not mobile — use `url-bar-cta`."
+---
+
+<ComponentPreview name="phone-trio" />
+
+<InstallBlock name="phone-trio" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { PhoneTrio } from "@/components/remocn/phone-trio";
+
+const PhoneTrioScene = () => (
+  <PhoneTrio
+    name="Ines Marlow"
+    role="Motion designer"
+    headline="Driven by motion, obsessed with the"
+    accentWord="seamless."
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="PhoneTrio"
+    component={PhoneTrioScene}
+    durationInFrames={132}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Three phones rise one after another: a profile card with `name`, `handle`, `role` and `skills`, a photo feed that scrolls, and a third that receives a `liveLabel` banner as the trio fans forward. The headline joins `headline` with an accent-colored `accentWord`. Ships dark by default and light. The default `images` are files that only exist in the remocn repo, so pass your own photo URLs.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark palette",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#ff5a36\"",
+      description: "Accent color for highlights, buttons and progress",
+    },
+    {
+      name: "name",
+      type: "string",
+      default: "\"Ines Marlow\"",
+      description: "Profile name on the first phone",
+    },
+    {
+      name: "handle",
+      type: "string",
+      default: "\"ines.marlow\"",
+      description: "Profile handle under the name",
+    },
+    {
+      name: "role",
+      type: "string",
+      default: "\"Motion designer\"",
+      description: "Role line under the name",
+    },
+    {
+      name: "headline",
+      type: "string",
+      default: "\"Driven by motion, obsessed with the\"",
+      description: "Headline text before the accent word",
+    },
+    {
+      name: "accentWord",
+      type: "string",
+      default: "\"seamless.\"",
+      description: "Last word of the headline, set in the accent color",
+    },
+    {
+      name: "images",
+      type: "string[]",
+      description: "Photo URLs for the feed; defaults exist only in the remocn repo",
+    },
+    {
+      name: "skills",
+      type: "string[]",
+      default: "[\"Motion\", \"Sound\", \"Web\"]",
+      description: "Skill chips shown on the profile",
+    },
+    {
+      name: "liveLabel",
+      type: "string",
+      default: "\"Portfolio is live\"",
+      description: "Text of the banner that drops in near the end",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "gradients.sh preset id for the backdrop shader",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the backdrop shader parameters",
+    },
+  ]}
+/>

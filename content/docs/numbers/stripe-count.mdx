@@ -1,0 +1,105 @@
+---
+title: Stripe Count
+description: "A figure counts up on a bold full-bleed color field as stripes fill its outline, under a caption band."
+component: stripe-count
+vibe: playful
+length: 98
+useWhen:
+  - "A loud, brand-colored stat beat where the whole frame becomes the accent color."
+  - "A count that should start as an outline and thicken into a solid figure."
+  - "A bold number with a caption set in a band above it."
+avoidWhen:
+  - "You want a quiet, dark stage rather than a full-bleed color - use `lumen-count`."
+  - "The big number should be framed by a yellow band with a roman numeral - use `roman-edition`."
+  - "The number belongs on a teal panel with gear steps - use `gear-shift`."
+---
+
+<ComponentPreview name="stripe-count" />
+
+<InstallBlock name="stripe-count" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { StripeCount } from "@/components/remocn/stripe-count";
+
+const StripeCountScene = () => <StripeCount value={184} accent="#FF4F00" label="scenes that take your brand colour from one prop" />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="StripeCount"
+    component={StripeCountScene}
+    durationInFrames={130}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The frame floods with the accent color and a dark caption band sits at the top. The figure counts up as an outline while horizontal stripes sweep across and thicken until the digits are solid dark; the caption rises in word by word. Pass `value`, `from` and `label`; `stripes` sets the stripe count and `accent` the frame color. It ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "value",
+      type: "number",
+      default: "184",
+      description: "The number the count lands on.",
+    },
+    {
+      name: "from",
+      type: "number",
+      default: "0",
+      description: "Starting number of the count.",
+    },
+    {
+      name: "prefix",
+      type: "string",
+      default: "\"\"",
+      description: "Text before the number.",
+    },
+    {
+      name: "suffix",
+      type: "string",
+      default: "\"\"",
+      description: "Text after the number.",
+    },
+    {
+      name: "label",
+      type: "string",
+      default: "\"scenes that take your brand colour from one prop\"",
+      description: "Caption in the top band, rising word by word.",
+    },
+    {
+      name: "stripes",
+      type: "number",
+      default: "12",
+      description: "How many horizontal stripes fill the figure.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Full-bleed frame color; defaults to orange.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Fill of the caption band; defaults to the theme field.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark palette.",
+    },
+  ]}
+/>

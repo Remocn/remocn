@@ -1,0 +1,89 @@
+---
+title: Pulse Line
+description: "A heartbeat-style pulse runs through 'Every frame has a pulse.' with the last word in teal"
+component: pulse-line
+vibe: premium
+length: 103
+useWhen:
+  - "A product beat about speed or liveness where a heartbeat pulse runs through the headline."
+  - "A tagline scene that needs a glowing one-line statement with a short caption below."
+avoidWhen:
+  - "You want a calm sweep of light across the text — use `shimmer-sweep`."
+  - "The line should be written out rather than pulsed — use `typewriter`."
+---
+
+<ComponentPreview name="pulse-line" />
+
+<InstallBlock name="pulse-line" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { PulseLine } from "@/components/remocn/pulse-line";
+
+const PulseLineScene = () => (
+  <PulseLine text="Every frame has a pulse." highlight="a pulse." beats={2} />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="PulseLine"
+    component={PulseLineScene}
+    durationInFrames={130}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A heartbeat pulse travels through the headline glyphs and lights the highlight phrase in an aurora gradient, then the caption fades in. Pass `text`, `highlight`, `caption` and `beats` (1 to 4 pulses); it ships light and dark.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "text",
+      type: "string",
+      default: "\"Every frame has a pulse.\"",
+      description: "The headline the pulse runs through.",
+    },
+    {
+      name: "highlight",
+      type: "string",
+      default: "\"a pulse.\"",
+      description: "Trailing phrase tinted with the aurora gradient.",
+    },
+    {
+      name: "caption",
+      type: "string",
+      default: "\"Motion components for Remotion. Copy one in, own every frame.\"",
+      description: "Small line under the headline; empty to hide.",
+    },
+    {
+      name: "beats",
+      type: "number",
+      default: "2",
+      description: "Number of pulses, from 1 to 4.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent colour (any CSS colour).",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier; above 1 plays faster.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Colour scheme; ships light and dark.",
+    },
+  ]}
+/>

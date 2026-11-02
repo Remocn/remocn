@@ -1,0 +1,136 @@
+---
+title: Feature Flag Rollout
+description: "A feature flag switches on and ramps 5%, 25%, then 100% while guardrail charts and an audit log update."
+component: feature-flag-rollout
+vibe: tech
+length: 182
+useWhen:
+  - "A release-engineering beat showing a gradual rollout: toggle on, drag the percentage up, watch guardrails hold."
+  - "A launch video for a feature-flag or experimentation tool that must prove rollouts are safe."
+  - "A shipped-safely scene where live metric charts and an audit trail sell the confidence."
+avoidWhen:
+  - "You want a build-and-deploy story with logs ending in Ready — use `deploy-pipeline`."
+  - "The point is merging code with passing checks, not controlling exposure — use `pr-merge`."
+  - "You need a plain live-metrics wall without a rollout interaction — use `live-dashboard`."
+---
+
+<ComponentPreview name="feature-flag-rollout" />
+
+<InstallBlock name="feature-flag-rollout" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { FeatureFlagRollout } from "@/components/remocn/feature-flag-rollout";
+
+const FeatureFlagRolloutScene = () => (
+  <FeatureFlagRollout
+    flagName="New checkout flow"
+    steps={[5, 25, 100]}
+    actor="Maya Chen"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="FeatureFlagRollout"
+    component={FeatureFlagRolloutScene}
+    durationInFrames={186}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A feature flag card appears, the toggle flips on at the first step, and a cursor drags the rollout slider through each percentage in `steps` while two guardrail charts (error rate and p95 latency) draw live and an audit log adds a row per step. Pass `flagName`, `flagKey`, `actor` and `steps` to match your product; `metrics` and `history` replace the charts and audit rows. Ships light and dark.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "flagName",
+      type: "string",
+      default: "\"New checkout flow\"",
+      description: "Feature flag display name",
+    },
+    {
+      name: "flagKey",
+      type: "string",
+      default: "\"new-checkout-flow\"",
+      description: "Flag key shown in monospace under the name",
+    },
+    {
+      name: "environment",
+      type: "string",
+      default: "\"Production\"",
+      description: "Environment chip text, e.g. 'Production'",
+    },
+    {
+      name: "steps",
+      type: "number[]",
+      default: "[5, 25, 100]",
+      description: "Rollout percentages the slider steps through",
+    },
+    {
+      name: "totalUsers",
+      type: "number",
+      default: "42800",
+      description: "User count the rollout percentage is applied to",
+    },
+    {
+      name: "actor",
+      type: "string",
+      default: "\"Maya Chen\"",
+      description: "Person named in the audit log entries",
+    },
+    {
+      name: "history",
+      type: "FlagAuditEntry[]",
+      default: "DEFAULT_HISTORY",
+      description: "Existing audit log rows: actor, verb, target, time",
+    },
+    {
+      name: "metrics",
+      type: "GuardrailMetric[]",
+      default: "DEFAULT_METRICS",
+      description: "Guardrail charts; the first two are shown",
+    },
+    {
+      name: "theme",
+      type: "\"light\" | \"dark\"",
+      default: "\"light\"",
+      description: "Light or dark palette",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for highlights, buttons and progress",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "gradients.sh preset id for the backdrop shader",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the backdrop shader parameters",
+    },
+    {
+      name: "workspace",
+      type: "string",
+      description: "Declared but not currently rendered",
+    },
+  ]}
+/>

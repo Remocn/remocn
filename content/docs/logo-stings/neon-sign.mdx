@@ -1,0 +1,91 @@
+---
+title: Neon Sign
+description: A glass neon tube stutters alive segment by segment, buzzes off once, then holds lit with a glow on the wall
+component: neon-sign
+vibe: playful
+length: 40
+useWhen:
+  - "The brand, venue or event has a nightlife, retro or hand-lettered feel and the sting should look like a lit sign."
+  - "Your mark or word exists as a monoline SVG path, so each stroke can light as its own tube."
+  - "You want a short greeting or title card like the default \"hello\" with a buzzing, imperfect start."
+avoidWhen:
+  - "Your logo is a filled image rather than a stroke path — wrap it with `spotlight` or `anamorphic-flare` instead."
+  - "Letters should draw on as clean outlines and then fill, without the neon look — use `outline-trace`."
+  - "The word should be written by hand on paper, not lit in glass — use `handwrite`."
+  - "You want a full retro neon landscape behind your content rather than a sign — use `synthwave`."
+---
+
+<ComponentPreview name="neon-sign" />
+
+<InstallBlock name="neon-sign" />
+
+## Usage
+
+`NeonSign` renders an SVG path as glass neon tubing on a dark wall. The unlit
+glass is visible from the first frame. Each subpath of the path is its own
+tube: tubes switch on one after another, flicker for 7 frames, then hold. Once
+everything is lit, the whole sign drops out for a few frames like a bad
+transformer and comes back for good. A lit tube has four layers: a wide
+blurred glow, a tight halo, the colored tube and a thin hot core. A soft glow
+on the wall behind follows the average brightness of the sign.
+
+```tsx
+import { NeonSign } from "@/components/remocn/neon-sign";
+
+export const LogoSting = () => <NeonSign color="#E5322D" glowColor="#E5322D" />;
+```
+
+With no props it writes a handwritten "hello" with an underline swash. To use
+your own mark or word, pass monoline path data in `path`. Every `M` command
+starts a new tube, so split the artwork where you want separate segments to
+light:
+
+```tsx
+<NeonSign
+  path="M 10 80 L 50 10 L 90 80 M 30 50 L 70 50"
+  strokeWidth={5}
+  color="#4DE1FF"
+  glowColor="#4DE1FF"
+/>
+```
+
+`strokeWidth` is in path units, so match it to your path's scale. Without a
+`viewBox` the sign frames the path's bounding box with padding of six stroke
+widths. The sign is scaled to `fit` of the frame width, and never taller than
+70% of the frame. Flicker comes from Remotion's seeded `random()`, so the
+same `seed` always renders the same frames.
+
+Each tube renders two blurred copies, so very long paths with many subpaths
+are heavier to render than the default.
+
+## Timing
+
+At 30 fps, `speed={1}` and the default six-tube path:
+
+| Frames | Motion |
+| --- | --- |
+| 0 | Unlit glass tubes on the dark wall |
+| 3–22 | Tubes switch on roughly every 3.4 frames, each with up to 2 frames of seeded delay |
+| each onset + 7 | Each tube flickers for 7 frames, then holds lit |
+| 29–32 | The whole sign drops out and stutters back on |
+| 32–40 | The wall glow settles to full strength |
+
+The buzz is fixed at frames 29–32. With more than six or seven tubes the last
+ones are still switching on when it hits, so allow for about 3.4 frames per
+extra tube. The docs preview runs 70 frames. `speed` scales the timeline.
+
+<PropsTable title="Props"
+  rows={[
+    { name: "path", type: "string", default: "handwritten \"hello\"", description: "SVG path data for the tubes; each subpath (M command) lights on its own" },
+    { name: "viewBox", type: "string", description: "viewBox for the path; defaults to the path's bounding box padded by six stroke widths" },
+    { name: "color", type: "string", default: '"#E5322D"', description: "Tube color when lit" },
+    { name: "glowColor", type: "string", default: '"#E5322D"', description: "Halo around the tubes and the glow on the wall" },
+    { name: "tubeColor", type: "string", default: '"#2A2A2A"', description: "Unlit glass tube" },
+    { name: "coreColor", type: "string", default: '"#FFFFFF"', description: "Hot core inside a lit tube" },
+    { name: "backgroundColor", type: "string", default: '"#111111"', description: "Full-frame wall" },
+    { name: "strokeWidth", type: "number", default: "6", description: "Tube thickness in path units" },
+    { name: "fit", type: "number", default: "0.62", description: "Share of the frame width the sign spans, capped at 70% of the height" },
+    { name: "seed", type: "number", default: "7", description: "Seeds each tube's onset delay and flicker pattern" },
+    { name: "speed", type: "number", default: "1", description: "Playback multiplier" },
+  ]}
+/>

@@ -1,0 +1,127 @@
+---
+title: Letter Gate
+description: "The camera pushes into a giant letter pair and the gap opens like a gate onto the next scene"
+component: letter-gate
+vibe: premium
+length: 26
+useWhen:
+  - "A launch video where a call-to-action headline hands off to a prompt or editor screen with a match cut on its own letters."
+  - "You want a bold typographic transition that stays on one word instead of wiping the whole frame."
+  - "A beat that moves from a brand statement into the product UI without a visible seam."
+avoidWhen:
+  - "The outgoing headline is short or has no two adjacent letters worth enlarging — use `ring-cut` for a generic circular cut."
+  - "The cut should be fast and lateral — use `whip-pan`."
+  - "You need a quiet reveal of a single line of text — use `hairline-open`."
+---
+
+<ComponentPreview name="letter-gate" />
+
+<InstallBlock name="letter-gate" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { LetterGateDemo } from "@/components/remocn/letter-gate";
+
+const LetterGateDemoScene = () => (
+  <LetterGateDemo
+    text="Start building"
+    gate="bu"
+    prompt="A launch film for v2"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="LetterGateDemo"
+    component={LetterGateDemoScene}
+    durationInFrames={118}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Scene A shows a short headline while the camera punches in twice. It then pushes into the letter pair named by `gate`, and the pair opens like a gate onto scene B, a prompt box with a label and a next step. Set `text` and make sure `gate` is a two-letter run inside it, then pass `prompt`, `placeholder`, `label` and `nextLabel` for scene B; it ships light and dark.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark palette for both scenes",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Accent color; defaults to the theme accent",
+    },
+    {
+      name: "text",
+      type: "string",
+      default: "\"Start building\"",
+      description: "Headline shown in scene A; the gate letters are taken from it",
+    },
+    {
+      name: "gate",
+      type: "string",
+      default: "\"bu\"",
+      description: "Two-letter run inside text that the camera pushes into",
+    },
+    {
+      name: "prompt",
+      type: "string",
+      default: "\"A launch film for v2\"",
+      description: "Text typed into the scene B prompt box",
+    },
+    {
+      name: "placeholder",
+      type: "string",
+      default: "\"Describe your launch\"",
+      description: "Placeholder shown in the prompt box before typing",
+    },
+    {
+      name: "label",
+      type: "string",
+      default: "\"Prompt\"",
+      description: "Label above the prompt box in scene B",
+    },
+    {
+      name: "nextLabel",
+      type: "string",
+      default: "\"Script\"",
+      description: "Label typed into the next-step node after the press",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "Preset id for the scene A gradients.sh shader ground",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the scene A shader parameters",
+    },
+    {
+      name: "groundB",
+      type: "GshPresetId",
+      description: "Preset id for the scene B gradients.sh shader ground",
+    },
+    {
+      name: "groundParamsB",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the scene B shader parameters",
+    },
+    {
+      name: "transition",
+      type: "LetterGateProps",
+      description: "Overrides for the transition presentation props",
+    },
+  ]}
+/>

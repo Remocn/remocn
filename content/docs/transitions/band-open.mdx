@@ -1,0 +1,105 @@
+---
+title: Band Open
+description: "A horizontal band opens at the center of a stacked headline to reveal a full-frame photo title card"
+component: band-open
+vibe: clean
+length: 36
+useWhen:
+  - "A title card reveal where one word or phrase opens up onto a photo."
+  - "Starting a launch video chapter with a bold typographic stack that splits to show the hero image."
+  - "A date or event announcement that needs a confident, editorial reveal with a caption line."
+avoidWhen:
+  - "You need a vertical reveal rather than a horizontal one — use `column-slide`."
+  - "The reveal should be a thin line of light, not a thick band — use `hairline-open`."
+  - "The reveal should come from a point rather than a band — use `ring-cut`."
+---
+
+<ComponentPreview name="band-open" />
+
+<InstallBlock name="band-open" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { BandOpen } from "@/components/remocn/band-open";
+
+const BandOpenScene = () => (
+  <BandOpen
+    line="Launch day"
+    src="/images/hero.jpg"
+    meta="Thursday · 09:00 · remocn.dev"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="BandOpen"
+    component={BandOpenScene}
+    durationInFrames={126}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Scene A stacks the headline into repeating rows that rise in and fade out above and below the center. A band opens across the middle and expands to full frame, revealing scene B, a photo with the same headline and a meta caption below. Pass `line`, `meta` and your own `src` (the default exists only in the remocn repo); it ships light and dark.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark palette for the stack scene",
+    },
+    {
+      name: "line",
+      type: "string",
+      default: "\"Launch day\"",
+      description: "Headline repeated in the strips and over the photo",
+    },
+    {
+      name: "src",
+      type: "string",
+      default: "\"reel/reel-2.jpg\"",
+      description: "Photo for scene B; the default exists only in the remocn repo",
+    },
+    {
+      name: "meta",
+      type: "string",
+      default: "\"Thursday · 09:00 · remocn.dev\"",
+      description: "Caption line under the headline in scene B",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "Preset id for the scene A gradients.sh shader ground",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the scene A shader parameters",
+    },
+    {
+      name: "transitionFrames",
+      type: "number",
+      default: "BAND_OPEN_TIMING.transition",
+      description: "Transition length in frames",
+    },
+    {
+      name: "band",
+      type: "number",
+      description: "Height share of the opening band; auto-sized from the line",
+    },
+    {
+      name: "rest",
+      type: "BandOpenProps",
+      description: "Other band options: center, openUntil, expandFrom, push, dim, edge, parallax",
+    },
+  ]}
+/>
