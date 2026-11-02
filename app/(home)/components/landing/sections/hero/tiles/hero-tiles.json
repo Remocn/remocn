@@ -94,6 +94,19 @@
         "props": {}
       },
       {
+        "name": "neon-sign",
+        "start": 0,
+        "zoom": 1,
+        "end": "hold",
+        "background": "#111111",
+        "radius": 0.28,
+        "cut": "auto",
+        "props": {
+          "color": "#E879F9",
+          "glowColor": "#E879F9"
+        }
+      },
+      {
         "name": "fog-rise",
         "start": 0,
         "zoom": 0.5,
