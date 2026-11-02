@@ -1,0 +1,105 @@
+---
+title: Color Bars
+description: "Slanted fluted color bars whip across the frame and swap the outgoing shot for the incoming one"
+component: color-bars
+vibe: playful
+length: 69
+useWhen:
+  - "Cutting between two product screenshots or scenes with a bold, colorful whip."
+  - "A launch video that needs a high-energy swap between features with brand-colored bars."
+  - "A directional cut that can go right, left, up or down depending on the story."
+avoidWhen:
+  - "You want a single band of light rather than several colored bars — use `flash-sweep`."
+  - "You need a clean seam with no color — use `diagonal-split`."
+  - "A soft, slow swap is better than a whip — use `grain-dissolve`."
+---
+
+<ComponentPreview name="color-bars" />
+
+<InstallBlock name="color-bars" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { ColorBars } from "@/components/remocn/color-bars";
+
+const ColorBarsScene = () => (
+  <ColorBars
+    images={["/shots/before.png", "/shots/after.png"]}
+    direction="right"
+    bars={5}
+    accent="#3B5BFD"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="ColorBars"
+    component={ColorBarsScene}
+    durationInFrames={86}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Two to six slanted bars, tinted from `accent`, whip across the frame in a stagger. The outgoing shot is shoved along while the incoming shot arrives late and settles. Pass the two shots as `scenes` (React nodes) or `images`, set the travel with `direction` and `angle`, and without either it plays a built-in pair of scenes. It ships light and dark; the bars finish and the scene settles by frame 69 with 5 bars.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "scenes",
+      type: "React.ReactNode[]",
+      description: "Outgoing and incoming shots as React nodes",
+    },
+    {
+      name: "images",
+      type: "string[]",
+      description: "Outgoing and incoming screenshots, used when scenes is not passed",
+    },
+    {
+      name: "direction",
+      type: "\"right\" | \"left\" | \"up\" | \"down\"",
+      default: "\"right\"",
+      description: "Which way the bars travel",
+    },
+    {
+      name: "angle",
+      type: "number",
+      default: "16",
+      description: "Slant of the bar edges in degrees; 0 is a straight wipe",
+    },
+    {
+      name: "bars",
+      type: "number",
+      default: "5",
+      description: "Number of bars, clamped between 4 and 6",
+    },
+    {
+      name: "colors",
+      type: "string[]",
+      description: "Override the derived bar colors, leading bar first",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Base color the bar colors are derived from",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier for the whole timeline",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark built-in scenes and bar colors",
+    },
+  ]}
+/>

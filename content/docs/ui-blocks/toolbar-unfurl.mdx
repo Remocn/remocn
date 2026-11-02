@@ -1,0 +1,88 @@
+---
+title: Toolbar Unfurl
+description: "A round tap button unfurls into a four-tool strip while captions name each tool, ending on a final line."
+component: toolbar-unfurl
+vibe: tech
+length: 125
+useWhen:
+  - "A feature beat introducing a set of editor tools, one caption per tool, such as select, text, draw and comment."
+  - "A product demo needs a toolbar that grows out of a single button and hops from tool to tool."
+  - "The closing line of a feature scene should land after a short guided tour of controls."
+avoidWhen:
+  - "You are presenting more than four features or want them as cards in a grid — use `bento-build`."
+  - "Only one control flips state and you want the whole stage to react — use `toggle-on`."
+  - "The beat is a typed prompt rather than a tool strip — use `caret-dolly`."
+---
+
+<ComponentPreview name="toolbar-unfurl" />
+
+<InstallBlock name="toolbar-unfurl" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { ToolbarUnfurl } from "@/components/remocn/toolbar-unfurl";
+
+const ToolbarUnfurlScene = () => (
+  <ToolbarUnfurl
+    accent="#3B5BFD"
+    lines={["Leave a note.", "Sketch the shot.", "Type on the frame.", "Select any layer."]}
+    finalLine="Every tool, one tap away."
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="ToolbarUnfurl"
+    component={ToolbarUnfurlScene}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A cursor taps a round accent button that unfurls into a four-tool strip, hopping from tool to tool while a caption names each one. The strip then retracts and the `finalLine` lands. Pass your own `lines` (up to four captions, one per tool) and `finalLine`; it ships light and dark through `theme`.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color scheme. Ships light and dark.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Color of the selection disc.",
+    },
+    {
+      name: "lines",
+      type: "string[]",
+      description: "Captions shown for each tool, up to four.",
+    },
+    {
+      name: "finalLine",
+      type: "string",
+      default: "\"Every tool, one tap away.\"",
+      description: "Closing line shown after the toolbar retracts.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "Shader preset id for the animated background.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Partial shader parameters that override the ground preset.",
+    },
+  ]}
+/>

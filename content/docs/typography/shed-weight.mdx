@@ -1,0 +1,87 @@
+---
+title: Shed Weight
+description: "One line repeats at growing sizes, each cut redrawn with its own optical weight, with size labels."
+component: shed-weight
+vibe: tech
+length: 60
+useWhen:
+  - "A typography-focused beat showing that a typeface holds up from tiny to huge sizes."
+  - "A design-tool or font launch where the size ladder with point labels explains the feature."
+  - "A technical, precise tagline that wants a stacked, specimen-like layout."
+avoidWhen:
+  - "The point is a weight or width that animates on one word - use `axis-flex`."
+  - "You want a single word to switch typefaces - use `font-cycle`."
+  - "The line should simply be revealed once, with no repetition - use `tracking-in`."
+---
+
+<ComponentPreview name="shed-weight" />
+
+<InstallBlock name="shed-weight" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { ShedWeight } from "@/components/remocn/shed-weight";
+
+const ShedWeightScene = () => <ShedWeight text="Sharp at any size." sizes={5} />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="ShedWeight"
+    component={ShedWeightScene}
+    durationInFrames={135}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The same line is stacked at a growing size ladder, each row drawing in under a hairline rule with a small point-size label, and every size uses its own optical cut. Pass `text` and `sizes` for the number of rows; `showSizes` toggles the labels. It takes a `theme` prop and ships light and dark.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "text",
+      type: "string",
+      default: "\"Sharp at any size.\"",
+      description: "The line repeated down the size ladder.",
+    },
+    {
+      name: "sizes",
+      type: "number",
+      default: "6",
+      description: "How many rows in the ladder, from 2 to 9.",
+    },
+    {
+      name: "showSizes",
+      type: "boolean",
+      default: "true",
+      description: "Show the small point-size label beside each row.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Spot color for the largest row, its rule and label.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Override the background color; use \"transparent\" to composite over your own.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark ground; the component ships both.",
+    },
+  ]}
+/>

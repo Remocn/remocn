@@ -1,0 +1,112 @@
+---
+title: Video Call
+description: "A video call fills with participants, then one shares a screen while emoji reactions float up"
+component: video-call
+vibe: social
+length: 300
+useWhen:
+  - "A team-collaboration launch beat where people join a call and one presenter shares a dashboard."
+  - "Showing a live, social product moment where viewers send emoji reactions during a demo."
+  - "A webinar or meetings tool teaser that needs a believable multi-person grid."
+avoidWhen:
+  - "The product is a chat, not a call — use `channel-reactions`, which shows reactions in a message thread."
+  - "You want cursors and sticky notes on a shared canvas rather than faces — use `multiplayer-cursors`."
+---
+
+<ComponentPreview name="video-call" />
+
+<InstallBlock name="video-call" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { VideoCall } from "@/components/remocn/video-call";
+
+const VideoCallScene = () => (
+  <VideoCall meetingCode="abc-defg-hij" presenter={1} accent="#3B5BFD" />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="VideoCall"
+    component={VideoCallScene}
+    durationInFrames={300}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Up to six participants join the grid one by one, then the presenter's tile becomes a shared screen and the rest move to a side strip. A reaction tray pops up and emoji float up the screen. Pass `participants` (name, color, camera, muted), `meetingCode`, and your own `src` screenshot or `children` for the shared screen.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "participants",
+      type: "CallParticipant[]",
+      default: "DEFAULT_PARTICIPANTS",
+      description: "Up to six people, in join order.",
+    },
+    {
+      name: "meetingCode",
+      type: "string",
+      default: "\"kqv-mnrt-zpa\"",
+      description: "Meeting code shown in the bottom bar.",
+    },
+    {
+      name: "time",
+      type: "string",
+      default: "\"10:42 AM\"",
+      description: "Clock time shown in the bottom bar.",
+    },
+    {
+      name: "presenter",
+      type: "number",
+      default: "1",
+      description: "Index of the participant who shares their screen.",
+    },
+    {
+      name: "present",
+      type: "boolean",
+      default: "true",
+      description: "`false` keeps the grid and ends on reactions only.",
+    },
+    {
+      name: "src",
+      type: "string",
+      description: "Screenshot shown as the shared screen.",
+    },
+    {
+      name: "children",
+      type: "React.ReactNode",
+      description: "Custom shared-screen content (wins over `src`).",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for highlights and the active speaker ring.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "Preset id for the shader background.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the shader background parameters.",
+    },
+  ]}
+/>

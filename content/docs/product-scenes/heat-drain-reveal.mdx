@@ -1,0 +1,122 @@
+---
+title: Heat Drain Reveal
+description: "A glowing month calendar drains its heat into a dithered glow, then a chip highlights the launch day."
+component: heat-drain-reveal
+vibe: tech
+length: 98
+useWhen:
+  - "A planning or scheduling product beat that ends on launch day being marked."
+  - "A moody dark hero where the calendar is the only UI and the headline sets the promise."
+  - "A launch-week announcement with a short list of upcoming events."
+avoidWhen:
+  - "You want a plain calendar picking a day and tagging dates — use `calendar-pick`."
+  - "You want a calendar that draws itself with a glowing ring on the date — use `launch-date`."
+  - "You want a booking flow with time slots — use `calendar-booking`."
+---
+
+<ComponentPreview name="heat-drain-reveal" />
+
+<InstallBlock name="heat-drain-reveal" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { HeatDrainReveal } from "@/components/remocn/heat-drain-reveal";
+
+const HeatDrainRevealScene = () => (
+  <HeatDrainReveal
+    headline="Plan the whole launch week."
+    monthLabel="2026 / 11"
+    events={[{ day: 19, label: "Launch", launch: true }]}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="HeatDrainReveal"
+    component={HeatDrainRevealScene}
+    durationInFrames={126}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A month calendar rises in hot orange tones, then the heat drains out of the grid into a dithered glow while event labels appear and the launch event gets an accent chip. Pass `headline`, `monthLabel`, `events` (mark one with `launch: true`) and `upcoming`; use `firstDay`, `daysInPrevMonth` and `daysInMonth` to match the real month and `heat` for the five-stop heat palette. Ships dark by default and light.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark palette",
+    },
+    {
+      name: "heat",
+      type: "string[]",
+      description: "Five colors from lightest to hottest used for the heat fill",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#ff7a2e\"",
+      description: "Accent color for highlights, buttons and progress",
+    },
+    {
+      name: "headline",
+      type: "string",
+      default: "\"Plan the whole launch week.\"",
+      description: "Headline text beside the calendar",
+    },
+    {
+      name: "monthLabel",
+      type: "string",
+      default: "\"2026 / 11\"",
+      description: "Month label above the grid, e.g. '2026 / 11'",
+    },
+    {
+      name: "firstDay",
+      type: "number",
+      default: "26",
+      description: "Previous-month day number shown in the first grid cell",
+    },
+    {
+      name: "daysInPrevMonth",
+      type: "number",
+      default: "31",
+      description: "Number of days in the previous month",
+    },
+    {
+      name: "daysInMonth",
+      type: "number",
+      default: "30",
+      description: "Number of days in the shown month",
+    },
+    {
+      name: "events",
+      type: "CalEvent[]",
+      description: "Day labels on the grid; set launch: true on the launch day",
+    },
+    {
+      name: "upcoming",
+      type: "{ when: string; title: string; time: string }[]",
+      description: "Upcoming list rows: when, title, time",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "gradients.sh preset id for the backdrop shader",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the backdrop shader parameters",
+    },
+  ]}
+/>

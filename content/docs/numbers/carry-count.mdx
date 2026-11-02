@@ -1,0 +1,99 @@
+---
+title: Carry Count
+description: "A big counter reaches 13,580 with a small caption, \"scenes students built in week one\""
+component: carry-count
+vibe: data
+length: 120
+useWhen:
+  - "A usage-stat beat where a number climbs in chunks and a small disc visibly carries a 1 into the next column."
+  - "A growth claim such as 13,580 scenes built that should feel mechanical and satisfying, like a tally rolling over."
+  - "A caption-beside-number layout that works in both landscape and portrait."
+avoidWhen:
+  - "You want digits that roll continuously like a live feed — use `live-ticker`."
+  - "You want rods and beads instead of carry discs — use `abacus-count`."
+  - "You want the count to land on beats of music — use `beat-count`."
+---
+
+<ComponentPreview name="carry-count" />
+
+<InstallBlock name="carry-count" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { CarryCount } from "@/components/remocn/carry-count";
+
+const CarryCountScene = () => (
+  <CarryCount
+    from={2855}
+    value={13580}
+    label={"scenes students\nbuilt in week one"}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="CarryCount"
+    component={CarryCountScene}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A large number starts at `from` and adds in `steps` chunks. Each change squashes the changed digit and, where a column overflows, a small disc carries a 1 over to the next column, growing a new digit at the left when needed. A caption of one or more lines slides up beside the number. Pass `value`, `from`, `steps` and `label` with a line break. It ships light and dark through the `theme` prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "value",
+      type: "number",
+      default: "13580",
+      description: "The final number the count lands on.",
+    },
+    {
+      name: "from",
+      type: "number",
+      default: "2855",
+      description: "The number the count starts from.",
+    },
+    {
+      name: "steps",
+      type: "number",
+      default: "5",
+      description: "How many additions it takes to get from `from` to `value`.",
+    },
+    {
+      name: "label",
+      type: "string",
+      default: "\"scenes students\\nbuilt in week one\"",
+      description: "Caption beside or below the number; use a line break to split lines.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Colour of the carry disc.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Stage colour; pass 'transparent' to layer over other footage.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier; 1 is the designed pace.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark.",
+    },
+  ]}
+/>

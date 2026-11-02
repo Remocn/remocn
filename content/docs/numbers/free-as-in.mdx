@@ -1,0 +1,81 @@
+---
+title: Free As In
+description: "A big word is glossed line by line, each new line pushing the last one up."
+component: free-as-in
+vibe: clean
+length: 105
+useWhen:
+  - "A pricing or openness beat where one word needs several short qualifications."
+  - "A clean typographic line-up of a claim followed by its clarifications, ending on a highlighted last line."
+  - "A closing message that explains what a word means to you, such as free, open or simple."
+avoidWhen:
+  - "The point is a list of fine print dropping away to one price - use `price-page`."
+  - "You want a receipt that totals what the viewer saves - use `the-tab`."
+  - "Lines should step in with growing indents like code - use `indent-steps`."
+---
+
+<ComponentPreview name="free-as-in" />
+
+<InstallBlock name="free-as-in" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { FreeAsIn } from "@/components/remocn/free-as-in";
+
+const FreeAsInScene = () => <FreeAsIn word="Free" glosses={["as in beer.", "as in speech.", "as in no seats.", "as in yours."]} />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="FreeAsIn"
+    component={FreeAsInScene}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A big word fades in on the left, then a series of short glosses slide in one at a time beside it, each pushing the previous gloss up and dimming it; the last gloss lands in the accent color. Pass `word` and a `glosses` array. The gloss pacing stretches to fill the composition, so give it about 150 frames.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "word",
+      type: "string",
+      default: "\"Free\"",
+      description: "The big headline word.",
+    },
+    {
+      name: "glosses",
+      type: "string[]",
+      default: "DEFAULT_GLOSSES",
+      description: "Short lines that follow the word; the last one is highlighted.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Color of the last gloss; defaults to the theme accent.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Stage background color; overrides the theme ground.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark palette.",
+    },
+  ]}
+/>

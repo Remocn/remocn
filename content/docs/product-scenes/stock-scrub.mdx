@@ -1,0 +1,106 @@
+---
+title: Stock Scrub
+description: "A phone stock page scrubs its price chart then opens a buy sheet"
+component: stock-scrub
+vibe: data
+length: 255
+useWhen:
+  - "A trading or investing app launch beat showing live price data and a quick buy."
+  - "A fintech demo that drags through an intraday chart, switches to the 1Y range and opens a buy sheet."
+  - "A data-forward mobile video where the chart interaction is the hero."
+avoidWhen:
+  - "The data lives in a desktop analytics chart with tooltips — use `analytics-funnel`."
+  - "You want a payments dashboard with stats and a feed — use `live-dashboard`."
+  - "The flow is sending money rather than buying an asset — use `money-send`."
+---
+
+<ComponentPreview name="stock-scrub" />
+
+<InstallBlock name="stock-scrub" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { StockScrub } from "@/components/remocn/stock-scrub";
+
+const StockScrubScene = () => <StockScrub ticker="ORBT" name="Orbit Labs" theme="light" />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="StockScrub"
+    component={StockScrubScene}
+    durationInFrames={270}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A phone shows a stock page whose price line draws in, then a finger presses and scrubs the chart left and right while the price readout follows. It taps the 1Y tab to morph the chart, then taps Buy to raise a buy sheet. Pass `ticker`, `name`, `series` and `yearSeries`, and `lines` for the headline beside the phone. It has a `theme` prop and ships light and dark (dark by default).
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "ticker",
+      type: "string",
+      default: "\"RMCN\"",
+      description: "Ticker symbol shown on the stock page.",
+    },
+    {
+      name: "name",
+      type: "string",
+      default: "\"remocn Inc.\"",
+      description: "Company name shown under the ticker.",
+    },
+    {
+      name: "series",
+      type: "number[]",
+      default: "DAY",
+      description: "Intraday prices, open → now. The first value is the open (the dashed baseline).",
+    },
+    {
+      name: "yearSeries",
+      type: "number[]",
+      default: "YEAR",
+      description: "Prices for the 1Y range; rescaled so it ends on the same price as `series`.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for the buy button and highlights.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier.",
+    },
+    {
+      name: "theme",
+      type: "\"light\" | \"dark\"",
+      default: "\"dark\"",
+      description: "Light or dark palette.",
+    },
+    {
+      name: "lines",
+      type: "[string, string, string, string]",
+      description: "Four lines beside the phone: live, scrub, range, buy.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "Gradients.sh preset id for the background shader.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the background shader parameters.",
+    },
+  ]}
+/>

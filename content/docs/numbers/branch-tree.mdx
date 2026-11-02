@@ -1,0 +1,89 @@
+---
+title: Branch Tree
+description: "A tree branches level by level from one root into many leaves, then lands the leaf count in big type."
+component: branch-tree
+vibe: tech
+length: 88
+useWhen:
+  - "A beat about variety or combinations, such as one component becoming dozens of variants."
+  - "A scale story where a single thing multiplies and the total is the punchline."
+  - "A tech-flavored stat where the final count should be computed from the branching."
+avoidWhen:
+  - "Cells should divide on a grid rather than branch - use `cell-divide`."
+  - "The sizes of categories matter more than the count - use `treemap-split`."
+  - "A simple multiplier number is enough - use `magnitude-push`."
+---
+
+<ComponentPreview name="branch-tree" />
+
+<InstallBlock name="branch-tree" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { BranchTree } from "@/components/remocn/branch-tree";
+
+const BranchTreeScene = () => <BranchTree depth={3} branching={[3, 4, 4]} title="variants" rootLabel="1 component" />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="BranchTree"
+    component={BranchTreeScene}
+    durationInFrames={130}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A single root node branches level by level into a growing fan of leaves, then the leaf count lands in large type with a caption. The count is the product of the branching, so 3 by 4 by 4 gives 48. Pass `depth` (1 to 5), `branching` as one number or one per level, `title` for the word after the count, and `rootLabel`. It ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "depth",
+      type: "number",
+      default: "3",
+      description: "Number of branching levels, from 1 to 5.",
+    },
+    {
+      name: "branching",
+      type: "number | number[]",
+      default: "[3, 4, 4]",
+      description: "Children per node; one number, or one per level.",
+    },
+    {
+      name: "title",
+      type: "string",
+      default: "\"variants\"",
+      description: "Word shown after the final leaf count.",
+    },
+    {
+      name: "rootLabel",
+      type: "string",
+      default: "\"1 component\"",
+      description: "Label next to the root node.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color of the branches and count.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark palette.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier.",
+    },
+  ]}
+/>

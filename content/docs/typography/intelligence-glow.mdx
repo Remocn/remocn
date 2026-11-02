@@ -1,0 +1,95 @@
+---
+title: Intelligence Glow
+description: "A question rises in under a breathing edge glow, the light collapses to a rule, and a serif-led answer resolves."
+component: intelligence-glow
+vibe: premium
+length: 148
+useWhen:
+  - "An AI feature beat that shows a prompt and its one-line answer, like a generated result."
+  - "A reveal where the answer should feel produced on demand, with the light settling under it."
+avoidWhen:
+  - "You want the answer typed out with a visible cursor and no glow — use `typewriter`."
+  - "The question and answer are plain type with no light effects — use `answer-first`."
+  - "You only need a soft blurred word reveal — use `soft-blur-in`."
+---
+
+<ComponentPreview name="intelligence-glow" />
+
+<InstallBlock name="intelligence-glow" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { IntelligenceGlow } from "@/components/remocn/intelligence-glow";
+
+const IntelligenceGlowScene = () => (
+  <IntelligenceGlow
+    question="Cut a teaser for Friday?"
+    answerLead="Done."
+    answer="9 shots, timed to the beat."
+    showLogo={false}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="IntelligenceGlow"
+    component={IntelligenceGlowScene}
+    durationInFrames={180}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The question rises in word by word while a colored light breathes around the frame edge, shimmers through the words as it thinks, then collapses into a thin rule. The `answerLead` word resolves in serif italic, followed by the rest of the `answer`, and the logo fades in last. It ships light and dark; `accent` tints the glow on dark only.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "question",
+      type: "string",
+      default: "\"Make a launch film for Friday?\"",
+      description: "Asked while the edge glow breathes.",
+    },
+    {
+      name: "answerLead",
+      type: "string",
+      default: "\"Done.\"",
+      description: "First word of the answer, set in a serif italic.",
+    },
+    {
+      name: "answer",
+      type: "string",
+      default: "\"14 shots, cut to the beat.\"",
+      description: "Rest of the answer, resolves word by word after the lead.",
+    },
+    {
+      name: "showLogo",
+      type: "boolean",
+      default: "true",
+      description: "Show the remocn logo under the answer on the poster frame.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Replaces one glow color in the dark theme; unused in light.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark palette.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+  ]}
+/>

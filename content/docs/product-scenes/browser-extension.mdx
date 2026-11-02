@@ -1,0 +1,167 @@
+---
+title: Browser Extension
+description: "A browser extension highlights key lines in an article and saves a generated summary to a reading list."
+component: browser-extension
+vibe: clean
+length: 184
+useWhen:
+  - "A browser-extension, web-clipper or AI-summarizer launch where the value is acting on the page you are already on."
+  - "A three-step payoff scene: highlight, summarize, save."
+  - "A reading or research workflow video where the article is your own copy, passed as `paragraphs`."
+avoidWhen:
+  - "The product is a web app with its own UI, not an overlay on another page — use `url-bar-cta`."
+  - "You want a zoom tour over a screenshot — use `screenshot-tour`."
+  - "You want a data table with filters and bulk actions — use `table-filter`."
+---
+
+<ComponentPreview name="browser-extension" />
+
+<InstallBlock name="browser-extension" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { BrowserExtension } from "@/components/remocn/browser-extension";
+
+const BrowserExtensionScene = () => (
+  <BrowserExtension
+    title="Why small teams ship faster"
+    extensionName="Acme"
+    collection="Reading list"
+    saveLabel="Save to Acme"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="BrowserExtension"
+    component={BrowserExtensionScene}
+    durationInFrames={200}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A browser window shows an article; the cursor clicks the extension icon, a popup reads the page, three passages are highlighted, a bullet summary fills in and the save button files it into a collection, ending with a toast. Pass `title`, `paragraphs`, `highlights` (text fragments that appear inside the paragraphs), `summary` and `extensionName` for your own story. Ships light and dark.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "url",
+      type: "string",
+      default: "\"quarry.blog/notes/why-small-teams-ship-faster\"",
+      description: "Address shown in the browser bar",
+    },
+    {
+      name: "siteName",
+      type: "string",
+      default: "\"Quarry Journal\"",
+      description: "Site name in the page header",
+    },
+    {
+      name: "kicker",
+      type: "string",
+      default: "\"Notes · 6 min read\"",
+      description: "Small label above the article title",
+    },
+    {
+      name: "title",
+      type: "string",
+      default: "\"Why small teams ship faster\"",
+      description: "Article headline",
+    },
+    {
+      name: "dek",
+      type: "string",
+      default: "\"On the short loop between a decision and a deploy.\"",
+      description: "Subheading under the headline",
+    },
+    {
+      name: "author",
+      type: "string",
+      default: "\"Priya Raman\"",
+      description: "Article author name",
+    },
+    {
+      name: "date",
+      type: "string",
+      default: "\"Oct 14, 2026\"",
+      description: "Article date label",
+    },
+    {
+      name: "paragraphs",
+      type: "string[]",
+      default: "DEFAULT_PARAGRAPHS",
+      description: "Article body paragraphs",
+    },
+    {
+      name: "highlights",
+      type: "string[]",
+      default: "DEFAULT_HIGHLIGHTS",
+      description: "Text fragments inside the paragraphs that get highlighted",
+    },
+    {
+      name: "summary",
+      type: "string[]",
+      default: "DEFAULT_SUMMARY",
+      description: "Bullet points the extension writes in its popup",
+    },
+    {
+      name: "extensionName",
+      type: "string",
+      default: "\"remocn\"",
+      description: "Name shown in the extension popup",
+    },
+    {
+      name: "collection",
+      type: "string",
+      default: "\"Reading list\"",
+      description: "Name of the list the summary is saved to",
+    },
+    {
+      name: "saveLabel",
+      type: "string",
+      default: "\"Save to remocn\"",
+      description: "Label on the save button",
+    },
+    {
+      name: "highlightColor",
+      type: "string",
+      description: "Highlight color; defaults to a tint of the accent",
+    },
+    {
+      name: "theme",
+      type: "\"light\" | \"dark\"",
+      default: "\"light\"",
+      description: "Light or dark palette",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for highlights, buttons and progress",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "gradients.sh preset id for the backdrop shader",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the backdrop shader parameters",
+    },
+  ]}
+/>

@@ -1,0 +1,94 @@
+---
+title: Live Activity
+description: "A phone island blooms into a live activity with a progress bar and countdown, then finishes with a check."
+component: live-activity
+vibe: tech
+length: 260
+useWhen:
+  - "A launch for an app with a live status (render, delivery, deploy) that lives on the lock screen."
+  - "A beat where an ETA counts down and the activity flips to a done state with a check."
+  - "A vertical cut with captions explaining what the live activity gives users."
+avoidWhen:
+  - "You want a home-screen widget with a chart — use `home-widget`."
+  - "You want a map and a driver arriving — use `ride-tracking`."
+  - "You want a stack of incoming alerts — use `notification-avalanche`."
+---
+
+<ComponentPreview name="live-activity" />
+
+<InstallBlock name="live-activity" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import {
+  LIVE_ACTIVITY_DELIVERY,
+  LiveActivity,
+} from "@/components/remocn/live-activity";
+
+const LiveActivityScene = () => (
+  <LiveActivity status={LIVE_ACTIVITY_DELIVERY} date="Tuesday, October 24" />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="LiveActivity"
+    component={LiveActivityScene}
+    durationInFrames={285}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A phone's island blooms into a compact pill, expands into a card with a countdown and a three-step progress bar, then collapses; the lock screen is pulled down where the activity completes with a check and a done line. Pass a `status` object (title, details, steps, seconds, format, glyph) to retell your own flow, or use the exported `LIVE_ACTIVITY_RENDER` and `LIVE_ACTIVITY_DELIVERY` presets. Ships dark by default and light.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "status",
+      type: "LiveActivityStatus",
+      default: "LIVE_ACTIVITY_RENDER",
+      description: "Activity content: title, details, steps, seconds, format and glyph",
+    },
+    {
+      name: "date",
+      type: "string",
+      default: "\"Tuesday, October 24\"",
+      description: "Date line shown on the lock screen",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for highlights, buttons and progress",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline",
+    },
+    {
+      name: "theme",
+      type: "\"light\" | \"dark\"",
+      default: "\"dark\"",
+      description: "Light or dark palette",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "gradients.sh preset id for the backdrop shader",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the backdrop shader parameters",
+    },
+  ]}
+/>

@@ -1,0 +1,81 @@
+---
+title: Answer First
+description: "The question \"Who made this video?\" is answered by a big \"A pull request.\""
+component: answer-first
+vibe: playful
+length: 72
+useWhen:
+  - "A Q&A beat where the punchy answer should land before the question that explains it."
+  - "A product claim like a founder's one-line answer to a common question."
+  - "A short hook near the start of a launch video."
+avoidWhen:
+  - "You need a back-and-forth between two speakers — use `overheard`."
+  - "The answer is a sheepish aside rather than a headline — use `coy-denial`."
+  - "You want a series of objections each answered in turn — use `exactly`."
+---
+
+<ComponentPreview name="answer-first" />
+
+<InstallBlock name="answer-first" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { AnswerFirst } from "@/components/remocn/answer-first";
+
+const AnswerFirstScene = () => <AnswerFirst answer="A pull request." question="Who made this video?" />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="AnswerFirst"
+    component={AnswerFirstScene}
+    durationInFrames={120}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A big answer rises word by word first, then slides up and shrinks as the question types in below it, so the reader sees the answer before the question. Pass `answer` and `question`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "answer",
+      type: "string",
+      default: "\"A pull request.\"",
+      description: "The big answer line shown first.",
+    },
+    {
+      name: "question",
+      type: "string",
+      default: "\"Who made this video?\"",
+      description: "The question that types in beneath the answer.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Color of the question text; defaults to the theme accent.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Stage fill color; pass \"transparent\" to overlay your own footage.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color scheme; ships dark and light.",
+    },
+  ]}
+/>

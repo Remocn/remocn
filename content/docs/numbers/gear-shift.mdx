@@ -1,0 +1,111 @@
+---
+title: Gear Shift
+description: "A big 42 shifts up through numbered gear steps on a teal panel with a caption"
+component: gear-shift
+vibe: playful
+length: 82
+useWhen:
+  - "A speed or momentum beat where a number accelerates through numbered gear steps, getting heavier and larger with each shift."
+  - "A stat on a bold coloured panel, with a gear indicator beside it and a caption, for a performance claim."
+  - "A figure that should feel like it is revving up before it lands with a small jolt."
+avoidWhen:
+  - "You want a single smooth ease with no stepped feel — use `compact-stat`."
+  - "You want the count to land on musical beats — use `beat-count`."
+  - "You want a slam-in from zero with no stepping — use `smash-count`."
+---
+
+<ComponentPreview name="gear-shift" />
+
+<InstallBlock name="gear-shift" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { GearShift } from "@/components/remocn/gear-shift";
+
+const GearShiftScene = () => <GearShift value={42} gears={4} label="scenes in one launch film" />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="GearShift"
+    component={GearShiftScene}
+    durationInFrames={120}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A coloured side panel with numbered gear steps fades in beside a number that counts from `from` to `value`. Each gear is a faster, heavier-weight stretch of the count, with a small jolt at every shift and a final landing jolt on the top gear. A caption sits in the panel. Pass `value`, `from`, `label` and `gears`. It ships light and dark through the `theme` prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "value",
+      type: "number",
+      default: "42",
+      description: "The final number the count lands on.",
+    },
+    {
+      name: "from",
+      type: "number",
+      default: "0",
+      description: "The number the count starts from.",
+    },
+    {
+      name: "decimals",
+      type: "number",
+      default: "0",
+      description: "Decimal places shown on the number.",
+    },
+    {
+      name: "prefix",
+      type: "string",
+      default: "\"\"",
+      description: "Text placed before the number, such as a currency sign.",
+    },
+    {
+      name: "suffix",
+      type: "string",
+      default: "\"\"",
+      description: "Text placed after the number, such as a unit.",
+    },
+    {
+      name: "label",
+      type: "string",
+      default: "\"scenes in one launch film\"",
+      description: "Caption shown in the panel.",
+    },
+    {
+      name: "gears",
+      type: "number",
+      default: "4",
+      description: "Number of gear steps, from 2 up to the number of font weights available.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Colour of the side panel.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Stage colour; pass 'transparent' to layer over other footage.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier; 1 is the designed pace.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark.",
+    },
+  ]}
+/>

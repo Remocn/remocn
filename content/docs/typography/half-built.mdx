@@ -1,0 +1,83 @@
+---
+title: Half Built
+description: "A sentence of unfinished verbs shows each one as an outline that fills in as it ships."
+component: half-built
+vibe: clean
+length: 116
+useWhen:
+  - "A roadmap beat showing what the product does now and what is coming."
+  - "An honest status scene where some capabilities are shipped and others are planned."
+  - "A build-in-public update that tags features by season."
+avoidWhen:
+  - "Everything is shipped and you want a recap — use `week-shipped`."
+  - "You want items listed as chips rather than inline words — use `feature-chips-flow`."
+  - "You want text to appear complete word by word — use `word-insert`."
+---
+
+<ComponentPreview name="half-built" />
+
+<InstallBlock name="half-built" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { HalfBuilt } from "@/components/remocn/half-built";
+
+const HalfBuiltScene = () => (
+  <HalfBuilt parts={[{ text: "It cuts," }, { text: "captions,", when: "Spring" }, { text: "narrates", when: "Summer" }]} progress={1.6} />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="HalfBuilt"
+    component={HalfBuiltScene}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Each part of the sentence starts hollow and fills in as `progress` advances, with optional season tags such as Summer or Later marking what is planned. Pass `parts` and set `progress` to choose how far the roadmap has filled. It ships in light and dark through the `theme` prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "parts",
+      type: "HalfBuiltPart[]",
+      default: "DEFAULT_PARTS",
+      description: "Sentence parts as `{ text, when? }`; `when` adds a season tag.",
+    },
+    {
+      name: "progress",
+      type: "number",
+      default: "1.6",
+      description: "How many parts are filled in by the end; fractions fill partially.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Accent color override; falls back to the theme accent.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background color override; falls back to the theme background.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark; picks the palette.",
+    },
+  ]}
+/>

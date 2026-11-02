@@ -1,0 +1,117 @@
+---
+title: What's New Modal
+description: "A product dashboard dims behind a modal that pages through feature slides and ends on a CTA click."
+component: whats-new-modal
+vibe: clean
+length: 224
+useWhen:
+  - "A product-update or release video where in-app announcements are the format."
+  - "A multi-feature recap told as a few slides with a clear call to action at the end."
+  - "A launch beat that needs your real dashboard behind the dim, passed as `children` or `src`."
+avoidWhen:
+  - "You want a full changelog list scrolling — use `changelog-scroll`."
+  - "You want camera moves through one screenshot — use `screenshot-tour`."
+  - "You want callouts pointing at UI targets — use `ui-callout`."
+---
+
+<ComponentPreview name="whats-new-modal" />
+
+<InstallBlock name="whats-new-modal" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { WhatsNewModal } from "@/components/remocn/whats-new-modal";
+
+const WhatsNewModalScene = () => (
+  <WhatsNewModal
+    brand="Acme"
+    userName="Maya Chen"
+    slides={[{ eyebrow: "New in 2.0", title: "Launch videos, built from components", body: "Drop in a scene and ship.", cta: "Try it now" }]}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="WhatsNewModal"
+    component={WhatsNewModalScene}
+    durationInFrames={250}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The app dashboard dims and a modal pops in with header art, an eyebrow, a title and a body; the slides swipe one by one, then a cursor clicks the final call to action. Pass `slides` (eyebrow, title, body, optional `cta` and `src`), `brand` and `userName`, and put your own app behind it with `children` or `src`. The default `images` are files that only exist in the remocn repo, so pass your own. Ships light and dark.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "slides",
+      type: "WhatsNewSlide[]",
+      default: "DEFAULT_SLIDES",
+      description: "Slides: eyebrow, title, body, optional cta, illustration or src",
+    },
+    {
+      name: "brand",
+      type: "string",
+      default: "\"remocn\"",
+      description: "Brand name in the dashboard mock",
+    },
+    {
+      name: "userName",
+      type: "string",
+      default: "\"Maya Chen\"",
+      description: "User name shown in the dashboard mock",
+    },
+    {
+      name: "children",
+      type: "React.ReactNode",
+      description: "Your own app screen behind the modal",
+    },
+    {
+      name: "src",
+      type: "string",
+      description: "Screenshot behind the modal when no children are passed",
+    },
+    {
+      name: "images",
+      type: "string[]",
+      default: "DEFAULT_IMAGES",
+      description: "Pictures for the built-in art; defaults exist only in the remocn repo",
+    },
+    {
+      name: "theme",
+      type: "\"light\" | \"dark\"",
+      default: "\"light\"",
+      description: "Light or dark palette",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for highlights, buttons and progress",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "gradients.sh preset id for the backdrop shader",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the backdrop shader parameters",
+    },
+  ]}
+/>

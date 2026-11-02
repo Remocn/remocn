@@ -1,0 +1,100 @@
+---
+title: Focus Front Swap
+description: "A headline pulls focus from line to line, blurring one out as the next comes forward, then ends on a logo."
+component: focus-front-swap
+vibe: premium
+length: 122
+useWhen:
+  - "A rhythmic three-line pitch that ends on a call to ship now."
+  - "A cinematic headline sequence over a soft gradient ground."
+  - "A launch hook where each line builds on the last and the final word should pop."
+avoidWhen:
+  - "Lines should swap by shifting layout rather than depth — use `layout-swap`."
+  - "You need an object sweeping across the frame — use `pass-swap`."
+  - "You want one word changed while the rest stays put — use `pinned-word`."
+---
+
+<ComponentPreview name="focus-front-swap" />
+
+<InstallBlock name="focus-front-swap" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { FocusFrontSwap } from "@/components/remocn/focus-front-swap";
+
+const FocusFrontSwapScene = () => (
+  <FocusFrontSwap lines={["Remocn knows the beat", "You describe it once", "Ship it {tonight}."]} logo={false} />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="FocusFrontSwap"
+    component={FocusFrontSwapScene}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Each line in `lines` sharpens into focus while the previous one blurs back, and a mark appears under the final line. Wrap a word in `{}` such as `{tonight}` to accent it, and set `logo={false}` to drop the mark.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop. It ships in light and dark through the `theme` prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "lines",
+      type: "string[]",
+      description: "Headlines in order; wrap a word in curly braces to accent it.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Accent color override; falls back to the theme accent.",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color override; falls back to the theme ink.",
+    },
+    {
+      name: "logo",
+      type: "boolean",
+      default: "true",
+      description: "Show the logo mark after the last line.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark; picks the palette.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "Gradient ground preset id for the backdrop.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Partial gradient parameters that tweak the chosen ground preset.",
+    },
+    {
+      name: "swap",
+      type: "number",
+      default: "BEAT.swap",
+      description: "Frames between focus pulls.",
+    },
+    {
+      name: "blur",
+      type: "number",
+      default: "18",
+      description: "Maximum blur radius in pixels for out-of-focus lines.",
+    },
+  ]}
+/>

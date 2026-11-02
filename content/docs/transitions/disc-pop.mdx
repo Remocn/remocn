@@ -1,0 +1,131 @@
+---
+title: Disc Pop
+description: "A grid of colored glyph discs pops across the frame and swaps a prompt screen for a video player"
+component: disc-pop
+vibe: tech
+length: 30
+useWhen:
+  - "Moving from typing a request into an AI tool to the finished video it produced."
+  - "A playful, graphic beat in a launch video where a field of icons pops in and out to swap scenes."
+  - "You want a bright, colorful cut that stays on-brand with your own disc colors and glyphs."
+avoidWhen:
+  - "The tone is restrained and editorial — use `hairline-open`."
+  - "You want a single expanding shape instead of a field of discs — use `ring-cut`."
+  - "The scenes should be joined by a light effect, not colored shapes — use `bloom-ring`."
+---
+
+<ComponentPreview name="disc-pop" />
+
+<InstallBlock name="disc-pop" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { DiscPopDemo } from "@/components/remocn/disc-pop";
+
+const DiscPopDemoScene = () => (
+  <DiscPopDemo
+    prompt="Make a launch film for our piano app: bold title, three product shots, calm ending."
+    overline="LAUNCH FILM · 01"
+    title="Keys, in an afternoon."
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="DiscPopDemo"
+    component={DiscPopDemoScene}
+    durationInFrames={138}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Scene A is a prompt card with a greeting that types a request and presses send. A grid of colored discs, each carrying a glyph such as play, spark or arrow, pops across the frame and swaps the scene for scene B, a video player with an overline, a title and a progress bar. Pass `greeting`, `prompt`, `overline` and `title`, plus your own `image`; it ships light and dark.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark palette for both scenes",
+    },
+    {
+      name: "greeting",
+      type: "[string, string]",
+      default: "[\"Hi there.\", \"What are you launching\"]",
+      description: "Two-part greeting above the prompt in scene A",
+    },
+    {
+      name: "prompt",
+      type: "string",
+      default: "\"Make a launch film for our piano app: bold title, three product shots, calm ending.\"",
+      description: "Request typed into the scene A prompt card",
+    },
+    {
+      name: "image",
+      type: "string",
+      description: "Image src for the player; the default exists only in the remocn repo",
+    },
+    {
+      name: "overline",
+      type: "string",
+      default: "\"LAUNCH FILM · 01\"",
+      description: "Small caps label above the title in scene B",
+    },
+    {
+      name: "title",
+      type: "string",
+      default: "\"Keys, in an afternoon.\"",
+      description: "Title shown in the scene B player",
+    },
+    {
+      name: "discs",
+      type: "DiscPopProps",
+      description: "Overrides for disc colors, glyphs, cell size, seed and swap point",
+    },
+    {
+      name: "groundA",
+      type: "GshPresetId",
+      description: "Preset id for the scene A gradients.sh shader ground",
+    },
+    {
+      name: "groundAParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the scene A shader parameters",
+    },
+    {
+      name: "groundB",
+      type: "GshPresetId",
+      description: "Preset id for the scene B gradients.sh shader ground",
+    },
+    {
+      name: "groundBParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the scene B shader parameters",
+    },
+    {
+      name: "sceneA",
+      type: "number",
+      default: "DISC_POP_DEMO.sceneA",
+      description: "Scene A length in frames",
+    },
+    {
+      name: "sceneB",
+      type: "number",
+      default: "DISC_POP_DEMO.sceneB",
+      description: "Scene B length in frames",
+    },
+    {
+      name: "transition",
+      type: "number",
+      default: "DISC_POP_DEMO.transition",
+      description: "Transition length in frames",
+    },
+  ]}
+/>

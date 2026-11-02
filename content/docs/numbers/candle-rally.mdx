@@ -1,0 +1,103 @@
+---
+title: Candle Rally
+description: "Candlesticks rally past a prior high as 'ALL-TIME HIGH' lands beside a price tag"
+component: candle-rally
+vibe: data
+length: 126
+useWhen:
+  - "A milestone beat for a record, such as an all-time high in usage, revenue or growth."
+  - "A chart-style hero moment where a price tag and a two-line headline land on the breakout."
+  - "A fictional-ticker scene for a finance-flavored or hype-style launch teaser."
+avoidWhen:
+  - "You want a smooth trend line rather than candles — use `growth-line`."
+  - "The story is gains and losses stepping to a total — use `waterfall-chart`."
+  - "You want a compact glowing trend beside a stat — use `sparkline-thread`."
+---
+
+<ComponentPreview name="candle-rally" />
+
+<InstallBlock name="candle-rally" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { CandleRally } from "@/components/remocn/candle-rally";
+
+const CandleRallyScene = () => (
+  <CandleRally
+    symbol="ACME"
+    price={96.5}
+    prevHigh={88}
+    headline="Record"
+    headline2="quarter"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="CandleRally"
+    component={CandleRallyScene}
+    durationInFrames={160}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Candlesticks build left to right, the last one breaks through a dashed previous-high line, and a price tag rides its wick before a two-line headline slams in. Pass `symbol`, `price`, `prevHigh`, and the `headline` and `headline2` words. Ships dark and light via `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "symbol",
+      type: "string",
+      default: "\"RMCN\"",
+      description: "Ticker on the price tag riding the last wick. Fictional.",
+    },
+    {
+      name: "price",
+      type: "number",
+      default: "128.4",
+      description: "Where the last candle closes; printed on the tag.",
+    },
+    {
+      name: "prevHigh",
+      type: "number",
+      default: "112",
+      description: "The previous high the rally breaks through (dashed level).",
+    },
+    {
+      name: "headline",
+      type: "string",
+      default: "\"All-time\"",
+      description: "First line of the slam.",
+    },
+    {
+      name: "headline2",
+      type: "string",
+      default: "\"high\"",
+      description: "Second line of the slam.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for the hero element.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Dark or light palette.",
+    },
+  ]}
+/>

@@ -1,0 +1,80 @@
+---
+title: Point Expand
+description: "Short statements rise word by word ending in a round point that pulses and expands into the next scene."
+component: point-expand
+vibe: clean
+length: 146
+useWhen:
+  - "A run of two to five punchy claims, each building on the last, with a bold accent change between them."
+  - "A launch opener where every full stop should become the transition to the next line."
+avoidWhen:
+  - "The statements should arrive in a list with progress ticks and notes — use `feature-trio`."
+  - "You need a single headline with a colored point after it, not a chain — use `point-intro`."
+  - "Plain stacked lines with no scene changes are enough — use `line-by-line-slide`."
+---
+
+<ComponentPreview name="point-expand" />
+
+<InstallBlock name="point-expand" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { PointExpand } from "@/components/remocn/point-expand";
+
+const PointExpandScene = () => (
+  <PointExpand
+    statements={["Launch films used to take weeks.", "Now they take an afternoon.", "Copy, paste, render."]}
+    accent="#3B5BFD"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="PointExpand"
+    component={PointExpandScene}
+    durationInFrames={180}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Each statement rises word by word and ends in a round point that drops in, pulses `pulses` times, and then expands as a circle that becomes the next scene's ground, alternating a plain stage with an accent gradient. Pass up to five `statements` (trailing periods are replaced by the point) and an `accent`. It ships light and dark.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "statements",
+      type: "string[]",
+      description: "Up to five statements; each ends in an expanding point.",
+    },
+    {
+      name: "pulses",
+      type: "number",
+      default: "2",
+      description: "How many times the point pulses before it expands.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Color of the points and the gradient scenes.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark palette.",
+    },
+  ]}
+/>

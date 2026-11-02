@@ -1,0 +1,93 @@
+---
+title: Single Stroke
+description: "A giant 27 drawn in single strokes sits beside a coral 'Mar' panel and a demo-day line"
+component: single-stroke
+vibe: playful
+length: 94
+useWhen:
+  - "A date or number reveal where a giant numeral is drawn in a single pen stroke on a teal field beside a coloured panel."
+  - "A demo-day or event announcement with a big day number, a short month panel and a one-line caption."
+  - "A portrait or landscape beat that wants a hand-drawn, poster-like number instead of a counted figure."
+avoidWhen:
+  - "You want a full calendar drawn and the launch day highlighted — use `launch-date`."
+  - "You want the number to count up rather than be drawn — use `compact-stat`."
+  - "You want a sports-broadcast or arcade feel for the figure — use `high-score`."
+---
+
+<ComponentPreview name="single-stroke" />
+
+<InstallBlock name="single-stroke" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { SingleStroke } from "@/components/remocn/single-stroke";
+
+const SingleStrokeScene = () => (
+  <SingleStroke
+    value="27"
+    unit="Mar"
+    label="Demo day. Every team shows a film."
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="SingleStroke"
+    component={SingleStrokeScene}
+    durationInFrames={120}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A coloured panel slides in and the number is drawn as one continuous stroke with a bright pen tip. As the stroke finishes, the unit text appears on the panel and the label fades in word by word. Pass `value` as digits only, plus `unit` and `label`. It ships light and dark through the `theme` prop; `accent` recolours the panel in dark and the stroke in light.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "value",
+      type: "string",
+      default: "\"27\"",
+      description: "The number to draw. Digits only; other characters are skipped.",
+    },
+    {
+      name: "unit",
+      type: "string",
+      default: "\"Mar\"",
+      description: "Short word on the panel, such as a month abbreviation.",
+    },
+    {
+      name: "label",
+      type: "string",
+      default: "\"Demo day. Every team shows a film.\"",
+      description: "Caption under the unit; words fade in one by one.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Overrides the panel colour in dark, or the stroke colour in light.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Overrides the background colour of the stage.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier; 1 is the designed pace.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark.",
+    },
+  ]}
+/>

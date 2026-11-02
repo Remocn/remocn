@@ -1,3 +1,4 @@
+import newDocs from "@/config/new-docs.json";
 import type { CtaId } from "@/lib/analytics";
 import remocnRegistry from "@/registry/remocn/registry.json";
 import remocnIconsRegistry from "@/registry/remocn-icons/registry.json";
@@ -87,49 +88,10 @@ export const NAV_LINKS: NavLink[] = [
 
 /**
  * Docs whose sidebar menu item should carry the animated "NEW" badge. Keyed by
- * the page's docs URL (the Fumadocs page-tree `item.url`). Add a path here to
- * tag another menu item — no component changes needed. See `withNewBadges`.
+ * the page's docs URL (the Fumadocs page-tree `item.url`). The list lives in
+ * `config/new-docs.json`: add or remove a path there to tag a menu item.
  */
-export const NEW_BADGE_PATHS = new Set<string>([
-  "/docs/transitions/iris-wipe",
-  "/docs/transitions/venetian-blinds",
-  "/docs/transitions/paper-tear",
-  "/docs/transitions/pixel-sort",
-  "/docs/transitions/light-leak",
-  "/docs/transitions/hyperspace",
-  "/docs/logo-stings/orbit-lock",
-  "/docs/logo-stings/puzzle-snap",
-  "/docs/logo-stings/spotlight",
-  "/docs/logo-stings/neon-sign",
-  "/docs/logo-stings/inflate",
-  "/docs/logo-stings/liquid-fill",
-  "/docs/logo-stings/accordion-unfold",
-  "/docs/logo-stings/anamorphic-flare",
-  "/docs/motion-graphics/pendulum-wave",
-  "/docs/motion-graphics/flow-field",
-  "/docs/motion-graphics/isometric-build",
-  "/docs/motion-graphics/life-grid",
-  "/docs/motion-graphics/string-art",
-  "/docs/motion-graphics/topo-lines",
-  "/docs/motion-graphics/phyllotaxis",
-  "/docs/camera/parallax-depth",
-  "/docs/camera/dolly-zoom",
-  "/docs/camera/turntable",
-  "/docs/camera/tiny-planet",
-  "/docs/camera/exploded-view",
-  "/docs/camera/gravity-pile",
-  "/docs/camera/cloth-reveal",
-  "/docs/camera/impact-shake",
-  "/docs/graphic-looks/riso-print",
-  "/docs/graphic-looks/line-boil",
-  "/docs/graphic-looks/blueprint",
-  "/docs/graphic-looks/duotone-beat",
-  "/docs/graphic-looks/comic-panels",
-  "/docs/graphic-looks/long-shadow",
-  "/docs/graphic-looks/synthwave",
-  "/docs/graphic-looks/brick-mosaic",
-  "/docs/graphic-looks/x-ray-scan",
-]);
+export const NEW_BADGE_PATHS = new Set<string>(newDocs);
 
 // Flat footer row: site pages first, then the external profiles.
 export const FOOTER_LINKS: NavLink[] = [

@@ -1,0 +1,92 @@
+---
+title: Layered Cutout
+description: "The camera dollies through layered cut sheets of paper to land on a framed logo and tagline"
+component: layered-cutout
+vibe: paper
+length: 140
+useWhen:
+  - "A logo or brand reveal that should feel tactile and dimensional, like paper cut by hand."
+  - "A closing or opening card for a launch video with a calm camera move and no UI."
+  - "You want a premium intro where the depth comes from stacked sheets rather than a 3D scene."
+avoidWhen:
+  - "You need a landscape of depth layers with a sideways truck — use `parallax-depth`."
+  - "The effect should be a vertigo stretch, not a push through openings — use `dolly-zoom`."
+  - "The reveal should happen on a product screenshot — use `stage`."
+---
+
+<ComponentPreview name="layered-cutout" />
+
+<InstallBlock name="layered-cutout" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { LayeredCutout } from "@/components/remocn/layered-cutout";
+
+const LayeredCutoutScene = () => (
+  <LayeredCutout
+    tagline="Launch films, cut from components."
+    layers={5}
+    theme="light"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="LayeredCutout"
+    component={LayeredCutoutScene}
+    durationInFrames={170}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Between 4 and 6 cut sheets part in depth while the camera pushes through them. The innermost sheet, cut from gradient paper, ends up framing the core, where the logo and the `tagline` surface. Pass a `logo` node and your `tagline`; it ships light (card stock) and dark (charcoal) and the camera move ends at frame 140.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "tagline",
+      type: "string",
+      default: "\"Launch films, cut from components.\"",
+      description: "Small line under the logo; pass an empty string to hide",
+    },
+    {
+      name: "logo",
+      type: "React.ReactNode",
+      description: "Replaces the remocn logo on the core sheet",
+    },
+    {
+      name: "layers",
+      type: "number",
+      default: "5",
+      description: "Number of cut sheets in front of the core, 4 to 6",
+    },
+    {
+      name: "accentLayer",
+      type: "number",
+      description: "Which sheet, 0 at the front, is cut from gradient paper",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier for the whole timeline",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"light\"",
+      description: "Light card stock or dark charcoal stock",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Accepted for parity; the gradient paper is the accent",
+    },
+  ]}
+/>

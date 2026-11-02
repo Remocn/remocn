@@ -1,0 +1,90 @@
+---
+title: Studio Reflection
+description: "A chrome gradient figure catches sweeping light bands over a floor reflection, with an eyebrow and label."
+component: studio-reflection
+vibe: premium
+length: 82
+useWhen:
+  - "A product-shot style hero number such as the size of a library."
+  - "A premium beat for a milestone count."
+  - "A quiet, glossy stat with a short eyebrow and a supporting line."
+avoidWhen:
+  - "The number should count up with a glow — use `lumen-count`."
+  - "You need a plain stat with no effects — use `compact-stat`."
+  - "The figure is a release version — use `version-hero`."
+---
+
+<ComponentPreview name="studio-reflection" />
+
+<InstallBlock name="studio-reflection" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { StudioReflection } from "@/components/remocn/studio-reflection";
+
+const StudioReflectionScene = () => (
+  <StudioReflection value="250+" eyebrow="In the library" label="launch-ready scenes, one command away" />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="StudioReflection"
+    component={StudioReflectionScene}
+    durationInFrames={120}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Bands of light glide across the frame and park on the figure, which takes on a chrome gradient with a mirrored reflection beneath it. The eyebrow and label rise in last. Pass `value`, `eyebrow` and `label`; it ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "value",
+      type: "string",
+      default: "\"250+\"",
+      description: "Figure drawn in chrome, as text.",
+    },
+    {
+      name: "label",
+      type: "string",
+      default: "\"launch-ready scenes, one command away\"",
+      description: "Supporting line that rises in under the figure.",
+    },
+    {
+      name: "eyebrow",
+      type: "string",
+      default: "\"In the library\"",
+      description: "Small line above the figure.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for highlights and small marks.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background color override. Pass \"transparent\" to composite over other layers.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color theme, \"dark\" or \"light\".",
+    },
+  ]}
+/>

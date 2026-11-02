@@ -1,0 +1,107 @@
+---
+title: Timeline Editor
+description: "A video editor drops clips onto a timeline, scrubs the preview, then exports with a progress panel."
+component: timeline-editor
+vibe: tech
+length: 332
+useWhen:
+  - "A video-editing or motion tool launch where the editor UI itself is the demo."
+  - "A beat that goes from empty tracks to an exported film in one continuous take."
+  - "A scene showing layered tracks: video, title and audio."
+avoidWhen:
+  - "You want a project roadmap with draggable bars — use `roadmap-timeline`."
+  - "You want one big publish click and a camera pull-back — use `macro-click`."
+  - "You want a player page with subscribe and like — use `video-watch-page`."
+---
+
+<ComponentPreview name="timeline-editor" />
+
+<InstallBlock name="timeline-editor" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { TimelineEditor } from "@/components/remocn/timeline-editor";
+
+const TimelineEditorScene = () => (
+  <TimelineEditor
+    projectName="Launch video"
+    title="Meet Acme"
+    audioName="soundtrack.wav"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="TimelineEditor"
+    component={TimelineEditorScene}
+    durationInFrames={360}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A video editor window drops up to three `clips` onto the V1 track one by one, then a `title` clip onto V2 and an `audioName` clip onto A1. A playhead scrubs through the monitor, then the cursor clicks Export and a progress panel finishes on Export complete. Pass `clips` (name, seconds, built-in scene), `projectName`, `title` and `audioName`. Ships dark by default and light.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "clips",
+      type: "EditorClip[]",
+      default: "DEFAULT_CLIPS",
+      description: "Up to three clips dragged onto V1: name, seconds, scene",
+    },
+    {
+      name: "projectName",
+      type: "string",
+      default: "\"Launch video\"",
+      description: "Project name in the title bar",
+    },
+    {
+      name: "title",
+      type: "string",
+      default: "\"Meet remocn\"",
+      description: "Text of the title clip that lands on V2",
+    },
+    {
+      name: "audioName",
+      type: "string",
+      default: "\"soundtrack.wav\"",
+      description: "Name of the audio clip that lands on A1",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for highlights, buttons and progress",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline",
+    },
+    {
+      name: "theme",
+      type: "\"light\" | \"dark\"",
+      default: "\"dark\"",
+      description: "Light or dark palette",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "gradients.sh preset id for the backdrop shader",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the backdrop shader parameters",
+    },
+  ]}
+/>

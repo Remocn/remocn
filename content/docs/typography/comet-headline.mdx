@@ -1,0 +1,100 @@
+---
+title: Comet Headline
+description: "A headline and subhead arrive while a comet streaks arcs behind each word, with one phrase highlighted."
+component: comet-headline
+vibe: premium
+length: 81
+useWhen:
+  - "A feature announcement where each word of the headline should be delivered with a trailing light."
+  - "A hero beat with an eyebrow, a headline, one highlighted phrase and a subhead."
+avoidWhen:
+  - "The headline is a single short word - use `spring-scale-in`."
+  - "You want calm, text-only motion with no streaks - use `staggered-fade-up`."
+  - "The scene is just a typed line - use `typewriter`."
+---
+
+<ComponentPreview name="comet-headline" />
+
+<InstallBlock name="comet-headline" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { CometHeadline } from "@/components/remocn/comet-headline";
+
+const CometHeadlineScene = () => (
+  <CometHeadline
+    eyebrow="New in remocn"
+    headline="Every launch beat, already in orbit."
+    highlight="in orbit"
+    accent="#3B5BFD"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="CometHeadline"
+    component={CometHeadlineScene}
+    durationInFrames={120}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+An eyebrow fades in, then the headline words fly in one after another on comet arcs and cool into place, and the subhead follows. Pass `eyebrow`, `headline`, `highlight` and `subhead` to make it yours; it ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "eyebrow",
+      type: "string",
+      default: "\"New in remocn\"",
+      description: "Small label above the headline; empty to hide",
+    },
+    {
+      name: "headline",
+      type: "string",
+      default: "\"Every launch beat, already in orbit.\"",
+      description: "Main headline; words arrive one by one",
+    },
+    {
+      name: "highlight",
+      type: "string",
+      default: "\"in orbit\"",
+      description: "Phrase inside the headline shown in the accent color",
+    },
+    {
+      name: "subhead",
+      type: "string",
+      default: "\"Reveals, feature heads and stats as drop-in Remotion scenes.\"",
+      description: "Supporting line under the headline; empty to hide",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color (any valid CSS color)",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Overrides the theme's stage color",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark palettes",
+    },
+  ]}
+/>

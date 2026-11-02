@@ -1,0 +1,85 @@
+---
+title: Thread Weave
+description: "A figure or mark is woven row by row on a loom of cream cells, then a caption settles."
+component: thread-weave
+vibe: paper
+length: 97
+useWhen:
+  - "A craft-flavoured beat where a figure should look built row by row."
+  - "A brand mark reveal, using `motif` set to mark."
+  - "A soft, paper-like stat with a short caption."
+avoidWhen:
+  - "You want a clean digital stat — use `compact-stat`."
+  - "You want a figure made of loose pixels — use `number-mosaic`."
+  - "You want a hand-drawn counting feel — use `tally-marks`."
+---
+
+<ComponentPreview name="thread-weave" />
+
+<InstallBlock name="thread-weave" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { ThreadWeave } from "@/components/remocn/thread-weave";
+
+const ThreadWeaveScene = () => (
+  <ThreadWeave value="24" caption="frames per second" />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="ThreadWeave"
+    component={ThreadWeaveScene}
+    durationInFrames={175}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Warp threads set up the loom, then every row of the pattern is woven across in alternating directions until the figure appears in blue and orange cells. A caption settles under it. Pass `value` and `caption`, or set `motif` to `mark` to weave the remocn mark; it ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "value",
+      type: "string",
+      default: "\"24\"",
+      description: "Short figure to weave, as text.",
+    },
+    {
+      name: "motif",
+      type: "\"value\" | \"mark\"",
+      default: "\"value\"",
+      description: "Weave the value as text or the remocn mark.",
+    },
+    {
+      name: "caption",
+      type: "string",
+      default: "\"frames per second\"",
+      description: "Small line that settles under the cloth.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for highlights and small marks.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color theme, \"dark\" or \"light\".",
+    },
+  ]}
+/>

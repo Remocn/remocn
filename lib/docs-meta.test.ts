@@ -22,6 +22,7 @@ const UNDOCUMENTED: Record<string, string> = {
   "dropdown-menu-item": "folds into the dropdown-menu page",
   "command-menu-item": "folds into the command-menu page",
   "icons-core": "shared icon runtime",
+  gsh: "shared gradients.sh shader engine behind the gradient grounds",
 };
 
 function isIcon(name: string): boolean {

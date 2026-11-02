@@ -1,0 +1,87 @@
+---
+title: Bubble Pack
+description: "Packed bubbles for categories grow around one big gradient bubble reading 420"
+component: bubble-pack
+vibe: data
+length: 108
+useWhen:
+  - "A beat showing what a product is used for, where one category clearly dominates the others."
+  - "A content-mix or usage-breakdown scene where bubble size carries the story."
+  - "A recap where the biggest category should swell into a gradient hero and count up."
+avoidWhen:
+  - "The parts add up to a whole and you want a percentage reading — use `share-donut`."
+  - "You want every category labeled in a tidy rectangle layout — use `treemap-split`."
+  - "Order and rank matter more than size — use `rank-climb`."
+---
+
+<ComponentPreview name="bubble-pack" />
+
+<InstallBlock name="bubble-pack" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { BubblePack } from "@/components/remocn/bubble-pack";
+
+const BubblePackScene = () => (
+  <BubblePack
+    highlight={0}
+    items={[
+      { label: "Launch videos", value: 420 },
+      { label: "Demos", value: 180 },
+      { label: "Changelogs", value: 150 },
+      { label: "Tutorials", value: 70 },
+    ]}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="BubblePack"
+    component={BubblePackScene}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Category bubbles pop in and pack together; the highlighted one swells into a large gradient bubble while its value counts up. Pass `items` (label and value, up to 16) and `highlight`, the index of the hero item. Ships dark and light via `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "items",
+      type: "BubbleItem[]",
+      default: "DEFAULT_ITEMS",
+      description: "Up to 16 categories; bubble area follows value.",
+    },
+    {
+      name: "highlight",
+      type: "number",
+      default: "0",
+      description: "Index in items of the bubble that grows into the hero.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for the hero element.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Dark or light palette.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier.",
+    },
+  ]}
+/>

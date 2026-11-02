@@ -1,0 +1,117 @@
+---
+title: Phone Scroll
+description: "A phone rises and flicks a tall app screen to each scroll stop while a headline slides in beside it."
+component: phone-scroll
+vibe: clean
+length: 86
+useWhen:
+  - "A mobile product beat showing a long feed or page being scrolled, with a one-line promise beside the phone."
+  - "A square or vertical clip where a tall screenshot passed as `src` needs to scroll naturally."
+  - "A quick hero beat for an app landing section where `label` carries the value proposition."
+avoidWhen:
+  - "You want three phones for a notification, a feed and a profile — use `phone-trio`."
+  - "The story is install and Open rather than scrolling — use `app-store-listing`."
+  - "You need the camera to tour regions of a desktop screenshot — use `screenshot-tour`."
+---
+
+<ComponentPreview name="phone-scroll" />
+
+<InstallBlock name="phone-scroll" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { PhoneScroll } from "@/components/remocn/phone-scroll";
+
+const PhoneScrollScene = () => (
+  <PhoneScroll
+    stops={[930]}
+    label="Find your next stay in two taps."
+    labelAccent="two taps."
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="PhoneScroll"
+    component={PhoneScrollScene}
+    durationInFrames={120}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A phone springs up beside a headline, then flicks its tall screen to each scroll stop with motion blur and momentum while a touch dot marks the press. Pass `src` with a tall screenshot, or `children` with your own 393pt-wide screen (omit both for a built-in sample feed), `stops` for the scroll offsets, and `label` plus `labelAccent` for the headline. Ships light and dark.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "src",
+      type: "string",
+      description: "Tall screenshot rendered 393pt wide and scrolled",
+    },
+    {
+      name: "stops",
+      type: "number[]",
+      default: "[930]",
+      description: "Scroll offsets in screen points; one flick per stop",
+    },
+    {
+      name: "label",
+      type: "string",
+      default: "\"Find your next stay in two taps.\"",
+      description: "Headline beside the phone; empty string hides it",
+    },
+    {
+      name: "labelAccent",
+      type: "string",
+      default: "\"two taps.\"",
+      description: "Trailing part of the label set in italic serif",
+    },
+    {
+      name: "eyebrow",
+      type: "string",
+      default: "\"remocn for iOS\"",
+      description: "Small line above the headline",
+    },
+    {
+      name: "children",
+      type: "React.ReactNode",
+      description: "Custom screen content, 393pt wide, scrolled like the screenshot",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for highlights, buttons and progress",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline",
+    },
+    {
+      name: "theme",
+      type: "\"light\" | \"dark\"",
+      default: "\"light\"",
+      description: "Light or dark palette",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "gradients.sh preset id for the backdrop shader",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the backdrop shader parameters",
+    },
+  ]}
+/>

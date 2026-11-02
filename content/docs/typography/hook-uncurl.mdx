@@ -1,0 +1,81 @@
+---
+title: Hook Uncurl
+description: "Stacked condensed caps lines uncurl into place, ending on 'Just make the video.'"
+component: hook-uncurl
+vibe: playful
+length: 78
+useWhen:
+  - "A hook that asks a question in stacked condensed caps and answers it as the lines uncurl."
+  - "A short social opener, like a challenge answered by a call to action."
+avoidWhen:
+  - "You want a bigger story with a punchline glyph — use `glyph-relay`."
+  - "You want single words slamming in — use `full-bleed-type`."
+---
+
+<ComponentPreview name="hook-uncurl" />
+
+<InstallBlock name="hook-uncurl" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { HookUncurl } from "@/components/remocn/hook-uncurl";
+
+const HookUncurlScene = () => (
+  <HookUncurl question="Why make the video?" answer="Just make the video." />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="HookUncurl"
+    component={HookUncurlScene}
+    durationInFrames={125}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Stacked caps lines enter curled, uncurl into place, then swap in a rolling change from the question to the answer. Pass `question` and `answer`; it ships light and dark.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "question",
+      type: "string",
+      default: "\"Why make the video?\"",
+      description: "The question set in stacked caps.",
+    },
+    {
+      name: "answer",
+      type: "string",
+      default: "\"Just make the video.\"",
+      description: "The answer that replaces it.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Accent colour (any CSS colour).",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Overrides the theme background colour.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier; above 1 plays faster.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Colour scheme; ships light and dark.",
+    },
+  ]}
+/>

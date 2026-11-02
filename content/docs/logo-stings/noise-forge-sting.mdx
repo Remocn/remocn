@@ -1,0 +1,91 @@
+---
+title: Noise Forge Sting
+description: "A seam of light forges the wordmark out of hot noise, then it cools beneath a tagline."
+component: noise-forge-sting
+vibe: premium
+length: 90
+useWhen:
+  - "A launch opener that wants a heated, forged reveal of the brand."
+  - "A developer-tool or hardware sting where the message is that it is built from parts."
+  - "A logo reveal followed by a tagline that arrives word by word once the mark has cooled."
+avoidWhen:
+  - "You want a calm, quiet reveal with no heat — use `first-light`."
+  - "The logo should be drawn by a travelling light rather than forged — use `light-trail-write`."
+  - "You need the mark built from pixels instead of noise — use `quadtree-mark`."
+---
+
+<ComponentPreview name="noise-forge-sting" />
+
+<InstallBlock name="noise-forge-sting" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { NoiseForgeSting } from "@/components/remocn/noise-forge-sting";
+
+const NoiseForgeStingScene = () => (
+  <NoiseForgeSting
+    tagline="Launch videos, built from parts."
+    theme="dark"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="NoiseForgeSting"
+    component={NoiseForgeStingScene}
+    durationInFrames={126}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A spark opens a seam of light, glyph slices forge the wordmark in a hot colour, then it cools to the ink colour and the tagline fades in word by word. Pass `tagline`; recolour with `hot`, `ink` and `accent`. The wordmark is the baked-in remocn logo. Ships light and dark.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Dark or light palette and ground.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Colour the R mark settles into once cooled.",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Colour the letters settle into once cooled.",
+    },
+    {
+      name: "hot",
+      type: "string",
+      description: "Glowing colour of the wordmark while it forges.",
+    },
+    {
+      name: "tagline",
+      type: "string",
+      default: "\"Launch videos, built from parts.\"",
+      description: "Line that fades in word by word under the logo.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "Shader preset id for the gradients.sh background ground.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Custom shader parameters for the ground, used instead of the theme default.",
+    },
+  ]}
+/>

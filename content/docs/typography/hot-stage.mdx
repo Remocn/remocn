@@ -1,0 +1,90 @@
+---
+title: Hot Stage
+description: "A headline pushes down and falls away for the next line while a faint mono mission log lights up."
+component: hot-stage
+vibe: tech
+length: 112
+useWhen:
+  - "A closing beat that walks through build, render and ship stages, each new line displacing the last."
+  - "A developer-tool launch where a faint mono log beside the headline adds technical credibility."
+  - "A three-line value statement that must land one line at a time with a countdown feel."
+avoidWhen:
+  - "You have one short line and want a calm caption instead of a staged log — use `cool-down`."
+  - "The lines should stay on screen and step in like code — use `indent-steps`."
+  - "You want a plain staggered paragraph with no log or vents — use `line-by-line-slide`."
+---
+
+<ComponentPreview name="hot-stage" />
+
+<InstallBlock name="hot-stage" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { HotStage } from "@/components/remocn/hot-stage";
+
+const HotStageScene = () => (
+  <HotStage
+    lines={["Write the scene.", "Render the cut.", "Ship it."]}
+    log={["T+00:00  Draft", "T+02:10  Render", "T+04:00  Live"]}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="HotStage"
+    component={HotStageScene}
+    durationInFrames={155}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The first line fades up beside a dim monospaced log. Every `stage` frames the next line pushes in with a flash of thin vent ticks, the previous line goes dim and falls away, and the matching log entry lights up. Pass your own `lines` and a `log` with one entry per line. It ships light and dark.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "lines",
+      type: "string[]",
+      description: "Headline lines shown one at a time; each replaces the previous.",
+    },
+    {
+      name: "log",
+      type: "string[]",
+      description: "Mono log entries on the side; entry N lights up when line N arrives.",
+    },
+    {
+      name: "stage",
+      type: "number",
+      default: "44",
+      description: "Frames between one line arriving and the next.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Color of the vent ticks; defaults to the ink color.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark palette.",
+    },
+  ]}
+/>

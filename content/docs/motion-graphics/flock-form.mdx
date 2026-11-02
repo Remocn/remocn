@@ -1,0 +1,71 @@
+---
+title: Flock Form
+description: "A flock of birds flies in, forms an arrow, then streams along a path and settles into the R mark"
+component: flock-form
+vibe: tech
+length: 148
+useWhen:
+  - "A logo reveal where hundreds of small shapes assemble into your brand mark."
+  - "A tech or AI launch intro that wants a sense of swarm intelligence and direction."
+  - "Opening a video with a dark or light sky-like ground and a final mark hold."
+avoidWhen:
+  - "The shape should cycle through icons before the logo — use `dot-field-morph`."
+  - "You want dots tied to a growing counter — use `waitlist-swarm`."
+  - "You need a quick, clean logo entrance without particles — use `logo-enter`."
+---
+
+<ComponentPreview name="flock-form" />
+
+<InstallBlock name="flock-form" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { FlockForm } from "@/components/remocn/flock-form";
+
+const FlockFormScene = () => <FlockForm count={340} accent="#3B5BFD" />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="FlockForm"
+    component={FlockFormScene}
+    durationInFrames={180}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A flock flies in from the edges and snaps into an arrow with accent-coloured lead birds, then the arrow launches along a curved path and the birds stream back to land in the remocn R mark. Pass `count` to change how many birds there are. The mark is built into the file; edit `REMOCN_R_PATH` to use another logo. Ships dark and light via `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "count",
+      type: "number",
+      default: "340",
+      description: "Number of birds. Formations resample to match.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Color of the lead birds on the arrow tip.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color scheme. Ships dark and light.",
+    },
+  ]}
+/>

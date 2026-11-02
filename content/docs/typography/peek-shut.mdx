@@ -1,0 +1,116 @@
+---
+title: Peek Shut
+description: "A question sits above a thin line that opens on an image sliver, snaps shut, then a refusal lands."
+component: peek-shut
+vibe: clean
+length: 126
+useWhen:
+  - "A teaser beat that shows a sliver of the product and then withholds the rest until launch day."
+  - "A coming-soon moment where a cheeky refusal and a release date close the scene."
+avoidWhen:
+  - "You want the full feature shown, not a glimpse — use `photo-fill-type`."
+  - "The tease is a single quiet line with no image — use `riddle-clues`."
+  - "A line should be cut off by a reply card instead of a shutter — use `cut-off`."
+---
+
+<ComponentPreview name="peek-shut" />
+
+<InstallBlock name="peek-shut" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { PeekShut } from "@/components/remocn/peek-shut";
+
+const PeekShutScene = () => (
+  <PeekShut
+    question="Want a peek?"
+    refusal="That is all you get."
+    when="The rest, Monday."
+    src="/product-shot.png"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="PeekShut"
+    component={PeekShutScene}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The question rises above a hairline that opens into a narrow slit showing a slow-panning crop of an image, then the slit snaps shut and the `refusal` and `when` lines rise below it, the last in the accent color. The default image is `hero.png` from the remocn repo, so pass your own 16:9 screenshot through `src`. Timing compresses if the composition is shorter than about 160 frames. It ships light and dark.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "question",
+      type: "string",
+      default: "\"Want a peek?\"",
+      description: "Line above the slit.",
+    },
+    {
+      name: "refusal",
+      type: "string",
+      default: "\"That’s all you get.\"",
+      description: "First line below the slit, in the base ink color.",
+    },
+    {
+      name: "when",
+      type: "string",
+      default: "\"The rest, Monday.\"",
+      description: "Second line below, in the accent color; usually a date.",
+    },
+    {
+      name: "src",
+      type: "string",
+      description: "Image shown through the slit; defaults to a file that only exists in the remocn repo.",
+    },
+    {
+      name: "focusY",
+      type: "number",
+      default: "0.5",
+      description: "Vertical focus point in the image, from 0 to 1.",
+    },
+    {
+      name: "pan",
+      type: "[number, number]",
+      default: "DEFAULT_PAN",
+      description: "Horizontal focus at the start and end of the pan, each 0 to 1.",
+    },
+    {
+      name: "zoom",
+      type: "number",
+      default: "3.2",
+      description: "How much the image is magnified inside the slit.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Color of the when line.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark palette.",
+    },
+  ]}
+/>

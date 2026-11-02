@@ -1,0 +1,96 @@
+---
+title: Play of the Game
+description: "A banner slices in, the logo slams in as the player, then a stat plate flashes with a gradient highlight."
+component: play-of-the-game
+vibe: playful
+length: 58
+useWhen:
+  - "A playful recap or hero-stat beat for a solo-builder launch, like shipped in 6 hours."
+  - "A gaming-flavoured social clip that celebrates a milestone."
+  - "A credit for a person or product with one number worth bragging about."
+avoidWhen:
+  - "You need a calm, premium brand reveal — use `introducing`."
+  - "A single large numeral should be the hero — use `sequel-numeral`."
+  - "You want fast rhythmic word cuts instead of a banner — use `blink-cut`."
+---
+
+<ComponentPreview name="play-of-the-game" />
+
+<InstallBlock name="play-of-the-game" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { PlayOfTheGame } from "@/components/remocn/play-of-the-game";
+
+const PlayOfTheGameScene = () => (
+  <PlayOfTheGame
+    title="Play of the game"
+    role="Solo builder"
+    stat="Shipped in 6 hours"
+    highlight="6 hours"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="PlayOfTheGame"
+    component={PlayOfTheGameScene}
+    durationInFrames={100}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A banner with `title` slices in over the remocn logo, which slams in as the player with a `role` label beneath. Then `stat` flashes on its own plate with `highlight` filled in the accent gradient and a final sweep. The player is always the remocn logo. Ships light and dark.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "title",
+      type: "string",
+      default: "\"Play of the game\"",
+      description: "Banner call that slices in first.",
+    },
+    {
+      name: "role",
+      type: "string",
+      default: "\"Solo builder\"",
+      description: "Small role label under the player.",
+    },
+    {
+      name: "stat",
+      type: "string",
+      default: "\"Shipped in 6 hours\"",
+      description: "Highlight stat flashed on its own plate.",
+    },
+    {
+      name: "highlight",
+      type: "string",
+      default: "\"6 hours\"",
+      description: "Part of the stat filled with the gradient; must appear in stat.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Colour of the role tick and gradient.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Dark or light palette and ground.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier for the whole timeline; 1 is normal speed.",
+    },
+  ]}
+/>

@@ -1,0 +1,105 @@
+---
+title: Module Count
+description: "A block-pixel number snaps through stepped values on a gridded ground, then a short caption fades in."
+component: module-count
+vibe: playful
+length: 98
+useWhen:
+  - "A playful or retro stat beat where the digits should read as LED-style modules on a grid."
+  - "A count that should tick up in visible, discrete steps instead of rolling smoothly."
+  - "A short caption that should fade in word by word right as the number locks."
+avoidWhen:
+  - "You need a smooth rolling, odometer-style count - use `live-ticker`."
+  - "The number should be quiet typography rather than blocky pixels - use `packed-count`."
+  - "The steps should lock to a music tempo - use `beat-count`."
+---
+
+<ComponentPreview name="module-count" />
+
+<InstallBlock name="module-count" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { ModuleCount } from "@/components/remocn/module-count";
+
+const ModuleCountScene = () => <ModuleCount value={120} suffix="+" label="Scenes snapped to one grid" />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="ModuleCount"
+    component={ModuleCountScene}
+    durationInFrames={130}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A five-row block-pixel number snaps through a series of stepped values on a faint grid, each step morphing the modules, then locks on the final figure while a short caption fades in word by word. Pass `value`, optional `prefix` and `suffix`, and `label`; `steps` sets how many readings it snaps through. It ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "value",
+      type: "number",
+      default: "48",
+      description: "The number the count snaps to.",
+    },
+    {
+      name: "from",
+      type: "number",
+      default: "0",
+      description: "Starting number of the first reading.",
+    },
+    {
+      name: "prefix",
+      type: "string",
+      default: "\"\"",
+      description: "Text before the number, such as a currency sign.",
+    },
+    {
+      name: "suffix",
+      type: "string",
+      default: "\"\"",
+      description: "Text after the number.",
+    },
+    {
+      name: "label",
+      type: "string",
+      default: "\"Scenes, every one snapped to a single grid\"",
+      description: "Caption that fades in word by word.",
+    },
+    {
+      name: "steps",
+      type: "number",
+      default: "11",
+      description: "How many stepped readings the count passes through.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Color of the digit modules; defaults to the theme accent.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Stage background color; overrides the theme ground.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark palette.",
+    },
+  ]}
+/>

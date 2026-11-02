@@ -1,0 +1,76 @@
+---
+title: Feature Trio
+description: "Three feature words, 'Fast. Composable. Open source.', rise from masks with progress ticks and notes"
+component: feature-trio
+vibe: clean
+length: 133
+useWhen:
+  - "A three-benefit summary beat for a product, one short word per benefit."
+  - "A features recap near the end of a launch video that resolves into a tidy row."
+  - "A list of two to four benefits where each needs a one-line note."
+avoidWhen:
+  - "Each feature needs a screenshot or UI view — use `feature-headline`."
+  - "The benefits are a numbered how-it-works flow — use `three-steps`."
+  - "You want a numbered index of features with hairline rows — use `index-list`."
+---
+
+<ComponentPreview name="feature-trio" />
+
+<InstallBlock name="feature-trio" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { FeatureTrio } from "@/components/remocn/feature-trio";
+
+const FeatureTrioScene = () => <FeatureTrio items={[{ title: "Fast.", description: "Drop in a scene and render it in minutes." }, { title: "Composable.", description: "Every piece is a React component you can remix." }]} />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="FeatureTrio"
+    component={FeatureTrioScene}
+    durationInFrames={165}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Each feature title rises from a mask with a note beneath it while progress ticks advance, and at the end all titles resolve into a compact row with their descriptions. Pass `items` (two to four title and description pairs); it spaces the beats to fit the composition length.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "items",
+      type: "FeatureTrioItem[]",
+      default: "DEFAULT_ITEMS",
+      description: "2–4 short benefits.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Color of the progress ticks and highlights.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Stage fill. \"transparent\" drops the stage and its glow.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color scheme; ships dark and light.",
+    },
+  ]}
+/>

@@ -1,0 +1,125 @@
+---
+title: Notification Avalanche
+description: "Notifications arrive faster and faster on a phone, group into a stack, then clear to a calm caught-up message."
+component: notification-avalanche
+vibe: clean
+length: 97
+useWhen:
+  - "An inbox, alerts or notification-management product where the problem is overload."
+  - "A before-and-after beat: chaos first with a runaway unread counter, calm right after."
+  - "A vertical or square cut where the phone sits beside a big counter."
+avoidWhen:
+  - "The chaos is desktop windows and chat toasts resolving into an app — use `chaos-to-order`."
+  - "You want a single ongoing status, not a pile — use `live-activity`."
+  - "You want a screen to scroll rather than alerts to arrive — use `phone-scroll`."
+---
+
+<ComponentPreview name="notification-avalanche" />
+
+<InstallBlock name="notification-avalanche" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { NotificationAvalanche } from "@/components/remocn/notification-avalanche";
+
+const NotificationAvalancheScene = () => (
+  <NotificationAvalanche
+    clearLabel="All caught up."
+    total={128}
+    counterLabel="unread before 10 am"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="NotificationAvalanche"
+    component={NotificationAvalancheScene}
+    durationInFrames={125}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Notification cards drop onto a phone lock screen at an accelerating pace while an unread counter climbs to `total`. A swipe groups them into one stack, then the screen clears to `clearLabel` with a check and `clearSubLabel`. Pass `notifications` (app, title, body, color), `clearLabel` and `total` to retell your inbox, and set `surface` to `desktop` for a laptop layout. The default `wallpaper` is a file that only exists in the remocn repo, so pass your own image URL. Ships light and dark.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "notifications",
+      type: "AvalancheNotification[]",
+      default: "DEFAULT_NOTIFICATIONS",
+      description: "Notification cards in arrival order: app, title, body, color",
+    },
+    {
+      name: "clearLabel",
+      type: "string",
+      default: "\"All caught up.\"",
+      description: "Headline shown once everything is cleared",
+    },
+    {
+      name: "clearSubLabel",
+      type: "string",
+      default: "\"remocn sorted 128 notifications\"",
+      description: "Line under the clear headline",
+    },
+    {
+      name: "total",
+      type: "number",
+      default: "128",
+      description: "Final value of the runaway unread counter",
+    },
+    {
+      name: "counterLabel",
+      type: "string",
+      default: "\"unread before 10 am\"",
+      description: "Caption under the counter beside the phone",
+    },
+    {
+      name: "surface",
+      type: "\"phone\" | \"desktop\"",
+      default: "\"phone\"",
+      description: "Device frame: phone or desktop",
+    },
+    {
+      name: "wallpaper",
+      type: "string",
+      default: "staticFile(\"reel/reel-1.jpg\")",
+      description: "Wallpaper image URL behind the notifications",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for highlights, buttons and progress",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline",
+    },
+    {
+      name: "theme",
+      type: "\"light\" | \"dark\"",
+      default: "\"dark\"",
+      description: "Light or dark palette",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "gradients.sh preset id for the backdrop shader",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the backdrop shader parameters",
+    },
+  ]}
+/>

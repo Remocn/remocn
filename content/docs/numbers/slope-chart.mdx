@@ -1,0 +1,107 @@
+---
+title: Slope Chart
+description: "A slope chart draws before/after lines, the hero line rising to a 6.8x stat"
+component: slope-chart
+vibe: data
+length: 124
+useWhen:
+  - "A before-and-after beat across two time points where one line climbs far above the rest."
+  - "A claim such as 6.8x more launch videos, shown against flat competitor lines."
+  - "A comparison where most lines barely move and one rises sharply."
+avoidWhen:
+  - "You want each row's before and after as dots on a track — use `dumbbell-shift`."
+  - "You have more than two time points — use `stacked-shift`."
+  - "You want the improvement as a single curve — use `growth-line`."
+---
+
+<ComponentPreview name="slope-chart" />
+
+<InstallBlock name="slope-chart" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { SlopeChart } from "@/components/remocn/slope-chart";
+
+const SlopeChartScene = () => (
+  <SlopeChart
+    highlight={{ before: 6, after: 41 }}
+    value="6.8×"
+    label="more launch videos shipped"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="SlopeChart"
+    component={SlopeChartScene}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Grey lines draw between a before and an after axis, then the hero line starts low, climbs steeply with a dot and ring, and the multiplier stat and label land. Pass `lines` for the grey context, `highlight` for the hero line, and `value`, `label`, `beforeLabel` and `afterLabel`. Ships dark and light via `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "lines",
+      type: "SlopeLine[]",
+      default: "DEFAULT_LINES",
+      description: "Grey context lines, each with a before and after value.",
+    },
+    {
+      name: "highlight",
+      type: "SlopeLine",
+      default: "DEFAULT_HIGHLIGHT",
+      description: "The hero line with before and after values.",
+    },
+    {
+      name: "value",
+      type: "string",
+      default: "\"6.8×\"",
+      description: "The hero stat that lands, such as 6.8x.",
+    },
+    {
+      name: "label",
+      type: "string",
+      default: "\"more launch videos shipped\"",
+      description: "Line under the hero stat.",
+    },
+    {
+      name: "beforeLabel",
+      type: "string",
+      default: "\"Before\"",
+      description: "Heading over the before axis.",
+    },
+    {
+      name: "afterLabel",
+      type: "string",
+      default: "\"After\"",
+      description: "Heading over the after axis.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for the hero element.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Dark or light palette.",
+    },
+  ]}
+/>

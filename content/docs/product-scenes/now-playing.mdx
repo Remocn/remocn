@@ -1,0 +1,125 @@
+---
+title: Now Playing
+description: "A music player taps play, likes the track, then scrolls synced lyrics that light up one line at a time."
+component: now-playing
+vibe: social
+length: 268
+useWhen:
+  - "A music, podcast or audio-app launch where the player UI plus lyrics carry the story."
+  - "A product video that wants a warm gradient background tied to the cover-art color via `tint`."
+  - "A vertical or square cut using the `mini` variant that expands a mini player into the full view."
+avoidWhen:
+  - "You want incoming alerts instead of playback — use `notification-avalanche`."
+  - "You want a video player with subscribe and like — use `video-watch-page`."
+  - "You need a lock-screen status with a progress bar — use `live-activity`."
+---
+
+<ComponentPreview name="now-playing" />
+
+<InstallBlock name="now-playing" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { NowPlaying } from "@/components/remocn/now-playing";
+
+const NowPlayingScene = () => (
+  <NowPlaying
+    title="Launch Day"
+    artist="Acme"
+    tint="#B8553A"
+    lyrics={["Shipped it at midnight", "and the build came green"]}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="NowPlaying"
+    component={NowPlayingScene}
+    durationInFrames={300}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A phone rises showing the player: a cursor taps play, the heart is liked, the lyrics panel opens and each line lights up in turn as the list scrolls. Pass `title`, `artist`, `lyrics` and `tint` (the gradient color); with `variant="mini"` the scene starts from a mini player that expands. Pass `src` for your own cover art, or omit it for the built-in artwork.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "title",
+      type: "string",
+      default: "\"Launch Day\"",
+      description: "Track title",
+    },
+    {
+      name: "artist",
+      type: "string",
+      default: "\"remocn\"",
+      description: "Artist name",
+    },
+    {
+      name: "playlist",
+      type: "string",
+      default: "\"Launch Week Mix\"",
+      description: "Playlist name in the playing-from line",
+    },
+    {
+      name: "src",
+      type: "string",
+      description: "Cover art image URL; a built-in artwork shows when omitted",
+    },
+    {
+      name: "tint",
+      type: "string",
+      default: "\"#B8553A\"",
+      description: "Color driving the gradient background",
+    },
+    {
+      name: "lyrics",
+      type: "string[]",
+      default: "DEFAULT_LYRICS",
+      description: "Lyric lines highlighted one after another",
+    },
+    {
+      name: "duration",
+      type: "number",
+      default: "165",
+      description: "Track length in seconds for the progress readout",
+    },
+    {
+      name: "variant",
+      type: "\"full\" | \"mini\"",
+      default: "\"full\"",
+      description: "Start as a full player or a mini player that expands",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for highlights, buttons and progress",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "gradients.sh preset id for the backdrop shader",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the backdrop shader parameters",
+    },
+  ]}
+/>

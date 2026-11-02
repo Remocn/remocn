@@ -1,0 +1,155 @@
+---
+title: Invoice Paid
+description: "An invoice gets stamped PAID while a payout notification arrives"
+component: invoice-paid
+vibe: paper
+length: 150
+useWhen:
+  - "A finance or billing launch beat showing an invoice moving from sent to viewed to paid."
+  - "A freelancer or invoicing app demo that ends on a payout notification landing."
+  - "A \"get paid faster\" feature announcement that needs a visual payoff."
+avoidWhen:
+  - "You want a checkout total changing with a promo code — use `coupon-apply`."
+  - "The money moves phone to phone instead of a document being settled — use `money-send`."
+  - "You need live revenue numbers and a recent activity feed — use `live-dashboard`."
+---
+
+<ComponentPreview name="invoice-paid" />
+
+<InstallBlock name="invoice-paid" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { InvoicePaid } from "@/components/remocn/invoice-paid";
+
+const InvoicePaidScene = () => <InvoicePaid sender="Northwind Studio" customer="Acme Corp" number="INV-1007" theme="dark" />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="InvoicePaid"
+    component={InvoicePaidScene}
+    durationInFrames={180}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+An invoice document and a status timeline appear side by side; a cursor presses Send, the timeline steps through Created, Sent, Viewed and Paid, a PAID stamp lands on the invoice, and a payout notification slides in. Pass `sender`, `customer`, `lines` and `events` to make it your own, and `payoutAccount` and `payoutArrival` for the notification. It has a `theme` prop and ships light and dark.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "sender",
+      type: "string",
+      default: "\"Halcyon Studio\"",
+      description: "Business name shown as the invoice sender.",
+    },
+    {
+      name: "customer",
+      type: "string",
+      default: "\"Kitebase, Inc.\"",
+      description: "Billed customer name.",
+    },
+    {
+      name: "customerEmail",
+      type: "string",
+      default: "\"ap@kitebase.com\"",
+      description: "Customer email, shown under the name.",
+    },
+    {
+      name: "customerAddress",
+      type: "string",
+      default: "\"2100 Market St, SF\"",
+      description: "Customer address line on the invoice.",
+    },
+    {
+      name: "number",
+      type: "string",
+      default: "\"INV-2041\"",
+      description: "Invoice number.",
+    },
+    {
+      name: "issued",
+      type: "string",
+      default: "\"Oct 24, 2026\"",
+      description: "Issue date text.",
+    },
+    {
+      name: "due",
+      type: "string",
+      default: "\"Nov 7, 2026\"",
+      description: "Due date text.",
+    },
+    {
+      name: "lines",
+      type: "InvoiceLine[]",
+      default: "DEFAULT_LINES",
+      description: "Line items, each with `description`, `qty` and `unit` price.",
+    },
+    {
+      name: "events",
+      type: "InvoiceEvent[]",
+      default: "DEFAULT_EVENTS",
+      description: "Four timeline entries (`title`, `detail`, `time`): created, sent, viewed, paid.",
+    },
+    {
+      name: "payoutAccount",
+      type: "string",
+      default: "\"Business Checking ••4821\"",
+      description: "Account shown in the payout notification.",
+    },
+    {
+      name: "payoutArrival",
+      type: "string",
+      default: "\"Oct 29\"",
+      description: "Arrival date text in the payout notification.",
+    },
+    {
+      name: "payoutFee",
+      type: "number",
+      default: "5",
+      description: "Fee deducted from the payout, in currency units.",
+    },
+    {
+      name: "currency",
+      type: "string",
+      default: "\"$\"",
+      description: "Currency symbol prefixed to amounts.",
+    },
+    {
+      name: "theme",
+      type: "\"light\" | \"dark\"",
+      default: "\"light\"",
+      description: "Light or dark palette.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for the timeline, buttons and stamp.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "Gradients.sh preset id for the background shader.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the background shader parameters.",
+    },
+  ]}
+/>

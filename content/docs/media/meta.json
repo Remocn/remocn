@@ -1,0 +1,22 @@
+{
+  "title": "Media & Collage",
+  "defaultOpen": false,
+  "pages": [
+    "index",
+    "---Screenshot tours---",
+    "looks-like-this",
+    "screenshot-tour",
+    "shot-answers",
+    "up-close",
+    "---Grids & collages---",
+    "grid-montage",
+    "panel-split",
+    "shards-to-grid",
+    "---Comparisons---",
+    "before-after",
+    "theme-flip",
+    "---Device frames---",
+    "device-morph"
+  ],
+  "icon": "Image01Icon"
+}

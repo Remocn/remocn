@@ -1,0 +1,77 @@
+---
+title: Round Slam
+description: "'ROUND 1' slams in in two hits, then 'SHIP!' punches over a red slashed band."
+component: round-slam
+vibe: playful
+length: 66
+useWhen:
+  - "A game-style announcement beat: a round or level call followed by a one-word finisher."
+  - "A high-energy launch moment where two impact frames and camera shakes sell the hit."
+  - "A short hype sting that ends on the logo under a chrome speed-slash band."
+avoidWhen:
+  - "You want a count to ten before the verdict word — use `ko-count`."
+  - "The tone is quiet and editorial rather than loud — use `cool-down`."
+  - "You just need one big word to slam in without the game framing — use `full-bleed-type`."
+---
+
+<ComponentPreview name="round-slam" />
+
+<InstallBlock name="round-slam" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { RoundSlam } from "@/components/remocn/round-slam";
+
+const RoundSlamScene = () => <RoundSlam round="ROUND 2" call="DEPLOY!" />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="RoundSlam"
+    component={RoundSlamScene}
+    durationInFrames={110}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+'ROUND' then the number slam in with echoes and a shake, hold with a slow push, then the call ducks up to a label. The `call` word punches in bigger, cracks along a diagonal, and speed slashes open a band behind it before the logo rises. Pass `round` and `call`; it ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "round",
+      type: "string",
+      default: "\"ROUND 1\"",
+      description: "The round call, slammed in first in two hits.",
+    },
+    {
+      name: "call",
+      type: "string",
+      default: "\"SHIP!\"",
+      description: "The finisher word, punched in bigger and cracked open by the slashes.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Color of one of the thin speed slashes.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark ground; ships both.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier.",
+    },
+  ]}
+/>

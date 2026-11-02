@@ -1,0 +1,78 @@
+---
+title: Beam Split
+description: "A light beam cuts a bold headline in two and a serif italic phrase appears in the gap."
+component: beam-split
+vibe: premium
+length: 116
+useWhen:
+  - "A headline that sets up a punchline, where the second phrase appears inside the opened gap."
+  - "A premium reveal that pairs a heavy sans headline with an italic aside."
+avoidWhen:
+  - "There is no second phrase to place in the gap - use `blur-out-up`."
+  - "You want a simple word-by-word entrance - use `staggered-fade-up`."
+  - "The scene needs a swap between two lines of equal weight - use `strikethrough-replace`."
+---
+
+<ComponentPreview name="beam-split" />
+
+<InstallBlock name="beam-split" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { BeamSplit } from "@/components/remocn/beam-split";
+
+const BeamSplitScene = () => (
+  <BeamSplit title="Ship the story" inner="with motion you own" accent="#3B5BFD" />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="BeamSplit"
+    component={BeamSplitScene}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A bold title rises, a thin beam draws across its middle and pushes the halves apart, and the italic phrase fades in between before the gap closes again. Pass `title` and `inner` to set the two texts; it ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "title",
+      type: "string",
+      default: "\"Ship the story\"",
+      description: "Bold headline that is split by the beam",
+    },
+    {
+      name: "inner",
+      type: "string",
+      default: "\"with motion you own\"",
+      description: "Serif italic phrase shown inside the opened gap",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color (any valid CSS color)",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark palettes",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier",
+    },
+  ]}
+/>

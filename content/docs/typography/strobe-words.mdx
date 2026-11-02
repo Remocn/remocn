@@ -1,0 +1,81 @@
+---
+title: Strobe Words
+description: "Big words strobe in on flashing fields at a tightening rhythm, then land on a poster with the logo."
+component: strobe-words
+vibe: premium
+length: 68
+useWhen:
+  - "A fast opener that cuts through a list of verbs, such as Plan, Write, Render, Ship."
+  - "A hype beat where words flash on accent, dark and light fields before the final word holds."
+  - "A launch sting that needs to end on the last word over a horizon glow with your logo."
+avoidWhen:
+  - "The words should blink at a fixed rhythm and then cut to the logo with a one-line tagline — use `blink-cut`."
+  - "Each word needs to slam in one at a time and stay on screen — use `full-bleed-type`."
+  - "The pace should be gentle and readable, not flashing — use `staggered-fade-up`."
+---
+
+<ComponentPreview name="strobe-words" />
+
+<InstallBlock name="strobe-words" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { StrobeWords } from "@/components/remocn/strobe-words";
+
+const StrobeWordsScene = () => <StrobeWords words={["Plan.", "Write.", "Render.", "Ship."]} accent="#3B5BFD" />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="StrobeWords"
+    component={StrobeWordsScene}
+    durationInFrames={115}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The words cycle on hard cuts across glow, dark and light fields, with beats that start slow and tighten, then the last word holds as a poster with the logo below. Pass `words` and optionally `rhythm` (frames per cut) and `logo`; it ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "words",
+      type: "string[]",
+      default: "[\"Plan.\", \"Write.\", \"Render.\", \"Ship.\"]",
+      description: "Words that strobe in order; the last one holds as the poster.",
+    },
+    {
+      name: "rhythm",
+      type: "number[]",
+      description: "Frames each cut holds. Defaults to a tightening beat.",
+    },
+    {
+      name: "logo",
+      type: "React.ReactNode",
+      description: "Replaces the default logo on the poster.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Color of trailing punctuation on the dark and light fields.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark ground; ships both.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier.",
+    },
+  ]}
+/>

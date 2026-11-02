@@ -1,0 +1,83 @@
+---
+title: Whole Page
+description: "A manifesto of serif belief paragraphs fills the page in columns, one after another."
+component: whole-page
+vibe: premium
+length: 344
+useWhen:
+  - "A mission or values beat for a long-form brand film."
+  - "A founder-letter style scene where several short beliefs read together."
+  - "A closing scene that lets the viewer read a full page of principles."
+avoidWhen:
+  - "You only need a short summary above the details — use `tldr-on-top`."
+  - "Each belief should appear and dim on its own — use `what-sticks`."
+  - "The statement is one sentence — use `we-call-it`."
+---
+
+<ComponentPreview name="whole-page" />
+
+<InstallBlock name="whole-page" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { WholePage } from "@/components/remocn/whole-page";
+
+const WholePageScene = () => (
+  <WholePage title="What we believe" beliefs={["A launch video is part of the launch.", "Every frame you install is a file you can rewrite."]} />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="WholePage"
+    component={WholePageScene}
+    durationInFrames={390}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A title opens a page that fills with `beliefs` paragraph by paragraph, flowing into columns, with the active paragraph highlighted. Pass `beliefs` and `title` for your own manifesto. It ships in light and dark through the `theme` prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "beliefs",
+      type: "string[]",
+      default: "DEFAULT_BELIEFS",
+      description: "Paragraphs that fill the page in order.",
+    },
+    {
+      name: "title",
+      type: "string",
+      default: "\"What we believe\"",
+      description: "Heading shown above the paragraphs.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Accent color override; falls back to the theme accent.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background color override; falls back to the theme background.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark; picks the palette.",
+    },
+  ]}
+/>

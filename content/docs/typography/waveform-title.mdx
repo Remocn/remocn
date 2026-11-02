@@ -1,0 +1,77 @@
+---
+title: Waveform Title
+description: "A headline rises over an aurora waveform line that settles into an underline beneath it"
+component: waveform-title
+vibe: clean
+length: 114
+useWhen:
+  - "A product beat about voice, audio or captions where a waveform line sits under the title."
+  - "A title card where the headline rises and the last word is set in serif italic."
+avoidWhen:
+  - "You want a pulse running through the text itself — use `pulse-line`."
+  - "You need a plain headline without an audio motif — use `blur-out-up`."
+---
+
+<ComponentPreview name="waveform-title" />
+
+<InstallBlock name="waveform-title" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { WaveformTitle } from "@/components/remocn/waveform-title";
+
+const WaveformTitleScene = () => (
+  <WaveformTitle title="Your voice, captioned" accentWords={1} />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="WaveformTitle"
+    component={WaveformTitleScene}
+    durationInFrames={140}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+An aurora waveform line opens and sweeps across the frame, settles into an underline, and the headline rises above it, with the trailing word(s) in italic serif. Pass `title` and `accentWords`; it ships light and dark.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "title",
+      type: "string",
+      default: "\"Your voice, captioned\"",
+      description: "The headline that rises over the waveform.",
+    },
+    {
+      name: "accentWords",
+      type: "number",
+      default: "1",
+      description: "How many trailing words are set in the italic serif accent.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent colour (any CSS colour).",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier; above 1 plays faster.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Colour scheme; ships light and dark.",
+    },
+  ]}
+/>

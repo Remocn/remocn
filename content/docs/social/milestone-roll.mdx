@@ -1,0 +1,90 @@
+---
+title: Milestone Roll
+description: "A counter races through milestones, flashing at each, and lands on a final milestone poster"
+component: milestone-roll
+vibe: social
+length: 150
+useWhen:
+  - "Celebrating growth (renders, users, downloads) as a counter that climbs through 1K, 10K, 100K, 1M."
+  - "A social-proof beat that should feel like a game scoreboard rather than a static stat."
+  - "A closing poster that states the biggest number with a unit and a brand sign-off."
+avoidWhen:
+  - "You need several unrelated stats shown at once — use `stat-sequence`."
+  - "One number should roll like an odometer instead of racing — use `number-wheel`."
+  - "The metric is repository stars or sponsors — use `github-stars`."
+---
+
+<ComponentPreview name="milestone-roll" />
+
+<InstallBlock name="milestone-roll" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { MilestoneRoll } from "@/components/remocn/milestone-roll";
+
+const MilestoneRollScene = () => (
+  <MilestoneRoll milestones={[100, 1000, 10000, 50000]} unit="signups" />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="MilestoneRoll"
+    component={MilestoneRollScene}
+    durationInFrames={180}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A big counter races up to each milestone in turn; every hit flashes, shakes and shrinks the ring behind it. On the last milestone the number becomes a poster with the `unit` in serif italic and a wordmark. Pass ascending `milestones` and a `unit`; it ships dark and light via `theme`. The closing wordmark is the remocn logo, swap `RemocnLogo` in the copied file.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "milestones",
+      type: "number[]",
+      default: "[1000, 10000, 100000, 1000000]",
+      description: "Milestones the counter races through, ascending. The last is the poster.",
+    },
+    {
+      name: "unit",
+      type: "string",
+      default: "\"renders\"",
+      description: "What is being counted; shown on the poster and in the top label.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color scheme. Ships dark and light.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "gradients.sh preset id for the animated ground.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the ground shader parameters.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Accepted for API consistency; the color comes from the ground.",
+    },
+  ]}
+/>

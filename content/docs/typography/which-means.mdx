@@ -1,0 +1,95 @@
+---
+title: Which Means
+description: "A feature tag leads into a chain of consequences, each introduced by a hinge phrase."
+component: which-means
+vibe: clean
+length: 143
+useWhen:
+  - "A feature beat that turns one capability into a chain of benefits."
+  - "A launch scene that links a new feature to what it means for the viewer."
+  - "A release note video where a feature name needs a plain-language payoff."
+avoidWhen:
+  - "You only need a short before-and-after contrast — use `less-more`."
+  - "The explanation is a long paragraph, not a chain — use `tldr-on-top`."
+  - "You want the name defined as a word — use `verbed`."
+---
+
+<ComponentPreview name="which-means" />
+
+<InstallBlock name="which-means" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { WhichMeans } from "@/components/remocn/which-means";
+
+const WhichMeansScene = () => (
+  <WhichMeans name="Live preview" label="New" steps={["Every edit shows up as you type,", "the first render is the one you ship."]} />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="WhichMeans"
+    component={WhichMeansScene}
+    durationInFrames={190}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A labeled feature name appears, then the hinge phrase and each step in `steps` unfold as a chain of consequences. Pass `name`, `label`, `steps` and `hinge` to describe your own feature. It ships in light and dark through the `theme` prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "name",
+      type: "string",
+      default: "\"Live preview\"",
+      description: "Feature name shown as the headline.",
+    },
+    {
+      name: "label",
+      type: "string",
+      default: "\"New\"",
+      description: "Small tag shown next to the name.",
+    },
+    {
+      name: "steps",
+      type: "string[]",
+      default: "DEFAULT_STEPS",
+      description: "Consequence lines revealed in order.",
+    },
+    {
+      name: "hinge",
+      type: "string",
+      default: "\"which means\"",
+      description: "Connector phrase shown between steps.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Accent color override; falls back to the theme accent.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background color override; falls back to the theme background.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark; picks the palette.",
+    },
+  ]}
+/>

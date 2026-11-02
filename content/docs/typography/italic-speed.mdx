@@ -1,0 +1,80 @@
+---
+title: Italic Speed
+description: "A slanted caps word rides in on speed strips, with a serif italic subtitle under an underline."
+component: italic-speed
+vibe: premium
+length: 43
+useWhen:
+  - "A speed or performance claim such as Faster that should feel like it is moving."
+  - "A short punchy title in capitals that needs a fast, racing entrance."
+avoidWhen:
+  - "The word is long or lowercase and needs a calm entrance - use `soft-blur-in`."
+  - "You want a heavy slam instead of a ride-in - use `lights-out`."
+  - "You want a smooth stretch of the text - use `stretch-in`."
+---
+
+<ComponentPreview name="italic-speed" />
+
+<InstallBlock name="italic-speed" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { ItalicSpeed } from "@/components/remocn/italic-speed";
+
+const ItalicSpeedScene = () => (
+  <ItalicSpeed title="FASTER" subtitle="Ship at race pace." accent="#3B5BFD" />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="ItalicSpeed"
+    component={ItalicSpeedScene}
+    durationInFrames={84}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The word leans in from the side on speed strips, locks upright with an underline, and a serif italic subtitle fades in below. Pass `title` (set in capitals) and `subtitle`; it ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "title",
+      type: "string",
+      default: "\"FASTER\"",
+      description: "The word that rides in on the strips. Set in caps.",
+      description: "Word shown in slanted capitals",
+    },
+    {
+      name: "subtitle",
+      type: "string",
+      default: "\"Ship at race pace.\"",
+      description: "Second line, set smaller under the underline. Pass \"\" to hide.",
+      description: "Serif italic line under the underline",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color (any valid CSS color)",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark palettes",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier",
+    },
+  ]}
+/>

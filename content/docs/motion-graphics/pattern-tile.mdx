@@ -1,0 +1,78 @@
+---
+title: Pattern Tile
+description: "A single quarter-disc tile is rotated, mirrored and translated into a wall of 72 tiles"
+component: pattern-tile
+vibe: playful
+length: 156
+useWhen:
+  - "Explaining how a pattern or design system is built from one rule repeated and transformed."
+  - "A design-tool launch beat showing tile, rotate, mirror and translate steps with a live tile count."
+  - "A calm geometric backdrop moment that builds a graphic from one shape."
+avoidWhen:
+  - "The tiles should flip like Truchet cards, not build a wall — use `truchet-flip`."
+  - "You want a ripple of cells across a grid — use `grid-wave`."
+  - "You want a brick wall assembling into a mosaic — use `brick-mosaic`."
+---
+
+<ComponentPreview name="pattern-tile" />
+
+<InstallBlock name="pattern-tile" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { PatternTile } from "@/components/remocn/pattern-tile";
+
+const PatternTileScene = () => (
+  <PatternTile steps={["tile", "rotate 90°", "mirror", "translate"]} unit="tiles" />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="PatternTile"
+    component={PatternTileScene}
+    durationInFrames={180}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+One quarter-disc tile appears, rotates into a rosette, mirrors across an axis and slides out into a full wall while a four-step label highlights the current operation. A counter ends on the total tile count with an accent marker. Pass `steps` (four labels) and `unit`. Ships dark and light via `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "steps",
+      type: "[string, string, string, string]",
+      description: "Four step labels shown in order under the grid.",
+    },
+    {
+      name: "unit",
+      type: "string",
+      default: "\"tiles\"",
+      description: "Noun shown after the tile counter.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Color of the counter marker and highlights.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color scheme. Ships dark and light.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+  ]}
+/>

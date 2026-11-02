@@ -1,0 +1,82 @@
+---
+title: Boss Bar
+description: "A boss HP bar is drained by hits, then 'DEFEATED' slams in beneath 'The old workflow'"
+component: boss-bar
+vibe: playful
+length: 124
+useWhen:
+  - "A playful beat framing a legacy workflow as a boss that your features defeat one hit at a time."
+  - "A feature recap where each hit names a capability and takes damage off the bar."
+avoidWhen:
+  - "You want a streak of eliminations ending in a banner — use `kill-feed`."
+  - "You want a simple countdown to a reveal — use `drop-timer`."
+---
+
+<ComponentPreview name="boss-bar" />
+
+<InstallBlock name="boss-bar" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { BossBar } from "@/components/remocn/boss-bar";
+
+const BossBarScene = () => (
+  <BossBar boss="THE OLD WORKFLOW" hits={[{ label: "Captions", damage: 800 }, { label: "Templates", damage: 1200 }]} />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="BossBar"
+    component={BossBarScene}
+    durationInFrames={160}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A boss HP bar fills in, each named hit slams in and drains the bar, and when it breaks the defeated word slams in beneath the boss name. Pass `boss`, `hits` (label and damage) and `defeated`; it ships light and dark.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "boss",
+      type: "string",
+      default: "\"THE OLD WORKFLOW\"",
+      description: "Boss name over the bar.",
+    },
+    {
+      name: "hits",
+      type: "BossHit[]",
+      description: "Hits in order; the last one takes the bar to zero.",
+    },
+    {
+      name: "defeated",
+      type: "string",
+      default: "\"DEFEATED\"",
+      description: "Word slammed in when the bar breaks.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "The small \"BOSS\" tag and the hit slash.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Colour scheme; ships light and dark.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier; above 1 plays faster.",
+    },
+  ]}
+/>

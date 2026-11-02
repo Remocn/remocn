@@ -1,0 +1,105 @@
+---
+title: Benchmark Race
+description: "Lanes race on a shared clock and Remocn finishes first, shown as 12x faster"
+component: benchmark-race
+vibe: data
+length: 104
+useWhen:
+  - "A performance claim where your product finishes a benchmark first and the multiplier lands above the lanes."
+  - "A speed comparison against one or two alternatives, each with a live clock."
+  - "A launch beat that needs a clear winner and a short statement, such as 12x faster."
+avoidWhen:
+  - "You want two stopwatches side by side with no lanes — use `timer-duel`."
+  - "You want a single bar that shrinks — use `cut-stat`."
+  - "You want a score-style head-to-head — use `versus-split`."
+---
+
+<ComponentPreview name="benchmark-race" />
+
+<InstallBlock name="benchmark-race" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { BenchmarkRace } from "@/components/remocn/benchmark-race";
+
+const BenchmarkRaceScene = () => (
+  <BenchmarkRace
+    statement="12× faster"
+    title="Cold render, 1080p · median of 50 runs"
+    lanes={[
+      { label: "remocn", seconds: 0.42, highlight: true },
+      { label: "Kitebase", seconds: 2.38 },
+      { label: "Before", seconds: 5.06 },
+    ]}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="BenchmarkRace"
+    component={BenchmarkRaceScene}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Lanes arrive and race on a shared clock; the highlighted lane hits the finish first and its time freezes with a pulse while the others dim and keep crawling. The camera then glides down and the `statement` rolls in above. Pass `lanes` (label, seconds, optional highlight), `statement` and `title`. Ships dark and light via `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "lanes",
+      type: "BenchmarkLane[]",
+      default: "DEFAULT_LANES",
+      description: "Lanes to race, each with a label, finish time and optional highlight.",
+    },
+    {
+      name: "unit",
+      type: "string",
+      default: "\"s\"",
+      description: "Suffix on the clocks.",
+    },
+    {
+      name: "statement",
+      type: "string",
+      default: "\"12× faster\"",
+      description: "Lands above the lanes after the hit. A leading number rolls in.",
+    },
+    {
+      name: "title",
+      type: "string",
+      default: "\"Cold render, 1080p · median of 50 runs\"",
+      description: "Small caption over the lanes: what was measured.",
+    },
+    {
+      name: "decimals",
+      type: "number",
+      default: "2",
+      description: "Digits after the decimal point on the clocks.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for the hero element.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Dark or light palette.",
+    },
+  ]}
+/>

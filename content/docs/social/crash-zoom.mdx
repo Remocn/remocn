@@ -1,0 +1,96 @@
+---
+title: Crash Zoom
+description: "A calm serif tease crash-zooms into a huge '1 DAY.' reveal with speed lines and a tagline"
+component: crash-zoom
+vibe: playful
+length: 66
+useWhen:
+  - "A hook beat for a short-form launch clip where a quiet tease must erupt into one big claim."
+  - "A reveal of a bold number or timeframe (\"1 DAY.\", \"$0\") right after a setup line."
+  - "A product demo that needs a loud, shaky punctuation before the feature walkthrough starts."
+avoidWhen:
+  - "The claim needs two separate slams in a row (stop, then payoff) — use `hook-punch`."
+  - "You want a calm editorial intro with no camera shake or speed lines — use `focus-blur-resolve`."
+  - "You need a setup line that reads as a social post format before the punchline — use `pov-setup`."
+---
+
+<ComponentPreview name="crash-zoom" />
+
+<InstallBlock name="crash-zoom" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { CrashZoom } from "@/components/remocn/crash-zoom";
+
+const CrashZoomScene = () => (
+  <CrashZoom tease="Wait for it…" reveal="2 HOURS." tagline="to ship the launch video." />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="CrashZoom"
+    component={CrashZoomScene}
+    durationInFrames={105}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A serif italic tease fades in (a trailing "…" types in dot by dot), then crash-zooms through a blur with speed lines into a huge solid reveal that lands with a flash and shake, followed by a tagline. Pass `tease`, `reveal` and `tagline` to make it yours; it ships dark and light via `theme`.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "tease",
+      type: "string",
+      default: "\"Wait for it…\"",
+      description: "The calm tease in serif italic; a trailing \"…\" types in dot by dot.",
+    },
+    {
+      name: "reveal",
+      type: "string",
+      default: "\"1 DAY.\"",
+      description: "The reveal, slammed huge in solid ink.",
+    },
+    {
+      name: "tagline",
+      type: "string",
+      default: "\"to make this video.\"",
+      description: "Line under the reveal. Empty string hides it.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color scheme. Ships dark and light.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "gradients.sh preset for the ground. Defaults to ember (dark) or paper mist (light).",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the ground shader parameters.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Accepted for API consistency; the color comes from the ground.",
+    },
+  ]}
+/>

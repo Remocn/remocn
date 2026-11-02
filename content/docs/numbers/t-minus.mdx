@@ -1,0 +1,108 @@
+---
+title: T Minus
+description: "A mission clock ticks T-minus with rolling characters, then slams 'LIFTOFF' over a sunrise glow"
+component: t-minus
+vibe: tech
+length: 108
+useWhen:
+  - "A release-day beat framed as a mission countdown: a T-minus clock ticks to zero and 'LIFTOFF' slams in over a sunrise glow."
+  - "A big launch announcement that wants telemetry corners, a counting clock and a warm bloom at the moment of release."
+  - "A short, dramatic cut from 10 down to zero before the main product reveal."
+avoidWhen:
+  - "You want large cinematic 3-2-1 numerals with ring and slice transitions — use `countdown`."
+  - "You want a sports shot clock with tenths and a buzzer — use `shot-clock`."
+  - "The countdown is toward a calendar date, not zero — use `launch-date`."
+---
+
+<ComponentPreview name="t-minus" />
+
+<InstallBlock name="t-minus" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { TMinus } from "@/components/remocn/t-minus";
+
+const TMinusScene = () => (
+  <TMinus
+    from={10}
+    beat={8}
+    title="Liftoff"
+    subtitle="remocn 2.0 is live"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="TMinus"
+    component={TMinusScene}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A big T-minus numeral counts down with one hard cut per beat while a small clock above it rolls and edge telemetry flickers. At T-0 a warm bloom fires from the bottom, 'LIFTOFF' slams in and the small clock flips to counting up. Pass `from`, `beat`, `title`, `subtitle`, `stage` and `status`. It ships light and dark through the `theme` prop. The length shown is for the defaults; in general it is `14 + (from - 1) * beat + 22`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "from",
+      type: "number",
+      default: "10",
+      description: "Seconds on the clock when it starts.",
+    },
+    {
+      name: "beat",
+      type: "number",
+      default: "8",
+      description: "Frames per counted second (the countdown is compressed).",
+    },
+    {
+      name: "title",
+      type: "string",
+      default: "\"Liftoff\"",
+      description: "The word that slams in at T–0. Set in caps.",
+    },
+    {
+      name: "subtitle",
+      type: "string",
+      default: "\"remocn 2.0 is live\"",
+      description: "Small line under the title. Pass \"\" to hide it.",
+    },
+    {
+      name: "stage",
+      type: "string",
+      default: "\"Stage 1\"",
+      description: "Telemetry, top left.",
+    },
+    {
+      name: "status",
+      type: "string",
+      default: "\"Go\"",
+      description: "Telemetry, top right, next to the live pip.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Live pip and the small accent marks.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier; 1 is the designed pace.",
+    },
+  ]}
+/>

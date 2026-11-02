@@ -1,0 +1,99 @@
+---
+title: Compact Stat
+description: "A long number retracts into a compact figure with a gradient K, M or B suffix, then grows."
+component: compact-stat
+vibe: premium
+length: 96
+useWhen:
+  - "A big total, such as frames rendered, that should be shortened to a headline form like 1.2M on screen."
+  - "A premium stat beat where the suffix gets a gradient treatment and the number scales up."
+  - "A caption-led stat on a dark ground with a soft glow underneath."
+avoidWhen:
+  - "The count should stay as a full long number - use `row-count`."
+  - "You want a count on a ruled scale - use `pitch-over`."
+  - "Several stats should sit in a row - use `stat-sequence`."
+---
+
+<ComponentPreview name="compact-stat" />
+
+<InstallBlock name="compact-stat" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { CompactStat } from "@/components/remocn/compact-stat";
+
+const CompactStatScene = () => <CompactStat value={1200000} decimals={1} label="frames rendered with remocn" />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="CompactStat"
+    component={CompactStatScene}
+    durationInFrames={130}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The full number rises in digit by digit, then its trailing digits retract on a reel and a magnitude suffix (K, M, B or T) springs in; the shortened figure scales up in a gradient with a soft ground glow, under a caption. Pass `value` as the full number, with `decimals`, `prefix` and `label`; the suffix is picked automatically unless you pass `suffix`. It ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "value",
+      type: "number",
+      default: "1200000",
+      description: "The full number; it is shortened with a K, M, B or T suffix.",
+    },
+    {
+      name: "decimals",
+      type: "number",
+      default: "1",
+      description: "Decimal places on the shortened figure.",
+    },
+    {
+      name: "suffix",
+      type: "string",
+      description: "Overrides the automatic magnitude suffix.",
+    },
+    {
+      name: "prefix",
+      type: "string",
+      default: "\"\"",
+      description: "Text before the number.",
+    },
+    {
+      name: "label",
+      type: "string",
+      default: "\"frames rendered with remocn\"",
+      description: "Caption under the figure.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Color of the gradient suffix and glow.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Stage background color; overrides the theme ground.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark palette.",
+    },
+  ]}
+/>

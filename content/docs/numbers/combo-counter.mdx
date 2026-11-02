@@ -1,0 +1,79 @@
+---
+title: Combo Counter
+description: "A gradient hit counter climbs to '12 HIT COMBO' with rating words like 'PERFECT'"
+component: combo-counter
+vibe: playful
+length: 102
+useWhen:
+  - "A feature-rundown beat where each capability slams in as a hit and a combo meter climbs to 'PERFECT'."
+  - "A playful 'everything included' moment that lists a dozen features fast, with rising rating words."
+  - "A launch video finale that ends on a big gradient count and the logo, in a game-HUD style."
+avoidWhen:
+  - "You want a calm, readable list of features rather than rapid hits — use `stat-sequence`."
+  - "The moment is a single new record with a leaderboard — use `high-score`."
+  - "You want one number counting up on a beat without feature names — use `beat-count`."
+---
+
+<ComponentPreview name="combo-counter" />
+
+<InstallBlock name="combo-counter" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { ComboCounter } from "@/components/remocn/combo-counter";
+
+const ComboCounterScene = () => (
+  <ComboCounter
+    hits={["Captions", "Transitions", "Charts", "Templates"]}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="ComboCounter"
+    component={ComboCounterScene}
+    durationInFrames={132}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Feature names hit one after another with a star flash and slash, each hit faster than the last, while a combo meter on the left counts up and its rating swaps from Nice to Great to PERFECT. After the final hit the frame flashes, the meter glides to the centre as a poster with a gradient number, and the logo rises in. Pass `hits` and optionally `ratings`. It ships light and dark through the `theme` prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "hits",
+      type: "string[]",
+      description: "One hit per feature, in order. The combo count is the number of hits landed.",
+    },
+    {
+      name: "ratings",
+      type: "ComboRating[]",
+      description: "Ratings, swapped in as the count passes `from`. The last one is the poster's.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Small marker next to the rating.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier; 1 is the designed pace.",
+    },
+  ]}
+/>

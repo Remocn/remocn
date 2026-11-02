@@ -1,0 +1,82 @@
+---
+title: Keep Words
+description: "Serif belief statements build word by word; each keyword turns red and drops into a closing column of mottos."
+component: keep-words
+vibe: premium
+length: 285
+useWhen:
+  - "A closing manifesto beat with two or three beliefs that each boil down to one word."
+  - "A values or principles moment where the keywords should end up stacked as a short motto."
+avoidWhen:
+  - "You want every belief visible together as a full manifesto page — use `whole-page`."
+  - "There is one statement or quote, not a series — use `changed-mind`."
+  - "You want one big word with a full stop and a single supporting line — use `plain-license`."
+---
+
+<ComponentPreview name="keep-words" />
+
+<InstallBlock name="keep-words" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { KeepWords } from "@/components/remocn/keep-words";
+
+const KeepWordsScene = () => (
+  <KeepWords
+    beliefs={[
+      { text: "A launch film should be written like code.", keep: "written" },
+      { text: "Every scene you install stays yours.", keep: "yours" },
+      { text: "And it ships on time with the release.", keep: "on time" },
+    ]}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="KeepWords"
+    component={KeepWordsScene}
+    durationInFrames={330}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Each belief builds word by word in a large serif; its keyword turns the accent color while the other words fall away, and the keyword flies down into a motto line. In the end the keywords stack into a column of one-word sentences, each ending in an accent full stop. Pass `beliefs` as `{ text, keep }` where `keep` is the exact word or phrase inside `text`. Timing stretches to fill the composition; 285 frames assumes three beliefs in 330. It ships light and dark.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "beliefs",
+      type: "{ text: string; keep: string }[]",
+      default: "DEFAULT_BELIEFS",
+      description: "Beliefs played in order; keep is the word or phrase inside text to extract.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Color of the keywords and full stops.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark palette.",
+    },
+  ]}
+/>

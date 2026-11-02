@@ -1,0 +1,116 @@
+---
+title: Time Breakdown
+description: "A segmented time bar shrinks while 56% less time per video counts up"
+component: time-breakdown
+vibe: data
+length: 138
+useWhen:
+  - "A time-saved claim where the segments of a workflow, such as editing, rendering and export, visibly shrink."
+  - "A beat that shows exactly which step you removed, not just the total saving."
+  - "A before-and-after scene that ends on a percent, such as 56% less time per video."
+avoidWhen:
+  - "You have a single bar and a single percentage — use `cut-stat`."
+  - "You want the comparison framed as a race — use `benchmark-race`."
+  - "You want each row's before and after as dots — use `dumbbell-shift`."
+---
+
+<ComponentPreview name="time-breakdown" />
+
+<InstallBlock name="time-breakdown" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { TimeBreakdown } from "@/components/remocn/time-breakdown";
+
+const TimeBreakdownScene = () => (
+  <TimeBreakdown
+    title="Where the time goes"
+    caption="less time per video"
+    before={[
+      { label: "Editing", value: 62 },
+      { label: "Rendering", value: 24 },
+      { label: "Export", value: 14 },
+    ]}
+    after={[
+      { label: "Editing", value: 6 },
+      { label: "Rendering", value: 24 },
+      { label: "Export", value: 14 },
+    ]}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="TimeBreakdown"
+    component={TimeBreakdownScene}
+    durationInFrames={165}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A segmented bar splits into time blocks, then the slow segment collapses and the bar shrinks while the saved percentage counts up with its caption. Pass `before` and `after` as lists of segments (label and value), and set `title`, `beforeLabel`, `afterLabel` and `caption`. Ships dark and light via `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "before",
+      type: "TimeSegment[]",
+      default: "DEFAULT_BEFORE",
+      description: "Segments of the original timeline, each with a label and value.",
+    },
+    {
+      name: "after",
+      type: "TimeSegment[]",
+      default: "DEFAULT_AFTER",
+      description: "Segments after the change; same labels, smaller values.",
+    },
+    {
+      name: "title",
+      type: "string",
+      default: "\"Where the time goes\"",
+      description: "Small heading over the bar.",
+    },
+    {
+      name: "beforeLabel",
+      type: "string",
+      default: "\"Before\"",
+      description: "Label on the original bar.",
+    },
+    {
+      name: "afterLabel",
+      type: "string",
+      default: "\"With remocn\"",
+      description: "Label on the shortened bar.",
+    },
+    {
+      name: "caption",
+      type: "string",
+      default: "\"less time per video\"",
+      description: "Line under the saved percentage.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for the hero element.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Dark or light palette.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier.",
+    },
+  ]}
+/>

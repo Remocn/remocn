@@ -1,0 +1,114 @@
+---
+title: AI Image Grid
+description: "A prompt generates a grid of images, then one is picked and zoomed with its details"
+component: ai-image-grid
+vibe: tech
+length: 205
+useWhen:
+  - "A product beat for an image generation tool: type a prompt, watch variations resolve, pick one."
+  - "A launch video showing the generate-then-choose loop of a creative AI app."
+  - "A demo where the viewer should see several results before one hero render is highlighted."
+avoidWhen:
+  - "You want a generic AI prompt-to-result flow with a button and loading skeleton — use `ai-prompt-flow`."
+  - "The AI output is a working app or site, not images — use `prompt-to-app`."
+  - "You need a chat conversation with an assistant — use `chat-flow`."
+---
+
+<ComponentPreview name="ai-image-grid" />
+
+<InstallBlock name="ai-image-grid" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { AiImageGrid } from "@/components/remocn/ai-image-grid";
+
+const AiImageGridScene = () => (
+  <AiImageGrid
+    prompt="a ceramic teapot on a linen cloth, studio light"
+    images={["/shots/teapot-1.png", "/shots/teapot-2.png"]}
+    layout="3x2"
+    pick={2}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="AiImageGrid"
+    component={AiImageGridScene}
+    durationInFrames={240}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A prompt card types in and the generate button is pressed. The card docks below a grid of tiles that diffuse into finished images one after another, then a cursor picks one tile, the others fall away, and the pick zooms into a detail view with a download button. Pass `prompt`, `model`, and `images` (your own image URLs, since the demo art is procedural) to make it yours; `layout` and `pick` control the grid. It ships light and dark through `theme`.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "prompt",
+      type: "string",
+      default: "\"isometric glass city at sunrise, soft light\"",
+      description: "The text typed into the prompt card.",
+    },
+    {
+      name: "images",
+      type: "string[]",
+      default: "[]",
+      description: "Your own image URLs for the tiles.",
+    },
+    {
+      name: "model",
+      type: "string",
+      default: "\"remocn Image 2\"",
+      description: "Model name shown in the prompt card and details.",
+    },
+    {
+      name: "layout",
+      type: "\"2x2\" | \"3x2\"",
+      default: "\"2x2\"",
+      description: "Grid of four or six tiles.",
+    },
+    {
+      name: "pick",
+      type: "number",
+      default: "1",
+      description: "Index of the tile that is chosen and zoomed.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for the button and highlights.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"light\" | \"dark\"",
+      default: "\"dark\"",
+      description: "Light or dark interface.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "Gradient shader preset for the background.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the shader preset parameters.",
+    },
+  ]}
+/>

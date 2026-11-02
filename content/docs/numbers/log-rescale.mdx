@@ -1,0 +1,92 @@
+---
+title: Log Rescale
+description: "A bar chart rescales to a log axis so the final 2.4M bar stands out"
+component: log-rescale
+vibe: data
+length: 124
+useWhen:
+  - "A growth story whose last value is orders of magnitude bigger than the first, such as 340 to 2.4M."
+  - "A beat that admits a linear chart hides the early years, then rescales to a log axis to show them."
+  - "A yearly progression where the final bar should stand out after the rescale."
+avoidWhen:
+  - "The values are close in size and need no rescale — use `spring-bars`."
+  - "You want a smooth curve through milestones — use `growth-line`."
+  - "You need the last bar to burst through a target line — use `off-the-charts`."
+---
+
+<ComponentPreview name="log-rescale" />
+
+<InstallBlock name="log-rescale" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { LogRescale } from "@/components/remocn/log-rescale";
+
+const LogRescaleScene = () => (
+  <LogRescale
+    title="remocn renders per year"
+    data={[
+      { label: "2023", value: 4800 },
+      { label: "2024", value: 18000 },
+      { label: "2025", value: 96000 },
+      { label: "2026", value: 2400000 },
+    ]}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="LogRescale"
+    component={LogRescaleScene}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Bars rise on a linear axis where only the last one is visible, then the axis morphs to a log scale, the smaller bars grow into view, and their values label in. Pass `data` (label and value per bar), `accentIndex` for the hero bar (defaults to the largest), and a `title`. Ships dark and light via `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "data",
+      type: "LogRescaleDatum[]",
+      default: "DEFAULT_DATA",
+      description: "Bars to plot, in order, with a label and value each.",
+    },
+    {
+      name: "accentIndex",
+      type: "number",
+      description: "Index of the hero bar; defaults to the largest value.",
+    },
+    {
+      name: "title",
+      type: "string",
+      default: "\"remocn renders per year\"",
+      description: "Small heading over the chart.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for the hero element.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Dark or light palette.",
+    },
+  ]}
+/>

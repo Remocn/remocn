@@ -1,0 +1,91 @@
+---
+title: Scissors Cut
+description: "Scissors cut a word out of a line, and a replacement word slides into the gap."
+component: scissors-cut
+vibe: playful
+length: 202
+useWhen:
+  - "A tagline where one phrase is cut out and replaced, such as swapping a slow timeline for a fast one."
+  - "A playful edit beat that shows removal, then the better word taking its place."
+  - "A closing line where the replacement is the payoff after a dashed cut outline."
+avoidWhen:
+  - "The swap should be quiet and fast - use `strikethrough-replace`."
+  - "You want several words cycling beside a fixed prefix - use `inline-word-roll`."
+  - "No gag is needed, just a clean replacement - use `fade-through`."
+---
+
+<ComponentPreview name="scissors-cut" />
+
+<InstallBlock name="scissors-cut" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { ScissorsCut } from "@/components/remocn/scissors-cut";
+
+const ScissorsCutScene = () => (
+  <ScissorsCut before="Ship " cut="next quarter" after="." replacement="now" />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="ScissorsCut"
+    component={ScissorsCutScene}
+    durationInFrames={250}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A line appears, a dashed outline traces the `cut` phrase and a pair of scissors snips along it. The cut piece falls away, the line reflows, and the `replacement` slides into the gap. Pass `before`, `cut`, `after` and `replacement`. It takes a `theme` prop and ships light and dark.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "before",
+      type: "string",
+      default: "\"Launch \"",
+      description: "Text before the cut-out. Keep the trailing space.",
+    },
+    {
+      name: "cut",
+      type: "string",
+      default: "\"next month\"",
+      description: "The words the scissors cut out.",
+    },
+    {
+      name: "after",
+      type: "string",
+      default: "\".\"",
+      description: "Text after the cut-out.",
+    },
+    {
+      name: "replacement",
+      type: "string",
+      default: "\"today\"",
+      description: "What slides into the gap.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Scissor handles and the replacement word.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark ground; the component ships both.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+  ]}
+/>

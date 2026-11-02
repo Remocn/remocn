@@ -1,0 +1,77 @@
+---
+title: Ring Align
+description: "Concentric dotted rings rotate until their slots align and a beam reveals a word in the channel"
+component: ring-align
+vibe: tech
+length: 98
+useWhen:
+  - "A reveal of a single word (\"Aligned.\") that should feel like a lock clicking into place."
+  - "A product beat about alignment, sync or precision, where rings snap one by one."
+  - "A clean title moment with a graphic backdrop instead of a photo."
+avoidWhen:
+  - "You want a physical lock-in of parts into a shape — use `orbit-lock`."
+  - "The word should be revealed through a gate or slot — use `letter-gate`."
+  - "You want a soft glass reveal rather than rings — use `fluted-glass`."
+---
+
+<ComponentPreview name="ring-align" />
+
+<InstallBlock name="ring-align" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { RingAlign } from "@/components/remocn/ring-align";
+
+const RingAlignScene = () => <RingAlign word="Aligned." rings={6} />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="RingAlign"
+    component={RingAlignScene}
+    durationInFrames={130}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Rings of dots spin from offset angles and lock one by one, outer ring first, each with a small settle. Once the last ring locks, a bright beam sweeps through the aligned channel and leaves your `word` filled in a gradient. Pass `word` and `rings` (3 to 9). Ships dark and light via `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "word",
+      type: "string",
+      default: "\"Aligned.\"",
+      description: "Word revealed in the channel once every slot lines up.",
+    },
+    {
+      name: "rings",
+      type: "number",
+      default: "6",
+      description: "Number of concentric rings, from 3 to 9.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Color of the period at the end of the word.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color scheme. Ships dark and light.",
+    },
+  ]}
+/>

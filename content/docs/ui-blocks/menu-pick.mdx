@@ -1,0 +1,105 @@
+---
+title: Menu Pick
+description: "A game-style menu lists options, a red selection bar hops between rows, blinks, and settles on the chosen one."
+component: menu-pick
+vibe: clean
+length: 71
+useWhen:
+  - "A choose-your-path beat where the answer is obviously the last option, such as three ways to ship a launch."
+  - "A funny or punchy comparison where the cursor hesitates between rows before picking one."
+  - "A retro console-menu feel with a Back and Select hint in the footer."
+avoidWhen:
+  - "You want a real dropdown opening from a button — use `dropdown-menu`."
+  - "The menu is a searchable command palette — use `command-menu`."
+  - "You only need a segmented switch between views — use `toggle-group`."
+---
+
+<ComponentPreview name="menu-pick" />
+
+<InstallBlock name="menu-pick" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { MenuPick } from "@/components/remocn/menu-pick";
+
+const MenuPickScene = () => (
+  <MenuPick
+    prompt="Choose your launch"
+    options={["Keyframe every beat", "Wait on an agency", "Install the scenes"]}
+    pick={2}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="MenuPick"
+    component={MenuPickScene}
+    durationInFrames={120}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A panel appears with a `prompt` and a list of `options`. A selection bar hops between rows, confirms with a quick blink on the `pick` row, and the other rows dim. Pass your own `prompt`, `options` and a zero-based `pick`; it ships light and dark through `theme`. Use `speed` to slow or quicken the hops.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "prompt",
+      type: "string",
+      default: "\"Choose your launch\"",
+      description: "Heading shown at the top of the menu.",
+    },
+    {
+      name: "options",
+      type: "string[]",
+      description: "Menu rows. Each is one line of text.",
+    },
+    {
+      name: "pick",
+      type: "number",
+      default: "2",
+      description: "Zero-based index of the row that gets selected.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#E60012\"",
+      description: "Color of the selection bar.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Solid background. Use 'transparent' to drop the ground.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the hops and blinks.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color scheme. Ships light and dark.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "Shader preset id for the animated background.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Partial shader parameters that override the ground preset.",
+    },
+  ]}
+/>

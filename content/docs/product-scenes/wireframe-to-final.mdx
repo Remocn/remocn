@@ -1,0 +1,87 @@
+---
+title: Wireframe to Final
+description: "A gray blueprint wireframe of a dashboard is drawn with measurement lines, then a sweep fills in the finished UI."
+component: wireframe-to-final
+vibe: clean
+length: 168
+useWhen:
+  - "A design or no-code launch that sells idea-to-product as one transformation."
+  - "A reveal where your real screenshot, passed as `src`, replaces a sketch."
+  - "A before-and-after beat with a short caption pair like Idea and Product."
+avoidWhen:
+  - "You want scattered windows collapsing into a tracker — use `chaos-to-order`."
+  - "You want a loader that settles into a landing page — use `tile-snake-loader`."
+  - "You want a camera tour of regions on a screenshot — use `screenshot-tour`."
+---
+
+<ComponentPreview name="wireframe-to-final" />
+
+<InstallBlock name="wireframe-to-final" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { WireframeToFinal } from "@/components/remocn/wireframe-to-final";
+
+const WireframeToFinalScene = () => (
+  <WireframeToFinal
+    captions={["Idea", "Product"]}
+    measurements={["1440", "900", "288"]}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="WireframeToFinal"
+    component={WireframeToFinalScene}
+    durationInFrames={225}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A blueprint-style stage draws the outline, dimension lines and gray wireframe blocks of a dashboard, then a light sweep fills it into the finished product UI while the caption swaps from `captions[0]` to `captions[1]`. Pass `src` with a screenshot of your product (a built-in dashboard shows if omitted), `captions` and `measurements`. Ships light and dark.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "src",
+      type: "string",
+      description: "Final screenshot; a built-in dashboard shows when omitted",
+    },
+    {
+      name: "theme",
+      type: "\"light\" | \"dark\"",
+      default: "\"light\"",
+      description: "Light or dark palette",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for highlights, buttons and progress",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline",
+    },
+    {
+      name: "captions",
+      type: "[string, string]",
+      default: "[\"Idea\", \"Product\"]",
+      description: "Captions before and after the fill; empty strings hide them",
+    },
+    {
+      name: "measurements",
+      type: "[string, string, string]",
+      default: "[\"1440\", \"900\", \"288\"]",
+      description: "Numbers on the measurement lines: width, height, sidebar",
+    },
+  ]}
+/>

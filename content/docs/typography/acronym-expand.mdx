@@ -1,0 +1,100 @@
+---
+title: Acronym Expand
+description: "An acronym expands letter by letter into its full name, with an eyebrow above and a subhead below."
+component: acronym-expand
+vibe: tech
+length: 86
+useWhen:
+  - "A feature-naming beat where a short acronym like MCP or SDK needs to be spelled out for the viewer."
+  - "An announcement scene that pairs one big abbreviation with a one-line explanation of what it does."
+avoidWhen:
+  - "The headline is a plain sentence with nothing to expand - use `tracking-in`."
+  - "You want text typed on with a caret rather than letters unfolding - use `typewriter`."
+  - "The full name is very long and would shrink to small type - use `line-by-line-slide`."
+---
+
+<ComponentPreview name="acronym-expand" />
+
+<InstallBlock name="acronym-expand" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { AcronymExpand } from "@/components/remocn/acronym-expand";
+
+const AcronymExpandScene = () => (
+  <AcronymExpand
+    short="SDK"
+    full="Software Development Kit"
+    eyebrow="Now available"
+    accent="#3B5BFD"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="AcronymExpand"
+    component={AcronymExpandScene}
+    durationInFrames={120}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The short form appears first, its letters spread apart and unfold into the full words, then the eyebrow and subhead fade in. Pass `short`, `full`, `eyebrow` and `subhead` to make it yours; it ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "short",
+      type: "string",
+      default: "\"MCP\"",
+      description: "The acronym shown large before it expands",
+    },
+    {
+      name: "full",
+      type: "string",
+      default: "\"Model Context Protocol\"",
+      description: "The full phrase the acronym expands into",
+    },
+    {
+      name: "eyebrow",
+      type: "string",
+      default: "\"Now in remocn\"",
+      description: "Small label above the expanded phrase; empty to hide",
+    },
+    {
+      name: "subhead",
+      type: "string",
+      default: "\"Your agent browses, installs and edits every component.\"",
+      description: "One-line explanation under the phrase; empty to hide",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color (any valid CSS color)",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Overrides the theme's stage color",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark palettes",
+    },
+  ]}
+/>

@@ -1,0 +1,116 @@
+---
+title: Beam Sweep
+description: "A beam of light sweeps across a page builder and reveals a closing headline over a glowing horizon"
+component: beam-sweep
+vibe: premium
+length: 30
+useWhen:
+  - "A beat where a working product screen gives way to a single confident statement."
+  - "Moving from a feature demo to a tagline or call to action with a cinematic light pass."
+  - "You want a diagonal beam of colored light to carry the cut instead of a plain wipe."
+avoidWhen:
+  - "You need a hard, flat edge between scenes with no glow — use `diagonal-split`."
+  - "You want a quick tilted band of light, not a long glowing sweep — use `flash-sweep`."
+  - "You want a plain lateral swap with no light effect — use `slide-swap`."
+---
+
+<ComponentPreview name="beam-sweep" />
+
+<InstallBlock name="beam-sweep" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { BeamSweepDemo } from "@/components/remocn/beam-sweep";
+
+const BeamSweepDemoScene = () => (
+  <BeamSweepDemo
+    line="Just describe the launch."
+    sub="Every scene is cut to your product."
+    images={["/shots/one.png", "/shots/two.png", "/shots/three.png"]}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="BeamSweepDemo"
+    component={BeamSweepDemoScene}
+    durationInFrames={108}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Scene A is a page builder with a progress bar and three images on a page. A diagonal beam of shader light sweeps across, burns the builder away, and reveals scene B, a statement with a supporting line over a glowing ground. Pass `pageTitle`, `line` and `sub` for the copy and your own `images` (the defaults exist only in the remocn repo); it ships light and dark.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark palette for both scenes",
+    },
+    {
+      name: "images",
+      type: "string[]",
+      description: "Up to three image srcs shown on the scene A page; defaults are remocn-only",
+    },
+    {
+      name: "pageTitle",
+      type: "[string, string]",
+      description: "Two-part title on the scene A page; the second part is italic",
+    },
+    {
+      name: "line",
+      type: "string",
+      default: "\"Just describe the launch.\"",
+      description: "Main statement in scene B",
+    },
+    {
+      name: "sub",
+      type: "string",
+      default: "\"Every scene is cut to your product.\"",
+      description: "Supporting line under the statement",
+    },
+    {
+      name: "beam",
+      type: "BeamSweepProps",
+      description: "Overrides for beam preset, angle, burn color, edge and light mode",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "Preset id for the scene B gradients.sh shader ground",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the scene B shader parameters",
+    },
+    {
+      name: "sceneA",
+      type: "number",
+      default: "BEAM_SWEEP_DEMO.sceneA",
+      description: "Scene A length in frames",
+    },
+    {
+      name: "sceneB",
+      type: "number",
+      default: "BEAM_SWEEP_DEMO.sceneB",
+      description: "Scene B length in frames",
+    },
+    {
+      name: "transition",
+      type: "number",
+      default: "BEAM_SWEEP_DEMO.transition",
+      description: "Transition length in frames",
+    },
+  ]}
+/>

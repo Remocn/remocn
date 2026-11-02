@@ -1,0 +1,108 @@
+---
+title: Rotary Dial
+description: "A knurled dial is grabbed and turned, the value counts up with it, and it clicks into its final detent."
+component: rotary-dial
+vibe: premium
+length: 90
+useWhen:
+  - "A performance or intensity claim such as render speed going from 1 to 10."
+  - "A feature beat where turning something up should feel physical and satisfying."
+  - "A hardware-flavored product moment with a big number and a unit."
+avoidWhen:
+  - "The number should just roll up without a control — use `rolling-number`."
+  - "You want a flat UI slider rather than a physical knob — use `slider`."
+  - "A boolean on and off is the point — use `toggle-on`."
+---
+
+<ComponentPreview name="rotary-dial" />
+
+<InstallBlock name="rotary-dial" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { RotaryDial } from "@/components/remocn/rotary-dial";
+
+const RotaryDialScene = () => (
+  <RotaryDial
+    from={1}
+    to={10}
+    unit="×"
+    label="Render speed"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="RotaryDial"
+    component={RotaryDialScene}
+    durationInFrames={125}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A label and value write in, a cursor grabs a metal dial and turns it, and the value counts from `from` to `to` as an arc heats up. The dial clicks into its final detent with a bloom of light. Pass your own `from`, `to`, `unit` and `label`; it ships light and dark through `theme`.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "from",
+      type: "number",
+      default: "1",
+      description: "Starting value on the dial.",
+    },
+    {
+      name: "to",
+      type: "number",
+      default: "10",
+      description: "Final value the dial lands on.",
+    },
+    {
+      name: "unit",
+      type: "string",
+      default: "\"×\"",
+      description: "Unit shown after the number, such as a multiplication sign.",
+    },
+    {
+      name: "label",
+      type: "string",
+      default: "\"Render speed\"",
+      description: "Caption describing the value.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Color of the heated arc.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color scheme. Ships light and dark.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "Shader preset id for the animated background.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Partial shader parameters that override the ground preset.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+  ]}
+/>

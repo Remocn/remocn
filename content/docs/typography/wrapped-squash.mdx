@@ -1,0 +1,78 @@
+---
+title: Wrapped Squash
+description: "Each caps line squashes to fill its own colored block, stacking into a full-frame poster"
+component: wrapped-squash
+vibe: playful
+length: 93
+useWhen:
+  - "A recap beat of two or three short caps lines, such as a year-in-review or shipped-this-quarter summary."
+  - "A bold section break where each line takes over the frame, then all lines lock into a stacked poster."
+  - "A social-style stat card that needs loud type blocks in one flat two-color pair."
+avoidWhen:
+  - "You have more than three lines or longer phrases — use `word-stack`."
+  - "The tone should be calm, with text appearing gently — use `mask-reveal-up`."
+  - "You only need one big word to hit the frame — use `round-slam`."
+---
+
+<ComponentPreview name="wrapped-squash" />
+
+<InstallBlock name="wrapped-squash" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { WrappedSquash } from "@/components/remocn/wrapped-squash";
+
+const WrappedSquashScene = () => (
+  <WrappedSquash lines={["WE", "SHIPPED", "IT ALL"]} />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="WrappedSquash"
+    component={WrappedSquashScene}
+    durationInFrames={135}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Line one grows to fill the frame, then each further line arrives on a 26-frame beat and squeezes the lines above it, and a spring lock settles every block to its final height. Blocks alternate between a window onto a shared gradient and a solid fill. Pass `lines` (two or three, set in caps); use `colors` for a flat two-color pair. It ships light and dark through `theme`, and with two lines the lock lands earlier (frame 67).
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "lines",
+      type: "string[]",
+      default: "[\"YOU\", \"SHIPPED\", \"A LOT\"]",
+      description: "Two or three short lines; set in caps, each fills its own block.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color used in the dark theme's gradient field.",
+    },
+    {
+      name: "colors",
+      type: "[string, string]",
+      description: "Flat two-color pair, such as `[\"#FF4632\", \"#FFD2F2\"]`, replacing the gradient.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier.",
+    },
+  ]}
+/>

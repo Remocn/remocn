@@ -1,0 +1,98 @@
+---
+title: Sankey Flow
+description: "Flows from several sources merge into one target block that reads 12.4k"
+component: sankey-flow
+vibe: data
+length: 98
+useWhen:
+  - "A beat showing several sources or channels merging into one outcome, such as total videos rendered."
+  - "A migration or adoption story where many inputs feed your product."
+  - "A scene where the combined total, such as 12.4k, is the payoff."
+avoidWhen:
+  - "You want shares of a whole as a percentage — use `share-donut`."
+  - "You want the parts as rectangles sized by value — use `treemap-split`."
+  - "You want one headline metric with no breakdown — use `compact-stat`."
+---
+
+<ComponentPreview name="sankey-flow" />
+
+<InstallBlock name="sankey-flow" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { SankeyFlow } from "@/components/remocn/sankey-flow";
+
+const SankeyFlowScene = () => (
+  <SankeyFlow
+    target="remocn"
+    label="videos rendered"
+    sources={[
+      { label: "Marketing", value: 4100 },
+      { label: "Product", value: 3200 },
+      { label: "Docs", value: 2400 },
+    ]}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="SankeyFlow"
+    component={SankeyFlowScene}
+    durationInFrames={140}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Source nodes appear on the left, then flows of different widths draw one by one into a single target block that lands with the combined total and label. Pass `sources` (label and value), `target`, and `label`; the total is the sum unless you set `total`. Ships dark and light via `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "sources",
+      type: "SankeySource[]",
+      default: "DEFAULT_SOURCES",
+      description: "Source nodes on the left, each with a label and value.",
+    },
+    {
+      name: "target",
+      type: "string",
+      default: "\"remocn\"",
+      description: "Name on the merged target block.",
+    },
+    {
+      name: "total",
+      type: "number",
+      description: "Number shown on the target; defaults to the sum of sources.",
+    },
+    {
+      name: "label",
+      type: "string",
+      default: "\"videos rendered\"",
+      description: "Caption under the total.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for the hero element.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Dark or light palette.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier.",
+    },
+  ]}
+/>

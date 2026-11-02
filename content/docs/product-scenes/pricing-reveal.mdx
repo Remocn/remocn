@@ -1,0 +1,113 @@
+---
+title: Pricing Reveal
+description: "A pricing table highlights the Pro plan and strikes the old price for the new one"
+component: pricing-reveal
+vibe: clean
+length: 81
+useWhen:
+  - "A pricing-page announcement where a launch discount replaces the old price."
+  - "A SaaS launch beat that presents three tiers and spotlights the one you want picked."
+  - "A \"simple pricing\" scene that ends with a free trial button being pressed."
+avoidWhen:
+  - "You only need one plan on a phone with a trial flow — use `mobile-paywall`."
+  - "The pricing is a single huge statement rather than a table — use `price-page`."
+  - "The point is a checkout total dropping after a code — use `coupon-apply`."
+---
+
+<ComponentPreview name="pricing-reveal" />
+
+<InstallBlock name="pricing-reveal" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { PricingReveal } from "@/components/remocn/pricing-reveal";
+
+const PricingRevealScene = () => <PricingReveal heading="Pricing that scales with you." discountLabel="−20% this week" badgeLabel="Best value" />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="PricingReveal"
+    component={PricingRevealScene}
+    durationInFrames={105}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Three plan cards rise in with their features, then the featured plan lifts, strikes its old price and rolls in the new one with a discount tag and a Most picked badge, and its button is pressed. Pass `plans` (set `featured` and `was` on the one to highlight), `heading`, `discountLabel` and `badgeLabel`. It has a `theme` prop and ships light and dark.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "plans",
+      type: "PricingPlan[]",
+      default: "DEFAULT_PLANS",
+      description: "Plan cards with `name`, `price`, `period`, `features`, `cta`; `featured` and `was` mark the highlight.",
+    },
+    {
+      name: "currency",
+      type: "string",
+      default: "\"$\"",
+      description: "Currency symbol shown before prices.",
+    },
+    {
+      name: "discountLabel",
+      type: "string",
+      default: "\"−35% launch week\"",
+      description: "Tag text shown next to the new price.",
+    },
+    {
+      name: "badgeLabel",
+      type: "string",
+      default: "\"Most picked\"",
+      description: "Badge text above the featured plan.",
+    },
+    {
+      name: "eyebrow",
+      type: "string",
+      default: "\"Billed monthly · cancel anytime\"",
+      description: "Small line above the heading.",
+    },
+    {
+      name: "heading",
+      type: "string",
+      default: "\"Simple pricing for every launch.\"",
+      description: "Main heading above the plan cards.",
+    },
+    {
+      name: "theme",
+      type: "\"light\" | \"dark\"",
+      default: "\"light\"",
+      description: "Light or dark palette.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for the featured plan and tag.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "Gradients.sh preset id for the background shader.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the background shader parameters.",
+    },
+  ]}
+/>

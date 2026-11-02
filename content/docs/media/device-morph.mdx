@@ -1,0 +1,110 @@
+---
+title: Device Morph
+description: "A device frame on a design canvas morphs from desktop to tablet to phone while the layout reflows."
+component: device-morph
+vibe: clean
+length: 170
+useWhen:
+  - "Showing that a product or site is responsive, with the layout actually reflowing at each size."
+  - "A feature beat where a cursor picks tablet then phone in a size switcher."
+  - "A design or builder tool demo showing one design across three devices."
+avoidWhen:
+  - "The change is a light and dark theme switch — use `theme-flip`."
+  - "You want a rendered set of phone screens side by side — use `phone-trio`."
+  - "A fixed screenshot should be toured region by region — use `screenshot-tour`."
+---
+
+<ComponentPreview name="device-morph" />
+
+<InstallBlock name="device-morph" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { DeviceMorph } from "@/components/remocn/device-morph";
+
+const DeviceMorphScene = () => (
+  <DeviceMorph
+    images={["/p/1.jpg", "/p/2.jpg", "/p/3.jpg", "/p/4.jpg", "/p/5.jpg", "/p/6.jpg"]}
+    reverse={false}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="DeviceMorph"
+    component={DeviceMorphScene}
+    durationInFrames={205}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A device frame appears over a size switcher. A cursor picks the tablet size, the frame morphs, then picks the phone size and morphs again, with the content reflowing at each width. Pass your own responsive UI as `children` (it lays out at the live viewport width), or a flat `src` screenshot, and set `reverse` to go from phone to desktop. The built-in dashboard uses `staticFile` thumbnails from the remocn repo, so pass your own `images`. It ships light and dark through `theme`.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "children",
+      type: "React.ReactNode",
+      description: "Your responsive UI. It lays out at the live viewport width.",
+    },
+    {
+      name: "src",
+      type: "string",
+      description: "Screenshot shown instead of the built-in dashboard. No reflow.",
+    },
+    {
+      name: "stops",
+      type: "{ label: string; width: number; height: number }[]",
+      default: "DEFAULT_STOPS",
+      description: "Exactly three stops, desktop then tablet then phone.",
+    },
+    {
+      name: "reverse",
+      type: "boolean",
+      default: "false",
+      description: "Go from phone to desktop instead of desktop to phone.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color of the selection handles and chips.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"light\" | \"dark\"",
+      default: "\"light\"",
+      description: "Color scheme. Ships light and dark.",
+    },
+    {
+      name: "images",
+      type: "string[]",
+      default: "DEFAULT_IMAGES",
+      description: "Six thumbnails for the built-in project cards. Defaults to repo-only files.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "Shader preset id for the animated background.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Partial shader parameters that override the ground preset.",
+    },
+  ]}
+/>

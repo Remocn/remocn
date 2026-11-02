@@ -1,0 +1,89 @@
+---
+title: Times Turn
+description: "A quiet unit beside a large figure is replaced by a turning multiplication sign, then the figure swells."
+component: times-turn
+vibe: playful
+length: 92
+useWhen:
+  - "A multiplier claim such as 3x, where a percent sign flips into a times sign."
+  - "A turn from a percentage framing to a multiple."
+  - "A short stat beat on a colored panel with one supporting line."
+avoidWhen:
+  - "You want the multiplier to count up — use `lean-count`."
+  - "The claim is a percentage — use `press-stat`."
+  - "You want a plain stat with no turn — use `compact-stat`."
+---
+
+<ComponentPreview name="times-turn" />
+
+<InstallBlock name="times-turn" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { TimesTurn } from "@/components/remocn/times-turn";
+
+const TimesTurnScene = () => (
+  <TimesTurn value="3" before="%" label="more launch cuts from the same storyboard" />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="TimesTurn"
+    component={TimesTurnScene}
+    durationInFrames={130}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The figure rises in beside a small unit. A multiplication sign then turns in on the panel while the unit exits, the figure swells to fill the space, and the label rises in word by word. Pass `value`, `before` and `label`; it ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "value",
+      type: "string",
+      default: "\"3\"",
+      description: "Figure shown next to the multiplication sign.",
+    },
+    {
+      name: "before",
+      type: "string",
+      default: "\"%\"",
+      description: "Small unit shown first, which exits as the sign turns in.",
+    },
+    {
+      name: "label",
+      type: "string",
+      default: "\"more launch cuts from the same storyboard\"",
+      description: "Caption that rises in word by word under the figure.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Accent color for highlights and small marks.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background color override. Pass \"transparent\" to composite over other layers.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color theme, \"dark\" or \"light\".",
+    },
+  ]}
+/>

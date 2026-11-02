@@ -1,0 +1,87 @@
+---
+title: Bass Drop
+description: "A trailer build breathes in with a tracked line, goes silent, then drops into the big gradient logo."
+component: bass-drop
+vibe: premium
+length: 96
+useWhen:
+  - "A trailer-style opener that builds tension before revealing the product name."
+  - "A teaser for a release date, with a short tracked line such as THIS FALL."
+  - "A hard-hitting logo slam on a beat of the soundtrack."
+avoidWhen:
+  - "You want a soft, quiet reveal — use `first-light`."
+  - "You need a stylised logo flip rather than a slam — use `flip-sting`."
+  - "The sting should be a fast run of word cuts — use `blink-cut`."
+---
+
+<ComponentPreview name="bass-drop" />
+
+<InstallBlock name="bass-drop" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { BassDrop } from "@/components/remocn/bass-drop";
+
+const BassDropScene = () => (
+  <BassDrop
+    build="THIS FALL"
+    title="REMOCN"
+    line="LAUNCH FILMS"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="BassDrop"
+    component={BassDropScene}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A widely tracked `build` line breathes in under rising tension, the frame cuts to silence, then the logo (or your own `title` word) slams in on the hit with a flash and a line cuts in beneath. Pass `build`, and optionally `title` and `line`. Ships light and dark.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "build",
+      type: "string",
+      default: "\"THIS FALL\"",
+      description: "Tracked line that breathes in during the build-up.",
+    },
+    {
+      name: "title",
+      type: "string",
+      description: "Word that lands on the hit; the remocn logo when omitted.",
+    },
+    {
+      name: "line",
+      type: "string",
+      description: "Line that cuts in under the title; defaults to build, empty hides it.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent colour for the mark and highlights; any CSS colour.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier for the whole timeline; 1 is normal speed.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Dark or light palette and ground.",
+    },
+  ]}
+/>

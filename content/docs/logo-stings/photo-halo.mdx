@@ -1,0 +1,103 @@
+---
+title: Photo Halo
+description: "A headline pops up among scattered photos, which gather into a halo of thumbnails beside the logo."
+component: photo-halo
+vibe: premium
+length: 114
+useWhen:
+  - "A community or customer beat: a headline over real faces or screenshots that gather beside the logo."
+  - "A launch recap that turns many photos into a compact social-proof row."
+  - "A closing lockup that needs thumbnails of people or product next to the brand."
+avoidWhen:
+  - "You have no imagery to show — use `spell-out`."
+  - "Cards should explode through 3D space around a headline — use `word-burst-cards`."
+  - "The closing lockup is a partnership between two brands — use `collab-lockup`."
+---
+
+<ComponentPreview name="photo-halo" />
+
+<InstallBlock name="photo-halo" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { PhotoHalo } from "@/components/remocn/photo-halo";
+
+const PhotoHaloScene = () => (
+  <PhotoHalo
+    words={["Launch", "films", "for", "everything", "you", "ship"]}
+    accentWord={3}
+    images={["https://example.com/a.jpg", "https://example.com/b.jpg"]}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="PhotoHalo"
+    component={PhotoHaloScene}
+    durationInFrames={138}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A line of words appears while photo cards pop around it, then the text drops away and the photos converge into a row of circular thumbnails with the logo landing beside them. Pass `words`, `accentWord` for the highlighted word, and `images` as URLs (the default photos only exist in the remocn repo). Ships light and dark.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "words",
+      type: "string[]",
+      default: "DEFAULT_WORDS",
+      description: "Headline words shown before the photos converge.",
+    },
+    {
+      name: "accentWord",
+      type: "number",
+      default: "3",
+      description: "Index of the word drawn in the accent colour.",
+    },
+    {
+      name: "images",
+      type: "string[]",
+      description: "Photo URLs; falls back to remocn's demo photos when empty.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Dark or light palette and ground.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Stage fill colour; overrides the theme background.",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Headline text colour.",
+    },
+    {
+      name: "blooms",
+      type: "string[]",
+      description: "Colours for the shader ground's light blooms.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "Shader preset id for the gradients.sh background ground.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Custom shader parameters for the ground, used instead of the theme default.",
+    },
+  ]}
+/>

@@ -1,0 +1,40 @@
+import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+
+export const titleConvergeConfig: ComponentConfig = {
+  componentName: "TitleConverge",
+  importPath: "@/components/remocn/title-converge",
+  controls: {
+    theme: {
+      type: "enum",
+      default: "dark",
+      variants: {
+        dark: {},
+        light: {},
+      },
+      description: "Theme",
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    word: {
+      type: "text-content",
+      default: "remocn",
+      description: "Word",
+    },
+    speed: {
+      type: "number",
+      default: 1,
+      min: 0.25,
+      max: 4,
+      step: 0.25,
+      description: "Speed",
+      hiddenFromList: false,
+    },
+  },
+  durationInFrames: 175,
+  fps: FPS,
+  compositionWidth: W,
+  compositionHeight: H,
+};

@@ -1,0 +1,107 @@
+---
+title: Band Shift
+description: "Horizontal bands slide across in a stagger, carrying colored blocks that swap one scene for the next"
+component: band-shift
+vibe: clean
+length: 55
+useWhen:
+  - "A fast swap from a short headline to a logo or closing line with a graphic, rhythmic motion."
+  - "A bold bar-based change between two statements in a launch video."
+  - "A cut where staggered motion across the whole frame is more interesting than a single wipe."
+avoidWhen:
+  - "The reveal should split vertically into columns — use `column-slide`."
+  - "You want the reveal to expand from a single point — use `ring-burst`."
+  - "A soft, slow swap is needed, not a rhythmic one — use `grain-dissolve`."
+---
+
+<ComponentPreview name="band-shift" />
+
+<InstallBlock name="band-shift" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { BandShift } from "@/components/remocn/band-shift";
+
+const BandShiftScene = () => (
+  <BandShift
+    from="Before."
+    to="Now live."
+    bands={6}
+    accent="#3B5BFD"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="BandShift"
+    component={BandShiftScene}
+    durationInFrames={90}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The `from` headline holds for `delay` frames. Then 5 to 7 horizontal bands slide across in alternating directions, each carrying a colored block, and the `to` scene lands as they pass. Pass `from` and `to` as short text or any React node; `to="remocn"` sets the remocn logo. With the defaults the shift ends at frame 55.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "from",
+      type: "React.ReactNode",
+      default: "\"Before.\"",
+      description: "Outgoing scene: a short headline or any React node",
+    },
+    {
+      name: "to",
+      type: "React.ReactNode",
+      default: "\"remocn\"",
+      description: "Incoming scene carried in by the bands",
+    },
+    {
+      name: "bands",
+      type: "number",
+      default: "6",
+      description: "Number of horizontal bands, clamped between 5 and 7",
+    },
+    {
+      name: "colors",
+      type: "string[]",
+      description: "Colors of the blocks riding between scenes; defaults to a mesh",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "18",
+      description: "Frames the outgoing scene holds before the shift",
+    },
+    {
+      name: "stagger",
+      type: "number",
+      default: "3",
+      description: "Frames between neighbouring bands starting",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color used by the scenes",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier for the whole timeline",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Tone the incoming scene lands on",
+    },
+  ]}
+/>

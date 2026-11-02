@@ -1,0 +1,99 @@
+---
+title: Chore Fold
+description: "A teal \"Captions does all of that.\" folds the chore away, \"You just talk.\" beneath"
+component: chore-fold
+vibe: clean
+length: 146
+useWhen:
+  - "A before-and-after beat where a list of chores is replaced by one product line."
+  - "A pain-point montage that ends on the benefit in one short sentence."
+  - "A launch scene where the tool name is the hero and the payoff is a two-word promise."
+avoidWhen:
+  - "You want pain points to dim toward one claim rather than fold away — use `what-sticks`."
+  - "The objections need answers one at a time — use `exactly`."
+  - "You want a simple three-item benefit list — use `feature-trio`."
+---
+
+<ComponentPreview name="chore-fold" />
+
+<InstallBlock name="chore-fold" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { ChoreFold } from "@/components/remocn/chore-fold";
+
+const ChoreFoldScene = () => <ChoreFold steps={["Export the audio.", "Fix every timestamp by hand."]} name="Captions" result="does all of that." payoff="You just talk." />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="ChoreFold"
+    component={ChoreFoldScene}
+    durationInFrames={180}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A list of tedious manual steps appears line by line, then folds away from the outside in until the middle is left, and the hero sentence swaps in with the tool name highlighted before the payoff line lands. Pass `steps`, `label`, `name`, `result` and `payoff`; it fits the read time to the composition length.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "steps",
+      type: "string[]",
+      default: "DEFAULT_STEPS",
+      description: "The manual chores shown first, one per line.",
+    },
+    {
+      name: "label",
+      type: "string",
+      default: "\"By hand\"",
+      description: "Small label above the list of chores.",
+    },
+    {
+      name: "name",
+      type: "string",
+      default: "\"Captions\"",
+      description: "Product or tool name highlighted in the hero line.",
+    },
+    {
+      name: "result",
+      type: "string",
+      default: "\"does all of that.\"",
+      description: "Rest of the hero sentence after the name.",
+    },
+    {
+      name: "payoff",
+      type: "string",
+      default: "\"You just talk.\"",
+      description: "Short closing line shown beneath the hero.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Color of the highlighted name; defaults to the theme accent.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Stage fill color; pass \"transparent\" to overlay your own footage.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color scheme; ships dark and light.",
+    },
+  ]}
+/>

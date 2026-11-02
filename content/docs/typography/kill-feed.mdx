@@ -1,0 +1,87 @@
+---
+title: Kill Feed
+description: "A kill-feed of eliminations builds to a big gradient 'PENTA SHIP' banner"
+component: kill-feed
+vibe: playful
+length: 69
+useWhen:
+  - "A playful recap where each shipped win lands as a kill in a game-style feed."
+  - "A feature roundup that builds to a big multi-kill banner."
+avoidWhen:
+  - "You want a single boss defeated by named hits — use `boss-bar`."
+  - "You want a plain list of items — use `index-list`."
+---
+
+<ComponentPreview name="kill-feed" />
+
+<InstallBlock name="kill-feed" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { KillFeed } from "@/components/remocn/kill-feed";
+
+const KillFeedScene = () => (
+  <KillFeed kills={["Manual keyframes", "Render queue", "Stock templates"]} banner="Triple ship" />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="KillFeed"
+    component={KillFeedScene}
+    durationInFrames={105}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Elimination lines drop into a game-style feed one by one with streak callouts, and the last kill fires a gradient banner with a caption. Pass `kills`, `callouts`, `banner` and `caption`; it ships light and dark.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "kills",
+      type: "string[]",
+      description: "One feed line per elimination, in order. remocn is always the one getting the kill.",
+    },
+    {
+      name: "callouts",
+      type: "string[]",
+      description: "The streak callout after each kill, bottom left. The last kill fires the banner instead.",
+    },
+    {
+      name: "banner",
+      type: "string",
+      default: "\"Penta ship\"",
+      description: "The multi-kill banner that slams across the middle after the last kill.",
+    },
+    {
+      name: "caption",
+      type: "string",
+      default: "\"5 / 5 eliminated\"",
+      description: "Small line under the banner, next to the logo.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Small markers: the streak tick and the caption rule.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Colour scheme; ships light and dark.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier; above 1 plays faster.",
+    },
+  ]}
+/>

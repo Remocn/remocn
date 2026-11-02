@@ -1,0 +1,106 @@
+---
+title: Radar Compare
+description: "A radar polygon for Remocn grows over a competitor outline next to the name and tagline"
+component: radar-compare
+vibe: data
+length: 132
+useWhen:
+  - "A feature-comparison beat where your product's strengths bulge past a competitor's outline on a six-axis radar."
+  - "A positioning scene that shows balanced strength across several attributes, then settles beside the brand name and a tagline."
+  - "A launch video moment that needs a visual head-to-head without printing a table of numbers."
+avoidWhen:
+  - "You only have one measure to compare and want a bar — use `measure-dim`."
+  - "Competitors should be spread across two axes rather than overlaid on one shape — use `quadrant-plot`."
+  - "You want rows of before and after values — use `dumbbell-shift`."
+---
+
+<ComponentPreview name="radar-compare" />
+
+<InstallBlock name="radar-compare" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { RadarCompare } from "@/components/remocn/radar-compare";
+
+const RadarCompareScene = () => (
+  <RadarCompare
+    axes={["Speed", "Docs", "Price", "Support", "Polish", "Fit"]}
+    brandLabel="remocn"
+    caption="Strong on every axis."
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="RadarCompare"
+    component={RadarCompareScene}
+    durationInFrames={165}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A radar grid appears and the competitor outline draws and fills. The brand polygon then springs out axis by axis over it, the chart slides left and the brand name, competitor name and a caption appear on the right. Pass `axes` with matching `competitor` and `brand` values from 0 to 1, plus `brandLabel`, `competitorLabel` and `caption`. It ships light and dark through the `theme` prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "axes",
+      type: "string[]",
+      default: "DEFAULT_AXES",
+      description: "Axis names around the radar. Up to eight are used, minimum three.",
+    },
+    {
+      name: "competitor",
+      type: "number[]",
+      default: "DEFAULT_COMPETITOR",
+      description: "Competitor values from 0 to 1, one per axis.",
+    },
+    {
+      name: "brand",
+      type: "number[]",
+      default: "DEFAULT_BRAND",
+      description: "Brand values from 0 to 1, one per axis.",
+    },
+    {
+      name: "brandLabel",
+      type: "string",
+      default: "\"remocn\"",
+      description: "Name of your product in the side panel.",
+    },
+    {
+      name: "competitorLabel",
+      type: "string",
+      default: "\"Kitebase\"",
+      description: "Name of the competitor in the side panel.",
+    },
+    {
+      name: "caption",
+      type: "string",
+      description: "Optional line of text under the names.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Highlight colour of the brand polygon.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier; 1 is the designed pace.",
+    },
+  ]}
+/>

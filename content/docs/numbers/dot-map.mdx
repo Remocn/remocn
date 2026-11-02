@@ -1,0 +1,83 @@
+---
+title: Dot Map
+description: "A dotted world map lights up city by city while a counter rises to its final value."
+component: dot-map
+vibe: data
+length: 113
+useWhen:
+  - "A coverage beat, such as countries or regions served, shown as points lighting up across a map."
+  - "A data stat where the number should rise in step with visible cities."
+  - "A calm, wide shot of the world with a big figure and a label beneath it."
+avoidWhen:
+  - "You want a rotating globe with flight arcs - use `dot-globe`."
+  - "The stat is not geographic - use `compact-stat`."
+  - "The data is flows between sources and a target - use `sankey-flow`."
+---
+
+<ComponentPreview name="dot-map" />
+
+<InstallBlock name="dot-map" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { DotMap } from "@/components/remocn/dot-map";
+
+const DotMapScene = () => <DotMap count={142} label="countries" />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="DotMap"
+    component={DotMapScene}
+    durationInFrames={135}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A dotted world map fades in and cities light up from west to east, each with a ripple ring, while the count rises with them to its final value and a label sits beneath. Pass `count`, `label` and `cities` as `{ lon, lat }` points. It ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "count",
+      type: "number",
+      default: "142",
+      description: "Final number shown once every city is lit.",
+    },
+    {
+      name: "label",
+      type: "string",
+      default: "\"countries\"",
+      description: "Word shown beside the count.",
+    },
+    {
+      name: "cities",
+      type: "DotMapCity[]",
+      default: "DEFAULT_CITIES",
+      description: "Points that light up, each with lon and lat.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Color of the ripple rings.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark palette.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier.",
+    },
+  ]}
+/>

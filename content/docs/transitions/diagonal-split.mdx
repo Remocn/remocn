@@ -1,0 +1,90 @@
+---
+title: Diagonal Split
+description: "A diagonal seam slides the outgoing scene away to reveal the next with a band of light along the edge"
+component: diagonal-split
+vibe: premium
+length: 70
+useWhen:
+  - "A confident before-and-after swap between two statements, such as built in a weekend and launched on Monday."
+  - "A beat where the outgoing scene should be pushed off at an angle instead of faded."
+  - "A directional cut where the seam angle can be tuned to match the layout."
+avoidWhen:
+  - "You want an opening that is straight and symmetrical rather than angled — use `hairline-open`."
+  - "You need several slanted bars instead of one seam — use `color-bars`."
+  - "A plain lateral shove between full scenes is enough — use `slide-swap`."
+---
+
+<ComponentPreview name="diagonal-split" />
+
+<InstallBlock name="diagonal-split" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { DiagonalSplit } from "@/components/remocn/diagonal-split";
+
+const DiagonalSplitScene = () => (
+  <DiagonalSplit
+    from="Built in a weekend"
+    to="Launched on Monday"
+    angle={28}
+    accent="#3B5BFD"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="DiagonalSplit"
+    component={DiagonalSplitScene}
+    durationInFrames={100}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A bright seam opens at `angle`, then the outgoing `from` scene is shoved off along the seam while the `to` scene settles in behind it on a fluted gradient. Pass `from` and `to` as short text or any React node and tune `angle`; it ships light and dark and the motion ends at frame 70.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "from",
+      type: "React.ReactNode",
+      default: "\"Built in a weekend\"",
+      description: "Outgoing scene: a short headline or any React node",
+    },
+    {
+      name: "to",
+      type: "React.ReactNode",
+      default: "\"Launched on Monday\"",
+      description: "Incoming scene: a short headline or any React node",
+    },
+    {
+      name: "angle",
+      type: "number",
+      default: "28",
+      description: "Seam angle in degrees",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color used by the scenes",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark stage",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier for the whole timeline",
+    },
+  ]}
+/>

@@ -1,0 +1,156 @@
+---
+title: PR Merge
+description: "A pull request's checks pass one by one, a cursor merges it, and the branch is offered for deletion."
+component: pr-merge
+vibe: tech
+length: 178
+useWhen:
+  - "A developer-tool launch beat about code review: checks go green, one click merges, the status flips to Merged."
+  - "A ship-faster scene that shows a CI pipeline gating a merge instead of describing it."
+  - "A changelog video for a git workflow feature where the merge confirmation is the payoff."
+avoidWhen:
+  - "You want a build streaming logs and flipping to Ready — use `deploy-pipeline`."
+  - "The story is a gradual percentage rollout with metric charts — use `feature-flag-rollout`."
+  - "You only need a short typed-code-to-UI moment, not a review flow — use `live-code-compilation`."
+---
+
+<ComponentPreview name="pr-merge" />
+
+<InstallBlock name="pr-merge" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { PrMerge } from "@/components/remocn/pr-merge";
+
+const PrMergeScene = () => (
+  <PrMerge
+    repo="acme/app"
+    title="Add dark mode"
+    number={128}
+    branch="feat/dark-mode"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="PrMerge"
+    component={PrMergeScene}
+    durationInFrames={210}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A pull request card enters with a list of CI checks that run and pass one by one. Once all are green, a cursor clicks Merge, confirms, and the checks collapse into a Merged state with a Delete branch prompt. Pass `repo`, `title`, `number`, `branch` and `checks` (plain names or `{ name, workflow, seconds }`) to make it yours; it ships light and dark.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "repo",
+      type: "string",
+      default: "\"remocn/remocn\"",
+      description: "Repository slug shown in the header",
+    },
+    {
+      name: "title",
+      type: "string",
+      default: "\"Add launch pack\"",
+      description: "Pull request title",
+    },
+    {
+      name: "number",
+      type: "number",
+      default: "312",
+      description: "Pull request number",
+    },
+    {
+      name: "author",
+      type: "string",
+      default: "\"maya-chen\"",
+      description: "Author handle shown on the card",
+    },
+    {
+      name: "reviewer",
+      type: "string",
+      default: "\"leo-park\"",
+      description: "Reviewer handle who approves the pull request",
+    },
+    {
+      name: "branch",
+      type: "string",
+      default: "\"feat/launch-pack\"",
+      description: "Source branch name",
+    },
+    {
+      name: "base",
+      type: "string",
+      default: "\"main\"",
+      description: "Target branch the pull request merges into",
+    },
+    {
+      name: "commits",
+      type: "number",
+      default: "14",
+      description: "Commit count shown in the summary",
+    },
+    {
+      name: "checks",
+      type: "(string | PrCheck)[]",
+      default: "DEFAULT_CHECKS",
+      description: "CI checks to run; plain names or { name, workflow, seconds }",
+    },
+    {
+      name: "additions",
+      type: "number",
+      default: "1248",
+      description: "Added-lines count in the diff stat",
+    },
+    {
+      name: "deletions",
+      type: "number",
+      default: "96",
+      description: "Removed-lines count in the diff stat",
+    },
+    {
+      name: "mergeSha",
+      type: "string",
+      default: "\"3f2a9c1\"",
+      description: "Short commit hash shown after the merge",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for highlights, buttons and progress",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline",
+    },
+    {
+      name: "theme",
+      type: "\"light\" | \"dark\"",
+      default: "\"light\"",
+      description: "Light or dark palette",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "gradients.sh preset id for the backdrop shader",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the backdrop shader parameters",
+    },
+  ]}
+/>

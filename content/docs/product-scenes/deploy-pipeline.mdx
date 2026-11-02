@@ -1,0 +1,130 @@
+---
+title: Deploy Pipeline
+description: "A deployment page runs a build, streams logs and flips to Ready"
+component: deploy-pipeline
+vibe: tech
+length: 150
+useWhen:
+  - "A developer-platform launch beat showing a deploy going from build to Ready."
+  - "A CI or hosting demo where streaming build logs sell the speed of the pipeline."
+  - "A release announcement that ends on a live site preview and a Visit button."
+avoidWhen:
+  - "You want a typed terminal session instead of a deployment page — use `terminal-simulator`."
+  - "The story is a pull request being merged — use `pr-merge`."
+  - "You need a status page with uptime strips — use `status-page`."
+---
+
+<ComponentPreview name="deploy-pipeline" />
+
+<InstallBlock name="deploy-pipeline" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition, staticFile } from "remotion";
+import { DeployPipeline } from "@/components/remocn/deploy-pipeline";
+
+const DeployPipelineScene = () => <DeployPipeline project="orbit-web" domain="orbit.app" commitMessage="feat: ship dashboard" preview={staticFile("site.png")} />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="DeployPipeline"
+    component={DeployPipelineScene}
+    durationInFrames={180}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A deployment page opens with the project, commit and branch, then build logs stream line by line while a build timer counts up. When the last line lands the status flips to Ready and a site preview and Visit button appear. Pass `project`, `commitMessage`, `domain` and `logs`; the preview image defaults to a `staticFile("hero.png")` that only exists in the remocn repo, so pass your own screenshot as `preview`. It has a `theme` prop and ships light and dark (dark by default).
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "project",
+      type: "string",
+      default: "\"remocn-web\"",
+      description: "Project name shown in the deployment header.",
+    },
+    {
+      name: "deploymentId",
+      type: "string",
+      default: "\"7Hq2xKfaW\"",
+      description: "Deployment id shown in the summary.",
+    },
+    {
+      name: "commitMessage",
+      type: "string",
+      default: "\"feat: launch video components\"",
+      description: "Commit message shown under the deployment.",
+    },
+    {
+      name: "commitSha",
+      type: "string",
+      default: "\"a4f9c21\"",
+      description: "Short commit hash shown next to the branch.",
+    },
+    {
+      name: "branch",
+      type: "string",
+      default: "\"main\"",
+      description: "Git branch name.",
+    },
+    {
+      name: "domain",
+      type: "string",
+      default: "\"remocn-web.kitebase.app\"",
+      description: "Production domain shown in the summary and Visit link.",
+    },
+    {
+      name: "logs",
+      type: "(string | DeployLogLine)[]",
+      default: "DEFAULT_LOGS",
+      description: "Build log lines; use `{ text, tone, wait }` to color or delay a line.",
+    },
+    {
+      name: "buildSeconds",
+      type: "number",
+      default: "21",
+      description: "Duration the counter lands on, in seconds.",
+    },
+    {
+      name: "preview",
+      type: "string",
+      description: "Site screenshot shown once the deployment is ready.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for links and highlights.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier.",
+    },
+    {
+      name: "theme",
+      type: "\"light\" | \"dark\"",
+      default: "\"dark\"",
+      description: "Light or dark palette.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "Gradients.sh preset id for the background shader.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the background shader parameters.",
+    },
+  ]}
+/>

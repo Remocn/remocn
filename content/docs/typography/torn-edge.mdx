@@ -1,0 +1,69 @@
+---
+title: Torn Edge
+description: "A torn paper sheet rips away to reveal a bold headline printed on the gradient stage"
+component: torn-edge
+vibe: paper
+length: 76
+useWhen:
+  - "A reveal that rips a paper sheet away to show a bold headline underneath."
+  - "A tactile, handmade moment between more polished scenes."
+avoidWhen:
+  - "You want a clean wipe with no paper texture — use `slash-wipe`."
+  - "You want a soft fade into the headline — use `fade-through`."
+---
+
+<ComponentPreview name="torn-edge" />
+
+<InstallBlock name="torn-edge" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { TornEdge } from "@/components/remocn/torn-edge";
+
+const TornEdgeScene = () => <TornEdge title="Make it yours." accent="#3B5BFD" />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="TornEdge"
+    component={TornEdgeScene}
+    durationInFrames={110}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A gradient paper sheet tears across the frame, the halves part, and the headline is printed on the stage underneath. Pass `title` and `accent` (the mid colour of the sheet gradient); it ships light and dark.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "title",
+      type: "string",
+      default: "\"Make it yours.\"",
+      description: "Headline printed on the stage underneath the sheet.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Mid colour of the sheet's gradient (gradients.sh \"fluted\").",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Colour scheme; ships light and dark.",
+    },
+  ]}
+/>

@@ -1,0 +1,86 @@
+import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+
+export const flashCountConfig: ComponentConfig = {
+  componentName: "FlashCount",
+  importPath: "@/components/remocn/flash-count",
+  controls: {
+    theme: {
+      type: "enum",
+      default: "dark",
+      variants: {
+        dark: {},
+        light: {},
+      },
+      description: "Theme",
+    },
+    prefix: {
+      type: "text-content",
+      default: "",
+      description: "Prefix",
+    },
+    suffix: {
+      type: "text-content",
+      default: "",
+      description: "Suffix",
+    },
+    label: {
+      type: "text-content",
+      default: "frames in a two‑minute launch film",
+      description: "Label",
+    },
+    eyebrow: {
+      type: "text-content",
+      default: "f/8  ·  1/250 s",
+      description: "Eyebrow",
+    },
+    value: {
+      type: "number",
+      default: 3600,
+      min: 0,
+      max: 10800,
+      step: 1,
+      description: "Value",
+      hiddenFromList: false,
+    },
+    from: {
+      type: "number",
+      default: 120,
+      min: 0,
+      max: 360,
+      step: 1,
+      description: "From",
+      hiddenFromList: false,
+    },
+    decimals: {
+      type: "number",
+      default: 0,
+      min: 0,
+      max: 10,
+      step: 1,
+      description: "Decimals",
+      hiddenFromList: false,
+    },
+    flashAt: {
+      type: "number",
+      default: 54,
+      min: 0,
+      max: 162,
+      step: 1,
+      description: "Flash at",
+      hiddenFromList: false,
+    },
+    speed: {
+      type: "number",
+      default: 1,
+      min: 0.25,
+      max: 4,
+      step: 0.25,
+      description: "Speed",
+      hiddenFromList: false,
+    },
+  },
+  durationInFrames: 120,
+  fps: FPS,
+  compositionWidth: W,
+  compositionHeight: H,
+};

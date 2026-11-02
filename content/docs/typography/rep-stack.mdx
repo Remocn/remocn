@@ -1,0 +1,77 @@
+---
+title: Rep Stack
+description: "A caps word scrolls past a gate as a reel of outlined copies, then locks as a cutout."
+component: rep-stack
+vibe: playful
+length: 60
+useWhen:
+  - "A one-word statement about repetition or iteration, like AGAIN. or REPEAT."
+  - "A bold typographic beat where letters read as cutouts of a dusk-colored band."
+  - "A closing word with trailing punctuation that should pick up the accent color."
+avoidWhen:
+  - "You have several different words, not one repeated word — use `word-stack`."
+  - "You want a focused line with outlined copies that keep drifting above and below — use `echo-stack`."
+  - "The word needs to arrive with an impact slam and shake — use `round-slam`."
+---
+
+<ComponentPreview name="rep-stack" />
+
+<InstallBlock name="rep-stack" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { RepStack } from "@/components/remocn/rep-stack";
+
+const RepStackScene = () => <RepStack word="AGAIN." reps={6} accent="#3B5BFD" />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="RepStack"
+    component={RepStackScene}
+    durationInFrames={96}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A reel of outlined copies of the word runs upward through a cap-height gate, braking, and the last copy settles into it as a cutout of the dusk band. The echoes above and below dim back. Pass `word` (one short word, trailing punctuation takes the accent) and `reps` for the number of copies; it ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "word",
+      type: "string",
+      default: "\"AGAIN.\"",
+      description: "One short word, set in caps. Trailing punctuation takes the accent.",
+    },
+    {
+      name: "reps",
+      type: "number",
+      default: "6",
+      description: "How many rows run through the gate before the last one locks.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Color of the trailing punctuation.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark ground; ships both.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier.",
+    },
+  ]}
+/>

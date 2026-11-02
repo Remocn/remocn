@@ -1,0 +1,86 @@
+---
+title: Word Acts
+description: "Each word acts out its own meaning in a short beat, ending on a held poster word"
+component: word-acts
+vibe: playful
+length: 139
+useWhen:
+  - "A feature-list beat where each word demonstrates itself, such as stretching, splitting, heavy or fast."
+  - "A playful tagline built from a handful of one-word acts that each get a short, distinct moment."
+  - "A closing beat where a word is rebuilt from geometric strokes and held as a poster."
+avoidWhen:
+  - "Every word should share one consistent motion style — use `kinetic-morph-text`."
+  - "The copy is a full sentence that needs to read as a line — use `word-push`."
+  - "You need only one word to stretch in, not a sequence of acts — use `stretch-in`."
+---
+
+<ComponentPreview name="word-acts" />
+
+<InstallBlock name="word-acts" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { WordActs } from "@/components/remocn/word-acts";
+
+const WordActsScene = () => (
+  <WordActs
+    acts={[
+      { word: "stretch", act: "stretch" },
+      { word: "heavy", act: "heavy" },
+      { word: "rebuilt", act: "rebuilt" },
+    ]}
+    hold={30}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="WordActs"
+    component={WordActsScene}
+    durationInFrames={126}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Words play one after another, each performing its meaning: `stretch`, `split`, `heavy` (falls and lands), `faster` (rushes in and snaps) and `rebuilt` (strokes scatter and reassemble). Pass `acts` as a list of `{ word, act, frames? }`; the last word also holds for `hold` frames. Total length is the sum of the acts' frames plus the hold, and it ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "acts",
+      type: "WordActBeat[]",
+      default: "DEFAULT_ACTS",
+      description: "List of `{ word, act, frames? }` beats; `rebuilt` words must be lowercase a–z.",
+    },
+    {
+      name: "hold",
+      type: "number",
+      default: "32",
+      description: "Extra frames the final word holds as a poster.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for the gradient marks and strokes.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark.",
+    },
+  ]}
+/>

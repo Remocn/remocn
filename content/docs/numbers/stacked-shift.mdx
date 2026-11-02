@@ -1,0 +1,99 @@
+---
+title: Stacked Shift
+description: "A stacked share bar shifts over the years until the logo series reaches 52%"
+component: stacked-shift
+vibe: data
+length: 150
+useWhen:
+  - "A market-share story across years where one series grows until it leads, such as 52%."
+  - "A beat showing adoption shifting from competitors to you over three or more periods."
+  - "A single stacked bar that morphs between periods instead of one chart per year."
+avoidWhen:
+  - "You only have one moment in time — use `share-donut`."
+  - "You want a flowing layered area over time — use `streamgraph`."
+  - "You want two time points with a line per item — use `slope-chart`."
+---
+
+<ComponentPreview name="stacked-shift" />
+
+<InstallBlock name="stacked-shift" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { StackedShift } from "@/components/remocn/stacked-shift";
+
+const StackedShiftScene = () => (
+  <StackedShift
+    years={["2023", "2024", "2025"]}
+    caption="of launch videos"
+    series={[
+      { label: "remocn", values: [6, 24, 52] },
+      { label: "Kitebase", values: [34, 28, 18] },
+      { label: "Other", values: [60, 48, 30] },
+    ]}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="StackedShift"
+    component={StackedShiftScene}
+    durationInFrames={178}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+One stacked share bar shifts from year to year, the segments sliding to new sizes with the year label changing, until the highlighted series reaches its final share and its caption lands. Pass `series` (label and one value per year), `years`, `highlight` and `caption`. Ships dark and light via `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "series",
+      type: "StackedSeries[]",
+      default: "DEFAULT_SERIES",
+      description: "Series stacked in the bar, each with one value per year.",
+    },
+    {
+      name: "years",
+      type: "string[]",
+      default: "DEFAULT_YEARS",
+      description: "Year labels, one per value in each series.",
+    },
+    {
+      name: "highlight",
+      type: "number",
+      default: "0",
+      description: "Index of the series that gets the gradient.",
+    },
+    {
+      name: "caption",
+      type: "string",
+      default: "\"of launch videos\"",
+      description: "Line under the final share.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for the hero element.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Dark or light palette.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier.",
+    },
+  ]}
+/>

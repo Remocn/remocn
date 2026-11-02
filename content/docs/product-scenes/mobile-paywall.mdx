@@ -1,0 +1,124 @@
+---
+title: Mobile Paywall
+description: "A phone paywall selects a plan and shows a Welcome to Pro confirmation"
+component: mobile-paywall
+vibe: clean
+length: 225
+useWhen:
+  - "A subscription app launch beat showing the paywall, plan pick and trial start."
+  - "A mobile product video that needs to show how easy upgrading to Pro is."
+  - "A pricing or monetization update where the free-trial confirmation is the payoff."
+avoidWhen:
+  - "You want a full pricing table comparing several tiers on a web page — use `pricing-reveal`."
+  - "The flow is a payment amount and receipt rather than a plan upgrade — use `money-send`."
+  - "You need a web checkout with a promo code — use `coupon-apply`."
+---
+
+<ComponentPreview name="mobile-paywall" />
+
+<InstallBlock name="mobile-paywall" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { MobilePaywall } from "@/components/remocn/mobile-paywall";
+
+const MobilePaywallScene = () => <MobilePaywall appName="Orbit Pro" title="Unlock every feature" cta="Start free for 7 days" theme="dark" />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="MobilePaywall"
+    component={MobilePaywallScene}
+    durationInFrames={250}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A phone slides in and a paywall sheet lists features and two plans. The second plan starts selected, the first is tapped, the CTA is double-clicked to pay, and a Welcome confirmation lists the trial dates. Pass `appName`, `title`, `features`, `plans` and `lines` (the headline beside the phone) to make it yours. It has a `theme` prop and ships light and dark.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "appName",
+      type: "string",
+      default: "\"remocn Pro\"",
+      description: "Product name shown in the paywall and welcome screen.",
+    },
+    {
+      name: "title",
+      type: "string",
+      default: "\"Ship launch videos in minutes\"",
+      description: "Headline at the top of the paywall.",
+    },
+    {
+      name: "features",
+      type: "PaywallFeature[]",
+      default: "DEFAULT_FEATURES",
+      description: "Feature rows, each with `title`, `description` and optional `icon`.",
+    },
+    {
+      name: "plans",
+      type: "[PaywallPlan, PaywallPlan]",
+      default: "DEFAULT_PLANS",
+      description: "Two plans: the first is the one that gets tapped, the second starts selected.",
+    },
+    {
+      name: "cta",
+      type: "string",
+      default: "\"Start free for 7 days\"",
+      description: "Label on the main purchase button.",
+    },
+    {
+      name: "account",
+      type: "string",
+      default: "\"maya@kitebase.dev\"",
+      description: "Account email shown on the confirmation.",
+    },
+    {
+      name: "dates",
+      type: "[string, string, string]",
+      default: "[\"Nov 2\", \"Nov 7\", \"Nov 9\"]",
+      description: "Trial dates on the confirmation: start, reminder, first charge.",
+    },
+    {
+      name: "lines",
+      type: "[string, string, string]",
+      description: "Three lines beside the phone: paywall, confirm, welcome.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for selection, buttons and badges.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier.",
+    },
+    {
+      name: "theme",
+      type: "\"light\" | \"dark\"",
+      default: "\"light\"",
+      description: "Light or dark palette.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "Gradients.sh preset id for the background shader.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the background shader parameters.",
+    },
+  ]}
+/>

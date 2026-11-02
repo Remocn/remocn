@@ -1,0 +1,75 @@
+---
+title: Edit Ripple
+description: "\"Change your mind, render it again.\" with the second line indented and ripple-coloured"
+component: edit-ripple
+vibe: clean
+length: 196
+useWhen:
+  - "A beat about cause and effect, such as one edit changing the whole video."
+  - "Two or three short if-this-then-that statements in a row."
+  - "A feature explanation where the second line is the payoff of the first."
+avoidWhen:
+  - "You want objections each answered in turn — use `exactly`."
+  - "You need one sentence to edit itself in place — use `changed-mind`."
+  - "You want a word-by-word diff of before and after — use `diff-swap`."
+---
+
+<ComponentPreview name="edit-ripple" />
+
+<InstallBlock name="edit-ripple" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { EditRipple } from "@/components/remocn/edit-ripple";
+
+const EditRippleScene = () => <EditRipple pairs={[{ cause: "Change one word,", effect: "every scene follows." }, { cause: "Swap the color,", effect: "every shot repaints." }]} />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="EditRipple"
+    component={EditRippleScene}
+    durationInFrames={230}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Each pair appears as a cause line followed by an effect line, and the effect words recolor in a ripple from left to right; then the pair exits and the next pair follows. Pass `pairs` (cause and effect strings); it spaces the pairs to fit the composition length.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "pairs",
+      type: "EditRipplePair[]",
+      default: "DEFAULT_PAIRS",
+      description: "Cause and effect lines, played one pair at a time.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Color of the effect words as the ripple passes.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Stage fill color; pass \"transparent\" to overlay your own footage.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color scheme; ships dark and light.",
+    },
+  ]}
+/>

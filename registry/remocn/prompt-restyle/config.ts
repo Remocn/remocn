@@ -1,0 +1,45 @@
+import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+
+export const promptRestyleConfig: ComponentConfig = {
+  componentName: "PromptRestyle",
+  importPath: "@/components/remocn/prompt-restyle",
+  controls: {
+    theme: {
+      type: "enum",
+      default: "dark",
+      variants: {
+        dark: {},
+        light: {},
+      },
+      description: "Theme",
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    headline: {
+      type: "text-content",
+      default: "Launch videos from parts you own.",
+      description: "Headline",
+    },
+    highlight: {
+      type: "text-content",
+      default: "you own",
+      description: "Highlight",
+    },
+    speed: {
+      type: "number",
+      default: 1,
+      min: 0.25,
+      max: 4,
+      step: 0.25,
+      description: "Speed",
+      hiddenFromList: false,
+    },
+  },
+  durationInFrames: 160,
+  fps: FPS,
+  compositionWidth: W,
+  compositionHeight: H,
+};

@@ -1,0 +1,132 @@
+---
+title: Coupon Apply
+description: "A checkout order summary rejects one coupon, accepts another and the total drops"
+component: coupon-apply
+vibe: clean
+length: 155
+useWhen:
+  - "A billing or subscription launch beat where a discount code visibly lowers the order total."
+  - "Showing a checkout that handles errors gracefully, with a rejected code before the valid one lands."
+  - "A promo or launch-offer video that needs the discount moment shown on a real payment form."
+avoidWhen:
+  - "The story is the shopper picking a product and adding it to a cart — use `cart-add`."
+  - "You only need a settled invoice with a PAID stamp, no code entry — use `invoice-paid`."
+---
+
+<ComponentPreview name="coupon-apply" />
+
+<InstallBlock name="coupon-apply" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { CouponApply } from "@/components/remocn/coupon-apply";
+
+const CouponApplyScene = () => (
+  <CouponApply merchant="Orbit" code="WELCOME20" invalidCode="WELCOME" percentOff={20} />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="CouponApply"
+    component={CouponApplyScene}
+    durationInFrames={180}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+An order summary and a payment form appear side by side. A cursor types a code that is rejected with a shake, retypes a valid one, the discount chip lands, the old total is struck through and the new total rolls in before the pay button lights up. Pass `merchant`, `items` (name, detail, amount), `invalidCode`, `code` and `percentOff`. The `theme` prop ships light and dark.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "merchant",
+      type: "string",
+      default: "\"Lumen\"",
+      description: "Merchant name shown at the top of the order summary.",
+    },
+    {
+      name: "items",
+      type: "CouponLineItem[]",
+      default: "DEFAULT_ITEMS",
+      description: "Order line items with name, detail and numeric amount.",
+    },
+    {
+      name: "invalidCode",
+      type: "string",
+      default: "\"LAUNCH\"",
+      description: "First attempt, rejected with a shake. Set to \"\" to skip the invalid beat.",
+    },
+    {
+      name: "code",
+      type: "string",
+      default: "\"LAUNCH24\"",
+      description: "Code that works. If it starts with `invalidCode`, only the rest is typed on retry.",
+    },
+    {
+      name: "percentOff",
+      type: "number",
+      default: "10",
+      description: "Discount percentage applied to the subtotal.",
+    },
+    {
+      name: "currency",
+      type: "string",
+      default: "\"$\"",
+      description: "Currency symbol placed before amounts.",
+    },
+    {
+      name: "payLabel",
+      type: "string",
+      default: "\"Subscribe\"",
+      description: "Text on the pay button.",
+    },
+    {
+      name: "email",
+      type: "string",
+      default: "\"maya@kitebase.com\"",
+      description: "Email address shown in the payment form.",
+    },
+    {
+      name: "cardholder",
+      type: "string",
+      default: "\"Maya Chen\"",
+      description: "Cardholder name shown in the payment form.",
+    },
+    {
+      name: "theme",
+      type: "\"light\" | \"dark\"",
+      default: "\"light\"",
+      description: "Light or dark checkout styling.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for the pay button and focus states.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "Preset id for the shader background.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the shader background parameters.",
+    },
+  ]}
+/>

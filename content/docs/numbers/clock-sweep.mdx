@@ -1,0 +1,76 @@
+---
+title: Clock Sweep
+description: "A clock hand sweeps a glowing wedge as the line From idea to video in 4 minutes appears"
+component: clock-sweep
+vibe: premium
+length: 117
+useWhen:
+  - "A time-saved beat such as 'from idea to video in 4 minutes' where a clock hand sweeps a glowing wedge to the number of minutes."
+  - "A speed claim that wants a literal clock face and a mm:ss readout before the headline appears."
+  - "A short stat scene where the dial slides left and a two-line headline fills the right side."
+avoidWhen:
+  - "You want two competing timers rather than one dial — use `timer-duel`."
+  - "The time is a countdown to an event, not an elapsed duration — use `countdown`."
+  - "You want a big counted number with no clock imagery — use `compact-stat`."
+---
+
+<ComponentPreview name="clock-sweep" />
+
+<InstallBlock name="clock-sweep" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { ClockSweep } from "@/components/remocn/clock-sweep";
+
+const ClockSweepScene = () => <ClockSweep minutes={4} title={"From idea to video\nin 4 minutes"} />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="ClockSweep"
+    component={ClockSweepScene}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A ticked clock dial draws in and its hand sweeps a glowing wedge across the given number of minutes while an mm:ss readout counts with it. The hand settles with a small kick, the dial glides to the left and a headline fades in word by word on the right with the number highlighted. Pass `minutes` and optionally `title`, which defaults to 'From idea to video in N minutes'. It ships light and dark through the `theme` prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "minutes",
+      type: "number",
+      default: "4",
+      description: "Minutes the hand sweeps, between 0.25 and 59.",
+    },
+    {
+      name: "title",
+      type: "string",
+      description: "Headline on the right; use a line break to split lines. Auto-built from minutes if omitted.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Colour of the wedge, hand and highlighted number in the headline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier; 1 is the designed pace.",
+    },
+  ]}
+/>

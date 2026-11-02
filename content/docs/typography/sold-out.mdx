@@ -1,0 +1,100 @@
+---
+title: Sold Out
+description: "A stock counter races to zero, then a tilted chrome 'SOLD OUT' band slams across."
+component: sold-out
+vibe: playful
+length: 122
+useWhen:
+  - "A scarcity beat for a limited drop, showing stock draining before a sold-out stamp."
+  - "A launch moment where a number should create urgency with a low-stock warning flash."
+  - "A teaser that ends on a one-line subline about the next release."
+avoidWhen:
+  - "You count down to a live time rather than draining stock — use `drop-timer`."
+  - "You just need a number to change smoothly to a target — use `number-wheel`."
+  - "The number should climb up as a positive stat — use `rolling-number`."
+---
+
+<ComponentPreview name="sold-out" />
+
+<InstallBlock name="sold-out" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { SoldOut } from "@/components/remocn/sold-out";
+
+const SoldOutScene = () => <SoldOut stock={64} unit="LEFT" stamp="SOLD OUT" tail="every launch." />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="SoldOut"
+    component={SoldOutScene}
+    durationInFrames={155}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+'128 LEFT' punches in, the reels race down to ten, then tick down hard with a LOW STOCK flash and red figures. At zero the diagonal band slams across with the stamp, and a subline rises. Pass `stock`, `unit`, `stamp`, `lead` and `tail`; it ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "stock",
+      type: "number",
+      default: "128",
+      description: "Stock when the shot opens; it races down to zero.",
+    },
+    {
+      name: "unit",
+      type: "string",
+      default: "\"LEFT\"",
+      description: "Word after the counter.",
+    },
+    {
+      name: "warning",
+      type: "string",
+      default: "\"LOW STOCK\"",
+      description: "Tag that flashes once the stock hits ten.",
+    },
+    {
+      name: "stamp",
+      type: "string",
+      default: "\"SOLD OUT\"",
+      description: "Set huge on the diagonal band at zero.",
+    },
+    {
+      name: "lead",
+      type: "string",
+      default: "\"Restocking:\"",
+      description: "Subline lead, in the grotesk.",
+    },
+    {
+      name: "tail",
+      type: "string",
+      default: "\"every launch.\"",
+      description: "Subline accent, in the serif italic.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark ground; ships both.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Unused; kept for API parity, the band uses a fixed chrome gradient.",
+    },
+  ]}
+/>

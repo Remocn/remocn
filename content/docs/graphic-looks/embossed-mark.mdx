@@ -1,0 +1,76 @@
+---
+title: Embossed Mark
+description: "The R mark and wordmark are debossed into a brushed grey surface as a raking light sweeps across"
+component: embossed-mark
+vibe: premium
+length: 112
+useWhen:
+  - "A premium logo sign-off where the brand looks pressed into paper or metal."
+  - "A tactile end card with a moving light that reveals relief and a foil fill."
+  - "Introducing a wordmark with an unhurried, material feel instead of a flashy animation."
+avoidWhen:
+  - "You want a fast, simple logo entrance — use `logo-enter`."
+  - "The logo should be written like a signature line — use `light-signature`."
+  - "You want the logo shown on a reflective floor — use `studio-reflection`."
+---
+
+<ComponentPreview name="embossed-mark" />
+
+<InstallBlock name="embossed-mark" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { EmbossedMark } from "@/components/remocn/embossed-mark";
+
+const EmbossedMarkScene = () => <EmbossedMark name="emocn" />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="EmbossedMark"
+    component={EmbossedMarkScene}
+    durationInFrames={160}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A mark is pressed into a grey surface; a raking light sweeps around it, deepening the shadows. The camera eases out, a foil fill appears in the mark and the `name` letters fade in after it. Pass a custom `logo` node (square slot, black fill) to replace the default R and set `name` to the letters that follow. Ships dark and light via `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "logo",
+      type: "React.ReactNode",
+      description: "Custom mark to deboss instead of the R (square slot, black fill).",
+    },
+    {
+      name: "name",
+      type: "string",
+      default: "\"emocn\"",
+      description: "Letters printed after the mark; with the default R this reads Remocn.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Color stop in the foil fill.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color scheme. Ships dark and light.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+  ]}
+/>

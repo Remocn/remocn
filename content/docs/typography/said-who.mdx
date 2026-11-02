@@ -1,0 +1,92 @@
+---
+title: Said Who
+description: "A big serif pull quote, \"Took me one evening.\", with a backend-engineer attribution"
+component: said-who
+vibe: premium
+length: 140
+useWhen:
+  - "A single short quote whose credibility comes from who said it, revealed bit by bit."
+  - "A surprising claim that lands before the speaker's unexpected background is shown."
+  - "A one-line testimonial beat in a serif editorial style."
+avoidWhen:
+  - "You have a longer testimonial with a role and company row — use `quote-hero`."
+  - "The quote should be answered by a second voice — use `overheard`."
+  - "The attribution is the joke, in a flat box — use `deadpan-box`."
+---
+
+<ComponentPreview name="said-who" />
+
+<InstallBlock name="said-who" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { SaidWho } from "@/components/remocn/said-who";
+
+const SaidWhoScene = () => <SaidWho quote="Took me one evening." highlight="one evening" name="Tobias Lind" details={["backend engineer", "never edited a video before"]} />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="SaidWho"
+    component={SaidWhoScene}
+    durationInFrames={165}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A big serif quote appears word by word, then the attribution line builds beneath it a piece at a time: first the name, then each detail, while the quote slowly grows and its highlighted phrase turns to the accent color. Pass `quote`, `highlight`, `name` and `details`; it spaces the builds to fit the composition length.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "quote",
+      type: "string",
+      default: "\"Took me one evening.\"",
+      description: "The quote text, without quote marks.",
+    },
+    {
+      name: "highlight",
+      type: "string",
+      default: "\"one evening\"",
+      description: "Phrase in the quote that turns to the accent color.",
+    },
+    {
+      name: "name",
+      type: "string",
+      default: "\"Tobias Lind\"",
+      description: "Speaker name, shown first in the attribution.",
+    },
+    {
+      name: "details",
+      type: "string[]",
+      description: "Extra attribution phrases added one by one after the name.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Color for the highlighted phrase; defaults to the theme accent.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Stage fill color; pass \"transparent\" to overlay your own footage.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color scheme; ships dark and light.",
+    },
+  ]}
+/>

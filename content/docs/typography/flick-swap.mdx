@@ -1,0 +1,89 @@
+---
+title: Flick Swap
+description: "A headline flicks up on a scrolling rail to swap between items, each with a label and a highlighted phrase."
+component: flick-swap
+vibe: premium
+length: 122
+useWhen:
+  - "A feature rundown where several one-line claims cycle through in one scene."
+  - "A beat that lists categories, each with its own headline, without cutting between scenes."
+avoidWhen:
+  - "You only have a single headline - use `feature-headline`."
+  - "You want items to change in place with a crossfade - use `per-word-crossfade`."
+  - "You want one word to roll through options - use `slot-machine-roll`."
+---
+
+<ComponentPreview name="flick-swap" />
+
+<InstallBlock name="flick-swap" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { FlickSwap } from "@/components/remocn/flick-swap";
+
+const FlickSwapScene = () => (
+  <FlickSwap
+    items={[
+      { label: "Captions", headline: "Every word lands on the beat.", highlight: "on the beat" },
+      { label: "Transitions", headline: "Cuts that feel expensive.", highlight: "expensive" },
+    ]}
+    dwell={28}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="FlickSwap"
+    component={FlickSwapScene}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A rail on the side marks position while headlines scroll upward with a quick flick and settle, holding for `dwell` frames each. Pass `items` as label, headline and highlight objects; it ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "items",
+      type: "FlickSwapItem[]",
+      default: "DEFAULT_ITEMS",
+      description: "List of items with label, headline and highlight phrase",
+    },
+    {
+      name: "dwell",
+      type: "number",
+      default: "28",
+      description: "Frames each item stays still between flicks",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color (any valid CSS color)",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Overrides the theme's stage color",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark palettes",
+    },
+  ]}
+/>

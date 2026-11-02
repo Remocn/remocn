@@ -1,0 +1,89 @@
+---
+title: Filler Cut
+description: "A transcript has its filler words cut, leaving a clean line, 'Ship your launch video today.'"
+component: filler-cut
+vibe: premium
+length: 114
+useWhen:
+  - "A captions or editing-tool demo that shows filler words being removed from speech."
+  - "A before-and-after of a messy sentence becoming a clean message."
+  - "A beat showing automatic clean-up of a spoken line."
+avoidWhen:
+  - "You want a before line diffed into an after line — use `diff-swap`."
+  - "A misspelled word should be corrected in place — use `typo-fix`."
+  - "You want a block to overwrite each line with the next — use `block-swap`."
+---
+
+<ComponentPreview name="filler-cut" />
+
+<InstallBlock name="filler-cut" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { FillerCut } from "@/components/remocn/filler-cut";
+
+const FillerCutScene = () => <FillerCut transcript="So, um, ship your, like, launch video, uh, today. You know?" keep="Ship your launch video today." highlight="today." />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="FillerCut"
+    component={FillerCutScene}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A spoken-style transcript appears with filler words marked, the filler is cut out one phrase at a time with a timecode, and the remaining words reflow and set into a clean headline with the last word highlighted. Pass `transcript` (the messy text), `keep` (the clean line) and `highlight`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "transcript",
+      type: "string",
+      default: "\"So, um, ship your, like, launch video, uh, today. You know?\"",
+      description: "The raw spoken text, including the filler words.",
+    },
+    {
+      name: "keep",
+      type: "string",
+      default: "\"Ship your launch video today.\"",
+      description: "The clean line; words not in it are cut.",
+    },
+    {
+      name: "highlight",
+      type: "string",
+      default: "\"today.\"",
+      description: "Phrase in the clean line set in the accent color.",
+    },
+    {
+      name: "showTime",
+      type: "boolean",
+      default: "true",
+      description: "Show the running timecode while words are cut.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "End color of the gradient fill on the clean headline.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color scheme; ships dark and light.",
+    },
+  ]}
+/>

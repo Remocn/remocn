@@ -1,0 +1,85 @@
+---
+title: Parallax Lockup
+description: "A stacked headline scrolls into a lockup with parallax between lines, the last line in a gradient."
+component: parallax-lockup
+vibe: premium
+length: 98
+useWhen:
+  - "A multi-line brand statement that should settle into a tight typographic lockup."
+  - "A closing title where the final line is the call to action."
+avoidWhen:
+  - "The text is one short line - use `tracking-in`."
+  - "You want lines to arrive one at a time without scroll - use `line-by-line-slide`."
+  - "You want a per-word fade - use `staggered-fade-up`."
+---
+
+<ComponentPreview name="parallax-lockup" />
+
+<InstallBlock name="parallax-lockup" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { ParallaxLockup } from "@/components/remocn/parallax-lockup";
+
+const ParallaxLockupScene = () => (
+  <ParallaxLockup
+    lines={["Every launch", "deserves", "a film"]}
+    accentLine={2}
+    accent="#3B5BFD"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="ParallaxLockup"
+    component={ParallaxLockupScene}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The lines scroll in at slightly different speeds and lock into a tightly sized stack while the accent line fills with the gradient. Pass `lines` and `accentLine` (zero-based index of the gradient line); it ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "lines",
+      type: "string[]",
+      default: "[\"Every launch\", \"deserves\", \"a film\"]",
+      description: "The statement, one string per line. Each line is sized so all lines end\nflush on both sides; shorter lines come out bigger. Three lines of\nfalling length read best.",
+      description: "Lines of the stack, top to bottom",
+    },
+    {
+      name: "accentLine",
+      type: "number",
+      default: "2",
+      description: "Index of the line that lands in the gradient fill. -1 for none.",
+      description: "Zero-based index of the line filled with the gradient",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color (any valid CSS color)",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier.",
+      description: "Playback speed multiplier",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark palettes",
+    },
+  ]}
+/>

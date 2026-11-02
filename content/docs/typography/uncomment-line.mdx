@@ -1,0 +1,88 @@
+---
+title: Uncomment Line
+description: "Code-comment lines lose their comment markers one by one and light up as live copy."
+component: uncomment-line
+vibe: tech
+length: 74
+useWhen:
+  - "A developer-product beat where three promises should read like code being switched on."
+  - "A feature list that starts muted and activates line by line."
+  - "A tagline sequence for a dev tool where the comment syntax signals code-first."
+avoidWhen:
+  - "The audience is not technical and comment syntax would be noise — use `what-sticks`."
+  - "You want one line edited into another — use `diff-swap`."
+  - "You want typed characters rather than a reveal — use `typewriter`."
+---
+
+<ComponentPreview name="uncomment-line" />
+
+<InstallBlock name="uncomment-line" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { UncommentLine } from "@/components/remocn/uncomment-line";
+
+const UncommentLineScene = () => (
+  <UncommentLine lines={["Fork the scenes.", "Change anything.", "Own the cut."]} marker="// " highlight={-1} />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="UncommentLine"
+    component={UncommentLineScene}
+    durationInFrames={125}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Lines appear dimmed behind a comment marker, then each marker drops away in turn so the line lights up. Pass `lines` for the copy and `highlight` for which line ends accented. It ships in light and dark through the `theme` prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "lines",
+      type: "string[]",
+      description: "Lines of copy, each revealed in turn.",
+    },
+    {
+      name: "marker",
+      type: "string",
+      default: "\"// \"",
+      description: "Comment prefix shown before each line until it opens.",
+    },
+    {
+      name: "highlight",
+      type: "number",
+      default: "-1",
+      description: "Index of the accented line; negative counts from the end.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Accent color override; falls back to the theme accent.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background color override; falls back to the theme background.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark; picks the palette.",
+    },
+  ]}
+/>

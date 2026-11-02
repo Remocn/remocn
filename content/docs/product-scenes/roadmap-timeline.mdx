@@ -1,0 +1,143 @@
+---
+title: Roadmap Timeline
+description: "A project roadmap draws its bars, a cursor drags one later while dependents shift, then a toast confirms."
+component: roadmap-timeline
+vibe: clean
+length: 158
+useWhen:
+  - "A planning or project-management launch where rescheduling must feel effortless."
+  - "A beat that shows dependencies reacting automatically when a date moves."
+  - "A half-year roadmap for a customer or investor update video."
+avoidWhen:
+  - "You want a launch-date calendar, not a Gantt chart — use `calendar-pick`."
+  - "You want a video editor timeline — use `timeline-editor`."
+  - "You want a ranked list that reorders itself — use `leaderboard-climb`."
+---
+
+<ComponentPreview name="roadmap-timeline" />
+
+<InstallBlock name="roadmap-timeline" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { RoadmapTimeline } from "@/components/remocn/roadmap-timeline";
+
+const RoadmapTimelineScene = () => (
+  <RoadmapTimeline
+    dragProject="Public API"
+    dragDays={14}
+    today="Aug 26"
+    milestone={{ name: "Public launch", date: "Nov 18" }}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="RoadmapTimeline"
+    component={RoadmapTimelineScene}
+    durationInFrames={190}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A roadmap window draws month columns, project bars and dependency links, then sweeps in a today marker and a milestone flag. The cursor grabs `dragProject` and moves it `dragDays` days later; blocked projects shift to keep their gap and a toast announces the reschedule. Pass `projects` (name, start, end, status, progress, lead, color, dependsOn), `milestone`, `today` and `dragProject`. Ships light and dark.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "projects",
+      type: "RoadmapProject[]",
+      default: "DEFAULT_PROJECTS",
+      description: "Roadmap rows: name, start, end, status, progress, lead, color, dependsOn",
+    },
+    {
+      name: "milestone",
+      type: "{ name: string; date: string }",
+      description: "Milestone flag: name and date, e.g. 'Nov 18'",
+    },
+    {
+      name: "today",
+      type: "string",
+      default: "\"Aug 26\"",
+      description: "Date of the today marker, e.g. 'Aug 26'",
+    },
+    {
+      name: "dragProject",
+      type: "string",
+      default: "\"Public API\"",
+      description: "Name of the project the cursor drags",
+    },
+    {
+      name: "dragDays",
+      type: "number",
+      default: "14",
+      description: "Days the dragged project moves; positive is later",
+    },
+    {
+      name: "startMonth",
+      type: "number",
+      default: "6",
+      description: "First visible month, 0-based (6 is July)",
+    },
+    {
+      name: "monthCount",
+      type: "number",
+      default: "5",
+      description: "Number of month columns shown",
+    },
+    {
+      name: "year",
+      type: "number",
+      default: "2026",
+      description: "Year used to resolve the dates",
+    },
+    {
+      name: "title",
+      type: "string",
+      default: "\"Roadmap · H2 2026\"",
+      description: "Roadmap title in the window header",
+    },
+    {
+      name: "workspace",
+      type: "string",
+      default: "\"remocn\"",
+      description: "Workspace name in the breadcrumb",
+    },
+    {
+      name: "theme",
+      type: "\"light\" | \"dark\"",
+      default: "\"light\"",
+      description: "Light or dark palette",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for highlights, buttons and progress",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "gradients.sh preset id for the backdrop shader",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the backdrop shader parameters",
+    },
+  ]}
+/>

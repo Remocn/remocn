@@ -1,0 +1,87 @@
+---
+title: Oval Type
+description: "Words ride a row of stretchy gradient capsules, which then grow into a tall three-word poster."
+component: oval-type
+vibe: playful
+length: 82
+useWhen:
+  - "A feature rundown that cycles through verbs before landing a short three-word tagline."
+  - "A playful poster closer where each word sits in its own glossy pill."
+  - "A beat that needs a conveyor rhythm with squash-and-stretch before the message settles."
+avoidWhen:
+  - "You only have one word to slam — use `full-bleed-type`."
+  - "The words should cut in at a hard, fast rhythm rather than ride a conveyor — use `strobe-words`."
+  - "The text is a full sentence that needs to read as a line — use `staggered-fade-up`."
+---
+
+<ComponentPreview name="oval-type" />
+
+<InstallBlock name="oval-type" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { OvalType } from "@/components/remocn/oval-type";
+
+const OvalTypeScene = () => <OvalType tagline={["Make", "it", "move"]} words={["Plan", "Cut", "Edit"]} accentWord={1} />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="OvalType"
+    component={OvalTypeScene}
+    durationInFrames={115}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Capsules step left along a conveyor, stretching while they travel and bouncing tall when they land, each carrying one word from `words`. Then the `tagline` words land as tall poster ovals and the gaps close. Use `accentWord` to set one tagline word in italic serif; it ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "tagline",
+      type: "string[]",
+      default: "[\"Make\", \"it\", \"move\"]",
+      description: "The poster row: one word per capsule, in reading order.",
+    },
+    {
+      name: "words",
+      type: "string[]",
+      description: "Words that ride the capsules past the frame before the tagline lands.",
+    },
+    {
+      name: "accentWord",
+      type: "number",
+      default: "1",
+      description: "Index of the tagline word set in italic serif; -1 for none.",
+    },
+    {
+      name: "beat",
+      type: "number",
+      default: "9",
+      description: "Frames between two conveyor steps.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark ground; ships both.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Unused; kept for API parity, the capsules use a fixed gradient.",
+    },
+  ]}
+/>

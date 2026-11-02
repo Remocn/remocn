@@ -1,0 +1,107 @@
+---
+title: Hook Punch
+description: "A two-beat hook stops the scroll, then a huge gradient payoff lands, ending on 'This video took 1 day.'"
+component: hook-punch
+vibe: social
+length: 69
+useWhen:
+  - "The opening second of a vertical launch clip that has to stop the scroll with two slammed words."
+  - "A hook that sets up a time-saving claim, then pays it off with one huge number."
+  - "A punchy first beat before a product walkthrough, where camera shake and a whip zoom fit the tone."
+avoidWhen:
+  - "The tease should build quietly before one slam, with speed lines — use `crash-zoom`."
+  - "You want a conversational setup and a soft punchline, no shake — use `pov-setup`."
+  - "A single headline should drift in without any impact effects — use `staggered-fade-up`."
+---
+
+<ComponentPreview name="hook-punch" />
+
+<InstallBlock name="hook-punch" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { HookPunch } from "@/components/remocn/hook-punch";
+
+const HookPunchScene = () => (
+  <HookPunch
+    stop="Stop"
+    scroll="scrolling."
+    lead="This video took"
+    payoff="1 day."
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="HookPunch"
+    component={HookPunchScene}
+    durationInFrames={105}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+"Stop" and a serif italic "scrolling." slam in with a camera kick, a whip zoom wipes the first line away, and a lead-in plus a huge payoff slam in with a shake. Pass `stop`, `scroll`, `lead` and `payoff` to rewrite both beats; it ships dark and light via `theme`.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "stop",
+      type: "string",
+      default: "\"Stop\"",
+      description: "First beat, set in the grotesk.",
+    },
+    {
+      name: "scroll",
+      type: "string",
+      default: "\"scrolling.\"",
+      description: "Second word of the first beat, in serif italic.",
+    },
+    {
+      name: "lead",
+      type: "string",
+      default: "\"This video took\"",
+      description: "Lead-in of the second beat.",
+    },
+    {
+      name: "payoff",
+      type: "string",
+      default: "\"1 day.\"",
+      description: "The payoff, slammed huge.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color scheme. Ships dark and light.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "gradients.sh preset id for the animated ground.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the ground shader parameters.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Accepted for API consistency; the color comes from the ground.",
+    },
+  ]}
+/>

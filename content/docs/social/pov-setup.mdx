@@ -1,0 +1,106 @@
+---
+title: POV Setup
+description: "A POV label and setup line slide in word by word, then a serif italic punchline lands"
+component: pov-setup
+vibe: social
+length: 86
+useWhen:
+  - "A social-style joke or relatable moment where a setup line precedes a one-word punchline."
+  - "A launch clip that frames the product as a lived situation (\"POV: you shipped before standup\")."
+  - "A short vertical or landscape beat that needs a conversational tone before the product shot."
+avoidWhen:
+  - "The setup should be typed character by character with a caret — use `typewriter`."
+  - "You want a loud shaky hook with a huge number payoff — use `hook-punch`."
+  - "The line should sit on highlighted bubbles like a story caption — use `story-text`."
+---
+
+<ComponentPreview name="pov-setup" />
+
+<InstallBlock name="pov-setup" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { PovSetup } from "@/components/remocn/pov-setup";
+
+const PovSetupScene = () => (
+  <PovSetup
+    setup="your whole launch video rendered while you made coffee"
+    lead="and it"
+    punch="slaps."
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="PovSetup"
+    component={PovSetupScene}
+    durationInFrames={125}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A small "POV:" label pops in, the setup line slides in word by word over a gradient ground, then the lead-in and a bold serif punch word land with a small shake. Pass `label`, `setup`, `lead` and `punch` for your own joke; it ships dark and light via `theme`.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "label",
+      type: "string",
+      default: "\"POV:\"",
+      description: "The format label, shown before the setup.",
+    },
+    {
+      name: "setup",
+      type: "string",
+      default: "\"you shipped the launch video before standup\"",
+      description: "The setup line; words slide in one by one.",
+    },
+    {
+      name: "lead",
+      type: "string",
+      default: "\"and it\"",
+      description: "Lead-in of the punchline, set in serif italic.",
+    },
+    {
+      name: "punch",
+      type: "string",
+      default: "\"slaps.\"",
+      description: "The key word of the punchline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color scheme. Ships dark and light.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "gradients.sh preset id for the animated ground.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the ground shader parameters.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Accepted for API consistency; the color comes from the ground.",
+    },
+  ]}
+/>

@@ -1,0 +1,103 @@
+---
+title: Waitlist Swarm
+description: "Cursors and avatar dots swarm in from the edges to form a logo while a waitlist counter rolls up"
+component: waitlist-swarm
+vibe: social
+length: 115
+useWhen:
+  - "A waitlist or community milestone where many people arrive and assemble into your logo."
+  - "A launch-day beat that pairs a growing signup number with a shape formed from particles."
+  - "A teaser that wants a big count (\"12,480 on the waitlist\") tied to a visual of many users."
+avoidWhen:
+  - "The shape should morph through several icons before the logo — use `dot-field-morph`."
+  - "You only need the number rolling up, with no swarm — use `rolling-number`."
+  - "The focus is live collaboration cursors moving around a screen — use `multiplayer-cursors`."
+---
+
+<ComponentPreview name="waitlist-swarm" />
+
+<InstallBlock name="waitlist-swarm" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { WaitlistSwarm } from "@/components/remocn/waitlist-swarm";
+
+const WaitlistSwarmScene = () => (
+  <WaitlistSwarm value={12480} label="on the waitlist" count={760} />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="WaitlistSwarm"
+    component={WaitlistSwarmScene}
+    durationInFrames={175}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Hundreds of dots and cursors fly in along curved paths from beyond the frame and settle into the outline and fill of a shape, while a counter climbs to `value` beside it with a `label`; a pulse ripples out when the last one lands. Pass `shape` (SVG path data, or parts with an `accent` flag) to swap the default R mark. Ships dark and light via `theme`.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "shape",
+      type: "string | SwarmShapePart[]",
+      default: "DEFAULT_SHAPE",
+      description: "SVG path data to form, or parts where `accent: true` uses the accent.",
+    },
+    {
+      name: "value",
+      type: "number",
+      default: "12480",
+      description: "Final number the counter rolls up to.",
+    },
+    {
+      name: "label",
+      type: "string",
+      default: "\"on the waitlist\"",
+      description: "Caption beside the counter.",
+    },
+    {
+      name: "count",
+      type: "number",
+      default: "760",
+      description: "How many particles form the shape.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Color of accent-flagged shape parts and the glow.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color scheme. Ships dark and light.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "gradients.sh preset id for the animated ground.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the ground shader parameters.",
+    },
+  ]}
+/>

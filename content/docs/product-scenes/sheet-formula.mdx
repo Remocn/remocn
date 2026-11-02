@@ -1,0 +1,125 @@
+---
+title: Sheet Formula
+description: "A spreadsheet types a formula, fills it down a column, then drops a bar chart onto the sheet."
+component: sheet-formula
+vibe: data
+length: 270
+useWhen:
+  - "A spreadsheet, analytics or no-code data product where type-once, fill-down, chart-it is the pitch."
+  - "A data beat that goes from raw columns to a chart in three clear steps."
+  - "A vertical cut with three captions matching type, fill and chart."
+avoidWhen:
+  - "The chart is the star and no spreadsheet is needed — use `animated-bar-chart`."
+  - "You want a filtered table with bulk actions — use `table-filter`."
+  - "You want a dashboard with live stats and a feed — use `live-dashboard`."
+---
+
+<ComponentPreview name="sheet-formula" />
+
+<InstallBlock name="sheet-formula" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { SheetFormula } from "@/components/remocn/sheet-formula";
+
+const SheetFormulaScene = () => (
+  <SheetFormula
+    formula="=D2/C2"
+    formulaHeader="ARPU"
+    valueFormat="currency"
+    chartTitle="ARPU by month"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="SheetFormula"
+    component={SheetFormulaScene}
+    durationInFrames={290}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A sheet window types `formula` into the first cell of a new column, the cursor drags the fill handle to copy it down every row, then the chart button drops an animated bar chart of the results. Pass `rows` (month, signups, paid, revenue), `formula` (references use columns A to D from row 2), `formulaHeader`, `valueFormat` and `chartTitle`; `lines` are three captions beside the sheet. Ships light and dark.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "rows",
+      type: "SheetRow[]",
+      default: "DEFAULT_ROWS",
+      description: "Data rows: month, signups, paid and revenue",
+    },
+    {
+      name: "formula",
+      type: "string",
+      default: "\"=D2/C2\"",
+      description: "Formula typed into the first new cell; references use columns A to D",
+    },
+    {
+      name: "formulaHeader",
+      type: "string",
+      default: "\"ARPU\"",
+      description: "Header of the formula column",
+    },
+    {
+      name: "valueFormat",
+      type: "\"currency\" | \"percent\" | \"number\"",
+      default: "\"currency\"",
+      description: "Format of computed values: currency, percent or number",
+    },
+    {
+      name: "title",
+      type: "string",
+      default: "\"Signups 2026\"",
+      description: "Sheet title in the window",
+    },
+    {
+      name: "chartTitle",
+      type: "string",
+      default: "\"ARPU by month\"",
+      description: "Title of the chart that drops in",
+    },
+    {
+      name: "theme",
+      type: "\"light\" | \"dark\"",
+      default: "\"light\"",
+      description: "Light or dark palette",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for highlights, buttons and progress",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline",
+    },
+    {
+      name: "lines",
+      type: "[string, string, string]",
+      description: "Three captions beside the sheet: type, fill, chart",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "gradients.sh preset id for the backdrop shader",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the backdrop shader parameters",
+    },
+  ]}
+/>

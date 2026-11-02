@@ -1,0 +1,91 @@
+---
+title: Uptime Strip
+description: "A strip of ticks fills in green with a few incident bars, then an uptime figure types out beside an italic word."
+component: uptime-strip
+vibe: data
+length: 103
+useWhen:
+  - "A reliability beat for an API, hosting or infrastructure product."
+  - "A status-page style proof with days of history."
+  - "A trust moment where an uptime figure follows a visible record."
+avoidWhen:
+  - "You show a metric climbing over time — use `sparkline-thread`."
+  - "You show activity over a calendar — use `contribution-heatmap`."
+  - "You only need the number — use `compact-stat`."
+---
+
+<ComponentPreview name="uptime-strip" />
+
+<InstallBlock name="uptime-strip" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { UptimeStrip } from "@/components/remocn/uptime-strip";
+
+const UptimeStripScene = () => (
+  <UptimeStrip value="99.99%" days={90} incidents={[27, 63]} label="uptime" />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="UptimeStrip"
+    component={UptimeStripScene}
+    durationInFrames={130}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A sweep fills the strip tick by tick, with the days named in `incidents` standing out as outages, then the ticks settle into the final strip. The uptime figure rises in letter by letter beside an italic label word. Pass `value`, `days`, `incidents` and `label`; it ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "value",
+      type: "string",
+      default: "\"99.99%\"",
+      description: "Uptime figure shown as text.",
+    },
+    {
+      name: "days",
+      type: "number",
+      default: "90",
+      description: "Number of ticks in the strip, one per day.",
+    },
+    {
+      name: "incidents",
+      type: "number[]",
+      default: "[27, 63]",
+      description: "Zero-based tick positions drawn as incident days.",
+    },
+    {
+      name: "label",
+      type: "string",
+      default: "\"uptime\"",
+      description: "Italic word shown after the figure.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for highlights and small marks.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color theme, \"dark\" or \"light\".",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+  ]}
+/>

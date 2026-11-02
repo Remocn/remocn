@@ -1,0 +1,86 @@
+---
+title: Activity Rings
+description: "Concentric activity rings lap their goal while three metrics count up beside them"
+component: activity-rings
+vibe: playful
+length: 90
+useWhen:
+  - "A monthly or quarterly recap beat where three usage metrics all beat their goals at once."
+  - "A product-update video that needs a friendly goals-hit moment with several readouts counting up."
+  - "A wrapped-style summary scene where each metric closes a ring and then laps past 100%."
+avoidWhen:
+  - "You have one headline percentage to land, not three metrics — use `share-donut`."
+  - "You need a single big number with no chart — use `compact-stat`."
+  - "You are comparing many categories side by side — use `spring-bars`."
+---
+
+<ComponentPreview name="activity-rings" />
+
+<InstallBlock name="activity-rings" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { ActivityRings } from "@/components/remocn/activity-rings";
+
+const ActivityRingsScene = () => (
+  <ActivityRings
+    title="This quarter"
+    rings={[
+      { label: "Renders", value: 2400, goal: 1.2 },
+      { label: "Templates", value: 64, goal: 1.1 },
+      { label: "Hours saved", value: 420, unit: "h", goal: 1.05 },
+    ]}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="ActivityRings"
+    component={ActivityRingsScene}
+    durationInFrames={130}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Three concentric rings fill clockwise one after another, snap closed, then lap past their goal with a check mark while the labels count up beside them. Pass `rings` (label, value, optional unit, and a `goal` fraction such as 1.14) and a `title`. Ships dark and light via `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "rings",
+      type: "ActivityRing[]",
+      default: "DEFAULT_RINGS",
+      description: "Up to three rings, outermost first.",
+    },
+    {
+      name: "title",
+      type: "string",
+      default: "\"This month\"",
+      description: "Small heading above the readouts.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Color of the outer hero ring.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Dark or light palette.",
+    },
+  ]}
+/>

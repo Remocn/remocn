@@ -1,0 +1,86 @@
+import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+
+export const weightCutConfig: ComponentConfig = {
+  componentName: "WeightCut",
+  importPath: "@/components/remocn/weight-cut",
+  controls: {
+    theme: {
+      type: "enum",
+      default: "dark",
+      variants: {
+        dark: {},
+        light: {},
+      },
+      description: "Theme",
+    },
+    prefix: {
+      type: "text-content",
+      default: "",
+      description: "Prefix",
+    },
+    suffix: {
+      type: "text-content",
+      default: "KB",
+      description: "Suffix",
+    },
+    eyebrow: {
+      type: "text-content",
+      default: "Per scene, gzipped",
+      description: "Eyebrow",
+    },
+    label: {
+      type: "text-content",
+      default: "Lighter than your logo file.",
+      description: "Label",
+    },
+    value: {
+      type: "number",
+      default: 6.8,
+      min: 0,
+      max: 20.4,
+      step: 0.01,
+      description: "Value",
+      hiddenFromList: false,
+    },
+    from: {
+      type: "number",
+      default: 94,
+      min: 0,
+      max: 282,
+      step: 1,
+      description: "From",
+      hiddenFromList: false,
+    },
+    decimals: {
+      type: "number",
+      default: 1,
+      min: 0,
+      max: 10,
+      step: 1,
+      description: "Decimals",
+      hiddenFromList: false,
+    },
+    lightWeight: {
+      type: "number",
+      default: 100,
+      min: 0,
+      max: 300,
+      step: 1,
+      description: "Light weight",
+      hiddenFromList: false,
+    },
+    speed: {
+      type: "number",
+      default: 1,
+      min: 0.25,
+      max: 4,
+      step: 0.25,
+      description: "Speed",
+      hiddenFromList: false,
+    },
+  },
+  durationInFrames: 120,
+  fps: FPS,
+  compositionWidth: W,
+  compositionHeight: H,
+};

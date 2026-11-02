@@ -1,0 +1,96 @@
+---
+title: Block City
+description: "A 3D grid of blocks rises like a city skyline while +340% renders counts up"
+component: block-city
+vibe: tech
+length: 218
+useWhen:
+  - "A growth beat where one big percentage should land after a cinematic flyover of a skyline."
+  - "A launch recap that wants a 3D data moment, with the tallest tower standing for the headline stat."
+  - "An announcement where a custom dataset should shape the skyline before the number counts up."
+avoidWhen:
+  - "You need a flat bar chart with readable category labels — use `spring-bars`."
+  - "The story is a trend over time, not a skyline — use `growth-line`."
+  - "You only have time for a short stat beat — use `compact-stat`."
+---
+
+<ComponentPreview name="block-city" />
+
+<InstallBlock name="block-city" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { BlockCity } from "@/components/remocn/block-city";
+
+const BlockCityScene = () => (
+  <BlockCity value={340} prefix="+" suffix="%" caption="renders" />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="BlockCity"
+    component={BlockCityScene}
+    durationInFrames={250}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A camera flies low over a grid of blocks that rise like a city, then cranes up into a front view where the tallest tower is lit and the stat counts up beside it. Pass `value`, `prefix`, `suffix` and `caption` for the number, and `data` (one number per column) to shape the skyline. Ships dark and light via `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "value",
+      type: "number",
+      default: "340",
+      description: "Hero number, counted up on the accent block.",
+    },
+    {
+      name: "prefix",
+      type: "string",
+      default: "\"+\"",
+      description: "Text before the number, such as a plus sign.",
+    },
+    {
+      name: "suffix",
+      type: "string",
+      default: "\"%\"",
+      description: "Text after the number, such as a percent sign.",
+    },
+    {
+      name: "caption",
+      type: "string",
+      default: "\"renders\"",
+      description: "Muted word after the number.",
+    },
+    {
+      name: "data",
+      type: "number[]",
+      description: "Optional dataset: one value per column, left to right (any scale).",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Color of the hero tower and number.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Dark or light palette.",
+    },
+  ]}
+/>

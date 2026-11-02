@@ -1,0 +1,97 @@
+---
+title: Indent Steps
+description: "Up to five lines rise in, each tabbing one step further right like indented code, then one word lights up."
+component: indent-steps
+vibe: tech
+length: 80
+useWhen:
+  - "A write, render, ship sequence that should read like steps in an editor."
+  - "A short developer-facing tagline where the last word is the payoff and gets a gradient."
+avoidWhen:
+  - "The lines should be typed out character by character — use `typewriter`."
+  - "Lines should read as commented-out code being switched on — use `uncomment-line`."
+  - "You want a numbered feature list with a moving highlight row — use `index-list`."
+---
+
+<ComponentPreview name="indent-steps" />
+
+<InstallBlock name="indent-steps" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { IndentSteps } from "@/components/remocn/indent-steps";
+
+const IndentStepsScene = () => (
+  <IndentSteps
+    lines={["Fork the scene.", "Change the props.", "Render tonight."]}
+    highlight="tonight"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="IndentSteps"
+    component={IndentStepsScene}
+    durationInFrames={120}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Each line rises from a mask and tabs one step further right with a small snap and a guide line, with optional line numbers in the gutter. Once the last line lands, the `highlight` word fills with a gradient. Pass up to five `lines`; set `exit` to outdent and slide them out over the last 18 frames. It ships light and dark.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "lines",
+      type: "string[]",
+      description: "Up to five lines, each indented one step more than the last.",
+    },
+    {
+      name: "highlight",
+      type: "string",
+      default: "\"tonight\"",
+      description: "Word or phrase that turns to a gradient at the end; case-insensitive.",
+    },
+    {
+      name: "lineNumbers",
+      type: "boolean",
+      default: "true",
+      description: "Show a mono line-number gutter beside the lines.",
+    },
+    {
+      name: "exit",
+      type: "boolean",
+      default: "false",
+      description: "Outdent and slide the lines out during the final 18 frames.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Color of the guide line that flashes after each tab.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark palette.",
+    },
+  ]}
+/>

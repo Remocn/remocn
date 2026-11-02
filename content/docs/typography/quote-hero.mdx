@@ -1,0 +1,77 @@
+---
+title: Quote Hero
+description: "A big pull quote with an underlined italic phrase and a named founder attribution"
+component: quote-hero
+vibe: premium
+length: 246
+useWhen:
+  - "A customer testimonial in a launch or case-study video, with the key phrase marked."
+  - "A rotation of two or three short quotes from different people, each with a name and role."
+  - "A trust beat near the end of a product video, before the call to action."
+avoidWhen:
+  - "The quote is a joke with a punchline attribution — use `deadpan-box`."
+  - "You want a social post card style testimonial — use `testimonial-stack`."
+  - "The quote should change in place between versions — use `changed-mind`."
+---
+
+<ComponentPreview name="quote-hero" />
+
+<InstallBlock name="quote-hero" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { QuoteHero } from "@/components/remocn/quote-hero";
+
+const QuoteHeroScene = () => <QuoteHero quoteDuration={120} quotes={[{ quote: "We shipped our launch video in an afternoon.", highlight: "in an afternoon", name: "Maya Chen", role: "Head of Design", company: "Kitebase" }]} />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="QuoteHero"
+    component={QuoteHeroScene}
+    durationInFrames={246}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A big serif pull quote rises line by line beside an oversized opening mark, then the author row settles in and a marker sweeps behind the highlighted phrase before the quote exits and the next one plays. Pass `quotes` (quote, highlight, name, role, company, optional avatar) and `quoteDuration`; the total length is 6 plus quotes times `quoteDuration`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "quotes",
+      type: "Quote[]",
+      default: "DEFAULT_QUOTES",
+      description: "Testimonials, each with quote, highlight, name, role, company and avatar.",
+    },
+    {
+      name: "quoteDuration",
+      type: "number",
+      default: "120",
+      description: "Frames each quote owns, including its exit.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Color of the highlighter sweep behind the key phrase.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color scheme; ships dark and light.",
+    },
+  ]}
+/>

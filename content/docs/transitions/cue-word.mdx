@@ -1,0 +1,83 @@
+---
+title: Cue Word
+description: "Kinetic type lines where one cue word lands in color, then the whole line slides, drops, lifts or cuts away"
+component: cue-word
+vibe: playful
+length: 176
+useWhen:
+  - "A rapid run of short claims where each line needs its own move and one emphasized word."
+  - "A feature list told as sentences, with a different transition style for each beat."
+  - "Bold type on alternating dark and accent fields, with no imagery or UI behind it."
+avoidWhen:
+  - "The lines should hand a word from one to the next — use `baton-word`."
+  - "You only need a single sentence with a highlighted word — use `inline-highlight`."
+  - "You want a softer, non-directional change between lines — use `per-word-crossfade`."
+---
+
+<ComponentPreview name="cue-word" />
+
+<InstallBlock name="cue-word" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { CueWord } from "@/components/remocn/cue-word";
+
+const CueWordScene = () => (
+  <CueWord
+    scenes={[
+      { text: "This line slides left.", cue: "slides left", cut: "slide" },
+      { text: "The next one drops in.", cue: "drops in", cut: "drop" },
+      { text: "And this one cuts.", cue: "cuts", cut: "cut" },
+    ]}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="CueWord"
+    component={CueWordScene}
+    durationInFrames={210}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Each entry in `scenes` fills the frame with large centered type. The words rise in, the `cue` words land in the accent color, and the line then leaves with its `cut`: slide, drop, lift or an instant cut. Lines alternate between the base field and an accent field. The timeline is 176 frames at speed 1 with the default four lines; it ships light and dark.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "scenes",
+      type: "CueWordScene[]",
+      default: "DEFAULT_SCENES",
+      description: "Lines to show; each has text, optional cue words and an exit cut",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Accent color for cue words and the accent field",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Base field color; pass transparent to composite over footage",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier for the whole timeline",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark palette",
+    },
+  ]}
+/>

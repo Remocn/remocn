@@ -1,0 +1,79 @@
+---
+title: Kerning Snap
+description: "Loose letters snap one by one into correct kerning, forming a gradient serif word"
+component: kerning-snap
+vibe: premium
+length: 80
+useWhen:
+  - "A design-craft beat about typesetting, details or polish, where a word assembles precisely."
+  - "A premium title reveal where scattered letters gather into one word with flash ticks at each snap."
+  - "A headline that benefits from a rhythmic, countable assembly with a controllable interval."
+avoidWhen:
+  - "You want letters to ease in with a spacing change rather than snapping — use `tracking-in`."
+  - "The whole word should drop in at once, not assemble — use `squeeze-in`."
+  - "You want the word to stretch or squash on entry — use `stretch-in`."
+---
+
+<ComponentPreview name="kerning-snap" />
+
+<InstallBlock name="kerning-snap" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { KerningSnap } from "@/components/remocn/kerning-snap";
+
+const KerningSnapScene = () => (
+  <KerningSnap word="Kerning" interval={6} />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="KerningSnap"
+    component={KerningSnapScene}
+    durationInFrames={120}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Letters start scattered and loose across the frame; from the center outward, each one springs into its kerned position every `interval` frames with a brief flash on the snap ticks, and the gradient fill reads whole once the word is set. Pass `word` and tune `interval` for pacing; it ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "word",
+      type: "string",
+      default: "\"Typeset\"",
+      description: "The word assembled from loose letters.",
+    },
+    {
+      name: "interval",
+      type: "number",
+      default: "7",
+      description: "Frames between one letter snapping and the next.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Color of the flash ticks beside the word.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier.",
+    },
+  ]}
+/>

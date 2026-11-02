@@ -1,0 +1,85 @@
+---
+title: Stem Stretch
+description: "The stems of a figure stretch into tall gradient stripes, then a caption rises beneath."
+component: stem-stretch
+vibe: premium
+length: 88
+useWhen:
+  - "A time-saved or duration claim such as 4 hours back every week."
+  - "A text-forward stat with a dramatic reveal."
+  - "A hero line where a number and a unit word share one heavy headline."
+avoidWhen:
+  - "You want a clean number with no stretching — use `compact-stat`."
+  - "You want a glossy pill that holds a word inside the number — use `zero-stretch`."
+  - "You want a weight change on a counting figure — use `weight-cut`."
+---
+
+<ComponentPreview name="stem-stretch" />
+
+<InstallBlock name="stem-stretch" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { StemStretch } from "@/components/remocn/stem-stretch";
+
+const StemStretchScene = () => (
+  <StemStretch value="4 hours" label="back, every week" steps={4} />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="StemStretch"
+    component={StemStretchScene}
+    durationInFrames={135}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The figure rises in, then in `steps` springy snaps its vertical stems stretch apart into long stripes with a gradient glow. The caption rises in word by word below. Pass `value`, `label` and `steps`; it ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "value",
+      type: "string",
+      default: "\"4 hours\"",
+      description: "Heading text whose stems stretch, such as a number and a unit.",
+    },
+    {
+      name: "label",
+      type: "string",
+      default: "\"back, every week\"",
+      description: "Caption that rises in word by word under the figure.",
+    },
+    {
+      name: "steps",
+      type: "number",
+      default: "4",
+      description: "Number of snaps the stretch is split into.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for highlights and small marks.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color theme, \"dark\" or \"light\".",
+    },
+  ]}
+/>

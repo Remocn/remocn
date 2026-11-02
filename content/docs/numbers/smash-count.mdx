@@ -1,0 +1,106 @@
+---
+title: Smash Count
+description: "A giant numeral hard-cuts up through larger values between corners and lands beside a small caption."
+component: smash-count
+vibe: playful
+length: 60
+useWhen:
+  - "A punchy stat reveal where the number should feel slammed into place, such as scenes made or shipped."
+  - "A fast beat that should escalate in a handful of cuts rather than a smooth count."
+  - "A bold single-color stat with a small caption in the opposite corner."
+avoidWhen:
+  - "You want a smooth, glowing count - use `lumen-count`."
+  - "The number should pause on each reading in blocky steps - use `module-count`."
+  - "A sticker-style outlined number is the look - use `fuchidori-count`."
+---
+
+<ComponentPreview name="smash-count" />
+
+<InstallBlock name="smash-count" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { SmashCount } from "@/components/remocn/smash-count";
+
+const SmashCountScene = () => <SmashCount value={64} from={1} cuts={6} label="scenes, zero keyframes" />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="SmashCount"
+    component={SmashCountScene}
+    durationInFrames={120}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A giant numeral hard-cuts through a series of larger and larger values, each cut punching in at a new corner of the frame and the cuts speeding up, until the final value lands large at the bottom left and a caption appears in the top right. Pass `value`, `from`, `cuts` and `label`; `accent` is the numeral color. It ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "value",
+      type: "number",
+      default: "64",
+      description: "The final number.",
+    },
+    {
+      name: "from",
+      type: "number",
+      default: "1",
+      description: "First number shown before the cuts.",
+    },
+    {
+      name: "cuts",
+      type: "number",
+      default: "6",
+      description: "How many hard cuts, including the final one.",
+    },
+    {
+      name: "prefix",
+      type: "string",
+      default: "\"\"",
+      description: "Text before the number.",
+    },
+    {
+      name: "suffix",
+      type: "string",
+      default: "\"\"",
+      description: "Text after the number.",
+    },
+    {
+      name: "label",
+      type: "string",
+      default: "\"scenes, zero keyframes\"",
+      description: "Caption shown top right on the final cut.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#E60012\"",
+      description: "Color of the numeral.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Stage background color; overrides the theme ground.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark palette.",
+    },
+  ]}
+/>

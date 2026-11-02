@@ -1,0 +1,119 @@
+---
+title: Query Cascade
+description: "Search queries rush past in a blur until one lands in the search box and resolves into an answer."
+component: query-cascade
+vibe: tech
+length: 148
+useWhen:
+  - "A search or answer-engine launch showing the one question that matters among many."
+  - "A beat that turns a user query into a statement, such as a search for a result that then reads as done."
+  - "A fast, kinetic opener that settles on a single phrase."
+avoidWhen:
+  - "The answer should come with cited sources — use `ai-answer-sources`."
+  - "A search pill should type and reveal a graphic panel — use `search-reveal`."
+  - "You want a smooth feed scroll on a phone — use `phone-scroll`."
+---
+
+<ComponentPreview name="query-cascade" />
+
+<InstallBlock name="query-cascade" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { QueryCascade } from "@/components/remocn/query-cascade";
+
+const QueryCascadeScene = () => (
+  <QueryCascade
+    hero="how to make a launch video"
+    term="launch video"
+    answerBefore="Your"
+    answerAfter="is ready."
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="QueryCascade"
+    component={QueryCascadeScene}
+    durationInFrames={170}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A long list of `queries` scrolls past with motion blur and decelerates until the `hero` query sits in a search box. The `term` inside it is highlighted, the box clears, and the line resolves into `answerBefore`, the term and `answerAfter`. Pass your own `hero`, `term` and answer words; it ships light and dark through `theme`.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "queries",
+      type: "string[]",
+      default: "QUERIES",
+      description: "Search queries that scroll past. The hero is inserted among them.",
+    },
+    {
+      name: "hero",
+      type: "string",
+      default: "\"how to make a launch video\"",
+      description: "The query that lands in the search box.",
+    },
+    {
+      name: "term",
+      type: "string",
+      default: "\"launch video\"",
+      description: "Phrase inside the hero that is highlighted and kept for the answer.",
+    },
+    {
+      name: "answerBefore",
+      type: "string",
+      default: "\"Your\"",
+      description: "Answer text before the term.",
+    },
+    {
+      name: "answerAfter",
+      type: "string",
+      default: "\"is ready.\"",
+      description: "Answer text after the term.",
+    },
+    {
+      name: "showLogo",
+      type: "boolean",
+      default: "true",
+      description: "Show the built-in wordmark at the end.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color scheme. Ships light and dark.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "Shader preset id for the animated background.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Partial shader parameters that override the ground preset.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Declared but not used by the current source.",
+    },
+  ]}
+/>

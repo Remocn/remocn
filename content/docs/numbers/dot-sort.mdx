@@ -1,0 +1,92 @@
+---
+title: Dot Sort
+description: "Dots sort into rows by group, the logo row largest at 41%"
+component: dot-sort
+vibe: data
+length: 111
+useWhen:
+  - "A share-of-choice beat where hundreds of dots sort into rows and the winning row is largest, such as 41%."
+  - "A survey or market scene where the individual dots make the percentage feel like real people."
+  - "A comparison of four or five groups with one clear leader."
+avoidWhen:
+  - "You want a gradient ring and one percentage — use `share-donut`."
+  - "You want a 10 by 10 grid reading a single percent — use `unit-grid`."
+  - "You want rectangles sized by value — use `treemap-split`."
+---
+
+<ComponentPreview name="dot-sort" />
+
+<InstallBlock name="dot-sort" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { DotSort } from "@/components/remocn/dot-sort";
+
+const DotSortScene = () => (
+  <DotSort
+    highlight={0}
+    groups={[
+      { label: "remocn", value: 41 },
+      { label: "Kitebase", value: 23 },
+      { label: "Lumen", value: 17 },
+      { label: "Other", value: 19 },
+    ]}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="DotSort"
+    component={DotSortScene}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Four hundred dots start in a cloud, then sort into rows by group; the highlighted row gets the gradient, the rest dim, and its percentage and caption land. Pass `groups` (label and value) and `highlight`, the index of the hero group. Ships dark and light via `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "groups",
+      type: "DotSortGroup[]",
+      default: "DEFAULT_GROUPS",
+      description: "Groups the dots sort into, each with a label and value.",
+    },
+    {
+      name: "highlight",
+      type: "number",
+      default: "0",
+      description: "Index of the hero group.",
+    },
+    {
+      name: "caption",
+      type: "string",
+      description: "Line under the percentage; defaults to a choose line.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for the hero element.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Dark or light palette.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier.",
+    },
+  ]}
+/>

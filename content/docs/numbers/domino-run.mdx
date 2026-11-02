@@ -1,0 +1,83 @@
+---
+title: Domino Run
+description: "Dominoes tip over in a chain, each bigger than the last, until the largest sets off a big stat."
+component: domino-run
+vibe: playful
+length: 135
+useWhen:
+  - "A compounding or chain-reaction story, such as one small step leading to a 10x result."
+  - "A playful beat where the number is the payoff of a visible setup."
+  - "A stat with an italic caption that explains the cause."
+avoidWhen:
+  - "The multiplication should be shown with a flipping sign - use `times-turn`."
+  - "You want bars that overshoot with spring - use `spring-bars`."
+  - "A plain multiplier headline is enough - use `magnitude-push`."
+---
+
+<ComponentPreview name="domino-run" />
+
+<InstallBlock name="domino-run" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { DominoRun } from "@/components/remocn/domino-run";
+
+const DominoRunScene = () => <DominoRun count={13} value="10x" caption="Every push tips a bigger one." />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="DominoRun"
+    component={DominoRunScene}
+    durationInFrames={165}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A row of dominoes, each taller than the one before, tips over one after another until the largest falls and the big value and caption fade in. Pass `count` (5 to 24) for the number of dominoes, plus `value` and `caption`. It ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "count",
+      type: "number",
+      default: "13",
+      description: "Number of dominoes, from 5 to 24.",
+    },
+    {
+      name: "value",
+      type: "string",
+      default: "\"10×\"",
+      description: "The stat revealed when the last domino falls.",
+    },
+    {
+      name: "caption",
+      type: "string",
+      default: "\"Every push tips a bigger one.\"",
+      description: "Caption under the stat.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color of the stat gradient.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark palette.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier.",
+    },
+  ]}
+/>

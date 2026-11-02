@@ -1,0 +1,78 @@
+---
+title: Negation Drop
+description: "Condensed caps lines rise in, then each negation drops away and its stem word lands on a lime block."
+component: negation-drop
+vibe: playful
+length: 94
+useWhen:
+  - "A myth-busting beat where objections like you can't animate flip into you can."
+  - "A punchy poster-style opener that turns three negative lines into three positive ones, one at a time."
+avoidWhen:
+  - "The lines have no contractions to flip and should just stack in — use `hook-uncurl`."
+  - "You have one denial with a sheepish reply tucked in the corner — use `coy-denial`."
+  - "One claim should dim while another brightens rather than a word dropping out — use `less-more`."
+---
+
+<ComponentPreview name="negation-drop" />
+
+<InstallBlock name="negation-drop" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { NegationDrop } from "@/components/remocn/negation-drop";
+
+const NegationDropScene = () => (
+  <NegationDrop
+    lines={["You can’t animate.", "You don’t have a team.", "It isn’t done."]}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="NegationDrop"
+    component={NegationDropScene}
+    durationInFrames={135}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Condensed all-caps lines rise in one after another. Then, line by line, the first contraction (can't, don't, isn't) loses its negation, which falls away, and the remaining stem word lands on a highlighted block while the line closes up. Pass `lines` that each contain a can't, don't or isn't style contraction. It ships light and dark.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "lines",
+      type: "string[]",
+      default: "DEFAULT_LINES",
+      description: "Lines to set in caps; the first contraction in each line flips.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Color of the highlight block behind the kept word.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark palette.",
+    },
+  ]}
+/>

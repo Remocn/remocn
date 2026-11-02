@@ -1,0 +1,71 @@
+---
+title: Ruler Align
+description: "A ruler slides under a messy line of text and straightens its letters onto the edge."
+component: ruler-align
+vibe: clean
+length: 151
+useWhen:
+  - "A message about precision, polish or alignment where messy text snaps into order."
+  - "A before-and-after beat where scattered letters get fixed by a tool in frame."
+  - "A tagline whose punchline is that everything is now measured and lined up."
+avoidWhen:
+  - "You only need letter spacing to tighten, not baseline fixing - use `kerning-snap`."
+  - "The line should simply appear, with no gag - use `staggered-fade-up`."
+  - "The text should arrive as if being typed - use `typewriter`."
+---
+
+<ComponentPreview name="ruler-align" />
+
+<InstallBlock name="ruler-align" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { RulerAlign } from "@/components/remocn/ruler-align";
+
+const RulerAlignScene = () => <RulerAlign text="Made to measure." accent="#3B5BFD" />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="RulerAlign"
+    component={RulerAlignScene}
+    durationInFrames={225}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The letters appear scattered at uneven heights, a ruler slides in beneath them, levels, then lifts so high letters drop onto its edge. Two taps then nudge the spacing tight. Pass `text` for your own line; letters without descenders sit best on the edge. It takes a `theme` prop and ships light and dark.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "text",
+      type: "string",
+      default: "\"Made to measure.\"",
+      description: "The line the ruler straightens. Letters without descenders sit best on the edge.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "The ruler's straight edge.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark ground; the component ships both.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+  ]}
+/>

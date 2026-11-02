@@ -1,0 +1,114 @@
+---
+title: Flood Sting
+description: "A row of icons is picked through, then a flood of colour fills the frame and the logo lands."
+component: flood-sting
+vibe: premium
+length: 104
+useWhen:
+  - "A tool-picker or integrations beat that should end by flooding into the brand."
+  - "A playful sting with a tactile hop, roll and press before the logo arrives."
+  - "A transition-like opener: UI selection into a full-frame colour reveal."
+avoidWhen:
+  - "You want the logo to ease in with no UI metaphor — use `first-light`."
+  - "A tagline must sit under the logo — use `introducing`."
+  - "The rhythm should come from words rather than icons — use `blink-cut`."
+---
+
+<ComponentPreview name="flood-sting" />
+
+<InstallBlock name="flood-sting" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { FloodSting } from "@/components/remocn/flood-sting";
+
+const FloodStingScene = () => (
+  <FloodSting
+    icons={["cluster", "download", "globe", "gear", "brackets"]}
+    pick={2}
+    flood="#3B5BFD"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="FloodSting"
+    component={FloodStingScene}
+    durationInFrames={120}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A row of icon tiles plays a selection game: a highlight hops across them and slot-style rolls swap their glyphs until a press picks one. The picked tile floods the frame with colour and the logo lands between two dots. Pass `icons` from the built-in glyph set (cluster, download, globe, gear, brackets, spark, grid, diamonds), `pick` and the colours. Ships light and dark.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "icons",
+      type: "GlyphName[]",
+      default: "DEFAULT_ICONS",
+      description: "Glyph names for the tiles in the row.",
+    },
+    {
+      name: "rolls",
+      type: "GlyphName[][]",
+      default: "DEFAULT_ROLLS",
+      description: "Glyph names each tile cycles through, one list per roll.",
+    },
+    {
+      name: "pick",
+      type: "number",
+      default: "2",
+      description: "Index of the tile that is pressed and floods the frame.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Dark or light palette and ground.",
+    },
+    {
+      name: "paper",
+      type: "string",
+      description: "Background colour of the row stage.",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Colour of the tiles and glyphs.",
+    },
+    {
+      name: "flood",
+      type: "string",
+      description: "Colour of the flood that fills the frame.",
+    },
+    {
+      name: "logoColor",
+      type: "string",
+      description: "Colour of the logo that lands after the flood.",
+    },
+    {
+      name: "hops",
+      type: "string[]",
+      description: "Colours the highlight takes as it hops between tiles.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "Shader preset id for the gradients.sh background ground.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Custom shader parameters for the ground, used instead of the theme default.",
+    },
+  ]}
+/>

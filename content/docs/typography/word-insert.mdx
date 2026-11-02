@@ -1,0 +1,73 @@
+---
+title: Word Insert
+description: "A sentence edits itself, opening a gap and inserting new words in an accent gradient."
+component: word-insert
+vibe: clean
+length: 116
+useWhen:
+  - "A tagline that grows from a plain noun into a full promise."
+  - "A showcase of how a sentence can gain qualifiers step by step."
+  - "A launch line where each added word is a selling point."
+avoidWhen:
+  - "Words should be replaced, not added — use `select-replace`."
+  - "The sentence resets layout between versions — use `layout-swap`."
+  - "Only one word should change in place — use `typo-fix`."
+---
+
+<ComponentPreview name="word-insert" />
+
+<InstallBlock name="word-insert" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { WordInsert } from "@/components/remocn/word-insert";
+
+const WordInsertScene = () => (
+  <WordInsert states={["Launch videos.", "Launch videos, as code."]} />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="WordInsert"
+    component={WordInsertScene}
+    durationInFrames={174}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Each entry in `states` is the same sentence with more words added, and the new words open a gap and slide in with a gradient. Pass `states` as successive versions of your line. It ships in light and dark through the `theme` prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "states",
+      type: "string[]",
+      default: "DEFAULT_STATES",
+      description: "Successive versions of the sentence, each adding words.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color override; falls back to the theme accent.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark; picks the palette.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+  ]}
+/>

@@ -1,0 +1,91 @@
+---
+title: Growth Line
+description: "An exponential growth curve draws through milestones to a 100k endpoint"
+component: growth-line
+vibe: data
+length: 148
+useWhen:
+  - "A growth story where a curve draws through milestones to a big endpoint such as 100k."
+  - "A first-year or since-launch recap with a few named milestones along the way."
+  - "A hockey-stick beat where the steepness of the curve is the message."
+avoidWhen:
+  - "You want a compact glowing trend beside a stat — use `sparkline-thread`."
+  - "You have real categories on an axis — use `spring-bars`."
+  - "You want the chart to transform between shapes — use `chart-morph`."
+---
+
+<ComponentPreview name="growth-line" />
+
+<InstallBlock name="growth-line" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { GrowthLine } from "@/components/remocn/growth-line";
+
+const GrowthLineScene = () => (
+  <GrowthLine value="100k" label="creators in the first year" steepness={4.6} />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="GrowthLine"
+    component={GrowthLineScene}
+    durationInFrames={180}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+An exponential curve draws across the frame while the camera tracks the tip, popping each milestone along the way, then the endpoint value lands with a ring. Pass `value`, `label`, and `milestones`; tune the curve with `steepness`. Ships dark and light via `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "value",
+      type: "string",
+      default: "\"100k\"",
+      description: "The number that lands at the tip.",
+    },
+    {
+      name: "label",
+      type: "string",
+      default: "\"creators in the first year\"",
+      description: "Muted line under the value.",
+    },
+    {
+      name: "milestones",
+      type: "GrowthMilestone[]",
+      default: "DEFAULT_MILESTONES",
+      description: "Points on the curve to call out, in order.",
+    },
+    {
+      name: "steepness",
+      type: "number",
+      default: "4.6",
+      description: "How hard the curve bends upward: 2 = gentle, 6 = hockey stick.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for the hero element.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Dark or light palette.",
+    },
+  ]}
+/>

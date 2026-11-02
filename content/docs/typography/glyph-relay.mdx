@@ -1,0 +1,89 @@
+---
+title: Glyph Relay
+description: "\"Building a product\" hands off between lines until a giant question mark resolves into \"Launching it?\""
+component: glyph-relay
+vibe: premium
+length: 114
+useWhen:
+  - "A setup-and-twist story beat where a phrase hands off between lines and ends on a giant question mark."
+  - "A rhetorical question that resolves into the product pitch."
+avoidWhen:
+  - "You only need a simple question and answer swap — use `hook-uncurl`."
+  - "You want a straight sequence of lines — use `slide-doors`."
+---
+
+<ComponentPreview name="glyph-relay" />
+
+<InstallBlock name="glyph-relay" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { GlyphRelay } from "@/components/remocn/glyph-relay";
+
+const GlyphRelayScene = () => (
+  <GlyphRelay line1={["Building a", "product"]} line2={["is", "easy."]} line3="Launching it?" />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="GlyphRelay"
+    component={GlyphRelayScene}
+    durationInFrames={146}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A phrase is handed off glyph by glyph between lines until a giant question mark resolves into the final line. Pass `line1`, `line2` (each a pair of text parts) and `line3`; it ships light and dark, over a gradient ground you can change with `ground`.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Colour scheme; ships light and dark.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent colour (any CSS colour).",
+    },
+    {
+      name: "line1",
+      type: "[string, string]",
+      default: "[\"Building a\", \"product\"]",
+      description: "First line as a pair of text parts.",
+    },
+    {
+      name: "line2",
+      type: "[string, string]",
+      default: "[\"is\", \"easy.\"]",
+      description: "Second line as a pair of text parts.",
+    },
+    {
+      name: "line3",
+      type: "string",
+      default: "\"Launching it?\"",
+      description: "Final line the question mark resolves into.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "Gradient preset used for the backdrop.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the gradient preset parameters.",
+    },
+  ]}
+/>

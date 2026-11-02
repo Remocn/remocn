@@ -1,0 +1,115 @@
+---
+title: World Signups
+description: "A dotted world map pings signup locations next to a rolling signup counter and live feed"
+component: world-signups
+vibe: data
+length: 175
+useWhen:
+  - "A growth beat showing signups arriving from cities around the world in real time."
+  - "A traction slide where a rolling counter and a live feed prove global adoption."
+  - "A launch-day recap that needs a dotted world map lighting up as users join."
+avoidWhen:
+  - "You want a single metric chart stepping through stages, not a map — use `analytics-funnel`."
+  - "The beat is a general stats dashboard with a chart and activity list — use `live-dashboard`."
+  - "You need a metric counting up in huge type with no map — use `row-count`."
+---
+
+<ComponentPreview name="world-signups" />
+
+<InstallBlock name="world-signups" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { WorldSignups } from "@/components/remocn/world-signups";
+
+const WorldSignupsScene = () => (
+  <WorldSignups title="Signups around the world" startCount={12847} accent="#3B5BFD" />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="WorldSignups"
+    component={WorldSignupsScene}
+    durationInFrames={180}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A dotted world map fades in as signup pings land on their cities one by one, heating the map while a counter rolls up, the feed lists each new user and a top-countries strip fills in. Pass `signups` (name, city, country, lon, lat, plan and the frame `at`), `startCount`, `countries`, `title` and `counterLabel` to make it yours. It ships light and dark through `theme`.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "signups",
+      type: "Signup[]",
+      default: "DEFAULT_SIGNUPS",
+      description: "Signup events with city, coordinates, plan and the frame they land at.",
+    },
+    {
+      name: "startCount",
+      type: "number",
+      default: "12847",
+      description: "Counter value before the first signup lands.",
+    },
+    {
+      name: "countries",
+      type: "CountryStat[]",
+      default: "DEFAULT_COUNTRIES",
+      description: "Top countries listed under the map, with counts.",
+    },
+    {
+      name: "title",
+      type: "string",
+      default: "\"Signups around the world\"",
+      description: "Heading of the window.",
+    },
+    {
+      name: "counterLabel",
+      type: "string",
+      default: "\"Signups today\"",
+      description: "Label next to the rolling counter.",
+    },
+    {
+      name: "delta",
+      type: "string",
+      default: "\"+18.2% vs. yesterday\"",
+      description: "Change text shown beside the counter.",
+    },
+    {
+      name: "theme",
+      type: "\"light\" | \"dark\"",
+      default: "\"light\"",
+      description: "Visual theme; ships light and dark.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for highlights and controls.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "Preset id for the gradients.sh background shader.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the shader parameters of the chosen ground.",
+    },
+  ]}
+/>

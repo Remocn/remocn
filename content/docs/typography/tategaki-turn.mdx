@@ -1,0 +1,86 @@
+---
+title: Tategaki Turn
+description: "Words drop in as vertical columns, then swing upright into one horizontal line."
+component: tategaki-turn
+vibe: clean
+length: 86
+useWhen:
+  - "A tagline that plays on reading direction, with vertical Japanese-style columns turning to a line."
+  - "A clean explainer beat where a short phrase should rearrange itself as the camera pulls out."
+  - "A minimal title with a single accent word, for a calm editorial tone."
+avoidWhen:
+  - "The phrase is long and should type out naturally — use `typewriter`."
+  - "Words should build into a phrase from the center — use `kinetic-center-build`."
+  - "You want a simple staggered entrance with no rotation — use `staggered-fade-up`."
+---
+
+<ComponentPreview name="tategaki-turn" />
+
+<InstallBlock name="tategaki-turn" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { TategakiTurn } from "@/components/remocn/tategaki-turn";
+
+const TategakiTurnScene = () => <TategakiTurn text="Read it both ways." highlight={3} />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="TategakiTurn"
+    component={TategakiTurnScene}
+    durationInFrames={120}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Each word of `text` drops in as a vertical column, letter by letter. After a hold, the columns swing 90 degrees and travel into a single horizontal line while the type scales up. The `highlight` word, the last by default, takes the accent color; it ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "text",
+      type: "string",
+      default: "\"Read it both ways.\"",
+      description: "The phrase; each word becomes a vertical column.",
+    },
+    {
+      name: "highlight",
+      type: "number",
+      description: "Index of the word set in the accent color. Defaults to the last.",
+    },
+    {
+      name: "hold",
+      type: "number",
+      default: "16",
+      description: "Frames the vertical columns hold before they turn.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Highlight color. Defaults to vermilion.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Stage color. Overrides the theme background.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark ground; ships both.",
+    },
+  ]}
+/>

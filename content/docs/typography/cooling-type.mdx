@@ -1,0 +1,121 @@
+---
+title: Cooling Type
+description: "A sentence types out glowing hot and cools to ink, ending on an italic serif word and a caret."
+component: cooling-type
+vibe: premium
+length: 110
+useWhen:
+  - "A question or hook line that should feel written live, ending on an emphasized word."
+  - "A cinematic title beat over a gradient ground where typing energy matters more than speed."
+avoidWhen:
+  - "You want a plain typed line with a blinking caret - use `typewriter`."
+  - "You want every letter to land with a bounce - use `per-character-rise`."
+  - "The text is a short label, not a sentence - use `tracking-in`."
+---
+
+<ComponentPreview name="cooling-type" />
+
+<InstallBlock name="cooling-type" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { CoolingType } from "@/components/remocn/cooling-type";
+
+const CoolingTypeScene = () => (
+  <CoolingType
+    text="What if your launch video could write itself?"
+    accentWord="itself?"
+    charFrames={1.6}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="CoolingType"
+    component={CoolingTypeScene}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Characters type in with a slightly irregular rhythm, each one starting in a hot color and cooling to the ink color; the accent word breathes in as serif italic and a caret finishes the line. Pass `text` and `accentWord`, and tune `charFrames` and `coolFrames` for pace; it ships light and dark through `theme`.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "text",
+      type: "string",
+      default: "\"What if your launch video could write itself?\"",
+      description: "Sentence to type out",
+    },
+    {
+      name: "accentWord",
+      type: "string",
+      default: "\"itself?\"",
+      description: "Word in the text set in serif italic",
+    },
+    {
+      name: "hot",
+      type: "string",
+      description: "Color of freshly typed characters",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Color of the accent word and caret",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Settled text color",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark palettes",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "Gradient ground preset id",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Partial gradient parameters to tune the ground",
+    },
+    {
+      name: "startAt",
+      type: "number",
+      default: "BEAT.start",
+      description: "Frame the first character appears",
+    },
+    {
+      name: "charFrames",
+      type: "number",
+      default: "1.6",
+      description: "Frames per character before pacing variation",
+    },
+    {
+      name: "coolFrames",
+      type: "number",
+      default: "20",
+      description: "Frames for a character to cool from hot to ink",
+    },
+    {
+      name: "seed",
+      type: "number",
+      default: "5",
+      description: "Seed for the typing rhythm jitter",
+    },
+  ]}
+/>

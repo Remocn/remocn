@@ -1,0 +1,98 @@
+---
+title: Figure to Label
+description: "A halftone-dot figure resolves on a ruled card, then collapses so a label word types out beside it."
+component: figure-to-label
+vibe: premium
+length: 117
+useWhen:
+  - "A valuation or revenue announcement where the figure should turn into the word that names it."
+  - "A premium beat that goes from a big number to a typed label with a blinking caret."
+  - "A reveal that should end with the remocn mark and an optional eyebrow above the line."
+avoidWhen:
+  - "Imagery should scroll behind the number - use `figure-reels`."
+  - "The number should simply count up - use `lumen-count`."
+  - "A caption-led stat on a dark ground is enough - use `compact-stat`."
+---
+
+<ComponentPreview name="figure-to-label" />
+
+<InstallBlock name="figure-to-label" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { FigureToLabel } from "@/components/remocn/figure-to-label";
+
+const FigureToLabelScene = () => <FigureToLabel value="$6.4B" word="valuation" eyebrow="Series B" />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="FigureToLabel"
+    component={FigureToLabelScene}
+    durationInFrames={138}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A figure built from a halftone dot field pops onto a ruled card, a wave sweeps across and the dots resolve left to right into solid digits. The card then collapses, the figure takes the accent color and the label word types out beside it with a caret, under the remocn mark. Pass `value`, `word` and an optional `eyebrow`. It ships light and dark through `theme`; `ground` and `groundParams` change the animated background.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "value",
+      type: "string",
+      default: "\"$6.4B\"",
+      description: "The figure shown on the card, such as $6.4B.",
+    },
+    {
+      name: "word",
+      type: "string",
+      default: "\"valuation\"",
+      description: "Label word typed out beside the figure.",
+    },
+    {
+      name: "eyebrow",
+      type: "string",
+      default: "\"\"",
+      description: "Text beside the mark above the line; hidden when empty.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Accent color of the figure; defaults to the theme accent.",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color; defaults to the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Stage background color; overrides the theme ground.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark palette.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "Preset id for the animated gradient ground.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the ground gradient parameters.",
+    },
+  ]}
+/>

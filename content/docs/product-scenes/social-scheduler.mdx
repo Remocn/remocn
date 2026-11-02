@@ -1,0 +1,148 @@
+---
+title: Social Scheduler
+description: "A post composer types a draft, attaches media, picks a time slot, and a toast confirms the schedule."
+component: social-scheduler
+vibe: social
+length: 206
+useWhen:
+  - "A social-media management or content-scheduling launch where schedule-in-a-click is the pitch."
+  - "A creator-tool beat that shows compose, schedule and queue in one continuous flow."
+  - "A weekly-queue scene whose slots carry hints like Best time."
+avoidWhen:
+  - "You want a phone video feed with a double-tap heart — use `reels-feed`."
+  - "You want emoji reactions on a team message — use `channel-reactions`."
+  - "You want a meeting booking flow — use `calendar-booking`."
+---
+
+<ComponentPreview name="social-scheduler" />
+
+<InstallBlock name="social-scheduler" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { SocialScheduler } from "@/components/remocn/social-scheduler";
+
+const SocialSchedulerScene = () => (
+  <SocialScheduler
+    text="We just shipped dark mode."
+    brand="Acme"
+    handle="acme"
+    pick={1}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="SocialScheduler"
+    component={SocialSchedulerScene}
+    durationInFrames={228}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A composer types `text`, attaches media and opens a time picker; the cursor chooses the slot at index `pick`, presses Schedule, and the post lands in the weekly queue with a confirming toast. Pass `text`, `brand`, `handle`, `slots` (label and optional hint), `queue` and `days` to match your product, and `mediaSrc` for the attached image. Ships light and dark.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "text",
+      type: "string",
+      default: "DEFAULT_TEXT",
+      description: "Post text typed into the composer",
+    },
+    {
+      name: "brand",
+      type: "string",
+      default: "\"remocn\"",
+      description: "Brand name on the post and queue",
+    },
+    {
+      name: "handle",
+      type: "string",
+      default: "\"remocn\"",
+      description: "Account handle on the post",
+    },
+    {
+      name: "mediaSrc",
+      type: "string",
+      description: "Image attached to the post",
+    },
+    {
+      name: "networks",
+      type: "[string, string]",
+      default: "[\"Quill\", \"Guild\"]",
+      description: "Two network names shown as toggles",
+    },
+    {
+      name: "slots",
+      type: "SchedulerSlot[]",
+      default: "DEFAULT_SLOTS",
+      description: "Time slots in the picker: label and optional hint",
+    },
+    {
+      name: "pick",
+      type: "number",
+      default: "1",
+      description: "Index of the slot the cursor picks",
+    },
+    {
+      name: "queue",
+      type: "QueuePost[]",
+      default: "DEFAULT_QUEUE",
+      description: "Existing queue posts: day, time, text, media",
+    },
+    {
+      name: "weekLabel",
+      type: "string",
+      default: "\"Oct 26 – 30, 2026\"",
+      description: "Date range label above the queue",
+    },
+    {
+      name: "days",
+      type: "string[]",
+      default: "DEFAULT_DAYS",
+      description: "Weekday column labels for the queue",
+    },
+    {
+      name: "theme",
+      type: "\"light\" | \"dark\"",
+      default: "\"light\"",
+      description: "Light or dark palette",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for highlights, buttons and progress",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "gradients.sh preset id for the backdrop shader",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the backdrop shader parameters",
+    },
+    {
+      name: "followers",
+      type: "string",
+      description: "Declared but not currently rendered",
+    },
+  ]}
+/>

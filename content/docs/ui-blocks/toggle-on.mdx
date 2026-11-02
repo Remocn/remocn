@@ -1,0 +1,94 @@
+---
+title: Toggle On
+description: "A large switch flips on, the stage lights up, and a feature label and its state write in."
+component: toggle-on
+vibe: playful
+length: 56
+useWhen:
+  - "A feature beat about a single setting being enabled, such as auto-captions or dark mode."
+  - "A short, punchy proof that a feature is one click away."
+  - "A tight cutaway between wider UI scenes that needs an unmistakable on state."
+avoidWhen:
+  - "The toggle is part of a real settings screen with several rows — use `settings-toggle-flow`."
+  - "You want a small switch inside a live UI rather than a hero object — use `switch`."
+  - "The value is a number that turns up, not a boolean — use `rotary-dial`."
+---
+
+<ComponentPreview name="toggle-on" />
+
+<InstallBlock name="toggle-on" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { ToggleOn } from "@/components/remocn/toggle-on";
+
+const ToggleOnScene = () => (
+  <ToggleOn
+    label="Auto-captions"
+    state="On"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="ToggleOn"
+    component={ToggleOnScene}
+    durationInFrames={105}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A big switch presses and flips on, the surrounding stage brightens, and the `label` and `state` words write in beside it. Pass your own `label` and `state` text; it ships light and dark through `theme`.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "label",
+      type: "string",
+      default: "\"Auto-captions\"",
+      description: "Feature name written in beside the switch.",
+    },
+    {
+      name: "state",
+      type: "string",
+      default: "\"On\"",
+      description: "State word written in after the label, such as On.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Color of the switch track when on.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color scheme. Ships light and dark.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "Shader preset id for the animated background.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Partial shader parameters that override the ground preset.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+  ]}
+/>

@@ -1,0 +1,40 @@
+import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+
+export const videoWatchPageConfig: ComponentConfig = {
+  componentName: "VideoWatchPage",
+  importPath: "@/components/remocn/video-watch-page",
+  controls: {
+    theme: {
+      type: "enum",
+      default: "light",
+      variants: {
+        light: {},
+        dark: {},
+      },
+      description: "Theme",
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    title: {
+      type: "text-content",
+      default: "Introducing remocn 2.0",
+      description: "Title",
+    },
+    speed: {
+      type: "number",
+      default: 1,
+      min: 0.25,
+      max: 4,
+      step: 0.25,
+      description: "Speed",
+      hiddenFromList: false,
+    },
+  },
+  durationInFrames: 210,
+  fps: FPS,
+  compositionWidth: W,
+  compositionHeight: H,
+};

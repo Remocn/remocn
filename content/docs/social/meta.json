@@ -7,7 +7,23 @@
     "github-sponsors",
     "x-follow-card",
     "x-followers-overview",
-    "logo-enter"
+    "logo-enter",
+    "---Creator formats---",
+    "duet-split",
+    "reels-feed",
+    "speedrun-timer",
+    "story-text",
+    "year-in-review",
+    "---Social proof---",
+    "milestone-roll",
+    "rating-laurel",
+    "testimonial-stack",
+    "upvote-burst",
+    "waitlist-swarm",
+    "---Hooks---",
+    "crash-zoom",
+    "hook-punch",
+    "pov-setup"
   ],
   "icon": "Share01Icon"
 }

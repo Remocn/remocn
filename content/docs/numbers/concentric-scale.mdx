@@ -1,0 +1,71 @@
+---
+title: Concentric Scale
+description: "Concentric dotted discs scale up step by step until the last glowing disc lands a large figure and label."
+component: concentric-scale
+vibe: data
+length: 138
+useWhen:
+  - "A scale story that jumps by orders of magnitude, such as one user to a hundred thousand."
+  - "A sequence of values that should each get a disc before the final number lands."
+  - "A data beat where the last value deserves a glowing planet-like emphasis."
+avoidWhen:
+  - "Only two values are compared as discs - use `area-compare`."
+  - "The scale should read as a rescaling axis of bars - use `log-rescale`."
+  - "A tree of multiplying branches is closer to the idea - use `branch-tree`."
+---
+
+<ComponentPreview name="concentric-scale" />
+
+<InstallBlock name="concentric-scale" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { ConcentricScale } from "@/components/remocn/concentric-scale";
+
+const ConcentricScaleScene = () => <ConcentricScale steps={[{ value: "1" }, { value: "100" }, { value: "10,000", label: "creators" }]} />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="ConcentricScale"
+    component={ConcentricScaleScene}
+    durationInFrames={175}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Dotted discs scale up one at a time as the camera pulls back, each ring labeled with a step value, until the last disc glows at its rim and its large figure and label land beside it. Pass `steps` as 2 to 7 entries of `{ value, label? }`; the label of the final step becomes the caption. It ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "steps",
+      type: "ScaleStep[]",
+      default: "DEFAULT_STEPS",
+      description: "Two to seven scale steps; each has a value and an optional label.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color of the rings and glow.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark palette.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier.",
+    },
+  ]}
+/>

@@ -1,0 +1,91 @@
+---
+title: Magnet Letters
+description: "A magnet pulls a wrong word into line, then repels it, and the right word drops in."
+component: magnet-letters
+vibe: playful
+length: 216
+useWhen:
+  - "A correction beat in a sentence, such as swapping one word for the better word, shown as a physical gag."
+  - "A launch video that contrasts the old way with the new way inside a single line."
+  - "A playful mid-video moment that rewards a slightly longer, more theatrical word swap."
+avoidWhen:
+  - "The swap should be quick and quiet - use `strikethrough-replace`."
+  - "You need several alternates cycling beside a prefix - use `inline-word-roll`."
+  - "The change is a value or number, not a word - use `slot-machine-roll`."
+---
+
+<ComponentPreview name="magnet-letters" />
+
+<InstallBlock name="magnet-letters" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { MagnetLetters } from "@/components/remocn/magnet-letters";
+
+const MagnetLettersScene = () => (
+  <MagnetLetters before="Ship " wrongWord="someday" word="today" after="." />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="MagnetLetters"
+    component={MagnetLettersScene}
+    durationInFrames={255}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A sentence settles in, a horseshoe magnet sweeps across the wrong word and lines its scattered letters up, then repels it off the line. The sentence reflows and the right word drops in letter by letter before the magnet leaves. Pass `before`, `word`, `after` and `wrongWord`. It takes a `theme` prop and ships light and dark.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "before",
+      type: "string",
+      default: "\"Launch \"",
+      description: "Text before the word that gets swapped. Keep the trailing space.",
+    },
+    {
+      name: "word",
+      type: "string",
+      default: "\"videos\"",
+      description: "The right word. It drops in once the wrong one is repelled.",
+    },
+    {
+      name: "after",
+      type: "string",
+      default: "\", in code.\"",
+      description: "Text after the swapped word.",
+    },
+    {
+      name: "wrongWord",
+      type: "string",
+      default: "\"slides\"",
+      description: "The wrong word the magnet pulls into line first, then repels.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Magnet body, landing ticks and the right word.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark ground; the component ships both.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+  ]}
+/>

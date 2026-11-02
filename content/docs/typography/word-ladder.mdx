@@ -1,0 +1,73 @@
+---
+title: Word Ladder
+description: "A word changes a letter or two per rung, climbing a ladder to the final word."
+component: word-ladder
+vibe: playful
+length: 154
+useWhen:
+  - "A transformation beat such as idea to ship in a few steps."
+  - "A word-play intro that shows progress through small changes."
+  - "A short title sequence that ends on the product's key verb."
+avoidWhen:
+  - "The letters should be rearranged into one new word — use `anagram-shuffle`."
+  - "The words are unrelated and should just swap — use `ruby-press`."
+  - "You want a fixed-width list swap — use `width-lock`."
+---
+
+<ComponentPreview name="word-ladder" />
+
+<InstallBlock name="word-ladder" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { WordLadder } from "@/components/remocn/word-ladder";
+
+const WordLadderScene = () => (
+  <WordLadder words={["idea", "item", "stem", "step", "ship"]} />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="WordLadder"
+    component={WordLadderScene}
+    durationInFrames={186}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Each word in `words` replaces the last by changing a letter or two, stepping from the first rung to the last. Pass `words` as a chain where neighbors differ slightly. It ships in light and dark through the `theme` prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "words",
+      type: "string[]",
+      default: "[\"idea\", \"item\", \"stem\", \"step\", \"ship\"]",
+      description: "Rungs of the ladder, first to last. Neighbours should differ by a letter or two.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color override; falls back to the theme accent.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark; picks the palette.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+  ]}
+/>

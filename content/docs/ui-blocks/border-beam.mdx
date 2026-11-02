@@ -1,0 +1,108 @@
+---
+title: Border Beam
+description: "A beam of light laps the border of a dark card, which then reveals a logo, title, description and command."
+component: border-beam
+vibe: premium
+length: 117
+useWhen:
+  - "A version or release announcement card that should feel premium and lit from the edge."
+  - "A hero card that reveals a logo, a title, a one-line pitch and an install command in order."
+  - "A closing beat for a launch video where the beam draws attention before the text lands."
+avoidWhen:
+  - "The beam should run as a shader on any frame rather than around a card — use `shader-pulsing-border`."
+  - "The card is a settings form that fills with fields — use `rim-draw-card`."
+  - "You want counted stats instead of a title and command — use `stat-sequence`."
+---
+
+<ComponentPreview name="border-beam" />
+
+<InstallBlock name="border-beam" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { BorderBeam } from "@/components/remocn/border-beam";
+
+const BorderBeamScene = () => (
+  <BorderBeam
+    title="Version 2.0"
+    description="Launch videos, written in React."
+    command="npx shadcn add @remocn/launch-film"
+    showLogo={false}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="BorderBeam"
+    component={BorderBeamScene}
+    durationInFrames={180}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A card rises in and a beam laps its border once. As the tail passes, a logo, the `title`, the `description` and the mono `command` line fade in one by one. Pass your own `title`, `description` and `command`; set `showLogo` to false to hide the built-in wordmark. It ships light and dark through `theme`.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "title",
+      type: "string",
+      default: "\"Version 2.0\"",
+      description: "Large title on the card.",
+    },
+    {
+      name: "description",
+      type: "string",
+      default: "\"Launch videos, written in React. Installed like shadcn.\"",
+      description: "One-line description under the title.",
+    },
+    {
+      name: "command",
+      type: "string",
+      default: "\"npx shadcn add @remocn/launch-film\"",
+      description: "Monospace command shown at the bottom of the card.",
+    },
+    {
+      name: "showLogo",
+      type: "boolean",
+      default: "true",
+      description: "Show the built-in wordmark at the top of the card.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Color of the traveling beam.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color scheme. Ships light and dark.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "Shader preset id for the animated background.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Partial shader parameters that override the ground preset.",
+    },
+  ]}
+/>

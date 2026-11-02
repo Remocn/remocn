@@ -1,0 +1,98 @@
+---
+title: Word Pullback
+description: "The camera pulls back from a big word to reveal \"The cinematic toolkit for every launch\""
+component: word-pullback
+vibe: premium
+length: 96
+useWhen:
+  - "An opener that starts on one huge word and pulls the camera back to reveal the full sentence."
+  - "A brand statement where one word in serif is the hero."
+avoidWhen:
+  - "You want media inside the sentence — use `word-gap-media`."
+  - "You want a plain line without camera motion — use `staggered-fade-up`."
+---
+
+<ComponentPreview name="word-pullback" />
+
+<InstallBlock name="word-pullback" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { WordPullback } from "@/components/remocn/word-pullback";
+
+const WordPullbackScene = () => (
+  <WordPullback before="The" accentWord="cinematic" after="toolkit for every launch" />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="WordPullback"
+    component={WordPullbackScene}
+    durationInFrames={132}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+One big word is typed, then the camera pulls back in two moves to reveal the surrounding sentence and a logo before a gradient floods the frame. Pass `before`, `accentWord` and `after`; it ships light and dark.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "before",
+      type: "string",
+      default: "\"The\"",
+      description: "Text before the accent word.",
+    },
+    {
+      name: "accentWord",
+      type: "string",
+      default: "\"cinematic\"",
+      description: "Word shown huge first, set in serif.",
+    },
+    {
+      name: "after",
+      type: "string",
+      default: "\"toolkit for every launch\"",
+      description: "Text after the accent word.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Accent colour (any CSS colour).",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text colour (any CSS colour).",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Overrides the theme background colour.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Colour scheme; ships light and dark.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "Gradient preset used for the backdrop.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the gradient preset parameters.",
+    },
+  ]}
+/>

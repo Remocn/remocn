@@ -1,0 +1,90 @@
+---
+title: Story Text
+description: "Story-style text types in word by word on rounded gradient highlight bubbles that change style"
+component: story-text
+vibe: social
+length: 138
+useWhen:
+  - "An announcement caption (\"okay, it's live\") styled like a social story text sticker."
+  - "A vertical launch clip that needs one readable sentence with personality before the demo."
+  - "A casual, handmade-feeling beat where the highlight style shifts from filled to outlined and back."
+avoidWhen:
+  - "The words should follow a voiceover with a karaoke highlight — use `caption-karaoke`."
+  - "You want plain character-by-character typing with no bubbles — use `typewriter`."
+  - "A short phrase should build in the center, pushing earlier words aside — use `kinetic-center-build`."
+---
+
+<ComponentPreview name="story-text" />
+
+<InstallBlock name="story-text" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { StoryText } from "@/components/remocn/story-text";
+
+const StoryTextScene = () => (
+  <StoryText text="okay, it's live — the update you kept asking for is finally here" />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="StoryText"
+    component={StoryTextScene}
+    durationInFrames={165}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Words pop in one at a time with a caret, each sitting on a merged rounded highlight bubble that wraps across lines. After the last word the highlight cycles through outline, plain and filled again. Pass your sentence as `text`; `measure` sets the line width as a fraction of the frame. Ships dark and light via `theme`.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "text",
+      type: "string",
+      default: "\"okay, it’s live — the update you kept asking for is finally here\"",
+      description: "The sentence to type. Wraps onto lines inside the measure.",
+    },
+    {
+      name: "measure",
+      type: "number",
+      description: "Line width as a fraction of the frame, before wrapping.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Color of the caret.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color scheme. Ships dark and light.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "gradients.sh preset id for the animated ground.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the ground shader parameters.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+  ]}
+/>

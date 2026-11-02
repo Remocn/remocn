@@ -1,0 +1,105 @@
+---
+title: Slim Count
+description: "A slim outlined numeral counts down as a wavy fill drains out of it, beside a condensed caption."
+component: slim-count
+vibe: playful
+length: 84
+useWhen:
+  - "A countdown of work removed, such as keyframes or hours left to do by hand, ending on zero."
+  - "A playful beat where the number should feel like a tank draining."
+  - "A tall, condensed headline-style number with a bold caption set beside it."
+avoidWhen:
+  - "The count rises to a big achievement figure - use `tall-count`."
+  - "You want a literal timer ticking to zero - use `shot-clock`."
+  - "The number should hard-cut rather than drain smoothly - use `smash-count`."
+---
+
+<ComponentPreview name="slim-count" />
+
+<InstallBlock name="slim-count" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { SlimCount } from "@/components/remocn/slim-count";
+
+const SlimCountScene = () => <SlimCount value={0} from={100} label="Keyframes left to set by hand" />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="SlimCount"
+    component={SlimCountScene}
+    durationInFrames={120}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A tall condensed numeral counts from `from` down to `value` while a wavy fill drains out of its outline like a tank; a bold caption rises in word by word beside it at the start. Pass `value`, `from` and `label`, with `prefix`, `suffix` or `decimals` if needed; `accent` colors the fill. It ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "value",
+      type: "number",
+      default: "0",
+      description: "The number the count lands on.",
+    },
+    {
+      name: "from",
+      type: "number",
+      default: "100",
+      description: "Starting number; the fill starts full here.",
+    },
+    {
+      name: "decimals",
+      type: "number",
+      default: "0",
+      description: "Decimal places shown.",
+    },
+    {
+      name: "prefix",
+      type: "string",
+      default: "\"\"",
+      description: "Text before the number.",
+    },
+    {
+      name: "suffix",
+      type: "string",
+      default: "\"\"",
+      description: "Text after the number.",
+    },
+    {
+      name: "label",
+      type: "string",
+      default: "\"Keyframes left to set by hand\"",
+      description: "Caption that rises in word by word.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Color of the fill; defaults to the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Stage background color; overrides the theme ground.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark palette.",
+    },
+  ]}
+/>

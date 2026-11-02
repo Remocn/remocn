@@ -1,0 +1,89 @@
+---
+title: Tldr on Top
+description: "A short TL;DR summary stacks above a dense paragraph that fades into the background."
+component: tldr-on-top
+vibe: clean
+length: 130
+useWhen:
+  - "A story beat that admits the full explanation is long and gives the short version first."
+  - "A launch recap where three one-line takeaways should sit above the full backstory."
+  - "A text-heavy scene that needs a clear reading order without cutting the long copy."
+avoidWhen:
+  - "You only have one short claim and no long body — use `less-more` for a two-line contrast."
+  - "The points should be stepped through and dimmed in sequence — use `what-sticks`."
+  - "You want the long copy to be the hero, filling the page — use `whole-page`."
+---
+
+<ComponentPreview name="tldr-on-top" />
+
+<InstallBlock name="tldr-on-top" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { TldrOnTop } from "@/components/remocn/tldr-on-top";
+
+const TldrOnTopScene = () => (
+  <TldrOnTop label="TL;DR" lines={["Every scene is a component.", "Your brand is one file."]} />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="TldrOnTop"
+    component={TldrOnTopScene}
+    durationInFrames={200}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A label and summary lines open one by one above a long body paragraph that dims behind them. Pass `lines` for the summary, `text` for the body, and `label` to rename the tag. It ships in light and dark through the `theme` prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "text",
+      type: "string",
+      default: "DEFAULT_TEXT",
+      description: "Long body paragraph shown dimmed behind the summary.",
+    },
+    {
+      name: "label",
+      type: "string",
+      default: "\"TL;DR\"",
+      description: "Tag shown above the summary lines.",
+    },
+    {
+      name: "lines",
+      type: "string[]",
+      default: "DEFAULT_LINES",
+      description: "Summary lines that open one by one on top.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Accent color override; falls back to the theme accent.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background color override; falls back to the theme background.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark; picks the palette.",
+    },
+  ]}
+/>

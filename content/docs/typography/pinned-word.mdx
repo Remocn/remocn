@@ -1,0 +1,89 @@
+---
+title: Pinned Word
+description: "A serif italic word stays pinned in a sentence while the words around it change."
+component: pinned-word
+vibe: premium
+length: 108
+useWhen:
+  - "A message where one keyword stays constant across several claims."
+  - "A tagline family such as ship, write, own the same thing."
+  - "A short sequence that anchors attention on the product word."
+avoidWhen:
+  - "The fixed part is a phrase and the changing part is a short list — use `width-lock`."
+  - "Each line should reshuffle its layout — use `layout-swap`."
+  - "You want the word inserted into a sentence — use `word-insert`."
+---
+
+<ComponentPreview name="pinned-word" />
+
+<InstallBlock name="pinned-word" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { PinnedWord } from "@/components/remocn/pinned-word";
+
+const PinnedWordScene = () => (
+  <PinnedWord lines={["Ship a video tonight.", "Own every video frame."]} word="video" hold={36} />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="PinnedWord"
+    component={PinnedWordScene}
+    durationInFrames={130}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The `word` stays fixed in italic serif while the lines around it swap in turn. Pass `lines` that each contain `word` and set `hold` for pacing. It ships in light and dark through the `theme` prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "lines",
+      type: "string[]",
+      description: "Sentences in order, each containing the pinned word.",
+    },
+    {
+      name: "word",
+      type: "string",
+      default: "\"video\"",
+      description: "Word kept fixed in italic serif.",
+    },
+    {
+      name: "hold",
+      type: "number",
+      default: "36",
+      description: "Frames each state stays on screen before the next one.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color override; falls back to the theme accent.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background color override; falls back to the theme background.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark; picks the palette.",
+    },
+  ]}
+/>

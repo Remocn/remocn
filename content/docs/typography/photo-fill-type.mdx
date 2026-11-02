@@ -1,0 +1,86 @@
+---
+title: Photo Fill Type
+description: "A word cut out of the stage opens onto a photo that fills the frame, followed by a caption."
+component: photo-fill-type
+vibe: premium
+length: 136
+useWhen:
+  - "A bold one-word title that should open into an image, such as a landscape or product shot."
+  - "An opener where the image fills the type first and then takes over the frame."
+avoidWhen:
+  - "You have no image and want text only - use `tracking-in`."
+  - "You want a masked text entrance without a photo - use `mask-reveal-up`."
+  - "You want photos around the text - use `photo-caret`."
+---
+
+<ComponentPreview name="photo-fill-type" />
+
+<InstallBlock name="photo-fill-type" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { PhotoFillType } from "@/components/remocn/photo-fill-type";
+
+const PhotoFillTypeScene = () => (
+  <PhotoFillType title="Dusk" caption="Not a photograph. Every pixel is code." src={staticFile("shots/dusk.jpg")} />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="PhotoFillType"
+    component={PhotoFillTypeScene}
+    durationInFrames={165}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The word sits as a cutout with the image visible through its letters, then expands until the image fills the frame and a caption fades in. Pass `title` and `caption`, and `src` with your own image to replace the built-in generated landscape; it ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "title",
+      type: "string",
+      default: "\"Dusk\"",
+      description: "The word cut out of the stage. Short and wide reads best (3–5 letters).",
+      description: "Word cut out of the stage; shows the image inside",
+    },
+    {
+      name: "caption",
+      type: "string",
+      default: "\"Not a photograph. Every pixel is code.\"",
+      description: "Small line that lands once the image fills the frame.",
+      description: "Line that fades in after the image fills the frame",
+    },
+    {
+      name: "src",
+      type: "string",
+      description: "Image seen through the letters. Defaults to a generated dusk landscape.",
+      description: "Image shown through the word; defaults to a generated landscape",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color (any valid CSS color)",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark palettes",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier",
+    },
+  ]}
+/>

@@ -11,7 +11,12 @@
     "long-shadow",
     "synthwave",
     "brick-mosaic",
-    "x-ray-scan"
+    "x-ray-scan",
+    "------",
+    "embossed-mark",
+    "fluted-glass",
+    "frosted-clear",
+    "led-ticker"
   ],
   "icon": "PaintBoardIcon"
 }

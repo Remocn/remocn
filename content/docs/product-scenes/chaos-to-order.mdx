@@ -1,0 +1,80 @@
+---
+title: Chaos to Order
+description: "Scattered windows, notes and toasts drop in, then snap into an organized issue tracker."
+component: chaos-to-order
+vibe: tech
+length: 98
+useWhen:
+  - "A problem-then-solution opener: too many tools and tabs, then one organized workspace."
+  - "A project-management or consolidation product where everything-in-one-place is the pitch."
+  - "A beat where an unread counter and clutter build tension before a clean reveal."
+avoidWhen:
+  - "The chaos is only notifications on a phone — use `notification-avalanche`."
+  - "You want a wireframe that resolves into the finished UI — use `wireframe-to-final`."
+  - "You want a calm tour of a finished screen — use `screenshot-tour`."
+---
+
+<ComponentPreview name="chaos-to-order" />
+
+<InstallBlock name="chaos-to-order" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { ChaosToOrder } from "@/components/remocn/chaos-to-order";
+
+const ChaosToOrderScene = () => (
+  <ChaosToOrder
+    items={["#launch-war-room", "Inbox", "Payment failed", "Standup in 2 min"]}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="ChaosToOrder"
+    component={ChaosToOrderScene}
+    durationInFrames={120}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Windows, sticky notes and toast alerts drop onto the screen while an unread counter races up, then everything is pulled to the center and replaced by a clean issues tracker window. Pass `items` to relabel the chaos pieces in drop order, and `children` to replace the tracker with your own product window. Ships dark by default and light.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "items",
+      type: "string[]",
+      default: "DEFAULT_ITEMS",
+      description: "Labels for the chaos pieces, in drop order",
+    },
+    {
+      name: "children",
+      type: "React.ReactNode",
+      description: "Your own product window shown after the snap; defaults to an issues list",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for highlights, buttons and progress",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline",
+    },
+    {
+      name: "theme",
+      type: "\"light\" | \"dark\"",
+      default: "\"dark\"",
+      description: "Light or dark palette",
+    },
+  ]}
+/>

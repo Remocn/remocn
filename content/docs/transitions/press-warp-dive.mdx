@@ -1,0 +1,121 @@
+---
+title: Press Warp Dive
+description: "A send button is pressed, the frame pinches into it and dives through an orb into the result screen"
+component: press-warp-dive
+vibe: tech
+length: 30
+useWhen:
+  - "An AI-prompt product demo where typing a request and hitting send should visibly launch the generated result."
+  - "A beat that needs a strong match-cut from a small UI control into a full-frame scene."
+  - "A launch video where the next scene is a finished artifact, such as a video, document or build."
+avoidWhen:
+  - "There is no button or clickable control to anchor the cut — use `zoom-blur` for a general push into the next scene."
+  - "The cut should feel calm and editorial rather than a dramatic dive — use `iris-wipe`."
+  - "You need a lateral, directional move between two shots — use `whip-pan`."
+---
+
+<ComponentPreview name="press-warp-dive" />
+
+<InstallBlock name="press-warp-dive" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { PressWarpDiveDemo } from "@/components/remocn/press-warp-dive";
+
+const PressWarpDiveDemoScene = () => (
+  <PressWarpDiveDemo
+    prompt="A 30-second teaser for our new editor"
+    headingB="Your teaser is ready"
+    title="Editor teaser, v1"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="PressWarpDiveDemo"
+    component={PressWarpDiveDemoScene}
+    durationInFrames={138}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Scene A is a prompt composer: a suggestion appears, the prompt types, and a cursor presses send. The press pinches the frame, an orb grows from the button, and the camera dives through it into scene B, a result screen with a heading, your image and a title. Pass `heading`, `prompt`, `headingB` and `title` for the copy and `image` for your own picture; it ships light and dark, and the transition itself is also exported as `pressWarpDive()` for a 30-frame `linearTiming` in your own `TransitionSeries`.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark palette for both scenes",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Accent color; defaults to the theme accent",
+    },
+    {
+      name: "heading",
+      type: "string",
+      default: "\"What are we launching?\"",
+      description: "Headline above the prompt box in scene A",
+    },
+    {
+      name: "prompt",
+      type: "string",
+      default: "\"A 30-second launch film for our new editor\"",
+      description: "Text typed into the prompt box before the press",
+    },
+    {
+      name: "headingB",
+      type: "string",
+      default: "\"Your film is ready\"",
+      description: "Headline of the result scene",
+    },
+    {
+      name: "title",
+      type: "string",
+      default: "\"Launch film, v2\"",
+      description: "Title of the generated result in scene B",
+    },
+    {
+      name: "image",
+      type: "string",
+      default: "staticFile(\"reel/reel-5.jpg\")",
+      description: "Image src for the result card; the default exists only in the remocn repo",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "Preset id for the scene A gradients.sh shader ground",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the scene A shader parameters",
+    },
+    {
+      name: "groundB",
+      type: "GshPresetId",
+      description: "Preset id for the scene B gradients.sh shader ground",
+    },
+    {
+      name: "groundParamsB",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the scene B shader parameters",
+    },
+    {
+      name: "transition",
+      type: "PressWarpDiveProps",
+      description: "Overrides for the transition presentation props",
+    },
+  ]}
+/>

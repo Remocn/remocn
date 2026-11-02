@@ -1,0 +1,107 @@
+---
+title: Flow Builder
+description: "A workflow canvas drops nodes, connects them, runs a packet through, and publishes with a toast."
+component: flow-builder
+vibe: clean
+length: 186
+useWhen:
+  - "An automation or workflow-builder launch where a graph must read as buildable in seconds."
+  - "A beat that proves a flow actually runs: a packet passes, timings appear, then publish."
+  - "A branching scenario where one node fans into two to explain conditional logic."
+avoidWhen:
+  - "The graph is generated from a prompt with dotted trail lines — use `node-trail`."
+  - "You want an existing graph to re-arrange itself — use `graph-relayout`."
+  - "You want build logs and a deploy status — use `deploy-pipeline`."
+---
+
+<ComponentPreview name="flow-builder" />
+
+<InstallBlock name="flow-builder" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { FlowBuilder } from "@/components/remocn/flow-builder";
+
+const FlowBuilderScene = () => (
+  <FlowBuilder
+    title="Welcome new signups"
+    workspace="acme"
+    toast="Live · runs on every signup"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="FlowBuilder"
+    component={FlowBuilderScene}
+    durationInFrames={205}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A workflow window drops in nodes one by one with connecting curves; the cursor presses Run, a packet travels through each node and its run time appears, then Publish is clicked and a toast confirms the flow is live. Pass `nodes` (id, title, subtitle, icon, color, duration and `next` ids) to define your own graph, plus `title` and `toast`. Ships light and dark.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "nodes",
+      type: "FlowNode[]",
+      default: "DEFAULT_NODES",
+      description: "Graph nodes: id, title, subtitle, icon, color, duration, next ids",
+    },
+    {
+      name: "title",
+      type: "string",
+      default: "\"Welcome new signups\"",
+      description: "Workflow name in the window title bar",
+    },
+    {
+      name: "workspace",
+      type: "string",
+      default: "\"remocn\"",
+      description: "Workspace name in the breadcrumb",
+    },
+    {
+      name: "toast",
+      type: "string",
+      default: "\"Live · runs on every signup\"",
+      description: "Text of the confirmation toast after Publish",
+    },
+    {
+      name: "theme",
+      type: "\"light\" | \"dark\"",
+      default: "\"light\"",
+      description: "Light or dark palette",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for highlights, buttons and progress",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "gradients.sh preset id for the backdrop shader",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the backdrop shader parameters",
+    },
+  ]}
+/>

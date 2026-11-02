@@ -1,0 +1,97 @@
+---
+title: Loop Break
+description: "A short loop of lines repeats faster each pass until a final line breaks it and highlights one phrase."
+component: loop-break
+vibe: clean
+length: 189
+useWhen:
+  - "A before and after beat that contrasts a tedious repeating workflow with a one-step fix."
+  - "A joke about doing the same chore over and over that ends on the product's answer."
+avoidWhen:
+  - "You want the old line struck through and replaced in place — use `strikethrough-replace`."
+  - "The change is a single edit that should be shown as a diff — use `diff-swap`."
+  - "There is no repetition, just a short statement and a reply — use `answer-first`."
+---
+
+<ComponentPreview name="loop-break" />
+
+<InstallBlock name="loop-break" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { LoopBreak } from "@/components/remocn/loop-break";
+
+const LoopBreakScene = () => (
+  <LoopBreak
+    loop={["Render the cut.", "Spot a typo.", "Start over."]}
+    fix="Change one word. Done."
+    highlight="Done."
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="LoopBreak"
+    component={LoopBreakScene}
+    durationInFrames={215}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The `loop` lines rise in one by one, hold, then rewind and replay faster on each of the `passes`. On the last pass the loop's final row is replaced by `fix`, which rises in sentence by sentence with the `highlight` phrase in the accent color while the earlier lines dim. Timing is tuned for a 215-frame composition and compresses if it is shorter. It ships light and dark.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "loop",
+      type: "string[]",
+      description: "Lines of the repeating loop; at least two.",
+    },
+    {
+      name: "fix",
+      type: "string",
+      default: "\"Change one word. Done.\"",
+      description: "Line that breaks the loop; each sentence gets its own row.",
+    },
+    {
+      name: "highlight",
+      type: "string",
+      default: "\"Done.\"",
+      description: "Phrase inside fix that turns accent-colored.",
+    },
+    {
+      name: "passes",
+      type: "number",
+      default: "3",
+      description: "How many times the loop plays before the break; minimum 2.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Accent color; overrides the theme accent.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark palette.",
+    },
+  ]}
+/>

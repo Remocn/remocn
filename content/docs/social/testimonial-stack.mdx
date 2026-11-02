@@ -1,0 +1,113 @@
+---
+title: Testimonial Stack
+description: "Social-post testimonial cards fly in one by one and pile up, with a highlighted line on each"
+component: testimonial-stack
+vibe: social
+length: 168
+useWhen:
+  - "Social proof for a launch video: three or four customer quotes with name, role and handle."
+  - "A beat where reviews arrive in sequence and a key phrase in each is highlighted."
+  - "Ending on a wall of every quote under a title, using `ending=\"fan\"`."
+avoidWhen:
+  - "You want one big quote as the hero line — use `quote-hero`."
+  - "The proof is a single rating number with reviews scrolling by — use `rating-laurel`."
+  - "The testimonial is one social account card with follower counts — use `x-follow-card`."
+---
+
+<ComponentPreview name="testimonial-stack" />
+
+<InstallBlock name="testimonial-stack" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { TestimonialStack } from "@/components/remocn/testimonial-stack";
+
+const TestimonialStackScene = () => (
+  <TestimonialStack
+    quotes={[
+      {
+        text: "We shipped our launch video in an afternoon.",
+        highlight: "in an afternoon",
+        name: "Maya Chen",
+        role: "Founder, Kitebase",
+        handle: "@mayachen",
+        source: "x",
+      },
+    ]}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="TestimonialStack"
+    component={TestimonialStackScene}
+    durationInFrames={236}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Each quote card slides in from alternating sides and lands on a growing, slightly rotated pile; the highlighted phrase is marked inside the text. With `ending="fan"` the pile then spreads into a grid under a `title` (the fan adds about 60 frames). Pass `quotes` with name, role and optional handle, stars and highlight. Ships light and dark via `theme`.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "quotes",
+      type: "TestimonialQuote[]",
+      default: "DEFAULT_QUOTES",
+      description: "Quote cards: text, name, role, plus optional highlight, handle, stars, date, source.",
+    },
+    {
+      name: "ending",
+      type: "\"pile\" | \"fan\"",
+      default: "\"pile\"",
+      description: "How the stack ends: stay as a pile, or fan out into a grid.",
+    },
+    {
+      name: "title",
+      type: "string",
+      default: "\"What builders said after launch week\"",
+      description: "Heading shown over the grid when `ending` is \"fan\".",
+    },
+    {
+      name: "theme",
+      type: "\"light\" | \"dark\"",
+      default: "\"light\"",
+      description: "Color scheme. Ships light and dark.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "framesPerQuote",
+      type: "number",
+      default: "50",
+      description: "Frames between each card landing.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "gradients.sh preset id for the animated ground.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the ground shader parameters.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Accepted for API consistency; the color comes from the ground.",
+    },
+  ]}
+/>

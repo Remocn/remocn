@@ -1,0 +1,107 @@
+---
+title: File Dropzone
+description: "Files drop into an upload dialog, progress bars fill, and an upload toast confirms the destination."
+component: file-dropzone
+vibe: clean
+length: 151
+useWhen:
+  - "A document, knowledge-base or asset-management launch where upload is the first action."
+  - "A beat showing several file types arriving with believable progress."
+  - "A confirmation moment: files appear in the list and a toast confirms."
+avoidWhen:
+  - "You want one file card filling an upload bar on a plain stage — use `drop-upload`."
+  - "Files go into a prompt box as chips — use `multi-file-drop`."
+  - "You want a table with filtering rather than uploads — use `table-filter`."
+---
+
+<ComponentPreview name="file-dropzone" />
+
+<InstallBlock name="file-dropzone" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { FileDropzone } from "@/components/remocn/file-dropzone";
+
+const FileDropzoneScene = () => (
+  <FileDropzone
+    title="Upload files"
+    destination="Research"
+    files={[{ name: "Q3-board-deck.pdf", size: 4200000 }, { name: "customers.csv", size: 640000 }]}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="FileDropzone"
+    component={FileDropzoneScene}
+    durationInFrames={195}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+An upload modal opens over an app window; file cards drop into the dropzone, rows appear with progress bars that finish at different times, then Upload is clicked and the files land in the table behind with a confirming toast. Pass `files` (name, size in bytes, optional type), `title` and `destination`. Pass `image` for the preview of image files; the default image only exists in the remocn repo. Ships light and dark.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "files",
+      type: "DropFile[]",
+      default: "DEFAULT_FILES",
+      description: "Up to three files: name, size in bytes, optional type",
+    },
+    {
+      name: "title",
+      type: "string",
+      default: "\"Upload files\"",
+      description: "Modal title",
+    },
+    {
+      name: "destination",
+      type: "string",
+      default: "\"Research\"",
+      description: "Where files go; shown in the window, rows and toast",
+    },
+    {
+      name: "image",
+      type: "string",
+      default: "staticFile(\"reel/reel-2.jpg\")",
+      description: "Preview for image files; default exists only in the remocn repo",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for highlights, buttons and progress",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline",
+    },
+    {
+      name: "theme",
+      type: "\"light\" | \"dark\"",
+      default: "\"light\"",
+      description: "Light or dark palette",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "gradients.sh preset id for the backdrop shader",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the backdrop shader parameters",
+    },
+  ]}
+/>

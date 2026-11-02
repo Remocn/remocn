@@ -1,0 +1,101 @@
+---
+title: Ruler Scrub
+description: "A ruler scrubs past ticks until the year 2026 lands in a gradient numeral"
+component: ruler-scrub
+vibe: premium
+length: 124
+useWhen:
+  - "A year or version reveal where a ruler scrubs past ticks and decelerates until the headline number, such as 2026, lands in the centre."
+  - "A 'the year launch videos became code' style statement that needs a big gradient numeral with a short label beneath."
+  - "A milestone beat where a value runs from a start to an end on a measuring scale, for example 0 to 100 with a custom format."
+avoidWhen:
+  - "The target is a calendar date rather than a single number — use `launch-date`."
+  - "You want a number counting up with digits rolling, not a scale scrubbing under a marker — use `compact-stat`."
+  - "You want a mission-clock countdown to zero — use `t-minus`."
+---
+
+<ComponentPreview name="ruler-scrub" />
+
+<InstallBlock name="ruler-scrub" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { RulerScrub } from "@/components/remocn/ruler-scrub";
+
+const RulerScrubScene = () => (
+  <RulerScrub
+    from={2012}
+    to={2026}
+    label="The year launch videos became code"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="RulerScrub"
+    component={RulerScrubScene}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A ruler fades in and scrubs quickly past its ticks, decelerating with a small settle until the final value sits under the centre mark with a flash. The ruler then drops lower and the value enlarges into a gradient numeral with a label fading in beneath. Pass `from`, `to`, `step`, `format` and `label`. It ships light and dark through the `theme` prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "from",
+      type: "number",
+      default: "2012",
+      description: "Value the scrub starts from.",
+    },
+    {
+      name: "to",
+      type: "number",
+      default: "2026",
+      description: "Value the ruler lands on.",
+    },
+    {
+      name: "step",
+      type: "number",
+      default: "1",
+      description: "Value difference between neighbouring ticks.",
+    },
+    {
+      name: "format",
+      type: "string | ((value: number) => string)",
+      default: "\"{value}\"",
+      description: "Template with {value}, or a function, to format each number.",
+    },
+    {
+      name: "label",
+      type: "string",
+      default: "\"The year launch videos became code\"",
+      description: "Line under the final value.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Colour of the centre marker and lit ticks.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier; 1 is the designed pace.",
+    },
+  ]}
+/>
