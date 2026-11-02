@@ -1,14 +1,21 @@
+import { cn } from "@/lib/utils";
+import { BLOCK_SPACING } from "./blocks/spacing";
+
+/** Packages a component needs beyond Remotion, as quiet mono tags. */
 export function Dependencies({ items }: { items: string[] }) {
   if (items.length === 0) return null;
   return (
-    <div className="not-prose my-4 flex max-w-3xl flex-wrap items-center gap-2">
-      <span className="text-xs font-medium text-muted-foreground">
-        Requires
-      </span>
+    <div
+      className={cn(
+        "not-prose flex flex-wrap items-center gap-1.5",
+        BLOCK_SPACING,
+      )}
+    >
+      <span className="mr-1 text-caption text-muted-foreground">Requires</span>
       {items.map((item) => (
         <code
           key={item}
-          className="rounded-lg border border-border bg-muted/40 px-2 py-0.5 font-mono text-xs text-foreground"
+          className="flex h-6 items-center rounded-tag bg-surface px-[7px] font-mono text-mono text-foreground shadow-[0_0_0_1px_var(--color-hairline)]"
         >
           {item}
         </code>

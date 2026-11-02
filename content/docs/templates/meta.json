@@ -1,5 +1,6 @@
 {
   "title": "Templates",
+  "icon": "PlaySquareIcon",
   "collapsible": false,
   "pages": [
     "release-teaser",

@@ -1,61 +1,63 @@
 import { RootProvider } from "fumadocs-ui/provider/next";
 import type { ReactNode } from "react";
-import { DocsHeader } from "@/components/docs/docs-header";
+import { PageShell } from "@/app/(home)/components/page-shell";
+import { SiteFooter } from "@/app/(home)/components/site-footer";
+import { SiteHeader } from "@/app/(home)/components/site-header";
 import { DocsShell } from "@/components/docs/docs-shell";
-import { DocsTabsBar } from "@/components/docs/docs-tabs-bar";
-import { splitDocsTree } from "@/lib/docs-tabs";
-import { withNewBadges } from "@/lib/with-new-badges";
-import remocnRegistry from "@/registry/remocn/registry.json";
+import { HeaderSearch } from "@/components/docs/shell/header-search";
+import {
+  buildSidebarModel,
+  type SidebarModel,
+} from "@/components/docs/shell/sidebar-model";
+import { DOCS_LAYOUT, docsLayoutVars } from "@/lib/docs-layout";
+import { DOCS_TABS, type DocsTabId, splitDocsTree } from "@/lib/docs-tabs";
 import iconsRegistry from "@/registry/remocn-icons/registry.json";
-import templatesRegistry from "@/registry/remocn-templates/registry.json";
-import uiRegistry from "@/registry/remocn-ui/registry.json";
 import { source } from "@/source";
 
-const componentCount = [
-  ...remocnRegistry.items,
-  ...uiRegistry.items,
-  ...iconsRegistry.items,
-  ...templatesRegistry.items,
-].filter((item) => item.type === "registry:component").length;
+const iconCount = iconsRegistry.items.filter(
+  (item) => item.type === "registry:component",
+).length;
 
-export default async function Layout({ children }: { children: ReactNode }) {
-  // Decorate the shared page tree with the animated "NEW" sidebar badge (see
-  // `withNewBadges`), then split it into the Components / Primitives tab trees
-  // (see `splitDocsTree`). Both run on the server; `DocsShell` picks the tree
-  // matching the active tab by pathname so each category owns its own sidebar.
-  const {
-    components,
-    primitives,
-    shaders,
-    filters,
-    captions,
-    templates,
-    icons,
-  } = splitDocsTree(withNewBadges(source.pageTree));
+export default function Layout({ children }: { children: ReactNode }) {
+  // Split the page tree into one tree per library and flatten each into a
+  // plain sidebar model on the server; the shell picks one by pathname.
+  const trees = splitDocsTree(source.pageTree);
+  const models = Object.fromEntries(
+    DOCS_TABS.map((tab) => [
+      tab.id,
+      buildSidebarModel(tab.id, tab.label, trees[tab.id], {
+        icons: iconCount,
+      }),
+    ]),
+  ) as Record<DocsTabId, SidebarModel>;
 
   return (
-    // fumadocs search + sidebar context lives here (docs-only) instead of the
-    // root layout, so non-docs routes never compile fumadocs-ui. `theme.enabled:
-    // false` defers to the root next-themes ThemeProvider — no double provider.
+    // fumadocs search context lives here (docs-only) instead of the root
+    // layout, so non-docs routes never compile fumadocs-ui. `theme.enabled:
+    // false` defers to the root next-themes ThemeProvider.
     <RootProvider theme={{ enabled: false }}>
-      {/* Custom remocn chrome: the main header (logo + site nav + actions), then
-          a thin bar holding the Components/Primitives switcher. Both are static
-          (non-sticky) and content-aligned so they track the docs grid — logo
-          over the sidebar, tabs starting at the article column's left edge. */}
-      <DocsHeader />
-      <DocsTabsBar />
-      <DocsShell
-        componentsTree={components}
-        primitivesTree={primitives}
-        shadersTree={shaders}
-        filtersTree={filters}
-        captionsTree={captions}
-        templatesTree={templates}
-        iconsTree={icons}
-        componentCount={componentCount}
-      >
-        {children}
-      </DocsShell>
+      <PageShell>
+        {/* Frame sizes as CSS variables (`lib/docs-layout.ts`); `contents`
+            keeps the flex column of the page shell intact. The docs layout
+            lab finds this element and rewrites the variables live. */}
+        <div
+          data-docs-layout
+          className="contents"
+          style={docsLayoutVars(DOCS_LAYOUT)}
+        >
+          {/* The docs grid is wider than the landing column: at `xl` the
+            shared header stretches to the docs frame (`lib/docs-layout.ts`), and sits
+            20px from the top like the docs artboards (28px on the landing). */}
+          <div className="lg:[&>header>div]:pt-5 xl:[&>header>div]:max-w-(--docs-frame) xl:[&>header>div]:px-(--docs-gutter)">
+            <SiteHeader mobileAction={<HeaderSearch />} />
+          </div>
+          <DocsShell models={models}>{children}</DocsShell>
+          {/* Same frame for the footer, with the docs' hairline on top. */}
+          <div className="border-hairline lg:border-t lg:pt-7 lg:[&>footer]:pb-8 xl:[&_.landing-container]:max-w-(--docs-frame) xl:[&_.landing-container]:px-(--docs-gutter)">
+            <SiteFooter />
+          </div>
+        </div>
+      </PageShell>
     </RootProvider>
   );
 }

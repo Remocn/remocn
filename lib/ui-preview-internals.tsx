@@ -16,15 +16,6 @@ import type { BackdropFill } from "@/registry/remocn/backdrop";
 import { Backdrop } from "@/registry/remocn/backdrop";
 
 /**
- * Shared internals for the docs preview widgets. Extracted verbatim from
- * `components/docs/component-preview.tsx` so both the original `ComponentPreview`
- * (animation tier) and the `UiComponentPreview` (ui tier) consume one
- * implementation — no copy-paste drift on the shared path.
- *
- * `getDefaults` already lives in `lib/customizer-config.ts`; reuse it from there.
- */
-
-/**
  * Build nuqs parsers + URL keys from a control config. Each control becomes a
  * URL-synced query param prefixed with the component name (dashes → underscores)
  * so multiple previews on one page never collide.
@@ -55,15 +46,10 @@ export function buildParsers(name: string, controls: ControlConfig) {
 }
 
 /**
- * D2 — lazy-mount the Remotion player. Until the stage enters the viewport
- * (IntersectionObserver) or the user clicks the poster, render a labeled
- * poster button that exactly matches the Suspense fallback dimensions, so the
- * live Player swaps in with zero layout shift.
- *
- * Timing fields are passed flat (durationInFrames/fps/compositionWidth/
- * compositionHeight) so the caller can source them from either the registry
- * config (animation tier) or the example entry (ui tier — D2: example owns
- * timing).
+ * Lazy-mounted Remotion player with its own controls, for the changelog and
+ * the embed route (the docs pages use `components/docs/blocks/player`). Until
+ * the stage nears the viewport or the poster is clicked, a labeled poster
+ * button holds the same 16:9 box, so the Player swaps in without a shift.
  */
 export function PreviewStage({
   name,
@@ -117,7 +103,7 @@ export function PreviewStage({
   // it shows the "playing" UI but the frame loop never starts — the preview
   // looks frozen until a manual pause/play. Instead the Player mounts paused and
   // we drive play() via the ref on the next animation frame, retrying once if
-  // the first call didn't take. Mirrors stars/hooks/use-player-controls.ts.
+  // the first call didn't take.
   useEffect(() => {
     if (!mounted || reducedMotion) return;
     let raf1 = 0;
@@ -136,9 +122,11 @@ export function PreviewStage({
     };
   }, [mounted, reducedMotion]);
 
+  // Pause while off screen (a reduced-motion reader may still press play),
+  // resume only what this observer paused.
   const pausedByStage = useRef(false);
   useEffect(() => {
-    if (!mounted || reducedMotion) return;
+    if (!mounted) return;
     const el = frameRef.current;
     if (!el || typeof IntersectionObserver === "undefined") return;
     const observer = new IntersectionObserver(
@@ -160,7 +148,7 @@ export function PreviewStage({
     );
     observer.observe(el);
     return () => observer.disconnect();
-  }, [mounted, reducedMotion]);
+  }, [mounted]);
 
   const compProps = useMemo<
     // biome-ignore lint/suspicious/noExplicitAny: dynamically-loaded Remotion composition, props shape varies per component
@@ -201,12 +189,7 @@ export function PreviewStage({
       )}
     >
       {mounted ? (
-        <div
-          className={cn(
-            "size-full",
-            !reducedMotion && "animate-in fade-in duration-300 ease-out",
-          )}
-        >
+        <div className="size-full animate-in fade-in duration-200 ease-[ease]">
           <Player
             ref={playerRef}
             {...compProps}
@@ -218,6 +201,9 @@ export function PreviewStage({
             style={{ width: "100%", height: "100%" }}
             controls
             loop
+            // Browsers block autoplay with sound; the controls' volume
+            // button turns it back on.
+            initiallyMuted
             acknowledgeRemotionLicense
           />
         </div>

@@ -3,36 +3,93 @@ title: Showcase reel
 description: A fast ~30-second reel where every item in a collection gets its own beat — the one we shipped the typography wave with
 ---
 
+import { GuideNotes, GuideMoreLink } from "@/components/docs/guides/director-notes";
+import { GuideCount } from "@/components/docs/guides/guide-ui";
+import { GuideNote } from "@/components/docs/guides/note";
+import { GuidePrompt } from "@/components/docs/guides/prompt-block";
+import { GuideRenderCard } from "@/components/docs/guides/render-card";
+import { GuideBeatList, GuideStoryboard } from "@/components/docs/guides/storyboard";
+import { GuideFacts } from "@/components/docs/guides/video-facts";
+import { GuideWords } from "@/components/docs/guides/words-form";
+
 <GuideVideo
   src="https://cdn.remocn.dev/videos/typography.mp4"
   poster="https://cdn.remocn.dev/posters/typography.png"
+  label="The typography wave showcase reel"
+  duration={30}
+/>
+
+<GuideFacts
+  facts={[
+    { value: "~30 s", label: "running time" },
+    { value: "7 beats", label: "the reel is most of it" },
+    { value: "1920×1080", label: "30 fps, landscape" },
+  ]}
 />
 
 This is the video we shipped eighteen new text animations with. The trick that carries it: nothing is described — every item gets two seconds of stage and demonstrates itself. If you have a collection — templates, integrations, themes, effects — this recipe turns the list into a reel.
 
-## The storyboard
+## The storyboard<GuideCount n={7} />
 
-1. **The hook** — one line on why this collection matters.
-2. **The number** — the count lands big. In ours, "18 new text animations".
-3. **The reel** — the heart of the video: one item per beat, a small counter ticking in a corner while items change, each item named with its own motion. If your items are visual, each one demonstrates itself.
-4. **The mechanism** — one line on the property every item shares.
-5. **The value** — two or three claims stack up.
-6. **The close** — a terminal types your command or link.
-7. **The lockup** — your logo and a closing line.
+<GuideStoryboard
+  beats={[
+    { label: "Hook", seconds: 3, look: "slide" },
+    { label: "Number", seconds: 3, look: "number" },
+    { label: "Reel", seconds: 14, look: "montage" },
+    { label: "Mechanism", seconds: 3, look: "line" },
+    { label: "Value", seconds: 3, look: "stack" },
+    { label: "Close", seconds: 2, look: "terminal" },
+    { label: "Lockup", seconds: 2, look: "logo" },
+  ]}
+/>
 
-## Your words
+<GuideBeatList>
 
-- **The collection** — what the things are, and the count
+1. **The hook** — One line on why this collection matters.
+2. **The number** — The count lands big. In ours, "18 new text animations".
+3. **The reel** — The heart of the video: one item per beat, a small counter ticking in a corner while items change, each item named with its own motion. If your items are visual, each one demonstrates itself.
+4. **The mechanism** — One line on the property every item shares.
+5. **The value** — Two or three claims stack up.
+6. **The close** — A terminal types your command or link.
+7. **The lockup** — Your logo and a closing line.
+
+</GuideBeatList>
+
+## Your words<GuideCount n={7} />
+
+<GuideWords
+  examples={[
+    { blank: ["<N>", "<THINGS>"] },
+    { blank: ["<HOOK LINE>"] },
+    { blank: ["<ITEM LIST>"] },
+    { blank: ["<MECHANISM LINE>"] },
+    { blank: ["<CLAIMS>"] },
+    { blank: ["<COMMAND OR LINK>"] },
+    { blank: ["<CLOSING LINE>"] },
+  ]}
+>
+
+- **The collection** — What the things are, and the count
 - **Hook line**
-- **The items** — six to eighteen names, one or two words each. Fewer than six? Make a [Feature announcement](/docs/guides/feature-announcement) instead.
-- **Mechanism line** — the property every item shares
+- **The items** — Six to eighteen names, one or two words each. Fewer than six? Make a [Feature announcement](/docs/guides/feature-announcement) instead.
+- **Mechanism line** — The property every item shares
 - **Two or three value claims**
 - **Command or link**
 - **Closing line**
 
+</GuideWords>
+
+<GuideNote icon="image">
+
 Struggling with the lines? [Words on screen](/docs/guides/words-on-screen) is the cheat sheet.
 
+</GuideNote>
+
 ## The prompt
+
+Paste it into your agent with your words in place of the highlighted blanks.
+
+<GuidePrompt>
 
 ```text
 I'm making a showcase reel with remocn (remocn.dev).
@@ -60,15 +117,29 @@ video. Keep the reel snappy — no long holds, effect after effect. Use my copy
 exactly as written.
 ```
 
+</GuidePrompt>
+
 ## Directing the result
+
+<GuideNotes>
 
 - "The reel drags in the middle — tighten items six through ten."
 - "The counter is too prominent — smaller and dimmer."
 - "Item four moves like item three — give it a different motion."
 - "Hold the number beat a little longer."
 
+</GuideNotes>
+
+<GuideMoreLink>
+
 More directing vocabulary: [Directing your agent](/docs/guides/directing-your-agent).
+
+</GuideMoreLink>
 
 ## Get the file
 
-Ask your agent: **"Render the video."** You'll get an `.mp4` in the project folder, ready to post.
+<GuideRenderCard prompt="Render the video.">
+
+You'll get an `.mp4` in the project folder, ready to post.
+
+</GuideRenderCard>

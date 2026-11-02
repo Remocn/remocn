@@ -40,4 +40,5 @@ export const valueSwapConfig: ComponentConfig = {
   compositionHeight: H,
   previewBackdrop: { type: "color", value: "#141318" },
   snippet: valueSwapExampleCode,
+  card: { props: { color: "#0E1012" } },
 };

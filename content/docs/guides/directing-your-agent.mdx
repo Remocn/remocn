@@ -3,13 +3,32 @@ title: Directing your agent
 description: The first cut is a draft — how to get from there to the video you meant
 ---
 
+import { GuideCount } from "@/components/docs/guides/guide-ui";
+import { DirectingFinish } from "@/components/docs/guides/practice/directing-finish";
+import { DirectingLoop } from "@/components/docs/guides/practice/directing-loop";
+import { DirectingOptions } from "@/components/docs/guides/practice/directing-options";
+import { DirectingPhrases } from "@/components/docs/guides/practice/directing-phrases";
+import { DirectingRedirect } from "@/components/docs/guides/practice/directing-redirect";
+import { GuidePrompt } from "@/components/docs/guides/prompt-block";
+
 Your agent's first cut will be roughly right and specifically wrong. That's not failure — that's where directing starts. You watch, you say what's off in plain sentences, you watch again. Two or three rounds is normal.
 
 ## The loop
 
-1. Watch the whole video once, start to finish, without commenting.
-2. Go beat by beat and say what's wrong, referring to beats by number.
-3. Put several notes in one message — one sentence per note.
+<DirectingLoop>
+
+1. **Watch** — Watch the whole video once, start to finish, without commenting.
+2. **Note beat by beat** — Go beat by beat and say what's wrong, referring to beats by number.
+3. **One message** — Put several notes in one message — one sentence per note.
+
+**Watch again** — two or three rounds is normal
+
+</DirectingLoop>
+
+<GuidePrompt
+  copyLabel="Copy"
+  marks={["In beat 1", "In beat 3", "beat 5"]}
+>
 
 ```text
 In beat 1, hold each line longer — I can't finish reading.
@@ -17,33 +36,61 @@ In beat 3, the background is too loud, calm it down.
 Cut beat 5 entirely.
 ```
 
-## Pacing words
+</GuidePrompt>
+
+## Pacing words<GuideCount n={4} />
+
+<DirectingPhrases>
 
 - **"Hold it longer"** / "it goes by too fast"
-- **"Tighter"** — cut the dead air between beats
-- **"Let it breathe"** — add a pause after a big moment
+- **"Tighter"** — Cut the dead air between beats
+- **"Let it breathe"** — Add a pause after a big moment
 - **"Make the whole thing two seconds shorter"**
 
-## Motion words
+</DirectingPhrases>
 
-- **"Snappier"** — faster, more decisive movement
-- **"Softer"** / "calmer" — less travel, less drama
-- **"Come in from the left"** (or right, or below)
-- **"Less bouncy"** — when things wobble too much
-- **"The background is too loud"** — dim it or slow it down
+## Motion words<GuideCount n={5} />
+
+<DirectingPhrases>
+
+- **"Snappier"** — Faster, more decisive movement
+- **"Softer"** / "calmer" — Less travel, less drama
+- **"Come in from the left"** — Or right, or below
+- **"Less bouncy"** — When things wobble too much
+- **"The background is too loud"** — Dim it or slow it down
+
+</DirectingPhrases>
 
 ## Asking for options
 
-When you can't name what's wrong, don't try — ask for variants instead: *"Show me two different openings for beat 1."* Watch both, pick one, move on.
+When you can't name what's wrong, don't try — ask for variants instead.
+
+<DirectingOptions>
+
+"Show me two different openings for beat 1."
+
+</DirectingOptions>
+
+Watch both, pick one, move on.
 
 ## Redirect or restart
 
 The one judgment call that saves the most time:
 
-- **The details are wrong** — pacing, a color, one beat's motion → direct, with the words above.
-- **The structure is wrong** — wrong story, wrong order, wrong number of beats → don't patch it. Rewrite your beat list and prompt again from scratch. Rebuilding structure through comments is always slower than restating it.
+<DirectingRedirect>
+
+- **The details are wrong** — Pacing, a color, one beat's motion. → **Direct**, with the words above.
+- **The structure is wrong** — Wrong story, wrong order, wrong number of beats. → **Restart**, don't patch it. Rewrite your beat list and prompt again from scratch.
+
+Rebuilding structure through comments is always slower than restating it.
+
+</DirectingRedirect>
 
 ## Finishing
 
-- **"Render the video."** — you get an `.mp4` in the project folder.
-- Need another shape? Ask: *"Render a vertical version too."*
+<DirectingFinish>
+
+- **"Render the video."** — You get an `.mp4` in the project folder.
+- **"Render a vertical version too."** — Need another shape? Ask.
+
+</DirectingFinish>

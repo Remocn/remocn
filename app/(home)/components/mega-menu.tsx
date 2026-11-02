@@ -80,7 +80,7 @@ export function MegaMenuPanel({
             y: -6,
             transition: reduced
               ? { duration: 0 }
-              : { duration: 0.13, ease: "easeIn" },
+              : { duration: 0.13, ease: "easeOut" },
           },
         }}
         className="origin-top rounded-[20px] bg-popover p-3 text-popover-foreground shadow-lg ring-1 ring-foreground/5 dark:ring-foreground/10"
@@ -197,7 +197,7 @@ function MenuRow({
       onMouseEnter={onHover}
       onFocus={onHover}
       className={cn(
-        "flex min-w-0 items-center rounded-lg px-3 text-sm font-medium transition-colors duration-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
+        "flex min-w-0 items-center rounded-lg px-3 text-sm font-medium transition-colors duration-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
         hovered ? "bg-muted text-foreground" : "text-muted-foreground",
       )}
     >

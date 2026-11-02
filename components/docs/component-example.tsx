@@ -1,38 +1,29 @@
 "use client";
 
-import { Suspense } from "react";
-import { PreviewStage } from "@/lib/ui-preview-internals";
+import { DocsPlayer } from "./blocks/player/docs-player";
+import { UnknownBlock } from "./blocks/player/player-fallback";
+import { BLOCK_SPACING } from "./blocks/spacing";
 import { examples } from "./examples";
 
+const NO_PROPS = {};
+/** A fixed recipe scene in the docs player, without toolbar or customizer. */
 export function ComponentExample({ name }: { name: string }) {
   const entry = examples[`${name}-example`];
-
-  if (!entry) {
-    return (
-      <div className="not-prose mb-6 rounded-lg border border-fd-border p-4 text-sm text-fd-muted-foreground">
-        Unknown example: <code>{name}</code>
-      </div>
-    );
-  }
+  if (!entry) return <UnknownBlock kind="example" name={name} />;
 
   return (
-    <Suspense
-      fallback={
-        <div className="not-prose mb-6 aspect-[1.9/1] w-full animate-pulse rounded-2xl bg-muted" />
-      }
-    >
-      <div className="not-prose mb-6">
-        <PreviewStage
-          name={`${name}-example`}
-          Component={entry.Component}
-          inputProps={{}}
-          durationInFrames={entry.durationInFrames}
-          fps={entry.fps}
-          compositionWidth={entry.width}
-          compositionHeight={entry.height}
-          previewBackdrop={entry.previewBackdrop}
-        />
-      </div>
-    </Suspense>
+    <DocsPlayer
+      name={`${name}-example`}
+      className={BLOCK_SPACING}
+      composition={{
+        Component: entry.Component,
+        inputProps: NO_PROPS,
+        durationInFrames: entry.durationInFrames,
+        fps: entry.fps,
+        compositionWidth: entry.width,
+        compositionHeight: entry.height,
+        previewBackdrop: entry.previewBackdrop,
+      }}
+    />
   );
 }

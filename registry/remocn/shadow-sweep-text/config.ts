@@ -79,4 +79,5 @@ export const shadowSweepTextConfig: ComponentConfig = {
   compositionWidth: W,
   compositionHeight: H,
   previewBackdrop: { type: "color", value: "#030012" },
+  card: { backdrop: true },
 };

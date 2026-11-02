@@ -1,116 +1,64 @@
 "use client";
 
-import type { Root } from "fumadocs-core/page-tree";
-import { DocsLayout } from "fumadocs-ui/layouts/docs";
-import { SearchTrigger } from "fumadocs-ui/layouts/shared/slots/search-trigger";
 import { usePathname } from "next/navigation";
-import { type ReactNode, useMemo } from "react";
-import { DocsSearchTrigger } from "@/components/docs/docs-search-trigger";
-import { getActiveDocsTab } from "@/lib/docs-tabs";
-import { baseOptions } from "@/lib/layout.shared";
+import {
+  createContext,
+  type ReactNode,
+  useContext,
+  useMemo,
+  useState,
+} from "react";
+import { type DocsTabId, getActiveDocsTab } from "@/lib/docs-tabs";
+import { DocsSidebar } from "./shell/docs-sidebar";
+import { SectionsSheet } from "./shell/sections-sheet";
+import type { SidebarModel } from "./shell/sidebar-model";
+
+type ShellState = { openSections: () => void };
+
+const ShellContext = createContext<ShellState | null>(null);
+
+/** Lets the mobile page bar open the sections sheet the shell owns. */
+export function useDocsShell(): ShellState {
+  const value = useContext(ShellContext);
+  if (!value) throw new Error("useDocsShell must be used inside DocsShell");
+  return value;
+}
 
 /**
- * Renders the Fumadocs `DocsLayout` with the sidebar tree that matches the
- * active docs tab. Both trees are built once on the server (in `app/docs/layout`)
- * and handed down; this client shell only picks between them by pathname, so the
- * Each docs category gets its own sidebar without moving files or changing
- * URLs. The page body arrives as server-rendered `children`,
- * so the RSC boundary stays intact — only the layout chrome is client-rendered.
- *
- * The `DocsLayout` props mirror the previous server layout: the custom
- * `DocsHeader` above owns the only top nav (`nav` disabled), search renders in
- * the sidebar header, and the theme switch / collapse trigger / sidebar footer
- * are suppressed. The decorative grid scopes a dotted backdrop to the content
- * column for visual continuity with the landing hero.
- *
- * `containerProps` sets `--fd-banner-height` to the sticky `DocsTabsBar` height
- * (h-11 = 2.75rem). fumadocs derives `--fd-docs-row-1: var(--fd-banner-height, 0px)`
- * and sticks the sidebar/TOC at `top-(--fd-docs-row-1)`, dropping them just below
- * the pinned tab bar instead of letting the bar overlap the sidebar top.
- *
- * On the icons tab the sidebar is disabled, but fumadocs still reserves the
- * `--fd-sidebar-width` (268px at md) gutter on the layout, indenting the article
- * away from the header/tab left edge. Forcing `--fd-sidebar-width:0px` (important,
- * to beat the sidebar slot's `md:layout:[--fd-sidebar-width:268px]`) collapses that
- * gutter so the content aligns flush-left under the logo and tabs.
- *
- * The grid's own `--fd-layout-width` is left at the fumadocs default (97rem) — the
- * chrome (DocsHeader/DocsTabsBar) is pinned to the same 97rem so everything shares
- * one centered block. (Forcing a narrower 1400px here only enlarged the side
- * gutters, pushing the sidebar inward.)
+ * Docs frame between the site header and footer: the sticky sidebar on the
+ * left (from `lg`) and the page (article + right rail, rendered by the page
+ * itself). Every library's sidebar model is built once on the server; the
+ * shell picks the one matching the current path, so the library switcher only
+ * has to navigate. Below `lg` the same model renders in the sections sheet.
  */
 export function DocsShell({
-  componentsTree,
-  primitivesTree,
-  shadersTree,
-  filtersTree,
-  captionsTree,
-  templatesTree,
-  iconsTree,
-  componentCount,
+  models,
   children,
 }: {
-  componentsTree: Root;
-  primitivesTree: Root;
-  shadersTree: Root;
-  filtersTree: Root;
-  captionsTree: Root;
-  templatesTree: Root;
-  iconsTree: Root;
-  componentCount: number;
+  models: Record<DocsTabId, SidebarModel>;
   children: ReactNode;
 }) {
-  const searchTriggerFull = useMemo(() => {
-    function SearchTriggerFull({
-      hideIfDisabled,
-    }: {
-      hideIfDisabled?: boolean;
-    }) {
-      return (
-        <DocsSearchTrigger
-          count={componentCount}
-          hideIfDisabled={hideIfDisabled}
-        />
-      );
-    }
-    return SearchTriggerFull;
-  }, [componentCount]);
   const pathname = usePathname();
-  const activeTab = getActiveDocsTab(pathname);
-  const isIcons = activeTab === "icons";
-  const trees: Record<typeof activeTab, Root> = {
-    components: componentsTree,
-    primitives: primitivesTree,
-    shaders: shadersTree,
-    filters: filtersTree,
-    captions: captionsTree,
-    templates: templatesTree,
-    icons: iconsTree,
-  };
-  const tree = trees[activeTab];
+  const tab = getActiveDocsTab(pathname);
+  const model = models[tab];
+  const [sectionsOpen, setSectionsOpen] = useState(false);
+  const value = useMemo<ShellState>(
+    () => ({ openSections: () => setSectionsOpen(true) }),
+    [],
+  );
 
   return (
-    <DocsLayout
-      tree={tree}
-      {...baseOptions()}
-      nav={{ enabled: false }}
-      searchToggle={{ enabled: true }}
-      slots={{
-        searchTrigger: { sm: SearchTrigger, full: searchTriggerFull },
-      }}
-      themeSwitch={{ enabled: false }}
-      sidebar={{ collapsible: false, enabled: !isIcons }}
-      containerProps={{
-        className: isIcons
-          ? "[--fd-banner-height:2.75rem] [--fd-sidebar-width:0px]!"
-          : "[--fd-banner-height:2.75rem]",
-      }}
-    >
-      <div
-        aria-hidden
-        className="pointer-events-none -z-10 h-[360px] w-full self-start [grid-area:main] bg-grid-fade"
+    <ShellContext.Provider value={value}>
+      <div className="mx-auto flex w-full max-w-(--docs-frame) flex-1 items-stretch lg:px-(--docs-gutter)">
+        <DocsSidebar model={model} activeUrl={pathname} />
+        <div className="flex min-w-0 flex-1 flex-col">{children}</div>
+      </div>
+      <SectionsSheet
+        open={sectionsOpen}
+        onOpenChange={setSectionsOpen}
+        model={model}
+        activeUrl={pathname}
       />
-      {children}
-    </DocsLayout>
+    </ShellContext.Provider>
   );
 }

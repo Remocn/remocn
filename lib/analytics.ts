@@ -27,6 +27,11 @@ type AnalyticsEvents = {
     package_manager: "pnpm" | "npm" | "yarn" | "bun" | "prompt";
     surface: "docs" | "landing" | "bento";
   };
+  install_prompt_opened: {
+    component: string;
+    agent: "claude" | "chatgpt" | "cursor";
+    surface: "docs";
+  };
   preview_played: {
     component: string;
     surface: PreviewSurface;

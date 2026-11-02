@@ -3,34 +3,101 @@ title: Teaser
 description: The ~15-second pre-launch video — something is coming, here is its name, here is the date
 ---
 
+import { GuideNotes, GuideMoreLink } from "@/components/docs/guides/director-notes";
+import { GuideCount } from "@/components/docs/guides/guide-ui";
+import { GuideNote } from "@/components/docs/guides/note";
+import { GuidePrompt } from "@/components/docs/guides/prompt-block";
+import { GuideCallout, GuideRenderCard } from "@/components/docs/guides/render-card";
+import { GuideBeatList, GuideStoryboard } from "@/components/docs/guides/storyboard";
+import { GuideStoryboardPreview } from "@/components/docs/guides/storyboard-preview";
+import { GuideFacts } from "@/components/docs/guides/video-facts";
+import { GuideWords } from "@/components/docs/guides/words-form";
+
+<GuideStoryboardPreview
+  beats={[
+    { label: "The itch", seconds: 3, frame: { line: "Every launch needs a video" } },
+    { label: "The tease", seconds: 3, frame: { line: "Yours shouldn't take a week" } },
+    { label: "The reveal", seconds: 4, frame: { name: "remocn", sub: "Cinematic video components for React" } },
+    { label: "The date", seconds: 3, frame: { big: "March 12" } },
+    { label: "The lockup", seconds: 2, frame: { logo: "remocn.dev" } },
+  ]}
+/>
+
+<GuideFacts
+  facts={[
+    { value: "~15 s", label: "running time" },
+    { value: "5 beats", label: "five is the ceiling" },
+    { value: "1920×1080", label: "30 fps, landscape" },
+  ]}
+/>
+
 The teaser is the shortest video in these guides. Fifteen seconds, one job: something is coming, here is its name, here is the date or the waitlist link. You make it before launch day — when there's nothing to demo yet and the whole point is the itch. Short is the feature: a fifteen-second teaser loops well in a feed and earns rewatches. Resist adding beats.
 
-## The storyboard
+## The storyboard<GuideCount n={5} />
 
-1. **The itch** — one line naming the problem or the hunger. No product yet.
-2. **The tease** — a second line promising something is coming. Still no name.
-3. **The reveal** — the product name lands, with one quiet line on what it is.
-4. **The date** — the launch date, or "Join the waitlist", big and alone.
-5. **The lockup** — your logo or wordmark and the URL.
+<GuideStoryboard
+  beats={[
+    { label: "The itch", seconds: 3, look: "line" },
+    { label: "The tease", seconds: 3, look: "tease" },
+    { label: "The reveal", seconds: 4, look: "reveal" },
+    { label: "The date", seconds: 3, look: "date" },
+    { label: "The lockup", seconds: 2, look: "logo" },
+  ]}
+/>
+
+<GuideBeatList>
+
+1. **The itch** — One line naming the problem or the hunger. No product yet.
+2. **The tease** — A second line promising something is coming. Still no name.
+3. **The reveal** — The product name lands, with one quiet line on what it is.
+4. **The date** — The launch date, or "Join the waitlist", big and alone.
+5. **The lockup** — Your logo or wordmark and the URL.
+
+</GuideBeatList>
+
+<GuideCallout>
 
 Five beats is the ceiling. If you're tempted to add a sixth, you're making a [Launch video](/docs/guides/launch-video) — save it for launch day.
 
-## Your words
+</GuideCallout>
+
+## Your words<GuideCount n={6} />
 
 Six blanks, and most of them are one line:
 
+<GuideWords
+  examples={[
+    ["remocn"],
+    { stack: ["Every launch needs a video", "Yours shouldn't take a week"] },
+    ["Cinematic video components for React"],
+    ["March 12"],
+    ["remocn.dev"],
+    { color: "#D4F25C", note: "Leave empty for the default lime" },
+  ]}
+>
+
 - **Product name**
-- **Two tease lines** — six words or fewer each; the first names the itch, the second promises relief
-- **What-it-is line** — one plain line for under the name
+- **Two tease lines** — Six words or fewer each; the first names the itch, the second promises relief
+- **What-it-is line** — One plain line for under the name
 - **The date or CTA** — "March 12" or "Join the waitlist"
 - **The URL**
-- **Accent color** — one hex value; optional, the default lime looks good
+- **Accent color** _optional_ — One hex value; the default lime looks good
+
+</GuideWords>
+
+<GuideNote icon="image">
 
 Have a logo? Drop the SVG into the project folder and mention the file name in the prompt. No logo — your agent will use the product name as a wordmark.
 
 Struggling with the lines? [Words on screen](/docs/guides/words-on-screen) is the cheat sheet.
 
+</GuideNote>
+
 ## The prompt
+
+Paste it into your agent with your words in place of the highlighted blanks.
+
+<GuidePrompt>
 
 ```text
 I'm making a pre-launch teaser with remocn (remocn.dev).
@@ -54,15 +121,29 @@ entire video with a radial scrim for readability. Five beats, no filler —
 each beat holds just long enough to read. Use my copy exactly as written.
 ```
 
+</GuidePrompt>
+
 ## Directing the result
+
+<GuideNotes swatches={{ 2: "#D4F25C" }}>
 
 - "The tease lines go by too fast — hold each one longer."
 - "The reveal should hit harder — bigger, faster in."
 - "Put the date in the accent color."
 - "Tighten it to twelve seconds."
 
+</GuideNotes>
+
+<GuideMoreLink>
+
 More directing vocabulary: [Directing your agent](/docs/guides/directing-your-agent).
+
+</GuideMoreLink>
 
 ## Get the file
 
-Ask your agent: **"Render the video."** You'll get an `.mp4` in the project folder, ready to post.
+<GuideRenderCard prompt="Render the video.">
+
+You'll get an `.mp4` in the project folder, ready to post.
+
+</GuideRenderCard>

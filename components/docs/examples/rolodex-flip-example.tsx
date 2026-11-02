@@ -9,9 +9,11 @@ const MONO_FONT =
 export function RolodexFlipExampleScene({
   interval,
   flipDuration,
+  color = "#f2f2f2",
 }: {
   interval?: number;
   flipDuration?: number;
+  color?: string;
 }) {
   return (
     <AbsoluteFill
@@ -23,7 +25,7 @@ export function RolodexFlipExampleScene({
       <span style={{ fontFamily: MONO_FONT, fontSize: 36 }}>
         <span style={{ color: "#6f6c7a" }}>$ </span>
         <span style={{ color: "#8a8794" }}>npx shadcn add </span>
-        <span style={{ color: "#f2f2f2" }}>
+        <span style={{ color }}>
           <RolodexFlip
             items={["button", "dialog", "command", "tabs", "chart-area"]}
             interval={interval}

@@ -1,7 +1,7 @@
 "use client";
 
 import type { Variants } from "motion/react";
-import { motion } from "motion/react";
+import { motion, useReducedMotion } from "motion/react";
 import * as React from "react";
 
 import { cn } from "@/lib/utils";
@@ -29,6 +29,8 @@ export function ShimmeringText({
   className,
   ...props
 }: ShimmeringTextProps) {
+  const reducedMotion = useReducedMotion() ?? false;
+  const stopped = isStopped || reducedMotion;
   const createCharVariants = React.useCallback(
     (charIndex: number): Variants => ({
       running: {
@@ -67,7 +69,7 @@ export function ShimmeringText({
           key={i}
           className="inline-block whitespace-pre"
           initial="stopped"
-          animate={isStopped ? "stopped" : "running"}
+          animate={stopped ? "stopped" : "running"}
           variants={createCharVariants(i)}
           aria-hidden
         >

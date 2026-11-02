@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import { changelog } from "@/.source/server";
-import { ChangelogHero } from "@/components/changelog/changelog-hero";
-import { ChangelogVideoFeed } from "@/components/changelog/changelog-video-feed";
 import {
   changelogDateFormatter,
   changelogSlug,
   sortByDateDesc,
 } from "@/lib/changelog";
+import { ChangelogHeader } from "../components/changelog-header";
+import { ChangelogVideoFeed } from "../components/video-feed";
 
 const DESCRIPTION =
   "Every remocn release as a short video — new components, transitions, shaders, and icons, newest first.";
@@ -52,10 +52,12 @@ export const metadata: Metadata = {
 export default function ChangelogVideoPage() {
   return (
     <>
-      <ChangelogHero active="video" />
-      <section className="pb-24">
-        <ChangelogVideoFeed entries={entries} />
-      </section>
+      <ChangelogHeader
+        active="video"
+        eyebrow={`Changelog, ${entries.length} videos`}
+        continuation="Every release, in video."
+      />
+      <ChangelogVideoFeed entries={entries} />
     </>
   );
 }

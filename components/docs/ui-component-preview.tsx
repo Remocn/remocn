@@ -1,22 +1,14 @@
 "use client";
 
-import { CheckIcon, LinkIcon, RotateCcwIcon } from "lucide-react";
-import { useQueryStates } from "nuqs";
-import { Suspense, use, useEffect, useMemo, useRef, useState } from "react";
-import { CodeBlock } from "@/components/docs/code-block";
-import { Button } from "@/components/ui/button";
-import {
-  Frame,
-  FrameHeader,
-  FramePanel,
-  FrameTitle,
-} from "@/components/ui/frame";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useTrackEvent } from "@/lib/analytics";
-import { type ControlConfig, getDefaults } from "@/lib/customizer-config";
-import { buildParsers, PreviewStage } from "@/lib/ui-preview-internals";
+import { Suspense, use, useMemo } from "react";
+import type { ControlConfig } from "@/lib/customizer-config";
+import { cn } from "@/lib/utils";
 import registry, { loadComponentConfig } from "@/registry/__index__";
-import { ComponentCustomizer } from "./component-customizer";
+import { CustomizePanel } from "./blocks/customize-panel";
+import { DocsPlayer } from "./blocks/player/docs-player";
+import { PlayerFallback, UnknownBlock } from "./blocks/player/player-fallback";
+import { BLOCK_SPACING } from "./blocks/spacing";
+import { useCustomizer } from "./blocks/use-customizer";
 import {
   loadUiScene,
   UI_PREVIEW_TIMING,
@@ -24,34 +16,23 @@ import {
   type UiPreviewTiming,
 } from "./examples/ui-preview-scenes";
 
-/** Shared "Unknown component" fallback — matches the existing docs widgets. */
-function UnknownComponent({ name }: { name: string }) {
-  return (
-    <div className="not-prose mb-6 rounded-lg border border-fd-border p-4 text-sm text-fd-muted-foreground">
-      Unknown component: <code>{name}</code>
-    </div>
-  );
-}
-
 export function UiComponentPreview({ name }: { name: string }) {
   const timing = UI_PREVIEW_TIMING[name];
   const entry = registry[name];
 
-  // Q1 — join the example timing with the registry config (controls) and a lazy
-  // scene loader. The scene (component + honored list + code template) is fetched
-  // inside `UiPreview` via `use()`. Any miss here → the shared Unknown fallback.
+  // Join the example timing with the registry config (controls) and a lazy
+  // scene loader. The scene (component + honored list + code template) is
+  // fetched inside `UiPreview` via `use()`.
   if (!timing || !entry || !(name in UI_SCENE_LOADERS)) {
-    return <UnknownComponent name={name} />;
+    return <UnknownBlock kind="component" name={name} />;
   }
 
   return (
-    <Suspense
-      fallback={
-        <div className="not-prose mb-6 aspect-[1.9/1] w-full animate-pulse rounded-2xl bg-muted" />
-      }
-    >
-      <UiPreview name={name} timing={timing} />
-    </Suspense>
+    <div className={cn("not-prose", BLOCK_SPACING)}>
+      <Suspense fallback={<PlayerFallback />}>
+        <UiPreview name={name} timing={timing} />
+      </Suspense>
+    </div>
   );
 }
 
@@ -62,16 +43,14 @@ function UiPreview({
   name: string;
   timing: UiPreviewTiming;
 }) {
-  // Suspends on first render until this component's scene chunk resolves, then
-  // returns synchronously from the cached promise. Gives us the scene component,
-  // its honored-control list, and its code template — no other scene is fetched.
+  // Suspends on first render until this component's scene chunk resolves:
+  // the scene component, its honored-control list and its code template.
   const scene = use(loadUiScene(name));
   const controls: ControlConfig = use(loadComponentConfig(name)).controls;
   const honored = scene.controls;
-  const trackEvent = useTrackEvent();
 
-  // visibleControls = config.controls ∩ honored[name]. This drops state/speed
-  // and every structural-but-unthreaded knob — no global blacklist needed.
+  // config.controls ∩ honored: drops state/speed and every structural knob
+  // the scene doesn't thread through.
   const visibleControls = useMemo(
     () =>
       Object.fromEntries(
@@ -80,148 +59,41 @@ function UiPreview({
     [controls, honored],
   );
 
-  const hasControls = Object.keys(visibleControls).length > 0;
-
-  const { parsers, urlKeys } = useMemo(
-    () => buildParsers(name, visibleControls),
-    [name, visibleControls],
-  );
-  const defaults = useMemo(
-    () => getDefaults(visibleControls),
-    [visibleControls],
+  const { values, isDefault, change, reset } = useCustomizer(
+    name,
+    visibleControls,
   );
 
-  const [values, setValues] = useQueryStates(parsers, {
-    urlKeys,
-    clearOnDefault: true,
-    shallow: true,
-  });
-
-  const isDefault = useMemo(
-    () => Object.entries(defaults).every(([k, v]) => values[k] === v),
-    [defaults, values],
-  );
-
-  // Honored-only code (Q4): the scene's own template interpolates ONLY honored
-  // keys, ONLY when a value differs from its default, and NEVER emits a prop the
-  // component ignores. The same `values` feeds the Player → guaranteed parity.
+  // The scene's template interpolates only honored keys that differ from
+  // their default; the same `values` feed the Player, so code and preview match.
   const code = useMemo(() => scene.code(values), [scene, values]);
 
-  const [copied, setCopied] = useState(false);
-  const handleCopyLink = () => {
-    if (typeof window === "undefined") return;
-    navigator.clipboard.writeText(window.location.href);
-    setCopied(true);
-    trackEvent("customized_link_shared", { component: name });
-    setTimeout(() => setCopied(false), 1500);
-  };
-
-  const handleReset = () => {
-    setValues(null);
-    trackEvent("customizer_reset", { component: name });
-  };
-
-  useEffect(() => {
-    trackEvent("docs_component_viewed", { component: name });
-  }, [name, trackEvent]);
-
-  const customizeTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(
-    new Map(),
-  );
-  useEffect(() => {
-    const timers = customizeTimers.current;
-    return () => {
-      for (const timer of timers.values()) clearTimeout(timer);
-      timers.clear();
-    };
-  }, []);
-  const handleCustomizeChange = (key: string, value: unknown) => {
-    setValues((prev) => ({ ...prev, [key]: value }));
-    const existing = customizeTimers.current.get(key);
-    if (existing) clearTimeout(existing);
-    customizeTimers.current.set(
-      key,
-      setTimeout(() => {
-        trackEvent("component_customized", { component: name, prop: key });
-        customizeTimers.current.delete(key);
-      }, 500),
-    );
-  };
-
   return (
-    <div className="not-prose mb-6 flex w-full flex-col gap-4">
-      <Frame>
-        <Tabs defaultValue="preview" className="gap-0">
-          <FrameHeader className="flex-row items-center px-2 py-2">
-            <TabsList>
-              <TabsTrigger value="preview">Preview</TabsTrigger>
-              <TabsTrigger value="code">Code</TabsTrigger>
-            </TabsList>
-          </FrameHeader>
-          <FramePanel className="overflow-hidden p-0">
-            <TabsContent value="preview" className="mt-0">
-              <PreviewStage
-                name={name}
-                Component={scene.Scene}
-                inputProps={values}
-                // D2 — timing is sourced from the EXAMPLE, not the config.
-                durationInFrames={timing.durationInFrames}
-                fps={timing.fps}
-                compositionWidth={timing.width}
-                compositionHeight={timing.height}
-                previewBackdrop={timing.previewBackdrop}
-                className="rounded-none"
-              />
-            </TabsContent>
-            <TabsContent value="code" className="mt-0">
-              <CodeBlock code={code} />
-            </TabsContent>
-          </FramePanel>
-        </Tabs>
-      </Frame>
-
-      {/* Empty-panel collapse (Q5): no honored controls → only the Tabs. */}
-      {hasControls && (
-        <Frame className="mt-2">
-          <FrameHeader className="flex-row items-center justify-between px-3 py-2">
-            <FrameTitle>Customize</FrameTitle>
-            <div className="flex items-center gap-1">
-              <Button
-                variant="outline"
-                size="icon-sm"
-                onClick={handleCopyLink}
-                aria-label="Copy share link"
-                title="Copy share link"
-                className="text-muted-foreground hover:text-foreground"
-              >
-                {copied ? (
-                  <CheckIcon className="size-3.5" />
-                ) : (
-                  <LinkIcon className="size-3.5" />
-                )}
-              </Button>
-              <Button
-                variant="outline"
-                size="icon-sm"
-                onClick={handleReset}
-                disabled={isDefault}
-                aria-label="Reset to defaults"
-                title="Reset to defaults"
-                className="text-muted-foreground hover:text-foreground disabled:opacity-40"
-              >
-                <RotateCcwIcon className="size-3.5" />
-              </Button>
-            </div>
-          </FrameHeader>
-          <FramePanel className="p-3">
-            <ComponentCustomizer
-              controls={visibleControls}
-              values={values as Record<string, unknown>}
-              onChange={handleCustomizeChange}
-            />
-          </FramePanel>
-        </Frame>
-      )}
-    </div>
+    <DocsPlayer
+      name={name}
+      code={code}
+      composition={{
+        Component: scene.Scene,
+        inputProps: values,
+        // Timing is sourced from the example, not the config.
+        durationInFrames: timing.durationInFrames,
+        fps: timing.fps,
+        compositionWidth: timing.width,
+        compositionHeight: timing.height,
+        previewBackdrop: timing.previewBackdrop,
+      }}
+    >
+      {Object.keys(visibleControls).length > 0 ? (
+        <CustomizePanel
+          name={name}
+          controls={visibleControls}
+          values={values}
+          code={code}
+          isDefault={isDefault}
+          onChange={change}
+          onReset={reset}
+        />
+      ) : null}
+    </DocsPlayer>
   );
 }

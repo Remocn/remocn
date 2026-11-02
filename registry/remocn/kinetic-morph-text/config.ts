@@ -114,4 +114,5 @@ export const kineticMorphTextConfig: ComponentConfig = {
   fps: FPS,
   compositionWidth: W,
   compositionHeight: H,
+  card: { props: { backgroundColor: "transparent" } },
 };
