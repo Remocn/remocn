@@ -25,14 +25,16 @@ function ColumnCopy({
   hidden?: boolean;
 }) {
   return (
-    <ul
-      aria-hidden={hidden || undefined}
-      inert={hidden}
-      className="flex flex-col gap-4 pb-4"
-    >
+    // The loop's second copy stays hoverable: `inert` would also drop pointer
+    // events, and the reversed column shows mostly this copy. It leaves the
+    // tab order and the a11y tree instead.
+    <ul aria-hidden={hidden || undefined} className="flex flex-col gap-4 pb-4">
       {handles.map((handle) => (
         <li key={handle} className="flex flex-col">
-          <XPostCard post={getXPost(handle)} />
+          <XPostCard
+            post={getXPost(handle)}
+            tabIndex={hidden ? -1 : undefined}
+          />
         </li>
       ))}
     </ul>

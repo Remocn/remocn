@@ -26,8 +26,10 @@ type Target = BentoSlot | "typography";
 const SLOT_LABELS: Record<BentoSlot, string> = {
   transitions: "Transitions",
   captions: "Captions",
-  filters: "Filters",
   backgrounds: "Backgrounds",
+  numbers: "Numbers",
+  productScenes: "Product scenes",
+  logoStings: "Logo stings",
 };
 
 function remixWord(name: string): ClipSpec {

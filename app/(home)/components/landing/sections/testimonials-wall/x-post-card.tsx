@@ -27,7 +27,13 @@ function formatCount(value: number) {
  * One X post on the testimonials wall. The whole card links to the post.
  * `featured` is the large lead card: bigger type, fuchsia glow, like/view counts.
  */
-export function XPostCard({ post }: { post: XPost }) {
+export function XPostCard({
+  post,
+  tabIndex,
+}: {
+  post: XPost;
+  tabIndex?: number;
+}) {
   const featured = post.featured ?? false;
   const showCounts = featured && (post.likes != null || post.views != null);
 
@@ -38,6 +44,7 @@ export function XPostCard({ post }: { post: XPost }) {
       href={post.url}
       target="_blank"
       rel="noreferrer"
+      tabIndex={tabIndex}
       className={cn(
         "group flex flex-col outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
         featured ? "rounded-[22px]" : "rounded-card",

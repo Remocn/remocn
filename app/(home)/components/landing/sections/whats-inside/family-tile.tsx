@@ -64,6 +64,14 @@ export function CaptionsVisual() {
   return <BentoClip slot="captions" className={FRAME} />;
 }
 
-export function FiltersVisual() {
-  return <BentoClip slot="filters" className={FRAME} />;
+export function NumbersVisual() {
+  return <BentoClip slot="numbers" className={FRAME} />;
+}
+
+export function ProductScenesVisual() {
+  return <BentoClip slot="productScenes" className={FRAME} />;
+}
+
+export function LogoStingsVisual() {
+  return <BentoClip slot="logoStings" className={FRAME} />;
 }

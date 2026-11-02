@@ -3,8 +3,10 @@ import type { ClipSpec } from "../hero/tiles/config";
 export const BENTO_SLOTS = [
   "transitions",
   "captions",
-  "filters",
   "backgrounds",
+  "numbers",
+  "productScenes",
+  "logoStings",
 ] as const;
 
 export type BentoSlot = (typeof BENTO_SLOTS)[number];
@@ -31,33 +33,30 @@ function spec(
   };
 }
 
-function word(name: string, text: string, props: Record<string, unknown> = {}) {
-  return spec(name, "transparent", "hold", {
-    text,
-    fontSize: 200,
-    fontWeight: 600,
-    color: "currentColor",
-    ...props,
-  });
+/**
+ * A launch-pack type beat: it paints its own dark backdrop and is laid out
+ * for a 16:9 frame, so the remix plays it at native size, cover-cropped, as a
+ * dark card like the family tiles below it.
+ */
+function type(name: string, props: Record<string, unknown>) {
+  return spec(name, "#0A0A0B", "hold", { theme: "dark", ...props });
 }
 
 export const DEFAULT_BENTO: BentoClips = {
   typography: [
-    word("soft-blur-in", "Arrive.", { blur: 24 }),
-    word("per-character-rise", "Rise."),
-    word("mask-reveal-up", "Reveal."),
-    word("tracking-in", "Track."),
-    word("squeeze-in", "Squeeze."),
+    type("weight-wave", { text: "Move." }),
+    type("baseline-drop", { text: "Drop." }),
+    type("kerning-snap", { word: "Snap." }),
+    type("slit-scan", { word: "Faster.", caption: "" }),
+    type("stack-letters", { word: "STACK" }),
   ],
-  transitions: spec("zoom-blur", "#141318", "hold"),
+  transitions: spec("tile-wave", "#0A0A0B", "hold", { theme: "dark" }),
   captions: spec("caption-karaoke", "#0E1012", "hold", {
     fontSize: 88,
     activeColor: "#E879F9",
   }),
-  filters: spec("crt-wordmark", "#050505", "hold"),
-  backgrounds: spec("shader-mesh-gradient", "#3B0764", "run", {
-    colors: ["#A800B7", "#F5D0FE", "#3B0764", "#E879F9"],
-    distortion: 0.8,
-    swirl: 0.3,
-  }),
+  numbers: spec("growth-line", "#0A0A0B", "hold", { theme: "dark" }),
+  productScenes: spec("multiplayer-cursors", "#efebe4", "hold"),
+  logoStings: spec("logo-construct", "#F5F4F0", "hold", { theme: "light" }),
+  backgrounds: spec("shader-mesh-gradient-dusk", "#1a1446", "run"),
 };

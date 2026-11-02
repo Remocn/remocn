@@ -29,12 +29,16 @@ function Beat({
   });
   return (
     <AbsoluteFill style={{ opacity }}>
-      <Clip
-        spec={{ ...spec, end: "hold" }}
-        frame={box}
-        canvas={STRIP}
-        anchor="bottom-left"
-      />
+      {spec.background === "transparent" ? (
+        <Clip
+          spec={{ ...spec, end: "hold" }}
+          frame={box}
+          canvas={STRIP}
+          anchor="bottom-left"
+        />
+      ) : (
+        <Clip spec={{ ...spec, end: "hold" }} frame={box} />
+      )}
     </AbsoluteFill>
   );
 }

@@ -1,7 +1,6 @@
 import { LandingButton } from "../../ui/landing-button";
-import { CopyCommandButton } from "./copy-command-button";
 
-/** Dark strip under the bento: a copyable install line + "Browse N+ blocks". */
+/** Dark strip under the bento: the install line + "Browse N+ blocks". */
 export function InstallStrip({
   component,
   browseHref,
@@ -28,7 +27,6 @@ export function InstallStrip({
             {command}
           </span>
         </code>
-        <CopyCommandButton command={command} component={component} />
       </div>
       <LandingButton
         href={browseHref}

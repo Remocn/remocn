@@ -4,7 +4,9 @@ import { BackgroundsTile } from "./whats-inside/backgrounds-tile";
 import {
   CaptionsVisual,
   FamilyTile,
-  FiltersVisual,
+  LogoStingsVisual,
+  NumbersVisual,
+  ProductScenesVisual,
   TransitionsVisual,
 } from "./whats-inside/family-tile";
 import { InstallStrip } from "./whats-inside/install-strip";
@@ -14,8 +16,10 @@ const FAMILY_HREF = {
   typography: "/docs/typography",
   transitions: "/docs/transitions",
   captions: "/docs/captions/getting-started/introduction",
-  filters: "/docs/filters/getting-started/introduction",
   backgrounds: "/docs/shaders/getting-started/introduction",
+  numbers: "/docs/numbers",
+  productScenes: "/docs/product-scenes",
+  logoStings: "/docs/logo-stings",
 } as const;
 
 const FAMILIES = [
@@ -34,11 +38,26 @@ const FAMILIES = [
     visual: <CaptionsVisual />,
   },
   {
-    href: FAMILY_HREF.filters,
-    title: "Filters",
-    description: "Halftone, CRT and VHS looks over any scene.",
+    href: FAMILY_HREF.numbers,
+    title: "Numbers",
+    description: "Counters, charts and prices where the figure is the hero.",
     tone: "dark",
-    visual: <FiltersVisual />,
+    visual: <NumbersVisual />,
+  },
+  {
+    href: FAMILY_HREF.productScenes,
+    title: "Product scenes",
+    description: "Mocked app UI that shows what your product does.",
+    tone: "light",
+    visual: <ProductScenesVisual />,
+    className: "md:col-span-2",
+  },
+  {
+    href: FAMILY_HREF.logoStings,
+    title: "Logo stings",
+    description: "Short brand reveals for the open and the close.",
+    tone: "light",
+    visual: <LogoStingsVisual />,
   },
 ] as const;
 
@@ -55,7 +74,7 @@ export function WhatsInside() {
         <header className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between xl:gap-0">
           <SectionTitle
             title="There’s a block for that"
-            continuation="Five kinds of building blocks. Your agent puts them on the timeline."
+            continuation="Seven kinds of building blocks. Your agent puts them on the timeline."
             className="text-[34px]/[36px] text-wrap md:text-h2"
             continuationClassName="xl:w-[720px]"
           />
@@ -71,7 +90,7 @@ export function WhatsInside() {
           <div
             data-reveal="stagger"
             data-seq
-            className="grid grid-cols-1 gap-2.5 md:grid-cols-3 xl:h-[660px] xl:grid-cols-[repeat(3,minmax(0,1fr))_372px] xl:grid-rows-[354px_294px] xl:gap-3"
+            className="grid grid-cols-1 gap-2.5 md:grid-cols-3 xl:grid-cols-[repeat(3,minmax(0,1fr))_372px] xl:grid-rows-[354px_294px_294px] xl:gap-3"
           >
             <TypographyTile
               href={FAMILY_HREF.typography}
@@ -82,7 +101,7 @@ export function WhatsInside() {
             ))}
             <BackgroundsTile
               href={FAMILY_HREF.backgrounds}
-              className="md:col-span-3 xl:col-span-1 xl:col-start-4 xl:row-span-2 xl:row-start-1"
+              className="md:col-span-3 xl:col-span-1 xl:col-start-4 xl:row-span-3 xl:row-start-1"
             />
           </div>
           <InstallStrip

@@ -14,7 +14,7 @@ export function SiteFooter() {
         data-reveal="fade"
         className="landing-container flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between"
       >
-        <div className="flex flex-col gap-1.5 lg:flex-row lg:items-center lg:gap-5">
+        <div className="flex flex-col gap-1.5 lg:flex-row lg:items-baseline lg:gap-5">
           <Link
             href="/"
             aria-label="remocn home"
