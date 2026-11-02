@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { DocsRail, RailCards } from "@/components/docs/shell/docs-rail";
+import { KeyboardNav } from "@/components/docs/shell/keyboard-nav";
 import { MobilePageBar } from "@/components/docs/shell/mobile-page-bar";
 import { getPageContext } from "@/components/docs/shell/page-context";
 import { PageFooter } from "@/components/docs/shell/page-footer";
@@ -27,12 +28,15 @@ export default async function Page(props: {
   return (
     <>
       <MobilePageBar crumbs={crumbs} />
+      <KeyboardNav previous={previous} next={next} />
       <div className="flex flex-1">
         <article className="flex min-w-0 flex-1 flex-col px-5 pt-7 pb-14 lg:px-10 lg:pt-9 lg:pb-16 xl:mx-auto xl:w-full xl:max-w-(--docs-article-max) xl:px-(--docs-article-pad)">
           <PageHeader
             title={data.title}
             description={data.description}
             links={links}
+            previous={previous}
+            next={next}
           />
           <div className="typeset typeset-docs mt-6 flex-1 lg:mt-8 [&_:is(h2,h3,h4)[id]]:scroll-mt-20 xl:[&_:is(h2,h3,h4)[id]]:scroll-mt-6">
             <MDX components={getMDXComponents()} />

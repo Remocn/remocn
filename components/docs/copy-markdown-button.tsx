@@ -68,7 +68,11 @@ export function CopyMarkdownButton({
       onClick={handleCopy}
       aria-busy={state === "loading"}
       className={cn(
-        "inline-flex h-11 w-fit shrink-0 items-center gap-2 rounded-control-sm bg-secondary pr-3.5 pl-3 text-[15px] leading-5 text-foreground outline-none transition-colors hover:bg-[#dcdde0] focus-visible:ring-2 focus-visible:ring-ring dark:hover:bg-[#33363b] lg:h-8 lg:gap-[7px] lg:rounded-[10px] lg:pr-3 lg:pl-[11px] lg:text-small",
+        "inline-flex w-fit shrink-0 items-center outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring",
+        // Below `lg`: a solid 44px button. From `lg`: a 32px tile inside the
+        // switcher-style capsule `PageActions` draws around it.
+        "max-lg:h-11 max-lg:gap-2 max-lg:rounded-control-sm max-lg:bg-secondary max-lg:pr-3.5 max-lg:pl-3 max-lg:text-[15px] max-lg:leading-5 max-lg:text-foreground max-lg:hover:bg-[#dcdde0] max-lg:dark:hover:bg-[#33363b]",
+        "lg:h-8 lg:gap-[7px] lg:rounded-tile lg:px-2.5 lg:text-small lg:text-muted-foreground lg:hover:bg-surface/60 lg:hover:text-foreground lg:dark:hover:bg-secondary/60",
         className,
       )}
     >

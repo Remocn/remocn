@@ -46,8 +46,9 @@ function useAlignToIsland(enabled: boolean) {
 /**
  * "Copy page" with a menu beside it: the button copies the page's markdown,
  * the chevron opens the agent hand-offs (Open in Claude / ChatGPT, View as
- * Markdown). 32px on the breadcrumb row from `lg`, 44px under the
- * description below it.
+ * Markdown). From `lg` it sits on the row above the title as a 40px capsule
+ * matching the sidebar's library switcher; below it, 44px under the
+ * description.
  */
 export function PageActions({
   links,
@@ -64,20 +65,20 @@ export function PageActions({
     <div
       ref={ref}
       className={cn(
-        "inline-flex w-fit shrink-0 items-stretch",
+        "inline-flex w-fit shrink-0 items-stretch lg:h-10 lg:items-center lg:gap-0.5 lg:rounded-control-sm lg:bg-capsule lg:p-1",
         alignToHeader && "xl:translate-x-[9px]",
         className,
       )}
     >
       <CopyMarkdownButton
         url={links.markdown}
-        className="rounded-r-none lg:rounded-r-none"
+        className="max-lg:rounded-r-none"
       />
-      <span aria-hidden="true" className="w-px bg-foreground/10" />
+      <span aria-hidden="true" className="w-px bg-foreground/10 lg:hidden" />
       <Menu.Root>
         <Menu.Trigger
           aria-label="More page actions"
-          className="group flex w-10 items-center justify-center rounded-r-control-sm bg-secondary text-foreground outline-none transition-colors hover:bg-[#dcdde0] focus-visible:ring-2 focus-visible:ring-ring data-popup-open:bg-[#dcdde0] lg:w-7 lg:rounded-r-[10px] dark:hover:bg-[#33363b] dark:data-popup-open:bg-[#33363b]"
+          className="group flex items-center justify-center outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring max-lg:w-10 max-lg:rounded-r-control-sm max-lg:bg-secondary max-lg:text-foreground max-lg:hover:bg-[#dcdde0] max-lg:data-popup-open:bg-[#dcdde0] max-lg:dark:hover:bg-[#33363b] max-lg:dark:data-popup-open:bg-[#33363b] lg:size-8 lg:rounded-tile lg:text-muted-foreground lg:hover:bg-surface/60 lg:hover:text-foreground lg:data-popup-open:bg-surface/60 lg:data-popup-open:text-foreground lg:dark:hover:bg-secondary/60 lg:dark:data-popup-open:bg-secondary/60"
         >
           <ChevronIcon className="size-3.5 rotate-90 transition-[rotate] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] group-data-popup-open:-rotate-90 motion-reduce:transition-none" />
         </Menu.Trigger>
