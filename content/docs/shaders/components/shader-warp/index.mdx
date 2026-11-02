@@ -1,0 +1,58 @@
+---
+title: Warp
+description: Domain-warped color field that folds and stretches like liquid
+component: shader-warp
+vibe: premium
+length: 150
+useWhen:
+  - "A hero scene wants organic, liquid motion that feels alive but stays out of the way."
+  - "You want a flowing alternative to a static gradient with more directional movement."
+  - "The palette is dark and you want folds of a single accent to read as depth."
+avoidWhen:
+  - "Text legibility over the whole frame is critical — raise `softness` and keep `distortion` low, or use a solid `backdrop`."
+  - "You want tight, repeating structure — use `shader-swirl` (banded) or `shader-spiral`."
+  - "You need a metallic sheen rather than color folds — use `shader-liquid-metal`."
+---
+
+<ComponentPreview name="shader-warp" />
+
+<InstallBlock name="shader-warp" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { ShaderWarp } from "@/components/remocn/shader-warp";
+
+const ShaderWarpScene = () => (
+  <ShaderWarp speed={1} distortion={0.2} swirl={0.4} />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="ShaderWarp"
+    component={ShaderWarpScene}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+## Presets
+
+Ready-made looks, each a standalone registry item that pulls in `shader-warp` as a dependency. Install one and drop it in like the base shader. Props you pass override the preset, and `speed` scales the preset's own pace instead of replacing it.
+
+<ShaderPresets base="shader-warp" />
+
+```tsx
+import { ShaderWarpSilk } from "@/components/remocn/shader-warp-silk";
+
+export const Background = () => <ShaderWarpSilk />;
+```
+
+## Credits
+
+Shader by [paper-design/shaders](https://github.com/paper-design/shaders).

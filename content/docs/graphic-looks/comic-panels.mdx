@@ -1,0 +1,76 @@
+---
+title: Comic Panels
+description: The frame cracks into a three-panel comic page with speed lines and halftone, then the action panel bursts into a full-frame POW
+component: comic-panels
+vibe: playful
+length: 36
+useWhen:
+  - "A logo, product or headline should land with comic-book energy, framed in a hero panel with speed lines."
+  - "A playful launch or social clip needs a loud sound-effect beat, like POW, ZAP or NEW, that takes over the frame."
+  - "The scene should turn from a single hero shot into a page layout in one move."
+avoidWhen:
+  - "You only need the manga-style impact lines around an element, without the page — use `speed-lines`."
+  - "The hit should be a heavy slam with a camera jolt rather than a page cracking — use `impact-shake`."
+  - "The burst should be a sculptural ribbon opener rather than a printed comic page — use `radial-burst`."
+---
+
+<ComponentPreview name="comic-panels" />
+
+<InstallBlock name="comic-panels" />
+
+## Usage
+
+`ComicPanels` is a full-frame scene. Your content starts centered on the page,
+surrounded by ink speed lines that are redrawn every two frames. A page border
+closes in, and a slanted gutter cracks across the frame and lifts the content
+into the top panel. A second gutter cracks down, and two panels slide in
+underneath: a halftone panel in the accent color from the left and an ink
+panel with a small starburst from the right. The page shakes, and the
+starburst grows until its accent rays fill the frame, leaving a paper burst
+with the word in the middle.
+
+```tsx
+import { ComicPanels } from "@/components/remocn/comic-panels";
+
+export const Launch = () => (
+  <ComicPanels word="POW">
+    <Logo />
+  </ComicPanels>
+);
+```
+
+`children` is the hero content. It is rendered at full size at first and
+scales to `heroScale` as it moves into the top panel, so size it as you would
+for a full frame. Without children a placeholder "remocn" lockup is shown. `word` is optional. Without it the starbursts are empty. Keep
+the word short: it is set large and bold, and three or four letters read best.
+
+## Timing
+
+At 30 fps and `speed={1}`:
+
+| Frames | Motion |
+| --- | --- |
+| 0–8 | The page margin and ink border close in |
+| 2–10 | The horizontal gutter cracks across; the hero rises and scales to `heroScale` |
+| 8–14 | The vertical gutter cracks down to the bottom edge |
+| 10–18 | The halftone panel slides in from the left |
+| 13–21 | The ink panel with the starburst slides in from the right |
+| 22–31 | The page shakes |
+| 23–34 | The starburst grows and spins until the accent fills the frame |
+| 30–36 | The paper burst settles from a slight overshoot |
+
+`comicPanelsLength` is 36. The final burst keeps a gentle 4% pulse after that,
+so the hold never freezes. `speed` scales the whole timeline.
+
+<PropsTable title="Props"
+  rows={[
+    { name: "children", type: "React.ReactNode", description: "Hero content, centered at first and framed in the top panel once the page cracks. Without it a placeholder \"remocn\" lockup in the ink and accent colors is shown" },
+    { name: "word", type: "string", description: "Sound-effect word in the starburst, for example \"POW\"" },
+    { name: "ink", type: "string", default: '"#111111"', description: "Speed lines, borders, the ink panel and the word. Overrides colors.ink when set" },
+    { name: "paper", type: "string", default: '"#FFFFFF"', description: "Page, gutters and the inner burst. Overrides colors.paper when set" },
+    { name: "accent", type: "string", default: '"#E5322D"', description: "Halftone, outer rays and the word shadow. Overrides colors.accent when set" },
+    { name: "colors", type: "{ ink?: string; paper?: string; accent?: string }", default: '{ ink: "#111111", paper: "#FFFFFF", accent: "#E5322D" }', description: "The same colors as one object; the flat props above take precedence, missing keys keep their defaults" },
+    { name: "heroScale", type: "number", default: "0.62", description: "Scale of children inside the top panel" },
+    { name: "speed", type: "number", default: "1", description: "Playback multiplier" },
+  ]}
+/>

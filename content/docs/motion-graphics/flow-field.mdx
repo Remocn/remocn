@@ -1,0 +1,103 @@
+---
+title: Flow Field
+description: Hundreds of particles ride a seeded, slowly changing vector field and leave fine fading trails, as a seamless loop
+component: flow-field
+vibe: premium
+length: sustained
+useWhen:
+  - "A title card, quote or hero shot needs a quiet, organic line texture behind it that keeps moving without drawing attention."
+  - "A scene about data, AI, networks or motion needs a generative backdrop that feels alive but stays monochrome with a few accent strands."
+  - "The background has to loop without a seam for any length of shot."
+avoidWhen:
+  - "The backdrop should be soft color fields rather than thin lines — use `shader-mesh-gradient`."
+  - "The motion should read as clouds or smoke rather than strands — use `shader-perlin-noise`."
+  - "The loop should be geometric and rule-based rather than organic — use `pendulum-wave`."
+  - "The particles should break up an element and carry the cut — use `particle-dissolve`."
+---
+
+<ComponentPreview name="flow-field" />
+
+<InstallBlock name="flow-field" />
+
+## Usage
+
+`FlowField` draws particles that follow a vector field across the frame. The
+field angle at each point is a sum of four seeded sine waves, and it shifts
+slowly over the loop. Each particle is born at a seeded position, sometimes
+just outside the frame, and steps along the field for its life. Its
+head moves first and the trail grows behind it; then the head stops and the
+tail catches up, so trails grow in and drain out instead of popping. Births
+are spread over the life, so the frame always holds a steady population.
+
+Each trail is split into six age segments that get fainter and thinner
+toward the tail. A seeded share of particles, `accentRatio`, is drawn in
+`accent`.
+
+```tsx
+import { FlowField } from "@/components/remocn/flow-field";
+
+export const Texture = () => <FlowField />;
+```
+
+The component fills its parent and paints its own `background`. Particle
+speed and stroke width scale with the short side of the composition, and
+`strokeWidth` is in px at 720p. Positions come from Remotion's seeded
+`random()`, so a `seed` always produces the same field and every frame
+renders the same way.
+
+## Timing
+
+The field and every particle's life cycle repeat every `loopFrames / speed`
+frames, 300 frames (10 seconds) at the defaults. The last frame of the loop
+flows into the first without a seam, so a `Sequence` of any multiple of the
+period, or a Remotion `<Loop>` of that length, plays as a continuous
+background.
+
+A particle lives `loopFrames / round(loopFrames / lifeFrames)` frames, 150
+at the defaults, so a whole number of lives fits in one loop. The trail is
+capped at 60% of the life: the head travels for `life − trail` frames, then
+holds while the tail drains.
+
+There is no build-up: frame 0 already shows a full population.
+
+## Performance
+
+Each frame recomputes every visible trail from the particle's birth, so the
+cost grows with `particles × lifeFrames`. The defaults render quickly; 800
+particles with 300-frame lives is about five times heavier. Lower
+`particles` before lowering `trailLength` if renders get slow.
+
+## Variations
+
+A high `trailLength` with a low `particles` count gives long, sparse strands.
+`accentRatio={0}` keeps the field monochrome, and `accentRatio={1}` draws
+everything in the accent. Change `seed` for a different field layout.
+
+```tsx
+<FlowField
+  particles={160}
+  trailLength={110}
+  strokeWidth={2}
+  accentRatio={0.25}
+  background="#0b1020"
+  color="#9fb4ff"
+  accent="#ffffff"
+  seed={5}
+/>
+```
+
+<PropsTable title="Props"
+  rows={[
+    { name: "particles", type: "number", default: "300", description: "Particles in flight" },
+    { name: "trailLength", type: "number", default: "72", description: "Trail length in frames of travel, capped at 60% of the particle life" },
+    { name: "loopFrames", type: "number", default: "300", description: "Frames for one seamless loop of the field and the particle life cycles" },
+    { name: "lifeFrames", type: "number", default: "150", description: "Particle lifetime in frames, adjusted so a whole number of lives fits in loopFrames" },
+    { name: "accentRatio", type: "number", default: "0.1", description: "Share of particles drawn in the accent color, 0 to 1" },
+    { name: "strokeWidth", type: "number", default: "1.4", description: "Trail width in px at 720p, at the head; older segments thin to half" },
+    { name: "seed", type: "number", default: "1", description: "Seeds the field, the spawn points and which particles take the accent" },
+    { name: "background", type: "string", default: '"#111111"', description: "Background fill" },
+    { name: "color", type: "string", default: '"#FFFFFF"', description: "Trail color" },
+    { name: "accent", type: "string", default: '"#E5322D"', description: "Color of the accent share of trails" },
+    { name: "speed", type: "number", default: "1", description: "Playback multiplier; the loop period is loopFrames / speed" },
+  ]}
+/>

@@ -1,0 +1,79 @@
+---
+title: Inflate
+description: A flat sliver puffs up like a balloon toy, squashes and settles into a glossy mark, then the wordmark slides out
+component: inflate
+vibe: playful
+length: 35
+useWhen:
+  - "A consumer, kids or casual app wants a soft, bouncy brand moment with a toy-like feel."
+  - "You have a wordmark and want the sting to supply a simple rounded mark beside it."
+  - "The sting should be short, with the mark settled and the wordmark in by frame 35."
+avoidWhen:
+  - "Your real logo must appear exactly as designed — the mark here is a fixed rounded square with a dot, so wrap your logo with `spotlight` or `orbit-lock`."
+  - "You want a word, not a mark, to pop up with a solid 3D body — use `extrude-pop`."
+  - "The mark should assemble from crisp geometric parts rather than inflate — use `puzzle-snap`."
+  - "The brand is serious or premium and the bounce reads as too playful — use `anamorphic-flare`."
+---
+
+<ComponentPreview name="inflate" />
+
+<InstallBlock name="inflate" />
+
+## Usage
+
+`Inflate` draws its own mark: a glossy rounded square with a dot in the
+middle. It starts as a flat, deflated sliver, then puffs up on an underdamped
+spring, overshoots, squashes wide and rings out like a balloon. As it fills,
+the corners tighten from a pill to a rounded square and a specular highlight
+and inner shadow fade in. The dot pops in last, then the mark slides left
+while your wordmark wipes in on its right.
+
+```tsx
+import { Inflate } from "@/components/remocn/inflate";
+
+export const LogoSting = () => (
+  <Inflate color="#E5322D" dotColor="#111111">
+    <span
+      style={{
+        fontSize: 104,
+        fontWeight: 800,
+        letterSpacing: "-0.04em",
+        color: "#FFFFFF",
+      }}
+    >
+      remocn
+    </span>
+  </Inflate>
+);
+```
+
+Pass only the wordmark as `children`. Without `children` the mark stays
+centered and no slide happens. The mark is 22% of the shorter side of the
+composition (158px at 720p); the wordmark keeps its own size.
+
+## Timing
+
+At 30 fps and `speed={1}`:
+
+| Frames | Motion |
+| --- | --- |
+| 0–3 | A flat sliver fades in and widens |
+| 3–26 | The body puffs up on a spring, peaking about 23% oversize around frame 10 |
+| 10–30 | Squash-and-stretch wobble that decays to rest |
+| 5–12 | Highlight and inner shadow fade in |
+| 15–32 | The dot springs in with a small overshoot |
+| 22–33 | The mark slides from the center to the left |
+| 24–35 | The wordmark wipes in from the left |
+
+The docs preview runs 66 frames. `speed` scales the timeline.
+
+<PropsTable title="Props"
+  rows={[
+    { name: "children", type: "ReactNode", description: "Wordmark revealed to the right of the mark once it settles. Without it the mark settles alone in the center" },
+    { name: "color", type: "string", default: '"#E5322D"', description: "Body color of the mark" },
+    { name: "highlight", type: "string", default: '"#FFFFFF"', description: "Specular highlight color" },
+    { name: "dotColor", type: "string", default: '"#111111"', description: "Dot inside the mark" },
+    { name: "backgroundColor", type: "string", default: '"#111111"', description: "Full-frame background" },
+    { name: "speed", type: "number", default: "1", description: "Playback multiplier" },
+  ]}
+/>

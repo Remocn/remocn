@@ -1,0 +1,19 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "shader-warp-deep-sea",
+  "title": "Shader Warp Deep Sea",
+  "description": "Diagonal teal bands rippling through midnight blue.",
+  "registryDependencies": ["@remocn/shader-warp"],
+  "files": [
+    {
+      "path": "registry/remocn/shader-warp-deep-sea/index.tsx",
+      "content": "\"use client\";\n\nimport {\n  ShaderWarp,\n  type ShaderWarpProps,\n} from \"@/components/remocn/shader-warp\";\n\n// Deep Sea: diagonal teal bands rippling through midnight blue.\n// A preset of ShaderWarp. The whole look lives in the object below, so tune\n// it freely. Props you pass override the preset, except `speed`, which scales\n// the preset's own speed instead of replacing it.\n\nexport const shaderWarpDeepSeaPreset = {\n  speed: 4,\n  shape: \"stripes\",\n  colors: [\"#020617\", \"#0f3d5e\", \"#1fb5a5\"],\n  proportion: 0.6,\n  softness: 1,\n  distortion: 0.15,\n  swirl: 0.3,\n  swirlIterations: 4,\n  shapeScale: 1,\n  rotation: 60,\n} satisfies ShaderWarpProps;\n\nexport function ShaderWarpDeepSea({ speed = 1, ...props }: ShaderWarpProps) {\n  return (\n    <ShaderWarp\n      {...shaderWarpDeepSeaPreset}\n      {...props}\n      speed={shaderWarpDeepSeaPreset.speed * speed}\n    />\n  );\n}\n",
+      "type": "registry:component",
+      "target": "components/remocn/shader-warp-deep-sea.tsx"
+    }
+  ],
+  "meta": {
+    "presetOf": "shader-warp"
+  },
+  "type": "registry:component"
+}

@@ -1,0 +1,102 @@
+---
+title: Turntable
+description: A product card with real thickness spins on an invisible turntable through front, edge and back, with face shading, a moving sheen and a floor shadow
+component: turntable
+vibe: premium
+length: 64
+useWhen:
+  - "A physical-looking object, such as a credit card, a membership pass or a ticket, should be shown from every side."
+  - "A product launch needs a hero beat where the object turns once and settles facing the camera."
+  - "Front and back carry different content and both should be seen in one move."
+avoidWhen:
+  - "The content is a long page or recording the camera should travel across — use `stage`."
+  - "A flat word should pop out of the plane into 3D — use `extrude-pop`."
+  - "The object should come apart into labelled layers — use `exploded-view`."
+---
+
+<ComponentPreview name="turntable" />
+
+<InstallBlock name="turntable" />
+
+## Usage
+
+`Turntable` builds a card in CSS 3D: a front face, a back face and four edge
+slabs, sized like a credit card at 46% of the frame height. It spins around
+its vertical axis on a slow-in, slow-out curve. Each face is shaded from a key
+light at the front left, a sheen slides across as it turns, and a soft floor
+shadow narrows and fades when the card is edge-on. With no children it shows a
+red front with a mark and a light back.
+
+```tsx
+import { Turntable } from "@/components/remocn/turntable";
+
+export const CardSpin = () => <Turntable />;
+```
+
+`turns` sets full rotations, so `turns={0.5}` ends on the back face and
+`turns={2}` spins twice in the same time. `tilt` looks down on the card in
+degrees; negative values look up at it. `thickness` is the card depth in px
+at 720p.
+
+### Your own faces
+
+`children` is the front face and `back` is the back face. Each face clips its
+content to the rounded card, so fill it edge to edge. The face font size is
+1/30 of the card height, so content sized in `em` scales with the
+composition.
+
+```tsx
+import { AbsoluteFill } from "remotion";
+import { Turntable } from "@/components/remocn/turntable";
+
+export const PassSpin = () => (
+  <Turntable
+    turns={1}
+    edgeColor="#2E2A8C"
+    back={<AbsoluteFill style={{ background: "#F5F5F5" }} />}
+  >
+    <AbsoluteFill
+      style={{
+        background: "linear-gradient(135deg, #4F46E5, #7C3AED)",
+        padding: "2.5em",
+        color: "white",
+        fontSize: "1.6em",
+        fontWeight: 700,
+      }}
+    >
+      Pro Pass
+    </AbsoluteFill>
+  </Turntable>
+);
+```
+
+Set `edgeColor` to a darker shade of your front so the card edge reads as
+the same material.
+
+## Timing
+
+At 30 fps and `speed={1}`:
+
+| Frames | Motion |
+| --- | --- |
+| 0–6 | The card rests facing the camera |
+| 6–64 | The card spins `turns` times on one eased curve, fastest around frame 29 |
+| 64+ | The card holds, facing front for whole turns or back for half turns |
+
+`speed` scales the spin, so `speed={2}` ends at frame 32.
+
+<PropsTable title="Props"
+  rows={[
+    { name: "children", type: "ReactNode", description: "Front face content. Defaults to a red card with a mark" },
+    { name: "back", type: "ReactNode", description: "Back face content. Defaults to a light card with a stripe" },
+    { name: "thickness", type: "number", default: "22", description: "Card thickness in px at 720p" },
+    { name: "turns", type: "number", default: "1", description: "Full rotations over the spin" },
+    { name: "tilt", type: "number", default: "8", description: "Camera tilt in degrees; positive looks down on the card" },
+    { name: "colors", type: "Partial<TurntableColors>", default: '{ background: "#111111", front: "#E5322D", back: "#F2F2F2", edge: "#A3201C", mark: "#FFFFFF", shadow: "#000000" }', description: "Background, default face colors, edge slabs, default mark and floor shadow; merged over the defaults. The flat color props below win over it" },
+    { name: "frontColor", type: "string", default: '"#E5322D"', description: "Default front face color; overrides colors.front" },
+    { name: "edgeColor", type: "string", default: '"#A3201C"', description: "Card edge color; overrides colors.edge" },
+    { name: "backColor", type: "string", default: '"#F2F2F2"', description: "Default back face color; overrides colors.back" },
+    { name: "backgroundColor", type: "string", default: '"#111111"', description: "Stage background; overrides colors.background" },
+    { name: "speed", type: "number", default: "1", description: "Playback multiplier" },
+  ]}
+/>

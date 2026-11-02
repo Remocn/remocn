@@ -58,4 +58,4 @@ articles
 /skills-lock.json
 
 # plugin eval runs
-plugins/remocn/evals/results/
+evals/results/

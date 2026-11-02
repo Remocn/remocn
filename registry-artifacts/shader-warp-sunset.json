@@ -1,0 +1,19 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "shader-warp-sunset",
+  "title": "Shader Warp Sunset",
+  "description": "Marbled coral, peach and wine flowing like warm liquid.",
+  "registryDependencies": ["@remocn/shader-warp"],
+  "files": [
+    {
+      "path": "registry/remocn/shader-warp-sunset/index.tsx",
+      "content": "\"use client\";\n\nimport {\n  ShaderWarp,\n  type ShaderWarpProps,\n} from \"@/components/remocn/shader-warp\";\n\n// Sunset: marbled coral, peach and wine flowing like warm liquid.\n// A preset of ShaderWarp. The whole look lives in the object below, so tune\n// it freely. Props you pass override the preset, except `speed`, which scales\n// the preset's own speed instead of replacing it.\n\nexport const shaderWarpSunsetPreset = {\n  speed: 3,\n  shape: \"checks\",\n  colors: [\"#2d0b16\", \"#ff5f6d\", \"#ffc371\"],\n  proportion: 0.5,\n  softness: 1,\n  distortion: 0.2,\n  swirl: 0.8,\n  swirlIterations: 10,\n  shapeScale: 0.2,\n} satisfies ShaderWarpProps;\n\nexport function ShaderWarpSunset({ speed = 1, ...props }: ShaderWarpProps) {\n  return (\n    <ShaderWarp\n      {...shaderWarpSunsetPreset}\n      {...props}\n      speed={shaderWarpSunsetPreset.speed * speed}\n    />\n  );\n}\n",
+      "type": "registry:component",
+      "target": "components/remocn/shader-warp-sunset.tsx"
+    }
+  ],
+  "meta": {
+    "presetOf": "shader-warp"
+  },
+  "type": "registry:component"
+}

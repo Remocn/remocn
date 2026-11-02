@@ -14,6 +14,10 @@ function loadStudioElement(name: string): StudioElementPayload | undefined {
 
 export function ComponentPreviewMdx({ name }: { name: string }) {
   return (
-    <ComponentPreview name={name} studioElement={loadStudioElement(name)} />
+    <ComponentPreview
+      name={name}
+      studioElement={loadStudioElement(name)}
+      layout={null}
+    />
   );
 }

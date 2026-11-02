@@ -174,22 +174,61 @@ function GroupChevron({ open, auto }: { open: boolean; auto: boolean }) {
   );
 }
 
+// Compact density for tight hosts (Remotion Studio's caption picker): shorter
+// tiles and smaller type. Scoped through the `customizer-control` hook so
+// every control type follows, and it outranks the phone sizes the narrow
+// Studio panel would otherwise pick up.
+const COMPACT = [
+  "[&_.customizer-control]:h-7 [&_.customizer-control]:gap-2 [&_.customizer-control]:rounded-[8px] [&_.customizer-control]:px-2.5 [&_.customizer-control]:text-xs [&_.customizer-control]:leading-4 [&_.customizer-control]:whitespace-nowrap",
+  "[&_.customizer-control_input]:text-xs",
+  // The swatch already shows the colour; the hex would crowd out the label.
+  "[&_.customizer-control:has(input[type=color])_.tabular-nums]:hidden",
+].join(" ");
+
 /**
  * Every prop the preview honours, grouped by intent (content, timing, style)
  * into collapsible sections. Controls flow three to a row on desktop and
- * stack on phones; long text takes a full row.
+ * stack on phones; long text takes a full row. The compact density drops the
+ * groups for one dense grid that fits a small fixed panel.
  */
 export function ComponentCustomizer({
   controls,
   values,
   onChange,
+  density = "default",
 }: {
   controls: ControlConfig;
   values: Record<string, unknown>;
   onChange: (key: string, value: unknown) => void;
+  density?: "default" | "compact";
 }) {
   const phone = usePhone();
   const [open, setOpen] = useState<Partial<Record<Group["id"], boolean>>>({});
+
+  if (density === "compact") {
+    return (
+      <div
+        className={cn(
+          "grid grid-cols-1 gap-1.5 @min-[280px]:grid-cols-2",
+          COMPACT,
+        )}
+      >
+        {Object.entries(controls).map(([key, ctrl]) => (
+          <div
+            key={key}
+            className={cn("min-w-0", isLong(ctrl) && "col-span-full")}
+          >
+            <Control
+              id={`ctrl-${key}`}
+              ctrl={ctrl}
+              value={values[key]}
+              onChange={(value) => onChange(key, value)}
+            />
+          </div>
+        ))}
+      </div>
+    );
+  }
 
   const groups = GROUPS.map((group) => ({
     ...group,

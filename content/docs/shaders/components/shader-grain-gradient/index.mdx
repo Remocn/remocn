@@ -1,0 +1,58 @@
+---
+title: Grain Gradient
+description: Grainy multi-stop gradient that drifts slowly with film-grain texture over the blend
+component: shader-grain-gradient
+vibe: premium
+length: 150
+useWhen:
+  - "A gradient backdrop needs analog texture — the grain reads as film/print rather than flat digital."
+  - "The scene tone is premium and editorial and you want subtle motion that does not distract."
+  - "You want the gradient softened; raise `softness`/`noise` for an even quieter field."
+avoidWhen:
+  - "You need crisp, clean color with no texture — use `shader-mesh-gradient`."
+  - "Foreground content is tiny text — heavy grain can reduce contrast; lower `intensity`/`noise` or pick a solid `backdrop`."
+  - "You want structured geometry — use `shader-dot-orbit` or `shader-voronoi`."
+---
+
+<ComponentPreview name="shader-grain-gradient" />
+
+<InstallBlock name="shader-grain-gradient" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { ShaderGrainGradient } from "@/components/remocn/shader-grain-gradient";
+
+const ShaderGrainGradientScene = () => (
+  <ShaderGrainGradient speed={1} intensity={0.2} noise={0.15} />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="ShaderGrainGradient"
+    component={ShaderGrainGradientScene}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+## Presets
+
+Ready-made looks, each a standalone registry item that pulls in `shader-grain-gradient` as a dependency. Install one and drop it in like the base shader. Props you pass override the preset, and `speed` scales the preset's own pace instead of replacing it.
+
+<ShaderPresets base="shader-grain-gradient" />
+
+```tsx
+import { ShaderGrainGradientSunrise } from "@/components/remocn/shader-grain-gradient-sunrise";
+
+export const Background = () => <ShaderGrainGradientSunrise />;
+```
+
+## Credits
+
+Shader by [paper-design/shaders](https://github.com/paper-design/shaders).

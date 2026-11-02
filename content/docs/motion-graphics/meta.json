@@ -8,7 +8,14 @@
     "truchet-flip",
     "trim-burst",
     "speed-lines",
-    "squiggle"
+    "squiggle",
+    "pendulum-wave",
+    "flow-field",
+    "isometric-build",
+    "life-grid",
+    "string-art",
+    "topo-lines",
+    "phyllotaxis"
   ],
   "icon": "GeometricShapes01Icon"
 }

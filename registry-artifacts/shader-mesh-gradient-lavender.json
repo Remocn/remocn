@@ -1,0 +1,19 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "shader-mesh-gradient-lavender",
+  "title": "Shader Mesh Gradient Lavender",
+  "description": "Soft lilac and pink haze with grain-softened edges.",
+  "registryDependencies": ["@remocn/shader-mesh-gradient"],
+  "files": [
+    {
+      "path": "registry/remocn/shader-mesh-gradient-lavender/index.tsx",
+      "content": "\"use client\";\n\nimport {\n  ShaderMeshGradient,\n  type ShaderMeshGradientProps,\n} from \"@/components/remocn/shader-mesh-gradient\";\n\n// Lavender: soft lilac and pink haze with grain-softened edges.\n// A preset of ShaderMeshGradient. The whole look lives in the object below, so tune\n// it freely. Props you pass override the preset, except `speed`, which scales\n// the preset's own speed instead of replacing it.\n\nexport const shaderMeshGradientLavenderPreset = {\n  speed: 1,\n  colors: [\"#e9e4ff\", \"#b8a6ff\", \"#7f6bff\", \"#ffd6f2\"],\n  distortion: 0.9,\n  swirl: 0.1,\n  grainMixer: 0.2,\n  rotation: 135,\n} satisfies ShaderMeshGradientProps;\n\nexport function ShaderMeshGradientLavender({\n  speed = 1,\n  ...props\n}: ShaderMeshGradientProps) {\n  return (\n    <ShaderMeshGradient\n      {...shaderMeshGradientLavenderPreset}\n      {...props}\n      speed={shaderMeshGradientLavenderPreset.speed * speed}\n    />\n  );\n}\n",
+      "type": "registry:component",
+      "target": "components/remocn/shader-mesh-gradient-lavender.tsx"
+    }
+  ],
+  "meta": {
+    "presetOf": "shader-mesh-gradient"
+  },
+  "type": "registry:component"
+}

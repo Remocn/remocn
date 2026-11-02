@@ -8,6 +8,8 @@
 
 remocn is a copy-paste component library for building videos in Remotion. Instead of writing every fade, wipe, and kinetic title from scratch, you `npx shadcn add` a polished primitive into your project and own the code. Built for solo builders and small teams who need a product demo video shipped today, not next week.
 
+Rather direct the video than write it? [Remocn Studio](https://remocn.studio) is a free, open-source macOS app where your own coding agent (Claude Code, Codex, GitHub Copilot or Grok) builds the video from remocn components while you watch the live preview.
+
 ## Why remocn
 
 Production-ready Remotion code: every component uses useCurrentFrame(), interpolate(), and spring() correctly. No Math.random() traps that break rendering.

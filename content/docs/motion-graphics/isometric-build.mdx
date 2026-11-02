@@ -1,0 +1,100 @@
+---
+title: Isometric Build
+description: An isometric tile grid springs up row by row into a stepped block sculpture with one accent tower, then holds
+component: isometric-build
+vibe: tech
+length: 38
+useWhen:
+  - "An opener or section break should build something in about a second, a small city or stack that reads as infrastructure, platform or growth."
+  - "A product story about building, scaling or assembling needs a flat, monochrome isometric visual with one highlighted piece."
+  - "A beat should end on a still, composed object that can hold under a title or a caption."
+avoidWhen:
+  - "The stack should come apart to explain layers, with labels — use `exploded-view`."
+  - "The blocks should rebuild a logo or pixel art — use `brick-mosaic`."
+  - "Blocks should rise across the whole frame and carry the cut into the next scene — use `grid-wave`."
+  - "The build should be flat 2D shapes rather than isometric volume — use `bauhaus-build`."
+---
+
+<ComponentPreview name="isometric-build" />
+
+<InstallBlock name="isometric-build" />
+
+## Usage
+
+`IsometricBuild` lays out a `grid × grid` floor in true isometric projection
+and raises a block on every tile. Block heights follow a mound that peaks in
+the middle, with seeded variation, snapped to whole floors so the blocks
+stack into one stepped sculpture. One interior tile, chosen by `seed`,
+becomes the accent tower, 35% taller than `maxHeight`.
+
+The build runs diagonal by diagonal from the front corner to the back. Each
+block fades in and springs up from the floor, overshoots its height by about
+12%, and settles. The side faces are the block color shaded toward the
+background, and optional floor lines mark each storey.
+
+```tsx
+import { IsometricBuild } from "@/components/remocn/isometric-build";
+
+export const Platform = () => <IsometricBuild />;
+```
+
+The component fills its parent and paints its own `background`. The diamond
+and the tallest tower are fitted into 64% of the width and 80% of the
+height, centered, so the object keeps its framing at any aspect ratio. The
+spring is driven by the Remotion frame and the layout by the seed, so
+renders are deterministic.
+
+## Timing
+
+At 30 fps, `speed={1}` and the defaults (`grid={5}`, `stagger={2}`):
+
+| Frames | Motion |
+| --- | --- |
+| 0–2 | The front block starts to rise |
+| 0–18 | Each diagonal starts `stagger` frames after the one in front, plus up to one `stagger` of seeded jitter |
+| 8 | The front block peaks at about 112% of its height |
+| ~20 | The front block settles |
+| 16–18 | The back corner block starts |
+| 38 | The last block settles; the sculpture holds still from here |
+
+Each block's spring settles about 20 frames after it starts. The build ends
+at roughly `(2 × (grid − 1) + 1) × stagger + 20` frames, so a larger grid or
+stagger lengthens it: `grid={7}` at the default stagger finishes near frame
+46. Divide by `speed` for faster builds. The component does not loop; after
+the build it holds the finished sculpture for as long as the `Sequence`
+runs.
+
+## Variations
+
+`gap` opens the seams between blocks; `gap={0}` merges them into one solid
+mass. `floors={false}` drops the storey lines for a cleaner block. Raise
+`maxHeight` for a taller skyline, and change `seed` to move the accent tower
+and reshuffle the heights.
+
+```tsx
+<IsometricBuild
+  grid={7}
+  maxHeight={3}
+  gap={0.1}
+  floors={false}
+  background="#f1eee7"
+  color="#1c1a17"
+  accent="#e4572e"
+  seed={12}
+/>
+```
+
+<PropsTable title="Props"
+  rows={[
+    { name: "grid", type: "number", default: "5", description: "Tiles per side, rounded, minimum 1; below 3 the accent tower takes the back corner tile" },
+    { name: "maxHeight", type: "number", default: "2.2", description: "Tallest regular block in tile widths; the accent tower rises to 1.35×" },
+    { name: "stagger", type: "number", default: "2", description: "Frames between consecutive diagonals starting to rise" },
+    { name: "gap", type: "number", default: "0.04", description: "Gap between neighboring blocks as a share of a tile, clamped to 0–0.45" },
+    { name: "floors", type: "boolean", default: "true", description: "Draws floor lines on the side faces" },
+    { name: "seed", type: "number", default: "4", description: "Seeds the block heights, the start jitter and the accent tower position" },
+    { name: "background", type: "string", default: '"#111111"', description: "Background fill; side faces are shaded toward it" },
+    { name: "color", type: "string", default: '"#FFFFFF"', description: "Block color" },
+    { name: "accent", type: "string", default: '"#E5322D"', description: "Color of the single accent tower" },
+    { name: "speed", type: "number", default: "1", description: "Playback multiplier" },
+  ]}
+/>

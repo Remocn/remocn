@@ -1,0 +1,19 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "shader-swirl-ember",
+  "title": "Shader Swirl Ember",
+  "description": "Gold and orange fire bands spinning around a dark core.",
+  "registryDependencies": ["@remocn/shader-swirl"],
+  "files": [
+    {
+      "path": "registry/remocn/shader-swirl-ember/index.tsx",
+      "content": "\"use client\";\n\nimport {\n  ShaderSwirl,\n  type ShaderSwirlProps,\n} from \"@/components/remocn/shader-swirl\";\n\n// Ember: gold and orange fire bands spinning around a dark core.\n// A preset of ShaderSwirl. The whole look lives in the object below, so tune\n// it freely. Props you pass override the preset, except `speed`, which scales\n// the preset's own speed instead of replacing it.\n\nexport const shaderSwirlEmberPreset = {\n  speed: 1,\n  colorBack: \"#1a0000\",\n  colors: [\"#ffb703\", \"#fb8500\", \"#9d0208\"],\n  bandCount: 4,\n  twist: 0.3,\n  softness: 0.8,\n  noise: 0.3,\n  center: 0,\n} satisfies ShaderSwirlProps;\n\nexport function ShaderSwirlEmber({ speed = 1, ...props }: ShaderSwirlProps) {\n  return (\n    <ShaderSwirl\n      {...shaderSwirlEmberPreset}\n      {...props}\n      speed={shaderSwirlEmberPreset.speed * speed}\n    />\n  );\n}\n",
+      "type": "registry:component",
+      "target": "components/remocn/shader-swirl-ember.tsx"
+    }
+  ],
+  "meta": {
+    "presetOf": "shader-swirl"
+  },
+  "type": "registry:component"
+}

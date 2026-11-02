@@ -1,0 +1,45 @@
+---
+title: Ember
+description: Swirl preset. Gold and orange fire bands spinning around a dark core
+component: shader-swirl-ember
+vibe: premium
+length: 150
+useWhen:
+  - "A fiery vortex for an intense, energetic beat."
+  - "Foreground is light text or a bright product shot that needs a dark field around it."
+  - "You want a finished Swirl look without tuning the palette and parameters yourself."
+avoidWhen:
+  - "The video must use your brand colors — start from `shader-swirl` and set `colors`."
+  - "You want a lighter, contrasting mood from the same shader — use `shader-swirl-lilac`."
+---
+
+<ComponentPreview name="shader-swirl-ember" />
+
+<InstallBlock name="shader-swirl-ember" />
+
+Installs [Swirl](/docs/shaders/components/shader-swirl) as a dependency. This file only fixes its look: the preset object at the top holds every value, so edit it in place to make the preset your own.
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { ShaderSwirlEmber } from "@/components/remocn/shader-swirl-ember";
+
+export const RemotionRoot = () => (
+  <Composition
+    id="ShaderSwirlEmber"
+    component={ShaderSwirlEmber}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+ShaderSwirlEmber takes the same props as `ShaderSwirl`. Props you pass override the preset, except `speed`, which scales the preset's own pace: `speed={2}` is twice as fast as the preset, whatever its base speed.
+
+## Credits
+
+Shader by [paper-design/shaders](https://github.com/paper-design/shaders).

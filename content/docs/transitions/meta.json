@@ -28,7 +28,13 @@
     "grid-wave",
     "displacement",
     "slide-swap",
-    "spring-settle"
+    "spring-settle",
+    "iris-wipe",
+    "venetian-blinds",
+    "paper-tear",
+    "pixel-sort",
+    "light-leak",
+    "hyperspace"
   ],
   "icon": "TransitionRightIcon"
 }

@@ -62,6 +62,13 @@ export const CATEGORIES = [
     label: "Motion graphics",
     href: "/docs/motion-graphics",
   },
+  { segment: "logo-stings", label: "Logo stings", href: "/docs/logo-stings" },
+  { segment: "camera", label: "Camera & physics", href: "/docs/camera" },
+  {
+    segment: "graphic-looks",
+    label: "Graphic looks",
+    href: "/docs/graphic-looks",
+  },
   { segment: "ui-blocks", label: "UI blocks", href: "/docs/ui-blocks" },
   { segment: "effects", label: "Effects", href: "/docs/effects" },
   {

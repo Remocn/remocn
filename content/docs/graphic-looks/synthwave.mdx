@@ -1,0 +1,75 @@
+---
+title: Synthwave
+description: A retro neon horizon with a scrolling perspective grid, a rising striped sun and mountain ranges that slide in
+component: synthwave
+vibe: playful
+length: sustained
+useWhen:
+  - "A scene needs an 80s retro backdrop: a music drop, a gaming or nostalgia beat, a late-night product teaser."
+  - "Titles or a logo should sit over a moving background that loops for as long as the beat lasts."
+  - "The brand has a neon accent and the backdrop should be built from it."
+avoidWhen:
+  - "The camera should fly forward through space into the next scene — use `hyperspace`."
+  - "The backdrop should be a calm landscape that trucks sideways in layers — use `parallax-depth`."
+  - "The moving floor should be a tunnel you travel through rather than a horizon — use `shader-light-tunnel`."
+---
+
+<ComponentPreview name="synthwave" />
+
+<InstallBlock name="synthwave" />
+
+## Usage
+
+`Synthwave` is a full-frame background. A perspective grid glows on the floor
+and scrolls toward the viewer. A striped sun rises from behind the horizon,
+its stripes thickening toward the bottom and drifting downward. Two mountain
+ranges slide in from opposite sides as they rise into place, the front one
+traced in the grid color. Stars twinkle in the dark sky, and a haze swallows
+the lines where they converge.
+
+```tsx
+import { AbsoluteFill } from "remotion";
+import { Synthwave } from "@/components/remocn/synthwave";
+
+export const Drop = () => (
+  <AbsoluteFill>
+    <Synthwave grid="#00E5FF" sunTop="#FFE66D" sunBottom="#FF2E88" />
+    <AbsoluteFill style={{ alignItems: "center", paddingTop: 120 }}>
+      <Title />
+    </AbsoluteFill>
+  </AbsoluteFill>
+);
+```
+
+It takes no children. Layer your content on top in a sibling `AbsoluteFill`,
+and keep it above the horizon, which sits at `horizon` of the frame height
+(60% by default).
+
+## Timing
+
+At 30 fps and `speed={1}`:
+
+| Frames | Motion |
+| --- | --- |
+| 0–40 | The sun rises from behind the horizon |
+| 4–34 | The back range slides in from the left and rises |
+| 8–38 | The front range slides in from the right and rises |
+| Always | The grid scrolls at `gridSpeed` rows per second; the sun stripes cycle every 36 frames |
+
+`synthwaveLength` is 40, the frame the sun and mountains are in place. The
+grid and stripes never stop, so the background holds for any duration.
+`speed` scales the entrance and the scroll together.
+
+<PropsTable title="Props"
+  rows={[
+    { name: "grid", type: "string", default: '"#E5322D"', description: "Grid lines and the front mountain outline. Overrides colors.grid when set" },
+    { name: "sunTop", type: "string", default: '"#FFC46B"', description: "Top of the sun gradient. Overrides colors.sunTop when set" },
+    { name: "sunBottom", type: "string", default: '"#E5322D"', description: "Bottom of the sun gradient. Overrides colors.sunBottom when set" },
+    { name: "skyHorizon", type: "string", default: '"#3B0C10"', description: "Sky glow at the horizon, also tints the floor and haze. Overrides colors.skyHorizon when set" },
+    { name: "colors", type: "{ skyTop?, skyHorizon?, sunTop?, sunBottom?, grid?, floor?, mountainsBack?, mountainsFront?: string }", default: '{ skyTop: "#08080B", skyHorizon: "#3B0C10", sunTop: "#FFC46B", sunBottom: "#E5322D", grid: "#E5322D", floor: "#0A0A0C", mountainsBack: "#2A0A0E", mountainsFront: "#111111" }', description: "All scene colors as one object; skyHorizon also tints the floor and the horizon haze. The flat props above take precedence, missing keys keep their defaults" },
+    { name: "gridSpeed", type: "number", default: "2", description: "Grid rows that pass the viewer per second" },
+    { name: "horizon", type: "number", default: "0.6", description: "Horizon height as a fraction of the frame height, from the top" },
+    { name: "sunStripes", type: "boolean", default: "true", description: "Scrolls the sun stripes downward; false keeps them fixed" },
+    { name: "speed", type: "number", default: "1", description: "Playback multiplier" },
+  ]}
+/>

@@ -1,0 +1,16 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "iris-wipe",
+  "title": "Iris Wipe",
+  "description": "An old-cartoon iris closes on the subject, holds a beat as a dot, then opens on the next scene.",
+  "dependencies": ["remotion", "@remotion/transitions"],
+  "files": [
+    {
+      "path": "registry/remocn/iris-wipe/index.tsx",
+      "content": "\"use client\";\n\nimport type {\n  TransitionPresentation,\n  TransitionPresentationComponentProps,\n} from \"@remotion/transitions\";\nimport type React from \"react\";\nimport { AbsoluteFill, Easing, interpolate } from \"remotion\";\n\nexport type IrisWipeProps = {\n  /** Fill shown outside the iris while it is closed. */\n  color?: string;\n  /** Horizontal iris center, 0 to 1. */\n  centerX?: number;\n  /** Vertical iris center, 0 to 1. */\n  centerY?: number;\n  /** Radius of the held dot, as a percentage of the frame diagonal. */\n  holdRadius?: number;\n};\n\nexport const irisWipeDefaults: Required<IrisWipeProps> = {\n  color: \"#000000\",\n  centerX: 0.5,\n  centerY: 0.5,\n  holdRadius: 12,\n};\n\n// circle() percentages resolve against the diagonal / sqrt(2), so 150% covers\n// the frame from any center point.\nconst COVER = 150;\n// Progress at which the iris is fully shut and starts opening on the next scene.\nconst CUT = 0.5;\n\n// One smooth curve instead of keyframes: the circle rushes in from off-frame,\n// lingers as a slowly shrinking dot and snaps shut, without ever standing\n// still. Easing each keyframe segment separately drops the speed to zero at\n// every key, which reads as a stall.\nfunction closingRadius(u: number, hold: number) {\n  return hold * (1 - u ** 3) + (COVER - hold) * (1 - u) ** 5;\n}\n\nconst clamp = {\n  extrapolateLeft: \"clamp\" as const,\n  extrapolateRight: \"clamp\" as const,\n};\n\nconst IrisWipePresentation: React.FC<\n  TransitionPresentationComponentProps<IrisWipeProps>\n> = ({\n  children,\n  presentationProgress,\n  presentationDirection,\n  passedProps,\n}) => {\n  const { color, centerX, centerY, holdRadius } = {\n    ...irisWipeDefaults,\n    ...passedProps,\n  };\n  const p = presentationProgress;\n  const at = `${centerX * 100}% ${centerY * 100}%`;\n\n  if (presentationDirection === \"exiting\") {\n    const radius = closingRadius(Math.min(1, p / CUT), holdRadius);\n    return (\n      <AbsoluteFill style={{ backgroundColor: color }}>\n        <AbsoluteFill style={{ clipPath: `circle(${radius}% at ${at})` }}>\n          {children}\n        </AbsoluteFill>\n      </AbsoluteFill>\n    );\n  }\n\n  const radius = interpolate(p, [CUT, 1], [0, COVER], {\n    ...clamp,\n    easing: Easing.bezier(0.45, 0, 0.75, 0.6),\n  });\n  return (\n    <AbsoluteFill style={{ clipPath: `circle(${radius}% at ${at})` }}>\n      {children}\n    </AbsoluteFill>\n  );\n};\n\nexport function irisWipe(\n  props: IrisWipeProps = {},\n): TransitionPresentation<IrisWipeProps> {\n  return { component: IrisWipePresentation, props };\n}\n",
+      "type": "registry:component",
+      "target": "components/remocn/iris-wipe.tsx"
+    }
+  ],
+  "type": "registry:component"
+}

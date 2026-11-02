@@ -4,7 +4,45 @@ description: Flat geometric motion-graphics pieces for openers, section breaks, 
 ---
 
 import { CategoryIndex } from "@/components/docs/index/category/category-index";
+import { ComponentGroup } from "@/components/docs/index/category/component-group";
 
 Brand-agnostic geometry built the way motion designers build shape layers — drop one over any scene, recolor it, and let it play out.
 
-<CategoryIndex section="/docs/motion-graphics" />
+<CategoryIndex section="/docs/motion-graphics">
+
+<ComponentGroup
+  items={[
+    "bauhaus-build",
+    "mondrian-split",
+    "truchet-flip",
+    "trim-burst",
+    "speed-lines",
+    "squiggle",
+  ]}
+>
+
+## Shapes & accents
+
+Shape-layer builds, pattern beds and punctuation accents for openers and section breaks.
+
+</ComponentGroup>
+
+<ComponentGroup
+  items={[
+    "pendulum-wave",
+    "flow-field",
+    "isometric-build",
+    "life-grid",
+    "string-art",
+    "topo-lines",
+    "phyllotaxis",
+  ]}
+>
+
+## Generative Loops
+
+Rule-driven systems that build or run on their own: pendulums, particles, cellular automata, times tables and growth spirals, for backgrounds and openers that keep moving.
+
+</ComponentGroup>
+
+</CategoryIndex>

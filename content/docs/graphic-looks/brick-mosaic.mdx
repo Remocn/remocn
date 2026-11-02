@@ -1,0 +1,103 @@
+---
+title: Brick Mosaic
+description: Toy bricks drop in row by row from the bottom with a small bounce and build a pixel-art image on a baseplate
+component: brick-mosaic
+vibe: playful
+length: 56
+useWhen:
+  - "A logo, icon or emoji should be built out of toy bricks, one row at a time, for a playful reveal."
+  - "The image is simple enough to read as pixel art on a grid of about 10 to 40 cells across."
+  - "A kids, gaming or maker-themed video needs a build moment that feels hands-on."
+avoidWhen:
+  - "The mark should assemble from a few geometric pieces that spin and snap into place — use `puzzle-snap`."
+  - "The build should rise as an isometric 3D city rather than a flat mosaic — use `isometric-build`."
+  - "The scene should melt into pixel streaks as a transition — use `pixel-sort`."
+---
+
+<ComponentPreview name="brick-mosaic" />
+
+<InstallBlock name="brick-mosaic" />
+
+## Usage
+
+`BrickMosaic` is a full-frame scene. A baseplate of studs fades in, then
+bricks fall onto it row by row from the bottom. Within a row they land left to
+right with a little seeded scatter, and each brick hops once after it lands.
+Every brick is shaded with beveled edges and a stud, so the finished image
+reads as a plastic mosaic.
+
+```tsx
+import { BrickMosaic } from "@/components/remocn/brick-mosaic";
+
+export const Build = () => <BrickMosaic />;
+```
+
+Without `pattern` it builds a red disc on white, `cols` by `rows` bricks. Pass
+`pattern` to build your own image, as rows of characters looked up in
+`colors`:
+
+```tsx
+import { BrickMosaic } from "@/components/remocn/brick-mosaic";
+
+const heart = [
+  "..........",
+  ".##....##.",
+  "####..####",
+  "##########",
+  "##########",
+  ".########.",
+  "..######..",
+  "...####...",
+  "....##....",
+  "..........",
+];
+
+export const Heart = () => (
+  <BrickMosaic
+    pattern={heart}
+    colors={{ "#": "#E5322D", ".": "#FFFFFF" }}
+    background="#1C1A17"
+  />
+);
+```
+
+Characters missing from `colors`, and spaces, leave the cell empty, so the
+baseplate shows through. `colors` replaces the default map entirely. A pattern
+can also be a 2D array of CSS colors, with `""` for an empty cell, which is
+handy when you generate it from an image. The grid is scaled to fit 86% of the
+frame and centered.
+
+## Timing
+
+At 30 fps and `speed={1}`, each brick falls for 7 frames from about two brick
+heights up, accelerating, then hops for 5 frames. Rows start `rowDelay` frames
+apart from the bottom up, and bricks within a row are spread over about 1.5
+frames plus 0.12 frames per column.
+
+| Frames | Motion |
+| --- | --- |
+| 0–10 | The baseplate studs fade in |
+| 0–16 | The bottom row lands and hops |
+| 3 frames per row | Each row above starts `rowDelay` frames after the one below |
+| 56 | The top row's last brick finishes its hop |
+
+`getBrickMosaicLength(rows, cols, rowDelay)` returns the build length, 56 at
+the defaults. For a custom pattern, pass the number of pattern rows and the
+longest row length. Divide by `speed` for other speeds.
+
+## Notes
+
+Each brick is six SVG shapes on top of a baseplate stud, so a 40 by 24 grid draws close to 7,000 nodes.
+That is fine for rendering, but keep grids smaller for smooth live previews.
+
+<PropsTable title="Props"
+  rows={[
+    { name: "pattern", type: "string[] | string[][]", description: "Image to build: rows of characters looked up in colors, or a 2D grid of CSS colors with \"\" for empty. Overrides cols and rows" },
+    { name: "cols", type: "number", default: "24", description: "Columns of the default disc image" },
+    { name: "rows", type: "number", default: "14", description: "Rows of the default disc image" },
+    { name: "colors", type: "Record<string, string>", default: '{ "#": "#E5322D", ".": "#FFFFFF", x: "#111111" }', description: "Character-to-color map for string patterns; replaces the default map" },
+    { name: "background", type: "string", default: '"#111111"', description: "Baseplate color behind the bricks" },
+    { name: "rowDelay", type: "number", default: "3", description: "Frames between rows" },
+    { name: "speed", type: "number", default: "1", description: "Playback multiplier" },
+  ]}
+/>

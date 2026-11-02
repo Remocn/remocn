@@ -37,6 +37,13 @@ const COMPONENT_CATEGORIES: MegaMenuItem[] = [
     href: "/docs/motion-graphics",
     preview: "bauhaus-build",
   },
+  { label: "Logo Stings", href: "/docs/logo-stings", preview: "neon-sign" },
+  { label: "Camera & Physics", href: "/docs/camera", preview: "dolly-zoom" },
+  {
+    label: "Graphic Looks",
+    href: "/docs/graphic-looks",
+    preview: "riso-print",
+  },
   {
     label: "Filters",
     href: "/docs/filters/getting-started/introduction",

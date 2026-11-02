@@ -5,6 +5,7 @@ import {
   isInsideStudio,
   type StudioElementPayload,
   setStudioDragData,
+  subscribeToCaptionStyleSelection,
 } from "@remotion/studio-protocol";
 import { Loader2Icon } from "lucide-react";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
@@ -39,6 +40,18 @@ export function StudioActions({
   const [isEmbeddedInStudio, setIsEmbeddedInStudio] = useState<boolean | null>(
     null,
   );
+  const [selectedSlug, setSelectedSlug] = useState<string | null>(null);
+  const isCaptionPicker =
+    isEmbeddedInStudio === true &&
+    payload.element.isCaptionStyle === true &&
+    new URLSearchParams(window.location.search).get(
+      "remotion-studio-context",
+    ) === "captions";
+  const isSelected = isCaptionPicker && selectedSlug === payload.element.slug;
+  useEffect(() => {
+    if (!isCaptionPicker) return;
+    return subscribeToCaptionStyleSelection(setSelectedSlug);
+  }, [isCaptionPicker]);
   const resetTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useLayoutEffect(() => {
@@ -60,7 +73,9 @@ export function StudioActions({
     if (result.success) {
       setStatus("success");
       setMessage(
-        `Sent to Remotion Studio${result.target.projectName === null ? "" : ` (${result.target.projectName})`}.`,
+        isCaptionPicker
+          ? null
+          : `Sent to Remotion Studio${result.target.projectName === null ? "" : ` (${result.target.projectName})`}.`,
       );
     } else {
       setStatus("error");
@@ -90,6 +105,7 @@ export function StudioActions({
         type="button"
         onClick={handleInstall}
         disabled={status === "pending"}
+        aria-pressed={isCaptionPicker ? isSelected : undefined}
         className={cn(STUDIO_BUTTON, "gap-2 px-3 max-md:h-11 max-md:gap-[7px]")}
       >
         {status === "pending" ? (
@@ -105,9 +121,13 @@ export function StudioActions({
             />
           </svg>
         )}
-        {status === "success"
-          ? "Sent to Remotion Studio"
-          : "Add to Remotion Studio"}
+        {isCaptionPicker
+          ? isSelected
+            ? "Update style"
+            : "Use this style"
+          : status === "success"
+            ? "Sent to Remotion Studio"
+            : "Add to Remotion Studio"}
       </button>
       {isEmbeddedInStudio === false ? (
         <button

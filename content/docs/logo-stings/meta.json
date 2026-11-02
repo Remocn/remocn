@@ -1,0 +1,16 @@
+{
+  "title": "Logo Stings",
+  "defaultOpen": true,
+  "pages": [
+    "index",
+    "orbit-lock",
+    "puzzle-snap",
+    "spotlight",
+    "neon-sign",
+    "inflate",
+    "liquid-fill",
+    "accordion-unfold",
+    "anamorphic-flare"
+  ],
+  "icon": "Award01Icon"
+}

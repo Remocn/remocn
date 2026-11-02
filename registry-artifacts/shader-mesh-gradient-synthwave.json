@@ -1,0 +1,19 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "shader-mesh-gradient-synthwave",
+  "title": "Shader Mesh Gradient Synthwave",
+  "description": "Night-purple field lit by a warm coral sunset glow.",
+  "registryDependencies": ["@remocn/shader-mesh-gradient"],
+  "files": [
+    {
+      "path": "registry/remocn/shader-mesh-gradient-synthwave/index.tsx",
+      "content": "\"use client\";\n\nimport {\n  ShaderMeshGradient,\n  type ShaderMeshGradientProps,\n} from \"@/components/remocn/shader-mesh-gradient\";\n\n// Synthwave: night-purple field lit by a warm coral sunset glow.\n// A preset of ShaderMeshGradient. The whole look lives in the object below, so tune\n// it freely. Props you pass override the preset, except `speed`, which scales\n// the preset's own speed instead of replacing it.\n\nexport const shaderMeshGradientSynthwavePreset = {\n  speed: 1,\n  colors: [\"#05030f\", \"#05030f\", \"#3a1c71\", \"#d76d77\", \"#ffaf7b\"],\n  distortion: 0.9,\n  swirl: 0.3,\n  rotation: 160,\n  offsetX: -0.2,\n} satisfies ShaderMeshGradientProps;\n\nexport function ShaderMeshGradientSynthwave({\n  speed = 1,\n  ...props\n}: ShaderMeshGradientProps) {\n  return (\n    <ShaderMeshGradient\n      {...shaderMeshGradientSynthwavePreset}\n      {...props}\n      speed={shaderMeshGradientSynthwavePreset.speed * speed}\n    />\n  );\n}\n",
+      "type": "registry:component",
+      "target": "components/remocn/shader-mesh-gradient-synthwave.tsx"
+    }
+  ],
+  "meta": {
+    "presetOf": "shader-mesh-gradient"
+  },
+  "type": "registry:component"
+}

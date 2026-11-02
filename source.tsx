@@ -1,5 +1,6 @@
 import {
   ArtificialIntelligence04Icon,
+  Award01Icon,
   BlurIcon,
   BookOpen01Icon,
   ClosedCaptionIcon,
@@ -9,6 +10,7 @@ import {
   Layers01Icon,
   Layout01Icon,
   MagicWand01Icon,
+  PaintBoardIcon,
   PlaySquareIcon,
   Rocket01Icon,
   Share01Icon,
@@ -16,6 +18,7 @@ import {
   TextFontIcon,
   ToggleOnIcon,
   TransitionRightIcon,
+  Video01Icon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
 import { loader } from "fumadocs-core/source";
@@ -24,6 +27,7 @@ import { docs } from "@/.source/server";
 /** Sidebar category icons — meta.json `icon` values resolve against this map. */
 const DOCS_ICONS: Record<string, IconSvgElement> = {
   ArtificialIntelligence04Icon,
+  Award01Icon,
   BlurIcon,
   BookOpen01Icon,
   ClosedCaptionIcon,
@@ -33,6 +37,7 @@ const DOCS_ICONS: Record<string, IconSvgElement> = {
   Layers01Icon,
   Layout01Icon,
   MagicWand01Icon,
+  PaintBoardIcon,
   PlaySquareIcon,
   Rocket01Icon,
   Share01Icon,
@@ -40,6 +45,7 @@ const DOCS_ICONS: Record<string, IconSvgElement> = {
   TextFontIcon,
   ToggleOnIcon,
   TransitionRightIcon,
+  Video01Icon,
 };
 
 export const source = loader({
