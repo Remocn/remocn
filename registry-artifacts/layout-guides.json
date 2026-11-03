@@ -1,0 +1,17 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "layout-guides",
+  "title": "Layout Guides",
+  "description": "Dashed column guides drop over a grid, one column fills and gets a label, a gutter is measured and a now line slides across.",
+  "dependencies": ["remotion"],
+  "registryDependencies": ["@remocn/audit-core"],
+  "files": [
+    {
+      "path": "registry/remocn/layout-guides/index.tsx",
+      "content": "\"use client\";\n\nimport type { ReactNode } from \"react\";\nimport { AbsoluteFill } from \"remotion\";\nimport {\n  AUDIT_COLORS,\n  AuditClock,\n  DEMO,\n  DemoDashboard,\n  FONT,\n  GuideMarks,\n  type GuideSpec,\n} from \"@/lib/remocn/audit-core\";\n\nexport type LayoutGuidesProps = {\n  /** UI to lay guides over, in a 1280x720 frame. Defaults to a demo calendar dashboard. */\n  children?: ReactNode;\n  /** Column edges, highlight, ruler and now line, in frame pixels. */\n  guides?: GuideSpec;\n  color?: string;\n  /** Color of the now line and its label. */\n  nowColor?: string;\n  background?: string;\n  speed?: number;\n};\n\nexport const layoutGuidesDefaults = {\n  color: AUDIT_COLORS.fix,\n  nowColor: AUDIT_COLORS.scan,\n  background: AUDIT_COLORS.stage,\n  speed: 1,\n};\n\nexport const layoutGuidesLength = 54;\n\nexport function LayoutGuides(props: LayoutGuidesProps) {\n  const { speed = 1 } = props;\n  return (\n    <AuditClock speed={speed}>\n      <Scene {...props} />\n    </AuditClock>\n  );\n}\n\nfunction Scene({\n  children,\n  guides = children ? undefined : DEMO.after.guides,\n  color = layoutGuidesDefaults.color,\n  nowColor = layoutGuidesDefaults.nowColor,\n  background = layoutGuidesDefaults.background,\n}: LayoutGuidesProps) {\n  return (\n    <AbsoluteFill style={{ background, fontFamily: FONT }}>\n      {children ?? <DemoDashboard v={2} />}\n      {guides && (\n        <GuideMarks\n          guides={guides}\n          color={color}\n          nowColor={nowColor}\n          start={8}\n        />\n      )}\n    </AbsoluteFill>\n  );\n}\n",
+      "type": "registry:component",
+      "target": "components/remocn/layout-guides.tsx"
+    }
+  ],
+  "type": "registry:component"
+}

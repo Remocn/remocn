@@ -1,0 +1,17 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "redline-measure",
+  "title": "Redline Measure",
+  "description": "Spacing and size redlines draw over a UI one by one: ticks snap in, the line grows from its middle and the value pops on.",
+  "dependencies": ["remotion"],
+  "registryDependencies": ["@remocn/audit-core"],
+  "files": [
+    {
+      "path": "registry/remocn/redline-measure/index.tsx",
+      "content": "\"use client\";\n\nimport type { ReactNode } from \"react\";\nimport { AbsoluteFill } from \"remotion\";\nimport {\n  AUDIT_COLORS,\n  AuditClock,\n  DEMO,\n  DemoDashboard,\n  easeInOut,\n  FONT,\n  type Measure,\n  MeasureMarks,\n  type RadiusMark,\n  useAuditFrame,\n} from \"@/lib/remocn/audit-core\";\n\nexport type RedlineMeasureProps = {\n  /** UI to measure, laid out in a 1280x720 frame. Defaults to a demo calendar dashboard. */\n  children?: ReactNode;\n  /** Distances to draw, in frame pixels. Defaults to spacing on the demo dashboard. */\n  measures?: Measure[];\n  /** Corners whose radius gets an arc and a label. */\n  radii?: RadiusMark[];\n  color?: string;\n  background?: string;\n  /** How far the UI fades toward the background so the marks read, 0 to 1. */\n  dim?: number;\n  /** Frames between one mark and the next. */\n  stagger?: number;\n  speed?: number;\n};\n\nexport const redlineMeasureDefaults = {\n  color: AUDIT_COLORS.audit,\n  background: AUDIT_COLORS.stage,\n  dim: 0.18,\n  stagger: 5,\n  speed: 1,\n};\n\nexport const redlineMeasureLength = 63;\n\nconst START = 8;\n\nexport function RedlineMeasure(props: RedlineMeasureProps) {\n  const { speed = 1 } = props;\n  return (\n    <AuditClock speed={speed}>\n      <Scene {...props} />\n    </AuditClock>\n  );\n}\n\nfunction Scene({\n  children,\n  measures = children ? [] : DEMO.before.measures,\n  radii = children ? [] : DEMO.before.radii,\n  color = redlineMeasureDefaults.color,\n  background = redlineMeasureDefaults.background,\n  dim = redlineMeasureDefaults.dim,\n  stagger = redlineMeasureDefaults.stagger,\n}: RedlineMeasureProps) {\n  const frame = useAuditFrame();\n  return (\n    <AbsoluteFill style={{ background, fontFamily: FONT }}>\n      {children ?? <DemoDashboard v={1} />}\n      <AbsoluteFill\n        style={{ background, opacity: easeInOut(frame, [0, 10], [0, dim]) }}\n      />\n      <MeasureMarks\n        measures={measures}\n        radii={radii}\n        color={color}\n        start={START}\n        stagger={stagger}\n      />\n    </AbsoluteFill>\n  );\n}\n",
+      "type": "registry:component",
+      "target": "components/remocn/redline-measure.tsx"
+    }
+  ],
+  "type": "registry:component"
+}

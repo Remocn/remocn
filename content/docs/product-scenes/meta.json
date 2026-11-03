@@ -70,7 +70,14 @@
     "status-page",
     "---Onboarding---",
     "heat-drain-reveal",
-    "whats-new-modal"
+    "whats-new-modal",
+    "---Design review---",
+    "design-audit",
+    "redline-measure",
+    "audit-boxes",
+    "scan-fix",
+    "token-tags",
+    "layout-guides"
   ],
   "icon": "ComputerIcon"
 }

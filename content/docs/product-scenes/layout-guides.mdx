@@ -1,0 +1,79 @@
+---
+title: Layout Guides
+description: Dashed column guides drop over a grid, one column fills with a label and a now line slides across
+component: layout-guides
+vibe: clean
+length: 54
+useWhen:
+  - "A layout, grid or responsive feature should show the structure under a screen."
+  - "A calendar, timeline or schedule product needs its columns and current time called out."
+  - "A design review beat should end on the grid rather than on individual values."
+avoidWhen:
+  - "Single distances and sizes should be measured — use `redline-measure`."
+  - "Elements should be tagged with design token names — use `token-tags`."
+  - "The beat should be a gray wireframe filling in — use `wireframe-to-final`."
+---
+
+<ComponentPreview name="layout-guides" />
+
+<InstallBlock name="layout-guides" />
+
+## Usage
+
+`LayoutGuides` is a full-frame scene. Dashed guides drop down every column edge
+left to right. Then one column fills with a tint and gets a label, a gutter is
+measured, and a marker line slides across the grid with its own label.
+
+```tsx
+import { LayoutGuides } from "@/components/remocn/layout-guides";
+
+export const Grid = () => <LayoutGuides />;
+```
+
+Without children it draws over the demo dashboard's week grid. For your own UI,
+pass it as children in a 1280×720 frame and describe the grid in frame pixels.
+Only `columns`, `top` and `bottom` are required.
+
+```tsx
+import { LayoutGuides } from "@/components/remocn/layout-guides";
+
+export const Grid = () => (
+  <LayoutGuides
+    guides={{
+      columns: [160, 400, 640, 880, 1120],
+      top: 120,
+      bottom: 660,
+      highlight: { rect: { x: 400, y: 120, w: 240, h: 540 }, label: "col 2" },
+      now: { y: 300, from: 160, to: 1120, label: "Live" },
+    }}
+  >
+    <MyScreen />
+  </LayoutGuides>
+);
+```
+
+## Timing
+
+At 30 fps and `speed={1}`:
+
+| Frames | Motion |
+| --- | --- |
+| 8 + n × 3 | Guide n drops down over 16 frames |
+| 22–36 | The highlight traces and fills |
+| 28–42 | The highlight's header box traces |
+| 32–44 | The ruler draws and its value pops |
+| 34–46 | The highlight label pops on |
+| 38–54 | The now line slides across, its label pops |
+
+`layoutGuidesLength` is 54. `speed` scales the whole timeline.
+
+<PropsTable title="Props"
+  rows={[
+    { name: "children", type: "React.ReactNode", description: "UI to lay guides over, in a 1280×720 frame. Without it a demo dashboard is drawn" },
+    { name: "guides", type: "{ columns: number[]; top: number; bottom: number; highlight?: { rect; label }; ruler?: Measure; now?: { y; from; to; label } }", description: "Column edges, optional highlight, ruler and now line, in frame pixels. Defaults to the demo week grid, or nothing with children" },
+    { name: "color", type: "string", default: '"#335CFF"', description: "Guide, highlight and ruler color" },
+    { name: "nowColor", type: "string", default: '"#7D52F4"', description: "Now line and label color" },
+    { name: "background", type: "string", default: '"#EDEDEF"', description: "Stage color" },
+    { name: "speed", type: "number", default: "1", description: "Playback multiplier" },
+  ]}
+/>

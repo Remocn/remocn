@@ -23,6 +23,7 @@ const UNDOCUMENTED: Record<string, string> = {
   "command-menu-item": "folds into the command-menu page",
   "icons-core": "shared icon runtime",
   gsh: "shared gradients.sh shader engine behind the gradient grounds",
+  "audit-core": "shared annotation kit behind the design-review scenes",
 };
 
 function isIcon(name: string): boolean {

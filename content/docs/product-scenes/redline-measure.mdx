@@ -1,0 +1,84 @@
+---
+title: Redline Measure
+description: Spacing and size redlines draw over a UI one by one, each value popping on once its line lands
+component: redline-measure
+vibe: clean
+length: 63
+useWhen:
+  - "A design tool, design system or UI kit launch should show that the spacing is measured, not eyeballed."
+  - "A before beat needs a screen marked up like a design review: paddings, gaps, heights and corner radii."
+  - "Your own UI or screenshot should get a quick spec pass with values you choose."
+avoidWhen:
+  - "The marks should flag what is wrong with the fix next to it — use `audit-boxes`."
+  - "The scene should move from the marked-up screen to the fixed one — use `scan-fix`."
+  - "A product object, not a UI, should turn into a technical drawing — use `blueprint`."
+---
+
+<ComponentPreview name="redline-measure" />
+
+<InstallBlock name="redline-measure" />
+
+## Usage
+
+`RedlineMeasure` is a full-frame scene. It dims the UI slightly, then draws each
+measurement in turn: the end ticks snap in, the line grows out from its middle
+and the value pops on. Radius marks sweep a quarter arc into a corner.
+
+```tsx
+import { RedlineMeasure } from "@/components/remocn/redline-measure";
+
+export const Spec = () => <RedlineMeasure />;
+```
+
+Without children it measures a demo calendar dashboard. To measure your own UI,
+pass it as children laid out in a 1280×720 frame, and list the marks in frame
+pixels. With children and no `measures`, nothing is drawn.
+
+```tsx
+import { Img, staticFile } from "remotion";
+import { RedlineMeasure } from "@/components/remocn/redline-measure";
+
+export const Spec = () => (
+  <RedlineMeasure
+    measures={[
+      { from: [120, 200], to: [144, 200], label: "24", side: "above" },
+      { from: [300, 160], to: [300, 192], label: "h 32", side: "right" },
+    ]}
+    radii={[{ x: 120, y: 180, r: 12, label: "radius 12" }]}
+  >
+    <Img src={staticFile("dashboard.png")} style={{ width: 1280, height: 720 }} />
+  </RedlineMeasure>
+);
+```
+
+A measure is horizontal when its points differ more in x than in y. `side`
+places the value: `above`, `below`, `left`, `right` or `center`. By default a
+horizontal value sits above its line and a vertical one to the left.
+
+## Timing
+
+At 30 fps and `speed={1}`:
+
+| Frames | Motion |
+| --- | --- |
+| 0–10 | The UI dims toward the background |
+| 6 + n × `stagger` | Measure n's end ticks snap in |
+| 8 + n × `stagger` | Its line grows from the middle over 12 frames |
+| 15 + n × `stagger` | Its value pops on over 12 frames |
+
+Radius marks follow the measures in the same rhythm. `redlineMeasureLength` is
+63 with the default demo marks. After that the marks hold still. `speed` scales
+the whole timeline.
+
+<PropsTable title="Props"
+  rows={[
+    { name: "children", type: "React.ReactNode", description: "UI to measure, laid out in a 1280×720 frame. Without it a demo dashboard is drawn" },
+    { name: "measures", type: "{ from: [number, number]; to: [number, number]; label: string; side?: string }[]", description: "Distances to draw, in frame pixels. Defaults to spacing on the demo dashboard, or none with children" },
+    { name: "radii", type: "{ x: number; y: number; r: number; label: string }[]", description: "Corners that get a radius arc; x and y are the corner" },
+    { name: "color", type: "string", default: '"#FB3748"', description: "Line and label color" },
+    { name: "background", type: "string", default: '"#EDEDEF"', description: "Stage color, also used for the dim" },
+    { name: "dim", type: "number", default: "0.18", description: "How far the UI fades toward the background, 0 to 1" },
+    { name: "stagger", type: "number", default: "5", description: "Frames between one mark and the next" },
+    { name: "speed", type: "number", default: "1", description: "Playback multiplier" },
+  ]}
+/>

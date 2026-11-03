@@ -30,6 +30,10 @@ const INLINABLE_LIBS: Record<string, { artifact: string; importPath: string }> =
       artifact: "caption-core",
       importPath: "@/lib/remocn/caption-core",
     },
+    "@remocn/audit-core": {
+      artifact: "audit-core",
+      importPath: "@/lib/remocn/audit-core",
+    },
   };
 
 interface RegistryItem {

@@ -401,6 +401,26 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       speed: 1,
     },
   },
+  "audit-boxes": {
+    durationInFrames: 83,
+    fps: 30,
+    compositionWidth: 1280,
+    compositionHeight: 720,
+    previewBackdrop: {
+      type: "color",
+      value: "#EDEDEF",
+    },
+    defaults: {
+      color: "#FB3748",
+      background: "#EDEDEF",
+      counterLabel: "issues",
+      stagger: 4,
+      speed: 1,
+    },
+    card: {
+      fit: false,
+    },
+  },
   "axis-flex": {
     durationInFrames: 150,
     fps: 30,
@@ -3014,6 +3034,27 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       caption: "Studio",
       showLogo: true,
       speed: 1,
+    },
+  },
+  "design-audit": {
+    durationInFrames: 340,
+    fps: 30,
+    compositionWidth: 1280,
+    compositionHeight: 720,
+    previewBackdrop: {
+      type: "color",
+      value: "#EDEDEF",
+    },
+    defaults: {
+      brand: "Synergy",
+      auditColor: "#FB3748",
+      fixColor: "#335CFF",
+      scanColor: "#7D52F4",
+      background: "#EDEDEF",
+      speed: 1,
+    },
+    card: {
+      fit: false,
     },
   },
   "device-grows-around": {
@@ -7029,6 +7070,25 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       speed: 1,
     },
   },
+  "layout-guides": {
+    durationInFrames: 81,
+    fps: 30,
+    compositionWidth: 1280,
+    compositionHeight: 720,
+    previewBackdrop: {
+      type: "color",
+      value: "#EDEDEF",
+    },
+    defaults: {
+      color: "#335CFF",
+      nowColor: "#7D52F4",
+      background: "#EDEDEF",
+      speed: 1,
+    },
+    card: {
+      fit: false,
+    },
+  },
   "layout-swap": {
     durationInFrames: 170,
     fps: 30,
@@ -9497,6 +9557,26 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       speed: 1,
     },
   },
+  "redline-measure": {
+    durationInFrames: 90,
+    fps: 30,
+    compositionWidth: 1280,
+    compositionHeight: 720,
+    previewBackdrop: {
+      type: "color",
+      value: "#EDEDEF",
+    },
+    defaults: {
+      color: "#FB3748",
+      background: "#EDEDEF",
+      dim: 0.18,
+      stagger: 5,
+      speed: 1,
+    },
+    card: {
+      fit: false,
+    },
+  },
   reel: {
     durationInFrames: 160,
     fps: 30,
@@ -10057,6 +10137,27 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       color: "#171717",
       fontWeight: "600",
       speed: 1,
+    },
+  },
+  "scan-fix": {
+    durationInFrames: 127,
+    fps: 30,
+    compositionWidth: 1280,
+    compositionHeight: 720,
+    previewBackdrop: {
+      type: "color",
+      value: "#EDEDEF",
+    },
+    defaults: {
+      brand: "Synergy",
+      scanColor: "#7D52F4",
+      beforeColor: "#FB3748",
+      afterColor: "#335CFF",
+      background: "#EDEDEF",
+      speed: 1,
+    },
+    card: {
+      fit: false,
     },
   },
   "scan-reveal": {
@@ -12976,6 +13077,25 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       label: "Auto-captions",
       state: "On",
       speed: 1,
+    },
+  },
+  "token-tags": {
+    durationInFrames: 88,
+    fps: 30,
+    compositionWidth: 1280,
+    compositionHeight: 720,
+    previewBackdrop: {
+      type: "color",
+      value: "#EDEDEF",
+    },
+    defaults: {
+      lineColor: "#0E121B",
+      background: "#EDEDEF",
+      stagger: 6,
+      speed: 1,
+    },
+    card: {
+      fit: false,
     },
   },
   "toolbar-unfurl": {

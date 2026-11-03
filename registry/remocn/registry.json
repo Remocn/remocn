@@ -11591,6 +11591,110 @@
           "target": "components/remocn/feature-flag-rollout.tsx"
         }
       ]
+    },
+    {
+      "name": "audit-core",
+      "type": "registry:lib",
+      "title": "Audit Core",
+      "description": "Shared kit behind the design-review components: redline rulers, issue boxes, radius arcs, token tags, layout guides, the scan band and a demo dashboard to measure.",
+      "dependencies": ["remotion"],
+      "files": [
+        {
+          "path": "audit-core/index.tsx",
+          "type": "registry:lib",
+          "target": "lib/remocn/audit-core.tsx"
+        }
+      ]
+    },
+    {
+      "name": "redline-measure",
+      "type": "registry:component",
+      "title": "Redline Measure",
+      "description": "Spacing and size redlines draw over a UI one by one: ticks snap in, the line grows from its middle and the value pops on.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/audit-core"],
+      "files": [
+        {
+          "path": "redline-measure/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/redline-measure.tsx"
+        }
+      ]
+    },
+    {
+      "name": "audit-boxes",
+      "type": "registry:component",
+      "title": "Audit Boxes",
+      "description": "Off-spec elements of a UI get traced with red boxes, each with the fix it needs, while an issue counter ticks up.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/audit-core"],
+      "files": [
+        {
+          "path": "audit-boxes/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/audit-boxes.tsx"
+        }
+      ]
+    },
+    {
+      "name": "scan-fix",
+      "type": "registry:component",
+      "title": "Scan Fix",
+      "description": "A scan band sweeps down a screen: below it the old build with red redlines, above it the fixed build with blue ones, and the version chip flips.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/audit-core"],
+      "files": [
+        {
+          "path": "scan-fix/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/scan-fix.tsx"
+        }
+      ]
+    },
+    {
+      "name": "token-tags",
+      "type": "registry:component",
+      "title": "Token Tags",
+      "description": "The rest of the UI washes out and leader lines run from elements to dark chips naming the design tokens they use.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/audit-core"],
+      "files": [
+        {
+          "path": "token-tags/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/token-tags.tsx"
+        }
+      ]
+    },
+    {
+      "name": "layout-guides",
+      "type": "registry:component",
+      "title": "Layout Guides",
+      "description": "Dashed column guides drop over a grid, one column fills and gets a label, a gutter is measured and a now line slides across.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/audit-core"],
+      "files": [
+        {
+          "path": "layout-guides/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/layout-guides.tsx"
+        }
+      ]
+    },
+    {
+      "name": "design-audit",
+      "type": "registry:component",
+      "title": "Design Audit",
+      "description": "A full design review in one scene: redlines and issue boxes, a scan that ships the fix, a camera push into one card with specs and tokens, then layout guides.",
+      "dependencies": ["remotion"],
+      "registryDependencies": ["@remocn/audit-core"],
+      "files": [
+        {
+          "path": "design-audit/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/design-audit.tsx"
+        }
+      ]
     }
   ]
 }

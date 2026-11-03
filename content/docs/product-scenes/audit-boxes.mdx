@@ -1,0 +1,79 @@
+---
+title: Audit Boxes
+description: Off-spec elements of a UI get traced with red boxes and labelled with the fix each one needs
+component: audit-boxes
+vibe: clean
+length: 56
+useWhen:
+  - "A design linting, QA or accessibility tool should show the problems it finds on a real screen."
+  - "A redesign story needs a before beat where the old UI is visibly full of small mistakes."
+  - "The count of issues found matters and should tick up as they are flagged."
+avoidWhen:
+  - "The marks should be neutral measurements rather than problems — use `redline-measure`."
+  - "The next beat should be the screen getting fixed — use `scan-fix`."
+  - "The camera should tour regions of a screenshot with captions — use `screenshot-tour`."
+---
+
+<ComponentPreview name="audit-boxes" />
+
+<InstallBlock name="audit-boxes" />
+
+## Usage
+
+`AuditBoxes` is a full-frame scene. Each issue's box traces itself clockwise
+from the top left, then its note pops on beside it. A counter above the frame's
+top right counts the boxes as they land.
+
+```tsx
+import { AuditBoxes } from "@/components/remocn/audit-boxes";
+
+export const Lint = () => <AuditBoxes />;
+```
+
+Without children it audits a demo calendar dashboard. For your own UI, pass it
+as children in a 1280×720 frame and list the issues in frame pixels.
+
+```tsx
+import { AuditBoxes } from "@/components/remocn/audit-boxes";
+
+export const Lint = () => (
+  <AuditBoxes
+    issues={[
+      { rect: { x: 320, y: 180, w: 200, h: 40 }, note: "contrast 3.1:1" },
+      { rect: { x: 900, y: 80, w: 120, h: 32 }, note: "hit 28 → 44", side: "end" },
+    ]}
+    counterLabel="problems"
+  >
+    <MyScreen />
+  </AuditBoxes>
+);
+```
+
+`side` places the note: `start` sits above the box's left edge, `end` above its
+right edge, `below` under its left edge. Set `counterLabel=""` to hide the
+counter.
+
+## Timing
+
+At 30 fps and `speed={1}`:
+
+| Frames | Motion |
+| --- | --- |
+| 4–14 | The counter drops in |
+| 10 + n × `stagger` | Box n starts tracing and takes 14 frames |
+| 20 + n × `stagger` | Its note pops on over 12 frames |
+
+`auditBoxesLength` is 56 with the seven demo issues. `speed` scales the whole
+timeline.
+
+<PropsTable title="Props"
+  rows={[
+    { name: "children", type: "React.ReactNode", description: "UI to audit, laid out in a 1280×720 frame. Without it a demo dashboard is drawn" },
+    { name: "issues", type: '{ rect: { x: number; y: number; w: number; h: number }; note: string; side?: "start" | "end" | "below" }[]', description: "Off-spec elements in frame pixels and the fix each needs. Defaults to the demo issues, or none with children" },
+    { name: "color", type: "string", default: '"#FB3748"', description: "Box, note and counter color" },
+    { name: "background", type: "string", default: '"#EDEDEF"', description: "Stage color" },
+    { name: "counterLabel", type: "string", default: '"issues"', description: "Word after the count; empty hides the counter" },
+    { name: "stagger", type: "number", default: "4", description: "Frames between one box and the next" },
+    { name: "speed", type: "number", default: "1", description: "Playback multiplier" },
+  ]}
+/>

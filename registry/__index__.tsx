@@ -9067,6 +9067,64 @@ const registry: Record<string, RegistryEntry> = {
         (m) => m.featureFlagRolloutConfig,
       ),
   },
+  "redline-measure": {
+    load: () =>
+      import("@/registry/remocn/redline-measure").then((m) => ({
+        default: m.RedlineMeasure,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/redline-measure/config").then(
+        (m) => m.redlineMeasureConfig,
+      ),
+  },
+  "audit-boxes": {
+    load: () =>
+      import("@/registry/remocn/audit-boxes").then((m) => ({
+        default: m.AuditBoxes,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/audit-boxes/config").then(
+        (m) => m.auditBoxesConfig,
+      ),
+  },
+  "scan-fix": {
+    load: () =>
+      import("@/registry/remocn/scan-fix").then((m) => ({
+        default: m.ScanFix,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/scan-fix/config").then((m) => m.scanFixConfig),
+  },
+  "token-tags": {
+    load: () =>
+      import("@/registry/remocn/token-tags").then((m) => ({
+        default: m.TokenTags,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/token-tags/config").then(
+        (m) => m.tokenTagsConfig,
+      ),
+  },
+  "layout-guides": {
+    load: () =>
+      import("@/registry/remocn/layout-guides").then((m) => ({
+        default: m.LayoutGuides,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/layout-guides/config").then(
+        (m) => m.layoutGuidesConfig,
+      ),
+  },
+  "design-audit": {
+    load: () =>
+      import("@/registry/remocn/design-audit").then((m) => ({
+        default: m.DesignAudit,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn/design-audit/config").then(
+        (m) => m.designAuditConfig,
+      ),
+  },
 };
 
 const configCache = new Map<string, Promise<ResolvedComponentConfig>>();

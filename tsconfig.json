@@ -36,6 +36,7 @@
         "./registry/remocn/canvas-presentation/index.tsx"
       ],
       "@/lib/remocn/caption-core": ["./registry/remocn/caption-core/index.ts"],
+      "@/lib/remocn/audit-core": ["./registry/remocn/audit-core/index.tsx"],
       "@/components/remocn/brush": ["./registry/remocn/brush/index.tsx"],
       "@/components/remocn/handwrite": [
         "./registry/remocn/handwrite/index.tsx"

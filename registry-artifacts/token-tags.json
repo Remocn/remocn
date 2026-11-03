@@ -1,0 +1,17 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "token-tags",
+  "title": "Token Tags",
+  "description": "The rest of the UI washes out and leader lines run from elements to dark chips naming the design tokens they use.",
+  "dependencies": ["remotion"],
+  "registryDependencies": ["@remocn/audit-core"],
+  "files": [
+    {
+      "path": "registry/remocn/token-tags/index.tsx",
+      "content": "\"use client\";\n\nimport type { ReactNode } from \"react\";\nimport { AbsoluteFill } from \"remotion\";\nimport {\n  AUDIT_COLORS,\n  AuditClock,\n  DEMO,\n  DemoDashboard,\n  easeInOut,\n  FONT,\n  type Rect,\n  Spotlight,\n  TokenMarks,\n  type TokenSpec,\n  useAuditFrame,\n} from \"@/lib/remocn/audit-core\";\n\nexport type TokenTagsProps = {\n  /** UI to tag, laid out in a 1280x720 frame. Defaults to a demo calendar dashboard. */\n  children?: ReactNode;\n  /** Token tags: a dot on `anchor`, the chip centered on `at`, in frame pixels. */\n  tokens?: TokenSpec[];\n  /** Area kept bright while the rest washes out. `null` skips the wash. */\n  focus?: Rect | null;\n  lineColor?: string;\n  background?: string;\n  /** Frames between one tag and the next. */\n  stagger?: number;\n  speed?: number;\n};\n\nexport const tokenTagsDefaults = {\n  lineColor: AUDIT_COLORS.ink,\n  background: AUDIT_COLORS.stage,\n  stagger: 6,\n  speed: 1,\n};\n\nexport const tokenTagsLength = 61;\n\nconst START = 12;\n\nexport function TokenTags(props: TokenTagsProps) {\n  const { speed = 1 } = props;\n  return (\n    <AuditClock speed={speed}>\n      <Scene {...props} />\n    </AuditClock>\n  );\n}\n\nfunction Scene({\n  children,\n  tokens = children ? [] : DEMO.after.tokens,\n  focus = children ? null : DEMO.after.cardRow,\n  lineColor = tokenTagsDefaults.lineColor,\n  background = tokenTagsDefaults.background,\n  stagger = tokenTagsDefaults.stagger,\n}: TokenTagsProps) {\n  const frame = useAuditFrame();\n  return (\n    <AbsoluteFill style={{ background, fontFamily: FONT }}>\n      {children ?? <DemoDashboard v={2} />}\n      {focus && (\n        <Spotlight\n          rect={focus}\n          color={background}\n          opacity={easeInOut(frame, [0, 12], [0, 1])}\n        />\n      )}\n      <TokenMarks\n        tokens={tokens}\n        start={START}\n        stagger={stagger}\n        lineColor={lineColor}\n      />\n    </AbsoluteFill>\n  );\n}\n",
+      "type": "registry:component",
+      "target": "components/remocn/token-tags.tsx"
+    }
+  ],
+  "type": "registry:component"
+}
