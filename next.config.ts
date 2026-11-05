@@ -3,6 +3,17 @@ import type { NextConfig } from "next";
 
 const withMDX = createMDX();
 
+// Next anchors `value` as `^value$`. Browsers never put text/markdown in
+// Accept; Claude Code's WebFetch sends `text/markdown, text/html, */*`.
+const AGENT_SIGNALS = [
+  { type: "header", key: "accept", value: ".*text/markdown.*" },
+  {
+    type: "header",
+    key: "user-agent",
+    value: ".*(Claude-User|ChatGPT-User|Perplexity-User|MistralAI-User).*",
+  },
+] as const;
+
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   typescript: {
@@ -36,8 +47,40 @@ const nextConfig: NextConfig = {
     root: __dirname,
   },
   async rewrites() {
-    // Serve raw Markdown for AI agents: `/docs/<slug>.md` -> app/llms.md route.
-    return [{ source: "/docs/:path*.md", destination: "/llms.md/:path*" }];
+    return {
+      beforeFiles: [
+        // Explicit Markdown URL: `/docs/<slug>.md` -> app/llms.md route.
+        // `/docs` itself has no page; its Markdown is the llms.txt index.
+        { source: "/docs.md", destination: "/llms.txt" },
+        { source: "/docs/:path*.md", destination: "/llms.md/:path*" },
+        // Same URL, Markdown for agents: a docs page or the home page answers
+        // with Markdown when the client asks for it or is a fetcher reading a
+        // page for a user. Crawlers that build a search index (Googlebot,
+        // OAI-SearchBot, Claude-SearchBot) and agentic browsers (Atlas,
+        // Claude-Agent, Google-Agent) still get HTML: the first would see
+        // cloaking, the second needs the real UI to click through.
+        ...AGENT_SIGNALS.flatMap((signal) => [
+          // Before `/docs/:path*`, which matches the bare `/docs` too.
+          { source: "/docs", has: [signal], destination: "/llms.txt" },
+          {
+            source: "/docs/:path*",
+            has: [signal],
+            destination: "/llms.md/:path*",
+          },
+          { source: "/", has: [signal], destination: "/llms.txt" },
+        ]),
+      ],
+      afterFiles: [],
+      fallback: [],
+    };
+  },
+  async headers() {
+    // The response at these URLs depends on Accept and User-Agent, so a cache
+    // must not hand the Markdown variant to a browser or the other way round.
+    return ["/", "/docs/:path*"].map((source) => ({
+      source,
+      headers: [{ key: "Vary", value: "Accept, User-Agent" }],
+    }));
   },
   async redirects() {
     // Collapse the www host into the canonical apex so Google indexes a single

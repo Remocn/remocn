@@ -77,7 +77,11 @@ export async function generateMetadata(props: {
   return {
     title: data.title,
     description: data.description,
-    alternates: { canonical: page.url },
+    // Agents that browse with a Chrome user agent find the Markdown here.
+    alternates: {
+      canonical: page.url,
+      types: { "text/markdown": `${page.url}.md` },
+    },
     openGraph: {
       title: data.title,
       description: data.description,
