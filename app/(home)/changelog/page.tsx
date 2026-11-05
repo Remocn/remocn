@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import type { ComponentProps } from "react";
 import { changelog } from "@/.source/server";
+import { SITE_PAGES, sitePageOgImage } from "@/config/site-pages";
 import {
   changelogDateFormatter,
   changelogSlug,
@@ -11,8 +12,7 @@ import { ChangelogEntry, EntryActionLink } from "./components/changelog-entry";
 import { ChangelogHeader } from "./components/changelog-header";
 import { ChangelogPreview } from "./components/changelog-preview";
 
-const DESCRIPTION =
-  "Every release of Remocn — new components, transitions, shaders, icons, and improvements, newest first.";
+const DESCRIPTION = SITE_PAGES.changelog.description;
 
 export const metadata: Metadata = {
   title: "Changelog",
@@ -25,15 +25,13 @@ export const metadata: Metadata = {
     title: "Changelog · Remocn",
     description: DESCRIPTION,
     locale: "en_US",
-    images: [
-      { url: "/hero.png", width: 1200, height: 675, alt: "Changelog · Remocn" },
-    ],
+    images: [sitePageOgImage("changelog")],
   },
   twitter: {
     card: "summary_large_image",
     title: "Changelog · Remocn",
     description: DESCRIPTION,
-    images: ["/hero.png"],
+    images: [sitePageOgImage("changelog").url],
   },
 };
 

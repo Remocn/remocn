@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import { INSPIRED_BY } from "@/config/inspired-by";
+import { SITE_PAGES, sitePageOgImage } from "@/config/site-pages";
 import { Credits } from "./credits";
 import saved from "./credits.json";
 import type { CreditsConfig } from "./credits-config";
 
-const DESCRIPTION =
-  "The people on X whose work shaped Remocn: motion, design and code we learned from.";
+const DESCRIPTION = SITE_PAGES["inspired-by"].description;
 
 const TITLE = "Inspired by · Remocn";
 
@@ -20,13 +20,13 @@ export const metadata: Metadata = {
     title: TITLE,
     description: DESCRIPTION,
     locale: "en_US",
-    images: [{ url: "/hero.png", width: 1200, height: 675, alt: TITLE }],
+    images: [sitePageOgImage("inspired-by")],
   },
   twitter: {
     card: "summary_large_image",
     title: TITLE,
     description: DESCRIPTION,
-    images: ["/hero.png"],
+    images: [sitePageOgImage("inspired-by").url],
   },
 };
 

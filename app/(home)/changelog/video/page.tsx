@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { changelog } from "@/.source/server";
+import { sitePageOgImage } from "@/config/site-pages";
 import {
   changelogDateFormatter,
   changelogSlug,
@@ -26,7 +27,7 @@ const entries = sortByDateDesc(changelog).flatMap((entry) =>
     : [],
 );
 
-const shareImage = entries[0]?.videoPoster ?? "/hero.png";
+const shareImage = entries[0]?.videoPoster ?? sitePageOgImage("changelog").url;
 
 export const metadata: Metadata = {
   title: "Changelog in video",

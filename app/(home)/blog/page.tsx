@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
+import { SITE_PAGES, sitePageOgImage } from "@/config/site-pages";
 import { BlogHeader } from "./components/blog-header";
 import { FeaturedPost } from "./components/featured-post";
 import { PostIndex } from "./components/post-index";
 import { getBlogPosts } from "./lib/posts";
 
-const DESCRIPTION =
-  "Making-of stories behind the videos we build with Remocn — the storyboard, the decisions that made each one work, and the prompt that rebuilds it.";
+const DESCRIPTION = SITE_PAGES.blog.description;
 
 export const metadata: Metadata = {
   title: "Blog",
@@ -21,15 +21,13 @@ export const metadata: Metadata = {
     title: "Blog · Remocn",
     description: DESCRIPTION,
     locale: "en_US",
-    images: [
-      { url: "/hero.png", width: 1200, height: 675, alt: "Blog · Remocn" },
-    ],
+    images: [sitePageOgImage("blog")],
   },
   twitter: {
     card: "summary_large_image",
     title: "Blog · Remocn",
     description: DESCRIPTION,
-    images: ["/hero.png"],
+    images: [sitePageOgImage("blog").url],
   },
 };
 

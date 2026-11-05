@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { SITE_PAGES, sitePageOgImage } from "@/config/site-pages";
 import { LandingButton } from "../components/landing/ui/landing-button";
 import {
   pageHeaderButton,
@@ -10,8 +11,7 @@ const STARWALL_URL = "https://starwall.radiumcoders.com/";
 const AUTHOR_X_URL = "https://x.com/radiumcoders";
 
 const TITLE = "GitHub Stars Video Generator · Remocn";
-const DESCRIPTION =
-  "Turn your repo's stars into a shareable animated video. Paste a GitHub repo and we animate every stargazer into a clip you can own.";
+const DESCRIPTION = SITE_PAGES.stars.description;
 
 export const metadata: Metadata = {
   title: "GitHub Stars Video Generator",
@@ -24,13 +24,13 @@ export const metadata: Metadata = {
     title: TITLE,
     description: DESCRIPTION,
     locale: "en_US",
-    images: [{ url: "/hero.png", width: 1200, height: 675, alt: TITLE }],
+    images: [sitePageOgImage("stars")],
   },
   twitter: {
     card: "summary_large_image",
     title: TITLE,
     description: DESCRIPTION,
-    images: ["/hero.png"],
+    images: [sitePageOgImage("stars").url],
   },
 };
 

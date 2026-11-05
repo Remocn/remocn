@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
+import { SITE_PAGES, sitePageOgImage } from "@/config/site-pages";
 import { LegalArticle } from "./components/legal-article";
 import { LegalContact } from "./components/legal-contact";
 import { LegalContentsBar } from "./components/legal-contents-bar";
 import { LegalHero } from "./components/legal-hero";
 import { LegalIndex } from "./components/legal-index";
 
-const DESCRIPTION =
-  "How Remocn handles your data, and the terms that apply to the site, the free components, and paid products.";
+const DESCRIPTION = SITE_PAGES.legal.description;
 
 export const metadata: Metadata = {
   title: "Privacy & Terms",
@@ -19,20 +19,13 @@ export const metadata: Metadata = {
     title: "Privacy & Terms · Remocn",
     description: DESCRIPTION,
     locale: "en_US",
-    images: [
-      {
-        url: "/hero.png",
-        width: 1200,
-        height: 675,
-        alt: "Privacy & Terms · Remocn",
-      },
-    ],
+    images: [sitePageOgImage("legal")],
   },
   twitter: {
     card: "summary_large_image",
     title: "Privacy & Terms · Remocn",
     description: DESCRIPTION,
-    images: ["/hero.png"],
+    images: [sitePageOgImage("legal").url],
   },
 };
 
