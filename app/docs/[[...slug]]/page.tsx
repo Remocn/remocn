@@ -82,7 +82,13 @@ export async function generateMetadata(props: {
       canonical: page.url,
       types: { "text/markdown": `${page.url}.md` },
     },
+    // A page-level openGraph replaces the root one, so the shared fields
+    // (url, type, siteName, locale) are restated here.
     openGraph: {
+      type: "article",
+      url: page.url,
+      siteName: "Remocn",
+      locale: "en_US",
       title: data.title,
       description: data.description,
       images: [{ url: ogUrl, width: 1200, height: 630 }],

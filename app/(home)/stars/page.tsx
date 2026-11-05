@@ -9,14 +9,28 @@ import {
 const STARWALL_URL = "https://starwall.radiumcoders.com/";
 const AUTHOR_X_URL = "https://x.com/radiumcoders";
 
+const TITLE = "GitHub Stars Video Generator · Remocn";
+const DESCRIPTION =
+  "Turn your repo's stars into a shareable animated video. Paste a GitHub repo and we animate every stargazer into a clip you can own.";
+
 export const metadata: Metadata = {
   title: "GitHub Stars Video Generator",
-  description:
-    "Turn your repo's stars into a shareable animated video. Paste a GitHub repo and we animate every stargazer into a clip you can own.",
+  description: DESCRIPTION,
+  alternates: { canonical: "/stars" },
   openGraph: {
-    title: "GitHub Stars Video Generator · remocn",
-    description:
-      "Turn your repo's stars into a shareable animated video. Paste a GitHub repo and we animate every stargazer into a clip you can own.",
+    type: "website",
+    url: "/stars",
+    siteName: "Remocn",
+    title: TITLE,
+    description: DESCRIPTION,
+    locale: "en_US",
+    images: [{ url: "/hero.png", width: 1200, height: 675, alt: TITLE }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: TITLE,
+    description: DESCRIPTION,
+    images: ["/hero.png"],
   },
 };
 

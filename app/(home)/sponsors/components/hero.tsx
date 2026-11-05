@@ -18,7 +18,7 @@ export function SponsorsHero() {
         />
         <div className="flex flex-col gap-6 md:max-w-[440px] md:gap-7 xl:w-[440px] xl:shrink-0 xl:pb-2">
           <p className="text-[20px] leading-7 text-body">
-            remocn is open-source and free. Your sponsorship helps us spend more
+            Remocn is open-source and free. Your sponsorship helps us spend more
             time building premium animations and keeping the project alive.
           </p>
           <HeroActions />

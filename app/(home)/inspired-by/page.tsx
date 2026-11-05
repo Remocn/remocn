@@ -5,12 +5,29 @@ import saved from "./credits.json";
 import type { CreditsConfig } from "./credits-config";
 
 const DESCRIPTION =
-  "The people on X whose work shaped remocn: motion, design and code we learned from.";
+  "The people on X whose work shaped Remocn: motion, design and code we learned from.";
+
+const TITLE = "Inspired by · Remocn";
 
 export const metadata: Metadata = {
   title: "Inspired by",
   description: DESCRIPTION,
-  openGraph: { title: "Inspired by · remocn", description: DESCRIPTION },
+  alternates: { canonical: "/inspired-by" },
+  openGraph: {
+    type: "website",
+    url: "/inspired-by",
+    siteName: "Remocn",
+    title: TITLE,
+    description: DESCRIPTION,
+    locale: "en_US",
+    images: [{ url: "/hero.png", width: 1200, height: 675, alt: TITLE }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: TITLE,
+    description: DESCRIPTION,
+    images: ["/hero.png"],
+  },
 };
 
 /**

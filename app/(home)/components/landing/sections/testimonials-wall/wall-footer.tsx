@@ -16,7 +16,7 @@ export function WallFooter() {
         Read all posts
       </LandingButton>
       <p className="text-[15px] text-muted-foreground leading-[18px]">
-        123 builders have posted about remocn since April
+        123 builders have posted about Remocn since April
       </p>
     </div>
   );

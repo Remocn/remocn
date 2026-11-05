@@ -335,7 +335,7 @@ export const tiers: Tier[] = [
     tagline: "Own the top spot",
     perks: [
       "Everything in Partner",
-      "Your logo on the remocn landing page",
+      "Your logo on the Remocn landing page",
       "Your logo in the docs sidebar",
       "Your logo on the Remocn Studio landing page",
     ],

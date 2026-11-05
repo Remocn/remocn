@@ -3,7 +3,7 @@ export const DOCS_MENU_HREF = "/docs/getting-started/introduction";
 export const START_HERE = [
   {
     href: "/docs/getting-started/introduction",
-    description: "What remocn is and how the pieces fit",
+    description: "What Remocn is and how the pieces fit",
   },
   {
     href: "/docs/getting-started/installation",

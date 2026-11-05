@@ -17,7 +17,7 @@ export function SiteFooter() {
         <div className="flex flex-col gap-1.5 lg:flex-row lg:items-baseline lg:gap-5">
           <Link
             href="/"
-            aria-label="remocn home"
+            aria-label="Remocn home"
             className="flex w-fit rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <LandingWordmark />

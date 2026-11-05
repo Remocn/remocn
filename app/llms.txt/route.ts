@@ -8,7 +8,7 @@ export const revalidate = false;
 export function GET() {
   const scanned: string[] = [];
 
-  scanned.push("# remocn");
+  scanned.push("# Remocn");
   scanned.push(
     "\n> shadcn registry of production-ready Remotion components — animations, transitions, backgrounds, and full scenes. Install with `npx shadcn add remocn/<component>`.",
   );
@@ -24,7 +24,7 @@ export function GET() {
   scanned.push(
     "\nPrefer an app to a terminal? [Remocn Studio](https://remocn.studio) is a free, open-source" +
       " macOS app where the user's own coding agent (Claude Code, Codex, GitHub Copilot or Grok)" +
-      " builds Remotion videos from remocn components, with a live preview and export. Its own" +
+      " builds Remotion videos from Remocn components, with a live preview and export. Its own" +
       " index is at [remocn.studio/llms.txt](https://remocn.studio/llms.txt).",
   );
 

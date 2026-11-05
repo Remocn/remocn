@@ -20,7 +20,7 @@ export function GuideFormatFrames() {
           <span
             className={cn(title, "flex gap-1.5 text-[22px] leading-[26px]")}
           >
-            Meet <span className={accent}>remocn</span>
+            Meet <span className={accent}>Remocn</span>
           </span>
           <span className="flex gap-2.5">
             <Still className="h-[88px] max-w-[155px] grow basis-0 rounded-tile" />
@@ -44,7 +44,7 @@ export function GuideFormatFrames() {
               "flex flex-col items-center text-ui leading-[18px]",
             )}
           >
-            Meet <span className={accent}>remocn</span>
+            Meet <span className={accent}>Remocn</span>
           </span>
           <Still className="h-[42px] w-[84px] rounded-tag" />
           <Lines
@@ -72,7 +72,7 @@ export function GuideFormatFrames() {
           <span
             className={cn(title, "flex gap-[5px] text-[19px] leading-[22px]")}
           >
-            Meet <span className={accent}>remocn</span>
+            Meet <span className={accent}>Remocn</span>
           </span>
           <span className="flex gap-2">
             <Still className="h-16 max-w-[83px] grow basis-0 rounded-[7px]" />

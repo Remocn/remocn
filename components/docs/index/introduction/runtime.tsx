@@ -148,7 +148,7 @@ export function RuntimeDiff() {
           }
         />
         <RuntimeCard
-          title="A remocn button"
+          title="A Remocn button"
           text="Same pixels for the same frame, every time."
           visual={
             <>

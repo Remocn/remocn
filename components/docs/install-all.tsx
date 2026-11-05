@@ -9,7 +9,7 @@ export function InstallAll() {
     <div className={cn("not-prose", BLOCK_SPACING)}>
       <CodeBlockCommand
         component="all"
-        prompt="Add every remocn component to my project."
+        prompt="Add every Remocn component to my project."
         {...convertNpmCommand(INSTALL_ALL_COMMAND)}
       />
     </div>

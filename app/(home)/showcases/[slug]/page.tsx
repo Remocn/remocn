@@ -36,7 +36,7 @@ export async function generateMetadata({
   const found = await getClip(slug);
   if (!found) return {};
   const { clip } = found;
-  const title = `${clip.title} · remocn`;
+  const title = `${clip.title} · Remocn`;
 
   return {
     title: clip.title,

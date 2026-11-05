@@ -50,7 +50,7 @@ export function MobileMenu() {
             render={
               <Link
                 href="/"
-                aria-label="remocn home"
+                aria-label="Remocn home"
                 className="flex h-11 items-center rounded-control bg-capsule px-3.5 outline-none focus-visible:ring-2 focus-visible:ring-ring"
               />
             }
@@ -105,7 +105,7 @@ export function MobileMenu() {
                 href={X_URL}
                 target="_blank"
                 rel="noreferrer"
-                aria-label="remocn on X"
+                aria-label="Remocn on X"
                 className="flex size-[52px] shrink-0 items-center justify-center rounded-cta bg-secondary text-foreground outline-none transition-colors hover:bg-[#dcdde0] focus-visible:ring-2 focus-visible:ring-ring dark:hover:bg-[#33363b]"
               >
                 <XLogoIcon className="size-4" />

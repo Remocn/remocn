@@ -18,7 +18,7 @@ export function PromptComposer() {
   return (
     <div className="px-5 md:px-10">
       <ComposerLoop
-        label="Example prompts: AI agents building product videos with remocn blocks"
+        label="Example prompts: AI agents building product videos with Remocn blocks"
         className="relative mx-auto flex w-full max-w-[860px] flex-col rounded-panel bg-surface p-2 shadow-[0_0_0_1px_#0E10120F,0_24px_60px_-20px_#0E101233] md:rounded-shell md:p-2.5"
       >
         <div className="flex flex-col gap-5 rounded-[18px] bg-surface-muted px-[18px] pt-5 pb-4 md:gap-7 md:rounded-card md:px-7 md:pt-[26px] md:pb-[22px]">
@@ -28,7 +28,7 @@ export function PromptComposer() {
 
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <p className="flex items-center gap-2 text-subtle md:gap-0">
-              <span className="text-mono md:text-caption">remocn skill</span>
+              <span className="text-mono md:text-caption">Remocn skill</span>
               <span className="hidden text-caption whitespace-pre md:inline">
                 {" · "}
               </span>

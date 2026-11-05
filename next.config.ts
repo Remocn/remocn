@@ -14,6 +14,22 @@ const AGENT_SIGNALS = [
   },
 ] as const;
 
+const DOCS_FOLDER_REDIRECTS: Record<string, string> = {
+  "/docs/getting-started": "/docs/getting-started/introduction",
+  "/docs/icons": "/docs/icons/gallery",
+  "/docs/ui/components": "/docs/ui",
+  ...Object.fromEntries(
+    ["shaders", "filters", "captions"].flatMap((tier) => {
+      const intro = `/docs/${tier}/getting-started/introduction`;
+      return [
+        [`/docs/${tier}`, intro],
+        [`/docs/${tier}/getting-started`, intro],
+        [`/docs/${tier}/components`, intro],
+      ];
+    }),
+  ),
+};
+
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   typescript: {
@@ -92,6 +108,21 @@ const nextConfig: NextConfig = {
         destination: "https://remocn.dev/:path*",
         permanent: true,
       },
+      // `/docs` has no page; people land on the introduction. Agents get the
+      // llms.txt index there instead (see rewrites), so they skip this one.
+      {
+        source: "/docs",
+        missing: [...AGENT_SIGNALS],
+        destination: "/docs/getting-started/introduction",
+        permanent: true,
+      },
+      // Docs folders without an index.mdx would 404; send them to their
+      // first page.
+      ...Object.entries(DOCS_FOLDER_REDIRECTS).map(([source, destination]) => ({
+        source,
+        destination,
+        permanent: true,
+      })),
     ];
   },
 };

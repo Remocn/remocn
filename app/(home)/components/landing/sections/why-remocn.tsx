@@ -10,7 +10,7 @@ const COMPARISON: CompareCardProps[] = [
     tone: "muted",
   },
   {
-    label: "remocn + your agent",
+    label: "Remocn + your agent",
     value: ["1 prompt,", "1 afternoon"],
     caption:
       "The animation is already built and timed. You react to the result.",
@@ -25,7 +25,7 @@ export function WhyRemocn() {
       className="landing-container flex flex-col gap-7 pt-[72px] lg:gap-14 xl:pt-5 xl:pb-[140px]"
     >
       <SectionTitle
-        title="Why remocn"
+        title="Why Remocn"
         continuation="Every other way costs you something."
         className="text-[34px]/[36px] text-wrap md:items-center md:text-center"
       />

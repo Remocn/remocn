@@ -5,7 +5,7 @@ import { TiersSection } from "./components/tiers";
 import { TrafficSection } from "./components/traffic";
 
 const DESCRIPTION =
-  "Support remocn and keep the components free and open source. Back the project monthly, from a name in the README to your logo on the landing page.";
+  "Support Remocn and keep the components free and open source. Back the project monthly, from a name in the README to your logo on the landing page.";
 
 export const metadata: Metadata = {
   title: "Sponsors",
@@ -15,16 +15,16 @@ export const metadata: Metadata = {
     type: "website",
     url: "/sponsors",
     siteName: "Remocn",
-    title: "Sponsors · remocn",
+    title: "Sponsors · Remocn",
     description: DESCRIPTION,
     locale: "en_US",
     images: [
-      { url: "/hero.png", width: 1200, height: 675, alt: "Sponsors · remocn" },
+      { url: "/hero.png", width: 1200, height: 675, alt: "Sponsors · Remocn" },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Sponsors · remocn",
+    title: "Sponsors · Remocn",
     description: DESCRIPTION,
     images: ["/hero.png"],
   },

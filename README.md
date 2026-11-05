@@ -6,11 +6,11 @@
 
 # Remocn
 
-remocn is a copy-paste component library for building videos in Remotion. Instead of writing every fade, wipe, and kinetic title from scratch, you `npx shadcn add` a polished primitive into your project and own the code. Built for solo builders and small teams who need a product demo video shipped today, not next week.
+Remocn is a copy-paste component library for building videos in Remotion. Instead of writing every fade, wipe, and kinetic title from scratch, you `npx shadcn add` a polished primitive into your project and own the code. Built for solo builders and small teams who need a product demo video shipped today, not next week.
 
-Rather direct the video than write it? [Remocn Studio](https://remocn.studio) is a free, open-source macOS app where your own coding agent (Claude Code, Codex, GitHub Copilot or Grok) builds the video from remocn components while you watch the live preview.
+Rather direct the video than write it? [Remocn Studio](https://remocn.studio) is a free, open-source macOS app where your own coding agent (Claude Code, Codex, GitHub Copilot or Grok) builds the video from Remocn components while you watch the live preview.
 
-## Why remocn
+## Why Remocn
 
 Production-ready Remotion code: every component uses useCurrentFrame(), interpolate(), and spring() correctly. No Math.random() traps that break rendering.
 Own your code: components are copied into your project, not installed as a dependency. Tweak them however you like.
@@ -49,7 +49,7 @@ In Codex: `codex plugin marketplace add Remocn/remocn`, then `codex plugin add r
 
 ## Sponsors
 
-remocn is free and MIT-licensed. These sponsors keep the registry growing and the renders fast.
+Remocn is free and MIT-licensed. These sponsors keep the registry growing and the renders fast.
 
 <!-- sponsors:start -->
 <table align="center">

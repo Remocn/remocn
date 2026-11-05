@@ -14,7 +14,7 @@ export function CreditsSection() {
       <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <SectionTitle
           title="The people keeping"
-          continuation="remocn alive."
+          continuation="Remocn alive."
           continuationClassName="text-subtle"
         />
         <p className="text-[16px] leading-6 text-muted-foreground md:w-[400px] md:shrink-0 md:pb-1.5">

@@ -5,7 +5,7 @@ import { PostIndex } from "./components/post-index";
 import { getBlogPosts } from "./lib/posts";
 
 const DESCRIPTION =
-  "Making-of stories behind the videos we build with remocn — the storyboard, the decisions that made each one work, and the prompt that rebuilds it.";
+  "Making-of stories behind the videos we build with Remocn — the storyboard, the decisions that made each one work, and the prompt that rebuilds it.";
 
 export const metadata: Metadata = {
   title: "Blog",
@@ -18,16 +18,16 @@ export const metadata: Metadata = {
     type: "website",
     url: "/blog",
     siteName: "Remocn",
-    title: "Blog · remocn",
+    title: "Blog · Remocn",
     description: DESCRIPTION,
     locale: "en_US",
     images: [
-      { url: "/hero.png", width: 1200, height: 675, alt: "Blog · remocn" },
+      { url: "/hero.png", width: 1200, height: 675, alt: "Blog · Remocn" },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Blog · remocn",
+    title: "Blog · Remocn",
     description: DESCRIPTION,
     images: ["/hero.png"],
   },

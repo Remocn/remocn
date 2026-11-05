@@ -82,7 +82,7 @@ export function WhatsInside() {
             data-reveal
             className="text-ui leading-6 text-paragraph [--reveal-i:2] md:max-w-[560px] md:text-[18px] md:leading-[27px] xl:w-[340px] xl:shrink-0"
           >
-            Every remocn component belongs to one of these families. It composes
+            Every Remocn component belongs to one of these families. It composes
             them one scene at a time.
           </p>
         </header>

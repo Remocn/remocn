@@ -36,7 +36,7 @@ export function GuideBrandFrames() {
   return (
     <ul className="not-prose mt-6 grid gap-4 pt-2 sm:grid-cols-2">
       <Frame
-        caption="remocn default"
+        caption="Remocn default"
         hex={DEFAULT_LOOK.background}
         look={DEFAULT_LOOK}
         className="dark:shadow-[0_0_0_1px_var(--color-hairline)]"

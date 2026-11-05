@@ -97,9 +97,11 @@ export const NEW_BADGE_PATHS = new Set<string>(newDocs);
 export const FOOTER_LINKS: NavLink[] = [
   { href: "/docs/getting-started/introduction", label: "Docs" },
   { href: "/changelog", label: "Changelog" },
+  { href: "/blog", label: "Blog" },
   { href: STUDIO_URL, label: "Studio", external: true },
   { href: "/sponsors", label: "Sponsors" },
   { href: "/inspired-by", label: "Inspired by" },
+  { href: "/legal", label: "Legal" },
   { href: GITHUB_URL, label: "GitHub", external: true },
   { href: X_URL, label: "X", external: true },
 ];

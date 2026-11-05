@@ -1,9 +1,9 @@
 ---
 title: Installation
-description: Add remocn to an existing Remotion project
+description: Add Remocn to an existing Remotion project
 ---
 
-remocn assumes you already have Remotion installed. If you don't, run `npx create-video@latest` first.
+Remocn assumes you already have Remotion installed. If you don't, run `npx create-video@latest` first.
 
 ## 1. Initialize shadcn
 
@@ -13,7 +13,7 @@ If your project doesn't already have a `components.json`, run:
 npx shadcn@latest init
 ```
 
-Pick the defaults: remocn components are framework-agnostic and only need the path aliases.
+Pick the defaults: Remocn components are framework-agnostic and only need the path aliases.
 
 ## 2. Add a component
 
@@ -23,7 +23,7 @@ This copies `soft-blur-in.tsx` into `components/remocn/` (or wherever your `comp
 
 ## Install everything
 
-Want the whole library at once? Copy this command to add every remocn component in a single run.
+Want the whole library at once? Copy this command to add every Remocn component in a single run.
 
 <InstallAll />
 
@@ -31,7 +31,7 @@ Want the whole library at once? Copy this command to add every remocn component 
 
 If a [Remotion Studio](https://www.remotion.dev/docs/studio) (4.0.502 or newer) is running locally, most components can skip the CLI entirely. Component pages show an **Add to Studio** button next to the preview — it finds your running Studio and drops the component into the active composition as source code. The drag handle beside it does the same thing by drag and drop, so you can place the element on the timeline yourself. Icons work the same way from the [icons gallery](/docs/icons/gallery).
 
-Either way the result matches `npx shadcn add`: the source lands in your project and is yours to edit. On top of that, elements arrive with editable controls — the same knobs each docs page shows (text, colors, timings, speed) appear as native controls in the Studio sidebar, alongside the standard timeline and transform handles. Compositions and components that build on other remocn components install through the CLI only.
+Either way the result matches `npx shadcn add`: the source lands in your project and is yours to edit. On top of that, elements arrive with editable controls — the same knobs each docs page shows (text, colors, timings, speed) appear as native controls in the Studio sidebar, alongside the standard timeline and transform handles. Compositions and components that build on other Remocn components install through the CLI only.
 
 ## 3. Use it in a Remotion composition
 

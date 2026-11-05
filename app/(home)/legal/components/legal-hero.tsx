@@ -37,7 +37,7 @@ export function LegalHero() {
           &amp; Terms
         </span>
       }
-      continuation="How remocn handles your data."
+      continuation="How Remocn handles your data."
       className="gap-6 pb-6 md:gap-5"
       asideClassName="xl:w-auto xl:pb-1.5"
     >

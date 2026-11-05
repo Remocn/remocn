@@ -9,7 +9,7 @@ import { ChangelogHeader } from "../components/changelog-header";
 import { ChangelogVideoFeed } from "../components/video-feed";
 
 const DESCRIPTION =
-  "Every remocn release as a short video — new components, transitions, shaders, and icons, newest first.";
+  "Every Remocn release as a short video — new components, transitions, shaders, and icons, newest first.";
 
 const entries = sortByDateDesc(changelog).flatMap((entry) =>
   entry.video
@@ -36,14 +36,14 @@ export const metadata: Metadata = {
     type: "website",
     url: "/changelog/video",
     siteName: "Remocn",
-    title: "Changelog in video · remocn",
+    title: "Changelog in video · Remocn",
     description: DESCRIPTION,
     locale: "en_US",
-    images: [{ url: shareImage, alt: "Changelog in video · remocn" }],
+    images: [{ url: shareImage, alt: "Changelog in video · Remocn" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Changelog in video · remocn",
+    title: "Changelog in video · Remocn",
     description: DESCRIPTION,
     images: [shareImage],
   },

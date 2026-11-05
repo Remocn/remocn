@@ -8,7 +8,7 @@ import {
 } from "../../components/site-page/page-header";
 
 export const SHOWCASES_DESCRIPTION =
-  "Videos made with remocn, real products and launches, animated with copy-paste Remotion components. Scrub the reel, see which blocks each one used.";
+  "Videos made with Remocn, real products and launches, animated with copy-paste Remotion components. Scrub the reel, see which blocks each one used.";
 
 /** Where new showcase videos are sent until there is a submission form. */
 export const SUBMIT_SHOWCASE_URL = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent("Showcase submission")}`;

@@ -51,7 +51,7 @@ export function SiteHeader({
         >
           <Link
             href="/"
-            aria-label="remocn home"
+            aria-label="Remocn home"
             className="flex rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <LandingWordmark />

@@ -12,7 +12,7 @@ import { ChangelogHeader } from "./components/changelog-header";
 import { ChangelogPreview } from "./components/changelog-preview";
 
 const DESCRIPTION =
-  "Every release of remocn — new components, transitions, shaders, icons, and improvements, newest first.";
+  "Every release of Remocn — new components, transitions, shaders, icons, and improvements, newest first.";
 
 export const metadata: Metadata = {
   title: "Changelog",
@@ -22,16 +22,16 @@ export const metadata: Metadata = {
     type: "website",
     url: "/changelog",
     siteName: "Remocn",
-    title: "Changelog · remocn",
+    title: "Changelog · Remocn",
     description: DESCRIPTION,
     locale: "en_US",
     images: [
-      { url: "/hero.png", width: 1200, height: 675, alt: "Changelog · remocn" },
+      { url: "/hero.png", width: 1200, height: 675, alt: "Changelog · Remocn" },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Changelog · remocn",
+    title: "Changelog · Remocn",
     description: DESCRIPTION,
     images: ["/hero.png"],
   },

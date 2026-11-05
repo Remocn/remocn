@@ -1,6 +1,6 @@
 ---
 title: Introduction
-description: "What remocn is: a shadcn-style component registry for Remotion plus an agent skill. Copy-paste video components, MIT, code lives in your repo."
+description: "What Remocn is: a shadcn-style component registry for Remotion plus an agent skill. Copy-paste video components, MIT, code lives in your repo."
 ---
 
 import { CompareTable } from "@/components/docs/index/introduction/compare-table";
@@ -25,7 +25,7 @@ import { Tier, Tiers } from "@/components/docs/index/introduction/tiers";
 
 ## If you know shadcn/ui
 
-The workflow is the one you already use. remocn is a namespaced registry, so components are addressed by name and copied in as files you own and edit.
+The workflow is the one you already use. Remocn is a namespaced registry, so components are addressed by name and copied in as files you own and edit.
 
 <FileFlow steps={["components.json", "npx shadcn add @remocn/<name>", "components/remocn/<name>.tsx"]} />
 
@@ -35,7 +35,7 @@ The workflow is the one you already use. remocn is a namespaced registry, so com
 
 ## If you know Remotion
 
-A fresh Remotion project gives you a blank canvas and the right APIs. remocn gives you the parts every product video needs, which you would otherwise rebuild each time.
+A fresh Remotion project gives you a blank canvas and the right APIs. Remocn gives you the parts every product video needs, which you would otherwise rebuild each time.
 
 <PartTiles />
 
@@ -58,25 +58,25 @@ Each one already uses the Remotion APIs correctly and avoids the traps that brea
 
 ## Two tiers of components
 
-remocn ships two tiers of components. Both install the same way, as files in your repo.
+Remocn ships two tiers of components. Both install the same way, as files in your repo.
 
 <Tiers>
 <Tier name="Animation tier" registry="remocn" links={[{ href: "/docs/shaders/getting-started/introduction", label: "Shader and canvas backgrounds" }, { href: "/docs/typography", label: "Text reveals" }, { href: "/docs/transitions", label: "Scene transitions" }, { href: "/docs/ui-blocks", label: "UI-block simulations" }, { href: "/docs/icons/gallery", label: "Icons that draw themselves in" }]} />
 <Tier name="UI tier" registry="remocn-ui" links={[{ href: "/docs/ui/components/button" }, { href: "/docs/ui/components/input" }, { href: "/docs/ui/components/checkbox" }, { href: "/docs/ui/components/select" }, { href: "/docs/ui/components/dialog" }]}>Familiar shadcn primitives rebuilt so their states are [scripted on the timeline](/docs/ui) instead of driven by the user.</Tier>
 </Tiers>
 
-## What remocn is not
+## What Remocn is not
 
 <NotCards icons={["editor", "cloud", "fork", "chat"]}>
 
 - **Not After Effects or a video editor.** There is no timeline UI to drag things around in. You write or prompt code, and Remotion Studio previews the result.
-- **Not a hosted service.** Nothing runs on remocn servers. No account, no runtime, no usage limits. Rendering happens on your machine or wherever you run Remotion.
-- **Not a fork of Remotion.** Remotion is a prerequisite, and remocn is a set of components written against its public API. Remotion keeps [its own license](https://www.remotion.dev/docs/license); remocn's own code is MIT.
+- **Not a hosted service.** Nothing runs on Remocn servers. No account, no runtime, no usage limits. Rendering happens on your machine or wherever you run Remotion.
+- **Not a fork of Remotion.** Remotion is a prerequisite, and Remocn is a set of components written against its public API. Remotion keeps [its own license](https://www.remotion.dev/docs/license); Remocn's own code is MIT.
 - **Not only AI chat components.** The [AI section](/docs/ai) recreates chat composers and CLI screens because product demos need them often, but it is one category among text, transitions, backgrounds, layout, UI blocks and templates.
 
 </NotCards>
 
-<Aside icon="info">remocn is an independent project. It is not affiliated with shadcn or with Remotion; it builds on the shadcn CLI and the Remotion library.</Aside>
+<Aside icon="info">Remocn is an independent project. It is not affiliated with shadcn or with Remotion; it builds on the shadcn CLI and the Remotion library.</Aside>
 
 ## Quick start
 
@@ -89,21 +89,21 @@ remocn ships two tiers of components. Both install the same way, as files in you
 
 <InstallationLink>The Installation page covers the full flow, including the one-shot command that installs every component and the Add to Studio button for a running Remotion Studio.</InstallationLink>
 
-## remocn vs raw Remotion
+## Remocn vs raw Remotion
 
 <CompareTable>
 
-| | Raw Remotion | Remotion + remocn |
+| | Raw Remotion | Remotion + Remocn |
 |---|---|---|
 | Starting point | Empty composition | Composition plus a catalog of ready components |
 | Animation code | Written per project | Copied in, then edited like any file you own |
 | Timing | Decided per element | Each component states its natural length in frames |
 | AI agents | Generic Remotion knowledge | Skill with catalog access, timing rules and scene recipes |
-| Dependency | Remotion | Remotion, same as before. remocn adds no runtime |
+| Dependency | Remotion | Remotion, same as before. Remocn adds no runtime |
 
 </CompareTable>
 
-Nothing here replaces Remotion. If you already have a component library of your own, remocn is a set of files to borrow from; if you are starting from a blank project, it is the fastest way to a first scene.
+Nothing here replaces Remotion. If you already have a component library of your own, Remocn is a set of files to borrow from; if you are starting from a blank project, it is the fastest way to a first scene.
 
 ## FAQ
 
@@ -116,7 +116,7 @@ Not necessarily, if you work through an AI coding agent. The [guides](/docs/guid
 No. Everything happens in your editor and a browser preview.
 
 **Is it free?**
-remocn is MIT licensed. Components copy onto your machine and stay yours.
+Remocn is MIT licensed. Components copy onto your machine and stay yours.
 
 **Does it work with any AI agent?**
 The skill installs through [skills.sh](https://skills.sh) into agents that load skills, Claude Code among them. The components themselves are plain Remotion code and work with any agent or no agent at all.
@@ -130,9 +130,9 @@ No. It is a community registry that uses the shadcn CLI and registry format. sha
 
 <NextLinks icons={["terminal", "sparkle", "grid", "play"]}>
 
-- [Installation](/docs/getting-started/installation): add remocn to an existing Remotion project
-- [Agent Skill](/docs/getting-started/agent-skill): teach your AI agent to compose videos with remocn
+- [Installation](/docs/getting-started/installation): add Remocn to an existing Remotion project
+- [Agent Skill](/docs/getting-started/agent-skill): teach your AI agent to compose videos with Remocn
 - [Components](/docs/components): every component, grouped by category
-- [Homepage](/): see the kind of video remocn is built for
+- [Homepage](/): see the kind of video Remocn is built for
 
 </NextLinks>

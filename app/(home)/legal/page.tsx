@@ -6,7 +6,7 @@ import { LegalHero } from "./components/legal-hero";
 import { LegalIndex } from "./components/legal-index";
 
 const DESCRIPTION =
-  "How remocn handles your data, and the terms that apply to the site, the free components, and paid products.";
+  "How Remocn handles your data, and the terms that apply to the site, the free components, and paid products.";
 
 export const metadata: Metadata = {
   title: "Privacy & Terms",
@@ -16,7 +16,7 @@ export const metadata: Metadata = {
     type: "website",
     url: "/legal",
     siteName: "Remocn",
-    title: "Privacy & Terms · remocn",
+    title: "Privacy & Terms · Remocn",
     description: DESCRIPTION,
     locale: "en_US",
     images: [
@@ -24,13 +24,13 @@ export const metadata: Metadata = {
         url: "/hero.png",
         width: 1200,
         height: 675,
-        alt: "Privacy & Terms · remocn",
+        alt: "Privacy & Terms · Remocn",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Privacy & Terms · remocn",
+    title: "Privacy & Terms · Remocn",
     description: DESCRIPTION,
     images: ["/hero.png"],
   },

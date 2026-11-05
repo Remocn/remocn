@@ -38,10 +38,10 @@ export const Mail = () => (
 );
 
 export const LEGAL_INTRO = {
-  lead: "How remocn handles your data, and the terms that apply when you use the site or buy something.",
+  lead: "How Remocn handles your data, and the terms that apply when you use the site or buy something.",
   body: (
     <>
-      remocn (&ldquo;we&rdquo;) operates{" "}
+      Remocn (&ldquo;we&rdquo;) operates{" "}
       <A href="https://remocn.dev">remocn.dev</A> — an open-source registry of
       video components for Remotion. If anything on this page is unclear, email
       us at <Mail />.
@@ -103,7 +103,7 @@ export const LEGAL_PARTS: LegalPart[] = [
         title: "The plugin and MCP server",
         body: (
           <>
-            The remocn plugin for Claude Code and Codex and the MCP server at{" "}
+            The Remocn plugin for Claude Code and Codex and the MCP server at{" "}
             <code>remocn.dev/mcp</code> need no account and collect no personal
             data.
           </>

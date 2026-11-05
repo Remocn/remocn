@@ -34,7 +34,7 @@ export async function generateMetadata({
   if (!post) return {};
 
   const url = `/blog/${slug}`;
-  const title = `${post.title} · remocn`;
+  const title = `${post.title} · Remocn`;
   const shareImage = post.videoPoster ?? "/hero.png";
 
   return {

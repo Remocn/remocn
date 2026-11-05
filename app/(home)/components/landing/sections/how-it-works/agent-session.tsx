@@ -22,13 +22,13 @@ const SESSION_STEPS: SessionStep[] = [
   {
     kind: "prompt",
     lines: [
-      "› Set up a new Remotion video project in this folder, then install the remocn agent skill:",
+      "› Set up a new Remotion video project in this folder, then install the Remocn agent skill:",
       "npx skills add Remocn/remocn --yes.",
       "When you're done, start the preview studio.",
     ],
     checks: [
       "✓ Remotion project created",
-      "✓ remocn skill installed",
+      "✓ Remocn skill installed",
       "✓ Preview studio running",
     ],
   },
@@ -39,7 +39,7 @@ const SESSION_STEPS: SessionStep[] = [
 export function AgentSession() {
   return (
     <figure
-      aria-label="A Claude Code session that sets up remocn and opens a preview"
+      aria-label="A Claude Code session that sets up Remocn and opens a preview"
       data-reveal="scale"
       data-seq
       className="flex w-full min-w-0 flex-col rounded-panel bg-dark-surface p-1.5 md:rounded-shell md:p-2 xl:grow"

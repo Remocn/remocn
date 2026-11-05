@@ -1,6 +1,6 @@
 ---
-title: Introducing remocn — shadcn-style copy-paste components for videos in React
-description: remocn is an MIT registry of 234 copy-paste Remotion components — text animations, cinematic transitions, WebGL shader backgrounds, animated icons, and simulated product UI.
+title: Introducing Remocn — shadcn-style copy-paste components for videos in React
+description: Remocn is an MIT registry of 234 copy-paste Remotion components — text animations, cinematic transitions, WebGL shader backgrounds, animated icons, and simulated product UI.
 date: 2026-07-22
 video: https://cdn.remocn.dev/videos/intoducing-remocn.mp4
 videoPoster: https://cdn.remocn.dev/posters/intoducing-remocn.png
@@ -26,7 +26,7 @@ The registry also carries dependency metadata: installing `whip-pan` brings in `
 
 ## Sixty seconds to a rendered video
 
-remocn assumes an existing Remotion project (`npx create-video@latest` if you need one) and a `components.json` (`npx shadcn@latest init`, defaults are fine). After that:
+Remocn assumes an existing Remotion project (`npx create-video@latest` if you need one) and a `components.json` (`npx shadcn@latest init`, defaults are fine). After that:
 
 ```tsx
 // src/Root.tsx
@@ -98,7 +98,7 @@ import { whipPan } from "@/components/remocn/whip-pan";
 
 Video rendering is stricter than the browser you’re used to. Remotion renders frame 47 in isolation — possibly on a different worker than frame 46, possibly out of order — and expects identical pixels every time it asks for that frame. A cursor blinking off `setInterval`, a `Math.random()` in a particle field, a CSS animation: all of them produce renders that flicker or desync.
 
-Every remocn component derives its motion from `useCurrentFrame()` and nothing else. The shader backgrounds go further: a shader normally animates against a wall clock, so the wrappers freeze it and drive its frame uniform from the timeline, gating the first paint with `delayRender()` so headless capture never grabs an uninitialized canvas. Scrubbing, looping, and multi-pass renders stay deterministic — which is exactly the class of bug you don’t want to discover at render time, on a deadline.
+Every Remocn component derives its motion from `useCurrentFrame()` and nothing else. The shader backgrounds go further: a shader normally animates against a wall clock, so the wrappers freeze it and drive its frame uniform from the timeline, gating the first paint with `delayRender()` so headless capture never grabs an uninitialized canvas. Scrubbing, looping, and multi-pass renders stay deterministic — which is exactly the class of bug you don’t want to discover at render time, on a deadline.
 
 The other handled part is taste. Springs come pre-tuned, transition durations ship with sane defaults (a whip-pan lives on speed at ~26 frames; a focus-pull needs ~46 to breathe), and components render transparent so your background — a `backdrop` fill or a shader — is one wrapper away.
 
