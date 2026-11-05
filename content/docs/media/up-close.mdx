@@ -1,0 +1,123 @@
+---
+title: Up Close
+description: "An image starts zoomed in on one detail, then pulls back into a framed shot with a second caption."
+component: up-close
+vibe: clean
+length: 78
+useWhen:
+  - "A two-part line such as up close it is one thing, from afar another, anchored on a real image."
+  - "Highlighting a detail of a screenshot, like code in a product, before revealing the full picture."
+  - "A calm, two-caption beat that moves from macro to wide."
+avoidWhen:
+  - "The sentence should end with a thumbnail growing into the image — use `looks-like-this`."
+  - "A question should turn into an answer next to the image — use `shot-answers`."
+  - "Several regions need visiting in turn — use `screenshot-tour`."
+---
+
+<ComponentPreview name="up-close" />
+
+<InstallBlock name="up-close" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { UpClose } from "@/components/remocn/up-close";
+
+const UpCloseScene = () => (
+  <UpClose
+    src="/shots/product.png"
+    close="Up close, it’s code."
+    wide="From here, it’s your launch."
+    focus={{ x: 0.58, y: 0.52 }}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="UpClose"
+    component={UpCloseScene}
+    durationInFrames={125}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The image fills the frame zoomed in on the `focus` point under the `close` caption. It then pulls back into a framed shot and the `wide` caption writes in while the first caption lifts. Pass your own image through `src` and tune `zoom` and `focus`; the default is a `staticFile` image from the Remocn repo. The timeline scales with the composition length, and it ships light and dark through `theme`.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "close",
+      type: "string",
+      default: "\"Up close, it’s code.\"",
+      description: "Caption shown while zoomed in.",
+    },
+    {
+      name: "wide",
+      type: "string",
+      default: "\"From here, it’s your launch.\"",
+      description: "Caption shown after pulling back.",
+    },
+    {
+      name: "src",
+      type: "string",
+      description: "Image URL. Defaults to a repo-only file.",
+    },
+    {
+      name: "aspect",
+      type: "number",
+      default: "1200 / 630",
+      description: "Aspect ratio of the image.",
+    },
+    {
+      name: "focus",
+      type: "{ x: number; y: number }",
+      default: "{ x: 0.58, y: 0.52 }",
+      description: "Point of interest as fractions of width and height, 0 to 1.",
+    },
+    {
+      name: "zoom",
+      type: "number",
+      default: "3",
+      description: "Initial zoom factor on the focus point.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Accent color for the zoom readout. Defaults depend on theme.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Solid background. Use 'transparent' to drop the ground.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "Shader preset id for the animated background.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Partial shader parameters that override the ground preset.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color scheme. Ships light and dark.",
+    },
+  ]}
+/>

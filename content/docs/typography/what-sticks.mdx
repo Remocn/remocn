@@ -1,0 +1,93 @@
+---
+title: What Sticks
+description: "A column of claims dims one by one until a single line stays highlighted."
+component: what-sticks
+vibe: clean
+length: 170
+useWhen:
+  - "A message-discipline beat that shows only one claim survives the viewer's memory."
+  - "A feature recap that ends by spotlighting the single most important point."
+  - "A closing scene that narrows several promises down to one takeaway."
+avoidWhen:
+  - "You want a summary on top of the full copy — use `tldr-on-top`."
+  - "Lines should stay all visible while one is edited — use `diff-swap`."
+  - "You want a single contrast pair, not a list — use `less-more`."
+---
+
+<ComponentPreview name="what-sticks" />
+
+<InstallBlock name="what-sticks" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { WhatSticks } from "@/components/remocn/what-sticks";
+
+const WhatSticksScene = () => (
+  <WhatSticks lines={["Scenes install with one command.", "You own every file."]} keep={1} />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="WhatSticks"
+    component={WhatSticksScene}
+    durationInFrames={230}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A stack of claims appears while timeline captions mark what you remember tonight, tomorrow and next week. Lines fade away until one is left bright. Pass `lines`, and use `keep` to pick the survivor. It ships in light and dark through the `theme` prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "lines",
+      type: "string[]",
+      default: "DEFAULT_LINES",
+      description: "Claims shown in the column.",
+    },
+    {
+      name: "keep",
+      type: "number",
+      description: "Index of the line that stays highlighted; defaults to about 70 percent down.",
+    },
+    {
+      name: "moments",
+      type: "string[]",
+      default: "DEFAULT_MOMENTS",
+      description: "Time captions marking each stage of forgetting.",
+    },
+    {
+      name: "forget",
+      type: "number[]",
+      description: "Indices of lines that fade out first.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Accent color override; falls back to the theme accent.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background color override; falls back to the theme background.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark; picks the palette.",
+    },
+  ]}
+/>

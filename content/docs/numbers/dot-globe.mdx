@@ -1,0 +1,89 @@
+---
+title: Dot Globe
+description: "A dotted globe spins while arcs fly between cities and a counter ticks up with each landing."
+component: dot-globe
+vibe: tech
+length: 210
+useWhen:
+  - "A global-reach beat, such as countries served, where each arc represents a new market."
+  - "A tech launch stat that should show movement across the world rather than a flat map."
+  - "A counter that should tick up in sync with visible events."
+avoidWhen:
+  - "A flat map lighting up city by city is the look - use `dot-map`."
+  - "The stat is one number with no geography - use `compact-stat`."
+  - "The count should be built from a sentence - use `stat-inline`."
+---
+
+<ComponentPreview name="dot-globe" />
+
+<InstallBlock name="dot-globe" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { DotGlobe } from "@/components/remocn/dot-globe";
+
+const DotGlobeScene = () => <DotGlobe count={142} prefix="Live in" suffix="countries" />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="DotGlobe"
+    component={DotGlobeScene}
+    durationInFrames={210}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A dotted globe fades in and keeps rotating while accent arcs lift off one city and land on another along great circles; each landing pulses a ring, drops a labeled pin and ticks the counter up by one, ending on the final count in big type. Pass `count`, `prefix`, `suffix` and `routes` (pairs of `{ name, lat, lon }` cities). It ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "count",
+      type: "number",
+      default: "142",
+      description: "Final counter value; it ticks up once per landed route.",
+    },
+    {
+      name: "prefix",
+      type: "string",
+      default: "\"Live in\"",
+      description: "Text before the counter.",
+    },
+    {
+      name: "suffix",
+      type: "string",
+      default: "\"countries\"",
+      description: "Text after the counter.",
+    },
+    {
+      name: "routes",
+      type: "GlobeRoute[]",
+      default: "DEFAULT_ROUTES",
+      description: "Arcs to draw; each has a from city and a to city with name, lat and lon.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Color of the arcs, pins and rings.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark palette.",
+    },
+  ]}
+/>

@@ -1,0 +1,116 @@
+---
+title: Path Search
+description: "A pathfinding search floods a grid around walls, then traces the shortest route from start to goal"
+component: path-search
+vibe: tech
+length: 109
+useWhen:
+  - "Explaining routing, search or an AI agent finding a path around obstacles."
+  - "A dev-tool or infrastructure beat that wants a clear before, search, then answer story."
+  - "A visual metaphor for \"finding the way\" with labelled Start and Goal."
+avoidWhen:
+  - "You want a simple arrow showing flow between boxes — use `flow-arrow`."
+  - "The path should be a trail of nodes in a graph — use `node-trail`."
+  - "You are showing a multi-step pipeline, not a grid search — use `deploy-pipeline`."
+---
+
+<ComponentPreview name="path-search" />
+
+<InstallBlock name="path-search" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { PathSearch } from "@/components/remocn/path-search";
+
+const PathSearchScene = () => (
+  <PathSearch
+    cols={17}
+    rows={9}
+    start={[1, 4]}
+    goal={[15, 4]}
+    startLabel="Start"
+    goalLabel="Goal"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="PathSearch"
+    component={PathSearchScene}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A grid fades in with walls and labelled start and goal cells. A flood front spreads from the start one step at a time, tinting cells, until it reaches the goal; the shortest route is then traced as a glowing line back to the start. Pass `cols`, `rows`, `start`, `goal` and `walls` to change the maze. The timing scales with route length. Ships dark and light via `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "cols",
+      type: "number",
+      default: "17",
+      description: "Number of grid columns.",
+    },
+    {
+      name: "rows",
+      type: "number",
+      default: "9",
+      description: "Number of grid rows.",
+    },
+    {
+      name: "start",
+      type: "[number, number]",
+      default: "[1, 4]",
+      description: "Start cell as [column, row].",
+    },
+    {
+      name: "goal",
+      type: "[number, number]",
+      default: "[15, 4]",
+      description: "Goal cell as [column, row].",
+    },
+    {
+      name: "walls",
+      type: "PathSearchWall[]",
+      default: "DEFAULT_WALLS",
+      description: "Wall rectangles in grid units: col, row, w, h.",
+    },
+    {
+      name: "startLabel",
+      type: "string",
+      default: "\"Start\"",
+      description: "Label on the start cell.",
+    },
+    {
+      name: "goalLabel",
+      type: "string",
+      default: "\"Goal\"",
+      description: "Label on the goal cell.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Color of the route start and highlights.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color scheme. Ships dark and light.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+  ]}
+/>

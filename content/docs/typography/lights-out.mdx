@@ -1,0 +1,87 @@
+---
+title: Lights Out
+description: "Five lights go out one by one and a heavy italic headline slams in with an accent period."
+component: lights-out
+vibe: playful
+length: 104
+useWhen:
+  - "A launch countdown moment where the lights go out and the product name hits."
+  - "A high-energy title for a racing or gaming flavored beat."
+avoidWhen:
+  - "You want a calm reveal - use `soft-blur-in`."
+  - "You want a speedy ride-in with a subtitle - use `italic-speed`."
+  - "The title is a long sentence - use `line-by-line-slide`."
+---
+
+<ComponentPreview name="lights-out" />
+
+<InstallBlock name="lights-out" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { LightsOut } from "@/components/remocn/lights-out";
+
+const LightsOutScene = () => (
+  <LightsOut title="SHIP IT." beat={10} hold={24} accent="#3B5BFD" />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="LightsOut"
+    component={LightsOutScene}
+    durationInFrames={112}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Five lights light up on the beat, hold, then go out and the headline slams in with a camera push and an accent period. Pass `title` (set in capitals), `beat` for the light interval and `hold` for the pause before they go out; it ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "title",
+      type: "string",
+      default: "\"SHIP IT.\"",
+      description: "Headline that slams in the instant the lights go out. Set in caps.",
+      description: "Headline slammed in after the lights go out",
+    },
+    {
+      name: "beat",
+      type: "number",
+      default: "10",
+      description: "Frames between two lights coming on.",
+      description: "Frames between each light turning on",
+    },
+    {
+      name: "hold",
+      type: "number",
+      default: "24",
+      description: "Frames all five lights stay lit before they go out together.",
+      description: "Frames all lights stay on before going out",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color (any valid CSS color)",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark palettes",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier",
+    },
+  ]}
+/>

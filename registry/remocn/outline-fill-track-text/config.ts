@@ -125,4 +125,5 @@ export const outlineFillTrackTextConfig: ComponentConfig = {
   compositionWidth: W,
   compositionHeight: H,
   previewBackdrop: { type: "color", value: "#030012" },
+  card: { props: { backgroundColor: "transparent" } },
 };

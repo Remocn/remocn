@@ -1,0 +1,166 @@
+{
+  "seed": 735670345,
+  "video": {
+    "mode": "reel",
+    "clips": [
+      {
+        "name": "soft-blur-in",
+        "start": 0,
+        "zoom": 0.95,
+        "end": "hold",
+        "background": "#ffffff",
+        "radius": 0.28,
+        "cut": "cut",
+        "props": {
+          "text": "Aa",
+          "fontSize": 320,
+          "color": "#000",
+          "blur": 24
+        }
+      },
+      {
+        "name": "shader-grain-gradient",
+        "start": 0,
+        "zoom": 1,
+        "end": "run",
+        "background": "#12020F",
+        "radius": 0.16,
+        "cut": "zoom-blur",
+        "props": {
+          "colors": ["#A800B7", "#F472B6", "#3B0764"],
+          "colorBack": "#12020F",
+          "intensity": 0.35,
+          "noise": 0.25
+        }
+      },
+      {
+        "name": "logo-enter",
+        "start": 0,
+        "zoom": 1.65,
+        "end": "hold",
+        "background": "#ffffff",
+        "radius": 0.25,
+        "cut": "cut",
+        "props": {}
+      },
+      {
+        "name": "word-stream",
+        "start": 0,
+        "zoom": 1,
+        "end": "hold",
+        "background": "#ffffff",
+        "radius": 0.25,
+        "cut": "auto",
+        "props": {}
+      },
+      {
+        "name": "top-down-letters",
+        "start": 0,
+        "zoom": 1,
+        "end": "hold",
+        "background": "#ffffff",
+        "radius": 0.25,
+        "cut": "auto",
+        "props": {}
+      },
+      {
+        "name": "word-push",
+        "start": 0,
+        "zoom": 0.8,
+        "end": "hold",
+        "background": "#ffffff",
+        "radius": 0.25,
+        "cut": "auto",
+        "props": {}
+      },
+      {
+        "name": "path-ride",
+        "start": 0,
+        "zoom": 1,
+        "end": "hold",
+        "background": "#ff4d1a",
+        "radius": 0.25,
+        "cut": "auto",
+        "props": {}
+      },
+      {
+        "name": "gooey-morph",
+        "start": 0,
+        "zoom": 1,
+        "end": "hold",
+        "background": "#141318",
+        "radius": 0.25,
+        "cut": "auto",
+        "props": {}
+      },
+      {
+        "name": "neon-sign",
+        "start": 0,
+        "zoom": 1,
+        "end": "hold",
+        "background": "#111111",
+        "radius": 0.28,
+        "cut": "auto",
+        "props": {
+          "color": "#E879F9",
+          "glowColor": "#E879F9"
+        }
+      },
+      {
+        "name": "fog-rise",
+        "start": 0,
+        "zoom": 0.5,
+        "end": "hold",
+        "background": "#ffffff",
+        "radius": 0.25,
+        "cut": "auto",
+        "props": {}
+      },
+      {
+        "name": "trim-burst",
+        "start": 0,
+        "zoom": 1,
+        "end": "loop",
+        "background": "#002fa7",
+        "radius": 0.25,
+        "cut": "cut",
+        "props": {}
+      },
+      {
+        "name": "type-wall",
+        "start": 0,
+        "zoom": 1,
+        "end": "hold",
+        "background": "#2b3bff",
+        "radius": 0.25,
+        "cut": "auto",
+        "props": {}
+      },
+      {
+        "name": "kinetic-warp",
+        "start": 0,
+        "zoom": 1,
+        "end": "hold",
+        "background": "#0E1012",
+        "radius": 0.25,
+        "cut": "auto",
+        "props": {}
+      }
+    ],
+    "beat": 66,
+    "transition": "cut",
+    "transitionFrames": 14,
+    "tilt": -6,
+    "sway": 4,
+    "deckDepth": 2,
+    "morph": 0.6
+  },
+  "ae": {
+    "mode": "stalled",
+    "period": 50,
+    "bounce": 0.05,
+    "tilt": 2,
+    "stallAt": 99,
+    "delay": 0
+  }
+}

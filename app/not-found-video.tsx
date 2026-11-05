@@ -17,6 +17,8 @@ function Clip({
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
 
+  // The other theme's clip is `display: none` and never intersects, so only
+  // the visible one plays (and it picks up again after a theme switch).
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
@@ -24,7 +26,12 @@ function Clip({
       video.pause();
       return;
     }
-    void video.play().catch(() => {});
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) void video.play().catch(() => {});
+      else video.pause();
+    });
+    observer.observe(video);
+    return () => observer.disconnect();
   }, [paused]);
 
   return (
@@ -32,8 +39,6 @@ function Clip({
       ref={videoRef}
       src={`/not-found-${theme}.mp4`}
       poster={`/not-found-${theme}.jpg`}
-      aria-label="404"
-      autoPlay
       muted
       loop
       playsInline
@@ -48,7 +53,7 @@ export function NotFoundVideo() {
   const reducedMotion = usePrefersReducedMotion();
 
   return (
-    <div className="relative size-full overflow-hidden">
+    <div aria-hidden="true" className="absolute inset-0 overflow-hidden">
       <Clip theme="light" className="dark:hidden" paused={reducedMotion} />
       <Clip theme="dark" className="hidden dark:block" paused={reducedMotion} />
     </div>

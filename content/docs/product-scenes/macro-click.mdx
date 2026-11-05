@@ -1,0 +1,136 @@
+---
+title: Macro Click
+description: "A macro close-up of a site builder: a click publishes, the status flips to Live, and the view pulls back."
+component: macro-click
+vibe: tech
+length: 122
+useWhen:
+  - "A publishing or site-builder launch where one click is the pitch."
+  - "A macro-style opener that starts tight on a control and pulls back to reveal the result."
+  - "A one-line promise overlaid on the finished page, set through `title`."
+avoidWhen:
+  - "You want a browser window with a landing page whose CTA is clicked — use `url-bar-cta`."
+  - "You want the whole editor with a timeline and export — use `timeline-editor`."
+  - "You want a build log and deploy status — use `deploy-pipeline`."
+---
+
+<ComponentPreview name="macro-click" />
+
+<InstallBlock name="macro-click" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { MacroClick } from "@/components/remocn/macro-click";
+
+const MacroClickScene = () => (
+  <MacroClick
+    title="One click. It's live."
+    url="acme.dev/launch"
+    heroLine="Ship the launch today."
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="MacroClick"
+    component={MacroClickScene}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The camera starts tight on the builder toolbar; the cursor clicks the publish button (`publishLabel`), which shows `busyLabel` and then `liveLabel`, the URL fills in, and the view pulls back to reveal the published hero page. The `title` headline fades in and a toast closes the beat. Pass `title`, `docTitle`, `url`, `heroLine` and `pages`. The hero photo defaults to a file that only exists in the Remocn repo, so pass your own `src`. Ships dark by default and light.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark palette",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for highlights, buttons and progress",
+    },
+    {
+      name: "title",
+      type: "string",
+      default: "\"One click. It's live.\"",
+      description: "Headline that fades in after the pull-back",
+    },
+    {
+      name: "docTitle",
+      type: "string",
+      default: "\"Launch site\"",
+      description: "Document name in the builder toolbar",
+    },
+    {
+      name: "publishLabel",
+      type: "string",
+      default: "\"Publish\"",
+      description: "Idle label of the publish button",
+    },
+    {
+      name: "busyLabel",
+      type: "string",
+      default: "\"Publishing\"",
+      description: "Button label while publishing",
+    },
+    {
+      name: "liveLabel",
+      type: "string",
+      default: "\"Live\"",
+      description: "Button label once the site is live",
+    },
+    {
+      name: "url",
+      type: "string",
+      default: "\"remocn.dev/launch\"",
+      description: "Address shown once published",
+    },
+    {
+      name: "toast",
+      type: "string",
+      default: "\"Your site is live\"",
+      description: "Toast text after the site goes live",
+    },
+    {
+      name: "pages",
+      type: "string[]",
+      default: "[\"Home\", \"Pricing\", \"Changelog\", \"Docs\"]",
+      description: "Page names in the builder navigation",
+    },
+    {
+      name: "heroLine",
+      type: "string",
+      default: "\"Ship the launch today.\"",
+      description: "Hero headline on the published page",
+    },
+    {
+      name: "src",
+      type: "string",
+      description: "Hero image URL; default exists only in the Remocn repo",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "gradients.sh preset id for the backdrop shader",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the backdrop shader parameters",
+    },
+  ]}
+/>

@@ -1,0 +1,113 @@
+---
+title: AI Answer Sources
+description: "An AI answer streams in with inline citations, then a source panel opens from a cited number"
+component: ai-answer-sources
+vibe: clean
+length: 395
+useWhen:
+  - "A product beat showing an AI search or research assistant answering a question with cited sources."
+  - "A launch video for an answer engine where trust in sourcing is the selling point."
+  - "A feature demo of citations: the viewer sees a number hovered and its source cards open."
+avoidWhen:
+  - "The AI should run tools and show a step-by-step plan rather than cite sources — use `agent-run`."
+  - "You want a simple chat reply bubble in a messaging UI — use `chat-flow`."
+  - "You need a prompt typing into a generator that produces an output — use `ai-prompt-flow`."
+---
+
+<ComponentPreview name="ai-answer-sources" />
+
+<InstallBlock name="ai-answer-sources" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { AiAnswerSources } from "@/components/remocn/ai-answer-sources";
+
+const AiAnswerSourcesScene = () => (
+  <AiAnswerSources
+    brand="atlas"
+    query="How do I cut my cloud bill?"
+    theme="dark"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="AiAnswerSources"
+    component={AiAnswerSourcesScene}
+    durationInFrames={419}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A question types into a search box and submits, a short thinking sequence runs, then the answer streams in with numbered citations and source chips. A cursor hovers a citation and clicks it, and a panel of the cited sources slides open. Pass `query`, `answer`, `sources`, `related`, and `brand` to make it yours; it ships light and dark through `theme`.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "query",
+      type: "string",
+      default: "\"What is the fastest way to make a launch video?\"",
+      description: "The question typed into the search box.",
+    },
+    {
+      name: "sources",
+      type: "AnswerSource[]",
+      default: "DEFAULT_SOURCES",
+      description: "Source cards: site, title, optional snippet and color.",
+    },
+    {
+      name: "answer",
+      type: "AnswerBlock[]",
+      default: "DEFAULT_ANSWER",
+      description: "Answer blocks: paragraphs, headings and bullet lists with [n] citations.",
+    },
+    {
+      name: "related",
+      type: "string[]",
+      default: "DEFAULT_RELATED",
+      description: "Follow-up questions shown under the answer.",
+    },
+    {
+      name: "brand",
+      type: "string",
+      default: "\"sift\"",
+      description: "Product name shown in the app header.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#20808D\"",
+      description: "Accent color for citations and highlights.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"light\" | \"dark\"",
+      default: "\"light\"",
+      description: "Light or dark interface.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "Gradient shader preset for the background.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the shader preset parameters.",
+    },
+  ]}
+/>

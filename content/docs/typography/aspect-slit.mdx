@@ -1,0 +1,83 @@
+---
+title: Aspect Slit
+description: "A film-title card opens through a slit, with a serif hero line and a small caption"
+component: aspect-slit
+vibe: premium
+length: 150
+useWhen:
+  - "A film-style title card for a product launch or release announcement."
+  - "An opening beat that frames the video as a feature film."
+  - "A short serif title with a one-line caption."
+avoidWhen:
+  - "You want a clean text reveal without letterbox bars — use `soft-blur-in`."
+  - "The title needs a gradient or dramatic camera move — use `macro-pan`."
+  - "You need a title that appears through a fluted scan — use `slit-scan`."
+---
+
+<ComponentPreview name="aspect-slit" />
+
+<InstallBlock name="aspect-slit" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { AspectSlit } from "@/components/remocn/aspect-slit";
+
+const AspectSlitScene = () => <AspectSlit title="Now showing." caption="A launch film, built in React." slit={0.125} />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="AspectSlit"
+    component={AspectSlitScene}
+    durationInFrames={180}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Letterbox bars close to a thin slit, a serif title rises into it, then the bars open back to full frame as the title grows to hero size and a small caption settles underneath. Pass `title`, `caption` and `slit` (the narrowest bar gap as a share of frame height).
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "title",
+      type: "string",
+      default: "\"Now showing.\"",
+      description: "Short title. It first appears inside the slit, then grows to hero size.",
+    },
+    {
+      name: "caption",
+      type: "string",
+      default: "\"A launch film, built in React.\"",
+      description: "Small line under the hero title. Pass \"\" to hide.",
+    },
+    {
+      name: "slit",
+      type: "number",
+      default: "0.125",
+      description: "Height of the narrowest slit, as a share of the frame height.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for the background light and the title full stop.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color scheme; ships dark and light.",
+    },
+  ]}
+/>

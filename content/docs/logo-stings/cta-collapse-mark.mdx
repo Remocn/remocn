@@ -1,0 +1,89 @@
+---
+title: CTA Collapse Mark
+description: "A call to action collapses into pixels that rebuild the Remocn wordmark, with a URL beneath."
+component: cta-collapse-mark
+vibe: premium
+length: 120
+useWhen:
+  - "The final beat of a launch film: a call to action and URL that resolve into the logo."
+  - "A sign-off that should hand the viewer a URL before the brand lands."
+  - "A vertical story where the call to action stacks over several lines; portrait frames re-wrap it."
+avoidWhen:
+  - "The logo should come first and the message after — use `introducing`."
+  - "You want a clean logo reveal with no text to read first — use `noise-forge-sting`."
+  - "The end card is a partnership between two brands — use `collab-lockup`."
+---
+
+<ComponentPreview name="cta-collapse-mark" />
+
+<InstallBlock name="cta-collapse-mark" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { CtaCollapseMark } from "@/components/remocn/cta-collapse-mark";
+
+const CtaCollapseMarkScene = () => (
+  <CtaCollapseMark
+    cta="Ship your first launch film"
+    url="remocn.dev"
+    accent="#3B5BFD"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="CtaCollapseMark"
+    component={CtaCollapseMarkScene}
+    durationInFrames={138}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The call to action fades in word by word with the URL beneath it, then its glyphs shed and fly into the cells of the R mark, which snaps together before the rest of the wordmark springs in. Pass `cta`, `url` and `accent` to make it yours; the wordmark is the baked-in Remocn logo. Ships light and dark.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Dark or light palette and ground.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent colour for the mark and URL.",
+    },
+    {
+      name: "cta",
+      type: "string",
+      default: "\"Ship your first launch film\"",
+      description: "Call-to-action line that collapses into the logo.",
+    },
+    {
+      name: "url",
+      type: "string",
+      default: "\"remocn.dev\"",
+      description: "URL set beneath the call to action.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "Shader preset id for the gradients.sh background ground.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Custom shader parameters for the ground, used instead of the theme default.",
+    },
+  ]}
+/>

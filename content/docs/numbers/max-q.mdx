@@ -1,0 +1,121 @@
+---
+title: Max Q
+description: "Speed and altitude figures race upward beside a drawn trajectory, a banner flashes at the peak, then a status settles."
+component: max-q
+vibe: tech
+length: 112
+useWhen:
+  - "A performance or scale beat told as a mission, with two metrics climbing together."
+  - "A dev-tool launch that wants a telemetry feel and a peak moment flagged on screen."
+  - "A technical beat where a status word like Nominal confirms the result."
+avoidWhen:
+  - "One headline number is enough — use `magnitude-push`."
+  - "You compare two things head to head — use `versus-split`."
+  - "The metrics should read as a market feed — use `ticker-tape`."
+---
+
+<ComponentPreview name="max-q" />
+
+<InstallBlock name="max-q" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { MaxQ } from "@/components/remocn/max-q";
+
+const MaxQScene = () => (
+  <MaxQ velocity={1880} speedUnit="km/h" altitude={14.2} altitudeUnit="km" event="Max Q" />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="MaxQ"
+    component={MaxQScene}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Labels and two figures rise in and race up together while a trajectory curve draws between them. At the peak a banner wipes across, a marker drops on the curve, and a status settles under the numbers. Pass `velocity`, `altitude`, their labels and units, `event` and `status`; it ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "velocity",
+      type: "number",
+      default: "1880",
+      description: "Left number at the end of the climb.",
+    },
+    {
+      name: "altitude",
+      type: "number",
+      default: "14.2",
+      description: "Right number at the end of the climb, shown with one decimal.",
+    },
+    {
+      name: "speedLabel",
+      type: "string",
+      default: "\"Speed\"",
+      description: "Label above the left number.",
+    },
+    {
+      name: "speedUnit",
+      type: "string",
+      default: "\"km/h\"",
+      description: "Unit shown after the left number.",
+    },
+    {
+      name: "altitudeLabel",
+      type: "string",
+      default: "\"Altitude\"",
+      description: "Label above the right number.",
+    },
+    {
+      name: "altitudeUnit",
+      type: "string",
+      default: "\"km\"",
+      description: "Unit shown after the right number.",
+    },
+    {
+      name: "event",
+      type: "string",
+      default: "\"Max Q\"",
+      description: "Banner text that flashes across at the peak.",
+    },
+    {
+      name: "eventDetail",
+      type: "string",
+      default: "\"Maximum dynamic pressure\"",
+      description: "Small line inside the banner. Pass an empty string to hide it.",
+    },
+    {
+      name: "status",
+      type: "string",
+      default: "\"Nominal\"",
+      description: "Status word that settles under the numbers at the end.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Vehicle dot on the trajectory and small marks.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color theme, \"dark\" or \"light\".",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+  ]}
+/>

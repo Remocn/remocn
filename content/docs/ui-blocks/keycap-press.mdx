@@ -1,0 +1,99 @@
+---
+title: Keycap Press
+description: "Keycaps rise in 3D and press as a shortcut chord, then a line of text writes in below."
+component: keycap-press
+vibe: playful
+length: 84
+useWhen:
+  - "A shortcut or command-palette feature, such as a two-key chord that opens everything."
+  - "A launch beat that needs a tactile, physical object rather than a flat UI."
+  - "Teaching a keyboard-first product where the keys themselves are the hero."
+avoidWhen:
+  - "You only need typed key labels appearing as text — use `keystroke`."
+  - "The shortcut opens a palette you want to show in full — use `command-menu`."
+  - "A button being clicked by a pointer is the story — use `button`."
+---
+
+<ComponentPreview name="keycap-press" />
+
+<InstallBlock name="keycap-press" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { KeycapPress } from "@/components/remocn/keycap-press";
+
+const KeycapPressScene = () => (
+  <KeycapPress
+    keys={[{ label: "⌘", sub: "command", width: 1.25 }, { label: "K" }]}
+    label="Everything, one shortcut away"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="KeycapPress"
+    component={KeycapPressScene}
+    durationInFrames={135}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Keycaps rise into a tilted 3D view, press one after another as a chord with a ripple, then lift while the `label` writes in below. Pass your own `keys` as strings or objects with a legend, a sub label and a width. `material` sets the keycap finish and `theme` the stage; the symbols for command, option and shift are drawn as icons.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "keys",
+      type: "(string | { label: string; sub?: string; width?: number })[]",
+      default: "DEFAULT_KEYS",
+      description: "Keys in the chord. Strings or objects with a label, sub caption and width.",
+    },
+    {
+      name: "label",
+      type: "string",
+      default: "\"Everything, one shortcut away\"",
+      description: "Line of text written in under the keys.",
+    },
+    {
+      name: "material",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Keycap finish, dark or light.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      description: "Stage look, dark or light. Defaults to the material.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Color of the press ripple.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "Shader preset id for the animated background.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Partial shader parameters that override the ground preset.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+  ]}
+/>

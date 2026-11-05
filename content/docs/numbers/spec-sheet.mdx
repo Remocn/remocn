@@ -1,0 +1,96 @@
+---
+title: Spec Sheet
+description: "A spec table with hairline rows reveals values in turn, then one row expands to feature its value."
+component: spec-sheet
+vibe: clean
+length: 84
+useWhen:
+  - "A beat listing product facts such as resolution, frame rate and license."
+  - "A technical summary where one spec is the hero."
+  - "A closing recap of what is included, in a compact table."
+avoidWhen:
+  - "You compare two options side by side — use `versus-split`."
+  - "Only one number matters — use `compact-stat`."
+  - "The numbers should count up one after another — use `stat-sequence`."
+---
+
+<ComponentPreview name="spec-sheet" />
+
+<InstallBlock name="spec-sheet" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { SpecSheet } from "@/components/remocn/spec-sheet";
+
+const SpecSheetScene = () => (
+  <SpecSheet title="Tech specs" highlight={3} rows={[{ label: "Resolution", value: "4K" }, { label: "Frame rate", value: "60 fps" }, { label: "Install", value: "1 command" }]} />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="SpecSheet"
+    component={SpecSheetScene}
+    durationInFrames={140}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Hairline rules draw across and the labels and values reveal row by row, the values typing in. Then the highlighted row expands and its value grows in the accent gradient. Pass `rows`, `highlight` (row index), `title` and `name` (shown in the bottom lockup); it ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "rows",
+      type: "SpecRow[]",
+      default: "DEFAULT_ROWS",
+      description: "Table rows, each with a label and a value shown as text.",
+    },
+    {
+      name: "highlight",
+      type: "number",
+      default: "3",
+      description: "Zero-based index of the row that expands.",
+    },
+    {
+      name: "title",
+      type: "string",
+      default: "\"Tech specs\"",
+      description: "Heading shown above the table.",
+    },
+    {
+      name: "name",
+      type: "string",
+      default: "\"3.0\"",
+      description: "Name shown next to the logo in the bottom lockup.",
+    },
+    {
+      name: "logo",
+      type: "React.ReactNode",
+      description: "React node shown in the lockup instead of the default Remocn logo.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for highlights and small marks.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color theme, \"dark\" or \"light\".",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+  ]}
+/>

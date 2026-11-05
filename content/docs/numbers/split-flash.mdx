@@ -1,0 +1,95 @@
+---
+title: Split Flash
+description: "A lap-time clock freezes on its final value, flashing a purple bar and a minus delta"
+component: split-flash
+vibe: data
+length: 59
+useWhen:
+  - "A record-time beat where a lap-style clock races and freezes on a final value, then flashes a purple 'Fastest lap' band."
+  - "A speed claim like a build or render time that needs a timing-screen look with a minus delta dropping in."
+  - "A motorsport-flavoured launch teaser that ends on a bold frozen time."
+avoidWhen:
+  - "You want two clocks racing each other with a multiplier — use `timer-duel`."
+  - "You want a shot-clock style countdown to a buzzer with a title — use `shot-clock`."
+  - "You want a readout that locks on a speed against a bar and last year's mark — use `speed-trap`."
+---
+
+<ComponentPreview name="split-flash" />
+
+<InstallBlock name="split-flash" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { SplitFlash } from "@/components/remocn/split-flash";
+
+const SplitFlashScene = () => (
+  <SplitFlash
+    time="1:12.408"
+    delta="−0.412"
+    flashLabel="Fastest lap"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="SplitFlash"
+    component={SplitFlashScene}
+    durationInFrames={96}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A lap clock runs with rolling tenths while an accent sector line draws under it. When the line is crossed the clock freezes on its final time, the line shoots up into a full-width purple band that blinks once, and the delta slides down from under it. Pass `time` as m:ss.mmm, plus `delta`, `label` and `flashLabel`. It ships light and dark through the `theme` prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "time",
+      type: "string",
+      default: "\"1:12.408\"",
+      description: "The time the clock freezes on, `m:ss.mmm`. Anything else is shown static.",
+    },
+    {
+      name: "delta",
+      type: "string",
+      default: "\"−0.412\"",
+      description: "Delta that drops in under the frozen time. Pass \"\" to hide.",
+    },
+    {
+      name: "label",
+      type: "string",
+      default: "\"Lap time\"",
+      description: "Small label above the clock while it runs.",
+    },
+    {
+      name: "flashLabel",
+      type: "string",
+      default: "\"Fastest lap\"",
+      description: "Label once the clock freezes.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Colour of the sector line and the live marker.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier; 1 is the designed pace.",
+    },
+  ]}
+/>

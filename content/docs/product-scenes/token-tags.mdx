@@ -1,0 +1,81 @@
+---
+title: Token Tags
+description: The UI washes out around one area and leader lines run from its elements to dark chips naming their design tokens
+component: token-tags
+vibe: clean
+length: 61
+useWhen:
+  - "A design system or theming launch should show that every color on screen comes from a named token."
+  - "A component beat should connect UI parts to code names, like variables or class names."
+  - "One region of a screen deserves focus while the rest steps back."
+avoidWhen:
+  - "The labels are measurements rather than names — use `redline-measure`."
+  - "The labels describe problems to fix — use `audit-boxes`."
+  - "A product object should get one labelled callout — use `blueprint`."
+---
+
+<ComponentPreview name="token-tags" />
+
+<InstallBlock name="token-tags" />
+
+## Usage
+
+`TokenTags` is a full-frame scene. Everything outside `focus` washes toward the
+background. Then, tag by tag, a dot lands on the element, a leader line runs out
+with one elbow and a dark chip with a color swatch and the token name settles at
+its end.
+
+```tsx
+import { TokenTags } from "@/components/remocn/token-tags";
+
+export const Tokens = () => <TokenTags />;
+```
+
+Without children it tags the demo dashboard's card row. For your own UI, pass it
+as children in a 1280×720 frame and list the tags in frame pixels. With children
+the wash is off unless you pass `focus`.
+
+```tsx
+import { TokenTags } from "@/components/remocn/token-tags";
+
+export const Tokens = () => (
+  <TokenTags
+    focus={{ x: 300, y: 160, w: 680, h: 120 }}
+    tokens={[
+      { anchor: [340, 220], at: [420, 360], label: "bg/brand", swatch: "#7D52F4" },
+      { anchor: [620, 200], at: [700, 400], label: "text/strong", swatch: "#0E121B" },
+    ]}
+  >
+    <MyScreen />
+  </TokenTags>
+);
+```
+
+The leader leaves `anchor` diagonally, bends at the chip's height and runs
+level into the chip at `at`, so place chips below or above their anchors.
+
+## Timing
+
+At 30 fps and `speed={1}`:
+
+| Frames | Motion |
+| --- | --- |
+| 0–12 | The wash fades in around `focus` |
+| 12 + n × `stagger` | Tag n's dot pops onto its element |
+| 15 + n × `stagger` | Its leader line draws over 14 frames |
+| 25 + n × `stagger` | Its chip rises in over 12 frames |
+
+`tokenTagsLength` is 61 with the five demo tags. `speed` scales the whole
+timeline.
+
+<PropsTable title="Props"
+  rows={[
+    { name: "children", type: "React.ReactNode", description: "UI to tag, laid out in a 1280×720 frame. Without it a demo dashboard is drawn" },
+    { name: "tokens", type: "{ anchor: [number, number]; at: [number, number]; label: string; swatch: string }[]", description: "Tags in frame pixels: a dot on anchor, the chip centered on at. Defaults to the demo tags, or none with children" },
+    { name: "focus", type: "{ x: number; y: number; w: number; h: number } | null", description: "Area kept bright while the rest washes out; null skips the wash. Defaults to the demo card row, or null with children" },
+    { name: "lineColor", type: "string", default: '"#0E121B"', description: "Leader line and dot color" },
+    { name: "background", type: "string", default: '"#EDEDEF"', description: "Stage color, also used for the wash" },
+    { name: "stagger", type: "number", default: "6", description: "Frames between one tag and the next" },
+    { name: "speed", type: "number", default: "1", description: "Playback multiplier" },
+  ]}
+/>

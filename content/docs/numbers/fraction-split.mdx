@@ -1,0 +1,83 @@
+---
+title: Fraction Split
+description: "A bar of eight boxes splits into halves, quarters and eighths, then leaves one filled under a headline."
+component: fraction-split
+vibe: clean
+length: 146
+useWhen:
+  - "A speed or efficiency claim such as 1/8 the time, where the fraction itself is the visual."
+  - "A clean beat that needs a headline with one highlighted word in gradient."
+  - "A comparison that reads best as one piece out of a whole."
+avoidWhen:
+  - "The share should be a pie-like ring - use `share-donut`."
+  - "The proportion is a grid of dots - use `unit-grid`."
+  - "A segmented bar that shrinks while a number counts is closer - use `time-breakdown`."
+---
+
+<ComponentPreview name="fraction-split" />
+
+<InstallBlock name="fraction-split" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { FractionSplit } from "@/components/remocn/fraction-split";
+
+const FractionSplitScene = () => <FractionSplit line="Renders in 1/8 the time." highlight="1/8" accentPiece={0} />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="FractionSplit"
+    component={FractionSplitScene}
+    durationInFrames={175}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A bar of eight segments splits into halves, quarters and eighths with a fraction label at each stage; then all but one piece drain away, the bar shifts up and the headline appears word by word with the `highlight` text in gradient. Pass `line` and `highlight`; `accentPiece` picks which of the eight pieces stays. It ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "line",
+      type: "string",
+      default: "\"Renders in 1/8 the time.\"",
+      description: "Headline shown under the bar.",
+    },
+    {
+      name: "highlight",
+      type: "string",
+      default: "\"1/8\"",
+      description: "Part of the line set in gradient; should match the fraction.",
+    },
+    {
+      name: "accentPiece",
+      type: "number",
+      default: "0",
+      description: "Which of the eight pieces stays filled, from 0 to 7.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color of the filled piece.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark palette.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier.",
+    },
+  ]}
+/>

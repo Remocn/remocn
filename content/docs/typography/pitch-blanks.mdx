@@ -1,0 +1,85 @@
+---
+title: Pitch Blanks
+description: "A one-line pitch shows underlined blanks with small labels, then each blank fills in with its word."
+component: pitch-blanks
+vibe: paper
+length: 141
+useWhen:
+  - "A positioning beat that frames the pitch as a fill-in-the-blank: product, category, audience."
+  - "An explainer moment where each key phrase needs a small label saying what role it plays."
+avoidWhen:
+  - "You want one word edited inside a sentence, not several blanks — use `word-insert`."
+  - "A single phrase should be emphasized with a marker stroke — use `marker-highlight`."
+  - "The sentence needs no labels and should just build in — use `serif-rise`."
+---
+
+<ComponentPreview name="pitch-blanks" />
+
+<InstallBlock name="pitch-blanks" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { PitchBlanks } from "@/components/remocn/pitch-blanks";
+
+const PitchBlanksScene = () => (
+  <PitchBlanks
+    line="{Acme} is a {motion toolkit} for {small teams}."
+    labels={["product", "category", "audience"]}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="PitchBlanks"
+    component={PitchBlanksScene}
+    durationInFrames={170}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The sentence appears with each braced phrase in `line` shown as an empty underline carrying a small caps label from `labels`. The blanks then fill in one by one: the underline stretches to fit, the word rises in, and the underline and label turn the accent color. Wrap phrases in curly braces and give `labels` one entry per blank; timing stretches to fit the composition, and 141 frames assumes three blanks in 170. It ships light and dark.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "line",
+      type: "string",
+      default: "\"{remocn} is a {launch-film kit} for {teams of one}.\"",
+      description: "Sentence with each blank wrapped in curly braces.",
+    },
+    {
+      name: "labels",
+      type: "string[]",
+      default: "[\"product\", \"category\", \"audience\"]",
+      description: "Small caps labels, one per blank, in order.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Accent color; overrides the theme accent.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark palette.",
+    },
+  ]}
+/>

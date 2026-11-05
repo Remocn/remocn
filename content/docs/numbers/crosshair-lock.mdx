@@ -1,0 +1,91 @@
+---
+title: Crosshair Lock
+description: "A crosshair locks onto the peak of a dot plot and calls out 2.4k per minute"
+component: crosshair-lock
+vibe: tech
+length: 82
+useWhen:
+  - "A beat that calls out one peak or outlier on a dot plot with a precise readout."
+  - "A performance scene where a rate such as requests or renders per minute needs a pinpoint callout."
+  - "A short analytics moment that should feel like a viewfinder locking on a target."
+avoidWhen:
+  - "You need a full chart that draws in and trends — use `growth-line`."
+  - "You want a bar chart that climbs to a final number — use `pixel-bars`."
+  - "The story is a before-and-after distribution — use `distribution-shift`."
+---
+
+<ComponentPreview name="crosshair-lock" />
+
+<InstallBlock name="crosshair-lock" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { CrosshairLock } from "@/components/remocn/crosshair-lock";
+
+const CrosshairLockScene = () => (
+  <CrosshairLock x={0.7} y={0.94} label="Peak" value="2.4k/min" />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="CrosshairLock"
+    component={CrosshairLockScene}
+    durationInFrames={120}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Two crosshair lines slide across a dot plot and lock onto a point with a ring, then a leader line pops out a label and value. Set the target with `x` and `y` (0 to 1 across the plot) and the callout with `label` and `value`. Ships dark and light via `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "x",
+      type: "number",
+      default: "0.7",
+      description: "Horizontal position of the locked point, from 0 to 1.",
+    },
+    {
+      name: "y",
+      type: "number",
+      default: "0.94",
+      description: "Vertical position of the locked point, from 0 to 1.",
+    },
+    {
+      name: "label",
+      type: "string",
+      default: "\"Peak\"",
+      description: "Small name above the callout value.",
+    },
+    {
+      name: "value",
+      type: "string",
+      default: "\"2.4k/min\"",
+      description: "The callout text, such as 2.4k/min.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for the hero element.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Dark or light palette.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier.",
+    },
+  ]}
+/>

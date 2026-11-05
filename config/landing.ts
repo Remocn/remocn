@@ -49,7 +49,7 @@ export const HOW_IT_WORKS_STEPS: HowItWorksStep[] = [
   {
     title: "Paste one prompt",
     detail:
-      "It sets up the project, installs the remocn skill and opens a preview.",
+      "It sets up the project, installs the Remocn skill and opens a preview.",
   },
   {
     title: "A player opens in your browser",

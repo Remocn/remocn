@@ -1,0 +1,102 @@
+---
+title: Level Up
+description: "A segmented XP bar fills from flying chips, bursts into a LEVEL UP call, rolls the level digit, then shows a stat."
+component: level-up
+vibe: playful
+length: 106
+useWhen:
+  - "A gaming-flavoured launch beat that frames a major release as a level-up."
+  - "A milestone beat with a stat chip, such as a render-speed gain, as the payoff."
+  - "A hype moment in a release video that needs a burst, a rolled number and one stat."
+avoidWhen:
+  - "The milestone is a plain version number — use `version-hero`."
+  - "You want a quiet, premium reveal instead of a burst — use `plus-open`."
+  - "The moment is a leaderboard or ranking climb — use `rank-climb`."
+---
+
+<ComponentPreview name="level-up" />
+
+<InstallBlock name="level-up" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { LevelUp } from "@/components/remocn/level-up";
+
+const LevelUpScene = () => (
+  <LevelUp level={41} title="LEVEL UP" stat={{ label: "Render speed", value: 40, suffix: "%" }} />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="LevelUp"
+    component={LevelUpScene}
+    durationInFrames={140}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The XP bar builds, XP chips fly into it one by one until it maxes out and collapses, then the title erupts with rays and a shockwave and the level digit rolls to the next number. A stat line ticks up last. Pass `level`, `startXp`, `maxXp`, `chips` (they should add up to `maxXp - startXp`), `title` and `stat`; it ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "level",
+      type: "number",
+      default: "41",
+      description: "Level before the level-up. The new level is this plus one.",
+    },
+    {
+      name: "startXp",
+      type: "number",
+      default: "2800",
+      description: "XP already in the bar when the shot opens.",
+    },
+    {
+      name: "maxXp",
+      type: "number",
+      default: "4000",
+      description: "XP needed to reach the next level.",
+    },
+    {
+      name: "chips",
+      type: "number[]",
+      default: "[120, 240, 180, 300, 360]",
+      description: "One chip per entry, each flying XP into the bar.",
+    },
+    {
+      name: "title",
+      type: "string",
+      default: "\"LEVEL UP\"",
+      description: "Big call that erupts when the bar maxes out.",
+    },
+    {
+      name: "stat",
+      type: "{ label: string; value: number; suffix?: string }",
+      description: "Stat line that ticks up at the end, with label, value and optional suffix.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for highlights and small marks.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color theme, \"dark\" or \"light\".",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+  ]}
+/>

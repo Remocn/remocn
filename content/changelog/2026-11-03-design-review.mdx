@@ -1,0 +1,19 @@
+---
+title: Design Review
+date: 2026-11-03
+---
+
+Six new Product Scenes play a design review over a UI: redlines, flagged problems, a scan that ships the fix, token names and layout guides. Each one draws over your own screen or screenshot, with every mark placed in frame pixels. Without props, they run on a demo calendar dashboard. They share the new `audit-core` lib, which installs with any of them.
+
+<ChangelogPreview name="design-audit" />
+
+### New components
+
+- [Design Audit](/docs/product-scenes/design-audit): the whole review in one scene. Red redlines and issue boxes are followed by a scan to the fixed build. The camera then pushes into one card for its specs and tokens and pulls back to the grid.
+- [Redline Measure](/docs/product-scenes/redline-measure): spacing and size rulers draw one by one, each value popping on when its line lands.
+- [Audit Boxes](/docs/product-scenes/audit-boxes): off-spec elements are traced in red, each labelled with its fix, while an issue counter ticks up.
+- [Scan Fix](/docs/product-scenes/scan-fix): a scan band sweeps the old build into the new one and flips the version chip.
+- [Token Tags](/docs/product-scenes/token-tags): leader lines run from elements to chips that name their design tokens.
+- [Layout Guides](/docs/product-scenes/layout-guides): column guides, a highlighted column, a gutter measure and a now line.
+
+<ChangelogPreview name="scan-fix" />

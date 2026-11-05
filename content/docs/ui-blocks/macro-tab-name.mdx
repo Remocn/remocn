@@ -1,0 +1,106 @@
+---
+title: Macro Tab Name
+description: "A macro close-up of a document tab where a cursor clicks in and the tab name types out."
+component: macro-tab-name
+vibe: tech
+length: 100
+useWhen:
+  - "A feature beat about naming or renaming a document, project or workspace, shot as an extreme close-up of the tab."
+  - "A collaboration or file-management demo needs a quick save confirmation: typing, a brief spinner, then the resolved title."
+  - "You want a tight, product-detail shot between wider UI scenes."
+avoidWhen:
+  - "You need a full browser window with an address bar and page content — use `url-bar-cta`."
+  - "The point is a big typed headline, not a UI chip — use `typewriter`."
+  - "You only need a pointer gliding and clicking on your own UI — use `simulated-cursor`."
+---
+
+<ComponentPreview name="macro-tab-name" />
+
+<InstallBlock name="macro-tab-name" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { MacroTabName } from "@/components/remocn/macro-tab-name";
+
+const MacroTabNameScene = () => (
+  <MacroTabName
+    name="Launch Assets"
+    path={["Marketing", "Launch week"]}
+    docMeta="Edited 2 min ago · 14 files"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="MacroTabName"
+    component={MacroTabNameScene}
+    durationInFrames={108}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The camera starts in macro on a document tab. A cursor clicks it, the `name` types in character by character, a brief spinner shows the save, and the tab resolves into the finished title over a breadcrumb and meta line. Pass your own `name`, `path` and `docMeta`; it ships light and dark through `theme`.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color scheme. Ships light and dark.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for the focus ring and spinner.",
+    },
+    {
+      name: "name",
+      type: "string",
+      default: "\"Launch Assets\"",
+      description: "Text typed into the tab, also the resolved document title.",
+    },
+    {
+      name: "neighbors",
+      type: "string[]",
+      default: "[\"Changelog\", \"Pricing\"]",
+      description: "Names of the sibling tabs shown to the left; last two used.",
+    },
+    {
+      name: "path",
+      type: "string[]",
+      default: "[\"Marketing\", \"Launch week\"]",
+      description: "Breadcrumb segments shown above the document title.",
+    },
+    {
+      name: "docMeta",
+      type: "string",
+      default: "\"Edited 2 min ago · 14 files\"",
+      description: "Meta line under the title, such as last edited time.",
+    },
+    {
+      name: "docBody",
+      type: "string[]",
+      description: "Body lines of the document; portrait shows all, landscape the first.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "Shader preset id for the animated background.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Partial shader parameters that override the ground preset.",
+    },
+  ]}
+/>

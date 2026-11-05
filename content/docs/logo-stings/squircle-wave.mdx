@@ -1,0 +1,71 @@
+---
+title: Squircle Wave
+description: "A wave of squircle cells sweeps across a dot grid and leaves the R mark behind."
+component: squircle-wave
+vibe: premium
+length: 72
+useWhen:
+  - "A text-free logo reveal where a wave of motion ends on the mark alone."
+  - "An opener for a design-system or UI-kit product, where the grid is on brand."
+  - "A short wordless sting that fits under a voice-over."
+avoidWhen:
+  - "You want the name shown beside the mark — use `ripple-mark`."
+  - "The mark should refine from large pixel squares — use `quadtree-mark`."
+  - "A tagline must accompany the reveal — use `first-light`."
+---
+
+<ComponentPreview name="squircle-wave" />
+
+<InstallBlock name="squircle-wave" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { SquircleWave } from "@/components/remocn/squircle-wave";
+
+const SquircleWaveScene = () => (
+  <SquircleWave
+    accent="#3B5BFD"
+    theme="dark"
+    speed={1}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="SquircleWave"
+    component={SquircleWaveScene}
+    durationInFrames={120}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A dot grid fades up, then a diagonal wave of squircle cells sweeps across it and the cells inside the R mark lock in solid as the crest passes, leaving only the mark. There is no text prop and the mark is the baked-in Remocn R. Pass `accent` for the wake colour. Ships light and dark.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Colour of the wave's leading edge behind the crest.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier for the whole timeline; 1 is normal speed.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Dark or light palette and ground.",
+    },
+  ]}
+/>

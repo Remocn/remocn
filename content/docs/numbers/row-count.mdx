@@ -1,0 +1,93 @@
+---
+title: Row Count
+description: "A big number rolls up across stacked ruled rows, adding a row at each thousands group."
+component: row-count
+vibe: data
+length: 84
+useWhen:
+  - "A very large figure, such as millions of frames rendered, where the digit groups themselves are part of the story."
+  - "A data-flavored stat beat with a small label to the side and an accent on the newest row."
+  - "A count that spans several orders of magnitude and should visibly gain rows as it grows."
+avoidWhen:
+  - "The number is small and needs no stacked rows - use `compact-stat`."
+  - "You want trailing groups to fade quieter than the lead group - use `diminuendo`."
+  - "The count should tick like a live feed - use `live-ticker`."
+---
+
+<ComponentPreview name="row-count" />
+
+<InstallBlock name="row-count" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { RowCount } from "@/components/remocn/row-count";
+
+const RowCountScene = () => <RowCount value={27300000} label="frames rendered in every region, every night" />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="RowCount"
+    component={RowCountScene}
+    durationInFrames={130}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The number counts up on a log curve beside a stack of ruled rows; each thousands group gets its own row, and a new row springs in as the count crosses 1,000, 1,000,000 and beyond, with the newest row tinted in the accent. A small label sits to the side. Pass `value`, `from`, `prefix` and `label`. It ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "value",
+      type: "number",
+      default: "27300000",
+      description: "The number the count lands on.",
+    },
+    {
+      name: "from",
+      type: "number",
+      default: "1",
+      description: "Starting number; the count climbs on a log curve.",
+    },
+    {
+      name: "prefix",
+      type: "string",
+      default: "\"\"",
+      description: "Text before the number.",
+    },
+    {
+      name: "label",
+      type: "string",
+      default: "\"frames rendered in every region, every night\"",
+      description: "Small label beside the stack.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Tint for the newest row; defaults to the theme accent.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Stage background color; overrides the theme ground.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark palette.",
+    },
+  ]}
+/>

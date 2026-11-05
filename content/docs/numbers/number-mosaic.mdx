@@ -1,0 +1,88 @@
+---
+title: Number Mosaic
+description: "A field of ticking digits dims while the cells forming the number light up, then a lockup appears beneath."
+component: number-mosaic
+vibe: tech
+length: 114
+useWhen:
+  - "A milestone beat, such as total renders or users, where the figure should emerge from a sea of data."
+  - "A closing stat that needs the product lockup (mark, name and a label) under the number."
+  - "A tech-flavored launch video where the number should feel computed rather than typed."
+avoidWhen:
+  - "You need a quick, simple stat with no lockup - use `compact-stat`."
+  - "The point is growth over time rather than sheer scale - use `growth-line`."
+  - "The number should read as a pixel-block display - use `module-count`."
+---
+
+<ComponentPreview name="number-mosaic" />
+
+<InstallBlock name="number-mosaic" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { NumberMosaic } from "@/components/remocn/number-mosaic";
+
+const NumberMosaicScene = () => <NumberMosaic value="10,000" name="acme" label="launch videos rendered" />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="NumberMosaic"
+    component={NumberMosaicScene}
+    durationInFrames={140}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A dim field of ticking digits fills the frame while the cells that form the number light up into a gradient and the rest fall back; a lockup of mark, product name and label then appears under the figure. Pass `value` as a string such as "10,000" or "2.4M", plus `name` and `label`, or `logo` to swap the mark. It ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "value",
+      type: "string",
+      default: "\"10,000\"",
+      description: "The number that emerges from the field. Supports digits and `, . + % k K M x`;\nother characters leave a gap.",
+    },
+    {
+      name: "label",
+      type: "string",
+      default: "\"launch videos rendered\"",
+      description: "Text after the lockup, under the number.",
+    },
+    {
+      name: "name",
+      type: "string",
+      default: "\"remocn\"",
+      description: "Product name in the lockup.",
+    },
+    {
+      name: "logo",
+      type: "React.ReactNode",
+      description: "Replaces the default Remocn mark in the lockup.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Gradient accent for the lit cells.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark palette.",
+    },
+  ]}
+/>

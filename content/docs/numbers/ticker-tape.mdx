@@ -1,0 +1,102 @@
+---
+title: Ticker Tape
+description: "Bands of stock quotes scroll, brake to a stop on a hero symbol, which scales into a price poster."
+component: ticker-tape
+vibe: data
+length: 130
+useWhen:
+  - "A funding, valuation or growth moment told as a market quote."
+  - "A fictional ticker as the hero of a product beat."
+  - "A finance-styled intro that ends on one symbol, price and percent change."
+avoidWhen:
+  - "The beat is an IPO price print — use `ipo-open`."
+  - "You show a price rally on a chart — use `candle-rally`."
+  - "You want a rolling live counter — use `live-ticker`."
+---
+
+<ComponentPreview name="ticker-tape" />
+
+<InstallBlock name="ticker-tape" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { TickerTape } from "@/components/remocn/ticker-tape";
+
+const TickerTapeScene = () => (
+  <TickerTape symbol="RMCN" price="128.40" change={12.4} name="remocn" />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="TickerTape"
+    component={TickerTapeScene}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Seven bands of quotes run at speed in alternating directions, then brake until the middle band stops on the hero symbol. The side bands clear away and the hero quote scales into a poster with price and move. Pass `symbol`, `price`, `change`, `symbols` and `name`; it ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "symbol",
+      type: "string",
+      default: "\"RMCN\"",
+      description: "Hero symbol the middle band stops on.",
+    },
+    {
+      name: "price",
+      type: "string",
+      default: "\"128.40\"",
+      description: "Hero price, shown as typed.",
+    },
+    {
+      name: "change",
+      type: "number",
+      default: "12.4",
+      description: "Hero move in percent; negative reads as a down move.",
+    },
+    {
+      name: "symbols",
+      type: "string[]",
+      default: "SYMBOLS",
+      description: "Other fictional symbols that fill the bands.",
+    },
+    {
+      name: "name",
+      type: "string",
+      default: "\"remocn\"",
+      description: "Product name under the poster; Remocn renders the real logo.",
+    },
+    {
+      name: "logo",
+      type: "React.ReactNode",
+      description: "React node that replaces the logo or name under the poster.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for highlights and small marks.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color theme, \"dark\" or \"light\".",
+    },
+  ]}
+/>

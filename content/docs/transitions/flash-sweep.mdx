@@ -1,0 +1,126 @@
+---
+title: Flash Sweep
+description: "A tilted band of light sweeps across the frame and swaps one shot for the next"
+component: flash-sweep
+vibe: premium
+length: 140
+useWhen:
+  - "Cutting through a chain of three or four product shots with a quick, repeated light pass."
+  - "A feature tour where each screen should flash into the next without a heavy effect."
+  - "A swap between two shots that should feel like a camera flash or a lens glint."
+avoidWhen:
+  - "You want colored bars instead of a single light band — use `color-bars`."
+  - "The light should linger as a warm, analog glow — use `light-leak`."
+  - "You want the cut to be a hard sideways camera move — use `whip-pan`."
+---
+
+<ComponentPreview name="flash-sweep" />
+
+<InstallBlock name="flash-sweep" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { FlashSweep } from "@/components/remocn/flash-sweep";
+
+const FlashSweepScene = () => (
+  <FlashSweep
+    images={["/shots/one.png", "/shots/two.png", "/shots/three.png"]}
+    direction="right"
+    hold={30}
+    accent="#3B5BFD"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="FlashSweep"
+    component={FlashSweepScene}
+    durationInFrames={156}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A tilted band of light, or a shadow in the `dark` variant, crosses the frame, blows out at the middle and swaps the shot, which then settles. Pass `scenes` for a chain where every neighboring pair gets one sweep, or `from` and `to` for a single swap, or `images` for screenshots. With the default four shots it ends at frame 140; each extra shot adds `hold` plus `duration` frames, and a single pair ends at frame 56.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "from",
+      type: "React.ReactNode",
+      description: "Outgoing shot",
+    },
+    {
+      name: "to",
+      type: "React.ReactNode",
+      description: "Incoming shot",
+    },
+    {
+      name: "scenes",
+      type: "React.ReactNode[]",
+      description: "A chain of shots; each neighboring pair gets one sweep",
+    },
+    {
+      name: "images",
+      type: "string[]",
+      description: "Screenshots, used when no React shots are passed",
+    },
+    {
+      name: "variant",
+      type: "\"light\" | \"dark\"",
+      description: "Light burns through to white; dark passes a shadow",
+    },
+    {
+      name: "angle",
+      type: "number",
+      default: "22",
+      description: "Tilt of the band from vertical, in degrees",
+    },
+    {
+      name: "direction",
+      type: "\"right\" | \"left\"",
+      default: "\"right\"",
+      description: "Which way the band travels",
+    },
+    {
+      name: "duration",
+      type: "number",
+      default: "12",
+      description: "Frames the band takes to cross the frame; 8 to 14 reads best",
+    },
+    {
+      name: "hold",
+      type: "number",
+      default: "30",
+      description: "Frames each shot holds before the next sweep",
+    },
+    {
+      name: "tint",
+      type: "string",
+      description: "Color of the light; defaults to warm white",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color used by the built-in shots",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier for the whole timeline",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark built-in shots; sets the default variant",
+    },
+  ]}
+/>

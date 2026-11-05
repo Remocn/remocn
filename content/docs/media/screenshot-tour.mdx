@@ -1,0 +1,130 @@
+---
+title: Screenshot Tour
+description: "The camera pushes in on regions of a product screenshot in turn, dimming the rest and labelling each stop."
+component: screenshot-tour
+vibe: clean
+length: 177
+useWhen:
+  - "A guided walkthrough of one screenshot with three or so labelled regions."
+  - "A product tour where each stop gets a caption and a numbered step."
+  - "Showing real UI up close without cutting to separate screenshots."
+avoidWhen:
+  - "All annotations should be visible together on a fixed frame — use `ui-callout`."
+  - "You only need one close-up and a pull back — use `up-close`."
+  - "The story is the layout adapting to screen sizes — use `device-morph`."
+---
+
+<ComponentPreview name="screenshot-tour" />
+
+<InstallBlock name="screenshot-tour" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { ScreenshotTour } from "@/components/remocn/screenshot-tour";
+
+const ScreenshotTourScene = () => (
+  <ScreenshotTour
+    src="/screens/dashboard.png"
+    screenshotWidth={1440}
+    screenshotHeight={900}
+    stops={[{ x: 40, y: 120, width: 420, height: 200, label: "Every issue, grouped by status" }]}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="ScreenshotTour"
+    component={ScreenshotTourScene}
+    durationInFrames={215}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A framed screenshot rises in and the camera travels between `stops`, pushing in on each region while the rest dims and a caption names it. After the last stop it pulls back to the full shot when `pullBack` is on. Pass your own screenshot through `src` or `children` with its `screenshotWidth` and `screenshotHeight`, and list `stops` in screenshot pixels. With neither it shows a built-in issue-tracker mock. It ships light and dark through `theme`. The length is `18 + stops * framesPerStop + 24` for three stops at 45 frames.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "src",
+      type: "string",
+      description: "Screenshot URL. Replaces the built-in mock.",
+    },
+    {
+      name: "children",
+      type: "React.ReactNode",
+      description: "Custom screen content. Used when src is not set.",
+    },
+    {
+      name: "screenshotWidth",
+      type: "number",
+      default: "MOCK_W",
+      description: "Natural width of the screenshot in pixels.",
+    },
+    {
+      name: "screenshotHeight",
+      type: "number",
+      default: "MOCK_H",
+      description: "Natural height of the screenshot in pixels.",
+    },
+    {
+      name: "stops",
+      type: "{ x: number; y: number; width: number; height: number; label: string }[]",
+      default: "DEFAULT_STOPS",
+      description: "Regions to visit, in screenshot pixels, each with a caption.",
+    },
+    {
+      name: "framesPerStop",
+      type: "number",
+      default: "45",
+      description: "Frames spent on each stop.",
+    },
+    {
+      name: "dim",
+      type: "number",
+      default: "0.55",
+      description: "Strength of the veil outside the focus, 0 to 1.",
+    },
+    {
+      name: "pullBack",
+      type: "boolean",
+      default: "true",
+      description: "Pull back to the full screenshot after the last stop.",
+    },
+    {
+      name: "theme",
+      type: "\"light\" | \"dark\"",
+      default: "\"light\"",
+      description: "Color scheme. Ships light and dark.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color of the focus ring.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "Shader preset id for the animated background.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Partial shader parameters that override the ground preset.",
+    },
+  ]}
+/>

@@ -1,0 +1,132 @@
+---
+title: Before After
+description: "A divider sweeps across a framed image to reveal the after version, then settles back to the pause point."
+component: before-after
+vibe: premium
+length: 112
+useWhen:
+  - "Showing a color grade, edit, retouch or redesign as a before and after."
+  - "A comparison beat with Before and After labels and an optional title above."
+  - "Any image pair where a draggable-slider feel works better than a cut."
+avoidWhen:
+  - "The change is a whole UI switching theme — use `theme-flip`."
+  - "You want a scene-to-scene wipe rather than a comparison — use `wave-wipe`."
+  - "The change is in text, not an image — use `diff-swap`."
+---
+
+<ComponentPreview name="before-after" />
+
+<InstallBlock name="before-after" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { BeforeAfter } from "@/components/remocn/before-after";
+
+const BeforeAfterScene = () => (
+  <BeforeAfter
+    before="/shots/raw.jpg"
+    after="/shots/graded.jpg"
+    title="Graded in one pass"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="BeforeAfter"
+    component={BeforeAfterScene}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A framed image appears with a grip handle. The divider sweeps across to reveal the after version, then returns to `pauseAt` before the grip fades. Pass your own `before` and `after` image URLs, with optional labels and a `title`. If neither is given, the built-in demo image shows a flat look against a graded look and uses a `staticFile` from the Remocn repo. It ships light and dark through `theme`.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "before",
+      type: "string",
+      description: "Image URL for the before side. Defaults to a repo-only file.",
+    },
+    {
+      name: "after",
+      type: "string",
+      description: "Image URL for the after side. Defaults to a repo-only file.",
+    },
+    {
+      name: "beforeLabel",
+      type: "string",
+      default: "\"Before\"",
+      description: "Label on the before side.",
+    },
+    {
+      name: "afterLabel",
+      type: "string",
+      default: "\"After\"",
+      description: "Label on the after side.",
+    },
+    {
+      name: "title",
+      type: "string",
+      description: "Optional title above the frame.",
+    },
+    {
+      name: "aspect",
+      type: "number",
+      description: "Aspect ratio of the frame. Defaults to 16:9, or 4:5 in portrait.",
+    },
+    {
+      name: "fit",
+      type: "\"cover\" | \"contain\"",
+      default: "\"cover\"",
+      description: "How images fill the frame.",
+    },
+    {
+      name: "pauseAt",
+      type: "number",
+      default: "0.5",
+      description: "Divider position where the sweep rests, 0 to 1.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color of the grip and divider.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Solid background color for the stage.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "Shader preset id for the animated background.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Partial shader parameters that override the ground preset.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color scheme. Ships light and dark.",
+    },
+  ]}
+/>

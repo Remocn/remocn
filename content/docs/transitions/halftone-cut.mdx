@@ -1,0 +1,83 @@
+---
+title: Halftone Cut
+description: "A diagonal wave of halftone dots shrinks one serif headline away and grows the next in its place"
+component: halftone-cut
+vibe: premium
+length: 76
+useWhen:
+  - "A print-flavored swap between two headlines, such as a draft and a final version."
+  - "An editorial or craft-oriented launch video that wants a textured cut instead of a fade."
+  - "A short headline pair where the swap itself should feel like ink on paper."
+avoidWhen:
+  - "You want to turn a whole existing scene into halftone print — use `halftone-print`."
+  - "The cut should be clean and vector-sharp, with no dot texture — use `ring-cut`."
+  - "You need a soft photographic dissolve between full scenes — use `grain-dissolve`."
+---
+
+<ComponentPreview name="halftone-cut" />
+
+<InstallBlock name="halftone-cut" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { HalftoneCut } from "@/components/remocn/halftone-cut";
+
+const HalftoneCutScene = () => (
+  <HalftoneCut
+    from="Draft one"
+    to="Final cut"
+    accent="#3B5BFD"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="HalftoneCut"
+    component={HalftoneCutScene}
+    durationInFrames={108}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The `from` headline, set in italic serif, is eaten away by a halftone dot pattern that shrinks along a diagonal wave. The dots then regrow to reveal the `to` headline in upright serif on a tinted gradient. Pass `from` and `to` as short strings; `accent` tints the gradient and it ships light and dark. The cut lands at frame 76.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "from",
+      type: "string",
+      default: "\"Draft one\"",
+      description: "Outgoing headline, set in italic serif",
+    },
+    {
+      name: "to",
+      type: "string",
+      default: "\"Final cut\"",
+      description: "Incoming headline, set in upright serif",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Tint color of the background gradient",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark stage",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier for the whole timeline",
+    },
+  ]}
+/>

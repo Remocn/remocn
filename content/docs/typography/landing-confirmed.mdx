@@ -1,0 +1,100 @@
+---
+title: Landing Confirmed
+description: "An altitude readout counts down to a hard stop, then a slammed confirmation gives way to a gradient title."
+component: landing-confirmed
+vibe: premium
+length: 114
+useWhen:
+  - "A ship-day beat that treats the release like a landing: countdown, impact, then the big word."
+  - "A closing card for a launch film that needs a punchy gradient title, a serif subline and a logo."
+avoidWhen:
+  - "You want a countdown that ends on a live URL rather than a landing — use `drop-timer`."
+  - "You only need one bold word with no telemetry or countdown — use `full-bleed-type`."
+  - "The tone is a fighting-game knockout rather than a mission landing — use `ko-count`."
+---
+
+<ComponentPreview name="landing-confirmed" />
+
+<InstallBlock name="landing-confirmed" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { LandingConfirmed } from "@/components/remocn/landing-confirmed";
+
+const LandingConfirmedScene = () => (
+  <LandingConfirmed
+    from={800}
+    confirm="Release confirmed"
+    title="Live."
+    subtitle="Version 2.0 is out."
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="LandingConfirmed"
+    component={LandingConfirmedScene}
+    durationInFrames={160}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A giant altitude number counts down from `from` metres beside a gauge and a velocity readout, hard-stops at zero, flashes, and slams `confirm` across the frame. That line shrinks into a small label as `title` slams in as a gradient headline, with `subtitle` in serif italic and a logo beneath. The default logo is the Remocn wordmark, so pass your own through `logo`. It ships light and dark.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "from",
+      type: "number",
+      default: "1200",
+      description: "Altitude the descent starts from, in metres.",
+    },
+    {
+      name: "confirm",
+      type: "string",
+      default: "\"Touchdown confirmed\"",
+      description: "The slam at touchdown. Two words read best (one per line).",
+    },
+    {
+      name: "title",
+      type: "string",
+      default: "\"Shipped.\"",
+      description: "The first resolve line, set big in caps.",
+    },
+    {
+      name: "subtitle",
+      type: "string",
+      default: "\"Nailed the landing.\"",
+      description: "The second resolve line, set in a serif italic.",
+    },
+    {
+      name: "logo",
+      type: "React.ReactNode",
+      description: "Replaces the Remocn logo under the resolve.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Gauge marker and small marks.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark palette.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+  ]}
+/>

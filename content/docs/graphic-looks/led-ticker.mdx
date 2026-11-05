@@ -1,0 +1,79 @@
+---
+title: LED Ticker
+description: "A line of text scrolls across a retro LED dot-matrix with a gradient flash on the highlighted word"
+component: led-ticker
+vibe: playful
+length: 93
+useWhen:
+  - "A short announcement (\"remocn is live\") that should read like a stadium or station sign."
+  - "A playful launch beat or bumper with a pixel-grid look and one word emphasised."
+  - "A dark or light retro backdrop for a single headline, using the built-in uppercase font."
+avoidWhen:
+  - "The text should loop continuously as a marquee — use `infinite-marquee`."
+  - "You want a data ticker with changing values — use `live-ticker`."
+  - "You want a stock-tape style strip of items — use `ticker-tape`."
+---
+
+<ComponentPreview name="led-ticker" />
+
+<InstallBlock name="led-ticker" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { LedTicker } from "@/components/remocn/led-ticker";
+
+const LedTickerScene = () => (
+  <LedTicker text="remocn is live" highlightWord="live" />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="LedTicker"
+    component={LedTickerScene}
+    durationInFrames={130}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Text scrolls in from the right across a grid of LED dots with a short trailing glow, locks centered, and the `highlightWord` flashes through a warm-to-accent gradient. Pass `text` and `highlightWord`; the dot font covers A to Z, digits and common punctuation, and text is drawn in uppercase. Ships dark and light via `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "text",
+      type: "string",
+      default: "\"remocn is live\"",
+      description: "The line to scroll. Shown in uppercase on the dot matrix.",
+    },
+    {
+      name: "highlightWord",
+      type: "string",
+      default: "\"live\"",
+      description: "Word that flashes in the gradient at the end.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Last color of the highlight gradient.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color scheme. Ships dark and light.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+  ]}
+/>

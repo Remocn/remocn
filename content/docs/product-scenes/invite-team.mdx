@@ -1,0 +1,102 @@
+---
+title: Invite Team
+description: "An invite field types emails, sends invites and a toast confirms in a project list"
+component: invite-team
+vibe: clean
+length: 170
+useWhen:
+  - "An onboarding or collaboration beat where a teammate invite is typed and sent in a few seconds."
+  - "A team-plan launch video showing how easy it is to add people to a workspace."
+  - "A product tour moment that ends on a confirmation toast over a project list."
+avoidWhen:
+  - "You want several people working live on one canvas — use `multiplayer-cursors`."
+  - "The confirmation is a payment or checkout, not an invite — use `invoice-paid`."
+  - "You need a cursor opening a card from a button — use `button-to-card`."
+---
+
+<ComponentPreview name="invite-team" />
+
+<InstallBlock name="invite-team" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { InviteTeam } from "@/components/remocn/invite-team";
+
+const InviteTeamScene = () => (
+  <InviteTeam emails={["maya@kitebase.io", "leo@kitebase.io"]} role="Editor" workspace="Kitebase" />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="InviteTeam"
+    component={InviteTeamScene}
+    durationInFrames={215}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A project app opens behind an invite modal; a cursor types up to three emails into chips, switches the role in a select, clicks send, and avatars fly into the header while a toast confirms. Pass `emails`, `role` and `workspace` to make it yours, and `images` with your own project thumbnails (the default files only exist in the Remocn repo). It ships light and dark through `theme`.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "emails",
+      type: "string[]",
+      description: "Emails typed into the invite field (up to 3 fit best).",
+    },
+    {
+      name: "role",
+      type: "string",
+      default: "\"Editor\"",
+      description: "Role the select switches to.",
+    },
+    {
+      name: "workspace",
+      type: "string",
+      default: "\"Kitebase\"",
+      description: "Workspace name shown in the modal and app.",
+    },
+    {
+      name: "images",
+      type: "string[]",
+      default: "DEFAULT_IMAGES",
+      description: "Project thumbnail URLs behind the modal; defaults ship with Remocn only.",
+    },
+    {
+      name: "theme",
+      type: "\"light\" | \"dark\"",
+      default: "\"light\"",
+      description: "Visual theme; ships light and dark.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for highlights and controls.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "Preset id for the gradients.sh background shader.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the shader parameters of the chosen ground.",
+    },
+  ]}
+/>

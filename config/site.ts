@@ -1,3 +1,4 @@
+import newDocs from "@/config/new-docs.json";
 import type { CtaId } from "@/lib/analytics";
 import remocnRegistry from "@/registry/remocn/registry.json";
 import remocnIconsRegistry from "@/registry/remocn-icons/registry.json";
@@ -50,6 +51,13 @@ export type NavLink = {
   /** Hidden on mobile (matches the existing `hidden sm:inline` pattern). */
   smOnly?: boolean;
   external?: boolean;
+  /** Small pink tag after the label (e.g. "New" on Studio). */
+  badge?: string;
+  /**
+   * Path prefix that marks this link as the current page. Defaults to `href`;
+   * `null` never marks it (deep links into a section another link owns).
+   */
+  current?: string | null;
 };
 
 export function externalLinkProps(link: NavLink, cta: CtaId) {
@@ -65,88 +73,35 @@ export function externalLinkProps(link: NavLink, cta: CtaId) {
 
 // Единый источник топ-навигации для landing / sponsors / docs.
 export const NAV_LINKS: NavLink[] = [
-  { href: "/docs/typography", label: "Components" },
-  { href: "/docs/shaders/getting-started/introduction", label: "Shaders" },
+  // Every docs page highlights Docs, Components and Templates included.
+  {
+    href: "/docs/getting-started/introduction",
+    label: "Docs",
+    current: "/docs",
+  },
+  { href: "/docs/typography", label: "Components", current: null },
+  { href: "/docs/templates", label: "Templates", current: null },
   { href: "/showcases", label: "Showcases" },
-  { href: "/blog", label: "Blog" },
   { href: "/sponsors", label: "Sponsors" },
+  { href: STUDIO_URL, label: "Studio", external: true, badge: "New" },
 ];
 
 /**
  * Docs whose sidebar menu item should carry the animated "NEW" badge. Keyed by
- * the page's docs URL (the Fumadocs page-tree `item.url`). Add a path here to
- * tag another menu item — no component changes needed. See `withNewBadges`.
+ * the page's docs URL (the Fumadocs page-tree `item.url`). The list lives in
+ * `config/new-docs.json`: add or remove a path there to tag a menu item.
  */
-export const NEW_BADGE_PATHS = new Set<string>([
-  "/docs/transitions/iris-wipe",
-  "/docs/transitions/venetian-blinds",
-  "/docs/transitions/paper-tear",
-  "/docs/transitions/pixel-sort",
-  "/docs/transitions/light-leak",
-  "/docs/transitions/hyperspace",
-  "/docs/logo-stings/orbit-lock",
-  "/docs/logo-stings/puzzle-snap",
-  "/docs/logo-stings/spotlight",
-  "/docs/logo-stings/neon-sign",
-  "/docs/logo-stings/inflate",
-  "/docs/logo-stings/liquid-fill",
-  "/docs/logo-stings/accordion-unfold",
-  "/docs/logo-stings/anamorphic-flare",
-  "/docs/motion-graphics/pendulum-wave",
-  "/docs/motion-graphics/flow-field",
-  "/docs/motion-graphics/isometric-build",
-  "/docs/motion-graphics/life-grid",
-  "/docs/motion-graphics/string-art",
-  "/docs/motion-graphics/topo-lines",
-  "/docs/motion-graphics/phyllotaxis",
-  "/docs/camera/parallax-depth",
-  "/docs/camera/dolly-zoom",
-  "/docs/camera/turntable",
-  "/docs/camera/tiny-planet",
-  "/docs/camera/exploded-view",
-  "/docs/camera/gravity-pile",
-  "/docs/camera/cloth-reveal",
-  "/docs/camera/impact-shake",
-  "/docs/graphic-looks/riso-print",
-  "/docs/graphic-looks/line-boil",
-  "/docs/graphic-looks/blueprint",
-  "/docs/graphic-looks/duotone-beat",
-  "/docs/graphic-looks/comic-panels",
-  "/docs/graphic-looks/long-shadow",
-  "/docs/graphic-looks/synthwave",
-  "/docs/graphic-looks/brick-mosaic",
-  "/docs/graphic-looks/x-ray-scan",
-]);
+export const NEW_BADGE_PATHS = new Set<string>(newDocs);
 
-export type FooterGroup = {
-  label: string;
-  links: NavLink[];
-};
-
-export const FOOTER_GROUPS: FooterGroup[] = [
-  {
-    label: "Registry",
-    links: [
-      { href: "/docs/typography", label: "Components" },
-      { href: "/docs/shaders/getting-started/introduction", label: "Shaders" },
-      { href: "/docs/icons/gallery", label: "Icons" },
-    ],
-  },
-  {
-    label: "Learn",
-    links: [
-      { href: "/docs/getting-started/introduction", label: "Docs" },
-      { href: "/blog", label: "Blog" },
-      { href: "/changelog", label: "Changelog" },
-    ],
-  },
-  {
-    label: "Project",
-    links: [
-      { href: STUDIO_URL, label: "Studio", external: true },
-      { href: "/showcases", label: "Showcases" },
-      { href: "/sponsors", label: "Sponsors" },
-      { href: "/legal", label: "Privacy & Terms" },
-    ],
-  },
+// Flat footer row: site pages first, then the external profiles.
+export const FOOTER_LINKS: NavLink[] = [
+  { href: "/docs/getting-started/introduction", label: "Docs" },
+  { href: "/changelog", label: "Changelog" },
+  { href: "/blog", label: "Blog" },
+  { href: STUDIO_URL, label: "Studio", external: true },
+  { href: "/sponsors", label: "Sponsors" },
+  { href: "/inspired-by", label: "Inspired by" },
+  { href: "/legal", label: "Legal" },
+  { href: GITHUB_URL, label: "GitHub", external: true },
+  { href: X_URL, label: "X", external: true },
 ];

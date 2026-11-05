@@ -3,30 +3,94 @@ title: Changelog video
 description: A ~25-second release update for the weeks that ship several small things — same open, same pace, every release
 ---
 
+import { GuideNotes, GuideMoreLink } from "@/components/docs/guides/director-notes";
+import { GuideCount } from "@/components/docs/guides/guide-ui";
+import { GuideNote } from "@/components/docs/guides/note";
+import { GuidePrompt } from "@/components/docs/guides/prompt-block";
+import { GuideRenderCard } from "@/components/docs/guides/render-card";
+import { GuideBeatList, GuideStoryboard } from "@/components/docs/guides/storyboard";
+import { GuideStoryboardPreview } from "@/components/docs/guides/storyboard-preview";
+import { GuideFacts } from "@/components/docs/guides/video-facts";
+import { GuideWords } from "@/components/docs/guides/words-form";
+
+<GuideStoryboardPreview
+  beats={[
+    { label: "The stamp", seconds: 4, frame: { name: "<PRODUCT NAME>", sub: "<VERSION OR DATE>" } },
+    { label: "Item one", seconds: 5, frame: { line: "<CHANGE 1> — <PAYOFF 1>" } },
+    { label: "Item two", seconds: 5, frame: { line: "<CHANGE 2> — <PAYOFF 2>" } },
+    { label: "Item three", seconds: 5, frame: { line: "<CHANGE 3> — <PAYOFF 3>" } },
+    { label: "The nudge", seconds: 3, frame: { line: "Full changelog at <CHANGELOG URL>" } },
+    { label: "The lockup", seconds: 3, frame: { logo: "<CLOSING LINE>" } },
+  ]}
+/>
+
+<GuideFacts
+  facts={[
+    { value: "~25 s", label: "running time" },
+    { value: "6 beats", label: "same frame every release" },
+    { value: "1920×1080", label: "30 fps, landscape" },
+  ]}
+/>
+
 Not every release deserves a launch. Most weeks ship three or four small improvements — a fix, a speedup, a new option — and that's exactly what this video carries. About twenty-five seconds, no big reveal, posted on a rhythm: weekly, monthly, every release. It's the lightweight sibling of the [Feature announcement](/docs/guides/feature-announcement) — when one change deserves the spotlight, use that recipe; when the week shipped several small things, use this one.
 
-## The storyboard
+## The storyboard<GuideCount n={6} />
 
-1. **The stamp** — your product name and the date or version land together, like a postmark. This is the recurring open viewers learn to recognize.
-2. **Item one** — the change's name and one line on what it does.
-3. **Item two** — same shape, next change.
-4. **Item three** — same shape again. If a change is visual, show it instead of describing it.
-5. **The nudge** — one line pointing to the full changelog.
-6. **The lockup** — your logo, one short closing line.
+<GuideStoryboard
+  beats={[
+    { label: "Stamp", seconds: 4, look: "reveal" },
+    { label: "Item one", seconds: 5, look: "lines" },
+    { label: "Item two", seconds: 5, look: "lines" },
+    { label: "Item three", seconds: 5, look: "lines" },
+    { label: "Nudge", seconds: 3, look: "line" },
+    { label: "Lockup", seconds: 3, look: "logo" },
+  ]}
+/>
+
+<GuideBeatList>
+
+1. **The stamp** — Your product name and the date or version land together, like a postmark. This is the recurring open viewers learn to recognize.
+2. **Item one** — The change's name and one line on what it does.
+3. **Item two** — Same shape, next change.
+4. **Item three** — Same shape again. If a change is visual, show it instead of describing it.
+5. **The nudge** — One line pointing to the full changelog.
+6. **The lockup** — Your logo, one short closing line.
+
+</GuideBeatList>
 
 The value of this video isn't any single edition — it's the rhythm. Same open, same pace, every release. By the third one, viewers recognize your update in the feed before they read a word. So resist redesigning it each time; change the items, keep the frame.
 
-## Your words
+## Your words<GuideCount n={5} />
+
+<GuideWords
+  examples={[
+    { blank: ["<PRODUCT NAME>"] },
+    { blank: ["<VERSION OR DATE>"] },
+    { blank: ["<CHANGE 1> — <PAYOFF 1>", "<CHANGE 2> — <PAYOFF 2>", "<CHANGE 3> — <PAYOFF 3>"] },
+    { blank: ["<CHANGELOG URL>"] },
+    { blank: ["<CLOSING LINE>"] },
+  ]}
+>
 
 - **Product name**
-- **Version or date** — whatever you stamp releases with
-- **Three or four changes** — each a name plus a one-line payoff, six words or fewer
+- **Version or date** — Whatever you stamp releases with
+- **Three or four changes** — Each a name plus a one-line payoff, six words or fewer
 - **Changelog URL**
 - **Closing line** — e.g. "Shipping weekly"
 
+</GuideWords>
+
+<GuideNote icon="image">
+
 Struggling with the payoff lines? [Words on screen](/docs/guides/words-on-screen) is the cheat sheet.
 
+</GuideNote>
+
 ## The prompt
+
+Paste it into your agent with your words in place of the highlighted blanks.
+
+<GuidePrompt>
 
 ```text
 I'm making a changelog video with remocn (remocn.dev).
@@ -55,17 +119,31 @@ whole video. Keep motion restrained and identical across the item beats —
 this is a stamp, not a show. Use my copy exactly as written.
 ```
 
+</GuidePrompt>
+
 ## Directing the result
+
+<GuideNotes>
 
 - "Item two runs long — tighten it."
 - "Hold the stamp a beat longer."
 - "Change three is visual — show the screen instead of the words."
 - "The items feel different from each other — make the motion identical."
 
+</GuideNotes>
+
+<GuideMoreLink>
+
 More directing vocabulary: [Directing your agent](/docs/guides/directing-your-agent).
+
+</GuideMoreLink>
 
 Next release, don't start over — ask your agent to reuse this video and swap the version and the items.
 
 ## Get the file
 
-Ask your agent: **"Render the video."** You'll get an `.mp4` in the project folder, ready to post.
+<GuideRenderCard prompt="Render the video.">
+
+You'll get an `.mp4` in the project folder, ready to post.
+
+</GuideRenderCard>

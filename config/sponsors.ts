@@ -58,6 +58,7 @@ export const sponsors: Sponsor[] = (
       customStyles: "opacity-100 grayscale-0 dark:[filter:invert(1)]",
       isPaste: false,
       layout: "row",
+      placements: [],
     },
     {
       id: "aceternity",
@@ -70,6 +71,7 @@ export const sponsors: Sponsor[] = (
       customStyles: "opacity-90",
       isPaste: false,
       layout: "row",
+      placements: [],
     },
     {
       id: "vidrush",
@@ -80,6 +82,7 @@ export const sponsors: Sponsor[] = (
       tier: "featured",
       customStyles: "opacity-90 max-w-full",
       isPaste: false,
+      placements: [],
     },
     {
       id: "21st",
@@ -269,6 +272,18 @@ function getSponsorsFor(placement: SponsorPlacement): Sponsor[] {
     .sort((a, b) => TIER_RANK[a.tier] - TIER_RANK[b.tier]);
 }
 
+/** Empty "Your logo here" slots in the landing carousel, linking to /sponsors. */
+export const OPEN_SPONSOR_SLOTS = 3;
+
+export type OpenSponsorSlot = { id: string; open: true };
+
+export function openSponsorSlots(): OpenSponsorSlot[] {
+  return Array.from({ length: OPEN_SPONSOR_SLOTS }, (_, index) => ({
+    id: `open-slot-${index + 1}`,
+    open: true,
+  }));
+}
+
 export function getLandingSponsors(): Sponsor[] {
   return getSponsorsFor("landing");
 }
@@ -276,8 +291,6 @@ export function getLandingSponsors(): Sponsor[] {
 export function getDocsSponsors(): Sponsor[] {
   return getSponsorsFor("docs");
 }
-
-export type BillingMode = "monthly" | "one-time";
 
 export type Tier = {
   id: "builder" | "partner" | "featured";
@@ -287,24 +300,19 @@ export type Tier = {
   perks: string[];
   highlighted: boolean;
   badge?: string;
+  /** Creem checkout for the monthly subscription. */
   monthlyUrl: string;
-  oneTimeUrl: string;
 };
 
 export const tiers: Tier[] = [
   {
     id: "builder",
-    price: 10,
+    price: 20,
     name: "Builder",
     tagline: "Start here",
-    perks: [
-      "Sponsor badge in our Discord",
-      "Your name in the repository README",
-      "Early access to release notes",
-    ],
+    perks: ["Your name in the repository README"],
     highlighted: false,
     monthlyUrl: "https://www.creem.io/payment/prod_6fpKhXCzk9KkbA4FSUzGIU",
-    oneTimeUrl: "https://www.creem.io/payment/prod_1C3cCbVoYsDPJrdlDhrhSG",
   },
   {
     id: "partner",
@@ -319,21 +327,20 @@ export const tiers: Tier[] = [
     ],
     highlighted: false,
     monthlyUrl: "https://www.creem.io/payment/prod_6tdCLqKgSA14P0IEVZ2GaG",
-    oneTimeUrl: "https://www.creem.io/payment/prod_2sb9zG2oJn232utqh5TN1S",
   },
   {
     id: "featured",
-    price: 100,
+    price: 150,
     name: "Featured",
     tagline: "Own the top spot",
     perks: [
       "Everything in Partner",
-      "Your logo on the remocn landing page",
+      "Your logo on the Remocn landing page",
       "Your logo in the docs sidebar",
+      "Your logo on the Remocn Studio landing page",
     ],
     highlighted: true,
     badge: "Front page",
     monthlyUrl: "https://www.creem.io/payment/prod_1PtwNGZVHfXZgChBSCwmJA",
-    oneTimeUrl: "https://www.creem.io/payment/prod_66n8fHDfCVmwSNswCHL5OH",
   },
 ];

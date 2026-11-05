@@ -3,16 +3,16 @@ title: Motion principles
 description: The classic animation principles reduced to the eight that matter when you assemble scenes from prebuilt blocks
 ---
 
-The 12 classic animation principles, adapted to **composing Remotion videos from remocn blocks**.
-Each entry gives the principle, the Remotion mechanic that expresses it, a remocn component that
-demonstrates it, and a do/avoid tuned to remocn's restraint.
+The 12 classic animation principles, adapted to **composing Remotion videos from Remocn blocks**.
+Each entry gives the principle, the Remotion mechanic that expresses it, a Remocn component that
+demonstrates it, and a do/avoid tuned to Remocn's restraint.
 
 This page is about **which** principle and **when** — intent. For **how** the APIs work (easing
 curves, sequencing, spring config), read the Remotion docs. Where a principle pushes toward
 boldness (squash, exaggeration), the cap in [Design defaults](/docs/craft/design-defaults) always
 wins.
 
-remocn components drive motion with `spring()` and `interpolate()` + `Easing`; the examples below
+Remocn components drive motion with `spring()` and `interpolate()` + `Easing`; the examples below
 use that same idiom.
 
 The eight principles here are routinely useful when assembling scenes. The remaining four are
@@ -81,7 +81,7 @@ Supporting motion that reinforces the primary action without stealing focus.
 
 Frame counts set weight: fast reads light, slow reads heavy. Vary timing for contrast.
 
-- **Mechanic:** budget in frames at the composition fps (remocn defaults to 30fps; component
+- **Mechanic:** budget in frames at the composition fps (Remocn defaults to 30fps; component
   durations run ~90–300 frames). The `speed` prop scales the animation tier.
 - **remocn:** every animation-tier component (`speed`); composition `durationInFrames`.
 - **Do/Avoid:** match duration to weight — a heavy hero assemble is slower than a toast. ❌ Don't
@@ -89,7 +89,7 @@ Frame counts set weight: fast reads light, slow reads heavy. Vary timing for con
 
 ## Exaggeration, capped
 
-Push slightly past literal reality for clarity — but remocn's house style is restraint.
+Push slightly past literal reality for clarity — but Remocn's house style is restraint.
 
 - **Mechanic:** a touch of overshoot on `spring()`, a brief ≤110% scale peak.
 - **remocn:** [`spring-scale-in`](/docs/typography/spring-scale-in),
@@ -105,7 +105,7 @@ assembling catalog components.
 
 - **Squash and stretch** — at most a 2–4% `scaleX`/`scaleY` volume trade on a hard landing
   (`spring-scale-in`, `confetti`); rubber-band squash on text or cards fights the design defaults.
-- **Straight-ahead vs pose-to-pose** — remocn is pose-to-pose by construction:
+- **Straight-ahead vs pose-to-pose** — Remocn is pose-to-pose by construction:
   `interpolate(frame, [k0, k1, k2], [v0, v1, v2])` keyframes are your poses. Straight-ahead
   (frame-by-frame) is for hand-drawn organic effects.
 - **Solid drawing** — keep one `perspective` and vanishing point per scene when stacking 3D layers

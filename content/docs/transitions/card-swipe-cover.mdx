@@ -1,0 +1,115 @@
+---
+title: Card Swipe Cover
+description: "A tilted card swipes across the frame and covers the headline, revealing a grid of launch kit cards"
+component: card-swipe-cover
+vibe: playful
+length: 30
+useWhen:
+  - "Moving from a statement headline to a catalog of deliverables, templates or case studies."
+  - "A launch video that introduces a gallery of cards right after a punchy line of copy."
+  - "You want a physical, layered swipe where a card with depth carries the next scene in."
+avoidWhen:
+  - "The next scene is a single hero shot, not a card or gallery — use `diagonal-split`."
+  - "You need a flat, graphic wipe with no depth or tilt — use `column-slide`."
+  - "The two scenes should crossfade softly — use `zoom-blur`."
+---
+
+<ComponentPreview name="card-swipe-cover" />
+
+<InstallBlock name="card-swipe-cover" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { CardSwipeCoverDemo } from "@/components/remocn/card-swipe-cover";
+
+const CardSwipeCoverDemoScene = () => (
+  <CardSwipeCoverDemo
+    line="Every launch asset, *in one place.*"
+    title="Launch kits"
+    subtitle="Four films, ready to render."
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="CardSwipeCoverDemo"
+    component={CardSwipeCoverDemoScene}
+    durationInFrames={120}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Scene A types a headline; the text between asterisks is set in the accent style. A card then swipes in from the bottom corner and covers the frame, and scene B shows a title, a subtitle, filter tabs and a grid of cover cards. Pass `line`, `title`, `subtitle` and your own `covers`; it ships light and dark.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark palette for both scenes",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Accent color; defaults to the theme accent",
+    },
+    {
+      name: "line",
+      type: "string",
+      default: "\"Every launch asset, *in one place.*\"",
+      description: "Scene A headline; wrap words in asterisks for the accent style",
+    },
+    {
+      name: "title",
+      type: "string",
+      default: "\"Launch kits\"",
+      description: "Heading of the card grid in scene B",
+    },
+    {
+      name: "subtitle",
+      type: "string",
+      default: "\"Four films, ready to render.\"",
+      description: "Supporting line under the grid heading",
+    },
+    {
+      name: "covers",
+      type: "CoverItem[]",
+      default: "DEFAULT_COVERS",
+      description: "Cards for the scene B grid; defaults use images only in the Remocn repo",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "Preset id for the scene A gradients.sh shader ground",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the scene A shader parameters",
+    },
+    {
+      name: "groundB",
+      type: "GshPresetId",
+      description: "Preset id for the scene B gradients.sh shader ground",
+    },
+    {
+      name: "groundParamsB",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the scene B shader parameters",
+    },
+    {
+      name: "transition",
+      type: "CardSwipeCoverProps",
+      description: "Overrides for the transition presentation props",
+    },
+  ]}
+/>

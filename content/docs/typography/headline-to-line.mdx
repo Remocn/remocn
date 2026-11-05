@@ -1,0 +1,98 @@
+---
+title: Headline to Line
+description: "A headline settles and its phrase collapses toward a single line over a glowing horizon"
+component: headline-to-line
+vibe: clean
+length: 93
+useWhen:
+  - "A hero headline that should collapse into a sentence and finish typing a longer description."
+  - "An introduction like a product name followed by a typed tagline."
+  - "A title that should feel like it is being written into a line of copy."
+avoidWhen:
+  - "The headline should only type, with no collapse — use `typewriter`."
+  - "You want a headline that pulls focus to swap its last word — use `focus-front-swap`."
+  - "The headline should be revealed over drifting lights — use `bokeh-title`."
+---
+
+<ComponentPreview name="headline-to-line" />
+
+<InstallBlock name="headline-to-line" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { HeadlineToLine } from "@/components/remocn/headline-to-line";
+
+const HeadlineToLineScene = () => <HeadlineToLine words={["Your", "launch", "video"]} accentIndex={1} continuation=", built from blocks you own" />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="HeadlineToLine"
+    component={HeadlineToLineScene}
+    durationInFrames={132}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Headline words pop in one by one, the accented word gets a springy pop, then the words shrink into a single line and a continuation types out after them with a blinking caret over a glowing ground. Pass `words`, `accentIndex` and `continuation`; `ground` picks the gradient preset for each theme.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "words",
+      type: "string[]",
+      default: "[\"Your\", \"launch\", \"video\"]",
+      description: "Headline words that pop in, then shrink into the line.",
+    },
+    {
+      name: "accentIndex",
+      type: "number",
+      default: "1",
+      description: "Which headline word gets the accent color and pop.",
+    },
+    {
+      name: "continuation",
+      type: "string",
+      default: "\", built from blocks you own\"",
+      description: "Text typed after the headline words once they shrink.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Color of the accented word; defaults to the theme accent.",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color override for the headline and continuation.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Stage fill color; pass \"transparent\" to overlay your own footage.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color scheme; ships dark and light.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "Gradient preset id for the background ground.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the ground preset gradient parameters.",
+    },
+  ]}
+/>

@@ -1,0 +1,101 @@
+---
+title: Multi File Drop
+description: "A fan of files flies into a prompt box, deals into slots, finishes uploading, then the cursor presses send."
+component: multi-file-drop
+vibe: tech
+length: 122
+useWhen:
+  - "An AI or builder product that takes a prompt plus attachments, shown as several files dropped in at once."
+  - "A feature beat about bringing your own assets: sketch, image, document and spreadsheet resolving into thumbnails."
+  - "You want the full arc of drop, upload progress and send in a single scene."
+avoidWhen:
+  - "Only one file is involved and you want a progress bar and confirmation — use `drop-upload`."
+  - "There are no attachments, just a prompt being typed — use `caret-dolly`."
+  - "You are showing a generic upload area rather than a prompt box — use `file-dropzone`."
+---
+
+<ComponentPreview name="multi-file-drop" />
+
+<InstallBlock name="multi-file-drop" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { MultiFileDrop } from "@/components/remocn/multi-file-drop";
+
+const MultiFileDropScene = () => (
+  <MultiFileDrop
+    heading="What are we launching?"
+    prompt="Build a launch page with a hero video and a pricing table."
+    files={[{ name: "brief.pdf", kind: "doc", size: "412 KB" }, { name: "hero.jpg", kind: "image", src: "/hero.jpg" }]}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="MultiFileDrop"
+    component={MultiFileDropScene}
+    durationInFrames={144}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A heading and prompt card appear, then a fan of up to four files flies in, drops into the card and deals into slots. Each file shows a progress ring that resolves into a thumbnail, and the cursor presses send. Pass your own `heading`, `prompt` and `files`; it ships light and dark through `theme`. The default image file uses a `staticFile` that only exists in the Remocn repo, so give your own image through `files[].src`.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color scheme. Ships light and dark.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for the drop zone and progress rings.",
+    },
+    {
+      name: "heading",
+      type: "string",
+      default: "\"What are we launching?\"",
+      description: "Headline shown above the card.",
+    },
+    {
+      name: "prompt",
+      type: "string",
+      default: "\"Build a launch page for v2 with a hero video, a pricing table and a waitlist.\"",
+      description: "Prompt text shown in the card.",
+    },
+    {
+      name: "files",
+      type: "{ name: string; kind: 'image' | 'sketch' | 'doc' | 'sheet'; src?: string; size?: string }[]",
+      default: "DEFAULT_FILES",
+      description: "Up to four files to drop in. Image files take an optional src.",
+    },
+    {
+      name: "resolveOrder",
+      type: "number[]",
+      default: "[0, 2, 1, 3]",
+      description: "Order in which files finish uploading, as file indexes.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "Shader preset id for the animated background.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Partial shader parameters that override the ground preset.",
+    },
+  ]}
+/>

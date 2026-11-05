@@ -1,0 +1,120 @@
+---
+title: Area Compare
+description: "Two discs compare bundle sizes while 14x smaller settles in big type"
+component: area-compare
+vibe: data
+length: 110
+useWhen:
+  - "A size or footprint claim, such as a bundle shrinking from 1200 KB to 84 KB, where area makes it obvious."
+  - "A beat that should show how much smaller, cheaper or lighter something is with two shapes."
+  - "A simple two-value comparison that ends on a big multiplier word."
+avoidWhen:
+  - "You have more than two values to compare — use `spring-bars`."
+  - "You want the measurement drawn with dimension lines — use `measure-dim`."
+  - "You want a duration comparison — use `timer-duel`."
+---
+
+<ComponentPreview name="area-compare" />
+
+<InstallBlock name="area-compare" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { AreaCompare } from "@/components/remocn/area-compare";
+
+const AreaCompareScene = () => (
+  <AreaCompare
+    label="Bundle size"
+    beforeValue={1200}
+    afterValue={84}
+    unit="KB"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="AreaCompare"
+    component={AreaCompareScene}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Two discs, sized by area, start at the same scale, then the second shrinks to its true ratio while a tag appears and the multiplier settles in large type with the verdict word. Pass `before` and `after` names, `beforeValue` and `afterValue` with a `unit`, and set `shape` to circle or square. Ships dark and light via `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "label",
+      type: "string",
+      default: "\"Bundle size\"",
+      description: "Small heading naming what is measured.",
+    },
+    {
+      name: "before",
+      type: "string",
+      default: "\"Before\"",
+      description: "Name of the original item.",
+    },
+    {
+      name: "after",
+      type: "string",
+      default: "\"remocn\"",
+      description: "Name of the improved item.",
+    },
+    {
+      name: "beforeValue",
+      type: "number",
+      default: "1200",
+      description: "Original measurement.",
+    },
+    {
+      name: "afterValue",
+      type: "number",
+      default: "84",
+      description: "Improved measurement; the ratio sets the multiplier.",
+    },
+    {
+      name: "unit",
+      type: "string",
+      default: "\"KB\"",
+      description: "Unit appended to the values.",
+    },
+    {
+      name: "verdict",
+      type: "string",
+      default: "\"smaller\"",
+      description: "Word after the multiplier, such as smaller.",
+    },
+    {
+      name: "shape",
+      type: "\"circle\" | \"square\"",
+      default: "\"circle\"",
+      description: "Draw the two items as circles or squares.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for the hero element.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Dark or light palette.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier.",
+    },
+  ]}
+/>

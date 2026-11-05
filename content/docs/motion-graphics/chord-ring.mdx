@@ -1,0 +1,89 @@
+---
+title: Chord Ring
+description: "Chords link a ring of integration names around a glowing center that reads a caption"
+component: chord-ring
+vibe: tech
+length: 116
+useWhen:
+  - "An integrations beat showing that your product connects with many tools around a central hub."
+  - "A platform or API launch where a ring of partner names reinforces breadth."
+  - "A clean data-viz moment that ends on a one-line promise in the middle."
+avoidWhen:
+  - "The tools should orbit in a constellation with depth — use `ecosystem-constellation`."
+  - "The connections carry quantities between two sides — use `sankey-flow`."
+  - "You want many items packed into clustered bubbles — use `bubble-pack`."
+---
+
+<ComponentPreview name="chord-ring" />
+
+<InstallBlock name="chord-ring" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { ChordRing } from "@/components/remocn/chord-ring";
+
+const ChordRingScene = () => (
+  <ChordRing
+    segments={["Acme", "Kitebase", "Lumen", "Fernway", "Quarry", "Orbitly"]}
+    brandIndex={0}
+    caption="Connects to everything"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="ChordRing"
+    component={ChordRingScene}
+    durationInFrames={165}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Ring segments grow in around a glowing center, then curved chords draw between them, with the `brandIndex` segment linked to every other one in the accent color. At the end the ring dims and the `caption` lands in the center. Pass up to 12 `segments` names (a segment named "remocn" renders as the Remocn logo) and a `caption`. Ships dark and light via `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "segments",
+      type: "string[]",
+      default: "DEFAULT_SEGMENTS",
+      description: "Names around the ring. Up to 12 are used.",
+    },
+    {
+      name: "brandIndex",
+      type: "number",
+      default: "0",
+      description: "Index of the segment that links to all the others.",
+    },
+    {
+      name: "caption",
+      type: "string",
+      default: "\"Connects to everything\"",
+      description: "Line shown in the center at the end.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Color of the brand segment chords.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color scheme. Ships dark and light.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+  ]}
+/>

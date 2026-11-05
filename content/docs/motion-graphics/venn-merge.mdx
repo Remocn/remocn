@@ -1,0 +1,89 @@
+---
+title: Venn Merge
+description: "Two circles labelled Design and Code overlap, the lens fills with the logo and a caption lands"
+component: venn-merge
+vibe: premium
+length: 116
+useWhen:
+  - "Explaining that your product sits at the overlap of two or three disciplines."
+  - "A positioning beat (\"Motion design, written as code\") with a brand name in the middle."
+  - "A clean concept diagram moment in a launch or pitch video."
+avoidWhen:
+  - "The idea is two pieces merging into one new shape — use `pill-morph`."
+  - "The overlap is a partnership of two brands — use `collab-lockup`."
+  - "You want one shape to morph into another letter or form — use `shape-morph-o`."
+---
+
+<ComponentPreview name="venn-merge" />
+
+<InstallBlock name="venn-merge" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { VennMerge } from "@/components/remocn/venn-merge";
+
+const VennMergeScene = () => (
+  <VennMerge
+    sets={["Design", "Code"]}
+    center="Kitebase"
+    caption="Motion design, written as code."
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="VennMerge"
+    component={VennMergeScene}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Outlined circles draw in, slide together until they overlap, and the shared lens fills with a gradient. The `center` text (or the Remocn logo for the default) fades into the lens and the `caption` appears below. Pass 2 or 3 `sets` labels, a `center` and a `caption`. Ships dark and light via `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "sets",
+      type: "string[]",
+      default: "[\"Design\", \"Code\"]",
+      description: "Labels for the circles. Two or three are used.",
+    },
+    {
+      name: "center",
+      type: "string",
+      default: "\"remocn\"",
+      description: "Text in the overlap. \"remocn\" shows the logo instead.",
+    },
+    {
+      name: "caption",
+      type: "string",
+      default: "\"Motion design, written as code.\"",
+      description: "Line shown under the diagram.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Color of the deep gradient stop in the lens.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color scheme. Ships dark and light.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+  ]}
+/>

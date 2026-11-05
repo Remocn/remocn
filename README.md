@@ -6,11 +6,11 @@
 
 # Remocn
 
-remocn is a copy-paste component library for building videos in Remotion. Instead of writing every fade, wipe, and kinetic title from scratch, you `npx shadcn add` a polished primitive into your project and own the code. Built for solo builders and small teams who need a product demo video shipped today, not next week.
+Remocn is a copy-paste component library for building videos in Remotion. Instead of writing every fade, wipe, and kinetic title from scratch, you `npx shadcn add` a polished primitive into your project and own the code. Built for solo builders and small teams who need a product demo video shipped today, not next week.
 
-Rather direct the video than write it? [Remocn Studio](https://remocn.studio) is a free, open-source macOS app where your own coding agent (Claude Code, Codex, GitHub Copilot or Grok) builds the video from remocn components while you watch the live preview.
+Rather direct the video than write it? [Remocn Studio](https://remocn.studio) is a free, open-source macOS app where your own coding agent (Claude Code, Codex, GitHub Copilot or Grok) builds the video from Remocn components while you watch the live preview.
 
-## Why remocn
+## Why Remocn
 
 Production-ready Remotion code: every component uses useCurrentFrame(), interpolate(), and spring() correctly. No Math.random() traps that break rendering.
 Own your code: components are copied into your project, not installed as a dependency. Tweak them however you like.
@@ -49,18 +49,13 @@ In Codex: `codex plugin marketplace add Remocn/remocn`, then `codex plugin add r
 
 ## Sponsors
 
-remocn is free and MIT-licensed. These sponsors keep the registry growing and the renders fast.
+Remocn is free and MIT-licensed. These sponsors keep the registry growing and the renders fast.
 
 <!-- sponsors:start -->
 <table align="center">
   <tbody>
     <tr>
       <td colspan="15" width="850" align="center"><a href="https://neon.com/"><picture><source media="(prefers-color-scheme: dark)" srcset="https://remocn.dev/sponsors/neon-dark.svg" /><img src="https://remocn.dev/sponsors/neon.svg" alt="Neon" height="48" align="middle" /></picture></a></td>
-    </tr>
-    <tr>
-      <td colspan="5" width="283" align="center"><a href="https://www.launchfa.st/"><img src="https://remocn.dev/sponsors/launchfast.png" alt="LaunchFast" height="40" align="middle" /> <b>LaunchFast</b></a></td>
-      <td colspan="5" width="283" align="center"><a href="https://ui.aceternity.com/"><picture><source media="(prefers-color-scheme: dark)" srcset="https://remocn.dev/sponsors/aceternity-dark.svg" /><img src="https://remocn.dev/sponsors/aceternity.svg" alt="Aceternity UI" height="40" align="middle" /></picture> <b>Aceternity UI</b></a></td>
-      <td colspan="5" width="283" align="center"><a href="https://vidrush.ai/"><picture><source media="(prefers-color-scheme: dark)" srcset="https://remocn.dev/sponsors/vidrush-dark.png" /><img src="https://remocn.dev/sponsors/vidrush.png" alt="VidRush" height="40" align="middle" /></picture></a></td>
     </tr>
     <tr>
       <td colspan="3" width="170" align="center"><a href="https://21st.dev/"><picture><source media="(prefers-color-scheme: dark)" srcset="https://remocn.dev/sponsors/21st-dark.svg" /><img src="https://remocn.dev/sponsors/21st.svg" alt="21st.dev" height="32" align="middle" /></picture></a></td>

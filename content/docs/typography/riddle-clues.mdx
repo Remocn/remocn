@@ -1,0 +1,94 @@
+---
+title: Riddle Clues
+description: "A numbered clue sets up a line, an accent twist completes it, and the clues repeat before a closing reveal."
+component: riddle-clues
+vibe: playful
+length: 214
+useWhen:
+  - "A teaser campaign beat that hints at the product through a few what it has but what it lacks riddles."
+  - "A countdown-style moment where the last line gives the reveal date."
+avoidWhen:
+  - "You want a single hesitant line answered by a reply — use `no-buts`."
+  - "The tease should reveal a sliver of the real product image — use `peek-shut`."
+  - "There is one quiet line and no riddle structure — use `coy-denial`."
+---
+
+<ComponentPreview name="riddle-clues" />
+
+<InstallBlock name="riddle-clues" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { RiddleClues } from "@/components/remocn/riddle-clues";
+
+const RiddleCluesScene = () => (
+  <RiddleClues
+    clues={[
+      { line: "It has scenes,", turn: "but no camera." },
+      { line: "It has a timeline,", turn: "but no editor." },
+    ]}
+    closer={{ line: "Give up?", turn: "Answer on the 14th." }}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="RiddleClues"
+    component={RiddleCluesScene}
+    durationInFrames={230}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Each clue shows a small numbered label and a `line` in white; a beat later its `turn` rises in the accent color beside or below it, then the clue lifts out and the next arrives. The `closer` is the last frame and stays on screen. Pass `clues` and `closer` as `{ line, turn }` pairs. Timing compresses if the composition is shorter than the 214 frames plus a short hold. It ships light and dark.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "clues",
+      type: "{ line: string; turn: string }[]",
+      default: "DEFAULT_CLUES",
+      description: "Riddle clues played in order, each a setup line and an accent twist.",
+    },
+    {
+      name: "closer",
+      type: "{ line: string; turn: string }",
+      default: "DEFAULT_CLOSER",
+      description: "Final reveal frame that stays on screen after the clues.",
+    },
+    {
+      name: "label",
+      type: "string",
+      default: "\"Clue\"",
+      description: "Word used in the small numbered label above each clue.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Color of the twist lines; overrides the theme accent.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark palette.",
+    },
+  ]}
+/>

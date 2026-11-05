@@ -1,0 +1,96 @@
+---
+title: Stat Sequence
+description: "Three large stats cut in one after another, then shrink together into a summary row."
+component: stat-sequence
+vibe: data
+length: 126
+useWhen:
+  - "A social-proof beat of two to four headline numbers."
+  - "A numbers recap that closes a product video."
+  - "A figures beat where each stat deserves its own moment before a final summary."
+avoidWhen:
+  - "You have only one stat — use `compact-stat`."
+  - "The stats should sit beside a headline and photo — use `stat-rail`."
+  - "You list facts as a table — use `spec-sheet`."
+---
+
+<ComponentPreview name="stat-sequence" />
+
+<InstallBlock name="stat-sequence" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { StatSequence } from "@/components/remocn/stat-sequence";
+
+const StatSequenceScene = () => (
+  <StatSequence name="remocn" eyebrow="in numbers" beat={26} stats={[{ value: "10,000", unit: "+", label: "builders" }, { value: "99.9", unit: "%", label: "uptime" }]} />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="StatSequence"
+    component={StatSequenceScene}
+    durationInFrames={170}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Each stat rises in at monumental size with its label and detail and is replaced by the next one every `beat` frames. The final stat then shrinks and all stats settle into a row. Pass `stats` and `name`; the total length is about 74 + (stats - 1) × `beat` frames, and it ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "stats",
+      type: "Stat[]",
+      default: "DEFAULT_STATS",
+      description: "Stats to show, each with a value, optional unit, label and detail.",
+    },
+    {
+      name: "name",
+      type: "string",
+      default: "\"remocn\"",
+      description: "Product name in the corner lockup.",
+    },
+    {
+      name: "eyebrow",
+      type: "string",
+      default: "\"in numbers\"",
+      description: "Muted text after the lockup.",
+    },
+    {
+      name: "logo",
+      type: "React.ReactNode",
+      description: "React node that replaces the default Remocn mark in the lockup.",
+    },
+    {
+      name: "beat",
+      type: "number",
+      default: "26",
+      description: "Frames each stat owns before the next one cuts in.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for highlights and small marks.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color theme, \"dark\" or \"light\".",
+    },
+  ]}
+/>

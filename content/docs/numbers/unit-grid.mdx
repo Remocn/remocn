@@ -1,0 +1,85 @@
+---
+title: Unit Grid
+description: "A grid of dots lights up a share of them beside a stat line and caption."
+component: unit-grid
+vibe: data
+length: 104
+useWhen:
+  - "A one in three or 33 percent claim shown as a countable share of dots."
+  - "A proportion that should feel tangible rather than abstract."
+  - "A survey result where each dot stands for one person or team."
+avoidWhen:
+  - "You compare shares among competitors — use `share-donut`."
+  - "You want a hex-cell fill with a percent reading — use `hex-fill`."
+  - "You just need a big plain stat — use `compact-stat`."
+---
+
+<ComponentPreview name="unit-grid" />
+
+<InstallBlock name="unit-grid" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { UnitGrid } from "@/components/remocn/unit-grid";
+
+const UnitGridScene = () => (
+  <UnitGrid total={100} highlighted={33} caption="1 in 3 teams ship weekly" />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="UnitGrid"
+    component={UnitGridScene}
+    durationInFrames={130}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Dots fade in across the grid, then the highlighted dots flip to the accent color in a sweeping order while the stat line and caption come in. Pass `total`, `highlighted` and `caption`; a total of 100 lays out as ten by ten, and it ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "total",
+      type: "number",
+      default: "100",
+      description: "Number of dots in the grid.",
+    },
+    {
+      name: "highlighted",
+      type: "number",
+      default: "33",
+      description: "How many dots light up.",
+    },
+    {
+      name: "caption",
+      type: "string",
+      default: "\"1 in 3 teams ship weekly\"",
+      description: "Line shown under the stat.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for highlights and small marks.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color theme, \"dark\" or \"light\".",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+  ]}
+/>

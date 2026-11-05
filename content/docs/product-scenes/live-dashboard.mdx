@@ -1,0 +1,133 @@
+---
+title: Live Dashboard
+description: "A payments dashboard animates its stats, chart and recent activity feed"
+component: live-dashboard
+vibe: data
+length: 155
+useWhen:
+  - "A payments or SaaS launch that needs a believable revenue dashboard with a growing chart and KPI cards."
+  - "A beat showing new payments landing live, each bumping the chart, headline total and activity feed."
+  - "A product tour opener that establishes a metrics home screen before zooming into details."
+avoidWhen:
+  - "The story is conversion drop-off between steps — use `analytics-funnel` instead."
+  - "You want a single big counter ticking up with no dashboard chrome — use `live-ticker` instead."
+  - "You need to show a deploy or build running rather than metrics — use `deploy-pipeline` instead."
+---
+
+<ComponentPreview name="live-dashboard" />
+
+<InstallBlock name="live-dashboard" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { LiveDashboard } from "@/components/remocn/live-dashboard";
+
+const LiveDashboardScene = () => (
+  <LiveDashboard workspace="Kitebase" change={15.1} theme="light" />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="LiveDashboard"
+    component={LiveDashboardScene}
+    durationInFrames={190}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A dashboard window opens, the headline total counts up while the cumulative chart draws and KPI cards fill in. Three live payments then land one by one, extending the chart and pushing rows into the activity feed. Pass your own `workspace`, `series`, `metrics` and `live` payments. It ships light and dark through the `theme` prop.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "title",
+      type: "string",
+      default: "\"Today\"",
+      description: "Page title in the dashboard header.",
+    },
+    {
+      name: "workspace",
+      type: "string",
+      default: "\"Kitebase\"",
+      description: "Workspace name shown in the header.",
+    },
+    {
+      name: "series",
+      type: "number[]",
+      default: "DEFAULT_SERIES",
+      description: "Cumulative gross volume through now; the last value is the headline number.",
+    },
+    {
+      name: "change",
+      type: "number",
+      default: "15.1",
+      description: "Change vs. yesterday for the headline, in percent.",
+    },
+    {
+      name: "metrics",
+      type: "DashboardMetric[]",
+      default: "DEFAULT_METRICS",
+      description: "KPI cards with label, value, format, change and optional sparkline.",
+    },
+    {
+      name: "live",
+      type: "DashboardTick[]",
+      default: "DEFAULT_LIVE",
+      description: "Payments that land one by one during the live phase.",
+    },
+    {
+      name: "payments",
+      type: "DashboardTick[]",
+      default: "DEFAULT_PAYMENTS",
+      description: "Earlier payments already in the activity feed.",
+    },
+    {
+      name: "visitors",
+      type: "number",
+      default: "128",
+      description: "Visitors-now count shown on the dashboard.",
+    },
+    {
+      name: "currency",
+      type: "string",
+      default: "\"USD\"",
+      description: "ISO currency code used to format money values.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for the chart and highlights.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"light\" | \"dark\"",
+      default: "\"light\"",
+      description: "Light or dark window styling.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "Gradient shader preset id for the background.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the shader preset parameters.",
+    },
+  ]}
+/>

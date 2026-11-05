@@ -1,15 +1,16 @@
 import type { Metadata } from "next";
 import { changelog } from "@/.source/server";
-import { ChangelogHero } from "@/components/changelog/changelog-hero";
-import { ChangelogVideoFeed } from "@/components/changelog/changelog-video-feed";
+import { sitePageOgImage } from "@/config/site-pages";
 import {
   changelogDateFormatter,
   changelogSlug,
   sortByDateDesc,
 } from "@/lib/changelog";
+import { ChangelogHeader } from "../components/changelog-header";
+import { ChangelogVideoFeed } from "../components/video-feed";
 
 const DESCRIPTION =
-  "Every remocn release as a short video — new components, transitions, shaders, and icons, newest first.";
+  "Every Remocn release as a short video — new components, transitions, shaders, and icons, newest first.";
 
 const entries = sortByDateDesc(changelog).flatMap((entry) =>
   entry.video
@@ -26,7 +27,7 @@ const entries = sortByDateDesc(changelog).flatMap((entry) =>
     : [],
 );
 
-const shareImage = entries[0]?.videoPoster ?? "/hero.png";
+const shareImage = entries[0]?.videoPoster ?? sitePageOgImage("changelog").url;
 
 export const metadata: Metadata = {
   title: "Changelog in video",
@@ -36,14 +37,14 @@ export const metadata: Metadata = {
     type: "website",
     url: "/changelog/video",
     siteName: "Remocn",
-    title: "Changelog in video · remocn",
+    title: "Changelog in video · Remocn",
     description: DESCRIPTION,
     locale: "en_US",
-    images: [{ url: shareImage, alt: "Changelog in video · remocn" }],
+    images: [{ url: shareImage, alt: "Changelog in video · Remocn" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Changelog in video · remocn",
+    title: "Changelog in video · Remocn",
     description: DESCRIPTION,
     images: [shareImage],
   },
@@ -52,10 +53,12 @@ export const metadata: Metadata = {
 export default function ChangelogVideoPage() {
   return (
     <>
-      <ChangelogHero active="video" />
-      <section className="pb-24">
-        <ChangelogVideoFeed entries={entries} />
-      </section>
+      <ChangelogHeader
+        active="video"
+        eyebrow={`Changelog, ${entries.length} videos`}
+        continuation="Every release, in video."
+      />
+      <ChangelogVideoFeed entries={entries} />
     </>
   );
 }

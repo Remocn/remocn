@@ -1,0 +1,111 @@
+---
+title: Glass Lens
+description: "A glass lens drop magnifies a headline word, glides to a clip and flattens into a call-to-action pill"
+component: glass-lens
+vibe: premium
+length: 180
+useWhen:
+  - "A launch video that moves from a headline to a product screen to a call to action in one continuous motion."
+  - "Drawing attention to a key word in a headline before pointing at a specific clip or feature."
+  - "A closing beat that turns a glass drop into the final button."
+avoidWhen:
+  - "You only need the magnified word in a headline — use `glass-capsule`."
+  - "You want a product screen revealed with a hairline of light, not a lens — use `slit-reveal`."
+  - "You need a longer walk through several regions of a screenshot — use `screenshot-tour`."
+---
+
+<ComponentPreview name="glass-lens" />
+
+<InstallBlock name="glass-lens" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { GlassLens } from "@/components/remocn/glass-lens";
+
+const GlassLensScene = () => (
+  <GlassLens
+    lines={["Every frame,", "composed."]}
+    focus={{ line: 0, word: 1 }}
+    cta="Start building"
+    src="/images/product.png"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="GlassLens"
+    component={GlassLensScene}
+    durationInFrames={210}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Headline lines rise in on the left and a glass drop slides in, settling on the `focus` word to magnify it. The drop then glides to the highlighted clip in the product pane, travels down to the call-to-action slot, flattens into a pill and fills with the accent, and the `cta` label and arrow land at frame 180. Pass `lines`, `cta` and your own `src` or `children` for the pane; it ships light and dark.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "lines",
+      type: "string[]",
+      default: "[\"Every frame,\", \"composed.\"]",
+      description: "Headline lines, set large on the left",
+    },
+    {
+      name: "italicLast",
+      type: "boolean",
+      default: "true",
+      description: "Set the last headline line in italic",
+    },
+    {
+      name: "focus",
+      type: "{ line: number; word: number }",
+      default: "{ line: 0, word: 1 }",
+      description: "Line and word index the lens stops on first",
+    },
+    {
+      name: "cta",
+      type: "string",
+      default: "\"Start with remocn\"",
+      description: "Label inside the pill the lens becomes",
+    },
+    {
+      name: "logo",
+      type: "React.ReactNode",
+      description: "Replaces the Remocn logo above the headline",
+    },
+    {
+      name: "src",
+      type: "string",
+      description: "Screenshot for the product pane",
+    },
+    {
+      name: "children",
+      type: "React.ReactNode",
+      description: "Custom product pane content; wins over src",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color of the pill and highlights",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier for the whole timeline",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark palette",
+    },
+  ]}
+/>

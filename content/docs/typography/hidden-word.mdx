@@ -1,0 +1,82 @@
+---
+title: Hidden Word
+description: "A word is found hidden letter by letter inside a sentence and lifted out as a large italic title"
+component: hidden-word
+vibe: premium
+length: 152
+useWhen:
+  - "A reveal beat where a key word is concealed in a sentence and then pulled out as the headline."
+  - "An editorial, premium tone for a manifesto or announcement, set as body copy first."
+  - "A product message where a hidden word, such as the product's verb, becomes the takeaway."
+avoidWhen:
+  - "You want a word highlighted in place without moving letters — use `inline-highlight`."
+  - "The text should simply appear and stay as a paragraph — use `word-stream`."
+  - "You need a fast single-line headline entrance — use `focus-blur-resolve`."
+---
+
+<ComponentPreview name="hidden-word" />
+
+<InstallBlock name="hidden-word" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { HiddenWord } from "@/components/remocn/hidden-word";
+
+const HiddenWordScene = () => (
+  <HiddenWord
+    text="Every founder deserves a launch video that feels expensive."
+    word="love"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="HiddenWord"
+    component={HiddenWordScene}
+    durationInFrames={186}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The sentence fades in line by line, the letters of `word` light up in order inside it, the rest dims, and each lit letter lifts out and flies into place to form a large serif italic word. Pass `text` (it must contain the letters of `word` in order, case-insensitive) and `word`; it ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "text",
+      type: "string",
+      default: "\"Small teams make their launch film in code and post it by Friday.\"",
+      description: "The sentence, set as editorial body type.",
+    },
+    {
+      name: "word",
+      type: "string",
+      default: "\"ship\"",
+      description: "The word hiding in `text`; its letters are found in order.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Color of the lit letters and the empty-slot rule.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier.",
+    },
+  ]}
+/>

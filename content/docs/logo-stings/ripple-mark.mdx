@@ -1,0 +1,82 @@
+---
+title: Ripple Mark
+description: "Dots ripple outward across the frame and light up the R mark, then the name appears beside it."
+component: ripple-mark
+vibe: tech
+length: 82
+useWhen:
+  - "A logo reveal that starts from a dot field, suited to a data or infrastructure brand."
+  - "A short sting with a ripple of light behind the mark."
+  - "A reveal where a path-based logo can be passed in."
+avoidWhen:
+  - "You want squares that subdivide into the mark — use `quadtree-mark`."
+  - "The reveal should be wordless — use `squircle-wave`."
+  - "A countdown should lead into the logo — use `glyph-matrix`."
+---
+
+<ComponentPreview name="ripple-mark" />
+
+<InstallBlock name="ripple-mark" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { RippleMark } from "@/components/remocn/ripple-mark";
+
+const RippleMarkScene = () => (
+  <RippleMark
+    name="remocn"
+    accent="#3B5BFD"
+    theme="dark"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="RippleMark"
+    component={RippleMarkScene}
+    durationInFrames={140}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A field of dots ripples outward from the centre and the dots inside the R mark light up in the accent colour, then the camera pans and the name letters appear beside the mark. Pass `name` (Remocn is set as the real logo) or your own `logo` path. Ships light and dark.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "logo",
+      type: "string | string[]",
+      description: "SVG path or paths of the mark; defaults to the R.",
+    },
+    {
+      name: "name",
+      type: "string",
+      default: "\"remocn\"",
+      description: "Name set after the mark; Remocn is set as the real logo.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent colour for the mark and highlights; any CSS colour.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Dark or light palette and ground.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier for the whole timeline; 1 is normal speed.",
+    },
+  ]}
+/>

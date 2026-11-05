@@ -12,7 +12,8 @@
     "ink-arrow",
     "scribble-circle",
     "crumple-toss",
-    "simulated-cursor"
+    "simulated-cursor",
+    "glass-lens"
   ],
   "icon": "SparklesIcon"
 }

@@ -1,0 +1,99 @@
+---
+title: Introducing
+description: "An eyebrow settles then lifts as the wordmark lands with a sweep of light and a tagline."
+component: introducing
+vibe: premium
+length: 86
+useWhen:
+  - "A product announcement that opens with Introducing and a one-line tagline."
+  - "A launch video opener right before the first product demo."
+  - "A rebrand or new-version reveal with a calm, premium tone."
+avoidWhen:
+  - "The version number should be the hero — use `sequel-numeral`."
+  - "You want a streak of light instead of a settling eyebrow — use `light-signature`."
+  - "The rhythm should come from fast word cuts — use `blink-cut`."
+---
+
+<ComponentPreview name="introducing" />
+
+<InstallBlock name="introducing" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { Introducing } from "@/components/remocn/introducing";
+
+const IntroducingScene = () => (
+  <Introducing
+    eyebrow="Introducing"
+    name="remocn"
+    tagline="Launch-video scenes for Remotion. Copy, paste, render."
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="Introducing"
+    component={IntroducingScene}
+    durationInFrames={120}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A large eyebrow settles in the centre and lifts to make room, then the name lands with a sweep of light and the tagline rises word by word. Pass `eyebrow`, `name` or `logo`, `tagline` and `accent`. Ships light and dark.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "eyebrow",
+      type: "string",
+      default: "\"Introducing\"",
+      description: "Small line that settles then lifts before the name lands.",
+    },
+    {
+      name: "name",
+      type: "string",
+      default: "\"remocn\"",
+      description: "Product name; Remocn renders the real logo.",
+    },
+    {
+      name: "logo",
+      type: "React.ReactNode",
+      description: "Mark set before the name, sized to its cap height.",
+    },
+    {
+      name: "tagline",
+      type: "string",
+      default: "\"Launch-video scenes for Remotion. Copy, paste, render.\"",
+      description: "One line under the lockup.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Colour of the light passing through the name.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Stage fill colour; overrides the theme background.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier for the whole timeline; 1 is normal speed.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Dark or light palette and ground.",
+    },
+  ]}
+/>

@@ -1,0 +1,77 @@
+---
+title: Hatch Shade
+description: "A serif number is shaded in with pen-drawn hatch lines in three passes, then outlined and captioned."
+component: hatch-shade
+vibe: paper
+length: 128
+useWhen:
+  - "An editorial or paper-craft stat where the number should look engraved rather than typed."
+  - "A quiet, premium beat on a copper plate with a caption fading in last."
+  - "A count-free figure, such as a number of new components, that deserves a drawn-in reveal."
+avoidWhen:
+  - "The number should be woven from threads - use `thread-weave`."
+  - "A single-stroke handwritten figure is the look - use `single-stroke`."
+  - "You want pixel tiles painting the figure - use `raster-paint`."
+---
+
+<ComponentPreview name="hatch-shade" />
+
+<InstallBlock name="hatch-shade" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { HatchShade } from "@/components/remocn/hatch-shade";
+
+const HatchShadeScene = () => <HatchShade value="24" caption="new components, drawn for launch week" />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="HatchShade"
+    component={HatchShadeScene}
+    durationInFrames={155}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A serif number is drawn in with pen-stroke hatch lines in three passes - two crossing passes in ink, then a copper pass - before a crisp outline appears and the caption fades in. Pass `value` as a string and `caption`. It ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "value",
+      type: "string",
+      default: "\"24\"",
+      description: "The number to shade in, as a string.",
+    },
+    {
+      name: "caption",
+      type: "string",
+      default: "\"new components, drawn for launch week\"",
+      description: "Caption that fades in below.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for the copper pass.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark palette.",
+    },
+  ]}
+/>

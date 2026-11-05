@@ -1,0 +1,88 @@
+---
+title: Paper Plane
+description: "A paper plane flies a dotted path past three stops and lands as the full stop of the wordmark."
+component: paper-plane
+vibe: paper
+length: 212
+useWhen:
+  - "A write, render, launch workflow beat that ends on the brand."
+  - "A friendly, craft-feeling reveal for a product about sending or shipping."
+  - "A long reveal with a URL that appears once the plane lands."
+avoidWhen:
+  - "A map of converging lines is wanted — use `transit-lines`."
+  - "A short sting under five seconds is needed — use `snap-click`."
+  - "You want a physical drop into a grid — use `gravity-grid`."
+---
+
+<ComponentPreview name="paper-plane" />
+
+<InstallBlock name="paper-plane" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { PaperPlane } from "@/components/remocn/paper-plane";
+
+const PaperPlaneScene = () => (
+  <PaperPlane
+    steps={["Write", "Render", "Launch"]}
+    url="remocn.dev"
+    accent="#3B5BFD"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="PaperPlane"
+    component={PaperPlaneScene}
+    durationInFrames={220}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A paper plane loops along a dotted flight path past three labelled stops, heads for the wordmark and lands as its full stop, then `url` appears beneath. Pass `steps` (three labels), `url` and `logo`. The theme prop defaults to light paper and also ships dark.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "steps",
+      type: "[string, string, string]",
+      default: "[\"Write\", \"Render\", \"Launch\"]",
+      description: "The three stops the plane passes; the last labels the landing.",
+    },
+    {
+      name: "logo",
+      type: "React.ReactNode",
+      description: "Replaces the remocn.dev logo; the plane lands as a full stop after it.",
+    },
+    {
+      name: "url",
+      type: "string",
+      default: "\"remocn.dev\"",
+      description: "Shown under the lockup after the plane lands.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent colour for the mark and highlights; any CSS colour.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier for the whole timeline; 1 is normal speed.",
+    },
+    {
+      name: "theme",
+      type: "\"light\" | \"dark\"",
+      default: "\"light\"",
+      description: "Light paper (default) or dark.",
+    },
+  ]}
+/>

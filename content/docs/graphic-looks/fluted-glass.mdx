@@ -1,0 +1,71 @@
+---
+title: Fluted Glass
+description: "Fluted glass refracts a gradient orb and its headline, then slides away to bring them into focus"
+component: fluted-glass
+vibe: premium
+length: 112
+useWhen:
+  - "A premium headline reveal that starts distorted and resolves to a sharp, clean title."
+  - "A brand moment with a gradient orb and one short phrase, such as \"In focus.\"."
+  - "A transition-like beat that hides a title behind textured glass before showing it."
+avoidWhen:
+  - "The reveal should be a frosted panel clearing around a stat — use `frosted-clear`."
+  - "You want a lens that magnifies part of the frame — use `glass-lens`."
+  - "A simple blur-to-sharp text entrance is enough — use `focus-blur-resolve`."
+---
+
+<ComponentPreview name="fluted-glass" />
+
+<InstallBlock name="fluted-glass" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { FlutedGlass } from "@/components/remocn/fluted-glass";
+
+const FlutedGlassScene = () => <FlutedGlass title="In focus." />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="FlutedGlass"
+    component={FlutedGlassScene}
+    durationInFrames={145}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A sheet of vertical glass flutes covers the frame, refracting an orb and the `title` into stretched slivers while the backdrop drifts. The sheet then slides off to the right, leaving the sharp orb and headline. Pass a short `title`. Ships dark and light via `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "title",
+      type: "string",
+      default: "\"In focus.\"",
+      description: "Headline shown beside the orb.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Color tint on the orb rim.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color scheme. Ships dark and light.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+  ]}
+/>

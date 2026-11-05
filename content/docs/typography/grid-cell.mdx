@@ -1,0 +1,82 @@
+---
+title: Grid Cell
+description: "A grid cell lights up in a graph-paper field and a headline is typed into it with a mono label."
+component: grid-cell
+vibe: tech
+length: 130
+useWhen:
+  - "An announcement framed as a design-tool grid cell, such as a version or product name."
+  - "A technical beat where the headline should be typed into a cell with a label in the corner."
+avoidWhen:
+  - "You want a plain typed line with no grid - use `typewriter`."
+  - "You want the headline to appear with blur - use `focus-blur-resolve`."
+  - "You want the text selected and resized - use `cursor-frame`."
+---
+
+<ComponentPreview name="grid-cell" />
+
+<InstallBlock name="grid-cell" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { GridCell } from "@/components/remocn/grid-cell";
+
+const GridCellScene = () => (
+  <GridCell title="Introducing remocn 2.0" label="v2.0" accent="#3B5BFD" />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="GridCell"
+    component={GridCellScene}
+    durationInFrames={170}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A grid fades in from the center, cells merge into one that frames the headline, the label appears in the corner, and the title is typed in with a caret before the grid dims. Pass `title` and `label`; it ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "title",
+      type: "string",
+      default: "\"Introducing remocn 2.0\"",
+      description: "Typed into the lit cell.",
+      description: "Headline typed into the cell",
+    },
+    {
+      name: "label",
+      type: "string",
+      default: "\"v2.0\"",
+      description: "Tiny mono label in the cell's top-left corner.",
+      description: "Tiny mono label in the cell corner",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Caret and the label's marker.",
+      description: "Accent color (any valid CSS color)",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier.",
+      description: "Playback speed multiplier",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark palettes",
+    },
+  ]}
+/>

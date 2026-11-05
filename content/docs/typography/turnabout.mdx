@@ -1,0 +1,89 @@
+---
+title: Turnabout
+description: "One sentence turns into its mirror image as words flip, ending with an accent-colored phrase."
+component: turnabout
+vibe: clean
+length: 106
+useWhen:
+  - "A positioning beat that flips the framing, such as from effort for the tool to effort from the tool."
+  - "A before-and-after claim where both lines reuse most of the same words."
+  - "A tagline reveal that should feel like a twist rather than a swap."
+avoidWhen:
+  - "The two lines share no words and just replace each other — use `layout-swap`."
+  - "Only one word should change inside a fixed sentence — use `pinned-word`."
+  - "You want an edit-style change with inserted words — use `word-insert`."
+---
+
+<ComponentPreview name="turnabout" />
+
+<InstallBlock name="turnabout" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { Turnabout } from "@/components/remocn/turnabout";
+
+const TurnaboutScene = () => (
+  <Turnabout before="You work for the video." after="The video works for you." highlight="you." />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="Turnabout"
+    component={TurnaboutScene}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The `before` sentence enters word by word, then turns into the `after` sentence while shared words travel to their new spots. The `highlight` phrase in `after` lights up in the accent color. It ships in light and dark through the `theme` prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "before",
+      type: "string",
+      default: "\"You work for the video.\"",
+      description: "Opening sentence.",
+    },
+    {
+      name: "after",
+      type: "string",
+      default: "\"The video works for you.\"",
+      description: "Sentence it turns into.",
+    },
+    {
+      name: "highlight",
+      type: "string",
+      default: "\"you.\"",
+      description: "Phrase inside `after` lit in the accent color.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Accent color override; falls back to the theme accent.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background color override; falls back to the theme background.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark; picks the palette.",
+    },
+  ]}
+/>

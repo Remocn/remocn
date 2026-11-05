@@ -1,0 +1,80 @@
+---
+title: Counter Reveal
+description: "A huge front word reveals a second line through the counters of its letters over a gradient."
+component: counter-reveal
+vibe: clean
+length: 128
+useWhen:
+  - "A bold one-word status beat such as Beta or Live that hides a secondary line inside its letters."
+  - "An announcement where a giant word shrinks away to reveal the detail behind it."
+avoidWhen:
+  - "The front word has few closed letterforms to reveal through - use `mask-reveal-up`."
+  - "You want both lines visible at once - use `staggered-fade-up`."
+  - "You need a simple word-by-word exit - use `blur-out-up`."
+---
+
+<ComponentPreview name="counter-reveal" />
+
+<InstallBlock name="counter-reveal" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { CounterReveal } from "@/components/remocn/counter-reveal";
+
+const CounterRevealScene = () => (
+  <CounterReveal word="Beta" line="Out now." accent="#3B5BFD" />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="CounterReveal"
+    component={CounterRevealScene}
+    durationInFrames={132}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A giant front word rises letter by letter, then shrinks and drifts away so its counters open onto the second line behind it, which settles in. Pass `word` for the big text and `line` for the revealed line; it ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "word",
+      type: "string",
+      default: "\"Beta\"",
+      description: "Huge front word. Letters with embedded outlines (the default \"Beta\")\nget real counter windows; any other letter falls back to live text.",
+      description: "Large front word whose counters reveal the line",
+    },
+    {
+      name: "line",
+      type: "string",
+      default: "\"Out now.\"",
+      description: "The line seen through the counters, then revealed in full.",
+      description: "Secondary line shown behind the word",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color (any valid CSS color)",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark palettes",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier",
+    },
+  ]}
+/>

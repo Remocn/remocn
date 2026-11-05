@@ -1,0 +1,95 @@
+---
+title: Balance Beam
+description: "A seesaw tips as one Remocn block outweighs a pile of hours, tools and revisions"
+component: balance-beam
+vibe: playful
+length: 146
+useWhen:
+  - "A value claim where one thing outweighs a pile of costs, such as hours, tools and revisions."
+  - "A playful beat that sets one hero block against a stack of effort and ends on a short title."
+  - "A pricing or ROI scene where the metaphor carries the message instead of numbers."
+avoidWhen:
+  - "You have real measured values to compare — use `area-compare`."
+  - "You want two stopwatches racing — use `timer-duel`."
+  - "You want a two-sided stat comparison — use `versus-split`."
+---
+
+<ComponentPreview name="balance-beam" />
+
+<InstallBlock name="balance-beam" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { BalanceBeam } from "@/components/remocn/balance-beam";
+
+const BalanceBeamScene = () => (
+  <BalanceBeam
+    items={["$4,800", "62 hours", "3 tools", "9 revisions"]}
+    accentLabel="remocn"
+    title="One block."
+    subtitle="Outweighs the whole stack."
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="BalanceBeam"
+    component={BalanceBeamScene}
+    durationInFrames={175}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Blocks labeled with costs drop one by one onto a seesaw and weigh it down, then the hero block lands on the other side and tips the beam while the title and subtitle fade in. Pass `items` (up to eight labels), `accentLabel` for the hero block, and `title` and `subtitle`. Ships dark and light via `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "items",
+      type: "string[]",
+      description: "Labels for the pile of blocks, up to eight.",
+    },
+    {
+      name: "accentLabel",
+      type: "string",
+      default: "\"remocn\"",
+      description: "Text on the hero block; Remocn draws the logo.",
+    },
+    {
+      name: "title",
+      type: "string",
+      default: "\"One block.\"",
+      description: "Headline shown after the beam tips.",
+    },
+    {
+      name: "subtitle",
+      type: "string",
+      default: "\"Outweighs the whole stack.\"",
+      description: "Line under the headline.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for the hero element.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Dark or light palette.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier.",
+    },
+  ]}
+/>

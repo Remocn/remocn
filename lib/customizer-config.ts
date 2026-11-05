@@ -71,6 +71,16 @@ export interface ComponentConfig {
    */
   snippet?: (values: Record<string, unknown>) => string;
   previewBackdrop?: BackdropFill;
+  /**
+   * How the component looks in the docs index cards (small light tiles, no
+   * backdrop). `props` override the defaults there, e.g. a scene background
+   * set to "transparent". Light colors meant for a dark `previewBackdrop`
+   * already turn to ink automatically (see `build-preview-manifest`); list a
+   * color here to keep it. `fit: false` keeps the full frame instead of
+   * zooming to the content. `backdrop: true` paints `previewBackdrop` behind
+   * it, for the few that can't read on a light tile (shader-drawn text).
+   */
+  card?: { props?: Record<string, unknown>; fit?: boolean; backdrop?: boolean };
 }
 
 /** `ComponentConfig` after `resolveConfig`: schema converted for the site UI. */

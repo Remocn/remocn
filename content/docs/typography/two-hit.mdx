@@ -1,0 +1,87 @@
+---
+title: Two Hit
+description: "A two-hit headline, \"Streaming now.\", in white then blue, right-aligned on black"
+component: two-hit
+vibe: social
+length: 91
+useWhen:
+  - "A two-beat teaser where a first line is replaced by a second, like a premiere card."
+  - "A short release line with a plain statement followed by a status."
+avoidWhen:
+  - "You have more than two lines to cycle — use `rewrite-bars`."
+  - "You want a single line with no replacement — use `staggered-fade-up`."
+---
+
+<ComponentPreview name="two-hit" />
+
+<InstallBlock name="two-hit" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { TwoHit } from "@/components/remocn/two-hit";
+
+const TwoHitScene = () => (
+  <TwoHit before="Premieres Friday." after="Streaming now." hitAt={34} />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="TwoHit"
+    component={TwoHitScene}
+    durationInFrames={120}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The first line appears, then at `hitAt` it is hit and replaced by the second line in the accent colour, right-aligned on a flat background. Pass `before`, `after` and `hitAt`; it ships light and dark.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "before",
+      type: "string",
+      default: "\"Premieres Friday.\"",
+      description: "First line, shown in the base text colour.",
+    },
+    {
+      name: "after",
+      type: "string",
+      default: "\"Streaming now.\"",
+      description: "Second line that replaces it in the accent colour.",
+    },
+    {
+      name: "hitAt",
+      type: "number",
+      default: "34",
+      description: "Frame where the second hit lands.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Accent colour (any CSS colour).",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Overrides the theme background colour.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier; above 1 plays faster.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Colour scheme; ships light and dark.",
+    },
+  ]}
+/>

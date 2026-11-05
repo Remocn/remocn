@@ -1,0 +1,120 @@
+---
+title: Speed Trap
+description: "A speed readout locks on 348 km/h over a segmented bar with last year's marker and delta"
+component: speed-trap
+vibe: data
+length: 65
+useWhen:
+  - "A performance beat where a top-speed style readout locks on your headline number against last year's mark."
+  - "A release recap that wants a motorsport telemetry look: segmented bar, sector labels and a delta against the previous version."
+  - "A speed or throughput claim that needs a visible year-over-year comparison, not just a bare number."
+avoidWhen:
+  - "You want a single quiet figure with no bar or comparison — use `compact-stat`."
+  - "The comparison is between two timers racing each other — use `timer-duel`."
+  - "The value is a percentage or a score on a dial rather than a speed — use `radial-bars`."
+---
+
+<ComponentPreview name="speed-trap" />
+
+<InstallBlock name="speed-trap" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { SpeedTrap } from "@/components/remocn/speed-trap";
+
+const SpeedTrapScene = () => (
+  <SpeedTrap
+    value={348}
+    previous={300}
+    unit="km/h"
+    banner="Top speed"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="SpeedTrap"
+    component={SpeedTrapScene}
+    durationInFrames={115}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A three-sector bar track snaps out and the readout floods up to the final value while a gradient bar races with it. On lock the number kicks, a banner wipes in, last year's mark drops onto the bar and the delta slice and comparison line appear. Pass `value`, `previous`, `max` and `unit`. It ships light and dark through the `theme` prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "value",
+      type: "number",
+      default: "348",
+      description: "Speed the readout locks on.",
+    },
+    {
+      name: "previous",
+      type: "number",
+      default: "300",
+      description: "Last year's mark, drawn as a line on the bar. The delta is computed from it.",
+    },
+    {
+      name: "max",
+      type: "number",
+      default: "360",
+      description: "Full scale of the bar.",
+    },
+    {
+      name: "unit",
+      type: "string",
+      default: "\"km/h\"",
+      description: "Unit after the number.",
+    },
+    {
+      name: "banner",
+      type: "string",
+      default: "\"Top speed\"",
+      description: "Banner that flashes when the readout locks.",
+    },
+    {
+      name: "previousLabel",
+      type: "string",
+      default: "\"2025\"",
+      description: "Label on the previous mark.",
+    },
+    {
+      name: "comparison",
+      type: "string",
+      default: "\"vs last year\"",
+      description: "Text after the delta, e.g. \"vs last year\".",
+    },
+    {
+      name: "label",
+      type: "string",
+      default: "\"Speed trap · Sector 3\"",
+      description: "Small label at the top left.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "The live dot next to the label.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier; 1 is the designed pace.",
+    },
+  ]}
+/>

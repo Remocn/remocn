@@ -1,0 +1,81 @@
+---
+title: Cool Down
+description: "A short statement, 'Runs cool.', settles in large over a faint grid with a mono caption"
+component: cool-down
+vibe: tech
+length: 92
+useWhen:
+  - "A performance or efficiency claim where the visuals should feel calm and settled."
+  - "A short two-word statement with a technical caption underneath."
+  - "A developer-focused beat about speed, stability or low resource use."
+avoidWhen:
+  - "You want to show a number counting up — use `rolling-number`."
+  - "The claim needs a code-style reveal — use `uncomment-line`."
+  - "You need a longer line with several words animating in — use `staggered-fade-up`."
+---
+
+<ComponentPreview name="cool-down" />
+
+<InstallBlock name="cool-down" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { CoolDown } from "@/components/remocn/cool-down";
+
+const CoolDownScene = () => <CoolDown title="Runs cool." label="a full launch film rendered, fans silent" />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="CoolDown"
+    component={CoolDownScene}
+    durationInFrames={125}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A short statement rises into place in large type, glowing in the accent color and cooling to the text color while a faint grid and heat shimmer calm down behind it, ending on a still frame with a small mono caption. Pass `title` and `label`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "title",
+      type: "string",
+      default: "\"Runs cool.\"",
+      description: "Short statement set large.",
+    },
+    {
+      name: "label",
+      type: "string",
+      default: "\"a full launch film rendered, fans silent\"",
+      description: "Small mono caption under the title.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Hot color the title and caption start in before cooling to the text color.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Stage fill color; pass \"transparent\" to overlay your own footage.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color scheme; ships dark and light.",
+    },
+  ]}
+/>

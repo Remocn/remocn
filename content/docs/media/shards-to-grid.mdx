@@ -1,0 +1,115 @@
+---
+title: Shards to Grid
+description: "Tilted image shards drift in 3D, snap into a five-cell media grid, and write in a headline and captions."
+component: shards-to-grid
+vibe: tech
+length: 115
+useWhen:
+  - "A media-heavy product beat that goes from a scatter of visuals to an organized grid."
+  - "A feature headline over a collage of screenshots or photos, with short captions on each cell."
+  - "Showing a tool that assembles many assets into one tidy layout."
+avoidWhen:
+  - "You want a beat-cut montage of full-frame shots — use `grid-montage`."
+  - "A mixed-size grid of feature tiles should build up piece by piece — use `bento-build`."
+  - "A vertical wall of images should pan endlessly — use `infinite-bento-pan`."
+---
+
+<ComponentPreview name="shards-to-grid" />
+
+<InstallBlock name="shards-to-grid" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { ShardsToGrid } from "@/components/remocn/shards-to-grid";
+
+const ShardsToGridScene = () => (
+  <ShardsToGrid
+    images={["/shots/one.jpg", "/shots/two.jpg", "/shots/three.jpg"]}
+    title="Launch v1"
+    headline="Every frame, written in code."
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="ShardsToGrid"
+    component={ShardsToGridScene}
+    durationInFrames={144}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Shards of your `images` drift through 3D space, converge and snap into a five-cell grid inside a window with a `title` and `status`. The hero cell writes in the `headline` word by word and the other cells show their `labels`. Pass your own `images`; the defaults are `staticFile` images from the Remocn repo. It ships light and dark through `theme`.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "images",
+      type: "string[]",
+      description: "Image URLs used for the shards and cells. Defaults to repo-only files.",
+    },
+    {
+      name: "title",
+      type: "string",
+      default: "\"Launch v1\"",
+      description: "Title in the window header.",
+    },
+    {
+      name: "status",
+      type: "string",
+      default: "\"Assembling\"",
+      description: "Status text next to the title.",
+    },
+    {
+      name: "headline",
+      type: "string",
+      default: "\"Every frame, written in code.\"",
+      description: "Headline written into the hero cell.",
+    },
+    {
+      name: "labels",
+      type: "string[]",
+      description: "Captions for the cells, in order.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color scheme. Ships light and dark.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Solid background color for the ground.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color of the window highlights.",
+    },
+    {
+      name: "blooms",
+      type: "string[]",
+      description: "Colors for the ground shader. Overrides the preset colors.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "Shader preset id for the animated background.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Partial shader parameters that override the ground preset.",
+    },
+  ]}
+/>

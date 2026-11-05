@@ -1,0 +1,85 @@
+---
+title: Rubberband Word
+description: "A cursor grabs a word by its last letter, stretches it like elastic, and it snaps into a new word."
+component: rubberband-word
+vibe: playful
+length: 90
+useWhen:
+  - "A tension-and-release beat where a word is pulled tight and then snaps into its resolution."
+  - "A tagline that turns one word into another with a physical, elastic gesture."
+  - "A playful interaction moment where a cursor is part of the story."
+avoidWhen:
+  - "The word change should morph letters smoothly, with no cursor - use `kinetic-morph-text`."
+  - "You just want an edit-style swap - use `strikethrough-replace`."
+  - "A single word only needs to pop onto screen - use `spring-scale-in`."
+---
+
+<ComponentPreview name="rubberband-word" />
+
+<InstallBlock name="rubberband-word" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { RubberbandWord } from "@/components/remocn/rubberband-word";
+
+const RubberbandWordScene = () => (
+  <RubberbandWord word="stretch" snapWord="deliver" />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="RubberbandWord"
+    component={RubberbandWordScene}
+    durationInFrames={130}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A cursor reaches in, grabs the last letter of `word` and pulls it out on a taffy band while the letters spread and squash. On release the word snaps back, overshoots, and swaps to `snapWord`, closing with an accent period. Pass `word` and `snapWord`. It takes a `theme` prop and ships light and dark.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "word",
+      type: "string",
+      default: "\"tension\"",
+      description: "The word the cursor grabs by its last letter.",
+    },
+    {
+      name: "snapWord",
+      type: "string",
+      default: "\"release\"",
+      description: "What the word becomes on the snap. Empty keeps the word and only accents it.",
+    },
+    {
+      name: "period",
+      type: "boolean",
+      default: "true",
+      description: "Close the final word with an accent period.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Color of the pulled letter and the closing period.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark ground; the component ships both.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+  ]}
+/>

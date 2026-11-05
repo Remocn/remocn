@@ -1,0 +1,117 @@
+---
+title: Shot Answers
+description: "A question rewrites itself word by word into its answer while a framed screenshot slides in beside it."
+component: shot-answers
+vibe: clean
+length: 92
+useWhen:
+  - "A question-and-answer beat where the answer reuses most of the question's words."
+  - "Pairing a bold claim with the screenshot that proves it, in a browser-style frame with a URL."
+  - "A text-led scene that should end on a product image rather than a logo."
+avoidWhen:
+  - "The sentence should end by growing a thumbnail into the image — use `looks-like-this`, the inline-thumbnail twin of this scene."
+  - "You want to zoom into one detail of the image — use `up-close`."
+  - "There is no question and answer, only a product tour — use `screenshot-tour`."
+---
+
+<ComponentPreview name="shot-answers" />
+
+<InstallBlock name="shot-answers" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { ShotAnswers } from "@/components/remocn/shot-answers";
+
+const ShotAnswersScene = () => (
+  <ShotAnswers
+    question="What if your launch video were just another pull request?"
+    answer="Your launch video is just another pull request."
+    src="/shots/studio.png"
+    url="example.dev/studio"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="ShotAnswers"
+    component={ShotAnswersScene}
+    durationInFrames={140}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The `question` writes in word by word and a framed screenshot slides in beside it. The shared words then glide into place while the rest swap, forming the `answer`, with new words appearing in the accent color. Pass your own `question`, `answer` and image through `src`; the default is a `staticFile` image from the Remocn repo. The timeline scales with the composition length, and it ships light and dark through `theme`.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "question",
+      type: "string",
+      default: "\"What if your launch video were just another pull request?\"",
+      description: "Question that writes in first.",
+    },
+    {
+      name: "answer",
+      type: "string",
+      default: "\"Your launch video is just another pull request.\"",
+      description: "Answer the question rewrites into. Reuse words for the glide.",
+    },
+    {
+      name: "src",
+      type: "string",
+      description: "Screenshot URL for the frame. Defaults to a repo-only file.",
+    },
+    {
+      name: "aspect",
+      type: "number",
+      default: "16 / 9",
+      description: "Aspect ratio of the screenshot.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Color of new words in the answer. Defaults depend on theme.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Solid background. Use 'transparent' to drop the ground.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "Shader preset id for the animated background.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Partial shader parameters that override the ground preset.",
+    },
+    {
+      name: "url",
+      type: "string",
+      default: "\"remocn.dev/studio\"",
+      description: "Address shown in the frame's title bar.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color scheme. Ships light and dark.",
+    },
+  ]}
+/>

@@ -1,0 +1,92 @@
+---
+title: Story Dip
+description: "Three timestamped story lines enter in columns: a snag drops low and dims, then the resolution climbs and lights up."
+component: story-dip
+vibe: paper
+length: 132
+useWhen:
+  - "A short anecdote in three beats, such as setup, a snag and the fix, each with its own timestamp."
+  - "A customer or founder story where the middle line should visibly dip before the answer rises."
+avoidWhen:
+  - "The story is a night-to-morning arc told over changing grounds — use `overnight`."
+  - "You only need one timestamped line — use `crunch`."
+  - "The text is a spoken quote with attribution — use `said-who`."
+---
+
+<ComponentPreview name="story-dip" />
+
+<InstallBlock name="story-dip" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { StoryDip } from "@/components/remocn/story-dip";
+
+const StoryDipScene = () => (
+  <StoryDip
+    setup={{ slug: "Wednesday, 4:00 PM", line: "The film was one render away." }}
+    snag={{ slug: "4:05 PM", line: "Then the client sent a new logo." }}
+    resolution={{ slug: "4:15 PM", line: "One prop later, every scene had it." }}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="StoryDip"
+    component={StoryDipScene}
+    durationInFrames={180}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Three timestamped lines enter side by side, or in two columns on a tall frame. The setup appears first, the snag then drops lower and dims, and the resolution rises to the top and turns accent-colored. Pass `setup`, `snag` and `resolution` as `{ slug, line }`, where `slug` is the small timestamp. It ships light and dark.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "setup",
+      type: "{ slug: string; line: string }",
+      default: "DEFAULT_SETUP",
+      description: "First beat: a small timestamp and the line.",
+    },
+    {
+      name: "snag",
+      type: "{ slug: string; line: string }",
+      default: "DEFAULT_SNAG",
+      description: "Second beat; it drops lower and dims.",
+    },
+    {
+      name: "resolution",
+      type: "{ slug: string; line: string }",
+      default: "DEFAULT_RESOLUTION",
+      description: "Third beat; it climbs to the top in the accent color.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Color of the timestamps and the lit resolution line.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark palette.",
+    },
+  ]}
+/>

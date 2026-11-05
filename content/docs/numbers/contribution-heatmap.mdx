@@ -1,0 +1,83 @@
+---
+title: Contribution Heatmap
+description: "A pixel heatmap fills in under a counter rolling up to 12,480 renders"
+component: contribution-heatmap
+vibe: data
+length: 96
+useWhen:
+  - "A usage or activity beat where a year of daily cells fills in like a contribution graph before the total lands."
+  - "A stat such as 12,480 renders this year that benefits from a visual of steady daily activity."
+  - "A product-adoption scene where the grid sweeps in diagonally, then dims behind a big counted number."
+avoidWhen:
+  - "You want a plain big number with no supporting graphic — use `compact-stat`."
+  - "You want a single line trending upward rather than a grid of cells — use `growth-line`."
+  - "You want a grid lit up to show a share of 100 — use `unit-grid`."
+---
+
+<ComponentPreview name="contribution-heatmap" />
+
+<InstallBlock name="contribution-heatmap" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { ContributionHeatmap } from "@/components/remocn/contribution-heatmap";
+
+const ContributionHeatmapScene = () => <ContributionHeatmap value={12480} label="renders this year" weeks={52} />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="ContributionHeatmap"
+    component={ContributionHeatmapScene}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A grid of weekly columns and seven day rows fills in on a diagonal sweep, each cell popping in with a flash at its activity level. The grid then dims and sinks while a large counter rolls up to the total with a caption below it. Pass `value`, `label` and `weeks`. It ships light and dark through the `theme` prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "value",
+      type: "number",
+      default: "12480",
+      description: "The total the counter rolls up to.",
+    },
+    {
+      name: "label",
+      type: "string",
+      default: "\"renders this year\"",
+      description: "Caption under the total.",
+    },
+    {
+      name: "weeks",
+      type: "number",
+      default: "52",
+      description: "Number of week columns in the grid; 4 at minimum.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Colour of the filled cells and the flash as each one lands.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier; 1 is the designed pace.",
+    },
+  ]}
+/>

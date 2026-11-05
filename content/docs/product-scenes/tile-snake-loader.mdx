@@ -1,0 +1,119 @@
+---
+title: Tile Snake Loader
+description: "Media tiles snake across a loader and settle into a studio landing page with a hero video card."
+component: tile-snake-loader
+vibe: tech
+length: 176
+useWhen:
+  - "A creative-tool or studio launch that needs a loading-into-a-polished-product reveal."
+  - "A brand opener where media thumbnails are the identity."
+  - "A beat that turns a loader into a landing page without a hard cut."
+avoidWhen:
+  - "You want a gray wireframe that fills into the finished UI — use `wireframe-to-final`."
+  - "You want file-by-file upload progress bars — use `file-dropzone`."
+  - "You only need a small looping spinner — use `spinner`."
+---
+
+<ComponentPreview name="tile-snake-loader" />
+
+<InstallBlock name="tile-snake-loader" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { TileSnakeLoader } from "@/components/remocn/tile-snake-loader";
+
+const TileSnakeLoaderScene = () => (
+  <TileSnakeLoader
+    name="Lumen Studio"
+    url="lumen.studio"
+    headline={"Launch films,\ncut in minutes."}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="TileSnakeLoader"
+    component={TileSnakeLoaderScene}
+    durationInFrames={178}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A product name builds letter by letter on a loader while media tiles snake across and a percentage fills. The tiles retract, a skeleton grows, and the window settles into a landing page with a headline, sub line and a hero video card. Pass `name`, `product`, `headline` (use a newline for a line break), `sub` and `url`. The default `images` are files that only exist in the Remocn repo, so pass your own image URLs. Ships dark by default and light.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark palette",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for highlights, buttons and progress",
+    },
+    {
+      name: "name",
+      type: "string",
+      default: "\"Lumen Studio\"",
+      description: "Name typed out on the loader",
+    },
+    {
+      name: "label",
+      type: "string",
+      default: "\"Initializing\"",
+      description: "Small loader label, e.g. 'Initializing'",
+    },
+    {
+      name: "images",
+      type: "string[]",
+      default: "DEFAULT_IMAGES",
+      description: "Image URLs for the tiles; defaults exist only in the Remocn repo",
+    },
+    {
+      name: "product",
+      type: "string",
+      default: "\"Lumen Studio\"",
+      description: "Product name on the landing page",
+    },
+    {
+      name: "url",
+      type: "string",
+      default: "\"lumen.studio\"",
+      description: "Address shown in the landing page chrome",
+    },
+    {
+      name: "headline",
+      type: "string",
+      default: "\"Launch films,\\ncut in minutes.\"",
+      description: "Landing headline; use a newline for a line break",
+    },
+    {
+      name: "sub",
+      type: "string",
+      default: "\"Drop your screens in. Ship the film by Friday.\"",
+      description: "Sub line under the headline",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "gradients.sh preset id for the backdrop shader",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the backdrop shader parameters",
+    },
+  ]}
+/>

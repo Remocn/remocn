@@ -1,0 +1,96 @@
+---
+title: Tile Wave
+description: "A diagonal wave shrinks a grid of tiles away and regrows them as the next scene on a blue gradient"
+component: tile-wave
+vibe: clean
+length: 94
+useWhen:
+  - "Swapping a short statement for a result or outcome word, such as Idea to Shipped, with a tactile grid motion."
+  - "A product beat where a diagonal sweep of tiles feels like a scan or build step between two claims."
+  - "A graphic cut where the incoming scene should arrive on a rich gradient panel."
+avoidWhen:
+  - "You want a grid that lifts into solid blocks and carries a full-frame scene — use `grid-wave`."
+  - "The change should be a few large moves rather than many small tiles — use `column-slide`."
+  - "You need an organic, soft dissolve instead of a hard grid — use `grain-dissolve`."
+---
+
+<ComponentPreview name="tile-wave" />
+
+<InstallBlock name="tile-wave" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { TileWave } from "@/components/remocn/tile-wave";
+
+const TileWaveScene = () => (
+  <TileWave
+    from="Idea."
+    to="Shipped."
+    rows={8}
+    accent="#3B5BFD"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="TileWave"
+    component={TileWaveScene}
+    durationInFrames={94}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The `from` scene holds for `delay` frames, then a diagonal wave shrinks the tile grid of the outgoing scene to dots and regrows the tiles carrying the `to` scene on a cold blue gradient. Pass `from` and `to` as short text or any React node, and raise `rows` for finer tiles; `theme` sets the stage between the tiles. The wave lands by frame 64 and the gradient settles by frame 94 with the default delay.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "from",
+      type: "React.ReactNode",
+      default: "\"Idea.\"",
+      description: "Outgoing scene: a short headline or any React node",
+    },
+    {
+      name: "to",
+      type: "React.ReactNode",
+      default: "\"Shipped.\"",
+      description: "Incoming scene, set on a blue gradient panel",
+    },
+    {
+      name: "rows",
+      type: "number",
+      default: "8",
+      description: "Number of tile rows; columns follow the aspect ratio",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "16",
+      description: "Frames the outgoing scene holds before the wave",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Color of the trailing period on text headlines",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier for the whole timeline",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Stage tone seen between tiles; the outgoing scene takes the other",
+    },
+  ]}
+/>

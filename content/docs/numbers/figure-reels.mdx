@@ -1,0 +1,116 @@
+---
+title: Figure Reels
+description: "A figure rolls up like an odometer between two scrolling image reels, then a label and mark fade in."
+component: figure-reels
+vibe: premium
+length: 116
+useWhen:
+  - "A funding or milestone announcement where a figure should land between rows of product imagery."
+  - "A premium beat that needs real screenshots or photos moving behind the number."
+  - "A reveal that ends with a small lockup and an announcing line."
+avoidWhen:
+  - "You have no images and want a number on a clean ground - use `figure-to-label`."
+  - "The figure should be one of several stats counting in a row - use `stat-sequence`."
+  - "A plain animated count is enough - use `compact-stat`."
+---
+
+<ComponentPreview name="figure-reels" />
+
+<InstallBlock name="figure-reels" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { FigureReels } from "@/components/remocn/figure-reels";
+
+const FigureReelsScene = () => <FigureReels from={396} to={400} prefix="$" suffix="M" images={["https://example.com/a.jpg", "https://example.com/b.jpg"]} />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="FigureReels"
+    component={FigureReelsScene}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The figure rolls its last digits up like an odometer (for example from $396M to $400M) while two reels of images scroll in above and below it, and a lockup with the Remocn mark and a label fades in. The default images are files that only exist in the Remocn repo, so pass `images` with your own URLs or paths from your `public` folder. It ships light and dark through `theme`; `ground` and `groundParams` change the animated background.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "from",
+      type: "number",
+      default: "396",
+      description: "Starting number the digits roll up from.",
+    },
+    {
+      name: "to",
+      type: "number",
+      default: "400",
+      description: "Final number the figure lands on.",
+    },
+    {
+      name: "prefix",
+      type: "string",
+      default: "\"$\"",
+      description: "Text before the figure, such as a currency sign.",
+    },
+    {
+      name: "suffix",
+      type: "string",
+      default: "\"M\"",
+      description: "Text after the figure, such as M or B.",
+    },
+    {
+      name: "label",
+      type: "string",
+      default: "\"Announcing\"",
+      description: "Text beside the mark in the lockup.",
+    },
+    {
+      name: "images",
+      type: "string[]",
+      default: "DEFAULT_IMAGES",
+      description: "Image URLs or public paths for the two reels; default files only exist in the Remocn repo.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Accent color for highlights.",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color; defaults to the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Stage background color; overrides the theme ground.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark palette.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "Preset id for the animated gradient ground.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the ground gradient parameters.",
+    },
+  ]}
+/>

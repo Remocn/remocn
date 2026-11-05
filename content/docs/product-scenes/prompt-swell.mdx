@@ -1,0 +1,108 @@
+---
+title: Prompt Swell
+description: "A prompt card swells into a builder window that generates a pricing page and ships it"
+component: prompt-swell
+vibe: tech
+length: 135
+useWhen:
+  - "A launch video for an AI site or page builder: prompt in, finished landing page out."
+  - "A beat where a single input expands into the full product window with a live preview."
+  - "A demo that ends with a deployed-and-live toast after the page builds and scrolls."
+avoidWhen:
+  - "You want a chat-driven build with files being written and a deploy step — use `prompt-to-app`."
+  - "The prompt should just collapse or push into the next scene — use `caret-collapse`."
+  - "You want a pipeline diagram rather than a window preview — use `node-trail`."
+---
+
+<ComponentPreview name="prompt-swell" />
+
+<InstallBlock name="prompt-swell" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { PromptSwell } from "@/components/remocn/prompt-swell";
+
+const PromptSwellScene = () => (
+  <PromptSwell
+    prompt="Build a pricing page for our scheduling app"
+    src="/shots/app-hero.png"
+    tiers={[
+      { name: "Solo", price: "$9" },
+      { name: "Team", price: "$29" },
+    ]}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="PromptSwell"
+    component={PromptSwellScene}
+    durationInFrames={156}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A prompt card types your request and is sent, then it swells into a builder window with a checklist of steps on one side and a page preview on the other. The preview builds a hero, scrolls to pricing tiers and a waitlist, publishes, and a live toast appears. Pass `prompt`, `steps`, `tiers`, `url`, and `src` (your own hero image, since the default file only exists in the Remocn repo). It ships light and dark through `theme`.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark interface.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#ff7a3d\"",
+      description: "Accent color for the send button and highlights.",
+    },
+    {
+      name: "prompt",
+      type: "string",
+      default: "\"Build a launch page for our video kit with a hero, pricing and a waitlist\"",
+      description: "The request typed into the prompt card.",
+    },
+    {
+      name: "src",
+      type: "string",
+      default: "staticFile(\"studio.png\")",
+      description: "Hero image shown in the generated page.",
+    },
+    {
+      name: "url",
+      type: "string",
+      default: "\"preview.remocn.dev\"",
+      description: "Address shown in the preview browser bar.",
+    },
+    {
+      name: "steps",
+      type: "string[]",
+      description: "Up to three checklist steps shown while building.",
+    },
+    {
+      name: "tiers",
+      type: "PromptSwellTier[]",
+      description: "Pricing tiers: name, price and optional features.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "Gradient shader preset for the background.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the shader preset parameters.",
+    },
+  ]}
+/>

@@ -1,0 +1,96 @@
+---
+title: Stat Inline
+description: "A large figure appears alone, then slides into place inside a sentence as the other words rise in."
+component: stat-inline
+vibe: clean
+length: 107
+useWhen:
+  - "A statement stat such as Builders shipped 12,480 launch videos, where the number must stay in context."
+  - "A social-proof beat written as one sentence."
+  - "A recap line that should read naturally with the key number highlighted."
+avoidWhen:
+  - "The number alone is the message — use `compact-stat`."
+  - "Several stats should appear in turn — use `stat-sequence`."
+  - "The number should count up — use `tall-count`."
+---
+
+<ComponentPreview name="stat-inline" />
+
+<InstallBlock name="stat-inline" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { StatInline } from "@/components/remocn/stat-inline";
+
+const StatInlineScene = () => (
+  <StatInline value="12,480" text="Builders shipped {value} launch videos this year." label="Launch videos shipped" />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="StatInline"
+    component={StatInlineScene}
+    durationInFrames={130}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The value appears large with a label, then moves into its slot in the sentence while the surrounding words rise in around it. Put `{value}` in `text` where the number belongs. Pass `value`, `text`, `label` and `align`; it ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "value",
+      type: "string",
+      default: "\"12,480\"",
+      description: "The number that gets highlighted, as text.",
+    },
+    {
+      name: "text",
+      type: "string",
+      default: "\"Builders shipped {value} launch videos with remocn this year.\"",
+      description: "Sentence containing the {value} placeholder where the number lands.",
+    },
+    {
+      name: "label",
+      type: "string",
+      default: "\"Launch videos shipped\"",
+      description: "Small label shown while the number is still alone.",
+    },
+    {
+      name: "align",
+      type: "\"left\" | \"center\"",
+      default: "\"left\"",
+      description: "Align the sentence to the left or the center.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for highlights and small marks.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background color override. Pass \"transparent\" to composite over other layers.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color theme, \"dark\" or \"light\".",
+    },
+  ]}
+/>

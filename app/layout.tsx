@@ -1,23 +1,32 @@
+import { GeistSans } from "geist/font/sans";
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Manrope } from "next/font/google";
+import { Geist_Mono, Manrope } from "next/font/google";
+import localFont from "next/font/local";
 import { ThemeProvider } from "next-themes";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import "./globals.css";
 import { OpenPanelComponent } from "@openpanel/nextjs";
-import { STUDIO_BAR_SCRIPT } from "@/lib/studio-bar";
 import { cn } from "@/lib/utils";
 import { ThemeShortcut } from "./theme-shortcut";
 
-const inter = Manrope({ subsets: ["latin"], variable: "--font-sans" });
+const manrope = Manrope({ subsets: ["latin"], variable: "--font-manrope" });
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
+// The `geist` package ships the full Geist charset; the Google Fonts build
+// lacks glyphs like "→" that the design uses throughout.
+const geistSans = GeistSans;
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+});
+
+// Paper Mono (SIL OFL 1.1, see ./fonts/PaperMono-OFL.txt) is the only mono
+// face in the design system: commands, code, paths and `@remocn/...` names.
+const paperMono = localFont({
+  src: "./fonts/PaperMono-Variable.woff2",
+  variable: "--font-paper-mono",
+  weight: "100 800",
+  display: "swap",
 });
 
 const SITE_URL = "https://remocn.dev";
@@ -65,22 +74,18 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      data-scroll-behavior="smooth"
       suppressHydrationWarning
       className={cn(
         "h-full",
         "antialiased",
         geistSans.variable,
         geistMono.variable,
+        paperMono.variable,
         "font-sans",
-        inter.variable,
+        manrope.variable,
       )}
     >
-      <head>
-        <script
-          // biome-ignore lint/security/noDangerouslySetInnerHtml: restores the dismissed studio bar before first paint
-          dangerouslySetInnerHTML={{ __html: STUDIO_BAR_SCRIPT }}
-        />
-      </head>
       <body className="min-h-full flex flex-col">
         <NuqsAdapter>
           <ThemeProvider

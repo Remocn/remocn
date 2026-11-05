@@ -17,8 +17,9 @@ Copy-paste components for Remotion videos. Components install via `shadcn` and l
 
 ## The catalog lives at remocn.dev
 
-This skill does not carry a copy of the component catalog. There are ~240 components and they
-change; a bundled copy goes stale silently. Read the live docs instead.
+This skill does not carry a copy of the component catalog. There are ~800 components and they
+change; a bundled copy goes stale silently. Read the live docs instead. The section map below
+tells you where to look; the index tells you what is there.
 
 **Start every component search here:**
 
@@ -46,6 +47,36 @@ Fetch with whatever your environment provides (a web-fetch tool, `curl`, `WebFet
 network is unavailable, say so and stop — do not invent props, defaults, or durations from memory,
 and do not substitute a component you have not read. A wrong prop name fails at build; an invented
 duration silently clips the animation.
+
+## Where things live
+
+The index has one table per docs section. Know the sections before you scan, because the same idea
+can sit in several of them (a number reveal is in Numbers, not Typography; a whole app screen is in
+Product Scenes, not UI Blocks).
+
+| Section | What's in it | Groups |
+|---|---|---|
+| Typography | Text is the hero: headlines, statements, kinetic posters, word swaps | Statements, Headline reveals, Kinetic posters, Word swaps, Letter mechanics, Quotes |
+| Numbers & Stats (`/docs/numbers`) | A number is the hero: counters, stat reveals, charts, prices, countdowns | Stat reveals, Counters, Charts, Comparisons, Countdowns & dates, Prices |
+| Product Scenes (`/docs/product-scenes`) | Full staged app screens with a beginning, a middle and a payoff | Web app, Commerce & payments, Mobile, Analytics, AI & agents, Collaboration, Dev tools, Onboarding |
+| UI Blocks | One UI element doing one thing: a card, a prompt box, a toggle, a cursor | Cards, Prompt boxes, Controls, Cursor & input, Callouts, Toolbars, Browser |
+| Media & Collage (`/docs/media`) | Your screenshots, photos and footage as the hero | Screenshot tours, Grids & collages, Comparisons, Device frames |
+| Logo Stings | Name and logo reveals, intro and end stings | Name reveals, Logo builds, End stings |
+| Transitions | `TransitionPresentation`s and scene sequencers between beats | Wipes, Type transitions, Light, Match cuts, Morphs |
+| Social | Vertical creator formats, social proof, hooks | Creator formats, Social proof, Hooks |
+| Motion Graphics, Graphic Looks, Effects, Camera | Abstract shapes, stylised looks, lens effects, camera and physics moves | — |
+| UI, Captions, Shaders, Filters, Layout, Compositions, Templates | Primitives, voiceover captions, shader backgrounds, filters, layout helpers, finished scenes and videos | — |
+
+Which section a launch-video beat usually comes from:
+
+- **Hook / problem:** Typography → Statements or Kinetic posters; Social → Hooks for vertical.
+- **Positioning / name:** Logo Stings → Name reveals; Typography → Headline reveals.
+- **Product reveal and features:** Product Scenes (whole screens) or UI Blocks (one element);
+  Media & Collage when the user has real screenshots or footage.
+- **Proof:** Numbers & Stats (a metric, a chart, a comparison); Social → Social proof for quotes and votes.
+- **Pricing:** Numbers & Stats → Prices, or `pricing-reveal` in Product Scenes.
+- **CTA / end:** Logo Stings → End stings; Typography → Statements.
+- **Between beats:** Transitions.
 
 ## Installation
 
@@ -90,6 +121,24 @@ Conventions differ by tier — don't assume animation-tier props on a primitive.
 - Text components: `fontSize`, `color`, `fontWeight`.
 - Transitions: lowercase factories (e.g. `whipPan(props)`) returning a `TransitionPresentation` — pass to `TransitionSeries.Transition` via `presentation`, pace with `linearTiming` / `springTiming`.
 - `className?: string` on the root.
+
+Most components in Typography, Numbers & Stats, Product Scenes, UI Blocks, Media & Collage, Logo
+Stings and Social share these extra conventions — the page's props table says which apply:
+
+- `theme?: "dark" | "light"` — the same piece ships in both looks; pick the one matching the video.
+- `ground` / `groundParams` — an animated gradient ground from `@remocn/gsh` (installed
+  automatically). It is WebGL2, so render with `--gl=angle` (CLI) or `chromiumOptions: { gl: "angle" }`;
+  without it the ground renders black.
+- Default images (`images`, `src`, `image`, `covers`…) point at `staticFile(...)` demo files that
+  only exist in the remocn repo. Always pass the user's own images, or put files with those names in `public/`.
+- Copy and data are props (`title`, `words`, `items`, `value`, `rows`…); defaults are placeholder
+  launch copy, so replace them.
+- `Length` is for the default props. Where it scales with content (word count, item count, number of
+  rows), the page says how.
+- Transitions come in two shapes. Some export a lowercase presentation factory for
+  `TransitionSeries` next to a demo component — use the factory. Others are self-contained
+  components that play the whole cut between their own two scenes — mount them as a scene. The
+  page shows which one you have.
 
 Not everything filed under transitions is a presentation: `slide-swap` and `spring-settle` are scene
 sequencers that take a `scenes` array and own the whole timeline. The page says which one you have.
@@ -166,6 +215,8 @@ https://remocn.dev/docs/craft/anti-patterns.md
 - **Cursor blink is deterministic** — `Math.floor(frame / 15) % 2 === 0`, not intervals.
 - **Static files go in `public/`** — load via `staticFile('cursor.svg')`, not imports.
 - **Social cards render offline** — `avatarUrl=""` / `coverUrl=""` fall back to gradients; no fetch.
+- **Gradient grounds need WebGL** — any component with a `ground` prop renders black without `--gl=angle`.
+- **Some pieces hard-code the remocn logo** — the page says so; swap it in the copied file.
 
 General Remotion rules (no `Math.random()`, no `setInterval`, animate `transform` not `top`/`left`,
 load fonts before render) live in the `remotion-best-practices` skill.

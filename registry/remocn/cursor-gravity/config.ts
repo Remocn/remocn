@@ -37,4 +37,5 @@ export const cursorGravityConfig: ComponentConfig = {
   fps: FPS,
   compositionWidth: W,
   compositionHeight: H,
+  card: { props: { backgroundColor: "transparent", cursorColor: "#0E1012" } },
 };

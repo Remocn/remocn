@@ -33,7 +33,7 @@ import { previewManifest } from "@/registry/__manifest__";
 
 const SERVER_INFO = { name: "remocn", version: "1.0.0" };
 
-const INSTRUCTIONS = `remocn is a shadcn registry of Remotion video components. Find components with search_components, read one with get_component before writing code against it, and use plan_video to turn a brief into a beat-by-beat storyboard. Install with \`npx shadcn@latest add @remocn/<name>\`. Full index: ${SITE_URL}/llms-components.txt`;
+const INSTRUCTIONS = `Remocn is a shadcn registry of Remotion video components. Find components with search_components, read one with get_component before writing code against it, and use plan_video to turn a brief into a beat-by-beat storyboard. Install with \`npx shadcn@latest add @remocn/<name>\`. Full index: ${SITE_URL}/llms-components.txt`;
 
 const MAX_PROPS_JSON = 4000;
 // The endpoint is public and unauthenticated; every text input is bounded so
@@ -118,7 +118,7 @@ function unknownComponent(input: string): TextResult {
   const suggestion = matches.length
     ? `Did you mean: ${matches.map((m) => `\`${m}\``).join(", ")}?`
     : "Try search_components to find it by what it does.";
-  return errorText(`No remocn component named "${input}". ${suggestion}`);
+  return errorText(`No Remocn component named "${input}". ${suggestion}`);
 }
 
 function formatRow(r: ComponentRecord): string {
@@ -200,9 +200,9 @@ export function createRemocnMcpServer(): McpServer {
   server.registerTool(
     "search_components",
     {
-      title: "Search remocn components",
+      title: "Search Remocn components",
       description:
-        "Search remocn Remotion components by what they do. Returns name, docs .md URL, vibe, length (frames @30fps), use/avoid notes and install command.",
+        "Search Remocn Remotion components by what they do. Returns name, docs .md URL, vibe, length (frames @30fps), use/avoid notes and install command.",
       inputSchema: z.object({
         query: z
           .string()
@@ -217,7 +217,7 @@ export function createRemocnMcpServer(): McpServer {
           .describe("Max motion length in frames @30fps"),
         limit: z.number().int().min(1).max(MAX_LIMIT).optional(),
       }),
-      annotations: readOnly("Search remocn components"),
+      annotations: readOnly("Search Remocn components"),
     },
     async ({ query, vibe, maxLength, limit }) => {
       const results = searchComponents(getCatalog().records, {
@@ -238,7 +238,7 @@ export function createRemocnMcpServer(): McpServer {
           { results: [] },
         );
       }
-      const header = `${results.length} remocn components for "${query}"${filters ? ` (${filters})` : ""}. Lengths are frames of motion @30fps — a floor for the Sequence, add hold on top.`;
+      const header = `${results.length} Remocn components for "${query}"${filters ? ` (${filters})` : ""}. Lengths are frames of motion @30fps — a floor for the Sequence, add hold on top.`;
       return text(`${header}\n\n${results.map(formatRow).join("\n")}`, {
         results: results.map(compactRow),
       });
@@ -248,16 +248,16 @@ export function createRemocnMcpServer(): McpServer {
   server.registerTool(
     "get_component",
     {
-      title: "Get a remocn component's docs",
+      title: "Get a Remocn component's docs",
       description:
-        "Full markdown docs for one remocn component: props, usage example, use/avoid notes and install command.",
+        "Full markdown docs for one Remocn component: props, usage example, use/avoid notes and install command.",
       inputSchema: z.object({
         name: z
           .string()
           .max(MAX_NAME)
           .describe("Component name, e.g. 'kinetic-center-build'"),
       }),
-      annotations: readOnly("Get a remocn component's docs"),
+      annotations: readOnly("Get a Remocn component's docs"),
     },
     async ({ name }) => {
       const record = resolveComponent(name);
@@ -275,9 +275,9 @@ export function createRemocnMcpServer(): McpServer {
   server.registerTool(
     "plan_video",
     {
-      title: "Plan a remocn video",
+      title: "Plan a Remocn video",
       description:
-        "Turn a video brief into a storyboard: picks an archetype, returns its recipe and a beat list with suggested remocn components per beat.",
+        "Turn a video brief into a storyboard: picks an archetype, returns its recipe and a beat list with suggested Remocn components per beat.",
       inputSchema: z.object({
         brief: z
           .string()
@@ -295,7 +295,7 @@ export function createRemocnMcpServer(): McpServer {
           .optional()
           .describe("Target length; picks the closest recipe variant"),
       }),
-      annotations: readOnly("Plan a remocn video"),
+      annotations: readOnly("Plan a Remocn video"),
       _meta: { ui: { resourceUri: PREVIEW_RESOURCE_URI } },
     },
     async ({ brief, archetype, durationSeconds }) => {
@@ -335,7 +335,7 @@ export function createRemocnMcpServer(): McpServer {
         : "";
       const prompts = {
         claudeCode: `/remocn:video ${brief}`,
-        generic: `Build a ${chosen} video in this Remotion project with remocn components (${SITE_URL}/llms.txt): ${brief}`,
+        generic: `Build a ${chosen} video in this Remotion project with Remocn components (${SITE_URL}/llms.txt): ${brief}`,
       };
 
       const why = archetype
@@ -388,7 +388,7 @@ export function createRemocnMcpServer(): McpServer {
         "",
         "## Next step",
         "",
-        `Claude Code with the remocn plugin: \`${prompts.claudeCode}\``,
+        `Claude Code with the Remocn plugin: \`${prompts.claudeCode}\``,
         `Other agents: ${prompts.generic}`,
         "Read each component's docs (get_component) before writing code against its props.",
         "",
@@ -431,9 +431,9 @@ export function createRemocnMcpServer(): McpServer {
   server.registerTool(
     "preview_component",
     {
-      title: "Preview a remocn component",
+      title: "Preview a Remocn component",
       description:
-        "Live in-chat preview of a remocn component with optional props. Also returns its docs URL and install command.",
+        "Live in-chat preview of a Remocn component with optional props. Also returns its docs URL and install command.",
       inputSchema: z.object({
         name: z
           .string()
@@ -444,7 +444,7 @@ export function createRemocnMcpServer(): McpServer {
           .optional()
           .describe("Props merged over the component's demo defaults"),
       }),
-      annotations: readOnly("Preview a remocn component"),
+      annotations: readOnly("Preview a Remocn component"),
       _meta: { ui: { resourceUri: PREVIEW_RESOURCE_URI } },
     },
     async ({ name, props }) => {
@@ -486,8 +486,8 @@ export function createRemocnMcpServer(): McpServer {
     "remocn-preview",
     PREVIEW_RESOURCE_URI,
     {
-      title: "remocn live preview",
-      description: "Plays remocn components and video plans in the chat.",
+      title: "Remocn live preview",
+      description: "Plays Remocn components and video plans in the chat.",
       mimeType: MCP_APP_MIME_TYPE,
       _meta: previewResourceMeta(),
     },

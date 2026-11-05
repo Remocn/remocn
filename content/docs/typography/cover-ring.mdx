@@ -1,0 +1,107 @@
+---
+title: Cover Ring
+description: "An audio-style bar meter appears above a headline line that collapses into a closing caption over green light."
+component: cover-ring
+vibe: premium
+length: 132
+useWhen:
+  - "A launch statement over a collage of product photos that collapses into a punchline caption."
+  - "A beat that moves from a long setup line to a short payoff with an audio-style meter."
+avoidWhen:
+  - "You have no photos and want text only - use `staggered-fade-up`."
+  - "You want a typed caption instead of a collapse - use `cooling-type`."
+  - "The scene is a single line with no setup - use `tracking-in`."
+---
+
+<ComponentPreview name="cover-ring" />
+
+<InstallBlock name="cover-ring" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { CoverRing } from "@/components/remocn/cover-ring";
+
+const CoverRingScene = () => (
+  <CoverRing
+    images={[staticFile("shots/one.jpg"), staticFile("shots/two.jpg")]}
+    line="Launch videos aren't edited anymore"
+    caption="They're composed."
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="CoverRing"
+    component={CoverRingScene}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Photo tiles flip in around a setup line, the line blurs away as the tiles collapse into a bar meter, and the caption lands with a pulse. Pass `images` with your own image paths (the defaults only exist in the Remocn repo), plus `line` and `caption`; it ships light and dark through `theme`.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "images",
+      type: "string[]",
+      description: "Image URLs for the tiles; pass your own, defaults are remocn-only",
+    },
+    {
+      name: "line",
+      type: "string",
+      default: "\"Launch videos aren't edited anymore\"",
+      description: "Setup line shown over the tiles",
+    },
+    {
+      name: "caption",
+      type: "string",
+      default: "\"They're composed.\"",
+      description: "Closing caption shown after the collapse",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark palettes",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Overrides the theme's stage color",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color override",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Accent color (any valid CSS color)",
+    },
+    {
+      name: "fog",
+      type: "string[]",
+      description: "Gradient colors for the ground; overrides the theme",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "Gradient ground preset id",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Partial gradient parameters to tune the ground",
+    },
+  ]}
+/>

@@ -1,0 +1,120 @@
+---
+title: Device Grows Around
+description: "A live plays counter card grows a device frame around it, with range tabs and delta stats"
+component: device-grows-around
+vibe: data
+length: 165
+useWhen:
+  - "A creator or media analytics launch that zooms out from one metric card to reveal the full app screen around it."
+  - "A beat that types a project name and subtitle, then shows a big counter with a delta and chart."
+  - "A portrait or landscape reveal where a phone bezel appears around a screen and the camera pulls back."
+avoidWhen:
+  - "You want a phone screen scrolling through several app states — use `phone-scroll` instead."
+  - "The focus is a funnel or breakdown chart rather than a growing device — use `analytics-funnel` instead."
+  - "You want a fast headline counter with no device frame — use `live-ticker` instead."
+---
+
+<ComponentPreview name="device-grows-around" />
+
+<InstallBlock name="device-grows-around" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { DeviceGrowsAround } from "@/components/remocn/device-grows-around";
+
+const DeviceGrowsAroundScene = () => (
+  <DeviceGrowsAround
+    name="Launch Film"
+    subtitle="Studio export"
+    metric={48213}
+    theme="dark"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="DeviceGrowsAround"
+    component={DeviceGrowsAroundScene}
+    durationInFrames={186}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A project name and subtitle type in, a plays counter card appears, then a phone frame grows around it as the camera pushes back to show a chart, range tabs, a list and an all-time total counting up. Pass your own `name`, `subtitle`, `metric`, `delta`, `total` and `gain`. It ships dark and light through the `theme` prop.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Dark or light styling for the device and stage.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for the typed text and highlights.",
+    },
+    {
+      name: "name",
+      type: "string",
+      default: "\"Launch Film\"",
+      description: "Project name typed in at the start.",
+    },
+    {
+      name: "badge",
+      type: "string",
+      default: "\"v2\"",
+      description: "Small badge shown next to the name; empty hides it.",
+    },
+    {
+      name: "subtitle",
+      type: "string",
+      default: "\"Remocn Studio export\"",
+      description: "Subtitle typed in under the name.",
+    },
+    {
+      name: "metric",
+      type: "number",
+      default: "48213",
+      description: "Main plays number shown on the counter card.",
+    },
+    {
+      name: "delta",
+      type: "string",
+      default: "\"6,904 (16.7%) today\"",
+      description: "Change text shown under the main number.",
+    },
+    {
+      name: "total",
+      type: "number",
+      default: "1284507",
+      description: "All-time total the final counter rolls up to.",
+    },
+    {
+      name: "gain",
+      type: "number",
+      default: "412880",
+      description: "Gain figure shown next to the total, counted up.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "Gradient shader preset id for the background.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the shader preset parameters.",
+    },
+  ]}
+/>

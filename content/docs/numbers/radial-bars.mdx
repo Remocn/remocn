@@ -1,0 +1,96 @@
+---
+title: Radial Bars
+description: "Bars around a dial sweep up to a peak while the center figure counts up with a label."
+component: radial-bars
+vibe: data
+length: 116
+useWhen:
+  - "Usage by hour or by day where the peak is the headline."
+  - "A rhythmic metric that deserves a circular shape rather than a bar chart."
+  - "A scale claim such as 2.4M renders per hour with a clear busiest moment."
+avoidWhen:
+  - "You show progress toward goals — use `activity-rings`."
+  - "You show a share of a whole — use `share-donut`."
+  - "You show a trend over time as a line — use `sparkline-thread`."
+---
+
+<ComponentPreview name="radial-bars" />
+
+<InstallBlock name="radial-bars" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { RadialBars } from "@/components/remocn/radial-bars";
+
+const RadialBarsScene = () => (
+  <RadialBars values={[8, 14, 22, 40, 90, 64, 30, 18]} value="2.4M" label="renders in the peak hour" />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="RadialBars"
+    component={RadialBarsScene}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Bars grow around the dial in a sweep, the peak group is picked out with a bracket and a soft glow, and the center figure counts up under its label. Pass `values` (one bar each), `highlight`, `value`, `label` and `ticks`; it ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "values",
+      type: "number[]",
+      default: "DEFAULT_VALUES",
+      description: "Bar heights around the dial, one entry per bar.",
+    },
+    {
+      name: "highlight",
+      type: "number",
+      description: "Index of the bar at the center of the focused group. Defaults to the peak.",
+    },
+    {
+      name: "value",
+      type: "string",
+      default: "\"2.4M\"",
+      description: "Center figure, as text.",
+    },
+    {
+      name: "label",
+      type: "string",
+      default: "\"renders in the peak hour\"",
+      description: "Caption under the center figure.",
+    },
+    {
+      name: "ticks",
+      type: "string[]",
+      default: "[\"00:00\", \"06:00\", \"12:00\", \"18:00\"]",
+      description: "Labels spaced evenly around the dial.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for highlights and small marks.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color theme, \"dark\" or \"light\".",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+  ]}
+/>

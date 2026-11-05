@@ -1,0 +1,76 @@
+---
+title: Liquid Word
+description: "One word melts into a glowing gradient pool, then a new word rises out of it and sets."
+component: liquid-word
+vibe: playful
+length: 112
+useWhen:
+  - "A before-and-after beat where an old word dissolves into the new one, such as draft turning into shipped."
+  - "A playful transformation moment that needs a molten, organic feel instead of a clean crossfade."
+  - "A tagline swap where the second word is the payoff and should land crisp after the melt."
+avoidWhen:
+  - "The swap should read as an edit, like a correction - use `strikethrough-replace`."
+  - "You need a quick, tidy word change beside a fixed prefix - use `inline-word-roll`."
+  - "The scene must stay calm and corporate - use `fade-through` for a clean replacement."
+---
+
+<ComponentPreview name="liquid-word" />
+
+<InstallBlock name="liquid-word" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { LiquidWord } from "@/components/remocn/liquid-word";
+
+const LiquidWordScene = () => <LiquidWord from="idea" to="product" />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="LiquidWord"
+    component={LiquidWordScene}
+    durationInFrames={145}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The `from` word holds, then melts under a swirl gradient, sags, drips and slumps into one pool. The `to` word rises out of the pool letter by letter from the center, and the liquid sets into solid ink. Pass `from` and `to` for your own words. It takes a `theme` prop and ships light and dark.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "from",
+      type: "string",
+      default: "\"draft\"",
+      description: "The word that melts.",
+    },
+    {
+      name: "to",
+      type: "string",
+      default: "\"shipped\"",
+      description: "The word that re-forms out of the pool, crisp and kerned.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark ground; the component ships both.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Kept for API parity; the liquid uses its own gradient palette.",
+    },
+  ]}
+/>

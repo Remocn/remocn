@@ -10,7 +10,9 @@
     "exploded-view",
     "gravity-pile",
     "cloth-reveal",
-    "impact-shake"
+    "impact-shake",
+    "------",
+    "layered-cutout"
   ],
   "icon": "Video01Icon"
 }

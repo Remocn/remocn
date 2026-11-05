@@ -1,0 +1,88 @@
+---
+title: Name Gloss
+description: "Big name words rise together, split into columns, and each gets a short gloss before a closing line."
+component: name-gloss
+vibe: clean
+length: 135
+useWhen:
+  - "A naming beat where a two-part product or feature name is unpacked word by word."
+  - "A short definition moment, with a one-line reason to care that closes the scene."
+avoidWhen:
+  - "You are mapping familiar concepts to yours, not glossing words — use `known-terms`."
+  - "You want a dictionary entry with senses and an example for one word — use `verbed`."
+  - "You have three feature words with progress ticks and notes — use `feature-trio`."
+---
+
+<ComponentPreview name="name-gloss" />
+
+<InstallBlock name="name-gloss" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { NameGloss } from "@/components/remocn/name-gloss";
+
+const NameGlossScene = () => (
+  <NameGloss
+    parts={[
+      { word: "Brand", gloss: "Your colors, your type, your logo." },
+      { word: "kit", gloss: "Packed into every scene you install." },
+    ]}
+    why="So every film looks like yours."
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="NameGloss"
+    component={NameGlossScene}
+    durationInFrames={170}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The name words rise in the middle as one phrase, then glide apart into columns across the top. Under each one its gloss builds word by word, and the `why` sentence resolves last in the accent color. Pass `parts` as `{ word, gloss }` pairs, usually two or three, and a closing `why`. It ships light and dark.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "parts",
+      type: "{ word: string; gloss: string }[]",
+      default: "DEFAULT_PARTS",
+      description: "Name words, each with the gloss shown beneath its column.",
+    },
+    {
+      name: "why",
+      type: "string",
+      default: "DEFAULT_WHY",
+      description: "Closing sentence in the accent color.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Color of the closing sentence.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark palette.",
+    },
+  ]}
+/>

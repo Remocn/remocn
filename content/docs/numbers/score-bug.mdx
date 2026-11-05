@@ -1,0 +1,113 @@
+---
+title: Score Bug
+description: "A broadcast score bug counts a 2-0 full-time result between Remocn and the old way"
+component: score-bug
+vibe: playful
+length: 82
+useWhen:
+  - "A launch beat framed as a match result where the product beats the old way, in the style of a sports broadcast score bug."
+  - "A before-and-after story told as a final scoreline with one scorer line per milestone."
+  - "A playful closing beat that ends on a bold 'Shipped' flash and a full-time tab."
+avoidWhen:
+  - "You want a plain animated number with no sports framing — use `combo-counter`."
+  - "The comparison is a diagonal two-sided layout with stat rows for time and cost — use `versus-split`."
+  - "The video is serious or enterprise in tone, where a sports metaphor would feel off — use `timer-duel`."
+---
+
+<ComponentPreview name="score-bug" />
+
+<InstallBlock name="score-bug" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { ScoreBug } from "@/components/remocn/score-bug";
+
+const ScoreBugScene = () => (
+  <ScoreBug
+    away="Old way"
+    score={2}
+    scorers={["Install 12′", "Ship 47′"]}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="ScoreBug"
+    component={ScoreBugScene}
+    durationInFrames={120}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A broadcast score panel opens with the Remocn block on the left and an opponent block on the right. The home digit flips once per goal and a scorer line drops in under the block each time. After the last goal a gradient flash band sweeps across, the tab changes to the full-time label and the opponent dims. Pass `away`, `score`, `scorers` and `flash`. It ships light and dark through the `theme` prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "away",
+      type: "string",
+      default: "\"Old way\"",
+      description: "The opponent's name, set in caps on the right block. The left block is always the Remocn logo.",
+    },
+    {
+      name: "score",
+      type: "number",
+      default: "2",
+      description: "Goals Remocn scores, one digit flip each.",
+    },
+    {
+      name: "awayScore",
+      type: "number",
+      default: "0",
+      description: "The opponent's score, shown from the start.",
+    },
+    {
+      name: "scorers",
+      type: "string[]",
+      default: "[\"Install 12′\", \"Ship 47′\"]",
+      description: "One scorer line per goal, under the Remocn block. Use the prime for minutes: \"Ship 47′\".",
+    },
+    {
+      name: "flash",
+      type: "string",
+      default: "\"Shipped\"",
+      description: "Word on the flash band that sweeps across after the last goal.",
+    },
+    {
+      name: "liveLabel",
+      type: "string",
+      default: "\"Live · 2nd half\"",
+      description: "Tab label while the match runs.",
+    },
+    {
+      name: "finalLabel",
+      type: "string",
+      default: "\"Full time\"",
+      description: "Tab label once the band has passed.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "The live marker in the tab and the scorer ticks.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier; 1 is the designed pace.",
+    },
+  ]}
+/>

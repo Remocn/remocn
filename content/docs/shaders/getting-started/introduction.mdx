@@ -3,21 +3,44 @@ title: Introduction
 description: WebGL shader backdrops wrapped for Remotion and driven per-frame for deterministic renders
 ---
 
-Shaders are GPU-rendered animated backgrounds for your Remotion scenes. Each one wraps a shader from [paper-design/shaders](https://github.com/paper-design/shaders) and adapts it to the way Remotion renders video — headless, frame by frame, the same output on every pass.
+import { HowItWorks } from "@/components/docs/index/libraries/how-it-works";
+import { LibraryGallery } from "@/components/docs/index/libraries/library-gallery";
+import { ShaderHero } from "@/components/docs/index/libraries/shader-hero";
 
-Drop one behind your content as a full-bleed backdrop, tune a few controls, and reach for the raw shader parameters when you want full control.
+<ShaderHero
+  name="shader-warp"
+  props={{ colors: ["#0e0418", "#4a0d5e", "#a800b7", "#f0abfc"] }}
+  title="Your scene sits on top"
+  subtitle="The shader is the backdrop. Nothing else changes."
+  tags={["WebGL, driven per frame", "Built on paper-design/shaders"]}
+/>
 
-## Why a dedicated wrapper
+<HowItWorks
+  steps={[
+    {
+      title: "Install a shader",
+      body: "Every shader is its own registry item. Add one and the file lands in your project.",
+    },
+    {
+      title: "Drop it behind content",
+      body: "Render it first in an AbsoluteFill. Whatever follows sits on top as a full-bleed backdrop.",
+    },
+    {
+      title: "Tune, then go raw",
+      body: "A speed control plus a few of its own. Any other paper-design prop passes straight through.",
+    },
+  ]}
+>
 
-A shader animates against a wall-clock timer. Remotion does not — it renders frame N in isolation, often out of order and across parallel workers, and expects the exact same pixels every time it asks for that frame.
+## How it works
 
-Each component bridges the two: instead of letting the shader run on its own clock, it freezes the shader (`speed={0}`) and drives its `frame` uniform from `useCurrentFrame()`. The motion becomes a pure function of the timeline, so scrubbing, looping, and multi-pass renders all stay deterministic.
+Each component wraps a shader from [paper-design/shaders](https://github.com/paper-design/shaders) and adapts it to the way Remotion renders video: headless, frame by frame, the same output on every pass.
 
-The wrapper also gates the first paint with `delayRender()`/`continueRender()` so WebGL is initialised before Remotion captures a frame, and forces the canvas to fill the whole composition (`fit="cover"` with the exact `width`/`height`) so there are no black margins.
+</HowItWorks>
 
-## Using a shader
+<InstallBlock name="shader-mesh-gradient" />
 
-```tsx
+```tsx title="scene.tsx"
 import { AbsoluteFill } from "remotion";
 import { ShaderMeshGradient } from "@/components/remocn/shader-mesh-gradient";
 
@@ -29,6 +52,14 @@ export const Scene = () => (
 );
 ```
 
-Every component exposes a `speed` control plus a handful of shader-specific ones, and forwards any remaining paper-design prop through, so nothing is locked away. Defaults are deliberately muted — pick your own palette when you want the shader to lead.
+<Note title="Why a dedicated wrapper">
+A shader runs on a wall-clock timer, while Remotion renders frame N in isolation, often out of order and across parallel workers. Each component freezes the shader with `speed={0}` and drives its `frame` uniform from `useCurrentFrame()`, so scrubbing, looping and multi-pass renders all stay deterministic. It also holds the first paint with `delayRender()` until WebGL is ready, and fills the whole composition so there are no black margins.
+</Note>
 
-Browse the individual shaders in the sidebar to preview each one and grab its install command.
+<LibraryGallery kind="shader">
+
+## All shaders
+
+Defaults are deliberately muted. Pick your own palette when the shader should lead.
+
+</LibraryGallery>

@@ -1,0 +1,101 @@
+---
+title: Press Stat
+description: "A monospace caption presses out and a large figure counts up beside it to a percentage."
+component: press-stat
+vibe: tech
+length: 72
+useWhen:
+  - "A single percentage-improvement claim such as edit time down 73 percent."
+  - "A quick stat beat between feature scenes."
+  - "A before-and-after phrase where the caption leads into the number."
+avoidWhen:
+  - "The headline is a multiplier — use `lean-count`."
+  - "Several stats should appear in a row — use `stat-sequence`."
+  - "The number must sit inside a sentence — use `stat-inline`."
+---
+
+<ComponentPreview name="press-stat" />
+
+<InstallBlock name="press-stat" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { PressStat } from "@/components/remocn/press-stat";
+
+const PressStatScene = () => (
+  <PressStat before="Edit time down" value={73} suffix="%" />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="PressStat"
+    component={PressStatScene}
+    durationInFrames={120}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The caption rises in letter by letter, then presses open to make room while the figure inflates and counts from `from` up to `value`. Pass `before`, `value` and `suffix`; it ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "before",
+      type: "string",
+      default: "\"Edit time down\"",
+      description: "Caption shown before the figure.",
+    },
+    {
+      name: "value",
+      type: "number",
+      default: "73",
+      description: "Final number the figure counts up to.",
+    },
+    {
+      name: "from",
+      type: "number",
+      default: "0",
+      description: "Number the count starts from.",
+    },
+    {
+      name: "prefix",
+      type: "string",
+      default: "\"\"",
+      description: "Text drawn before the number.",
+    },
+    {
+      name: "suffix",
+      type: "string",
+      default: "\"%\"",
+      description: "Text drawn after the number, such as a percent sign.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Accent color for highlights and small marks.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background color override. Pass \"transparent\" to composite over other layers.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color theme, \"dark\" or \"light\".",
+    },
+  ]}
+/>

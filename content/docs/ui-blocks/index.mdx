@@ -3,67 +3,129 @@ title: UI Blocks
 description: Pre-assembled interface elements like code editors, layouts, charts, and workflow visualizations
 ---
 
+import { CategoryIndex } from "@/components/docs/index/category/category-index";
+import { ComponentGroup } from "@/components/docs/index/category/component-group";
+
 Larger blocks built from primitives, the actual surfaces your viewers will recognize: code windows, terminals, charts, dashboards, and workflow diagrams.
+
+<CategoryIndex section="/docs/ui-blocks">
+
+<ComponentGroup
+  items={[
+    "glass-code-block",
+    "code-morph",
+    "terminal-simulator",
+    "terminal-cursor-zoom",
+  ]}
+>
 
 ## Code & CLI
 
-<ComponentCardGrid
+</ComponentGroup>
+
+<ComponentGroup
   items={[
-    {
-      name: "GlassCodeBlock",
-      description: "Premium frosted-glass code window with rim light and traffic-light controls",
-      status: "stable",
-      href: "/docs/ui-blocks/glass-code-block",
-    },
-    {
-      name: "CodeMorph",
-      description: "Keynote-style Magic Move for code, with surviving tokens gliding to their new line and column",
-      status: "stable",
-      href: "/docs/ui-blocks/code-morph",
-    },
-    {
-      name: "TerminalSimulator",
-      description: "CLI build simulation with chunked log output and step-function scrolling",
-      status: "stable",
-      href: "/docs/ui-blocks/terminal-simulator",
-    },
-    {
-      name: "TerminalCursorZoom",
-      description: "Camera rides the typing cursor, dollying across a terminal as a command types at high zoom",
-      status: "stable",
-      href: "/docs/ui-blocks/terminal-cursor-zoom",
-    },
+    "animated-line-chart",
+    "animated-bar-chart",
   ]}
-/>
+>
 
 ## Data & System
 
-<ComponentCardGrid
+</ComponentGroup>
+
+<ComponentGroup
   items={[
-    {
-      name: "AnimatedLineChart",
-      description: "SVG line chart drawn left-to-right via stroke-dashoffset",
-      status: "stable",
-      href: "/docs/ui-blocks/animated-line-chart",
-    },
-    {
-      name: "AnimatedBarChart",
-      description: "Bars spring up from the baseline with deterministic stagger",
-      status: "stable",
-      href: "/docs/ui-blocks/animated-bar-chart",
-    },
+    "search-reveal",
   ]}
-/>
+>
 
 ## Product intros
 
-<ComponentCardGrid
+</ComponentGroup>
+
+<ComponentGroup
   items={[
-    {
-      name: "SearchReveal",
-      description: "Construction circles become a search field that types your product name over an abstract graphic reveal",
-      status: "stable",
-      href: "/docs/ui-blocks/search-reveal",
-    },
+    "achievement-pop",
+    "border-beam",
+    "card-fan",
+    "glow-born-card",
+    "launch-days",
+    "pill-morph",
+    "rim-draw-card",
   ]}
-/>
+>
+
+## Cards
+
+</ComponentGroup>
+
+<ComponentGroup
+  items={[
+    "card-push-line",
+    "caret-dolly",
+    "ghost-complete",
+    "multi-file-drop",
+    "query-cascade",
+  ]}
+>
+
+## Prompt boxes
+
+</ComponentGroup>
+
+<ComponentGroup
+  items={[
+    "keycap-press",
+    "rotary-dial",
+    "toggle-on",
+  ]}
+>
+
+## Control
+
+</ComponentGroup>
+
+<ComponentGroup
+  items={[
+    "drop-upload",
+    "macro-tab-name",
+  ]}
+>
+
+## Cursor & input
+
+</ComponentGroup>
+
+<ComponentGroup
+  items={[
+    "menu-pick",
+    "ui-callout",
+  ]}
+>
+
+## Callouts
+
+</ComponentGroup>
+
+<ComponentGroup
+  items={[
+    "toolbar-unfurl",
+  ]}
+>
+
+## Toolbars
+
+</ComponentGroup>
+
+<ComponentGroup
+  items={[
+    "url-bar-cta",
+  ]}
+>
+
+## Browser
+
+</ComponentGroup>
+
+</CategoryIndex>

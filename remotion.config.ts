@@ -34,6 +34,10 @@ Config.overrideWebpackConfig((config) => ({
         process.cwd(),
         "registry/remocn/radial-burst/index.tsx",
       ),
+      "@/lib/remocn/audit-core$": path.join(
+        process.cwd(),
+        "registry/remocn/audit-core/index.tsx",
+      ),
       "@": process.cwd(),
     },
   },

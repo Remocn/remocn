@@ -3,238 +3,179 @@ title: Transitions
 description: Scene transitions built as presentations for TransitionSeries
 ---
 
+import { CategoryIndex } from "@/components/docs/index/category/category-index";
+import { ComponentGroup } from "@/components/docs/index/category/component-group";
+
 Most transitions here are presentations for `@remotion/transitions` — pass one to a `TransitionSeries.Transition` between two sequences and control the pace with `linearTiming` or `springTiming`. The sequencers at the bottom work differently: they own the whole run of scenes themselves.
+
+<CategoryIndex section="/docs/transitions">
+
+<ComponentGroup
+  items={[
+    "whip-pan",
+    "push-through",
+    "focus-pull",
+    "zoom-blur",
+  ]}
+>
 
 ## Camera Motion
 
 Pure CSS-transform physics, no dependencies beyond Remotion.
 
-<ComponentCardGrid
+</ComponentGroup>
+
+<ComponentGroup
   items={[
-    {
-      name: "WhipPan",
-      description: "Whip the camera sideways with motion blur so both scenes fly through in one move",
-      status: "stable",
-      href: "/docs/transitions/whip-pan",
-    },
-    {
-      name: "PushThrough",
-      description: "Dolly through the outgoing scene while the next one approaches from the depth",
-      status: "stable",
-      href: "/docs/transitions/push-through",
-    },
-    {
-      name: "FocusPull",
-      description: "Rack focus from one scene to the next through a soft defocus breath",
-      status: "stable",
-      href: "/docs/transitions/focus-pull",
-    },
-    {
-      name: "ZoomBlur",
-      description: "Push the outgoing scene through the viewer while the incoming one resolves out of blur",
-      status: "stable",
-      href: "/docs/transitions/zoom-blur",
-    },
+    "shader-spiral-pass",
+    "shader-seam",
+    "grain-dissolve",
+    "wave-wipe",
+    "ripple-zoom",
+    "swirl-dissolve",
+    "dither-dissolve",
+    "perlin-dissolve",
+    "smoke-dissolve",
+    "warp-dissolve",
   ]}
-/>
+>
 
 ## Shader
 
 Textured, organic transitions driven by frame-synced shaders. Most use `@paper-design/shaders-react`; Shader Seam and Shader Spiral Pass use a local OpenShaders export.
 
-<ComponentCardGrid
+</ComponentGroup>
+
+<ComponentGroup
   items={[
-    {
-      name: "ShaderSpiralPass",
-      description: "Fly into a luminous spiral and emerge through its center into the next scene",
-      status: "stable",
-      href: "/docs/transitions/shader-spiral-pass",
-    },
-    {
-      name: "ShaderSeam",
-      description: "Dissolve an OpenShaders material in place to uncover the next scene",
-      status: "stable",
-      href: "/docs/transitions/shader-seam",
-    },
-    {
-      name: "GrainDissolve",
-      description: "Disintegrate the outgoing scene into soft grainy shapes and condense the next out of the noise",
-      status: "stable",
-      href: "/docs/transitions/grain-dissolve",
-    },
-    {
-      name: "WaveWipe",
-      description: "Sweep a grainy wave up across the frame and reveal the next scene from below",
-      status: "stable",
-      href: "/docs/transitions/wave-wipe",
-    },
-    {
-      name: "RippleZoom",
-      description: "Fly the camera through the center of grainy ripple rings while the next scene approaches",
-      status: "stable",
-      href: "/docs/transitions/ripple-zoom",
-    },
-    {
-      name: "SwirlDissolve",
-      description: "Twist the frame into swirling bands that unwind into the next scene",
-      status: "stable",
-      href: "/docs/transitions/swirl-dissolve",
-    },
-    {
-      name: "DitherDissolve",
-      description: "Dissolve through an animated dither pattern for a retro print texture",
-      status: "stable",
-      href: "/docs/transitions/dither-dissolve",
-    },
-    {
-      name: "PerlinDissolve",
-      description: "Sweep a perlin-noise threshold across the frame to dissolve into the next scene",
-      status: "stable",
-      href: "/docs/transitions/perlin-dissolve",
-    },
-    {
-      name: "SmokeDissolve",
-      description: "Expand a smoke ring outward across the frame to reveal the next scene",
-      status: "stable",
-      href: "/docs/transitions/smoke-dissolve",
-    },
-    {
-      name: "WarpDissolve",
-      description: "Melt the outgoing scene into a folding domain-warp field that straightens into the next",
-      status: "stable",
-      href: "/docs/transitions/warp-dissolve",
-    },
+    "ascii-dissolve",
+    "caret-wipe",
+    "icon-scatter",
   ]}
-/>
+>
 
 ## Stylized
 
 Kinetic, interface-flavored transitions — typed wipes, scattering icons, and messaging motion.
 
-<ComponentCardGrid
+</ComponentGroup>
+
+<ComponentGroup
   items={[
-    {
-      name: "AsciiDissolve",
-      description: "Dissolve one scene into the next through a drifting field of ASCII glyphs",
-      status: "stable",
-      href: "/docs/transitions/ascii-dissolve",
-    },
-    {
-      name: "CaretWipe",
-      description: "Sweep a typing caret across the frame, wiping the outgoing scene into the next",
-      status: "stable",
-      href: "/docs/transitions/caret-wipe",
-    },
-    {
-      name: "IconScatter",
-      description: "Scatter a field of icons over the cut, hiding the scene swap at the field's peak",
-      status: "stable",
-      href: "/docs/transitions/icon-scatter",
-    },
+    "glitch-cut",
+    "ember-burn",
+    "particle-dissolve",
+    "grid-wave",
+    "displacement",
   ]}
-/>
-
-## Graphic Cuts
-
-Bold, showy cuts built from plain CSS and SVG: shapes, slats, torn paper, streaks and light. No dependencies beyond Remotion.
-
-<ComponentCardGrid
-  items={[
-    {
-      name: "IrisWipe",
-      description: "Close a cartoon iris on the subject, hold it as a dot, then open it on the next scene",
-      status: "stable",
-      href: "/docs/transitions/iris-wipe",
-    },
-    {
-      name: "VenetianBlinds",
-      description: "Turn the outgoing scene edge-on in staggered horizontal slats to reveal the next one",
-      status: "stable",
-      href: "/docs/transitions/venetian-blinds",
-    },
-    {
-      name: "PaperTear",
-      description: "Rip the frame down the middle and fling both torn halves apart on impact",
-      status: "stable",
-      href: "/docs/transitions/paper-tear",
-    },
-    {
-      name: "PixelSort",
-      description: "Melt the scene into glowing vertical streaks and drop the next one in column by column",
-      status: "stable",
-      href: "/docs/transitions/pixel-sort",
-    },
-    {
-      name: "LightLeak",
-      description: "Drift a warm analog light leak across the frame and hard-cut under its blow-out",
-      status: "stable",
-      href: "/docs/transitions/light-leak",
-    },
-    {
-      name: "Hyperspace",
-      description: "Stretch a starfield into streaks, tunnel forward and land on the next scene through a flash",
-      status: "stable",
-      href: "/docs/transitions/hyperspace",
-    },
-  ]}
-/>
+>
 
 ## Canvas
 
 Pixel-level transitions. These read the actual pixels of both scenes through the experimental html-in-canvas browser API and post-process them per frame, which is what makes tearing, burning, and shattering possible at all. Chrome 149+ behind `chrome://flags/#canvas-draw-element` shows the real effect; every other browser degrades to a CSS approximation of the same edit, so previews and renders never break.
 
-<ComponentCardGrid
+</ComponentGroup>
+
+<ComponentGroup
   items={[
-    {
-      name: "GlitchCut",
-      description: "Tear a hard cut into displaced slices with channel split and corrupted blocks",
-      status: "stable",
-      href: "/docs/transitions/glitch-cut",
-    },
-    {
-      name: "EmberBurn",
-      description: "Set the outgoing frame on fire so it boils, chars, and blows away as sparks that carry its own colour",
-      status: "stable",
-      href: "/docs/transitions/ember-burn",
-    },
-    {
-      name: "ParticleDissolve",
-      description: "Grind the frame into drifting grey dust and let the next scene coalesce back out of it",
-      status: "stable",
-      href: "/docs/transitions/particle-dissolve",
-    },
-    {
-      name: "GridWave",
-      description: "Send a wave across the frame that raises the picture into solid blocks and sets them down carrying the next scene",
-      status: "stable",
-      href: "/docs/transitions/grid-wave",
-    },
-    {
-      name: "Displacement",
-      description: "Shear the frame into a grid of offset colour-fringed tiles and settle them back on the next scene",
-      status: "stable",
-      href: "/docs/transitions/displacement",
-    },
+    "iris-wipe",
+    "venetian-blinds",
+    "paper-tear",
+    "pixel-sort",
+    "light-leak",
+    "hyperspace",
   ]}
-/>
+>
+
+## Graphic Cuts
+
+Bold, showy cuts built from plain CSS and SVG: shapes, slats, torn paper, streaks and light. No dependencies beyond Remotion.
+
+</ComponentGroup>
+
+<ComponentGroup
+  items={[
+    "slide-swap",
+    "spring-settle",
+  ]}
+>
 
 ## Scene Sequencers
 
 Not presentations. Each of these takes the whole list of scenes and runs the timeline itself, so the boundary is a property of the film rather than something dropped between two sequences. Scenes never overlap and the stage is continuous, which is what makes a run of them read as one cut instead of a slideshow.
 
-<ComponentCardGrid
+</ComponentGroup>
+
+<ComponentGroup
   items={[
-    {
-      name: "SlideSwapScenes",
-      description: "Shove one scene off the canvas and spring the next in from the opposite edge",
-      status: "stable",
-      href: "/docs/transitions/slide-swap",
-    },
-    {
-      name: "SpringSettleScenes",
-      description: "Shrink a scene away as one group, hold the stage empty for a beat, then land the next from above",
-      status: "stable",
-      href: "/docs/transitions/spring-settle",
-    },
+    "band-open",
+    "band-shift",
+    "card-swipe-cover",
+    "color-bars",
+    "diagonal-split",
+    "hairline-open",
+    "replay-wipe",
+    "ring-cut",
+    "tile-wave",
   ]}
-/>
+>
+
+## Wipes
+
+</ComponentGroup>
+
+<ComponentGroup
+  items={[
+    "baton-word",
+    "column-slide",
+    "cue-word",
+    "halftone-cut",
+    "letter-gate",
+    "shape-cut",
+    "window-trail",
+  ]}
+>
+
+## Type transitions
+
+</ComponentGroup>
+
+<ComponentGroup
+  items={[
+    "beam-sweep",
+    "bloom-ring",
+    "flash-sweep",
+    "light-burn-to-line",
+    "ring-burst",
+    "slit-reveal",
+    "strobe-montage",
+  ]}
+>
+
+## Light
+
+</ComponentGroup>
+
+<ComponentGroup
+  items={[
+    "caret-collapse",
+    "disc-pop",
+    "press-warp-dive",
+  ]}
+>
+
+## Match cuts
+
+</ComponentGroup>
+
+<ComponentGroup
+  items={[
+    "hot-slab-morph",
+  ]}
+>
+
+## Morphs
+
+</ComponentGroup>
+
+</CategoryIndex>

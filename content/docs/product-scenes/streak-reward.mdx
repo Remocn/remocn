@@ -1,0 +1,125 @@
+---
+title: Streak Reward
+description: "A phone shows a streak counting up with week dots, then a lesson-complete reward with medal and stat badges."
+component: streak-reward
+vibe: playful
+length: 150
+useWhen:
+  - "A learning, fitness or habit app launch where retention is the pitch."
+  - "A celebratory beat with counters rolling up, such as XP, accuracy and time."
+  - "A vertical clip with two captions: the streak, then the reward."
+avoidWhen:
+  - "You want a gesture-driven card interaction — use `swipe-deck`."
+  - "You want an achievement popup in a game-style UI, not a phone app — use `achievement-pop`."
+  - "You want concentric rings and metrics counting up instead — use `activity-rings`."
+---
+
+<ComponentPreview name="streak-reward" />
+
+<InstallBlock name="streak-reward" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { StreakReward } from "@/components/remocn/streak-reward";
+
+const StreakRewardScene = () => (
+  <StreakReward
+    streak={7}
+    title="Lesson complete"
+    subtitle="No mistakes across 14 answers."
+    cta="Continue"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="StreakReward"
+    component={StreakRewardScene}
+    durationInFrames={180}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A phone shows a flame and a streak number counting up beside a row of week dots, then a tap swaps to a Lesson complete card with a medal, stat badges that count up and a Continue button. Pass `streak`, `stats` (label, value, kind), `title` and `cta` to match your app; `lines` are the two captions beside the phone. Ships light and dark.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "streak",
+      type: "number",
+      default: "7",
+      description: "Streak after today; the number counts up from one less",
+    },
+    {
+      name: "stats",
+      type: "StreakStat[]",
+      default: "DEFAULT_STATS",
+      description: "Stat badges: label, value, kind (xp, accuracy, time) and optional color",
+    },
+    {
+      name: "title",
+      type: "string",
+      default: "\"Lesson complete\"",
+      description: "Heading on the reward card",
+    },
+    {
+      name: "subtitle",
+      type: "string",
+      default: "\"No mistakes across 14 answers.\"",
+      description: "Line under the reward heading",
+    },
+    {
+      name: "days",
+      type: "string[]",
+      default: "[\"M\", \"T\", \"W\", \"T\", \"F\", \"S\", \"S\"]",
+      description: "Seven weekday letters in the week row",
+    },
+    {
+      name: "cta",
+      type: "string",
+      default: "\"Continue\"",
+      description: "Button label on the reward screen",
+    },
+    {
+      name: "lines",
+      type: "[string, string]",
+      description: "Two captions beside the phone: streak, then reward",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for highlights, buttons and progress",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline",
+    },
+    {
+      name: "theme",
+      type: "\"light\" | \"dark\"",
+      default: "\"light\"",
+      description: "Light or dark palette",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "gradients.sh preset id for the backdrop shader",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the backdrop shader parameters",
+    },
+  ]}
+/>

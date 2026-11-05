@@ -30,13 +30,43 @@ const canOpenMenu = () =>
  * pointer can travel into the panel, and instant section switching while the
  * panel is already open (the panel slides its content instead of reopening).
  */
+const VARIANT_STYLES = {
+  default: {
+    nav: "relative hidden items-center gap-1 sm:flex",
+    item: "relative inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:text-foreground focus-visible:outline-none",
+    highlight: undefined,
+  },
+} as const;
+
+export function NavBadge({
+  children,
+  className,
+}: {
+  children: string;
+  className?: string;
+}) {
+  return (
+    <span
+      className={cn(
+        "rounded-tag bg-primary-tint px-1.5 py-0.5 text-micro font-medium text-primary-strong",
+        className,
+      )}
+    >
+      {children}
+    </span>
+  );
+}
+
 export function NavDesktop({
   links,
   className,
+  variant = "default",
 }: {
   links: NavLink[];
   className?: string;
+  variant?: keyof typeof VARIANT_STYLES;
 }) {
+  const styles = VARIANT_STYLES[variant];
   const navRef = useRef<HTMLElement>(null);
   const [highlight, setHighlight] = useState<{
     left: number;
@@ -115,9 +145,9 @@ export function NavDesktop({
           closeNow();
         }
       }}
-      className={cn("relative hidden items-center gap-1 sm:flex", className)}
+      className={cn(styles.nav, className)}
     >
-      <SlidingHighlight rect={highlight} />
+      <SlidingHighlight rect={highlight} className={styles.highlight} />
       {links.map((link) => {
         const hasMenu = SECTION_HREFS.has(link.href);
         return (
@@ -143,9 +173,12 @@ export function NavDesktop({
             aria-haspopup={hasMenu ? "true" : undefined}
             aria-expanded={hasMenu ? open === link.href : undefined}
             aria-controls={hasMenu ? "site-mega-menu" : undefined}
-            className="relative rounded-full px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:text-foreground focus-visible:outline-none"
+            target={link.external ? "_blank" : undefined}
+            rel={link.external ? "noreferrer" : undefined}
+            className={styles.item}
           >
             {link.label}
+            {link.badge && <NavBadge>{link.badge}</NavBadge>}
           </Link>
         );
       })}
@@ -168,12 +201,14 @@ export function NavMobile({ links }: { links: NavLink[] }) {
           render={
             <Link
               href={link.href}
-              aria-label={link.label}
-              className="py-3 text-foreground/90 transition-colors hover:text-foreground focus-visible:text-foreground focus-visible:outline-none"
+              target={link.external ? "_blank" : undefined}
+              rel={link.external ? "noreferrer" : undefined}
+              className="flex items-center gap-2 py-3 text-foreground/90 transition-colors hover:text-foreground focus-visible:text-foreground focus-visible:outline-none"
             />
           }
         >
           {link.label}
+          {link.badge && <NavBadge>{link.badge}</NavBadge>}
         </SheetClose>
       ))}
     </nav>

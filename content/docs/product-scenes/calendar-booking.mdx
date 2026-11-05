@@ -1,0 +1,111 @@
+---
+title: Calendar Booking
+description: "A cursor picks a day and a time slot, confirms, and a meeting-scheduled card appears."
+component: calendar-booking
+vibe: clean
+length: 122
+useWhen:
+  - "A scheduling or booking product beat: pick a day, pick a time, get confirmed."
+  - "A demo-booking flow shown start to finish in under five seconds."
+  - "A short success moment where the confirmation card is the payoff."
+avoidWhen:
+  - "You want a calendar that tags launch dates with event labels — use `calendar-pick`."
+  - "You want a heat-themed launch calendar — use `heat-drain-reveal`."
+  - "You want a team timeline with draggable bars — use `roadmap-timeline`."
+---
+
+<ComponentPreview name="calendar-booking" />
+
+<InstallBlock name="calendar-booking" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { CalendarBooking } from "@/components/remocn/calendar-booking";
+
+const CalendarBookingScene = () => (
+  <CalendarBooking
+    host={{ name: "Maya Chen", initials: "MC" }}
+    day={18}
+    pick="10:30am"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="CalendarBooking"
+    component={CalendarBookingScene}
+    durationInFrames={165}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A scheduling card shows the host, event details and a month grid; the cursor picks a `day`, then a time slot, and presses Confirm, which morphs the card into a scheduled confirmation with a drawn check and detail rows. Pass `host`, `event`, `slots`, `pick` and `day` for your own flow. Ships light and dark.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "host",
+      type: "BookingHost",
+      default: "DEFAULT_HOST",
+      description: "Host name, optional email and avatar initials",
+    },
+    {
+      name: "event",
+      type: "BookingEvent",
+      description: "Event details: title, durations, location, month and weekday offsets",
+    },
+    {
+      name: "slots",
+      type: "string[]",
+      default: "DEFAULT_SLOTS",
+      description: "Time slots shown after picking a day, e.g. '10:30am'",
+    },
+    {
+      name: "pick",
+      type: "string",
+      description: "Slot the cursor picks; defaults to 10:30am",
+    },
+    {
+      name: "day",
+      type: "number",
+      default: "18",
+      description: "Day of the month the cursor picks",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for highlights, buttons and progress",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline",
+    },
+    {
+      name: "theme",
+      type: "\"light\" | \"dark\"",
+      default: "\"light\"",
+      description: "Light or dark palette",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "gradients.sh preset id for the backdrop shader",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the backdrop shader parameters",
+    },
+  ]}
+/>

@@ -1,0 +1,105 @@
+---
+title: Leaderboard Climb
+description: "A launch leaderboard where the highlighted row climbs the table to a top rank"
+component: leaderboard-climb
+vibe: data
+length: 90
+useWhen:
+  - "A launch recap showing the product climbing a daily ranking after a launch day push."
+  - "A social-proof beat where a highlighted row passes competitors one by one while its score counts up."
+  - "A vertical or landscape clip that ends on a rank-up badge such as how many places gained."
+avoidWhen:
+  - "You want the climb to end with a number one badge stamp — use `upvote-burst` instead."
+  - "You need a bracket-style elimination story, not a ranked list — use `bracket-win` instead."
+  - "You want large animated stats with no table — use `stat-sequence` instead."
+---
+
+<ComponentPreview name="leaderboard-climb" />
+
+<InstallBlock name="leaderboard-climb" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { LeaderboardClimb } from "@/components/remocn/leaderboard-climb";
+
+const LeaderboardClimbScene = () => (
+  <LeaderboardClimb
+    title="Top launches"
+    toRank={3}
+    self={{ name: "remocn", tagline: "Launch videos from code", from: 598, to: 1284 }}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="LeaderboardClimb"
+    component={LeaderboardClimbScene}
+    durationInFrames={120}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A leaderboard panel lists up to eight products, then the highlighted row starts at the bottom and climbs past them one by one while its score counts up. It lands on a rank-up badge. Pass your own `entries`, `self` (name, tagline, start and end score) and `toRank`. It ships dark and light through the `theme` prop.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Dark or light panel styling.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for the highlighted row.",
+    },
+    {
+      name: "title",
+      type: "string",
+      default: "\"Top launches\"",
+      description: "Panel title in the header.",
+    },
+    {
+      name: "subtitle",
+      type: "string",
+      default: "\"Today · Launch league\"",
+      description: "Small line under the panel title.",
+    },
+    {
+      name: "entries",
+      type: "LeaderboardEntry[]",
+      description: "Competing rows with name, tagline and score; the first eight are used.",
+    },
+    {
+      name: "self",
+      type: "{ name: string; tagline: string; from: number; to: number }",
+      description: "Your row: name, tagline, and the scores it climbs from and to.",
+    },
+    {
+      name: "toRank",
+      type: "number",
+      default: "3",
+      description: "Rank the highlighted row ends on, counting from 1.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "Gradient shader preset id for the background.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the shader preset parameters.",
+    },
+  ]}
+/>

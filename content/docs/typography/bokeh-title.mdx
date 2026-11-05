@@ -1,0 +1,98 @@
+---
+title: Bokeh Title
+description: "A serif headline sharpens out of drifting bokeh lights that first form a pattern."
+component: bokeh-title
+vibe: premium
+length: 152
+useWhen:
+  - "An opening title for a premium or lifestyle launch where the headline should resolve from a blur of lights."
+  - "A cinematic cold open that needs atmosphere before the product name appears."
+avoidWhen:
+  - "The scene needs crisp, fast type with no atmosphere - use `tracking-in`."
+  - "You only want a blur-to-sharp text resolve with no lights - use `focus-blur-resolve`."
+  - "You want a simple fade-up of a title - use `staggered-fade-up`."
+---
+
+<ComponentPreview name="bokeh-title" />
+
+<InstallBlock name="bokeh-title" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { BokehTitle } from "@/components/remocn/bokeh-title";
+
+const BokehTitleScene = () => (
+  <BokehTitle
+    title="Launch films, made in code"
+    subtitle="remocn · Spring release"
+    pattern="grid"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="BokehTitle"
+    component={BokehTitleScene}
+    durationInFrames={190}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Out-of-focus bokeh lights drift, a focus pull snaps them into a mark or grid pattern, then they defocus again as the serif title and subtitle resolve. Pass `title` and `subtitle` (split on ' · ' for a lead and a tail) and choose `pattern` and `shape`; it ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "title",
+      type: "string",
+      default: "\"Launch films, made in code\"",
+      description: "Serif headline that resolves from the bokeh",
+    },
+    {
+      name: "subtitle",
+      type: "string",
+      default: "\"remocn · Spring release\"",
+      description: "Line under the title; ' · ' splits a lead from the rest",
+    },
+    {
+      name: "pattern",
+      type: "\"mark\" | \"grid\"",
+      default: "\"mark\"",
+      description: "What the lights resolve into during the rack focus.",
+      description: "Arrangement the lights snap into: mark or grid",
+    },
+    {
+      name: "shape",
+      type: "\"circle\" | \"hexagon\"",
+      default: "\"circle\"",
+      description: "Aperture shape of the out-of-focus lights.",
+      description: "Shape of each bokeh light: circle or hexagon",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color (any valid CSS color)",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier.",
+      description: "Playback speed multiplier",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Dark = night lights; light = soft daylight bokeh.",
+      description: "Ships light and dark palettes",
+    },
+  ]}
+/>

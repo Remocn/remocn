@@ -1,0 +1,90 @@
+---
+title: Version Hero
+description: "A chrome numeral is built from stacked slices, docks inside a glowing disc, and a label lands beneath."
+component: version-hero
+vibe: premium
+length: 96
+useWhen:
+  - "A release announcement where the version number is the hero."
+  - "A 2.0 style launch close with a light sweep over the numeral."
+  - "A product-name lockup that finishes on a short Now available line."
+avoidWhen:
+  - "The number is an edition counter — use `roman-edition`."
+  - "The headline is a statistic — use `compact-stat`."
+  - "You want a gradient number snapped onto a poster grid — use `grid-snap-poster`."
+---
+
+<ComponentPreview name="version-hero" />
+
+<InstallBlock name="version-hero" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { VersionHero } from "@/components/remocn/version-hero";
+
+const VersionHeroScene = () => (
+  <VersionHero version="2.0" name="remocn" label="Now available" />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="VersionHero"
+    component={VersionHeroScene}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The numeral's slices stack up in 3D under a slow orbiting camera, dock into a solid object while a disc of light rises behind it, and a specular sweep crosses its faces. The label lands beneath. Pass `version`, `name` and `label`; `theme` picks brushed aluminium in dark or matte paper stock in light.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "version",
+      type: "string",
+      default: "\"2.0\"",
+      description: "Release number rendered as the extruded object.",
+    },
+    {
+      name: "name",
+      type: "string",
+      default: "\"remocn\"",
+      description: "Product name in the label under the numeral.",
+    },
+    {
+      name: "label",
+      type: "string",
+      default: "\"Now available\"",
+      description: "Second half of the label.",
+    },
+    {
+      name: "logo",
+      type: "React.ReactNode",
+      description: "React node that replaces the label's name; the default is the Remocn logo.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for highlights and small marks.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Dark is brushed aluminium, light is matte paper stock.",
+    },
+  ]}
+/>

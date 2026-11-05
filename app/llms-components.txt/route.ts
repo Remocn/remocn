@@ -45,9 +45,9 @@ function cell(value: string | undefined): string {
 
 export function GET() {
   const lines: string[] = [
-    "# remocn Component Index",
+    "# Remocn Component Index",
     "",
-    "> Router for every installable remocn component. Scan the tables, pick candidates by",
+    "> Router for every installable Remocn component. Scan the tables, pick candidates by",
     "> `Use for` / `Avoid for`, then fetch only the component pages you need.",
     "",
     `Full reference for one component — props, examples, all use / don't-use notes — lives at its`,

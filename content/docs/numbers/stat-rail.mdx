@@ -1,0 +1,104 @@
+---
+title: Stat Rail
+description: "A headline card shrinks over scenery while a rail of stats steps through on the left."
+component: stat-rail
+vibe: clean
+length: 110
+useWhen:
+  - "A proof beat with up to four stats stepping through next to a headline and a photo."
+  - "A launch recap that needs a scenic backdrop behind the figures."
+  - "A closing stats beat where the last stat should get the payoff chip."
+avoidWhen:
+  - "Each stat should count up big, one per beat — use `stat-sequence`."
+  - "Only one headline number is needed — use `compact-stat`."
+  - "You have no image and want a plain table — use `spec-sheet`."
+---
+
+<ComponentPreview name="stat-rail" />
+
+<InstallBlock name="stat-rail" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition, staticFile } from "remotion";
+import { StatRail } from "@/components/remocn/stat-rail";
+
+const StatRailScene = () => (
+  <StatRail image={staticFile("hero.jpg")} tagline="The *future* of launch video is code" stats={[{ value: "120", label: "components ready to install" }, { value: "4", label: "minutes to first render" }]} />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="StatRail"
+    component={StatRailScene}
+    durationInFrames={144}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The tagline fills the frame over the image, then the image shrinks to the right as the rail slides in and each stat steps up in turn, the last one landing as a chip. By default it uses a stock image that only exists in the Remocn repo, so pass your own `image` URL or `staticFile(...)`. Wrap a tagline word in asterisks to set it in the accent serif; it ships light and dark through `theme`.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "stats",
+      type: "Stat[]",
+      default: "DEFAULT_STATS",
+      description: "Stats on the rail, up to four, each with a value and label.",
+    },
+    {
+      name: "image",
+      type: "string",
+      description: "Image URL for the scenery card. The default only exists in the Remocn repo.",
+    },
+    {
+      name: "tagline",
+      type: "string",
+      default: "\"The *future* of launch video is code\"",
+      description: "Headline over the image; wrap a word in asterisks to accent it.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color theme, \"dark\" or \"light\".",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Ground background color override.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Accent color for the highlighted stat and chip.",
+    },
+    {
+      name: "card",
+      type: "string",
+      description: "Background color of the stat card.",
+    },
+    {
+      name: "faded",
+      type: "string",
+      description: "Color of stats that have not stepped in yet.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "Gradient preset used as the background ground.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the gradient ground's parameters.",
+    },
+  ]}
+/>

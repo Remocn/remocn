@@ -1,0 +1,106 @@
+---
+title: Countdown
+description: "A monumental countdown numeral inside a ring resolves into a Live lockup"
+component: countdown
+vibe: premium
+length: 92
+useWhen:
+  - "An opening beat that counts 3, 2, 1 in monumental numerals and lands on 'Live' or a product name."
+  - "A launch-day or event teaser that needs tension before the reveal, ending on a small logo lockup."
+  - "A video intro where each number exits differently, with a ring wipe, a slice and a final rush past the camera."
+avoidWhen:
+  - "You want a countdown to a specific calendar date, not 3-2-1 — use `launch-date`."
+  - "You need a mission-clock style T-minus readout with rolling characters — use `t-minus`."
+  - "You want a small sports-style clock running down to zero — use `shot-clock`."
+---
+
+<ComponentPreview name="countdown" />
+
+<InstallBlock name="countdown" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { Countdown } from "@/components/remocn/countdown";
+
+const CountdownScene = () => (
+  <Countdown
+    from={3}
+    finalLabel="Live"
+    caption="remocn 2.0"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="Countdown"
+    component={CountdownScene}
+    durationInFrames={130}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Giant numerals count down from `from`, each held for `beat` frames and leaving by a ring wipe, a horizontal slice or a rush past the camera. The final label then hits with a spring over a glowing halo, with an accent dot and a small caption lockup underneath. Pass `from`, `finalLabel` and `caption`. It ships light and dark through the `theme` prop. The length shown is for the defaults of 3 numerals at 20 frames; it is `from * beat + 32` in general.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "from",
+      type: "number",
+      default: "3",
+      description: "First number of the countdown.",
+    },
+    {
+      name: "finalLabel",
+      type: "string",
+      default: "\"Live\"",
+      description: "What the countdown lands on: \"Live\", a product name, a date.",
+    },
+    {
+      name: "indicator",
+      type: "boolean",
+      default: "true",
+      description: "Show the small accent dot before the final label.",
+    },
+    {
+      name: "caption",
+      type: "string",
+      default: "\"remocn 2.0\"",
+      description: "Small lockup under the final label. Pass \"\" to hide it.",
+    },
+    {
+      name: "logo",
+      type: "React.ReactNode",
+      description: "Replaces the default Remocn mark in the lockup.",
+    },
+    {
+      name: "beat",
+      type: "number",
+      default: "20",
+      description: "Frames per number.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Colour of the ring sweep, cut line and final dot.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier; 1 is the designed pace.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark.",
+    },
+  ]}
+/>

@@ -1,0 +1,78 @@
+---
+title: Script Cut
+description: "A one-line script is cut by accent ticks into shots, and each piece flies up to fill the frame."
+component: script-cut
+vibe: clean
+length: 176
+useWhen:
+  - "A how-we-made-it beat that shows one written line being split into separate shots."
+  - "A sequence of three or four phrases that should each get a full-frame moment in order."
+avoidWhen:
+  - "A cut should remove filler words from a transcript — use `filler-cut`."
+  - "You want a single word cut out of a line and replaced — use `scissors-cut`."
+  - "The phrases should build on one centered line instead of flying up — use `word-stream`."
+---
+
+<ComponentPreview name="script-cut" />
+
+<InstallBlock name="script-cut" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { ScriptCut } from "@/components/remocn/script-cut";
+
+const ScriptCutScene = () => (
+  <ScriptCut
+    shots={["We wrote the launch as one line,", "cut it twice,", "and every piece became a shot."]}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="ScriptCut"
+    component={ScriptCutScene}
+    durationInFrames={200}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The whole script appears as a small line along the bottom, then accent ticks drop in to cut it into pieces. Each shot lights up in turn and its words fly up from the row to fill the frame at large size, then exit for the next. Pass `shots` as the script split into phrases; timing adapts to the composition length, and 176 frames assumes the three defaults in 200. It ships light and dark.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "shots",
+      type: "string[]",
+      default: "DEFAULT_SHOTS",
+      description: "Script pieces in order; together they form the small line below.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Color of the cut ticks and the lit shot.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark palette.",
+    },
+  ]}
+/>

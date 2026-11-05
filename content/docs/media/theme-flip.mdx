@@ -1,0 +1,144 @@
+---
+title: Theme Flip
+description: "A cursor clicks a theme toggle in a product window and the whole UI floods from light to dark."
+component: theme-flip
+vibe: clean
+length: 74
+useWhen:
+  - "Showing a dark mode or theme switch as a circular reveal flooding out from the toggle."
+  - "A feature beat where the same screen needs to appear in both themes."
+  - "A close camera push on a small control, then a pull back to the full window."
+avoidWhen:
+  - "The change is a photo being graded rather than a UI theme — use `before-after`."
+  - "The change is the layout adapting to screen sizes — use `device-morph`."
+  - "You want to visit several parts of one screen — use `screenshot-tour`."
+---
+
+<ComponentPreview name="theme-flip" />
+
+<InstallBlock name="theme-flip" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { ThemeFlip } from "@/components/remocn/theme-flip";
+
+const ThemeFlipScene = () => (
+  <ThemeFlip
+    fromSrc="/screens/light.png"
+    toSrc="/screens/dark.png"
+    origin={{ x: 1340, y: 33 }}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="ThemeFlip"
+    component={ThemeFlipScene}
+    durationInFrames={112}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The camera pushes in on a theme toggle, a cursor clicks it, and the new theme floods out from the click point across the window before the camera pulls back. With `reverse` it clicks again and flips back. Use the built-in mock, or pass `from` and `to` nodes, or `fromSrc` and `toSrc` images, with an `origin` in screenshot pixels. It has two looks built in, set by `startTheme`.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "from",
+      type: "React.ReactNode",
+      description: "Custom starting UI as a React node.",
+    },
+    {
+      name: "to",
+      type: "React.ReactNode",
+      description: "Custom final UI as a React node.",
+    },
+    {
+      name: "fromSrc",
+      type: "string",
+      description: "Starting screenshot URL.",
+    },
+    {
+      name: "toSrc",
+      type: "string",
+      description: "Final screenshot URL.",
+    },
+    {
+      name: "startTheme",
+      type: "\"light\" | \"dark\"",
+      default: "\"light\"",
+      description: "Theme the built-in mock starts in.",
+    },
+    {
+      name: "origin",
+      type: "{ x: number; y: number }",
+      description: "Click point and flood center in screenshot pixels.",
+    },
+    {
+      name: "showToggle",
+      type: "boolean",
+      default: "true",
+      description: "Draw a floating toggle at origin over custom content.",
+    },
+    {
+      name: "showCursor",
+      type: "boolean",
+      default: "true",
+      description: "Show the cursor that clicks the toggle.",
+    },
+    {
+      name: "reverse",
+      type: "boolean",
+      default: "false",
+      description: "Click again after a hold and flip back to the first theme.",
+    },
+    {
+      name: "screenshotWidth",
+      type: "number",
+      default: "MOCK_W",
+      description: "Natural width of the screenshot in pixels.",
+    },
+    {
+      name: "screenshotHeight",
+      type: "number",
+      default: "MOCK_H",
+      description: "Natural height of the screenshot in pixels.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color of the mock UI.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "zoom",
+      type: "number",
+      default: "ZOOM",
+      description: "Camera zoom on the toggle around the click. 1 means no push-in.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "Shader preset id for the animated background.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Partial shader parameters that override the ground preset.",
+    },
+  ]}
+/>

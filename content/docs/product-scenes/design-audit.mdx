@@ -1,0 +1,104 @@
+---
+title: Design Audit
+description: A full design review in one scene, from red redlines and issue boxes through a scan that ships the fix to a close-up with specs and tokens
+component: design-audit
+vibe: clean
+length: 332
+useWhen:
+  - "A design tool, UI kit or design system launch needs a hero sequence that tells the whole review story."
+  - "A redesign or v2 release should show what was wrong, the fix landing, and how the new build is specified."
+  - "A single eleven-second scene should carry audit, layout, component and token beats with a step bar on top."
+avoidWhen:
+  - "Only the before-to-after sweep is needed — use `scan-fix`."
+  - "Only the flagged problems are needed — use `audit-boxes`."
+  - "The camera should tour several regions of a screenshot with captions — use `screenshot-tour`."
+---
+
+<ComponentPreview name="design-audit" />
+
+<InstallBlock name="design-audit" />
+
+## Usage
+
+`DesignAudit` chains the design-review beats into one scene. The screen rises
+in and red redlines and issue boxes draw over the old build. A scan band sweeps
+down and leaves the fixed build with blue redlines. The camera then pushes into
+one element, which gets specs and token tags, and pulls back while layout
+guides draw over the grid. A step bar on top lights Audit, Layout, Components
+and Tokens in turn, and the version chip flips when the scan passes it.
+
+```tsx
+import { DesignAudit } from "@/components/remocn/design-audit";
+
+export const Review = () => <DesignAudit />;
+```
+
+Without `before` and `after` it plays on the demo dashboard. With your own
+frames, pass the marks for each beat in frame pixels. Each beat you leave out
+is skipped, and `focus: null` skips the camera push.
+
+```tsx
+import { Img, staticFile } from "remotion";
+import { DesignAudit } from "@/components/remocn/design-audit";
+
+export const Review = () => (
+  <DesignAudit
+    before={<Img src={staticFile("v1.png")} />}
+    after={<Img src={staticFile("v2.png")} />}
+    beforeMarks={{ measures: [{ from: [320, 200], to: [340, 200], label: "20" }] }}
+    issues={[{ rect: { x: 320, y: 180, w: 200, h: 40 }, note: "13 → 14" }]}
+    afterMarks={{ measures: [{ from: [320, 200], to: [344, 200], label: "24" }] }}
+    focus={{
+      rect: { x: 320, y: 180, w: 200, h: 92 },
+      tokens: [{ anchor: [340, 250], at: [380, 320], label: "bg/success", swatch: "#1FC16B" }],
+    }}
+    guides={null}
+    brand="Acme"
+    versions={["v1", "v2"]}
+  />
+);
+```
+
+The marks use the shapes from [Redline Measure](/docs/product-scenes/redline-measure),
+[Audit Boxes](/docs/product-scenes/audit-boxes), [Token Tags](/docs/product-scenes/token-tags)
+and [Layout Guides](/docs/product-scenes/layout-guides). Set `brand=""` to hide
+the top bar.
+
+## Timing
+
+At 30 fps and `speed={1}`:
+
+| Frames | Motion |
+| --- | --- |
+| 0–18 | The screen rises in |
+| 14–60 | Red redlines draw |
+| 34–80 | Issue boxes trace and get their notes |
+| 72–136 | The scan band sweeps down; the chip flips; Layout lights |
+| 146–156 | The blue redlines fade |
+| 156–178 | The camera pushes into `focus`; Components lights |
+| 180–210 | Close-up specs draw |
+| 208–250 | Token tags draw; Tokens lights |
+| 252–274 | The camera pulls back |
+| 278–332 | Layout guides draw |
+
+`designAuditLength` is 332. `speed` scales the whole timeline.
+
+<PropsTable title="Props"
+  rows={[
+    { name: "before", type: "React.ReactNode", description: "UI before the fix, 1280×720. Defaults to the demo dashboard" },
+    { name: "after", type: "React.ReactNode", description: "The fixed UI with the same layout" },
+    { name: "beforeMarks", type: "{ measures?: Measure[]; radii?: RadiusMark[] }", description: "Red redlines over before" },
+    { name: "issues", type: "Issue[]", description: "Off-spec elements boxed on before" },
+    { name: "afterMarks", type: "{ measures?: Measure[]; radii?: RadiusMark[] }", description: "Blue redlines over after, shown once the scan lands" },
+    { name: "focus", type: "{ rect: Rect; measures?: Measure[]; radii?: RadiusMark[]; tokens?: TokenSpec[] } | null", description: "Element the camera pushes into, with its specs and tokens; null skips the push" },
+    { name: "guides", type: "GuideSpec | null", description: "Guides drawn after the camera pulls back; null skips them" },
+    { name: "steps", type: "string[]", default: '["Audit", "Layout", "Components", "Tokens"]', description: "Four step names lit in turn" },
+    { name: "brand", type: "string", default: '"Synergy"', description: "Name beside the version chip; empty hides the top bar" },
+    { name: "versions", type: "[string, string]", default: '["v1.0", "v2.0"]', description: "Chip text before and after the scan" },
+    { name: "auditColor", type: "string", default: '"#FB3748"', description: "Red marks and first step color" },
+    { name: "fixColor", type: "string", default: '"#335CFF"', description: "Blue marks, guides and lit step color" },
+    { name: "scanColor", type: "string", default: '"#7D52F4"', description: "Scan band color" },
+    { name: "background", type: "string", default: '"#EDEDEF"', description: "Stage color" },
+    { name: "speed", type: "number", default: "1", description: "Playback multiplier" },
+  ]}
+/>

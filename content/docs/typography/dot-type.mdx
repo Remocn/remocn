@@ -1,0 +1,84 @@
+---
+title: Dot Type
+description: "Words are drawn from a field of round dots in a gradient, with the last word set in the accent."
+component: dot-type
+vibe: tech
+length: 158
+useWhen:
+  - "A rapid sequence of single words such as Think, Make, Ship, each formed from dots."
+  - "A tech-flavored title card where type should assemble from a particle field."
+avoidWhen:
+  - "The words must stay readable at small sizes - use `typewriter`."
+  - "You want a glitchy decode instead of dots - use `matrix-decode`."
+  - "You want one word swapping through options - use `slot-machine-roll`."
+---
+
+<ComponentPreview name="dot-type" />
+
+<InstallBlock name="dot-type" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { DotType } from "@/components/remocn/dot-type";
+
+const DotTypeScene = () => (
+  <DotType words={["Think.", "Make.", "Ship."]} count={1500} accent="#3B5BFD" />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="DotType"
+    component={DotTypeScene}
+    durationInFrames={190}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A dot field collapses into the first word, then each next word reforms from the same dots in turn; the final word can take the accent color. Pass `words` and tune `count` for dot density; it ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "words",
+      type: "string[]",
+      default: "DEFAULT_WORDS",
+      description: "Words shown in order, each formed from the dots",
+    },
+    {
+      name: "accentLast",
+      type: "boolean",
+      default: "true",
+      description: "Color the final word with the accent",
+    },
+    {
+      name: "count",
+      type: "number",
+      default: "1500",
+      description: "Number of dots in the field; minimum 300",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color (any valid CSS color)",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark palettes",
+    },
+  ]}
+/>

@@ -40,14 +40,14 @@ New components stay transparent (background via a backdrop in the example), seek
 
 A product demo is 6 beats. **Proof** and **CTA** are optional; **Hook** and **Product reveal** are the spine. Beats overlap at their edges (the end of one launches the next — no dead frames between).
 
-| # | Beat | Job | Typical content |
-|---|---|---|---|
-| 1 | **Hook** | State the problem or a bold positioning line in plain language | "Your team has tasks everywhere", "Show up in AI answers", "Don't get blocked by your machine" |
-| 2 | **Positioning** | Name the product / what it is → resolve to the lockup | "Meet Flowith", "AI-Powered Work Operating System" → logo |
-| 3 | **Product reveal** | Show the actual product surface working | chat composer typing a prompt, a terminal running, a planning timeline, a workflow graph |
-| 4 | **Features** | 2–4 capabilities, each as a quick concrete moment | a checklist running, task cards wiring up, a "designed to simplify your workflow" line |
-| 5 | **Proof** *(optional)* | Make it credible | a metric/score counting up, metric cards, "Join 12,000+ people" + testimonials, an integration landing in Slack |
-| 6 | **CTA** *(optional)* | One ask + where to go | "Build with…", a command to run, `domain.com`, logo lockup on a calm hold |
+| # | Beat | Job | Typical content | Usually from |
+|---|---|---|---|---|
+| 1 | **Hook** | State the problem or a bold positioning line in plain language | "Your team has tasks everywhere", "Show up in AI answers", "Don't get blocked by your machine" | Typography (Statements, Kinetic posters), Social (Hooks) |
+| 2 | **Positioning** | Name the product / what it is → resolve to the lockup | "Meet Flowith", "AI-Powered Work Operating System" → logo | Logo Stings (Name reveals), Typography (Headline reveals) |
+| 3 | **Product reveal** | Show the actual product surface working | chat composer typing a prompt, a terminal running, a planning timeline, a workflow graph | Product Scenes, UI Blocks, Media & Collage |
+| 4 | **Features** | 2–4 capabilities, each as a quick concrete moment | a checklist running, task cards wiring up, a "designed to simplify your workflow" line | Product Scenes, UI Blocks, Typography (Word swaps) |
+| 5 | **Proof** *(optional)* | Make it credible | a metric/score counting up, metric cards, "Join 12,000+ people" + testimonials, an integration landing in Slack | Numbers & Stats, Social (Social proof) |
+| 6 | **CTA** *(optional)* | One ask + where to go | "Build with…", a command to run, `domain.com`, logo lockup on a calm hold | Logo Stings (End stings), Typography (Statements) |
 
 The hook usually carries the single hardest idea; features are where most of the runtime lives. Transitions between beats use `push-through`, `focus-pull`, `whip-pan`, or plain `fade()` from `@remotion/transitions/fade` — match the move to the narrative (push for "going deeper", focus or fade for a neutral cut, whip for energy). Note: `fade-through` / `shared-axis-y` / `shared-axis-z` are text-swap *components*, not presentations — mount them inside a scene, never pass them to `TransitionSeries.Transition`.
 

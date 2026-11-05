@@ -1,0 +1,108 @@
+---
+title: Video Watch Page
+description: "A video watch page where the cursor subscribes and likes while view, like and subscriber counts climb."
+component: video-watch-page
+vibe: social
+length: 190
+useWhen:
+  - "A video platform or creator-tool launch where social proof (views, likes, subscribers) is the payoff."
+  - "A beat showing engagement growing from a normal number to a viral one."
+  - "A scene that frames your own video as the featured content via `src` or `children`."
+avoidWhen:
+  - "You want a vertical reels feed with a double-tap heart — use `reels-feed`."
+  - "You want a live call with participants — use `video-call`."
+  - "You want to show editing rather than watching — use `timeline-editor`."
+---
+
+<ComponentPreview name="video-watch-page" />
+
+<InstallBlock name="video-watch-page" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { VideoWatchPage } from "@/components/remocn/video-watch-page";
+
+const VideoWatchPageScene = () => (
+  <VideoWatchPage
+    title="Introducing Acme 2.0"
+    channel={{ name: "Acme", subscribers: 48200 }}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="VideoWatchPage"
+    component={VideoWatchPageScene}
+    durationInFrames={210}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A watch page shows the player with a title, channel and stat row; the cursor hovers the player, clicks Subscribe and then Like while the subscriber, like, view and comment counts count up. Pass `title`, `channel` (name, subscribers), `stats` (from and to values) and a poster `src`, or `children` for custom player content laid out at 836 by 470. Ships light and dark.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "title",
+      type: "string",
+      default: "\"Introducing remocn 2.0\"",
+      description: "Video title",
+    },
+    {
+      name: "channel",
+      type: "Partial<WatchChannel>",
+      description: "Channel name, subscriber count and optional color",
+    },
+    {
+      name: "stats",
+      type: "Partial<WatchStats>",
+      description: "Count-up ranges for likes, views and comments",
+    },
+    {
+      name: "src",
+      type: "string",
+      description: "Poster image shown in the player",
+    },
+    {
+      name: "children",
+      type: "React.ReactNode",
+      description: "Custom player content, 836 by 470; overrides src",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for highlights, buttons and progress",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline",
+    },
+    {
+      name: "theme",
+      type: "\"light\" | \"dark\"",
+      default: "\"light\"",
+      description: "Light or dark palette",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "gradients.sh preset id for the backdrop shader",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the backdrop shader parameters",
+    },
+  ]}
+/>

@@ -1,0 +1,126 @@
+---
+title: Table Filter
+description: "A CRM table filters by a stage, sorts, selects rows, and a bulk-action bar slides up."
+component: table-filter
+vibe: clean
+length: 196
+useWhen:
+  - "A CRM, database or ops-tool launch where filter, select, act is the loop to show."
+  - "A beat proving the product handles bulk actions across many rows."
+  - "A data-heavy scene that needs structure rather than a chart."
+avoidWhen:
+  - "You want to compute and chart columns — use `sheet-formula`."
+  - "You want a ranking that reorders on its own — use `leaderboard-climb`."
+  - "You want stats and a chart feed that update live — use `live-dashboard`."
+---
+
+<ComponentPreview name="table-filter" />
+
+<InstallBlock name="table-filter" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { TableFilter } from "@/components/remocn/table-filter";
+
+const TableFilterScene = () => (
+  <TableFilter
+    title="Companies"
+    filterAttribute="Stage"
+    filterValue="Closed-won"
+    bulkAction="Add to sequence"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="TableFilter"
+    component={TableFilterScene}
+    durationInFrames={220}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A table window opens a filter popover and applies `filterValue` to `filterAttribute`, collapsing the list; the cursor then sorts by ARR, checks `selectCount` rows and a bulk-action bar slides up with `bulkAction`, which the cursor hovers and clicks. Pass `rows` (company, domain, stage, arr, owner, lastInteraction, color), `title` and `workspace`. Ships light and dark.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "rows",
+      type: "TableRecord[]",
+      default: "DEFAULT_ROWS",
+      description: "Table records: company, domain, stage, arr, owner, lastInteraction, color",
+    },
+    {
+      name: "title",
+      type: "string",
+      default: "\"Companies\"",
+      description: "Table title in the sidebar and header",
+    },
+    {
+      name: "filterAttribute",
+      type: "string",
+      default: "\"Stage\"",
+      description: "Attribute shown in the filter chip",
+    },
+    {
+      name: "filterValue",
+      type: "string",
+      default: "\"Closed-won\"",
+      description: "Stage value rows are filtered by",
+    },
+    {
+      name: "selectCount",
+      type: "number",
+      default: "3",
+      description: "How many remaining rows get selected",
+    },
+    {
+      name: "bulkAction",
+      type: "string",
+      default: "\"Add to sequence\"",
+      description: "Label of the bulk-action button",
+    },
+    {
+      name: "workspace",
+      type: "string",
+      default: "\"remocn\"",
+      description: "Workspace name in the sidebar",
+    },
+    {
+      name: "theme",
+      type: "\"light\" | \"dark\"",
+      default: "\"light\"",
+      description: "Light or dark palette",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for highlights, buttons and progress",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "gradients.sh preset id for the backdrop shader",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the backdrop shader parameters",
+    },
+  ]}
+/>

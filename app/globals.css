@@ -11,9 +11,94 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
-  --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-paper-mono);
+  --font-heading: var(--font-geist-sans);
+  --font-wordmark: var(--font-manrope);
+
+  /* Design system (Paper "Remocn · Component Ideas" → Design system page).
+     Surfaces and text roles that shadcn's palette has no slot for. */
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-surface-sunken: var(--surface-sunken);
+  --color-tile: var(--tile);
+  --color-capsule: var(--capsule);
+  --color-hairline: var(--hairline);
+  --color-divider: var(--divider);
+  --color-foreground-nav: var(--foreground-nav);
+  --color-body: var(--body);
+  --color-body-muted: var(--body-muted);
+  --color-paragraph: var(--paragraph);
+  --color-title-muted: var(--title-muted);
+  --color-subtle: var(--subtle);
+  /* `subtle` is a text tone (4.5:1 on every surface); dots, ticks, strokes
+     and borders that used it keep the paler value here. */
+  --color-subtle-line: var(--subtle-line);
+  --color-inverse: var(--inverse);
+  --color-primary-strong: var(--primary-strong);
+  --color-primary-bright: var(--primary-bright);
+  --color-primary-soft: var(--primary-soft);
+  --color-primary-tint: var(--primary-tint);
+  --color-primary-wash: var(--primary-wash);
+  /* Always-dark blocks (terminal, studio pipeline, install strip) keep the
+     same palette in both themes. */
+  --color-dark-surface: #0e1012;
+  --color-dark-raised: #1a1c1e;
+  --color-dark-control: #1e2124;
+  --color-dark-line: #23272a;
+  --color-dark-border: rgb(255 255 255 / 8%);
+  --color-dark-body: #b8bec2;
+  --color-dark-muted: #7d8a8f;
+  --color-dark-subtle: #9aa3a7;
+  --color-success: #22c55e;
+  --color-success-soft: #86efac;
+  --color-neon: #00e599;
+  --color-claude: #d97757;
+
+  --text-micro: 11px;
+  --text-micro--line-height: 14px;
+  --text-mono: 12px;
+  --text-mono--line-height: 16px;
+  --text-caption: 13px;
+  --text-caption--line-height: 16px;
+  --text-small: 14px;
+  --text-small--line-height: 20px;
+  --text-ui: 16px;
+  --text-ui--line-height: 20px;
+  --text-button-lg: 17px;
+  --text-button-lg--line-height: 22px;
+  --text-lead: 20px;
+  --text-lead--line-height: 28px;
+  --text-quote: 26px;
+  --text-quote--line-height: 36px;
+  --text-h3: 48px;
+  --text-h3--line-height: 50px;
+  --text-h3--letter-spacing: -0.045em;
+  --text-h2: 56px;
+  --text-h2--line-height: 58px;
+  --text-h2--letter-spacing: -0.045em;
+  --text-display: 124px;
+  --text-display--line-height: 124px;
+  --text-display--letter-spacing: -0.05em;
+
+  --tracking-display: -0.05em;
+  --tracking-heading: -0.045em;
+  --tracking-title: -0.02em;
+
+  --radius-tag: 6px;
+  --radius-tile: 8px;
+  --radius-control-sm: 12px;
+  --radius-control: 14px;
+  --radius-cta: 16px;
+  --radius-capsule: 18px;
+  --radius-card: 20px;
+  --radius-panel: 24px;
+  --radius-shell: 28px;
+
+  --spacing-gutter: 100px;
+  --spacing-section: 120px;
+  --container-content: 1240px;
+  --container-prose: 640px;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -63,45 +148,76 @@
       transform: translateX(-50%);
     }
   }
+  --animate-marquee-y: marquee-y var(--marquee-duration, 60s) linear infinite;
+  @keyframes marquee-y {
+    from {
+      transform: translateY(0);
+    }
+    to {
+      transform: translateY(-50%);
+    }
+  }
 }
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.148 0.004 228.8);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.148 0.004 228.8);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.148 0.004 228.8);
-  --primary: oklch(0.518 0.253 323.949);
-  --primary-foreground: oklch(0.977 0.017 320.058);
-  --secondary: oklch(0.963 0.002 197.1);
-  --secondary-foreground: oklch(0.218 0.008 223.9);
-  --muted: oklch(0.963 0.002 197.1);
-  --muted-foreground: oklch(0.56 0.021 213.5);
-  --accent: oklch(0.963 0.002 197.1);
-  --accent-foreground: oklch(0.218 0.008 223.9);
+  --background: #fafafa;
+  --foreground: #0e1012;
+  --card: #ffffff;
+  --card-foreground: #0e1012;
+  --popover: #ffffff;
+  --popover-foreground: #0e1012;
+  --primary: #a800b7;
+  --primary-foreground: #ffffff;
+  --secondary: #e4e5e7;
+  --secondary-foreground: #0e1012;
+  --muted: #f4f4f5;
+  --muted-foreground: #57646a;
+  --accent: #f4f4f5;
+  --accent-foreground: #0e1012;
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.925 0.005 214.3);
-  --input: oklch(0.925 0.005 214.3);
-  --ring: oklch(0.723 0.014 214.4);
+  --border: rgb(14 16 18 / 12%);
+  --input: rgb(14 16 18 / 12%);
+  /* Focus rings draw at full opacity: 5.9:1 on the page (3:1 is the floor). */
+  --ring: #57646a;
   --chart-1: oklch(0.872 0.007 219.6);
   --chart-2: oklch(0.56 0.021 213.5);
   --chart-3: oklch(0.45 0.017 213.2);
   --chart-4: oklch(0.378 0.015 216);
   --chart-5: oklch(0.275 0.011 216.9);
   --radius: 0.625rem;
-  --sidebar: oklch(0.987 0.002 197.1);
-  --sidebar-foreground: oklch(0.148 0.004 228.8);
-  --sidebar-primary: oklch(0.591 0.293 322.896);
-  --sidebar-primary-foreground: oklch(0.977 0.017 320.058);
-  --sidebar-accent: oklch(0.963 0.002 197.1);
-  --sidebar-accent-foreground: oklch(0.218 0.008 223.9);
-  --sidebar-border: oklch(0.925 0.005 214.3);
-  --sidebar-ring: oklch(0.723 0.014 214.4);
-  --code: oklch(0.963 0.002 197.1);
-  --code-foreground: oklch(0.148 0.004 228.8);
-  --code-highlight: oklch(0.93 0.004 214.3);
-  --code-number: oklch(0.56 0.021 213.5);
+  --sidebar: #fafafa;
+  --sidebar-foreground: #0e1012;
+  --sidebar-primary: #a800b7;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f4f4f5;
+  --sidebar-accent-foreground: #0e1012;
+  --sidebar-border: rgb(14 16 18 / 12%);
+  --sidebar-ring: #9aa3a7;
+  --code: #f4f4f5;
+  --code-foreground: #0e1012;
+  --code-highlight: #e4e5e7;
+  --code-number: #6b7a80;
+
+  --surface: #ffffff;
+  --surface-muted: #f4f4f5;
+  --surface-sunken: #f2f2f4;
+  --tile: #eff0f1;
+  --capsule: rgb(226 226 229 / 75%);
+  --hairline: rgb(14 16 18 / 6%);
+  --divider: rgb(14 16 18 / 12%);
+  --foreground-nav: #1a1c1e;
+  --body: #2a2e31;
+  --body-muted: #4a5054;
+  --paragraph: #3a3f43;
+  --title-muted: #818a8e;
+  --subtle: #646d71;
+  --subtle-line: #9aa3a7;
+  --inverse: #fafafa;
+  --primary-strong: #86198f;
+  --primary-bright: #c026d3;
+  --primary-soft: #f0abfc;
+  --primary-tint: #f5d0fe;
+  --primary-wash: #fbe8fd;
 
   --elevation-raised:
     0 0 0 1px rgb(0 0 0 / 0.05), 0 1px 3px rgb(0 0 0 / 0.05), 0 4px 10px -4px
@@ -122,41 +238,62 @@
 }
 
 .dark {
-  --background: oklch(0.148 0.004 228.8);
-  --foreground: oklch(0.987 0.002 197.1);
-  --card: oklch(0.175 0.005 225);
-  --card-foreground: oklch(0.987 0.002 197.1);
-  --popover: oklch(0.19 0.006 225);
-  --popover-foreground: oklch(0.987 0.002 197.1);
-  --primary: oklch(0.452 0.211 324.591);
-  --primary-foreground: oklch(0.977 0.017 320.058);
-  --secondary: oklch(0.225 0.008 224);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.205 0.007 225);
-  --muted-foreground: oklch(0.723 0.014 214.4);
-  --accent: oklch(0.225 0.008 224);
-  --accent-foreground: oklch(0.987 0.002 197.1);
+  --background: #0c0d0f;
+  --foreground: #f4f4f5;
+  --card: #151719;
+  --card-foreground: #f4f4f5;
+  --popover: #1b1d20;
+  --popover-foreground: #f4f4f5;
+  --primary: #d946ef;
+  --primary-foreground: #0e1012;
+  --secondary: #2a2d31;
+  --secondary-foreground: #f4f4f5;
+  --muted: #1b1d20;
+  --muted-foreground: #8b979c;
+  --accent: #2a2d31;
+  --accent-foreground: #f4f4f5;
   --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.56 0.021 213.5);
+  --border: rgb(255 255 255 / 12%);
+  --input: rgb(255 255 255 / 15%);
+  --ring: #8b979c;
   --chart-1: oklch(0.872 0.007 219.6);
   --chart-2: oklch(0.56 0.021 213.5);
   --chart-3: oklch(0.45 0.017 213.2);
   --chart-4: oklch(0.378 0.015 216);
   --chart-5: oklch(0.275 0.011 216.9);
-  --sidebar: oklch(0.148 0.004 228.8);
-  --sidebar-foreground: oklch(0.987 0.002 197.1);
-  --sidebar-primary: oklch(0.667 0.295 322.15);
-  --sidebar-primary-foreground: oklch(0.977 0.017 320.058);
-  --sidebar-accent: oklch(0.205 0.007 225);
-  --sidebar-accent-foreground: oklch(0.987 0.002 197.1);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.56 0.021 213.5);
-  --code: oklch(0.13 0.004 228.8);
-  --code-foreground: oklch(0.987 0.002 197.1);
-  --code-highlight: oklch(0.225 0.008 224);
-  --code-number: oklch(0.56 0.021 213.5);
+  --sidebar: #0c0d0f;
+  --sidebar-foreground: #f4f4f5;
+  --sidebar-primary: #d946ef;
+  --sidebar-primary-foreground: #0e1012;
+  --sidebar-accent: #1b1d20;
+  --sidebar-accent-foreground: #f4f4f5;
+  --sidebar-border: rgb(255 255 255 / 12%);
+  --sidebar-ring: #626c70;
+  --code: #101214;
+  --code-foreground: #f4f4f5;
+  --code-highlight: #1b1d20;
+  --code-number: #626c70;
+
+  --surface: #151719;
+  --surface-muted: #1b1d20;
+  --surface-sunken: #101214;
+  --tile: #151719;
+  --capsule: rgb(38 40 44 / 75%);
+  --hairline: rgb(255 255 255 / 7%);
+  --divider: rgb(255 255 255 / 12%);
+  --foreground-nav: #f4f4f5;
+  --body: #c8cdd0;
+  --body-muted: #a3acb0;
+  --paragraph: #c8cdd0;
+  --title-muted: #626c70;
+  --subtle: #7e868a;
+  --subtle-line: #626c70;
+  --inverse: #0e1012;
+  --primary-strong: #f0abfc;
+  --primary-bright: #e879f9;
+  --primary-soft: #f0abfc;
+  --primary-tint: rgb(217 70 239 / 18%);
+  --primary-wash: rgb(217 70 239 / 10%);
 
   --elevation-raised: 0 0 0 1px rgb(255 255 255 / 0.09);
   --elevation-raised-hover: 0 0 0 1px rgb(255 255 255 / 0.14);
@@ -174,17 +311,27 @@
   * {
     @apply border-border outline-ring/50;
   }
+  /* Inner scroll areas (sidebar, rail, code, rows) scroll without a visible
+     bar; the page's own scrollbar stays. */
+  *:not(html) {
+    scrollbar-width: none;
+  }
+  *:not(html)::-webkit-scrollbar {
+    display: none;
+  }
   body {
     @apply bg-background text-foreground;
-    font-feature-settings: "cv11", "ss01";
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
   }
   html {
     @apply font-sans;
     font-synthesis: none;
-    scroll-behavior: smooth;
     scroll-padding-top: 80px;
+
+    @media (prefers-reduced-motion: no-preference) {
+      scroll-behavior: smooth;
+    }
   }
 }
 
@@ -194,6 +341,10 @@
 
 .section {
   @apply mx-auto w-full max-w-6xl px-4 sm:px-6 min-[1440px]:max-w-5xl;
+}
+
+.landing-container {
+  @apply mx-auto w-full max-w-(--docs-frame) px-5 md:px-10 xl:px-(--docs-gutter);
 }
 
 .control-surface {
@@ -274,11 +425,6 @@
   );
 }
 
-[data-rehype-pretty-code-figure] pre {
-  scrollbar-width: thin;
-  scrollbar-color: color-mix(in oklab, currentColor 25%, transparent)
-    transparent;
-}
 .typeset figure.shiki {
   /* biome-ignore lint/complexity/noImportantStyles: overrides shiki's own inline background/border/shadow, which outrank this class in specificity */
   background-color: var(--muted) !important;
@@ -292,11 +438,6 @@
 .typeset figure.shiki [class*="bg-"] {
   /* biome-ignore lint/complexity/noImportantStyles: see above */
   background-color: transparent !important;
-}
-.typeset figure.shiki pre {
-  scrollbar-width: thin;
-  scrollbar-color: color-mix(in oklab, currentColor 25%, transparent)
-    transparent;
 }
 
 [data-rehype-pretty-code-figure] {
@@ -391,102 +532,754 @@
   );
 }
 
-#nd-sidebar a,
-#nd-sidebar-mobile a {
-  font-size: 0.8125rem;
-  letter-spacing: -0.01em;
-}
-
-#nd-sidebar p,
-#nd-sidebar-mobile p {
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  font-size: 0.6875rem;
-  font-weight: 600;
-  color: var(--muted-foreground);
-}
-
-#nd-sidebar a[data-active],
-#nd-sidebar-mobile a[data-active] {
-  padding-block: 0.375rem;
-  color: var(--foreground);
-  transition: color 150ms ease;
-}
-#nd-sidebar a[data-active]:hover,
-#nd-sidebar-mobile a[data-active]:hover {
-  color: var(--foreground);
-  background-color: transparent;
-}
-
-#nd-sidebar a[data-active="true"],
-#nd-sidebar-mobile a[data-active="true"] {
-  position: relative;
-  font-weight: 500;
-  color: var(--foreground);
-  background-color: color-mix(in oklab, var(--accent) 80%, transparent);
-}
-#nd-sidebar a[data-active="true"]:hover,
-#nd-sidebar-mobile a[data-active="true"]:hover {
-  background-color: color-mix(in oklab, var(--accent) 80%, transparent);
-}
-#nd-sidebar a[data-active="true"]::before,
-#nd-sidebar-mobile a[data-active="true"]::before {
-  content: "";
-  position: absolute;
-  inset-inline-start: 0;
-  inset-block: 0.3rem;
-  width: 2px;
-  border-radius: 1px;
-  background-color: var(--foreground);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  #nd-sidebar a[data-active],
-  #nd-sidebar-mobile a[data-active] {
-    transition: none;
+/*
+ * Iridescent metal border that slowly travels around the contour. Two parts:
+ * `border-metal` paints the face (padding box) and leaves the border
+ * transparent; `<MetalRing />` (`metal-ring`) fills the border with the ring:
+ *   <a class="relative border-metal border rounded-[11px]">… <MetalRing /></a>
+ *   <a class="relative border-metal border-2 rounded-[14px]">… <MetalRing width={2} /></a>
+ * The ring is a conic gradient on a square layer that spins with `rotate`,
+ * masked to the border, so the motion runs on the compositor (animating the
+ * gradient's angle would repaint on the main thread every frame).
+ * The face lifts slightly on hover in both themes; override the
+ * `--metal-face-*` / `--metal-hover-*` variables for a one-off.
+ */
+@keyframes metal-spin {
+  to {
+    rotate: 360deg;
   }
 }
 
-#nd-sidebar a.w-full,
-#nd-sidebar-mobile a.w-full,
-#nd-sidebar [data-radix-scroll-area-viewport] button.w-full,
-#nd-sidebar-mobile [data-radix-scroll-area-viewport] button.w-full {
-  font-size: 0.8125rem;
-  letter-spacing: -0.01em;
-  font-weight: 500;
-  margin-top: 0.25rem;
+@utility metal-ring {
+  position: absolute;
+  inset: calc(-1 * var(--metal-width, 1px));
+  z-index: -1;
+  padding: var(--metal-width, 1px);
+  border-radius: inherit;
+  overflow: clip;
+  pointer-events: none;
+  mask:
+    linear-gradient(#000 0 0) content-box exclude,
+    linear-gradient(#000 0 0);
+
+  &::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    /* A square at least as wide as the diagonal, so the corners stay covered. */
+    width: 150%;
+    min-height: 150%;
+    aspect-ratio: 1;
+    translate: -50% -50%;
+    background: conic-gradient(
+      from 200deg in oklab,
+      #ffffff 0%,
+      #b47bbe 10%,
+      #f7eef9 20%,
+      #3a1f40 30%,
+      #e879f9 40%,
+      #ffffff 50%,
+      #8a5a93 60%,
+      #f5d0fe 70%,
+      #2e1633 80%,
+      #c026d3 90%,
+      #ffffff 100%
+    );
+    animation: metal-spin 6s linear infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &::before {
+      animation: none;
+    }
+  }
 }
 
-#nd-sidebar [data-radix-scroll-area-viewport] a.w-full + div,
-#nd-sidebar [data-radix-scroll-area-viewport] button.w-full + div,
-#nd-sidebar-mobile [data-radix-scroll-area-viewport] a.w-full + div,
-#nd-sidebar-mobile [data-radix-scroll-area-viewport] button.w-full + div {
-  padding-bottom: 1rem;
-}
-#nd-sidebar [data-radix-scroll-area-viewport] a.w-full + div::before,
-#nd-sidebar [data-radix-scroll-area-viewport] button.w-full + div::before,
-#nd-sidebar-mobile [data-radix-scroll-area-viewport] a.w-full + div::before,
-#nd-sidebar-mobile
-  [data-radix-scroll-area-viewport]
-  button.w-full
-  + div::before {
-  bottom: 1.25rem;
+@utility border-metal {
+  --metal-face-from: #ffffff;
+  --metal-face-to: #f6f7f8;
+  --metal-hover-from: #fdfafe;
+  --metal-hover-to: #f3eef5;
+  isolation: isolate;
+  border-color: transparent;
+  background: linear-gradient(
+      180deg,
+      var(--metal-face-from),
+      var(--metal-face-to)
+    )
+    padding-box;
+
+  @variant dark {
+    --metal-face-from: #1b1d20;
+    --metal-face-to: #151719;
+    --metal-hover-from: #26292d;
+    --metal-hover-to: #1d1f23;
+  }
+
+  @media (hover: hover) {
+    &:hover {
+      --metal-face-from: var(--metal-hover-from);
+      --metal-face-to: var(--metal-hover-to);
+    }
+  }
 }
 
-#nd-sidebar a.w-full svg[data-icon],
-#nd-sidebar button.w-full svg[data-icon],
-#nd-sidebar-mobile a.w-full svg[data-icon],
-#nd-sidebar-mobile button.w-full svg[data-icon] {
-  width: 0.875rem;
-  height: 0.875rem;
-  opacity: 0.7;
+/* Text caret in the hero composer: hard on/off, like an editor. */
+@keyframes caret-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
 }
 
-#nd-sidebar [data-radix-scroll-area-viewport],
-#nd-sidebar-mobile [data-radix-scroll-area-viewport] {
-  padding-bottom: 2rem;
+@theme {
+  --ease-tile-out: cubic-bezier(0.22, 1, 0.36, 1);
+  /* Picked-chip tiles move an inner layer with `transform`, never
+     `background-position`, so the loops stay on the compositor. */
+  --animate-tile-drift: tile-drift 5s ease-in-out infinite alternate;
+  --animate-tile-pan: tile-pan 5s ease-in-out infinite alternate;
+  --animate-tile-blur-in: tile-blur-in 2.8s var(--ease-tile-out) infinite;
+  --animate-tile-type: tile-type 2.8s steps(1) infinite;
+  --animate-tile-roll: tile-roll 3.6s var(--ease-tile-out) infinite;
+  --animate-tile-zoom: tile-zoom 2.6s var(--ease-tile-out) infinite;
+  --animate-tile-whip: tile-whip 3s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+  --animate-tile-glitch: tile-glitch 2.4s steps(1) infinite;
+  --animate-tile-karaoke: tile-karaoke 2.4s linear infinite;
+  --animate-tile-grow: tile-grow 2.6s var(--ease-tile-out) infinite;
+  --animate-tile-line: tile-line 2.4s steps(4) infinite;
+  --animate-tile-pop: tile-pop 2.6s cubic-bezier(0.34, 1.56, 0.64, 1) infinite;
+  --animate-tile-scanline: tile-scanline 0.6s linear infinite;
+  --animate-tile-flicker: tile-flicker 3s steps(1) infinite;
+  --animate-tile-cursor: tile-cursor 2.8s var(--ease-tile-out) infinite;
+  --animate-tile-draw: tile-draw 2.6s var(--ease-tile-out) infinite;
+
+  /* Same path as `background-position: 0% 30%` → `100% 70%` on a 260%
+     wide 1280×600 image: the layer is 260% × 121.875% of the tile. */
+  @keyframes tile-drift {
+    from {
+      transform: translate(0, -5.38%);
+    }
+    to {
+      transform: translate(-61.54%, -12.56%);
+    }
+  }
+  @keyframes tile-pan {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
+  @keyframes tile-blur-in {
+    0% {
+      opacity: 0;
+      filter: blur(4px);
+      transform: translateY(3px);
+    }
+    40%,
+    85% {
+      opacity: 1;
+      filter: blur(0);
+      transform: translateY(0);
+    }
+    100% {
+      opacity: 0;
+      filter: blur(2px);
+      transform: translateY(0);
+    }
+  }
+  @keyframes tile-type {
+    0% {
+      clip-path: inset(0 100% 0 0);
+    }
+    14% {
+      clip-path: inset(0 52% 0 0);
+    }
+    28%,
+    90% {
+      clip-path: inset(0 0 0 0);
+    }
+    100% {
+      clip-path: inset(0 100% 0 0);
+    }
+  }
+  @keyframes tile-roll {
+    0%,
+    22% {
+      transform: translateY(0);
+    }
+    33%,
+    55% {
+      transform: translateY(-26px);
+    }
+    66%,
+    88% {
+      transform: translateY(-52px);
+    }
+    100% {
+      transform: translateY(-78px);
+    }
+  }
+  @keyframes tile-zoom {
+    0% {
+      opacity: 0;
+      filter: blur(3px);
+      transform: scale(0.3);
+    }
+    45%,
+    85% {
+      opacity: 1;
+      filter: blur(0);
+      transform: scale(1);
+    }
+    100% {
+      opacity: 0;
+      filter: blur(3px);
+      transform: scale(1.6);
+    }
+  }
+  @keyframes tile-whip {
+    0%,
+    30% {
+      transform: translateX(0);
+      filter: blur(0);
+    }
+    40% {
+      filter: blur(1.5px);
+    }
+    50%,
+    80% {
+      transform: translateX(-33.333%);
+      filter: blur(0);
+    }
+    90% {
+      filter: blur(1.5px);
+    }
+    100% {
+      transform: translateX(-66.666%);
+      filter: blur(0);
+    }
+  }
+  @keyframes tile-glitch {
+    0%,
+    58% {
+      transform: translateX(0);
+    }
+    60% {
+      transform: translateX(3px);
+    }
+    63% {
+      transform: translateX(-2px);
+    }
+    66% {
+      transform: translateX(1px);
+    }
+    69%,
+    100% {
+      transform: translateX(0);
+    }
+  }
+  @keyframes tile-karaoke {
+    from {
+      transform: translateX(-50%);
+    }
+    to {
+      transform: translateX(0);
+    }
+  }
+  @keyframes tile-grow {
+    0% {
+      transform: scaleY(0);
+    }
+    35%,
+    85% {
+      transform: scaleY(1);
+    }
+    100% {
+      transform: scaleY(0);
+    }
+  }
+  @keyframes tile-line {
+    0% {
+      transform: scaleX(0);
+    }
+    50%,
+    90% {
+      transform: scaleX(1);
+    }
+    100% {
+      transform: scaleX(0);
+    }
+  }
+  @keyframes tile-pop {
+    0% {
+      opacity: 0;
+      transform: scale(0.4);
+    }
+    30%,
+    85% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    100% {
+      opacity: 0;
+      transform: scale(1);
+    }
+  }
+  @keyframes tile-scan {
+    from {
+      background-position: 0 0;
+    }
+    to {
+      background-position: 0 4px;
+    }
+  }
+  @keyframes tile-scanline {
+    to {
+      transform: translateY(4px);
+    }
+  }
+  @keyframes tile-flicker {
+    0%,
+    70% {
+      opacity: 1;
+    }
+    72% {
+      opacity: 0.6;
+    }
+    74%,
+    100% {
+      opacity: 1;
+    }
+  }
+  @keyframes tile-cursor {
+    0% {
+      transform: translate(-6px, 5px) scale(1);
+    }
+    40% {
+      transform: translate(1px, -1px) scale(1);
+    }
+    48% {
+      transform: translate(1px, -1px) scale(0.8);
+    }
+    56%,
+    85% {
+      transform: translate(1px, -1px) scale(1);
+    }
+    100% {
+      transform: translate(-6px, 5px) scale(1);
+    }
+  }
+  @keyframes tile-draw {
+    0% {
+      stroke-dashoffset: 1;
+      opacity: 1;
+    }
+    40%,
+    85% {
+      stroke-dashoffset: 0;
+      opacity: 1;
+    }
+    100% {
+      stroke-dashoffset: 0;
+      opacity: 0;
+    }
+  }
 }
 
-#nd-sidebar [data-active="true"] svg {
-  color: var(--foreground);
+figure[data-paused] [data-tile],
+figure[data-paused] [data-tile] * {
+  animation-play-state: paused;
+}
+
+@keyframes scene-drift {
+  from {
+    background-position:
+      0 0,
+      15% 35%;
+  }
+  to {
+    background-position:
+      0 0,
+      85% 65%;
+  }
+}
+
+@keyframes scene-float {
+  0%,
+  100% {
+    translate: 0 0;
+    rotate: 0deg;
+  }
+  25% {
+    translate: calc(var(--float-amp) * 0.6) calc(var(--float-amp) * -1);
+    rotate: var(--float-tilt);
+  }
+  50% {
+    translate: calc(var(--float-amp) * -0.4) calc(var(--float-amp) * -0.3);
+    rotate: 0deg;
+  }
+  75% {
+    translate: calc(var(--float-amp) * -0.7) calc(var(--float-amp) * 0.8);
+    rotate: calc(var(--float-tilt) * -1);
+  }
+}
+
+@theme {
+  --ease-reveal: cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+@property --reveal-i {
+  syntax: "<number>";
+  inherits: false;
+  initial-value: 0;
+}
+
+@property --count {
+  syntax: "<integer>";
+  inherits: false;
+  initial-value: 0;
+}
+
+@keyframes reveal-rise {
+  from {
+    opacity: 0;
+    translate: 0 20px;
+  }
+}
+
+@keyframes reveal-nudge {
+  from {
+    opacity: 0;
+    translate: 0 8px;
+  }
+}
+
+@keyframes reveal-text {
+  from {
+    opacity: 0;
+    translate: 0 12px;
+    filter: blur(6px);
+  }
+}
+
+@keyframes reveal-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes reveal-scale {
+  from {
+    opacity: 0;
+    translate: 0 14px;
+    scale: 0.97;
+  }
+}
+
+@keyframes reveal-draw {
+  from {
+    scale: 0 1;
+  }
+}
+
+@keyframes reveal-pop {
+  from {
+    opacity: 0;
+    scale: 0.8;
+  }
+}
+
+@keyframes reveal-type {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0);
+  }
+}
+
+@keyframes reveal-arrive {
+  from {
+    opacity: 0;
+    translate: 0 0.3em;
+    filter: blur(16px);
+  }
+}
+
+@keyframes reveal-settle {
+  from {
+    scale: 1.12;
+  }
+}
+
+@keyframes count-up {
+  from {
+    --count: 0;
+  }
+}
+
+.hero-in {
+  animation: reveal-text 1000ms var(--ease-reveal) backwards;
+  animation-delay: calc(var(--reveal-i) * 90ms + 80ms);
+}
+
+.hero-in.hero-rise {
+  animation-name: reveal-rise;
+}
+
+:root[data-reveal-ready]
+  [data-reveal]:not(
+    [data-shown],
+    [data-reveal="trigger"],
+    [data-reveal="stagger"],
+    [data-reveal="draw"]
+  ) {
+  opacity: 0;
+}
+
+/*
+ * Sections out of view pause their loops (see PauseOffscreen). Loops are
+ * listed by name rather than `*`: toggling the attribute then restyles only
+ * these few elements instead of the whole section subtree mid-scroll.
+ */
+[data-section][data-offscreen]
+  :is([data-loop], .animate-marquee-y, .animate-marquee),
+[data-section][data-offscreen] .metal-ring::before {
+  /* biome-ignore lint/complexity/noImportantStyles: some loops set `animation` inline (scene-float), which only !important can pause */
+  animation-play-state: paused !important;
+}
+
+/*
+ * Loops inside a block that hasn't revealed yet wait for it. Chrome won't hand
+ * an animation to the compositor when it starts under a static `opacity: 0`,
+ * and never retries, so it would tick on the main thread for good. Resuming
+ * together with the reveal animation lets it composite.
+ */
+:root[data-reveal-ready]
+  [data-reveal]:not([data-shown])
+  :is(.animate-marquee-y, .animate-marquee),
+:root[data-reveal-ready] [data-reveal]:not([data-shown]) .metal-ring::before {
+  animation-play-state: paused;
+}
+
+:root[data-reveal-ready] [data-reveal="draw"]:not([data-shown]) {
+  scale: 0 1;
+}
+
+:root[data-reveal-ready] [data-reveal="stagger"]:not([data-shown]) > * {
+  opacity: 0;
+}
+
+[data-shown="in"] {
+  animation: reveal-rise 900ms var(--ease-reveal) backwards;
+  animation-delay: calc(var(--reveal-i) * 80ms);
+}
+
+[data-shown="in"][data-reveal="text"] {
+  animation-name: reveal-text;
+  animation-duration: 1000ms;
+}
+
+[data-shown="in"][data-reveal="fade"] {
+  animation-name: reveal-fade;
+  animation-duration: 700ms;
+}
+
+[data-shown="in"][data-reveal="scale"] {
+  animation-name: reveal-scale;
+}
+
+[data-shown="in"][data-reveal="draw"] {
+  animation-name: reveal-draw;
+  animation-duration: 1200ms;
+}
+
+[data-shown="in"]:is([data-reveal="trigger"], [data-reveal="stagger"]) {
+  animation: none;
+}
+
+[data-shown="in"][data-reveal="stagger"] > * {
+  animation: reveal-rise 900ms var(--ease-reveal) backwards;
+  animation-delay: calc(var(--stagger-i, 0) * 70ms + var(--stagger-base, 0ms));
+}
+
+[data-reveal="stagger"] > :nth-child(2) {
+  --stagger-i: 1;
+}
+[data-reveal="stagger"] > :nth-child(3) {
+  --stagger-i: 2;
+}
+[data-reveal="stagger"] > :nth-child(4) {
+  --stagger-i: 3;
+}
+[data-reveal="stagger"] > :nth-child(5) {
+  --stagger-i: 4;
+}
+[data-reveal="stagger"] > :nth-child(6) {
+  --stagger-i: 5;
+}
+[data-reveal="stagger"] > :nth-child(7) {
+  --stagger-i: 6;
+}
+[data-reveal="stagger"] > :nth-child(8) {
+  --stagger-i: 7;
+}
+
+[data-seq][data-shown="in"] .seq-in {
+  animation: reveal-nudge 600ms var(--ease-reveal) var(--at, 0s) backwards;
+}
+
+[data-seq][data-shown="in"] .seq-type {
+  animation: reveal-type var(--dur, 900ms) steps(var(--steps, 30)) var(--at, 0s)
+    backwards;
+}
+
+[data-seq][data-shown="in"] .seq-pop {
+  animation: reveal-pop 500ms cubic-bezier(0.34, 1.4, 0.64, 1) var(--at, 0s)
+    backwards;
+}
+
+[data-seq][data-shown="in"] .seq-draw {
+  animation: reveal-draw var(--dur, 1400ms) var(--ease-reveal) var(--at, 0s)
+    backwards;
+}
+
+[data-seq][data-shown="in"] .seq-arrive {
+  animation: reveal-arrive 1300ms var(--ease-reveal) var(--at, 0s) backwards;
+}
+
+[data-seq][data-shown="in"] .bg-settle {
+  animation: reveal-settle 1800ms var(--ease-reveal) backwards;
+}
+
+:root[data-reveal-ready]
+  [data-seq]:not([data-shown])
+  :is(.seq-in, .seq-pop, .seq-arrive) {
+  opacity: 0;
+}
+
+:root[data-reveal-ready] [data-seq]:not([data-shown]) .seq-type {
+  clip-path: inset(0 100% 0 0);
+}
+
+:root[data-reveal-ready] [data-seq]:not([data-shown]) .seq-draw {
+  scale: 0 1;
+}
+
+.seq-count {
+  counter-reset: count var(--count);
+}
+
+.seq-count::after {
+  content: counter(count) "%";
+}
+
+[data-seq][data-shown="in"] .seq-count {
+  animation: count-up var(--dur, 1400ms) var(--ease-reveal) var(--at, 0s)
+    backwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-in,
+  [data-shown="in"][data-reveal]:not(
+      [data-reveal="trigger"],
+      [data-reveal="stagger"]
+    ),
+  [data-shown="in"][data-reveal="stagger"] > *,
+  [data-seq][data-shown="in"]
+    :is(.seq-in, .seq-type, .seq-pop, .seq-draw, .seq-arrive) {
+    animation-name: reveal-fade;
+    animation-duration: 500ms;
+    animation-timing-function: ease;
+  }
+
+  :root[data-reveal-ready] [data-reveal="draw"]:not([data-shown]) {
+    scale: none;
+    opacity: 0;
+  }
+
+  [data-seq][data-shown="in"] :is(.seq-count, .bg-settle) {
+    animation: none;
+  }
+}
+
+.disclosure {
+  interpolate-size: allow-keywords;
+}
+
+/* The transition on each state is the one that runs into it: closing (base
+   rule) is shorter and simpler than opening. Both are transitions, so a
+   click mid-way reverses from where the panel is. */
+.disclosure::details-content {
+  block-size: 0;
+  opacity: 0;
+  overflow-y: clip;
+  transition:
+    block-size 200ms cubic-bezier(0.25, 1, 0.5, 1),
+    opacity 150ms ease,
+    content-visibility 200ms allow-discrete;
+}
+
+.disclosure[open]::details-content {
+  block-size: auto;
+  opacity: 1;
+  transition:
+    block-size 260ms cubic-bezier(0.25, 1, 0.5, 1),
+    opacity 200ms ease,
+    content-visibility 260ms allow-discrete;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .disclosure::details-content,
+  .disclosure[open]::details-content {
+    transition:
+      opacity 150ms ease,
+      content-visibility 150ms allow-discrete;
+  }
+}
+
+/* Header item size (`config/header-layout.json`). Unlayered, so it wins over
+   the items' own `text-ui`; the mobile header keeps its sizes. */
+@media (width >= 64rem) {
+  [data-site-header] [data-pill] {
+    font-size: var(--hdr-text);
+  }
+}
+
+/* Invisible native seek bar over a drawn ruler. The thumb needs a real size:
+   Chrome maps a click on a zero-width thumb's track to the minimum, so every
+   seek jumped to 0. Its width is twice the ruler's side inset, which makes the
+   thumb's centre travel exactly where the drawn playhead does. */
+@utility seek-range {
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+  &::-webkit-slider-thumb {
+    appearance: none;
+    width: var(--seek-thumb, 1px);
+    height: 24px;
+    opacity: 0;
+  }
+  &::-moz-range-thumb {
+    width: var(--seek-thumb, 1px);
+    height: 24px;
+    border: 0;
+    opacity: 0;
+  }
+}
+
+/* The fumadocs ⌘K search dialog opens from a keyboard shortcut, so it opens
+   and closes without animation. Its overlay and panel read these theme
+   variables; with `none`, Radix's presence check unmounts them at once. */
+:root {
+  --animate-fd-dialog-in: none;
+  --animate-fd-dialog-out: none;
+  --animate-fd-fade-in: none;
+  --animate-fd-fade-out: none;
 }

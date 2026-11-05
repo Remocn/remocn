@@ -1,0 +1,91 @@
+---
+title: Case Flip
+description: "A headline flips glyph by glyph from lowercase to uppercase and back to its final casing"
+component: case-flip
+vibe: clean
+length: 120
+useWhen:
+  - "A headline beat where the casing itself is the joke, such as a quiet word turning LOUD."
+  - "A title that should land with a word picked out in a gradient accent color."
+  - "A typographic intro that benefits from baseline and x-height guides showing the glyph change."
+avoidWhen:
+  - "You want letters decoding from random characters instead of flipping case — use `matrix-decode`."
+  - "The text should simply fade up with no casing gag — use `staggered-fade-up`."
+  - "You want one smooth morph between two phrases — use `kinetic-morph-text`."
+---
+
+<ComponentPreview name="case-flip" />
+
+<InstallBlock name="case-flip" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { CaseFlip } from "@/components/remocn/case-flip";
+
+const CaseFlipScene = () => (
+  <CaseFlip text="Make it LOUD" accentWord="LOUD" stagger={2} />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="CaseFlip"
+    component={CaseFlipScene}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Every glyph starts lowercase, then a wave flips them to uppercase one by one with a squash-and-spring, and a second wave flips each to its final casing. The accent word then fills with a gradient while the baseline and x-height guides fade out. Pass `text` in its final casing and `accentWord`; it ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "text",
+      type: "string",
+      default: "\"Launch it LOUD\"",
+      description: "The headline in its final casing.",
+    },
+    {
+      name: "accentWord",
+      type: "string",
+      default: "\"LOUD\"",
+      description: "Word from `text` that lands in the accent gradient.",
+    },
+    {
+      name: "stagger",
+      type: "number",
+      default: "2",
+      description: "Frames between neighboring glyphs in each wave.",
+    },
+    {
+      name: "showGuides",
+      type: "boolean",
+      default: "true",
+      description: "Show the baseline and x-height guide lines.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for the highlighted word.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier.",
+    },
+  ]}
+/>

@@ -1,0 +1,105 @@
+---
+title: Speedrun Timer
+description: "A speedrun split table fills row by row against personal bests and ends on a gold world record banner"
+component: speedrun-timer
+vibe: playful
+length: 130
+useWhen:
+  - "A launch video that frames shipping as a speedrun, with steps like script, edit, render and ship."
+  - "Showing a workflow's time savings as per-step splits that beat a previous best."
+  - "A playful milestone beat that ends on a celebratory banner after a timed sequence."
+avoidWhen:
+  - "You only need one counting number, not a split table — use `rolling-number`."
+  - "You want two timers racing side by side instead of splits — use `timer-duel`."
+  - "The data is a ranking that climbs a list, not elapsed time — use `leaderboard-climb`."
+---
+
+<ComponentPreview name="speedrun-timer" />
+
+<InstallBlock name="speedrun-timer" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { SpeedrunTimer } from "@/components/remocn/speedrun-timer";
+
+const SpeedrunTimerScene = () => (
+  <SpeedrunTimer
+    category="Launch video · Any%"
+    splits={[
+      { name: "Script", time: 300, pb: 340 },
+      { name: "Edit", time: 900, pb: 950 },
+      { name: "Ship", time: 1500, pb: 1620 },
+    ]}
+    banner="World record"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="SpeedrunTimer"
+    component={SpeedrunTimerScene}
+    durationInFrames={175}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The panel slides in with a header and one row per split. The run clock starts, each split locks in with the time and a green or red delta against its personal best, and the last split goes gold before a banner lands. Pass `splits` (cumulative seconds for `time` and `pb`), `category` and `banner`; it ships dark and light via `theme`. The header uses the Remocn wordmark, swap `RemocnLogo` in the copied file for your own.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "category",
+      type: "string",
+      default: "\"Launch video · Any%\"",
+      description: "Category line in the header, after the logo.",
+    },
+    {
+      name: "splits",
+      type: "SpeedrunSplit[]",
+      default: "DEFAULT_SPLITS",
+      description: "The splits in order. The last one is the finish and goes gold.",
+    },
+    {
+      name: "banner",
+      type: "string",
+      default: "\"World record\"",
+      description: "The banner that lands when the run finishes.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Color of the current-split marker.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color scheme. Ships dark and light.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "gradients.sh preset id for the animated ground.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the ground shader parameters.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+  ]}
+/>

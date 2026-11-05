@@ -1,0 +1,126 @@
+---
+title: Rating Laurel
+description: "A laurel wreath frames a 4.96 rating above category scores and gliding review cards"
+component: rating-laurel
+vibe: premium
+length: 250
+useWhen:
+  - "Social proof beat for an app or tool: one headline rating with a wreath and short review quotes."
+  - "Showing category scores (docs, motion, setup, support, value) next to written reviews."
+  - "Closing a launch video with an award-style trust moment before the call to action."
+avoidWhen:
+  - "You want pile-up social post cards rather than a rating — use `testimonial-stack`."
+  - "The proof is several stats counting up, not reviews — use `stat-sequence`."
+  - "The proof is a repository star count — use `github-stars`."
+---
+
+<ComponentPreview name="rating-laurel" />
+
+<InstallBlock name="rating-laurel" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { RatingLaurel } from "@/components/remocn/rating-laurel";
+
+const RatingLaurelScene = () => (
+  <RatingLaurel
+    rating={4.9}
+    title="Loved by builders"
+    subtitle="Rated in the **top 5%** of launch tools"
+    reviewCount={298}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="RatingLaurel"
+    component={RatingLaurelScene}
+    durationInFrames={270}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A laurel draws around a rolling `rating` number with a `title` and a subtitle (wrap words in `**` for emphasis). Category score chips appear, review cards fade up and glide sideways, and a "Show all reviews" button closes the beat. Pass `reviews`, `categories` and `reviewCount`; `device` picks a web card or a phone frame (portrait always uses phone). Ships light and dark via `theme`.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "rating",
+      type: "number",
+      default: "4.96",
+      description: "The headline rating, shown to two decimals.",
+    },
+    {
+      name: "title",
+      type: "string",
+      default: "\"Loved by builders\"",
+      description: "Heading under the wreath.",
+    },
+    {
+      name: "subtitle",
+      type: "string",
+      default: "\"remocn is in the **top 5%** of launch tools, based on ratings, reviews, and reliability\"",
+      description: "Supporting line; wrap words in ** for bold.",
+    },
+    {
+      name: "reviews",
+      type: "RatingReview[]",
+      default: "DEFAULT_REVIEWS",
+      description: "Review cards: quote, name, city, optional date and hue.",
+    },
+    {
+      name: "reviewCount",
+      type: "number",
+      default: "298",
+      description: "Review count shown in the \"Show all reviews\" button.",
+    },
+    {
+      name: "categories",
+      type: "RatingCategory[]",
+      default: "DEFAULT_CATEGORIES",
+      description: "Category scores, each with label, score and icon.",
+    },
+    {
+      name: "device",
+      type: "\"web\" | \"phone\"",
+      default: "\"web\"",
+      description: "Show the layout as a web card or a phone frame.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Color of the call-to-action button.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"light\" | \"dark\"",
+      default: "\"light\"",
+      description: "Color scheme. Ships light and dark.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "gradients.sh preset id for the animated ground.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the ground shader parameters.",
+    },
+  ]}
+/>

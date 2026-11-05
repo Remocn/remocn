@@ -3,36 +3,32 @@ title: Compositions
 description: Full scenes built by composing primitives and UI blocks
 ---
 
+import { CategoryIndex } from "@/components/docs/index/category/category-index";
+import { ComponentGroup } from "@/components/docs/index/category/component-group";
+
 Higher-level templates that combine multiple primitives, UI blocks, and transitions into finished shots: heroes, product showcases, and journeys.
+
+<CategoryIndex section="/docs/compositions">
+
+<ComponentGroup
+  items={[
+    "ecosystem-constellation",
+    "infinite-bento-pan",
+  ]}
+>
 
 ## Hero & Outro
 
-<ComponentCardGrid
+</ComponentGroup>
+
+<ComponentGroup
   items={[
-    {
-      name: "EcosystemConstellation",
-      description: "Central logo orbited by integration satellites with pulsing data lines",
-      status: "stable",
-      href: "/docs/compositions/ecosystem-constellation",
-    },
-    {
-      name: "InfiniteBentoPan",
-      description: "Camera diagonally drifts across an oversized bento grid behind a soft vignette",
-      status: "stable",
-      href: "/docs/compositions/infinite-bento-pan",
-    },
+    "live-code-compilation",
   ]}
-/>
+>
 
 ## Product Showcases
 
-<ComponentCardGrid
-  items={[
-    {
-      name: "LiveCodeCompilation",
-      description: "Split-screen where typed code on the left snaps a live UI preview on the right",
-      status: "stable",
-      href: "/docs/compositions/live-code-compilation",
-    },
-  ]}
-/>
+</ComponentGroup>
+
+</CategoryIndex>

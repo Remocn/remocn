@@ -1,0 +1,73 @@
+---
+title: Ellipsis Resolve
+description: "Three pulsing dots resolve into a gradient word and a closing period."
+component: ellipsis-resolve
+vibe: clean
+length: 94
+useWhen:
+  - "A loading-to-done beat where a thinking indicator turns into a result word like Shipped."
+  - "A punchy one-word payoff that should follow a short build-up."
+avoidWhen:
+  - "The payoff is a full sentence - use `typewriter`."
+  - "You want a swap between two words - use `slot-machine-roll`."
+  - "You want letters to stagger in with no dots - use `per-character-rise`."
+---
+
+<ComponentPreview name="ellipsis-resolve" />
+
+<InstallBlock name="ellipsis-resolve" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { EllipsisResolve } from "@/components/remocn/ellipsis-resolve";
+
+const EllipsisResolveScene = () => (
+  <EllipsisResolve word="Shipped" accent="#3B5BFD" />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="EllipsisResolve"
+    component={EllipsisResolveScene}
+    durationInFrames={131}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Three dots pulse in turn, stretch apart, and a gradient sweep turns them into the letters of the word, ending on a period. Pass `word` to set the result; it ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "word",
+      type: "string",
+      default: "\"Shipped\"",
+      description: "The word the ellipsis resolves into. A period is always appended.",
+      description: "Word the three dots resolve into",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color (any valid CSS color)",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark palettes",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier",
+    },
+  ]}
+/>

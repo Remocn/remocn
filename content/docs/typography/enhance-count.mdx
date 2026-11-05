@@ -1,0 +1,82 @@
+---
+title: Enhance Count
+description: "A blurred, thin line sharpens in place into a heavier weight, with the last word in the accent."
+component: enhance-count
+vibe: clean
+length: 87
+useWhen:
+  - "A before and after message about quality, such as a rough draft becoming a finished piece."
+  - "A two-line statement where the second line is the payoff."
+avoidWhen:
+  - "You want a blur-in entrance only - use `focus-blur-resolve`."
+  - "You need the text to change content, not weight - use `strikethrough-replace`."
+  - "You want a simple fade-up - use `staggered-fade-up`."
+---
+
+<ComponentPreview name="enhance-count" />
+
+<InstallBlock name="enhance-count" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { EnhanceCount } from "@/components/remocn/enhance-count";
+
+const EnhanceCountScene = () => (
+  <EnhanceCount text={"Draft it fast.\nFinish it sharp."} highlight="sharp." />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="EnhanceCount"
+    component={EnhanceCountScene}
+    durationInFrames={120}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The text enters thin and blurred, then each glyph sharpens and gains weight in a quick sweep so the line reads as finished. Pass `text` (use a newline for a second line) and `highlight` for the accented words; it ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "text",
+      type: "string",
+      default: "\"Draft it fast.\\nFinish it sharp.\"",
+      description: "Text to show; newline starts a new line",
+    },
+    {
+      name: "highlight",
+      type: "string",
+      default: "\"sharp.\"",
+      description: "Word or words shown in the accent color",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Accent color (any valid CSS color)",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Overrides the theme's stage color",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark palettes",
+    },
+  ]}
+/>

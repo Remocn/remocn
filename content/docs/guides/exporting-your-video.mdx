@@ -3,18 +3,28 @@ title: Exporting your video
 description: The preview in your browser is not a file yet — one prompt turns it into an mp4 you can post
 ---
 
+import { GuideCtaCard } from "@/components/docs/guides/practice/cta-card";
+import { GuideExportPipeline } from "@/components/docs/guides/practice/export-pipeline";
+import { GuidePrompt } from "@/components/docs/guides/prompt-block";
+
 The preview studio plays your video, but it isn't a file. Nothing to upload, nothing to send. Rendering fixes that: it turns the preview into a real mp4, and it's one prompt.
 
 ## The one move
 
 When the video looks right in the player, paste:
 
+<GuidePrompt copyLabel="Copy" size="lg">
+
 ```text
 Render the video to an mp4 in the project folder, and tell me the full path
 to the file when it's done.
 ```
 
+</GuidePrompt>
+
 That's it. Your agent runs the render and tells you where the file landed.
+
+<GuideExportPipeline />
 
 ## What to expect
 
@@ -24,7 +34,15 @@ Rendering builds the file frame by frame — every frame of your video gets draw
 
 The mp4 is ready to upload as-is. X, YouTube and LinkedIn all take the horizontal file directly — no conversion, no export settings, no editor in between.
 
-Posting to Shorts, Reels or TikTok too? Those want a vertical cut of the same video: [One video, three formats](/docs/guides/one-video-three-formats).
+<GuideCtaCard>
+
+Posting to Shorts, Reels or TikTok too?
+
+Those want a vertical cut of the same video.
+
+[One video, three formats](/docs/guides/one-video-three-formats)
+
+</GuideCtaCard>
 
 ## Changed something after rendering?
 

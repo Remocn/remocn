@@ -1,0 +1,154 @@
+---
+title: App Store Listing
+description: "A phone storefront listing taps Get, downloads while screenshots swipe past, then the button becomes Open."
+component: app-store-listing
+vibe: clean
+length: 172
+useWhen:
+  - "A mobile app launch video that needs the now-on-the-store beat with rating, rank and screenshots."
+  - "A vertical cut where off-device lines narrate each step: discover, install, open."
+  - "A feature tour that starts from discovery and install before the in-app scenes."
+avoidWhen:
+  - "You want the app's home screen and a placed widget after install — use `home-widget`."
+  - "You need a scrolling in-app screen, not a store page — use `phone-scroll`."
+  - "You need several phones in one frame — use `phone-trio`."
+---
+
+<ComponentPreview name="app-store-listing" />
+
+<InstallBlock name="app-store-listing" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { AppStoreListing } from "@/components/remocn/app-store-listing";
+
+const AppStoreListingScene = () => (
+  <AppStoreListing
+    appName="Acme"
+    subtitle="Plan your week"
+    rating={4.8}
+    chartRank={3}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="AppStoreListing"
+    component={AppStoreListingScene}
+    durationInFrames={200}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A phone rises with the app listing: icon, info strip and a screenshot carousel. A tap on Get collapses the button into a progress ring, the screenshots swipe sideways while it downloads, and the button expands into Open. Pass `appName`, `subtitle`, `rating`, `iconSrc` and `screenshots` (each with a `src`) to match your app; `lines` are the four captions beside the phone. Ships light and dark.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "appName",
+      type: "string",
+      default: "\"remocn\"",
+      description: "App name next to the icon",
+    },
+    {
+      name: "subtitle",
+      type: "string",
+      default: "\"Launch videos, written in React\"",
+      description: "One-line subtitle under the app name",
+    },
+    {
+      name: "developer",
+      type: "string",
+      default: "\"remocn Labs\"",
+      description: "Developer or publisher name",
+    },
+    {
+      name: "iconSrc",
+      type: "string",
+      description: "App icon image URL; a built-in mark shows when omitted",
+    },
+    {
+      name: "rating",
+      type: "number",
+      default: "4.8",
+      description: "Average star rating, e.g. 4.8",
+    },
+    {
+      name: "ratingCount",
+      type: "string",
+      default: "\"12K\"",
+      description: "Rating count label, e.g. '12K'",
+    },
+    {
+      name: "ageRating",
+      type: "string",
+      default: "\"4+\"",
+      description: "Age rating label in the info strip",
+    },
+    {
+      name: "category",
+      type: "string",
+      default: "\"Developer Tools\"",
+      description: "Category label in the info strip",
+    },
+    {
+      name: "chartRank",
+      type: "number",
+      default: "3",
+      description: "Chart position shown in the info strip",
+    },
+    {
+      name: "award",
+      type: "string | null",
+      default: "null",
+      description: "Optional award label; null hides it",
+    },
+    {
+      name: "screenshots",
+      type: "AppScreenshot[]",
+      default: "DEFAULT_SHOTS",
+      description: "Screenshot cards, each with a title and optional image src",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for highlights, buttons and progress",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline",
+    },
+    {
+      name: "theme",
+      type: "\"light\" | \"dark\"",
+      default: "\"light\"",
+      description: "Light or dark palette",
+    },
+    {
+      name: "lines",
+      type: "string[]",
+      description: "Four captions beside the phone, one per beat",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "gradients.sh preset id for the backdrop shader",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the backdrop shader parameters",
+    },
+  ]}
+/>

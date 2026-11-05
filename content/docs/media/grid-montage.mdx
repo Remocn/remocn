@@ -1,0 +1,98 @@
+---
+title: Grid Montage
+description: "One shot splits into a 2x2 grid, then a 3x3 grid cutting on the beat, then merges back."
+component: grid-montage
+vibe: clean
+length: 138
+useWhen:
+  - "A rhythmic recap montage of many scenes or screenshots cut to a beat."
+  - "An opener or closer that fans one hero shot out into a wall of variations and back."
+  - "Showing the breadth of a product through nine moving tiles."
+avoidWhen:
+  - "Image shards should converge into a labelled layout — use `shards-to-grid`."
+  - "You need fast full-frame cuts rather than a grid — use `strobe-montage`."
+  - "A single image should be examined closely — use `up-close`."
+---
+
+<ComponentPreview name="grid-montage" />
+
+<InstallBlock name="grid-montage" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { GridMontage } from "@/components/remocn/grid-montage";
+
+const GridMontageScene = () => (
+  <GridMontage
+    images={["/shots/1.jpg", "/shots/2.jpg", "/shots/3.jpg", "/shots/4.jpg"]}
+    beat={14}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="GridMontage"
+    component={GridMontageScene}
+    durationInFrames={170}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A full-frame shot splits into a 2x2 grid of new scenes, grows into a 3x3 grid that swaps tiles on every beat, then merges back into one closing shot. Pass your own `scenes` (React nodes) or `images`, and set `beat`, the number of frames between cuts. With neither, it shows built-in mock tiles. It ships light and dark through `theme`.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "scenes",
+      type: "React.ReactNode[]",
+      description: "Your own scenes as React nodes. Takes priority over images.",
+    },
+    {
+      name: "images",
+      type: "string[]",
+      description: "Image URLs used as the tiles.",
+    },
+    {
+      name: "beat",
+      type: "number",
+      default: "14",
+      description: "Frames per beat. The whole timeline scales with it.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color of the mock tiles.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "Shader preset id for the animated background.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Partial shader parameters that override the ground preset.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color scheme. Ships light and dark.",
+    },
+  ]}
+/>

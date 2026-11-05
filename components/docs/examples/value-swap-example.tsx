@@ -10,10 +10,12 @@ export function ValueSwapExampleScene({
   duration,
   distance,
   direction,
+  color = "#f2f2f2",
 }: {
   duration?: number;
   distance?: number;
   direction?: "up" | "down";
+  color?: string;
 }) {
   return (
     <AbsoluteFill
@@ -27,7 +29,7 @@ export function ValueSwapExampleScene({
           fontFamily: FONT_FAMILY,
           fontSize: 40,
           fontWeight: 600,
-          color: "#f2f2f2",
+          color,
         }}
       >
         <ValueSwap

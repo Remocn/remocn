@@ -1,0 +1,82 @@
+---
+title: Quadtree Mark
+description: "The R mark is built from subdividing pixel squares that refine into a sharp logo, then the name appears."
+component: quadtree-mark
+vibe: tech
+length: 98
+useWhen:
+  - "A logo reveal for an imaging, graphics or codec product, with pixels refining into the mark."
+  - "A tech brand with a path-based logo that can be passed in."
+  - "A reveal that needs no tagline and ends on the name."
+avoidWhen:
+  - "You want dots that ripple rather than squares that subdivide — use `ripple-mark`."
+  - "A wave across a grid should leave the mark behind — use `squircle-wave`."
+  - "A tagline must be readable at the end — use `introducing`."
+---
+
+<ComponentPreview name="quadtree-mark" />
+
+<InstallBlock name="quadtree-mark" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { QuadtreeMark } from "@/components/remocn/quadtree-mark";
+
+const QuadtreeMarkScene = () => (
+  <QuadtreeMark
+    name="emocn"
+    accent="#3B5BFD"
+    theme="dark"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="QuadtreeMark"
+    component={QuadtreeMarkScene}
+    durationInFrames={130}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Coarse pixel squares subdivide step by step around the R mark until the edges are sharp, the camera pans, and the name appears beside the mark. Pass `logo` as an SVG path (or several) to subdivide your own mark and `name` for the text after it. Ships light and dark.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "logo",
+      type: "string | string[]",
+      description: "SVG path or paths of the mark to subdivide; defaults to the R.",
+    },
+    {
+      name: "name",
+      type: "string",
+      default: "\"emocn\"",
+      description: "Text set after the mark; emocn reads as the logo.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent colour for the mark and highlights; any CSS colour.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Dark or light palette and ground.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier for the whole timeline; 1 is normal speed.",
+    },
+  ]}
+/>

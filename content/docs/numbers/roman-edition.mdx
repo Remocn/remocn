@@ -1,0 +1,101 @@
+---
+title: Roman Edition
+description: "A giant Roman numeral counts up on a colored band under an edition header, then a tagline lands."
+component: roman-edition
+vibe: playful
+length: 132
+useWhen:
+  - "A numbered edition such as a launch week or release series shown as a numeral."
+  - "A recurring announcement that has run for many editions."
+  - "An opener where the edition number should feel like a title card."
+avoidWhen:
+  - "The number is a plain software version — use `version-hero`."
+  - "The number counts down to a date — use `countdown`."
+  - "The figure is an ordinary large count — use `carry-count`."
+---
+
+<ComponentPreview name="roman-edition" />
+
+<InstallBlock name="roman-edition" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { RomanEdition } from "@/components/remocn/roman-edition";
+
+const RomanEditionScene = () => (
+  <RomanEdition value={14} eyebrow="Launch Week" tagline="Five days of new scenes, one every morning." />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="RomanEdition"
+    component={RomanEditionScene}
+    durationInFrames={160}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The band wipes in and the numeral ticks through the sequence from `from` to `value`, slow at first, quick through the middle, then easing onto the final edition. The tagline rises in after it lands. Pass `value`, `eyebrow` and `tagline`; it ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "value",
+      type: "number",
+      default: "14",
+      description: "Final edition number, drawn as a Roman numeral.",
+    },
+    {
+      name: "from",
+      type: "number",
+      default: "1",
+      description: "Edition number the sequence starts from.",
+    },
+    {
+      name: "eyebrow",
+      type: "string",
+      default: "\"Launch Week\"",
+      description: "Header text above the numeral.",
+    },
+    {
+      name: "tagline",
+      type: "string",
+      default: "\"Five days of new scenes, one every morning.\"",
+      description: "Line that rises in word by word under the band.",
+    },
+    {
+      name: "showNumber",
+      type: "boolean",
+      default: "true",
+      description: "Show the plain edition number at the top right.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Accent color for highlights and small marks.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background color override.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color theme, \"dark\" or \"light\".",
+    },
+  ]}
+/>

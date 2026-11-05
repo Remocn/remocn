@@ -16,7 +16,11 @@ export async function GET(
   if (!page) notFound();
 
   return new Response(await getLLMText(page), {
-    headers: { "Content-Type": "text/markdown; charset=utf-8" },
+    headers: {
+      "Content-Type": "text/markdown; charset=utf-8",
+      // A copy of the HTML page for agents; search should index the HTML.
+      "X-Robots-Tag": "noindex",
+    },
   });
 }
 

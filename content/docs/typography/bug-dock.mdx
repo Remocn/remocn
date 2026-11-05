@@ -1,0 +1,87 @@
+---
+title: Bug Dock
+description: "\"Playing on every screen you ship.\" with a small broadcast logo bug docking at the bottom"
+component: bug-dock
+vibe: social
+length: 114
+useWhen:
+  - "A broadcast-style title where the brand shrinks into a corner bug and the message takes over."
+  - "A launch beat that introduces the brand first and the headline second."
+  - "A closing or channel-ident moment for a social or streaming video."
+avoidWhen:
+  - "You want the headline alone with no logo lockup — use `soft-blur-in`."
+  - "The brand should stay centered with a status word — use `beta-thanks`."
+  - "You need a logo reveal on its own — use `flip-sting`."
+---
+
+<ComponentPreview name="bug-dock" />
+
+<InstallBlock name="bug-dock" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { BugDock } from "@/components/remocn/bug-dock";
+
+const BugDockScene = () => <BugDock name="remocn" headline="Playing on every screen you ship." highlight="every screen" />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="BugDock"
+    component={BugDockScene}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A large logo-and-name lockup fades in, its letters tuck away until only the mark remains, and the mark docks to the bottom corner like a broadcast bug while the headline appears with one phrase highlighted. Pass `name` ("remocn" uses the real logo), `headline` and `highlight`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "name",
+      type: "string",
+      default: "\"remocn\"",
+      description: "Brand name; \"remocn\" renders the real logo, anything else a wordmark.",
+    },
+    {
+      name: "headline",
+      type: "string",
+      default: "\"Playing on every screen you ship.\"",
+      description: "Headline text shown after the brand docks.",
+    },
+    {
+      name: "highlight",
+      type: "string",
+      default: "\"every screen\"",
+      description: "Phrase in the headline set in the accent color.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Color for the highlighted phrase; defaults to the theme accent.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Stage fill color; pass \"transparent\" to overlay your own footage.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color scheme; ships dark and light.",
+    },
+  ]}
+/>

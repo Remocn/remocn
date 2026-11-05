@@ -1,0 +1,98 @@
+---
+title: Run on
+description: "A breathless run-on sentence speeds up and scrolls away, then a full stop drops into a short promise line."
+component: run-on
+vibe: clean
+length: 188
+useWhen:
+  - "A pain-point beat that shows a tedious workflow as one exhausting sentence before the fix."
+  - "A before and after moment where the long version should feel endless and the answer one short line."
+avoidWhen:
+  - "The pain is a repeating loop of short steps rather than one sentence — use `loop-break`."
+  - "You want the chore list to be crossed out, not scrolled away — use `filler-cut`."
+  - "You only need the short answer with a highlighted phrase — use `answer-first`."
+---
+
+<ComponentPreview name="run-on" />
+
+<InstallBlock name="run-on" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { RunOn } from "@/components/remocn/run-on";
+
+const RunOnScene = () => (
+  <RunOn
+    text="Open the old project and relink the fonts and nudge every keyframe and render and spot a typo and render it all again"
+    promise="Or change one line."
+    highlight="one line"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="RunOn"
+    component={RunOnScene}
+    durationInFrames={200}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The `text` runs in word by word at an accelerating pace, joiner words like and dimmed, and scrolls up as it fills the frame. A final accent full stop slams in, the wall drains away, and the stop slides down to end the `promise` line, whose `highlight` phrase lights up. Pass a long `text` without its final period, plus `promise` and `highlight`. It ships light and dark.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "text",
+      type: "string",
+      default: "\"Open last year’s project and relink the fonts and nudge every keyframe and render and spot a typo and render it all again\"",
+      description: "Long sentence to run on; its trailing punctuation is removed.",
+    },
+    {
+      name: "promise",
+      type: "string",
+      default: "\"Or change one line.\"",
+      description: "Short line that follows once the long sentence drains away.",
+    },
+    {
+      name: "highlight",
+      type: "string",
+      default: "\"one line\"",
+      description: "Phrase inside promise that turns accent-colored.",
+    },
+    {
+      name: "joiners",
+      type: "string[]",
+      default: "[\"and\", \"then\"]",
+      description: "Words dimmed within the run-on, such as and or then.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Color of the full stop and highlight; overrides the theme accent.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark palette.",
+    },
+  ]}
+/>

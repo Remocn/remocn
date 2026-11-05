@@ -4,7 +4,7 @@ import { sortByDateDesc } from "@/lib/changelog";
 
 const SITE_URL = "https://remocn.dev";
 const CHANNEL_DESCRIPTION =
-  "Making-of stories behind the videos we build with remocn — the storyboard, the decisions that made each one work, and the prompt that rebuilds it.";
+  "Making-of stories behind the videos we build with Remocn — the storyboard, the decisions that made each one work, and the prompt that rebuilds it.";
 
 function escapeXml(value: string): string {
   return value
@@ -36,7 +36,7 @@ export function GET() {
     '<?xml version="1.0" encoding="UTF-8"?>',
     '<rss version="2.0">',
     "<channel>",
-    "<title>remocn blog</title>",
+    "<title>Remocn blog</title>",
     `<link>${SITE_URL}/blog</link>`,
     `<description>${escapeXml(CHANNEL_DESCRIPTION)}</description>`,
     "<language>en</language>",

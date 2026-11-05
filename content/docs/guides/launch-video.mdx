@@ -1,45 +1,105 @@
 ---
 title: Launch video
-description: The ~35-second launch video we made for remocn itself — with your product in it
+description: The ~35-second launch video we made for Remocn itself — with your product in it
 ---
+
+import { GuideNotes, GuideMoreLink } from "@/components/docs/guides/director-notes";
+import { GuideCount } from "@/components/docs/guides/guide-ui";
+import { GuideNote } from "@/components/docs/guides/note";
+import { GuidePrompt } from "@/components/docs/guides/prompt-block";
+import { GuideRenderCard } from "@/components/docs/guides/render-card";
+import { GuideBeatList, GuideStoryboard } from "@/components/docs/guides/storyboard";
+import { GuideFacts } from "@/components/docs/guides/video-facts";
+import { GuideWords } from "@/components/docs/guides/words-form";
 
 <GuideVideo
   src="https://cdn.remocn.dev/videos/intoducing-remocn.mp4"
   poster="https://cdn.remocn.dev/posters/intoducing-remocn.png"
+  label="The Remocn launch video"
+  duration={35}
 />
 
-This is the video we launched remocn with. Eight beats, thirty-five seconds, built entirely from remocn components. Below is everything you need to make the same video for your product.
+<GuideFacts
+  facts={[
+    { value: "~35 s", label: "running time" },
+    { value: "8 beats", label: "built from Remocn components" },
+    { value: "1920×1080", label: "30 fps, landscape" },
+  ]}
+/>
 
-## The storyboard
+This is the video we launched Remocn with. Eight beats, thirty-five seconds, built entirely from Remocn components. Below is everything you need to make the same video for your product.
 
-1. **The pain** — two short lines land one after the other, naming the problem you solve.
+## The storyboard<GuideCount n={8} />
+
+<GuideStoryboard
+  beats={[
+    { label: "Pain", seconds: 4, look: "lines" },
+    { label: "Reveal", seconds: 3, look: "swirl" },
+    { label: "Tagline", seconds: 3, look: "slide" },
+    { label: "Positioning", seconds: 4, look: "words" },
+    { label: "Montage", seconds: 6, look: "montage" },
+    { label: "Value", seconds: 5, look: "stack" },
+    { label: "Install", seconds: 5, look: "terminal" },
+    { label: "Outro", seconds: 4, look: "logo" },
+  ]}
+/>
+
+<GuideBeatList>
+
+1. **The pain** — Two short lines land one after the other, naming the problem you solve.
 2. **The reveal** — "Meet &lt;Product&gt;", uncovered by a swirl of color.
-3. **The tagline** — your one-liner slides in.
+3. **The tagline** — Your one-liner slides in.
 4. **The positioning** — "Like X, for Y" assembles itself word by word.
-5. **The montage** — six fast cuts: a feature name over a different animated background each time.
-6. **The value** — three claims stack up, line by line.
-7. **The install** — a terminal types out your install command or call to action.
-8. **The outro** — your logo draws itself on, with one quiet closing line.
+5. **The montage** — Six fast cuts: a feature name over a different animated background each time.
+6. **The value** — Three claims stack up, line by line.
+7. **The install** — A terminal types out your install command or call to action.
+8. **The outro** — Your logo draws itself on, with one quiet closing line.
 
-## Your words
+</GuideBeatList>
+
+## Your words<GuideCount n={9} />
 
 This is the whole creative work — nine blanks:
 
+<GuideWords
+  examples={[
+    ["remocn"],
+    { stack: ["Every launch needs a video", "Yours shouldn't take a week"] },
+    ["Cinematic video components for React"],
+    ["Like shadcn/ui, for video"],
+    ["Typography", "Transitions", "Shaders", "UI primitives", "Captions", "Logo stings"],
+    ["110+ components", "One command to install", "The code is yours"],
+    { code: "npx shadcn add @remocn/shader-swirl" },
+    ["Open source, all the way down"],
+    { color: "#D4F25C", note: "Leave empty for the default lime" },
+  ]}
+>
+
 - **Product name**
-- **Two pain lines** — six words or fewer each; they're on screen for about two seconds
-- **Tagline** — one line
-- **Positioning** — the "Like X, for Y" sentence
-- **Six feature labels** — one or two words each
-- **Three value claims** — short, concrete, no adjectives you can't prove
-- **Install command or CTA** — whatever you want typed on screen
-- **Closing line** — e.g. "Open source, all the way down"
-- **Accent color** — one hex value; optional, the default lime looks good
+- **Two pain lines** — Six words or fewer each; they're on screen for about two seconds
+- **Tagline** — One line
+- **Positioning** — The "Like X, for Y" sentence
+- **Six feature labels** — One or two words each
+- **Three value claims** — Short, concrete, no adjectives you can't prove
+- **Install command or CTA** — Whatever you want typed on screen
+- **Closing line**
+- **Accent color** _optional_ — One hex value; the default lime looks good
+
+</GuideWords>
+
+<GuideNote icon="image">
 
 Have a logo? Drop the SVG into the project folder and mention the file name in the prompt. No logo — your agent will use the product name as a wordmark.
 
 Struggling with the lines? [Words on screen](/docs/guides/words-on-screen) is the cheat sheet.
 
+</GuideNote>
+
 ## The prompt
+
+Paste it into your agent with your words in place of the highlighted blanks.
+
+<GuidePrompt>
 
 ```text
 I'm making a product launch video with remocn (remocn.dev).
@@ -71,9 +131,13 @@ covers (swirl, dithering), not plain crossfades. Use my copy exactly as
 written.
 ```
 
+</GuidePrompt>
+
 ## Directing the result
 
 The first cut won't be the final one — that's normal. Direct with plain sentences:
+
+<GuideNotes>
 
 - "The pain lines go by too fast — hold each one longer."
 - "Cut the montage to four beats."
@@ -81,8 +145,18 @@ The first cut won't be the final one — that's normal. Direct with plain senten
 - "The tagline should come in from the left."
 - "Make the outro two seconds shorter."
 
+</GuideNotes>
+
+<GuideMoreLink>
+
 More directing vocabulary: [Directing your agent](/docs/guides/directing-your-agent).
+
+</GuideMoreLink>
 
 ## Get the file
 
-Ask your agent: **"Render the video."** You'll get an `.mp4` in the project folder, ready to post.
+<GuideRenderCard prompt="Render the video.">
+
+You'll get an `.mp4` in the project folder, ready to post.
+
+</GuideRenderCard>

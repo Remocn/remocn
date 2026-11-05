@@ -1,0 +1,94 @@
+---
+title: Depth Headline
+description: "A huge serif headline sits behind a gradient sphere that slides in front of it for a sense of depth."
+component: depth-headline
+vibe: premium
+length: 62
+useWhen:
+  - "A product name or hero word that should feel layered with an object in front of it."
+  - "An opening title where a subject, such as a cutout image, passes in front of the type."
+avoidWhen:
+  - "The headline needs to read clearly with nothing overlapping it - use `staggered-fade-up`."
+  - "You want letters to rise individually - use `per-character-rise`."
+  - "You want a calm blur-in title - use `soft-blur-in`."
+---
+
+<ComponentPreview name="depth-headline" />
+
+<InstallBlock name="depth-headline" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { DepthHeadline } from "@/components/remocn/depth-headline";
+
+const DepthHeadlineScene = () => (
+  <DepthHeadline title="Studio" caption="Studio" showLogo accent="#3B5BFD" />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="DepthHeadline"
+    component={DepthHeadlineScene}
+    durationInFrames={120}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The headline opens and rises behind a sphere that glides across the frame, with a caption and logo fading in underneath. Pass `title` and `caption`, and pass `src` with a transparent cutout image to replace the default sphere; it ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "title",
+      type: "string",
+      default: "\"Studio\"",
+      description: "Huge headline set behind the subject. One short word reads best.",
+      description: "Large headline placed behind the subject",
+    },
+    {
+      name: "src",
+      type: "string",
+      description: "Transparent-PNG cutout that rises in front of the headline.",
+      description: "Cutout image shown in front of the title; defaults to a sphere",
+    },
+    {
+      name: "caption",
+      type: "string",
+      default: "\"Studio\"",
+      description: "Small line at the foot of the frame, after the logo. Pass \"\" to hide.",
+      description: "Small caption beside the logo",
+    },
+    {
+      name: "showLogo",
+      type: "boolean",
+      default: "true",
+      description: "Show the Remocn logo at the foot of the frame.",
+      description: "Show the logo mark next to the caption",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color (any valid CSS color)",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier.",
+      description: "Playback speed multiplier",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark palettes",
+    },
+  ]}
+/>

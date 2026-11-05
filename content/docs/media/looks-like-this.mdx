@@ -1,0 +1,122 @@
+---
+title: Looks Like This
+description: "A sentence ends with a small inline thumbnail that grows into a large player frame, replaced by an italic word."
+component: looks-like-this
+vibe: clean
+length: 90
+useWhen:
+  - "A promise line such as what your next launch looks like, where the image is the answer."
+  - "Revealing a hero screenshot or video still as the payoff of one sentence."
+  - "A short intro beat that needs typography and one image working together."
+avoidWhen:
+  - "The text is a question that rewrites itself into an answer beside the screenshot — use `shot-answers`."
+  - "You want to zoom into a detail of the image first and pull back — use `up-close`."
+  - "The image should be toured region by region — use `screenshot-tour`."
+---
+
+<ComponentPreview name="looks-like-this" />
+
+<InstallBlock name="looks-like-this" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { LooksLikeThis } from "@/components/remocn/looks-like-this";
+
+const LooksLikeThisScene = () => (
+  <LooksLikeThis
+    lead="Your next launch looks like"
+    word="this"
+    src="/shots/product.png"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="LooksLikeThis"
+    component={LooksLikeThisScene}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The `lead` sentence writes in with a small thumbnail chip inline before the `end` punctuation. The chip then grows into a large framed image with player chrome while the italic `word` takes its place in the sentence. Pass your own image through `src`; the default is a `staticFile` image from the Remocn repo. The timeline scales with the composition length, and it ships light and dark through `theme`.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "lead",
+      type: "string",
+      default: "\"Your next launch looks like\"",
+      description: "Sentence that leads into the image.",
+    },
+    {
+      name: "word",
+      type: "string",
+      default: "\"this\"",
+      description: "Italic word that ends up beside the image.",
+    },
+    {
+      name: "end",
+      type: "string",
+      default: "\".\"",
+      description: "Closing punctuation after the word.",
+    },
+    {
+      name: "src",
+      type: "string",
+      description: "Image URL for the hero frame. Defaults to a repo-only file.",
+    },
+    {
+      name: "aspect",
+      type: "number",
+      default: "16 / 9",
+      description: "Aspect ratio of the hero frame.",
+    },
+    {
+      name: "duration",
+      type: "string",
+      default: "\"0:30\"",
+      description: "Clip length shown on the player chrome.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Accent color for the italic word. Defaults depend on theme.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Solid background. Use 'transparent' to drop the ground.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color scheme. Ships light and dark.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "Shader preset id for the animated background.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Partial shader parameters that override the ground preset.",
+    },
+  ]}
+/>

@@ -1,0 +1,94 @@
+---
+title: Plain License
+description: "Dense legal clauses are replaced one by one by short plain-language phrases that build into a big line."
+component: plain-license
+vibe: clean
+length: 184
+useWhen:
+  - "A trust beat that translates a license or terms into a few plain words, such as free, for anyone, for anything."
+  - "A pricing or policy moment where fine print should visibly collapse into the simple promise."
+avoidWhen:
+  - "You want tiny fine print under a big claim instead of a translation — use `fine-print-up`."
+  - "The line is a single bold statement with no legal text — use `embargo-lift`."
+  - "You want a TL;DR sitting on top of a long body — use `tldr-on-top`."
+---
+
+<ComponentPreview name="plain-license" />
+
+<InstallBlock name="plain-license" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { PlainLicense } from "@/components/remocn/plain-license";
+
+const PlainLicenseScene = () => (
+  <PlainLicense
+    clauses={[
+      { legal: "Permission is hereby granted, free of charge,", plain: "Free," },
+      { legal: "to any person obtaining a copy of this software,", plain: "for anyone," },
+      { legal: "to use, copy, modify, merge, publish and distribute it.", plain: "for anything." },
+    ]}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="PlainLicense"
+    component={PlainLicenseScene}
+    durationInFrames={220}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Each clause starts as dim legal text, then is swapped by its short plain phrase, which rises in the accent color and cools to ink when the next one takes over. At the end the plain phrases zoom into one big line, with the `highlight` clause keeping the accent. Pass `clauses` as `{ legal, plain }` pairs. It ships light and dark.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "clauses",
+      type: "{ legal: string; plain: string }[]",
+      default: "DEFAULT_CLAUSES",
+      description: "Legal text and its plain-language replacement, in reading order.",
+    },
+    {
+      name: "highlight",
+      type: "number",
+      default: "0",
+      description: "Zero-based index of the clause whose plain phrase keeps the accent color.",
+    },
+    {
+      name: "step",
+      type: "number",
+      default: "40",
+      description: "Frames between one clause swapping and the next; minimum 34.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Color of the plain phrases; overrides the theme accent.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark palette.",
+    },
+  ]}
+/>

@@ -1,0 +1,91 @@
+---
+title: Tagline Justify
+description: "A tagline springs in word by word and sets as a justified block, with one word in gradient serif italic."
+component: tagline-justify
+vibe: clean
+length: 112
+useWhen:
+  - "A closing tagline that should lock up as a tidy poster block with a logo beneath it."
+  - "A one-sentence brand statement where a single key word deserves a gradient italic accent."
+avoidWhen:
+  - "A paragraph should reflow its column width rather than set as a fixed block — use `column-reflow`."
+  - "You want a three-line headline with parallax depth — use `parallax-lockup`."
+  - "The text should crop in tight line by line over ruled lines — use `poster-crop`."
+---
+
+<ComponentPreview name="tagline-justify" />
+
+<InstallBlock name="tagline-justify" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { TaglineJustify } from "@/components/remocn/tagline-justify";
+
+const TaglineJustifyScene = () => (
+  <TaglineJustify
+    text="Your launch deserves a film as good as the product."
+    highlight="film"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="TaglineJustify"
+    component={TaglineJustifyScene}
+    durationInFrames={140}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Words spring in one after another and the line breaks stretch and scale so every line fills the same width, like a justified column. The `highlight` word is set in serif italic and fills with a gradient, then a hairline and a logo land beneath. The default logo is the Remocn wordmark, so pass your own `logo`. It ships light and dark.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "words",
+      type: "string[]",
+      description: "Pre-split words; overrides text when given.",
+    },
+    {
+      name: "text",
+      type: "string",
+      default: "\"Your launch deserves a film as good as the product.\"",
+      description: "Tagline to justify; it is split on spaces.",
+    },
+    {
+      name: "highlight",
+      type: "string",
+      default: "\"film\"",
+      description: "Word set in gradient serif italic.",
+    },
+    {
+      name: "logo",
+      type: "React.ReactNode",
+      description: "Logo node under the block; defaults to the Remocn wordmark.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Color of the short accent segment on the hairline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark palette.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+  ]}
+/>

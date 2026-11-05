@@ -1,0 +1,87 @@
+---
+title: Spell Out
+description: "Letters drop in one at a time with hyphens between them, then close into the word with a line beneath."
+component: spell-out
+vibe: clean
+length: 103
+useWhen:
+  - "A name people mispronounce, where spelling it out is the hook."
+  - "A brand intro with a one-line slogan right after the name."
+  - "A minimal sting built on a bold lowercase wordmark."
+avoidWhen:
+  - "You want a glitchy decode rather than a clean drop — use `glyph-block-decode`."
+  - "The sting needs the actual logo mark, not typed text — use `snap-click`."
+  - "Many words should cut in at a fast rhythm — use `blink-cut`."
+---
+
+<ComponentPreview name="spell-out" />
+
+<InstallBlock name="spell-out" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { SpellOut } from "@/components/remocn/spell-out";
+
+const SpellOutScene = () => (
+  <SpellOut
+    name="remocn"
+    line="Say it once. Remember it."
+    speed={1}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="SpellOut"
+    component={SpellOutScene}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Each letter of `name` drops in with a small impact and a hyphen between, holds spelled out, then closes up into the finished word while `line` rises beneath. Pass `name` and `line`; `speed` retimes it. Ships light and dark.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "name",
+      type: "string",
+      default: "\"remocn\"",
+      description: "Word spelled out letter by letter.",
+    },
+    {
+      name: "line",
+      type: "string",
+      default: "\"Say it once. Remember it.\"",
+      description: "Slogan that rises under the finished word.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Colour of the hyphens between letters.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Stage fill colour; overrides the theme background.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier for the whole timeline; 1 is normal speed.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Dark or light palette and ground.",
+    },
+  ]}
+/>

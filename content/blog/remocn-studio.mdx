@@ -8,7 +8,7 @@ videoPoster: https://cdn.remocn.dev/posters/remocn-studio-v001.png
 
 Remocn gives you 234 copy-paste components. That solves the parts of a video — the text entrance, the whip pan, the shader background. It doesn’t solve the assembly: what plays when, how long a beat holds, which transition hides which cut. That part still happens in a loop that looks like this — edit TSX, alt-tab to `remotion studio`, scrub, notice the subtitle lands a beat late, alt-tab back, guess a frame number, repeat.
 
-Claude Code already shortens the loop. Point it at a Remotion project, add [the remocn skill](/docs/getting-started/agent-skill), and it writes scenes for you. But the agent lives in a terminal and the video lives in a browser tab, and neither knows about the other. When something looks wrong you have to describe it in words: “the logo in the second scene, the one that fades in around frame 90, it’s too big.” You are the translation layer between two windows.
+Claude Code already shortens the loop. Point it at a Remotion project, add [the Remocn skill](/docs/getting-started/agent-skill), and it writes scenes for you. But the agent lives in a terminal and the video lives in a browser tab, and neither knows about the other. When something looks wrong you have to describe it in words: “the logo in the second scene, the one that fades in around frame 90, it’s too big.” You are the translation layer between two windows.
 
 **Remocn studio** removes that layer. It’s a local macOS app that runs the [Claude Agent SDK](https://docs.claude.com/en/api/agent-sdk/overview) against a folder on your disk, compiles that folder with its own Remotion bundler, and puts the chat and the player side by side. When the logo is too big, you click it.
 
@@ -54,7 +54,7 @@ There’s no second bundle, and that’s the feature: the preview has already co
 
 ## What the agent already knows
 
-What makes this remocn studio and not a generic Claude Code GUI: the app bundle carries a Claude Code plugin with four skills — the remocn skill, two Remotion ones, and `video-lessons`, which is ours.
+What makes this Remocn studio and not a generic Claude Code GUI: the app bundle carries a Claude Code plugin with four skills — the Remocn skill, two Remotion ones, and `video-lessons`, which is ours.
 
 `video-lessons` is 44 KB of production rules where every entry exists because the opposite was tried and had to be re-rendered. Why text entrances travel on X and never on Y (browsers snap glyph baselines to whole device pixels, so the identical curve that ticks vertically is smooth horizontally). Why a transform on a span silently forces `inline-block` and breaks a two-tone paragraph. Which `TransitionSeries` shapes render an empty frame at a boundary. The system prompt tells the agent to work from it before writing any video code, so those corrections no longer get pasted into prompts by hand.
 

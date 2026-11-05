@@ -1,0 +1,100 @@
+---
+title: Measure Dim
+description: "A gradient bar is measured by dimension lines as 184 fps overtakes 60 fps"
+component: measure-dim
+vibe: data
+length: 84
+useWhen:
+  - "A performance beat where your frame rate or speed is drawn as a bar and measured with technical dimension lines against the old figure."
+  - "A comparison scene that wants a blueprint, engineering-drawing feel instead of a plain bar chart."
+  - "A spec reveal where one number must clearly dwarf its predecessor before a brand sign-off."
+avoidWhen:
+  - "You have more than two values to compare or need categories on an axis — use `benchmark-race`."
+  - "The point is a before-and-after shift per row rather than one measured bar — use `dumbbell-shift`."
+  - "You only need one big counted figure with no comparison — use `compact-stat`."
+---
+
+<ComponentPreview name="measure-dim" />
+
+<InstallBlock name="measure-dim" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { MeasureDim } from "@/components/remocn/measure-dim";
+
+const MeasureDimScene = () => (
+  <MeasureDim
+    value="184 fps"
+    before="60 fps"
+    beforeLabel="Before"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="MeasureDim"
+    component={MeasureDimScene}
+    durationInFrames={130}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A gradient bar draws in, extension lines drop and a dimension arrow counts the new value along it. A ghost bar for the previous value then appears below and gets its own dimension line. Pass `value` and `before` with their units, and `label` and `beforeLabel` to name the two bars. It ships light and dark through the `theme` prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "subject",
+      type: "React.ReactNode",
+      description: "Optional node shown in place of the bar label, e.g. a logo.",
+    },
+    {
+      name: "label",
+      type: "string",
+      default: "\"remocn\"",
+      description: "Name shown on the hero bar.",
+    },
+    {
+      name: "value",
+      type: "string",
+      default: "\"184 fps\"",
+      description: "The new measurement with its unit, e.g. '184 fps'. The number counts up.",
+    },
+    {
+      name: "before",
+      type: "string",
+      default: "\"60 fps\"",
+      description: "The previous measurement with its unit. Leave empty to drop the ghost bar.",
+    },
+    {
+      name: "beforeLabel",
+      type: "string",
+      default: "\"Before\"",
+      description: "Name shown on the ghost bar.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Highlight colour woven into the bar gradient.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier; 1 is the designed pace.",
+    },
+  ]}
+/>

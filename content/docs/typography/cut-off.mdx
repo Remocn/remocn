@@ -1,0 +1,87 @@
+---
+title: Cut Off
+description: "A line is cut off by a white reply card: \"Or let the code cut it.\""
+component: cut-off
+vibe: playful
+length: 110
+useWhen:
+  - "A joke where a long, tedious explanation is interrupted by a short, better answer."
+  - "A before-and-after beat showing a slow workflow cut short by a simple one."
+  - "A two-part message where the second half should land as a hard hit."
+avoidWhen:
+  - "The setup should be answered with a sheepish aside, not a hard cut — use `coy-denial`."
+  - "You want a hesitant start answered by a bold reply — use `no-buts`."
+  - "You need a shutter-style cut off of a line — use `peek-shut`."
+---
+
+<ComponentPreview name="cut-off" />
+
+<InstallBlock name="cut-off" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { CutOff } from "@/components/remocn/cut-off";
+
+const CutOffScene = () => <CutOff line="So first I export the clips, redo all the captions, then line up the mus" reply="Or let the code cut it." highlight="the code" />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="CutOff"
+    component={CutOffScene}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A line types in word by word and breaks off mid-word with a dash, then a card cuts in and the reply words land on it in a hard hit, with one phrase highlighted. Pass `line` (the sentence that gets cut off), `reply` and `highlight`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "line",
+      type: "string",
+      default: "\"So first I export the clips, redo all the captions, then line up the mus\"",
+      description: "The sentence that is cut off; its last word is broken mid-word.",
+    },
+    {
+      name: "reply",
+      type: "string",
+      default: "\"Or let the code cut it.\"",
+      description: "The words that land on the card after the cut.",
+    },
+    {
+      name: "highlight",
+      type: "string",
+      default: "\"the code\"",
+      description: "Phrase in the reply set in the accent color.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Color for the highlighted phrase; defaults to the theme accent.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Stage fill color; pass \"transparent\" to overlay your own footage.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color scheme; ships dark and light.",
+    },
+  ]}
+/>

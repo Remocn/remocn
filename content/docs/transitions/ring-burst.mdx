@@ -1,0 +1,101 @@
+---
+title: Ring Burst
+description: "Concentric colored rings burst outward from a point and the last ring carries in the next scene"
+component: ring-burst
+vibe: premium
+length: 65
+useWhen:
+  - "Swapping a short headline for a logo or closing statement with a punchy, centered burst."
+  - "A launch video ending that needs a single beat to land the brand mark."
+  - "A hit-and-reveal cut where the burst point can be placed on a button or object."
+avoidWhen:
+  - "You want a soft glow rather than solid rings — use `bloom-ring`."
+  - "You need a cut that expands cleanly with no color rings — use `ring-cut`."
+  - "The reveal should come from horizontal bands rather than a point — use `band-shift`."
+---
+
+<ComponentPreview name="ring-burst" />
+
+<InstallBlock name="ring-burst" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { RingBurst } from "@/components/remocn/ring-burst";
+
+const RingBurstScene = () => (
+  <RingBurst
+    from="Before."
+    to="Now live."
+    accent="#3B5BFD"
+    origin={[0.5, 0.5]}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="RingBurst"
+    component={RingBurstScene}
+    durationInFrames={100}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The `from` headline holds for `delay` frames on the opposite tone. Then up to three colored rings burst out from `origin` in quick succession, and the last ring lands the `to` scene, with a soft halo around it. Pass `from` and `to` as short text or any React node; `to="remocn"` sets the Remocn logo, and `theme` picks the tone the incoming scene lands on. The burst lands at frame 65 with the default delay.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "from",
+      type: "React.ReactNode",
+      default: "\"Before.\"",
+      description: "Outgoing scene: a short headline or any React node",
+    },
+    {
+      name: "to",
+      type: "React.ReactNode",
+      default: "\"remocn\"",
+      description: "Incoming scene carried in by the last ring",
+    },
+    {
+      name: "origin",
+      type: "[number, number]",
+      default: "[0.5, 0.5]",
+      description: "Burst point as fractions of the frame, x then y",
+    },
+    {
+      name: "colors",
+      type: "string[]",
+      description: "Ring colors, outermost first, up to three",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "20",
+      description: "Frames the outgoing scene holds before the burst",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Color of the outermost ring",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier for the whole timeline",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Tone the incoming scene lands on",
+    },
+  ]}
+/>

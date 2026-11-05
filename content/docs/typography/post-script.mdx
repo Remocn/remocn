@@ -1,0 +1,105 @@
+---
+title: Post Script
+description: "A signoff and signature rise, then shrink away as a P.S. line grows and an install command wipes in."
+component: post-script
+vibe: playful
+length: 115
+useWhen:
+  - "A closing card that thanks the viewer and then drops a final call to action as a P.S."
+  - "An end slate where the last line should be the install command or link."
+avoidWhen:
+  - "You only need a logo and a short tagline to close — use `blink-cut`."
+  - "The ending should be a big gradient title rather than a letter-style sign-off — use `landing-confirmed`."
+  - "You want a quote-style close with an attribution — use `said-who`."
+---
+
+<ComponentPreview name="post-script" />
+
+<InstallBlock name="post-script" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { PostScript } from "@/components/remocn/post-script";
+
+const PostScriptScene = () => (
+  <PostScript
+    signoff="Thanks for watching."
+    signature="— the Acme team"
+    ps="Your next launch film is a prop away."
+    install="npx shadcn add @acme/launch-film"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="PostScript"
+    component={PostScriptScene}
+    durationInFrames={180}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The `signoff` rises word by word with the `signature` beneath it. A P.S. line (`label` in the accent color, then `ps`) follows, the signoff shrinks and dims upward as the P.S. grows to full size, and the `install` command wipes in at the bottom. The defaults mention Remocn, so pass your own `signature` and `install`. It ships light and dark.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "signoff",
+      type: "string",
+      default: "\"Thanks for watching.\"",
+      description: "Large first line that rises in and later shrinks.",
+    },
+    {
+      name: "signature",
+      type: "string",
+      default: "\"— the remocn team\"",
+      description: "Small line under the signoff; pass an empty string to hide it.",
+    },
+    {
+      name: "label",
+      type: "string",
+      default: "\"P.S.\"",
+      description: "Accent-colored prefix of the P.S. line.",
+    },
+    {
+      name: "ps",
+      type: "string",
+      default: "\"The next launch film is yours.\"",
+      description: "Text of the P.S. line after the label.",
+    },
+    {
+      name: "install",
+      type: "string",
+      default: "\"npx shadcn add @remocn/zoom-blur\"",
+      description: "Command or link that wipes in at the bottom; empty hides it.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Color of the label and the install line.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark palette.",
+    },
+  ]}
+/>

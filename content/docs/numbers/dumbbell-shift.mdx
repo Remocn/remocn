@@ -1,0 +1,103 @@
+---
+title: Dumbbell Shift
+description: "Dumbbell rows slide their before and after dots apart, with a +16 summary"
+component: dumbbell-shift
+vibe: data
+length: 140
+useWhen:
+  - "A before-and-after beat across several categories, where each row's dots slide apart."
+  - "A launch recap showing improvement per workflow, ending on the biggest gain, such as +16."
+  - "A comparison where per-row change matters more than an overall total."
+avoidWhen:
+  - "You have only two time points and want slanted lines — use `slope-chart`."
+  - "You want a whole population of dots — use `beeswarm`."
+  - "You want a single saved-time bar — use `time-breakdown`."
+---
+
+<ComponentPreview name="dumbbell-shift" />
+
+<InstallBlock name="dumbbell-shift" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { DumbbellShift } from "@/components/remocn/dumbbell-shift";
+
+const DumbbellShiftScene = () => (
+  <DumbbellShift
+    beforeLabel="Before"
+    afterLabel="With remocn"
+    rows={[
+      { label: "Launch videos", before: 2, after: 9 },
+      { label: "Changelogs", before: 4, after: 7 },
+      { label: "Social clips", before: 3, after: 19 },
+    ]}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="DumbbellShift"
+    component={DumbbellShiftScene}
+    durationInFrames={165}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Rows enter with a before dot and an after dot, the dots slide apart row by row, then the rows sort and the biggest gain is lit with a summary caption. Pass `rows` (label, before, after), plus `beforeLabel`, `afterLabel` and an optional `summaryCaption`. Ships dark and light via `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "rows",
+      type: "DumbbellRow[]",
+      default: "DEFAULT_ROWS",
+      description: "Categories, each with a before and after value.",
+    },
+    {
+      name: "beforeLabel",
+      type: "string",
+      default: "\"Before\"",
+      description: "Legend text for the before dot.",
+    },
+    {
+      name: "afterLabel",
+      type: "string",
+      default: "\"With remocn\"",
+      description: "Legend text for the after dot.",
+    },
+    {
+      name: "summaryCaption",
+      type: "string",
+      description: "Line under the summary; defaults to the winning row name.",
+    },
+    {
+      name: "max",
+      type: "number",
+      description: "Axis maximum; defaults to a rounded value above the data.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for the hero element.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Dark or light palette.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier.",
+    },
+  ]}
+/>

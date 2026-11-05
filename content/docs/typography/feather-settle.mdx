@@ -1,0 +1,100 @@
+---
+title: Feather Settle
+description: "Words drift down and sway like feathers before settling into a sentence, with one phrase highlighted."
+component: feather-settle
+vibe: clean
+length: 111
+useWhen:
+  - "A calm, reassuring closing line such as a soft landing or a gentle sign-off."
+  - "A beat where words should arrive slowly and organically rather than snap in."
+avoidWhen:
+  - "You need a fast, energetic entrance - use `rush-type`."
+  - "You want words to drop and bounce rather than float - use `baseline-drop`."
+  - "You want a controlled blur reveal - use `soft-blur-in`."
+---
+
+<ComponentPreview name="feather-settle" />
+
+<InstallBlock name="feather-settle" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { FeatherSettle } from "@/components/remocn/feather-settle";
+
+const FeatherSettleScene = () => (
+  <FeatherSettle text="Your launch, landing softly." highlight="softly" stagger={13} />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="FeatherSettle"
+    component={FeatherSettleScene}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Each word falls from above with a gentle side-to-side sway and tilt, staggered in order, and settles into the sentence; `highlight` is set in the accent. Pass `text`, `stagger`, `fall` and `sway` to tune the drift; it ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "text",
+      type: "string",
+      default: "\"Your launch, landing softly.\"",
+      description: "Sentence whose words fall in one by one",
+    },
+    {
+      name: "highlight",
+      type: "string",
+      default: "\"softly\"",
+      description: "Word or phrase shown in the accent color",
+    },
+    {
+      name: "stagger",
+      type: "number",
+      default: "13",
+      description: "Frames between words starting to fall",
+    },
+    {
+      name: "fall",
+      type: "number",
+      default: "68",
+      description: "Frames each word takes to fall into place",
+    },
+    {
+      name: "sway",
+      type: "number",
+      default: "1",
+      description: "Side-to-side drift multiplier; 0 falls straight",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Accent color (any valid CSS color)",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Overrides the theme's stage color",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark palettes",
+    },
+  ]}
+/>

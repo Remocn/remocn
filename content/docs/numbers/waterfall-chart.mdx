@@ -1,0 +1,105 @@
+---
+title: Waterfall Chart
+description: "A revenue waterfall steps through gains and losses into a gradient total of $84k MRR"
+component: waterfall-chart
+vibe: data
+length: 111
+useWhen:
+  - "A revenue or metric bridge where gains and losses step from a start value to a total, such as $84k MRR."
+  - "A beat that explains churn, expansion and new business as separate contributions."
+  - "A finance-flavored update scene where the final total should land in gradient."
+avoidWhen:
+  - "You have simple category values with no running total — use `spring-bars`."
+  - "You want the total framed as a share of a whole — use `share-donut`."
+  - "You want a trend over time — use `growth-line`."
+---
+
+<ComponentPreview name="waterfall-chart" />
+
+<InstallBlock name="waterfall-chart" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { WaterfallChart } from "@/components/remocn/waterfall-chart";
+
+const WaterfallChartScene = () => (
+  <WaterfallChart
+    title="Net revenue, Q3"
+    start={{ label: "Start", value: 52 }}
+    steps={[
+      { label: "Churn", value: -7 },
+      { label: "New", value: 24 },
+      { label: "Expansion", value: 12 },
+    ]}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="WaterfallChart"
+    component={WaterfallChartScene}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A starting column is set, then each step floats up or down as a green gain or red loss, and the total rises last in gradient while its value counts up. Pass `start`, `steps` (label and signed value), `totalLabel` and `title`; use `format` to control how numbers print. Ships dark and light via `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "start",
+      type: "WaterfallStep",
+      default: "DEFAULT_START",
+      description: "The opening column, with a label and value.",
+    },
+    {
+      name: "steps",
+      type: "WaterfallStep[]",
+      default: "DEFAULT_STEPS",
+      description: "Changes applied in order; negative values step down.",
+    },
+    {
+      name: "totalLabel",
+      type: "string",
+      default: "\"MRR\"",
+      description: "Label on the final total column.",
+    },
+    {
+      name: "title",
+      type: "string",
+      default: "\"Net revenue, Q3\"",
+      description: "Small heading over the chart.",
+    },
+    {
+      name: "format",
+      type: "(value: number) => string",
+      default: "defaultFormat",
+      description: "Turns a number into display text, such as $84k.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for the hero element.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Dark or light palette.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier.",
+    },
+  ]}
+/>

@@ -1,0 +1,93 @@
+---
+title: The Tab
+description: "A receipt of dotted-leader lines prices every item the same, then lands a total line."
+component: the-tab
+vibe: clean
+length: 122
+useWhen:
+  - "A what-you-get beat where every included item carries the same price, such as zero."
+  - "A pricing close that ends on a witty total instead of a number."
+  - "A clean receipt-style list of features that should build line by line."
+avoidWhen:
+  - "Fine print should be removed one line at a time - use `price-page`."
+  - "A single price needs a strikethrough and a spin - use `price-slate`."
+  - "A technical spec table with hairline rows is the look - use `spec-sheet`."
+---
+
+<ComponentPreview name="the-tab" />
+
+<InstallBlock name="the-tab" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { TheTab } from "@/components/remocn/the-tab";
+
+const TheTabScene = () => <TheTab items={[{ item: "Every component" }, { item: "Every template" }]} price="$0" total="one Sunday morning." />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="TheTab"
+    component={TheTabScene}
+    durationInFrames={170}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A receipt builds line by line, each item joined to its price by a dotted leader; a rule draws under the list and the total lands word by word in the accent color. Pass `items` (each `{ item, price? }`), `price` as the default per-line price, and `totalLabel` with `total`. The row pacing stretches to the composition length, so give it about 170 frames. It ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "items",
+      type: "TheTabItem[]",
+      default: "DEFAULT_ITEMS",
+      description: "Receipt rows; each has an item name and an optional price.",
+    },
+    {
+      name: "price",
+      type: "string",
+      default: "\"$0\"",
+      description: "Default price shown on rows without their own.",
+    },
+    {
+      name: "totalLabel",
+      type: "string",
+      default: "\"Total\"",
+      description: "Label for the total line.",
+    },
+    {
+      name: "total",
+      type: "string",
+      default: "\"one Sunday morning.\"",
+      description: "Total text that lands word by word.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Color of the total; defaults to the theme accent.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Stage background color; overrides the theme ground.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark palette.",
+    },
+  ]}
+/>

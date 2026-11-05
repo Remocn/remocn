@@ -1,0 +1,102 @@
+---
+title: Focus Pan Text
+description: "Earlier lines stack up blurred as focus pans down line by line to a final sentence and a small toolbar."
+component: focus-pan-text
+vibe: premium
+length: 113
+useWhen:
+  - "A step-by-step status sequence, such as checks passing, ending on a ready message."
+  - "A narrative beat where several short lines build to one final statement."
+avoidWhen:
+  - "You have only one sentence - use `focus-blur-resolve`."
+  - "You want the lines to be typed - use `typewriter`."
+  - "You want lines to replace each other in place - use `per-word-crossfade`."
+---
+
+<ComponentPreview name="focus-pan-text" />
+
+<InstallBlock name="focus-pan-text" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { FocusPanText } from "@/components/remocn/focus-pan-text";
+
+const FocusPanTextScene = () => (
+  <FocusPanText
+    lines={["The scan is clean.", "All 48 checks passed.", "You're ready to launch."]}
+    meta="Just now"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="FocusPanText"
+    component={FocusPanTextScene}
+    durationInFrames={169}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Each line is read in turn while earlier lines fall out of focus above; focus lands on the final line, the accent word lights up and a toolbar with `meta` text appears. Pass `lines` and `accentWord`; it ships light and dark through `theme`.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "lines",
+      type: "string[]",
+      default: "DEFAULT_LINES",
+      description: "Lines shown in order; the last one is the payoff",
+    },
+    {
+      name: "accentWord",
+      type: "string",
+      description: "Word in the last line shown in the accent color",
+    },
+    {
+      name: "meta",
+      type: "string",
+      default: "\"Just now\"",
+      description: "Text in the toolbar after the final line",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Color of the accent word",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color override",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark palettes",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "Gradient ground preset id",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Partial gradient parameters to tune the ground",
+    },
+    {
+      name: "firstHold",
+      type: "number",
+      default: "30",
+      description: "Frames the first line is held before panning on",
+    },
+  ]}
+/>

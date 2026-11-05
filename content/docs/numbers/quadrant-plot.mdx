@@ -1,0 +1,95 @@
+---
+title: Quadrant Plot
+description: "Competitors scatter on a quadrant plot and the Remocn marker lands in the best corner"
+component: quadrant-plot
+vibe: data
+length: 110
+useWhen:
+  - "A positioning beat that places competitors on a two-axis map and then lands your product in the best corner."
+  - "A market-comparison scene with named axes such as speed against ease, ending with a spotlight on the winner."
+  - "A strategy slide for a launch video where the brand point must visibly separate from the pack."
+avoidWhen:
+  - "You compare against one rival across several attributes — use `radar-compare`."
+  - "You need competitors ranked on a single measure — use `rank-climb`."
+  - "You want a numeric before-and-after across many rows — use `dumbbell-shift`."
+---
+
+<ComponentPreview name="quadrant-plot" />
+
+<InstallBlock name="quadrant-plot" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { QuadrantPlot } from "@/components/remocn/quadrant-plot";
+
+const QuadrantPlotScene = () => (
+  <QuadrantPlot
+    xLabels={["Slow", "Fast"]}
+    yLabels={["Hard", "Easy"]}
+    brand={{ label: "remocn", x: 0.9, y: 0.88 }}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="QuadrantPlot"
+    component={QuadrantPlotScene}
+    durationInFrames={140}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Axes and corner marks draw in, the competitor dots drop onto the grid, and then the brand marker flies in along a curved path and lands in its quadrant. A ring, a wash and a guide line spotlight it afterwards. Pass `points` and `brand` as 0-1 coordinates, and `xLabels` and `yLabels` for the two axes. It ships light and dark through the `theme` prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "xLabels",
+      type: "[string, string]",
+      default: "[\"Slow\", \"Fast\"]",
+      description: "Low and high ends of the horizontal axis, left then right.",
+    },
+    {
+      name: "yLabels",
+      type: "[string, string]",
+      default: "[\"Hard\", \"Easy\"]",
+      description: "Low and high ends of the vertical axis, bottom then top.",
+    },
+    {
+      name: "points",
+      type: "QuadrantPoint[]",
+      default: "DEFAULT_POINTS",
+      description: "Competitor dots: label plus x and y from 0 to 1.",
+    },
+    {
+      name: "brand",
+      type: "QuadrantPoint",
+      default: "DEFAULT_BRAND",
+      description: "The hero marker that lands last, with label and x, y from 0 to 1.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Colour of the brand marker before the spotlight wash.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier; 1 is the designed pace.",
+    },
+  ]}
+/>

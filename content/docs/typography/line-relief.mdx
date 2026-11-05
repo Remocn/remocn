@@ -1,0 +1,71 @@
+---
+title: Line Relief
+description: "A big word is ruled out of 40 horizontal lines that bulge into relief, then resolves to solid."
+component: line-relief
+vibe: premium
+length: 112
+useWhen:
+  - "A hero title card where one huge word should first read as a topographic or radar-style relief."
+  - "A premium reveal of a product or launch name over a dusk-toned gradient sky."
+  - "A single-word beat that needs texture and depth rather than a plain fade."
+avoidWhen:
+  - "The word must be readable from the first frame — use `full-bleed-type`."
+  - "You want each glyph contour drawn as a stroke, letter by letter — use `outline-trace`."
+  - "The text is a phrase or sentence, not one short word — use `staggered-fade-up`."
+---
+
+<ComponentPreview name="line-relief" />
+
+<InstallBlock name="line-relief" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { LineRelief } from "@/components/remocn/line-relief";
+
+const LineReliefScene = () => <LineRelief word="LAUNCH" accent="#3B5BFD" />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="LineRelief"
+    component={LineReliefScene}
+    durationInFrames={140}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Forty thin horizontal lines sweep across the frame and rise into the shape of the word like a relief map. They then flatten while the solid word resolves out of a soft blur. Pass `word` (short, caps work best); `accent` tints the night sky, and it ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "word",
+      type: "string",
+      default: "\"LAUNCH\"",
+      description: "The word ruled out of the lines. Keep it short.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Tint for the sky behind the lines.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark ground; ships both.",
+    },
+  ]}
+/>

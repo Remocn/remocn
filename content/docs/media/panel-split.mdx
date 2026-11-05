@@ -1,0 +1,128 @@
+---
+title: Panel Split
+description: "One portfolio panel splits into four, filling with a bio, a case study, a question and a reel card."
+component: panel-split
+vibe: premium
+length: 120
+useWhen:
+  - "An about-me or studio intro that grows from a single hero panel into a bento of bio, work and reel."
+  - "A portfolio beat where the final panel floods with color and fans out preview cards."
+  - "Presenting a person or studio with a headline, a question and a body line."
+avoidWhen:
+  - "Only two sides are compared against each other — use `versus-split`."
+  - "You want feature tiles building up rather than a hero splitting — use `bento-build`."
+  - "A montage of shots cutting on the beat is the goal — use `grid-montage`."
+---
+
+<ComponentPreview name="panel-split" />
+
+<InstallBlock name="panel-split" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { PanelSplit } from "@/components/remocn/panel-split";
+
+const PanelSplitScene = () => (
+  <PanelSplit
+    name="Mara Okafor"
+    role="Motion designer"
+    headline={["Driven by motion,", "obsessed with", "the seamless."]}
+    images={["/work/a.jpg", "/work/b.jpg", "/work/c.jpg"]}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="PanelSplit"
+    component={PanelSplitScene}
+    durationInFrames={144}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A single hero panel with the `name`, `role` and `headline` lines splits into four panels. They fill with a case-study image and `caption`, a `question` with `body` text, and a reel panel that floods with color and fans out preview cards. Pass your own `images`; the defaults are `staticFile` images from the Remocn repo. It ships light and dark through `theme`.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "images",
+      type: "string[]",
+      description: "Image URLs for the panels. Defaults to repo-only files.",
+    },
+    {
+      name: "name",
+      type: "string",
+      default: "\"Mara Okafor\"",
+      description: "Person or studio name on the hero panel.",
+    },
+    {
+      name: "role",
+      type: "string",
+      default: "\"Motion designer\"",
+      description: "Role line under the name.",
+    },
+    {
+      name: "headline",
+      type: "string[]",
+      description: "Headline lines on the hero panel.",
+    },
+    {
+      name: "question",
+      type: "string",
+      default: "\"What if every launch felt this good?\"",
+      description: "Question text on the third panel.",
+    },
+    {
+      name: "body",
+      type: "string",
+      default: "\"A studio practice built on timing, rhythm and the frames in between.\"",
+      description: "Body text under the question.",
+    },
+    {
+      name: "caption",
+      type: "string",
+      default: "\"Horizon, brand film\"",
+      description: "Caption under the case-study image.",
+    },
+    {
+      name: "labels",
+      type: "string[]",
+      description: "Short header labels for the four panels.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color scheme. Ships light and dark.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color of the final flood.",
+    },
+    {
+      name: "panel",
+      type: "string",
+      description: "Panel background color. Defaults depend on theme.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "Shader preset id for the animated background.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Partial shader parameters that override the ground preset.",
+    },
+  ]}
+/>

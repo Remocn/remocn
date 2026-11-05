@@ -1,0 +1,80 @@
+---
+title: Crew of One
+description: "A credits roll, Written by / Directed by / Shipped by, all pointing at a big \"you\""
+component: crew-of-one
+vibe: playful
+length: 138
+useWhen:
+  - "A credits-roll joke where one person plays every role, ending on who they are."
+  - "A solo-builder message that lists the jobs a tool takes off your plate."
+  - "A closing credits beat for a launch or demo video."
+avoidWhen:
+  - "You want a list of benefits rather than credits — use `feature-trio`."
+  - "The list should end on the audience, not a name — use `and-you`."
+  - "You want the viewer addressed in several lines — use `they-are-you`."
+---
+
+<ComponentPreview name="crew-of-one" />
+
+<InstallBlock name="crew-of-one" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { CrewOfOne } from "@/components/remocn/crew-of-one";
+
+const CrewOfOneScene = () => <CrewOfOne roles={["Written by", "Directed by", "Shipped by"]} name="you" />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="CrewOfOne"
+    component={CrewOfOneScene}
+    durationInFrames={170}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Credit-style role lines roll upward in turn, then gather into place under a large name that has been waiting at the center. Pass `roles` (one string per credit) and `name`; it spaces the roll to fit the composition length.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "roles",
+      type: "string[]",
+      description: "Credit lines such as Written by, rolled in order.",
+    },
+    {
+      name: "name",
+      type: "string",
+      default: "\"you\"",
+      description: "The big name all roles point at.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Color of the name; defaults to the theme accent.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Stage fill color; pass \"transparent\" to overlay your own footage.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color scheme; ships dark and light.",
+    },
+  ]}
+/>

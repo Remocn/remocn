@@ -1,0 +1,137 @@
+---
+title: Channel Reactions
+description: "A team chat channel where a launch message collects emoji reactions and replies"
+component: channel-reactions
+vibe: social
+length: 220
+useWhen:
+  - "A social-proof beat where a launch announcement in a team chat collects emoji reactions and replies."
+  - "A collaboration product demo showing how a message gets noticed and discussed in a channel."
+  - "A launch-day video that needs the celebration moment inside a workspace app."
+avoidWhen:
+  - "You want several collaborators moving around a shared canvas — use `multiplayer-cursors`."
+  - "The beat is a video call with participants and controls — use `video-call`."
+  - "You want a hero stat or leaderboard moment instead of chat — use `leaderboard-climb`."
+---
+
+<ComponentPreview name="channel-reactions" />
+
+<InstallBlock name="channel-reactions" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { ChannelReactions } from "@/components/remocn/channel-reactions";
+
+const ChannelReactionsScene = () => (
+  <ChannelReactions workspace="remocn" channel="launch" message="We just shipped v2. Take it for a spin." />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="ChannelReactions"
+    component={ChannelReactionsScene}
+    durationInFrames={220}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A channel window opens, a launch message with a link preview appears, a cursor opens the emoji picker and reactions pop in one by one, then a thread opens and replies arrive. Pass `author`, `message`, `link`, `reactions`, `replies`, `workspace` and `channel` to make it yours, and `image` with your own picture for the link preview (the default file only exists in the Remocn repo). It ships light and dark through `theme`.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "author",
+      type: "ChannelAuthor",
+      default: "PEOPLE.maya",
+      description: "Name and avatar color of the message author.",
+    },
+    {
+      name: "message",
+      type: "string",
+      default: "\"remocn v2 is live. Thirty new components, a captions tab, and a studio that renders right in your browser. Take it for a spin:\"",
+      description: "Text of the launch message.",
+    },
+    {
+      name: "link",
+      type: "{ url: string; title: string; description: string; site: string }",
+      description: "Link preview card: url, title, description and site.",
+    },
+    {
+      name: "image",
+      type: "string",
+      description: "Link preview image URL; the default ships with Remocn only.",
+    },
+    {
+      name: "reactions",
+      type: "ChannelReaction[]",
+      default: "DEFAULT_REACTIONS",
+      description: "Emoji reactions with their final counts.",
+    },
+    {
+      name: "replies",
+      type: "ChannelReply[]",
+      default: "DEFAULT_REPLIES",
+      description: "Thread replies, each with an author and text.",
+    },
+    {
+      name: "replyCount",
+      type: "number",
+      default: "14",
+      description: "Final reply count shown on the thread line.",
+    },
+    {
+      name: "workspace",
+      type: "string",
+      default: "\"remocn\"",
+      description: "Workspace name in the sidebar.",
+    },
+    {
+      name: "channel",
+      type: "string",
+      default: "\"launch\"",
+      description: "Channel name in the header.",
+    },
+    {
+      name: "headline",
+      type: "string",
+      default: "\"Launch day, live\"",
+      description: "Large line above the window in the 9:16 layout.",
+    },
+    {
+      name: "theme",
+      type: "\"light\" | \"dark\"",
+      default: "\"light\"",
+      description: "Visual theme; ships light and dark.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for highlights and controls.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "Preset id for the gradients.sh background shader.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the shader parameters of the chosen ground.",
+    },
+  ]}
+/>

@@ -1,0 +1,83 @@
+---
+title: Deadpan Box
+description: "A flat, deadpan quote in a blue box with a small attribution line"
+component: deadpan-box
+vibe: clean
+length: 126
+useWhen:
+  - "A joke or punchline beat where a quiet setup is flipped by the attribution that follows."
+  - "A bold, minimal quote card that should end with the brand signing off."
+  - "A social-style card that starts as a masthead and expands into a full-frame statement."
+avoidWhen:
+  - "The quote is sincere praise from a real customer — use `quote-hero`."
+  - "You want a quick one-line reveal with no setup and punchline — use `soft-blur-in`."
+  - "The setup needs a follow-up aside in a corner rather than a flood — use `coy-denial`."
+---
+
+<ComponentPreview name="deadpan-box" />
+
+<InstallBlock name="deadpan-box" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { DeadpanBox } from "@/components/remocn/deadpan-box";
+
+const DeadpanBoxScene = () => <DeadpanBox quote="Nobody watches launch videos." attribution="Founder. Nobody watched the launch." brand="remocn" />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="DeadpanBox"
+    component={DeadpanBoxScene}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A small box showing the brand logo grows to hug a flat quote, which holds for a deadpan beat; then the box floods the whole frame and the attribution line lands the joke before a brand sign-off. Pass `quote`, `attribution` and `brand` ("remocn" renders the real logo, anything else is set as a wordmark).
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "quote",
+      type: "string",
+      default: "\"Nobody watches launch videos.\"",
+      description: "The setup, without quote marks: curly marks are added and hung for you.",
+    },
+    {
+      name: "attribution",
+      type: "string",
+      default: "\"Founder. Nobody watched the launch.\"",
+      description: "The deadpan attribution that lands the joke after a pause.",
+    },
+    {
+      name: "brand",
+      type: "string",
+      default: "\"remocn\"",
+      description: "Brand name; \"remocn\" renders the real logo, anything else a wordmark.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Main color of the gradient field inside the box.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color scheme; ships dark and light.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier for the whole timeline.",
+    },
+  ]}
+/>

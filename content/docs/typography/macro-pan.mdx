@@ -1,0 +1,87 @@
+---
+title: Macro Pan
+description: "A serif headline is revealed by a close-up pan across its glyphs, pulling back to a full lockup."
+component: macro-pan
+vibe: premium
+length: 134
+useWhen:
+  - "A title that should feel shot with a macro lens, scanning across the letterforms."
+  - "A chapter opener with a running label and index in the corner."
+avoidWhen:
+  - "You want a quick, clean entrance - use `staggered-fade-up`."
+  - "You want a blur reveal with no camera move - use `focus-blur-resolve`."
+  - "You want the lens effect on a single word - use `glass-capsule`."
+---
+
+<ComponentPreview name="macro-pan" />
+
+<InstallBlock name="macro-pan" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { MacroPan } from "@/components/remocn/macro-pan";
+
+const MacroPanScene = () => (
+  <MacroPan title="Built to move." label="remocn" index="01" accent="#3B5BFD" />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="MacroPan"
+    component={MacroPanScene}
+    durationInFrames={180}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The camera starts zoomed into the letters and pans across them, then pulls back to reveal the whole headline ending on a gradient while the corner label settles. Pass `title`, `label` and `index`; it ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "title",
+      type: "string",
+      default: "\"Built to move.\"",
+      description: "One-line headline. A closing period or other punctuation takes the accent.",
+      description: "Headline revealed by the pan",
+    },
+    {
+      name: "label",
+      type: "string",
+      default: "\"remocn\"",
+      description: "Running label in the corner. \"remocn\" is set as the real logo.",
+      description: "Running label in the corner; Remocn shows the logo",
+    },
+    {
+      name: "index",
+      type: "string",
+      default: "\"01\"",
+      description: "Number set before the label, like a reel or chapter.",
+      description: "Number before the label, like a reel or chapter",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color (any valid CSS color)",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark palettes",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier",
+    },
+  ]}
+/>

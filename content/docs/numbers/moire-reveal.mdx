@@ -1,0 +1,85 @@
+---
+title: Moire Reveal
+description: "A large figure resolves out of a rotating moire line pattern and locks sharp, with a small pill caption."
+component: moire-reveal
+vibe: tech
+length: 130
+useWhen:
+  - "A speed-up claim like 10x that should resolve out of visual noise."
+  - "A brand mark reveal, using `shape` set to mark instead of text."
+  - "A tech-flavoured stat beat that wants a hypnotic build before the payoff."
+avoidWhen:
+  - "The number should count up — use `tall-count`."
+  - "You want a clean, quiet headline stat — use `compact-stat`."
+  - "You want a figure assembled from loose pixels — use `number-mosaic`."
+---
+
+<ComponentPreview name="moire-reveal" />
+
+<InstallBlock name="moire-reveal" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { MoireReveal } from "@/components/remocn/moire-reveal";
+
+const MoireRevealScene = () => (
+  <MoireReveal value="10×" caption="faster first frame on remocn render" />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="MoireReveal"
+    component={MoireRevealScene}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A field of fine lines turns and drifts until it locks into the figure, then a small pill caption fades in beneath. Pass `value` and `caption`, or set `shape` to `mark` to reveal the Remocn mark instead of text; it ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "value",
+      type: "string",
+      default: "\"10×\"",
+      description: "Figure that the line pattern resolves into.",
+    },
+    {
+      name: "shape",
+      type: "\"text\" | \"mark\"",
+      default: "\"text\"",
+      description: "Reveal the value as text or as the Remocn mark.",
+    },
+    {
+      name: "caption",
+      type: "string",
+      default: "\"faster first frame on remocn render\"",
+      description: "Small pill caption that fades in under the figure.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for highlights and small marks.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color theme, \"dark\" or \"light\".",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+  ]}
+/>

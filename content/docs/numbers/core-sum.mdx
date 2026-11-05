@@ -1,0 +1,105 @@
+---
+title: Core Sum
+description: "A monospace figure sums up to 2,097,152 beside a divider and a small caption"
+component: core-sum
+vibe: tech
+length: 105
+useWhen:
+  - "A scale claim where parallel pieces, such as cores or workers, each count up and then merge row by row into one huge total."
+  - "A 'many small parts add up' beat that wants a visible summation instead of a single counting number."
+  - "A throughput stat with a monospace figure, a divider and a short caption in a technical product video."
+avoidWhen:
+  - "You want one number simply counting up with no parts — use `carry-count`."
+  - "You want a digit-by-digit odometer feel — use `live-ticker`."
+  - "The point is a share or breakdown of a whole rather than a sum — use `number-split`."
+---
+
+<ComponentPreview name="core-sum" />
+
+<InstallBlock name="core-sum" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { CoreSum } from "@/components/remocn/core-sum";
+
+const CoreSumScene = () => <CoreSum value={2097152} parts={8} label="frames per night, every core busy" />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="CoreSum"
+    component={CoreSumScene}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A column of partial figures counts up row by row, each labelled like 'core 01'. They then merge pairwise, level by level, until a single total remains, which fills with the accent colour and shows the main caption. Pass `value`, `parts`, `label` and `partLabel`. The length shown is for the default of 8 parts. It ships light and dark through the `theme` prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "value",
+      type: "number",
+      default: "2097152",
+      description: "The final total the parts add up to.",
+    },
+    {
+      name: "parts",
+      type: "number",
+      default: "8",
+      description: "Number of partial rows, rounded to a power of two from 2 to 16.",
+    },
+    {
+      name: "prefix",
+      type: "string",
+      default: "\"\"",
+      description: "Text placed before every number, such as a currency sign.",
+    },
+    {
+      name: "suffix",
+      type: "string",
+      default: "\"\"",
+      description: "Text placed after every number, such as a unit.",
+    },
+    {
+      name: "label",
+      type: "string",
+      default: "\"frames per night, every core busy\"",
+      description: "Caption beside the final total.",
+    },
+    {
+      name: "partLabel",
+      type: "string",
+      default: "\"core\"",
+      description: "Word used to label the partial rows, e.g. 'core 01'.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Colour the final total fills with.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Stage colour; pass 'transparent' to layer over other footage.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier; 1 is the designed pace.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark.",
+    },
+  ]}
+/>

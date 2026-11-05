@@ -1,0 +1,110 @@
+---
+title: Caret Collapse
+description: "A line of typed text crops down to its blinking caret, which glides over and opens into a prompt screen"
+component: caret-collapse
+vibe: tech
+length: 36
+useWhen:
+  - "A beat that moves from a typed URL or status line into an input where the viewer takes the next step."
+  - "A launch video where the caret is the visual hinge between a statement and an interactive prompt."
+  - "You want a calm hand-off that keeps the eye on one small point."
+avoidWhen:
+  - "There is no typed text in the outgoing scene to anchor the caret — use `ring-cut` for a generic reveal."
+  - "You want the caret to sweep across the frame and wipe the scene — use `caret-wipe`."
+  - "The cut should be a fast dramatic dive, not a quiet collapse — use `press-warp-dive`."
+---
+
+<ComponentPreview name="caret-collapse" />
+
+<InstallBlock name="caret-collapse" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { CaretCollapseDemo } from "@/components/remocn/caret-collapse";
+
+const CaretCollapseDemoScene = () => (
+  <CaretCollapseDemo
+    url="remocn.dev/launch"
+    question="What will you launch next?"
+    prompt="Make a 30-second launch film for our 2.0 release"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="CaretCollapseDemo"
+    component={CaretCollapseDemoScene}
+    durationInFrames={132}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Scene A types a URL with a short label after it. The frame crops down to the caret, which blinks off, glides to the prompt position and opens into scene B, a composer with a question heading and a prompt typed in. Pass `url`, `label`, `question` and `prompt`; it ships light and dark.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark palette for both scenes",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Caret color; defaults to the theme caret",
+    },
+    {
+      name: "url",
+      type: "string",
+      default: "\"remocn.dev/launch\"",
+      description: "URL typed in scene A",
+    },
+    {
+      name: "label",
+      type: "string",
+      default: "\"is live\"",
+      description: "Short label shown after the URL",
+    },
+    {
+      name: "question",
+      type: "string",
+      default: "\"What will you launch next?\"",
+      description: "Heading above the prompt in scene B",
+    },
+    {
+      name: "prompt",
+      type: "string",
+      default: "\"Make a 30-second launch film for our 2.0 release\"",
+      description: "Text typed into the scene B prompt box",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "Preset id for the scene A gradients.sh shader ground",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the scene A shader parameters",
+    },
+    {
+      name: "groundB",
+      type: "GshPresetId",
+      description: "Preset id for the scene B gradients.sh shader ground",
+    },
+    {
+      name: "groundParamsB",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the scene B shader parameters",
+    },
+  ]}
+/>

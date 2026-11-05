@@ -1,0 +1,94 @@
+---
+title: Changelog Scroll
+description: "A changelog list scrolls and one row enlarges into a highlighted headline entry"
+component: changelog-scroll
+vibe: tech
+length: 108
+useWhen:
+  - "A what's-new beat that shows a long history of releases and zooms into the latest one."
+  - "A release-notes video where one entry deserves the headline treatment."
+  - "A sense-of-momentum shot showing how often a product ships."
+avoidWhen:
+  - "You want a live terminal-style log instead of a list — use `terminal-simulator`."
+  - "You want a short numbered feature list — use `index-list`."
+  - "You have three headline benefits, not a history — use `feature-trio`."
+---
+
+<ComponentPreview name="changelog-scroll" />
+
+<InstallBlock name="changelog-scroll" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { ChangelogScroll } from "@/components/remocn/changelog-scroll";
+
+const ChangelogScrollScene = () => <ChangelogScroll title="Changelog" url="remocn.dev/changelog" focus={9} />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="ChangelogScroll"
+    component={ChangelogScrollScene}
+    durationInFrames={140}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A tall changelog list scrolls fast then eases to a stop on one row, which enlarges into a highlighted entry on a glowing panel while the title and URL chrome fade in. Pass `entries` (date, text and optional version), `focus` for the row index to enlarge, `title` and `url`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "entries",
+      type: "ChangelogEntry[]",
+      default: "DEFAULT_ENTRIES",
+      description: "Changelog rows with date, text and an optional version.",
+    },
+    {
+      name: "focus",
+      type: "number",
+      default: "9",
+      description: "Index of the entry that enlarges into the headline.",
+    },
+    {
+      name: "title",
+      type: "string",
+      default: "\"Changelog\"",
+      description: "Heading shown once the entry expands.",
+    },
+    {
+      name: "url",
+      type: "string",
+      default: "\"remocn.dev/changelog\"",
+      description: "Address shown in the chrome after the expand.",
+    },
+    {
+      name: "logo",
+      type: "React.ReactNode",
+      description: "Custom logo node; defaults to the Remocn logo.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color of the focused entry panel.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color scheme; ships dark and light.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier for the whole timeline.",
+    },
+  ]}
+/>

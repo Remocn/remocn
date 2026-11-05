@@ -1,0 +1,79 @@
+---
+title: Unmask Line
+description: "A monospace line is unmasked letter by letter, 'Out of stealth.', the last word in green"
+component: unmask-line
+vibe: tech
+length: 77
+useWhen:
+  - "A tech or developer-tool announcement where a monospace line is unmasked letter by letter."
+  - "A status-style reveal, like going live, with the last line tinted green."
+avoidWhen:
+  - "You want a classic typing cursor — use `typewriter`."
+  - "You want the words to rise in softly — use `staggered-fade-up`."
+---
+
+<ComponentPreview name="unmask-line" />
+
+<InstallBlock name="unmask-line" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { UnmaskLine } from "@/components/remocn/unmask-line";
+
+const UnmaskLineScene = () => <UnmaskLine lines={["Out of", "stealth."]} highlight={-1} />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="UnmaskLine"
+    component={UnmaskLineScene}
+    durationInFrames={120}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Dots appear for each letter, breathe, then open into monospace characters line by line, with the chosen line tinted green. Pass `lines` and `highlight` (a line index; -1 means the last line); it ships light and dark.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "lines",
+      type: "string[]",
+      default: "[\"Out of\", \"stealth.\"]",
+      description: "Lines unmasked letter by letter.",
+    },
+    {
+      name: "highlight",
+      type: "number",
+      default: "-1",
+      description: "Index of the line tinted green; -1 is the last line.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Accent colour (any CSS colour).",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Overrides the theme background colour.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier; above 1 plays faster.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Colour scheme; ships light and dark.",
+    },
+  ]}
+/>

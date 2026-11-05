@@ -1,0 +1,96 @@
+---
+title: Shape Pack
+description: "Colored tiles drop in and pack into a poster grid, then one block locks in a stat with a label."
+component: shape-pack
+vibe: premium
+length: 103
+useWhen:
+  - "A poster-style stat beat with a collage look."
+  - "A multiplier result with the brand logo in the locking tile."
+  - "A playful intro where blocks fall into place before the number counts up."
+avoidWhen:
+  - "You want a clean headline number — use `compact-stat`."
+  - "You want a gradient number snapped onto a grid with a headline — use `grid-snap-poster`."
+  - "You want to break a total into categories — use `number-split`."
+---
+
+<ComponentPreview name="shape-pack" />
+
+<InstallBlock name="shape-pack" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { ShapePack } from "@/components/remocn/shape-pack";
+
+const ShapePackScene = () => (
+  <ShapePack value={3.2} decimals={1} suffix="×" label="faster renders" />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="ShapePack"
+    component={ShapePackScene}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Blocks fall one after another and pack into a twelve by eight grid, leaving a slot that the last block fills. That block counts up to `value` with its suffix and label. Pass `value`, `suffix`, `label` and optionally your own `logo` node; it ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "value",
+      type: "number",
+      default: "3.2",
+      description: "Final number the locking block counts up to.",
+    },
+    {
+      name: "decimals",
+      type: "number",
+      default: "1",
+      description: "Decimal places shown while counting.",
+    },
+    {
+      name: "suffix",
+      type: "string",
+      default: "\"×\"",
+      description: "Text drawn after the number.",
+    },
+    {
+      name: "label",
+      type: "string",
+      default: "\"faster renders\"",
+      description: "Caption inside the locking block.",
+    },
+    {
+      name: "logo",
+      type: "React.ReactNode",
+      description: "React node shown in the poster instead of the default Remocn logo.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for highlights and small marks.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color theme, \"dark\" or \"light\".",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+  ]}
+/>

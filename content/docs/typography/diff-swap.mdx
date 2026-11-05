@@ -1,0 +1,90 @@
+---
+title: Diff Swap
+description: "A code-diff style edit rewrites a before line into the after line with the changed part highlighted."
+component: diff-swap
+vibe: tech
+length: 102
+useWhen:
+  - "A dev-tool beat showing the old painful way replaced by the new one."
+  - "A changelog scene presenting one line removed and one added."
+  - "A before-and-after claim that should look like a version-control change."
+avoidWhen:
+  - "The change is a single word inside a sentence — use `strikethrough-replace`."
+  - "Text should be selected then retyped like an editor — use `select-replace`."
+  - "The audience is non-technical and a diff would confuse — use `layout-swap`."
+---
+
+<ComponentPreview name="diff-swap" />
+
+<InstallBlock name="diff-swap" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { DiffSwap } from "@/components/remocn/diff-swap";
+
+const DiffSwapScene = () => (
+  <DiffSwap before="Keyframe every frame by hand." after="Install the scene. Edit the props." highlight="Edit the props." />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="DiffSwap"
+    component={DiffSwapScene}
+    durationInFrames={125}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The `before` line is struck through as a deletion while the `after` line appears as an addition, with `highlight` marked in the accent color. Pass `before`, `after` and `highlight`. It ships in light and dark through the `theme` prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "before",
+      type: "string",
+      default: "\"Keyframe every frame by hand.\"",
+      description: "Line shown as the removed text.",
+    },
+    {
+      name: "after",
+      type: "string",
+      default: "\"Install the scene. Edit the props.\"",
+      description: "Line shown as the added text.",
+    },
+    {
+      name: "highlight",
+      type: "string",
+      default: "\"Edit the props.\"",
+      description: "Part of `after` marked in the accent color.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color override; falls back to the theme accent.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background color override; falls back to the theme background.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark; picks the palette.",
+    },
+  ]}
+/>

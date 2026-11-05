@@ -1,0 +1,83 @@
+---
+title: Letter Relay
+description: "Letters of a wordmark hop one after another, each taking off as the last lands, then tighten into place."
+component: letter-relay
+vibe: clean
+length: 99
+useWhen:
+  - "A brand or product name needs a playful reveal at the start of a launch video, one letter hopping after another."
+  - "An outro or sign-off beat where the wordmark lands letter by letter on a lit floor."
+  - "The name starts with an r and you want the Remocn R mark as its first letter."
+avoidWhen:
+  - "The name should type in like a command or prompt - use `typewriter`."
+  - "You need a calm, quick reveal rather than a bouncing relay - use `per-character-rise`."
+  - "The text is a full phrase, not a single short word - use `word-push` to build it word by word."
+---
+
+<ComponentPreview name="letter-relay" />
+
+<InstallBlock name="letter-relay" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { LetterRelay } from "@/components/remocn/letter-relay";
+
+const LetterRelayScene = () => <LetterRelay word="launchpad" hop={8} mark={false} />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="LetterRelay"
+    component={LetterRelayScene}
+    durationInFrames={130}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Each letter pops in, then hops over to its place in turn, squashing as it lands on a glowing floor; once the last one lands the spacing tightens to final kerning. Pass `word` for your own name and `hop` to set the pace. With `mark` on, a leading r is drawn as the Remocn R mark. It takes a `theme` prop and ships light and dark.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "word",
+      type: "string",
+      default: "\"remocn\"",
+      description: "The wordmark to spell, hopped in letter by letter.",
+    },
+    {
+      name: "hop",
+      type: "number",
+      default: "10",
+      description: "Frames per hop; the next letter takes off as the previous one lands.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Color each letter takes on while it is in the air.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark ground; the component ships both.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "mark",
+      type: "boolean",
+      default: "true",
+      description: "Set the leading \"r\" as the Remocn R mark.",
+    },
+  ]}
+/>

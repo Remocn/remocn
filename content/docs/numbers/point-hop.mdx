@@ -1,0 +1,95 @@
+---
+title: Point Hop
+description: "A decimal point hops between digits to change units, ending on a value with a metric prefix."
+component: point-hop
+vibe: tech
+length: 119
+useWhen:
+  - "A latency or performance claim where unit scaling, such as seconds to microseconds, is the story."
+  - "A precise measurement result with a short caption."
+  - "A technical beat where a tiny number needs to be made readable."
+avoidWhen:
+  - "The number is an ordinary count — use `tall-count`."
+  - "You compare two values side by side — use `measure-dim`."
+  - "You want a speed readout with a delta — use `speed-trap`."
+---
+
+<ComponentPreview name="point-hop" />
+
+<InstallBlock name="point-hop" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { PointHop } from "@/components/remocn/point-hop";
+
+const PointHopScene = () => (
+  <PointHop value={0.0000342} unit="s" label="scene refresh after a prop change" />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="PointHop"
+    component={PointHopScene}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The tiny value starts as a long string of zeros. Its decimal point hops three digits at a time while the unit prefix swaps, once per step, until the figure reads cleanly. Pass `value` in base units, `unit`, `prefixes` and `label`; it ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "value",
+      type: "number",
+      default: "3.42e-05",
+      description: "Value in base units, such as seconds.",
+    },
+    {
+      name: "unit",
+      type: "string",
+      default: "\"s\"",
+      description: "Base unit symbol shown after the prefix.",
+    },
+    {
+      name: "prefixes",
+      type: "string[]",
+      default: "[\"\", \"m\", \"µ\", \"n\"]",
+      description: "Unit prefixes in order of three digits each, starting with none.",
+    },
+    {
+      name: "label",
+      type: "string",
+      default: "\"scene refresh after a prop change\"",
+      description: "Caption that rises in at the top.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Accent color for highlights and small marks.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background color override. Pass \"transparent\" to composite over other layers.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color theme, \"dark\" or \"light\".",
+    },
+  ]}
+/>

@@ -1,0 +1,105 @@
+---
+title: Light Signature
+description: "A red light streak chases across the wordmark under an eyebrow, with a tagline below."
+component: light-signature
+vibe: premium
+length: 90
+useWhen:
+  - "A new-version reveal that carries a short eyebrow such as The all-new."
+  - "A cinematic logo sting where a streak of light ignites the name."
+  - "A trailer-style sign-off with a one-line tagline."
+avoidWhen:
+  - "You want the eyebrow to settle and lift into place — use `introducing`."
+  - "A full-frame anamorphic flare is wanted — use `anamorphic-flare`."
+  - "A quieter band of light with no eyebrow — use `first-light`."
+---
+
+<ComponentPreview name="light-signature" />
+
+<InstallBlock name="light-signature" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { LightSignature } from "@/components/remocn/light-signature";
+
+const LightSignatureScene = () => (
+  <LightSignature
+    eyebrow="The all-new"
+    name="remocn"
+    tagline="Launch-video scenes, ready to render."
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="LightSignature"
+    component={LightSignatureScene}
+    durationInFrames={120}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A streak of light chases across the name, igniting it as it passes and returning to settle, then the eyebrow and tagline fade in around it. Pass `eyebrow`, `name` or `logo`, `tagline` and `lightColor`. Ships light and dark.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "eyebrow",
+      type: "string",
+      default: "\"The all-new\"",
+      description: "Small line above the name.",
+    },
+    {
+      name: "name",
+      type: "string",
+      default: "\"remocn\"",
+      description: "Name the light ignites; Remocn renders the real logo.",
+    },
+    {
+      name: "logo",
+      type: "React.ReactNode",
+      description: "Mark set before the name, replacing the default.",
+    },
+    {
+      name: "tagline",
+      type: "string",
+      default: "\"Launch-video scenes, ready to render.\"",
+      description: "Line that fades in under the name.",
+    },
+    {
+      name: "lightColor",
+      type: "string",
+      default: "CHROME[0]",
+      description: "Colour of the travelling streak of light.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent colour for the mark and highlights; any CSS colour.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Stage fill colour; overrides the theme background.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier for the whole timeline; 1 is normal speed.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Dark or light palette and ground.",
+    },
+  ]}
+/>

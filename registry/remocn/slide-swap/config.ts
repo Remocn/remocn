@@ -48,4 +48,5 @@ export const slideSwapConfig: ComponentConfig = {
   compositionHeight: H,
   previewBackdrop: { type: "color", value: "#141318" },
   snippet: slideSwapExampleCode,
+  card: { backdrop: true },
 };

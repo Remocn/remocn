@@ -1,0 +1,90 @@
+---
+title: Shape Cut
+description: "A circle, square or pill swells to cover the headline, then shrinks to a small mark beside the next line"
+component: shape-cut
+vibe: clean
+length: 76
+useWhen:
+  - "Swapping a short statement for a logo or closing line with a single bold shape that ends as a punctuation-like mark."
+  - "A launch beat where the shape type, a circle, square or pill, should match the brand."
+  - "A fast, graphic cut that needs no imagery."
+avoidWhen:
+  - "You want multiple rings expanding from a point — use `ring-cut`."
+  - "The reveal should open from a band across the middle — use `band-open`."
+  - "You need a soft change with no hard-edged shape — use `grain-dissolve`."
+---
+
+<ComponentPreview name="shape-cut" />
+
+<InstallBlock name="shape-cut" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { ShapeCut } from "@/components/remocn/shape-cut";
+
+const ShapeCutScene = () => (
+  <ShapeCut
+    from="Ideas move fast"
+    to="Now live"
+    shape="pill"
+    accent="#3B5BFD"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="ShapeCut"
+    component={ShapeCutScene}
+    durationInFrames={110}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A shape slides in from the left edge and swells until it covers the `from` headline, then shrinks down to a small mark beside the `to` text, which settles into place. Choose `shape` as circle, square or pill (the pill ends as an underline bar), and pass `to="remocn"` to set the Remocn logo. It ships light and dark, and the cut finishes at frame 76.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "from",
+      type: "string",
+      default: "\"Ideas move fast\"",
+      description: "Outgoing headline",
+    },
+    {
+      name: "to",
+      type: "string",
+      default: "\"remocn\"",
+      description: "Incoming headline; Remocn sets the logo",
+    },
+    {
+      name: "shape",
+      type: "\"circle\" | \"square\" | \"pill\"",
+      default: "\"circle\"",
+      description: "Shape that grows out of the text: circle, square or pill",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color used by the scenes",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark stage",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier for the whole timeline",
+    },
+  ]}
+/>

@@ -1,0 +1,87 @@
+---
+title: First Light
+description: "A band of light climbs along a baseline and lights the wordmark as it passes, with a tagline below."
+component: first-light
+vibe: premium
+length: 86
+useWhen:
+  - "A calm, premium logo reveal at the very start or end of a launch film."
+  - "A brand sting that needs a single tagline and no other text."
+  - "A quiet closer after a loud, busy sequence."
+avoidWhen:
+  - "You want an eyebrow line before the name — use `introducing`."
+  - "The reveal should feel hot and forged — use `noise-forge-sting`."
+  - "The name should be spelled out letter by letter — use `spell-out`."
+---
+
+<ComponentPreview name="first-light" />
+
+<InstallBlock name="first-light" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { FirstLight } from "@/components/remocn/first-light";
+
+const FirstLightScene = () => (
+  <FirstLight
+    name="remocn"
+    tagline="Every frame catches the light."
+    speed={1}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="FirstLight"
+    component={FirstLightScene}
+    durationInFrames={120}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A band of light climbs along a baseline, lighting the name as it passes, then settles and a tagline fades in below. Pass `name` and `tagline`; a name of Remocn is set as the real logo. Ships light and dark.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "name",
+      type: "string",
+      default: "\"remocn\"",
+      description: "Name that the light sweeps across.",
+    },
+    {
+      name: "tagline",
+      type: "string",
+      default: "\"Every frame catches the light.\"",
+      description: "Line that fades in under the name.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Colour of the light band.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Stage fill colour; overrides the theme background.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier for the whole timeline; 1 is normal speed.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Dark or light palette and ground.",
+    },
+  ]}
+/>

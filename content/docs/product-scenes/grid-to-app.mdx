@@ -1,0 +1,94 @@
+---
+title: Grid to App
+description: "A product grid expands into a store admin app with sidebar and product catalogue"
+component: grid-to-app
+vibe: premium
+length: 132
+useWhen:
+  - "A commerce-platform launch beat that zooms from a few product tiles into the full admin dashboard."
+  - "Introducing a merchant back office with navigation, a product table and a publish action."
+  - "A camera-pull reveal where a simple grid of images turns out to be a real app."
+avoidWhen:
+  - "You want a single button to morph into a new product card — use `button-to-card`."
+  - "The story is a payments or stats dashboard rather than a catalogue — use `live-dashboard`."
+---
+
+<ComponentPreview name="grid-to-app" />
+
+<InstallBlock name="grid-to-app" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { GridToApp } from "@/components/remocn/grid-to-app";
+
+const GridToAppScene = () => (
+  <GridToApp storeName="Hearth & Co" pageTitle="Catalogue" accent="#ff6a2b" />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="GridToApp"
+    component={GridToAppScene}
+    durationInFrames={132}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Two rows of product tiles pull back into a store admin window with a sidebar, header and a product table. The product count rolls up, then the Publish button presses and flips to Store live. Pass `storeName`, `pageTitle`, `products` (name and price) and your own `images`, because the default images use `staticFile(...)` paths that only exist in the Remocn repo. The `theme` prop ships dark and light.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Dark or light admin and background styling.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#ff6a2b\"",
+      description: "Accent color for the Publish button and highlights.",
+    },
+    {
+      name: "storeName",
+      type: "string",
+      default: "\"Studio Goods\"",
+      description: "Store name shown at the top of the sidebar.",
+    },
+    {
+      name: "pageTitle",
+      type: "string",
+      default: "\"Products\"",
+      description: "Heading of the catalogue page.",
+    },
+    {
+      name: "images",
+      type: "string[]",
+      description: "Product image URLs, one per product, in order.",
+    },
+    {
+      name: "products",
+      type: "{ name: string; price: string }[]",
+      description: "Products as name and price pairs, shown in tiles and table.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "Preset id for the shader background.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the shader background parameters.",
+    },
+  ]}
+/>

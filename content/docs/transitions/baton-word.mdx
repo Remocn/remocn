@@ -1,0 +1,83 @@
+---
+title: Baton Word
+description: "Kinetic type where each line hands its last word to the next line as an accent-colored baton"
+component: baton-word
+vibe: playful
+length: 177
+useWhen:
+  - "A script-driven launch video where three or four short sentences should flow into each other word by word."
+  - "A manifesto or problem-to-solution beat where the key word links one claim to the next."
+  - "Bold, minimal typography as the whole scene, with no imagery or UI behind it."
+avoidWhen:
+  - "You need a single headline that appears once — use `staggered-fade-up`."
+  - "The lines are unrelated and share no linking word — use `per-word-crossfade` for independent lines."
+  - "You want each line to swap with a hard directional move rather than a word hand-off — use `cue-word`."
+---
+
+<ComponentPreview name="baton-word" />
+
+<InstallBlock name="baton-word" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { BatonWord } from "@/components/remocn/baton-word";
+
+const BatonWordScene = () => (
+  <BatonWord
+    scenes={[
+      "The app is ready for launch.",
+      "Launch day needs a film.",
+      "Film it in code.",
+    ]}
+    theme="dark"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="BatonWord"
+    component={BatonWordScene}
+    durationInFrames={210}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Each sentence in `scenes` rises in word by word. Its last word then lights up in the accent color, travels along an arc, and becomes the first word of the next sentence, so end each line with the word the next one starts with. The motion finishes at frame 177 at speed 1 with the default three lines, and longer or more lines take longer; it ships light and dark.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "scenes",
+      type: "string[]",
+      description: "Sentences in order; each should end with the word the next starts with",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Color of the baton word and the lead word of each next line",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Stage color; pass transparent to composite over your own footage",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier for the whole timeline",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark palette",
+    },
+  ]}
+/>

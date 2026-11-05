@@ -1,0 +1,86 @@
+---
+title: Path Text
+description: "Text starts along a loose hand-drawn path, then straightens into a clean line with an italic tail."
+component: path-text
+vibe: premium
+length: 86
+useWhen:
+  - "A before and after message about going from rough to refined."
+  - "A title that should feel written by hand before resolving into clean type."
+avoidWhen:
+  - "You want text typed out character by character - use `typewriter`."
+  - "You want a signature-style draw-on - use `shimmer-sweep`."
+  - "You want a simple clean entrance - use `staggered-fade-up`."
+---
+
+<ComponentPreview name="path-text" />
+
+<InstallBlock name="path-text" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { PathText } from "@/components/remocn/path-text";
+
+const PathTextScene = () => (
+  <PathText text="From rough to ready." italicWords={1} looseness={0.15} />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="PathText"
+    component={PathTextScene}
+    durationInFrames={130}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The text is drawn along a wobbly path, then the path flattens and thins as the letters straighten into a clean line, with the last words in italic. Pass `text`, `italicWords` and `looseness`; it ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "text",
+      type: "string",
+      default: "\"From rough to ready.\"",
+      description: "Text laid along the path",
+    },
+    {
+      name: "italicWords",
+      type: "number",
+      default: "1",
+      description: "Trailing word(s) of `text` set in italic, the editorial accent.",
+      description: "Number of trailing words set in italic",
+    },
+    {
+      name: "looseness",
+      type: "number",
+      default: "0.15",
+      description: "How loose the opening curve is, as a fraction of the canvas height.",
+      description: "How wobbly the starting path is; 0 is flat",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark palettes",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Kept for the shared draft API; the stroke takes the theme's gradient instead.",
+      description: "Accent color for the stroke gradient",
+    },
+  ]}
+/>

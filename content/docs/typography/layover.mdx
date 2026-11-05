@@ -1,0 +1,95 @@
+---
+title: Layover
+description: "A headline's key word cycles through short stops before landing on the final word."
+component: layover
+vibe: clean
+length: 142
+useWhen:
+  - "A journey beat where a word steps through intermediate stops before arriving."
+  - "A tagline that morphs through shorthand fragments to a full word."
+  - "A short hero line with one cycling slot."
+avoidWhen:
+  - "You want a time phrase counting down to today — use `on-approach`, which is the close twin."
+  - "The cycling slot should keep a fixed width — use `width-lock`."
+  - "Words should pull into view from spaced-out places — use `pull-in`."
+---
+
+<ComponentPreview name="layover" />
+
+<InstallBlock name="layover" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { Layover } from "@/components/remocn/layover";
+
+const LayoverScene = () => (
+  <Layover from="Write it" word="here." stops={["w", "every"]} to="Plays" />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="Layover"
+    component={LayoverScene}
+    durationInFrames={175}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The `from` phrase stays while `word` cycles through each entry in `stops` and settles on `to`. Pass `from`, `word`, `stops` and `to` to tell your own stop-by-stop story. It ships in light and dark through the `theme` prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "from",
+      type: "string",
+      default: "\"Write it\"",
+      description: "Phrase that stays in place.",
+    },
+    {
+      name: "word",
+      type: "string",
+      default: "\"here.\"",
+      description: "Initial word in the cycling slot.",
+    },
+    {
+      name: "stops",
+      type: "string[]",
+      default: "[\"w\", \"every\"]",
+      description: "Words the slot passes through.",
+    },
+    {
+      name: "to",
+      type: "string",
+      default: "\"Plays\"",
+      description: "Word the line settles on.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Accent color override; falls back to the theme accent.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background color override; falls back to the theme background.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark; picks the palette.",
+    },
+  ]}
+/>

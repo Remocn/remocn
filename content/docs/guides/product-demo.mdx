@@ -3,37 +3,109 @@ title: Product demo
 description: A ~50-second video where your product is on camera doing its job — one flow, start to finish
 ---
 
+import { GuideNotes, GuideMoreLink } from "@/components/docs/guides/director-notes";
+import { GuideCount } from "@/components/docs/guides/guide-ui";
+import { GuideNote } from "@/components/docs/guides/note";
+import { GuidePrompt } from "@/components/docs/guides/prompt-block";
+import { GuideRenderCard } from "@/components/docs/guides/render-card";
+import { GuideBeatList, GuideStoryboard } from "@/components/docs/guides/storyboard";
+import { GuideStoryboardPreview } from "@/components/docs/guides/storyboard-preview";
+import { GuideFacts } from "@/components/docs/guides/video-facts";
+import { GuideWords } from "@/components/docs/guides/words-form";
+
+<GuideStoryboardPreview
+  beats={[
+    { label: "The setup", seconds: 4, frame: { line: "<SETUP LINE>" } },
+    { label: "The screen", seconds: 5, frame: { screen: "<PRODUCT NAME>" } },
+    { label: "Step one", seconds: 10, frame: { screen: "<FLOW STEP 1>" } },
+    { label: "Step two", seconds: 10, frame: { screen: "<FLOW STEP 2>" } },
+    { label: "Step three", seconds: 10, frame: { screen: "<FLOW STEP 3>" } },
+    { label: "The payoff", seconds: 6, frame: { line: "<PAYOFF LINE>" } },
+    { label: "The close", seconds: 5, frame: { logo: "<INSTALL COMMAND OR URL>" } },
+  ]}
+/>
+
+<GuideFacts
+  facts={[
+    { value: "~50 s", label: "running time" },
+    { value: "7 beats", label: "one flow, three steps" },
+    { value: "1920×1080", label: "30 fps, landscape" },
+  ]}
+/>
+
 This is the video where your product does the talking. A recreated app screen acts out your core flow — something is clicked, the UI responds, the result lands — pixel-perfect and scripted, which is why it looks better than any screen recording. No cursor hunting for a button, no loading spinners, no stray notifications. In the [Feature announcement](/docs/guides/feature-announcement) this is one beat called the demo; here that beat grows into the whole video.
 
-## The storyboard
+## The storyboard<GuideCount n={7} />
 
-1. **The setup** — one line naming who this is for and the job to be done.
-2. **The screen appears** — your app UI slides in, calm, no action yet. Let the viewer see where they are.
-3. **Step one** — the flow begins: something is clicked or typed, the UI responds.
-4. **Step two** — the next step of the same flow, given room to be seen.
-5. **Step three** — the last step; the flow completes on camera.
-6. **The payoff** — the outcome on screen, plus one line saying what just happened in the user's terms.
-7. **The close** — a terminal types your install command or URL, then your logo.
+<GuideStoryboard
+  beats={[
+    { label: "Setup", seconds: 4, look: "line" },
+    { label: "Screen", seconds: 5, look: "screen" },
+    { label: "Step one", seconds: 10, look: "screen" },
+    { label: "Step two", seconds: 10, look: "screen" },
+    { label: "Step three", seconds: 10, look: "screen" },
+    { label: "Payoff", seconds: 6, look: "reveal" },
+    { label: "Close", seconds: 5, look: "terminal" },
+  ]}
+/>
+
+<GuideBeatList>
+
+1. **The setup** — One line naming who this is for and the job to be done.
+2. **The screen appears** — Your app UI slides in, calm, no action yet. Let the viewer see where they are.
+3. **Step one** — The flow begins: something is clicked or typed, the UI responds.
+4. **Step two** — The next step of the same flow, given room to be seen.
+5. **Step three** — The last step; the flow completes on camera.
+6. **The payoff** — The outcome on screen, plus one line saying what just happened in the user's terms.
+7. **The close** — A terminal types your install command or URL, then your logo.
+
+</GuideBeatList>
 
 The three flow steps are most of the runtime. Everything else frames them.
 
-## Your words
+## Your words<GuideCount n={7} />
+
+<GuideWords
+  examples={[
+    { blank: ["<PRODUCT NAME>"] },
+    { blank: ["<SETUP LINE>"] },
+    { blank: ["<FLOW STEP 1>", "<FLOW STEP 2>", "<FLOW STEP 3>"] },
+    { blank: ["<PAYOFF LINE>"] },
+    { blank: ["<INSTALL COMMAND OR URL>"] },
+    { blank: ["<CLOSING LINE>"] },
+    { color: "#D4F25C", note: "Leave empty for the default lime" },
+  ]}
+>
 
 - **Product name**
-- **Setup line** — who this is for and the job, one sentence
-- **The one flow** — told as three steps, each a short sentence describing what happens on screen ("the user pastes a link", "a preview builds itself", "the share button lights up")
-- **Payoff line** — what the user just got, in their words
-- **Install command or URL** — one, not both
+- **Setup line** — Who this is for and the job, one sentence
+- **The one flow** — Told as three steps, each a short sentence describing what happens on screen ("the user pastes a link", "a preview builds itself", "the share button lights up")
+- **Payoff line** — What the user just got, in their words
+- **Install command or URL** — One, not both
 - **Closing line**
-- **Accent color** — one hex value; optional, the default lime looks good
+- **Accent color** _optional_ — One hex value; the default lime looks good
+
+</GuideWords>
 
 Pick one flow. A demo that shows three features demos none — the viewer should finish the video able to retell the flow from memory. If your product has three flows worth showing, that's three videos.
 
+<GuideNote icon="image">
+
 Have a logo? Drop the SVG into the project folder and mention the file name in the prompt. No logo — your agent will use the product name as a wordmark.
+
+<GuideNote icon="image">
 
 Struggling with the lines? [Words on screen](/docs/guides/words-on-screen) is the cheat sheet.
 
+</GuideNote>
+
+</GuideNote>
+
 ## The prompt
+
+Paste it into your agent with your words in place of the highlighted blanks.
+
+<GuidePrompt>
 
 ```text
 I'm making a product demo video with remocn (remocn.dev).
@@ -62,7 +134,11 @@ text, one accent color <ACCENT COLOR>, Manrope. Keep transitions restrained
 — the screen holds still, the flow moves. Use my copy exactly as written.
 ```
 
+</GuidePrompt>
+
 ## Directing the result
+
+<GuideNotes>
 
 - "Step two goes by too fast — I can't see what was clicked."
 - "The screen should look more like my app — here's a screenshot."
@@ -70,8 +146,18 @@ text, one accent color <ACCENT COLOR>, Manrope. Keep transitions restrained
 - "The typing is too quick — slow it to a human pace."
 - "Cut straight from the setup line to the screen."
 
+</GuideNotes>
+
+<GuideMoreLink>
+
 More directing vocabulary: [Directing your agent](/docs/guides/directing-your-agent).
+
+</GuideMoreLink>
 
 ## Get the file
 
-Ask your agent: **"Render the video."** You'll get an `.mp4` in the project folder, ready to post.
+<GuideRenderCard prompt="Render the video.">
+
+You'll get an `.mp4` in the project folder, ready to post.
+
+</GuideRenderCard>

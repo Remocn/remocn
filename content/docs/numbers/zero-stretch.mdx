@@ -1,0 +1,85 @@
+---
+title: Zero Stretch
+description: "The zero in a number stretches into a glossy pill that holds a label word, then a caption lands."
+component: zero-stretch
+vibe: premium
+length: 90
+useWhen:
+  - "A count claim such as 200 components, where the unit word sits inside the number."
+  - "A hero number that doubles as its own label."
+  - "A product-size stat with a one-line caption beneath."
+avoidWhen:
+  - "The stat is a duration with a unit word — use `stem-stretch`."
+  - "You want a plain figure with no integrated word — use `compact-stat`."
+  - "The number should count up — use `tall-count`."
+---
+
+<ComponentPreview name="zero-stretch" />
+
+<InstallBlock name="zero-stretch" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { ZeroStretch } from "@/components/remocn/zero-stretch";
+
+const ZeroStretchScene = () => (
+  <ZeroStretch value="200" label="components" caption="Ready to ship. Copy one in, own every frame." />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="ZeroStretch"
+    component={ZeroStretchScene}
+    durationInFrames={135}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The digits rise in, then the first zero springs open into a glossy pill that carries the label word. The caption rises in below. Pass `value` (a zero is added if it has none), `label` and `caption`; it ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "value",
+      type: "string",
+      default: "\"200\"",
+      description: "Figure whose zero stretches, as text. A zero is added if missing.",
+    },
+    {
+      name: "label",
+      type: "string",
+      default: "\"components\"",
+      description: "Word held inside the stretched pill.",
+    },
+    {
+      name: "caption",
+      type: "string",
+      default: "\"Ready to ship. Copy one in, own every frame.\"",
+      description: "Line that rises in under the figure.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for highlights and small marks.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color theme, \"dark\" or \"light\".",
+    },
+  ]}
+/>

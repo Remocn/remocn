@@ -1,0 +1,79 @@
+---
+title: Scan Fix
+description: A scan band sweeps down a screen and leaves the fixed build behind it, red redlines turning blue and the version chip flipping
+component: scan-fix
+vibe: clean
+length: 100
+useWhen:
+  - "A release should show the old build turning into the new one in a single sweep."
+  - "A design review story needs its payoff: every flagged problem fixed at once."
+  - "Two frames with the same layout should swap top to bottom rather than side to side."
+avoidWhen:
+  - "A divider should sweep sideways across an image — use `before-after`."
+  - "A gray wireframe should fill in with the finished UI — use `wireframe-to-final`."
+  - "The whole review, from audit to tokens, should play as one scene — use `design-audit`."
+---
+
+<ComponentPreview name="scan-fix" />
+
+<InstallBlock name="scan-fix" />
+
+## Usage
+
+`ScanFix` is a full-frame scene with two layers. A bright line with a soft wash
+behind it travels from the top of the frame to the bottom. Above the line you
+see `after`, below it `before`. When the line passes the version chip, the chip
+switches from the first version to the second.
+
+```tsx
+import { ScanFix } from "@/components/remocn/scan-fix";
+
+export const Ship = () => <ScanFix />;
+```
+
+Without props it scans the demo dashboard: the drifted v1 with red redlines and
+issue boxes turns into v2 with blue redlines. Pass your own frames, 1280×720
+each, with the same layout so the sweep reads as a fix.
+
+```tsx
+import { Img, staticFile } from "remotion";
+import { ScanFix } from "@/components/remocn/scan-fix";
+
+export const Ship = () => (
+  <ScanFix
+    before={<Img src={staticFile("v1.png")} />}
+    after={<Img src={staticFile("v2.png")} />}
+    brand="Acme"
+    versions={["v3.2", "v4.0"]}
+  />
+);
+```
+
+Set `brand=""` to hide the version chip.
+
+## Timing
+
+At 30 fps and `speed={1}`:
+
+| Frames | Motion |
+| --- | --- |
+| 14–20 | The band fades in above the frame |
+| 18–98 | The band sweeps top to bottom with a cubic ease-in-out |
+| ~22 | The version chip flips as the band passes it |
+| 92–100 | The band fades out below the frame |
+
+`scanFixLength` is 100. `speed` scales the whole timeline.
+
+<PropsTable title="Props"
+  rows={[
+    { name: "before", type: "React.ReactNode", description: "Frame before the fix, 1280×720. Defaults to the demo dashboard with red marks" },
+    { name: "after", type: "React.ReactNode", description: "Frame after the fix, same size. Defaults to the fixed dashboard with blue marks" },
+    { name: "brand", type: "string", default: '"Synergy"', description: "Name beside the version chip; empty hides the chip" },
+    { name: "versions", type: "[string, string]", default: '["v1.0", "v2.0"]', description: "Chip text before and after the band passes" },
+    { name: "scanColor", type: "string", default: '"#7D52F4"', description: "Band color" },
+    { name: "beforeColor", type: "string", default: '"#FB3748"', description: "Old chip and demo redline color" },
+    { name: "afterColor", type: "string", default: '"#335CFF"', description: "New chip and demo redline color" },
+    { name: "background", type: "string", default: '"#EDEDEF"', description: "Stage color" },
+    { name: "speed", type: "number", default: "1", description: "Playback multiplier" },
+  ]}
+/>

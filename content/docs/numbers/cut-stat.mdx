@@ -1,0 +1,124 @@
+---
+title: Cut Stat
+description: "A blue bar graph wipes upward beside a big minus 44% caption, 'less time to a finished cut'"
+component: cut-stat
+vibe: data
+length: 93
+useWhen:
+  - "A time-saved or cost-cut claim where a bar graph visibly shrinks beside the percentage."
+  - "A benefit beat that needs a big minus-percent number with a one-line explanation."
+  - "A before-and-after claim that should read in under four seconds."
+avoidWhen:
+  - "You have several segments that shrink, not one bar — use `time-breakdown`."
+  - "You want the savings framed as a race between tools — use `benchmark-race`."
+  - "You need a plain big number with a caption — use `compact-stat`."
+---
+
+<ComponentPreview name="cut-stat" />
+
+<InstallBlock name="cut-stat" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { CutStat } from "@/components/remocn/cut-stat";
+
+const CutStatScene = () => (
+  <CutStat
+    value={44}
+    label="less time to a finished cut"
+    caption="vs. keyframing every scene by hand"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="CutStat"
+    component={CutStatScene}
+    durationInFrames={115}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A bar graph wipes up, then a cut sweeps it down with a flash as the big minus percentage words in and the caption follows. Pass `value` (the percent cut, 5 to 95), `label` for the claim, and `caption` for the comparison. Ships dark and light via `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "value",
+      type: "number",
+      default: "44",
+      description: "Percent cut; also sets how far the bar drops, from 5 to 95.",
+    },
+    {
+      name: "decimals",
+      type: "number",
+      default: "0",
+      description: "Digits after the decimal point.",
+    },
+    {
+      name: "prefix",
+      type: "string",
+      default: "\"−\"",
+      description: "Text before the number, a minus sign by default.",
+    },
+    {
+      name: "suffix",
+      type: "string",
+      default: "\"%\"",
+      description: "Text after the number.",
+    },
+    {
+      name: "label",
+      type: "string",
+      default: "\"less time to a finished cut\"",
+      description: "Main claim shown beside the number.",
+    },
+    {
+      name: "caption",
+      type: "string",
+      default: "\"vs. keyframing every scene by hand\"",
+      description: "Small line comparing against the old way.",
+    },
+    {
+      name: "fromLabel",
+      type: "string",
+      default: "\"Before\"",
+      description: "Label on the full bar.",
+    },
+    {
+      name: "toLabel",
+      type: "string",
+      default: "\"With remocn\"",
+      description: "Label on the shortened bar.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for the hero element.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Optional CSS background replacing the theme ground.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Dark or light palette.",
+    },
+  ]}
+/>

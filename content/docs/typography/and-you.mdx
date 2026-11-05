@@ -1,0 +1,80 @@
+---
+title: And You
+description: "A list of audiences (\"For the founder who...\") ends on a big \"and you.\""
+component: and-you
+vibe: playful
+length: 127
+useWhen:
+  - "A who-it's-for beat that lists several audiences and ends by addressing the viewer."
+  - "An inclusive closing statement near the end of a launch video."
+  - "A list of three to five short clauses that should read as one sentence."
+avoidWhen:
+  - "You want three short benefit words instead of audiences — use `feature-trio`."
+  - "The lines are separate claims that should dim toward one — use `what-sticks`."
+  - "Each line should be a full-screen beat — use `point-expand`."
+---
+
+<ComponentPreview name="and-you" />
+
+<InstallBlock name="and-you" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { AndYou } from "@/components/remocn/and-you";
+
+const AndYouScene = () => <AndYou clauses={["For the founder who launches on Monday,", "the designer who just learned React,", "the two-person studio,"]} last="and you." />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="AndYou"
+    component={AndYouScene}
+    durationInFrames={180}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A list of audiences scrolls in clause by clause, each one stacking under the last, then they dim and a big closing phrase rises at the bottom of the frame. Pass `clauses` (one string per audience) and `last` for the closing words; it spaces the clauses to fit the composition length.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "clauses",
+      type: "string[]",
+      description: "Audience clauses, each shown in turn and stacked.",
+    },
+    {
+      name: "last",
+      type: "string",
+      default: "\"and you.\"",
+      description: "Closing words shown large at the bottom.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Color for the closing phrase; defaults to the theme accent.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Stage fill color; pass \"transparent\" to overlay your own footage.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color scheme; ships dark and light.",
+    },
+  ]}
+/>

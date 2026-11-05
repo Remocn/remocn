@@ -29,12 +29,14 @@
       "@/lib/remocn-icons": ["./registry/remocn-icons/icons-core/index.ts"],
       "@/lib/remocn-ui": ["./registry/remocn-ui/core/index.ts"],
       "@/lib/remocn-ui/*": ["./registry/remocn-ui/core/*"],
+      "@/lib/remocn/gsh/*": ["./registry/remocn/gsh/*"],
       "@/lib/remocn/stop-motion": ["./registry/remocn/stop-motion/index.ts"],
       "@/lib/remocn/scene-motion": ["./registry/remocn/scene-motion/index.ts"],
       "@/lib/remocn/canvas-presentation": [
         "./registry/remocn/canvas-presentation/index.tsx"
       ],
       "@/lib/remocn/caption-core": ["./registry/remocn/caption-core/index.ts"],
+      "@/lib/remocn/audit-core": ["./registry/remocn/audit-core/index.tsx"],
       "@/components/remocn/brush": ["./registry/remocn/brush/index.tsx"],
       "@/components/remocn/handwrite": [
         "./registry/remocn/handwrite/index.tsx"

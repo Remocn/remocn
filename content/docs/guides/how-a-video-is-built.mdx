@@ -3,46 +3,77 @@ title: How a video is built
 description: Think in beats — the one mental model behind every video you'll make
 ---
 
+import { GuideCount } from "@/components/docs/guides/guide-ui";
+import { BuiltRules } from "@/components/docs/guides/practice/built-rules";
+import { BuiltSkeleton } from "@/components/docs/guides/practice/built-skeleton";
+import { BuiltVocabulary } from "@/components/docs/guides/practice/built-vocabulary";
+import { ClapperIcon } from "@/components/docs/guides/practice/clapper-icon";
+import { GuideCtaCard } from "@/components/docs/guides/practice/cta-card";
+import { GuidePrompt } from "@/components/docs/guides/prompt-block";
+
 Every video in these guides — and every video you'll invent yourself — is built the same way: as a list of beats.
 
 ## Beats
 
-A beat is one idea on screen. A line of text landing. A feature name over a background. A logo drawing itself on. When the idea changes, the beat changes.
+A beat is one idea on screen. A line of text landing. A feature name over a background. A logo drawing itself on. When the idea changes, the beat changes. Three rules cover most of it:
 
-Three rules cover most of it:
+<BuiltRules art={["one-idea", "two-seconds", "beat-count"]}>
 
-- **One idea per beat.** If describing a beat needs the word "and", it's two beats.
-- **A text beat lives about two seconds** — long enough to read once, not twice.
-- **A video is five to ten beats.** The [launch video](/docs/guides/launch-video) is eight.
+- **One idea per beat** — If describing a beat needs the word "and", it's two beats.
+- **~2 seconds** — A text beat lives about two seconds — long enough to read once, not twice.
+- **5 to 10 beats** — A video is five to ten beats. The [launch video](/docs/guides/launch-video) is eight.
+
+</BuiltRules>
 
 ## The skeleton
 
 Every video that works has the same three acts:
 
-1. **Hook** — why anyone should care: a pain, a bold claim, a question.
-2. **Body** — what it is: features, value, proof.
-3. **Close** — what to do next: a command, a URL, a date.
+<BuiltSkeleton
+  acts={[
+    { range: "1–2 beats", beats: 2 },
+    { range: "3–5 beats", beats: 5 },
+    { range: "1 beat", beats: 1 },
+  ]}
+>
 
-Not sure what beats to write? One or two hook beats, three to five body beats, one close beat. That's a video.
+1. **Hook** — Why anyone should care: a pain, a bold claim, a question.
+2. **Body** — What it is: features, value, proof.
+3. **Close** — What to do next: a command, a URL, a date.
 
-## The vocabulary
+**Not sure what beats to write?** One or two hook beats, three to five body beats, one close beat. That's a video.
 
-When you describe a beat to your agent, plain words work — and some plain words map especially well to what remocn can build:
+</BuiltSkeleton>
 
-- **"an animated headline"** — a line of text that enters with motion
-- **"lines that stack up"** — claims appearing one after another
-- **"a living background"** — slow, animated color behind everything
-- **"a hard cut" / "a scene change"** — how one beat hands over to the next
-- **"a terminal that types"** — a command line typing itself out
-- **"a fake app screen"** — an interface with buttons, menus, and dialogs that act
+## The vocabulary<GuideCount n={8} />
+
+When you describe a beat to your agent, plain words work — and some plain words map especially well to what Remocn can build:
+
+<BuiltVocabulary
+  art={["headline", "stack", "background", "cut", "terminal", "app", "logo", "counter"]}
+>
+
+- **"an animated headline"** — A line of text that enters with motion
+- **"lines that stack up"** — Claims appearing one after another
+- **"a living background"** — Slow, animated color behind everything
+- **"a hard cut" / "a scene change"** — How one beat hands over to the next
+- **"a terminal that types"** — A command line typing itself out
+- **"a fake app screen"** — An interface with buttons, menus, and dialogs that act
 - **"a logo that draws itself on"**
-- **"a counter"** — a number counting up to a milestone
+- **"a counter"** — A number counting up to a milestone
+
+</BuiltVocabulary>
 
 You never need to know what any of these are called internally. Your agent does.
 
 ## From beats to prompt
 
 Write your video as a numbered list of beats — one line each, your copy in quotes. That list is 80% of a prompt; add a format line and a style line and it's done:
+
+<GuidePrompt
+  copyLabel="Copy"
+  marks={["an animated headline", "three lines that stack up", "a terminal that types"]}
+>
 
 ```text
 Build a ~15-second, 1920×1080, 30fps video in this Remotion project,
@@ -55,4 +86,14 @@ using remocn components:
 Style: dark background, one accent color <HEX>, calm pacing.
 ```
 
-When the first cut plays, switch hats: you're the director now — see [Directing your agent](/docs/guides/directing-your-agent).
+</GuidePrompt>
+
+<GuideCtaCard icon={<ClapperIcon />}>
+
+When the first cut plays, switch hats
+
+You're the director now.
+
+[Directing your agent](/docs/guides/directing-your-agent)
+
+</GuideCtaCard>

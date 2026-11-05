@@ -1,0 +1,85 @@
+---
+title: Not Yet
+description: "Lines of what it can't do build word by word, each ending in an accent Yet., and stack upward."
+component: not-yet
+vibe: clean
+length: 173
+useWhen:
+  - "A roadmap or honesty beat that admits current limits, each one ending in a hopeful word."
+  - "A coming-soon moment where a short list of missing features should read as a promise."
+avoidWhen:
+  - "Only one line should flip from a negation to a positive — use `negation-drop`."
+  - "Items need Summer or Later style tags and fill-in animation — use `half-built`."
+  - "You want a now, next and later queue where items ship — use `moves-up`."
+---
+
+<ComponentPreview name="not-yet" />
+
+<InstallBlock name="not-yet" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { NotYet } from "@/components/remocn/not-yet";
+
+const NotYetScene = () => (
+  <NotYet
+    lines={["It can’t write your script.", "It can’t pick your music."]}
+    word="Yet."
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="NotYet"
+    component={NotYetScene}
+    durationInFrames={170}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Each line builds word by word and finishes with the accent `word` (Yet. by default). The next line then pushes in beneath it while earlier lines shrink and dim above a thin rule, so the newest line is always the largest. Pass `lines` and optionally a different `word`. Timing compresses to fit the composition; 173 frames is the uncompressed length of the three defaults. It ships light and dark.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "lines",
+      type: "string[]",
+      default: "DEFAULT_LINES",
+      description: "Lines of text; each one is followed by the accent word.",
+    },
+    {
+      name: "word",
+      type: "string",
+      default: "\"Yet.\"",
+      description: "Accent word appended to every line.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Accent color; overrides the theme accent.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark palette.",
+    },
+  ]}
+/>

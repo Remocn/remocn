@@ -1,0 +1,93 @@
+---
+title: Long Vowel
+description: "A serif word stretches one vowel into a long drawl, colored in a warm gradient, with an italic caption."
+component: long-vowel
+vibe: playful
+length: 81
+useWhen:
+  - "A tagline that plays on emphasis, like a word drawn out for comic effect, followed by a short punchline."
+  - "A casual, human beat that breaks up a run of tight product shots with a single stretched word."
+  - "A hero line where a short word plus a caption is the whole scene."
+avoidWhen:
+  - "You want letters to fly in and smear sideways - use `stretch-in`."
+  - "The effect should be width and weight flexing on a whole word - use `axis-flex`."
+  - "The line is serious or data-heavy and needs no comic stretch - use `tracking-in`."
+---
+
+<ComponentPreview name="long-vowel" />
+
+<InstallBlock name="long-vowel" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { LongVowel } from "@/components/remocn/long-vowel";
+
+const LongVowelScene = () => <LongVowel word="Wow" repeat={6} rest="that was fast." />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="LongVowel"
+    component={LongVowelScene}
+    durationInFrames={120}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The word rises into place, then the chosen letter is drawn out with spring-driven copies that fan into a gradient trail; the caption words then slide up under it. Pass `word`, the `letter` to stretch (defaults to the first vowel), `repeat` for how many copies, and `rest` for the caption. It takes a `theme` prop and ships light and dark.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "word",
+      type: "string",
+      default: "\"Way\"",
+      description: "The word whose vowel gets stretched.",
+    },
+    {
+      name: "letter",
+      type: "string",
+      description: "Which letter to stretch; defaults to the first vowel.",
+    },
+    {
+      name: "repeat",
+      type: "number",
+      default: "5",
+      description: "How many extra copies of the letter are drawn out.",
+    },
+    {
+      name: "rest",
+      type: "string",
+      default: "\"less keyframing.\"",
+      description: "Caption set in italic under the word; empty for none.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color that seeds the gradient across the stretched letters.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Override the background color; use \"transparent\" to composite over your own.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark ground; the component ships both.",
+    },
+  ]}
+/>

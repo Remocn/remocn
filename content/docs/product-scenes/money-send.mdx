@@ -1,0 +1,106 @@
+---
+title: Money Send
+description: "A phone payment screen confirms Sent to Maya with a receipt"
+component: money-send
+vibe: clean
+length: 230
+useWhen:
+  - "A fintech or payments launch beat showing how fast sending money is."
+  - "A mobile product demo that types an amount, adds a note and ends on a receipt."
+  - "A peer-to-peer payments announcement where \"sent in a second\" is the message."
+avoidWhen:
+  - "The scene is a subscription upgrade with plan cards — use `mobile-paywall`."
+  - "You are settling a business invoice on a desktop layout — use `invoice-paid`."
+  - "You need a stock or portfolio screen with a chart — use `stock-scrub`."
+---
+
+<ComponentPreview name="money-send" />
+
+<InstallBlock name="money-send" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { MoneySend } from "@/components/remocn/money-send";
+
+const MoneySendScene = () => <MoneySend recipient="Sam Rivera" amount={85} currency="EUR" note="Concert tickets 🎟" />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="MoneySend"
+    component={MoneySendScene}
+    durationInFrames={260}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A phone opens on a keypad where the amount is typed digit by digit, then the note is typed on the keyboard with an emoji picked from the suggestion bar. Send flies the payment off, a progress ring spins, and a Sent confirmation shows a receipt. Pass `recipient`, `amount`, `currency` and `note`, and `lines` for the headline beside the phone. It has a `theme` prop and ships light and dark (dark by default).
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "recipient",
+      type: "string",
+      default: "\"Maya Chen\"",
+      description: "Full name; the first name is used in \"Sent to …\".",
+    },
+    {
+      name: "amount",
+      type: "number",
+      default: "120",
+      description: "Whole amount, typed digit by digit on the keypad.",
+    },
+    {
+      name: "currency",
+      type: "string",
+      default: "\"USD\"",
+      description: "ISO code, shown in the currency pill. USD, EUR, GBP and JPY get a symbol.",
+    },
+    {
+      name: "note",
+      type: "string",
+      default: "\"Dinner 🍜\"",
+      description: "Letters are typed on the keyboard; a trailing emoji is picked from the suggestion bar.",
+    },
+    {
+      name: "lines",
+      type: "[string, string, string]",
+      description: "Three lines beside the phone: amount, note, sent.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for the send button and confirmation.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier.",
+    },
+    {
+      name: "theme",
+      type: "\"light\" | \"dark\"",
+      default: "\"dark\"",
+      description: "Light or dark palette.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "Gradients.sh preset id for the background shader.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the background shader parameters.",
+    },
+  ]}
+/>

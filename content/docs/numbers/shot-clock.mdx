@@ -1,0 +1,114 @@
+---
+title: Shot Clock
+description: "A shot clock counts down to 0.0 in red, then 'SHIPPED' lands 'at the buzzer'"
+component: shot-clock
+vibe: playful
+length: 137
+useWhen:
+  - "A deadline beat framed as a basketball shot clock that counts down, turns red for tenths and ends on a buzzer with 'Shipped'."
+  - "A 'just in time' story where the title slams in at the buzzer with a line like 'at the buzzer'."
+  - "A sports-flavoured launch teaser with a period label and a possession bar running out."
+avoidWhen:
+  - "You want a rocket-launch style mission clock with telemetry — use `t-minus`."
+  - "You want the big cinematic 3-2-1 numerals instead of a scoreboard clock — use `countdown`."
+  - "The clock should freeze on a lap time with a delta, not run to zero — use `split-flash`."
+---
+
+<ComponentPreview name="shot-clock" />
+
+<InstallBlock name="shot-clock" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { ShotClock } from "@/components/remocn/shot-clock";
+
+const ShotClockScene = () => (
+  <ShotClock
+    from={24}
+    title="Shipped"
+    subtitle="at the buzzer"
+    period="Q4 · 00:24"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="ShotClock"
+    component={ShotClockScene}
+    durationInFrames={165}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A large shot clock drops in with a light bar above and a possession bar below. Whole seconds tick down, the clock turns red at the tenths threshold and counts tenths, and at 0.0 the frame flashes and the light stays lit. The clock then shrinks upward and the title and subtitle slam in. Pass `from`, `title`, `subtitle`, `label` and `period`. It ships light and dark through the `theme` prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "from",
+      type: "number",
+      default: "24",
+      description: "Seconds on the clock when it starts. Whole seconds, then tenths below `tenthsBelow`.",
+    },
+    {
+      name: "tenthsBelow",
+      type: "number",
+      default: "5",
+      description: "Below this many seconds the clock shows tenths and turns red.",
+    },
+    {
+      name: "title",
+      type: "string",
+      default: "\"Shipped\"",
+      description: "The big word that slams in at the buzzer. Set in caps.",
+    },
+    {
+      name: "subtitle",
+      type: "string",
+      default: "\"at the buzzer\"",
+      description: "The line under it.",
+    },
+    {
+      name: "label",
+      type: "string",
+      default: "\"Shot clock\"",
+      description: "Small label over the clock, left.",
+    },
+    {
+      name: "period",
+      type: "string",
+      default: "\"Q4 · 00:24\"",
+      description: "Small label over the clock, right.",
+    },
+    {
+      name: "alarm",
+      type: "string",
+      default: "\"#FF4433\"",
+      description: "Colour of the last seconds and the buzzer light.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "The live marker next to the period label.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier; 1 is the designed pace.",
+    },
+  ]}
+/>

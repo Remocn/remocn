@@ -1,0 +1,77 @@
+---
+title: Split Word
+description: "A huge word is cut open by a hairline and a second word slides into the gap."
+component: split-word
+vibe: premium
+length: 94
+useWhen:
+  - "A 'Now Available' style reveal where a status word appears inside the headline itself."
+  - "A premium announcement where one word is split to let a second word through a gradient sky."
+  - "A short two-word message that should feel like the first word opens up to reveal the second."
+avoidWhen:
+  - "You want a gradient slash to wipe a large title in — use `slash-wipe`."
+  - "The words should build up one after another into a phrase — use `kinetic-center-build`."
+  - "The reveal is plain text appearing, not a physical split — use `typewriter`."
+---
+
+<ComponentPreview name="split-word" />
+
+<InstallBlock name="split-word" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { SplitWord } from "@/components/remocn/split-word";
+
+const SplitWordScene = () => <SplitWord word="Now" insert="Available" accent="#3B5BFD" />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="SplitWord"
+    component={SplitWordScene}
+    durationInFrames={126}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+`word` rises in letter by letter, a hairline cuts through its middle, and the two halves slide apart to open an aurora-gradient band where `insert` sits. The halves then settle back with a small offset. It ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "word",
+      type: "string",
+      default: "\"Now\"",
+      description: "The huge word that gets split open.",
+    },
+    {
+      name: "insert",
+      type: "string",
+      default: "\"Available\"",
+      description: "The word revealed inside the gap.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Color of the hairline cut.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark ground; ships both.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier.",
+    },
+  ]}
+/>

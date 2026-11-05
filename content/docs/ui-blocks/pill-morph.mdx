@@ -1,0 +1,109 @@
+---
+title: Pill Morph
+description: "A small logo pill grows into a product card, splits into three feature pills, then merges into an app tile."
+component: pill-morph
+vibe: premium
+length: 216
+useWhen:
+  - "A product intro that goes from brand mark to product window to feature list to app icon in one continuous shape."
+  - "A launch beat that lists exactly three features as pills before resolving into the product identity."
+  - "You want a gooey, liquid sense of one object transforming through several states."
+avoidWhen:
+  - "You only need a brand mark revealing — use `logo-enter`."
+  - "The transform should carry the video between two scenes — use `gooey-morph`."
+  - "More than three features need showing as cards — use `bento-build`."
+---
+
+<ComponentPreview name="pill-morph" />
+
+<InstallBlock name="pill-morph" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { PillMorph } from "@/components/remocn/pill-morph";
+
+const PillMorphScene = () => (
+  <PillMorph
+    name="Lumen"
+    features={["Transitions", "Captions", "Backgrounds"]}
+    src="/product-shot.jpg"
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="PillMorph"
+    component={PillMorphScene}
+    durationInFrames={240}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A logo pill pops in and grows into a card showing a product clip, then collapses to a bar and splits into three feature pills before merging into an app tile with the name written below. Pass your own `logo` and `name`, the three `features`, and either a `src` image or `children` for the card. With no `src` or `children` it shows a built-in editor mock that uses a `staticFile` image from the Remocn repo. It ships light and dark through `theme`.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "name",
+      type: "string",
+      default: "\"\"",
+      description: "Product name shown in the pill and under the tile.",
+    },
+    {
+      name: "features",
+      type: "[string, string, string]",
+      description: "Exactly three feature names for the split pills.",
+    },
+    {
+      name: "logo",
+      type: "React.ReactNode",
+      description: "Brand mark node shown in the pill and the tile.",
+    },
+    {
+      name: "src",
+      type: "string",
+      description: "Image shown inside the card. Replaces the built-in editor mock.",
+    },
+    {
+      name: "children",
+      type: "React.ReactNode",
+      description: "Custom content shown inside the card. Takes priority over src.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color used inside the built-in editor.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color scheme. Ships light and dark.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "Shader preset id for the animated background.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Partial shader parameters that override the ground preset.",
+    },
+  ]}
+/>

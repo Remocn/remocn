@@ -1,0 +1,97 @@
+---
+title: Font Cycle
+description: "One word rapidly cycles through typefaces, each labeled, before settling in its final face"
+component: font-cycle
+vibe: playful
+length: 102
+useWhen:
+  - "A branding beat showing the same word in many typefaces before the chosen one lands."
+  - "A type-design or customization pitch that needs a fast, decelerating font roulette."
+  - "A hero word reveal that should end on a gradient-filled word in one clean face."
+avoidWhen:
+  - "You want one family flexing in width and weight, not different faces — use `axis-flex`."
+  - "You want a casing change rather than a typeface change — use `case-flip`."
+  - "The word should simply land with no cycling — use `focus-blur-resolve`."
+---
+
+<ComponentPreview name="font-cycle" />
+
+<InstallBlock name="font-cycle" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { FontCycle } from "@/components/remocn/font-cycle";
+
+const FontCycleScene = () => (
+  <FontCycle word="Shipped" passes={2} showLabel />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="FontCycle"
+    component={FontCycleScene}
+    durationInFrames={130}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The word swaps through the `fonts` list for `passes` rounds, starting fast and slowing, with the font name shown as a small label under it. It then lands in the `final` face with a small settle and a gradient sheen while the guides fade. Pass `word`, and custom `fonts` or `final` only if their font families are already loaded in your project; it ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "word",
+      type: "string",
+      default: "\"Launch\"",
+      description: "The word that cycles through the typefaces.",
+    },
+    {
+      name: "fonts",
+      type: "FontCycleFace[]",
+      default: "DEFAULT_FONTS",
+      description: "Faces to cycle through; each needs a loaded family and a label.",
+    },
+    {
+      name: "final",
+      type: "FontCycleFace",
+      default: "FINAL_FACE",
+      description: "Face the word settles into at the end.",
+    },
+    {
+      name: "passes",
+      type: "number",
+      default: "2",
+      description: "How many times the font list is cycled.",
+    },
+    {
+      name: "showLabel",
+      type: "boolean",
+      default: "true",
+      description: "Show each font's name under the word.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Color of the label dot once the word lands.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier.",
+    },
+  ]}
+/>

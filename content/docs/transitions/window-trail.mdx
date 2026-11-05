@@ -1,0 +1,93 @@
+---
+title: Window Trail
+description: "An orange window sweeps up over the old line and drags the new line in behind it"
+component: window-trail
+vibe: clean
+length: 86
+useWhen:
+  - "A before-and-after beat such as an old look versus a new look, or a rename or rebrand."
+  - "A single replacement of one statement with another, with a short tagline following."
+  - "A punchy, graphic swap that works as a title card with no imagery."
+avoidWhen:
+  - "The old text should be visibly struck out rather than painted over — use `strikethrough-replace`."
+  - "You want a wipe that splits the frame between two scenes — use `diagonal-split`."
+  - "The new line should type in rather than sweep — use `typewriter`."
+---
+
+<ComponentPreview name="window-trail" />
+
+<InstallBlock name="window-trail" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { WindowTrail } from "@/components/remocn/window-trail";
+
+const WindowTrailScene = () => (
+  <WindowTrail
+    from="Old look."
+    text="New look, same product."
+    tagline="Repainted in one render."
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="WindowTrail"
+    component={WindowTrailScene}
+    durationInFrames={120}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The `from` line sits on the field, then an orange window is thrown up over it, leaving a short trail of stamps. The `text` line is then dragged up from the bottom of the frame the same way, and the `tagline` rises in word by word underneath. Pass your own `from`, `text` and `tagline`; it ships light and dark, and the motion ends at frame 86 at speed 1.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "from",
+      type: "string",
+      default: "\"Old look.\"",
+      description: "Outgoing line swept away first; empty skips the exit",
+    },
+    {
+      name: "text",
+      type: "string",
+      default: "\"New look, same product.\"",
+      description: "Incoming line that replaces it",
+    },
+    {
+      name: "tagline",
+      type: "string",
+      default: "\"Repainted in one render.\"",
+      description: "Small line that rises in word by word under the text",
+    },
+    {
+      name: "accent",
+      type: "string",
+      description: "Window color; defaults to orange",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Field color; pass transparent to composite over footage",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier for the whole timeline",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark palette",
+    },
+  ]}
+/>

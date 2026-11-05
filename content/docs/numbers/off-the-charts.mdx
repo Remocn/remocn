@@ -1,0 +1,122 @@
+---
+title: Off The Charts
+description: "Quarterly bars climb until the last one breaks its axis and overshoots the target at 260%"
+component: off-the-charts
+vibe: data
+length: 107
+useWhen:
+  - "A quarterly results beat where the last bar blows past a target line, such as 260% of plan."
+  - "A goal-versus-actual moment where overshooting the chart is the whole message."
+  - "A bold overachievement stat that should break the frame instead of fitting inside it."
+avoidWhen:
+  - "Everything fits comfortably on one axis — use `spring-bars`."
+  - "The huge value needs a log rescale to read the smaller bars — use `log-rescale`."
+  - "You want a stepped total of gains and losses — use `waterfall-chart`."
+---
+
+<ComponentPreview name="off-the-charts" />
+
+<InstallBlock name="off-the-charts" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { OffTheCharts } from "@/components/remocn/off-the-charts";
+
+const OffTheChartsScene = () => (
+  <OffTheCharts
+    target={100}
+    caption="of the Q4 target"
+    data={[
+      { label: "Q1", value: 58 },
+      { label: "Q2", value: 74 },
+      { label: "Q3", value: 86 },
+      { label: "Q4", value: 260 },
+    ]}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="OffTheCharts"
+    component={OffTheChartsScene}
+    durationInFrames={140}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Quarterly bars climb against a dashed target line inside a framed axis; the last bar presses against the ceiling, snaps through it, and the overshoot value slams in with its caption. Pass `data`, `target`, and `max` (the axis ceiling), with `unit`, `value` and `caption` for the text. Ships dark and light via `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "data",
+      type: "OffTheChartsDatum[]",
+      default: "DEFAULT_DATA",
+      description: "Bars to plot, in order, with a label and value each.",
+    },
+    {
+      name: "accentIndex",
+      type: "number",
+      description: "Index of the bar that breaks out; defaults to the last.",
+    },
+    {
+      name: "target",
+      type: "number",
+      default: "100",
+      description: "Value where the dashed target line sits.",
+    },
+    {
+      name: "max",
+      type: "number",
+      default: "150",
+      description: "Value at the top of the framed axis.",
+    },
+    {
+      name: "unit",
+      type: "string",
+      default: "\"%\"",
+      description: "Unit appended to values.",
+    },
+    {
+      name: "targetLabel",
+      type: "string",
+      default: "\"Target\"",
+      description: "Label on the target line.",
+    },
+    {
+      name: "value",
+      type: "string",
+      description: "Hero text; defaults to the accent bar value plus unit.",
+    },
+    {
+      name: "caption",
+      type: "string",
+      default: "\"of the Q4 target\"",
+      description: "Line under the hero value.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for the hero element.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Dark or light palette.",
+    },
+  ]}
+/>

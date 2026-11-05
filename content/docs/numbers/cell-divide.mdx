@@ -1,0 +1,77 @@
+---
+title: Cell Divide
+description: "A grid of dots doubles by cell division up to a count of 64"
+component: cell-divide
+vibe: data
+length: 136
+useWhen:
+  - "A doubling or exponential-growth beat where one dot divides into 2, 4, 8 up to 64 while the count rolls beside it."
+  - "A 'x2 every week' style claim that needs a biological, organic feel instead of a bar chart."
+  - "A stat scene with a big number on the right and a short caption with a marker dot."
+avoidWhen:
+  - "You want a grid of discrete dots lit up to show a share of 100 — use `unit-grid`."
+  - "You want a smooth rising curve for exponential growth — use `growth-line`."
+  - "You want a branching structure rather than a doubling grid — use `branch-tree`."
+---
+
+<ComponentPreview name="cell-divide" />
+
+<InstallBlock name="cell-divide" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { CellDivide } from "@/components/remocn/cell-divide";
+
+const CellDivideScene = () => <CellDivide generations={6} label="×2 every week" />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="CellDivide"
+    component={CellDivideScene}
+    durationInFrames={165}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A single dot divides in two, then four, then eight, each division morphing like a cell and the grid of dots growing smaller as it fills, with the count rolling beside it. After the last division the cells pulse in a wave and a caption with an accent dot sits under the number. Pass `generations` from 2 to 7 and `label`. The length shown is for the default of 6 generations. It ships light and dark through the `theme` prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "generations",
+      type: "number",
+      default: "6",
+      description: "Number of divisions, 2 to 7. The final count is 2 to that power.",
+    },
+    {
+      name: "label",
+      type: "string",
+      default: "\"×2 every week\"",
+      description: "Caption under the number.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Colour of the dot before the caption.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier; 1 is the designed pace.",
+    },
+  ]}
+/>

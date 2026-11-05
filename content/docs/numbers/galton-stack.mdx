@@ -1,0 +1,91 @@
+---
+title: Galton Stack
+description: "Dots fall through a Galton board into a bell curve, marked at 95%"
+component: galton-stack
+vibe: data
+length: 137
+useWhen:
+  - "A reliability or speed claim, such as 95% of renders under 2s, backed by a visible bell curve."
+  - "A beat that explains a distribution playfully, with dots falling through pegs."
+  - "A stat scene where the proof is the pile-up of many individual samples."
+avoidWhen:
+  - "You want two sample groups compared on one axis — use `beeswarm`."
+  - "You want a smooth before-and-after curve — use `distribution-shift`."
+  - "You only need the stat — use `compact-stat`."
+---
+
+<ComponentPreview name="galton-stack" />
+
+<InstallBlock name="galton-stack" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { GaltonStack } from "@/components/remocn/galton-stack";
+
+const GaltonStackScene = () => (
+  <GaltonStack count={260} label="95% of renders under 2s" markerLabel="2s" />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="GaltonStack"
+    component={GaltonStackScene}
+    durationInFrames={175}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Dots fall through a field of pegs into bins and stack into a bell curve, then the camera settles on a marker line and the label lands. Pass `count` of dots, `marker` (0 to 1 across the bins) and its `markerLabel`, plus a `label` for the claim. Ships dark and light via `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "count",
+      type: "number",
+      default: "260",
+      description: "Number of falling dots, from 20 to 600.",
+    },
+    {
+      name: "marker",
+      type: "number",
+      default: "0.733",
+      description: "Marker position across the bins, from 0 to 1.",
+    },
+    {
+      name: "label",
+      type: "string",
+      default: "\"95% of renders under 2s\"",
+      description: "Claim shown with the marker.",
+    },
+    {
+      name: "markerLabel",
+      type: "string",
+      default: "\"2s\"",
+      description: "Short tag on the marker line.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for the hero element.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Dark or light palette.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier.",
+    },
+  ]}
+/>

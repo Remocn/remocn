@@ -1,0 +1,94 @@
+---
+title: Grid Snap Poster
+description: "A poster layout snaps element by element across a column grid, from number to headline to body to logo."
+component: grid-snap-poster
+vibe: premium
+length: 106
+useWhen:
+  - "A version or release announcement laid out like a poster, with a giant number and a headline."
+  - "A premium beat where elements should step on a visible grid instead of fading in."
+  - "A closing frame that carries the product mark and a short paragraph."
+avoidWhen:
+  - "The version numeral should rise inside a glowing ring - use `version-hero`."
+  - "The number should be shown as an edition on a colored band - use `roman-edition`."
+  - "Tiles should pack into a poster grid around one stat - use `shape-pack`."
+---
+
+<ComponentPreview name="grid-snap-poster" />
+
+<InstallBlock name="grid-snap-poster" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { GridSnapPoster } from "@/components/remocn/grid-snap-poster";
+
+const GridSnapPosterScene = () => <GridSnapPoster number="3.0" title={"Launch films,\nset in motion."} body="Install a component, drop in your words, render." />;
+
+export const RemotionRoot = () => (
+  <Composition
+    id="GridSnapPoster"
+    component={GridSnapPosterScene}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A 12-column grid draws in with hairlines and bands, then a giant gradient number, the headline, the body copy and the logo each step across it in discrete snaps with a brief flash on landing; the grid fades and the layout settles. Pass `title` (use a newline for line breaks), `number`, `body`, and `name` or `logo` for the mark. It ships light and dark through `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "title",
+      type: "string",
+      default: "\"Launch films,\\nset in motion.\"",
+      description: "Headline; use a newline for a line break.",
+    },
+    {
+      name: "number",
+      type: "string",
+      default: "\"3.0\"",
+      description: "Giant gradient number or version.",
+    },
+    {
+      name: "body",
+      type: "string",
+      default: "\"Production-ready motion for launch videos. Install a component, drop in your words, render.\"",
+      description: "Paragraph of body copy.",
+    },
+    {
+      name: "name",
+      type: "string",
+      default: "\"remocn\"",
+      description: "Brand name next to the mark; Remocn renders the real logo.",
+    },
+    {
+      name: "logo",
+      type: "React.ReactNode",
+      description: "Replaces the default mark.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color of the number gradient.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Light or dark palette.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier.",
+    },
+  ]}
+/>

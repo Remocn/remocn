@@ -1,0 +1,93 @@
+---
+title: Streamgraph
+description: "Flowing stacked layers draw across the frame and settle into a 48% share"
+component: streamgraph
+vibe: data
+length: 110
+useWhen:
+  - "A trend beat with several layers over time where one layer swells into the headline share."
+  - "A market or usage story that is more about flow and momentum than exact bar values."
+  - "An atmospheric data scene with a single closing number, such as 48% of new projects."
+avoidWhen:
+  - "You need exact values at a few time points — use `stacked-shift`."
+  - "You want separate distribution rows per period — use `ridgeline`."
+  - "You only have one snapshot of shares — use `share-donut`."
+---
+
+<ComponentPreview name="streamgraph" />
+
+<InstallBlock name="streamgraph" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { Streamgraph } from "@/components/remocn/streamgraph";
+
+const StreamgraphScene = () => (
+  <Streamgraph
+    highlight={2}
+    label="of new projects"
+    series={[
+      { label: "Kitebase", values: [12, 14, 17, 19, 18, 16, 15, 13] },
+      { label: "Lumen", values: [9, 10, 12, 14, 15, 13, 11, 9] },
+      { label: "remocn", values: [2, 3, 5, 9, 13, 19, 25, 33] },
+    ]}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="Streamgraph"
+    component={StreamgraphScene}
+    durationInFrames={150}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Stacked layers draw from left to right as a flowing stream, then the highlighted layer takes the gradient while the others dim, and its share counts up with a label. Pass `series` (label and one value per time step), `highlight` and `label`. Ships dark and light via `theme`.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "series",
+      type: "StreamSeries[]",
+      default: "DEFAULT_SERIES",
+      description: "Layers of the stream, each with one value per time step.",
+    },
+    {
+      name: "highlight",
+      type: "number",
+      default: "2",
+      description: "Index of the layer that gets the gradient.",
+    },
+    {
+      name: "label",
+      type: "string",
+      default: "\"of new projects\"",
+      description: "Line under the final share.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for the hero element.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Dark or light palette.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier.",
+    },
+  ]}
+/>

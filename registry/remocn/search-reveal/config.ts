@@ -90,4 +90,5 @@ export const searchRevealConfig: ComponentConfig = {
   fps: FPS,
   compositionWidth: W,
   compositionHeight: H,
+  card: { props: { backgroundColor: "transparent", fieldColor: "#ffffff" } },
 };

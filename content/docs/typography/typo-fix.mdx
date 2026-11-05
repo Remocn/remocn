@@ -1,0 +1,91 @@
+---
+title: Typo Fix
+description: "A misspelled word is caught and corrected in place inside a short line."
+component: typo-fix
+vibe: clean
+length: 80
+useWhen:
+  - "A quick-edit demo showing how easy a copy fix is."
+  - "A joke or humanizing beat about a typo caught before the launch."
+  - "A short proof that text changes are a one-line prop edit."
+avoidWhen:
+  - "Whole phrases should be selected and rewritten — use `select-replace`."
+  - "You want to show a code-style change — use `diff-swap`."
+  - "A new word should be added to the sentence — use `word-insert`."
+---
+
+<ComponentPreview name="typo-fix" />
+
+<InstallBlock name="typo-fix" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { TypoFix } from "@/components/remocn/typo-fix";
+
+const TypoFixScene = () => (
+  <TypoFix wrong="Lanuch" correct="Launch" after="day" />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="TypoFix"
+    component={TypoFixScene}
+    durationInFrames={116}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The `wrong` word appears in a short line, gets flagged, and is corrected to `correct` in place. Pass `wrong`, `correct` and surrounding `before` and `after` text. It ships in light and dark through the `theme` prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "wrong",
+      type: "string",
+      default: "\"Lanuch\"",
+      description: "Misspelled word shown first.",
+    },
+    {
+      name: "correct",
+      type: "string",
+      default: "\"Launch\"",
+      description: "Correct spelling it becomes.",
+    },
+    {
+      name: "before",
+      type: "string",
+      default: "\"\"",
+      description: "Text before the word.",
+    },
+    {
+      name: "after",
+      type: "string",
+      default: "\"day\"",
+      description: "Text after the word.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color override; falls back to the theme accent.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Ships light and dark; picks the palette.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+  ]}
+/>

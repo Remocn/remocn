@@ -1,0 +1,83 @@
+---
+title: Speed Ramp Word
+description: "Time slows on the key word as it warms to a gradient, with a timecode HUD"
+component: speed-ramp-word
+vibe: premium
+length: 119
+useWhen:
+  - "A line that rushes by and drops into slow motion on one key word for emphasis."
+  - "A performance or instant-feel beat where a timecode HUD sells the speed ramp."
+avoidWhen:
+  - "You want a streaked blur resolving into a word — use `slit-scan`."
+  - "The line should just be typed in — use `typewriter`."
+---
+
+<ComponentPreview name="speed-ramp-word" />
+
+<InstallBlock name="speed-ramp-word" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { SpeedRampWord } from "@/components/remocn/speed-ramp-word";
+
+const SpeedRampWordScene = () => (
+  <SpeedRampWord text="Everything changes in an instant." keyWord="instant" hud />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="SpeedRampWord"
+    component={SpeedRampWordScene}
+    durationInFrames={121}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+The phrase rushes across the frame, then time slows on the key word as it warms to a gradient, with a small timecode and speed readout slowing alongside. Pass `text` and `keyWord`; set `hud` to false to hide the readout. It ships light and dark.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "text",
+      type: "string",
+      default: "\"Everything changes in an instant.\"",
+      description: "The phrase that rushes across.",
+    },
+    {
+      name: "keyWord",
+      type: "string",
+      default: "\"instant\"",
+      description: "The word inside `text` that drops into slow motion. Defaults to the last word.",
+    },
+    {
+      name: "hud",
+      type: "boolean",
+      default: "true",
+      description: "Show the small timecode and speed readout that slow down with the shot.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent colour (any CSS colour).",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Colour scheme; ships light and dark.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback multiplier; above 1 plays faster.",
+    },
+  ]}
+/>

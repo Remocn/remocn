@@ -1,0 +1,103 @@
+---
+title: Duet Split
+description: "A split screen contrasts a slow grey before side with a crisp gradient after side, row by row"
+component: duet-split
+vibe: social
+length: 100
+useWhen:
+  - "A before-and-after claim such as \"3 weeks vs 1 day\" or \"$12K vs $0\" told as paired rows."
+  - "Comparing the old way and your product on three or four concrete metrics."
+  - "A pricing or time-saving beat that ends on a brand sign-off."
+avoidWhen:
+  - "You are comparing two images or screenshots with a sweeping divider — use `before-after`."
+  - "The contrast is a head-to-head with a clash effect rather than paired rows — use `versus-split`."
+  - "A single old value should be crossed out and replaced inline — use `strikethrough-replace`."
+---
+
+<ComponentPreview name="duet-split" />
+
+<InstallBlock name="duet-split" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { DuetSplit } from "@/components/remocn/duet-split";
+
+const DuetSplitScene = () => (
+  <DuetSplit
+    beforeLabel="Before"
+    afterLabel="With us"
+    rows={[
+      { before: "3 weeks", after: "1 day" },
+      { before: "$12K", after: "$0" },
+    ]}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="DuetSplit"
+    component={DuetSplitScene}
+    durationInFrames={140}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+Two slabs slide in, labelled by `beforeLabel` and `afterLabel`. The grey side types out wobbly serif values row by row; the after side then pushes in and shows the crisp replacements, and a wordmark rises at the bottom. Pass `rows` as `{ before, after }` pairs; it ships dark and light via `theme`. The closing wordmark is the Remocn logo, swap `RemocnLogo` in the copied file.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "beforeLabel",
+      type: "string",
+      default: "\"Before\"",
+      description: "Label above the grey before side.",
+    },
+    {
+      name: "afterLabel",
+      type: "string",
+      default: "\"With remocn\"",
+      description: "Label above the gradient after side.",
+    },
+    {
+      name: "rows",
+      type: "DuetRow[]",
+      description: "Paired values, one row each: the old way and the new way.",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Color of the dot beside the after label.",
+    },
+    {
+      name: "theme",
+      type: "\"dark\" | \"light\"",
+      default: "\"dark\"",
+      description: "Color scheme. Ships dark and light.",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "gradients.sh preset id for the animated ground.",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the ground shader parameters.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
+    },
+  ]}
+/>

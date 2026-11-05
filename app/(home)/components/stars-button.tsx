@@ -15,7 +15,7 @@ export function StarsButton({
       data-cta="stars_header"
       data-destination="/stars"
       className={cn(
-        "group inline-flex h-9 items-center gap-2 rounded-full border border-border px-3 text-sm font-medium transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
+        "group inline-flex h-9 items-center gap-2 rounded-full border border-border px-3 text-sm font-medium transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
         className,
       )}
       {...props}

@@ -1,0 +1,113 @@
+---
+title: Bento Build
+description: "A bento grid of feature tiles builds in, then spotlights chosen tiles one at a time."
+component: bento-build
+vibe: clean
+length: 141
+useWhen:
+  - "A features overview where many capabilities need to read as one organized product."
+  - "A launch beat that calls out a few headline features in sequence."
+  - "A vertical cut where the grid reflows to at most two columns on tall frames."
+avoidWhen:
+  - "You only have three short feature words — use `feature-trio`."
+  - "You want pills streaming around a logo — use `feature-chips-flow`."
+  - "You want an existing screen annotated instead of a grid — use `ui-callout`."
+---
+
+<ComponentPreview name="bento-build" />
+
+<InstallBlock name="bento-build" />
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import { BentoBuild } from "@/components/remocn/bento-build";
+
+const BentoBuildScene = () => (
+  <BentoBuild
+    eyebrow="Features"
+    heading="Everything a launch video needs."
+    highlightOrder={[0, 1, 4]}
+  />
+);
+
+export const RemotionRoot = () => (
+  <Composition
+    id="BentoBuild"
+    component={BentoBuildScene}
+    durationInFrames={170}
+    fps={30}
+    width={1280}
+    height={720}
+  />
+);
+```
+
+A heading and eyebrow appear over an empty grid, then tiles pop in with a stagger and lock into a bento layout; chosen tiles are lit one after another while the rest dim. Pass `tiles` (title, description, `span` as `[columns, rows]`, optional icon and visual), `highlightOrder` for the spotlight sequence, `heading` and `eyebrow`. Ships dark by default and light.
+
+The ground is a live gradients.sh shader (`GshGround`), installed with the component as `@remocn/gsh`. Pick another look with the `ground` preset prop.
+
+<PropsTable title="Props"
+  rows={[
+    {
+      name: "tiles",
+      type: "BentoTile[]",
+      default: "DEFAULT_TILES",
+      description: "Grid tiles: title, description, span [columns, rows], optional icon and visual",
+    },
+    {
+      name: "highlightOrder",
+      type: "number[]",
+      default: "[0, 1, 4]",
+      description: "Tile indices spotlighted in order after the grid locks",
+    },
+    {
+      name: "eyebrow",
+      type: "string",
+      default: "\"Features\"",
+      description: "Small label above the heading",
+    },
+    {
+      name: "heading",
+      type: "string",
+      default: "\"Everything a launch video needs.\"",
+      description: "Heading above the grid",
+    },
+    {
+      name: "columns",
+      type: "number",
+      default: "4",
+      description: "Grid column count; tall frames use at most two",
+    },
+    {
+      name: "theme",
+      type: "\"light\" | \"dark\"",
+      default: "\"dark\"",
+      description: "Light or dark palette",
+    },
+    {
+      name: "accent",
+      type: "string",
+      default: "\"#3B5BFD\"",
+      description: "Accent color for highlights, buttons and progress",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline",
+    },
+    {
+      name: "ground",
+      type: "GshPresetId",
+      description: "gradients.sh preset id for the backdrop shader",
+    },
+    {
+      name: "groundParams",
+      type: "Partial<GradientParams>",
+      description: "Overrides for the backdrop shader parameters",
+    },
+  ]}
+/>
