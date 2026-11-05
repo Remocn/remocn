@@ -1,4 +1,3 @@
-import { ComposerStatus } from "./composer-status";
 import { FloatingScene, ROW_SCENES } from "./floating-scene";
 import { PromptComposer } from "./prompt-composer";
 import { HeroSceneField } from "./scenes/hero-scene-field";
@@ -19,8 +18,6 @@ export function PromptStage() {
           <FloatingScene key={scene.index} scene={scene} variant="row" />
         ))}
       </div>
-
-      <ComposerStatus />
     </div>
   );
 }
