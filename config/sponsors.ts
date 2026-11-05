@@ -307,14 +307,10 @@ export type Tier = {
 export const tiers: Tier[] = [
   {
     id: "builder",
-    price: 10,
+    price: 20,
     name: "Builder",
     tagline: "Start here",
-    perks: [
-      "Sponsor badge in our Discord",
-      "Your name in the repository README",
-      "Early access to release notes",
-    ],
+    perks: ["Your name in the repository README"],
     highlighted: false,
     monthlyUrl: "https://www.creem.io/payment/prod_6fpKhXCzk9KkbA4FSUzGIU",
   },
@@ -334,13 +330,14 @@ export const tiers: Tier[] = [
   },
   {
     id: "featured",
-    price: 100,
+    price: 150,
     name: "Featured",
     tagline: "Own the top spot",
     perks: [
       "Everything in Partner",
       "Your logo on the remocn landing page",
       "Your logo in the docs sidebar",
+      "Your logo on the Remocn Studio landing page",
     ],
     highlighted: true,
     badge: "Front page",
