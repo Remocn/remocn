@@ -6,6 +6,7 @@ import { ThemeProvider } from "next-themes";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import "./globals.css";
 import { OpenPanelComponent } from "@openpanel/nextjs";
+import { SITE_DESCRIPTION } from "@/config/site";
 import { cn } from "@/lib/utils";
 import { ThemeShortcut } from "./theme-shortcut";
 
@@ -31,8 +32,6 @@ const paperMono = localFont({
 
 const SITE_URL = "https://remocn.dev";
 const SITE_TITLE = "Remocn - Make a product demo video with your AI agent";
-const SITE_DESCRIPTION =
-  "Describe your product, get a demo video. Ready-made animations, transitions and app-screen sims your coding agent can use. No video editor, no motion designer.";
 
 export const metadata: Metadata = {
   // Resolves the relative `/hero.png` below into an absolute URL for crawlers.
