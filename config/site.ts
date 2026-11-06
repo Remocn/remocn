@@ -20,6 +20,10 @@ export const STUDIO_URL = "https://remocn.studio";
 
 export const SUPPORT_EMAIL = "kapish@remocn.dev";
 
+/** The site's meta description; the home page's JSON-LD reuses it. */
+export const SITE_DESCRIPTION =
+  "Describe your product, get a demo video. Ready-made animations, transitions and app-screen sims your coding agent can use. No video editor, no motion designer.";
+
 export const INSTALL_ALL_NAMES: string[] = [
   ...remocnRegistry.items,
   ...remocnUiRegistry.items,

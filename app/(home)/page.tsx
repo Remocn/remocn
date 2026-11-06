@@ -1,4 +1,7 @@
 import type { Metadata } from "next";
+import { JsonLd } from "@/components/json-ld";
+import { SITE_DESCRIPTION } from "@/config/site";
+import { HOME_KEYWORDS, homeJsonLd } from "@/lib/structured-data";
 import { FinalCta } from "./components/landing/sections/final-cta";
 import { Hero } from "./components/landing/sections/hero";
 import { HowItWorks } from "./components/landing/sections/how-it-works";
@@ -12,11 +15,13 @@ import { RevealScope } from "./components/landing/ui/reveal-scope";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/" },
+  keywords: HOME_KEYWORDS,
 };
 
 export default function Page() {
   return (
     <>
+      <JsonLd data={homeJsonLd(SITE_DESCRIPTION)} />
       <Hero />
       <SponsorsStrip />
       <HowItWorks />
