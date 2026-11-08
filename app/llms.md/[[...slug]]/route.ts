@@ -25,6 +25,9 @@ export async function GET(
   });
 }
 
+// No paths at build time: each page's Markdown is rendered on its first
+// request and cached until the next deploy. Prerendering all 875 doubled the
+// build's page count for files agents rarely ask for.
 export function generateStaticParams() {
-  return source.generateParams();
+  return [];
 }
