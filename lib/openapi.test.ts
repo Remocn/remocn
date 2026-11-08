@@ -32,7 +32,7 @@ const operations: [string, string, Operation][] = Object.entries(
   ),
 );
 
-/** `/api/render/{jobId}` -> `app/api/render/[jobId]/route.ts` */
+/** `/r/{file}` -> `app/r/[file]/route.ts` */
 function routeFile(path: string): string {
   return join(
     ROOT,

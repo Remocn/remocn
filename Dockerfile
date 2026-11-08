@@ -1,66 +1,37 @@
-# Coolify builds this image. Debian (bookworm) — NOT Alpine — because Remotion's
-# headless Chromium needs glibc. Single stage; the Chrome Headless Shell and the
-# pre-bundled Remotion serveUrl are baked in so renders start fast at boot.
+# Coolify builds this image (Dockerfile build pack). Node 22 runs `next build`
+# and `next start`; bun is the package manager. Every base image comes from
+# Docker Hub and is cached on the server, so a build doesn't depend on GitHub.
 FROM node:22-bookworm-slim
 
-ENV DEBIAN_FRONTEND=noninteractive \
-    NODE_ENV=production \
+ENV NEXT_TELEMETRY_DISABLED=1 \
     PORT=3000
 
-# Chromium runtime libraries + base fonts needed by @remotion/renderer.
-RUN apt-get update && apt-get install -y --no-install-recommends \
-      ca-certificates \
-      fonts-liberation \
-      libasound2 \
-      libatk-bridge2.0-0 \
-      libatk1.0-0 \
-      libcups2 \
-      libdbus-1-3 \
-      libdrm2 \
-      libgbm1 \
-      libgtk-3-0 \
-      libnss3 \
-      libpango-1.0-0 \
-      libxcomposite1 \
-      libxdamage1 \
-      libxfixes3 \
-      libxkbcommon0 \
-      libxrandr2 \
-    && rm -rf /var/lib/apt/lists/*
-
-# Bun (the repo's package manager + runtime) — copied from the official image.
-COPY --from=oven/bun:1 /usr/local/bin/bun /usr/local/bin/bun
+COPY --from=oven/bun:1.4.2 /usr/local/bin/bun /usr/local/bin/bun
 
 WORKDIR /app
 
-# Install deps first for better layer caching. Requires bun.lock to match
-# package.json — run `bun install` locally after dependency changes and commit
-# the updated lockfile before building.
+# Dependencies get their own layer, reused until bun.lock changes. Scripts are
+# skipped because the root postinstall (fumadocs-mdx) needs the sources; it runs
+# after the COPY below.
 COPY package.json bun.lock ./
-RUN bun install --frozen-lockfile
+RUN --mount=type=cache,target=/root/.bun/install/cache \
+    bun install --frozen-lockfile --ignore-scripts
 
-# App source + build.
 COPY . .
+RUN bun run postinstall
 
-# The /showcases pages are prerendered, so the build itself fetches the manager
-# and fails loudly when it can't reach it. Coolify only forwards this to the
-# build when the variable is marked as a *build* variable in its UI — a plain
-# runtime variable is not enough. ENV also carries the value into the running
-# image as a default; a runtime variable of the same name still overrides it.
+# Read while prerendering. Coolify passes these only when they are marked as
+# *build* variables in its UI. /showcases fails the build without
+# SHOWCASES_API_URL; the OpenPanel keys feed the sponsors traffic numbers.
 ARG SHOWCASES_API_URL
-ENV SHOWCASES_API_URL=$SHOWCASES_API_URL
+ARG NEXT_PUBLIC_OPENPANEL_CLIENT_ID
+ARG NEXT_PUBLIC_OPENPANEL_API_URL
+ARG OPENPANEL_CLIENT_SECRET
+ARG OPENPANEL_PUBLIC_DASHBOARD_URL
 
-RUN bun run build
+# .next/cache survives between builds, so Next recompiles only what changed.
+RUN --mount=type=cache,target=/app/.next/cache bun run build
 
-# Bake the Chrome Headless Shell into the image (no slow runtime download).
-# Uses @remotion/renderer's ensureBrowser() — the `remotion` pkg has no CLI bin
-# (that's @remotion/cli, which we don't install), so `bunx remotion ...` fails.
-RUN bun run remotion:browser
-
-# Pre-bundle the Remotion entry → .remotion-bundle/ (serveUrl ready at boot).
-RUN bun run bundle:remotion
-
+ENV NODE_ENV=production
 EXPOSE 3000
-
-# next start (matches `bun run start` in package.json).
 CMD ["bun", "run", "start"]

@@ -16,27 +16,19 @@ const ERROR_RESPONSE = (description: string) => ({
   },
 });
 
-const JOB_ID = {
-  name: "jobId",
-  in: "path",
-  required: true,
-  description: "Render job id returned by `createRender`.",
-  schema: { type: "string", format: "uuid" },
-} as const;
-
 export const OPENAPI_SPEC = {
   openapi: "3.1.0",
   info: {
     title: "Remocn API",
     version: "1.0.0",
     summary:
-      "Registry items, docs search and GitHub stars video renders for Remocn, the shadcn registry of Remotion components.",
+      "Registry items, docs search and GitHub stargazers for Remocn, the shadcn registry of Remotion components.",
     description: [
       "Public, unauthenticated HTTP API behind remocn.dev.",
       "",
       "- **Install components** with the shadcn CLI (`npx shadcn@latest add @remocn/<name>`); it fetches `getRegistryItem` for you.",
       "- **Find components** with `getComponentIndex` (one Markdown table of every component) or `searchDocs`.",
-      "- **Render a GitHub stars video**: `getStargazers` → `createRender` → poll `getRenderStatus` → `downloadRender`.",
+      "- **Get a repository's stargazers** with `getStargazers`, e.g. as props for the `github-stars` component.",
       "",
       `Agents can also use the remote MCP server at ${SITE_URL}/mcp (Streamable HTTP, JSON-RPC, no auth) with the tools \`search_components\`, \`get_component\`, \`plan_video\` and \`preview_component\`.`,
       "",
@@ -58,9 +50,8 @@ export const OPENAPI_SPEC = {
     { name: "Registry", description: "shadcn registry items." },
     { name: "Docs", description: "Documentation for people and agents." },
     {
-      name: "Stars video",
-      description:
-        "Turn a GitHub repository's stargazers into an MP4 (the /stars page).",
+      name: "GitHub",
+      description: "GitHub data for the `github-stars` component.",
     },
   ],
   paths: {
@@ -176,10 +167,10 @@ export const OPENAPI_SPEC = {
     "/api/stargazers": {
       get: {
         operationId: "getStargazers",
-        tags: ["Stars video"],
+        tags: ["GitHub"],
         summary: "Get a repository's stargazers",
         description:
-          "Fetches a GitHub repository's stargazers server-side and returns a downsampled list ready to pass to `createRender`.",
+          "Fetches a GitHub repository's stargazers server-side and returns a downsampled list ready to pass to the `github-stars` component.",
         parameters: [
           {
             name: "repo",
@@ -210,99 +201,6 @@ export const OPENAPI_SPEC = {
           ),
           "502": ERROR_RESPONSE(
             "GitHub request failed (code `fetch_failed`). Retry later.",
-          ),
-        },
-      },
-    },
-    "/api/render": {
-      post: {
-        operationId: "createRender",
-        tags: ["Stars video"],
-        summary: "Start a stars video render",
-        description:
-          "Validates the props and queues a background render. Returns a job id immediately; poll `getRenderStatus`. Rate-limited per IP (5 requests per minute by default).",
-        requestBody: {
-          required: true,
-          content: {
-            "application/json": {
-              schema: { $ref: "#/components/schemas/RenderInput" },
-            },
-          },
-        },
-        responses: {
-          "202": {
-            description: "Render queued.",
-            content: {
-              "application/json": {
-                schema: {
-                  type: "object",
-                  required: ["jobId"],
-                  properties: {
-                    jobId: {
-                      type: "string",
-                      format: "uuid",
-                      description: "Pass to `getRenderStatus`.",
-                    },
-                  },
-                },
-              },
-            },
-          },
-          "400": ERROR_RESPONSE(
-            "Body is not JSON (code `invalid_json`) or breaks a field rule (code `invalid_input`; the message names the field).",
-          ),
-          "429": ERROR_RESPONSE(
-            "Too many renders from this IP (code `rate_limited`). Wait a minute and retry.",
-          ),
-          "503": ERROR_RESPONSE(
-            "Render queue is full (code `queue_full`). Retry shortly.",
-          ),
-        },
-      },
-    },
-    "/api/render/{jobId}": {
-      get: {
-        operationId: "getRenderStatus",
-        tags: ["Stars video"],
-        summary: "Get a render's progress",
-        description:
-          "Poll until `status` is `done` (then follow `downloadUrl`) or `error`.",
-        parameters: [JOB_ID],
-        responses: {
-          "200": {
-            description: "The job's state.",
-            content: {
-              "application/json": {
-                schema: { $ref: "#/components/schemas/RenderStatus" },
-              },
-            },
-          },
-          "404": ERROR_RESPONSE(
-            "Unknown job (code `not_found`). Jobs live in memory and expire.",
-          ),
-        },
-      },
-    },
-    "/api/render/{jobId}/download": {
-      get: {
-        operationId: "downloadRender",
-        tags: ["Stars video"],
-        summary: "Download a finished render",
-        description:
-          "Streams the MP4 once, then deletes it from the server. Download it as soon as `getRenderStatus` reports `done`.",
-        parameters: [JOB_ID],
-        responses: {
-          "200": {
-            description: "The rendered video.",
-            content: {
-              "video/mp4": {
-                schema: { type: "string", contentMediaType: "video/mp4" },
-              },
-            },
-          },
-          "404": ERROR_RESPONSE("Unknown job (code `not_found`)."),
-          "410": ERROR_RESPONSE(
-            "Not finished yet (code `not_ready`) or already downloaded and swept (code `expired`). Start a new render.",
           ),
         },
       },
@@ -411,67 +309,6 @@ export const OPENAPI_SPEC = {
           stargazers: {
             type: "array",
             items: { $ref: "#/components/schemas/Stargazer" },
-          },
-        },
-      },
-      RenderInput: {
-        type: "object",
-        required: ["repo", "totalStars", "stargazers", "orientation"],
-        properties: {
-          repo: {
-            type: "string",
-            minLength: 1,
-            maxLength: 200,
-            description: "Shown in the video, e.g. `Remocn/remocn`.",
-          },
-          totalStars: {
-            type: "integer",
-            minimum: 0,
-            maximum: 100000000,
-          },
-          stargazers: {
-            type: "array",
-            maxItems: 60,
-            items: { $ref: "#/components/schemas/Stargazer" },
-          },
-          orientation: {
-            type: "string",
-            enum: ["horizontal", "vertical"],
-          },
-          accentColor: {
-            type: "string",
-            pattern: "^#[0-9a-fA-F]{3,8}$",
-            default: "#ffbb00",
-          },
-          speed: {
-            type: "number",
-            minimum: 1,
-            maximum: 4,
-            default: 1,
-          },
-          theme: {
-            type: "string",
-            enum: ["light", "dark"],
-            default: "light",
-          },
-        },
-      },
-      RenderStatus: {
-        type: "object",
-        required: ["status", "progress"],
-        properties: {
-          status: {
-            type: "string",
-            enum: ["queued", "rendering", "done", "error"],
-          },
-          progress: { type: "number", minimum: 0, maximum: 1 },
-          downloadUrl: {
-            type: "string",
-            description: "Present when `status` is `done`.",
-          },
-          error: {
-            type: "string",
-            description: "Present when `status` is `error`.",
           },
         },
       },
