@@ -5,10 +5,6 @@ node_modules
 .omc
 .claude
 
-# Generated inside the Docker build (RUN bun run bundle:remotion) — never copy a
-# local/stale bundle in.
-.remotion-bundle
-
 # Local env + misc
 .env*
 *.tsbuildinfo

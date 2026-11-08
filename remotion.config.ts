@@ -1,9 +1,8 @@
 import path from "node:path";
 import { Config } from "@remotion/cli/config";
 
-// The Remotion bundler (webpack) doesn't read tsconfig `paths` — mirror the
-// alias override from scripts/bundle-remotion.mts so `@/registry/...` resolves
-// in Studio too.
+// The Remotion bundler (webpack) doesn't read tsconfig `paths`, so teach it the
+// `@/* → project root` alias that `@/registry/...` imports rely on.
 Config.overrideWebpackConfig((config) => ({
   ...config,
   resolve: {

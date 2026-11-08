@@ -36,17 +36,8 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ["motion"],
   },
-  // Remotion's server packages are Node-only and ship native binaries (esbuild +
-  // the platform-specific @remotion/compositor-*). They must NOT be bundled by
-  // Turbopack/webpack — keep them external so they're require()'d at runtime in
-  // the /api/render route. Without this the build fails resolving the compositor
-  // binaries + reading the esbuild binary as source.
-  serverExternalPackages: [
-    "@remotion/renderer",
-    "@remotion/bundler",
-    "esbuild",
-    "@takumi-rs/core",
-  ],
+  // takumi's OG renderer is a native binding: keep it out of the server bundle.
+  serverExternalPackages: ["@takumi-rs/core"],
   // The /mcp route reads the remocn skill's archetype recipes from disk at
   // runtime (lib/mcp/archetype-files.ts). Docker copies the whole tree, but
   // trace them explicitly so standalone/traced output keeps them too.
