@@ -16,11 +16,11 @@ function sectionTitle(section: string): string | undefined {
 
 export const dynamic = "force-static";
 
+// No paths at build time: each card is drawn on its first request (a crawler
+// or a link preview) and cached until the next deploy. Drawing all 875 PNGs
+// was the heaviest part of the build.
 export function generateStaticParams() {
-  return source
-    .getPages()
-    .map((page) => ({ slug: page.slugs }))
-    .filter((p) => p.slug.length > 0);
+  return [];
 }
 
 export async function GET(
