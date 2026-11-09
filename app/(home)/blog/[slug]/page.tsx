@@ -3,7 +3,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { blog } from "@/.source/server";
 import { GuideVideo } from "@/components/docs/guide-video";
+import { JsonLd } from "@/components/json-ld";
 import { blogSlug } from "@/lib/blog";
+import { blogPostJsonLd } from "@/lib/structured-data";
 import { cn } from "@/lib/utils";
 import { getMDXComponents } from "@/mdx-components";
 import { landingButtonVariants } from "../../components/landing/ui/landing-button";
@@ -78,9 +80,28 @@ export default async function BlogPostPage({ params }: PageProps) {
   );
   const headings = post.toc.filter((item) => item.depth <= 3);
   const MDX = post.body;
+  const jsonLd = blogPostJsonLd({
+    url: `/blog/${slug}`,
+    title: post.title,
+    description: post.description,
+    date: post.date,
+    image: post.videoPoster ?? `/og/blog/${slug}`,
+    video:
+      summary.video && summary.poster
+        ? {
+            name: post.title,
+            description: post.description,
+            contentUrl: summary.video,
+            thumbnailUrl: summary.poster,
+            uploadDate: post.date,
+            duration: summary.duration,
+          }
+        : undefined,
+  });
 
   return (
     <>
+      <JsonLd data={jsonLd} />
       <article>
         <header className="landing-container flex flex-col gap-5 pt-12 pb-8 md:pt-20 md:pb-12 xl:pt-28 xl:pb-14">
           <Link

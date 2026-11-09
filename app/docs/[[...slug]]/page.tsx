@@ -6,6 +6,8 @@ import { getPageContext } from "@/components/docs/shell/page-context";
 import { PageFooter } from "@/components/docs/shell/page-footer";
 import { PageHeader } from "@/components/docs/shell/page-header";
 import { getPageLinks } from "@/components/docs/shell/page-links";
+import { JsonLd } from "@/components/json-ld";
+import { docsPageJsonLd, faqFromMdx } from "@/lib/structured-data";
 import { getMDXComponents } from "@/mdx-components";
 import { source } from "@/source";
 
@@ -24,9 +26,24 @@ export default async function Page(props: {
   const MDX = data.body;
   const { crumbs, previous, next } = getPageContext(page.url);
   const links = params.slug?.length ? getPageLinks(page.url) : undefined;
+  const raw = await (
+    data as typeof data & { getText: (type: "raw") => Promise<string> }
+  ).getText("raw");
+  const jsonLd = docsPageJsonLd({
+    url: page.url,
+    title: data.title,
+    description: data.description,
+    crumbs,
+    image: params.slug?.length
+      ? `/og/docs/${params.slug.join("/")}`
+      : "/hero.png",
+    component: data.component,
+    faq: faqFromMdx(raw),
+  });
 
   return (
     <>
+      <JsonLd data={jsonLd} />
       <MobilePageBar crumbs={crumbs} />
       <KeyboardNav previous={previous} next={next} />
       <div className="flex flex-1">
