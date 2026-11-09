@@ -8,5 +8,6 @@ export function docsIndexPages(): IndexPage[] {
     url: page.url,
     title: page.data.title,
     description: page.data.description,
+    component: page.data.component,
   }));
 }

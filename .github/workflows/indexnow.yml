@@ -1,0 +1,43 @@
+name: IndexNow
+
+# Tells Bing and the other IndexNow engines which pages a push to main
+# changed, once Coolify has deployed it. Run it by hand with "all" to submit
+# every URL in the live sitemap.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "content/**"
+      - "app/(home)/**"
+  workflow_dispatch:
+    inputs:
+      scope:
+        description: "changed (last push) or all (whole sitemap)"
+        default: all
+        type: choice
+        options: [all, changed]
+
+concurrency:
+  group: indexnow
+  cancel-in-progress: false
+
+jobs:
+  submit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - name: Submit changed URLs
+        if: github.event_name == 'push'
+        run: bun scripts/indexnow.mts --changed ${{ github.event.before }} ${{ github.sha }} --wait-deploy
+      - name: Submit every URL
+        if: github.event_name == 'workflow_dispatch' && inputs.scope == 'all'
+        run: bun scripts/indexnow.mts --all
+      - name: Submit the last commit's URLs
+        if: github.event_name == 'workflow_dispatch' && inputs.scope == 'changed'
+        run: bun scripts/indexnow.mts --changed HEAD~1 HEAD

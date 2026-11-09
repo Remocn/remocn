@@ -11,7 +11,20 @@ export type IndexPage = {
   url: string;
   title: string;
   description?: string;
+  /** Registry name, when the page documents an installable component. */
+  component?: string;
 };
+
+/** Facts about the catalog, stated once near the top of llms.txt. */
+export type CatalogFacts = {
+  /** Installable registry items, as the site counts them. */
+  components: number;
+};
+
+/** One section of the docs corpus as a single Markdown file. */
+export function sectionCorpusUrl(key: string): string {
+  return `${SITE_URL}/llms-full/${key}.txt`;
+}
 
 export const INSTALL_COMMAND = "npx shadcn@latest add @remocn/<name>";
 
@@ -51,7 +64,7 @@ const AGENT_TOOLS = [
   `- [Component index](${SITE_URL}/llms-components.txt): every installable component with its use / avoid signal, natural length, vibe and dependencies`,
   `- [MCP server](${MCP_URL}): remote, read-only, no auth. Search components, read one, plan a video, preview a component`,
   `- [OpenAPI spec](${OPENAPI_URL}): the HTTP API (registry items, docs search, GitHub stars video renders)`,
-  `- [Full docs corpus](${SITE_URL}/llms-full.txt): every docs page as Markdown in one file`,
+  `- [Full docs corpus](${SITE_URL}/llms-full.txt): every docs page as Markdown in one file. It runs to megabytes, more than a context window holds; prefer one section's file, linked at the end of each section below`,
 ];
 
 const ABOUT_LINKS = [
@@ -71,17 +84,39 @@ function sectionHeading(key: string): string {
     : "Overview";
 }
 
-/** llms.txt (https://llmstxt.org): H1, summary, guidance, then link lists. */
-export function buildLlmsTxt(pages: IndexPage[]): string {
+/**
+ * llms.txt (https://llmstxt.org): H1, summary, guidance, then link lists.
+ * Component pages are not listed one by one: /llms-components.txt has every
+ * one with its use / avoid signal, and each section links its whole text as
+ * one file. Guides, overviews and concept pages are listed.
+ */
+export function buildLlmsTxt(pages: IndexPage[], facts?: CatalogFacts): string {
   const lines: string[] = [];
 
   lines.push("# Remocn");
   lines.push(
     `\n> shadcn registry of production-ready Remotion components — animations, transitions, backgrounds, and full scenes for product demo videos. Install with \`${INSTALL_COMMAND}\`.`,
   );
+  // Group pages by their top-level section (first slug segment).
+  const sections = new Map<string, IndexPage[]>();
+  for (const page of pages) {
+    const key = page.slugs[0] ?? "";
+    const bucket = sections.get(key) ?? [];
+    bucket.push(page);
+    sections.set(key, bucket);
+  }
+
+  if (facts) {
+    const componentSections = [...sections.values()].filter((bucket) =>
+      bucket.some((page) => page.component),
+    ).length;
+    lines.push(
+      `\nRemocn has ${facts.components} components across ${componentSections} docs sections, documented on ${pages.length} pages. Everything is MIT-licensed and free; components are copied into the user's project as source files, and Remotion is the only runtime.`,
+    );
+  }
   lines.push(
-    "\nDocs are also available as raw Markdown: append `.md` to any docs URL, or read [/llms-full.txt](" +
-      `${SITE_URL}/llms-full.txt) for the full corpus in a single file.`,
+    "\nDocs are also available as raw Markdown: append `.md` to any docs URL, or read one section as a single file at " +
+      `\`${SITE_URL}/llms-full/<section>.txt\` (linked at the end of each section below).`,
   );
   lines.push(
     `\nBuilding a video? Start at [/llms-components.txt](${SITE_URL}/llms-components.txt) — every` +
@@ -97,20 +132,19 @@ export function buildLlmsTxt(pages: IndexPage[]): string {
   lines.push(`\n${WHEN_TO_USE.join("\n")}`);
   lines.push(`\n${AGENT_TOOLS.join("\n")}`);
 
-  // Group pages by their top-level section (first slug segment).
-  const sections = new Map<string, IndexPage[]>();
-  for (const page of pages) {
-    const key = page.slugs[0] ?? "";
-    const bucket = sections.get(key) ?? [];
-    bucket.push(page);
-    sections.set(key, bucket);
-  }
-
   for (const [key, bucket] of sections) {
-    lines.push(`\n## ${sectionHeading(key)}`);
+    const heading = sectionHeading(key);
+    lines.push(`\n## ${heading}`);
     for (const page of bucket) {
+      if (page.component) continue;
       const desc = page.description ? `: ${page.description}` : "";
       lines.push(`- [${page.title}](${SITE_URL}${page.url}.md)${desc}`);
+    }
+    const components = bucket.filter((page) => page.component).length;
+    if (components && key) {
+      lines.push(
+        `- [${heading}: all ${bucket.length} pages in one file](${sectionCorpusUrl(key)}): ${components} component pages with install command, props and usage. Each is also listed in /llms-components.txt`,
+      );
     }
   }
 

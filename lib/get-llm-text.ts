@@ -1,5 +1,14 @@
 import type { InferPageType } from "fumadocs-core/source";
-import { mdxToMarkdown, stripFrontmatter } from "@/lib/mdx-to-markdown";
+import {
+  getComponentEntries,
+  getEntry,
+  loadDocsSource,
+} from "@/components/docs/index/data";
+import {
+  type DocsLookup,
+  mdxToMarkdown,
+  stripFrontmatter,
+} from "@/lib/mdx-to-markdown";
 import type { source } from "@/source";
 
 export const SITE_URL = "https://remocn.dev";
@@ -18,7 +27,12 @@ export async function getLLMText(page: DocPage): Promise<string> {
   };
 
   const raw = await data.getText("raw");
-  const body = mdxToMarkdown(stripFrontmatter(raw), SITE_URL).trim();
+  await loadDocsSource();
+  const docs: DocsLookup = {
+    entry: getEntry,
+    componentEntries: getComponentEntries,
+  };
+  const body = mdxToMarkdown(stripFrontmatter(raw), SITE_URL, { docs }).trim();
 
   const facts: string[] = [];
   if (data.component)

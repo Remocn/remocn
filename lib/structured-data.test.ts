@@ -1,5 +1,14 @@
 import { describe, expect, test } from "bun:test";
-import { HOME_KEYWORDS, homeJsonLd, serializeJsonLd } from "./structured-data";
+import {
+  blogPostJsonLd,
+  docsPageJsonLd,
+  faqFromMdx,
+  HOME_KEYWORDS,
+  homeJsonLd,
+  isoDuration,
+  serializeJsonLd,
+  showcaseJsonLd,
+} from "./structured-data";
 
 type Node = Record<string, unknown>;
 
@@ -57,5 +66,161 @@ describe("serializeJsonLd", () => {
     const out = serializeJsonLd({ x: "</script><script>alert(1)</script>" });
     expect(out).not.toContain("<");
     expect(JSON.parse(out).x).toBe("</script><script>alert(1)</script>");
+  });
+});
+
+describe("docs page JSON-LD", () => {
+  const doc = docsPageJsonLd({
+    url: "/docs/transitions/zoom-blur",
+    title: "Zoom Blur",
+    description: "Depth punch-in",
+    crumbs: [
+      { label: "Transitions", href: "/docs/transitions" },
+      { label: "Zoom Blur" },
+    ],
+    image: "/og/docs/transitions/zoom-blur",
+    component: "zoom-blur",
+  });
+  const nodes = doc["@graph"] as Node[];
+  const find = (type: string) => nodes.find((n) => n["@type"] === type);
+
+  test("is a TechArticle about the component's source", () => {
+    expect(find("TechArticle")).toMatchObject({
+      headline: "Zoom Blur",
+      url: "https://remocn.dev/docs/transitions/zoom-blur",
+      image: "https://remocn.dev/og/docs/transitions/zoom-blur",
+      about: {
+        "@type": "SoftwareSourceCode",
+        url: "https://remocn.dev/r/zoom-blur.json",
+      },
+    });
+  });
+
+  test("breadcrumbs run from the home page to the page itself", () => {
+    const items = find("BreadcrumbList")?.itemListElement as Node[];
+    expect(items.map((item) => item.item)).toEqual([
+      "https://remocn.dev/",
+      "https://remocn.dev/docs/transitions",
+      "https://remocn.dev/docs/transitions/zoom-blur",
+    ]);
+    expect(items.map((item) => item.position)).toEqual([1, 2, 3]);
+  });
+
+  test("adds an FAQPage only when the page has questions", () => {
+    expect(find("FAQPage")).toBeUndefined();
+    const withFaq = docsPageJsonLd({
+      url: "/docs/x",
+      title: "X",
+      crumbs: [],
+      image: "/hero.png",
+      faq: [{ question: "Is it free?", answer: "Yes." }],
+    })["@graph"] as Node[];
+    expect(withFaq.find((n) => n["@type"] === "FAQPage")).toMatchObject({
+      mainEntity: [
+        {
+          "@type": "Question",
+          name: "Is it free?",
+          acceptedAnswer: { "@type": "Answer", text: "Yes." },
+        },
+      ],
+    });
+  });
+});
+
+describe("faqFromMdx", () => {
+  test("reads bold questions and plain answers out of <Faq>", () => {
+    const raw = [
+      "Intro.",
+      "",
+      "<Faq>",
+      "",
+      "**Do I need **code**?**",
+      "Not with an [agent](/docs/guides). Use `npx`.",
+      "",
+      "**Is it free?**",
+      "MIT.",
+      "",
+      "</Faq>",
+    ].join("\n");
+    expect(faqFromMdx(raw)).toEqual([
+      { question: "Do I need code?", answer: "Not with an agent. Use npx." },
+      { question: "Is it free?", answer: "MIT." },
+    ]);
+  });
+
+  test("returns nothing for a page without a FAQ", () => {
+    expect(faqFromMdx("**Bold**\nText")).toEqual([]);
+  });
+});
+
+describe("video JSON-LD", () => {
+  test("ISO 8601 durations", () => {
+    expect(isoDuration(33.4)).toBe("PT33S");
+    expect(isoDuration(75)).toBe("PT1M15S");
+    expect(isoDuration(120)).toBe("PT2M");
+  });
+
+  test("a blog post carries its video", () => {
+    const post = blogPostJsonLd({
+      url: "/blog/nextjs-launch-video",
+      title: "Next.js",
+      description: "The eclipse cut",
+      date: new Date("2026-07-22T00:00:00Z"),
+      image: "https://cdn.remocn.dev/posters/n.png",
+      video: {
+        name: "Next.js",
+        description: "The eclipse cut",
+        contentUrl: "https://cdn.remocn.dev/videos/n.mp4",
+        thumbnailUrl: "https://cdn.remocn.dev/posters/n.png",
+        uploadDate: new Date("2026-07-22T00:00:00Z"),
+        duration: 33,
+      },
+    })["@graph"] as Node[];
+    expect(post[0]).toMatchObject({
+      "@type": "BlogPosting",
+      datePublished: "2026-07-22T00:00:00.000Z",
+      video: {
+        "@type": "VideoObject",
+        contentUrl: "https://cdn.remocn.dev/videos/n.mp4",
+        thumbnailUrl: ["https://cdn.remocn.dev/posters/n.png"],
+        uploadDate: "2026-07-22T00:00:00.000Z",
+        duration: "PT33S",
+      },
+    });
+  });
+
+  test("a video without a known length leaves duration out", () => {
+    const video = showcaseJsonLd({
+      url: "/showcases/x",
+      author: { name: "Ann", url: null },
+      video: {
+        name: "X",
+        description: "d",
+        contentUrl: "https://cdn.remocn.dev/x.mp4",
+        thumbnailUrl: "https://cdn.remocn.dev/x.png",
+        uploadDate: "2026-09-01",
+        duration: null,
+      },
+    })["@graph"] as Node[];
+    expect(video[0]).not.toHaveProperty("duration");
+    expect(video[0]).toMatchObject({
+      "@type": "VideoObject",
+      creator: { "@type": "Person", name: "Ann" },
+    });
+  });
+});
+
+describe("home JSON-LD entity links", () => {
+  test("the Organization names its maintainer and npm package", () => {
+    const org = (homeJsonLd("x")["@graph"] as Node[]).find(
+      (n) => n["@type"] === "Organization",
+    );
+    expect(org?.sameAs).toContain(
+      "https://www.npmjs.com/package/@remocn/render-sdk",
+    );
+    expect(org?.founder).toMatchObject({
+      "@type": "Person",
+      url: "https://github.com/kapishdima",
+    });
   });
 });

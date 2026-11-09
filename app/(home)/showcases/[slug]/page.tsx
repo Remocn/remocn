@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { JsonLd } from "@/components/json-ld";
+import { showcaseJsonLd } from "@/lib/structured-data";
 import { cn } from "@/lib/utils";
 import { formatDuration } from "@/lib/video-duration";
 import { landingButtonVariants } from "../../components/landing/ui/landing-button";
@@ -8,6 +10,7 @@ import { pageHeaderButton } from "../../components/site-page/page-header";
 import { ShowcaseDetails } from "../components/showcase-details";
 import { ShowcaseVideo } from "../components/showcase-video";
 import { getReel } from "../lib/reel";
+import type { ReelClip } from "../lib/reel-types";
 
 type PageProps = { params: Promise<{ slug: string }> };
 
@@ -37,24 +40,37 @@ export async function generateMetadata({
   if (!found) return {};
   const { clip } = found;
   const title = `${clip.title} · Remocn`;
+  const description = showcaseDescription(clip);
 
   return {
     title: clip.title,
+    description,
     alternates: { canonical: `/showcases/${clip.slug}` },
     openGraph: {
       type: "article",
       url: `/showcases/${clip.slug}`,
       siteName: "Remocn",
       title,
+      description,
       locale: "en_US",
       images: [{ url: clip.poster, alt: clip.title }],
     },
     twitter: {
       card: "summary_large_image",
       title,
+      description,
       images: [clip.poster],
     },
   };
+}
+
+/** One sentence: who made the video and which components it is built from. */
+function showcaseDescription(clip: ReelClip): string {
+  const names = clip.components.map((component) => component.name);
+  const built = names.length
+    ? `, built from ${names.slice(0, 4).join(", ")}${names.length > 4 ? ` and ${names.length - 4} more` : ""}`
+    : "";
+  return `${clip.title}: a video ${clip.author.name} made with Remocn components for Remotion${built}.`;
 }
 
 const NAV_BUTTON = cn(
@@ -67,9 +83,22 @@ export default async function ShowcasePage({ params }: PageProps) {
   const found = await getClip(slug);
   if (!found) notFound();
   const { clip, index, count, prev, next } = found;
+  const jsonLd = showcaseJsonLd({
+    url: `/showcases/${clip.slug}`,
+    author: clip.author,
+    video: {
+      name: clip.title,
+      description: showcaseDescription(clip),
+      contentUrl: clip.video,
+      thumbnailUrl: clip.poster,
+      uploadDate: clip.iso,
+      duration: clip.duration,
+    },
+  });
 
   return (
     <>
+      <JsonLd data={jsonLd} />
       <header className="landing-container flex flex-col gap-5 pt-12 pb-8 md:pt-20 md:pb-12 xl:pt-24 xl:pb-12">
         <Link href="/showcases" className={cn(NAV_BUTTON, "self-start")}>
           <span aria-hidden="true" className="text-primary">
