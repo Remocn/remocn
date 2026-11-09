@@ -30,6 +30,8 @@ export const INSTALL_COMMAND = "npx shadcn@latest add @remocn/<name>";
 
 export const MCP_URL = `${SITE_URL}/mcp`;
 
+export const MCP_DOCS_URL = `${SITE_URL}/docs/getting-started/mcp-server`;
+
 export const OPENAPI_URL = `${SITE_URL}/openapi.json`;
 
 /**
@@ -52,7 +54,7 @@ const WHEN_TO_USE = [
   "",
   "**How an agent should use Remocn:**",
   "",
-  `1. Pick components from [/llms-components.txt](${SITE_URL}/llms-components.txt), or call the MCP server at ${MCP_URL} (Streamable HTTP, no auth; tools \`search_components\`, \`get_component\`, \`plan_video\`, \`preview_component\`).`,
+  `1. Pick components from [/llms-components.txt](${SITE_URL}/llms-components.txt), or call the MCP server at ${MCP_URL} (Streamable HTTP, no auth; tools \`search_components\`, \`get_component\`, \`plan_video\`, \`preview_component\`; setup per client: [MCP server docs](${MCP_DOCS_URL}.md)).`,
   "2. Read the component's page as Markdown (append `.md` to its docs URL) before writing code against it: props, natural length and a usage example live there.",
   `3. Install with the shadcn CLI: \`${INSTALL_COMMAND}\`. The source lands in the user's project. Raw registry items are JSON at \`${SITE_URL}/r/<name>.json\`.`,
   "4. For a whole video workflow, install the agent skill (`npx skills add Remocn/remocn --yes`) or the Claude Code plugin (`/plugin install remocn --marketplace Remocn/remocn`).",
@@ -62,7 +64,7 @@ const WHEN_TO_USE = [
 const AGENT_TOOLS = [
   "## Agent tools",
   `- [Component index](${SITE_URL}/llms-components.txt): every installable component with its use / avoid signal, natural length, vibe and dependencies`,
-  `- [MCP server](${MCP_URL}): remote, read-only, no auth. Search components, read one, plan a video, preview a component`,
+  `- [MCP server](${MCP_DOCS_URL}.md): hosted MCP for building Remotion videos at ${MCP_URL}. Remote, read-only, no auth; it does not render video. Search components, read one, plan a video, preview a component. The page covers tools and setup for Claude Code, Claude Desktop, Cursor, VS Code and Codex`,
   `- [OpenAPI spec](${OPENAPI_URL}): the HTTP API (registry items, docs search, GitHub stars video renders)`,
   `- [Full docs corpus](${SITE_URL}/llms-full.txt): every docs page as Markdown in one file. It runs to megabytes, more than a context window holds; prefer one section's file, linked at the end of each section below`,
 ];

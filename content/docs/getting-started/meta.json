@@ -1,6 +1,12 @@
 {
   "title": "Getting Started",
   "defaultOpen": true,
-  "pages": ["introduction", "installation", "agent-skill", "plugin"],
+  "pages": [
+    "introduction",
+    "installation",
+    "agent-skill",
+    "plugin",
+    "mcp-server"
+  ],
   "icon": "Rocket01Icon"
 }

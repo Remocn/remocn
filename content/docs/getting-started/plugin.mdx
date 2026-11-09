@@ -48,7 +48,7 @@ codex plugin add remocn@remocn
 | `remocn` skill | The [agent skill](/docs/getting-started/agent-skill): component tiers, timing rules, composition recipes. Loads on its own for any video work |
 | `video-director` agent | Plans the storyboard: one beat per row, a component per beat, frame budgets that hit the target length |
 | `scene-reviewer` agent | Renders stills at key frames of every beat and checks them for clipped text, empty frames, low contrast and jumps between beats |
-| `remocn` MCP server | Connects to `https://remocn.dev/mcp` for component search, component pages, video plans and live previews |
+| `remocn` MCP server | Connects to the [Remocn MCP server](/docs/getting-started/mcp-server) at `https://remocn.dev/mcp` for component search, component pages, video plans and live previews |
 
 The agents run in Claude Code. In Codex the video workflow does the same planning and checking
 itself.
@@ -99,4 +99,4 @@ The project already carries Studio's manifest (`.remocn/project.json`), so it op
 Chat apps have no terminal, so the plugin can't install components there. What does work is the
 catalog connection: add `https://remocn.dev/mcp` as a custom connector to search components, read
 their pages, plan a video and preview components inline. Then take the plan to Claude Code or Codex
-to build it.
+to build it. [MCP Server](/docs/getting-started/mcp-server) has the steps for each client.

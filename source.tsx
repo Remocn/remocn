@@ -57,4 +57,17 @@ export const source = loader({
     return <HugeiconsIcon icon={svg} strokeWidth={1.8} />;
   },
   source: docs.toFumadocsSource(),
+  pageTree: {
+    transformers: [
+      {
+        file(node, filePath) {
+          if (!filePath) return node;
+          const file = this.storage.read(filePath);
+          if (file?.format !== "page") return node;
+          const navTitle = (file.data as { navTitle?: string }).navTitle;
+          return navTitle ? { ...node, name: navTitle } : node;
+        },
+      },
+    ],
+  },
 });

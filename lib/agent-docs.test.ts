@@ -85,7 +85,10 @@ describe("buildLlmsTxt", () => {
   });
 
   test("links the machine endpoints", () => {
-    expect(text).toContain("(https://remocn.dev/mcp)");
+    expect(text).toContain("https://remocn.dev/mcp");
+    expect(text).toContain(
+      "[MCP server](https://remocn.dev/docs/getting-started/mcp-server.md)",
+    );
     expect(text).toContain("(https://remocn.dev/openapi.json)");
     expect(text).toContain("(https://remocn.dev/llms-components.txt)");
   });
