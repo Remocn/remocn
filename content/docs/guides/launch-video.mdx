@@ -1,6 +1,7 @@
 ---
-title: Launch video
-description: The ~35-second launch video we made for Remocn itself — with your product in it
+title: "SaaS launch video template for Remotion (35 s, 8 scenes, 1080p)"
+navTitle: Launch video
+description: "SaaS launch video template for Remotion: a ~35-second, eight-scene 1080p product launch video you make with Claude Code from one prompt, built from MIT-licensed Remocn components"
 ---
 
 import { GuideNotes, GuideMoreLink } from "@/components/docs/guides/director-notes";
@@ -12,22 +13,39 @@ import { GuideBeatList, GuideStoryboard } from "@/components/docs/guides/storybo
 import { GuideFacts } from "@/components/docs/guides/video-facts";
 import { GuideWords } from "@/components/docs/guides/words-form";
 
+To make a product launch video with Claude Code, install the Remocn plugin, run one prompt with your product name, your words and (optionally) your logo and screenshots, preview the result in [Remocn Studio](https://remocn.studio), and export an MP4. This template runs about 35 seconds: eight scenes at 1920×1080, 30 fps. Every scene is built from Remocn components, MIT-licensed source files that live in your repo.
+
 <GuideVideo
   src="https://cdn.remocn.dev/videos/intoducing-remocn.mp4"
   poster="https://cdn.remocn.dev/posters/intoducing-remocn.png"
-  label="The Remocn launch video"
+  label="The Remocn launch video, made from this template"
   duration={35}
 />
+
+[Download the MP4](https://cdn.remocn.dev/videos/intoducing-remocn.mp4) · [Poster image](https://cdn.remocn.dev/posters/intoducing-remocn.png)
 
 <GuideFacts
   facts={[
     { value: "~35 s", label: "running time" },
-    { value: "8 beats", label: "built from Remocn components" },
+    { value: "8 scenes", label: "built from Remocn components" },
     { value: "1920×1080", label: "30 fps, landscape" },
   ]}
 />
 
-This is the video we launched Remocn with. Eight beats, thirty-five seconds, built entirely from Remocn components. Below is everything you need to make the same video for your product.
+This is the video we launched Remocn with. Below is everything you need to make the same video for your SaaS product: the storyboard, the components, the words to fill in and the prompt to paste.
+
+**Works with:** Claude Code and Codex (through the [plugin](/docs/getting-started/plugin)), other coding agents that load Agent Skills (through the [agent skill](/docs/getting-started/agent-skill)), and [Remocn Studio](https://remocn.studio) on macOS.
+
+**Last updated:** November 9, 2026 · Remotion 4.0.530 · components from the live Remocn registry
+
+## Use it for
+
+- **SaaS launches** — the first video for a new product or a big relaunch
+- **Product Hunt** — the gallery video on your launch page
+- **Landing-page hero** — a muted, looping video above the fold
+- **Changelog and release posts** — for one release, the [feature announcement](/docs/guides/feature-announcement) guide fits better; for several small changes, use the [changelog video](/docs/guides/changelog-video) guide
+
+Need it vertical for Reels, Shorts or TikTok? [One video, three formats](/docs/guides/one-video-three-formats) re-cuts it.
 
 ## The storyboard<GuideCount n={8} />
 
@@ -56,6 +74,49 @@ This is the video we launched Remocn with. Eight beats, thirty-five seconds, bui
 8. **The outro** — Your logo draws itself on, with one quiet closing line.
 
 </GuideBeatList>
+
+## Components in the template
+
+Your agent installs these for you. To install them yourself, run the commands in an existing Remotion project; each one copies the source into your repo.
+
+| Scene | Component | Install |
+|---|---|---|
+| Pain | [Scale Down Fade](/docs/typography/scale-down-fade) | `npx shadcn@latest add @remocn/scale-down-fade` |
+| Reveal | [Swirl](/docs/shaders/components/shader-swirl) | `npx shadcn@latest add @remocn/shader-swirl` |
+| Tagline | [Short Slide Right](/docs/typography/short-slide-right) | `npx shadcn@latest add @remocn/short-slide-right` |
+| Positioning | [Kinetic Center Build](/docs/typography/kinetic-center-build) | `npx shadcn@latest add @remocn/kinetic-center-build` |
+| Montage | [Color Panels](/docs/shaders/components/shader-color-panels), [Warp](/docs/shaders/components/shader-warp), [Mesh Gradient](/docs/shaders/components/shader-mesh-gradient), [Voronoi](/docs/shaders/components/shader-voronoi), [Metaballs](/docs/shaders/components/shader-metaballs), [God Rays](/docs/shaders/components/shader-god-rays) | `npx shadcn@latest add @remocn/shader-color-panels` (and the same for each) |
+| Value | [Line-by-Line Slide](/docs/typography/line-by-line-slide) | `npx shadcn@latest add @remocn/line-by-line-slide` |
+| Outro | [Smoke Ring](/docs/shaders/components/shader-smoke-ring) | `npx shadcn@latest add @remocn/shader-smoke-ring` |
+| Whole video | [Simplex Noise](/docs/shaders/components/shader-simplex-noise) background, [Dithering](/docs/shaders/components/shader-dithering) transitions | `npx shadcn@latest add @remocn/shader-simplex-noise` |
+
+The install beat is a typed terminal line; your agent builds it, or you can use [Terminal Simulator](/docs/ui-blocks/terminal-simulator).
+
+All of them at once:
+
+```bash
+npx shadcn@latest add @remocn/scale-down-fade @remocn/shader-swirl @remocn/short-slide-right @remocn/kinetic-center-build @remocn/shader-color-panels @remocn/shader-warp @remocn/shader-mesh-gradient @remocn/shader-voronoi @remocn/shader-metaballs @remocn/shader-god-rays @remocn/line-by-line-slide @remocn/shader-smoke-ring @remocn/shader-simplex-noise @remocn/shader-dithering
+```
+
+## How do I make a launch video for my product with Claude Code?
+
+1. **Install the Remocn plugin.** Open Claude Code in an empty folder or your Remotion project and run:
+
+   ```text
+   /plugin install remocn --marketplace Remocn/remocn
+   ```
+
+   In an empty folder, the plugin creates the Remotion project for you. Using another agent? Install the skill instead and ask the agent to set up Remotion ([Setup](/docs/guides/setup) has the prompt):
+
+   ```bash
+   npx skills add Remocn/remocn --yes
+   ```
+
+2. **Fill in your words.** Nine blanks: product name, two pain lines, tagline, positioning, six feature labels, three claims, install command or call to action, closing line and an optional accent color. The form is below.
+3. **Paste the prompt** from [The prompt](#the-prompt) with your words in place of the blanks. With the plugin, start the message with `/remocn:video`: it shows you the storyboard and waits for your go-ahead before writing code.
+4. **Preview it.** Open the project in [Remocn Studio](https://remocn.studio) (the plugin offers this when the video is built), or run `npx remotion studio`.
+5. **Direct the result** in plain sentences, one change at a time. See [Directing the result](#directing-the-result).
+6. **Export an MP4.** Ask the agent to "Render the video.", or run `npx remotion render <composition-id>`. Remocn Studio also exports MP4.
 
 ## Your words<GuideCount n={9} />
 
@@ -91,6 +152,8 @@ This is the whole creative work — nine blanks:
 
 Have a logo? Drop the SVG into the project folder and mention the file name in the prompt. No logo — your agent will use the product name as a wordmark.
 
+Have screenshots? Put them in the project's `public/` folder and add a line to the prompt, for example: "Show my screenshots from public/ in the montage, one per feature."
+
 Struggling with the lines? [Words on screen](/docs/guides/words-on-screen) is the cheat sheet.
 
 </GuideNote>
@@ -106,7 +169,7 @@ I'm making a product launch video with remocn (remocn.dev).
 
 Build a ~35-second, 1920×1080, 30fps launch video for <PRODUCT NAME> in this
 Remotion project, using remocn components — install anything you need with
-`npx shadcn add @remocn/<name>`:
+`npx shadcn@latest add @remocn/<name>`:
 
 1. Pain — two short lines, one after the other (scale-down-fade):
    "<PAIN LINE 1>" then "<PAIN LINE 2>".
@@ -153,10 +216,45 @@ More directing vocabulary: [Directing your agent](/docs/guides/directing-your-ag
 
 </GuideMoreLink>
 
-## Get the file
+## Get the MP4
 
 <GuideRenderCard prompt="Render the video.">
 
-You'll get an `.mp4` in the project folder, ready to post.
+You'll get an `.mp4` in the project folder, ready to post. [Exporting your video](/docs/guides/exporting-your-video) covers what to expect and where the file goes next.
 
 </GuideRenderCard>
+
+## How long is a SaaS launch video?
+
+This template runs about 35 seconds. That is long enough to name the problem, show the product and end on a call to action, and short enough for a Product Hunt gallery or a landing-page loop. To make it shorter, cut the montage from six features to four, or drop the positioning beat.
+
+The one-time setup takes about ten minutes ([Setup](/docs/guides/setup)). The first cut comes from one prompt; plan on a few rounds of directing after that.
+
+## What does it cost?
+
+- **Remocn:** free. The components are MIT-licensed and copied into your repo as source files. There is no account and no usage limit.
+- **Claude Code:** runs on your own Claude plan or API usage. Remocn adds no fee on top.
+- **Rendering:** happens on your machine (or wherever you run Remotion), so there is no per-render charge from Remocn.
+- **Remotion:** Remocn needs a Remotion project, and Remotion has [its own license](https://www.remotion.dev/docs/license). It is free for individuals and for organizations of up to three people. Companies of four or more need a Remotion company license.
+
+## How do I keep it from looking AI-generated?
+
+- **Write your own words.** The prompt says "use my copy exactly as written", so the agent doesn't invent claims. Keep value claims concrete; [Words on screen](/docs/guides/words-on-screen) helps.
+- **Let the components do the motion.** Remocn components are frame-driven Remotion code with their own timing, and each docs page states its natural length. Ask the agent to give every scene at least that long, so no animation is cut off mid-motion.
+- **Keep one look.** One background, one accent color, one font, shader transitions instead of plain crossfades. [Your brand](/docs/guides/your-brand) shows how to bring your own colors and type.
+- **Check the frames.** With the plugin, a `scene-reviewer` agent renders stills of every scene and checks for clipped text, empty frames, low contrast and jumps between scenes. Watch the preview yourself before you export.
+- **Read the house rules.** [Craft](/docs/craft) lists the [anti-patterns](/docs/craft/anti-patterns) that give a generated video away, each with its fix.
+
+## Remocn vs other Remotion launch video templates
+
+| | Remocn launch video | [saas-product-demo-video](https://github.com/noamdorr/saas-product-demo-video) | [Subclip Product Hero](https://subclip.app/motion-graphics-templates/remotion/hero-launch) |
+|---|---|---|---|
+| What it is | A storyboard, a prompt and a component registry for your agent | A Claude Code skill with an intake questionnaire, beat detection and render scripts | A single Remotion intro template |
+| Length | ~35 s, 8 scenes | 20 to 60 s | 6 s |
+| What you get | Source files for each component, copied into your repo | A Remotion scaffold generated by the skill | One `template.tsx` file |
+| Extra prerequisites | A Remotion project (the plugin can create one) | Python 3, ffmpeg, librosa, Pillow | None stated |
+| License | MIT | MIT | Not stated on the page |
+
+Pick Remocn when you want a finished storyboard and want to reuse the same components for your demo, changelog and social videos. Pick saas-product-demo-video when you want the skill to cut the video to a music track. Pick Subclip's Product Hero when you only need a short hero intro.
+
+Comparison checked on November 9, 2026 from each project's public page.

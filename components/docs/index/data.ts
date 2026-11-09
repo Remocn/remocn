@@ -15,6 +15,8 @@ import type { source as docsSourceType } from "@/source";
 export type DocEntry = {
   url: string;
   title: string;
+  /** Short label from `navTitle` frontmatter, for cards and the sidebar. */
+  navTitle?: string;
   description?: string;
   /** Registry name from the page's `component` frontmatter. */
   component?: string;
@@ -66,6 +68,7 @@ export function getEntry(url: string): DocEntry | undefined {
   return {
     url: page.url,
     title: page.data.title,
+    navTitle: page.data.navTitle,
     description: page.data.description,
     component: page.data.component,
     isNew: NEW_BADGE_PATHS.has(page.url),
