@@ -42,7 +42,9 @@ describe("buildLlmsTxt with component pages", () => {
 
   test("states the catalog size once, before the first section", () => {
     const preamble = text.slice(0, text.indexOf("\n## "));
-    expect(preamble).toContain("Remocn has 932 components across 1 docs sections");
+    expect(preamble).toContain(
+      "Remocn has 932 components across 1 docs sections",
+    );
   });
 
   test("links a section's whole text instead of each component page", () => {
