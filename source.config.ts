@@ -12,7 +12,12 @@ import { componentMetaSchema } from "./lib/docs-schema";
 export const docs = defineDocs({
   dir: "content/docs",
   docs: {
-    schema: pageSchema.safeExtend(componentMetaSchema.shape),
+    schema: pageSchema.safeExtend({
+      ...componentMetaSchema.shape,
+      // Shorter label for the sidebar, breadcrumbs and prev/next when the
+      // page title is too long to sit there.
+      navTitle: z.string().optional(),
+    }),
     postprocess: {
       includeProcessedMarkdown: true,
     },

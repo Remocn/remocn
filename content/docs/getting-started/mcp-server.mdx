@@ -1,0 +1,297 @@
+---
+title: "Remocn MCP Server: a hosted MCP for building Remotion videos in Claude Code, Cursor and Codex"
+navTitle: MCP Server
+description: "A hosted MCP server for making videos with Remotion, at https://remocn.dev/mcp. No auth, read-only. It searches Remocn's Remotion components, returns their docs, plans a video beat by beat and previews components. It does not render video."
+---
+
+import { Faq } from "@/components/docs/index/introduction/faq";
+
+_Last updated: November 9, 2026_
+
+The Remocn MCP server is a hosted MCP server for making videos with Remotion. Add
+`https://remocn.dev/mcp` to Claude Code, Cursor, Codex or any other MCP client, with no API key and
+no account, and your agent can search Remocn's Remotion components, read their docs, plan a video
+beat by beat and preview a component.
+
+It is read-only and it does not render video. Your agent writes the Remotion code in your own
+project, and you render it with Remotion as usual.
+
+| | |
+|---|---|
+| URL | `https://remocn.dev/mcp` |
+| Transport | Streamable HTTP |
+| Auth | None. No API key, no account, no OAuth |
+| Access | Read-only. Four tools; nothing is written to your machine |
+| Price | Free. Remocn is MIT licensed |
+
+## What the Remocn MCP server does
+
+Remocn is a [shadcn-style registry](/docs/getting-started/introduction) of Remotion components:
+text animations, transitions, backgrounds, shaders, app-screen simulations, icons and full video
+templates. You install a component with `npx shadcn@latest add @remocn/<name>`, and its source is
+copied into your project.
+
+The MCP server gives an agent the catalog half of that work: which component fits a beat, what
+props it takes, how many frames its motion lasts, and the command that installs it. A typical
+session looks like this:
+
+1. `plan_video` turns a brief such as "30-second launch video for our CLI" into a storyboard with a
+   suggested component for each beat.
+2. `search_components` finds alternatives when a beat needs something else.
+3. `get_component` returns one component's docs before the agent writes code against its props.
+4. The agent runs the install command in your Remotion project and writes the composition.
+
+## Tools
+
+| Tool | Arguments | Returns |
+|---|---|---|
+| `search_components` | `query` (required). Optional: `vibe` (`clean`, `premium`, `tech`, `data`, `playful`, `social` or `paper`), `maxLength` (frames at 30fps), `limit` (1–50, default 10) | Matching components, each with name, title, section, vibe, natural length in frames, a use and an avoid note, docs URL and install command |
+| `get_component` | `name` (required). Accepts `typewriter`, `@remocn/typewriter` or the component's title | The component's full docs page as Markdown: install command, props, usage example, use and avoid notes, plus its registry dependencies |
+| `plan_video` | `brief` (required). Optional: `archetype` (`product-demo`, `changelog`, `feature-announcement`, `oss-showcase`, `cli-tool-demo`, `testimonial-reel`, `year-in-review`, `pricing-reveal` or `logo-bumper`), `durationSeconds` (up to 600) | A storyboard: the archetype and why it was picked, beats with frame ranges and component options, transitions, one install command for the suggested picks, and the archetype's full recipe |
+| `preview_component` | `name` (required). Optional: `props`, merged over the component's demo defaults | A live preview link with length, frame rate and size, plus docs URL and install command. In clients that support MCP Apps, the preview plays in the chat |
+
+When a name doesn't match, `get_component` and `preview_component` answer with the closest
+component names instead of an empty result.
+
+### Example: search_components
+
+```json
+{ "query": "typewriter headline", "limit": 2 }
+```
+
+```text
+2 Remocn components for "typewriter headline". Lengths are frames of motion @30fps — a floor for the Sequence, add hold on top.
+
+- `typewriter` — Typewriter (typography · clean · 120f · remocn)
+  Use: Simulating a command being typed into a terminal or input — pairs with `terminal-simulator`.
+  Avoid: The text is long — typing a paragraph at a readable speed eats far more frames than a viewer will wait; use `staggered-fade-up` or `blur-out-up` instead.
+  Docs: https://remocn.dev/docs/typography/typewriter.md · Install: `npx shadcn@latest add @remocn/typewriter`
+- `comet-headline` — Comet Headline (typography · premium · 81f · remocn)
+  Use: A feature announcement where each word of the headline should be delivered with a trailing light.
+  Avoid: The headline is a single short word - use `spring-scale-in`.
+  Docs: https://remocn.dev/docs/typography/comet-headline.md · Install: `npx shadcn@latest add @remocn/comet-headline`
+```
+
+### Example: get_component
+
+```json
+{ "name": "typewriter" }
+```
+
+```text
+# Typewriter
+URL: https://remocn.dev/docs/typography/typewriter
+
+Character-by-character text reveal with a deterministic blinking cursor
+
+- Install: `npx shadcn@latest add @remocn/typewriter`
+- Vibe: clean
+- Natural length: 120f @ 30fps
+
+## Installation
+…props table, usage example, when to use and when not to…
+
+Registry dependencies (installed automatically): `@remocn/remocn-ui`, `@remocn/caret`
+```
+
+### Example: plan_video
+
+```json
+{ "brief": "30-second launch video for our CLI" }
+```
+
+```text
+# Video plan: cli-tool-demo (matched: cli)
+
+Brief: 30-second launch video for our CLI
+
+## Beats
+The first component of each beat is the suggested pick; the rest are recipe alternatives.
+
+1. **Hook** (0–150f)
+   Problem statement or bold positioning line — kinetic word-by-word build, one accent
+   Components: `kinetic-center-build`, `inline-highlight`, `shader-dot-orbit`
+2. **Agent chat** (150–420f)
+   Prompt typed in the matching agent surface; cursor blinks; response or task list begins streaming
+   Components: `claude-code`, `opencode`, `v0`, `chat-gpt`, `claude-chat`, `cursor`
+3. **Terminal run** (420–900f)
+   …
+## Install
+## Next step
+## Recipe: cli-tool-demo
+…
+```
+
+Pass `durationSeconds` to pick the recipe variant closest to the length you want.
+
+### Example: preview_component
+
+```json
+{ "name": "typewriter" }
+```
+
+```text
+Live preview of `typewriter` (Typewriter): https://remocn.dev/embed/typewriter
+120f @ 30fps, 1280×720.
+Docs: https://remocn.dev/docs/typography/typewriter.md
+Install: `npx shadcn@latest add @remocn/typewriter`
+```
+
+## How to add the Remocn MCP server
+
+Every client below connects to the same URL over Streamable HTTP. There are no headers or keys to
+fill in.
+
+### Claude Code
+
+```bash
+claude mcp add --transport http remocn https://remocn.dev/mcp
+```
+
+Add `--scope user` to make it available in every project. The
+[Remocn plugin](/docs/getting-started/plugin) bundles this server with the `/remocn:video`
+workflow, so if you install the plugin you don't need to add the server separately:
+
+```text
+/plugin install remocn --marketplace Remocn/remocn
+```
+
+### Claude Desktop and claude.ai
+
+Open **Settings → Connectors → Add custom connector**, name it `Remocn` and paste
+`https://remocn.dev/mcp` as the URL. Leave the OAuth fields empty.
+
+### Cursor
+
+Add the server to `.cursor/mcp.json` in your project, or to `~/.cursor/mcp.json` for every
+project:
+
+```json
+{
+  "mcpServers": {
+    "remocn": {
+      "url": "https://remocn.dev/mcp"
+    }
+  }
+}
+```
+
+### VS Code
+
+Add the server to `.vscode/mcp.json` in your workspace, or run **MCP: Add Server** from the command
+palette and pick HTTP:
+
+```json
+{
+  "servers": {
+    "remocn": {
+      "type": "http",
+      "url": "https://remocn.dev/mcp"
+    }
+  }
+}
+```
+
+### Codex
+
+```bash
+codex mcp add remocn --url https://remocn.dev/mcp
+```
+
+Or add it to `~/.codex/config.toml`:
+
+```toml
+[mcp_servers.remocn]
+url = "https://remocn.dev/mcp"
+```
+
+The [Remocn plugin](/docs/getting-started/plugin) for Codex includes the server too.
+
+### Other clients
+
+Any client that speaks Streamable HTTP can use `https://remocn.dev/mcp` directly. For a client that
+only runs local stdio servers, bridge it with `npx mcp-remote https://remocn.dev/mcp`.
+
+To check the connection, ask your agent: "Use the Remocn MCP server to find a typewriter text
+animation." It should call `search_components` and answer with `typewriter`.
+
+## Does the Remocn MCP server render video?
+
+No. None of the four tools renders frames or produces an MP4, and the server never runs your code.
+It sends back text: component docs, plans, install commands and preview links.
+
+Rendering happens wherever you run Remotion:
+
+- `npx remotion studio` to preview the composition in the browser
+- `npx remotion render <composition-id>` to export an MP4
+- [Remocn Studio](https://remocn.studio), a free desktop app that previews a Remotion project live
+  and exports MP4
+
+Remocn needs an existing Remotion project, and Remotion keeps
+[its own license](https://www.remotion.dev/docs/license), which can require a company license for
+larger teams.
+
+## Remocn MCP vs other Remotion MCP servers
+
+Remotion's own hosted MCP server, which searched the Remotion documentation, was
+[shut down on October 26, 2026](https://www.remotion.dev/docs/ai/mcp). Remotion now points agents
+to its Agent Skills instead. Here is how the options that remain compare.
+
+| | What it is | Where it runs | Renders video | Pick it when |
+|---|---|---|---|---|
+| **Remocn MCP server** | Catalog of Remocn's Remotion components: search, docs, video plans, previews | Hosted at `https://remocn.dev/mcp`, no auth | No | You want ready-made components and a storyboard for a product video |
+| **Remotion docs MCP** (`remotion-documentation`) | Search over the Remotion docs | Was hosted by Remotion | No | It's gone. Use Remotion's Agent Skills and `/remotion-docs` instead |
+| **[Remotion Agent Skills](https://www.remotion.dev/docs/ai/skills)** | Not an MCP server. Instructions that teach agents Remotion's APIs and best practices, including `/remotion-docs` and `/remotion-render` | Installed locally: `npx skills add remotion-dev/skills` | Through your agent and Remotion's CLI | You want your agent to know how Remotion itself works |
+| **[PratyushChauhan/remotion-mcp-server](https://github.com/PratyushChauhan/remotion-mcp-server)** | Self-hosted server that scaffolds projects from JSON-parameterized templates and renders them through the Remotion CLI, with a render queue | You run it: stdio or SSE, Node.js 18+ and the Remotion CLI | Yes, MP4 | You want an MCP tool call to produce an MP4 from a template |
+| **[mcp-use remotion-mcp-app](https://github.com/mcp-use/remotion-mcp-app)** | MCP App: the model writes Remotion code, the server compiles it, and a player shows it in the chat | Hosted instance or local | Plays in the chat; its README describes no MP4 export | You want a quick animation inside Claude or ChatGPT, without a project |
+
+These don't exclude each other. Remotion's skills answer how Remotion works; the Remocn MCP server
+answers which component goes on screen and how long it runs. Many setups use both.
+
+## When to use the MCP server, the plugin or the skill
+
+- **MCP server:** you want the catalog in any MCP client, including chat apps with no terminal.
+- **[Plugin](/docs/getting-started/plugin):** you work in Claude Code or Codex and want the whole
+  workflow: brief, storyboard, install, compose, visual check. It includes the MCP server and the
+  skill.
+- **[Agent skill](/docs/getting-started/agent-skill):** your agent loads skills and you want it to
+  know Remocn's timing rules and recipes. It reads the same catalog from
+  [`/llms-components.txt`](https://remocn.dev/llms-components.txt).
+
+## FAQ
+
+<Faq>
+
+**Is there a Remotion MCP server I can still use?**
+Remotion's official MCP server shut down on October 26, 2026. The Remocn MCP server at `https://remocn.dev/mcp` is live and hosted, but it serves Remocn's component catalog, not Remotion's docs. For Remotion's docs, Remotion recommends its [Agent Skills](https://www.remotion.dev/docs/ai/skills).
+
+**Does the Remocn MCP server need an API key?**
+No. There is no auth, no account and no key. Add the URL to your client and it works.
+
+**Can the Remocn MCP server render an MP4?**
+No. It returns docs, plans, install commands and preview links. Render with `npx remotion render`, Remotion Studio or [Remocn Studio](https://remocn.studio).
+
+**Which clients does it work with?**
+Any MCP client that supports Streamable HTTP, including Claude Code, Claude Desktop, claude.ai, Cursor, VS Code and Codex. Stdio-only clients can connect through `npx mcp-remote`.
+
+**Does it change files in my project?**
+No. All four tools are read-only and the server never sees your code. Your agent runs `npx shadcn@latest add @remocn/<name>` itself, and that is what copies component files into your project.
+
+**Is it free?**
+Yes. Remocn is MIT licensed and the MCP server is free to use. Remotion has [its own license](https://www.remotion.dev/docs/license).
+
+**Is this Remotion's official MCP server?**
+No. Remocn is an independent community project, not affiliated with Remotion or shadcn. It is listed on Remotion's resources page.
+
+**Do I need the MCP server if I installed the plugin or the skill?**
+The plugin already includes the MCP server. The skill reads the catalog from remocn.dev directly, so the server is optional next to it.
+
+</Faq>
+
+## What's next
+
+- [Installation](/docs/getting-started/installation): add Remocn to an existing Remotion project
+- [Plugin](/docs/getting-started/plugin): the `/remocn:video` workflow for Claude Code and Codex
+- [Agent Skill](/docs/getting-started/agent-skill): teach any skill-loading agent to compose videos
+  with Remocn
+- [Components](/docs/components): every component, grouped by category
