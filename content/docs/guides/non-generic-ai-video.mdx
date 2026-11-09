@@ -1,0 +1,264 @@
+---
+title: "Why Claude Code launch videos look generic, and how to fix it"
+navTitle: Non-generic AI video
+description: "Why launch videos made with Claude Code, Cursor or Codex and Remotion all look alike: glow, gradient text, pop-in panels, invented UI. The tells, the fixes, the setup per agent and paste-ready prompts that keep your video from looking generic."
+---
+
+import { Faq } from "@/components/docs/index/introduction/faq";
+import { GuidePrompt } from "@/components/docs/guides/prompt-block";
+
+_Last updated: November 9, 2026_
+
+Launch videos made with Claude Code, Cursor or Codex look generic because the agent hand-rolls
+every animation with default fonts, glowing gradients and panels that pop in on the same frame.
+The fix is to keep Remotion's `remotion-best-practices` skill for the API and add tuned components
+plus taste rules: Remocn gives your agent both through its plugin, skill or MCP server.
+
+Remocn works **with** Remotion's skills, not instead of them. Remotion's skills teach your agent how
+Remotion works. Remocn decides what goes on screen: which component plays each beat, how many frames
+it runs and what your own text and cards should look like.
+
+## Why do Claude Code launch videos look generic?
+
+An agent asked for a "launch video" with nothing else to go on writes every scene from scratch with
+`interpolate()` and `spring()`. It reaches for the same moves every time, because those are the
+moves most common in the code it learned from. The result is a video that looks like every other
+agent-made video.
+
+Remotion's own skills don't prevent this, and aren't meant to. They cover compositions, timing,
+fonts, rendering and captions, and carry no design rules. Since the Skills 2.0 release, Remotion
+leaves the visual direction to you. If your brief doesn't set it, the agent's defaults do.
+
+## The tells of a generic AI video, and the fix for each
+
+These are the tells we see most in agent-built Remotion videos. Each fix links to the rule on
+Remocn's [Craft](/docs/craft) pages, which the Remocn skill points your agent to.
+
+| Tell | Why it reads as generic | Fix | Remocn component or rule |
+|---|---|---|---|
+| Glow halos and blurred color blobs behind headings | The single most common tell in AI-made promos | No colored glows, no blur over ~24px. If the background should move, use a slow, muted shader | [`shader-mesh-gradient`](/docs/shaders/components/shader-mesh-gradient) at low speed, or a solid fill with [`backdrop`](/docs/layout/backdrop). Rule: [no glow](/docs/craft/design-defaults#no-glow-or-heavy-shadows) |
+| Gradient-filled headline text | Decoration standing in for emphasis | Solid text. Mark the one word that matters with weight, the accent color or a highlight | [`marker-highlight`](/docs/typography/marker-highlight), [`inline-highlight`](/docs/typography/inline-highlight). Rule: [no gradient text](/docs/craft/design-defaults#no-gradient-text-fills-or-decorative-washes) |
+| ALL-CAPS with wide letter-spacing | Reads as "designed by AI" on sight | Sentence case, default tracking | [`blur-out-up`](/docs/typography/blur-out-up), [`kinetic-center-build`](/docs/typography/kinetic-center-build). Rule: [no decorative tracking](/docs/craft/design-defaults#no-decorative-letter-spacing) |
+| Default fonts, one weight everywhere | Nothing says whose product this is | One display and one UI font, loaded with `@remotion/google-fonts` before render | [Design defaults: fonts and palette](/docs/craft/design-defaults#design-tokens) |
+| Every panel pops in on the same frame | Robotic; no focal point | Stagger sibling entrances by 3–6 frames, one focal action per beat | [`staggered-fade-up`](/docs/typography/staggered-fade-up). Rule: [everything enters on one frame](/docs/craft/anti-patterns#everything-enters-on-one-frame) |
+| Animations cut off mid-motion (clipped sequences) | The `Sequence` is shorter than the motion inside it | Budget each `Sequence` at least the component's natural length, then add hold | Every component states its length in [`/llms-components.txt`](https://remocn.dev/llms-components.txt). Rule: [clipping](/docs/craft/anti-patterns#clipping-a-component-by-under-budgeting-its-sequence) |
+| Transitions mounted as components, or a crossfade between every scene | Scenes overlap or jump instead of cutting | Pass a presentation to `TransitionSeries.Transition` and match the move to the story | [`whip-pan`](/docs/transitions/whip-pan), [`push-through`](/docs/transitions/push-through), [`focus-pull`](/docs/transitions/focus-pull). Rule: [mounting a transition](/docs/craft/anti-patterns#mounting-a-transition-as-a-component) |
+| Every beat the same length | Kills rhythm; the video drones | Give each beat a length that matches its weight: a hook is short, the product beat is long | `plan_video` returns per-beat frame ranges from an archetype recipe. Rule: [timing](/docs/craft/motion-principles#timing) |
+| An invented, generic SaaS dashboard | The viewer can't tell what your product does | Show a believable product surface, large and legible, or your real screenshots | [Product Scenes](/docs/product-scenes), [`claude-code`](/docs/ai/claude-code), [`terminal-simulator`](/docs/ui-blocks/terminal-simulator) |
+
+Remocn's own components are exempt where the effect is the point. [`tracking-in`](/docs/typography/tracking-in)
+animates letter-spacing on purpose, and the shader backgrounds are gradients by design. The rules
+apply to what your agent writes by hand.
+
+## What Remotion's skills cover, and what Remocn adds
+
+| Problem | Remotion's skills (`remotion-best-practices`) | What Remocn adds |
+|---|---|---|
+| Fonts | How to load Google Fonts and local fonts | Which fonts and palette to use: [Design defaults](/docs/craft/design-defaults) |
+| Motion | How `interpolate()`, `spring()` and `Sequence` work | Frame-driven components with tuned timing, each with a stated length in frames |
+| Product UI | How to lay out React markup | App-screen simulations: [AI chat composers and CLIs](/docs/ai) (Claude Code, ChatGPT, v0), [Product Scenes](/docs/product-scenes), [UI Blocks](/docs/ui-blocks) |
+| Transitions | `TransitionSeries` and its timings | Presentations to pass to it: [Transitions](/docs/transitions) |
+| Structure | Compositions, Studio, rendering | Video archetypes with beats and frame budgets, via `plan_video` and the [guides](/docs/guides) |
+| Quality bar | — | Taste rules: [design defaults](/docs/craft/design-defaults), [motion principles](/docs/craft/motion-principles), [anti-patterns](/docs/craft/anti-patterns) |
+
+Install both. Each component lands in your project as source with
+`npx shadcn@latest add @remocn/<name>`, so you own the code and there is no runtime dependency
+beyond Remotion.
+
+## How do I make a launch video for my product with Claude Code?
+
+1. **Install Remotion's skills and the Remocn plugin.** In your shell, `npx skills add remotion-dev/skills`.
+   In Claude Code, `/plugin install remocn --marketplace Remocn/remocn`.
+2. **Open Claude Code in your product's repo or an empty folder.** The plugin creates a Remotion
+   project with `npx create-video --blank` when there isn't one.
+3. **Run `/remocn:video` with a one-line brief.** The agent reads your repo for content, plans a
+   storyboard and stops there so you can change direction before any code is written.
+4. **Approve the storyboard.** The agent installs the components, writes the video and renders
+   stills at key frames to check for clipped text, empty frames, low contrast and jumps between
+   beats.
+5. **Direct the result in plain sentences**, then render the MP4 with `npx remotion render <slug>`
+   or open the project in [Remocn Studio](https://remocn.studio).
+
+```text
+/remocn:video 35-second launch video for Tasklane, a shared task inbox for small teams
+```
+
+The [Launch video guide](/docs/guides/launch-video) has an eight-beat storyboard and a full prompt
+to fill in with your product's words. [Directing your agent](/docs/guides/directing-your-agent)
+covers the rounds of notes after the first cut.
+
+## Setup for Claude Code, Codex and Cursor
+
+Each setup gives your agent the same catalog, read live from remocn.dev, and the same Craft rules.
+
+| Agent | Remotion's skills | Remocn | Then |
+|---|---|---|---|
+| **Claude Code** | `npx skills add remotion-dev/skills` | `/plugin install remocn --marketplace Remocn/remocn` | `/remocn:video <brief>` |
+| **Codex** | `npx skills add remotion-dev/skills` | `codex plugin marketplace add Remocn/remocn` then `codex plugin add remocn@remocn` | `/remocn:video <brief>` |
+| **Cursor** | `npx skills add remotion-dev/skills -a cursor` | `npx skills add Remocn/remocn --skill remocn -a cursor`, plus the MCP server (below) | One of the prompts below |
+| **Any other agent** | `npx skills add remotion-dev/skills` | `npx skills add Remocn/remocn --skill remocn`, or the MCP server | One of the prompts below |
+
+The plugin includes the Remocn skill and the [MCP server](/docs/getting-started/mcp-server), so in
+Claude Code and Codex you need nothing else.
+
+In Cursor, add the MCP server to `.cursor/mcp.json` in your project, or to `~/.cursor/mcp.json` for
+every project. It is hosted at `https://remocn.dev/mcp`, with no API key and no account:
+
+```json
+{
+  "mcpServers": {
+    "remocn": {
+      "url": "https://remocn.dev/mcp"
+    }
+  }
+}
+```
+
+The MCP server is read-only and does not render video. It answers with component docs, video plans,
+install commands and preview links. See [Agent skill](/docs/getting-started/agent-skill) and
+[MCP server](/docs/getting-started/mcp-server) for the full options.
+
+## Paste-ready prompts that don't look generic
+
+Each prompt names the MCP tools so the agent plans before it codes. In Claude Code or Codex with the
+plugin, the same tools are already connected.
+
+### Plan a launch video
+
+<GuidePrompt>
+
+```text
+Make a 35-second, 1280×720, 30fps launch video for <PRODUCT>, <ONE-LINE DESCRIPTION>,
+in this Remotion project.
+
+1. Call the remocn MCP tool plan_video with that brief and durationSeconds 35.
+   Show me the storyboard and wait for my go-ahead before writing code.
+2. For each beat, call get_component on the suggested pick and read its props
+   and natural length before using it.
+3. Install with npx shadcn@latest add @remocn/<name>. Budget every Sequence at
+   least the component's natural length, then add hold. Vary beat lengths.
+4. Follow https://remocn.dev/docs/craft/design-defaults.md for anything you
+   write yourself: sentence case, default tracking, solid text, no glow, one
+   accent color (<HEX>).
+```
+
+</GuidePrompt>
+
+### Replace invented UI with a real-looking product surface
+
+<GuidePrompt>
+
+```text
+Beat 3 shows a made-up dashboard. Replace it with a believable surface for
+<PRODUCT>: call the remocn MCP tool search_components with "<WHAT THE PRODUCT
+DOES, e.g. coding agent running in a terminal>" and vibe "tech". Pick one,
+call get_component on it, and fill its props with our real copy: <PROMPT OR
+COMMAND TO SHOW>. Make the UI fill the frame and stay legible.
+```
+
+</GuidePrompt>
+
+### Fix a video that already looks generic
+
+<GuidePrompt>
+
+```text
+Audit the video in src/ against https://remocn.dev/docs/craft/anti-patterns.md
+and https://remocn.dev/docs/craft/design-defaults.md. List every glow, gradient
+text, ALL-CAPS label, clipped Sequence, transition mounted as a component and
+beat that has the same length as the others. Then fix them: for each
+hand-rolled text or transition, call search_components and swap in a remocn
+component, and check its length with get_component.
+```
+
+</GuidePrompt>
+
+### Pick a transition that fits the story
+
+<GuidePrompt>
+
+```text
+Between the hook and the product reveal, the crossfade feels flat. Call the
+remocn MCP tool search_components with "transition that pushes into the next
+scene" and maxLength 30, show me two options with their lengths, and use the
+one I pick as a presentation in TransitionSeries.Transition.
+```
+
+</GuidePrompt>
+
+## With Remocn and without
+
+The same launch brief, built two ways:
+
+| | Agent alone | Agent with Remocn |
+|---|---|---|
+| Headline | Gradient-filled ALL-CAPS with a glow behind it | Sentence case, solid text, one word marked with the accent |
+| Entrances | Every panel scales in on the same frame | Staggered entrances, one focal point per beat |
+| Product | A generic dashboard the agent invented | A product scene or your screenshots, large and legible |
+| Transitions | A crossfade between every scene | A presentation chosen per cut: whip, push or focus |
+| Timing | Every beat the same length, some animations cut off | Each beat sized to its weight, every `Sequence` at least the component's length |
+| Code | Hundreds of lines of hand-tuned `interpolate()` | A few installed components, copied into your project as source |
+
+The headline beat as code:
+
+```tsx
+// Agent alone: hand-rolled, gradient text, wide tracking, glow
+<h1
+  style={{
+    background: "linear-gradient(90deg,#0ea5e9,#9333ea)",
+    WebkitBackgroundClip: "text",
+    color: "transparent",
+    letterSpacing: "0.3em",
+    textTransform: "uppercase",
+    filter: "drop-shadow(0 0 40px #9333ea)",
+    transform: `scale(${spring({ frame, fps })})`,
+  }}
+>
+  Meet Tasklane
+</h1>
+
+// With Remocn: npx shadcn@latest add @remocn/blur-out-up
+<Sequence durationInFrames={90}>
+  <BlurOutUp text="Meet Tasklane" />
+</Sequence>
+```
+
+This launch video for Remocn was built entirely from Remocn components:
+
+<GuideVideo
+  src="https://cdn.remocn.dev/videos/intoducing-remocn.mp4"
+  poster="https://cdn.remocn.dev/posters/intoducing-remocn.png"
+  label="The Remocn launch video"
+  duration={35}
+/>
+
+## FAQ
+
+<Faq>
+
+**Does Remocn replace Remotion's remotion-best-practices skill?**
+No. Keep Remotion's skills for how Remotion works: compositions, fonts, rendering, captions. Remocn adds what Remotion's skills leave out: ready-made components, video recipes and taste rules. The Remocn skill defers Remotion API questions to Remotion's skills.
+
+**Does this work in Cursor?**
+Yes. Install the skill with `npx skills add Remocn/remocn --skill remocn -a cursor`, add `https://remocn.dev/mcp` to `.cursor/mcp.json`, and paste one of the prompts above.
+
+**Does it work in Codex?**
+Yes. The Remocn plugin installs in Codex with `codex plugin marketplace add Remocn/remocn` and `codex plugin add remocn@remocn`, and gives you `/remocn:video`.
+
+**Do I need an existing Remotion project?**
+Remocn installs into a Remotion project. In Claude Code and Codex the plugin creates one when the folder is empty; otherwise run `npx create-video@latest` first.
+
+**Is Remocn free?**
+Yes. Remocn is MIT licensed, with no account and no usage limits. Remotion has [its own license](https://www.remotion.dev/docs/license), which can require a company license for larger teams.
+
+**Is Remocn part of Remotion?**
+No. Remocn is an independent community project, not affiliated with Remotion or shadcn. It is listed on Remotion's resources page.
+
+</Faq>
+
+## What's next
+
+- [Launch video](/docs/guides/launch-video): the full storyboard and prompt for a ~35-second launch
+- [Craft](/docs/craft): design defaults, motion principles and anti-patterns in full
+- [Plugin](/docs/getting-started/plugin): the `/remocn:video` workflow for Claude Code and Codex
+- [MCP server](/docs/getting-started/mcp-server): tools and setup for every MCP client
