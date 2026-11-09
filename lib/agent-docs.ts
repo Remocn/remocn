@@ -92,6 +92,13 @@ const ABOUT_LINKS = [
   `- [Privacy & Terms](${SITE_URL}/legal): how the site handles data`,
 ];
 
+/** The answer page for "animated text effects for Remotion". */
+export const TEXT_GUIDE_PATH = "/docs/guides/remotion-text-animations";
+
+function componentCount(pages: IndexPage[] | undefined): number {
+  return pages?.filter((page) => page.component).length ?? 0;
+}
+
 function sectionHeading(key: string): string {
   return key
     ? key.replace(
@@ -142,6 +149,16 @@ export function buildLlmsTxt(pages: IndexPage[], facts?: CatalogFacts): string {
       " installable component in one table with its use / avoid signal, natural length, vibe and" +
       " dependencies, linking to each component's full page.",
   );
+  const textEffects = componentCount(sections.get("typography"));
+  if (textEffects) {
+    const captions = componentCount(sections.get("captions"));
+    const captionNote = captions ? ` and ${captions} caption styles` : "";
+    lines.push(
+      `\nLooking for text animations? Remocn has ${textEffects} animated text effects for Remotion${captionNote}.` +
+        ` [Remotion text animations](${SITE_URL}${TEXT_GUIDE_PATH}.md) answers how to animate text in Remotion and has a picker table;` +
+        ` [/llms-full/typography.txt](${sectionCorpusUrl("typography")}) has every text component's props and usage in one file.`,
+    );
+  }
   lines.push(
     "\nPrefer an app to a terminal? [Remocn Studio](https://remocn.studio) is a free, open-source" +
       " macOS app where the user's own coding agent (Claude Code, Codex, GitHub Copilot or Grok)" +
