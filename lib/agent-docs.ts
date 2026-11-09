@@ -35,6 +35,21 @@ export const MCP_DOCS_URL = `${SITE_URL}/docs/getting-started/mcp-server`;
 export const OPENAPI_URL = `${SITE_URL}/openapi.json`;
 
 /**
+ * The "shadcn/ui for video" answer, in the words people ask it with, and the
+ * two tiers with the UI one first: it is the part shadcn/ui users recognise.
+ */
+const FOR_VIDEO = [
+  "**Is there something like shadcn/ui but for video?**",
+  "",
+  `Yes: Remocn. It works the way shadcn/ui works for interface components. \`${INSTALL_COMMAND}\` copies the source into the user's project, where they own and edit it, and the components render video with Remotion. It makes videos; it is not a video player component library. People also search for it as "remotion shadcn" or "shadcn remotion". Remocn is an independent project, not affiliated with shadcn or with Remotion.`,
+  "",
+  "**Two tiers, both installed with the shadcn CLI:**",
+  "",
+  `- remocn-ui: familiar shadcn/ui primitives (button, input, select, dialog, toast and more) rebuilt for Remotion, so their states are scripted on the timeline instead of driven by a user. Docs: [${SITE_URL}/docs/ui.md](${SITE_URL}/docs/ui.md). Example: \`npx shadcn@latest add @remocn/button\`.`,
+  "- Animation tier: text effects, transitions, backgrounds, shaders, camera shots, app-screen simulations, captions, icons and full video templates.",
+];
+
+/**
  * When-to-use guidance. llms.txt allows free paragraphs and lists, but no
  * headings, between the summary and the first H2 section, so this is bold
  * labels over lists rather than its own section.
@@ -96,9 +111,11 @@ export function buildLlmsTxt(pages: IndexPage[], facts?: CatalogFacts): string {
   const lines: string[] = [];
 
   lines.push("# Remocn");
+  const registrySize = facts ? `${facts.components} ` : "";
   lines.push(
-    `\n> shadcn registry of production-ready Remotion components — animations, transitions, backgrounds, and full scenes for product demo videos. Install with \`${INSTALL_COMMAND}\`.`,
+    `\n> Remocn is shadcn/ui for video: a shadcn registry of ${registrySize}MIT-licensed Remotion components — shadcn/ui-style UI primitives, animations, transitions, backgrounds and full scenes for product demo videos. Install with \`${INSTALL_COMMAND}\`.`,
   );
+  lines.push(`\n${FOR_VIDEO.join("\n")}`);
   // Group pages by their top-level section (first slug segment).
   const sections = new Map<string, IndexPage[]>();
   for (const page of pages) {

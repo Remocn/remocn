@@ -20,10 +20,6 @@ export const STUDIO_URL = "https://remocn.studio";
 
 export const SUPPORT_EMAIL = "kapish@remocn.dev";
 
-/** The site's meta description; the home page's JSON-LD reuses it. */
-export const SITE_DESCRIPTION =
-  "Describe your product, get a demo video. Ready-made animations, transitions and app-screen sims your coding agent can use. No video editor, no motion designer.";
-
 export const INSTALL_ALL_NAMES: string[] = [
   ...remocnRegistry.items,
   ...remocnUiRegistry.items,
@@ -37,6 +33,12 @@ export const COMPONENT_COUNT =
   remocnRegistry.items.length +
   remocnUiRegistry.items.length +
   remocnIconsRegistry.items.length;
+
+/**
+ * The site's meta description; the home page's JSON-LD reuses it. It opens
+ * with the "shadcn/ui for video" answer in the words people search with.
+ */
+export const SITE_DESCRIPTION = `Remocn is shadcn/ui for video: a shadcn registry of ${COMPONENT_COUNT} MIT-licensed Remotion components. Your AI agent turns them into a product demo video.`;
 
 export const SPRING_BOUNCE = {
   type: "spring" as const,

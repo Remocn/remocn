@@ -17,9 +17,10 @@ export function Hero() {
         <HeroHeadline />
         <div className="flex w-full flex-col items-center gap-6 pt-5 md:gap-[30px] md:pt-[30px]">
           <p className="hero-in max-w-[640px] text-center [--reveal-i:3] text-[18px] leading-[26px] text-body md:text-lead md:leading-7">
-            Describe your product to your AI agent. It builds the demo video
-            from <span className="whitespace-nowrap">ready-made</span> pieces
-            while you watch in the browser.
+            Remocn is shadcn/ui for video. Describe your product to your AI
+            agent, and it builds the demo video from{" "}
+            <span className="whitespace-nowrap">ready-made</span> pieces while
+            you watch in the browser.
           </p>
           <div className="hero-in hero-rise flex w-full flex-col gap-2.5 [--reveal-i:4] md:w-auto md:flex-row">
             <LandingButton

@@ -47,6 +47,20 @@ describe("buildLlmsTxt with component pages", () => {
     );
   });
 
+  test("opens with the shadcn/ui-for-video answer and the UI tier", () => {
+    const preamble = text.slice(0, text.indexOf("\n## "));
+    expect(preamble).toContain(
+      "> Remocn is shadcn/ui for video: a shadcn registry of 932 MIT-licensed Remotion components",
+    );
+    expect(preamble).toContain(
+      "**Is there something like shadcn/ui but for video?**",
+    );
+    expect(preamble).toContain("remotion shadcn");
+    expect(preamble.indexOf("- remocn-ui:")).toBeLessThan(
+      preamble.indexOf("- Animation tier:"),
+    );
+  });
+
   test("links a section's whole text instead of each component page", () => {
     expect(text).not.toContain("whip-pan.md");
     expect(text).toContain(
