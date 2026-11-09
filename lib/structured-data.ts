@@ -10,6 +10,13 @@ const SITE_URL = "https://remocn.dev";
 
 const ORG_ID = `${SITE_URL}/#organization`;
 
+/** The maintainer (/about names them), by their public profiles. */
+const MAINTAINER_GITHUB = "https://github.com/kapishdima";
+const MAINTAINER_X = "https://x.com/kapish_dima";
+
+/** The npm package Remocn publishes (the render SDK). */
+const NPM_URL = "https://www.npmjs.com/package/@remocn/render-sdk";
+
 /**
  * Product terms people search together with the brand. Ora and other agents
  * read the first ones as "what Remocn is", so the most specific term leads,
@@ -41,7 +48,13 @@ export function homeJsonLd(description: string) {
         email: SUPPORT_EMAIL,
         description:
           "Remocn builds open-source video components for Remotion and the tools to make product demo videos with an AI agent.",
-        sameAs: [GITHUB_URL, X_URL, THREADS_URL],
+        sameAs: [GITHUB_URL, X_URL, THREADS_URL, NPM_URL],
+        founder: {
+          "@type": "Person",
+          name: "KapishDima",
+          url: MAINTAINER_GITHUB,
+          sameAs: [MAINTAINER_GITHUB, MAINTAINER_X],
+        },
         knowsAbout: ["Remotion", "React", "Motion design", "shadcn/ui"],
         contactPoint: [
           {

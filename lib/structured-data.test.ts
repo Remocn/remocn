@@ -209,3 +209,18 @@ describe("video JSON-LD", () => {
     });
   });
 });
+
+describe("home JSON-LD entity links", () => {
+  test("the Organization names its maintainer and npm package", () => {
+    const org = (homeJsonLd("x")["@graph"] as Node[]).find(
+      (n) => n["@type"] === "Organization",
+    );
+    expect(org?.sameAs).toContain(
+      "https://www.npmjs.com/package/@remocn/render-sdk",
+    );
+    expect(org?.founder).toMatchObject({
+      "@type": "Person",
+      url: "https://github.com/kapishdima",
+    });
+  });
+});

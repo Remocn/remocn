@@ -20,6 +20,46 @@ const PAGES = [
   },
 ];
 
+describe("buildLlmsTxt with component pages", () => {
+  const text = buildLlmsTxt(
+    [
+      ...PAGES,
+      {
+        slugs: ["transitions"],
+        url: "/docs/transitions",
+        title: "Transitions",
+        description: "Scene transitions",
+      },
+      {
+        slugs: ["transitions", "whip-pan"],
+        url: "/docs/transitions/whip-pan",
+        title: "Whip Pan",
+        component: "whip-pan",
+      },
+    ],
+    { components: 932 },
+  );
+
+  test("states the catalog size once, before the first section", () => {
+    const preamble = text.slice(0, text.indexOf("\n## "));
+    expect(preamble).toContain("Remocn has 932 components across 1 docs sections");
+  });
+
+  test("links a section's whole text instead of each component page", () => {
+    expect(text).not.toContain("whip-pan.md");
+    expect(text).toContain(
+      "- [Transitions](https://remocn.dev/docs/transitions.md): Scene transitions",
+    );
+    expect(text).toContain(
+      "- [Transitions: all 3 pages in one file](https://remocn.dev/llms-full/transitions.txt): 1 component pages",
+    );
+  });
+
+  test("sections without component pages get no corpus link", () => {
+    expect(text).not.toContain("llms-full/getting-started.txt");
+  });
+});
+
 describe("buildLlmsTxt", () => {
   const text = buildLlmsTxt(PAGES);
   const lines = text.split("\n");
