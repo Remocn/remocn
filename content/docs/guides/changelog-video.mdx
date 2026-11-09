@@ -1,84 +1,306 @@
 ---
-title: Changelog video
-description: A ~25-second release update for the weeks that ship several small things — same open, same pace, every release
+title: How to make a changelog video for every release
+navTitle: Changelog video
+description: A changelog video for every release, rendered in CI — a props-driven Remotion template, a script that turns CHANGELOG.md or GitHub release notes into props, and a GitHub Actions workflow that renders the MP4 on release
 ---
 
 import { GuideNotes, GuideMoreLink } from "@/components/docs/guides/director-notes";
-import { GuideCount } from "@/components/docs/guides/guide-ui";
 import { GuideNote } from "@/components/docs/guides/note";
 import { GuidePrompt } from "@/components/docs/guides/prompt-block";
-import { GuideRenderCard } from "@/components/docs/guides/render-card";
-import { GuideBeatList, GuideStoryboard } from "@/components/docs/guides/storyboard";
-import { GuideStoryboardPreview } from "@/components/docs/guides/storyboard-preview";
 import { GuideFacts } from "@/components/docs/guides/video-facts";
-import { GuideWords } from "@/components/docs/guides/words-form";
 
-<GuideStoryboardPreview
-  beats={[
-    { label: "The stamp", seconds: 4, frame: { name: "<PRODUCT NAME>", sub: "<VERSION OR DATE>" } },
-    { label: "Item one", seconds: 5, frame: { line: "<CHANGE 1> — <PAYOFF 1>" } },
-    { label: "Item two", seconds: 5, frame: { line: "<CHANGE 2> — <PAYOFF 2>" } },
-    { label: "Item three", seconds: 5, frame: { line: "<CHANGE 3> — <PAYOFF 3>" } },
-    { label: "The nudge", seconds: 3, frame: { line: "Full changelog at <CHANGELOG URL>" } },
-    { label: "The lockup", seconds: 3, frame: { logo: "<CLOSING LINE>" } },
-  ]}
-/>
+To make a changelog video for every release of your app, keep one video template and feed it each release's notes as data: version, date and a list of changes. A GitHub Actions workflow runs on `release: published`, turns your release notes or `CHANGELOG.md` into props, renders the MP4 with `npx remotion render --props` and attaches it to the release.
+
+_Updated November 9, 2026._
+
+**TL;DR**
+
+- Install the template: `npx shadcn@latest add @remocn/changelog-video`. It is free, MIT-licensed source code that lands in your Remotion project.
+- It takes `version`, `date` and `items[]` of `{ title, payoff }` as input props. No code edits per release.
+- A short script turns `CHANGELOG.md` or the GitHub release body into those props. An agent prompt does the same with better wording.
+- One workflow file renders the video on every published release. Test it on an old tag before you rely on it.
+- Remocn generates motion graphics. It doesn't record your screen or edit footage. If you need that, see [the comparison](#remocn-vs-screen-studio-loom-and-descript).
+
+<ComponentPreview name="changelog-video" />
 
 <GuideFacts
   facts={[
-    { value: "~25 s", label: "running time" },
-    { value: "6 beats", label: "same frame every release" },
+    { value: "21 s", label: "with 3 items, +4.5 s per item" },
+    { value: "items[]", label: "one beat per change, up to 8" },
     { value: "1920×1080", label: "30 fps, landscape" },
   ]}
 />
 
-Not every release deserves a launch. Most weeks ship three or four small improvements — a fix, a speedup, a new option — and that's exactly what this video carries. About twenty-five seconds, no big reveal, posted on a rhythm: weekly, monthly, every release. It's the lightweight sibling of the [Feature announcement](/docs/guides/feature-announcement) — when one change deserves the spotlight, use that recipe; when the week shipped several small things, use this one.
+Most releases don't deserve a launch video. They ship three or four small things: a fix, a speedup, a new option. This video carries exactly that, and it looks the same every time. Same open, same pace, every release. By the third one, viewers recognize your update in the feed before they read a word. So the frame stays fixed in code and only the data changes. When one change deserves the spotlight, use the [Feature announcement](/docs/guides/feature-announcement) recipe instead.
 
-## The storyboard<GuideCount n={6} />
+## What you need
 
-<GuideStoryboard
-  beats={[
-    { label: "Stamp", seconds: 4, look: "reveal" },
-    { label: "Item one", seconds: 5, look: "lines" },
-    { label: "Item two", seconds: 5, look: "lines" },
-    { label: "Item three", seconds: 5, look: "lines" },
-    { label: "Nudge", seconds: 3, look: "line" },
-    { label: "Lockup", seconds: 3, look: "logo" },
-  ]}
-/>
+- A [Remotion](https://www.remotion.dev) project. Remotion is a prerequisite: Remocn doesn't set it up for you. If you're starting from zero, [Setup](/docs/guides/setup) takes about ten minutes.
+- Release notes in a GitHub release body or a `CHANGELOG.md` with one heading per version and one bullet per change.
+- A GitHub repository, if you want the video rendered automatically.
 
-<GuideBeatList>
+## Step 1: Install the changelog video template
 
-1. **The stamp** — Your product name and the date or version land together, like a postmark. This is the recurring open viewers learn to recognize.
-2. **Item one** — The change's name and one line on what it does.
-3. **Item two** — Same shape, next change.
-4. **Item three** — Same shape again. If a change is visual, show it instead of describing it.
-5. **The nudge** — One line pointing to the full changelog.
-6. **The lockup** — Your logo, one short closing line.
+```bash
+npx shadcn@latest add @remocn/changelog-video
+```
 
-</GuideBeatList>
+The shadcn CLI copies two files into `components/remocn/templates/changelog-video/`. They're your code now: change the fonts, colors and timing as you like. The [template page](/docs/templates/changelog-video) lists every prop.
 
-The value of this video isn't any single edition — it's the rhythm. Same open, same pace, every release. By the third one, viewers recognize your update in the feed before they read a word. So resist redesigning it each time; change the items, keep the frame.
+## Step 2: Register the composition
 
-## Your words<GuideCount n={5} />
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import {
+  ChangelogVideo,
+  calculateChangelogVideoMetadata,
+  changelogVideoDefaults,
+  CHANGELOG_VIDEO_FPS,
+  CHANGELOG_VIDEO_HEIGHT,
+  CHANGELOG_VIDEO_WIDTH,
+} from "@/components/remocn/templates/changelog-video";
 
-<GuideWords
-  examples={[
-    { blank: ["<PRODUCT NAME>"] },
-    { blank: ["<VERSION OR DATE>"] },
-    { blank: ["<CHANGE 1> — <PAYOFF 1>", "<CHANGE 2> — <PAYOFF 2>", "<CHANGE 3> — <PAYOFF 3>"] },
-    { blank: ["<CHANGELOG URL>"] },
-    { blank: ["<CLOSING LINE>"] },
-  ]}
->
+export const RemotionRoot = () => (
+  <Composition
+    id="ChangelogVideo"
+    component={ChangelogVideo}
+    durationInFrames={630}
+    calculateMetadata={calculateChangelogVideoMetadata}
+    fps={CHANGELOG_VIDEO_FPS}
+    width={CHANGELOG_VIDEO_WIDTH}
+    height={CHANGELOG_VIDEO_HEIGHT}
+    defaultProps={changelogVideoDefaults}
+  />
+);
+```
 
-- **Product name**
-- **Version or date** — Whatever you stamp releases with
-- **Three or four changes** — Each a name plus a one-line payoff, six words or fewer
-- **Changelog URL**
-- **Closing line** — e.g. "Shipping weekly"
+`calculateMetadata` sets the length from the number of items, so a release with five changes gets a longer video than one with two.
 
-</GuideWords>
+## Step 3: Turn your release notes into props
+
+The video reads one JSON object:
+
+```json
+{
+  "product": "Northwind",
+  "version": "v2.4.0",
+  "date": "Nov 9, 2026",
+  "items": [
+    { "title": "Dark mode", "payoff": "Easy on the eyes at night" },
+    { "title": "CSV export", "payoff": "Every report, one click" },
+    { "title": "Faster search", "payoff": "Results in under 100 ms" }
+  ],
+  "url": "northwind.example/changelog",
+  "closing": "Shipping every week."
+}
+```
+
+There are two ways to fill `items`. Pick one, or use both.
+
+### Option A: a script, fully automatic
+
+Save this as `scripts/changelog-props.mjs`. It reads the GitHub release body first, then falls back to the matching section of `CHANGELOG.md`. Each bullet becomes one item. A bullet written as `Title — payoff` or `Title: payoff` is split into the two lines, and links, PR numbers and GitHub's `by @user in …` suffix are stripped.
+
+```js
+// Turns release notes into props for the remocn changelog-video template.
+// Usage: node scripts/changelog-props.mjs <tag> [CHANGELOG.md] > props.json
+// Reads $RELEASE_BODY when it has bullet points, else the <tag> section of CHANGELOG.md.
+import { existsSync, readFileSync } from "node:fs";
+
+const [tag = "", file = "CHANGELOG.md"] = process.argv.slice(2);
+const bare = tag.replace(/^v/, "");
+
+// The block under the first heading that mentions the version, up to the next
+// heading of the same or a higher level.
+function changelogSection(markdown) {
+  const lines = markdown.split("\n");
+  const start = lines.findIndex(
+    (line) => /^#{1,6}\s/.test(line) && bare && line.includes(bare),
+  );
+  if (start === -1) return "";
+  const level = lines[start].match(/^#+/)[0].length;
+  const rest = lines.slice(start + 1);
+  const end = rest.findIndex((line) => {
+    const heading = line.match(/^(#+)\s/);
+    return heading && heading[1].length <= level;
+  });
+  return rest.slice(0, end === -1 ? undefined : end).join("\n");
+}
+
+function clean(text) {
+  return text
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1") // [label](url) -> label
+    .replace(/\s+by @\S+(\s+in\s+\S+)?$/, "") // GitHub's generated notes
+    .replace(/\s*\(#\d+\)|\s+#\d+\b/g, "") // PR numbers
+    .replace(/[*_`]/g, "")
+    .trim();
+}
+
+function items(markdown) {
+  return markdown
+    .split("\n")
+    .map((line) => line.match(/^\s*[-*]\s+(.+)/)?.[1])
+    .filter(Boolean)
+    .map((line) => {
+      const [title, ...payoff] = clean(line).split(/\s+[—–-]\s+|:\s+/);
+      return { title: title.trim(), payoff: payoff.join(" ").trim() };
+    })
+    .filter((item) => item.title)
+    .slice(0, 5);
+}
+
+let list = items(process.env.RELEASE_BODY ?? "");
+if (list.length === 0 && existsSync(file)) {
+  list = items(changelogSection(readFileSync(file, "utf8")));
+}
+if (list.length === 0) {
+  console.error(`No bullet points for ${tag} in the release body or ${file}.`);
+  process.exit(1);
+}
+
+const props = {
+  product: process.env.PRODUCT ?? "My App",
+  version: tag,
+  date: new Date().toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  }),
+  items: list,
+  url: process.env.CHANGELOG_URL ?? "",
+  closing: process.env.CLOSING ?? "",
+};
+process.stdout.write(`${JSON.stringify(props, null, 2)}\n`);
+```
+
+Try it on your last release:
+
+```bash
+PRODUCT="Northwind" CHANGELOG_URL="northwind.example/changelog" \
+  node scripts/changelog-props.mjs v2.4.0 > props.json
+```
+
+The script copies your bullets word for word, and changelog bullets are written for developers. "Fix race in CSV parser (#412)" is accurate, but nobody watching will care. If your notes read like that, Option B gives a better video.
+
+### Option B: an agent writes the items
+
+An agent can pick the changes users will notice and rewrite them as short screen lines. Paste this into Claude Code, Codex or any coding agent when you cut the release:
+
+<GuidePrompt>
+
+```text
+Read the <VERSION> section of CHANGELOG.md (or the GitHub release <VERSION>).
+Write video/props/<VERSION>.json for the remocn changelog-video template
+(https://remocn.dev/docs/templates/changelog-video.md):
+
+- product: "<PRODUCT NAME>", version: "<VERSION>", date: today as "Nov 9, 2026"
+- url: "<CHANGELOG URL>", closing: "<CLOSING LINE>"
+- items: the 3 to 5 changes a user would notice, most important first.
+  title = the change in 4 words or fewer. payoff = what it does for the
+  user in 6 words or fewer. Skip internal refactors and dependency bumps.
+
+Then render it: npx remotion render ChangelogVideo out/changelog.mp4
+--props=./video/props/<VERSION>.json
+```
+
+</GuidePrompt>
+
+Commit `video/props/<VERSION>.json` and the workflow below uses it instead of running the script. You get the agent's wording with CI's rendering.
+
+## Step 4: Render it locally first
+
+```bash
+npx remotion render ChangelogVideo out/changelog.mp4 --props=./props.json
+```
+
+Watch the result before you automate anything. Check that every line fits, that nothing important was dropped, and that the version and date are right. `npx remotion studio` gives you a live preview while you adjust the template.
+
+On an Apple M3 laptop, a four-item, 25-second video took about 2 minutes 20 seconds, bundling included. We haven't benchmarked GitHub's runners, so time your first CI run.
+
+## Step 5: Render on every release with GitHub Actions
+
+Save this as `.github/workflows/changelog-video.yml`:
+
+```yaml
+name: Changelog video
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to render, e.g. v2.4.0
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    env:
+      TAG: ${{ github.event.release.tag_name || inputs.tag }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+
+      - name: Turn the release notes into props
+        env:
+          PRODUCT: Northwind
+          CHANGELOG_URL: northwind.example/changelog
+          CLOSING: Shipping every week.
+        run: |
+          if [ -f "video/props/$TAG.json" ]; then
+            cp "video/props/$TAG.json" props.json
+          else
+            export RELEASE_BODY="$(gh release view "$TAG" --json body --jq .body || true)"
+            node scripts/changelog-props.mjs "$TAG" > props.json
+          fi
+          cat props.json
+
+      - name: Render the video
+        run: npx remotion render ChangelogVideo "out/changelog-$TAG.mp4" --props=./props.json
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: changelog-video-${{ env.TAG }}
+          path: out/*.mp4
+
+      - name: Attach the MP4 to the release
+        if: github.event_name == 'release'
+        run: gh release upload "$TAG" "out/changelog-$TAG.mp4" --clobber
+```
+
+How it fits together:
+
+- `release: published` fires when you publish a GitHub release. Drafts don't trigger it.
+- The tag comes in through `env`, never pasted into the script, so a strange tag name can't run as shell code.
+- `--props=./props.json` passes the data to the composition. Remotion's docs recommend a file over an inline JSON string because inline JSON breaks on Windows shells.
+- The MP4 is uploaded as a workflow artifact, and attached to the release as an asset.
+
+Using pnpm, Yarn or Bun? Swap `npm ci` and the `cache` line for your package manager's install step.
+
+### Test it before you trust it
+
+1. Push the workflow, then open **Actions → Changelog video → Run workflow** and enter a tag you've already released. The `workflow_dispatch` trigger exists for this. It renders without touching the release.
+2. Download the artifact and watch it.
+3. Only then publish a real release and let the `release` trigger take over.
+
+The workflow never posts the video anywhere. Watch the MP4 attached to the release, then post it yourself. One bad bullet in the notes ends up on screen, so a human look before posting is worth the minute.
+
+## Write items that read well on screen
+
+- **Three to five items.** More than that and the video runs past 30 seconds and viewers stop reading.
+- **Title: four words or fewer.** Name the change: "Dark mode", "CSV export".
+- **Payoff: six words or fewer.** Say what it does for the viewer: "Every report, one click".
+- **Skip what users can't see.** Refactors, dependency bumps and CI fixes belong in `CHANGELOG.md`, not in the video.
 
 <GuideNote icon="image">
 
@@ -86,64 +308,69 @@ Struggling with the payoff lines? [Words on screen](/docs/guides/words-on-screen
 
 </GuideNote>
 
-## The prompt
+## Make it look like your product
 
-Paste it into your agent with your words in place of the highlighted blanks.
-
-<GuidePrompt>
-
-```text
-I'm making a changelog video with remocn (remocn.dev).
-
-Build a ~25-second, 1920×1080, 30fps release update for <PRODUCT NAME> in
-this Remotion project, using remocn components — install anything you need
-with `npx shadcn add @remocn/<name>`:
-
-1. Stamp — "<PRODUCT NAME>" with "<VERSION OR DATE>" beneath it, landing
-   together like a postmark. Short and confident — this open repeats every
-   release, so keep it simple enough to reuse.
-2. Items — one beat per change, every beat built the same way: the change
-   name lands first, its payoff line follows beneath it:
-   - "<CHANGE 1>" — "<PAYOFF 1>"
-   - "<CHANGE 2>" — "<PAYOFF 2>"
-   - "<CHANGE 3>" — "<PAYOFF 3>"
-   If a change is visual, replace its text beat with a small fake app
-   screen showing it happen.
-3. Nudge — one calm line: "Full changelog at <CHANGELOG URL>".
-4. Lockup — my logo (<LOGO FILE, or: use the product name as a wordmark>)
-   with a closing line: "<CLOSING LINE>".
-
-Style: warm dark background (#141318), off-white text, one accent color
-<ACCENT COLOR>, Manrope. One quiet shader-simplex-noise field behind the
-whole video. Keep motion restrained and identical across the item beats —
-this is a stamp, not a show. Use my copy exactly as written.
-```
-
-</GuidePrompt>
-
-## Directing the result
+Pass `accent` and `theme` as props, or open `components/remocn/templates/changelog-video/index.tsx` and change it. It's a short file of plain Remotion: `useCurrentFrame()`, `interpolate()` and `Sequence`. With the [agent skill](/docs/getting-started/agent-skill) or the [plugin](/docs/getting-started/plugin) installed, ask your agent in plain words:
 
 <GuideNotes>
 
-- "Item two runs long — tighten it."
+- "Use our brand font and #FF5A1F as the accent."
 - "Hold the stamp a beat longer."
-- "Change three is visual — show the screen instead of the words."
-- "The items feel different from each other — make the motion identical."
+- "Put our logo from public/logo.svg in the closing beat."
+- "Change three is visual — show a small app screen instead of the words."
 
 </GuideNotes>
 
 <GuideMoreLink>
 
-More directing vocabulary: [Directing your agent](/docs/guides/directing-your-agent).
+More directing vocabulary: [Directing your agent](/docs/guides/directing-your-agent). Want the same video as a square or vertical cut? See [One video, three formats](/docs/guides/one-video-three-formats).
 
 </GuideMoreLink>
 
-Next release, don't start over — ask your agent to reuse this video and swap the version and the items.
+Change the look once, then leave it. The rhythm only works if every edition looks the same.
 
-## Get the file
+## Remocn vs Screen Studio, Loom and Descript
 
-<GuideRenderCard prompt="Render the video.">
+These tools solve different problems. Screen Studio, Loom and Descript record or edit footage of your product. Remocn generates motion graphics from code and data. It doesn't record your screen and it isn't a video editor.
 
-You'll get an `.mp4` in the project folder, ready to post.
+| | Screen Studio | Loom | Descript | Remocn + Remotion |
+| --- | --- | --- | --- | --- |
+| What it makes | Polished screen recordings | Screen and camera recordings | Edits of recorded video and audio | Motion graphics rendered from code |
+| Input | Your screen | Your screen and camera | Footage you recorded | Release notes as JSON props |
+| Next release | Record again | Record again | Record and edit again | Re-render from the new notes |
+| Runs unattended in CI | No | No | No | Yes, `npx remotion render` |
+| Shows your real UI | Yes | Yes | Yes | Not by itself. Add a clip or an app-screen component |
+| Platform | macOS | Desktop and browser | Desktop and browser | Anywhere Node.js runs |
+| Cost | Paid | Free and paid plans | Free and paid plans | Free and MIT. Remotion's own license applies |
 
-</GuideRenderCard>
+Choose a recording tool when the point is to show a workflow in your real product. Choose a generated video when you want the same short update every release with no one in front of a screen. You can also combine them: record a clip, then place it in your Remotion composition with Remotion's `<OffthreadVideo>`.
+
+## FAQ
+
+### Can I fully automate a changelog video?
+
+Yes. With Option A, the workflow above goes from published release to an MP4 attached to that release with no manual step. We still recommend watching it before you post it anywhere, because the video says exactly what your release notes say.
+
+### What does it cost?
+
+Remocn is free and MIT-licensed. Remotion has its own license: it's free for individuals and small teams, and larger companies may need a Remotion company license. Check [remotion.dev/license](https://www.remotion.dev/license). GitHub Actions minutes are free on public repositories; private repositories use the minutes included in your GitHub plan. There is no Remocn account, server or usage limit, because the render runs on your own runner.
+
+### How long should a changelog video be?
+
+Twenty to thirty seconds. The template runs 21 seconds with three items and adds 4.5 seconds per item, up to eight. Three to five items is the sweet spot.
+
+### Do I need a Mac?
+
+No. Remotion renders on Linux, macOS and Windows, and the workflow above runs on GitHub's Ubuntu runners. The only Mac-only piece in the Remocn ecosystem is [Remocn Studio](https://remocn.studio), and you don't need it for this.
+
+### Do I need an AI agent?
+
+No. The template, the script and the workflow run without one. An agent helps in two places: rewriting developer-facing bullets into short screen lines (Option B), and restyling the template to your brand. Remocn's [agent skill](/docs/getting-started/agent-skill), [plugin](/docs/getting-started/plugin) and [MCP server](/docs/getting-started/mcp-server) give the agent the component docs.
+
+### Can I post it to YouTube or X automatically?
+
+The workflow stops at the MP4. You can add an upload step for your platform, but we'd keep posting manual until you've seen a few editions come out right.
+
+### Is Remocn affiliated with Remotion or shadcn?
+
+No. Remocn is an independent, open-source project. It uses the shadcn CLI to install components and builds on Remotion, but it isn't made by either team.

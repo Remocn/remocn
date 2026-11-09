@@ -53,6 +53,25 @@
       ]
     },
     {
+      "name": "changelog-video",
+      "title": "Changelog Video",
+      "type": "registry:component",
+      "description": "A props-driven release update: a version-and-date stamp, one beat per changelog item ({ title, payoff }), and a closing beat with the changelog URL. Built to be re-rendered in CI for every release.",
+      "dependencies": ["remotion", "@remotion/google-fonts"],
+      "files": [
+        {
+          "path": "changelog-video/index.tsx",
+          "type": "registry:component",
+          "target": "components/remocn/templates/changelog-video/index.tsx"
+        },
+        {
+          "path": "changelog-video/content.ts",
+          "type": "registry:component",
+          "target": "components/remocn/templates/changelog-video/content.ts"
+        }
+      ]
+    },
+    {
       "name": "brand-guidelines",
       "title": "Brand Guidelines",
       "type": "registry:component",

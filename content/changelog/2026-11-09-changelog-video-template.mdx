@@ -1,0 +1,23 @@
+---
+title: Changelog Video template
+date: 2026-11-09
+---
+
+### New components
+
+[Changelog Video](/docs/templates/changelog-video) is a release update driven
+entirely by props: a stamp with the product, version and date, one beat per
+change from `items[]` of `{ title, payoff }`, and a closing beat with the
+changelog URL. Its length follows the number of items, so it can be
+re-rendered for every release with `npx remotion render --props` and no code
+edits.
+
+<ChangelogPreview name="changelog-video" />
+
+### Improvements
+
+The [Changelog video guide](/docs/guides/changelog-video) now covers the whole
+pipeline: a script that turns `CHANGELOG.md` or GitHub release notes into
+props, an agent prompt for better-worded items, and a GitHub Actions workflow
+that renders the MP4 on every published release and attaches it to the
+release.

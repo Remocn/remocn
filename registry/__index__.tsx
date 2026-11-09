@@ -22,6 +22,16 @@ const registry: Record<string, RegistryEntry> = {
         (m) => m.releaseTeaserConfig,
       ),
   },
+  "changelog-video": {
+    load: () =>
+      import("@/registry/remocn-templates/changelog-video").then((m) => ({
+        default: m.ChangelogVideo,
+      })),
+    loadConfig: () =>
+      import("@/registry/remocn-templates/changelog-video").then(
+        (m) => m.changelogVideoConfig,
+      ),
+  },
   "brand-guidelines": {
     load: () =>
       import("@/registry/remocn-templates/brand-guidelines").then((m) => ({
