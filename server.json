@@ -1,0 +1,26 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "dev.remocn/remocn",
+  "title": "Remocn: Remotion MCP server",
+  "description": "Hosted MCP for Remotion videos: search Remocn components, read docs, plan a video, preview it.",
+  "version": "1.0.0",
+  "websiteUrl": "https://remocn.dev/docs/getting-started/mcp-server",
+  "repository": {
+    "url": "https://github.com/Remocn/remocn",
+    "source": "github",
+    "id": "1204316823"
+  },
+  "icons": [
+    {
+      "src": "https://remocn.dev/avatar-github.png",
+      "mimeType": "image/png",
+      "sizes": ["500x500"]
+    }
+  ],
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://remocn.dev/mcp"
+    }
+  ]
+}
