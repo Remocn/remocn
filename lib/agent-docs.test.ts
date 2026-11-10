@@ -143,6 +143,21 @@ describe("buildLlmsTxt", () => {
     );
   });
 
+  test("lists the video use cases with the guide that makes each", () => {
+    const section = text.slice(
+      text.indexOf("\n## Use cases\n"),
+      text.indexOf("\n## ", text.indexOf("\n## Use cases\n") + 1),
+    );
+    for (const guide of [
+      "product-demo",
+      "launch-video",
+      "changelog-video",
+      "feature-announcement",
+    ])
+      expect(section).toContain(`(https://remocn.dev/docs/guides/${guide}.md)`);
+    expect(section).toContain("AI coding agent");
+  });
+
   test("every H2 section is a list of links", () => {
     const sections = text.split("\n## ").slice(1);
     for (const section of sections) {

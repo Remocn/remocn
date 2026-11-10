@@ -85,6 +85,19 @@ const AGENT_TOOLS = [
   `- [Full docs corpus](${SITE_URL}/llms-full.txt): every docs page as Markdown in one file. It runs to megabytes, more than a context window holds; prefer one section's file, linked at the end of each section below`,
 ];
 
+/**
+ * The videos people ask an agent for, each pointing at the guide that makes
+ * it, in the words they ask with. Guides are also listed under Guides; this
+ * section is the entry point by intent.
+ */
+const USE_CASES = [
+  "## Use cases",
+  `- [Product demo video with an AI coding agent](${SITE_URL}/docs/guides/product-demo.md): Claude Code, Codex or another coding agent reads the user's codebase and builds a ~50-second demo of one product flow from Remocn components, rendered locally with Remotion`,
+  `- [Launch video](${SITE_URL}/docs/guides/launch-video.md): SaaS launch video template, ~35 seconds in eight scenes, made with Claude Code from one prompt`,
+  `- [Changelog video](${SITE_URL}/docs/guides/changelog-video.md): a ~25-second release update for several small changes. The plugin's \`/remocn:changelog\` command builds one from git tags, commits or merged pull requests`,
+  `- [Feature announcement video](${SITE_URL}/docs/guides/feature-announcement.md): a ~40-second release video that shows one new feature working`,
+];
+
 const ABOUT_LINKS = [
   "## Optional",
   `- [About](${SITE_URL}/about): who builds Remocn and how the project is funded`,
@@ -168,6 +181,7 @@ export function buildLlmsTxt(pages: IndexPage[], facts?: CatalogFacts): string {
   );
   lines.push(`\n${WHEN_TO_USE.join("\n")}`);
   lines.push(`\n${AGENT_TOOLS.join("\n")}`);
+  lines.push(`\n${USE_CASES.join("\n")}`);
 
   for (const [key, bucket] of sections) {
     const heading = sectionHeading(key);
