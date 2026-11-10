@@ -347,3 +347,26 @@ describe("stated text effect counts match the docs", () => {
     expect(wrong).toEqual([]);
   });
 });
+
+describe("stated catalog size matches the registry", () => {
+  const STATED = [
+    "content/docs/getting-started/introduction.mdx",
+    "content/docs/guides/after-effects-alternatives-for-developers.mdx",
+  ];
+
+  it("states the real number of installable components", async () => {
+    const { COMPONENT_COUNT } = await import("@/config/site");
+    const wrong: string[] = [];
+    for (const file of STATED) {
+      const src = readFileSync(file, "utf8");
+      for (const [, n] of src.matchAll(
+        /\b(\d{3,}) (?:free, )?(?:MIT-licensed (?:Remotion )?components|components,? all MIT|MIT-licensed components)/g,
+      )) {
+        if (Number(n) !== COMPONENT_COUNT)
+          wrong.push(`${file}: ${n}, real ${COMPONENT_COUNT}`);
+      }
+    }
+
+    expect(wrong).toEqual([]);
+  });
+});

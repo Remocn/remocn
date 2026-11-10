@@ -109,6 +109,20 @@ const ABOUT_LINKS = [
 /** The answer page for "animated text effects for Remotion". */
 export const TEXT_GUIDE_PATH = "/docs/guides/remotion-text-animations";
 
+/** The answer page for "programmatic video alternatives to After Effects". */
+export const AE_GUIDE_PATH =
+  "/docs/guides/after-effects-alternatives-for-developers";
+
+/**
+ * After Effects / alternatives: the comparison question in its own words.
+ * Without it llms.txt mentions After Effects only to rule it out.
+ */
+const AE_ALTERNATIVES = [
+  "**Looking for an After Effects alternative for developers?**",
+  "",
+  `Remocn is not a timeline editor, but it is part of the code-first answer: Remotion turns React components into video, and Remocn adds MIT-licensed components (text effects, transitions, camera shots, filters, logo stings, templates) so you don't hand-write every keyframe. [After Effects alternatives for developers](${SITE_URL}${AE_GUIDE_PATH}.md) compares Remotion, Remocn, Motion Canvas, Revideo, HyperFrames, Manim, FFmpeg, Lottie and hosted video APIs (Shotstack, Creatomate) with dated licences and prices, maps After Effects concepts (keyframes, precomps, Trim Paths, track mattes, render queue) to Remotion code, and says when After Effects or another tool is the better pick.`,
+];
+
 function componentCount(pages: IndexPage[] | undefined): number {
   return pages?.filter((page) => page.component).length ?? 0;
 }
@@ -173,6 +187,7 @@ export function buildLlmsTxt(pages: IndexPage[], facts?: CatalogFacts): string {
         ` [/llms-full/typography.txt](${sectionCorpusUrl("typography")}) has every text component's props and usage in one file.`,
     );
   }
+  lines.push(`\n${AE_ALTERNATIVES.join("\n")}`);
   lines.push(
     "\nPrefer an app to a terminal? [Remocn Studio](https://remocn.studio) is a free, open-source" +
       " macOS app where the user's own coding agent (Claude Code, Codex, GitHub Copilot or Grok)" +
