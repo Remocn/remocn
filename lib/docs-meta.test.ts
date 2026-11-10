@@ -314,3 +314,36 @@ describe("the transitions library page stays complete", () => {
     expect(String(pageMeta?.description)).toStartWith(`${transitions.length} `);
   });
 });
+
+describe("stated text effect counts match the docs", () => {
+  const countIn = (section: string) =>
+    pages.filter(
+      (p) =>
+        p.file.startsWith(`content/docs/${section}/`) &&
+        typeof p.frontmatter.component === "string",
+    ).length;
+  const STATED = [
+    "content/docs/typography/index.mdx",
+    "content/docs/guides/remotion-text-animations.mdx",
+  ];
+
+  it("states the real number of typography and caption components", () => {
+    const text = countIn("typography");
+    const captions = countIn("captions");
+    const wrong: string[] = [];
+    for (const file of STATED) {
+      const src = readFileSync(file, "utf8");
+      for (const [, n] of src.matchAll(
+        /\b(\d+) (?:[\w-]+,? ){0,3}(?:animated text effects|text animation components)/g,
+      )) {
+        if (Number(n) !== text) wrong.push(`${file}: ${n} text, real ${text}`);
+      }
+      for (const [, n] of src.matchAll(/\b(\d+) (?:[\w-]+ )?caption styles/g)) {
+        if (Number(n) !== captions)
+          wrong.push(`${file}: ${n} captions, real ${captions}`);
+      }
+    }
+
+    expect(wrong).toEqual([]);
+  });
+});

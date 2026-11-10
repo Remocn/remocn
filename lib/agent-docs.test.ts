@@ -47,6 +47,20 @@ describe("buildLlmsTxt with component pages", () => {
     );
   });
 
+  test("opens with the shadcn/ui-for-video answer and the UI tier", () => {
+    const preamble = text.slice(0, text.indexOf("\n## "));
+    expect(preamble).toContain(
+      "> Remocn is shadcn/ui for video: a shadcn registry of 932 MIT-licensed Remotion components",
+    );
+    expect(preamble).toContain(
+      "**Is there something like shadcn/ui but for video?**",
+    );
+    expect(preamble).toContain("remotion shadcn");
+    expect(preamble.indexOf("- remocn-ui:")).toBeLessThan(
+      preamble.indexOf("- Animation tier:"),
+    );
+  });
+
   test("links a section's whole text instead of each component page", () => {
     expect(text).not.toContain("whip-pan.md");
     expect(text).toContain(
@@ -59,6 +73,33 @@ describe("buildLlmsTxt with component pages", () => {
 
   test("sections without component pages get no corpus link", () => {
     expect(text).not.toContain("llms-full/getting-started.txt");
+  });
+
+  test("points text-animation questions at the guide only when there are text effects", () => {
+    expect(text).not.toContain("Looking for text animations?");
+    const withText = buildLlmsTxt([
+      ...PAGES,
+      {
+        slugs: ["typography", "typewriter"],
+        url: "/docs/typography/typewriter",
+        title: "Typewriter",
+        component: "typewriter",
+      },
+      {
+        slugs: ["captions", "components", "caption-karaoke"],
+        url: "/docs/captions/components/caption-karaoke",
+        title: "Karaoke",
+        component: "caption-karaoke",
+      },
+    ]);
+    const preamble = withText.slice(0, withText.indexOf("\n## "));
+    expect(preamble).toContain(
+      "Remocn has 1 animated text effects for Remotion and 1 caption styles.",
+    );
+    expect(preamble).toContain(
+      "(https://remocn.dev/docs/guides/remotion-text-animations.md)",
+    );
+    expect(preamble).toContain("(https://remocn.dev/llms-full/typography.txt)");
   });
 });
 

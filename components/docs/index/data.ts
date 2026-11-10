@@ -65,7 +65,7 @@ export function getEntry(url: string): DocEntry | undefined {
   if (!page) return undefined;
   return {
     url: page.url,
-    title: page.data.title,
+    title: page.data.navTitle ?? page.data.title,
     description: page.data.description,
     component: page.data.component,
     isNew: NEW_BADGE_PATHS.has(page.url),
