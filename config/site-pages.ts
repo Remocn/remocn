@@ -29,6 +29,16 @@ export const SITE_PAGES = {
     description:
       "Turn your repo's stars into a shareable animated video. Paste a GitHub repo and we animate every stargazer into a clip you can own.",
   },
+  about: {
+    title: "About",
+    description:
+      "Remocn is an open-source registry of Remotion video components that your AI agent uses to build product demo videos. Who it is for, how it works and how it is funded.",
+  },
+  contact: {
+    title: "Contact",
+    description:
+      "How to reach Remocn: email for questions, sponsorship and purchases, GitHub issues for bugs and component requests, and X or Threads for news.",
+  },
   "inspired-by": {
     title: "Inspired by",
     description:

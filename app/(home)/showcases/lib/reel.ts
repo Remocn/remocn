@@ -13,6 +13,11 @@ const TRACK_LIMIT = 8;
 /** Used for a clip whose file can't be measured, so the reel stays whole. */
 const FALLBACK_DURATION = 30;
 
+/** Product sites by showcase slug. The manager has no field for them. */
+const PRODUCT_URLS: Record<string, string> = {
+  "introducing-videorc": "https://www.videorc.com/",
+};
+
 const REGISTRY_NAMES = new Set(
   [remocnRegistry, remocnUiRegistry, remocnIconsRegistry].flatMap((registry) =>
     registry.items.map((item) => item.name),
@@ -77,6 +82,7 @@ export const getReel = cache(async (): Promise<Reel> => {
       iso: createdAt.toISOString().slice(0, 10),
       dateLabel: showcaseDateFormatter.format(createdAt),
       githubUrl: showcase.githubUrl ?? null,
+      productUrl: PRODUCT_URLS[showcase.slug] ?? null,
       components: showcase.components.map((c) => toComponent(c, docs)),
       start,
       duration,

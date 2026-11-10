@@ -1,19 +1,11 @@
-import { getLLMText } from "@/lib/get-llm-text";
+import { corpusResponse } from "@/lib/llms-corpus";
 import { source } from "@/source";
 
 export const revalidate = false;
 
 // llms-full.txt — every doc page concatenated as Markdown, for LLMs that want
-// the entire corpus in one request.
-export async function GET() {
-  const pages = source.getPages();
-  const docs = await Promise.all(pages.map((page) => getLLMText(page)));
-
-  return new Response(docs.join("\n\n---\n\n"), {
-    headers: {
-      "Content-Type": "text/plain; charset=utf-8",
-      // The same text as the docs pages; keep search on the HTML.
-      "X-Robots-Tag": "noindex",
-    },
-  });
+// the entire corpus in one request. It runs to megabytes; llms.txt points
+// agents at the per-section files in app/llms-full/[file] instead.
+export function GET() {
+  return corpusResponse(source.getPages());
 }

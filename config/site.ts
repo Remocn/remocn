@@ -34,6 +34,12 @@ export const COMPONENT_COUNT =
   remocnUiRegistry.items.length +
   remocnIconsRegistry.items.length;
 
+/**
+ * The site's meta description; the home page's JSON-LD reuses it. It opens
+ * with the "shadcn/ui for video" answer in the words people search with.
+ */
+export const SITE_DESCRIPTION = `Remocn is shadcn/ui for video: a shadcn registry of ${COMPONENT_COUNT} MIT-licensed Remotion components. Your AI agent turns them into a product demo video.`;
+
 export const SPRING_BOUNCE = {
   type: "spring" as const,
   stiffness: 120,

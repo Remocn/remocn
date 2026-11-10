@@ -54,20 +54,39 @@ export function ShowcaseDetails({ clip }: { clip: ReelClip }) {
         </div>
       )}
 
-      {clip.githubUrl && (
-        <a
-          href={clip.githubUrl}
-          target="_blank"
-          rel="noreferrer"
-          className={cn(
-            landingButtonVariants({ variant: "ink" }),
-            pageHeaderButton,
-            "self-start",
+      {(clip.githubUrl || clip.productUrl) && (
+        <div className="flex flex-wrap gap-2">
+          {clip.githubUrl && (
+            <a
+              href={clip.githubUrl}
+              target="_blank"
+              rel="noreferrer"
+              className={cn(
+                landingButtonVariants({ variant: "ink" }),
+                pageHeaderButton,
+              )}
+            >
+              <GitHubLogoIcon className="size-4" />
+              View source
+            </a>
           )}
-        >
-          <GitHubLogoIcon className="size-4" />
-          View source
-        </a>
+          {clip.productUrl && (
+            <a
+              href={clip.productUrl}
+              target="_blank"
+              rel="noreferrer"
+              className={cn(
+                landingButtonVariants({ variant: "secondary" }),
+                pageHeaderButton,
+              )}
+            >
+              {new URL(clip.productUrl).hostname.replace(/^www\./, "")}
+              <span aria-hidden="true" className="text-primary">
+                ↗
+              </span>
+            </a>
+          )}
+        </div>
       )}
     </aside>
   );

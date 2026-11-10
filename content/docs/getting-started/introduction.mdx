@@ -1,6 +1,6 @@
 ---
 title: Introduction
-description: "What Remocn is: a shadcn-style component registry for Remotion plus an agent skill. Copy-paste video components, MIT, code lives in your repo."
+description: "Remocn is shadcn/ui for video: a shadcn registry of 932 MIT-licensed Remotion components, plus an agent skill. Add them with the shadcn CLI; the code lives in your repo."
 ---
 
 import { CompareTable } from "@/components/docs/index/introduction/compare-table";
@@ -14,7 +14,7 @@ import { FileFlow, IconNote, RuntimeDiff } from "@/components/docs/index/introdu
 import { Tier, Tiers } from "@/components/docs/index/introduction/tiers";
 
 <Pillars>
-  <Pillar icon="components" title="Copy-paste components">Text animations, transitions, backgrounds, UI blocks and icons, added to a [Remotion](https://www.remotion.dev) project with the shadcn CLI.</Pillar>
+  <Pillar icon="components" title="Copy-paste components">shadcn/ui-style UI primitives, text animations, transitions, backgrounds and icons, added to a [Remotion](https://www.remotion.dev) project with the shadcn CLI.</Pillar>
   <Pillar icon="sparkle" title="Plus an agent skill">Teaches AI coding agents how to compose a video from those components.</Pillar>
   <Pillar icon="folder" title="MIT, code in your repo" path="components/remocn/">Everything is MIT. Files are copied into your repo, where you own and edit them.</Pillar>
 </Pillars>
@@ -22,6 +22,15 @@ import { Tier, Tiers } from "@/components/docs/index/introduction/tiers";
 <FirstComponent name="soft-blur-in" />
 
 <Aside>If you searched for “remotion shadcn” or “shadcn remotion”, this is the thing you were looking for.</Aside>
+
+## shadcn/ui for video
+
+Remocn works for video the way shadcn/ui works for interface components. It ships two tiers, and both install with `npx shadcn@latest add @remocn/<name>`.
+
+<Tiers>
+<Tier name="UI tier" registry="remocn-ui" links={[{ href: "/docs/ui/components/button" }, { href: "/docs/ui/components/input" }, { href: "/docs/ui/components/checkbox" }, { href: "/docs/ui/components/select" }, { href: "/docs/ui/components/dialog" }]}>Familiar shadcn/ui primitives rebuilt so their states are [scripted on the timeline](/docs/ui) instead of driven by the user.</Tier>
+<Tier name="Animation tier" registry="remocn" links={[{ href: "/docs/shaders/getting-started/introduction", label: "Shader and canvas backgrounds" }, { href: "/docs/typography", label: "Text reveals" }, { href: "/docs/transitions", label: "Scene transitions" }, { href: "/docs/ui-blocks", label: "UI-block simulations" }, { href: "/docs/icons/gallery", label: "Icons that draw themselves in" }]} />
+</Tiers>
 
 ## If you know shadcn/ui
 
@@ -55,15 +64,6 @@ Each one already uses the Remotion APIs correctly and avoids the traps that brea
   from="generate a Remotion video"
   to="a video that looks shipped"
 />
-
-## Two tiers of components
-
-Remocn ships two tiers of components. Both install the same way, as files in your repo.
-
-<Tiers>
-<Tier name="Animation tier" registry="remocn" links={[{ href: "/docs/shaders/getting-started/introduction", label: "Shader and canvas backgrounds" }, { href: "/docs/typography", label: "Text reveals" }, { href: "/docs/transitions", label: "Scene transitions" }, { href: "/docs/ui-blocks", label: "UI-block simulations" }, { href: "/docs/icons/gallery", label: "Icons that draw themselves in" }]} />
-<Tier name="UI tier" registry="remocn-ui" links={[{ href: "/docs/ui/components/button" }, { href: "/docs/ui/components/input" }, { href: "/docs/ui/components/checkbox" }, { href: "/docs/ui/components/select" }, { href: "/docs/ui/components/dialog" }]}>Familiar shadcn primitives rebuilt so their states are [scripted on the timeline](/docs/ui) instead of driven by the user.</Tier>
-</Tiers>
 
 ## What Remocn is not
 
@@ -109,6 +109,9 @@ Nothing here replaces Remotion. If you already have a component library of your 
 
 <Faq>
 
+**Is there something like shadcn/ui but for video?**
+Yes. Remocn is shadcn/ui for video: a shadcn registry of Remotion components that you add with `npx shadcn@latest add @remocn/<name>`, the same way shadcn/ui works for interface components. The files are copied into your project under MIT, and the result renders as video with [Remotion](https://www.remotion.dev). It makes videos rather than playing them, so it is not a video player component library.
+
 **Do I need to know how to code?**
 Not necessarily, if you work through an AI coding agent. The [guides](/docs/guides) walk through building a video with prompts. Without an agent, you need to be comfortable with React and TypeScript.
 
@@ -121,6 +124,9 @@ Remocn is MIT licensed. Components copy onto your machine and stay yours.
 **Does it work with any AI agent?**
 The skill installs through [skills.sh](https://skills.sh) into agents that load skills, Claude Code among them. The components themselves are plain Remotion code and work with any agent or no agent at all.
 
+**Is there a Remocn MCP server?**
+Yes. The [Remocn MCP server](/docs/getting-started/mcp-server) is hosted at `https://remocn.dev/mcp` with no auth. It lets Claude Code, Cursor, Codex and other MCP clients search components, read their docs, plan a video and preview a component. It does not render video.
+
 **Is this the official shadcn registry for Remotion?**
 No. It is a community registry that uses the shadcn CLI and registry format. shadcn and Remotion are separate projects with their own maintainers.
 
@@ -131,7 +137,7 @@ No. It is a community registry that uses the shadcn CLI and registry format. sha
 <NextLinks icons={["terminal", "sparkle", "grid", "play"]}>
 
 - [Installation](/docs/getting-started/installation): add Remocn to an existing Remotion project
-- [Agent Skill](/docs/getting-started/agent-skill): teach your AI agent to compose videos with Remocn
+- [Agent Skill](/docs/getting-started/agent-skill): teach your AI agent to compose videos with Remocn, or connect it to the hosted [MCP server](/docs/getting-started/mcp-server)
 - [Components](/docs/components): every component, grouped by category
 - [Homepage](/): see the kind of video Remocn is built for
 

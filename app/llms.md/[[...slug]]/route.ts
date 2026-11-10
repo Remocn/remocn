@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { markdownNotFound } from "@/lib/agent-docs";
 import { getLLMText } from "@/lib/get-llm-text";
 import { source } from "@/source";
 
@@ -13,7 +13,8 @@ export async function GET(
 ) {
   const { slug } = await params;
   const page = source.getPage(slug);
-  if (!page) notFound();
+  // An agent asked for Markdown, so the 404 is Markdown too.
+  if (!page) return markdownNotFound(`/docs/${(slug ?? []).join("/")}`);
 
   return new Response(await getLLMText(page), {
     headers: {
@@ -24,6 +25,9 @@ export async function GET(
   });
 }
 
+// No paths at build time: each page's Markdown is rendered on its first
+// request and cached until the next deploy. Prerendering all 875 doubled the
+// build's page count for files agents rarely ask for.
 export function generateStaticParams() {
-  return source.generateParams();
+  return [];
 }

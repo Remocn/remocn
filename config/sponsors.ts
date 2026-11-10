@@ -344,3 +344,21 @@ export const tiers: Tier[] = [
     monthlyUrl: "https://www.creem.io/payment/prod_1PtwNGZVHfXZgChBSCwmJA",
   },
 ];
+
+export type OneTimeTier = {
+  name: string;
+  tagline: string;
+  perks: string[];
+  /** Creem checkout where the sponsor picks the amount. */
+  checkoutUrl: string;
+};
+
+export const oneTimeTier: OneTimeTier = {
+  name: "One-time",
+  tagline: "Pay what you want, once",
+  perks: [
+    "Everything in Builder",
+    "Larger amounts can earn more, we'll reach out",
+  ],
+  checkoutUrl: "https://www.creem.io/payment/prod_6Cji8mKQrBguhRnNV3HXgm",
+};

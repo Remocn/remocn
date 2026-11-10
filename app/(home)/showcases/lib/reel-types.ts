@@ -18,6 +18,8 @@ export type ReelClip = {
   iso: string;
   dateLabel: string;
   githubUrl: string | null;
+  /** Site of the product the video is about. */
+  productUrl: string | null;
   components: ReelComponent[];
   /** Seconds from the start of the reel. */
   start: number;
