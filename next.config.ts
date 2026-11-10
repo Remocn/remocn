@@ -79,6 +79,12 @@ const nextConfig: NextConfig = {
         destination: "/docs/guides/remotion-text-animations",
         permanent: true,
       },
+      // Short URL for the Claude Code plugin page, as it is shared.
+      {
+        source: "/plugin",
+        destination: "/docs/getting-started/plugin",
+        permanent: true,
+      },
       // Docs folders without an index.mdx would 404; send them to their
       // first page.
       ...Object.entries(DOCS_FOLDER_REDIRECTS).map(([source, destination]) => ({
