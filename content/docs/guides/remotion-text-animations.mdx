@@ -1,0 +1,206 @@
+---
+title: "Remotion text animations: 256 free animated text effects, with code"
+navTitle: Text animations
+description: "How to animate text in Remotion, and 256 ready-made, MIT-licensed text animation components you install with the shadcn CLI: word reveals, typewriter, highlights, word swaps, counters, glitch and kinetic type."
+---
+
+import { Faq } from "@/components/docs/index/introduction/faq";
+
+_Last updated: November 9, 2026_
+
+To make animated text effects in Remotion, every style value of the text (opacity, position,
+blur, letter spacing) has to be computed from the current frame with `useCurrentFrame()` and
+`interpolate()` or `spring()`. You split the text into words or letters and offset each one's
+start frame. Or you install a finished effect: Remocn has 256 free, MIT-licensed text animation
+components for Remotion, plus 31 caption styles, added with
+`npx shadcn@latest add @remocn/<name>`.
+
+Each component is copied into your project as one TypeScript file. There is no runtime package to
+depend on, and you can edit the source.
+
+## How to animate text in Remotion
+
+A word-by-word reveal written by hand looks like this:
+
+```tsx
+import { interpolate, useCurrentFrame } from "remotion";
+
+export const WordReveal = ({ text }: { text: string }) => {
+  const frame = useCurrentFrame();
+
+  return (
+    <h1 style={{ fontSize: 96 }}>
+      {text.split(" ").map((word, i) => {
+        // Each word starts 4 frames after the previous one and takes 12 frames.
+        const progress = interpolate(frame - i * 4, [0, 12], [0, 1], {
+          extrapolateLeft: "clamp",
+          extrapolateRight: "clamp",
+        });
+        return (
+          <span
+            key={i}
+            style={{
+              display: "inline-block",
+              marginRight: "0.25em",
+              opacity: progress,
+              translate: `0 ${(1 - progress) * 20}px`,
+            }}
+          >
+            {word}
+          </span>
+        );
+      })}
+    </h1>
+  );
+};
+```
+
+The same effect from Remocn, followed by a highlighted line:
+
+```bash
+npx shadcn@latest add @remocn/staggered-fade-up @remocn/marker-highlight
+```
+
+```tsx
+import { AbsoluteFill, Sequence } from "remotion";
+import { MarkerHighlight } from "@/components/remocn/marker-highlight";
+import { StaggeredFadeUp } from "@/components/remocn/staggered-fade-up";
+
+export const Hook = () => (
+  <AbsoluteFill>
+    <Sequence durationInFrames={90}>
+      <StaggeredFadeUp text="Every launch needs a video" staggerDelay={4} />
+    </Sequence>
+    <Sequence from={90} durationInFrames={90}>
+      <MarkerHighlight before="Yours ships " highlight="today" after="." />
+    </Sequence>
+  </AbsoluteFill>
+);
+```
+
+Every component page lists the component's props and its natural length in frames at 30fps.
+That length is the minimum for its `Sequence`. Add hold frames on top if the text should stay on
+screen after it settles.
+
+## Remotion text animation pitfalls
+
+These are the mistakes that make text flicker, jump or render differently from the preview.
+Remocn's text components handle each of them in their source, which you can read after install.
+
+- **CSS transitions and keyframes don't render.** Remotion renders frames out of order and in
+  parallel, so wall-clock animation never reaches the MP4. None of the typography components uses
+  a CSS `transition`, `animation` or `@keyframes`; every value comes from the frame.
+- **`Math.random()` changes on every render.** Scrambles and glitches built on it flicker and
+  differ between render threads. None of the components calls `Math.random()`. The ones with
+  randomness in them, such as `matrix-decode`, `rgb-glitch-text` and `type-wall`, use Remotion's
+  seeded `random()`, so frame 40 always looks the same.
+- **The font isn't loaded on the first frame.** The text renders in a fallback font, and anything
+  measured from it (line widths, where a highlight or caret sits) is wrong. Most of the
+  components load their font through `@remotion/google-fonts`, and most of the ones that lay text out
+  by measuring it hold the render with `delayRender()` until the font has loaded and the measurement
+  is done.
+- **Unclamped `interpolate()` keeps going.** Without `extrapolateRight: "clamp"`, a fade passes 1
+  and a slide overshoots its end position. The components clamp their interpolations.
+- **Timing written in frames breaks at another frame rate.** `typewriter` takes
+  `charsPerSecond` and converts it with the composition's `fps`. Almost every component also
+  takes a `speed` prop that retimes the whole effect without editing its code.
+- **Spaces collapse when text is split into spans.** Splitting per character drops the spaces
+  between words. Per-letter components such as `soft-blur-in` and `typewriter` render with
+  `white-space: pre`, so the spaces stay.
+
+## Which Remocn text animation to use
+
+Twenty-one components picked by the job they do. The [Typography](/docs/typography) page lists
+all 256 text animation components.
+
+| Job | Component | What it does | Length | Install |
+|---|---|---|---|---|
+| Word-by-word headline | [Staggered Fade Up](/docs/typography/staggered-fade-up) | Words slide up and fade in, one after another | 90f | `npx shadcn@latest add @remocn/staggered-fade-up` |
+| Letter-by-letter, soft | [Soft Blur In](/docs/typography/soft-blur-in) | Each character fades in with a gentle blur and lift | 60f | `npx shadcn@latest add @remocn/soft-blur-in` |
+| Focus pull | [Focus Blur Resolve](/docs/typography/focus-blur-resolve) | Text sharpens from heavy blur, then blurs out | 90f | `npx shadcn@latest add @remocn/focus-blur-resolve` |
+| Lines rising from a mask | [Mask Reveal Up](/docs/typography/mask-reveal-up) | Lines reveal upward with a compact stagger | 90f | `npx shadcn@latest add @remocn/mask-reveal-up` |
+| Tracking in | [Tracking In](/docs/typography/tracking-in) | Letter spacing collapses while blur clears, on a spring | 90f | `npx shadcn@latest add @remocn/tracking-in` |
+| One punchy word | [Spring Scale In](/docs/typography/spring-scale-in) | Words pop in with a soft overshoot | 60f | `npx shadcn@latest add @remocn/spring-scale-in` |
+| Phrase that builds centered | [Kinetic Center Build](/docs/typography/kinetic-center-build) | Words enter from the right and push the line to center | 60f | `npx shadcn@latest add @remocn/kinetic-center-build` |
+| Typed text | [Typewriter](/docs/typography/typewriter) | Character-by-character typing with a blinking cursor | 120f | `npx shadcn@latest add @remocn/typewriter` |
+| Handwritten note | [Handwrite](/docs/typography/handwrite) | Handwritten text laid down letter by letter, stop-motion style | 120f | `npx shadcn@latest add @remocn/handwrite` |
+| Highlight a phrase | [Marker Highlight](/docs/typography/marker-highlight) | A marker block draws behind a phrase | 90f | `npx shadcn@latest add @remocn/marker-highlight` |
+| Recolor one word | [Inline Highlight](/docs/typography/inline-highlight) | One word in a sentence shifts to a brand color | 90f | `npx shadcn@latest add @remocn/inline-highlight` |
+| Draw attention with light | [Shimmer Sweep](/docs/typography/shimmer-sweep) | A shine travels across muted text | 120f | `npx shadcn@latest add @remocn/shimmer-sweep` |
+| Rotating word after a prefix | [Inline Word Roll](/docs/typography/inline-word-roll) | Words switch beside a fixed prefix with a vertical roll | 75f | `npx shadcn@latest add @remocn/inline-word-roll` |
+| Swap one phrase for another | [Per-Word Crossfade](/docs/typography/per-word-crossfade) | One phrase fades out as the next fades in, word by word | 90f | `npx shadcn@latest add @remocn/per-word-crossfade` |
+| Correct a claim | [Strikethrough Replace](/docs/typography/strikethrough-replace) | Strikes the old text, then fades the new text in | 120f | `npx shadcn@latest add @remocn/strikethrough-replace` |
+| Count up to a number | [Rolling Number](/docs/typography/rolling-number) | Odometer that settles exactly on the target value | 150f | `npx shadcn@latest add @remocn/rolling-number` |
+| Decode / scramble | [Matrix Decode](/docs/typography/matrix-decode) | A random scramble resolves left to right into the text | 90f | `npx shadcn@latest add @remocn/matrix-decode` |
+| Glitch | [RGB Glitch Text](/docs/typography/rgb-glitch-text) | Three RGB-offset copies jitter for a chromatic glitch | 90f | `npx shadcn@latest add @remocn/rgb-glitch-text` |
+| Looping ticker | [Infinite Marquee](/docs/typography/infinite-marquee) | A horizontal text strip that loops seamlessly | 180f | `npx shadcn@latest add @remocn/infinite-marquee` |
+| Draw the letters | [Outline Trace](/docs/typography/outline-trace) | Glyph outlines draw as strokes, then the fill wipes in | 44f | `npx shadcn@latest add @remocn/outline-trace` |
+| Captions from a voiceover | [Karaoke](/docs/captions/components/caption-karaoke) | Each word fills with color as it is spoken | From the transcript | `npx shadcn@latest add @remocn/caption-karaoke` |
+
+For subtitles timed to speech, see the [captions](/docs/captions/getting-started/introduction)
+section: 31 caption styles that render from a transcript.
+
+## Remocn vs Remotion Bits vs snapcn vs hand-rolled
+
+Facts about the other libraries come from their own sites, checked on November 9, 2026.
+
+| | Hand-rolled | [Remotion Bits](https://remotion-bits.dev) | [snapcn](https://snapcn.dev) | Remocn |
+|---|---|---|---|---|
+| What you get | Your own code | One configurable `AnimatedText` (split by character, word or line, with stagger) plus `Typewriter`; about 14 text examples | Twelve free text components on its text-animation page; its Text & Titles list has more, some marked Pro | 256 text animation components plus 31 caption styles, one component per effect |
+| Install | — | `npm install remotion-bits`, or copy the source with jsrepo | `npx shadcn@latest add @snapcn/<name>` | `npx shadcn@latest add @remocn/<name>` |
+| Price and license | Free | Free, MIT | 60 components MIT, 81 Pro (site-wide, per its footer) | Free, MIT, every component |
+| Pick it when | You need one simple effect and want zero dependencies | You want one primitive you configure yourself | You want its specific look and its notes on rendering scaled type | You want a finished, distinct effect for each beat without writing the motion |
+
+The options combine. A Remocn component is plain Remotion code in your project, so you can put it
+next to Remotion Bits primitives or your own effects in the same composition.
+
+## Using Remocn text animations from an AI agent
+
+- **Agent skill:** `npx skills add Remocn/remocn`. The agent reads the live component index from
+  remocn.dev and picks text effects by their use and avoid notes.
+- **Plugin for Claude Code and Codex:** `/plugin install remocn --marketplace Remocn/remocn`, then
+  `/remocn:video <brief>`.
+- **MCP server:** add `https://remocn.dev/mcp` to any MCP client. No auth. Ask for "a typewriter
+  headline" and `search_components` returns matching text effects with install commands. See
+  [MCP server](/docs/getting-started/mcp-server).
+- **Plain text:** every Typography page in one file at
+  [/llms-full/typography.txt](https://remocn.dev/llms-full/typography.txt), and every component
+  with its use / avoid signal at [/llms-components.txt](https://remocn.dev/llms-components.txt).
+  Any docs URL returns Markdown when you append `.md`.
+
+## FAQ
+
+<Faq>
+
+**How do I animate text in Remotion?**
+Compute every style value from `useCurrentFrame()` with `interpolate()` or `spring()`, split the text into words or letters, and give each one a later start frame. Or install a ready-made effect with `npx shadcn@latest add @remocn/<name>`.
+
+**Are there free text animation components for Remotion?**
+Yes. Remocn has 256 free, MIT-licensed text animation components and 31 caption styles. You install them with the shadcn CLI, and the source is copied into your project.
+
+**Can I use CSS animations for text in Remotion?**
+No. Remotion renders frames out of order and in parallel, so CSS transitions and keyframes don't show up in the render. Every value has to come from the current frame.
+
+**How do I make a typewriter effect in Remotion?**
+Install it with `npx shadcn@latest add @remocn/typewriter` and pass `text` and `charsPerSecond`. The cursor blink is computed from the frame, so it is the same in every render.
+
+**Why does my text flicker or jump in the rendered video?**
+The usual causes are `Math.random()` in the render, a font that loaded after the first frame, or an `interpolate()` without clamping. See the [pitfalls](#remotion-text-animation-pitfalls) above.
+
+**Do Remocn components need a runtime dependency?**
+No. The shadcn CLI copies each component's source into your project. Remotion is the only runtime, and it keeps [its own license](https://www.remotion.dev/docs/license).
+
+**Can I change the font, colors and timing?**
+Yes. Props cover text, colors, sizes and a `speed` multiplier on most components, and the source is yours to edit.
+
+**Is Remocn made by Remotion or shadcn?**
+No. Remocn is an independent open-source project, not affiliated with Remotion or shadcn. It is listed on Remotion's resources page.
+
+</Faq>
+
+## What's next
+
+- [Typography](/docs/typography): all 256 text animation components, grouped by category
+- [Captions](/docs/captions/getting-started/introduction): 31 transcript-driven caption styles
+- [Words on screen](/docs/guides/words-on-screen): how to write lines people can read in two seconds
+- [Installation](/docs/getting-started/installation): add Remocn to an existing Remotion project

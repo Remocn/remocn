@@ -61,7 +61,7 @@ export async function GuideVideos({ children }: { children: ReactNode }) {
                 </span>
                 <span className="flex flex-col gap-1.5 px-2.5 pt-3.5">
                   <span className="text-button-lg leading-[22px] font-medium text-foreground">
-                    {entry.navTitle ?? entry.title}
+                    {entry.title}
                   </span>
                   <span className="line-clamp-2 text-small text-muted-foreground">
                     {entry.description}

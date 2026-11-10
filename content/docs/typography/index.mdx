@@ -1,12 +1,67 @@
 ---
-title: Typography
-description: Text effects, reveals, and kinetic type for Remotion
+title: "Typography: 256 animated text effects for Remotion"
+navTitle: Typography
+description: "256 free, MIT-licensed animated text effects for Remotion: reveals, highlights, word swaps, counters, glitches and kinetic type. Install any one with npx shadcn@latest add @remocn/<name>."
 ---
 
 import { CategoryIndex } from "@/components/docs/index/category/category-index";
 import { ComponentGroup } from "@/components/docs/index/category/component-group";
 
-Every way text can move, fade, glitch, or stretch across the screen. From quiet word-by-word reveals to full-bleed marquees and RGB glitches.
+_Last updated: November 9, 2026_
+
+Remocn has 256 free, MIT-licensed text animation components for Remotion: word and letter
+reveals, highlights, typewriters, word swaps, counters, glitches, kinetic posters and pull quotes.
+Each one installs with the shadcn CLI and lands in your project as a single TypeScript file, with
+no runtime dependency besides Remotion.
+
+```bash
+npx shadcn@latest add @remocn/staggered-fade-up
+```
+
+```tsx
+import { Composition } from "remotion";
+import { StaggeredFadeUp } from "@/components/remocn/staggered-fade-up";
+
+const Title = () => <StaggeredFadeUp text="Ship videos faster" staggerDelay={4} />;
+
+export const RemotionRoot = () => (
+  <Composition id="Title" component={Title} durationInFrames={90} fps={30} width={1280} height={720} />
+);
+```
+
+## Pick a text effect by job
+
+| Job | Component | Length | Install |
+|---|---|---|---|
+| Word-by-word headline | [Staggered Fade Up](/docs/typography/staggered-fade-up) | 90f | `npx shadcn@latest add @remocn/staggered-fade-up` |
+| Letter-by-letter, soft | [Soft Blur In](/docs/typography/soft-blur-in) | 60f | `npx shadcn@latest add @remocn/soft-blur-in` |
+| Focus pull from blur | [Focus Blur Resolve](/docs/typography/focus-blur-resolve) | 90f | `npx shadcn@latest add @remocn/focus-blur-resolve` |
+| Lines rising from a mask | [Mask Reveal Up](/docs/typography/mask-reveal-up) | 90f | `npx shadcn@latest add @remocn/mask-reveal-up` |
+| Tracking in | [Tracking In](/docs/typography/tracking-in) | 90f | `npx shadcn@latest add @remocn/tracking-in` |
+| One punchy word | [Spring Scale In](/docs/typography/spring-scale-in) | 60f | `npx shadcn@latest add @remocn/spring-scale-in` |
+| Phrase that builds centered | [Kinetic Center Build](/docs/typography/kinetic-center-build) | 60f | `npx shadcn@latest add @remocn/kinetic-center-build` |
+| Typed text | [Typewriter](/docs/typography/typewriter) | 120f | `npx shadcn@latest add @remocn/typewriter` |
+| Handwritten note | [Handwrite](/docs/typography/handwrite) | 120f | `npx shadcn@latest add @remocn/handwrite` |
+| Highlight a phrase | [Marker Highlight](/docs/typography/marker-highlight) | 90f | `npx shadcn@latest add @remocn/marker-highlight` |
+| Recolor one word | [Inline Highlight](/docs/typography/inline-highlight) | 90f | `npx shadcn@latest add @remocn/inline-highlight` |
+| Rotating word after a prefix | [Inline Word Roll](/docs/typography/inline-word-roll) | 75f | `npx shadcn@latest add @remocn/inline-word-roll` |
+| Swap one phrase for another | [Per-Word Crossfade](/docs/typography/per-word-crossfade) | 90f | `npx shadcn@latest add @remocn/per-word-crossfade` |
+| Correct a claim | [Strikethrough Replace](/docs/typography/strikethrough-replace) | 120f | `npx shadcn@latest add @remocn/strikethrough-replace` |
+| Count up to a number | [Rolling Number](/docs/typography/rolling-number) | 150f | `npx shadcn@latest add @remocn/rolling-number` |
+| Decode / scramble | [Matrix Decode](/docs/typography/matrix-decode) | 90f | `npx shadcn@latest add @remocn/matrix-decode` |
+| Glitch | [RGB Glitch Text](/docs/typography/rgb-glitch-text) | 90f | `npx shadcn@latest add @remocn/rgb-glitch-text` |
+| Looping ticker | [Infinite Marquee](/docs/typography/infinite-marquee) | 180f | `npx shadcn@latest add @remocn/infinite-marquee` |
+| Draw the letters | [Outline Trace](/docs/typography/outline-trace) | 44f | `npx shadcn@latest add @remocn/outline-trace` |
+| Text on a curve | [Path Ride](/docs/typography/path-ride) | 70f | `npx shadcn@latest add @remocn/path-ride` |
+
+Length is the frames of motion at 30fps, the minimum for the component's `Sequence`. For how to
+animate text by hand, the Remotion pitfalls these components handle and a comparison with other
+libraries, read [Remotion text animations](/docs/guides/remotion-text-animations). For subtitles
+timed to speech, see the 31 caption styles in
+[Captions](/docs/captions/getting-started/introduction).
+
+Agents can read this whole section, every component's props and usage included, as one file at
+[/llms-full/typography.txt](https://remocn.dev/llms-full/typography.txt).
 
 <CategoryIndex section="/docs/typography">
 
@@ -33,6 +88,9 @@ Every way text can move, fade, glitch, or stretch across the screen. From quiet 
 
 ## Reveals
 
+Entrances for a headline or a line of copy: by word, by letter, through blur or through a mask.
+`staggered-fade-up` is the neutral default; `soft-blur-in` and `focus-blur-resolve` read premium.
+
 </ComponentGroup>
 
 <ComponentGroup
@@ -45,6 +103,9 @@ Every way text can move, fade, glitch, or stretch across the screen. From quiet 
 
 ## Highlights
 
+Point at one word or phrase inside a sentence that is already on screen.
+A marker block, a color shift or a passing shine.
+
 </ComponentGroup>
 
 <ComponentGroup
@@ -56,6 +117,9 @@ Every way text can move, fade, glitch, or stretch across the screen. From quiet 
 
 ## Dynamic Text
 
+Text that changes while it plays.
+Typed character by character, or rolled through a reel of values.
+
 </ComponentGroup>
 
 <ComponentGroup
@@ -66,6 +130,9 @@ Every way text can move, fade, glitch, or stretch across the screen. From quiet 
 >
 
 ## Tech & Glitch
+
+Scrambles that decode into the text, and RGB-split glitches.
+Both use Remotion's seeded `random()`, so every render matches the preview.
 
 </ComponentGroup>
 
@@ -81,6 +148,7 @@ Every way text can move, fade, glitch, or stretch across the screen. From quiet 
 ## Text Transitions
 
 Swap one phrase for another with motion.
+Use them when the layout stays and only the words change.
 
 </ComponentGroup>
 
@@ -95,6 +163,7 @@ Swap one phrase for another with motion.
 ## Kinetic
 
 Word-by-word builds with motion and momentum.
+They suit a hook line that should land one word at a time.
 
 </ComponentGroup>
 
@@ -201,6 +270,9 @@ Type built the way a motion designer builds it: trim paths on real glyph outline
 
 ## Statements
 
+Finished copy beats for launch and changelog videos: the line, its layout and its motion.
+Each carries one message, such as a TL;DR, a week recap or a one-line answer. Swap in your words.
+
 </ComponentGroup>
 
 <ComponentGroup
@@ -261,6 +333,9 @@ Type built the way a motion designer builds it: trim paths on real glyph outline
 
 ## Headline reveals
 
+Headline-and-subhead entrances with a signature treatment: bokeh, slit-scan, comet trails, photo-filled type.
+Use one for the title beat of a feature announcement.
+
 </ComponentGroup>
 
 <ComponentGroup
@@ -295,6 +370,9 @@ Type built the way a motion designer builds it: trim paths on real glyph outline
 
 ## Kinetic posters
 
+Loud, poster-style type for social cuts and hype beats.
+Slams, stacks, countdowns and game-UI gags.
+
 </ComponentGroup>
 
 <ComponentGroup
@@ -323,6 +401,9 @@ Type built the way a motion designer builds it: trim paths on real glyph outline
 >
 
 ## Word swaps
+
+One word or phrase turns into another in place: anagrams, typo fixes, word ladders, select and replace.
+Use them to change a claim without cutting the shot.
 
 </ComponentGroup>
 
@@ -353,6 +434,9 @@ Type built the way a motion designer builds it: trim paths on real glyph outline
 
 ## Letter mechanics
 
+Effects that work on the letters themselves.
+Kerning, weight, case, font and single glyphs move while the word stays readable.
+
 </ComponentGroup>
 
 <ComponentGroup
@@ -366,6 +450,9 @@ Type built the way a motion designer builds it: trim paths on real glyph outline
 >
 
 ## Quotes
+
+Big pull quotes with an attribution line.
+For testimonials and social proof.
 
 </ComponentGroup>
 

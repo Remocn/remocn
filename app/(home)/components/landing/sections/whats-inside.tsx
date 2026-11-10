@@ -73,7 +73,7 @@ export function WhatsInside() {
       <div className="landing-container flex flex-col gap-7 xl:gap-12">
         <header className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between xl:gap-0">
           <SectionTitle
-            title="There’s a block for that"
+            title="shadcn/ui for video"
             continuation="Seven kinds of building blocks. Your agent puts them on the timeline."
             className="text-[34px]/[36px] text-wrap md:text-h2"
             continuationClassName="xl:w-[720px]"
@@ -82,8 +82,9 @@ export function WhatsInside() {
             data-reveal
             className="text-ui leading-6 text-paragraph [--reveal-i:2] md:max-w-[560px] md:text-[18px] md:leading-[27px] xl:w-[340px] xl:shrink-0"
           >
-            Every Remocn component belongs to one of these families. It composes
-            them one scene at a time.
+            Remocn is shadcn/ui for video: a shadcn registry of{" "}
+            {COMPONENT_COUNT} MIT-licensed Remotion components. Your agent picks
+            from these families and composes them one scene at a time.
           </p>
         </header>
         <div className="flex flex-col gap-2.5 xl:gap-3">

@@ -73,6 +73,12 @@ const nextConfig: NextConfig = {
       // Conventional trust-page URLs land on the matching part of /legal.
       { source: "/privacy", destination: "/legal#privacy", permanent: true },
       { source: "/terms", destination: "/legal#terms", permanent: true },
+      // Short, question-shaped URL for the text animations answer page.
+      {
+        source: "/remotion-text-animations",
+        destination: "/docs/guides/remotion-text-animations",
+        permanent: true,
+      },
       // Docs folders without an index.mdx would 404; send them to their
       // first page.
       ...Object.entries(DOCS_FOLDER_REDIRECTS).map(([source, destination]) => ({
