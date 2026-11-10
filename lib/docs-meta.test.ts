@@ -278,3 +278,72 @@ describe("navigation lists every page", () => {
     expect(missing).toEqual([]);
   });
 });
+
+describe("the transitions library page stays complete", () => {
+  // /docs/transitions answers "is there a transitions library for Remotion?"
+  // with a count and a table of every transition. A new transition page has
+  // to land in that table, and the count in the title has to follow.
+  const index = readFileSync("content/docs/transitions/index.mdx", "utf8");
+  const transitions = pages
+    .filter(
+      (page) =>
+        page.file.startsWith("content/docs/transitions/") &&
+        typeof page.frontmatter.component === "string",
+    )
+    .map((page) => basename(page.file, ".mdx"))
+    .sort();
+
+  it("lists every transition page in a table row", () => {
+    const rows = [
+      ...index.matchAll(
+        /^\| \[[^\]]+\]\(\/docs\/transitions\/([a-z0-9-]+)\)/gm,
+      ),
+    ].map((match) => match[1]);
+
+    expect([...rows].sort()).toEqual(transitions);
+  });
+
+  it("states the real count in its title and description", () => {
+    const pageMeta = pages.find(
+      (page) => page.file === "content/docs/transitions/index.mdx",
+    )?.frontmatter;
+
+    expect(String(pageMeta?.title)).toContain(
+      `${transitions.length} ready-made`,
+    );
+    expect(String(pageMeta?.description)).toStartWith(`${transitions.length} `);
+  });
+});
+
+describe("stated text effect counts match the docs", () => {
+  const countIn = (section: string) =>
+    pages.filter(
+      (p) =>
+        p.file.startsWith(`content/docs/${section}/`) &&
+        typeof p.frontmatter.component === "string",
+    ).length;
+  const STATED = [
+    "content/docs/typography/index.mdx",
+    "content/docs/guides/remotion-text-animations.mdx",
+  ];
+
+  it("states the real number of typography and caption components", () => {
+    const text = countIn("typography");
+    const captions = countIn("captions");
+    const wrong: string[] = [];
+    for (const file of STATED) {
+      const src = readFileSync(file, "utf8");
+      for (const [, n] of src.matchAll(
+        /\b(\d+) (?:[\w-]+,? ){0,3}(?:animated text effects|text animation components)/g,
+      )) {
+        if (Number(n) !== text) wrong.push(`${file}: ${n} text, real ${text}`);
+      }
+      for (const [, n] of src.matchAll(/\b(\d+) (?:[\w-]+ )?caption styles/g)) {
+        if (Number(n) !== captions)
+          wrong.push(`${file}: ${n} captions, real ${captions}`);
+      }
+    }
+
+    expect(wrong).toEqual([]);
+  });
+});

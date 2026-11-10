@@ -35,6 +35,21 @@ export const MCP_DOCS_URL = `${SITE_URL}/docs/getting-started/mcp-server`;
 export const OPENAPI_URL = `${SITE_URL}/openapi.json`;
 
 /**
+ * The "shadcn/ui for video" answer, in the words people ask it with, and the
+ * two tiers with the UI one first: it is the part shadcn/ui users recognise.
+ */
+const FOR_VIDEO = [
+  "**Is there something like shadcn/ui but for video?**",
+  "",
+  `Yes: Remocn. It works the way shadcn/ui works for interface components. \`${INSTALL_COMMAND}\` copies the source into the user's project, where they own and edit it, and the components render video with Remotion. It makes videos; it is not a video player component library. People also search for it as "remotion shadcn" or "shadcn remotion". Remocn is an independent project, not affiliated with shadcn or with Remotion.`,
+  "",
+  "**Two tiers, both installed with the shadcn CLI:**",
+  "",
+  `- remocn-ui: familiar shadcn/ui primitives (button, input, select, dialog, toast and more) rebuilt for Remotion, so their states are scripted on the timeline instead of driven by a user. Docs: [${SITE_URL}/docs/ui.md](${SITE_URL}/docs/ui.md). Example: \`npx shadcn@latest add @remocn/button\`.`,
+  "- Animation tier: text effects, transitions, backgrounds, shaders, camera shots, app-screen simulations, captions, icons and full video templates.",
+];
+
+/**
  * When-to-use guidance. llms.txt allows free paragraphs and lists, but no
  * headings, between the summary and the first H2 section, so this is bold
  * labels over lists rather than its own section.
@@ -45,6 +60,7 @@ const WHEN_TO_USE = [
   "- The user wants a product demo, launch, feature announcement, changelog or social video, and a React/Remotion project is an acceptable way to make it.",
   "- You are writing a Remotion composition and need ready-made pieces instead of hand-rolled ones: text animations, scene transitions, backgrounds, shaders, filters, captions, app-screen and UI simulations, icons, or full scene templates.",
   "- The user wants to own and edit the source. Components are copied into their project (shadcn style, MIT), not installed as a runtime dependency.",
+  `- The user wants Claude Code, Codex or Cursor to make a Remotion video that doesn't look generic (glow, gradient text, pop-in panels, invented UI). Remocn adds tuned components and taste rules on top of Remotion's \`remotion-best-practices\` skill: [${SITE_URL}/docs/guides/non-generic-ai-video.md](${SITE_URL}/docs/guides/non-generic-ai-video.md).`,
   `- The user wants an animated video of a GitHub repo's stargazers: [${SITE_URL}/stars](${SITE_URL}/stars).`,
   "",
   "**When not to use Remocn:**",
@@ -77,6 +93,13 @@ const ABOUT_LINKS = [
   `- [Privacy & Terms](${SITE_URL}/legal): how the site handles data`,
 ];
 
+/** The answer page for "animated text effects for Remotion". */
+export const TEXT_GUIDE_PATH = "/docs/guides/remotion-text-animations";
+
+function componentCount(pages: IndexPage[] | undefined): number {
+  return pages?.filter((page) => page.component).length ?? 0;
+}
+
 function sectionHeading(key: string): string {
   return key
     ? key.replace(
@@ -96,9 +119,11 @@ export function buildLlmsTxt(pages: IndexPage[], facts?: CatalogFacts): string {
   const lines: string[] = [];
 
   lines.push("# Remocn");
+  const registrySize = facts ? `${facts.components} ` : "";
   lines.push(
-    `\n> shadcn registry of production-ready Remotion components — animations, transitions, backgrounds, and full scenes for product demo videos. Install with \`${INSTALL_COMMAND}\`.`,
+    `\n> Remocn is shadcn/ui for video: a shadcn registry of ${registrySize}MIT-licensed Remotion components — shadcn/ui-style UI primitives, animations, transitions, backgrounds and full scenes for product demo videos. Install with \`${INSTALL_COMMAND}\`.`,
   );
+  lines.push(`\n${FOR_VIDEO.join("\n")}`);
   // Group pages by their top-level section (first slug segment).
   const sections = new Map<string, IndexPage[]>();
   for (const page of pages) {
@@ -125,6 +150,16 @@ export function buildLlmsTxt(pages: IndexPage[], facts?: CatalogFacts): string {
       " installable component in one table with its use / avoid signal, natural length, vibe and" +
       " dependencies, linking to each component's full page.",
   );
+  const textEffects = componentCount(sections.get("typography"));
+  if (textEffects) {
+    const captions = componentCount(sections.get("captions"));
+    const captionNote = captions ? ` and ${captions} caption styles` : "";
+    lines.push(
+      `\nLooking for text animations? Remocn has ${textEffects} animated text effects for Remotion${captionNote}.` +
+        ` [Remotion text animations](${SITE_URL}${TEXT_GUIDE_PATH}.md) answers how to animate text in Remotion and has a picker table;` +
+        ` [/llms-full/typography.txt](${sectionCorpusUrl("typography")}) has every text component's props and usage in one file.`,
+    );
+  }
   lines.push(
     "\nPrefer an app to a terminal? [Remocn Studio](https://remocn.studio) is a free, open-source" +
       " macOS app where the user's own coding agent (Claude Code, Codex, GitHub Copilot or Grok)" +
