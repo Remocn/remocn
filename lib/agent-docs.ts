@@ -73,6 +73,7 @@ const WHEN_TO_USE = [
   `1. Pick components from [/llms-components.txt](${SITE_URL}/llms-components.txt), or call the MCP server at ${MCP_URL} (Streamable HTTP, no auth; tools \`search_components\`, \`get_component\`, \`plan_video\`, \`preview_component\`; setup per client: [MCP server docs](${MCP_DOCS_URL}.md)).`,
   "2. Read the component's page as Markdown (append `.md` to its docs URL) before writing code against it: props, natural length and a usage example live there.",
   `3. Install with the shadcn CLI: \`${INSTALL_COMMAND}\`. The source lands in the user's project. Raw registry items are JSON at \`${SITE_URL}/r/<name>.json\`.`,
+  "   To drop a component into one Remotion composition as an editable copy instead, run `npx remotion elements use <docs page URL> --composition <id>` (Remotion 4.0.542+). It writes `<name>.element.tsx` next to the composition, inserts it, and installs its dependencies, exactly like Install in Studio.",
   "4. For a whole video workflow, install the agent skill (`npx skills add Remocn/remocn --yes`) or the Claude Code plugin (`/plugin install remocn --marketplace Remocn/remocn`).",
 ];
 

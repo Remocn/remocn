@@ -55,6 +55,8 @@ export function GET() {
     "",
     "Install any entry: `npx shadcn@latest add @remocn/<name>` (lands in `components/remocn/`;",
     "`registryDependencies` install transitively).",
+    "To add an entry to one Remotion composition as an editable copy, run",
+    "`npx remotion elements use <Docs link> --composition <id>` (Remotion 4.0.542+).",
     "",
     "`Length` is how many frames of motion the component itself runs at 30fps — for a transition it",
     "is the value to pass to `linearTiming` / `springTiming`, for everything else it is the point at",

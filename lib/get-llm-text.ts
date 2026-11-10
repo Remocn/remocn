@@ -1,3 +1,5 @@
+import { existsSync } from "node:fs";
+import { join } from "node:path";
 import type { InferPageType } from "fumadocs-core/source";
 import {
   getComponentEntries,
@@ -38,6 +40,20 @@ export async function getLLMText(page: DocPage): Promise<string> {
   if (data.component)
     facts.push(
       `- Install: \`npx shadcn@latest add @remocn/${data.component}\``,
+    );
+  if (
+    data.component &&
+    existsSync(
+      join(
+        process.cwd(),
+        "registry-artifacts",
+        "elements",
+        `${data.component}.json`,
+      ),
+    )
+  )
+    facts.push(
+      `- Add to a composition as an editable copy: \`npx remotion elements use ${SITE_URL}${page.url} --composition <id>\``,
     );
   if (data.vibe) facts.push(`- Vibe: ${data.vibe}`);
   if (data.length) facts.push(`- Natural length: ${formatLength(data.length)}`);
