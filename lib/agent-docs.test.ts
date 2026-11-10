@@ -74,6 +74,33 @@ describe("buildLlmsTxt with component pages", () => {
   test("sections without component pages get no corpus link", () => {
     expect(text).not.toContain("llms-full/getting-started.txt");
   });
+
+  test("points text-animation questions at the guide only when there are text effects", () => {
+    expect(text).not.toContain("Looking for text animations?");
+    const withText = buildLlmsTxt([
+      ...PAGES,
+      {
+        slugs: ["typography", "typewriter"],
+        url: "/docs/typography/typewriter",
+        title: "Typewriter",
+        component: "typewriter",
+      },
+      {
+        slugs: ["captions", "components", "caption-karaoke"],
+        url: "/docs/captions/components/caption-karaoke",
+        title: "Karaoke",
+        component: "caption-karaoke",
+      },
+    ]);
+    const preamble = withText.slice(0, withText.indexOf("\n## "));
+    expect(preamble).toContain(
+      "Remocn has 1 animated text effects for Remotion and 1 caption styles.",
+    );
+    expect(preamble).toContain(
+      "(https://remocn.dev/docs/guides/remotion-text-animations.md)",
+    );
+    expect(preamble).toContain("(https://remocn.dev/llms-full/typography.txt)");
+  });
 });
 
 describe("buildLlmsTxt", () => {
