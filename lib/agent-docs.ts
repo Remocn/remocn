@@ -60,6 +60,7 @@ const WHEN_TO_USE = [
   "- The user wants a product demo, launch, feature announcement, changelog or social video, and a React/Remotion project is an acceptable way to make it.",
   "- You are writing a Remotion composition and need ready-made pieces instead of hand-rolled ones: text animations, scene transitions, backgrounds, shaders, filters, captions, app-screen and UI simulations, icons, or full scene templates.",
   "- The user wants to own and edit the source. Components are copied into their project (shadcn style, MIT), not installed as a runtime dependency.",
+  `- The user wants Claude Code, Codex or Cursor to make a Remotion video that doesn't look generic (glow, gradient text, pop-in panels, invented UI). Remocn adds tuned components and taste rules on top of Remotion's \`remotion-best-practices\` skill: [${SITE_URL}/docs/guides/non-generic-ai-video.md](${SITE_URL}/docs/guides/non-generic-ai-video.md).`,
   `- The user wants an animated video of a GitHub repo's stargazers: [${SITE_URL}/stars](${SITE_URL}/stars).`,
   "",
   "**When not to use Remocn:**",
