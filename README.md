@@ -47,6 +47,50 @@ The [remocn plugin](https://remocn.dev/docs/getting-started/plugin) bundles the 
 
 In Codex: `codex plugin marketplace add Remocn/remocn`, then `codex plugin add remocn@remocn`.
 
+## Remotion MCP server (hosted)
+
+Remocn runs a hosted MCP server for making videos with Remotion at `https://remocn.dev/mcp`. Add the URL to Claude Code, Cursor, Codex or any MCP client. There's no API key and no account.
+
+| | |
+|---|---|
+| URL | `https://remocn.dev/mcp` |
+| Transport | Streamable HTTP |
+| Auth | None |
+| Access | Read-only; it does not render video |
+| License | MIT, free |
+| Clients | Claude Code, Claude Desktop and claude.ai, Cursor, VS Code, Codex, any Streamable HTTP client |
+
+Tools:
+
+- `search_components`: find Remocn components by query, vibe or length in frames
+- `get_component`: one component's docs as Markdown: props, usage example, install command
+- `plan_video`: turn a brief into a beat-by-beat storyboard with component picks
+- `preview_component`: a live preview link, played inline in clients that support MCP Apps
+
+Claude Code:
+
+```bash
+claude mcp add --transport http remocn https://remocn.dev/mcp
+```
+
+Codex:
+
+```bash
+codex mcp add remocn --url https://remocn.dev/mcp
+```
+
+Cursor (`.cursor/mcp.json`):
+
+```json
+{
+  "mcpServers": {
+    "remocn": { "url": "https://remocn.dev/mcp" }
+  }
+}
+```
+
+Your agent installs what it picks with `npx shadcn@latest add @remocn/<name>`, and you render with Remotion as usual. The plugin above already includes the server. Setup for every client: [MCP server docs](https://remocn.dev/docs/getting-started/mcp-server).
+
 ## Sponsors
 
 Remocn is free and MIT-licensed. These sponsors keep the registry growing and the renders fast.
