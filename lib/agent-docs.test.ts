@@ -107,6 +107,19 @@ describe("buildLlmsTxt", () => {
   const text = buildLlmsTxt(PAGES);
   const lines = text.split("\n");
 
+  test("answers the After Effects alternatives question before the first section", () => {
+    const preamble = text.slice(0, text.indexOf("\n## "));
+    expect(preamble).toContain(
+      "**Looking for an After Effects alternative for developers?**",
+    );
+    expect(preamble).toContain(
+      "(https://remocn.dev/docs/guides/after-effects-alternatives-for-developers.md)",
+    );
+    for (const tool of ["Motion Canvas", "Revideo", "HyperFrames", "Lottie"]) {
+      expect(preamble).toContain(tool);
+    }
+  });
+
   test("follows the llms.txt layout: H1, then a blockquote summary", () => {
     expect(lines[0]).toBe("# Remocn");
     expect(lines.find((l) => l.startsWith(">"))).toContain("Remotion");
