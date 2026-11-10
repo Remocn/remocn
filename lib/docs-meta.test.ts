@@ -279,6 +279,42 @@ describe("navigation lists every page", () => {
   });
 });
 
+describe("the transitions library page stays complete", () => {
+  // /docs/transitions answers "is there a transitions library for Remotion?"
+  // with a count and a table of every transition. A new transition page has
+  // to land in that table, and the count in the title has to follow.
+  const index = readFileSync("content/docs/transitions/index.mdx", "utf8");
+  const transitions = pages
+    .filter(
+      (page) =>
+        page.file.startsWith("content/docs/transitions/") &&
+        typeof page.frontmatter.component === "string",
+    )
+    .map((page) => basename(page.file, ".mdx"))
+    .sort();
+
+  it("lists every transition page in a table row", () => {
+    const rows = [
+      ...index.matchAll(
+        /^\| \[[^\]]+\]\(\/docs\/transitions\/([a-z0-9-]+)\)/gm,
+      ),
+    ].map((match) => match[1]);
+
+    expect([...rows].sort()).toEqual(transitions);
+  });
+
+  it("states the real count in its title and description", () => {
+    const pageMeta = pages.find(
+      (page) => page.file === "content/docs/transitions/index.mdx",
+    )?.frontmatter;
+
+    expect(String(pageMeta?.title)).toContain(
+      `${transitions.length} ready-made`,
+    );
+    expect(String(pageMeta?.description)).toStartWith(`${transitions.length} `);
+  });
+});
+
 describe("stated text effect counts match the docs", () => {
   const countIn = (section: string) =>
     pages.filter(

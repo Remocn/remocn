@@ -1,12 +1,252 @@
 ---
-title: Transitions
-description: Scene transitions built as presentations for TransitionSeries
+title: "Remotion Transitions Library: 59 ready-made scene transitions (free, MIT)"
+navTitle: Transitions
+description: "59 ready-made scene transitions for Remotion: 41 presentations for TransitionSeries plus 18 self-contained transition scenes. Free, MIT, installed as source with the shadcn CLI."
 ---
 
 import { CategoryIndex } from "@/components/docs/index/category/category-index";
 import { ComponentGroup } from "@/components/docs/index/category/component-group";
+import { Faq } from "@/components/docs/index/introduction/faq";
 
-Most transitions here are presentations for `@remotion/transitions` — pass one to a `TransitionSeries.Transition` between two sequences and control the pace with `linearTiming` or `springTiming`. The sequencers at the bottom work differently: they own the whole run of scenes themselves.
+_Last updated: November 9, 2026_
+
+Yes, there is a library of ready-made transitions for Remotion: Remocn has 59 scene transitions, free
+and MIT licensed. 41 of them are presentations for `TransitionSeries` from `@remotion/transitions`,
+so you drop one into a `TransitionSeries.Transition` and pace it with `linearTiming` or
+`springTiming`. The other 18 are self-contained components that play the whole cut themselves.
+
+Install any of them with `npx shadcn@latest add @remocn/<name>`, for example
+`npx shadcn@latest add @remocn/zoom-blur`. The shadcn CLI copies the source into your project, so you
+own the file and can change it. There is no Remocn runtime package.
+
+| | |
+|---|---|
+| Transitions | 59: 41 `TransitionSeries` presentations, 16 transition scenes, 2 scene sequencers |
+| Install | `npx shadcn@latest add @remocn/<name>` ([setup](/docs/getting-started/installation)) |
+| License | MIT, free. Remotion keeps [its own license](https://www.remotion.dev/docs/license) |
+| Requires | An existing Remotion project. Presentations also use `@remotion/transitions` |
+| Length | Every transition states its natural length in frames at 30fps |
+
+Want to see them move? Every transition has a live preview in the
+[gallery at the bottom of this page](#camera-motion) and on its own docs page.
+
+## All 59 Remocn transitions
+
+"Natural length" is how many frames the transition's own motion takes at 30fps. For a presentation,
+pass it to `linearTiming({ durationInFrames })`. For a scene, it is when the cut has finished, so
+give the `Sequence` at least that many frames plus any hold.
+
+### TransitionSeries presentations (41)
+
+Pass these to `TransitionSeries.Transition` between two `TransitionSeries.Sequence`s.
+
+| Name | Effect | Best for | Natural length | Install |
+|---|---|---|---|---|
+| [Zoom Blur](/docs/transitions/zoom-blur) | The outgoing scene pushes past the viewer into blur while the next resolves out of it | A default, general-purpose cut in a product demo | 18 | `@remocn/zoom-blur` |
+| [Whip Pan](/docs/transitions/whip-pan) | A sideways camera whip with motion blur carries both scenes through the frame | Fast feature-to-feature jumps and montage rhythm | 26 | `@remocn/whip-pan` |
+| [Push Through](/docs/transitions/push-through) | The camera dollies through the outgoing scene as the next approaches from depth | Going deeper into a feature or a chapter | 40 | `@remocn/push-through` |
+| [Focus Pull](/docs/transitions/focus-pull) | A rack focus through a soft defocus breath | Calm, editorial and premium product films | 46 | `@remocn/focus-pull` |
+| [Lens Zoom](/docs/transitions/lens-zoom) | A hard cut hidden in a lens punch-in with barrel distortion, zoom blur, chromatic split and shake | High-energy beat drops and reveals | 28 | `@remocn/lens-zoom` |
+| [Grain Dissolve](/docs/transitions/grain-dissolve) | The scene breaks into soft grainy shapes and the next condenses out of the noise | Editorial, textured, analog looks | 76 | `@remocn/grain-dissolve` |
+| [Wave Wipe](/docs/transitions/wave-wipe) | A grainy wave sweeps up, covering one scene and revealing the next | Scene changes that should feel like a swell | 60 | `@remocn/wave-wipe` |
+| [Shader Seam](/docs/transitions/shader-seam) | An OpenShaders material appears, then dissolves in place onto the next scene | Material-led reveals | 60 | `@remocn/shader-seam` |
+| [Shader Spiral Pass](/docs/transitions/shader-spiral-pass) | The camera flies into a luminous spiral and out through its center | Flying through to somewhere new | 72 | `@remocn/shader-spiral-pass` |
+| [Ripple Zoom](/docs/transitions/ripple-zoom) | The camera flies through grainy ripple rings toward the next scene | Arriving on a hero statement or logo | 88 | `@remocn/ripple-zoom` |
+| [Swirl Dissolve](/docs/transitions/swirl-dissolve) | A swirl shader unwinds open and winds shut on the next scene | Dramatic chapter breaks and reveals | 104 | `@remocn/swirl-dissolve` |
+| [Dither Dissolve](/docs/transitions/dither-dissolve) | A drifting field of dither pixels | Retro, terminal or print aesthetics | 40 | `@remocn/dither-dissolve` |
+| [Perlin Dissolve](/docs/transitions/perlin-dissolve) | A perlin-noise threshold sweeps across the frame | Organic, atmospheric chapter changes | 104 | `@remocn/perlin-dissolve` |
+| [Smoke Dissolve](/docs/transitions/smoke-dissolve) | A smoke ring expands outward and reveals the next scene | Moody, cinematic openings | 104 | `@remocn/smoke-dissolve` |
+| [Warp Dissolve](/docs/transitions/warp-dissolve) | The scene melts into a folding domain-warp field that straightens into the next | Mood shifts and time passing | 76 | `@remocn/warp-dissolve` |
+| [ASCII Dissolve](/docs/transitions/ascii-dissolve) | A drifting field of ASCII glyphs | Dev-tool, terminal and retro videos | 40 | `@remocn/ascii-dissolve` |
+| [Caret Wipe](/docs/transitions/caret-wipe) | A typing caret sweeps across the frame and wipes to the next scene | Editor, terminal and dev-tool demos | 40 | `@remocn/caret-wipe` |
+| [Icon Scatter](/docs/transitions/icon-scatter) | A field of icons scatters over the cut and hides the swap | Playful product and app videos | 40 | `@remocn/icon-scatter` |
+| [Glitch Cut](/docs/transitions/glitch-cut) | A hard cut torn into displaced slices with channel split and corrupted blocks | Tech and developer-facing demos | 12 | `@remocn/glitch-cut` |
+| [Ember Burn](/docs/transitions/ember-burn) | The outgoing frame catches fire, chars and blows away as sparks | Cinematic, physical scene changes | 40 | `@remocn/ember-burn` |
+| [Particle Dissolve](/docs/transitions/particle-dissolve) | The frame grinds into drifting dust and the next scene coalesces out of it | A picture breaking down and reassembling | 36 | `@remocn/particle-dissolve` |
+| [Grid Wave](/docs/transitions/grid-wave) | A wave raises the picture into blocks and sets them down as the next scene | Product and interface demos | 36 | `@remocn/grid-wave` |
+| [Displacement](/docs/transitions/displacement) | The frame shears into offset, color-fringed tiles under film grain, then settles | Tech cuts that knock the picture out of register | 18 | `@remocn/displacement` |
+| [Iris Wipe](/docs/transitions/iris-wipe) | A cartoon iris closes on the subject, holds as a dot, then reopens | Playful "that's all" beats | 36 | `@remocn/iris-wipe` |
+| [Venetian Blinds](/docs/transitions/venetian-blinds) | Horizontal slats turn edge-on in a staggered ripple | Graphic, editorial brand reels | 26 | `@remocn/venetian-blinds` |
+| [Paper Tear](/docs/transitions/paper-tear) | The frame rips down the middle and both halves fling apart | Reveals that hit: a product, a headline, a price | 36 | `@remocn/paper-tear` |
+| [Pixel Sort](/docs/transitions/pixel-sort) | The scene melts into glowing vertical streaks and the next drops in column by column | Glitch, generative and data-art looks | 30 | `@remocn/pixel-sort` |
+| [Light Leak](/docs/transitions/light-leak) | A warm analog light leak drifts across and blows out at the cut | Film, lifestyle and nostalgic looks | 20 | `@remocn/light-leak` |
+| [Hyperspace](/docs/transitions/hyperspace) | A starfield stretches into a tunnel and lands through a white flash | Launch and "what's next" moments | 56 | `@remocn/hyperspace` |
+| [Page Turn](/docs/transitions/page-turn) | The scene swings away like a notebook page in stop-motion poses | Act breaks in paper and scrapbook videos | 128 | `@remocn/page-turn` |
+| [Band Open](/docs/transitions/band-open) | A band opens in a stacked headline onto a full-frame photo title card | Title card and chapter reveals | 36 | `@remocn/band-open` |
+| [Card Swipe Cover](/docs/transitions/card-swipe-cover) | A tilted card swipes across and reveals a grid of cards | A headline into a catalog of templates or deliverables | 30 | `@remocn/card-swipe-cover` |
+| [Letter Gate](/docs/transitions/letter-gate) | The camera pushes into a giant letter pair that opens like a gate | A call-to-action headline into an editor or prompt | 26 | `@remocn/letter-gate` |
+| [Beam Sweep](/docs/transitions/beam-sweep) | A beam of light sweeps a product screen into a closing headline | A product screen into one confident statement | 30 | `@remocn/beam-sweep` |
+| [Bloom Ring](/docs/transitions/bloom-ring) | A ring of warm, striped light blooms outward and swaps a headline for a logo | A headline resolving into the brand mark | 30 | `@remocn/bloom-ring` |
+| [Light Burn to Line](/docs/transitions/light-burn-to-line) | A browser scene burns down to a line of light that opens onto a headline | A closing beat with a call to action | 36 | `@remocn/light-burn-to-line` |
+| [Strobe Montage](/docs/transitions/strobe-montage) | A fast strobe of photo frames lands on a prompt box | A high-energy cut from a claim to the product | 28 | `@remocn/strobe-montage` |
+| [Caret Collapse](/docs/transitions/caret-collapse) | Typed text crops down to its caret, which opens into a prompt screen | A typed URL or status line into an input | 36 | `@remocn/caret-collapse` |
+| [Disc Pop](/docs/transitions/disc-pop) | A grid of glyph discs pops across and swaps a prompt screen for a video player | An AI-tool request into the finished result | 30 | `@remocn/disc-pop` |
+| [Press Warp Dive](/docs/transitions/press-warp-dive) | A send button is pressed and the frame dives through an orb into the result | AI prompt demos, from send to generated result | 30 | `@remocn/press-warp-dive` |
+| [Hot Slab Morph](/docs/transitions/hot-slab-morph) | A glowing slab morphs from a template panel into a prompt card | Choosing a template, then describing a video | 24 | `@remocn/hot-slab-morph` |
+
+### Transition scenes (16)
+
+Self-contained components: pass the outgoing and incoming content as props (`from` and `to`, or a
+`scenes` list) and place the component in a `Sequence` or `Composition`.
+
+| Name | Effect | Best for | Natural length | Install |
+|---|---|---|---|---|
+| [Band Shift](/docs/transitions/band-shift) | Staggered horizontal bands carry colored blocks across and swap the scenes | A fast swap from a headline to a logo | 55 | `@remocn/band-shift` |
+| [Color Bars](/docs/transitions/color-bars) | Slanted, fluted color bars whip across the frame | A bold cut between two screenshots | 69 | `@remocn/color-bars` |
+| [Diagonal Split](/docs/transitions/diagonal-split) | A diagonal seam slides one scene away with light along its edge | Before-and-after statements | 70 | `@remocn/diagonal-split` |
+| [Hairline Open](/docs/transitions/hairline-open) | A hairline of light draws across and opens like a slit | Calm, editorial statement swaps | 78 | `@remocn/hairline-open` |
+| [Replay Wipe](/docs/transitions/replay-wipe) | A broadcast stinger wipes to a slow-motion replay and back | Sports or event-style recaps | 102 | `@remocn/replay-wipe` |
+| [Ring Cut](/docs/transitions/ring-cut) | Concentric colored rings expand from a chosen point | A circular reveal of a logo or closing line | 57 | `@remocn/ring-cut` |
+| [Tile Wave](/docs/transitions/tile-wave) | A diagonal wave shrinks a tile grid and regrows it as the next scene | A statement into an outcome word, such as Idea to Shipped | 94 | `@remocn/tile-wave` |
+| [Baton Word](/docs/transitions/baton-word) | Each line hands its last word to the next line as an accent-colored baton | Script-driven runs of three or four short sentences | 177 | `@remocn/baton-word` |
+| [Column Slide](/docs/transitions/column-slide) | Vertical columns slide across in a stagger | Clean swaps between two headlines | 66 | `@remocn/column-slide` |
+| [Cue Word](/docs/transitions/cue-word) | One cue word lands in color, then the line slides, drops, lifts or cuts away | Rapid runs of short claims | 176 | `@remocn/cue-word` |
+| [Halftone Cut](/docs/transitions/halftone-cut) | A diagonal wave of halftone dots shrinks one headline and grows the next | Print-flavored headline swaps | 76 | `@remocn/halftone-cut` |
+| [Shape Cut](/docs/transitions/shape-cut) | A circle, square or pill covers the headline, then shrinks to a small mark | A statement into a logo with one bold shape | 76 | `@remocn/shape-cut` |
+| [Window Trail](/docs/transitions/window-trail) | A window sweeps over the old line and drags the new one in behind it | Before-and-after, rename or rebrand beats | 86 | `@remocn/window-trail` |
+| [Flash Sweep](/docs/transitions/flash-sweep) | A tilted band of light sweeps across and swaps one shot for the next | A chain of three or four product shots | 140 | `@remocn/flash-sweep` |
+| [Ring Burst](/docs/transitions/ring-burst) | Concentric rings burst from a point and the last one carries in the next scene | Punchy headline-to-logo swaps | 65 | `@remocn/ring-burst` |
+| [Slit Reveal](/docs/transitions/slit-reveal) | A point of light draws a hairline that opens onto a product scene | Introducing a product with a title | 132 | `@remocn/slit-reveal` |
+
+### Scene sequencers (2)
+
+Not presentations either. A sequencer takes the whole list of scenes and runs the timeline itself, so
+scenes never overlap. The length is for the demo's full run of scenes.
+
+| Name | Effect | Best for | Natural length | Install |
+|---|---|---|---|---|
+| [Slide Swap](/docs/transitions/slide-swap) | Shoves one scene off the canvas and springs the next in from the opposite edge | Scene-to-scene runs with no overlap at all | 210 | `@remocn/slide-swap` |
+| [Spring Settle](/docs/transitions/spring-settle) | Shrinks a scene away, holds the stage empty for a beat, then lands the next from above | Runs where the background color changes per scene | 213 | `@remocn/spring-settle` |
+
+## How to use a Remocn transition in Remotion
+
+Add Remocn to an existing Remotion project once ([installation](/docs/getting-started/installation)),
+then install a transition by name:
+
+```bash
+npx shadcn@latest add @remocn/zoom-blur
+```
+
+The file lands in `components/remocn/`. A presentation goes between two sequences in a
+`TransitionSeries`, and the timing sets the pace:
+
+```tsx
+import { TransitionSeries, linearTiming } from "@remotion/transitions";
+import { zoomBlur } from "@/components/remocn/zoom-blur";
+
+export const MyVideo = () => (
+  <TransitionSeries>
+    <TransitionSeries.Sequence durationInFrames={70}>
+      <SceneA />
+    </TransitionSeries.Sequence>
+    <TransitionSeries.Transition
+      timing={linearTiming({ durationInFrames: 18 })}
+      presentation={zoomBlur()}
+    />
+    <TransitionSeries.Sequence durationInFrames={70}>
+      <SceneB />
+    </TransitionSeries.Sequence>
+  </TransitionSeries>
+);
+```
+
+A transition scene is an ordinary component. Give it both sides of the cut as props:
+
+```tsx
+import { BandShift } from "@/components/remocn/band-shift";
+
+export const Swap = () => <BandShift from="Before." to="Now live." bands={6} />;
+```
+
+Each transition's page lists its props, a usage example, and when to use it or pick something else.
+
+## Options for Remotion transitions
+
+There are four ways to get scene transitions into a Remotion video. They work together: Remocn's
+presentations run on Remotion's own `TransitionSeries`.
+
+| Option | What you get | License | Pick it when |
+|---|---|---|---|
+| **[`@remotion/transitions`](https://www.remotion.dev/docs/transitions)** (official) | `TransitionSeries`, `linearTiming` and `springTiming`, and the built-in presentations. Version 4.0.530 ships `fade`, `slide`, `wipe`, `flip`, `clockWipe`, `iris`, `none` and WebGL ones such as `dissolve`, `crosswarp`, `filmBurn`, `ripple` and `zoomBlur`. Install with `npx remotion add @remotion/transitions` | [Remotion License](https://www.remotion.dev/docs/license) | A clean, standard cut is enough. You need this package for any presentation, Remocn's included |
+| **[`@remotion/light-leaks`](https://www.remotion.dev/docs/light-leaks)** (official) | A WebGL light-leak effect from Remotion, which you place over a cut with `TransitionSeries.Overlay` | Remotion License | You want a light-leak overlay on top of a cut rather than a transition between scenes |
+| **Custom presentations and shaders** | Write your own [custom presentation](https://www.remotion.dev/docs/transitions/presentations/custom) in React and CSS, or a WebGL2 shader through [`makeHtmlInCanvasPresentation()`](https://www.remotion.dev/docs/transitions/make-html-in-canvas-presentation), for example a port of a GLSL transition in the gl-transitions style | Yours | You need one specific effect nobody has built, and you have time to write and tune it |
+| **Remocn** (this page) | 59 ready-made transitions: 41 presentations for `TransitionSeries`, 16 transition scenes and 2 sequencers, installed with `npx shadcn@latest add @remocn/<name>` | MIT | You want a wider choice of styled cuts for a product, launch or social video, as source you can edit |
+
+What Remocn adds on top of `@remotion/transitions`:
+
+- **Range.** 59 transitions in camera, shader, pixel, graphic, light, type and match-cut styles,
+  next to the built-in set.
+- **Source in your project.** The shadcn CLI copies each transition into `components/remocn/`. There
+  is no Remocn package to keep up to date, and you can edit the code.
+- **Timing you can plan with.** Every transition states its natural length in frames, plus when to
+  use it and when to pick another one.
+- **Few dependencies.** Most need only Remotion packages. The shader dissolves also install
+  `@paper-design/shaders-react` through a Remocn shader component, which the CLI adds for you.
+
+What it doesn't change: presentations still run on `@remotion/transitions`, and Remotion's license
+applies to Remotion. The five canvas transitions (Glitch Cut, Ember Burn, Particle Dissolve, Grid
+Wave, Displacement) read real pixels through the experimental html-in-canvas API. Chrome 149+ with
+`chrome://flags/#canvas-draw-element` shows the full effect, and other browsers get a CSS
+approximation, so previews and renders don't break.
+
+Community repos exist as well. As of November 2026,
+[Ashad001/remotion-transitions](https://github.com/Ashad001/remotion-transitions) is a Claude Code
+skill with six `TransitionPresentation` patterns, and
+[GTKottman/remotion-transitions](https://github.com/GTKottman/remotion-transitions) is a library of 50
+transitions you copy in by hand, with a `catalog.json`. Both are MIT.
+
+Remocn is an independent community project. It is not affiliated with Remotion or shadcn, and it is
+listed on Remotion's resources page.
+
+## Using Remocn transitions with an AI agent
+
+Agents can pick and install transitions without reading this page:
+
+- **[MCP server](/docs/getting-started/mcp-server)** at `https://remocn.dev/mcp`, no auth.
+  `search_components` with a query such as `"transition"` or `"glitch cut"` returns matching
+  transitions with natural length, use and avoid notes, and the install command. `get_component`
+  returns one transition's full docs.
+- **[Claude Code / Codex plugin](/docs/getting-started/plugin)**:
+  `/plugin install remocn --marketplace Remocn/remocn`, then `/remocn:video <brief>` plans a
+  storyboard, installs the components it picks, transitions included, and writes the video.
+- **[Agent skill](/docs/getting-started/agent-skill)**: `npx skills add Remocn/remocn` teaches any
+  skill-loading agent Remocn's timing rules. It reads the live component index from remocn.dev.
+- **Markdown:** this page is at [`/docs/transitions.md`](/docs/transitions.md), and every transition
+  is listed with its use and avoid notes in [`/llms-components.txt`](/llms-components.txt).
+
+## FAQ
+
+<Faq>
+
+**Is there a library of ready-made transitions for Remotion?**
+Yes. Remocn has 59 ready-made scene transitions for Remotion, free and MIT licensed. 41 are presentations for `TransitionSeries` and 18 are self-contained components. Install one with `npx shadcn@latest add @remocn/<name>`. Remotion's own `@remotion/transitions` package also ships a smaller built-in set, such as `fade`, `slide` and `wipe`.
+
+**Is Remocn the same as @remotion/transitions?**
+No. `@remotion/transitions` is Remotion's official package: it provides `TransitionSeries`, the timings and the built-in presentations. Remocn is an independent registry whose presentations plug into that same `TransitionSeries`, so you use both together.
+
+**Are Remocn transitions free?**
+Yes. Remocn is MIT licensed and free. Remotion and `@remotion/transitions` keep [Remotion's license](https://www.remotion.dev/docs/license), which can require a company license for larger companies.
+
+**How do I add a transition to my Remotion video?**
+Run `npx shadcn@latest add @remocn/<name>` in your Remotion project, import the presentation from `components/remocn/<name>`, and pass it as the `presentation` of a `TransitionSeries.Transition` with `linearTiming` or `springTiming`.
+
+**Which transition should I use by default?**
+[Zoom Blur](/docs/transitions/zoom-blur) is the general-purpose cut for product demos, at 18 frames. [Whip Pan](/docs/transitions/whip-pan) is faster and more energetic, and [Focus Pull](/docs/transitions/focus-pull) is calmer.
+
+**Can I change how a transition looks?**
+Yes. Each transition takes props such as colors, direction or timing, and because the source is copied into your project you can edit the code itself.
+
+**Do the transitions work in every browser?**
+Yes. The five canvas transitions show their full pixel effect only in Chrome with the html-in-canvas flag. Everywhere else they fall back to a CSS version of the same cut, so nothing breaks.
+
+**Does Remocn render the video?**
+No. Remocn gives you components. You preview and render with Remotion as usual, for example with `npx remotion studio` and `npx remotion render`.
+
+</Faq>
+
+## Browse transitions by style
+
+Every transition with a live preview, grouped by how it moves.
 
 <CategoryIndex section="/docs/transitions">
 
@@ -16,12 +256,13 @@ Most transitions here are presentations for `@remotion/transitions` — pass one
     "push-through",
     "focus-pull",
     "zoom-blur",
+    "lens-zoom",
   ]}
 >
 
 ## Camera Motion
 
-Pure CSS-transform physics, no dependencies beyond Remotion.
+Camera moves built from CSS transforms and SVG filters, no dependencies beyond Remotion.
 
 </ComponentGroup>
 
@@ -84,6 +325,7 @@ Pixel-level transitions. These read the actual pixels of both scenes through the
     "pixel-sort",
     "light-leak",
     "hyperspace",
+    "page-turn",
   ]}
 >
 
