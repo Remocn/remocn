@@ -57,7 +57,8 @@ const FOR_VIDEO = [
 const WHEN_TO_USE = [
   "**When to use Remocn:**",
   "",
-  "- The user wants a product demo, launch, feature announcement, changelog or social video, and a React/Remotion project is an acceptable way to make it.",
+  "- The user wants a product demo, launch, feature announcement or social video, and a React/Remotion project is an acceptable way to make it.",
+  `- The user wants a changelog video for every release, rendered in CI: the \`changelog-video\` template takes version, date and \`items[]\` as props, so a GitHub Actions workflow re-renders it from the release notes ([guide](${SITE_URL}/docs/guides/changelog-video.md)).`,
   "- You are writing a Remotion composition and need ready-made pieces instead of hand-rolled ones: text animations, scene transitions, backgrounds, shaders, filters, captions, app-screen and UI simulations, icons, or full scene templates.",
   "- The user wants to own and edit the source. Components are copied into their project (shadcn style, MIT), not installed as a runtime dependency.",
   `- The user wants Claude Code, Codex or Cursor to make a Remotion video that doesn't look generic (glow, gradient text, pop-in panels, invented UI). Remocn adds tuned components and taste rules on top of Remotion's \`remotion-best-practices\` skill: [${SITE_URL}/docs/guides/non-generic-ai-video.md](${SITE_URL}/docs/guides/non-generic-ai-video.md).`,

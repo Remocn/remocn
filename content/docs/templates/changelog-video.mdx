@@ -1,0 +1,108 @@
+---
+title: Changelog Video
+description: A release update you render from data — version, date and a list of changes go in as props, so CI can render a new edition for every release
+component: changelog-video
+vibe: clean
+length: 630
+useWhen:
+  - "You want a changelog video for every release, rendered in CI from the release notes with no code edits."
+  - "Your release is a version, a date and two to eight changes, each a name plus a one-line payoff."
+avoidWhen:
+  - "One change deserves the whole video and a big reveal; use `release-teaser`."
+  - "You want a single scrolling list of past releases rather than one beat per change; use `changelog-scroll`."
+---
+
+<ComponentPreview name="changelog-video" />
+
+<InstallBlock name="changelog-video" />
+
+**Changelog Video** is a release update driven entirely by props: a stamp with
+your product name, version and date, one beat per change, and a closing beat
+with the full changelog URL. The frame stays the same every release; only the
+data changes. That is what lets you render it from a GitHub Actions workflow
+with `npx remotion render --props`, without touching the code.
+
+With three items it runs **630 frames at 30 fps, 1920×1080, 21 seconds**. Each
+extra item adds 4.5 seconds, up to eight items. The step-by-step setup for
+rendering it on every release is in the
+[Changelog video guide](/docs/guides/changelog-video).
+
+## Usage
+
+```tsx
+// src/Root.tsx
+import { Composition } from "remotion";
+import {
+  ChangelogVideo,
+  calculateChangelogVideoMetadata,
+  changelogVideoDefaults,
+  CHANGELOG_VIDEO_FPS,
+  CHANGELOG_VIDEO_HEIGHT,
+  CHANGELOG_VIDEO_WIDTH,
+} from "@/components/remocn/templates/changelog-video";
+
+export const RemotionRoot = () => (
+  <Composition
+    id="ChangelogVideo"
+    component={ChangelogVideo}
+    durationInFrames={630}
+    calculateMetadata={calculateChangelogVideoMetadata}
+    fps={CHANGELOG_VIDEO_FPS}
+    width={CHANGELOG_VIDEO_WIDTH}
+    height={CHANGELOG_VIDEO_HEIGHT}
+    defaultProps={changelogVideoDefaults}
+  />
+);
+```
+
+`calculateMetadata` sets the length from the number of items, so a release
+with five changes renders a longer video than one with two.
+
+## Props
+
+```json
+{
+  "product": "Northwind",
+  "version": "v2.4.0",
+  "date": "Nov 9, 2026",
+  "items": [
+    { "title": "Dark mode", "payoff": "Easy on the eyes at night" },
+    { "title": "CSV export", "payoff": "Every report, one click" },
+    { "title": "Faster search", "payoff": "Results in under 100 ms" }
+  ],
+  "url": "northwind.example/changelog",
+  "closing": "Shipping every week.",
+  "accent": "#7CC4A4",
+  "theme": "dark"
+}
+```
+
+Every prop is plain JSON, so the same object works in `defaultProps`, in a
+`props.json` file and in `npx remotion render --props=./props.json`.
+
+| Prop | Default / behavior |
+| --- | --- |
+| `product` | `"Northwind"`; on the stamp and the closing beat |
+| `version` | `"v2.4.0"`; an empty string hides it |
+| `date` | `"Nov 9, 2026"`; printed as written, an empty string hides it |
+| `items` | `{ title, payoff }[]`; one 4.5-second beat each, up to 8. Blank titles are dropped; an empty list falls back to the defaults |
+| `url` | `"northwind.example/changelog"`; an empty string hides it |
+| `closing` | `"Shipping every week."`; an empty string hides it |
+| `accent` | `"#7CC4A4"`; counter, rule, progress and URL |
+| `theme` | `"dark"` or `"light"` |
+
+Keep each `title` to a few words and each `payoff` to six words or fewer.
+Longer lines shrink to fit, but short ones read better at speed.
+[Words on screen](/docs/guides/words-on-screen) has the rules of thumb.
+
+## Timeline
+
+| Beat | Frames (30 fps) | Time |
+| --- | --- | --- |
+| Stamp: product, version, date | 0–104 | 0–3.5 s |
+| One beat per item | 135 frames each | 4.5 s each |
+| Closing: product, closing line, URL | last 120 | 4 s |
+
+The layout is designed at 1920×1080 and scales uniformly to other sizes; it
+does not reflow to portrait. Fonts are Manrope and JetBrains Mono through
+`@remotion/google-fonts`. No footage, audio or images are included.

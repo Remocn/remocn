@@ -106,6 +106,7 @@ export type AgentMark = (typeof AGENTS)[number]["mark"];
 
 export const TEMPLATES = [
   "/docs/templates/release-teaser",
+  "/docs/templates/changelog-video",
   "/docs/templates/launch-anything",
   "/docs/templates/brand-guidelines",
   "/docs/templates/workflow-console",

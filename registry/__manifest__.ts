@@ -2172,6 +2172,22 @@ export const previewManifest: Record<string, PreviewManifestEntry> = {
       speed: 1,
     },
   },
+  "changelog-video": {
+    durationInFrames: 630,
+    fps: 30,
+    compositionWidth: 1920,
+    compositionHeight: 1080,
+    defaults: {
+      product: "Northwind",
+      version: "v2.4.0",
+      date: "Nov 9, 2026",
+      url: "northwind.example/changelog",
+      closing: "Shipping every week.",
+      accent: "#7CC4A4",
+      theme: "dark",
+      speed: 1,
+    },
+  },
   "channel-reactions": {
     durationInFrames: 220,
     fps: 30,
