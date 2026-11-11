@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./public/hero.png" alt="Remocn: Claude Code plugin and agent skill for making Remotion videos" />
+  <a href="https://cdn.remocn.dev/videos/remocn-v3.mp4"><img src="https://cdn.remocn.dev/posters/remocn-v3.png" alt="Remocn demo video made with Remocn components (MP4)" width="720" /></a>
 </p>
 
 ![Skills installs, MIT license, hosted MCP at remocn.dev/mcp, GitHub stars and forks, sponsor](https://shieldcn.dev/group/https/skills.sh/api/badge/remocn/remocn+github/license/Remocn/remocn+badge/MCP-remocn.dev%2Fmcp-black+github/stars/Remocn/remocn+github/forks/Remocn/remocn+badge/%E2%9D%A4%EF%B8%8F%20Sponsor-this%20project-FF69B4.svg?variant=secondary)
@@ -27,14 +27,6 @@ Pick one. The plugin already includes the skill and the MCP server.
 | Your own hands | `npx shadcn@latest add @remocn/blur-reveal` | One component's source in your repo |
 
 Remotion is a prerequisite. The plugin creates a project in an empty folder; by hand it's `npx create-video@latest`.
-
-## Demo
-
-<p align="center">
-  <a href="https://cdn.remocn.dev/videos/remocn-v3.mp4"><img src="https://cdn.remocn.dev/posters/remocn-v3.png" alt="Remocn demo video made with Remocn components (MP4)" width="720" /></a>
-  <br />
-  <sub>▶ <a href="https://cdn.remocn.dev/videos/remocn-v3.mp4">Watch the MP4</a> · built with Remotion and Remocn components</sub>
-</p>
 
 ## Make a Remotion video with Claude Code
 

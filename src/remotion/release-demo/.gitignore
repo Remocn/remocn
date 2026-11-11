@@ -1,0 +1,4 @@
+# Not committed: Center Stage renders (~100MB, public/clips/) and symlinks to
+# the site public/ dir, which registry components read their default images from.
+# Recreate: cd public && for e in ../../../../public/*; do [ -d "$e" ] && ln -s "$e" . || cp "$e" .; done
+public/
