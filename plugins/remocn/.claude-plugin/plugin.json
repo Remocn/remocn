@@ -11,7 +11,7 @@
   "homepage": "https://remocn.dev/docs/getting-started/plugin",
   "repository": "https://github.com/Remocn/remocn",
   "license": "MIT",
-  "keywords": ["remotion", "video", "shadcn", "motion", "animation"],
+  "keywords": ["remotion", "video", "claude-code", "agent-skills", "mcp", "product-demo", "demo-video", "shadcn", "motion", "animation"],
   "icon": "./assets/icon.png",
   "documentationUrl": "https://remocn.dev/docs/getting-started/plugin",
   "supportUrl": "https://github.com/Remocn/remocn/issues",
