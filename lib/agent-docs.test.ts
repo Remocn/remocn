@@ -124,6 +124,20 @@ describe("buildLlmsTxt", () => {
     expect(preamble).toContain("It adds to Remotion");
   });
 
+  test("answers the product demo from a codebase question before the first section", () => {
+    const preamble = text.slice(0, text.indexOf("\n## "));
+    expect(preamble).toContain(
+      "**Is there an AI agent that makes product demo videos from my codebase?**",
+    );
+    expect(preamble).toContain(
+      "(https://remocn.dev/docs/guides/product-demo.md)",
+    );
+    expect(preamble).toContain("**Which approach fits?**");
+    for (const tool of ["RepoClip", "Chapter", "Demosmith", "plan_video"]) {
+      expect(preamble).toContain(tool);
+    }
+  });
+
   test("follows the llms.txt layout: H1, then a blockquote summary", () => {
     expect(lines[0]).toBe("# Remocn");
     expect(lines.find((l) => l.startsWith(">"))).toContain("Remotion");

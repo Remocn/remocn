@@ -1,7 +1,7 @@
 ---
-title: "Make a product demo video with an AI coding agent (Claude Code + Remotion)"
+title: "Make a product demo video from your codebase with Claude Code or Codex (Remotion + Remocn)"
 navTitle: Product demo
-description: "Make a product demo video from your codebase with an AI coding agent: Claude Code or Codex reads your repo and builds a ~50-second Remotion demo of one product flow from MIT-licensed Remocn components"
+description: "An AI agent that makes product demo videos from your codebase: Claude Code or Codex reads your repo, plans a storyboard and builds a ~50-second Remotion demo of one product flow from MIT-licensed Remocn components, rendered to MP4 on your machine"
 ---
 
 import { GuideNotes, GuideMoreLink } from "@/components/docs/guides/director-notes";
@@ -13,17 +13,28 @@ import { GuideBeatList, GuideStoryboard } from "@/components/docs/guides/storybo
 import { GuideFacts } from "@/components/docs/guides/video-facts";
 import { GuideWords } from "@/components/docs/guides/words-form";
 
-To make a product demo video with an AI coding agent, open Claude Code, Codex or another coding agent in your product's repo, install Remocn, and ask for one flow of your product. The agent reads your codebase for the product name, copy and flow, rebuilds the screens as scripted React components in a Remotion project, and renders a ~50-second MP4 that stays editable as code.
+To make a product demo video from your codebase with an AI agent, open Claude Code or Codex in your product's repo, install the Remocn plugin and run `/remocn:video` with the one flow you want to show. The agent reads your `README`, landing copy, `package.json` and recent releases, shows you a storyboard, builds the video from Remocn's Remotion components and renders a ~50-second MP4 on your machine that stays editable as code.
 
-Remocn is what the agent builds with: an [agent skill](/docs/getting-started/agent-skill) for any agent that loads Agent Skills, a [plugin](/docs/getting-started/plugin) for Claude Code and Codex with a `/remocn:video` workflow, and a shadcn-style registry of MIT-licensed Remotion components (app screens, UI primitives, cursors, transitions, text) that it installs with `npx shadcn@latest add @remocn/<name>`. It is free and open source, with no account and no hosted service.
+Remocn is what the agent builds with: a shadcn-style registry of MIT-licensed Remotion components (app screens, UI primitives, cursors, transitions, text) that it installs with `npx shadcn@latest add @remocn/<name>`, plus an [agent skill](/docs/getting-started/agent-skill), a [Claude Code and Codex plugin](/docs/getting-started/plugin) and an [MCP server](/docs/getting-started/mcp-server). It is free and open source, with no account and no hosted service.
 
-## Example: a rendered product demo
+**Last updated:** November 11, 2026 · Remotion 4.0.530 · components from the live Remocn registry
+
+## Example: a product demo rendered with Remocn
+
+<GuideVideo
+  src="https://cdn.remocn.dev/videos/remocn-ui.mp4"
+  poster="https://cdn.remocn.dev/posters/remocn-ui.png"
+  label="The remocn/ui announcement, rendered to MP4 with Remotion from Remocn components"
+  duration={40}
+/>
+
+[Download the MP4](https://cdn.remocn.dev/videos/remocn-ui.mp4) · [Poster image](https://cdn.remocn.dev/posters/remocn-ui.png)
+
+This is the ~40-second video we announced [remocn/ui](/docs/ui) with: a real MP4 rendered with Remotion from Remocn components, where a scripted product screen does the demo. The [Feature announcement](/docs/guides/feature-announcement) guide has its storyboard.
 
 <ComponentPreview name="fomo-limit-orders" />
 
-This is [Order Flow](/docs/templates/fomo-limit-orders), a product demo template of about 18 seconds (60 fps) from the registry: a fictional trading app, a phone interface, an exit-price slider, a confirmation and a closing mark. On remocn.dev the preview plays it live in your browser from the template's source with `@remotion/player`; none of it is a screen recording. To get the same source in your project: `npx shadcn@latest add @remocn/fomo-limit-orders`.
-
-Example checked on November 10, 2026: the preview runs the registry's current source on Remotion 4.0.530.
+This one is [Order Flow](/docs/templates/fomo-limit-orders), a product demo template of about 18 seconds (60 fps): a fictional trading app, a phone interface, an exit-price slider, a confirmation and a closing mark. The preview plays it live in your browser from the template's source with `@remotion/player`; none of it is a screen recording. To get the same source in your project: `npx shadcn@latest add @remocn/fomo-limit-orders`.
 
 <GuideFacts
   facts={[
@@ -33,38 +44,51 @@ Example checked on November 10, 2026: the preview runs the registry's current so
   ]}
 />
 
-**Works with:** Claude Code and Codex (through the [plugin](/docs/getting-started/plugin)), other agents that load Agent Skills (through the [agent skill](/docs/getting-started/agent-skill)), and [Remocn Studio](https://remocn.studio) on macOS and Linux. Chat apps such as claude.ai and ChatGPT can plan the video through the [MCP server](/docs/getting-started/mcp-server), but building it needs an agent with a terminal.
+**Works with:** Claude Code and Codex (through the [plugin](/docs/getting-started/plugin)), other agents that load Agent Skills (through the [agent skill](/docs/getting-started/agent-skill)), and [Remocn Studio](https://remocn.studio). Chat apps such as claude.ai and ChatGPT can plan the video through the [MCP server](/docs/getting-started/mcp-server), but building it needs an agent with a terminal.
 
-**Last updated:** November 10, 2026 · Remotion 4.0.530 · components from the live Remocn registry
+## Setup: skill, plugin or MCP
 
-## How do I make a product demo video with an AI coding agent?
+Pick one. All three are free and need no account.
 
-1. **Install the Remocn plugin.** In Claude Code:
+**Plugin, for Claude Code and Codex.** Adds the `/remocn:video` workflow and bundles the MCP server. In Claude Code:
 
-   ```text
-   /plugin install remocn --marketplace Remocn/remocn
-   ```
+```text
+/plugin install remocn --marketplace Remocn/remocn
+```
 
-   In Codex:
+In Codex:
 
-   ```bash
-   codex plugin marketplace add Remocn/remocn
-   codex plugin add remocn@remocn
-   ```
+```bash
+codex plugin marketplace add Remocn/remocn
+codex plugin add remocn@remocn
+```
 
-   Another agent: install the skill instead, then ask the agent to set up Remotion ([Setup](/docs/guides/setup) has the prompt).
+**Agent skill, for any agent that loads Agent Skills.** The skill carries the product demo recipe, including the step that reads your repo. Then ask the agent to set up Remotion ([Setup](/docs/guides/setup) has the prompt).
 
-   ```bash
-   npx skills add Remocn/remocn --skill remocn --yes
-   ```
+```bash
+npx skills add Remocn/remocn --skill remocn --yes
+```
 
-2. **Ask for the demo in one line,** from your product's repo. Name the product and the one flow to show:
+**MCP server, for planning in any MCP client.** `https://remocn.dev/mcp` has four read-only tools. `plan_video` turns a brief such as "50-second product demo for Tasklane" into a beat-by-beat storyboard with a suggested component per beat and one install command; `search_components`, `get_component` and `preview_component` find, read and preview components. It does not render video. In Claude Code or Codex:
+
+```bash
+claude mcp add --transport http remocn https://remocn.dev/mcp
+codex mcp add remocn --url https://remocn.dev/mcp
+```
+
+Other clients: [MCP server setup](/docs/getting-started/mcp-server).
+
+## How do I make a product demo video from my codebase?
+
+1. **Ask for the demo in one line,** from your product's repo. Name the product and the one flow to show:
 
    ```text
    /remocn:video 50-second product demo for Tasklane: a user pastes a link, a preview builds itself, the share button lights up
    ```
 
-   The agent reads your `README`, landing copy, `package.json` and recent releases, then shows a storyboard and waits for your go-ahead before writing code. If the repo has no Remotion project, it creates one in a new folder. For more control, paste the full prompt from [The prompt](#the-prompt) instead.
+   With the skill instead of the plugin, ask in plain words ("Make a 50-second product demo video of this app with remocn: ..."). For more control, paste the full prompt from [The prompt](#the-prompt).
+
+2. **Approve the storyboard.** The agent reads your `README`, landing copy, `package.json` and recent releases, asks only for what is still missing, and shows a storyboard: beats, lengths, components and one install line. It waits for your go-ahead before writing code. If the repo has no Remotion project, it creates one in a new folder.
 
 3. **Preview it.** Open the project in [Remocn Studio](https://remocn.studio) (the plugin offers this when the video is built), or run:
 
@@ -80,27 +104,39 @@ Example checked on November 10, 2026: the preview runs the registry's current so
    npx remotion render <slug> out/<slug>.mp4
    ```
 
-## From your codebase
+## What the agent reads from your codebase
 
-What the agent takes from your repo, and what it doesn't:
-
-- **Your words.** The [video workflow](/docs/getting-started/plugin) pulls the product name, copy and recent releases from your `README`, landing copy and `package.json`, and asks only for what is still missing.
+- **Your words.** The product demo recipe in the [skill](/docs/getting-started/agent-skill) and the [`/remocn:video` workflow](/docs/getting-started/plugin) pull the product name, one-liner, features and recent releases from your `README`, landing copy and `package.json`, ask only for what is still missing, and fall back to honest placeholders rather than blocking.
+- **Your screens, if you point it at them.** The agent rebuilds your UI from Remocn's UI primitives and app-screen components instead of running your app, because a video frame has to render the same way every time: no data fetching, no hover state, no clock. Name the files of the screens in your flow, or use [The prompt](#the-prompt), which asks the agent to read them, so labels, copy and layout match your app. A screenshot helps too.
 - **Your design tokens.** Remocn's UI primitives ([remocn-ui](/docs/ui)) use stock shadcn/ui token names: `primary`, `background`, `border`, `radius` and the rest. If your app uses shadcn/ui, ask the agent to copy the values from your `globals.css` into the video's theme. Animated colors need concrete values (oklch, hex or rgb), not `var(--primary)`; [Theming](/docs/ui/concepts#theming) explains why. For everything else, the [brand brief](/docs/guides/your-brand) keeps your colors, font and logo in one file the agent reuses.
-- **Your screens.** The agent rebuilds your UI from Remocn's UI primitives and app-screen components rather than running your app, because a video frame has to render the same way every time: no data fetching, no hover state, no clock. Give it a screenshot when it needs to look closer to your app.
 - **Where the video lives.** Every component is copied into your project as source, so the video is ordinary React and TypeScript that sits next to your code and goes through git like the rest of it.
 
-## Which approach fits
+## Which approach fits?
 
-There are four common ways to get a product demo video out of your code. Facts about RepoClip and agentic-product-demo come from their own pages, checked on November 10, 2026; the Playwright row describes the general approach.
+There are three ways to get a product demo video out of your code: a hosted service that turns a repo into a video, an agent that records your real app, or an agent that builds the video as code. Facts about the other tools come from their own pages, checked on November 11, 2026 (agentic-product-demo on November 10, 2026). Prices change; check each site.
 
-| | How the video is made | What it reads | What you can edit afterwards | Cost and setup | Fits when |
+| | Approach | How the video is made | What it reads | What you edit afterwards | Cost and setup |
 |---|---|---|---|---|---|
-| [RepoClip](https://repoclip.io/product-demo-video-maker) | Hosted service. AI writes a script and generates the visuals and narration for each scene | A public or private GitHub repo URL | The video, through the service | Account required. One free video a month, paid plans above that | You want a narrated explainer from a repo URL with nothing to install |
-| Playwright-based recording skills (a general pattern, not one tool) | The agent drives your running app in a headless browser and records the screen | Your running app | The recording script, then the footage | Your app running locally with demo data | You need the real pixels of your app, and a screen recording look is fine |
-| [agentic-product-demo](https://github.com/Alexwtlf/agentic-product-demo) | A Claude Code skill and a motion kit. The agent draws your app in React and renders it with Remotion | Your repo, running app or site, and your stylesheet's tokens | The composition, as code | MIT kit, Node 20+, Remotion | You want a short UI clip in your app's own styling, built from one kit |
-| Remocn | A skill, plugin and component registry. The agent composes a full storyboard from installed Remotion components and renders it locally | Your repo's `README`, landing copy, `package.json` and releases | Every component, as source in your project | Free and MIT, no account. Remotion project required | You want a complete demo (setup line, flow, payoff, install command) and will make more videos from the same parts |
+| [RepoClip](https://repoclip.io/product-demo-video-maker) | Hosted repo-to-video | AI writes a script, generates images for each scene and adds a TTS narration and music | A public or private GitHub repo URL | Not stated on its page; tone, style and voice are set before generating | Account required. One free video a month, paid plans up to $79/mo |
+| [Chapter](https://chapter.dev) | Hosted agent that films your real app | Runs your app from its code with stand-ins for the backend and films it with an AI agent, with voiceover, captions and music | A GitHub repo (read-only), or a staging URL and a test login | Changes are requested in words; demos are re-filmed when pull requests merge | Account required. First 3 demos free, then from $47/mo billed yearly |
+| [Demosmith](https://demosmith.ai) | Hosted agent that records your real app | A cloud browser agent clicks through the flow while recording, then adds cuts, zooms, AI voiceover and captions | Your product URL and a prompt, with an optional test login | Narration, captions, zooms and audio in its editor | Account required. From $33/mo billed yearly, 3-day trial |
+| [AI Product Demo Video](https://github.com/RJ1107/ai-product-demo-video) | Agent skill that records your real app | Claude Code, Codex or another agent drives your running app with Playwright and records it, with narration and captions | Your running app | The generated `plan.json` and recording script, then re-record | MIT, free. Node 22+, Python, Playwright and FFmpeg; paid TTS optional |
+| [agentic-product-demo](https://github.com/Alexwtlf/agentic-product-demo) | Agent skill that builds the video as code | A Claude Code skill and motion kit: the agent draws your app in React and renders it with Remotion | Your repo, running app or site, and your stylesheet's tokens | The composition, as code | MIT kit, Node 20+, Remotion |
+| Remocn | Skill, plugin and registry that build the video as code | The agent plans a storyboard and composes it from installed Remotion components, then renders locally | Your repo's `README`, landing copy, `package.json` and releases, plus any files you point it at | Every component, as source in your project | Free and MIT, no account. Remotion project required |
 
-Remotion has its own license: free for individuals and small companies, with a paid company license for larger teams. Both Remotion-based options above inherit it. Check [Remotion's license](https://www.remotion.dev/license) for the current thresholds.
+Remotion has its own license: free for individuals and small companies, with a paid company license for larger teams. The Remotion-based options above inherit it. Check [Remotion's license](https://www.remotion.dev/license) for the current thresholds.
+
+### When to use Remocn
+
+- You want a complete, scripted demo (setup line, flow, payoff, install command) that looks cleaner than a screen recording.
+- You want the video as code in your repo, so the next demo, launch or changelog video reuses the same parts.
+- You already use Claude Code, Codex or another coding agent and don't want another account or subscription.
+
+### When not to use Remocn
+
+- **You need the real pixels of your app with real data.** Remocn rebuilds screens as scripted components. Use an agent that records your running app (Chapter, Demosmith or the AI Product Demo Video skill).
+- **You want a narrated video from a repo URL with nothing to install.** Remocn does not generate a voiceover and needs a Node.js and React project. A hosted service such as RepoClip fits better.
+- **You want to edit existing footage.** Remocn generates motion graphics in code; it is not a video editor.
 
 ## What the demo is
 
@@ -181,9 +217,11 @@ Paste it into your agent with your words in place of the highlighted blanks.
 ```text
 I'm making a product demo video with remocn (remocn.dev).
 
-Build a ~50-second, 1920×1080, 30fps demo video for <PRODUCT NAME> in this
-Remotion project, using remocn components — install anything you need with
-`npx shadcn@latest add @remocn/<name>`:
+Read this codebase first: the README, landing copy, package.json and the
+source of the screens in the flow below, so labels, copy and layout match
+my app. Then build a ~50-second, 1920×1080, 30fps demo video for
+<PRODUCT NAME> in this Remotion project, using remocn components — install
+anything you need with `npx shadcn@latest add @remocn/<name>`:
 
 1. Setup — one calm line: "<SETUP LINE>".
 2. The screen — a recreated app screen for <PRODUCT NAME> slides in and
@@ -197,8 +235,8 @@ Remotion project, using remocn components — install anything you need with
    then my logo (<LOGO FILE, or: use the product name as a wordmark>) with
    a closing line: "<CLOSING LINE>".
 
-The app screen is the star: recreate a clean, believable version of my UI
-and script every interaction — deliberate clicks, typing that a viewer can
+The app screen is the star: rebuild my UI from what you read in the code,
+cleaned up, and script every interaction — deliberate clicks, typing that a viewer can
 follow, responses that land with a beat of rest. Give the three flow steps
 the most screen time. Style: warm dark background (#141318), off-white
 text, one accent color <ACCENT COLOR>, Manrope. Keep transitions restrained
