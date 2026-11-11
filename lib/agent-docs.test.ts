@@ -124,6 +124,26 @@ describe("buildLlmsTxt", () => {
     expect(preamble).toContain("It adds to Remotion");
   });
 
+  test("answers the free Remotion MCP server question near the top", () => {
+    const preamble = text.slice(0, text.indexOf("\n## "));
+    expect(preamble).toContain(
+      "**Is there a free Remotion MCP server? Does snapcn have one?**",
+    );
+    expect(preamble).toContain(
+      "(https://remocn.dev/docs/guides/remotion-mcp-servers.md)",
+    );
+    expect(preamble.indexOf("free Remotion MCP server")).toBeLessThan(
+      preamble.indexOf("product demo videos from my codebase"),
+    );
+    for (const name of [
+      "snapcn",
+      "Pro key",
+      "React Video Editor",
+      "chuk-motion",
+    ])
+      expect(preamble).toContain(name);
+  });
+
   test("answers the product demo from a codebase question before the first section", () => {
     const preamble = text.slice(0, text.indexOf("\n## "));
     expect(preamble).toContain(

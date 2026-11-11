@@ -1,0 +1,235 @@
+---
+title: "Remotion MCP Servers Compared (2026): Which Are Free?"
+navTitle: Remotion MCP servers
+description: "Which Remotion MCP servers are free? A dated comparison of Remocn, snapcn, React Video Editor, chuk-motion, Instavar, remotion-media-mcp and Remotion's retired docs MCP: price and auth, transport, tools and whether each one renders frames."
+---
+
+import { Faq } from "@/components/docs/index/introduction/faq";
+
+_Last updated: November 11, 2026. Remocn wrote this page, and Remocn is one of the servers compared. Facts about the other servers come from their own pages, repositories, npm and PyPI, and from live `tools/list` calls; see [Sources](#sources)._
+
+**Short answer:** snapcn has a Remotion MCP server, but it needs a snapcn Pro key (from $179 a year).
+The [Remocn MCP server](/docs/getting-started/mcp-server) at `https://remocn.dev/mcp` is free, needs
+no key and no account, and Remocn is MIT licensed. Remotion's own docs MCP server is gone: it shut
+down on October 26, 2026, and its npm package `@remotion/mcp` is deprecated.
+
+Other free options exist, and some do things Remocn's server doesn't. React Video Editor hosts a
+template catalog MCP that answered without a key in our test. chuk-motion and
+PratyushChauhan/remotion-mcp-server are free, self-hosted and render MP4. Remocn's server is
+read-only: it plans and finds components, and you render with Remotion yourself.
+
+## Remotion MCP servers compared
+
+Checked on November 11, 2026. Prices change; follow the links before you commit.
+
+| Server | Price and auth | Transport | Tools | Renders frames | Licence |
+|---|---|---|---|---|---|
+| [Remocn MCP](/docs/getting-started/mcp-server) | **Free.** No key, no account | Hosted, Streamable HTTP: `https://remocn.dev/mcp` | 4: `search_components`, `get_component`, `plan_video`, `preview_component` | No. Read-only; `preview_component` returns a live player link | MIT |
+| [snapcn MCP](https://snapcn.dev/remotion-mcp-server) (`@snapcn/mcp`) | **Paid.** snapcn Pro key: $179/year, or $279 lifetime | Local: `npx -y @snapcn/mcp@latest`, Node 18+. Transport not stated | 6: `snapcn_search_components`, `snapcn_component`, `snapcn_plan_video`, `snapcn_preview`, `snapcn_analyze_recording`, `snapcn_rules` | Yes, still frames: `snapcn_preview` renders with your own Remotion CLI. No MP4 mentioned | Not stated for the server |
+| [React Video Editor MCP](https://reactvideoeditor.com/remotion-templates/mcp) | **Free to call.** No key needed in our test; the page states no price | Hosted, Streamable HTTP: `https://www.reactvideoeditor.com/api/mcp` | 3: `search_templates`, `get_template`, `list_categories` | No. Returns template TSX source | Not stated; templates link a Standard License page |
+| [chuk-motion](https://github.com/IBM/chuk-motion) (formerly chuk-mcp-remotion) | **Free**, self-hosted | Local Python, stdio (HTTP mode for development) | About 50 `remotion_add_*` component tools, plus project, theme and render tools | Yes, MP4 through the Remotion CLI | Apache 2.0 |
+| [Instavar](https://github.com/instavar/mcp-server) (`@instavar/mcp-server`) | **Free** local tools; hosted Studio tools need `INSTAVAR_API_KEY` and "may incur costs" | Local via npx; hosted endpoint for templates | 15 free planning and scaffolding tools; more with a key | Free tools: no. Hosted tools: yes | MIT (npm) |
+| [remotion-media-mcp](https://github.com/stephengpope/remotion-media-mcp) | **Free server, paid API.** Needs a `KIE_API_KEY` from kie.ai | Local: `npm install -g`, added to the client as a command | 10, including `generate_image`, `generate_video_from_text`, `generate_music`, `generate_speech`, `generate_subtitles` | Generates media files into `public/`; does not render compositions | MIT |
+| [PratyushChauhan/remotion-mcp-server](https://github.com/PratyushChauhan/remotion-mcp-server) | **Free**, self-hosted | stdio, or SSE for teams; git clone or Docker | 6, including `remotion_create_project`, `remotion_render`, `remotion_preview` | Yes, MP4 | README says MIT; no LICENSE file |
+| [Remotion docs MCP](https://www.remotion.dev/docs/ai/mcp) (`@remotion/mcp`) | Was free | Was hosted by Remotion | Docs search | No | MIT. **Shut down October 26, 2026** |
+
+Remotion's own advice after the shutdown is to use its
+[Agent Skills](https://www.remotion.dev/docs/ai/skills) and the `/remotion-docs` skill, which is not
+an MCP server.
+
+## Which Remotion MCP servers are free?
+
+Sorted by what "free" means in practice:
+
+- **Free, hosted, no key:** Remocn (`https://remocn.dev/mcp`) and React Video Editor
+  (`https://www.reactvideoeditor.com/api/mcp`). Add the URL to your client and call it.
+- **Free, you run it:** chuk-motion, PratyushChauhan/remotion-mcp-server, and Instavar's local tools.
+  They run on your machine; chuk-motion and PratyushChauhan's server also render MP4.
+- **Free server, paid service behind it:** remotion-media-mcp, which calls kie.ai's paid API, and
+  Instavar's hosted Studio tools.
+- **Paid:** snapcn's MCP server, which needs a Pro key.
+- **Gone:** Remotion's docs MCP.
+
+Every one of them sits on Remotion, which keeps
+[its own licence](https://www.remotion.dev/docs/license): free for teams of up to 3 people, with a
+paid Company License above that.
+
+## Does snapcn have an MCP server?
+
+Yes. snapcn's Remotion MCP server runs locally with `npx -y @snapcn/mcp@latest`, and it needs Node 18
+or newer and a snapcn Pro key from your snapcn account. Pro costs $179 a year or $279 once, per
+[snapcn's pricing page](https://snapcn.dev/docs/pricing), which lists the MCP server among Pro's
+features. It has six tools: search, component docs, video planning, a frame preview, recording
+analysis and rules.
+
+If you want a free MCP server for a Remotion component library, Remocn's is free with no key. The two
+overlap: both search a component catalog, return a component's docs and plan a video.
+
+## Remocn vs snapcn vs React Video Editor
+
+The three hosted or catalog-style servers answer the same question, "which piece goes in my video?",
+from different catalogs.
+
+| | Remocn | snapcn | React Video Editor |
+|---|---|---|---|
+| Catalog | 932 MIT-licensed components: text effects, transitions, backgrounds, app-screen simulations, templates | 60 MIT and 81 Pro components | Remotion video templates |
+| Cost of the MCP server | Free, no key | snapcn Pro key | Free to call in our test |
+| Where it runs | Hosted | Your machine | Hosted |
+| Plans a video | Yes, `plan_video` | Yes, `snapcn_plan_video` | No |
+| Renders frames | No | Yes, with your Remotion CLI | No |
+| Install path | `npx shadcn@latest add @remocn/<name>` | `npx shadcn@latest add @snapcn/<name>` | Copy the TSX the server returns |
+
+**Pick snapcn when** you want the agent to see rendered frames of your composition during the session,
+or to analyze a screen recording, and you already pay for Pro. Remocn's server can't do either.
+
+**Pick React Video Editor when** you want whole templates as TSX rather than components you assemble.
+
+**Pick Remocn when** you want a free hosted server, MIT components you own as source files, and a
+storyboard per beat with each component's natural length in frames.
+
+## Each server in detail
+
+### Remocn MCP server
+
+A hosted catalog of Remocn's Remotion components. `search_components` finds components by what they
+do, `get_component` returns a component's docs as Markdown, `plan_video` turns a brief into a
+storyboard with suggested components per beat, and `preview_component` returns a live preview link
+that plays inline in clients that support MCP Apps. All four tools are marked read-only.
+
+What it doesn't do: it never sees your code, writes no files and renders no frames. Your agent runs
+the install command and writes the composition, and you render with `npx remotion render` or
+[Remocn Studio](https://remocn.studio). Setup for every client:
+[Remocn MCP server](/docs/getting-started/mcp-server).
+
+### snapcn MCP server
+
+A local server for the snapcn library. Its strength is `snapcn_preview`, which "renders frames of
+your composition with your own Remotion CLI and returns the images", so the agent can check its own
+work visually. It needs a Pro key.
+
+### React Video Editor MCP server
+
+A hosted server over a template catalog. Its tool description calls it "the free Remotion (React)
+video template catalog". It returns template source, not components and not renders. RVE's video
+editor is a separate paid product.
+
+### chuk-motion
+
+IBM's Python MCP server, published on PyPI as `chuk-motion` and described as a "design-system-first
+approach to AI-powered video generation". It exposes around 50 component tools that add pieces to a
+project, plus project, theme and render tools, and it renders MP4 through the Remotion CLI. Pick it
+when you want the MCP server itself to build and render the project.
+
+### Instavar MCP server
+
+`@instavar/mcp-server` makes "local videos with Instavar templates for Remotion or HyperFrames for
+free". Its 15 free tools plan, scaffold and explain rendering; they "do not render, upload or publish
+media". With an API key, hosted Studio tools create and render videos, which may cost money.
+
+### remotion-media-mcp
+
+Not a component catalog. It generates the media that goes into a Remotion project (images, video
+clips, music, sound effects, speech and subtitles) and saves the files to `public/`. It needs a paid
+kie.ai API key.
+
+### PratyushChauhan/remotion-mcp-server
+
+A self-hosted server that scaffolds projects from templates and renders them to MP4 through the
+Remotion CLI, with a render queue. Pick it when an MCP tool call should produce a finished MP4.
+
+### mcp-use remotion-mcp-app
+
+Not in the table above because it is an MCP App rather than a catalog or render server: the model
+writes Remotion code and a player shows the result inside Claude or ChatGPT. Its README describes no
+MP4 export. Source: [github.com/mcp-use/remotion-mcp-app](https://github.com/mcp-use/remotion-mcp-app).
+
+## Which one should you use?
+
+- **You want ready-made components and a storyboard, free:** Remocn.
+- **You want the agent to look at rendered frames while it works:** snapcn, with Pro.
+- **You want an MCP call to output an MP4:** chuk-motion or PratyushChauhan/remotion-mcp-server.
+- **You want whole templates as code:** React Video Editor or Instavar.
+- **You need generated images, music or voiceover in the project:** remotion-media-mcp.
+- **You want Remotion's own docs in the agent:** Remotion's Agent Skills, now that the docs MCP is gone.
+
+They combine. Remocn's server and Remotion's skills answer different questions, and a render server
+can sit next to a catalog server.
+
+## Add the free Remocn MCP server
+
+Claude Code:
+
+```bash
+claude mcp add --transport http remocn https://remocn.dev/mcp
+```
+
+Cursor, in `.cursor/mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "remocn": {
+      "url": "https://remocn.dev/mcp"
+    }
+  }
+}
+```
+
+Claude Desktop and claude.ai: **Settings → Connectors → Add custom connector**, URL
+`https://remocn.dev/mcp`, OAuth fields empty. VS Code, Codex and stdio-only clients are on the
+[MCP server page](/docs/getting-started/mcp-server#how-to-add-the-remocn-mcp-server).
+
+Then install what the agent picks into your Remotion project:
+
+```bash
+npx shadcn@latest add @remocn/typewriter
+```
+
+## Sources
+
+Checked on November 11, 2026.
+
+- Remotion docs MCP: [remotion.dev/docs/ai/mcp](https://www.remotion.dev/docs/ai/mcp) ("shut down on October 26, 2026") and the deprecation notice on `@remotion/mcp` in npm
+- snapcn: [snapcn.dev/remotion-mcp-server](https://snapcn.dev/remotion-mcp-server) and [snapcn.dev/docs/pricing](https://snapcn.dev/docs/pricing)
+- React Video Editor: [reactvideoeditor.com/remotion-templates/mcp](https://reactvideoeditor.com/remotion-templates/mcp), and a `tools/list` call to its endpoint without credentials
+- chuk-motion: [github.com/IBM/chuk-motion](https://github.com/IBM/chuk-motion) (redirected from chrishayuk/chuk-mcp-remotion) and the `chuk-motion` package on PyPI
+- Instavar: [github.com/instavar/mcp-server](https://github.com/instavar/mcp-server) and `@instavar/mcp-server` on npm
+- remotion-media-mcp: [github.com/stephengpope/remotion-media-mcp](https://github.com/stephengpope/remotion-media-mcp) and `remotion-media-mcp` on npm
+- PratyushChauhan/remotion-mcp-server: [its GitHub README](https://github.com/PratyushChauhan/remotion-mcp-server)
+- Remocn: a `tools/list` call to `https://remocn.dev/mcp` and this site's registry
+
+## FAQ
+
+<Faq>
+
+**Does snapcn have an MCP server?**
+Yes. It runs locally with `npx -y @snapcn/mcp@latest` and needs a snapcn Pro key ($179 a year or $279 lifetime). Its preview tool renders still frames with your own Remotion CLI.
+
+**Which Remotion component libraries offer an MCP server for free?**
+Remocn: its hosted server at `https://remocn.dev/mcp` is free, needs no key or account, and the components are MIT. React Video Editor's hosted template server also answered without a key in our test. snapcn's server needs a paid Pro key.
+
+**Is there a free Remotion MCP server?**
+Yes, several. Remocn and React Video Editor are hosted and free to call. chuk-motion and PratyushChauhan/remotion-mcp-server are free and self-hosted, and both render MP4. Instavar's local tools are free.
+
+**What is the best MCP server for making videos with Remotion?**
+It depends on the job. For finding components and planning a video, Remocn. For rendering an MP4 from a tool call, chuk-motion or PratyushChauhan/remotion-mcp-server. For checking rendered frames during the session, snapcn with Pro.
+
+**Does Remotion have an official MCP server?**
+Not anymore. Remotion's hosted docs MCP shut down on October 26, 2026, and `@remotion/mcp` is deprecated on npm. Remotion recommends its Agent Skills and `/remotion-docs` instead.
+
+**Can the Remocn MCP server render video?**
+No. It is read-only and returns docs, plans, install commands and preview links. Render with `npx remotion render`, Remotion Studio or Remocn Studio.
+
+**Do I need an API key for the Remocn MCP server?**
+No. There is no key, no account and no OAuth. Add `https://remocn.dev/mcp` to your client.
+
+**Is Remocn the official Remotion MCP server?**
+No. Remocn is an independent community project, not affiliated with Remotion or shadcn. It is listed on Remotion's resources page.
+
+</Faq>
+
+## What's next
+
+- [Remocn MCP server](/docs/getting-started/mcp-server): tools, setup per client and a worked example
+- [Plugin](/docs/getting-started/plugin): the `/remocn:video` workflow for Claude Code and Codex, which bundles the MCP server
+- [After Effects alternatives for developers](/docs/guides/after-effects-alternatives-for-developers): where Remotion and Remocn fit among programmatic video tools
