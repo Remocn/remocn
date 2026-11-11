@@ -2,13 +2,7 @@
   <img src="./public/hero.png" alt="Remocn: Claude Code plugin and agent skill for making Remotion videos" />
 </p>
 
-<p align="center">
-  <a href="https://skills.sh/remocn/remocn"><img src="https://img.shields.io/endpoint?url=https%3A%2F%2Fskills.sh%2Fapi%2Fbadge%2Fremocn%2Fremocn" alt="Remocn on skills.sh" /></a>
-  <a href="./LICENSE"><img src="https://img.shields.io/badge/license-MIT-black" alt="MIT license" /></a>
-  <a href="https://remocn.dev/docs/getting-started/mcp-server"><img src="https://img.shields.io/badge/MCP-remocn.dev%2Fmcp-black" alt="Hosted MCP server at remocn.dev/mcp" /></a>
-</p>
-
-![GitHub Health](https://shieldcn.dev/group/github/stars/kapishdima/remocn+github/forks/kapishdima/remocn+badge/%E2%9D%A4%EF%B8%8F%20Sponsor-this%20project-FF69B4.svg?variant=secondary)
+![Skills installs, MIT license, hosted MCP at remocn.dev/mcp, GitHub stars and forks, sponsor](https://shieldcn.dev/group/https/skills.sh/api/badge/remocn/remocn+github/license/Remocn/remocn+badge/MCP-remocn.dev%2Fmcp-black+github/stars/Remocn/remocn+github/forks/Remocn/remocn+badge/%E2%9D%A4%EF%B8%8F%20Sponsor-this%20project-FF69B4.svg?variant=secondary)
 
 # Remocn: Claude Code plugin & agent skill for making Remotion videos
 
@@ -37,9 +31,9 @@ Remotion is a prerequisite. The plugin creates a project in an empty folder; by 
 ## Demo
 
 <p align="center">
-  <a href="https://cdn.remocn.dev/videos/intoducing-remocn.mp4"><img src="https://cdn.remocn.dev/posters/intoducing-remocn.png" alt="Introducing Remocn: launch video made with Remocn components (MP4)" width="720" /></a>
+  <a href="https://cdn.remocn.dev/videos/remocn-v3.mp4"><img src="https://cdn.remocn.dev/posters/remocn-v3.png" alt="Remocn demo video made with Remocn components (MP4)" width="720" /></a>
   <br />
-  <sub>▶ <a href="https://cdn.remocn.dev/videos/intoducing-remocn.mp4">Watch the MP4</a> · built with Remotion and Remocn components</sub>
+  <sub>▶ <a href="https://cdn.remocn.dev/videos/remocn-v3.mp4">Watch the MP4</a> · built with Remotion and Remocn components</sub>
 </p>
 
 ## Make a Remotion video with Claude Code
