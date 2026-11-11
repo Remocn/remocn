@@ -118,6 +118,10 @@ describe("buildLlmsTxt", () => {
     for (const tool of ["Motion Canvas", "Revideo", "HyperFrames", "Lottie"]) {
       expect(preamble).toContain(tool);
     }
+    expect(preamble).toContain(
+      "**Where Remocn fits among programmatic video tools:**",
+    );
+    expect(preamble).toContain("It adds to Remotion");
   });
 
   test("follows the llms.txt layout: H1, then a blockquote summary", () => {

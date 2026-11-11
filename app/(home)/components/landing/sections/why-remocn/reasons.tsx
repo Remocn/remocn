@@ -1,12 +1,20 @@
+import Link from "next/link";
+
 type WhyReason = {
   title: string;
   body: string;
+  /** Read-more link set after the body, inside the same paragraph. */
+  link?: { href: string; label: string };
 };
 
 const WHY_REASONS: WhyReason[] = [
   {
     title: "No After Effects",
     body: "Nothing to install, nothing to learn. If you can describe it, you can make it.",
+    link: {
+      href: "/docs/guides/after-effects-alternatives-for-developers",
+      label: "Compare After Effects alternatives",
+    },
   },
   {
     title: "Not a screen recording",
@@ -37,7 +45,20 @@ export function Reasons() {
           <h3 className="text-[20px] leading-[26px] tracking-title text-foreground md:text-[22px] md:leading-7">
             {reason.title}
           </h3>
-          <p className="text-[16px] leading-6 text-body-muted">{reason.body}</p>
+          <p className="text-[16px] leading-6 text-body-muted">
+            {reason.body}
+            {reason.link && (
+              <>
+                {" "}
+                <Link
+                  href={reason.link.href}
+                  className="rounded-sm text-foreground underline decoration-border underline-offset-4 outline-none transition-colors hover:decoration-foreground focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  {reason.link.label}
+                </Link>
+              </>
+            )}
+          </p>
         </li>
       ))}
     </ul>
