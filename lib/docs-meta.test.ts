@@ -352,6 +352,7 @@ describe("stated catalog size matches the registry", () => {
   const STATED = [
     "content/docs/getting-started/introduction.mdx",
     "content/docs/guides/after-effects-alternatives-for-developers.mdx",
+    "content/docs/guides/remotion-mcp-servers.mdx",
   ];
 
   it("states the real number of installable components", async () => {
