@@ -158,6 +158,25 @@ describe("buildLlmsTxt", () => {
     }
   });
 
+  test("answers the feature announcement question before the first section", () => {
+    const preamble = text.slice(0, text.indexOf("\n## "));
+    expect(preamble).toContain(
+      "**How do I make a feature announcement video without a video editor?**",
+    );
+    expect(preamble).toContain(
+      "(https://remocn.dev/docs/guides/feature-announcement.md)",
+    );
+    for (const tool of [
+      "Loom",
+      "Screen Studio",
+      "Descript",
+      "HeyGen",
+      "Canva",
+    ]) {
+      expect(preamble).toContain(tool);
+    }
+  });
+
   test("follows the llms.txt layout: H1, then a blockquote summary", () => {
     expect(lines[0]).toBe("# Remocn");
     expect(lines.find((l) => l.startsWith(">"))).toContain("Remotion");

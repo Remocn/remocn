@@ -1,6 +1,7 @@
 ---
-title: Feature announcement
-description: A ~40-second release video that shows the feature working — the one we shipped remocn/ui with
+title: "How to make a feature announcement video without a video editor (Claude Code + Remotion)"
+navTitle: Feature announcement
+description: "How to make a feature announcement video without a video editor: Claude Code or Codex builds a ~40-second release video from your release notes and Remocn's Remotion components, with no timeline, rendered to MP4 on your machine. Prompts, storyboard, timings and a comparison with Loom, Screen Studio, Descript, HeyGen and Canva."
 ---
 
 import { GuideNotes, GuideMoreLink } from "@/components/docs/guides/director-notes";
@@ -12,12 +13,24 @@ import { GuideBeatList, GuideStoryboard } from "@/components/docs/guides/storybo
 import { GuideFacts } from "@/components/docs/guides/video-facts";
 import { GuideWords } from "@/components/docs/guides/words-form";
 
+To make a feature announcement video without a video editor, open Claude Code or Codex in your project, install Remocn, and paste one prompt with ten short lines about your feature (or let the agent take them from your release notes). The agent writes the video as Remotion code from Remocn's ready-made components, you review it in a browser preview and ask for changes in plain words, and `npx remotion render` gives you a ~40-second MP4. There is no timeline to drag clips around in.
+
+Remocn is a free, MIT-licensed, shadcn-style registry of more than 430 Remotion components, with an [agent skill](/docs/getting-started/agent-skill), a [Claude Code and Codex plugin](/docs/getting-started/plugin) and an [MCP server](/docs/getting-started/mcp-server). It is an independent project, not made by Remotion or shadcn.
+
+**Last updated:** November 11, 2026
+
+## Example: the remocn/ui feature announcement
+
 <GuideVideo
   src="https://cdn.remocn.dev/videos/remocn-ui.mp4"
   poster="https://cdn.remocn.dev/posters/remocn-ui.png"
-  label="The remocn/ui feature announcement"
-  duration={40}
+  label="The remocn/ui feature announcement, made with Remotion and Remocn components"
+  duration={43}
 />
+
+[Download the MP4](https://cdn.remocn.dev/videos/remocn-ui.mp4) · [Poster image](https://cdn.remocn.dev/posters/remocn-ui.png) · [Release notes](/changelog#2026-06-12-remocn-ui)
+
+This is the video we announced [remocn/ui](/docs/ui) with on June 12, 2026, built with the storyboard on this page. Every frame is rendered from code: the dialog, the button, the [command menu](/docs/ui/components/command-menu) and the [toast](/docs/ui/components/toast) are Remocn components scripted on the timeline, not a screen recording.
 
 <GuideFacts
   facts={[
@@ -27,9 +40,73 @@ import { GuideWords } from "@/components/docs/guides/words-form";
   ]}
 />
 
-This is the video we announced remocn/ui with. A launch video sells the whole product; a feature announcement sells one release — and it earns its runtime by showing the feature work, not by talking about it. Eight beats, about forty seconds, and the demo beat gets the most screen time.
+### Transcript
+
+The video has no voiceover or sound. All of its words are on screen:
+
+- **0:00 – The moments.** "A dialog opening" · "A menu filtering" · "A form filling itself", then "Every demo has to show the product".
+- **0:05 – The problem.** "Real components run on the clock" · "A video only has a frame number".
+- **0:09 – The reveal.** "Meet remocn/ui".
+- **0:11 – The mechanism.** "The same shapes, driven by the timeline".
+- **0:13 – The demo.** A code panel steps through `useButtonTransition` (hover, press, loading, success) while a "Create account" button acts out each state. A command menu types "pub" and picks "Publish changes", and a "Changes published" toast appears.
+- **0:25 – The breadth.** A montage of primitives, each labeled: checkbox ("Accept terms and conditions"), switch ("Notifications"), tabs (Account, Password, Settings), select (Theme: Light, Dark, System) and toast ("Account created").
+- **0:32 – The value.** "Around forty primitives" · "Assembled flows included" · "Deterministic on every render".
+- **0:35 – The install.** A terminal types `npx shadcn add @remocn/command-menu`.
+- **0:38 – The outro.** The Remocn logo, then "Open source, all the way down".
+
+## Who this is for
+
+- Developers and small product teams who ship a feature and need a short video for the release post, the changelog, X or LinkedIn.
+- People who already work in Claude Code, Codex or another coding agent and don't want to learn a video editor for one clip.
+- Teams that want the next release video to reuse the same parts: the video lives in your repo as React code.
+
+If you want a recording of your real app with your face or voice on it, see [When not to use Remocn](#when-not-to-use-remocn).
+
+## Prerequisites
+
+1. **A coding agent.** Claude Code or Codex for the plugin, or any agent that loads Agent Skills.
+2. **Node.js and a Remotion project.** No Remotion project yet? The agent creates one; [Setup](/docs/guides/setup) has the prompt. Remotion has [its own license](https://www.remotion.dev/license): free for individuals and small companies, with a paid company license for larger teams.
+3. **What you're announcing.** The feature's name and a few lines about it, or a release note, `CHANGELOG.md` entry or pull request description the agent can read.
+4. **Optional: your logo and accent color.** The [brand brief](/docs/guides/your-brand) keeps them in one file the agent reuses.
+
+## Install
+
+1. **Claude Code:** install the plugin.
+
+   ```text
+   /plugin install remocn --marketplace Remocn/remocn
+   ```
+
+2. **Codex:** install the same plugin.
+
+   ```bash
+   codex plugin marketplace add Remocn/remocn
+   codex plugin add remocn@remocn
+   ```
+
+3. **Any other agent:** install the agent skill.
+
+   ```bash
+   npx skills add Remocn/remocn --yes
+   ```
+
+You only need one of the three. The agent installs each component it uses with the shadcn CLI, for example `npx shadcn@latest add @remocn/command-menu`, and the source is copied into your project. There is no account and no hosted service.
+
+## How do I make a feature announcement video without a video editor?
+
+Rough timings for a first video. Agent time depends on your agent, model and machine.
+
+1. **Install Remocn** (about 2 minutes, once). One of the [install](#install) commands above.
+2. **Write ten lines** (about 10–15 minutes). Fill the blanks in [Your words](#your-words). Have release notes already? Use the [from release notes](#from-release-notes) prompt and the agent fills them for you.
+3. **Paste the prompt** (agent time: minutes). The agent installs components and writes the video. For scale: in our [plugin test](/docs/getting-started/plugin#test-the-same-15-second-promo-with-and-without-remocn), a 15-second promo took 7.2 minutes from prompt to file. A 40-second video with a demo beat takes longer.
+4. **Preview and direct** (a few rounds of 5–10 minutes). Open the preview with `npx remotion studio`, or in [Remocn Studio](https://remocn.studio). Ask for changes in plain words; [Directing the result](#directing-the-result) has examples.
+5. **Render the MP4** (a few minutes on a laptop). Ask the agent to render it, or run `npx remotion render`.
+
+Prefer a one-line brief? `/remocn:video feature announcement for <feature>` makes the plugin plan its own storyboard, usually a shorter "Introducing X" reveal. For the 40-second, eight-beat version on this page, paste [the prompt](#the-prompt).
 
 ## The storyboard<GuideCount n={8} />
+
+A launch video sells the whole product; a feature announcement sells one release, and it earns its runtime by showing the feature work, not by talking about it. Eight beats, about forty seconds, and the demo beat gets the most screen time.
 
 <GuideStoryboard
   beats={[
@@ -46,14 +123,14 @@ This is the video we announced remocn/ui with. A launch video sells the whole pr
 
 <GuideBeatList>
 
-1. **The moments** — Three quick situations your users know, swapping in one spot, then the problem lands in one line.
-2. **The reveal** — "Meet &lt;Feature&gt;", with your one-line promise.
-3. **The mechanism** — The single idea behind the feature, one calm beat.
-4. **The demo** — The feature acting on camera: a fake app screen doing the real thing. The longest part of the video.
-5. **The breadth** — A fast montage of what else ships in this release.
-6. **The value** — Three claims stack up.
-7. **The install** — A terminal types your command or call to action.
-8. **The outro** — Your logo, one quiet closing line.
+1. **The moments** (~6 s) — Three quick situations your users know, swapping in one spot, then the problem lands in one line.
+2. **The reveal** (~4 s) — "Meet &lt;Feature&gt;", with your one-line promise.
+3. **The mechanism** (~4 s) — The single idea behind the feature, one calm beat.
+4. **The demo** (~10 s) — The feature acting on camera: a fake app screen doing the real thing. The longest part of the video.
+5. **The breadth** (~5 s) — A fast montage of what else ships in this release.
+6. **The value** (~4 s) — Three claims stack up.
+7. **The install** (~4 s) — A terminal types your command or call to action.
+8. **The outro** (~3 s) — Your logo, one quiet closing line.
 
 </GuideBeatList>
 
@@ -106,21 +183,21 @@ I'm making a feature announcement video with remocn (remocn.dev).
 
 Build a ~40-second, 1920×1080, 30fps release video for <FEATURE NAME> in this
 Remotion project, using remocn components — install anything you need with
-`npx shadcn add @remocn/<name>`:
+`npx shadcn@latest add @remocn/<name>`:
 
-1. Hook — three quick moments swapping in one center slot: "<MOMENT 1>",
-   "<MOMENT 2>", "<MOMENT 3>" — then the problem lands beneath them:
-   "<PROBLEM LINE>".
-2. Reveal — "Meet <FEATURE NAME>", then the promise: "<PROMISE LINE>".
-3. Mechanism — one calm beat naming the idea: "<MECHANISM LINE>".
-4. Demo — the feature acting on camera: a fake app screen where
+1. Hook (~6s) — three quick moments swapping in one center slot:
+   "<MOMENT 1>", "<MOMENT 2>", "<MOMENT 3>" — then the problem lands
+   beneath them: "<PROBLEM LINE>".
+2. Reveal (~4s) — "Meet <FEATURE NAME>", then the promise: "<PROMISE LINE>".
+3. Mechanism (~4s) — one calm beat naming the idea: "<MECHANISM LINE>".
+4. Demo (~10s) — the feature acting on camera: a fake app screen where
    <DEMO ACTIONS>. Give this the most screen time — it is the proof.
-5. Breadth — a fast montage of what else ships: <OTHER ITEMS>.
-6. Value — three claims stacking line by line (line-by-line-slide):
+5. Breadth (~5s) — a fast montage of what else ships: <OTHER ITEMS>.
+6. Value (~4s) — three claims stacking line by line (line-by-line-slide):
    <THREE CLAIMS>.
-7. Install — a terminal line that types itself: `<COMMAND OR CTA>`.
-8. Outro — my logo (<LOGO FILE, or: use the product name as a wordmark>)
-   with a quiet closing line: "<CLOSING LINE>".
+7. Install (~4s) — a terminal line that types itself: `<COMMAND OR CTA>`.
+8. Outro (~3s) — my logo (<LOGO FILE, or: use the product name as a
+   wordmark>) with a quiet closing line: "<CLOSING LINE>".
 
 Style: warm dark background (#141318), off-white text, one accent color
 <ACCENT COLOR>, Manrope. One quiet shader-simplex-noise field runs behind the
@@ -129,6 +206,37 @@ plus one signature transition at the reveal. Use my copy exactly as written.
 ```
 
 </GuidePrompt>
+
+## From release notes
+
+Already wrote the release? Let the agent fill the ten blanks from it. Paste this first; it shows you the lines before it builds anything.
+
+<GuidePrompt>
+
+```text
+I'm making a feature announcement video with remocn (remocn.dev) for the
+feature in <CHANGELOG.md, the latest release, or pull request #NUMBER>.
+
+1. Read it: the CHANGELOG.md entry, the GitHub release notes, or the pull
+   request description (`gh pr view <NUMBER>`). Also read the README for the
+   product name and voice.
+2. Fill these ten blanks from what you read, in short on-screen English:
+   FEATURE NAME; MOMENT 1–3 (two to four words each); PROBLEM LINE;
+   PROMISE LINE; MECHANISM LINE; DEMO ACTIONS (two or three things we watch
+   happen on a fake app screen); OTHER ITEMS (other changes in the same
+   release, or "none"); THREE CLAIMS; COMMAND OR CTA; CLOSING LINE.
+   Don't invent numbers, quotes or features that the notes don't state.
+   Where the notes don't say, write a plain placeholder and tell me.
+3. Show me the ten lines and wait for my go-ahead.
+4. Then build the ~40-second, 1920×1080, 30fps eight-beat feature
+   announcement from remocn.dev/docs/guides/feature-announcement with those
+   lines, using remocn components installed with
+   `npx shadcn@latest add @remocn/<name>`.
+```
+
+</GuidePrompt>
+
+Shipped several small changes instead of one big one? Use the [Changelog video](/docs/guides/changelog-video). The plugin's `/remocn:changelog` command builds one from git tags, commits or merged pull requests.
 
 ## Directing the result
 
@@ -151,6 +259,70 @@ More directing vocabulary: [Directing your agent](/docs/guides/directing-your-ag
 
 <GuideRenderCard prompt="Render the video.">
 
-You'll get an `.mp4` in the project folder, ready to post.
+You'll get an `.mp4` in the project folder, ready to post. Need a square or vertical cut too? See [One video, three formats](/docs/guides/one-video-three-formats).
 
 </GuideRenderCard>
+
+## Remocn vs Loom, Screen Studio, Descript, HeyGen and Canva
+
+The usual ways to make a feature announcement video, and what each one asks of you. These are general descriptions as of November 2026, not a test of each tool; check each site for current features and prices.
+
+| | How the video is made | Video editor or timeline? | What the viewer sees | What you change later | Fits when |
+|---|---|---|---|---|---|
+| Loom, Cap | Record your screen and camera while you talk | No; recordings are trimmed rather than edited | Your real app, your face and voice | Re-record, or trim | A quick walkthrough for users or your team |
+| Screen Studio | Record your screen; the app adds zooms and smooth cursor motion | Light editing in the app | Your real app, polished | The recording, in the app | You want a slick recording of the real UI on macOS |
+| Descript | Record or import footage, then edit by editing the transcript | Yes, transcript-based | Footage, often with voice | The edit, in Descript | You have narrated footage to cut |
+| HeyGen, Synthesia | Write a script; an AI avatar presents it | No, script-driven | An AI presenter | The script, then regenerate | You want a talking-head explainer without filming |
+| Canva, Keynote | Animate slides or a template, export to video | Yes, slides and timing | Slides and templates | The slides | You already work in slides |
+| Remocn | Your coding agent writes a Remotion video from Remocn components | No; the video is code | Motion graphics and scripted product UI | The code, in your repo | You work in a coding agent and want a branded release video you can reuse |
+
+### When to use Remocn
+
+- You want a short, designed release video with your copy on screen, not a talking head or a raw recording.
+- You already use Claude Code, Codex or another coding agent and don't want another account or subscription.
+- You'll make more of these: next release, the agent reuses the same video and swaps the words.
+
+## When not to use Remocn
+
+- **You need your real app with real data on screen.** Remocn rebuilds screens as scripted components. Record the real thing with Loom, Cap or Screen Studio.
+- **You want a voiceover or a presenter.** Remocn doesn't generate voice or avatars. Record yourself, or use HeyGen or Synthesia. You can add music later; see [Music and sound](/docs/guides/music-and-sound).
+- **You have footage to cut.** Remocn makes motion graphics in code; it is not a video editor. Use Descript or another editor, and add Remocn scenes around the result if you like.
+- **You can't run Node.js and React.** Rendering happens in your own Remotion project. A slide tool such as Canva or Keynote needs no setup.
+- **The release is several small changes.** Use the [Changelog video](/docs/guides/changelog-video) instead.
+
+## FAQ
+
+<Faq>
+
+**How do I make a feature announcement video without a video editor?**
+Install Remocn in Claude Code or Codex (`/plugin install remocn --marketplace Remocn/remocn`), paste the prompt from this page with ten lines about your feature, and let the agent build the video as Remotion code. Preview it in the browser, ask for changes in plain words, and render an MP4 with `npx remotion render`. No timeline is involved.
+
+**Can Claude Code make a feature announcement video?**
+Yes. With the Remocn plugin or agent skill, Claude Code installs Remocn's Remotion components with `npx shadcn@latest add @remocn/<name>`, writes the eight beats and renders the MP4 on your machine. Codex and other agents that load Agent Skills work the same way.
+
+**Can I make a feature announcement video from release notes or a changelog?**
+Yes. The [from release notes](#from-release-notes) prompt has the agent read your `CHANGELOG.md`, GitHub release or pull request description, fill the ten blanks, and show you the lines before it builds. For a release with several small changes, the plugin's `/remocn:changelog` command builds a [changelog video](/docs/guides/changelog-video) from git tags, commits or merged pull requests.
+
+**How long should a feature announcement video be?**
+The recipe here runs about 40 seconds in eight beats, with the demo beat the longest at about ten seconds. For a single "Introducing X" post, a shorter cut of the reveal, demo and outro works too.
+
+**What's the difference between a feature announcement, a launch video and a changelog video?**
+A [launch video](/docs/guides/launch-video) sells the whole product. A feature announcement sells one release and shows it working. A [changelog video](/docs/guides/changelog-video) is a ~25-second update for several small changes, with the same frame every release.
+
+**Do I need to know Remotion or React?**
+Not to get a first video: the agent writes the code. To edit it by hand later, you need to be comfortable with React and TypeScript.
+
+**Does Remocn add a voiceover or music?**
+No. The remocn/ui video above is silent. Add a track yourself; [Music and sound](/docs/guides/music-and-sound) covers how.
+
+**Is it free?**
+Remocn, its plugin, skill and MCP server are MIT licensed and free, with no account or usage limits. Remotion, which renders the video, has its own license; larger companies may need a Remotion company license.
+
+</Faq>
+
+## What's next
+
+- [Changelog video](/docs/guides/changelog-video): a ~25-second update for releases with several small changes
+- [Launch video](/docs/guides/launch-video): the same approach for a whole product
+- [Plugin](/docs/getting-started/plugin): the `/remocn:video` and `/remocn:changelog` workflows for Claude Code and Codex
+- [remocn/ui](/docs/ui): the UI primitives the demo beat is built from
