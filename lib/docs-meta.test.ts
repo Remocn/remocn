@@ -182,6 +182,25 @@ describe("component pages carry selection metadata", () => {
     expect(offenders).toEqual([]);
   });
 
+  it("carries five to eight distinct askedAs phrasings", () => {
+    const offenders: string[] = [];
+    for (const page of componentPages) {
+      const value = page.frontmatter.askedAs;
+      const ok =
+        Array.isArray(value) &&
+        value.length >= 5 &&
+        value.length <= 8 &&
+        value.every(
+          (entry) => typeof entry === "string" && entry.trim().length > 0,
+        ) &&
+        new Set(value.map((entry) => String(entry).toLowerCase())).size ===
+          value.length;
+      if (!ok) offenders.push(page.file);
+    }
+
+    expect(offenders).toEqual([]);
+  });
+
   it("only cites components that exist", () => {
     const known = new Set(items.map((i) => i.name));
     const offenders: string[] = [];
