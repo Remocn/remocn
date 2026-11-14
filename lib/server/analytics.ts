@@ -51,15 +51,6 @@ export async function trackRegistryInstall(
   }
 }
 
-/**
- * Whether agent searches are recorded with their text. Off: the privacy policy
- * (`app/(home)/legal/content.tsx`, "MCP server") promises that what an agent
- * sends is discarded, so an agent search is described by its shape (length,
- * script) and by the components it returned, never quoted. Turning this on
- * means rewriting that promise first.
- */
-const LOG_AGENT_QUERY_TEXT = false;
-
 function send(event: string, properties: Record<string, unknown>): void {
   // Never awaited: analytics must not add to a response time, and a metrics
   // outage must never reach the caller.
@@ -85,6 +76,11 @@ export interface AgentSearch {
  * A search made by a program: an MCP `search_components` call or a direct
  * call to `/api/search`. Same event name as the dialog's, told apart by
  * `actor` and `surface`.
+ *
+ * The query text is recorded, cut to `MAX_LOGGED_QUERY`. The privacy policy
+ * (`app/(home)/legal/content.tsx`, "MCP server") says so and names the limit:
+ * search queries only. Video briefs and component props stay out of
+ * analytics, and widening this needs that paragraph changed first.
  */
 export function trackAgentSearch(search: AgentSearch): void {
   if (isCrawler(search.userAgent)) return;
@@ -93,7 +89,7 @@ export function trackAgentSearch(search: AgentSearch): void {
     surface: search.surface,
     client: classifyAgentClient(search.userAgent),
     user_agent: search.userAgent.slice(0, 200),
-    ...(LOG_AGENT_QUERY_TEXT ? { query: loggedQuery(search.query) } : {}),
+    query: loggedQuery(search.query),
     ...describeQuery(search.query),
     result_count: search.results.length,
     component_count: search.results.length,

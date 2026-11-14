@@ -107,14 +107,14 @@ export const LEGAL_PARTS: LegalPart[] = [
         body: (
           <>
             The Remocn plugin for Claude Code and Codex and the MCP server at{" "}
-            <code>remocn.dev/mcp</code> need no account and collect no personal
+            <code>remocn.dev/mcp</code> need no account and ask for no personal
             data.
           </>
         ),
         items: [
           {
             title: "MCP server.",
-            body: "The server is stateless. It answers each request from the public component catalog and does not store or log what you send it: search queries, video briefs and component props are used to build the answer and then discarded. We do count tool calls, to see whether the search works: which tool ran, which client called it, how long a query was and which catalog components came back. Those counts hold none of the text you sent. The standard access logs described above apply, as for the rest of the site.",
+            body: "The server is stateless and has no accounts. Search queries sent to the search tool are recorded, cut to 200 characters, so we can see what agents look for and whether the search finds it. A recorded query is not tied to an account or an IP address; it is stored with the name of the calling client, the catalog components that came back and how long the answer took. Keep confidential details out of search queries. Video briefs and component props are used to build the answer and then discarded. We also count calls to the other tools: which tool ran and which component it asked for. The standard access logs described above apply, as for the rest of the site.",
           },
           {
             title: "Previews in chat.",
