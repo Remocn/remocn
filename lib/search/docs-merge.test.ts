@@ -1,6 +1,10 @@
 import { describe, expect, it } from "bun:test";
 import type { SortedResult } from "fumadocs-core/search";
-import { type ComponentHit, mergeDocsResults } from "./docs-merge";
+import {
+  type ComponentHit,
+  fullTextQuery,
+  mergeDocsResults,
+} from "./docs-merge";
 
 const clock: ComponentHit = {
   name: "clock-sweep",
@@ -104,5 +108,72 @@ describe("mergeDocsResults", () => {
 
     expect(merged[0].id).toBe("component:clock-sweep");
     expect(merged.at(-1)?.url).toBe("/docs/guides/setup");
+  });
+
+  it("does not promote a guide through one word of a described need", () => {
+    const docs = [
+      page("/docs/guides/showcase-reel", "<mark>Show</mark>case reel"),
+      text("/docs/guides/showcase-reel#reel", "The reel"),
+    ];
+
+    const merged = mergeDocsResults(
+      "i need show my contribution",
+      docs,
+      [clock],
+      COMPONENT_URLS,
+    );
+
+    expect(merged[0].id).toBe("component:clock-sweep");
+  });
+
+  it("promotes a guide asked for in a sentence", () => {
+    const docs = [
+      page("/docs/getting-started/installation", "<mark>Install</mark>ation"),
+    ];
+
+    const merged = mergeDocsResults(
+      "how to install",
+      docs,
+      [clock],
+      COMPONENT_URLS,
+    );
+
+    expect(merged[0].url).toBe("/docs/getting-started/installation");
+  });
+
+  it("shows only a few lines of a leading guide", () => {
+    const url = "/docs/getting-started/installation";
+    const docs = [
+      page(url, "<mark>Installation</mark>"),
+      ...Array.from({ length: 9 }, (_, n) => text(`${url}#s${n}`, `line ${n}`)),
+    ];
+
+    const merged = mergeDocsResults(
+      "installation",
+      docs,
+      [clock],
+      COMPONENT_URLS,
+    );
+
+    expect(merged.findIndex((r) => r.id === "component:clock-sweep")).toBe(3);
+  });
+});
+
+describe("fullTextQuery", () => {
+  it("drops function words and stray letters", () => {
+    expect(fullTextQuery("i need show my contribution")).toBe(
+      "show contribution",
+    );
+  });
+
+  it("keeps a query that names something", () => {
+    expect(fullTextQuery("blur transition")).toBe("blur transition");
+    expect(fullTextQuery("показать рост выручки")).toBe(
+      "показать рост выручки",
+    );
+  });
+
+  it("passes through a query made only of function words", () => {
+    expect(fullTextQuery("how do i")).toBe("how do i");
   });
 });
