@@ -93,6 +93,29 @@ Solo builders и маленькие команды (1-2 чел), фронтен�
 - CDN-конвенция: `video: https://cdn.remocn.dev/videos/<name>.mp4`, `videoPoster: https://cdn.remocn.dev/posters/<name>.png`. `<name>` произвольный и не обязан совпадать со slug записи — маппинг живёт во frontmatter. Поля пишутся парой: есть `video` — есть и `videoPoster`
 - Плеер: `muted` + `playsInline` + `loop`, автоплей только у самого видимого ролика, остальные с `preload="none"`. При `prefers-reduced-motion` автоплей глушится
 
+## UI docs-сайта на ui-sdk
+
+Контролы кастомайзера (`components/docs/blocks/controls/`) и панель вокруг них собраны на `@ui-sdk/react`. Агентский мост ui-sdk (`createAgent`, WebMCP) видит только ui-sdk компоненты, поэтому голые `<button>`, `<input>` и `role="slider"`-дивы там не пишем.
+
+- Перед работой с ui-sdk: скилл `ui-sdk`, затем `node_modules/@ui-sdk/react/docs/llms.txt` и страницы нужных компонентов из `docs/components/`. Версия beta, пинится точно
+- `web.css` не подключаем — стили наши, Tailwind по `data-slot` и state-атрибутам. `@layer ui-sdk;` стоит первой строкой `app/globals.css`
+- `components/ui/*` (shadcn на base-ui) остаётся как есть
+- Тесты компонентов — vitest + jsdom (`bun run test:dom`, файлы `components/**/*.test.tsx`); `bun test` их игнорирует через `bunfig.toml`
+
+### Эталон: shuding/spec-01
+
+[github.com/shuding/spec-01](https://github.com/shuding/spec-01) — кит на ui-sdk от автора ui-sdk, считаем его best practice. Перед тем как считать код на ui-sdk готовым, найди в `registry/hardware/ui/` spec-01 компонент на том же примитиве и сверь. Стили там на plain CSS через `data-kit`, у нас Tailwind — это расхождение намеренное, сверяем композицию и поведение, не стили. Их ui-sdk — nightly-сборка, у нас beta: API сверяй с нашими `docs/`.
+
+Чек-лист:
+- Имя контрола даёт видимый `FieldLabel` внутри `Field` (slider, number input, text, textarea). `aria-label` — только когда видимого текста нет или он живёт внутри триггера (Select)
+- Внутри `Field` не передавай контролу свой `id`: он перебивает id от `Field`, и `<label for>` указывает в пустоту. `Field` оборачивает `NumberInput` снаружи (как в наших docs); в spec-01 `Field` внутри `NumberInput` плюс `aria-label` — у нас так `for`/`id` расходятся. Связку проверяй рендером в HTML (`renderToString`) или тестом по `getByLabelText`
+- Значение показывает часть ui-sdk (`SliderValue` с `format`), а не своя копия текста
+- Декор (шкалы, тики) — `aria-hidden` span прямо внутри `SliderControl`, не внутри `SliderTrack`
+- Свой pointer-код поверх ui-sdk допустим только как расширение: порог сдвига, `setPointerCapture`, проверка `pointerType`, итог — через тот же controlled `onValueChange`. Комментарий объясняет зачем
+- Попап (`*Content`): сбросить `right`/`bottom` и держать высоту по контенту (`right-auto bottom-auto h-fit max-h-(--available-height) overflow-y-auto`) — иначе в Safari UA-шный `inset: 0` растягивает попап до низа экрана
+- Перетаскиваемый слайдер показывает нажатие, а не focus ring
+- Комментарии — только «почему»: браузерный квирк, компромисс, правило APG
+
 ## Бизнес-модель
 
 Open core. Free примитивы и базовые compositions (MIT). В будущем — premium блоки и video builder.
@@ -106,6 +129,7 @@ bun run build            # production-сборка превью и сайта
 bun run previews:build   # только превью, в public/_previews
 bun run typecheck        # tsc --noEmit
 bun run lint             # biome check
+bun run test:dom         # vitest + jsdom для components/**/*.test.tsx
 bun run registry:build   # пересборка registry-artifacts из registry/
 bun run search:build     # семантический индекс поиска + модель в .search/
 bun run search:eval      # качество поиска на evals/search/golden.json
