@@ -1,5 +1,9 @@
 [
   {
+    "query": "i need show my contribution",
+    "expect": ["contribution-heatmap"]
+  },
+  {
     "query": "show someone asking OpenAI's assistant a question",
     "expect": ["chat-gpt"]
   },

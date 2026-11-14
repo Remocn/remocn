@@ -1,7 +1,11 @@
 import { createFromSource } from "fumadocs-core/search/server";
 import { getCatalog } from "@/lib/mcp/catalog";
 import { searchCatalog } from "@/lib/search/components";
-import { type ComponentHit, mergeDocsResults } from "@/lib/search/docs-merge";
+import {
+  type ComponentHit,
+  fullTextQuery,
+  mergeDocsResults,
+} from "@/lib/search/docs-merge";
 import { trackAgentSearch } from "@/lib/server/analytics";
 import { source } from "@/source";
 
@@ -32,7 +36,7 @@ export async function GET(request: Request) {
   const catalog = getCatalog();
   const started = performance.now();
   const [docs, { results: components, mode }] = await Promise.all([
-    docsSearch.search(query, {
+    docsSearch.search(fullTextQuery(query), {
       tag,
       locale: url.searchParams.get("locale") ?? undefined,
       limit,

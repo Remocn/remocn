@@ -33,25 +33,84 @@ function groupByPage(results: SortedResult[]): Map<string, SortedResult[]> {
   return groups;
 }
 
+/**
+ * Words that carry a sentence but name nothing. People now describe what they
+ * need ("i need to show my contribution"), and the full-text search would
+ * otherwise match the letter "i" on every page.
+ */
+const FUNCTION_WORDS = new Set([
+  "a",
+  "an",
+  "and",
+  "are",
+  "can",
+  "do",
+  "does",
+  "for",
+  "how",
+  "i",
+  "in",
+  "is",
+  "it",
+  "me",
+  "my",
+  "need",
+  "of",
+  "on",
+  "or",
+  "our",
+  "some",
+  "something",
+  "that",
+  "the",
+  "this",
+  "to",
+  "want",
+  "we",
+  "what",
+  "with",
+  "you",
+  "your",
+]);
+
+/**
+ * The query the full-text search should run: the same words without the
+ * function words and stray single letters. A query made only of those is
+ * passed through as typed.
+ */
+export function fullTextQuery(query: string): string {
+  const kept = query
+    .trim()
+    .split(/\s+/)
+    .filter((word) => {
+      const bare = word.toLowerCase().replace(/[^\p{L}\p{N}]/gu, "");
+      return !FUNCTION_WORDS.has(bare) && !/^[a-z0-9]?$/.test(bare);
+    });
+  return kept.length > 0 ? kept.join(" ") : query;
+}
+
 function wordsOverlap(a: string, b: string): boolean {
   return a === b || (a.length >= 4 && b.startsWith(a)) || a.startsWith(b);
 }
 
 /**
- * Whether the visitor is asking for this page by its title: at least half of
- * the query's words appear in it. One shared word out of seven ("show that
- * setup only takes five minutes" against the Setup guide) is a description
- * that happens to touch the title, not a request for the guide.
+ * Whether the visitor is asking for this page by its title: every word of the
+ * query, function words aside, appears in it ("installation", "how to
+ * install", "mcp server"). One shared word is not enough: "i need show my
+ * contribution" touches "Showcase reel" through "show", and is a described
+ * need, not a request for that guide.
  */
 function namesTitle(group: SortedResult[], queryWords: string[]): boolean {
   const title = group.find((r) => r.type === "page")?.content;
   if (!title || queryWords.length === 0) return false;
   const titleWords = tokenize(title.replace(/<\/?mark>/g, ""));
-  const shared = queryWords.filter((word) =>
+  return queryWords.every((word) =>
     titleWords.some((titleWord) => wordsOverlap(word, titleWord)),
   );
-  return shared.length * 2 >= queryWords.length;
 }
+
+/** Matched lines shown under a guide that leads the results. */
+const GUIDE_LINES = 2;
 
 function sectionLabel(slug: string): string {
   return slug.replace(/(^|-)([a-z])/g, (_, sep: string, c: string) =>
@@ -76,16 +135,24 @@ export function mergeDocsResults(
   componentUrls: ReadonlySet<string>,
 ): SortedResult[] {
   const groups = groupByPage(docs);
-  const queryWords = tokenize(query);
+  const queryWords = tokenize(query).filter(
+    (word) => !FUNCTION_WORDS.has(word),
+  );
   const shown = new Set(components.map((c) => c.url));
 
   const guides: SortedResult[] = [];
   const rest: SortedResult[] = [];
   for (const [url, group] of groups) {
     if (shown.has(url)) continue;
-    if (!componentUrls.has(url) && namesTitle(group, queryWords))
-      guides.push(...group);
-    else rest.push(...group);
+    if (!componentUrls.has(url) && namesTitle(group, queryWords)) {
+      // A long guide matches on dozens of lines; all of them above the
+      // components would push every component off the first screen.
+      const lines = group.filter((r) => r.type !== "page");
+      guides.push(
+        ...group.filter((r) => r.type === "page"),
+        ...lines.slice(0, GUIDE_LINES),
+      );
+    } else rest.push(...group);
   }
 
   const componentRows = components.flatMap((component): SortedResult[] => {
