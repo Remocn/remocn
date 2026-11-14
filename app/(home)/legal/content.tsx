@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { GITHUB_URL, SUPPORT_EMAIL } from "@/config/site";
 
-export const LAST_UPDATED = "October 10, 2026";
+export const LAST_UPDATED = "November 14, 2026";
 
 export type LegalItem = { title: ReactNode; body: ReactNode };
 
@@ -66,7 +66,10 @@ export const LEGAL_PARTS: LegalPart[] = [
                 We use <A href="https://openpanel.dev">OpenPanel</A> to collect
                 anonymous usage data: pages visited, referrer, browser and
                 device type, and coarse location (country level). This tells us
-                which components people actually use. We do not use advertising
+                which components people actually use. When you use the docs
+                search, we also record what you searched for, how many results
+                came back and which one you opened, so we can tell whether the
+                search finds what people look for. We do not use advertising
                 trackers, we do not build cross-site profiles, and we never sell
                 data.
               </>
@@ -111,7 +114,7 @@ export const LEGAL_PARTS: LegalPart[] = [
         items: [
           {
             title: "MCP server.",
-            body: "The server is stateless. It answers each request from the public component catalog and does not store or log what you send it: search queries, video briefs and component props are used to build the answer and then discarded. The standard access logs described above apply, as for the rest of the site.",
+            body: "The server is stateless. It answers each request from the public component catalog and does not store or log what you send it: search queries, video briefs and component props are used to build the answer and then discarded. We do count tool calls, to see whether the search works: which tool ran, which client called it, how long a query was and which catalog components came back. Those counts hold none of the text you sent. The standard access logs described above apply, as for the rest of the site.",
           },
           {
             title: "Previews in chat.",

@@ -24,6 +24,7 @@ function record(
     tier: "remocn",
     useWhen: [],
     avoidWhen: [],
+    askedAs: [],
     install: `npx shadcn@latest add @remocn/${name}`,
     ...overrides,
   };

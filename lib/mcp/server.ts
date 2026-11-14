@@ -20,20 +20,25 @@ import {
   MCP_APP_MIME_TYPE,
   PREVIEW_RESOURCE_URI,
 } from "@/lib/mcp/config";
+import { mcpRequestContext } from "@/lib/mcp/request-context";
 import {
   type ComponentRecord,
   closestNames,
   installCommand,
   MAX_LIMIT,
   normalizeName,
-  searchComponents,
 } from "@/lib/mcp/search";
 import { PREVIEW_WIDGET_HTML } from "@/lib/mcp/widget";
+import { searchCatalog } from "@/lib/search/components";
+import {
+  trackAgentComponentFetch,
+  trackAgentSearch,
+} from "@/lib/server/analytics";
 import { previewManifest } from "@/registry/__manifest__";
 
 const SERVER_INFO = { name: "remocn", version: "1.0.0" };
 
-const INSTRUCTIONS = `Remocn is a shadcn registry of Remotion video components. Find components with search_components, read one with get_component before writing code against it, and use plan_video to turn a brief into a beat-by-beat storyboard. Install with \`npx shadcn@latest add @remocn/<name>\`. Full index: ${SITE_URL}/llms-components.txt`;
+const INSTRUCTIONS = `Remocn is a shadcn registry of Remotion video components. Find components with search_components: describe what the scene should show or say (in any language), or pass a name or keywords. Read one with get_component before writing code against it, and use plan_video to turn a brief into a beat-by-beat storyboard. Install with \`npx shadcn@latest add @remocn/<name>\`. Full index: ${SITE_URL}/llms-components.txt`;
 
 const MAX_PROPS_JSON = 4000;
 // The endpoint is public and unauthenticated; every text input is bounded so
@@ -79,6 +84,23 @@ function lengthLabel(length: ComponentRecord["length"]): string {
 
 function htmlDocsUrl(record: ComponentRecord): string {
   return record.docs.replace(/\.md$/, "");
+}
+
+function callerUserAgent(): string {
+  return mcpRequestContext.getStore()?.userAgent ?? "";
+}
+
+function trackFetch(
+  tool: "get_component" | "preview_component",
+  input: string,
+  record: ComponentRecord | undefined,
+): void {
+  trackAgentComponentFetch({
+    tool,
+    userAgent: callerUserAgent(),
+    component: record?.name ?? input,
+    found: Boolean(record),
+  });
 }
 
 /** Resolve user input (name, `@remocn/name`, docs path, or title) to a documented component. */
@@ -202,12 +224,14 @@ export function createRemocnMcpServer(): McpServer {
     {
       title: "Search Remocn components",
       description:
-        "Search Remocn Remotion components by what they do. Returns name, docs .md URL, vibe, length (frames @30fps), use/avoid notes and install command.",
+        "Search Remocn Remotion components by what they do or by the need they serve; matches by meaning as well as by words. Returns name, docs .md URL, vibe, length (frames @30fps), use/avoid notes and install command.",
       inputSchema: z.object({
         query: z
           .string()
           .max(MAX_QUERY)
-          .describe("What the component should do, e.g. 'typewriter headline'"),
+          .describe(
+            "What the component should do or what the scene should say, in any language, e.g. 'typewriter headline' or 'show that setup takes five minutes'",
+          ),
         vibe: z.enum(VIBES).optional().describe("Tonal tag to match the brand"),
         maxLength: z
           .number()
@@ -220,11 +244,22 @@ export function createRemocnMcpServer(): McpServer {
       annotations: readOnly("Search Remocn components"),
     },
     async ({ query, vibe, maxLength, limit }) => {
-      const results = searchComponents(getCatalog().records, {
+      const started = performance.now();
+      const { results, mode } = await searchCatalog({
         query,
         vibe,
         maxLength,
         limit,
+      });
+      trackAgentSearch({
+        surface: "mcp",
+        userAgent: callerUserAgent(),
+        query,
+        results: results.map((r) => r.name),
+        mode,
+        latencyMs: performance.now() - started,
+        vibe,
+        maxLength,
       });
       const filters = [
         vibe && `vibe=${vibe}`,
@@ -261,6 +296,7 @@ export function createRemocnMcpServer(): McpServer {
     },
     async ({ name }) => {
       const record = resolveComponent(name);
+      trackFetch("get_component", name, record);
       if (!record) return unknownComponent(name);
       const markdown = await getComponentMarkdown(record.name);
       if (!markdown) return unknownComponent(name);
@@ -449,6 +485,7 @@ export function createRemocnMcpServer(): McpServer {
     },
     async ({ name, props }) => {
       const record = resolveComponent(name);
+      trackFetch("preview_component", name, record);
       if (!record) return unknownComponent(name);
       if (props && JSON.stringify(props).length > MAX_PROPS_JSON) {
         return errorText(

@@ -43,6 +43,9 @@ next-env.d.ts
 # fumadocs generated source
 .source/
 
+# semantic search index + embedding model (bun run search:build)
+.search/
+
 .omc
 
 articles

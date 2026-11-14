@@ -4,6 +4,7 @@ import { PageShell } from "@/app/(home)/components/page-shell";
 import { SiteFooter } from "@/app/(home)/components/site-footer";
 import { SiteHeader } from "@/app/(home)/components/site-header";
 import { DocsShell } from "@/components/docs/docs-shell";
+import DocsSearchDialog from "@/components/docs/search-dialog";
 import { HeaderSearch } from "@/components/docs/shell/header-search";
 import {
   buildSidebarModel,
@@ -35,7 +36,10 @@ export default function Layout({ children }: { children: ReactNode }) {
     // fumadocs search context lives here (docs-only) instead of the root
     // layout, so non-docs routes never compile fumadocs-ui. `theme.enabled:
     // false` defers to the root next-themes ThemeProvider.
-    <RootProvider theme={{ enabled: false }}>
+    <RootProvider
+      theme={{ enabled: false }}
+      search={{ SearchDialog: DocsSearchDialog }}
+    >
       <PageShell>
         {/* Frame sizes as CSS variables (`lib/docs-layout.ts`); `contents`
             keeps the flex column of the page shell intact. The docs layout
