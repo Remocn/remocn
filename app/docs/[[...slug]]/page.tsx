@@ -23,7 +23,7 @@ export default async function Page(props: {
   if (!page) notFound();
 
   const data = page.data;
-  const MDX = data.body;
+  const { body: MDX } = await data.load();
   const { crumbs, previous, next } = getPageContext(page.url);
   const links = params.slug?.length ? getPageLinks(page.url) : undefined;
   const raw = await (

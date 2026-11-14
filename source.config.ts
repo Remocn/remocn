@@ -12,6 +12,9 @@ import { componentMetaSchema } from "./lib/docs-schema";
 export const docs = defineDocs({
   dir: "content/docs",
   docs: {
+    // ~1000 pages: load each body on demand instead of compiling all of them
+    // into the docs route on its first request.
+    async: true,
     schema: pageSchema.safeExtend({
       ...componentMetaSchema.shape,
       // Shorter label for the sidebar, breadcrumbs and prev/next when the
