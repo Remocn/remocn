@@ -12,6 +12,13 @@ avoidWhen:
   - "You want directional momentum between scenes; `slide-swap` shoves the outgoing content off one edge and springs the next in from the opposite one."
   - "You need a presentation to drop into a `TransitionSeries` between two `<Sequence>`s; this owns its own scene list, so use `push-through` or `zoom-blur` instead."
   - "The scene should keep breathing while it holds — content is perfectly still between boundaries here, so wrap it in `drift` if you want a constant camera push."
+askedAs:
+  - "scene shrinks away then next drops in"
+  - "empty stage between scenes"
+  - "I want everything to shrink away, pause on empty, then the next drops from above"
+  - "backgrounds change colour between scenes without muddy blending"
+  - "bouncy handoff where the stage clears before the next scene lands"
+  - "old group scales down, blank beat, new scene falls in with a settle"
 ---
 
 <ComponentPreview name="spring-settle" />

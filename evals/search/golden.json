@@ -1,0 +1,312 @@
+[
+  {
+    "query": "show someone asking OpenAI's assistant a question",
+    "expect": ["chat-gpt"]
+  },
+  {
+    "query": "unveil the product like pulling a cover off at a keynote",
+    "expect": ["cloth-reveal"]
+  },
+  {
+    "query": "subtitles that look like they're being decrypted as the speaker talks",
+    "expect": ["caption-scramble"]
+  },
+  {
+    "query": "add a little smiley over certain spoken words in my reel subtitles",
+    "expect": ["caption-emoji"]
+  },
+  {
+    "query": "slow drifting shot over lots of dashboard widgets to use behind my title",
+    "expect": ["infinite-bento-pan"]
+  },
+  {
+    "query": "party poppers when the user finishes onboarding",
+    "expect": ["confetti"]
+  },
+  {
+    "query": "make the scene look like a sci-fi projected image",
+    "expect": ["hologram"]
+  },
+  { "query": "build my icon out of lego pieces", "expect": ["brick-mosaic"] },
+  {
+    "query": "tilt a website capture in 3D and scroll the camera down a long landing page",
+    "expect": ["stage"]
+  },
+  {
+    "query": "explode a sentence into a bunch of product pictures and finish on our brand mark",
+    "expect": ["word-burst-cards"]
+  },
+  {
+    "query": "two pieces of the brand mark join together with a satisfying mechanical feel",
+    "expect": ["snap-click"]
+  },
+  {
+    "query": "sign our name in glowing neon handwriting",
+    "expect": ["light-trail-write"]
+  },
+  {
+    "query": "scattered pictures floating around that organize themselves into a neat gallery",
+    "expect": ["shards-to-grid"]
+  },
+  {
+    "query": "tiny sparkle lines radiating out when a button gets pressed",
+    "expect": ["trim-burst"]
+  },
+  {
+    "query": "show where we sit versus rivals on a 2x2 matrix",
+    "expect": ["quadrant-plot"]
+  },
+  {
+    "query": "announce the release date by selecting it in a date picker",
+    "expect": ["calendar-pick"]
+  },
+  {
+    "query": "show that setup only takes five minutes",
+    "expect": ["clock-sweep"]
+  },
+  {
+    "query": "visualize that 1 out of 3 developers use it",
+    "expect": ["unit-grid"]
+  },
+  {
+    "query": "race our build time against the old way",
+    "expect": ["timer-duel"]
+  },
+  {
+    "query": "list everything included and show it all costs nothing",
+    "expect": ["the-tab"]
+  },
+  {
+    "query": "big metric ticking upward with a measuring scale underneath",
+    "expect": ["pitch-over"]
+  },
+  {
+    "query": "many workers each counting and adding into one enormous total",
+    "expect": ["core-sum"]
+  },
+  {
+    "query": "phone getting flooded with alerts and then everything is quiet",
+    "expect": ["notification-avalanche"]
+  },
+  {
+    "query": "walk through critiquing a UI mockup and then shipping the corrected version",
+    "expect": ["design-audit"]
+  },
+  {
+    "query": "demo an AI phone assistant making a restaurant reservation",
+    "expect": ["voice-agent"]
+  },
+  {
+    "query": "duolingo-style daily progress celebration on a mobile screen",
+    "expect": ["streak-reward"]
+  },
+  {
+    "query": "warm sunset-like band backdrop between dark blue and light sky",
+    "expect": ["shader-grain-gradient-horizon"]
+  },
+  {
+    "query": "underwater-feeling animated backdrop with slanted turquoise stripes",
+    "expect": ["shader-warp-deep-sea"]
+  },
+  {
+    "query": "80s retro purple and orange glowing backdrop",
+    "expect": ["shader-mesh-gradient-synthwave"]
+  },
+  {
+    "query": "pattern of circling points as a backdrop that suggests a network",
+    "expect": ["shader-dot-orbit"]
+  },
+  {
+    "query": "quiet setup line then slam into a giant number with camera shake",
+    "expect": ["crash-zoom"]
+  },
+  {
+    "query": "a full ready-made product video I can just edit the text of",
+    "expect": ["launch-anything"]
+  },
+  {
+    "query": "scene change that feels like fog clearing from the center",
+    "expect": ["smoke-dissolve"]
+  },
+  {
+    "query": "rapid flashing of many images between two scenes",
+    "expect": ["strobe-montage"]
+  },
+  {
+    "query": "fly the camera forward into the next scene",
+    "expect": ["push-through"]
+  },
+  {
+    "query": "scene change where the image turns into 3D tiles that ripple",
+    "expect": ["grid-wave"]
+  },
+  {
+    "query": "keep one keyword fixed while the rest of the sentence swaps",
+    "expect": ["pinned-word"]
+  },
+  {
+    "query": "split a sentence into chunks and show each chunk full-screen one after another",
+    "expect": ["script-cut"]
+  },
+  {
+    "query": "elegant closing sentence that slides upward with the last words colored",
+    "expect": ["serif-rise"]
+  },
+  {
+    "query": "title revealed by a dark band passing over it",
+    "expect": ["shadow-sweep-text"]
+  },
+  {
+    "query": "answer a series of customer objections with the same affirmative reply",
+    "expect": ["yes-run"]
+  },
+  {
+    "query": "extreme close-up moving letter to letter then zoom out to the whole sentence",
+    "expect": ["macro-letter-pan", "macro-pan"]
+  },
+  {
+    "query": "vaporwave title with rippling color-fringe distortion that loops",
+    "expect": ["chromatic-wave"]
+  },
+  {
+    "query": "blurry text coming into focus and getting bolder",
+    "expect": ["enhance-count"]
+  },
+  {
+    "query": "headline filmed up close sliding across the letter shapes, for a chapter opening",
+    "expect": ["macro-pan", "macro-letter-pan"]
+  },
+  {
+    "query": "funny statement followed by a small parenthetical that contradicts it",
+    "expect": ["coy-denial"]
+  },
+  {
+    "query": "sentence flies by then goes slow-mo on the important word",
+    "expect": ["speed-ramp-word"]
+  },
+  {
+    "query": "turn legal fine print into simple human words",
+    "expect": ["plain-license"]
+  },
+  {
+    "query": "tell a short founder story with a problem in the middle and a happy ending",
+    "expect": ["story-dip"]
+  },
+  {
+    "query": "characters rearrange themselves to spell the next phrase",
+    "expect": ["kinetic-morph-text"]
+  },
+  {
+    "query": "lots of small capability tags gathering around our brand mark",
+    "expect": ["feature-chips-flow"]
+  },
+  {
+    "query": "show a word being drawn with vector points and curve handles like in a type design app",
+    "expect": ["glyph-anatomy"]
+  },
+  {
+    "query": "list who the product is for and end by speaking to the viewer directly",
+    "expect": ["and-you"]
+  },
+  {
+    "query": "dragging a document in and watching it finish importing",
+    "expect": ["drop-upload"]
+  },
+  {
+    "query": "translucent editor window showing a snippet appearing line by line",
+    "expect": ["glass-code-block"]
+  },
+  {
+    "query": "switch between sections of a panel in an app demo",
+    "expect": ["tabs"]
+  },
+  {
+    "query": "small hint bubble that pops up when the cursor is over an icon",
+    "expect": ["tooltip"]
+  },
+  {
+    "query": "messenger conversation with blue bubbles and double check marks",
+    "expect": ["telegram-chat-flow"]
+  },
+  {
+    "query": "показать, что настройка занимает всего пять минут",
+    "expect": ["clock-sweep"],
+    "lang": "ru"
+  },
+  {
+    "query": "собрать логотип из кубиков лего",
+    "expect": ["brick-mosaic"],
+    "lang": "ru"
+  },
+  {
+    "query": "конфетти, когда пользователь завершил онбординг",
+    "expect": ["confetti"],
+    "lang": "ru"
+  },
+  {
+    "query": "переход между сценами как рассеивающийся туман",
+    "expect": ["smoke-dissolve"],
+    "lang": "ru"
+  },
+  {
+    "query": "субтитры, которые расшифровываются как в терминале",
+    "expect": ["caption-scramble"],
+    "lang": "ru"
+  },
+  {
+    "query": "показать, где мы находимся относительно конкурентов на матрице 2x2",
+    "expect": ["quadrant-plot"],
+    "lang": "ru"
+  },
+  {
+    "query": "перетащить файл и показать, как он загружается",
+    "expect": ["drop-upload"],
+    "lang": "ru"
+  },
+  {
+    "query": "переписка в мессенджере с синими пузырями и двумя галочками",
+    "expect": ["telegram-chat-flow"],
+    "lang": "ru"
+  },
+  { "query": "typewriter", "expect": ["typewriter"], "kind": "keyword" },
+  {
+    "query": "typewriter headline",
+    "expect": ["typewriter"],
+    "kind": "keyword"
+  },
+  { "query": "confetti", "expect": ["confetti"], "kind": "keyword" },
+  {
+    "query": "rolling number",
+    "expect": ["rolling-number"],
+    "kind": "keyword"
+  },
+  { "query": "bar chart", "expect": ["animated-bar-chart"], "kind": "keyword" },
+  {
+    "query": "line chart",
+    "expect": ["animated-line-chart"],
+    "kind": "keyword"
+  },
+  {
+    "query": "waterfall chart",
+    "expect": ["waterfall-chart"],
+    "kind": "keyword"
+  },
+  { "query": "github stars", "expect": ["github-stars"], "kind": "keyword" },
+  { "query": "before after", "expect": ["before-after"], "kind": "keyword" },
+  { "query": "terminal", "expect": ["terminal-simulator"], "kind": "keyword" },
+  { "query": "tabs", "expect": ["tabs"], "kind": "keyword" },
+  { "query": "tooltip", "expect": ["tooltip"], "kind": "keyword" },
+  { "query": "accordion", "expect": ["accordion"], "kind": "keyword" },
+  { "query": "command menu", "expect": ["command-menu"], "kind": "keyword" },
+  { "query": "zoom blur", "expect": ["zoom-blur"], "kind": "keyword" },
+  { "query": "neon sign", "expect": ["neon-sign"], "kind": "keyword" },
+  { "query": "countdown", "expect": ["countdown"], "kind": "keyword" },
+  { "query": "chatgpt", "expect": ["chat-gpt"], "kind": "keyword" },
+  { "query": "claude chat", "expect": ["claude-chat"], "kind": "keyword" },
+  { "query": "dropdown menu", "expect": ["dropdown-menu"], "kind": "keyword" },
+  { "query": "progress bar", "expect": ["progress"], "kind": "keyword" },
+  { "query": "whip pan", "expect": ["whip-pan"], "kind": "keyword" },
+  { "query": "stepper", "expect": ["stepper"], "kind": "keyword" },
+  { "query": "toggle switch", "expect": ["switch"], "kind": "keyword" },
+  { "query": "button", "expect": ["button"], "kind": "keyword" }
+]

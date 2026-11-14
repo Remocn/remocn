@@ -1,6 +1,12 @@
 import "server-only";
 
 import { OpenPanel } from "@openpanel/sdk";
+import {
+  classifyAgentClient,
+  describeQuery,
+  loggedQuery,
+  type SearchSurface,
+} from "@/lib/search/analytics-shape";
 
 const CRAWLER_UA =
   /bot\b|bot[/_-]|crawler|crawling|spider|slurp|facebookexternalhit|feedfetcher|mediapartners/i;
@@ -43,4 +49,83 @@ export async function trackRegistryInstall(
   } catch {
     // A metrics outage must never surface to the caller — the payload already shipped.
   }
+}
+
+/**
+ * Whether agent searches are recorded with their text. Off: the privacy policy
+ * (`app/(home)/legal/content.tsx`, "MCP server") promises that what an agent
+ * sends is discarded, so an agent search is described by its shape (length,
+ * script) and by the components it returned, never quoted. Turning this on
+ * means rewriting that promise first.
+ */
+const LOG_AGENT_QUERY_TEXT = false;
+
+function send(event: string, properties: Record<string, unknown>): void {
+  // Never awaited: analytics must not add to a response time, and a metrics
+  // outage must never reach the caller.
+  void Promise.resolve()
+    .then(() => openPanel()?.track(event, properties))
+    .catch(() => {});
+}
+
+export interface AgentSearch {
+  surface: Extract<SearchSurface, "mcp" | "api">;
+  userAgent: string;
+  query: string;
+  /** Component names in the order they were returned. */
+  results: string[];
+  /** `keyword` when the semantic index or model was not available. */
+  mode?: "hybrid" | "keyword";
+  latencyMs: number;
+  vibe?: string;
+  maxLength?: number;
+}
+
+/**
+ * A search made by a program: an MCP `search_components` call or a direct
+ * call to `/api/search`. Same event name as the dialog's, told apart by
+ * `actor` and `surface`.
+ */
+export function trackAgentSearch(search: AgentSearch): void {
+  if (isCrawler(search.userAgent)) return;
+  send("search_performed", {
+    actor: "agent",
+    surface: search.surface,
+    client: classifyAgentClient(search.userAgent),
+    user_agent: search.userAgent.slice(0, 200),
+    ...(LOG_AGENT_QUERY_TEXT ? { query: loggedQuery(search.query) } : {}),
+    ...describeQuery(search.query),
+    result_count: search.results.length,
+    component_count: search.results.length,
+    has_results: search.results.length > 0,
+    top_components: search.results.slice(0, 6).join(","),
+    ...(search.mode ? { mode: search.mode } : {}),
+    latency_ms: Math.round(search.latencyMs),
+    ...(search.vibe ? { vibe: search.vibe } : {}),
+    ...(search.maxLength !== undefined ? { max_length: search.maxLength } : {}),
+  });
+}
+
+/**
+ * An agent asked for one component by name (`get_component`,
+ * `preview_component`). Set against the searches that returned that component,
+ * it is the closest thing to a click: the agent went on to read or show it.
+ * `found: false` is a name the agent made up or misread.
+ */
+export function trackAgentComponentFetch(fetch: {
+  tool: "get_component" | "preview_component";
+  userAgent: string;
+  /** Resolved component name, or the raw input when nothing matched. */
+  component: string;
+  found: boolean;
+}): void {
+  if (isCrawler(fetch.userAgent)) return;
+  send("component_fetched", {
+    actor: "agent",
+    surface: "mcp",
+    client: classifyAgentClient(fetch.userAgent),
+    tool: fetch.tool,
+    component: fetch.found ? fetch.component : "",
+    found: fetch.found,
+  });
 }

@@ -25,4 +25,7 @@ export const componentMetaSchema = z.object({
     .optional(),
   useWhen: z.array(z.string()).optional(),
   avoidWhen: z.array(z.string()).optional(),
+  // How people ask for the component in their own words. Search-only: these
+  // feed the lexical scorer and the semantic index, and are never rendered.
+  askedAs: z.array(z.string()).optional(),
 });

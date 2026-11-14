@@ -12,6 +12,13 @@ avoidWhen:
   - "You need an infinitely looping ambient background as a standalone track — use a shader backdrop directly and let the composition handle framing."
   - "You want a raw full-bleed color with no frame treatment — set `padding={0}` and `radius={0}`, or just set `backgroundColor` in the Remotion composition root."
   - "You're inside a transition presentation — transitions like `whip-pan` manage their own full-frame layout; nesting Backdrop inside them creates double-framing."
+askedAs:
+  - "scene background wrapper"
+  - "frame with rounded content"
+  - "I want a full-frame fill with a rounded shadowed card inside"
+  - "color gradient or image behind my composition"
+  - "wrap every scene in a consistent background"
+  - "base layer that holds the content on a nice backdrop"
 ---
 
 <ComponentPreview name="backdrop" />

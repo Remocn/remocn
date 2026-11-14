@@ -95,13 +95,14 @@ export const OPENAPI_SPEC = {
         tags: ["Docs"],
         summary: "Search the docs",
         description:
-          "Full-text search over every docs page, heading and paragraph. Returns an empty array when `query` is missing.",
+          "Search the docs by words and components by need. Full-text matches over every docs page, heading and paragraph, with the components that fit the query by meaning placed among them (`show that setup takes five minutes` finds a clock scene; the query can be in any language). Returns an empty array when `query` is missing.",
         parameters: [
           {
             name: "query",
             in: "query",
             required: true,
-            description: "Search text, e.g. `blur transition`.",
+            description:
+              "Search text: a name, a keyword or a described need, e.g. `blur transition`.",
             schema: { type: "string", minLength: 1 },
           },
           {
