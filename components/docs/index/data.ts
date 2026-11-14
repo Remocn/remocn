@@ -24,11 +24,14 @@ export type DocEntry = {
 type DocsSource = typeof docsSourceType;
 export type DocPage = ReturnType<DocsSource["getPages"]>[number];
 
-// `@/source` must never be imported statically from here: the index MDX pages
-// render these helpers, and `@/source` imports the MDX pages, so a static
-// import evaluates `source` while `.source/server` is still initialising
-// (500 on every route that loads the docs collection first, e.g. the RSS
-// feed). Components load it once per render with `await loadDocsSource()`.
+// `@/source` is loaded on demand here, not imported statically. While the
+// docs collection was bundled, `@/source` imported the MDX pages, the index
+// pages among them render these helpers, and a static import evaluated
+// `source` while `.source/server` was still initialising (500 on every route
+// that loaded the docs collection first, e.g. the RSS feed). The collection
+// compiles at runtime now (`dynamic` in source.config.ts) and no longer
+// imports its pages, so that cycle is gone; the loading stayed as it was.
+// Components load it once per render with `await loadDocsSource()`.
 let loaded: DocsSource | undefined;
 let pageMap: Map<string, DocPage> | undefined;
 

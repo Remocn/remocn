@@ -4,15 +4,6 @@ navTitle: Product demo
 description: "An AI agent that makes product demo videos from your codebase: Claude Code or Codex reads your repo, plans a storyboard and builds a ~50-second Remotion demo of one product flow from MIT-licensed Remocn components, rendered to MP4 on your machine"
 ---
 
-import { GuideNotes, GuideMoreLink } from "@/components/docs/guides/director-notes";
-import { GuideCount } from "@/components/docs/guides/guide-ui";
-import { GuideNote } from "@/components/docs/guides/note";
-import { GuidePrompt } from "@/components/docs/guides/prompt-block";
-import { GuideRenderCard } from "@/components/docs/guides/render-card";
-import { GuideBeatList, GuideStoryboard } from "@/components/docs/guides/storyboard";
-import { GuideFacts } from "@/components/docs/guides/video-facts";
-import { GuideWords } from "@/components/docs/guides/words-form";
-
 To make a product demo video from your codebase with an AI agent, open Claude Code or Codex in your product's repo, install the Remocn plugin and run `/remocn:video` with the one flow you want to show. The agent reads your `README`, landing copy, `package.json` and recent releases, shows you a storyboard, builds the video from Remocn's Remotion components and renders a ~50-second MP4 on your machine that stays editable as code.
 
 Remocn is what the agent builds with: a shadcn-style registry of MIT-licensed Remotion components (app screens, UI primitives, cursors, transitions, text) that it installs with `npx shadcn@latest add @remocn/<name>`, plus an [agent skill](/docs/getting-started/agent-skill), a [Claude Code and Codex plugin](/docs/getting-started/plugin) and an [MCP server](/docs/getting-started/mcp-server). It is free and open source, with no account and no hosted service.

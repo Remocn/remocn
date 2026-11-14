@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { docsPageComponents } from "@/components/docs/mdx-page-components";
 import { DocsRail, RailCards } from "@/components/docs/shell/docs-rail";
 import { KeyboardNav } from "@/components/docs/shell/keyboard-nav";
 import { MobilePageBar } from "@/components/docs/shell/mobile-page-bar";
@@ -56,7 +57,7 @@ export default async function Page(props: {
             next={next}
           />
           <div className="typeset typeset-docs mt-6 flex-1 lg:mt-8 [&_:is(h2,h3,h4)[id]]:scroll-mt-20 xl:[&_:is(h2,h3,h4)[id]]:scroll-mt-6">
-            <MDX components={getMDXComponents()} />
+            <MDX components={getMDXComponents(docsPageComponents)} />
           </div>
           <PageFooter
             previous={previous}

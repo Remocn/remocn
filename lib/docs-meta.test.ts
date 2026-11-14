@@ -279,6 +279,27 @@ describe("navigation lists every page", () => {
   });
 });
 
+describe("docs pages compile at runtime", () => {
+  // `dynamic` in source.config.ts: a page is compiled when it is rendered,
+  // and Fumadocs rules out `import` and `export` in pages compiled that way.
+  // What a page needs is registered in components/docs/mdx-page-components.ts.
+  it("no page imports or exports", () => {
+    const offenders: string[] = [];
+    for (const { file } of pages) {
+      let fenced = false;
+      for (const line of readFileSync(file, "utf8").split("\n")) {
+        if (/^\s*(```|~~~)/.test(line)) fenced = !fenced;
+        else if (!fenced && /^(import|export)\s/.test(line)) {
+          offenders.push(file);
+          break;
+        }
+      }
+    }
+
+    expect(offenders).toEqual([]);
+  });
+});
+
 describe("the transitions library page stays complete", () => {
   // /docs/transitions answers "is there a transitions library for Remotion?"
   // with a count and a table of every transition. A new transition page has
