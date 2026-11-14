@@ -1,16 +1,26 @@
 "use client";
 
-import { cn } from "@/lib/utils";
 import {
-  CONTROL,
-  CONTROL_FOCUS,
-  CONTROL_LABEL,
-  CONTROL_VALUE,
-} from "./control-styles";
+  ColorPicker,
+  ColorPickerArea,
+  ColorPickerAreaThumb,
+  ColorPickerInput,
+  ColorPickerSlider,
+  ColorPickerSliderThumb,
+  ColorPickerSwatch,
+} from "@ui-sdk/react/color-picker";
+import { Popover, PopoverContent, PopoverTrigger } from "@ui-sdk/react/popover";
+import { cn } from "@/lib/utils";
+import { CONTROL, CONTROL_LABEL, CONTROL_VALUE } from "./control-styles";
 
-/** Color prop: hex readout and a swatch that opens the native picker. */
+const THUMB =
+  "size-3.5 rounded-full border-2 border-white bg-(--color-picker-color) shadow-[0_0_0_1px_rgb(0_0_0/40%),0_1px_3px_rgb(0_0_0/50%)] outline-none [translate:-50%_-50%] has-focus-visible:ring-2 has-focus-visible:ring-primary-bright focus-visible:ring-2 focus-visible:ring-primary-bright";
+
+/**
+ * Color prop: the tile shows the hex and a swatch, and opens a picker with a
+ * saturation/brightness area, a hue slider and a hex field.
+ */
 export function ColorControl({
-  id,
   label,
   value,
   onChange,
@@ -21,27 +31,53 @@ export function ColorControl({
   onChange: (value: string) => void;
 }) {
   return (
-    <div className={cn(CONTROL, CONTROL_FOCUS, "pr-2")}>
-      <label htmlFor={id} className={cn(CONTROL_LABEL, "cursor-pointer")}>
-        {label}
-      </label>
-      <span className="flex items-center gap-2.5">
-        <span className={cn(CONTROL_VALUE, "tabular-nums")}>
-          {value.toUpperCase()}
-        </span>
-        <span
-          className="relative size-5 shrink-0 overflow-hidden rounded-[5px] border border-white/15"
-          style={{ backgroundColor: value }}
+    <ColorPicker
+      aria-label={label}
+      value={value}
+      format="hex"
+      onValueChange={(next) => onChange(next)}
+    >
+      <Popover>
+        <PopoverTrigger
+          aria-label={label}
+          className={cn(
+            CONTROL,
+            "w-full cursor-pointer pr-2 outline-none focus-visible:ring-[1.5px] focus-visible:ring-primary-bright focus-visible:ring-inset data-open:bg-white/8",
+          )}
         >
-          <input
-            id={id}
-            type="color"
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            className="absolute inset-0 size-full cursor-pointer opacity-0"
+          <span className={CONTROL_LABEL}>{label}</span>
+          <span className="flex items-center gap-2.5">
+            <span className={cn(CONTROL_VALUE, "tabular-nums")}>
+              {value.toUpperCase()}
+            </span>
+            <ColorPickerSwatch className="size-5 shrink-0 rounded-[5px] border border-white/15 bg-(--color-picker-color)" />
+          </span>
+        </PopoverTrigger>
+        <PopoverContent
+          side="bottom"
+          align="end"
+          sideOffset={6}
+          className="m-0 right-auto bottom-auto flex h-fit w-[232px] origin-(--transform-origin) flex-col gap-2.5 rounded-control-sm border border-dark-border bg-dark-raised p-2.5 text-inherit shadow-[0_12px_24px_-8px_rgb(0_0_0/60%)] outline-none transition-[opacity,scale] duration-150 ease-[cubic-bezier(0.19,1,0.22,1)] data-ending-style:scale-98 data-ending-style:opacity-0 data-ending-style:duration-100 data-starting-style:scale-98 data-starting-style:opacity-0 motion-reduce:transition-opacity"
+        >
+          <ColorPickerArea className="relative h-36 w-full touch-none rounded-tile bg-(image:--color-area-background)">
+            <ColorPickerAreaThumb className={THUMB} />
+          </ColorPickerArea>
+          <ColorPickerSlider
+            channel="hue"
+            className="relative h-3 w-full touch-none rounded-full bg-(image:--color-slider-background)"
+          >
+            <ColorPickerSliderThumb className={cn(THUMB, "top-1/2")} />
+          </ColorPickerSlider>
+          <ColorPickerInput
+            aria-label={`${label} hex`}
+            spellCheck={false}
+            className={cn(
+              CONTROL_VALUE,
+              "h-8 w-full rounded-tile bg-white/5 px-2.5 text-caption tabular-nums uppercase caret-primary-soft outline-none focus-visible:ring-[1.5px] focus-visible:ring-primary-bright focus-visible:ring-inset max-md:h-11 max-md:text-base",
+            )}
           />
-        </span>
-      </span>
-    </div>
+        </PopoverContent>
+      </Popover>
+    </ColorPicker>
   );
 }

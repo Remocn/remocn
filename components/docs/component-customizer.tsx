@@ -182,7 +182,7 @@ const COMPACT = [
   "[&_.customizer-control]:h-7 [&_.customizer-control]:gap-2 [&_.customizer-control]:rounded-[8px] [&_.customizer-control]:px-2.5 [&_.customizer-control]:text-xs [&_.customizer-control]:leading-4 [&_.customizer-control]:whitespace-nowrap",
   "[&_.customizer-control_input]:text-xs",
   // The swatch already shows the colour; the hex would crowd out the label.
-  "[&_.customizer-control:has(input[type=color])_.tabular-nums]:hidden",
+  "[&_.customizer-control:has([data-slot=color-picker-swatch])_.tabular-nums]:hidden",
 ].join(" ");
 
 /**
