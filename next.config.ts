@@ -46,6 +46,18 @@ const nextConfig: NextConfig = {
   },
   turbopack: {
     root: __dirname,
+    rules: {
+      // Previews load their component in the browser only, so the server
+      // build drops those imports from the preview index instead of compiling
+      // ~900 components a second time. A `path` condition rather than a
+      // path-glob key: Turbopack didn't apply the rule under a glob key.
+      "*": {
+        condition: {
+          all: [{ not: "browser" }, { path: /^registry\/__index__\.tsx$/ }],
+        },
+        loaders: ["./lib/build/strip-server-preview-loads.cjs"],
+      },
+    },
   },
   async rewrites() {
     // Agents get Markdown at the same URLs; see lib/agent-routing.ts.

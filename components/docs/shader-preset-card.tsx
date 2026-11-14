@@ -2,7 +2,7 @@
 
 import { Player, type PlayerRef } from "@remotion/player";
 import Link from "next/link";
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAutoplay } from "@/app/(home)/components/use-autoplay";
 import type { ShaderPresetItem } from "@/lib/shader-presets";
 import registry from "@/registry/__index__";
@@ -14,6 +14,11 @@ export function ShaderPresetCard({ item }: { item: ShaderPresetItem }) {
   const preview = previewManifest[item.name];
   const playerRef = useRef<PlayerRef>(null);
   const { containerRef } = useAutoplay(playerRef);
+  // The Player mounts after hydration: on the server its lazyComponent would
+  // load the shader there, and the server build strips preview loads
+  // (lib/build/strip-server-preview-loads.cjs).
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
   const command = `npx shadcn@latest add @remocn/${item.name}`;
 
   return (
@@ -22,7 +27,9 @@ export function ShaderPresetCard({ item }: { item: ShaderPresetItem }) {
         ref={containerRef}
         className="surface-card aspect-video w-full overflow-hidden rounded-xl"
       >
-        {entry && preview ? (
+        {!entry || !preview ? (
+          <div className="size-full bg-muted/40" />
+        ) : mounted ? (
           <Player
             ref={playerRef}
             lazyComponent={entry.load}
@@ -36,9 +43,7 @@ export function ShaderPresetCard({ item }: { item: ShaderPresetItem }) {
             loop
             acknowledgeRemotionLicense
           />
-        ) : (
-          <div className="size-full bg-muted/40" />
-        )}
+        ) : null}
       </div>
       <div className="flex items-center justify-between gap-2">
         <Link

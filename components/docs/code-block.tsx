@@ -1,10 +1,36 @@
 "use client";
 
-import { DynamicCodeBlock } from "fumadocs-ui/components/dynamic-codeblock";
+import { createShikiFactory } from "fumadocs-core/highlight/shiki";
+import { DynamicCodeBlock } from "fumadocs-ui/components/dynamic-codeblock.core";
 import type { ComponentProps } from "react";
 import type { ShikiTransformer } from "shiki";
 import { CODE_PRE, CodeFrame } from "@/components/docs/blocks/code-frame";
 import { cn } from "@/lib/utils";
+
+// Only what the snippets use. Fumadocs' default factory loads `shiki` whole,
+// which bundles every grammar and theme (300+ chunks, ~30 MB in dev).
+const LANGS = {
+  tsx: () => import("shiki/langs/tsx.mjs"),
+};
+
+const shiki = createShikiFactory({
+  async init() {
+    const { createBundledHighlighter } = await import("shiki/core");
+    const { createJavaScriptRegexEngine } = await import(
+      "shiki/engine/javascript"
+    );
+    const createHighlighter = createBundledHighlighter({
+      langs: LANGS,
+      themes: {
+        vesper: () => import("shiki/themes/vesper.mjs"),
+        "github-light-default": () =>
+          import("shiki/themes/github-light-default.mjs"),
+      },
+      engine: () => createJavaScriptRegexEngine(),
+    });
+    return createHighlighter({ langs: [], themes: [] });
+  },
+});
 
 const transformers: ShikiTransformer[] = [
   {
@@ -44,6 +70,7 @@ export function CodeBlock({
       bodyClassName={bodyClassName}
     >
       <DynamicCodeBlock
+        highlighter={() => shiki.getOrInit()}
         lang={lang}
         code={code}
         options={{

@@ -9,22 +9,28 @@ import { ImageResponse } from "takumi-js/response";
  * with its description at the bottom.
  */
 
-const asset = (p: string) => join(process.cwd(), p);
-
+// Literal `join(process.cwd(), "…")` calls, not a helper: the bundler traces
+// a literal path to that one file, but a computed one to the whole project.
 const shaderDataUri = `data:image/png;base64,${readFileSync(
-  asset("public/landing/shader-magenta.png"),
+  join(process.cwd(), "public/landing/shader-magenta.png"),
 ).toString("base64")}`;
 
 const markDataUri = `data:image/svg+xml;base64,${Buffer.from(
-  readFileSync(asset("public/logo-mark.svg"), "utf8").replace(
+  readFileSync(join(process.cwd(), "public/logo-mark.svg"), "utf8").replace(
     /currentColor/g,
     "#ffffff",
   ),
 ).toString("base64")}`;
 
-const geist400 = readFileSync(asset("app/og/fonts/geist-400.woff2"));
-const geist500 = readFileSync(asset("app/og/fonts/geist-500.woff2"));
-const manrope600 = readFileSync(asset("app/og/fonts/manrope-600.woff2"));
+const geist400 = readFileSync(
+  join(process.cwd(), "app/og/fonts/geist-400.woff2"),
+);
+const geist500 = readFileSync(
+  join(process.cwd(), "app/og/fonts/geist-500.woff2"),
+);
+const manrope600 = readFileSync(
+  join(process.cwd(), "app/og/fonts/manrope-600.woff2"),
+);
 
 export const OG_SIZE = { width: 1200, height: 630 } as const;
 
