@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@ui-sdk/react/button";
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
@@ -85,9 +86,8 @@ export function CopyButton({
   );
 
   return (
-    <button
-      type="button"
-      data-slot="copy-button"
+    <Button
+      data-copy-button=""
       onClick={async () => {
         const ok = await navigator.clipboard.writeText(value).then(
           () => true,
@@ -115,6 +115,6 @@ export function CopyButton({
           {copied ? label : "Copied"}
         </span>
       </span>
-    </button>
+    </Button>
   );
 }

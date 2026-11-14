@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@ui-sdk/react/button";
 import { useEffect, useRef, useState } from "react";
 import { CopyButton } from "@/components/docs/copy-button";
 import { useTrackEvent } from "@/lib/analytics";
@@ -111,16 +112,11 @@ export function CustomizePanel({
           </span>
         </div>
         <div className="flex items-center gap-1.5">
-          <button
-            type="button"
-            onClick={onReset}
-            disabled={isDefault}
-            className={CHIP}
-          >
+          <Button onClick={onReset} disabled={isDefault} className={CHIP}>
             <Icon d={["M3 12a9 9 0 1 0 3-6.7L3 8", "M3 3v5h5"]} />
             Reset
-          </button>
-          <button type="button" onClick={share} className={CHIP}>
+          </Button>
+          <Button onClick={share} className={CHIP}>
             <Icon
               d={[
                 "M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1",
@@ -139,7 +135,7 @@ export function CustomizePanel({
                 {shared ? "Share link" : "Copied"}
               </span>
             </span>
-          </button>
+          </Button>
           <CopyButton value={code} label="Copy code" variant="light" />
         </div>
       </div>

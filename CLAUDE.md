@@ -114,6 +114,7 @@ Solo builders и маленькие команды (1-2 чел), фронтен�
 - Свой pointer-код поверх ui-sdk допустим только как расширение: порог сдвига, `setPointerCapture`, проверка `pointerType`, итог — через тот же controlled `onValueChange`. Комментарий объясняет зачем
 - Попап (`*Content`): сбросить `right`/`bottom` и держать высоту по контенту (`right-auto bottom-auto h-fit max-h-(--available-height) overflow-y-auto`) — иначе в Safari UA-шный `inset: 0` растягивает попап до низа экрана
 - Перетаскиваемый слайдер показывает нажатие, а не focus ring
+- ui-sdk перезаписывает `data-slot` своим значением (`button`, `switch`…). Свой хук для CSS/тестов — отдельный атрибут (`data-copy-button`), не `data-slot`. Переводя элемент на ui-sdk, grep'ни его старый `data-slot` по CSS
 - Комментарии — только «почему»: браузерный квирк, компромисс, правило APG
 
 ## Бизнес-модель

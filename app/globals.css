@@ -455,7 +455,7 @@
   outline: none;
 }
 [data-rehype-pretty-code-figure]:has([data-rehype-pretty-code-title])
-  [data-slot="copy-button"] {
+  [data-copy-button] {
   top: calc(var(--spacing) * 1.5);
 }
 /* biome-ignore lint/style/noDescendingSpecificity: rehype-pretty-code markup never carries .typeset figure.shiki, so the earlier rule cannot apply here */

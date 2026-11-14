@@ -1,5 +1,10 @@
 "use client";
 
+import {
+  Collapsible,
+  CollapsiblePanel,
+  CollapsibleTrigger,
+} from "@ui-sdk/react/collapsible";
 import { type CSSProperties, useState, useSyncExternalStore } from "react";
 import type { ControlConfig, ControlType } from "@/lib/customizer-config";
 import { cn } from "@/lib/utils";
@@ -244,7 +249,6 @@ export function ComponentCustomizer({
         // Undecided groups follow the layout: open on desktop, first-only on phones.
         const autoCollapsed = chosen === undefined && index > 0;
         const expanded = chosen ?? !(phone && index > 0);
-        const panelId = `customize-${group.id}`;
         return (
           <section
             key={group.id}
@@ -254,44 +258,45 @@ export function ComponentCustomizer({
               index > 0 && "border-t border-white/6",
             )}
           >
-            <button
-              type="button"
-              aria-expanded={expanded}
-              aria-controls={panelId}
-              onClick={() =>
-                setOpen((prev) => ({ ...prev, [group.id]: !expanded }))
+            <Collapsible
+              open={expanded}
+              onOpenChange={(next) =>
+                setOpen((prev) => ({ ...prev, [group.id]: next }))
               }
-              className="flex h-9 shrink-0 cursor-pointer items-center justify-between rounded-tile px-0.5 text-caption leading-[17px] font-semibold text-white/70 outline-none hover:text-[#fafafa] focus-visible:ring-2 focus-visible:ring-white/40 max-md:h-11 max-md:px-1.5 max-md:text-small max-md:leading-[18px]"
+              className="contents"
             >
-              {group.title}
-              <GroupChevron open={chosen ?? true} auto={autoCollapsed} />
-            </button>
-            <div
-              id={panelId}
-              className={cn(
-                "flex flex-wrap gap-1.5",
-                chosen === false && "hidden",
-                autoCollapsed && "max-md:hidden",
-              )}
-            >
-              {group.entries.map(([key, ctrl]) => {
-                const { className, style } = slot(ctrl);
-                return (
-                  <div
-                    key={key}
-                    style={style}
-                    className={cn("min-w-0 max-md:basis-full!", className)}
-                  >
-                    <Control
-                      id={`ctrl-${key}`}
-                      ctrl={ctrl}
-                      value={values[key]}
-                      onChange={(value) => onChange(key, value)}
-                    />
-                  </div>
-                );
-              })}
-            </div>
+              <CollapsibleTrigger className="flex h-9 shrink-0 cursor-pointer items-center justify-between rounded-tile px-0.5 text-caption leading-[17px] font-semibold text-white/70 outline-none hover:text-[#fafafa] focus-visible:ring-2 focus-visible:ring-white/40 max-md:h-11 max-md:px-1.5 max-md:text-small max-md:leading-[18px]">
+                {group.title}
+                <GroupChevron open={chosen ?? true} auto={autoCollapsed} />
+              </CollapsibleTrigger>
+              {/* Before hydration a phone still renders every group open;
+                  the class keeps the later ones shut until state catches up. */}
+              <CollapsiblePanel
+                keepMounted
+                className={cn(
+                  "flex flex-wrap gap-1.5",
+                  autoCollapsed && "max-md:hidden",
+                )}
+              >
+                {group.entries.map(([key, ctrl]) => {
+                  const { className, style } = slot(ctrl);
+                  return (
+                    <div
+                      key={key}
+                      style={style}
+                      className={cn("min-w-0 max-md:basis-full!", className)}
+                    >
+                      <Control
+                        id={`ctrl-${key}`}
+                        ctrl={ctrl}
+                        value={values[key]}
+                        onChange={(value) => onChange(key, value)}
+                      />
+                    </div>
+                  );
+                })}
+              </CollapsiblePanel>
+            </Collapsible>
           </section>
         );
       })}
