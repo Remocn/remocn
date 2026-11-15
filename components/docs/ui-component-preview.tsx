@@ -2,8 +2,9 @@
 
 import { Suspense, use, useMemo } from "react";
 import type { ControlConfig } from "@/lib/customizer-config";
+import registry from "@/lib/previews";
+import { useComponentConfig } from "@/lib/previews/use-component-config";
 import { cn } from "@/lib/utils";
-import registry, { loadComponentConfig } from "@/registry/__index__";
 import { CustomizePanel } from "./blocks/customize-panel";
 import { DocsPlayer } from "./blocks/player/docs-player";
 import { PlayerFallback, UnknownBlock } from "./blocks/player/player-fallback";
@@ -46,7 +47,7 @@ function UiPreview({
   // Suspends on first render until this component's scene chunk resolves:
   // the scene component, its honored-control list and its code template.
   const scene = use(loadUiScene(name));
-  const controls: ControlConfig = use(loadComponentConfig(name)).controls;
+  const controls: ControlConfig = useComponentConfig(name).controls;
   const honored = scene.controls;
 
   // config.controls ∩ honored: drops state/speed and every structural knob

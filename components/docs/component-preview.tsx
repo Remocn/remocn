@@ -6,7 +6,6 @@ import { RotateCcwIcon } from "lucide-react";
 import {
   type ReactNode,
   Suspense,
-  use,
   useCallback,
   useMemo,
   useRef,
@@ -17,8 +16,9 @@ import type {
   ControlConfig,
   ResolvedComponentConfig,
 } from "@/lib/customizer-config";
+import registry from "@/lib/previews";
+import { useComponentConfig } from "@/lib/previews/use-component-config";
 import { cn } from "@/lib/utils";
-import registry, { loadComponentConfig } from "@/registry/__index__";
 import { CustomizePanel } from "./blocks/customize-panel";
 import { DocsPlayer } from "./blocks/player/docs-player";
 import { PlayerFallback, UnknownBlock } from "./blocks/player/player-fallback";
@@ -103,7 +103,7 @@ function Preview({
 }) {
   // Suspends until this component's config chunk resolves, then returns
   // synchronously from the cached promise. No other config is fetched.
-  const config = use(loadComponentConfig(name));
+  const config = useComponentConfig(name);
   const { values, isDefault, change, reset } = useCustomizer(
     name,
     config.controls,

@@ -5,9 +5,9 @@ import { useIntersectionObserver } from "@uidotdev/usehooks";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useAutoplay } from "@/app/(home)/components/use-autoplay";
+import registry from "@/lib/previews";
 import { usePrefersReducedMotion } from "@/lib/use-prefers-reduced-motion";
 import { cn } from "@/lib/utils";
-import registry from "@/registry/__index__";
 import { previewManifest } from "@/registry/__manifest__";
 import type { CardItem } from "./component-card-grid";
 

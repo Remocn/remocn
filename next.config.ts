@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { createMDX } from "fumadocs-mdx/next";
 import type { NextConfig } from "next";
 import {
@@ -7,6 +9,42 @@ import {
 } from "./lib/agent-routing";
 
 const withMDX = createMDX();
+
+/**
+ * The version of the production preview bundle, which `bun run build` writes
+ * (scripts/previews/build.mts) before it runs `next build`. Constant in dev:
+ * there the page reads the manifest itself, and a value that changed on each
+ * start would only invalidate Turbopack's cache.
+ */
+function previewsVersion(): string {
+  if (process.env.NODE_ENV === "development") return "";
+  try {
+    const manifest = readFileSync(
+      join(__dirname, "public/_previews/prod/manifest.json"),
+      "utf8",
+    );
+    return JSON.parse(manifest).version;
+  } catch {
+    // lib/previews/index.ts reports the missing bundle where it is needed.
+    return "";
+  }
+}
+
+/**
+ * Every script and font of the preview bundle is named by the hash of its
+ * content, so none of them changes under its URL. The manifest, the preload
+ * map and the source maps are not, and keep the default headers.
+ */
+function previewsHeaders() {
+  const headers = [
+    { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
+  ];
+  return [
+    "/_previews/:mode(dev|prod)/chunks/:file([^/]+\\.js)",
+    "/_previews/:mode(dev|prod)/assets/:file*",
+    "/_previews/:mode(dev|prod)/:entry(entries-[0-9a-f]+\\.js)",
+  ].map((source) => ({ source, headers }));
+}
 
 const DOCS_FOLDER_REDIRECTS: Record<string, string> = {
   "/docs/getting-started": "/docs/getting-started/introduction",
@@ -44,20 +82,14 @@ const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     "/mcp": ["./plugins/remocn/skills/remocn/references/**/*.md"],
   },
+  // The preview bundle in public/_previews that lib/previews/index.ts loads
+  // by URL: the version names its entry file, and the server refuses a bundle
+  // other than the one the site was built against.
+  env: {
+    REMOCN_PREVIEWS_VERSION: previewsVersion(),
+  },
   turbopack: {
     root: __dirname,
-    rules: {
-      // Previews load their component in the browser only, so the server
-      // build drops those imports from the preview index instead of compiling
-      // ~900 components a second time. A `path` condition rather than a
-      // path-glob key: Turbopack didn't apply the rule under a glob key.
-      "*": {
-        condition: {
-          all: [{ not: "browser" }, { path: /^registry\/__index__\.tsx$/ }],
-        },
-        loaders: ["./lib/build/strip-server-preview-loads.cjs"],
-      },
-    },
   },
   async rewrites() {
     // Agents get Markdown at the same URLs; see lib/agent-routing.ts.
@@ -68,7 +100,7 @@ const nextConfig: NextConfig = {
     };
   },
   async headers() {
-    return agentHeaders();
+    return [...agentHeaders(), ...previewsHeaders()];
   },
   async redirects() {
     // Collapse the www host into the canonical apex so Google indexes a single

@@ -1,7 +1,7 @@
 "use client";
 
+import registry from "@/lib/previews";
 import { PreviewStage } from "@/lib/ui-preview-internals";
-import registry from "@/registry/__index__";
 import type { BackdropFill } from "@/registry/remocn/backdrop";
 
 export function EmbedPlayer({

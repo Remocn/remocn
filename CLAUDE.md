@@ -18,6 +18,7 @@ Solo builders и маленькие команды (1-2 чел), фронтен�
 - `content/docs/` — MDX документации (fumadocs collection `docs`), `content/changelog/` — записи ченджлога (flat collection `changelog`)
 - `registry/` — исходники компонентов: `remocn/` (анимации, переходы, backgrounds), `remocn-ui/` (UI-примитивы), `remocn-icons/` (иконки), `remocn-templates/` (готовые видео). У каждого неймспейса свой `registry.json`; `registry/__index__.tsx` — отдельный реестр превью для сайта
 - `registry-artifacts/` — собранный shadcn-registry (`bun run registry:build`), коммитится в репозиторий
+- `public/_previews/` — собранный реестр превью, в git не попадает. См. «Превью собираются отдельно»
 - `components/`, `lib/`, `config/`, `hooks/` — код сайта
 
 ## Уровни компонентов
@@ -48,6 +49,17 @@ Solo builders и маленькие команды (1-2 чел), фронтен�
 - `bun test lib/docs-meta.test.ts` — блокирующий шаг CI, отдельный от основного прогона тестов (тот пока `continue-on-error`)
 - Агентские артефакты генерируются из этого frontmatter: `/llms-components.txt` (роутер по всем компонентам) и `/docs/**.md` (страница как чистый markdown, см. `lib/mdx-to-markdown.ts`)
 
+## Превью собираются отдельно
+
+`registry/__index__.tsx` перечисляет ~900 превью, у каждого ленивый импорт компонента и конфига. Turbopack компилирует ленивые импорты сразу, поэтому с этим индексом в графе сайта первый запрос любой страницы с превью компилировал все превью. Теперь индекс собирает Bun, а сайт загружает результат по URL.
+
+- `scripts/previews/build.mts` собирает индекс в `public/_previews/` за ~0,3 с: dev-сборка лежит в `dev/`, production — в `prod/`, друг друга они не затирают. Один набор файлов читают и браузер (`/_previews/…`), и сервер (с диска). Все скрипты названы по хешу содержимого. `react` и `remotion` в сборку не входят: превью берут их у страницы, список общих модулей — `lib/previews/shared-modules.ts`
+- Код сайта импортирует `@/lib/previews` и никогда `@/registry/__index__`: экспорты те же. Тест в `lib/docs-meta.test.ts` это проверяет. Скрипты и Remotion Studio по-прежнему импортируют сам индекс
+- `bun dev` (`scripts/dev.mts`) собирает превью, запускает `next dev` и пересобирает превью при сохранении их исходников. Открытая страница получает сборку по WebSocket и подменяет изменённые превью на месте, без перезагрузки (`lib/previews/hot.ts`). Ошибка сборки печатается в терминале `bun dev`, страница остаётся на последней удачной сборке
+- `bun run build` сначала собирает превью (`bun run previews:build`), затем сайт. `next build` без собранных превью падает на пререндере с подсказкой. Пересобрать превью после `next build` и не пересобрать сайт нельзя: страницы ссылаются на прежний входной файл
+- `registry/__names__.ts` — сгенерированный список имён превью, коммитится. Его переписывает любая сборка превью, когда меняются ключи `registry/__index__.tsx`; тест проверяет, что он не отстал
+- Сервер загружает только конфиги. `load()` на сервере отклоняется: плеер с `lazyComponent={load}` монтируется после гидрации
+
 ## Changelog
 
 Любая ветка, которая добавляет или заметно меняет компоненты registry, обязана содержать запись ченджлога — в том же PR, что и сама фича.
@@ -76,8 +88,9 @@ Open core. Free примитивы и базовые compositions (MIT). В бу
 
 ```bash
 bun install              # установка зависимостей
-bun dev                  # dev-сервер Next.js
-bun run build            # production-сборка сайта
+bun dev                  # dev-сервер Next.js и пересборка превью при сохранении
+bun run build            # production-сборка превью и сайта
+bun run previews:build   # только превью, в public/_previews
 bun run typecheck        # tsc --noEmit
 bun run lint             # biome check
 bun run registry:build   # пересборка registry-artifacts из registry/

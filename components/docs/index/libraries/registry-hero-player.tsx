@@ -1,6 +1,6 @@
 "use client";
 
-import registry from "@/registry/__index__";
+import registry from "@/lib/previews";
 import { previewManifest } from "@/registry/__manifest__";
 import { HeroPlayer } from "./hero-player";
 

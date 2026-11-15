@@ -4,8 +4,8 @@ import { Player, type PlayerRef } from "@remotion/player";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useAutoplay } from "@/app/(home)/components/use-autoplay";
+import registry from "@/lib/previews";
 import type { ShaderPresetItem } from "@/lib/shader-presets";
-import registry from "@/registry/__index__";
 import { previewManifest } from "@/registry/__manifest__";
 import { CopyButton } from "./copy-button";
 
@@ -15,8 +15,8 @@ export function ShaderPresetCard({ item }: { item: ShaderPresetItem }) {
   const playerRef = useRef<PlayerRef>(null);
   const { containerRef } = useAutoplay(playerRef);
   // The Player mounts after hydration: on the server its lazyComponent would
-  // load the shader there, and the server build strips preview loads
-  // (lib/build/strip-server-preview-loads.cjs).
+  // load the shader there, and previews load in the browser only
+  // (lib/previews/index.ts).
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
   const command = `npx shadcn@latest add @remocn/${item.name}`;

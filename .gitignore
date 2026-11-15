@@ -43,6 +43,9 @@ next-env.d.ts
 # fumadocs generated source
 .source/
 
+# preview bundle (scripts/previews/build.mts)
+/public/_previews/
+
 .omc
 
 articles
