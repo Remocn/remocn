@@ -4,8 +4,6 @@ navTitle: MCP Server
 description: "A free, hosted Remotion MCP server for making videos, at https://remocn.dev/mcp. No API key, no account, MIT licensed, read-only. It searches Remocn's Remotion components, returns their docs, plans a video beat by beat and previews components. It does not render video."
 ---
 
-import { Faq } from "@/components/docs/index/introduction/faq";
-
 _Last updated: November 11, 2026_
 
 The Remocn MCP server is a free, hosted Remotion MCP server for making videos. Add
@@ -49,6 +47,10 @@ session looks like this:
 | `get_component` | `name` (required). Accepts `typewriter`, `@remocn/typewriter` or the component's title | The component's full docs page as Markdown: install command, props, usage example, use and avoid notes, plus its registry dependencies |
 | `plan_video` | `brief` (required). Optional: `archetype` (`product-demo`, `changelog`, `feature-announcement`, `oss-showcase`, `cli-tool-demo`, `testimonial-reel`, `year-in-review`, `pricing-reveal` or `logo-bumper`), `durationSeconds` (up to 600) | A storyboard: the archetype and why it was picked, beats with frame ranges and component options, transitions, one install command for the suggested picks, and the archetype's full recipe |
 | `preview_component` | `name` (required). Optional: `props`, merged over the component's demo defaults | A live preview link with length, frame rate and size, plus docs URL and install command. In clients that support MCP Apps, the preview plays in the chat |
+
+`search_components` matches by meaning as well as by words, so `query` can be a name
+(`typewriter`), a couple of keywords, or the need itself in any language
+(`show that setup takes five minutes`).
 
 When a name doesn't match, `get_component` and `preview_component` answer with the closest
 component names instead of an empty result.

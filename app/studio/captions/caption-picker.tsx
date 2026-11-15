@@ -12,13 +12,13 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useAutoplay } from "@/app/(home)/components/use-autoplay";
 import { ComponentPreview } from "@/components/docs/component-preview";
 import captionsMeta from "@/content/docs/captions/components/meta.json";
+import components from "@/lib/previews";
 import {
   getCachedStudioElement,
   loadStudioElement,
 } from "@/lib/studio-element";
 import { usePrefersReducedMotion } from "@/lib/use-prefers-reduced-motion";
 import { cn } from "@/lib/utils";
-import components from "@/registry/__index__";
 import { previewManifest } from "@/registry/__manifest__";
 import registry from "@/registry/remocn/registry.json";
 

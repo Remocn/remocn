@@ -22,7 +22,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
 import { loader } from "fumadocs-core/source";
-import { docs } from "@/.source/server";
+import { docs } from "@/.source/dynamic";
 
 /** Sidebar category icons — meta.json `icon` values resolve against this map. */
 const DOCS_ICONS: Record<string, IconSvgElement> = {

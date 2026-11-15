@@ -24,6 +24,8 @@ export interface ComponentRecord {
   tier?: string;
   useWhen: string[];
   avoidWhen: string[];
+  /** Search phrasings from the docs frontmatter; matched, never displayed. */
+  askedAs: string[];
   install: string;
 }
 
@@ -112,6 +114,7 @@ const WEIGHTS = {
   description: 3,
   section: 2,
   useWhen: 2,
+  askedAs: 2,
   vibe: 1,
 } as const;
 
@@ -127,6 +130,7 @@ export function scoreComponent(
     description: tokenize(record.description),
     section: tokenize(record.section.replace(/-/g, " ")),
     useWhen: tokenize(record.useWhen.join(" ")),
+    askedAs: tokenize(record.askedAs.join(" ")),
     vibe: record.vibe ? [record.vibe] : [],
   };
 
@@ -157,7 +161,7 @@ export function scoreComponent(
 
 function passesFilters(
   record: ComponentRecord,
-  { vibe, maxLength }: SearchOptions,
+  { vibe, maxLength }: Pick<SearchOptions, "vibe" | "maxLength">,
 ): boolean {
   if (vibe && record.vibe !== vibe) return false;
   if (maxLength !== undefined) {
@@ -169,32 +173,58 @@ function passesFilters(
   return true;
 }
 
+export interface ScoredComponent {
+  record: ComponentRecord;
+  score: number;
+}
+
+export function clampLimit(limit: number | undefined): number {
+  return Math.min(Math.max(1, Math.floor(limit ?? DEFAULT_LIMIT)), MAX_LIMIT);
+}
+
+export function filterComponents(
+  records: ComponentRecord[],
+  options: Pick<SearchOptions, "vibe" | "maxLength">,
+): ComponentRecord[] {
+  return records.filter((r) => passesFilters(r, options));
+}
+
+/**
+ * Every candidate the words of the query hit, best first, with no limit
+ * applied. Empty when the query has no usable tokens (stopwords only, or a
+ * language the tokenizer does not read).
+ */
+export function rankComponents(
+  candidates: ComponentRecord[],
+  query: string,
+): ScoredComponent[] {
+  const queryTokens = tokenize(query);
+  if (queryTokens.length === 0) return [];
+  return candidates
+    .map((record) => ({
+      record,
+      score: scoreComponent(record, queryTokens, query),
+    }))
+    .filter((r) => r.score > 0)
+    .sort(
+      (a, b) => b.score - a.score || a.record.name.localeCompare(b.record.name),
+    );
+}
+
 export function searchComponents(
   records: ComponentRecord[],
   options: SearchOptions,
 ): ComponentRecord[] {
-  const limit = Math.min(
-    Math.max(1, Math.floor(options.limit ?? DEFAULT_LIMIT)),
-    MAX_LIMIT,
-  );
-  const candidates = records.filter((r) => passesFilters(r, options));
-  const queryTokens = tokenize(options.query);
+  const limit = clampLimit(options.limit);
+  const candidates = filterComponents(records, options);
 
-  if (queryTokens.length === 0) {
+  if (tokenize(options.query).length === 0) {
     return [...candidates]
       .sort((a, b) => a.name.localeCompare(b.name))
       .slice(0, limit);
   }
 
-  return candidates
-    .map((record) => ({
-      record,
-      score: scoreComponent(record, queryTokens, options.query),
-    }))
-    .filter((r) => r.score > 0)
-    .sort(
-      (a, b) => b.score - a.score || a.record.name.localeCompare(b.record.name),
-    )
+  return rankComponents(candidates, options.query)
     .slice(0, limit)
     .map((r) => r.record);
 }

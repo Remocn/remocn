@@ -43,6 +43,12 @@ next-env.d.ts
 # fumadocs generated source
 .source/
 
+# preview bundle (scripts/previews/build.mts)
+/public/_previews/
+
+# semantic search index + embedding model (bun run search:build)
+.search/
+
 .omc
 
 articles

@@ -7,8 +7,8 @@ import {
   Suspense,
 } from "react";
 import { AbsoluteFill, Freeze, Sequence, useCurrentFrame } from "remotion";
+import registry from "@/lib/previews";
 import { cn } from "@/lib/utils";
-import registry from "@/registry/__index__";
 import { previewManifest } from "@/registry/__manifest__";
 import { LANDING_SCENES } from "../../../scenes";
 import { type ClipEnd, type ClipSpec, TILE_SIZE } from "./config";

@@ -20,6 +20,19 @@ RUN --mount=type=cache,target=/root/.bun/install/cache \
 COPY . .
 RUN bun run postinstall
 
+# Semantic search: embeds the component catalog into .search/ and downloads the
+# embedding model there (about 120 MB from huggingface.co); the server reads
+# both at runtime and never downloads anything itself. The model is kept in a
+# build cache, so only the first build on a server needs that download. A
+# failure here does not stop the deploy: without the index the site searches
+# by keywords only.
+RUN --mount=type=cache,target=/var/cache/remocn-search \
+    mkdir -p .search/models \
+    && cp -a /var/cache/remocn-search/. .search/models/ \
+    && (bun run search:build \
+        && cp -a .search/models/. /var/cache/remocn-search/ \
+        || echo "WARNING: search index not built, the site will search by keywords only")
+
 # Read while prerendering. Coolify passes these only when they are marked as
 # *build* variables in its UI. /showcases fails the build without
 # SHOWCASES_API_URL; the OpenPanel keys feed the sponsors traffic numbers.

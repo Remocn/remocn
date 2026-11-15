@@ -1,17 +1,60 @@
 import { metaSchema, pageSchema } from "fumadocs-core/source/schema";
 import {
+  applyMdxPreset,
   defineCollections,
   defineConfig,
   defineDocs,
 } from "fumadocs-mdx/config";
-import rehypePrettyCode from "rehype-pretty-code";
+import rehypePrettyCode, {
+  type Options as RehypePrettyCodeOptions,
+} from "rehype-pretty-code";
 import type { ShikiTransformer } from "shiki";
 import { z } from "zod";
 import { componentMetaSchema } from "./lib/docs-schema";
 
+const transformers: ShikiTransformer[] = [
+  {
+    code(node) {
+      if (node.tagName === "code") {
+        node.properties.__raw__ = this.source;
+        if (this.source.split("\n").length > 1) {
+          node.properties["data-line-numbers"] = "";
+        }
+      }
+    },
+  },
+];
+
+// Code fences: rehype-pretty-code in place of Fumadocs' own highlighter.
+const prettyCode: [typeof rehypePrettyCode, RehypePrettyCodeOptions] = [
+  rehypePrettyCode,
+  {
+    theme: {
+      dark: "vesper",
+      light: "github-light-default",
+    },
+    keepBackground: false,
+    transformers,
+  },
+];
+
 export const docs = defineDocs({
   dir: "content/docs",
   docs: {
+    // ~900 pages: a page body is compiled when the page is rendered (on
+    // request in dev, during prerender in a build) instead of every page
+    // being a bundler module. Turbopack compiles all modules of a route up
+    // front, lazy imports included, so the bundled modes (`async: true` too)
+    // made the first docs request in dev compile the whole collection. The
+    // price: a docs page can't `import` or `export`. Its components are
+    // registered in components/docs/mdx-page-components.ts.
+    dynamic: true,
+    // The preset without rehype-toc: the docs read neither its `toc` export
+    // nor its `[toc]` heading markers. The export holds each heading as JSX
+    // at module level, where a component in a heading
+    // (`## The storyboard<GuideCount n={5} />`) has to be an import, and a
+    // runtime-compiled page has none.
+    mdxOptions: applyMdxPreset({ rehypePlugins: () => [prettyCode] }),
     schema: pageSchema.safeExtend({
       ...componentMetaSchema.shape,
       // Shorter label for the sidebar, breadcrumbs and prev/next when the
@@ -50,34 +93,11 @@ export const blog = defineCollections({
   }),
 });
 
-const transformers: ShikiTransformer[] = [
-  {
-    code(node) {
-      if (node.tagName === "code") {
-        node.properties.__raw__ = this.source;
-        if (this.source.split("\n").length > 1) {
-          node.properties["data-line-numbers"] = "";
-        }
-      }
-    },
-  },
-];
-
 export default defineConfig({
   mdxOptions: {
     rehypePlugins: (plugins) => {
       plugins.shift();
-      plugins.push([
-        rehypePrettyCode,
-        {
-          theme: {
-            dark: "vesper",
-            light: "github-light-default",
-          },
-          keepBackground: false,
-          transformers,
-        },
-      ]);
+      plugins.push(prettyCode);
       return plugins;
     },
   },

@@ -5,6 +5,9 @@
 @import "fumadocs-ui/css/preset.css";
 @import "./typeset.css";
 @source "../node_modules/fumadocs-ui/dist/**/*.js";
+/* Built registry JSON (27 MB) only repeats class names from registry/, which
+   is scanned already: skipping it leaves the CSS byte-identical. */
+@source not "../registry-artifacts";
 
 @custom-variant dark (&:is(.dark *));
 

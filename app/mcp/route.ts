@@ -1,4 +1,5 @@
 import { createMcpHandler } from "@modelcontextprotocol/server";
+import { mcpRequestContext } from "@/lib/mcp/request-context";
 import { createRemocnMcpServer } from "@/lib/mcp/server";
 
 /**
@@ -38,7 +39,10 @@ function corsHeaders(request: Request): Headers {
 }
 
 async function serve(request: Request): Promise<Response> {
-  const response = await handler.fetch(request);
+  const response = await mcpRequestContext.run(
+    { userAgent: request.headers.get("user-agent") ?? "" },
+    () => handler.fetch(request),
+  );
   const headers = new Headers(response.headers);
   for (const [key, value] of corsHeaders(request)) headers.set(key, value);
   return new Response(response.body, {

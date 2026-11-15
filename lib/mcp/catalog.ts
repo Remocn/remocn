@@ -80,6 +80,7 @@ export function getCatalog(): Catalog {
       tier: registry.get(name)?.tier,
       useWhen: data.useWhen ?? [],
       avoidWhen: data.avoidWhen ?? [],
+      askedAs: data.askedAs ?? [],
       install: installCommand(name),
     };
     records.push(record);

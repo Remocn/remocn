@@ -182,6 +182,25 @@ describe("component pages carry selection metadata", () => {
     expect(offenders).toEqual([]);
   });
 
+  it("carries five to eight distinct askedAs phrasings", () => {
+    const offenders: string[] = [];
+    for (const page of componentPages) {
+      const value = page.frontmatter.askedAs;
+      const ok =
+        Array.isArray(value) &&
+        value.length >= 5 &&
+        value.length <= 8 &&
+        value.every(
+          (entry) => typeof entry === "string" && entry.trim().length > 0,
+        ) &&
+        new Set(value.map((entry) => String(entry).toLowerCase())).size ===
+          value.length;
+      if (!ok) offenders.push(page.file);
+    }
+
+    expect(offenders).toEqual([]);
+  });
+
   it("only cites components that exist", () => {
     const known = new Set(items.map((i) => i.name));
     const offenders: string[] = [];
@@ -276,6 +295,84 @@ describe("navigation lists every page", () => {
     }
 
     expect(missing).toEqual([]);
+  });
+});
+
+describe("docs pages compile at runtime", () => {
+  // `dynamic` in source.config.ts: a page is compiled when it is rendered,
+  // and Fumadocs rules out `import` and `export` in pages compiled that way.
+  // What a page needs is registered in components/docs/mdx-page-components.ts.
+  it("no page imports or exports", () => {
+    const offenders: string[] = [];
+    for (const { file } of pages) {
+      let fenced = false;
+      for (const line of readFileSync(file, "utf8").split("\n")) {
+        if (/^\s*(```|~~~)/.test(line)) fenced = !fenced;
+        else if (!fenced && /^(import|export)\s/.test(line)) {
+          offenders.push(file);
+          break;
+        }
+      }
+    }
+
+    expect(offenders).toEqual([]);
+  });
+});
+
+describe("previews are built outside the site's bundler", () => {
+  // registry/__index__.tsx lazily imports ~900 previews, and Turbopack
+  // compiles lazy imports up front: in the site's module graph the index
+  // made the first request of any page with a preview compile them all. The
+  // site loads the index as a separate bundle instead (lib/previews/index.ts).
+  it("no site code imports the registry index", () => {
+    const files = [
+      ...new Glob("*.{ts,tsx}").scanSync("."),
+      ...["app", "components", "config", "hooks", "lib"].flatMap((folder) => [
+        ...new Glob(`${folder}/**/*.{ts,tsx}`).scanSync("."),
+      ]),
+      // Blog and changelog pages go through the bundler and may import.
+      ...new Glob("content/{blog,changelog}/**/*.mdx").scanSync("."),
+    ];
+    const offenders = files.filter((file) => {
+      // Tests run under Bun, not in the site's bundle.
+      if (/\.test\.tsx?$/.test(file)) return false;
+      let source = readFileSync(file, "utf8");
+      source = file.endsWith(".mdx")
+        ? // Prose may name the file; only its import lines count.
+          source
+            .split("\n")
+            .filter((line) => /^(import|export)\s/.test(line))
+            .join(";\n")
+        : // Comments may name it too.
+          source
+            .replace(/\/\*[\s\S]*?\*\//g, "")
+            .replace(/(^|[^:"'`\\])\/\/.*$/gm, "$1");
+      // A module specifier that ends at the index, in whatever statement
+      // holds it: import, export … from, import(), require().
+      const specifier = /["'`][^"'`\n]*registry\/__index__(\.tsx?)?["'`]/g;
+      for (const match of source.matchAll(specifier)) {
+        const before = source.slice(0, match.index);
+        const statement = before.slice(before.lastIndexOf(";") + 1);
+        // Type-only forms are erased, so they stay allowed.
+        const typeOnly =
+          /^\s*((import|export) )?type\b/.test(statement) ||
+          /typeof import\(\s*$/.test(before);
+        if (!typeOnly) return true;
+      }
+      return false;
+    });
+
+    expect(offenders).toEqual([]);
+  });
+
+  // The site tells a known preview from an unknown one by this list, without
+  // loading the bundle. Any previews build rewrites it (`bun dev`,
+  // `bun run build`, `bun run previews:build`); commit the result.
+  it("registry/__names__.ts lists the keys of the registry index", async () => {
+    const { default: registry } = await import("@/registry/__index__");
+    const { previewNames } = await import("@/registry/__names__");
+
+    expect<string[]>([...previewNames]).toEqual(Object.keys(registry));
   });
 });
 
