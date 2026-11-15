@@ -177,6 +177,8 @@ const registry: Record<string, RegistryEntry> = Object.fromEntries(
 const configs = new Map<string, Promise<ResolvedComponentConfig>>();
 /** Dev: each loaded config as its module exports it, to tell which ones a rebuild changed. */
 const rawConfigs = new Map<string, unknown>();
+/** Dev: the configs a rebuild replaced, resolved. */
+const swapped = new Map<string, ResolvedComponentConfig>();
 
 export function loadComponentConfig(
   slug: string,
@@ -252,6 +254,17 @@ export function previewsRevision(): number {
   return revision;
 }
 
+/**
+ * Dev: the config of `slug` as the last rebuild that changed it left it, or
+ * undefined while the page has the one it loaded with. It is resolved, so a
+ * component can render with it at once (use-component-config.ts).
+ */
+export function swappedConfig(
+  slug: string,
+): ResolvedComponentConfig | undefined {
+  return swapped.get(slug);
+}
+
 /** Dev: a rebuilt bundle is out. Replace what the page loaded from the old one. */
 function swap(version: string) {
   swapping = swapping
@@ -268,8 +281,10 @@ function swap(version: string) {
           // Unchanged chunks keep their URL, so an unchanged config is the
           // same object and its consumers are left alone.
           if (fresh === undefined || fresh === rawConfigs.get(slug)) continue;
+          const resolved = await bundle.loadComponentConfig(slug);
           rawConfigs.set(slug, fresh);
-          configs.set(slug, bundle.loadComponentConfig(slug));
+          configs.set(slug, Promise.resolve(resolved));
+          swapped.set(slug, resolved);
         } catch (error) {
           console.error(`[previews] config of "${slug}" failed to load`, error);
         }

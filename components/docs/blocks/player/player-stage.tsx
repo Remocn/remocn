@@ -119,13 +119,20 @@ export function PlayerStage({
   // The stage wears the composition's backdrop while its chunk loads, and the
   // first frame fades in over it instead of cutting in from black.
   const [loaded, setLoaded] = useState(false);
+  // By value: a config that is loaded again (a dev rebuild) brings an equal
+  // backdrop in a new object, and a new `lazyComponent` makes the Player load
+  // the composition from scratch.
+  const backdropKey = previewBackdrop ? JSON.stringify(previewBackdrop) : "";
   const compProps = useMemo<
     | { lazyComponent: () => Promise<{ default: AnyComposition }> }
     | { component: AnyComposition }
   >(() => {
+    const backdrop: BackdropFill | undefined = backdropKey
+      ? JSON.parse(backdropKey)
+      : undefined;
     const wrap = (Inner: AnyComposition) => (p: Record<string, unknown>) =>
-      previewBackdrop ? (
-        <Backdrop fill={previewBackdrop} padding={0} radius={0} shadow="">
+      backdrop ? (
+        <Backdrop fill={backdrop} padding={0} radius={0} shadow="">
           <Inner {...p} />
         </Backdrop>
       ) : (
@@ -142,7 +149,7 @@ export function PlayerStage({
       };
     }
     return { component: wrap(Component ?? (() => null)) };
-  }, [Component, load, previewBackdrop]);
+  }, [Component, load, backdropKey]);
 
   const poster =
     previewBackdrop && previewBackdrop.type !== "image"
