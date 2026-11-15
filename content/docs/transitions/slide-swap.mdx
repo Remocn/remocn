@@ -12,6 +12,13 @@ avoidWhen:
   - "The stage colour has to change between scenes — this sequencer paints one constant canvas, while `spring-settle` crossfades the background inside a dedicated gap."
   - "You need a presentation to drop into a `TransitionSeries` between two `<Sequence>`s; this owns its own scene list, so reach for `push-through` or `whip-pan` instead."
   - "What is swapping is a single phrase rather than a whole scene — `shared-axis-y` or `fade-through` replace text without moving the entire stage."
+askedAs:
+  - "push scene off canvas"
+  - "next scene springs in from opposite side"
+  - "I want the old scene to leave completely before the new one slides in"
+  - "clean sequential change with no overlap"
+  - "slide the whole screen away and bounce the next in"
+  - "scene is shoved out one edge and the new scene arrives from the other"
 ---
 
 <ComponentPreview name="slide-swap" />
