@@ -2,8 +2,8 @@
 
 import { memo, useCallback, useState } from "react";
 import { previewCaptions } from "@/components/docs/examples/caption-fixture";
+import registry from "@/lib/previews";
 import { cn } from "@/lib/utils";
-import registry from "@/registry/__index__";
 import { previewManifest } from "@/registry/__manifest__";
 import { HeroTag } from "./hero-pill";
 import { HeroPlayer } from "./hero-player";

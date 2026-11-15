@@ -1,4 +1,5 @@
 import { createFromSource } from "fumadocs-core/search/server";
+import { docsSearchIndex } from "@/lib/docs-search-index";
 import { getCatalog } from "@/lib/mcp/catalog";
 import { searchCatalog } from "@/lib/search/components";
 import {
@@ -9,7 +10,9 @@ import {
 import { trackAgentSearch } from "@/lib/server/analytics";
 import { source } from "@/source";
 
-const docsSearch = createFromSource(source);
+const docsSearch = createFromSource(source, {
+  buildIndex: docsSearchIndex,
+});
 
 /** How many components lead the results of the docs search dialog. */
 const COMPONENT_RESULTS = 6;

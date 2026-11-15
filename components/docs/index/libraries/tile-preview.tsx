@@ -2,8 +2,8 @@
 
 import { Player, type PlayerRef } from "@remotion/player";
 import { useEffect, useRef } from "react";
+import registry from "@/lib/previews";
 import { usePrefersReducedMotion } from "@/lib/use-prefers-reduced-motion";
-import registry from "@/registry/__index__";
 import { previewManifest } from "@/registry/__manifest__";
 import { FILTER_PHOTO_LOADERS } from "./filter-photo-scenes";
 import { useInView } from "./use-in-view";

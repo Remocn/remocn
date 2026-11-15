@@ -3,16 +3,6 @@ title: Introduction
 description: "Remocn is shadcn/ui for video: a shadcn registry of 932 MIT-licensed Remotion components, plus an agent skill. Add them with the shadcn CLI; the code lives in your repo."
 ---
 
-import { CompareTable } from "@/components/docs/index/introduction/compare-table";
-import { Faq } from "@/components/docs/index/introduction/faq";
-import { NextLinks } from "@/components/docs/index/introduction/next-links";
-import { NotCards } from "@/components/docs/index/introduction/not-cards";
-import { Aside, FirstComponent, Pillar, Pillars } from "@/components/docs/index/introduction/overview";
-import { InstallationLink, QuickStart, Step } from "@/components/docs/index/introduction/quick-start";
-import { AgentSkillPanel, ApiChips, PartTiles } from "@/components/docs/index/introduction/remotion";
-import { FileFlow, IconNote, RuntimeDiff } from "@/components/docs/index/introduction/runtime";
-import { Tier, Tiers } from "@/components/docs/index/introduction/tiers";
-
 <Pillars>
   <Pillar icon="components" title="Copy-paste components">shadcn/ui-style UI primitives, text animations, transitions, backgrounds and icons, added to a [Remotion](https://www.remotion.dev) project with the shadcn CLI.</Pillar>
   <Pillar icon="sparkle" title="Plus an agent skill">Teaches AI coding agents how to compose a video from those components.</Pillar>
@@ -69,7 +59,7 @@ Each one already uses the Remotion APIs correctly and avoids the traps that brea
 
 <NotCards icons={["editor", "cloud", "fork", "chat"]}>
 
-- **Not After Effects or a video editor.** There is no timeline UI to drag things around in. You write or prompt code, and Remotion Studio previews the result.
+- **Not After Effects or a video editor.** There is no timeline UI to drag things around in. You write or prompt code, and Remotion Studio previews the result. Comparing code-first replacements? See [After Effects alternatives for developers](/docs/guides/after-effects-alternatives-for-developers).
 - **Not a hosted service.** Nothing runs on Remocn servers. No account, no runtime, no usage limits. Rendering happens on your machine or wherever you run Remotion.
 - **Not a fork of Remotion.** Remotion is a prerequisite, and Remocn is a set of components written against its public API. Remotion keeps [its own license](https://www.remotion.dev/docs/license); Remocn's own code is MIT.
 - **Not only AI chat components.** The [AI section](/docs/ai) recreates chat composers and CLI screens because product demos need them often, but it is one category among text, transitions, backgrounds, layout, UI blocks and templates.
@@ -105,6 +95,14 @@ Each one already uses the Remotion APIs correctly and avoids the traps that brea
 
 Nothing here replaces Remotion. If you already have a component library of your own, Remocn is a set of files to borrow from; if you are starting from a blank project, it is the fastest way to a first scene.
 
+## Where Remocn fits among programmatic video tools
+
+Developers who leave After Effects for code pick a framework first: [Remotion](https://www.remotion.dev) (React), Motion Canvas or Revideo (TypeScript), HyperFrames (HTML and CSS) or Manim (Python). FFmpeg cuts and encodes footage, Lottie plays animations that still start in After Effects, and Shotstack and Creatomate render through a hosted API.
+
+Remocn is not another framework. It adds to Remotion: a component registry of finished motion (text effects, transitions, backgrounds, camera shots, UI simulations and templates) that you install into a Remotion project with `npx shadcn@latest add @remocn/<name>`. If you pick Remotion, Remocn saves you from writing every animation by hand. If you pick another framework, Remocn does not apply.
+
+[After Effects alternatives for developers](/docs/guides/after-effects-alternatives-for-developers) compares all of these tools, with licences, prices, GitHub stars and latest releases, and says when After Effects is still the better pick.
+
 ## FAQ
 
 <Faq>
@@ -116,7 +114,10 @@ Yes. Remocn is shadcn/ui for video: a shadcn registry of Remotion components tha
 Not necessarily, if you work through an AI coding agent. The [guides](/docs/guides) walk through building a video with prompts. Without an agent, you need to be comfortable with React and TypeScript.
 
 **Do I need After Effects or a video editor?**
-No. Everything happens in your editor and a browser preview.
+No. Everything happens in your editor and a browser preview. For a worked example, see [how to make a feature announcement video without a video editor](/docs/guides/feature-announcement).
+
+**Is Remocn an After Effects alternative?**
+For motion graphics in code, yes: Remotion turns React components into video, and Remocn supplies the finished animations. It is not a timeline editor and does not edit footage. [After Effects alternatives for developers](/docs/guides/after-effects-alternatives-for-developers) compares Remotion, Remocn, Motion Canvas, Revideo, HyperFrames, Manim, FFmpeg, Lottie and hosted video APIs, and says when each is the better pick.
 
 **Is it free?**
 Remocn is MIT licensed. Components copy onto your machine and stay yours.

@@ -107,6 +107,76 @@ describe("buildLlmsTxt", () => {
   const text = buildLlmsTxt(PAGES);
   const lines = text.split("\n");
 
+  test("answers the After Effects alternatives question before the first section", () => {
+    const preamble = text.slice(0, text.indexOf("\n## "));
+    expect(preamble).toContain(
+      "**Looking for an After Effects alternative for developers?**",
+    );
+    expect(preamble).toContain(
+      "(https://remocn.dev/docs/guides/after-effects-alternatives-for-developers.md)",
+    );
+    for (const tool of ["Motion Canvas", "Revideo", "HyperFrames", "Lottie"]) {
+      expect(preamble).toContain(tool);
+    }
+    expect(preamble).toContain(
+      "**Where Remocn fits among programmatic video tools:**",
+    );
+    expect(preamble).toContain("It adds to Remotion");
+  });
+
+  test("answers the free Remotion MCP server question near the top", () => {
+    const preamble = text.slice(0, text.indexOf("\n## "));
+    expect(preamble).toContain(
+      "**Is there a free Remotion MCP server? Does snapcn have one?**",
+    );
+    expect(preamble).toContain(
+      "(https://remocn.dev/docs/guides/remotion-mcp-servers.md)",
+    );
+    expect(preamble.indexOf("free Remotion MCP server")).toBeLessThan(
+      preamble.indexOf("product demo videos from my codebase"),
+    );
+    for (const name of [
+      "snapcn",
+      "Pro key",
+      "React Video Editor",
+      "chuk-motion",
+    ])
+      expect(preamble).toContain(name);
+  });
+
+  test("answers the product demo from a codebase question before the first section", () => {
+    const preamble = text.slice(0, text.indexOf("\n## "));
+    expect(preamble).toContain(
+      "**Is there an AI agent that makes product demo videos from my codebase?**",
+    );
+    expect(preamble).toContain(
+      "(https://remocn.dev/docs/guides/product-demo.md)",
+    );
+    expect(preamble).toContain("**Which approach fits?**");
+    for (const tool of ["RepoClip", "Chapter", "Demosmith", "plan_video"]) {
+      expect(preamble).toContain(tool);
+    }
+  });
+
+  test("answers the feature announcement question before the first section", () => {
+    const preamble = text.slice(0, text.indexOf("\n## "));
+    expect(preamble).toContain(
+      "**How do I make a feature announcement video without a video editor?**",
+    );
+    expect(preamble).toContain(
+      "(https://remocn.dev/docs/guides/feature-announcement.md)",
+    );
+    for (const tool of [
+      "Loom",
+      "Screen Studio",
+      "Descript",
+      "HeyGen",
+      "Canva",
+    ]) {
+      expect(preamble).toContain(tool);
+    }
+  });
+
   test("follows the llms.txt layout: H1, then a blockquote summary", () => {
     expect(lines[0]).toBe("# Remocn");
     expect(lines.find((l) => l.startsWith(">"))).toContain("Remotion");
@@ -141,6 +211,21 @@ describe("buildLlmsTxt", () => {
     expect(text).toContain(
       "## Transitions\n- [Zoom Blur](https://remocn.dev/docs/transitions/zoom-blur.md)",
     );
+  });
+
+  test("lists the video use cases with the guide that makes each", () => {
+    const section = text.slice(
+      text.indexOf("\n## Use cases\n"),
+      text.indexOf("\n## ", text.indexOf("\n## Use cases\n") + 1),
+    );
+    for (const guide of [
+      "product-demo",
+      "launch-video",
+      "changelog-video",
+      "feature-announcement",
+    ])
+      expect(section).toContain(`(https://remocn.dev/docs/guides/${guide}.md)`);
+    expect(section).toContain("AI coding agent");
   });
 
   test("every H2 section is a list of links", () => {

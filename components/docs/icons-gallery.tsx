@@ -14,13 +14,13 @@ import {
   type IconEntry,
 } from "@/components/docs/index/icons/icons";
 import { Remotion } from "@/components/ui/svgs/remotion";
+import registry, { type RegistryEntry } from "@/lib/previews";
 import {
   getCachedStudioElement,
   loadStudioElement,
 } from "@/lib/studio-element";
 import { usePrefersReducedMotion } from "@/lib/use-prefers-reduced-motion";
 import { cn } from "@/lib/utils";
-import registry, { type RegistryEntry } from "@/registry/__index__";
 import {
   type PreviewManifestEntry,
   previewManifest,

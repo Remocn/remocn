@@ -69,7 +69,8 @@ function tagVariant(request: NextRequest, variant: string) {
 
 export const config = {
   matcher: [
-    // Everything but build assets, the JSON API, MCP, registry and images.
-    "/((?!_next/|api/|mcp|r/|og/|embed/|favicon\\.ico).*)",
+    // Everything but build assets, the preview bundle, the JSON API, MCP,
+    // registry and images.
+    "/((?!_next/|_previews/|api/|mcp|r/|og/|embed/|favicon\\.ico).*)",
   ],
 };
