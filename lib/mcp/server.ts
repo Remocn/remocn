@@ -15,6 +15,7 @@ import {
 } from "@/lib/mcp/archetypes";
 import { getCatalog, getComponentMarkdown } from "@/lib/mcp/catalog";
 import {
+  customizedDocsUrl,
   embedBaseUrl,
   embedUrl,
   MCP_APP_MIME_TYPE,
@@ -493,7 +494,11 @@ export function createRemocnMcpServer(): McpServer {
         );
       }
       const preview = previewFor(record.name, props);
-      const docsPage = htmlDocsUrl(record);
+      const docsPage = customizedDocsUrl(
+        htmlDocsUrl(record),
+        record.name,
+        props,
+      );
       if (!preview) {
         return text(
           `\`${record.name}\` has no live preview. Docs: ${record.docs}\nInstall: \`${record.install}\``,
@@ -504,6 +509,7 @@ export function createRemocnMcpServer(): McpServer {
           `Live preview of \`${record.name}\` (${record.title}): ${preview.embedUrl}`,
           `${preview.durationInFrames}f @ ${preview.fps}fps, ${preview.width}×${preview.height}${props ? ", custom props applied over demo defaults" : ""}.`,
           `Docs: ${record.docs}`,
+          ...(props ? [`Tweak these props in the docs: ${docsPage}`] : []),
           `Install: \`${record.install}\``,
         ].join("\n"),
         {

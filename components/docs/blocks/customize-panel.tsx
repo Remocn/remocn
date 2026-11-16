@@ -1,11 +1,15 @@
 "use client";
 
 import { Button } from "@ui-sdk/react/button";
+import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { CopyButton } from "@/components/docs/copy-button";
+import { agentPrompt } from "@/lib/agent-prompt";
 import { useTrackEvent } from "@/lib/analytics";
 import type { ControlConfig } from "@/lib/customizer-config";
+import { useAgentBridge } from "../agent/use-agent-bridge";
 import { ComponentCustomizer } from "../component-customizer";
+import { OpenInAgent } from "../open-in-agent";
 
 const CHIP =
   "flex h-8 shrink-0 cursor-pointer items-center gap-1.5 rounded-tile bg-white/5 px-3 text-caption font-medium text-white/70 outline-none transition-colors duration-150 hover:bg-white/10 hover:text-[#fafafa] focus-visible:ring-2 focus-visible:ring-white/40 disabled:cursor-default disabled:opacity-40 disabled:hover:bg-white/5 disabled:hover:text-white/70 max-md:h-11 max-md:flex-1 max-md:justify-center max-md:rounded-[10px] max-md:bg-white/8";
@@ -76,6 +80,8 @@ export function CustomizePanel({
   onReset: () => void;
 }) {
   const trackEvent = useTrackEvent();
+  const pathname = usePathname();
+  useAgentBridge();
   const [shared, setShared] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(
@@ -111,12 +117,12 @@ export function CustomizePanel({
             {count} {count === 1 ? "prop" : "props"}
           </span>
         </div>
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1.5 max-md:grid max-md:grid-cols-2">
           <Button onClick={onReset} disabled={isDefault} className={CHIP}>
             <Icon d={["M3 12a9 9 0 1 0 3-6.7L3 8", "M3 3v5h5"]} />
             Reset
           </Button>
-          <Button onClick={share} className={CHIP}>
+          <Button onClick={share} data-agent-hidden="" className={CHIP}>
             <Icon
               d={[
                 "M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1",
@@ -136,6 +142,12 @@ export function CustomizePanel({
               </span>
             </span>
           </Button>
+          <OpenInAgent
+            prompt={agentPrompt({ name, code, pathname })}
+            component={name}
+            surface="customizer"
+            variant="chip"
+          />
           <CopyButton value={code} label="Copy code" variant="light" />
         </div>
       </div>

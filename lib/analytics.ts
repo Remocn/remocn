@@ -26,12 +26,12 @@ type AnalyticsEvents = {
   install_command_copied: {
     component: string;
     package_manager: "pnpm" | "npm" | "yarn" | "bun" | "prompt";
-    surface: "docs" | "landing" | "bento";
+    surface: "docs" | "landing" | "bento" | "customizer";
   };
   install_prompt_opened: {
     component: string;
     agent: "claude" | "chatgpt" | "cursor";
-    surface: "docs";
+    surface: "docs" | "customizer";
   };
   preview_played: {
     component: string;
