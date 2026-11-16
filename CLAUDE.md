@@ -101,7 +101,7 @@ Solo builders и маленькие команды (1-2 чел), фронтен�
 - `web.css` не подключаем — стили наши, Tailwind по `data-slot` и state-атрибутам. `@layer ui-sdk;` стоит первой строкой `app/globals.css`
 - `components/ui/*` (shadcn на base-ui) остаётся как есть
 - Тесты компонентов — vitest + jsdom (`bun run test:dom`, файлы `components/**/*.test.tsx`); `bun test` их игнорирует через `bunfig.toml`
-- Мост для браузерного агента (WebMCP) — `components/docs/agent/`: грузится лениво из панели Customize, только где есть `document.modelContext` (в dev всегда, как `window.remocnAgent`). Агент меняет значения, сворачивает группы и жмёт Reset; кнопки, которые пишут в буфер обмена или уводят со страницы, помечены `data-agent-hidden`, а `allowStep` не пускает к остальным `button`. Новая кнопка в панели — реши, нужна ли она агенту, и поправь тест в `customize-panel.test.tsx`
+- Мост для браузерного агента (WebMCP) — `components/docs/agent/`: грузится лениво из панели Customize, только где есть `document.modelContext` (в dev всегда, как `window.remocnAgent`). Агент меняет значения, сворачивает группы и жмёт Reset, Undo и Redo; кнопки, которые пишут в буфер обмена или уводят со страницы, помечены `data-agent-hidden`, а `allowStep` не пускает к остальным `button`. Новая кнопка в панели — реши, нужна ли она агенту, и поправь тест в `customize-panel.test.tsx`
 
 ### Эталон: shuding/spec-01
 

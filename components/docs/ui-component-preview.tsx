@@ -60,7 +60,7 @@ function UiPreview({
     [controls, honored],
   );
 
-  const { values, isDefault, change, reset } = useCustomizer(
+  const { values, isDefault, change, reset, ...history } = useCustomizer(
     name,
     visibleControls,
   );
@@ -93,6 +93,7 @@ function UiPreview({
           isDefault={isDefault}
           onChange={change}
           onReset={reset}
+          history={history}
         />
       ) : null}
     </DocsPlayer>

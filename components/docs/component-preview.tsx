@@ -104,7 +104,7 @@ function Preview({
   // Suspends until this component's config chunk resolves, then returns
   // synchronously from the cached promise. No other config is fetched.
   const config = useComponentConfig(name);
-  const { values, isDefault, change, reset } = useCustomizer(
+  const { values, isDefault, change, reset, ...history } = useCustomizer(
     name,
     config.controls,
   );
@@ -168,6 +168,7 @@ function Preview({
           isDefault={isDefault}
           onChange={change}
           onReset={reset}
+          history={history}
         />
       ) : null}
     </DocsPlayer>

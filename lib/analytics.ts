@@ -55,6 +55,10 @@ type AnalyticsEvents = {
   customizer_reset: {
     component: string;
   };
+  customizer_undo: {
+    component: string;
+    direction: "undo" | "redo";
+  };
   cta_clicked: {
     cta: CtaId;
     destination: string;

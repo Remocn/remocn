@@ -6,14 +6,17 @@ import {
   registerTools,
 } from "@ui-sdk/react/agent";
 
+const AGENT_BUTTONS = new Set(["Reset", "Undo", "Redo"]);
+
 /**
  * The panel's buttons that write to the clipboard or leave the page are a
- * person's to press; an agent may change values, open groups and reset.
+ * person's to press; an agent may change values, open groups, step through
+ * the history and reset.
  */
 export function allowStep(
   step: Pick<AgentAction, "component" | "label">,
 ): boolean {
-  return step.component !== "button" || step.label === "Reset";
+  return step.component !== "button" || AGENT_BUTTONS.has(step.label ?? "");
 }
 
 let agent: ReturnType<typeof createAgent> | undefined;
