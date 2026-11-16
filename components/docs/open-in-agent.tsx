@@ -8,6 +8,7 @@ import {
   OpenAIIcon,
 } from "@/app/(home)/components/landing/ui/brand-icons";
 import { useTrackEvent } from "@/lib/analytics";
+import { cn } from "@/lib/utils";
 import {
   AgentMenuAction,
   AgentMenuLink,
@@ -52,13 +53,23 @@ const AGENTS: {
  * "Open in" for an install prompt: a menu of agents, each opening a new chat
  * with the prompt already in the composer, plus a plain copy.
  */
+const TRIGGER = {
+  ink: "h-[34px] rounded-[10px] bg-foreground text-inverse hover:bg-foreground/85 focus-visible:ring-ring data-popup-open:bg-foreground/85 max-md:h-11 max-md:rounded-control-sm max-md:pl-3.5 max-md:text-small",
+  chip: "h-8 justify-center rounded-tile bg-white/5 font-medium text-white/70 hover:bg-white/10 hover:text-[#fafafa] focus-visible:ring-white/40 data-popup-open:bg-white/10 data-popup-open:text-[#fafafa] max-md:h-11 max-md:rounded-[10px] max-md:bg-white/8",
+} as const;
+
 export function OpenInAgent({
   prompt,
   component,
+  surface = "docs",
+  variant = "ink",
 }: {
   prompt: string;
   /** Registry name sent with the events; omitted events are not tracked. */
   component?: string;
+  surface?: "docs" | "customizer";
+  /** `ink` beside an install command, `chip` on the dark player panel. */
+  variant?: keyof typeof TRIGGER;
 }) {
   const trackEvent = useTrackEvent();
   const [open, setOpen] = useState(false);
@@ -78,7 +89,7 @@ export function OpenInAgent({
       trackEvent("install_command_copied", {
         component,
         package_manager: "prompt",
-        surface: "docs",
+        surface,
       });
     }
     clearTimeout(closeTimer.current);
@@ -93,7 +104,12 @@ export function OpenInAgent({
         if (next) setCopied(false);
       }}
     >
-      <Menu.Trigger className="group flex h-[34px] shrink-0 cursor-pointer items-center gap-1.5 rounded-[10px] bg-foreground pr-2.5 pl-3 text-caption text-inverse outline-none transition-colors hover:bg-foreground/85 focus-visible:ring-2 focus-visible:ring-ring data-popup-open:bg-foreground/85 max-md:h-11 max-md:rounded-control-sm max-md:pl-3.5 max-md:text-small">
+      <Menu.Trigger
+        className={cn(
+          "group flex shrink-0 cursor-pointer items-center gap-1.5 pr-2.5 pl-3 text-caption outline-none transition-colors focus-visible:ring-2",
+          TRIGGER[variant],
+        )}
+      >
         Open in
         <ChevronIcon className="size-3 rotate-90 transition-[rotate] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] group-data-popup-open:-rotate-90 motion-reduce:transition-none" />
       </Menu.Trigger>
@@ -108,7 +124,7 @@ export function OpenInAgent({
               trackEvent("install_prompt_opened", {
                 component,
                 agent: agent.id,
-                surface: "docs",
+                surface,
               });
             }}
           >

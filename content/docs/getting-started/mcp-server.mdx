@@ -46,7 +46,7 @@ session looks like this:
 | `search_components` | `query` (required). Optional: `vibe` (`clean`, `premium`, `tech`, `data`, `playful`, `social` or `paper`), `maxLength` (frames at 30fps), `limit` (1–50, default 10) | Matching components, each with name, title, section, vibe, natural length in frames, a use and an avoid note, docs URL and install command |
 | `get_component` | `name` (required). Accepts `typewriter`, `@remocn/typewriter` or the component's title | The component's full docs page as Markdown: install command, props, usage example, use and avoid notes, plus its registry dependencies |
 | `plan_video` | `brief` (required). Optional: `archetype` (`product-demo`, `changelog`, `feature-announcement`, `oss-showcase`, `cli-tool-demo`, `testimonial-reel`, `year-in-review`, `pricing-reveal` or `logo-bumper`), `durationSeconds` (up to 600) | A storyboard: the archetype and why it was picked, beats with frame ranges and component options, transitions, one install command for the suggested picks, and the archetype's full recipe |
-| `preview_component` | `name` (required). Optional: `props`, merged over the component's demo defaults | A live preview link with length, frame rate and size, plus docs URL and install command. In clients that support MCP Apps, the preview plays in the chat |
+| `preview_component` | `name` (required). Optional: `props`, merged over the component's demo defaults | A live preview link with length, frame rate and size, plus docs URL and install command. With `props`, also a link to the docs page with the Customize panel already set to them. In clients that support MCP Apps, the preview plays in the chat |
 
 `search_components` matches by meaning as well as by words, so `query` can be a name
 (`typewriter`), a couple of keywords, or the need itself in any language
@@ -136,6 +136,21 @@ Pass `durationSeconds` to pick the recipe variant closest to the length you want
 Live preview of `typewriter` (Typewriter): https://remocn.dev/embed/typewriter
 120f @ 30fps, 1280×720.
 Docs: https://remocn.dev/docs/typography/typewriter.md
+Install: `npx shadcn@latest add @remocn/typewriter`
+```
+
+With `props`, the answer adds a link that opens the docs page with the
+[Customize panel](/docs/getting-started/webmcp) already set to them:
+
+```json
+{ "name": "typewriter", "props": { "text": "Ship it", "speed": 0.5 } }
+```
+
+```text
+Live preview of `typewriter` (Typewriter): https://remocn.dev/embed/typewriter?props=…
+120f @ 30fps, 1280×720, custom props applied over demo defaults.
+Docs: https://remocn.dev/docs/typography/typewriter.md
+Tweak these props in the docs: https://remocn.dev/docs/typography/typewriter?typewriter_text=Ship+it&typewriter_speed=0.5
 Install: `npx shadcn@latest add @remocn/typewriter`
 ```
 
@@ -358,4 +373,6 @@ The plugin already includes the MCP server. The skill reads the catalog from rem
 - [Plugin](/docs/getting-started/plugin): the `/remocn:video` workflow for Claude Code and Codex
 - [Agent Skill](/docs/getting-started/agent-skill): teach any skill-loading agent to compose videos
   with Remocn
+- [WebMCP](/docs/getting-started/webmcp): let your browser's agent tune a component's props right
+  on its docs page
 - [Components](/docs/components): every component, grouped by category

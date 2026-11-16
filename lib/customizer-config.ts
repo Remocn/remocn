@@ -274,3 +274,11 @@ export function getDefaults(controls: ControlConfig): Record<string, unknown> {
   }
   return out;
 }
+
+/**
+ * Query param that carries one control's value on a docs page. Prefixed with
+ * the component name so several previews on one page never collide.
+ */
+export function customizerUrlKey(name: string, key: string): string {
+  return `${name.replace(/-/g, "_")}_${key}`;
+}

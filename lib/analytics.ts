@@ -9,6 +9,16 @@ export type PreviewSurface =
   | "landing_code_showcase"
   | "docs";
 
+/** Who changed a control, as ui-sdk reports it in a change's details. */
+export type ChangeSource =
+  | "mouse"
+  | "touch"
+  | "pen"
+  | "keyboard"
+  | "virtual"
+  | "programmatic"
+  | "agent";
+
 export type CtaId =
   | "hero_start"
   | "hero_showcases"
@@ -26,12 +36,12 @@ type AnalyticsEvents = {
   install_command_copied: {
     component: string;
     package_manager: "pnpm" | "npm" | "yarn" | "bun" | "prompt";
-    surface: "docs" | "landing" | "bento";
+    surface: "docs" | "landing" | "bento" | "customizer";
   };
   install_prompt_opened: {
     component: string;
     agent: "claude" | "chatgpt" | "cursor";
-    surface: "docs";
+    surface: "docs" | "customizer";
   };
   preview_played: {
     component: string;
@@ -45,6 +55,7 @@ type AnalyticsEvents = {
   component_customized: {
     component: string;
     prop: string;
+    source?: ChangeSource;
   };
   customized_link_shared: {
     component: string;
@@ -54,6 +65,10 @@ type AnalyticsEvents = {
   };
   customizer_reset: {
     component: string;
+  };
+  customizer_undo: {
+    component: string;
+    direction: "undo" | "redo";
   };
   cta_clicked: {
     cta: CtaId;

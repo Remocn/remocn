@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@ui-sdk/react/button";
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
@@ -85,9 +86,11 @@ export function CopyButton({
   );
 
   return (
-    <button
-      type="button"
-      data-slot="copy-button"
+    // A clipboard write needs a person's click, and a page of same-named copy
+    // buttons would crowd an agent's view of the controls.
+    <Button
+      data-copy-button=""
+      data-agent-hidden=""
       onClick={async () => {
         const ok = await navigator.clipboard.writeText(value).then(
           () => true,
@@ -115,6 +118,6 @@ export function CopyButton({
           {copied ? label : "Copied"}
         </span>
       </span>
-    </button>
+    </Button>
   );
 }

@@ -62,3 +62,6 @@ articles
 
 # plugin eval runs
 evals/results/
+
+# customizer report (bun run report:customizer -- --out report.md)
+/report.md

@@ -1,15 +1,22 @@
 "use client";
 
 import { useQueryStates } from "nuqs";
-import { useEffect, useMemo, useRef } from "react";
-import { useTrackEvent } from "@/lib/analytics";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { type ChangeSource, useTrackEvent } from "@/lib/analytics";
 import { type ControlConfig, getDefaults } from "@/lib/customizer-config";
 import { buildParsers } from "@/lib/ui-preview-internals";
+import {
+  EMPTY_HISTORY,
+  record,
+  redo as redoStep,
+  undo as undoStep,
+  type Values,
+} from "@/lib/undo-history";
 
 /**
  * Customizer state shared by the animation and ui previews: URL-synced values
- * (nuqs, one query param per control), reset, and the analytics the docs
- * widgets have always sent. Customize events are debounced per prop so a
+ * (nuqs, one query param per control), reset, undo/redo, and the analytics
+ * the docs widgets have always sent. Customize events are debounced per prop so a
  * slider drag reports once, not on every step.
  */
 export function useCustomizer(name: string, controls: ControlConfig) {
@@ -25,6 +32,11 @@ export function useCustomizer(name: string, controls: ControlConfig) {
     clearOnDefault: true,
     shallow: true,
   });
+
+  // Read at change time: several changes can land before the next render.
+  const current = useRef<Values>(values);
+  current.current = values;
+  const [history, setHistory] = useState(EMPTY_HISTORY);
 
   const isDefault = useMemo(
     () => Object.entries(defaults).every(([k, v]) => values[k] === v),
@@ -44,22 +56,40 @@ export function useCustomizer(name: string, controls: ControlConfig) {
     };
   }, []);
 
-  const change = (key: string, value: unknown) => {
+  const change = (key: string, value: unknown, source?: ChangeSource) => {
+    if (Object.is(current.current[key], value)) return;
+    setHistory((h) => record(h, current.current, key, Date.now()));
     setValues((prev) => ({ ...prev, [key]: value }));
     const existing = timers.current.get(key);
     if (existing) clearTimeout(existing);
     timers.current.set(
       key,
       setTimeout(() => {
-        trackEvent("component_customized", { component: name, prop: key });
+        trackEvent("component_customized", {
+          component: name,
+          prop: key,
+          ...(source ? { source } : {}),
+        });
         timers.current.delete(key);
       }, 500),
     );
   };
 
   const reset = () => {
+    setHistory((h) => record(h, current.current, null, Date.now()));
     setValues(null);
     trackEvent("customizer_reset", { component: name });
+  };
+
+  const step = (direction: "undo" | "redo") => {
+    const result = (direction === "undo" ? undoStep : redoStep)(
+      history,
+      current.current,
+    );
+    if (!result) return;
+    setHistory(result.history);
+    setValues(result.values);
+    trackEvent("customizer_undo", { component: name, direction });
   };
 
   return {
@@ -67,5 +97,9 @@ export function useCustomizer(name: string, controls: ControlConfig) {
     isDefault,
     change,
     reset,
+    undo: () => step("undo"),
+    redo: () => step("redo"),
+    canUndo: history.past.length > 0,
+    canRedo: history.future.length > 0,
   };
 }

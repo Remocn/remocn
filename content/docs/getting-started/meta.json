@@ -6,7 +6,8 @@
     "installation",
     "agent-skill",
     "plugin",
-    "mcp-server"
+    "mcp-server",
+    "webmcp"
   ],
   "icon": "Rocket01Icon"
 }
