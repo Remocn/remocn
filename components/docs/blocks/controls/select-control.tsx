@@ -8,6 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@ui-sdk/react/select";
+import type { ChangeSource } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 import { CONTROL, CONTROL_LABEL, CONTROL_VALUE } from "./control-styles";
 
@@ -45,14 +46,14 @@ export function SelectControl({
   label: string;
   value: string;
   options: string[];
-  onChange: (value: string) => void;
+  onChange: (value: string, source?: ChangeSource) => void;
 }) {
   return (
     <Select
       value={value}
       presentation="auto"
-      onValueChange={(next) => {
-        if (next !== null) onChange(next as string);
+      onValueChange={(next, details) => {
+        if (next !== null) onChange(next as string, details.source);
       }}
     >
       <SelectTrigger

@@ -3,6 +3,7 @@
 import { Field, FieldLabel } from "@ui-sdk/react/field";
 import { Input } from "@ui-sdk/react/input";
 import { Textarea } from "@ui-sdk/react/textarea";
+import type { ChangeSource } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 import {
   CONTROL,
@@ -28,7 +29,7 @@ export function TextControl({
   label: string;
   value: string;
   long?: boolean;
-  onChange: (value: string) => void;
+  onChange: (value: string, source?: ChangeSource) => void;
 }) {
   if (long) {
     return (
@@ -45,7 +46,7 @@ export function TextControl({
           rows={3}
           spellCheck={false}
           value={value}
-          onValueChange={(next) => onChange(next)}
+          onValueChange={(next, details) => onChange(next, details.source)}
           className={cn(
             CONTROL_VALUE,
             "min-h-[60px] w-full resize-none bg-transparent text-caption leading-5 font-normal caret-primary-soft outline-none max-md:text-base",
@@ -63,7 +64,7 @@ export function TextControl({
         spellCheck={false}
         autoComplete="off"
         value={value}
-        onValueChange={(next) => onChange(next)}
+        onValueChange={(next, details) => onChange(next, details.source)}
         className={cn(
           CONTROL_VALUE,
           "min-w-0 flex-1 truncate bg-transparent text-right caret-primary-soft outline-none max-md:text-base",

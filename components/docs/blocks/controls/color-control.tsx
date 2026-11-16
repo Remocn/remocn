@@ -10,6 +10,7 @@ import {
   ColorPickerSwatch,
 } from "@ui-sdk/react/color-picker";
 import { Popover, PopoverContent, PopoverTrigger } from "@ui-sdk/react/popover";
+import type { ChangeSource } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 import { CONTROL, CONTROL_LABEL, CONTROL_VALUE } from "./control-styles";
 
@@ -28,14 +29,14 @@ export function ColorControl({
   id: string;
   label: string;
   value: string;
-  onChange: (value: string) => void;
+  onChange: (value: string, source?: ChangeSource) => void;
 }) {
   return (
     <ColorPicker
       aria-label={label}
       value={value}
       format="hex"
-      onValueChange={(next) => onChange(next)}
+      onValueChange={(next, details) => onChange(next, details.source)}
     >
       <Popover>
         <PopoverTrigger

@@ -9,6 +9,16 @@ export type PreviewSurface =
   | "landing_code_showcase"
   | "docs";
 
+/** Who changed a control, as ui-sdk reports it in a change's details. */
+export type ChangeSource =
+  | "mouse"
+  | "touch"
+  | "pen"
+  | "keyboard"
+  | "virtual"
+  | "programmatic"
+  | "agent";
+
 export type CtaId =
   | "hero_start"
   | "hero_showcases"
@@ -45,6 +55,7 @@ type AnalyticsEvents = {
   component_customized: {
     component: string;
     prop: string;
+    source?: ChangeSource;
   };
   customized_link_shared: {
     component: string;

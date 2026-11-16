@@ -6,6 +6,7 @@ import {
   CollapsibleTrigger,
 } from "@ui-sdk/react/collapsible";
 import { type CSSProperties, useState, useSyncExternalStore } from "react";
+import type { ChangeSource } from "@/lib/analytics";
 import type { ControlConfig, ControlType } from "@/lib/customizer-config";
 import { cn } from "@/lib/utils";
 import { BooleanControl } from "./blocks/controls/boolean-control";
@@ -83,7 +84,7 @@ function Control({
   id: string;
   ctrl: ControlType;
   value: unknown;
-  onChange: (value: unknown) => void;
+  onChange: (value: unknown, source?: ChangeSource) => void;
 }) {
   switch (ctrl.type) {
     case "number":
@@ -204,7 +205,7 @@ export function ComponentCustomizer({
 }: {
   controls: ControlConfig;
   values: Record<string, unknown>;
-  onChange: (key: string, value: unknown) => void;
+  onChange: (key: string, value: unknown, source?: ChangeSource) => void;
   density?: "default" | "compact";
 }) {
   const phone = usePhone();
@@ -227,7 +228,7 @@ export function ComponentCustomizer({
               id={`ctrl-${key}`}
               ctrl={ctrl}
               value={values[key]}
-              onChange={(value) => onChange(key, value)}
+              onChange={(value, source) => onChange(key, value, source)}
             />
           </div>
         ))}
@@ -290,7 +291,9 @@ export function ComponentCustomizer({
                         id={`ctrl-${key}`}
                         ctrl={ctrl}
                         value={values[key]}
-                        onChange={(value) => onChange(key, value)}
+                        onChange={(value, source) =>
+                          onChange(key, value, source)
+                        }
                       />
                     </div>
                   );

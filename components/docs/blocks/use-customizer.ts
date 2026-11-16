@@ -2,7 +2,7 @@
 
 import { useQueryStates } from "nuqs";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useTrackEvent } from "@/lib/analytics";
+import { type ChangeSource, useTrackEvent } from "@/lib/analytics";
 import { type ControlConfig, getDefaults } from "@/lib/customizer-config";
 import { buildParsers } from "@/lib/ui-preview-internals";
 import {
@@ -56,7 +56,7 @@ export function useCustomizer(name: string, controls: ControlConfig) {
     };
   }, []);
 
-  const change = (key: string, value: unknown) => {
+  const change = (key: string, value: unknown, source?: ChangeSource) => {
     if (Object.is(current.current[key], value)) return;
     setHistory((h) => record(h, current.current, key, Date.now()));
     setValues((prev) => ({ ...prev, [key]: value }));
@@ -65,7 +65,11 @@ export function useCustomizer(name: string, controls: ControlConfig) {
     timers.current.set(
       key,
       setTimeout(() => {
-        trackEvent("component_customized", { component: name, prop: key });
+        trackEvent("component_customized", {
+          component: name,
+          prop: key,
+          ...(source ? { source } : {}),
+        });
         timers.current.delete(key);
       }, 500),
     );

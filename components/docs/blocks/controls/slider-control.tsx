@@ -10,6 +10,7 @@ import {
   SliderValue,
 } from "@ui-sdk/react/slider";
 import { type PointerEvent, useLayoutEffect, useRef, useState } from "react";
+import type { ChangeSource } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 import { CONTROL, CONTROL_LABEL, formatStep } from "./control-styles";
 
@@ -37,7 +38,7 @@ export function SliderControl({
   min: number;
   max: number;
   step: number;
-  onChange: (value: number) => void;
+  onChange: (value: number, source?: ChangeSource) => void;
 }) {
   const areaRef = useRef<HTMLDivElement>(null);
   const labelRef = useRef<HTMLLabelElement>(null);
@@ -71,7 +72,7 @@ export function SliderControl({
   const commit = (raw: number) => {
     const snapped = Math.round((raw - min) / step) * step + min;
     const next = Number(clamp(snapped, min, max).toFixed(10));
-    if (next !== value) onChange(next);
+    if (next !== value) onChange(next, "touch");
   };
 
   const fromPointer = (clientX: number) => {
@@ -122,8 +123,8 @@ export function SliderControl({
         max={max}
         step={step}
         format={(v: number) => formatStep(v, step)}
-        onValueChange={(next) => {
-          if (typeof next === "number") onChange(next);
+        onValueChange={(next, details) => {
+          if (typeof next === "number") onChange(next, details.source);
         }}
         data-touch-dragging={touchDragging || undefined}
         onPointerDownCapture={onPointerDownCapture}

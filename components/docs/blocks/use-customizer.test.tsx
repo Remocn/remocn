@@ -8,7 +8,8 @@ import { allowStep } from "../agent/bridge";
 import { CustomizePanel } from "./customize-panel";
 import { useCustomizer } from "./use-customizer";
 
-vi.mock("@/lib/analytics", () => ({ useTrackEvent: () => () => {} }));
+const track = vi.hoisted(() => vi.fn());
+vi.mock("@/lib/analytics", () => ({ useTrackEvent: () => track }));
 vi.mock("next/navigation", () => ({ usePathname: () => "/docs/text/demo" }));
 
 const controls: ControlConfig = {
@@ -134,5 +135,36 @@ describe("agent", () => {
     expect(undone.ok, undone.error?.message).toBe(true);
     await act(async () => {});
     expect(latest.speed).toBe(1);
+  });
+});
+
+describe("analytics", () => {
+  const agent = createAgent({ allow: allowStep });
+
+  test("a customize event says who made the change", async () => {
+    const user = userEvent.setup();
+    renderPanel();
+    track.mockClear();
+    screen.getByRole("slider", { name: "Speed" }).focus();
+    await user.keyboard("{ArrowRight}");
+    await agent.act({
+      steps: [{ ref: "Loop", action: "setChecked", args: [true] }],
+    });
+    // jsdom's events aren't trusted, so ui-sdk calls the key press
+    // "programmatic" here; a browser reports "keyboard".
+    await waitFor(
+      () => {
+        expect(track).toHaveBeenCalledWith(
+          "component_customized",
+          expect.objectContaining({ component: "demo", prop: "speed" }),
+        );
+        expect(track).toHaveBeenCalledWith("component_customized", {
+          component: "demo",
+          prop: "loop",
+          source: "agent",
+        });
+      },
+      { timeout: 2000 },
+    );
   });
 });

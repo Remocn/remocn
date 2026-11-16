@@ -9,6 +9,7 @@ import {
   NumberInputScrubAreaCursor,
 } from "@ui-sdk/react/number-input";
 import { CursorGrowIcon } from "@/components/ui/number-field";
+import type { ChangeSource } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 import {
   CONTROL,
@@ -35,7 +36,7 @@ export function NumberControl({
   min: number;
   max: number;
   step: number;
-  onChange: (value: number) => void;
+  onChange: (value: number, source?: ChangeSource) => void;
 }) {
   return (
     <Field className={cn(CONTROL, CONTROL_FOCUS)}>
@@ -44,8 +45,8 @@ export function NumberControl({
         min={min}
         max={max}
         step={step}
-        onValueChange={(next) => {
-          if (next !== null) onChange(next);
+        onValueChange={(next, details) => {
+          if (next !== null) onChange(next, details.source);
         }}
         className="contents"
       >

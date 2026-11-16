@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { type KeyboardEvent, useEffect, useRef, useState } from "react";
 import { CopyButton } from "@/components/docs/copy-button";
 import { agentPrompt } from "@/lib/agent-prompt";
-import { useTrackEvent } from "@/lib/analytics";
+import { type ChangeSource, useTrackEvent } from "@/lib/analytics";
 import type { ControlConfig } from "@/lib/customizer-config";
 import { useAgentBridge } from "../agent/use-agent-bridge";
 import { ComponentCustomizer } from "../component-customizer";
@@ -91,7 +91,7 @@ export function CustomizePanel({
   values: Record<string, unknown>;
   code: string;
   isDefault: boolean;
-  onChange: (key: string, value: unknown) => void;
+  onChange: (key: string, value: unknown, source?: ChangeSource) => void;
   onReset: () => void;
   history?: UndoControls;
 }) {

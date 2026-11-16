@@ -132,6 +132,7 @@ bun run previews:build   # только превью, в public/_previews
 bun run typecheck        # tsc --noEmit
 bun run lint             # biome check
 bun run test:dom         # vitest + jsdom для components/**/*.test.tsx
+bun run report:customizer -- --days 30 --out report.md  # какие пропсы крутят в кастомайзере (OpenPanel, ключи из .env)
 bun run registry:build   # пересборка registry-artifacts из registry/
 bun run search:build     # семантический индекс поиска + модель в .search/
 bun run search:eval      # качество поиска на evals/search/golden.json

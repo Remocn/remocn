@@ -22,6 +22,7 @@
     "dev:clean": "rm -rf .next && bun scripts/dev.mts",
     "clean": "rm -rf .next",
     "build": "bun run previews:build && NODE_OPTIONS=--max-old-space-size=8192 bun scripts/low-priority.mts next build",
+    "report:customizer": "bun scripts/customizer-report.mts",
     "previews:build": "bun scripts/previews/build.mts --production --prune",
     "start": "next start",
     "test": "bun test",
