@@ -1,0 +1,184 @@
+---
+title: "WebMCP: let your browser's agent tune a Remocn component on the docs page"
+navTitle: WebMCP
+description: "Every Remocn component page exposes its Customize panel as WebMCP tools. A browser agent such as ChatGPT's built-in browser can read the props, set them in plain words, and hand you the code. No install, no key."
+---
+
+_Last updated: November 16, 2026_
+
+Every component page on remocn.dev registers its **Customize** panel as
+[WebMCP](https://developer.chrome.com/docs/ai/webmcp) tools. An agent built into your browser can
+read the props a component takes and set them for you: "make the caption _Launch day_, half speed,
+orange accent". The preview, the generated code and the page URL update as if you had moved the
+controls yourself.
+
+Nothing to install on your side, and no key. The page offers the tools; your browser's agent
+decides when to call them.
+
+| | |
+|---|---|
+| Where | Every docs page with a live preview and a Customize panel |
+| Tools | `snapshot`, `query`, `act` |
+| Sees | The Customize panel only: its controls, groups, Reset, Undo and Redo |
+| Changes | Prop values, open and closed groups, Reset, Undo, Redo |
+| Never does | Copy to your clipboard, share links, install anything, leave the page |
+
+## WebMCP or the MCP server?
+
+They do different jobs and work well together.
+
+- **WebMCP** works on the page you are looking at. The agent tunes one component's props in the
+  live preview, and you watch it happen.
+- **The [MCP server](/docs/getting-started/mcp-server)** works from your editor or chat. Your agent
+  searches the whole catalog, reads docs, plans a video and installs components in your project.
+
+A common path: find a component with the MCP server, open its page, tune it with WebMCP, then take
+the code into your project with **Open in** (see [below](#take-the-result-into-your-project)).
+
+## Set it up
+
+### ChatGPT desktop app
+
+ChatGPT calls WebMCP tools "site tools". They work in the browser built into the ChatGPT desktop
+app.
+
+1. In ChatGPT, open **Settings → Browser → Permissions** and turn on **Enable site tools**.
+2. Start a Work conversation with a model that supports site tools.
+3. In the built-in browser, open a component page, for example
+   [Countdown](https://remocn.dev/docs/numbers/countdown).
+4. Select **Site tools** in the address bar, then **Available site tools**. You should see
+   `snapshot`, `query` and `act`.
+
+Model and workspace availability is listed in
+[ChatGPT's site tools guide](https://learn.chatgpt.com/docs/webmcp).
+
+### Chrome
+
+Chrome has WebMCP behind a flag while the API is in an origin trial:
+
+1. Open `chrome://flags/#enable-webmcp-testing`, set it to **Enabled** and restart Chrome.
+2. Install one of the inspector extensions linked from
+   [Chrome's WebMCP docs](https://developer.chrome.com/docs/ai/webmcp). They list a page's tools
+   and can call them through Gemini with your own API key.
+3. Open a component page. Chrome DevTools also shows the registered tools under
+   **Application → WebMCP**.
+
+### Check that the page offers the tools
+
+Open the browser's console on a component page and run:
+
+```js
+typeof document.modelContext?.registerTool
+```
+
+`"function"` means the browser supports WebMCP and the panel has registered its tools.
+`"undefined"` means this browser doesn't support WebMCP yet. The page works as usual either way.
+
+## Try it
+
+Start with a prompt that only reads the page:
+
+```text
+Use this page's site tools to list the Customize controls and their current values.
+```
+
+Then ask for a change in plain words:
+
+```text
+Make the final label "Launch day", the speed 0.5 and the accent orange. Switch to the light theme.
+```
+
+And step back if you don't like it:
+
+```text
+Undo the last change.
+```
+
+The agent reads the controls with `snapshot`, looks up a select's choices with `query`, and changes
+values with `act`. Each change lands in the live preview at once, the Code tab shows the new props,
+and the URL keeps them, so **Share link** shares exactly what you see.
+
+## Tools
+
+| Tool | What it does |
+|---|---|
+| `snapshot` | Lists the panel's controls with their labels, current values, ranges and choices. Read-only |
+| `query` | Finds a control or lists a select's choices without opening it. Read-only |
+| `act` | Runs steps in order: set a value, toggle a switch, open or close a group, press Reset, Undo or Redo |
+
+A step names a control by its visible label, such as `Speed` or `Accent`. Values are checked like a
+person's input: a slider stays within its range and snaps to its step, and a select takes only one
+of its options.
+
+## What the agent can't do
+
+The agent only sees the Customize panel. The rest of the page stays yours:
+
+- **Copy and share.** Copy code, Copy and Share link write to your clipboard, so they are hidden
+  from the agent. Ask it for the values instead, or press the button yourself.
+- **Playback.** The player's play, pause and seek controls aren't part of the tools.
+- **Your project.** WebMCP can't install a component or touch your files. Use **Open in** or the
+  [MCP server](/docs/getting-started/mcp-server) for that.
+
+The tools run in your tab and only while it is open. The page sends nothing to Remocn; whatever
+your agent reads goes to the agent you chose to use.
+
+## Take the result into your project
+
+When the preview looks right, use **Open in** in the Customize panel. It opens Claude, ChatGPT or
+Cursor with a ready prompt, or copies it. The prompt asks your coding agent to add the component
+with the props you picked, and carries three things:
+
+- the install command, `npx shadcn@latest add @remocn/countdown`
+- the code the panel generated, with every prop as you left it
+- a link to the component's Markdown docs, `https://remocn.dev/docs/numbers/countdown.md`
+
+For Countdown tuned as above, the code in the prompt is:
+
+```tsx
+import { Countdown } from "@/components/remocn/countdown";
+
+<Countdown
+  theme="light"
+  accent="#ff6600"
+  finalLabel="Launch day"
+  caption="remocn 2.0"
+  indicator={true}
+  from={3}
+  beat={20}
+  speed={0.5}
+/>
+```
+
+Going the other way, the MCP server's `preview_component` answers with a link to the docs page
+with your props already set, so you can open a chat preview in the full Customize panel and keep
+tuning there.
+
+## FAQ
+
+<Faq>
+
+**Do I need an API key or an account?**
+No. The tools are part of the public docs pages. Your browser's agent may need its own account, such as ChatGPT.
+
+**Which browsers support WebMCP?**
+The browser built into the ChatGPT desktop app supports it as site tools. Chrome supports it behind the `chrome://flags/#enable-webmcp-testing` flag during its origin trial. Other browsers will pick it up when they ship `document.modelContext`.
+
+**Can the agent change anything outside the Customize panel?**
+No. It sees the panel's controls, groups, Reset, Undo and Redo, and nothing else on the page.
+
+**Does it work on every docs page?**
+On every page with a live preview and a Customize panel. Guides and pages without controls register no tools.
+
+**Can I undo what the agent did?**
+Yes. Press Undo, or Cmd+Z (Ctrl+Z) while the panel has focus. An agent's change is one step, like yours.
+
+</Faq>
+
+## What's next
+
+- [MCP server](/docs/getting-started/mcp-server): search the catalog, plan a video and install
+  components from your editor
+- [Agent Skill](/docs/getting-started/agent-skill): teach your agent Remocn's timing rules and
+  recipes
+- [Components](/docs/components): every component, each with a Customize panel to try
