@@ -18,7 +18,7 @@ import { HoverZone } from "./hover-zone";
 
 function titleOf(href: string) {
   const page = source.getPage(href.split("/").filter(Boolean).slice(1));
-  return page?.data.title ?? href;
+  return page?.data.navTitle ?? page?.data.title ?? href;
 }
 
 function countOf(segment: string) {

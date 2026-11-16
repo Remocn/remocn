@@ -57,8 +57,8 @@ export const docs = defineDocs({
     mdxOptions: applyMdxPreset({ rehypePlugins: () => [prettyCode] }),
     schema: pageSchema.safeExtend({
       ...componentMetaSchema.shape,
-      // Shorter label for the sidebar, breadcrumbs and prev/next when the
-      // page title is too long to sit there.
+      // Shorter label for the sidebar, breadcrumbs, prev/next and the docs
+      // menu in the site header when the page title is too long to sit there.
       navTitle: z.string().optional(),
     }),
     postprocess: {
