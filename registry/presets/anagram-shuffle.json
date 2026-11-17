@@ -1,0 +1,103 @@
+{
+  "component": "anagram-shuffle",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "snappy-pop",
+      "label": "Snappy Pop",
+      "description": "Quick, tight letter swaps with a warm coral accent for an energetic hook.",
+      "askedAs": [
+        "make the letters swap fast",
+        "quick punchy anagram",
+        "energetic word shuffle",
+        "быстрая перестановка букв",
+        "энергичная анаграмма"
+      ],
+      "props": {
+        "stagger": 1,
+        "travel": 14,
+        "speed": 1.5,
+        "accent": "#ff6b4a"
+      }
+    },
+    {
+      "id": "slow-cascade",
+      "label": "Slow Cascade",
+      "description": "Letters drift one after another in a long, graceful wave over a deep navy ground.",
+      "askedAs": [
+        "slow elegant letter movement",
+        "letters move one by one gently",
+        "calm cinematic word swap",
+        "медленная плавная анаграмма",
+        "буквы двигаются по очереди"
+      ],
+      "props": {
+        "stagger": 10,
+        "travel": 52,
+        "speed": 0.75,
+        "background": "#0f1a2e",
+        "ink": "#e8ecf5",
+        "accent": "#8fb3ff"
+      }
+    },
+    {
+      "id": "paper-light",
+      "label": "Paper Light",
+      "description": "Clean light theme with charcoal letters and a muted green accent on warm off-white.",
+      "askedAs": [
+        "light background version",
+        "white clean anagram",
+        "minimal bright word swap",
+        "светлая версия анаграммы",
+        "белый фон минимализм"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f6f3ec",
+        "ink": "#1e1e1e",
+        "accent": "#2f7d5b",
+        "grain": false
+      }
+    },
+    {
+      "id": "big-statement",
+      "label": "Big Statement",
+      "description": "Oversized letters on pure black with a golden accent for a bold section opener.",
+      "askedAs": [
+        "make the word huge",
+        "big bold title shuffle",
+        "large dramatic letters",
+        "крупные буквы на весь экран",
+        "большой заголовок анаграмма"
+      ],
+      "props": {
+        "scale": 1.4,
+        "background": "#0a0a0a",
+        "ink": "#fafafa",
+        "accent": "#e8b44a",
+        "travel": 36
+      }
+    },
+    {
+      "id": "soft-blush",
+      "label": "Soft Blush",
+      "description": "Compact, gentle shuffle in plum ink on a soft blush background after a short pause.",
+      "askedAs": [
+        "soft pastel word swap",
+        "pink gentle anagram",
+        "delicate small letters",
+        "нежная пастельная анаграмма",
+        "розовый фон мягко"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f7e6e4",
+        "ink": "#4a2a3a",
+        "accent": "#c8577a",
+        "scale": 0.8,
+        "delay": 15
+      }
+    }
+  ]
+}

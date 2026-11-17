@@ -1,0 +1,105 @@
+{
+  "component": "bug-dock",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "snappy-light",
+      "label": "Snappy Light",
+      "description": "A bright, fast-cut ident with quick tuck and tight word stagger on a clean off-white ground.",
+      "askedAs": [
+        "fast light version",
+        "quick bright channel ident",
+        "snappy white background title",
+        "быстрая светлая версия",
+        "светлый динамичный заставочный титр"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f6f5f1",
+        "ink": "#141414",
+        "accent": "#2f5bff",
+        "speed": 1.5,
+        "stagger": 1.5
+      }
+    },
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "A slow, magazine-like reveal in Instrument Serif on warm charcoal with a muted terracotta accent.",
+      "askedAs": [
+        "elegant serif broadcast title",
+        "slow classy brand reveal",
+        "magazine style ident",
+        "элегантный титр с засечками",
+        "медленное стильное появление бренда"
+      ],
+      "props": {
+        "fontFamily": "Instrument Serif",
+        "background": "#1c1a18",
+        "ink": "#f2ede4",
+        "accent": "#c8734a",
+        "speed": 0.75,
+        "stagger": 4
+      }
+    },
+    {
+      "id": "tech-mono",
+      "label": "Tech Mono",
+      "description": "A terminal-flavoured look in JetBrains Mono on deep navy with a mint accent and crisp pacing.",
+      "askedAs": [
+        "developer style monospace title",
+        "techy code look ident",
+        "mono font broadcast bug",
+        "моноширинный технический стиль",
+        "титр в стиле кода"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0b1220",
+        "ink": "#e6edf5",
+        "accent": "#5fd4a8",
+        "scale": 0.85,
+        "stagger": 1
+      }
+    },
+    {
+      "id": "big-bold",
+      "label": "Big Bold",
+      "description": "An oversized Bricolage Grotesque headline that holds the brand longer before tucking it away.",
+      "askedAs": [
+        "make it huge and bold",
+        "large punchy headline",
+        "bigger text with late tuck",
+        "крупный жирный заголовок",
+        "сделать текст больше и ярче"
+      ],
+      "props": {
+        "fontFamily": "Bricolage Grotesque",
+        "scale": 1.3,
+        "tuckAt": 55,
+        "accent": "#ff5a3c"
+      }
+    },
+    {
+      "id": "calm-sand",
+      "label": "Calm Sand",
+      "description": "A soft, unhurried light treatment in Manrope on sand beige with a sage accent and gentle stagger.",
+      "askedAs": [
+        "calm soft warm version",
+        "gentle beige ident",
+        "relaxed slow light title",
+        "спокойный тёплый вариант",
+        "мягкий бежевый фон"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Manrope",
+        "background": "#ede6da",
+        "ink": "#2b2823",
+        "accent": "#6f8f72",
+        "speed": 0.5
+      }
+    }
+  ]
+}

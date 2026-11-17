@@ -1,0 +1,94 @@
+{
+  "component": "shader-warp-silk",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "still-satin",
+      "label": "Still Satin",
+      "description": "Barely moving, smooth satin folds with almost no turbulence for a calm, luxurious backdrop.",
+      "askedAs": [
+        "very slow calm silk background",
+        "subtle gentle fabric motion",
+        "minimal smooth luxury waves",
+        "медленный спокойный шёлк",
+        "едва заметное движение ткани"
+      ],
+      "props": {
+        "speed": 0.25,
+        "distortion": 0.05,
+        "swirl": 0.3
+      }
+    },
+    {
+      "id": "molten-flow",
+      "label": "Molten Flow",
+      "description": "Deep, heavy swirls that twist the silk into rich, liquid eddies at a measured pace.",
+      "askedAs": [
+        "swirly liquid marble effect",
+        "heavy twisting fluid silk",
+        "rich molten paint swirl",
+        "жидкий мрамор с завихрениями",
+        "густые закрученные волны"
+      ],
+      "props": {
+        "speed": 0.75,
+        "distortion": 0.4,
+        "swirl": 1,
+        "proportion": 0.55
+      }
+    },
+    {
+      "id": "crisp-ribbons",
+      "label": "Crisp Ribbons",
+      "description": "Sharper colour edges turn the silk into defined ribbon bands with a more graphic feel.",
+      "askedAs": [
+        "sharp edged ribbon stripes",
+        "more defined color bands",
+        "graphic crisp silk folds",
+        "чёткие ленты вместо размытия",
+        "резкие цветные полосы"
+      ],
+      "props": {
+        "softness": 0.2,
+        "swirl": 0.45,
+        "distortion": 0.25
+      }
+    },
+    {
+      "id": "lively-ripple",
+      "label": "Lively Ripple",
+      "description": "Faster, energetic ripples with extra distortion for an upbeat, dynamic hero moment.",
+      "askedAs": [
+        "fast energetic silk waves",
+        "dynamic rippling background",
+        "upbeat moving fabric",
+        "быстрые энергичные волны",
+        "динамичный фон с рябью"
+      ],
+      "props": {
+        "speed": 2.5,
+        "distortion": 0.6,
+        "swirl": 0.75
+      }
+    },
+    {
+      "id": "pastel-haze",
+      "label": "Pastel Haze",
+      "description": "Soft, lighter-weighted colour balance drifting slowly like a misty pastel veil.",
+      "askedAs": [
+        "light airy pastel background",
+        "soft hazy dreamy gradient",
+        "washed out gentle colors",
+        "нежная пастельная дымка",
+        "воздушный светлый фон"
+      ],
+      "props": {
+        "speed": 0.5,
+        "proportion": 0.2,
+        "swirl": 0.2,
+        "distortion": 0.1
+      }
+    }
+  ]
+}

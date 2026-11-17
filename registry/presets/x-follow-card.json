@@ -1,0 +1,103 @@
+{
+  "component": "x-follow-card",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "vertical-story",
+      "label": "Vertical Story",
+      "description": "A stacked portrait card in classic X blue, sized for Stories and Reels.",
+      "askedAs": [
+        "vertical follow card for reels",
+        "portrait profile card",
+        "stacked x card for stories",
+        "вертикальная карточка профиля",
+        "карточка для сторис"
+      ],
+      "props": {
+        "orientation": "vertical"
+      }
+    },
+    {
+      "id": "quick-snap",
+      "label": "Quick Snap",
+      "description": "A brisk horizontal card where the bounce, blur-in and follow click land in a fast, punchy beat.",
+      "askedAs": [
+        "fast follow animation",
+        "snappy profile card",
+        "quick click to follow",
+        "быстрая анимация подписки",
+        "резкая карточка профиля"
+      ],
+      "props": {
+        "speed": 2.5,
+        "accentColor": "#1d9bf0"
+      }
+    },
+    {
+      "id": "graphite-mono",
+      "label": "Graphite Mono",
+      "description": "A near-black monochrome accent for an understated, editorial follow card at a slightly lifted pace.",
+      "askedAs": [
+        "black and white follow card",
+        "minimal monochrome x card",
+        "dark accent profile",
+        "минималистичная чёрная карточка",
+        "монохромная карточка профиля"
+      ],
+      "props": {
+        "accentColor": "#0f1419",
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "emerald-portrait",
+      "label": "Emerald Portrait",
+      "description": "A calm deep-green accent on a vertical card for a fresh, grounded creator intro.",
+      "askedAs": [
+        "green follow button",
+        "vertical card with green accent",
+        "calm creator intro card",
+        "зелёная кнопка подписки",
+        "вертикальная карточка с зелёным"
+      ],
+      "props": {
+        "accentColor": "#0f9d6b",
+        "orientation": "vertical"
+      }
+    },
+    {
+      "id": "coral-rush",
+      "label": "Coral Rush",
+      "description": "A warm coral accent driven at top speed for an energetic, attention-grabbing follow moment.",
+      "askedAs": [
+        "warm energetic follow card",
+        "very fast coral profile",
+        "punchy orange follow button",
+        "яркая быстрая карточка",
+        "оранжевая кнопка подписки"
+      ],
+      "props": {
+        "accentColor": "#e8664a",
+        "speed": 4
+      }
+    },
+    {
+      "id": "violet-pulse",
+      "label": "Violet Pulse",
+      "description": "A muted violet accent on a stacked card with a lively double-time rhythm.",
+      "askedAs": [
+        "purple follow card",
+        "vertical violet profile",
+        "lively purple x card",
+        "фиолетовая карточка профиля",
+        "вертикальная фиолетовая подписка"
+      ],
+      "props": {
+        "accentColor": "#7c5cff",
+        "orientation": "vertical",
+        "speed": 2
+      }
+    }
+  ]
+}

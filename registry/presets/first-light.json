@@ -1,0 +1,106 @@
+{
+  "component": "first-light",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "A slow, light-themed reveal in Instrument Serif with warm paper tones and a muted bronze line.",
+      "askedAs": [
+        "elegant serif logo reveal",
+        "magazine style light intro",
+        "slow classy wordmark on cream",
+        "элегантное появление логотипа с засечками",
+        "светлая журнальная заставка"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "background": "#f4efe6",
+        "ink": "#1f1b16",
+        "accent": "#a07a4a",
+        "rise": 84
+      }
+    },
+    {
+      "id": "midnight-gold",
+      "label": "Midnight Gold",
+      "description": "A deep navy field with a soft gold light band and a measured, unhurried rise.",
+      "askedAs": [
+        "luxury gold logo on dark blue",
+        "premium night reveal",
+        "gold line logo sting",
+        "логотип с золотой линией на тёмном",
+        "премиальная тёмная заставка"
+      ],
+      "props": {
+        "background": "#0b1220",
+        "ink": "#f2ebdd",
+        "accent": "#c9a85c",
+        "fontFamily": "Fraunces",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "swift-tech",
+      "label": "Swift Tech",
+      "description": "A fast, compact monospace reveal on near-black with a cool cyan line and no ruler ticks.",
+      "askedAs": [
+        "quick techy logo flash",
+        "fast monospace wordmark",
+        "snappy developer brand sting",
+        "быстрое техно появление логотипа",
+        "моноширинный логотип быстро"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0a0c0f",
+        "ink": "#e6edf3",
+        "accent": "#5fb3c9",
+        "rise": 24,
+        "speed": 1.75
+      }
+    },
+    {
+      "id": "gallery-white",
+      "label": "Gallery White",
+      "description": "A clean, oversized wordmark on bright white with graphite text and a crisp clean baseline.",
+      "askedAs": [
+        "minimal white logo reveal",
+        "big clean logo on white",
+        "apple style bright ending",
+        "минималистичный логотип на белом",
+        "крупный логотип светлая концовка"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#fafafa",
+        "ink": "#18181b",
+        "accent": "#71717a",
+        "ticks": false,
+        "scale": 1.3
+      }
+    },
+    {
+      "id": "quiet-closer",
+      "label": "Quiet Closer",
+      "description": "A small, slow, delayed reveal in Inter on charcoal with a sage line for a hushed ending.",
+      "askedAs": [
+        "calm slow ending logo",
+        "subtle small logo outro",
+        "gentle fade in after busy scene",
+        "спокойная медленная концовка с логотипом",
+        "тихий финальный логотип"
+      ],
+      "props": {
+        "fontFamily": "Inter",
+        "background": "#1c1d1b",
+        "ink": "#e4e6e0",
+        "accent": "#8fa58a",
+        "scale": 0.75,
+        "delay": 30
+      }
+    }
+  ]
+}

@@ -1,0 +1,123 @@
+{
+  "component": "keycap-press",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "paper-desk",
+      "label": "Paper Desk",
+      "description": "Light ivory keycaps on a warm paper ground with a serif headline and a soft, faint underglow.",
+      "askedAs": [
+        "light keyboard on paper",
+        "warm minimal shortcut reveal",
+        "cream keycaps with serif text",
+        "светлые клавиши на бумажном фоне",
+        "тёплый минималистичный вариант"
+      ],
+      "props": {
+        "theme": "light",
+        "material": "light",
+        "ground": "paper-crease",
+        "fontFamily": "Instrument Serif",
+        "glow": 0.3,
+        "accent": "#c2410c"
+      }
+    },
+    {
+      "id": "terminal-night",
+      "label": "Terminal Night",
+      "description": "Dark keycaps under a mint underglow with monospace type, quick and tight like a developer tool.",
+      "askedAs": [
+        "hacker style keycaps",
+        "dev tool command palette look",
+        "monospace dark shortcut",
+        "тёмный стиль для разработчиков",
+        "моноширинный шрифт и зелёное свечение"
+      ],
+      "props": {
+        "theme": "dark",
+        "ground": "nightfold",
+        "fontFamily": "JetBrains Mono",
+        "accent": "#34d399",
+        "speed": 1.5,
+        "stagger": 1
+      }
+    },
+    {
+      "id": "slow-hero",
+      "label": "Slow Hero",
+      "description": "Oversized keycaps press slowly with a long word cascade, giving the chord a cinematic launch moment.",
+      "askedAs": [
+        "big slow keycap reveal",
+        "cinematic launch shortcut",
+        "make the keys huge and dramatic",
+        "крупные клавиши медленно",
+        "кинематографичный запуск"
+      ],
+      "props": {
+        "scale": 1.35,
+        "speed": 0.5,
+        "stagger": 8,
+        "ground": "spotlight",
+        "delay": 15
+      }
+    },
+    {
+      "id": "ember-glow",
+      "label": "Ember Glow",
+      "description": "Dark keycaps resting in a copper-orange underglow on a warm ember ground with a soft serif headline.",
+      "askedAs": [
+        "warm orange glow keys",
+        "copper keyboard look",
+        "cozy fiery shortcut",
+        "оранжевое свечение под клавишами",
+        "тёплый медный вариант"
+      ],
+      "props": {
+        "theme": "dark",
+        "ground": "ember",
+        "accent": "#f97316",
+        "fontFamily": "Fraunces"
+      }
+    },
+    {
+      "id": "quiet-mono",
+      "label": "Quiet Mono",
+      "description": "Light keycaps with no underglow on a plain graphite background, compact and fast for an understated aside.",
+      "askedAs": [
+        "no glow simple keys",
+        "small quick shortcut hint",
+        "understated grey keycaps",
+        "без свечения, сдержанно",
+        "маленькие быстрые клавиши"
+      ],
+      "props": {
+        "material": "light",
+        "glow": 0,
+        "background": "#1c1d21",
+        "ink": "#e7e7ea",
+        "scale": 0.75,
+        "speed": 2
+      }
+    },
+    {
+      "id": "iris-pop",
+      "label": "Iris Pop",
+      "description": "Playful violet underglow on an iris ground with rounded grotesque type and a bouncy, quick cascade.",
+      "askedAs": [
+        "purple playful keycaps",
+        "fun violet shortcut animation",
+        "bright friendly keyboard",
+        "фиолетовые игривые клавиши",
+        "весёлый яркий вариант"
+      ],
+      "props": {
+        "ground": "iris",
+        "accent": "#8b5cf6",
+        "fontFamily": "Space Grotesk",
+        "stagger": 5,
+        "speed": 1.25
+      }
+    }
+  ]
+}

@@ -1,0 +1,102 @@
+{
+  "component": "release-teaser",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "molten-gold",
+      "label": "Molten Gold",
+      "description": "Warm brass edge light gives the mark a luxurious, gilded glow at the standard pace.",
+      "askedAs": [
+        "gold luxury teaser",
+        "warm premium brand reveal",
+        "brass glow launch trailer",
+        "золотой премиальный тизер",
+        "тёплое золотое свечение"
+      ],
+      "props": {
+        "accentColor": "#d4a85a"
+      }
+    },
+    {
+      "id": "slow-burn",
+      "label": "Slow Burn",
+      "description": "A half-speed, drawn-out reveal with soft ember lighting that stretches the anticipation.",
+      "askedAs": [
+        "slower dramatic teaser",
+        "build suspense slowly",
+        "cinematic slow reveal",
+        "медленный драматичный тизер",
+        "нагнетание напряжения медленно"
+      ],
+      "props": {
+        "speed": 0.5,
+        "accentColor": "#e07a5f"
+      }
+    },
+    {
+      "id": "quick-cut",
+      "label": "Quick Cut",
+      "description": "Double-speed pacing with crisp cobalt light for a punchy, social-ready announcement.",
+      "askedAs": [
+        "fast short teaser",
+        "snappy launch video for social",
+        "energetic quick reveal",
+        "быстрый короткий тизер",
+        "динамичный анонс для соцсетей"
+      ],
+      "props": {
+        "speed": 2,
+        "accentColor": "#4c7dff"
+      }
+    },
+    {
+      "id": "still-frame",
+      "label": "Still Frame",
+      "description": "A calm, motion-free version with a static mark and full statements in cool silver light.",
+      "askedAs": [
+        "no motion version",
+        "accessible static teaser",
+        "calm reveal without blur",
+        "статичный тизер без анимации",
+        "спокойный вариант без движения"
+      ],
+      "props": {
+        "reducedMotion": true,
+        "accentColor": "#c9ced6"
+      }
+    },
+    {
+      "id": "verdant-edge",
+      "label": "Verdant Edge",
+      "description": "Muted sage edge lighting at a slightly relaxed pace for an organic, refined tone.",
+      "askedAs": [
+        "green calm brand teaser",
+        "natural eco launch reveal",
+        "soft sage premium look",
+        "зелёный спокойный тизер",
+        "эко запуск продукта"
+      ],
+      "props": {
+        "accentColor": "#8dbf9e",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "violet-hour",
+      "label": "Violet Hour",
+      "description": "Dusky lavender light with a brisker tempo for a moody, nocturnal release feel.",
+      "askedAs": [
+        "purple night teaser",
+        "moody evening launch",
+        "lavender dramatic reveal",
+        "фиолетовый ночной тизер",
+        "атмосферный вечерний анонс"
+      ],
+      "props": {
+        "accentColor": "#a08bd8",
+        "speed": 1.25
+      }
+    }
+  ]
+}

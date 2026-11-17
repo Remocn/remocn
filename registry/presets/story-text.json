@@ -1,0 +1,124 @@
+{
+  "component": "story-text",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "quick-drop",
+      "label": "Quick Drop",
+      "description": "Snappy word-by-word pop with a hot coral accent on a dark ember ground, sized up for vertical clips.",
+      "askedAs": [
+        "fast punchy story caption",
+        "snappy social text pop",
+        "bold quick announcement sticker",
+        "быстрый текст как в сторис",
+        "энергичная подпись для анонса"
+      ],
+      "props": {
+        "stagger": 2,
+        "speed": 1.5,
+        "accent": "#ff5a4e",
+        "ground": "ember",
+        "scale": 1.2,
+        "fontFamily": "Bricolage Grotesque"
+      }
+    },
+    {
+      "id": "soft-paper",
+      "label": "Soft Paper",
+      "description": "Light, relaxed typing with a muted sage accent on warm paper for a handmade feel.",
+      "askedAs": [
+        "light handmade story text",
+        "calm caption on paper background",
+        "soft pastel text sticker",
+        "светлый спокойный текст",
+        "подпись в стиле крафт"
+      ],
+      "props": {
+        "theme": "light",
+        "ground": "paper-crease",
+        "accent": "#7fa38a",
+        "stagger": 8,
+        "fontFamily": "Manrope"
+      }
+    },
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "Slow, elegant serif words on a velvet ground with a deep garnet highlight and a long hold.",
+      "askedAs": [
+        "elegant serif story caption",
+        "slow classy text reveal",
+        "magazine style highlight text",
+        "элегантный текст с засечками",
+        "медленная красивая подпись"
+      ],
+      "props": {
+        "fontFamily": "Instrument Serif",
+        "ground": "velvet-hour",
+        "accent": "#9e2b47",
+        "stagger": 10,
+        "hold": 40,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "terminal-mono",
+      "label": "Terminal Mono",
+      "description": "Monospace words tick in on charcoal with a cool cyan highlight, like a dev log going live.",
+      "askedAs": [
+        "code style launch caption",
+        "monospace typing text",
+        "developer announcement sticker",
+        "текст как в терминале",
+        "моноширинный шрифт для запуска"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "ground": "charcoal-satin",
+        "accent": "#2bb3c0",
+        "stagger": 3,
+        "scale": 0.9
+      }
+    },
+    {
+      "id": "clean-minimal",
+      "label": "Clean Minimal",
+      "description": "Plain white background with near-black text and a crisp blue highlight in compact Inter.",
+      "askedAs": [
+        "clean white caption",
+        "minimal product launch text",
+        "simple readable story text",
+        "минималистичный белый фон",
+        "простая чистая подпись"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#ffffff",
+        "ink": "#111318",
+        "accent": "#2f6bff",
+        "fontFamily": "Inter",
+        "scale": 0.85
+      }
+    },
+    {
+      "id": "golden-hour",
+      "label": "Golden Hour",
+      "description": "Warm amber highlights on a solstice gradient with rounded grotesk type and an easy pace.",
+      "askedAs": [
+        "warm sunset story text",
+        "cozy golden caption",
+        "friendly warm highlight words",
+        "тёплый закатный текст",
+        "уютная подпись в сторис"
+      ],
+      "props": {
+        "ground": "solstice",
+        "accent": "#e8973a",
+        "fontFamily": "Space Grotesk",
+        "stagger": 7,
+        "hold": 24
+      }
+    }
+  ]
+}

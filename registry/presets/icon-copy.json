@@ -1,0 +1,116 @@
+{
+  "component": "icon-copy",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "hairline-slow",
+      "label": "Hairline Slow",
+      "description": "A large, thin-stroked copy icon that draws itself in slowly for a calm, editorial feel.",
+      "askedAs": [
+        "thin slow drawing copy icon",
+        "elegant line copy animation",
+        "big delicate copy symbol",
+        "тонкая медленная иконка копирования",
+        "элегантная линия копировать"
+      ],
+      "props": {
+        "animation": "draw",
+        "size": 120,
+        "strokeWidth": 1.25,
+        "speed": 0.5,
+        "color": "#3f3f46"
+      }
+    },
+    {
+      "id": "bold-snap",
+      "label": "Bold Snap",
+      "description": "A chunky, heavy-stroked icon that performs a quick copy action with punchy energy.",
+      "askedAs": [
+        "fast bold copy icon",
+        "thick snappy copy animation",
+        "punchy copy button motion",
+        "жирная быстрая иконка копирования",
+        "резкая анимация копирования"
+      ],
+      "props": {
+        "animation": "action",
+        "strokeWidth": 3,
+        "speed": 2,
+        "size": 72
+      }
+    },
+    {
+      "id": "brand-blue-loop",
+      "label": "Brand Loop",
+      "description": "A medium blue icon that continuously draws and acts, ideal as a looping UI hint.",
+      "askedAs": [
+        "looping blue copy icon",
+        "repeating copy animation",
+        "copy hint that keeps playing",
+        "синяя зацикленная иконка копирования",
+        "повторяющаяся анимация копирования"
+      ],
+      "props": {
+        "loop": true,
+        "color": "#1f6feb",
+        "size": 64
+      }
+    },
+    {
+      "id": "success-green",
+      "label": "Copied Green",
+      "description": "A muted green icon with a brisk action, signalling a successful copy.",
+      "askedAs": [
+        "green copied confirmation icon",
+        "copy success animation",
+        "copied to clipboard feedback",
+        "зелёная иконка скопировано",
+        "анимация успешного копирования"
+      ],
+      "props": {
+        "animation": "action",
+        "color": "#16a34a",
+        "speed": 1.5,
+        "strokeWidth": 2.5
+      }
+    },
+    {
+      "id": "hero-terracotta",
+      "label": "Hero Terracotta",
+      "description": "An oversized warm terracotta icon drawn at a relaxed pace for title cards.",
+      "askedAs": [
+        "huge warm copy icon",
+        "large orange copy symbol for intro",
+        "big slow copy hero shot",
+        "большая тёплая иконка копирования",
+        "крупный значок копирования для заставки"
+      ],
+      "props": {
+        "size": 200,
+        "color": "#c2410c",
+        "speed": 0.75,
+        "strokeWidth": 1.75
+      }
+    },
+    {
+      "id": "tiny-subtle",
+      "label": "Tiny Subtle",
+      "description": "A small, soft gray icon with a light stroke that loops quietly in the background.",
+      "askedAs": [
+        "small subtle copy icon",
+        "quiet gray copy animation",
+        "minimal tiny copy loop",
+        "маленькая серая иконка копирования",
+        "ненавязчивая анимация копирования"
+      ],
+      "props": {
+        "size": 32,
+        "color": "#71717a",
+        "strokeWidth": 1.5,
+        "loop": true,
+        "speed": 0.75
+      }
+    }
+  ]
+}

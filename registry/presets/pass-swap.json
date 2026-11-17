@@ -1,0 +1,122 @@
+{
+  "component": "pass-swap",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "rapid-fire",
+      "label": "Rapid Fire",
+      "description": "Quick slab swipes snap through the headlines in a tight, punchy rhythm.",
+      "askedAs": [
+        "fast punchy headline swaps",
+        "quick energetic launch hook",
+        "snappy rhythmic text change",
+        "быстрая смена заголовков",
+        "резкий динамичный хук"
+      ],
+      "props": {
+        "shape": "slab",
+        "passLength": 14,
+        "passGap": 24,
+        "fontFamily": "Space Grotesk",
+        "accent": "#ff5a36"
+      }
+    },
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "A warm paper backdrop with dark serif type and slow, graceful disc passes.",
+      "askedAs": [
+        "elegant magazine style headline",
+        "slow serif text reveal on cream",
+        "classy editorial pitch",
+        "элегантный журнальный стиль",
+        "медленный показ с засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f3eee4",
+        "ink": "#1c1a17",
+        "accent": "#b4532a",
+        "fontFamily": "Instrument Serif",
+        "shape": "disc"
+      }
+    },
+    {
+      "id": "clean-light",
+      "label": "Clean Light",
+      "description": "Crisp white minimalism with grain off and a cool blue accent.",
+      "askedAs": [
+        "clean white minimal version",
+        "light theme without noise",
+        "simple bright product reveal",
+        "светлый минималистичный вариант",
+        "чистый белый фон"
+      ],
+      "props": {
+        "theme": "light",
+        "grain": false,
+        "fontFamily": "Inter",
+        "accent": "#2563eb"
+      }
+    },
+    {
+      "id": "midnight-calm",
+      "label": "Midnight Calm",
+      "description": "Deep navy field with soft mint accent and unhurried, spacious passes.",
+      "askedAs": [
+        "slow calm dark navy",
+        "relaxed premium pacing",
+        "moody slow headline swap",
+        "спокойный тёмно-синий",
+        "медленные плавные переходы"
+      ],
+      "props": {
+        "background": "#0e1626",
+        "ink": "#e8eef6",
+        "accent": "#6fd3b5",
+        "passLength": 48,
+        "passGap": 80,
+        "fontFamily": "Manrope"
+      }
+    },
+    {
+      "id": "terminal-mono",
+      "label": "Terminal Mono",
+      "description": "Monospaced type on near-black with an amber accent and plain text, no highlighted last word.",
+      "askedAs": [
+        "developer code style headline",
+        "monospace tech launch",
+        "terminal look text swap",
+        "моноширинный шрифт как в терминале",
+        "стиль для разработчиков"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0b0b0c",
+        "ink": "#e6e6e6",
+        "accent": "#f5a524",
+        "accentLastWord": false,
+        "scale": 0.85
+      }
+    },
+    {
+      "id": "big-poster",
+      "label": "Big Poster",
+      "description": "Oversized bold headlines with chunky slab passes for a loud poster finish.",
+      "askedAs": [
+        "huge bold headline",
+        "big poster style text",
+        "large type launch hook",
+        "огромный жирный заголовок",
+        "крупный текст как постер"
+      ],
+      "props": {
+        "scale": 1.35,
+        "fontFamily": "Bricolage Grotesque",
+        "shape": "slab",
+        "accent": "#e8c547"
+      }
+    }
+  ]
+}

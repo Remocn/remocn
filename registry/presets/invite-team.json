@@ -1,0 +1,119 @@
+{
+  "component": "invite-team",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "midnight-workspace",
+      "label": "Midnight Workspace",
+      "description": "Dark interface on a deep blue-hour ground with a soft periwinkle accent and calm pacing.",
+      "askedAs": [
+        "dark mode invite",
+        "night themed team invite",
+        "moody dark collaboration screen",
+        "тёмная тема приглашения",
+        "ночной вариант приглашения в команду"
+      ],
+      "props": {
+        "theme": "dark",
+        "ground": "blue-hour",
+        "accent": "#7c8cff",
+        "fontFamily": "Geist"
+      }
+    },
+    {
+      "id": "quick-send",
+      "label": "Quick Send",
+      "description": "Snappy double-speed typing and send with a slightly larger, punchy Inter layout.",
+      "askedAs": [
+        "fast invite animation",
+        "speed up the typing",
+        "quick snappy team invite",
+        "быстрая анимация приглашения",
+        "ускорить отправку приглашения"
+      ],
+      "props": {
+        "speed": 2,
+        "scale": 1.15,
+        "fontFamily": "Inter",
+        "accent": "#1f6feb"
+      }
+    },
+    {
+      "id": "editorial-warm",
+      "label": "Editorial Warm",
+      "description": "Cream paper background with dark brown ink, a terracotta accent and Fraunces type at an unhurried pace.",
+      "askedAs": [
+        "warm editorial style",
+        "serif invite on cream",
+        "cozy paper look",
+        "тёплый редакционный стиль",
+        "кремовый фон с засечками"
+      ],
+      "props": {
+        "background": "#f6f1e7",
+        "ink": "#2b2118",
+        "accent": "#c2562f",
+        "fontFamily": "Fraunces",
+        "ground": "paper-crease",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "dev-console",
+      "label": "Dev Console",
+      "description": "Charcoal dark theme with mono type and a muted mint accent for a technical, terminal-like feel.",
+      "askedAs": [
+        "developer style invite",
+        "monospace dark look",
+        "terminal vibe team invite",
+        "стиль для разработчиков",
+        "моноширинный шрифт тёмная тема"
+      ],
+      "props": {
+        "theme": "dark",
+        "ground": "charcoal-satin",
+        "fontFamily": "JetBrains Mono",
+        "accent": "#3fb68b"
+      }
+    },
+    {
+      "id": "slow-reveal",
+      "label": "Slow Reveal",
+      "description": "A gentle half-speed sequence that waits a beat before starting, set smaller on a cool polar ground.",
+      "askedAs": [
+        "slow calm invite",
+        "delayed start animation",
+        "relaxed product tour pace",
+        "медленное спокойное приглашение",
+        "с задержкой перед началом"
+      ],
+      "props": {
+        "speed": 0.5,
+        "delay": 30,
+        "scale": 0.9,
+        "ground": "polar",
+        "fontFamily": "Manrope"
+      }
+    },
+    {
+      "id": "velvet-launch",
+      "label": "Velvet Launch",
+      "description": "Dark velvet-hour ground with a rose accent and Space Grotesk for a bold launch-video mood.",
+      "askedAs": [
+        "launch video style",
+        "purple dramatic invite",
+        "bold team plan launch look",
+        "стиль для запуска продукта",
+        "фиолетовый драматичный вид"
+      ],
+      "props": {
+        "theme": "dark",
+        "ground": "velvet-hour",
+        "accent": "#e87a9b",
+        "fontFamily": "Space Grotesk",
+        "scale": 1.1
+      }
+    }
+  ]
+}

@@ -1,0 +1,124 @@
+{
+  "component": "uptime-strip",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "terminal-mono",
+      "label": "Terminal Mono",
+      "description": "A near-black console look with monospaced digits, soft green accents and no grain.",
+      "askedAs": [
+        "make it look like a terminal",
+        "monospace hacker style uptime",
+        "dark console with green text",
+        "в стиле терминала",
+        "моноширинный шрифт на тёмном фоне"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0b0f0c",
+        "ink": "#d7e3d9",
+        "accent": "#3fb37f",
+        "stagger": 4,
+        "grain": false
+      }
+    },
+    {
+      "id": "paper-editorial",
+      "label": "Paper Editorial",
+      "description": "Warm off-white paper with a serif face and deep forest accent, moving at an unhurried pace.",
+      "askedAs": [
+        "warm editorial light version",
+        "serif on cream paper",
+        "magazine style uptime figure",
+        "светлый редакционный стиль",
+        "кремовый фон с засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Fraunces",
+        "background": "#f5f1e8",
+        "ink": "#1e1c18",
+        "accent": "#2f6b4f",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "quick-pulse",
+      "label": "Quick Pulse",
+      "description": "A larger, snappy version where ticks and digits land fast in a geometric grotesk.",
+      "askedAs": [
+        "faster and punchier",
+        "quick energetic uptime reveal",
+        "bigger and snappier animation",
+        "быстрее и энергичнее",
+        "крупно и динамично"
+      ],
+      "props": {
+        "speed": 2,
+        "stagger": 1,
+        "scale": 1.15,
+        "fontFamily": "Space Grotesk",
+        "accent": "#22c55e"
+      }
+    },
+    {
+      "id": "slow-reveal",
+      "label": "Slow Reveal",
+      "description": "A calm, cinematic build with a held start, wide digit stagger and an elegant serif.",
+      "askedAs": [
+        "slow cinematic version",
+        "calm elegant reveal",
+        "let it breathe before starting",
+        "медленное плавное появление",
+        "кинематографично и спокойно"
+      ],
+      "props": {
+        "speed": 0.5,
+        "stagger": 6,
+        "delay": 20,
+        "fontFamily": "Instrument Serif",
+        "scale": 0.9
+      }
+    },
+    {
+      "id": "clean-status",
+      "label": "Clean Status",
+      "description": "A crisp white status-page look with slate text, blue accent and no grain.",
+      "askedAs": [
+        "clean status page style",
+        "white minimal SaaS look",
+        "plain light dashboard version",
+        "как страница статуса",
+        "чистый белый минимализм"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "background": "#ffffff",
+        "ink": "#0f172a",
+        "accent": "#2563eb",
+        "grain": false
+      }
+    },
+    {
+      "id": "midnight-navy",
+      "label": "Midnight Navy",
+      "description": "Deep navy backdrop with pale periwinkle accents and slightly enlarged Geist type.",
+      "askedAs": [
+        "dark blue night theme",
+        "navy infrastructure vibe",
+        "moody blue enterprise look",
+        "тёмно-синяя тема",
+        "ночной синий стиль"
+      ],
+      "props": {
+        "background": "#0e1626",
+        "ink": "#e6ecf5",
+        "accent": "#7aa2f7",
+        "fontFamily": "Geist",
+        "scale": 1.1
+      }
+    }
+  ]
+}

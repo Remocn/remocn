@@ -1,0 +1,103 @@
+{
+  "component": "ecosystem-constellation",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "calm-orbit",
+      "label": "Calm Orbit",
+      "description": "A slow, drifting orbit in a soft teal that suits long background holds.",
+      "askedAs": [
+        "slow relaxed orbit",
+        "calm teal integrations loop",
+        "gentle ambient constellation",
+        "медленная спокойная орбита",
+        "плавный бирюзовый вариант"
+      ],
+      "props": {
+        "speed": 0.5,
+        "accentColor": "#14b8a6"
+      }
+    },
+    {
+      "id": "rapid-sync",
+      "label": "Rapid Sync",
+      "description": "Fast orbit with quick-firing data lines in a crisp electric blue.",
+      "askedAs": [
+        "fast energetic integrations",
+        "quick pulsing connections",
+        "speed it up blue",
+        "быстрая анимация интеграций",
+        "энергичный синий вариант"
+      ],
+      "props": {
+        "speed": 2.5,
+        "accentColor": "#3b82f6"
+      }
+    },
+    {
+      "id": "warm-signal",
+      "label": "Warm Signal",
+      "description": "A measured orbit with amber data lines for a warmer, friendlier tech tone.",
+      "askedAs": [
+        "warm orange connections",
+        "amber accent orbit",
+        "friendlier warm tech look",
+        "тёплый оранжевый акцент",
+        "янтарные линии связи"
+      ],
+      "props": {
+        "accentColor": "#f59e0b",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "mint-network",
+      "label": "Mint Network",
+      "description": "Fresh mint-green pulses at a slightly brisk pace, evoking healthy live connections.",
+      "askedAs": [
+        "green live network",
+        "mint colored data lines",
+        "everything connected and online",
+        "зелёная сеть интеграций",
+        "мятный цвет линий"
+      ],
+      "props": {
+        "accentColor": "#10b981",
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "slate-minimal",
+      "label": "Slate Minimal",
+      "description": "Understated cool-gray accents with a near-still orbit for a restrained, corporate feel.",
+      "askedAs": [
+        "muted gray minimal",
+        "subtle corporate version",
+        "no bright colors please",
+        "сдержанный серый стиль",
+        "минималистичный корпоративный вид"
+      ],
+      "props": {
+        "accentColor": "#94a3b8",
+        "speed": 0.25
+      }
+    },
+    {
+      "id": "rose-pulse",
+      "label": "Rose Pulse",
+      "description": "Lively rose-pink data pulses at double speed for a bold, consumer-tech energy.",
+      "askedAs": [
+        "pink fast pulses",
+        "bold rose accent",
+        "punchy consumer app style",
+        "розовые быстрые импульсы",
+        "яркий розовый акцент"
+      ],
+      "props": {
+        "accentColor": "#f43f5e",
+        "speed": 2
+      }
+    }
+  ]
+}

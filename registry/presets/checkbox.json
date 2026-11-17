@@ -1,0 +1,90 @@
+{
+  "component": "checkbox",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "slow-deliberate",
+      "label": "Slow Deliberate",
+      "description": "A large checkbox that fills and draws its checkmark at an unhurried, cinematic pace.",
+      "askedAs": [
+        "slow big checkbox",
+        "calm checkmark animation",
+        "dramatic check off",
+        "медленная большая галочка",
+        "плавное отмечание чекбокса"
+      ],
+      "props": {
+        "size": "lg",
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "snappy-blue",
+      "label": "Snappy Blue",
+      "description": "A crisp product-blue checkbox that ticks on quickly like a confident UI click.",
+      "askedAs": [
+        "fast blue checkbox",
+        "quick tick in brand blue",
+        "snappy form checkbox",
+        "быстрый синий чекбокс",
+        "резкая синяя галочка"
+      ],
+      "props": {
+        "primary": "#2563eb",
+        "speed": 2
+      }
+    },
+    {
+      "id": "done-green",
+      "label": "Done Green",
+      "description": "A calm emerald fill that reads as a completed task at a natural pace.",
+      "askedAs": [
+        "green task done checkbox",
+        "completed to-do check",
+        "success tick green",
+        "зелёная галочка выполнено",
+        "задача отмечена зелёным"
+      ],
+      "props": {
+        "primary": "#059669",
+        "size": "lg",
+        "speed": 1.25
+      }
+    },
+    {
+      "id": "compact-indigo",
+      "label": "Compact Indigo",
+      "description": "A small, dense indigo checkbox suited to tight lists and form rows.",
+      "askedAs": [
+        "small checkbox for lists",
+        "compact purple tick",
+        "tiny form checkbox",
+        "маленький чекбокс",
+        "компактная фиолетовая галочка"
+      ],
+      "props": {
+        "size": "sm",
+        "primary": "#4f46e5",
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "uncheck-terracotta",
+      "label": "Warm Uncheck",
+      "description": "A warm terracotta box that clears its checkmark gently, showing an option being turned off.",
+      "askedAs": [
+        "checkbox turning off",
+        "uncheck animation warm color",
+        "deselect option",
+        "снятие галочки",
+        "чекбокс выключается"
+      ],
+      "props": {
+        "state": "unchecked",
+        "primary": "#c2410c",
+        "speed": 0.75
+      }
+    }
+  ]
+}

@@ -1,0 +1,111 @@
+{
+  "component": "blur-in",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "soft-focus",
+      "label": "Soft Focus",
+      "description": "A heavy, dreamy blur that slowly resolves in place with almost no movement.",
+      "askedAs": [
+        "slow dreamy blur fade in",
+        "heavy blur reveal without sliding",
+        "soft focus pull entrance",
+        "мягкое размытие при появлении",
+        "медленное проявление из размытия"
+      ],
+      "props": {
+        "blur": 28,
+        "distance": 0,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "quick-snap",
+      "label": "Quick Snap",
+      "description": "A fast, crisp entrance with a light blur and short upward nudge.",
+      "askedAs": [
+        "fast subtle blur pop in",
+        "snappy quick reveal",
+        "short sharp entrance animation",
+        "быстрое резкое появление",
+        "короткий снэп с лёгким размытием"
+      ],
+      "props": {
+        "blur": 4,
+        "distance": 6,
+        "speed": 2.5
+      }
+    },
+    {
+      "id": "drift-down",
+      "label": "Drift Down",
+      "description": "Content floats down from above with a medium blur at a calm pace.",
+      "askedAs": [
+        "fall in from the top with blur",
+        "drop down soft reveal",
+        "descend into view gently",
+        "плавно опускается сверху",
+        "появление сверху вниз с размытием"
+      ],
+      "props": {
+        "direction": "down",
+        "distance": 32,
+        "blur": 12,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "side-sweep",
+      "label": "Side Sweep",
+      "description": "A long lateral glide in from the left with a strong motion blur feel.",
+      "askedAs": [
+        "slide in from the left with blur",
+        "horizontal sweep reveal",
+        "glide in sideways",
+        "выезд слева с размытием",
+        "горизонтальное появление сбоку"
+      ],
+      "props": {
+        "direction": "right",
+        "distance": 64,
+        "blur": 18,
+        "speed": 1.25
+      }
+    },
+    {
+      "id": "cinematic-rise",
+      "label": "Cinematic Rise",
+      "description": "A slow, deep rise from below with generous blur for hero moments.",
+      "askedAs": [
+        "dramatic slow rise from below",
+        "cinematic hero entrance",
+        "big blurry lift up reveal",
+        "кинематографичное появление снизу",
+        "медленный подъём с сильным размытием"
+      ],
+      "props": {
+        "distance": 48,
+        "blur": 24,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "hidden-start",
+      "label": "Held Hidden",
+      "description": "Keeps the content blurred out and offset, ready to be revealed later.",
+      "askedAs": [
+        "keep it hidden for now",
+        "start invisible blurred",
+        "hide the element before reveal",
+        "скрыть элемент до появления",
+        "начальное скрытое состояние"
+      ],
+      "props": {
+        "state": "hidden",
+        "blur": 16,
+        "distance": 24
+      }
+    }
+  ]
+}

@@ -1,0 +1,101 @@
+{
+  "component": "claude-code",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "ocean-blue",
+      "label": "Ocean Blue",
+      "description": "A calm steel-blue accent replaces the clay orange for a cooler, enterprise feel at a relaxed pace.",
+      "askedAs": [
+        "blue accent terminal",
+        "cool toned cli screen",
+        "corporate blue claude code",
+        "синий акцент терминала",
+        "холодная палитра для cli"
+      ],
+      "props": {
+        "accentColor": "#4a7fd4"
+      }
+    },
+    {
+      "id": "quick-demo",
+      "label": "Quick Demo",
+      "description": "Original clay accent with brisk double-speed typing for short cuts and social clips.",
+      "askedAs": [
+        "faster typing",
+        "speed up the terminal animation",
+        "quick cli intro",
+        "ускорить печать команды",
+        "быстрая анимация терминала"
+      ],
+      "props": {
+        "speed": 2
+      }
+    },
+    {
+      "id": "sage-terminal",
+      "label": "Sage Terminal",
+      "description": "Muted sage-green accent with slightly quicker motion for a soft, natural hacker look.",
+      "askedAs": [
+        "green terminal accent",
+        "muted green cli",
+        "calm hacker look",
+        "зелёный терминал",
+        "приглушённый зелёный акцент"
+      ],
+      "props": {
+        "accentColor": "#6fa383",
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "violet-rush",
+      "label": "Violet Rush",
+      "description": "Dusty violet accent paired with rapid triple-speed typing for an energetic, modern reveal.",
+      "askedAs": [
+        "purple fast terminal",
+        "energetic violet cli",
+        "snappy purple prompt",
+        "фиолетовый быстрый терминал",
+        "энергичная анимация с фиолетовым"
+      ],
+      "props": {
+        "accentColor": "#8b6fd6",
+        "speed": 3
+      }
+    },
+    {
+      "id": "mono-graphite",
+      "label": "Mono Graphite",
+      "description": "Neutral graphite-grey accent for an understated, monochrome terminal that lets content lead.",
+      "askedAs": [
+        "grey neutral terminal",
+        "monochrome cli look",
+        "no color accent",
+        "серый монохромный терминал",
+        "нейтральный акцент без цвета"
+      ],
+      "props": {
+        "accentColor": "#8a8f98",
+        "speed": 1.25
+      }
+    },
+    {
+      "id": "amber-flash",
+      "label": "Amber Flash",
+      "description": "Warm amber accent at maximum speed for a punchy, near-instant welcome screen.",
+      "askedAs": [
+        "instant terminal reveal",
+        "warm yellow fast cli",
+        "fastest typing amber",
+        "мгновенный терминал",
+        "янтарный акцент и максимальная скорость"
+      ],
+      "props": {
+        "accentColor": "#d9a441",
+        "speed": 4
+      }
+    }
+  ]
+}

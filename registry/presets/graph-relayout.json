@@ -1,0 +1,118 @@
+{
+  "component": "graph-relayout",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "blueprint-light",
+      "label": "Blueprint Light",
+      "description": "A clean light canvas with a cobalt accent and crisp grotesk type, like a product whiteboard.",
+      "askedAs": [
+        "light version with blue accent",
+        "clean white workflow diagram",
+        "bright minimal node graph",
+        "светлая версия с синим акцентом",
+        "белый чистый граф узлов"
+      ],
+      "props": {
+        "theme": "light",
+        "accent": "#2563eb",
+        "fontFamily": "Inter",
+        "ground": "paper-crease"
+      }
+    },
+    {
+      "id": "terminal-mono",
+      "label": "Terminal Mono",
+      "description": "A near-black ground with mint accent and monospace labels for a developer-tool feel.",
+      "askedAs": [
+        "make it look like a terminal",
+        "monospace dev tool style",
+        "hacker green on black graph",
+        "в стиле терминала",
+        "моноширинный шрифт для разработчиков"
+      ],
+      "props": {
+        "theme": "dark",
+        "fontFamily": "JetBrains Mono",
+        "background": "#0b0f0e",
+        "ink": "#d7e4df",
+        "accent": "#34d399",
+        "dots": false
+      }
+    },
+    {
+      "id": "quick-cut",
+      "label": "Quick Cut",
+      "description": "A snappy, fast-paced relayout with almost no initial hold, built for punchy social edits.",
+      "askedAs": [
+        "faster animation",
+        "speed it up for reels",
+        "no pause at the start",
+        "быстрее анимацию",
+        "без паузы в начале"
+      ],
+      "props": {
+        "speed": 2,
+        "hold": 8,
+        "ground": "cyan-drift",
+        "accent": "#22d3ee"
+      }
+    },
+    {
+      "id": "slow-explainer",
+      "label": "Slow Explainer",
+      "description": "A calm, unhurried pace with a long opening hold and larger nodes so viewers can follow each step.",
+      "askedAs": [
+        "slower so people can read it",
+        "bigger nodes and calmer pacing",
+        "longer pause before it moves",
+        "помедленнее и крупнее",
+        "подольше задержка в начале"
+      ],
+      "props": {
+        "speed": 0.5,
+        "hold": 64,
+        "scale": 1.25,
+        "ground": "blue-hour"
+      }
+    },
+    {
+      "id": "warm-editorial",
+      "label": "Warm Editorial",
+      "description": "A copper-toned dark ground with serif type and an amber accent for a premium, editorial look.",
+      "askedAs": [
+        "warm elegant version",
+        "serif font with amber tones",
+        "luxury brand style graph",
+        "тёплый элегантный стиль",
+        "шрифт с засечками и янтарный цвет"
+      ],
+      "props": {
+        "ground": "copper",
+        "fontFamily": "Fraunces",
+        "accent": "#f59e0b",
+        "dots": false
+      }
+    },
+    {
+      "id": "compact-violet",
+      "label": "Compact Violet",
+      "description": "A smaller, centered graph on a deep violet ground with soft lavender accent, leaving room for captions.",
+      "askedAs": [
+        "smaller graph with purple tones",
+        "leave space for text around it",
+        "violet night look",
+        "фиолетовый и поменьше",
+        "уменьшить граф, оставить место"
+      ],
+      "props": {
+        "scale": 0.75,
+        "ground": "velvet-hour",
+        "accent": "#a78bfa",
+        "fontFamily": "Space Grotesk",
+        "delay": 12
+      }
+    }
+  ]
+}

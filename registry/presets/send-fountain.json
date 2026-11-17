@@ -1,0 +1,101 @@
+{
+  "component": "send-fountain",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "cobalt-console",
+      "label": "Cobalt Console",
+      "description": "A deep blue night board with a cool electric-blue accent and crisp Geist type.",
+      "askedAs": [
+        "blue tech dashboard look",
+        "cool dark blue launch board",
+        "make it feel like a developer console",
+        "синий технологичный дашборд",
+        "холодная тёмная панель запуска"
+      ],
+      "props": {
+        "theme": "dark",
+        "ground": "cobalt-rise",
+        "accent": "#4c8dff",
+        "fontFamily": "Geist"
+      }
+    },
+    {
+      "id": "paper-studio",
+      "label": "Paper Studio",
+      "description": "A calm light workspace on warm paper with an ink-green accent and Manrope type.",
+      "askedAs": [
+        "light clean dashboard version",
+        "soft paper background with green",
+        "minimal bright workspace look",
+        "светлая чистая версия дашборда",
+        "спокойный светлый стиль на бумаге"
+      ],
+      "props": {
+        "theme": "light",
+        "ground": "paper-crease",
+        "accent": "#1f7a5a",
+        "fontFamily": "Manrope",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "terminal-burst",
+      "label": "Terminal Burst",
+      "description": "A fast, monospaced build on near-black charcoal with a lime signal accent.",
+      "askedAs": [
+        "hacker terminal style fast",
+        "monospace code look dashboard",
+        "quick snappy developer vibe",
+        "быстрый стиль как в терминале",
+        "моноширинный шрифт и тёмный фон"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0d0f0e",
+        "ink": "#e6efe9",
+        "accent": "#a3e635",
+        "speed": 1.75
+      }
+    },
+    {
+      "id": "ember-keynote",
+      "label": "Ember Keynote",
+      "description": "A slow, cinematic keynote reveal on a warm ember glow with editorial serif type.",
+      "askedAs": [
+        "warm cinematic keynote reveal",
+        "slow dramatic launch with serif font",
+        "elegant orange glow presentation",
+        "тёплая кинематографичная презентация",
+        "медленное эффектное появление с засечками"
+      ],
+      "props": {
+        "ground": "ember",
+        "fontFamily": "Instrument Serif",
+        "accent": "#f2a65a",
+        "speed": 0.5,
+        "delay": 20
+      }
+    },
+    {
+      "id": "polar-closeup",
+      "label": "Polar Close-up",
+      "description": "An enlarged, icy light board with a violet accent framed tight for vertical hero shots.",
+      "askedAs": [
+        "bigger zoomed in dashboard",
+        "icy light look for vertical video",
+        "close up with purple accent",
+        "крупный план светлого дашборда",
+        "увеличить для вертикального видео"
+      ],
+      "props": {
+        "theme": "light",
+        "ground": "polar",
+        "accent": "#6d4aff",
+        "scale": 1.3,
+        "fontFamily": "Space Grotesk"
+      }
+    }
+  ]
+}

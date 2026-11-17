@@ -1,0 +1,99 @@
+{
+  "component": "icon-flame",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "ember-glow",
+      "label": "Ember Glow",
+      "description": "A large warm orange flame that draws itself in and flickers at a calm, steady pace.",
+      "askedAs": [
+        "warm orange fire icon",
+        "big glowing flame",
+        "cozy campfire look",
+        "тёплое оранжевое пламя",
+        "большой огонь"
+      ],
+      "props": {
+        "color": "#e8590c",
+        "size": 120,
+        "strokeWidth": 2.25,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "quick-flicker",
+      "label": "Quick Flicker",
+      "description": "A small crimson flame that flickers rapidly on a loop, like a nervous candle.",
+      "askedAs": [
+        "fast flickering flame",
+        "hot trending badge icon",
+        "small red fire that jitters",
+        "быстро мерцающий огонь",
+        "маленькое красное пламя"
+      ],
+      "props": {
+        "color": "#c92a2a",
+        "size": 32,
+        "animation": "action",
+        "speed": 2.5
+      }
+    },
+    {
+      "id": "fine-sketch",
+      "label": "Fine Sketch",
+      "description": "A thin slate line drawing that traces the flame once, slowly, and stays put.",
+      "askedAs": [
+        "thin line flame drawing",
+        "draw the fire icon once",
+        "minimal outline flame",
+        "тонкий контур пламени",
+        "нарисовать огонь один раз"
+      ],
+      "props": {
+        "animation": "draw",
+        "loop": false,
+        "strokeWidth": 1,
+        "color": "#475569",
+        "speed": 0.5,
+        "size": 96
+      }
+    },
+    {
+      "id": "bold-hero",
+      "label": "Bold Hero",
+      "description": "An oversized, heavy-stroked amber flame for hero shots with a lively loop.",
+      "askedAs": [
+        "huge bold fire icon",
+        "thick flame for title card",
+        "giant amber flame",
+        "огромное жирное пламя",
+        "крупная иконка огня"
+      ],
+      "props": {
+        "size": 200,
+        "strokeWidth": 3,
+        "color": "#d97706",
+        "speed": 1.25
+      }
+    },
+    {
+      "id": "blue-gas",
+      "label": "Blue Gas",
+      "description": "A cool steel-blue flame burning slowly, like a gas stove burner.",
+      "askedAs": [
+        "blue flame icon",
+        "gas burner fire",
+        "cool colored flame",
+        "синее пламя",
+        "огонь газовой горелки"
+      ],
+      "props": {
+        "color": "#1f6feb",
+        "size": 72,
+        "strokeWidth": 1.75,
+        "speed": 0.5
+      }
+    }
+  ]
+}

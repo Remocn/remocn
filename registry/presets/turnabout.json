@@ -1,0 +1,122 @@
+{
+  "component": "turnabout",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "Warm paper background with dark serif type and a slow, measured word-by-word reveal.",
+      "askedAs": [
+        "make it look like a magazine headline",
+        "serif font on cream background, slower",
+        "elegant editorial tagline",
+        "журнальный стиль с засечками",
+        "медленнее и на светлом фоне"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "fontWeight": 400,
+        "background": "#f4efe6",
+        "ink": "#1d1b18",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "snap-punch",
+      "label": "Snap Punch",
+      "description": "Large, fast grotesque type that lands almost all at once for a punchy twist.",
+      "askedAs": [
+        "faster and bigger",
+        "punchy quick reveal",
+        "make it hit hard",
+        "быстрее и крупнее",
+        "резкая подача текста"
+      ],
+      "props": {
+        "fontFamily": "Space Grotesk",
+        "scale": 1.3,
+        "speed": 2,
+        "stagger": 1
+      }
+    },
+    {
+      "id": "midnight-blue",
+      "label": "Midnight Blue",
+      "description": "Deep navy background with soft off-white text and a calm sky-blue accent word.",
+      "askedAs": [
+        "navy background with blue highlight",
+        "cool blue color scheme",
+        "dark blue corporate look",
+        "тёмно-синий фон",
+        "синий акцент вместо оранжевого"
+      ],
+      "props": {
+        "background": "#0f1a2e",
+        "ink": "#e6ecf5",
+        "accent": "#6ea8fe",
+        "fontFamily": "Inter"
+      }
+    },
+    {
+      "id": "terminal-mono",
+      "label": "Terminal Mono",
+      "description": "Monospaced type on near-black with a muted green accent and a typed-out cadence.",
+      "askedAs": [
+        "code style font",
+        "make it look like a terminal",
+        "developer tool vibe",
+        "моноширинный шрифт как в терминале",
+        "стиль для разработчиков"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "fontWeight": 400,
+        "background": "#0d0f0e",
+        "ink": "#d7ddd8",
+        "accent": "#5fbf8a",
+        "stagger": 7
+      }
+    },
+    {
+      "id": "quiet-cascade",
+      "label": "Quiet Cascade",
+      "description": "Small, light-weight text on a clean light theme with a long, gentle word cascade after a pause.",
+      "askedAs": [
+        "subtle and minimal",
+        "smaller text, gentle slow reveal",
+        "calm understated tagline",
+        "минималистично и спокойно",
+        "мелкий текст с плавным появлением"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Manrope",
+        "fontWeight": 400,
+        "scale": 0.75,
+        "stagger": 10,
+        "delay": 20
+      }
+    },
+    {
+      "id": "terracotta-bold",
+      "label": "Terracotta Bold",
+      "description": "Expressive Fraunces type on warm sand with a deep terracotta accent for a crafted feel.",
+      "askedAs": [
+        "warm earthy colors",
+        "friendly expressive font",
+        "rust orange on beige",
+        "тёплые природные цвета",
+        "выразительный шрифт на бежевом"
+      ],
+      "props": {
+        "fontFamily": "Fraunces",
+        "background": "#ede3d4",
+        "ink": "#2b211b",
+        "accent": "#b5532f",
+        "scale": 1.15
+      }
+    }
+  ]
+}

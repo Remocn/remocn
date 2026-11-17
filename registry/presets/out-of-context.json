@@ -1,0 +1,121 @@
+{
+  "component": "out-of-context",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "snap-reveal",
+      "label": "Snap Reveal",
+      "description": "A fast, punchy drop with a quick pull-back so the punchline lands almost instantly.",
+      "askedAs": [
+        "make it faster and snappier",
+        "quick punchline reveal",
+        "short punchy version",
+        "сделай быстрее и резче",
+        "быстрое появление панчлайна"
+      ],
+      "props": {
+        "dropAt": 15,
+        "pullLen": 16,
+        "speed": 1.5,
+        "fontFamily": "Space Grotesk"
+      }
+    },
+    {
+      "id": "slow-burn",
+      "label": "Slow Burn",
+      "description": "A long, patient setup and a slow pull-back that lets the twist sink in.",
+      "askedAs": [
+        "slower dramatic reveal",
+        "let the setup breathe longer",
+        "cinematic slow pull back",
+        "медленное драматичное раскрытие",
+        "сделай медленнее и кинематографичнее"
+      ],
+      "props": {
+        "dropAt": 75,
+        "pullLen": 80,
+        "speed": 0.75,
+        "fontFamily": "Instrument Serif",
+        "scale": 1.15
+      }
+    },
+    {
+      "id": "paper-print",
+      "label": "Paper Print",
+      "description": "Warm off-white paper with near-black serif type and a brick-red punchline, like an editorial headline.",
+      "askedAs": [
+        "light editorial style",
+        "newspaper headline look",
+        "cream background with serif",
+        "светлый редакционный стиль",
+        "как заголовок в журнале"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4efe6",
+        "ink": "#1c1a17",
+        "accent": "#c2412d",
+        "fontFamily": "Fraunces"
+      }
+    },
+    {
+      "id": "terminal-quip",
+      "label": "Terminal Quip",
+      "description": "Monospace text on a deep charcoal ground with a mint-green punchline for a developer feel.",
+      "askedAs": [
+        "code style slogan",
+        "dev terminal look",
+        "monospace dark version",
+        "в стиле терминала",
+        "моноширинный шрифт на тёмном фоне"
+      ],
+      "props": {
+        "background": "#14161a",
+        "ink": "#e6e8eb",
+        "accent": "#5fd3a4",
+        "fontFamily": "JetBrains Mono",
+        "scale": 0.9
+      }
+    },
+    {
+      "id": "citrus-pop",
+      "label": "Citrus Pop",
+      "description": "Bold grotesque type on a soft lemon background with a tangerine punchline and an oversized scale.",
+      "askedAs": [
+        "bright cheerful colors",
+        "big bold yellow version",
+        "make it loud and fun",
+        "яркий весёлый вариант",
+        "крупный текст на жёлтом фоне"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#fbe7a1",
+        "ink": "#2a1f0f",
+        "accent": "#e4572e",
+        "fontFamily": "Bricolage Grotesque",
+        "scale": 1.3
+      }
+    },
+    {
+      "id": "midnight-violet",
+      "label": "Midnight Violet",
+      "description": "Quiet navy-black ground with soft white type and a lavender punchline, starting after a short pause.",
+      "askedAs": [
+        "dark moody purple",
+        "calm night version",
+        "subtle elegant dark look",
+        "тёмный фиолетовый вариант",
+        "спокойный ночной стиль"
+      ],
+      "props": {
+        "background": "#0f1226",
+        "ink": "#eef0f7",
+        "accent": "#a99cf0",
+        "fontFamily": "Manrope",
+        "delay": 20
+      }
+    }
+  ]
+}

@@ -1,0 +1,102 @@
+{
+  "component": "focus-pull",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "gentle-drift",
+      "label": "Gentle Drift",
+      "description": "A slow, soft defocus with light blur that lets scenes melt into each other calmly.",
+      "askedAs": [
+        "slow soft focus change",
+        "subtle dreamy blur transition",
+        "calm gentle refocus",
+        "медленный мягкий расфокус",
+        "плавный лёгкий переход размытием"
+      ],
+      "props": {
+        "blur": 8,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "deep-rack",
+      "label": "Deep Rack",
+      "description": "A heavy, unhurried rack focus that dissolves the frame into a wide luminous haze before resolving.",
+      "askedAs": [
+        "strong cinematic blur transition",
+        "heavy defocus between scenes",
+        "dramatic lens focus pull",
+        "сильное кинематографичное размытие",
+        "глубокий расфокус объектива"
+      ],
+      "props": {
+        "blur": 28,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "quick-snap",
+      "label": "Quick Snap",
+      "description": "A brisk, crisp focus snap with modest blur for a tight, energetic cut.",
+      "askedAs": [
+        "fast focus snap",
+        "quick refocus cut",
+        "snappy blur transition",
+        "быстрая смена фокуса",
+        "резкий короткий переход с размытием"
+      ],
+      "props": {
+        "blur": 12,
+        "speed": 2
+      }
+    },
+    {
+      "id": "whisper",
+      "label": "Whisper",
+      "description": "A barely-there focus shift with minimal blur at an even pace, almost invisible.",
+      "askedAs": [
+        "very subtle focus transition",
+        "minimal blur change",
+        "almost invisible scene switch",
+        "едва заметный переход фокуса",
+        "минимальное размытие"
+      ],
+      "props": {
+        "blur": 4
+      }
+    },
+    {
+      "id": "bloom-flash",
+      "label": "Bloom Flash",
+      "description": "A fast, intense blur burst that flashes the frame into a bright glow and back.",
+      "askedAs": [
+        "fast heavy blur burst",
+        "punchy glow transition",
+        "quick bright defocus flash",
+        "быстрая яркая вспышка размытия",
+        "мощный короткий расфокус"
+      ],
+      "props": {
+        "blur": 32,
+        "speed": 3
+      }
+    },
+    {
+      "id": "slow-reveal",
+      "label": "Slow Reveal",
+      "description": "A very slow, moderately deep refocus that lingers in the haze for a contemplative reveal.",
+      "askedAs": [
+        "very slow focus reveal",
+        "lingering blur transition",
+        "meditative refocus",
+        "очень медленное проявление фокуса",
+        "задумчивый переход через размытие"
+      ],
+      "props": {
+        "blur": 20,
+        "speed": 0.25
+      }
+    }
+  ]
+}

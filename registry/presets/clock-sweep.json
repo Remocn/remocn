@@ -1,0 +1,107 @@
+{
+  "component": "clock-sweep",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-paper",
+      "label": "Editorial Paper",
+      "description": "Warm off-white page with a serif headline and a deep rust wedge, unhurried and magazine-like.",
+      "askedAs": [
+        "make it look like a magazine page",
+        "light serif version with warm colors",
+        "elegant print style clock",
+        "светлый журнальный стиль",
+        "версия с засечками на светлом фоне"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4efe6",
+        "ink": "#1f1b16",
+        "accent": "#b4532a",
+        "fontFamily": "Instrument Serif",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "terminal-quick",
+      "label": "Terminal Quick",
+      "description": "Near-black console look with monospace type, a mint wedge and a brisk, snappy sweep.",
+      "askedAs": [
+        "developer terminal look",
+        "fast monospace version",
+        "code style clock for a dev tool",
+        "стиль терминала для разработчиков",
+        "быстрый моноширинный вариант"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0b0f0e",
+        "ink": "#d8e6e0",
+        "accent": "#3fbf8f",
+        "speed": 1.75,
+        "stagger": 1
+      }
+    },
+    {
+      "id": "bold-launch",
+      "label": "Bold Launch",
+      "description": "Oversized heavy grotesque on deep navy with a bright coral wedge for a loud, confident claim.",
+      "askedAs": [
+        "make it big and punchy",
+        "bold launch announcement style",
+        "heavier text and larger dial",
+        "крупно и жирно для анонса",
+        "яркий смелый вариант"
+      ],
+      "props": {
+        "fontFamily": "Bricolage Grotesque",
+        "fontWeight": 700,
+        "scale": 1.25,
+        "background": "#0e1530",
+        "ink": "#f5f3ee",
+        "accent": "#ff6b4a"
+      }
+    },
+    {
+      "id": "quiet-minimal",
+      "label": "Quiet Minimal",
+      "description": "Clean white canvas, light-weight Inter, graphite accent and no grain for a calm, restrained beat.",
+      "askedAs": [
+        "minimal clean white version",
+        "subtle and understated",
+        "no grain, light font",
+        "минималистичный белый вариант",
+        "спокойный сдержанный стиль"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "fontWeight": 300,
+        "accent": "#3a3f47",
+        "grain": false,
+        "scale": 0.9
+      }
+    },
+    {
+      "id": "slow-luxe",
+      "label": "Slow Luxe",
+      "description": "Slow cinematic sweep in Fraunces on espresso brown with a soft gold glow and wide word stagger.",
+      "askedAs": [
+        "luxury slow cinematic feel",
+        "gold and dark premium look",
+        "slower more dramatic reveal",
+        "медленный кинематографичный вариант",
+        "премиальный золотой на тёмном"
+      ],
+      "props": {
+        "fontFamily": "Fraunces",
+        "background": "#1a1411",
+        "ink": "#efe6d8",
+        "accent": "#c9a35b",
+        "speed": 0.5,
+        "stagger": 6
+      }
+    }
+  ]
+}

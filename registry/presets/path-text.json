@@ -1,0 +1,105 @@
+{
+  "component": "path-text",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-ivory",
+      "label": "Editorial Ivory",
+      "description": "Warm ivory page with deep ink serif text and a muted terracotta italic tail, resolving at a calm pace.",
+      "askedAs": [
+        "light paper look with serif text",
+        "warm editorial cream background",
+        "magazine style handwritten title",
+        "светлый редакционный стиль на кремовом фоне",
+        "тёплая бумага с засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f5f0e6",
+        "ink": "#1e1b18",
+        "accent": "#b5532e",
+        "fontFamily": "Fraunces",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "wild-scribble",
+      "label": "Wild Scribble",
+      "description": "Very loose, wavering letters that hang messy for a long beat before snapping into a clean line.",
+      "askedAs": [
+        "really messy text that gets tidy",
+        "extra wobbly rough draft effect",
+        "long chaotic start then clean",
+        "очень неровный текст который выпрямляется",
+        "хаотичный черновик превращается в чистый"
+      ],
+      "props": {
+        "looseness": 0.6,
+        "stagger": 4,
+        "pullAt": 75,
+        "italicWords": 2
+      }
+    },
+    {
+      "id": "swift-snap",
+      "label": "Swift Snap",
+      "description": "Clean sans letters with a slight wobble that pull taut quickly for a fast, confident reveal.",
+      "askedAs": [
+        "quick tight text straighten",
+        "fast modern sans reveal",
+        "snappy short version",
+        "быстрое появление текста без засечек",
+        "резкое выравнивание надписи"
+      ],
+      "props": {
+        "fontFamily": "Geist",
+        "looseness": 0.08,
+        "stagger": 1,
+        "pullAt": 24,
+        "speed": 1.5,
+        "italicWords": 0
+      }
+    },
+    {
+      "id": "midnight-gold",
+      "label": "Midnight Gold",
+      "description": "Deep navy backdrop with soft cream type and a brushed gold italic tail, slow and luxurious.",
+      "askedAs": [
+        "luxury dark blue with gold",
+        "premium slow elegant title",
+        "navy and gold handwritten text",
+        "роскошный тёмно-синий с золотом",
+        "медленный премиальный заголовок"
+      ],
+      "props": {
+        "background": "#0e1424",
+        "ink": "#f2ebdd",
+        "accent": "#c9a45c",
+        "speed": 0.5,
+        "scale": 1.2,
+        "looseness": 0.25
+      }
+    },
+    {
+      "id": "code-draft",
+      "label": "Code Draft",
+      "description": "Monospace type on charcoal with a mint accent, drifting gently before locking into a terminal-clean line.",
+      "askedAs": [
+        "monospace developer style text",
+        "tech code look straightening",
+        "terminal font on dark",
+        "моноширинный шрифт как в коде",
+        "технический стиль для разработчиков"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#16181d",
+        "ink": "#e4e7ec",
+        "accent": "#5fc9a0",
+        "scale": 0.8,
+        "stagger": 3
+      }
+    }
+  ]
+}

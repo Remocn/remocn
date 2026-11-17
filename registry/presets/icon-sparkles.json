@@ -1,0 +1,102 @@
+{
+  "component": "icon-sparkles",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "gentle-shimmer",
+      "label": "Gentle Shimmer",
+      "description": "A large, fine-lined sparkle in soft gold that twinkles slowly and continuously.",
+      "askedAs": [
+        "slow golden sparkle",
+        "soft twinkling stars icon",
+        "calm magic sparkle loop",
+        "медленные золотые искры",
+        "мягкое мерцание звёздочек"
+      ],
+      "props": {
+        "animation": "action",
+        "size": 96,
+        "color": "#c9a227",
+        "strokeWidth": 1.5,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "quick-pop",
+      "label": "Quick Pop",
+      "description": "A small, bold sparkle in indigo that bursts with a fast, snappy twinkle.",
+      "askedAs": [
+        "fast sparkle burst",
+        "snappy small sparkle icon",
+        "quick magic pop",
+        "быстрая вспышка искр",
+        "резкие маленькие звёздочки"
+      ],
+      "props": {
+        "animation": "action",
+        "size": 32,
+        "color": "#4f46e5",
+        "strokeWidth": 2.5,
+        "speed": 2
+      }
+    },
+    {
+      "id": "hand-drawn-reveal",
+      "label": "Hand Drawn",
+      "description": "A one-time line-drawing reveal of the sparkles in muted slate with a thin, sketch-like stroke.",
+      "askedAs": [
+        "draw the sparkles once",
+        "sketch reveal sparkle icon",
+        "line drawing stars intro",
+        "нарисовать искры один раз",
+        "эффект рисования звёздочек"
+      ],
+      "props": {
+        "animation": "draw",
+        "loop": false,
+        "color": "#475569",
+        "strokeWidth": 1.25,
+        "speed": 0.75,
+        "size": 80
+      }
+    },
+    {
+      "id": "hero-glow",
+      "label": "Hero Statement",
+      "description": "An oversized, heavy-stroked sparkle in deep violet that draws in and twinkles at a steady pace.",
+      "askedAs": [
+        "huge bold sparkle",
+        "big AI magic icon",
+        "headline sparkle animation",
+        "огромные жирные искры",
+        "крупный значок магии ИИ"
+      ],
+      "props": {
+        "size": 180,
+        "color": "#6d28d9",
+        "strokeWidth": 3,
+        "speed": 1.25
+      }
+    },
+    {
+      "id": "subtle-accent",
+      "label": "Subtle Accent",
+      "description": "A tiny, thin sparkle in warm grey that quietly twinkles as an unobtrusive inline accent.",
+      "askedAs": [
+        "tiny subtle sparkle",
+        "small inline star icon",
+        "quiet sparkle accent",
+        "маленькая незаметная искра",
+        "тонкий акцент со звёздочкой"
+      ],
+      "props": {
+        "animation": "action",
+        "size": 24,
+        "color": "#78716c",
+        "strokeWidth": 1,
+        "speed": 0.75
+      }
+    }
+  ]
+}

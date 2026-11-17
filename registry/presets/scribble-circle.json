@@ -1,0 +1,106 @@
+{
+  "component": "scribble-circle",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "quick-marker",
+      "label": "Quick Marker",
+      "description": "A fast, clean single loop in confident red marker with almost no dry grain.",
+      "askedAs": [
+        "fast red circle around a button",
+        "quick clean marker loop",
+        "snappy highlight circle",
+        "быстрый красный кружок маркером",
+        "обвести быстро и чисто"
+      ],
+      "props": {
+        "laps": 1,
+        "strokeWidth": 10,
+        "pressure": 0.6,
+        "grain": 0.2,
+        "color": "#c8412f",
+        "speed": 2
+      }
+    },
+    {
+      "id": "frantic-scrawl",
+      "label": "Frantic Scrawl",
+      "description": "Several hurried, thin, overlapping loops in graphite like an excited note in the margin.",
+      "askedAs": [
+        "messy multiple loops scribble",
+        "circle it over and over",
+        "hasty pencil scribble around number",
+        "несколько небрежных кругов карандашом",
+        "нервно обвести несколько раз"
+      ],
+      "props": {
+        "laps": 2.6,
+        "strokeWidth": 6,
+        "grain": 1.4,
+        "color": "#3a3a3c",
+        "step": 2,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "slow-sumi",
+      "label": "Slow Sumi",
+      "description": "A deliberate, heavy ink-brush enso drawn slowly with a dry, grainy start.",
+      "askedAs": [
+        "zen brush circle",
+        "slow thick ink enso",
+        "calligraphy brush ring",
+        "медленный круг тушью",
+        "дзен кисть энсо"
+      ],
+      "props": {
+        "laps": 0.95,
+        "strokeWidth": 28,
+        "pressure": 0.1,
+        "grain": 1.8,
+        "color": "#1c1b1a",
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "blueprint-pen",
+      "label": "Blueprint Pen",
+      "description": "A fine, smooth navy pen line drawn in fluid frames like a technical review note.",
+      "askedAs": [
+        "thin blue pen circle",
+        "subtle fine ink outline",
+        "smooth editor's pen loop",
+        "тонкий синий круг ручкой",
+        "аккуратно обвести синей ручкой"
+      ],
+      "props": {
+        "strokeWidth": 5,
+        "pressure": 0.8,
+        "grain": 0,
+        "color": "#1f4e8c",
+        "step": 1,
+        "durationSteps": 18
+      }
+    },
+    {
+      "id": "stop-motion-crayon",
+      "label": "Stop Motion Crayon",
+      "description": "A chunky ochre crayon loop that pops in with choppy, hand-animated poses.",
+      "askedAs": [
+        "choppy crayon circle",
+        "stop motion hand drawn ring",
+        "kid crayon highlight",
+        "обвести мелком покадрово",
+        "дерганый круг как в стоп-моушн"
+      ],
+      "props": {
+        "strokeWidth": 20,
+        "grain": 2,
+        "color": "#c98a2b",
+        "durationSteps": 5,
+        "step": 6
+      }
+    }
+  ]
+}

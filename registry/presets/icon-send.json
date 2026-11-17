@@ -1,0 +1,100 @@
+{
+  "component": "icon-send",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "hairline-draw",
+      "label": "Hairline Draw",
+      "description": "A large, thin-stroked slate icon that slowly sketches itself in without the send motion.",
+      "askedAs": [
+        "thin line icon drawing slowly",
+        "elegant outline send icon",
+        "minimal sketch animation paper plane",
+        "тонкая иконка рисуется медленно",
+        "минималистичная линейная иконка отправки"
+      ],
+      "props": {
+        "animation": "draw",
+        "size": 120,
+        "strokeWidth": 1,
+        "speed": 0.5,
+        "color": "#475569"
+      }
+    },
+    {
+      "id": "bold-dispatch",
+      "label": "Bold Dispatch",
+      "description": "A heavy-stroked indigo send icon that fires off quickly with only the action motion.",
+      "askedAs": [
+        "quick send button animation",
+        "bold paper plane flying off",
+        "fast send action icon",
+        "быстрая анимация отправки",
+        "жирная иконка самолётика улетает"
+      ],
+      "props": {
+        "animation": "action",
+        "strokeWidth": 3,
+        "speed": 2,
+        "color": "#4338ca",
+        "size": 64
+      }
+    },
+    {
+      "id": "looping-hint",
+      "label": "Looping Hint",
+      "description": "A compact teal icon that loops its draw-and-send sequence at a calm pace as a gentle call to action.",
+      "askedAs": [
+        "repeating send icon",
+        "looping message sent animation",
+        "subtle send hint for UI",
+        "зацикленная иконка отправки",
+        "повторяющаяся анимация отправить"
+      ],
+      "props": {
+        "loop": true,
+        "color": "#0f766e",
+        "speed": 0.75,
+        "size": 40
+      }
+    },
+    {
+      "id": "hero-send",
+      "label": "Hero Send",
+      "description": "An oversized warm terracotta send icon with a medium stroke for title-card moments.",
+      "askedAs": [
+        "huge send icon for intro",
+        "big paper plane hero shot",
+        "large warm colored send animation",
+        "большая иконка отправки на весь экран",
+        "крупный самолётик для заставки"
+      ],
+      "props": {
+        "size": 200,
+        "color": "#c2410c",
+        "strokeWidth": 1.5,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "snappy-loop",
+      "label": "Snappy Loop",
+      "description": "A small, crisp near-black icon that repeatedly launches at double speed for energetic UI demos.",
+      "askedAs": [
+        "fast looping send action",
+        "energetic repeating paper plane",
+        "quick loop sending icon",
+        "быстрый цикл отправки сообщения",
+        "энергичная повторяющаяся иконка"
+      ],
+      "props": {
+        "animation": "action",
+        "loop": true,
+        "speed": 2.5,
+        "size": 32,
+        "strokeWidth": 2.5
+      }
+    }
+  ]
+}

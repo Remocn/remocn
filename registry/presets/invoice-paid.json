@@ -1,0 +1,118 @@
+{
+  "component": "invoice-paid",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "ledger-serif",
+      "label": "Ledger Serif",
+      "description": "Warm cream paper with deep ink and an oxblood stamp, set in an editorial serif at an unhurried pace.",
+      "askedAs": [
+        "classic paper invoice look",
+        "old-school accounting ledger style",
+        "elegant serif invoice"
+      ],
+      "props": {
+        "fontFamily": "Fraunces",
+        "background": "#f4efe4",
+        "ink": "#2a2420",
+        "accent": "#9b2c2c",
+        "ground": "paper-crease",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "night-ledger",
+      "label": "Night Ledger",
+      "description": "Dark charcoal satin with a soft mint accent for a calm, premium fintech feel.",
+      "askedAs": [
+        "dark mode invoice",
+        "premium fintech dark style",
+        "moody night billing scene",
+        "тёмная тема для счёта",
+        "счёт в тёмном стиле"
+      ],
+      "props": {
+        "theme": "dark",
+        "ground": "charcoal-satin",
+        "accent": "#5fd4a4",
+        "fontFamily": "Inter"
+      }
+    },
+    {
+      "id": "quick-payout",
+      "label": "Quick Payout",
+      "description": "Snappy double-speed motion with a punchy cobalt backdrop for a get-paid-faster beat.",
+      "askedAs": [
+        "fast energetic payment animation",
+        "get paid faster punchy version",
+        "quick snappy invoice",
+        "быстрая анимация оплаты",
+        "энергичный вариант счёта"
+      ],
+      "props": {
+        "speed": 2,
+        "ground": "cobalt-rise",
+        "accent": "#1f4fe0",
+        "fontFamily": "Space Grotesk",
+        "scale": 1.1
+      }
+    },
+    {
+      "id": "terminal-receipt",
+      "label": "Terminal Receipt",
+      "description": "Monospaced type on cool grey with a muted teal stamp, like a developer-friendly billing log.",
+      "askedAs": [
+        "monospace invoice for dev tools",
+        "technical receipt look",
+        "code style billing",
+        "моноширинный шрифт для счёта",
+        "счёт в стиле терминала"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#e9ecef",
+        "ink": "#1b1f24",
+        "accent": "#0f766e",
+        "ground": "coldlight"
+      }
+    },
+    {
+      "id": "copper-glow",
+      "label": "Copper Glow",
+      "description": "Warm copper ground with an amber accent and a slight delayed, relaxed entrance.",
+      "askedAs": [
+        "warm cozy freelancer invoice",
+        "copper toned payment",
+        "golden warm billing scene",
+        "тёплый вариант счёта",
+        "медные тона для оплаты"
+      ],
+      "props": {
+        "ground": "copper",
+        "accent": "#c2410c",
+        "fontFamily": "Manrope",
+        "delay": 15,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "compact-card",
+      "label": "Compact Card",
+      "description": "A smaller, centred invoice on a soft polar ground that leaves room for captions around it.",
+      "askedAs": [
+        "smaller invoice with space around",
+        "minimal compact payment card",
+        "clean light invoice",
+        "компактный счёт",
+        "маленькая карточка оплаты"
+      ],
+      "props": {
+        "scale": 0.75,
+        "ground": "polar",
+        "accent": "#334155",
+        "fontFamily": "Bricolage Grotesque"
+      }
+    }
+  ]
+}

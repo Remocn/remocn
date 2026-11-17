@@ -1,0 +1,102 @@
+{
+  "component": "lumen-count",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "slow-reveal",
+      "label": "Slow Reveal",
+      "description": "A long, unhurried climb with a heavier glow for a cinematic keynote moment.",
+      "askedAs": [
+        "slow dramatic count up",
+        "cinematic glowing number",
+        "keynote style big metric",
+        "медленный кинематографичный счётчик",
+        "драматичное появление числа"
+      ],
+      "props": {
+        "countFrames": 110,
+        "glow": 1.6,
+        "delay": 18,
+        "scale": 1.15
+      }
+    },
+    {
+      "id": "quick-pop",
+      "label": "Quick Pop",
+      "description": "A snappy, compact count in Space Grotesk with a subtle glow for fast-cut edits.",
+      "askedAs": [
+        "fast snappy counter",
+        "quick number for short clips",
+        "punchy count without much glow",
+        "быстрый резкий счётчик",
+        "короткая анимация числа"
+      ],
+      "props": {
+        "countFrames": 20,
+        "speed": 1.5,
+        "glow": 0.5,
+        "fontFamily": "Space Grotesk"
+      }
+    },
+    {
+      "id": "gallery-light",
+      "label": "Gallery Light",
+      "description": "A clean light stage with an ink-blue serif number and no grain, like a printed annual report.",
+      "askedAs": [
+        "light background elegant number",
+        "serif metric on white",
+        "clean editorial counter",
+        "светлый элегантный счётчик",
+        "число с засечками на белом фоне"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "accent": "#1e3a8a",
+        "glow": 0.4,
+        "grain": false,
+        "scale": 1.2
+      }
+    },
+    {
+      "id": "amber-ember",
+      "label": "Amber Ember",
+      "description": "A warm amber glow on a deep espresso background set in Fraunces for a luxurious feel.",
+      "askedAs": [
+        "warm gold glowing number",
+        "luxury amber counter",
+        "premium warm dark metric",
+        "тёплое золотое свечение числа",
+        "роскошный янтарный счётчик"
+      ],
+      "props": {
+        "accent": "#e8a23b",
+        "background": "#17110b",
+        "ink": "#f5e9d6",
+        "fontFamily": "Fraunces",
+        "glow": 1.3
+      }
+    },
+    {
+      "id": "terminal-mint",
+      "label": "Terminal Mint",
+      "description": "A monospaced count with a soft mint glow on near-black, reading like a developer dashboard.",
+      "askedAs": [
+        "code style counter",
+        "monospace green glow number",
+        "developer stats number",
+        "счётчик в стиле терминала",
+        "моноширинное число с зелёным свечением"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "accent": "#3fbf8f",
+        "background": "#0b0f0e",
+        "ink": "#e3f2ec",
+        "scale": 0.85,
+        "grain": false
+      }
+    }
+  ]
+}

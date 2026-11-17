@@ -1,0 +1,99 @@
+{
+  "component": "shader-pulsing-border",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "slow-halo",
+      "label": "Slow Halo",
+      "description": "A soft, thick glow that breathes slowly around rounded edges on a deep ink background.",
+      "askedAs": [
+        "slow soft glowing frame",
+        "calm breathing border",
+        "gentle thick edge glow",
+        "медленная мягкая светящаяся рамка",
+        "спокойное свечение по краям"
+      ],
+      "props": {
+        "speed": 0.5,
+        "thickness": 0.24,
+        "roundness": 0.5,
+        "intensity": 0.35,
+        "colorBack": "#0d0f1a"
+      }
+    },
+    {
+      "id": "hairline-edge",
+      "label": "Hairline Edge",
+      "description": "A thin, sharp-cornered line of light with a quiet pulse for a minimal editorial frame.",
+      "askedAs": [
+        "thin minimal border line",
+        "sharp corner subtle frame",
+        "hairline glowing outline",
+        "тонкая минималистичная рамка",
+        "острые углы тонкая линия"
+      ],
+      "props": {
+        "thickness": 0.04,
+        "roundness": 0,
+        "intensity": 0.1,
+        "colorBack": "#0a0a0c"
+      }
+    },
+    {
+      "id": "energetic-pulse",
+      "label": "Energetic Pulse",
+      "description": "A fast, bright pulse racing around a medium frame for high-energy reveals.",
+      "askedAs": [
+        "fast bright pulsing border",
+        "energetic glowing frame",
+        "quick flashing edge light",
+        "быстрая яркая пульсирующая рамка",
+        "энергичное свечение краев"
+      ],
+      "props": {
+        "speed": 2.5,
+        "thickness": 0.14,
+        "intensity": 0.6
+      }
+    },
+    {
+      "id": "pill-capsule",
+      "label": "Pill Capsule",
+      "description": "A fully rounded capsule-like glow on a dark plum background with a relaxed rhythm.",
+      "askedAs": [
+        "very rounded glowing frame",
+        "capsule shaped border",
+        "soft round corners glow",
+        "очень скругленная рамка",
+        "рамка в форме капсулы"
+      ],
+      "props": {
+        "roundness": 1,
+        "thickness": 0.12,
+        "speed": 0.75,
+        "intensity": 0.3,
+        "colorBack": "#1a1220"
+      }
+    },
+    {
+      "id": "deep-vignette",
+      "label": "Deep Vignette",
+      "description": "A wide, heavy glow that seeps far into the frame like a luminous vignette on midnight navy.",
+      "askedAs": [
+        "wide heavy edge glow",
+        "glowing vignette frame",
+        "thick border light bleed",
+        "широкое свечение по краям",
+        "виньетка из света"
+      ],
+      "props": {
+        "thickness": 0.42,
+        "intensity": 0.5,
+        "roundness": 0.35,
+        "speed": 0.75,
+        "colorBack": "#0b1424"
+      }
+    }
+  ]
+}

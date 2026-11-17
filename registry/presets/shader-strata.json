@@ -1,0 +1,111 @@
+{
+  "component": "shader-strata",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "bedrock",
+      "label": "Bedrock",
+      "description": "A few thick, nearly flat bands drifting slowly like deep stone.",
+      "askedAs": [
+        "slow thick rock layers",
+        "calm heavy stone bands",
+        "minimal flat strata background",
+        "медленные толстые слои камня",
+        "спокойный фон из широких пластов"
+      ],
+      "props": {
+        "speed": 0.5,
+        "layers": 6,
+        "amplitude": 0.06
+      }
+    },
+    {
+      "id": "fine-sediment",
+      "label": "Fine Sediment",
+      "description": "Many thin, gently warped layers that read as a fine-grained texture.",
+      "askedAs": [
+        "lots of thin layers",
+        "fine detailed sediment texture",
+        "dense striped noise backdrop",
+        "много тонких слоёв",
+        "мелкая текстура осадочных пород"
+      ],
+      "props": {
+        "layers": 28,
+        "amplitude": 0.12,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "folded-terrain",
+      "label": "Folded Terrain",
+      "description": "Strongly buckled layers with pronounced waves for a more dramatic geological feel.",
+      "askedAs": [
+        "wavy folded rock layers",
+        "dramatic bent strata",
+        "strong distortion layers",
+        "сильно изогнутые слои",
+        "волнистые складки породы"
+      ],
+      "props": {
+        "amplitude": 0.38,
+        "layers": 18,
+        "speed": 1.25
+      }
+    },
+    {
+      "id": "sandstone",
+      "label": "Sandstone",
+      "description": "Warm terracotta tint washed over medium layers for an earthy desert canyon mood.",
+      "askedAs": [
+        "warm sandstone layers",
+        "earthy canyon background",
+        "terracotta strata",
+        "тёплый песчаник",
+        "фон как каньон в пустыне"
+      ],
+      "props": {
+        "accent": "#c2703d",
+        "accentAmount": 0.55,
+        "amplitude": 0.2,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "slate-tide",
+      "label": "Slate Tide",
+      "description": "Cool slate-blue tint with quicker drift for a modern, crisp tech backdrop.",
+      "askedAs": [
+        "cool blue layered background",
+        "slate tinted strata",
+        "faster moving blue bands",
+        "холодные синие слои",
+        "сланцевый синий фон"
+      ],
+      "props": {
+        "accent": "#3e5c76",
+        "accentAmount": 0.5,
+        "speed": 2,
+        "layers": 20
+      }
+    },
+    {
+      "id": "violet-core",
+      "label": "Violet Core",
+      "description": "Brand violet blended in strongly across lively, moderately warped layers.",
+      "askedAs": [
+        "purple layered background",
+        "brand color strata",
+        "violet tinted layers",
+        "фиолетовые слои",
+        "фон с фирменным фиолетовым"
+      ],
+      "props": {
+        "accentAmount": 0.7,
+        "amplitude": 0.24,
+        "speed": 1.5
+      }
+    }
+  ]
+}

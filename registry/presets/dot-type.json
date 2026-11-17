@@ -1,0 +1,124 @@
+{
+  "component": "dot-type",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "terminal-green",
+      "label": "Terminal",
+      "description": "Monospaced dot type on a near-black screen with soft green highlights and a brisk, clipped rhythm.",
+      "askedAs": [
+        "hacker terminal style",
+        "green code on black",
+        "console look with mono font",
+        "терминал зелёный на чёрном",
+        "как в командной строке"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0b0f0c",
+        "ink": "#d7e3d9",
+        "accent": "#5bbf7a",
+        "speed": 1.5,
+        "hold": 14
+      }
+    },
+    {
+      "id": "editorial-light",
+      "label": "Editorial",
+      "description": "Light paper backdrop with elegant serif words assembling slowly and a warm rust accent.",
+      "askedAs": [
+        "elegant serif on white",
+        "magazine style light",
+        "slow classy title",
+        "светлый журнальный стиль",
+        "элегантный шрифт с засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "fontWeight": 400,
+        "accent": "#c2410c",
+        "speed": 0.75,
+        "hold": 34
+      }
+    },
+    {
+      "id": "dense-bold",
+      "label": "Dense Bold",
+      "description": "Heavy, oversized letters packed with thousands of dots and a violet final word.",
+      "askedAs": [
+        "big bold dense dots",
+        "make the words huge and solid",
+        "more particles heavy type",
+        "крупный жирный текст из точек",
+        "плотные точки большие буквы"
+      ],
+      "props": {
+        "count": 3600,
+        "fontWeight": 800,
+        "scale": 1.25,
+        "fontFamily": "Space Grotesk",
+        "accent": "#7c5cff"
+      }
+    },
+    {
+      "id": "sparse-calm",
+      "label": "Sparse Calm",
+      "description": "Airy, thin letters from a loose scatter of dots that drift in slowly and linger on a clean frame.",
+      "askedAs": [
+        "minimal slow and airy",
+        "fewer dots calm pace",
+        "light thin gentle animation",
+        "спокойный минималистичный вариант",
+        "редкие точки медленно"
+      ],
+      "props": {
+        "count": 700,
+        "fontWeight": 300,
+        "fontFamily": "Manrope",
+        "speed": 0.5,
+        "hold": 40,
+        "grain": false
+      }
+    },
+    {
+      "id": "rapid-fire",
+      "label": "Rapid Fire",
+      "description": "Punchy bold words snapping in quick succession with a short hold and an amber accent.",
+      "askedAs": [
+        "fast punchy word sequence",
+        "quick cuts energetic",
+        "rapid words for a promo",
+        "быстрая смена слов",
+        "энергичный динамичный ритм"
+      ],
+      "props": {
+        "speed": 2.5,
+        "hold": 8,
+        "fontFamily": "Geist",
+        "fontWeight": 700,
+        "accent": "#f5a524"
+      }
+    },
+    {
+      "id": "blueprint",
+      "label": "Blueprint",
+      "description": "Crisp pale dots on a deep navy field with an icy blue accent and no grain, like a technical drawing.",
+      "askedAs": [
+        "navy blue technical look",
+        "blueprint style clean",
+        "dark blue background engineering",
+        "синий фон как чертёж",
+        "технический стиль тёмно-синий"
+      ],
+      "props": {
+        "background": "#0e2a47",
+        "ink": "#e6eef7",
+        "accent": "#7fd1ff",
+        "fontFamily": "Inter",
+        "grain": false
+      }
+    }
+  ]
+}

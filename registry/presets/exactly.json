@@ -1,0 +1,121 @@
+{
+  "component": "exactly",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "snappy-retort",
+      "label": "Snappy Retort",
+      "description": "Fast, tight comeback with words landing almost at once and a short pause between rounds.",
+      "askedAs": [
+        "make it quick and punchy",
+        "faster comeback timing",
+        "snappy reply animation",
+        "быстрее и резче",
+        "короткий бойкий ответ"
+      ],
+      "props": {
+        "speed": 2,
+        "stagger": 1,
+        "hold": 12,
+        "fontFamily": "Space Grotesk"
+      }
+    },
+    {
+      "id": "deadpan-pause",
+      "label": "Deadpan Pause",
+      "description": "Slow, deliberate delivery with a long beat before the answer lands, for dry comic timing.",
+      "askedAs": [
+        "slower with a dramatic pause",
+        "dry deadpan timing",
+        "let the answer breathe",
+        "медленнее с паузой",
+        "невозмутимая подача"
+      ],
+      "props": {
+        "speed": 0.75,
+        "stagger": 8,
+        "hold": 70,
+        "delay": 15
+      }
+    },
+    {
+      "id": "paper-editorial",
+      "label": "Paper Editorial",
+      "description": "Light warm paper background with a serif face and a terracotta accent for a magazine feel.",
+      "askedAs": [
+        "light serif version",
+        "editorial magazine look",
+        "cream background elegant text",
+        "светлый журнальный стиль",
+        "шрифт с засечками на светлом"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Fraunces",
+        "background": "#f5efe4",
+        "ink": "#1f1b16",
+        "accent": "#c4532d"
+      }
+    },
+    {
+      "id": "terminal-reply",
+      "label": "Terminal Reply",
+      "description": "Monospace text on a near-black console background with a soft green accent, like a code prompt answer.",
+      "askedAs": [
+        "make it look like a terminal",
+        "code style monospace",
+        "hacker console vibe",
+        "как в терминале",
+        "моноширинный шрифт как код"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0d1117",
+        "ink": "#c9d1d9",
+        "accent": "#3fb950",
+        "stagger": 5
+      }
+    },
+    {
+      "id": "big-shout",
+      "label": "Big Shout",
+      "description": "Oversized chunky type with a bold coral accent on deep navy for a loud, confident answer.",
+      "askedAs": [
+        "make the text huge",
+        "bold loud headline",
+        "bigger and more confident",
+        "крупный жирный текст",
+        "громко и уверенно"
+      ],
+      "props": {
+        "scale": 1.4,
+        "fontFamily": "Bricolage Grotesque",
+        "background": "#14213d",
+        "ink": "#f8f4ec",
+        "accent": "#ff7a59",
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "quiet-aside",
+      "label": "Quiet Aside",
+      "description": "Small, understated Inter type on soft grey with a muted blue accent and gentle pacing.",
+      "askedAs": [
+        "smaller and more subtle",
+        "minimal calm version",
+        "understated clean look",
+        "поменьше и спокойнее",
+        "минималистичный вариант"
+      ],
+      "props": {
+        "theme": "light",
+        "scale": 0.75,
+        "fontFamily": "Inter",
+        "background": "#eceef1",
+        "ink": "#2b2f36",
+        "accent": "#3d6fb6"
+      }
+    }
+  ]
+}

@@ -1,0 +1,115 @@
+{
+  "component": "shader-caustics",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "still-pool",
+      "label": "Still Pool",
+      "description": "Slow, broad filaments drifting gently like light on the floor of a quiet pool.",
+      "askedAs": [
+        "slow calm water light",
+        "gentle pool reflections",
+        "relaxed wide caustics",
+        "спокойные блики воды",
+        "медленный свет в бассейне"
+      ],
+      "props": {
+        "speed": 0.5,
+        "scale": 3.2,
+        "intensity": 0.8
+      }
+    },
+    {
+      "id": "tropical-shallows",
+      "label": "Tropical Shallows",
+      "description": "Bright, fine caustics tinted a clear teal, like sunlight over a shallow lagoon.",
+      "askedAs": [
+        "turquoise ocean light",
+        "sunny lagoon water",
+        "bright teal caustics",
+        "бирюзовая вода лагуны",
+        "яркие блики моря"
+      ],
+      "props": {
+        "accent": "#2bb5b0",
+        "accentAmount": 0.55,
+        "scale": 6.5,
+        "intensity": 1.3,
+        "speed": 1.25
+      }
+    },
+    {
+      "id": "champagne-glow",
+      "label": "Champagne Glow",
+      "description": "Soft warm-gold filaments with a slow drift for a luxurious, upscale backdrop.",
+      "askedAs": [
+        "gold luxury light background",
+        "warm champagne shimmer",
+        "elegant golden ripples",
+        "золотой роскошный фон",
+        "тёплое сияние шампанского"
+      ],
+      "props": {
+        "accent": "#d9b26f",
+        "accentAmount": 0.5,
+        "speed": 0.75,
+        "intensity": 1.1
+      }
+    },
+    {
+      "id": "deep-violet",
+      "label": "Deep Violet",
+      "description": "Dim, large violet-tinted filaments that feel moody and nocturnal.",
+      "askedAs": [
+        "dark purple water light",
+        "moody night caustics",
+        "subtle violet ambient",
+        "тёмный фиолетовый фон",
+        "ночные блики света"
+      ],
+      "props": {
+        "accentAmount": 0.7,
+        "intensity": 0.6,
+        "scale": 4,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "crystal-shimmer",
+      "label": "Crystal Shimmer",
+      "description": "Dense, fast, fine-grained filaments that sparkle like light through cut glass.",
+      "askedAs": [
+        "sparkly fast caustics",
+        "glittering crystal light",
+        "energetic shimmering water",
+        "быстрое мерцание света",
+        "кристальные искры"
+      ],
+      "props": {
+        "scale": 10.5,
+        "speed": 2.5,
+        "intensity": 1.6
+      }
+    },
+    {
+      "id": "arctic-mist",
+      "label": "Arctic Mist",
+      "description": "Pale icy-blue light with low intensity for a cool, airy, understated backdrop.",
+      "askedAs": [
+        "cold icy blue light",
+        "soft frosty background",
+        "minimal cool ripples",
+        "ледяной голубой свет",
+        "холодный мягкий фон"
+      ],
+      "props": {
+        "accent": "#9cc8e8",
+        "accentAmount": 0.45,
+        "intensity": 0.5,
+        "scale": 7,
+        "speed": 0.75
+      }
+    }
+  ]
+}

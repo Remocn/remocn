@@ -1,0 +1,88 @@
+{
+  "component": "combobox",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "snappy",
+      "label": "Snappy",
+      "description": "A brisk, responsive feel where the panel pops open and the list filters quickly.",
+      "askedAs": [
+        "make the dropdown faster",
+        "quick snappy combobox animation",
+        "speed up the autocomplete",
+        "быстрая анимация выпадающего списка",
+        "ускорить комбобокс"
+      ],
+      "props": {
+        "speed": 2,
+        "highlightedIndex": 0
+      }
+    },
+    {
+      "id": "slow-typed",
+      "label": "Slow Typing",
+      "description": "A relaxed, deliberate pace with the query typed out character by character so viewers can follow the filtering.",
+      "askedAs": [
+        "slow down the typing in the search",
+        "show the query being typed slowly",
+        "gentle walkthrough pace for autocomplete",
+        "медленный ввод запроса",
+        "плавная демонстрация автодополнения"
+      ],
+      "props": {
+        "speed": 0.5,
+        "revealCount": 6
+      }
+    },
+    {
+      "id": "closed-rest",
+      "label": "Closed Field",
+      "description": "A quiet resting field with the panel tucked away, showing only the trigger input.",
+      "askedAs": [
+        "show the combobox closed",
+        "just the input without the dropdown",
+        "collapsed search field",
+        "закрытый комбобокс",
+        "только поле без списка"
+      ],
+      "props": {
+        "state": "closed",
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "calm-browse",
+      "label": "Calm Browse",
+      "description": "An unhurried open list with no active highlight for a clean, neutral look.",
+      "askedAs": [
+        "open list with nothing highlighted",
+        "neutral dropdown without hover",
+        "calm minimal combobox",
+        "список без подсветки",
+        "спокойный открытый список"
+      ],
+      "props": {
+        "highlightedIndex": -1,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "picked",
+      "label": "Picked Option",
+      "description": "A confident finished state where the highlighted row is also the selected one, shown at a lively pace.",
+      "askedAs": [
+        "show an option already selected",
+        "combobox with a chosen value",
+        "autocomplete after picking an item",
+        "выбранный вариант в списке",
+        "комбобокс с выбранным значением"
+      ],
+      "props": {
+        "selectedIndex": 1,
+        "highlightedIndex": 1,
+        "speed": 1.25
+      }
+    }
+  ]
+}

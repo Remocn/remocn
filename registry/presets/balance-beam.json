@@ -1,0 +1,120 @@
+{
+  "component": "balance-beam",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "paper-light",
+      "label": "Paper Light",
+      "description": "A warm off-white page with dark ink, a terracotta accent and an editorial serif.",
+      "askedAs": [
+        "light warm paper look",
+        "cream background with serif text",
+        "editorial light version",
+        "светлая бумажная версия",
+        "тёплый светлый фон с засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4efe6",
+        "ink": "#1f1b16",
+        "accent": "#c2562f",
+        "fontFamily": "Fraunces"
+      }
+    },
+    {
+      "id": "snappy-pop",
+      "label": "Snappy Pop",
+      "description": "Fast, bouncy timing with tight block drops and a chunky grotesque in bright coral.",
+      "askedAs": [
+        "make it quick and punchy",
+        "fast playful seesaw",
+        "energetic version for social",
+        "быстрее и бодрее",
+        "динамичная весёлая версия"
+      ],
+      "props": {
+        "speed": 2,
+        "stagger": 4,
+        "fontFamily": "Bricolage Grotesque",
+        "accent": "#ff6b4a"
+      }
+    },
+    {
+      "id": "slow-weigh",
+      "label": "Slow Weigh",
+      "description": "A calm, deliberate tip with widely spaced blocks and a soft sage accent on deep green.",
+      "askedAs": [
+        "slow calm version",
+        "let the blocks fall one by one",
+        "relaxed pacing",
+        "медленно и спокойно",
+        "плавная неторопливая анимация"
+      ],
+      "props": {
+        "speed": 0.5,
+        "stagger": 20,
+        "background": "#14211c",
+        "ink": "#e8efe9",
+        "accent": "#8fbf9f",
+        "delay": 12
+      }
+    },
+    {
+      "id": "clean-product",
+      "label": "Clean Product",
+      "description": "A crisp, grain-free light layout in Inter with a confident blue accent for SaaS pages.",
+      "askedAs": [
+        "clean minimal product style",
+        "no grain modern light",
+        "startup landing look",
+        "чистый минималистичный стиль",
+        "современный вид без зерна"
+      ],
+      "props": {
+        "theme": "light",
+        "grain": false,
+        "fontFamily": "Inter",
+        "accent": "#2563eb"
+      }
+    },
+    {
+      "id": "terminal-mono",
+      "label": "Terminal Mono",
+      "description": "A near-black dev-tool look in JetBrains Mono with a muted amber accent and slightly smaller scale.",
+      "askedAs": [
+        "developer terminal style",
+        "monospace dark version",
+        "code tool aesthetic",
+        "стиль терминала",
+        "моноширинный тёмный вариант"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0e0f12",
+        "ink": "#e6e2d6",
+        "accent": "#e0a84a",
+        "grain": false,
+        "scale": 0.85
+      }
+    },
+    {
+      "id": "big-stage",
+      "label": "Big Stage",
+      "description": "An oversized, close-up seesaw in Space Grotesk with a violet accent that fills the frame.",
+      "askedAs": [
+        "make it bigger",
+        "zoomed in bold version",
+        "large for presentation",
+        "крупнее на весь экран",
+        "большой смелый вариант"
+      ],
+      "props": {
+        "scale": 1.35,
+        "fontFamily": "Space Grotesk",
+        "accent": "#7c5cff",
+        "stagger": 12
+      }
+    }
+  ]
+}

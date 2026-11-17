@@ -1,0 +1,105 @@
+{
+  "component": "poster-crop",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "A warm ivory poster with a refined serif headline and a deep oxblood accent, paced slowly like a magazine cover.",
+      "askedAs": [
+        "make it look like a magazine cover",
+        "elegant serif poster on cream",
+        "slow classy editorial headline",
+        "как обложка журнала",
+        "элегантный постер с засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f3eee4",
+        "ink": "#1c1a17",
+        "accent": "#7a2e2a",
+        "fontFamily": "Instrument Serif",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "midnight-snap",
+      "label": "Midnight Snap",
+      "description": "A near-black ground with a cool off-white headline that crops in fast and punchy with a short pull back.",
+      "askedAs": [
+        "fast punchy dark launch poster",
+        "quick snappy headline reveal",
+        "black poster with sharp crop",
+        "быстрый тёмный постер",
+        "резкое появление заголовка"
+      ],
+      "props": {
+        "theme": "dark",
+        "background": "#0b0c10",
+        "ink": "#edeff4",
+        "pull": 40,
+        "speed": 1.75,
+        "fontFamily": "Space Grotesk"
+      }
+    },
+    {
+      "id": "slow-pullback",
+      "label": "Slow Pullback",
+      "description": "A cinematic version with a long, slow pull back and a larger, more commanding headline.",
+      "askedAs": [
+        "slow cinematic poster reveal",
+        "big dramatic headline zoom out",
+        "make the crop slower and bigger",
+        "медленный кинематографичный постер",
+        "крупный заголовок с плавным отъездом"
+      ],
+      "props": {
+        "pull": 128,
+        "speed": 0.5,
+        "scale": 1.2,
+        "delay": 12
+      }
+    },
+    {
+      "id": "clean-mono",
+      "label": "Clean Mono",
+      "description": "A crisp grain-free light poster in monospaced type with a graphite accent for technical release notes.",
+      "askedAs": [
+        "clean technical release card",
+        "monospace developer launch poster",
+        "minimal white poster no grain",
+        "минималистичный моно постер",
+        "чистая карточка релиза для разработчиков"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#fafaf8",
+        "ink": "#111111",
+        "accent": "#3a3f47",
+        "fontFamily": "JetBrains Mono",
+        "grain": false
+      }
+    },
+    {
+      "id": "forest-luxe",
+      "label": "Forest Luxe",
+      "description": "A deep forest-green ground with soft cream type and a muted brass accent in a confident Fraunces headline.",
+      "askedAs": [
+        "luxury green and gold poster",
+        "premium dark green announcement",
+        "rich elegant release date card",
+        "роскошный зелёный постер",
+        "премиальная карточка с золотом"
+      ],
+      "props": {
+        "theme": "dark",
+        "background": "#12261e",
+        "ink": "#f1ead8",
+        "accent": "#b8975a",
+        "fontFamily": "Fraunces",
+        "scale": 0.9
+      }
+    }
+  ]
+}

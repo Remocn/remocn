@@ -1,0 +1,119 @@
+{
+  "component": "app-store-listing",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "midnight-launch",
+      "label": "Midnight Launch",
+      "description": "Dark store page on a deep blue-hour ground with a cool violet accent and steady pacing.",
+      "askedAs": [
+        "dark mode app store listing",
+        "night launch look for app",
+        "moody dark app page",
+        "тёмная тема для страницы приложения",
+        "ночной запуск приложения"
+      ],
+      "props": {
+        "theme": "dark",
+        "ground": "blue-hour",
+        "accent": "#7c8cff",
+        "fontFamily": "Geist"
+      }
+    },
+    {
+      "id": "paper-editorial",
+      "label": "Paper Editorial",
+      "description": "Warm off-white page with serif type and a terracotta accent, unhurried and magazine-like.",
+      "askedAs": [
+        "elegant serif app listing",
+        "warm editorial store page",
+        "calm classy app launch",
+        "элегантная страница приложения с засечками",
+        "тёплый спокойный стиль"
+      ],
+      "props": {
+        "ground": "paper-crease",
+        "fontFamily": "Fraunces",
+        "accent": "#c2562e",
+        "background": "#f6f1e8",
+        "ink": "#2a2420",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "quick-hit",
+      "label": "Quick Hit",
+      "description": "Fast, slightly enlarged listing with a vivid green accent for snappy social cuts.",
+      "askedAs": [
+        "fast app store beat",
+        "snappy listing for reels",
+        "quick install animation",
+        "быстрая анимация установки",
+        "динамичный ролик для сторис"
+      ],
+      "props": {
+        "speed": 2,
+        "scale": 1.15,
+        "accent": "#1fa463",
+        "fontFamily": "Manrope"
+      }
+    },
+    {
+      "id": "ember-glow",
+      "label": "Ember Glow",
+      "description": "Dark listing set against a warm ember ground with an amber accent and bold grotesque type.",
+      "askedAs": [
+        "warm dark app launch",
+        "orange glow store listing",
+        "cinematic warm app page",
+        "тёплая тёмная витрина приложения",
+        "оранжевое свечение фон"
+      ],
+      "props": {
+        "theme": "dark",
+        "ground": "ember",
+        "accent": "#f29a3e",
+        "fontFamily": "Bricolage Grotesque"
+      }
+    },
+    {
+      "id": "dev-tool",
+      "label": "Dev Tool",
+      "description": "Compact monospace listing on a cold graphite ground with a cyan accent and delayed entrance.",
+      "askedAs": [
+        "technical developer app listing",
+        "monospace store page",
+        "minimal techy launch",
+        "страница приложения для разработчиков",
+        "моноширинный технический стиль"
+      ],
+      "props": {
+        "theme": "dark",
+        "fontFamily": "JetBrains Mono",
+        "ground": "charcoal-satin",
+        "accent": "#3fb6c9",
+        "scale": 0.85,
+        "delay": 15
+      }
+    },
+    {
+      "id": "soft-petal",
+      "label": "Soft Petal",
+      "description": "Light listing floating over a pink petal-arc ground with a rose accent and gentle slow motion.",
+      "askedAs": [
+        "soft pastel app listing",
+        "pink lifestyle app launch",
+        "gentle feminine store page",
+        "нежная пастельная страница приложения",
+        "розовый мягкий стиль"
+      ],
+      "props": {
+        "ground": "petal-arc",
+        "accent": "#d9487a",
+        "fontFamily": "Instrument Serif",
+        "speed": 0.5
+      }
+    }
+  ]
+}

@@ -1,0 +1,118 @@
+{
+  "component": "money-send",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "daylight-teller",
+      "label": "Daylight Teller",
+      "description": "A bright light-theme screen with a calm green accent on a pale paper ground, set in Inter.",
+      "askedAs": [
+        "light mode payment screen",
+        "clean white fintech look",
+        "bright minimal money transfer",
+        "светлая тема для перевода денег",
+        "белый чистый экран оплаты"
+      ],
+      "props": {
+        "theme": "light",
+        "accent": "#0f9d6b",
+        "ground": "paper-crease",
+        "fontFamily": "Inter"
+      }
+    },
+    {
+      "id": "instant-send",
+      "label": "Instant Send",
+      "description": "A fast, snappy run with tight key taps that sells the sent-in-a-second message.",
+      "askedAs": [
+        "make it really fast",
+        "quick snappy payment",
+        "speed up the typing",
+        "сделай быстрее",
+        "мгновенный перевод быстро"
+      ],
+      "props": {
+        "speed": 2,
+        "stagger": 5,
+        "ground": "cobalt-rise"
+      }
+    },
+    {
+      "id": "private-banking",
+      "label": "Private Banking",
+      "description": "A slow, premium dark screen with a muted gold accent and Fraunces serif type on charcoal satin.",
+      "askedAs": [
+        "luxury premium bank style",
+        "elegant gold and black",
+        "slow classy payment",
+        "премиальный банковский стиль",
+        "дорогой тёмный с золотом"
+      ],
+      "props": {
+        "theme": "dark",
+        "accent": "#c9a45c",
+        "ground": "charcoal-satin",
+        "fontFamily": "Fraunces",
+        "speed": 0.75,
+        "stagger": 16
+      }
+    },
+    {
+      "id": "dev-ledger",
+      "label": "Dev Ledger",
+      "description": "A technical monospace look in JetBrains Mono with a cool cyan accent over a deep blue-hour ground.",
+      "askedAs": [
+        "developer api payment look",
+        "monospace tech fintech",
+        "crypto style transfer",
+        "моноширинный шрифт технический",
+        "как для разработчиков"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "accent": "#38bdf8",
+        "ground": "blue-hour",
+        "theme": "dark"
+      }
+    },
+    {
+      "id": "warm-hello",
+      "label": "Warm Hello",
+      "description": "A friendly light screen with a coral accent, Bricolage Grotesque type and a soft petal ground, shown larger.",
+      "askedAs": [
+        "friendly warm p2p app",
+        "playful pink payment",
+        "bigger cozy phone screen",
+        "тёплый дружелюбный стиль",
+        "крупнее и мягкие цвета"
+      ],
+      "props": {
+        "theme": "light",
+        "accent": "#e8664a",
+        "ground": "petal-arc",
+        "fontFamily": "Bricolage Grotesque",
+        "scale": 1.2
+      }
+    },
+    {
+      "id": "midnight-violet",
+      "label": "Midnight Violet",
+      "description": "A moody dark take with a soft violet accent on a velvet-hour ground in Space Grotesk, with a short lead-in.",
+      "askedAs": [
+        "dark purple night theme",
+        "moody violet fintech",
+        "modern dark with delay",
+        "тёмно-фиолетовая тема",
+        "ночной стиль с задержкой"
+      ],
+      "props": {
+        "theme": "dark",
+        "accent": "#8b7cf6",
+        "ground": "velvet-hour",
+        "fontFamily": "Space Grotesk",
+        "delay": 15
+      }
+    }
+  ]
+}

@@ -1,0 +1,99 @@
+{
+  "component": "caption-drop",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "heavy-thud",
+      "label": "Heavy Thud",
+      "description": "Huge black-weight words that land with almost no rebound, like dropped bricks.",
+      "askedAs": [
+        "big heavy captions that slam down",
+        "no bounce chunky subtitles",
+        "words that land hard with weight",
+        "тяжёлые крупные субтитры без отскока",
+        "слова падают как кирпичи"
+      ],
+      "props": {
+        "fontSize": 104,
+        "fontWeight": 900,
+        "bounce": 0.1,
+        "holdMs": 900
+      }
+    },
+    {
+      "id": "rubber-ball",
+      "label": "Rubber Ball",
+      "description": "Springy warm-yellow words that bounce high and pop in short, rapid bursts.",
+      "askedAs": [
+        "super bouncy yellow captions",
+        "springy fun subtitles for tiktok",
+        "words bounce a lot when they land",
+        "очень прыгучие жёлтые субтитры",
+        "весёлые пружинящие слова"
+      ],
+      "props": {
+        "bounce": 1,
+        "color": "#ffd23f",
+        "combineTokensWithinMilliseconds": 600,
+        "holdMs": 300
+      }
+    },
+    {
+      "id": "word-by-word",
+      "label": "Word By Word",
+      "description": "One large word at a time drops in and clears out almost instantly for punchy rhythm.",
+      "askedAs": [
+        "one word at a time captions",
+        "fast single word subtitles",
+        "punchy rapid fire text",
+        "субтитры по одному слову",
+        "быстрые слова по одному"
+      ],
+      "props": {
+        "combineTokensWithinMilliseconds": 0,
+        "fontSize": 120,
+        "holdMs": 150,
+        "bounce": 0.45
+      }
+    },
+    {
+      "id": "soft-settle",
+      "label": "Soft Settle",
+      "description": "Smaller medium-weight cream text in long phrases that settles gently and lingers on pauses.",
+      "askedAs": [
+        "calm gentle drop captions",
+        "subtle subtitles for interviews",
+        "longer lines that stay on screen",
+        "спокойные мягкие субтитры",
+        "длинные фразы которые задерживаются"
+      ],
+      "props": {
+        "fontSize": 48,
+        "fontWeight": 500,
+        "color": "#f5efe3",
+        "bounce": 0.25,
+        "combineTokensWithinMilliseconds": 2400,
+        "holdMs": 1400
+      }
+    },
+    {
+      "id": "ink-on-paper",
+      "label": "Ink On Paper",
+      "description": "Flat dark charcoal words without shadow for light, clean backgrounds.",
+      "askedAs": [
+        "dark captions for white background",
+        "black text no shadow subtitles",
+        "clean flat bouncing words",
+        "тёмные субтитры для светлого фона",
+        "чёрный текст без тени"
+      ],
+      "props": {
+        "color": "#1c1c1e",
+        "shadow": false,
+        "fontWeight": 700,
+        "fontSize": 72
+      }
+    }
+  ]
+}

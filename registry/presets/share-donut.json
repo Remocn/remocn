@@ -1,0 +1,106 @@
+{
+  "component": "share-donut",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-paper",
+      "label": "Editorial Paper",
+      "description": "A light cream page with a slim terracotta ring and serif labels, like a printed annual report.",
+      "askedAs": [
+        "light report style donut chart",
+        "serif magazine pie chart",
+        "warm paper look for market share",
+        "светлая диаграмма в журнальном стиле",
+        "пончик на бумажном фоне с засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4efe6",
+        "ink": "#2a2420",
+        "accent": "#c2562f",
+        "fontFamily": "Fraunces",
+        "thickness": 6
+      }
+    },
+    {
+      "id": "bold-headline",
+      "label": "Bold Headline",
+      "description": "A thick, oversized ring that snaps in fast with a strong highlight on the winning slice.",
+      "askedAs": [
+        "big punchy donut for the main stat",
+        "fast thick share chart",
+        "make our slice pop hard",
+        "крупная толстая кольцевая диаграмма",
+        "быстрая яркая доля рынка"
+      ],
+      "props": {
+        "thickness": 32,
+        "scale": 1.3,
+        "speed": 1.75,
+        "highlight": 8,
+        "fontFamily": "Bricolage Grotesque"
+      }
+    },
+    {
+      "id": "slow-reveal",
+      "label": "Slow Reveal",
+      "description": "A calm, unhurried sweep on deep navy with a soft teal accent and a short pause before it draws.",
+      "askedAs": [
+        "slow cinematic donut animation",
+        "calm market share reveal",
+        "gentle sweep with delay",
+        "медленная плавная анимация кольца",
+        "спокойное появление доли"
+      ],
+      "props": {
+        "drawLength": 110,
+        "speed": 0.75,
+        "delay": 20,
+        "background": "#0e1626",
+        "ink": "#e6ecf5",
+        "accent": "#3fb8a8"
+      }
+    },
+    {
+      "id": "terminal-data",
+      "label": "Terminal Data",
+      "description": "A monospaced, hairline ring in lime-green on near-black with no grain, like a dev dashboard.",
+      "askedAs": [
+        "code style pie chart",
+        "monospace dashboard donut",
+        "thin technical share ring",
+        "диаграмма в стиле терминала",
+        "моноширинный шрифт и тонкое кольцо"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "thickness": 4,
+        "background": "#0b0d0c",
+        "ink": "#d7e0d9",
+        "accent": "#9bd14b",
+        "grain": false
+      }
+    },
+    {
+      "id": "clean-corporate",
+      "label": "Clean Corporate",
+      "description": "A crisp white slide with a compact Inter-labeled ring in indigo, grain off for a pitch-deck finish.",
+      "askedAs": [
+        "clean white slide donut chart",
+        "corporate presentation share graph",
+        "minimal light pie for pitch deck",
+        "чистая корпоративная диаграмма",
+        "минималистичный белый слайд с долей"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "accent": "#4f46e5",
+        "grain": false,
+        "scale": 0.85,
+        "highlight": 3
+      }
+    }
+  ]
+}

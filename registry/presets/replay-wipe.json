@@ -1,0 +1,117 @@
+{
+  "component": "replay-wipe",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "stadium-red",
+      "label": "Stadium Red",
+      "description": "A punchy broadcast red accent with snappy short wipes for high-energy sports cuts.",
+      "askedAs": [
+        "sports tv red replay",
+        "fast aggressive replay wipe",
+        "espn style transition",
+        "красный спортивный повтор",
+        "быстрая вайп-склейка как на тв"
+      ],
+      "props": {
+        "accent": "#e23b3b",
+        "wipeLength": 10,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "slow-mo-replay",
+      "label": "Slow Motion",
+      "description": "Long, drawn-out wipes at half speed that feel like a dramatic slow-motion replay.",
+      "askedAs": [
+        "slow motion replay wipe",
+        "dramatic slow transition",
+        "cinematic slow replay",
+        "замедленный повтор",
+        "медленная драматичная склейка"
+      ],
+      "props": {
+        "wipeLength": 42,
+        "speed": 0.5,
+        "accent": "#c9a227"
+      }
+    },
+    {
+      "id": "daylight-studio",
+      "label": "Daylight Studio",
+      "description": "A clean light studio look with crisp Inter type and a cool blue accent.",
+      "askedAs": [
+        "light mode replay",
+        "clean white broadcast graphics",
+        "bright studio look",
+        "светлая тема повтора",
+        "белая студийная графика"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4f5f7",
+        "ink": "#111418",
+        "accent": "#1f6feb",
+        "fontFamily": "Inter"
+      }
+    },
+    {
+      "id": "esports-terminal",
+      "label": "Esports Terminal",
+      "description": "A dark tech palette with mono type and a mint accent, like an esports overlay.",
+      "askedAs": [
+        "esports overlay style",
+        "gaming tech replay",
+        "monospace hacker look",
+        "киберспортивный стиль",
+        "техничный моноширинный шрифт"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0b0f14",
+        "ink": "#e6f1ec",
+        "accent": "#2fd4a3",
+        "wipeLength": 14
+      }
+    },
+    {
+      "id": "big-bold-hit",
+      "label": "Big Bold Hit",
+      "description": "Oversized frame with an orange accent and instant cuts for maximum impact.",
+      "askedAs": [
+        "huge bold replay graphic",
+        "maximum impact cut",
+        "large in-your-face wipe",
+        "крупная яркая графика",
+        "мощная резкая склейка"
+      ],
+      "props": {
+        "scale": 1.3,
+        "accent": "#ff6a1a",
+        "wipeLength": 6,
+        "speed": 2
+      }
+    },
+    {
+      "id": "editorial-recap",
+      "label": "Editorial Recap",
+      "description": "A refined serif recap on deep navy with a calm pace and smaller frame.",
+      "askedAs": [
+        "elegant replay recap",
+        "premium event highlight",
+        "subtle classy transition",
+        "элегантный повтор",
+        "спокойный премиальный стиль"
+      ],
+      "props": {
+        "fontFamily": "Fraunces",
+        "background": "#101828",
+        "ink": "#f2eee6",
+        "accent": "#d8b47a",
+        "scale": 0.85,
+        "speed": 0.75
+      }
+    }
+  ]
+}

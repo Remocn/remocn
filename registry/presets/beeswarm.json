@@ -1,0 +1,123 @@
+{
+  "component": "beeswarm",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-paper",
+      "label": "Editorial Paper",
+      "description": "A light, print-inspired look with a serif face, warm off-white paper and a deep ink-red accent.",
+      "askedAs": [
+        "make it look like a newspaper chart",
+        "light serif editorial style",
+        "warm paper background with red dots",
+        "стиль газетной инфографики",
+        "светлый вариант с засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4efe6",
+        "ink": "#1e1b18",
+        "accent": "#b23a2e",
+        "fontFamily": "Fraunces",
+        "grain": false
+      }
+    },
+    {
+      "id": "terminal-mono",
+      "label": "Terminal Mono",
+      "description": "A near-black technical screen with monospace labels and a muted green accent.",
+      "askedAs": [
+        "hacker terminal style",
+        "monospace dark data look",
+        "green on black console chart",
+        "в стиле терминала",
+        "моноширинный шрифт на тёмном фоне"
+      ],
+      "props": {
+        "background": "#0d1110",
+        "ink": "#d6e4dc",
+        "accent": "#4fbf8a",
+        "fontFamily": "JetBrains Mono",
+        "grain": false
+      }
+    },
+    {
+      "id": "slow-reveal",
+      "label": "Slow Reveal",
+      "description": "A calm, unhurried build where the swarms drift in late and take their time to separate.",
+      "askedAs": [
+        "slower more dramatic animation",
+        "let the dots settle slowly",
+        "calm pacing with a pause before",
+        "медленная плавная анимация",
+        "сделай появление неторопливым"
+      ],
+      "props": {
+        "speed": 0.5,
+        "split": 70,
+        "delay": 24,
+        "fontWeight": 300
+      }
+    },
+    {
+      "id": "punchy-quick",
+      "label": "Punchy Quick",
+      "description": "A fast, bold cut with heavy type, a bright amber accent and a slightly larger frame.",
+      "askedAs": [
+        "fast energetic version",
+        "quick bold social clip",
+        "make it snappy and big",
+        "быстрая энергичная версия",
+        "крупно и резко"
+      ],
+      "props": {
+        "speed": 2,
+        "split": 12,
+        "fontFamily": "Space Grotesk",
+        "fontWeight": 700,
+        "accent": "#f2a93b",
+        "scale": 1.15
+      }
+    },
+    {
+      "id": "clean-report",
+      "label": "Clean Report",
+      "description": "A crisp corporate light theme with Inter, a cool slate background and a teal accent.",
+      "askedAs": [
+        "clean business presentation look",
+        "light minimal report chart",
+        "corporate slide style",
+        "чистый стиль для отчёта",
+        "светлая минималистичная тема"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f5f7fa",
+        "ink": "#1b2430",
+        "accent": "#0f8b8d",
+        "fontFamily": "Inter",
+        "grain": false
+      }
+    },
+    {
+      "id": "midnight-violet",
+      "label": "Midnight Violet",
+      "description": "A deep indigo night palette with soft lavender dots and a compact, centered composition.",
+      "askedAs": [
+        "dark purple moody chart",
+        "smaller compact night version",
+        "indigo background with lilac dots",
+        "тёмно-фиолетовая тема",
+        "компактный вариант в ночных тонах"
+      ],
+      "props": {
+        "background": "#141228",
+        "ink": "#e7e3f7",
+        "accent": "#a48bf0",
+        "fontFamily": "Manrope",
+        "scale": 0.85
+      }
+    }
+  ]
+}

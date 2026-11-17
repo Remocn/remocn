@@ -239,7 +239,11 @@ export function ComponentCustomizer({
         {Object.entries(controls).map(([key, ctrl]) => (
           <div
             key={key}
-            className={cn("min-w-0", isLong(ctrl) && "col-span-full")}
+            data-control={key}
+            className={cn(
+              "min-w-0 scroll-mb-44 rounded-tile transition-shadow duration-200 data-agent-active:ring-[1.5px] data-agent-active:ring-primary-bright data-agent-active:ring-offset-0 motion-reduce:transition-none",
+              isLong(ctrl) && "col-span-full",
+            )}
           >
             <Control
               id={`ctrl-${key}`}
@@ -283,7 +287,7 @@ export function ComponentCustomizer({
               }
               className="contents"
             >
-              <CollapsibleTrigger className="flex h-9 shrink-0 cursor-pointer items-center justify-between rounded-tile px-0.5 text-caption leading-[17px] font-semibold text-white/70 outline-none hover:text-[#fafafa] focus-visible:ring-2 focus-visible:ring-white/40 max-md:h-11 max-md:px-1.5 max-md:text-small max-md:leading-[18px]">
+              <CollapsibleTrigger className="flex h-9 shrink-0 scroll-mb-44 cursor-pointer items-center justify-between rounded-tile px-0.5 data-agent-active:text-[#fafafa] data-agent-active:ring-[1.5px] data-agent-active:ring-primary-bright text-caption leading-[17px] font-semibold text-white/70 outline-none hover:text-[#fafafa] focus-visible:ring-2 focus-visible:ring-white/40 max-md:h-11 max-md:px-1.5 max-md:text-small max-md:leading-[18px]">
                 {group.title}
                 <GroupChevron open={chosen ?? true} auto={autoCollapsed} />
               </CollapsibleTrigger>
@@ -301,8 +305,12 @@ export function ComponentCustomizer({
                   return (
                     <div
                       key={key}
+                      data-control={key}
                       style={style}
-                      className={cn("min-w-0 max-md:basis-full!", className)}
+                      className={cn(
+                        "min-w-0 max-md:basis-full! scroll-mb-44 rounded-tile transition-shadow duration-200 data-agent-active:ring-[1.5px] data-agent-active:ring-primary-bright data-agent-active:ring-offset-0 motion-reduce:transition-none",
+                        className,
+                      )}
                     >
                       <Control
                         id={`ctrl-${key}`}

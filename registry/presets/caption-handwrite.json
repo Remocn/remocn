@@ -1,0 +1,121 @@
+{
+  "component": "caption-handwrite",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "fountain-pen",
+      "label": "Fountain Pen",
+      "description": "Fine navy ink in a lighter weight with gentle tilt, like a careful journal entry.",
+      "askedAs": [
+        "neat journal handwriting",
+        "thin blue ink captions",
+        "calm elegant handwritten subtitles",
+        "аккуратный почерк как в дневнике",
+        "тонкие синие рукописные субтитры"
+      ],
+      "props": {
+        "fontWeight": 500,
+        "color": "#1e3a5f",
+        "wobble": 0.5,
+        "shadow": false,
+        "fontSize": 56
+      }
+    },
+    {
+      "id": "marker-scrawl",
+      "label": "Marker Scrawl",
+      "description": "Big, heavy, loosely tilted words that look dashed off with a thick marker.",
+      "askedAs": [
+        "messy bold handwriting",
+        "big marker captions",
+        "energetic scribbled text",
+        "небрежные жирные надписи маркером",
+        "крупный размашистый почерк"
+      ],
+      "props": {
+        "fontSize": 96,
+        "fontWeight": 900,
+        "wobble": 1.8,
+        "combineTokensWithinMilliseconds": 600,
+        "holdMs": 300
+      }
+    },
+    {
+      "id": "pencil-notes",
+      "label": "Pencil Notes",
+      "description": "Soft graphite-grey writing, small and flat, that lingers like margin notes.",
+      "askedAs": [
+        "pencil sketch captions",
+        "grey notebook handwriting",
+        "subtle small handwritten notes",
+        "подписи как карандашом",
+        "серый незаметный рукописный текст"
+      ],
+      "props": {
+        "color": "#4a4a4a",
+        "fontSize": 44,
+        "fontWeight": 400,
+        "wobble": 0.8,
+        "shadow": false,
+        "holdMs": 1200
+      }
+    },
+    {
+      "id": "slow-letter",
+      "label": "Slow Letter",
+      "description": "Warm cream ink gathered into long pages that stay on screen, for unhurried storytelling.",
+      "askedAs": [
+        "slow reflective handwritten captions",
+        "long lines that stay longer",
+        "warm letter style subtitles",
+        "медленные рукописные субтитры для истории",
+        "длинные строки как в письме"
+      ],
+      "props": {
+        "color": "#f3e9d2",
+        "combineTokensWithinMilliseconds": 2600,
+        "holdMs": 1600,
+        "fontWeight": 600,
+        "wobble": 0.7
+      }
+    },
+    {
+      "id": "red-correction",
+      "label": "Red Correction",
+      "description": "Brick-red ink with a sharp tilt, like a teacher's notes scrawled over the page.",
+      "askedAs": [
+        "red pen handwriting",
+        "teacher correction style captions",
+        "red annotated text",
+        "красная ручка как у учителя",
+        "красные рукописные пометки"
+      ],
+      "props": {
+        "color": "#b3362b",
+        "wobble": 1.4,
+        "fontWeight": 700,
+        "shadow": false,
+        "fontSize": 72
+      }
+    },
+    {
+      "id": "steady-print",
+      "label": "Steady Print",
+      "description": "Upright, quick word-by-word lettering with almost no tilt for clear, punchy captions.",
+      "askedAs": [
+        "straight neat handwriting",
+        "fast single word captions",
+        "clean upright handwritten text",
+        "ровный почерк без наклона",
+        "быстрые субтитры по одному слову"
+      ],
+      "props": {
+        "wobble": 0.1,
+        "combineTokensWithinMilliseconds": 0,
+        "holdMs": 200,
+        "fontSize": 84
+      }
+    }
+  ]
+}

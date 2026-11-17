@@ -1,0 +1,99 @@
+{
+  "component": "icon-chevron-down",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "hairline-draw",
+      "label": "Hairline Draw",
+      "description": "A large, thin chevron that slowly sketches itself in a soft slate tone.",
+      "askedAs": [
+        "thin slow drawing arrow",
+        "elegant line chevron",
+        "delicate outline down arrow",
+        "тонкая стрелка рисуется медленно",
+        "изящный шеврон вниз"
+      ],
+      "props": {
+        "animation": "draw",
+        "size": 120,
+        "strokeWidth": 1,
+        "speed": 0.5,
+        "color": "#475569"
+      }
+    },
+    {
+      "id": "scroll-hint",
+      "label": "Scroll Hint",
+      "description": "A looping nudge downward in calm blue that invites viewers to scroll.",
+      "askedAs": [
+        "bouncing scroll down arrow",
+        "looping down indicator",
+        "scroll prompt chevron",
+        "стрелка прокрутки вниз",
+        "повторяющаяся подсказка листать"
+      ],
+      "props": {
+        "animation": "action",
+        "loop": true,
+        "color": "#2563eb",
+        "size": 64
+      }
+    },
+    {
+      "id": "bold-snap",
+      "label": "Bold Snap",
+      "description": "A chunky, heavy-stroke chevron that draws and moves quickly with punch.",
+      "askedAs": [
+        "thick fast arrow down",
+        "bold punchy chevron",
+        "heavy quick dropdown icon",
+        "жирная быстрая стрелка",
+        "толстый шеврон резко"
+      ],
+      "props": {
+        "strokeWidth": 3,
+        "speed": 2,
+        "size": 96,
+        "color": "#0f172a"
+      }
+    },
+    {
+      "id": "warm-accent",
+      "label": "Warm Accent",
+      "description": "A medium terracotta chevron that draws in and nudges at a relaxed pace.",
+      "askedAs": [
+        "orange down arrow",
+        "warm colored chevron",
+        "soft accent dropdown arrow",
+        "оранжевая стрелка вниз",
+        "тёплый цвет шеврона"
+      ],
+      "props": {
+        "color": "#c2410c",
+        "strokeWidth": 2.5,
+        "speed": 0.75,
+        "size": 80
+      }
+    },
+    {
+      "id": "tiny-pulse",
+      "label": "Tiny Pulse",
+      "description": "A small muted green chevron that loops a gentle, steady nudge for compact UI moments.",
+      "askedAs": [
+        "small looping arrow",
+        "mini dropdown hint",
+        "subtle green chevron loop",
+        "маленькая зелёная стрелка",
+        "крошечный повторяющийся шеврон"
+      ],
+      "props": {
+        "size": 32,
+        "loop": true,
+        "animation": "action",
+        "color": "#15803d",
+        "speed": 1.5
+      }
+    }
+  ]
+}

@@ -1,0 +1,125 @@
+{
+  "component": "italic-speed",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "pit-lane-red",
+      "label": "Pit Lane",
+      "description": "Deep charcoal ground with a racing red accent and a hard forward lean for an aggressive motorsport feel.",
+      "askedAs": [
+        "racing red speed title",
+        "motorsport style fast text",
+        "aggressive red on black title",
+        "красный гоночный заголовок",
+        "агрессивная надпись в стиле автоспорта"
+      ],
+      "props": {
+        "theme": "dark",
+        "accent": "#e5322d",
+        "background": "#111214",
+        "ink": "#f4f2ee",
+        "lean": 52,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "gallery-ivory",
+      "label": "Gallery Ivory",
+      "description": "Warm ivory page with ink-black serif type and a slow, gentle lean for an editorial luxury look.",
+      "askedAs": [
+        "elegant light speed title",
+        "luxury magazine style headline",
+        "calm serif slanted title on cream",
+        "элегантный светлый заголовок",
+        "люксовый журнальный стиль"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f5f0e6",
+        "ink": "#1a1814",
+        "accent": "#8c6a3f",
+        "fontFamily": "Fraunces",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "bullet-snap",
+      "label": "Bullet Snap",
+      "description": "Near-instant letter arrival with no stagger and doubled speed for a sharp, punchy hit.",
+      "askedAs": [
+        "very fast snappy title",
+        "instant punchy text entrance",
+        "quick hit speed word",
+        "очень быстрое появление текста",
+        "резкий короткий заголовок"
+      ],
+      "props": {
+        "stagger": 0.2,
+        "speed": 2,
+        "lean": 24,
+        "fontFamily": "Inter"
+      }
+    },
+    {
+      "id": "midnight-cruise",
+      "label": "Midnight Cruise",
+      "description": "Navy night tones with a soft teal accent and a wide, leisurely letter cascade.",
+      "askedAs": [
+        "slow cinematic speed title",
+        "dark blue calm performance text",
+        "smooth cascading letters navy",
+        "медленный кинематографичный заголовок",
+        "тёмно-синий плавный текст"
+      ],
+      "props": {
+        "background": "#0b1426",
+        "ink": "#e6edf7",
+        "accent": "#3fb8af",
+        "stagger": 2.8,
+        "speed": 0.5,
+        "lean": 40
+      }
+    },
+    {
+      "id": "tech-spec",
+      "label": "Tech Spec",
+      "description": "Monospaced caps on light grey with a lime-free graphite palette and modest lean, like a product spec sheet.",
+      "askedAs": [
+        "technical monospace speed title",
+        "engineering style performance claim",
+        "minimal grey code font headline",
+        "технический моноширинный заголовок",
+        "минималистичный серый стиль"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "JetBrains Mono",
+        "background": "#e9eaec",
+        "ink": "#1c1f24",
+        "accent": "#ff6a13",
+        "lean": 14
+      }
+    },
+    {
+      "id": "grand-prix",
+      "label": "Grand Prix",
+      "description": "Oversized gold-accented title on black with a steep lean for a bold, trophy-worthy statement.",
+      "askedAs": [
+        "big bold gold speed title",
+        "huge premium performance word",
+        "oversized black and gold headline",
+        "большой золотой заголовок",
+        "крупная премиальная надпись"
+      ],
+      "props": {
+        "scale": 1.35,
+        "accent": "#c9a44c",
+        "background": "#0a0a0a",
+        "ink": "#ffffff",
+        "fontFamily": "Bricolage Grotesque",
+        "lean": 58
+      }
+    }
+  ]
+}

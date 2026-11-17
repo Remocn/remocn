@@ -1,0 +1,102 @@
+{
+  "component": "pattern-tile",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "paper-terracotta",
+      "label": "Paper Terracotta",
+      "description": "Warm off-white paper with terracotta tiles and a soft serif, like a printed tile catalogue.",
+      "askedAs": [
+        "warm light version with orange tiles",
+        "make it look like printed paper",
+        "cream background terracotta pattern",
+        "светлый тёплый вариант с терракотой",
+        "как бумажный каталог плитки"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4efe6",
+        "ink": "#2a2420",
+        "accent": "#c4562e",
+        "fontFamily": "Fraunces"
+      }
+    },
+    {
+      "id": "blueprint-mono",
+      "label": "Blueprint",
+      "description": "Deep navy field with pale cyan tiles and monospace labels, read like a technical construction diagram.",
+      "askedAs": [
+        "technical blueprint style",
+        "navy background with mono font",
+        "make it look like an engineering drawing",
+        "в стиле чертежа",
+        "тёмно-синий технический вид"
+      ],
+      "props": {
+        "background": "#0e1a2e",
+        "ink": "#d6e4f0",
+        "accent": "#7fb8d9",
+        "fontFamily": "JetBrains Mono",
+        "grain": false
+      }
+    },
+    {
+      "id": "quick-snap",
+      "label": "Quick Snap",
+      "description": "A fast, punchy build that starts closer in and snaps through each transform for launch reels.",
+      "askedAs": [
+        "faster energetic version",
+        "speed it up for a promo",
+        "snappy quick tile build",
+        "сделай быстрее и энергичнее",
+        "быстрая сборка паттерна"
+      ],
+      "props": {
+        "speed": 2,
+        "zoom": 3.8,
+        "accent": "#ff5a36",
+        "fontFamily": "Space Grotesk"
+      }
+    },
+    {
+      "id": "slow-backdrop",
+      "label": "Slow Backdrop",
+      "description": "A calm, slow wide build with no highlight, muted sage tones, suited to sit behind other content.",
+      "askedAs": [
+        "calm slow background pattern",
+        "subtle backdrop without highlight",
+        "relaxed muted version",
+        "спокойный медленный фон",
+        "приглушённый фоновый паттерн"
+      ],
+      "props": {
+        "speed": 0.5,
+        "highlight": false,
+        "zoom": 1.6,
+        "accent": "#7a9a82",
+        "delay": 20
+      }
+    },
+    {
+      "id": "bold-close",
+      "label": "Bold Close-Up",
+      "description": "Oversized light composition in grotesque type with a deep plum accent, framed tight and clean.",
+      "askedAs": [
+        "bigger bolder light version",
+        "zoomed in large tiles",
+        "clean light layout with purple",
+        "крупнее и смелее на светлом",
+        "большие плитки крупным планом"
+      ],
+      "props": {
+        "theme": "light",
+        "scale": 1.3,
+        "zoom": 4.5,
+        "accent": "#5b2a86",
+        "fontFamily": "Bricolage Grotesque",
+        "grain": false
+      }
+    }
+  ]
+}

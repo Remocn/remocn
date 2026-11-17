@@ -1,0 +1,105 @@
+{
+  "component": "toggle-on",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "snappy-green",
+      "label": "Snappy Green",
+      "description": "A quick, bouncy flip with a fresh green accent on a dark stage, like an iOS switch caught mid-click.",
+      "askedAs": [
+        "fast green toggle",
+        "quick switch turning on in green",
+        "snappy ios style switch",
+        "быстрый зелёный переключатель",
+        "резкое включение тумблера"
+      ],
+      "props": {
+        "accent": "#34c759",
+        "speed": 1.75,
+        "stagger": 4,
+        "fontFamily": "Inter",
+        "fontWeight": 600
+      }
+    },
+    {
+      "id": "soft-paper",
+      "label": "Soft Paper",
+      "description": "A light, unhurried reveal on warm off-white with a coral accent and friendly rounded type.",
+      "askedAs": [
+        "light calm toggle on paper",
+        "warm light switch scene",
+        "gentle bright settings toggle",
+        "светлый спокойный переключатель",
+        "тёплый светлый фон с тумблером"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f6f1e9",
+        "ink": "#2a2420",
+        "accent": "#e8664a",
+        "fontFamily": "Manrope",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "big-bold",
+      "label": "Big Bold",
+      "description": "An oversized switch and heavy chunky lettering that fill the frame for a loud, punchy beat.",
+      "askedAs": [
+        "huge bold toggle",
+        "make the switch really big",
+        "loud chunky on switch",
+        "огромный жирный переключатель",
+        "крупный тумблер на весь экран"
+      ],
+      "props": {
+        "scale": 1.4,
+        "fontFamily": "Bricolage Grotesque",
+        "fontWeight": 700,
+        "accent": "#ff8a3d",
+        "ground": "ember"
+      }
+    },
+    {
+      "id": "night-glow",
+      "label": "Night Glow",
+      "description": "A slow, cinematic switch-on against a deep violet ground with a lavender glow and elegant serif label.",
+      "askedAs": [
+        "moody slow toggle at night",
+        "purple glowing switch",
+        "cinematic dark mode switch",
+        "медленный тёмный тумблер с фиолетовым",
+        "кинематографичное включение ночью"
+      ],
+      "props": {
+        "ground": "velvet-hour",
+        "accent": "#a78bfa",
+        "fontFamily": "Instrument Serif",
+        "speed": 0.5,
+        "stagger": 16,
+        "delay": 12
+      }
+    },
+    {
+      "id": "dev-mono",
+      "label": "Dev Mono",
+      "description": "A compact, technical take with monospace type, cyan accent and a cool blue-hour ground.",
+      "askedAs": [
+        "developer style toggle",
+        "monospace code settings switch",
+        "techy cyan toggle",
+        "переключатель в стиле кода",
+        "моноширинный технический тумблер"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "accent": "#22d3ee",
+        "ground": "blue-hour",
+        "scale": 0.85,
+        "stagger": 0,
+        "fontWeight": 500
+      }
+    }
+  ]
+}

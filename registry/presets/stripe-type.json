@@ -1,0 +1,100 @@
+{
+  "component": "stripe-type",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "classic-blue",
+      "label": "Classic Blue",
+      "description": "Heavy type in a crisp corporate blue with many fine bands that lock into a striped mark and stay.",
+      "askedAs": [
+        "IBM style blue striped logo",
+        "corporate striped wordmark that stays on screen",
+        "blue engineered logo with thin stripes",
+        "синий полосатый логотип как у IBM",
+        "корпоративный логотип в полоску"
+      ],
+      "props": {
+        "color": "#4a7dff",
+        "stripes": 12,
+        "gap": 0.3,
+        "exit": false
+      }
+    },
+    {
+      "id": "bold-reveal",
+      "label": "Bold Reveal",
+      "description": "A few chunky bands slam together and fuse into solid type for a confident title card.",
+      "askedAs": [
+        "stripes merge into solid text",
+        "chunky bands that become a solid title",
+        "bold title assembled from slices",
+        "полосы собираются в сплошной текст",
+        "крупный заголовок из нескольких полос"
+      ],
+      "props": {
+        "settle": "solid",
+        "stripes": 4,
+        "fontWeight": 900,
+        "fontSize": 220,
+        "exit": false
+      }
+    },
+    {
+      "id": "quick-pass",
+      "label": "Quick Pass",
+      "description": "Fast, wide-gapped stripes zip in and straight through with almost no pause.",
+      "askedAs": [
+        "fast striped word that flies through",
+        "quick transition with sliced text",
+        "snappy stripe wipe for a cut",
+        "быстрый пролёт полосатого слова",
+        "резкий переход с нарезанным текстом"
+      ],
+      "props": {
+        "speed": 2.5,
+        "hold": 5,
+        "gap": 0.5,
+        "stripes": 6
+      }
+    },
+    {
+      "id": "fine-lines",
+      "label": "Fine Lines",
+      "description": "Light-weight type sliced into many hairline bands for a delicate, technical feel.",
+      "askedAs": [
+        "thin elegant striped type",
+        "many hairline stripes on light text",
+        "delicate scanline lettering",
+        "тонкий текст в много полосок",
+        "изящные линии как скан"
+      ],
+      "props": {
+        "fontWeight": 300,
+        "stripes": 16,
+        "gap": 0.55,
+        "color": "#d6dbe1",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "slow-amber",
+      "label": "Slow Amber",
+      "description": "Warm amber stripes glide in slowly and linger before drifting out.",
+      "askedAs": [
+        "slow warm striped title",
+        "amber sliced text that lingers",
+        "calm stripe entrance with long hold",
+        "медленный тёплый полосатый заголовок",
+        "янтарный текст полосами с долгой паузой"
+      ],
+      "props": {
+        "color": "#f2b134",
+        "speed": 0.5,
+        "hold": 90,
+        "stripes": 7,
+        "gap": 0.25
+      }
+    }
+  ]
+}

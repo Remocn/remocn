@@ -1,0 +1,87 @@
+{
+  "component": "sheet",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "slow-reveal",
+      "label": "Slow Reveal",
+      "description": "The panel glides in at a relaxed, cinematic pace with a gentle backdrop fade.",
+      "askedAs": [
+        "slow sliding side panel",
+        "smooth gentle drawer open",
+        "cinematic slow sheet",
+        "медленно выезжающая панель",
+        "плавное открытие боковой панели"
+      ],
+      "props": {
+        "state": "opened",
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "snappy-open",
+      "label": "Snappy Open",
+      "description": "The drawer snaps in quickly from the right edge for a brisk, responsive feel.",
+      "askedAs": [
+        "fast drawer slide in",
+        "quick settings panel open",
+        "snappy offcanvas",
+        "быстро открыть боковую панель",
+        "резкий выезд шторки"
+      ],
+      "props": {
+        "state": "opened",
+        "speed": 2
+      }
+    },
+    {
+      "id": "instant-flash",
+      "label": "Instant",
+      "description": "The sheet appears almost immediately with a near-instant dim, ideal for fast-cut demos.",
+      "askedAs": [
+        "instant side panel",
+        "super fast drawer",
+        "no-delay sheet appear",
+        "мгновенная панель",
+        "очень быстрое появление шторки"
+      ],
+      "props": {
+        "state": "opened",
+        "speed": 4
+      }
+    },
+    {
+      "id": "gentle-dismiss",
+      "label": "Gentle Dismiss",
+      "description": "The panel slides back out to the right slowly as the backdrop softly clears.",
+      "askedAs": [
+        "slow close drawer",
+        "panel sliding away gently",
+        "soft dismiss sheet",
+        "медленное закрытие панели",
+        "плавно убрать боковую шторку"
+      ],
+      "props": {
+        "state": "closed",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "quick-dismiss",
+      "label": "Quick Dismiss",
+      "description": "The sheet exits briskly off the right edge with a fast backdrop fade-out.",
+      "askedAs": [
+        "fast close panel",
+        "quick hide drawer",
+        "snap sheet closed",
+        "быстро закрыть панель",
+        "резкое скрытие шторки"
+      ],
+      "props": {
+        "state": "closed",
+        "speed": 2.5
+      }
+    }
+  ]
+}

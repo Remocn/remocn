@@ -1,0 +1,118 @@
+{
+  "component": "icon-download",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "hero-bold",
+      "label": "Hero Bold",
+      "description": "A large, heavy-stroked download icon that draws in and drops its arrow once, made for title cards.",
+      "askedAs": [
+        "big bold download icon",
+        "large thick download arrow for intro",
+        "oversized download symbol",
+        "большая жирная иконка загрузки",
+        "крупная стрелка скачивания"
+      ],
+      "props": {
+        "size": 160,
+        "strokeWidth": 3,
+        "animation": "both",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "fine-line-draw",
+      "label": "Fine Line",
+      "description": "A thin slate stroke that slowly traces itself in, with no arrow bounce, for calm editorial layouts.",
+      "askedAs": [
+        "thin line download icon slowly drawing",
+        "elegant minimal download outline",
+        "slow sketch of download icon",
+        "тонкая линия иконки загрузки",
+        "медленная отрисовка значка скачивания"
+      ],
+      "props": {
+        "animation": "draw",
+        "strokeWidth": 1.25,
+        "speed": 0.5,
+        "color": "#475569",
+        "size": 96
+      }
+    },
+    {
+      "id": "busy-loop",
+      "label": "Busy Loop",
+      "description": "A blue arrow that keeps dropping in a brisk loop, like a download in progress.",
+      "askedAs": [
+        "looping download animation",
+        "download in progress icon",
+        "repeating arrow drop",
+        "зацикленная анимация загрузки",
+        "иконка идёт скачивание"
+      ],
+      "props": {
+        "animation": "action",
+        "loop": true,
+        "speed": 1.5,
+        "color": "#2563eb",
+        "size": 64
+      }
+    },
+    {
+      "id": "success-green",
+      "label": "Success Green",
+      "description": "A quick, punchy emerald download icon that snaps in once to confirm a saved file.",
+      "askedAs": [
+        "green download done icon",
+        "fast download confirmation",
+        "quick snappy save icon",
+        "зелёная иконка успешной загрузки",
+        "быстрый значок файл скачан"
+      ],
+      "props": {
+        "color": "#059669",
+        "speed": 2,
+        "strokeWidth": 2.5,
+        "size": 72
+      }
+    },
+    {
+      "id": "soft-pulse",
+      "label": "Soft Pulse",
+      "description": "A muted terracotta icon with a slow, gentle looping arrow motion for ambient backgrounds.",
+      "askedAs": [
+        "slow gentle looping download",
+        "warm muted download icon",
+        "relaxed repeating arrow",
+        "медленная плавная петля загрузки",
+        "тёплая спокойная иконка скачивания"
+      ],
+      "props": {
+        "color": "#c2410c",
+        "loop": true,
+        "speed": 0.5,
+        "animation": "both",
+        "strokeWidth": 1.75
+      }
+    },
+    {
+      "id": "tiny-ui",
+      "label": "Tiny UI",
+      "description": "A compact, fast inline icon sized for buttons and toolbar captions.",
+      "askedAs": [
+        "small download icon for button",
+        "tiny inline download symbol",
+        "compact toolbar download icon",
+        "маленькая иконка загрузки для кнопки",
+        "мини значок скачивания"
+      ],
+      "props": {
+        "size": 28,
+        "speed": 1.75,
+        "strokeWidth": 2.25,
+        "animation": "action"
+      }
+    }
+  ]
+}

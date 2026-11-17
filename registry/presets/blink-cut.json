@@ -1,0 +1,124 @@
+{
+  "component": "blink-cut",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "strobe-rush",
+      "label": "Strobe Rush",
+      "description": "Heavy grotesque words slam past at a frantic beat with no drift, ending on a hot red accent.",
+      "askedAs": [
+        "make it really fast and punchy",
+        "aggressive hype cut",
+        "quick flashing bold words",
+        "очень быстрая нарезка слов",
+        "агрессивный жирный монтаж"
+      ],
+      "props": {
+        "framesPerWord": 3,
+        "fontWeight": 800,
+        "drift": false,
+        "accent": "#e5484d",
+        "scale": 1.2
+      }
+    },
+    {
+      "id": "editorial-slow",
+      "label": "Editorial Slow",
+      "description": "Light serif words linger on a warm cream page for a calm, magazine-like reveal.",
+      "askedAs": [
+        "slow elegant serif version",
+        "calm editorial look",
+        "luxury magazine style words",
+        "медленный элегантный вариант с засечками",
+        "спокойный журнальный стиль"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "fontWeight": 400,
+        "framesPerWord": 14,
+        "background": "#f4efe6",
+        "ink": "#1c1a17"
+      }
+    },
+    {
+      "id": "terminal-beat",
+      "label": "Terminal Beat",
+      "description": "Monospaced words tick by on near-black with a muted green accent, like a developer launch log.",
+      "askedAs": [
+        "techy code style teaser",
+        "monospace developer vibe",
+        "hacker terminal words",
+        "стиль терминала для разработчиков",
+        "моноширинный технический шрифт"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0b0f0c",
+        "ink": "#d8e6dc",
+        "accent": "#3fb68b",
+        "framesPerWord": 5,
+        "drift": false
+      }
+    },
+    {
+      "id": "clean-swiss",
+      "label": "Clean Swiss",
+      "description": "Crisp Inter on white with a cobalt accent, compact and tidy for a corporate launch.",
+      "askedAs": [
+        "clean minimal white version",
+        "corporate light theme",
+        "simple swiss design look",
+        "чистый минималистичный светлый вариант",
+        "строгий корпоративный стиль"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "fontWeight": 600,
+        "accent": "#1f4fd8",
+        "scale": 0.85
+      }
+    },
+    {
+      "id": "midnight-gold",
+      "label": "Midnight Gold",
+      "description": "Fraunces on deep navy with a soft gold accent, paced deliberately after a short pause.",
+      "askedAs": [
+        "premium dark and gold",
+        "luxury brand reveal",
+        "rich navy with gold accent",
+        "премиальный тёмный с золотом",
+        "люксовое появление бренда"
+      ],
+      "props": {
+        "fontFamily": "Fraunces",
+        "background": "#0e1424",
+        "ink": "#f2ebdd",
+        "accent": "#c9a45c",
+        "framesPerWord": 10,
+        "delay": 12
+      }
+    },
+    {
+      "id": "oversized-pulse",
+      "label": "Oversized Pulse",
+      "description": "Huge Space Grotesk words fill the frame at double speed with a violet accent for a music-driven sting.",
+      "askedAs": [
+        "giant words on the beat",
+        "big loud music sting",
+        "huge text fast tempo",
+        "огромные слова в такт музыке",
+        "крупный текст и быстрый темп"
+      ],
+      "props": {
+        "fontFamily": "Space Grotesk",
+        "fontWeight": 700,
+        "scale": 1.45,
+        "speed": 2,
+        "accent": "#7c5cff"
+      }
+    }
+  ]
+}

@@ -1,0 +1,106 @@
+{
+  "component": "baseline-drop",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "slow-monument",
+      "label": "Slow Monument",
+      "description": "Large serif words fall slowly and far apart, each one landing like a heavy stone over a warm amber streak.",
+      "askedAs": [
+        "slow heavy word drop",
+        "cinematic serif tagline ending",
+        "dramatic slow closing slogan",
+        "медленное падение слов с засечками",
+        "кинематографичный финальный слоган"
+      ],
+      "props": {
+        "fontFamily": "Instrument Serif",
+        "stagger": 24,
+        "fall": 26,
+        "hold": 40,
+        "scale": 1.3,
+        "accent": "#d9a35b"
+      }
+    },
+    {
+      "id": "snap-launch",
+      "label": "Snap Launch",
+      "description": "Tight, fast-landing grotesk words snap into place in quick succession over an electric violet glow.",
+      "askedAs": [
+        "fast punchy word drop",
+        "quick energetic slogan",
+        "snappy launch tagline",
+        "быстрое резкое появление слов",
+        "энергичный слоган для запуска"
+      ],
+      "props": {
+        "fontFamily": "Space Grotesk",
+        "stagger": 4,
+        "fall": 6,
+        "hold": 10,
+        "accent": "#7c5cff"
+      }
+    },
+    {
+      "id": "paper-editorial",
+      "label": "Paper Editorial",
+      "description": "Light ivory page with near-black Fraunces type and a muted terracotta streak, clean and grain-free.",
+      "askedAs": [
+        "light editorial tagline",
+        "magazine style closing words",
+        "warm paper background slogan",
+        "светлый журнальный стиль",
+        "слоган на бумажном фоне"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4efe6",
+        "ink": "#1c1a17",
+        "accent": "#c2593a",
+        "fontFamily": "Fraunces",
+        "grain": false
+      }
+    },
+    {
+      "id": "midnight-emerald",
+      "label": "Midnight Emerald",
+      "description": "Deep green-black ground with soft mint text and an emerald streak for a calm, luxurious finish.",
+      "askedAs": [
+        "dark green luxury tagline",
+        "elegant emerald ending",
+        "calm premium slogan",
+        "тёмно-зелёный премиальный слоган",
+        "элегантная концовка с изумрудом"
+      ],
+      "props": {
+        "background": "#0b1712",
+        "ink": "#e3f2ea",
+        "accent": "#2fb67c",
+        "fontFamily": "Manrope",
+        "stagger": 16,
+        "fall": 20
+      }
+    },
+    {
+      "id": "terminal-mono",
+      "label": "Terminal Mono",
+      "description": "Compact monospace words tick down evenly at small scale over a cool cyan streak for a technical feel.",
+      "askedAs": [
+        "monospace code style tagline",
+        "developer product ending",
+        "techy minimal slogan",
+        "моноширинный технический стиль",
+        "слоган в стиле кода"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "scale": 0.8,
+        "accent": "#22b8cf",
+        "background": "#0d1117",
+        "ink": "#e6edf3",
+        "stagger": 8
+      }
+    }
+  ]
+}

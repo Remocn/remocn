@@ -1,0 +1,112 @@
+{
+  "component": "selection-snap",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "figma-blue",
+      "label": "Figma Blue",
+      "description": "Classic design-tool look with a cool blue selection, violet accent and a slightly brisker snap.",
+      "askedAs": [
+        "make it look like figma",
+        "blue selection box design tool",
+        "clean ui editor style",
+        "как в фигме",
+        "синяя рамка выделения"
+      ],
+      "props": {
+        "selectionColor": "#0d99ff",
+        "accent": "#a259ff",
+        "speed": 1.25
+      }
+    },
+    {
+      "id": "slow-reveal",
+      "label": "Slow Reveal",
+      "description": "A large word swells slowly from hairline to black with a calm, deliberate pace.",
+      "askedAs": [
+        "slower dramatic weight change",
+        "big word that grows slowly",
+        "cinematic slow selection",
+        "медленное появление жирности",
+        "крупное слово медленно"
+      ],
+      "props": {
+        "fontSize": 200,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "quick-snap",
+      "label": "Quick Snap",
+      "description": "A compact word snaps fast into its frame without the size readout, for punchy cuts.",
+      "askedAs": [
+        "fast snappy selection",
+        "quick version no badge",
+        "short punchy title",
+        "быстрый щелчок выделения",
+        "без бейджа размера быстро"
+      ],
+      "props": {
+        "fontSize": 120,
+        "badge": false,
+        "speed": 2
+      }
+    },
+    {
+      "id": "subtle-weight",
+      "label": "Subtle Weight",
+      "description": "A restrained move from light to semibold in soft mint and graphite tones.",
+      "askedAs": [
+        "less dramatic weight jump",
+        "soft understated version",
+        "light to medium weight",
+        "сдержанная смена веса",
+        "мягкий вариант без контраста"
+      ],
+      "props": {
+        "fromWeight": 300,
+        "toWeight": 600,
+        "selectionColor": "#2bb3a3",
+        "accent": "#2bb3a3",
+        "color": "#e8ece9"
+      }
+    },
+    {
+      "id": "warm-paper",
+      "label": "Warm Paper",
+      "description": "Warm cream type with a terracotta accent and amber selection for an editorial feel.",
+      "askedAs": [
+        "warm editorial colors",
+        "orange and cream palette",
+        "less techy warmer look",
+        "тёплая палитра",
+        "кремовый текст с оранжевым"
+      ],
+      "props": {
+        "color": "#f3e9d8",
+        "accent": "#d9673a",
+        "selectionColor": "#e0a33a",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "reverse-thin",
+      "label": "Reverse Thin",
+      "description": "The word starts heavy and slims down to a hairline inside a monochrome selection.",
+      "askedAs": [
+        "bold to thin animation",
+        "weight goes down instead",
+        "monochrome selection box",
+        "от жирного к тонкому",
+        "обратная смена насыщенности"
+      ],
+      "props": {
+        "fromWeight": 900,
+        "toWeight": 100,
+        "selectionColor": "#9aa0a6",
+        "accent": "#fafafa"
+      }
+    }
+  ]
+}

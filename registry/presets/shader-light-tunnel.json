@@ -1,0 +1,115 @@
+{
+  "component": "shader-light-tunnel",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "slow-drift",
+      "label": "Slow Drift",
+      "description": "A calm, unhurried glide through softly lit ribbons with gentle spiral motion.",
+      "askedAs": [
+        "slow calm tunnel",
+        "gentle floating light tunnel",
+        "relaxed ambient flythrough",
+        "медленный спокойный туннель",
+        "плавный полёт сквозь свет"
+      ],
+      "props": {
+        "speed": 0.5,
+        "twist": 0.3,
+        "glow": 0.8,
+        "depth": 1.3
+      }
+    },
+    {
+      "id": "hyperdrive",
+      "label": "Hyperdrive",
+      "description": "A fast, bright rush forward with stretched perspective like jumping to light speed.",
+      "askedAs": [
+        "fast warp speed tunnel",
+        "hyperspace jump effect",
+        "energetic rush through light",
+        "быстрый туннель как гиперпрыжок",
+        "скоростной полёт сквозь свет"
+      ],
+      "props": {
+        "speed": 3,
+        "twist": 0.4,
+        "glow": 1.6,
+        "depth": 1.8
+      }
+    },
+    {
+      "id": "vortex",
+      "label": "Vortex",
+      "description": "A tightly wound whirlpool of many ribbons spinning hard as you dive in.",
+      "askedAs": [
+        "spinning vortex tunnel",
+        "hypnotic swirl of light",
+        "twisting spiral wormhole",
+        "закрученный вихрь из света",
+        "гипнотическая спираль туннеля"
+      ],
+      "props": {
+        "speed": 1.5,
+        "twist": 1.8,
+        "spirals": 6,
+        "depth": 0.8
+      }
+    },
+    {
+      "id": "dim-noir",
+      "label": "Dim Noir",
+      "description": "A low-exposure, moody passage where faint ribbons emerge from deep darkness.",
+      "askedAs": [
+        "dark moody tunnel",
+        "subtle low light background",
+        "understated cinematic tunnel",
+        "тёмный атмосферный туннель",
+        "приглушённый свет для фона"
+      ],
+      "props": {
+        "glow": 0.4,
+        "speed": 0.75,
+        "spirals": 2,
+        "timeOffset": 12
+      }
+    },
+    {
+      "id": "radiant-bloom",
+      "label": "Radiant Bloom",
+      "description": "An overexposed, luminous corridor with a single broad ribbon and a wide, shallow perspective.",
+      "askedAs": [
+        "bright glowing tunnel",
+        "dreamy blown out light",
+        "soft radiant reveal",
+        "яркий светящийся туннель",
+        "мягкое сияние для заставки"
+      ],
+      "props": {
+        "glow": 2.4,
+        "spirals": 1,
+        "twist": 1,
+        "depth": 0.6
+      }
+    },
+    {
+      "id": "straight-line",
+      "label": "Straight Line",
+      "description": "A clean, non-rotating forward flight with crisp parallel ribbons for minimal product intros.",
+      "askedAs": [
+        "straight tunnel without spin",
+        "clean minimal flythrough",
+        "steady forward motion",
+        "прямой туннель без вращения",
+        "минималистичный полёт вперёд"
+      ],
+      "props": {
+        "twist": 0,
+        "spirals": 4,
+        "speed": 1.25,
+        "timeOffset": 30
+      }
+    }
+  ]
+}

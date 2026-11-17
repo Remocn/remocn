@@ -1,0 +1,101 @@
+{
+  "component": "claude-chat",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "rapid-fire",
+      "label": "Rapid Fire",
+      "description": "Keeps the signature terracotta but types the prompt at a brisk, snappy clip.",
+      "askedAs": [
+        "make it type faster",
+        "quick typing claude input",
+        "speed up the prompt animation",
+        "быстрая печать",
+        "ускорить набор текста"
+      ],
+      "props": {
+        "speed": 2.5
+      }
+    },
+    {
+      "id": "ocean-blue",
+      "label": "Ocean Blue",
+      "description": "A calm cobalt send button with a slightly quicker typing rhythm for a cooler, product-UI feel.",
+      "askedAs": [
+        "blue send button",
+        "cool toned chat input",
+        "corporate blue accent",
+        "синяя кнопка отправки",
+        "холодный синий акцент"
+      ],
+      "props": {
+        "accentColor": "#2f6feb",
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "forest-green",
+      "label": "Forest Green",
+      "description": "A muted forest green accent at an unhurried pace for an earthy, grounded look.",
+      "askedAs": [
+        "green accent chat",
+        "natural earthy tone",
+        "calm green send button",
+        "зелёный акцент",
+        "спокойный природный цвет"
+      ],
+      "props": {
+        "accentColor": "#3f7d5a"
+      }
+    },
+    {
+      "id": "graphite-mono",
+      "label": "Graphite Mono",
+      "description": "A near-black graphite send button with a fast, efficient cadence for a minimal monochrome style.",
+      "askedAs": [
+        "monochrome chat input",
+        "black send button minimal",
+        "neutral no color accent",
+        "монохромный стиль",
+        "чёрная кнопка минимализм"
+      ],
+      "props": {
+        "accentColor": "#2e2e2e",
+        "speed": 2
+      }
+    },
+    {
+      "id": "plum-burst",
+      "label": "Plum Burst",
+      "description": "A rich muted plum accent paired with very fast typing for an energetic, punchy reveal.",
+      "askedAs": [
+        "purple accent fast",
+        "energetic violet chat",
+        "plum colored send button",
+        "фиолетовый быстрый",
+        "яркая сливовая кнопка"
+      ],
+      "props": {
+        "accentColor": "#8a4fbf",
+        "speed": 3
+      }
+    },
+    {
+      "id": "amber-glow",
+      "label": "Amber Glow",
+      "description": "A warm golden amber accent at the maximum speed for a near-instant, sunny pop.",
+      "askedAs": [
+        "gold accent instant typing",
+        "warm yellow send button",
+        "fastest possible prompt",
+        "золотой акцент",
+        "мгновенная печать"
+      ],
+      "props": {
+        "accentColor": "#c98a1b",
+        "speed": 4
+      }
+    }
+  ]
+}

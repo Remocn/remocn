@@ -1,0 +1,102 @@
+{
+  "component": "parallax-depth",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "dawn-drift",
+      "label": "Dawn Drift",
+      "description": "A slow, wide leftward glide across a pale peach sky with a soft amber sun.",
+      "askedAs": [
+        "slow sunrise pan",
+        "soft morning landscape",
+        "gentle warm establishing shot",
+        "медленный рассвет с панорамой",
+        "тёплое утреннее небо"
+      ],
+      "props": {
+        "skyColor": "#f3e3d3",
+        "sunColor": "#e89a4c",
+        "speed": 0.5,
+        "direction": "left",
+        "distance": 0.8
+      }
+    },
+    {
+      "id": "midnight-push",
+      "label": "Midnight Push",
+      "description": "A deep navy night with a cool moon-white sun and a strong, dramatic push-in.",
+      "askedAs": [
+        "night scene zoom in",
+        "dark blue moonlit hills",
+        "dramatic push into the scene",
+        "ночной пейзаж с наездом",
+        "тёмно-синее небо и луна"
+      ],
+      "props": {
+        "skyColor": "#0e1a2b",
+        "sunColor": "#e8e4d8",
+        "push": 0.44,
+        "distance": 0.25,
+        "seed": 11
+      }
+    },
+    {
+      "id": "brisk-truck",
+      "label": "Brisk Truck",
+      "description": "A fast, long sideways sweep on charcoal with a crisp orange sun for energetic openers.",
+      "askedAs": [
+        "fast sideways camera move",
+        "quick parallax sweep",
+        "energetic landscape pan",
+        "быстрый параллакс вбок",
+        "динамичная панорама"
+      ],
+      "props": {
+        "speed": 2,
+        "distance": 1.2,
+        "push": 0.06,
+        "sunColor": "#f2662a",
+        "seed": 7
+      }
+    },
+    {
+      "id": "still-bed",
+      "label": "Still Bed",
+      "description": "A barely moving, muted slate scene that sits quietly behind a title.",
+      "askedAs": [
+        "subtle background for title",
+        "almost static landscape",
+        "calm minimal motion",
+        "спокойный фон под заголовок",
+        "почти неподвижный пейзаж"
+      ],
+      "props": {
+        "distance": 0.15,
+        "push": 0.04,
+        "speed": 0.75,
+        "skyColor": "#2a2f33",
+        "sunColor": "#b8a68a"
+      }
+    },
+    {
+      "id": "desert-dusk",
+      "label": "Desert Dusk",
+      "description": "A dusky terracotta sky with a golden sun drifting left at an unhurried cinematic pace.",
+      "askedAs": [
+        "desert sunset parallax",
+        "warm dusk cinematic shot",
+        "golden hour hills",
+        "закат в пустыне",
+        "золотой час над холмами"
+      ],
+      "props": {
+        "skyColor": "#5a2e25",
+        "sunColor": "#f0b44c",
+        "direction": "left",
+        "seed": 18,
+        "push": 0.24
+      }
+    }
+  ]
+}

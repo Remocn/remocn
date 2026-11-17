@@ -1,0 +1,111 @@
+{
+  "component": "redline-measure",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "blueprint-review",
+      "label": "Blueprint Review",
+      "description": "Cool blue marks on a pale blue-grey canvas for a calm, engineering-spec feel.",
+      "askedAs": [
+        "blue measurement lines",
+        "blueprint style redlines",
+        "technical spec look",
+        "синие размерные линии",
+        "как чертёж"
+      ],
+      "props": {
+        "color": "#1f6feb",
+        "background": "#e8eef6",
+        "dim": 0.24
+      }
+    },
+    {
+      "id": "dark-inspect",
+      "label": "Dark Inspect",
+      "description": "Warm coral marks on a deep charcoal background with a heavier dim, like a dev-tools inspector.",
+      "askedAs": [
+        "dark mode redlines",
+        "inspector overlay on dark",
+        "night mode spacing marks",
+        "тёмная тема разметки",
+        "как инспектор в браузере"
+      ],
+      "props": {
+        "color": "#ff6b5e",
+        "background": "#16171b",
+        "dim": 0.4,
+        "stagger": 4
+      }
+    },
+    {
+      "id": "rapid-spec",
+      "label": "Rapid Spec",
+      "description": "Marks fire in quick succession at double speed for a punchy, energetic markup pass.",
+      "askedAs": [
+        "fast redlines",
+        "quick spec pass",
+        "snappy measurements",
+        "быстрая разметка",
+        "размеры появляются быстро"
+      ],
+      "props": {
+        "speed": 2,
+        "stagger": 2,
+        "dim": 0.1
+      }
+    },
+    {
+      "id": "slow-walkthrough",
+      "label": "Slow Walkthrough",
+      "description": "Each measurement lands slowly with long gaps and a strong dim, so viewers can read every value.",
+      "askedAs": [
+        "slow detailed measurements",
+        "calm design review",
+        "one by one slowly",
+        "медленная разметка",
+        "спокойный разбор отступов"
+      ],
+      "props": {
+        "speed": 0.5,
+        "stagger": 10,
+        "dim": 0.34
+      }
+    },
+    {
+      "id": "figma-violet",
+      "label": "Violet Handoff",
+      "description": "Soft violet marks on a near-white canvas with a light dim for a modern handoff-tool look.",
+      "askedAs": [
+        "purple measurement marks",
+        "figma handoff style",
+        "light minimal spec",
+        "фиолетовые размеры",
+        "светлая минималистичная разметка"
+      ],
+      "props": {
+        "color": "#7c4dff",
+        "background": "#f7f7f9",
+        "dim": 0.08
+      }
+    },
+    {
+      "id": "forest-ink",
+      "label": "Forest Ink",
+      "description": "Deep green marks on a warm paper background for a quiet, editorial annotation style.",
+      "askedAs": [
+        "green annotations",
+        "paper style markup",
+        "muted editorial redlines",
+        "зелёная разметка",
+        "на бумажном фоне"
+      ],
+      "props": {
+        "color": "#1e7a52",
+        "background": "#f3efe6",
+        "dim": 0.2,
+        "speed": 0.75
+      }
+    }
+  ]
+}

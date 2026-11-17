@@ -1,0 +1,100 @@
+{
+  "component": "accordion",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "slow-reveal",
+      "label": "Slow Reveal",
+      "description": "A calm, unhurried panel expansion that gives viewers time to read as the content unfolds.",
+      "askedAs": [
+        "slow accordion opening",
+        "gentle expand animation",
+        "relaxed FAQ reveal",
+        "медленное раскрытие аккордеона",
+        "плавное открытие панели"
+      ],
+      "props": {
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "snappy",
+      "label": "Snappy",
+      "description": "A quick, crisp open that feels like a responsive real-world click.",
+      "askedAs": [
+        "fast accordion open",
+        "snappy expand",
+        "quick click reveal",
+        "быстрое открытие аккордеона",
+        "резкое раскрытие"
+      ],
+      "props": {
+        "speed": 2.5
+      }
+    },
+    {
+      "id": "ghost-minimal",
+      "label": "Ghost Minimal",
+      "description": "A borderless, backgroundless disclosure that sits lightly on any layout with an easy pace.",
+      "askedAs": [
+        "minimal accordion no background",
+        "transparent accordion",
+        "subtle borderless FAQ",
+        "минималистичный аккордеон",
+        "прозрачный аккордеон без фона"
+      ],
+      "props": {
+        "variant": "ghost",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "ghost-quick",
+      "label": "Ghost Quick",
+      "description": "A lightweight transparent panel that pops open briskly for fast-cut product demos.",
+      "askedAs": [
+        "fast transparent accordion",
+        "quick ghost expand",
+        "light accordion for demo",
+        "быстрый прозрачный аккордеон",
+        "лёгкое быстрое раскрытие"
+      ],
+      "props": {
+        "variant": "ghost",
+        "speed": 2
+      }
+    },
+    {
+      "id": "collapse",
+      "label": "Collapse",
+      "description": "The panel folds shut with a steady motion, ideal for closing out a section.",
+      "askedAs": [
+        "accordion closing animation",
+        "collapse the panel",
+        "fold up FAQ item",
+        "закрытие аккордеона",
+        "сворачивание панели"
+      ],
+      "props": {
+        "state": "closed",
+        "speed": 1.25
+      }
+    },
+    {
+      "id": "cinematic",
+      "label": "Cinematic",
+      "description": "An ultra-slow, deliberate expansion that turns a simple disclosure into a dramatic moment.",
+      "askedAs": [
+        "very slow dramatic reveal",
+        "cinematic accordion",
+        "slow motion expand",
+        "кинематографичное раскрытие",
+        "очень медленный аккордеон"
+      ],
+      "props": {
+        "speed": 0.25
+      }
+    }
+  ]
+}

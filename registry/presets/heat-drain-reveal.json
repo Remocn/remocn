@@ -1,0 +1,120 @@
+{
+  "component": "heat-drain-reveal",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "ember-night",
+      "label": "Ember Night",
+      "description": "Deep warm charcoal ground with a molten orange-red accent and a slow, smouldering cool-down.",
+      "askedAs": [
+        "warm dark calendar with orange glow",
+        "slow fiery launch reveal",
+        "moody ember look",
+        "тёплый тёмный календарь с оранжевым",
+        "медленное огненное появление"
+      ],
+      "props": {
+        "ground": "ember",
+        "accent": "#ff5a1f",
+        "speed": 0.75,
+        "stagger": 3,
+        "fontFamily": "Bricolage Grotesque"
+      }
+    },
+    {
+      "id": "polar-terminal",
+      "label": "Polar Terminal",
+      "description": "Icy blue accent on a cold polar ground set in monospace for a crisp engineering feel.",
+      "askedAs": [
+        "cold blue developer calendar",
+        "monospace launch date reveal",
+        "icy tech look",
+        "холодный синий календарь для разработчиков",
+        "моноширинный шрифт техно стиль"
+      ],
+      "props": {
+        "ground": "polar",
+        "accent": "#5cc8ff",
+        "fontFamily": "JetBrains Mono",
+        "stagger": 1
+      }
+    },
+    {
+      "id": "paper-light",
+      "label": "Paper Light",
+      "description": "Light theme on soft off-white with dark ink and a muted terracotta highlight in an editorial serif.",
+      "askedAs": [
+        "light version of the launch calendar",
+        "clean white editorial calendar",
+        "serif calendar on paper",
+        "светлый календарь на белом фоне",
+        "редакционный стиль с засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "ground": "paper-crease",
+        "background": "#f4f1ea",
+        "ink": "#1c1a17",
+        "accent": "#c4532d",
+        "fontFamily": "Instrument Serif"
+      }
+    },
+    {
+      "id": "quick-cut",
+      "label": "Quick Cut",
+      "description": "Fast, punchy reveal with no word stagger and a slightly larger calendar for short social edits.",
+      "askedAs": [
+        "fast snappy calendar animation",
+        "quick launch day reveal for reels",
+        "bigger and faster version",
+        "быстрая анимация календаря",
+        "резкое появление для коротких видео"
+      ],
+      "props": {
+        "speed": 2,
+        "stagger": 0,
+        "scale": 1.2,
+        "fontFamily": "Space Grotesk"
+      }
+    },
+    {
+      "id": "velvet-violet",
+      "label": "Velvet Violet",
+      "description": "Plush violet evening ground with a soft lavender accent and a calm, unhurried pace.",
+      "askedAs": [
+        "purple dark calendar",
+        "elegant violet launch reveal",
+        "calm night purple look",
+        "фиолетовый тёмный календарь",
+        "спокойный элегантный стиль"
+      ],
+      "props": {
+        "ground": "velvet-hour",
+        "accent": "#b69cff",
+        "speed": 0.5,
+        "fontFamily": "Manrope",
+        "delay": 12
+      }
+    },
+    {
+      "id": "greenhouse-go",
+      "label": "Greenhouse Go",
+      "description": "Compact calendar on a deep green ground with a fresh mint highlight in clean Geist type.",
+      "askedAs": [
+        "green launch calendar",
+        "small calendar with mint accent",
+        "fresh green tech look",
+        "зелёный календарь запуска",
+        "компактный календарь с мятным акцентом"
+      ],
+      "props": {
+        "ground": "greenhouse",
+        "accent": "#4fe0a6",
+        "scale": 0.85,
+        "fontFamily": "Geist",
+        "speed": 1.25
+      }
+    }
+  ]
+}

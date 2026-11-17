@@ -1,0 +1,106 @@
+{
+  "component": "rolling-number",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "hero-headline",
+      "label": "Hero Headline",
+      "description": "Oversized near-black digits that roll at a calm, deliberate pace for a milestone reveal.",
+      "askedAs": [
+        "make the number huge and slow",
+        "big dramatic number reveal",
+        "giant milestone counter",
+        "огромное число медленно",
+        "крупный счётчик для главного слайда"
+      ],
+      "props": {
+        "fontSize": 240,
+        "color": "#0f172a"
+      }
+    },
+    {
+      "id": "quick-tick",
+      "label": "Quick Tick",
+      "description": "Compact digits that snap to the target fast, like a live dashboard readout.",
+      "askedAs": [
+        "fast small counter",
+        "quick dashboard number",
+        "snappy number update",
+        "быстрый маленький счётчик",
+        "число как на дашборде"
+      ],
+      "props": {
+        "fontSize": 64,
+        "speed": 3
+      }
+    },
+    {
+      "id": "growth-green",
+      "label": "Growth Green",
+      "description": "Deep green digits at a lively pace that read as positive growth.",
+      "askedAs": [
+        "green number for revenue growth",
+        "positive metric color",
+        "money counter in green",
+        "зелёное число роста",
+        "счётчик выручки зелёным"
+      ],
+      "props": {
+        "color": "#15803d",
+        "speed": 1.75,
+        "fontSize": 144
+      }
+    },
+    {
+      "id": "brand-blue",
+      "label": "Brand Blue",
+      "description": "Medium-sized cobalt digits with a steady roll for clean corporate stats.",
+      "askedAs": [
+        "blue corporate stat",
+        "professional number in blue",
+        "clean business counter",
+        "синий корпоративный счётчик",
+        "деловая цифра синим"
+      ],
+      "props": {
+        "color": "#1d4ed8",
+        "fontSize": 96,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "warm-accent",
+      "label": "Warm Accent",
+      "description": "Large burnt-orange digits that roll briskly for an energetic highlight.",
+      "askedAs": [
+        "orange highlighted number",
+        "warm energetic counter",
+        "punchy accent stat",
+        "оранжевое яркое число",
+        "энергичный счётчик тёплого цвета"
+      ],
+      "props": {
+        "color": "#c2410c",
+        "fontSize": 180,
+        "speed": 2.5
+      }
+    },
+    {
+      "id": "quiet-slate",
+      "label": "Quiet Slate",
+      "description": "Small muted slate digits that roll gently as a subtle supporting figure.",
+      "askedAs": [
+        "subtle grey number",
+        "understated small stat",
+        "muted secondary counter",
+        "неброское серое число",
+        "тихий второстепенный счётчик"
+      ],
+      "props": {
+        "color": "#64748b",
+        "fontSize": 48
+      }
+    }
+  ]
+}

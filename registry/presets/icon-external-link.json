@@ -1,0 +1,98 @@
+{
+  "component": "icon-external-link",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "hairline-slow-draw",
+      "label": "Hairline Draw",
+      "description": "A large, thin-stroked icon that slowly draws itself in a soft slate tone.",
+      "askedAs": [
+        "thin slow drawing link icon",
+        "elegant line draw external link",
+        "delicate outline animation",
+        "тонкая медленная отрисовка иконки",
+        "изящная линия внешней ссылки"
+      ],
+      "props": {
+        "animation": "draw",
+        "strokeWidth": 1,
+        "speed": 0.5,
+        "size": 120,
+        "color": "#475569"
+      }
+    },
+    {
+      "id": "bold-snap",
+      "label": "Bold Snap",
+      "description": "A heavy-stroked icon that pops its arrow out quickly with a punchy feel.",
+      "askedAs": [
+        "thick fast arrow pop",
+        "bold quick external link",
+        "punchy link icon motion",
+        "жирная быстрая стрелка",
+        "резкая анимация иконки ссылки"
+      ],
+      "props": {
+        "animation": "action",
+        "strokeWidth": 3,
+        "speed": 2,
+        "size": 72
+      }
+    },
+    {
+      "id": "link-blue-loop",
+      "label": "Link Blue Loop",
+      "description": "A classic hyperlink blue icon that keeps nudging outward in a continuous loop.",
+      "askedAs": [
+        "blue looping link icon",
+        "repeating external link arrow",
+        "hyperlink style animated icon",
+        "синяя зацикленная иконка ссылки",
+        "повторяющаяся анимация ссылки"
+      ],
+      "props": {
+        "color": "#1f6feb",
+        "loop": true,
+        "animation": "action",
+        "size": 64
+      }
+    },
+    {
+      "id": "tiny-inline",
+      "label": "Tiny Inline",
+      "description": "A small, compact icon in muted gray that draws briskly, suited to sit beside text.",
+      "askedAs": [
+        "small inline link icon",
+        "tiny external link next to text",
+        "compact subtle link arrow",
+        "маленькая иконка рядом с текстом",
+        "компактная серая стрелка ссылки"
+      ],
+      "props": {
+        "size": 24,
+        "color": "#6b7280",
+        "strokeWidth": 1.5,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "hero-emerald",
+      "label": "Hero Emerald",
+      "description": "An oversized deep green icon that draws and then gestures outward at a calm pace.",
+      "askedAs": [
+        "huge green link icon",
+        "big hero external link animation",
+        "large calm green arrow",
+        "большая зелёная иконка ссылки",
+        "крупная спокойная анимация стрелки"
+      ],
+      "props": {
+        "size": 200,
+        "color": "#047857",
+        "strokeWidth": 2.5,
+        "speed": 0.75
+      }
+    }
+  ]
+}

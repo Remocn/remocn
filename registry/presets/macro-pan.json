@@ -1,0 +1,123 @@
+{
+  "component": "macro-pan",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "slow-cinema",
+      "label": "Slow Cinema",
+      "description": "A long, unhurried macro scan with a gentle pull-back and warm amber accent on deep black.",
+      "askedAs": [
+        "slow cinematic title pan",
+        "luxury slow reveal of headline",
+        "film-like macro scan across letters",
+        "медленное кинематографичное появление заголовка",
+        "плавная панорама по буквам"
+      ],
+      "props": {
+        "panLen": 180,
+        "pullLen": 70,
+        "accent": "#c8963e",
+        "background": "#0b0a09",
+        "ink": "#f2ebdd"
+      }
+    },
+    {
+      "id": "gallery-paper",
+      "label": "Gallery Paper",
+      "description": "Light editorial look with Instrument Serif in ink black on warm paper and a muted terracotta accent.",
+      "askedAs": [
+        "light editorial serif title",
+        "museum style headline on paper",
+        "clean white magazine title reveal",
+        "светлый журнальный заголовок",
+        "заголовок как в галерее на бумаге"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "background": "#f4efe6",
+        "ink": "#1a1714",
+        "accent": "#b5543a",
+        "grain": false
+      }
+    },
+    {
+      "id": "quick-cut",
+      "label": "Quick Cut",
+      "description": "A brisk, punchy pass over the glyphs with a snappy pull-back, sized up for impact.",
+      "askedAs": [
+        "fast punchy title reveal",
+        "quick macro pan for social",
+        "snappy headline intro",
+        "быстрое появление заголовка",
+        "динамичный заголовок для соцсетей"
+      ],
+      "props": {
+        "panLen": 44,
+        "pullLen": 12,
+        "speed": 1.5,
+        "scale": 1.2
+      }
+    },
+    {
+      "id": "tech-mono",
+      "label": "Tech Mono",
+      "description": "Monospaced type on cool graphite with a crisp teal accent and no grain for a precise, technical feel.",
+      "askedAs": [
+        "technical monospace title",
+        "code style chapter opener",
+        "clean tech product headline",
+        "технический заголовок моноширинным шрифтом",
+        "заголовок в стиле кода"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#11151a",
+        "ink": "#e3e8ee",
+        "accent": "#2ba3a0",
+        "grain": false,
+        "scale": 0.85
+      }
+    },
+    {
+      "id": "midnight-velvet",
+      "label": "Midnight Velvet",
+      "description": "Deep navy backdrop with soft ivory serif and a dusty violet gradient, delayed for a composed entrance.",
+      "askedAs": [
+        "dark blue premium title",
+        "elegant night headline with purple",
+        "moody luxury chapter opener",
+        "тёмно-синий премиальный заголовок",
+        "элегантная заставка главы"
+      ],
+      "props": {
+        "background": "#0e1424",
+        "ink": "#ede8f5",
+        "accent": "#7c6bc4",
+        "delay": 20,
+        "panLen": 130
+      }
+    },
+    {
+      "id": "modern-grotesk",
+      "label": "Modern Grotesk",
+      "description": "Contemporary Space Grotesk on light grey with a forest green accent at a smaller, airy scale.",
+      "askedAs": [
+        "modern sans serif title pan",
+        "minimal startup headline",
+        "clean light grotesk opener",
+        "современный заголовок без засечек",
+        "минималистичный светлый заголовок"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Space Grotesk",
+        "background": "#ecedea",
+        "ink": "#161816",
+        "accent": "#2f6b4f",
+        "scale": 0.8
+      }
+    }
+  ]
+}

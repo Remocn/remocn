@@ -62,6 +62,7 @@ export function DocsPlayer({
   return (
     <section
       aria-label={label}
+      data-docs-player=""
       className={cn(
         "not-prose flex flex-col gap-2 rounded-card border border-transparent bg-dark-surface p-2 text-[#fafafa] dark:border-hairline dark:bg-surface",
         className,

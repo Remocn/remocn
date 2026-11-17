@@ -1,0 +1,97 @@
+{
+  "component": "kinetic-center-build",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "slow-luxe",
+      "label": "Slow Luxe",
+      "description": "Light, airy type glides in gently from a short distance for an unhurried luxury feel.",
+      "askedAs": [
+        "slow elegant word reveal",
+        "gentle premium headline build",
+        "calm luxury text animation",
+        "медленное элегантное появление слов",
+        "спокойный премиальный заголовок"
+      ],
+      "props": {
+        "speed": 0.5,
+        "entryOffset": 40,
+        "fontWeight": "400",
+        "color": "#3a3530"
+      }
+    },
+    {
+      "id": "punch-launch",
+      "label": "Punch Launch",
+      "description": "Heavy oversized words slam in fast from far right for a high-energy launch moment.",
+      "askedAs": [
+        "fast bold headline punch",
+        "energetic big word build",
+        "aggressive launch text",
+        "быстрые жирные слова для запуска",
+        "энергичный крупный заголовок"
+      ],
+      "props": {
+        "speed": 2,
+        "entryOffset": 150,
+        "fontSize": 110,
+        "fontWeight": "700"
+      }
+    },
+    {
+      "id": "midnight-ink",
+      "label": "Midnight Ink",
+      "description": "Deep navy semibold type builds at a steady, confident pace.",
+      "askedAs": [
+        "navy blue headline build",
+        "corporate confident word reveal",
+        "dark blue kinetic text",
+        "тёмно-синий заголовок по словам",
+        "деловое появление текста"
+      ],
+      "props": {
+        "color": "#1b2a4a",
+        "speed": 1.25,
+        "entryOffset": 100
+      }
+    },
+    {
+      "id": "quiet-caption",
+      "label": "Quiet Caption",
+      "description": "Small medium-weight grey text slides in subtly, ideal for understated taglines.",
+      "askedAs": [
+        "small subtle tagline build",
+        "minimal caption word reveal",
+        "understated text animation",
+        "маленькая скромная подпись",
+        "минималистичное появление слов"
+      ],
+      "props": {
+        "fontSize": 36,
+        "fontWeight": "500",
+        "color": "#5c5c5c",
+        "entryOffset": 28,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "ember-statement",
+      "label": "Ember Statement",
+      "description": "Warm burnt-orange bold headline with brisk momentum for a vivid brand statement.",
+      "askedAs": [
+        "warm orange bold headline",
+        "brand color word build",
+        "vibrant statement text",
+        "оранжевый жирный заголовок",
+        "яркое заявление бренда"
+      ],
+      "props": {
+        "color": "#c2410c",
+        "fontWeight": "700",
+        "fontSize": 90,
+        "speed": 1.5
+      }
+    }
+  ]
+}

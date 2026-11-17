@@ -1,0 +1,126 @@
+{
+  "component": "squiggle",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "marker-underline",
+      "label": "Marker Underline",
+      "description": "A thick, low and lazy wave in warm amber that settles into a calm underline and stays on screen.",
+      "askedAs": [
+        "thick underline that stays",
+        "hand-drawn marker underline",
+        "bold wavy underline under a word",
+        "жирное подчёркивание маркером",
+        "волнистая линия под словом"
+      ],
+      "props": {
+        "color": "#f2b544",
+        "weight": 7,
+        "amplitude": 8,
+        "wavelength": 70,
+        "settle": 0.8,
+        "erase": false
+      }
+    },
+    {
+      "id": "electric-zigzag",
+      "label": "Electric Zigzag",
+      "description": "A fast, sharp zigzag in cool cyan that snaps across and clears quickly.",
+      "askedAs": [
+        "fast zigzag line",
+        "energetic lightning accent",
+        "quick sharp zigzag stroke",
+        "быстрый зигзаг",
+        "резкая линия как молния"
+      ],
+      "props": {
+        "shape": "zigzag",
+        "color": "#5ad1e6",
+        "amplitude": 20,
+        "wavelength": 28,
+        "speed": 2,
+        "hold": 4
+      }
+    },
+    {
+      "id": "slow-loops",
+      "label": "Slow Loops",
+      "description": "Wide, unhurried coral loops that glide along a long path and linger before erasing.",
+      "askedAs": [
+        "slow loopy line",
+        "calm curly connector",
+        "relaxed looping scribble",
+        "медленные петли",
+        "плавная линия с завитками"
+      ],
+      "props": {
+        "shape": "loops",
+        "color": "#ef7b6b",
+        "amplitude": 24,
+        "length": 560,
+        "speed": 0.5,
+        "hold": 40
+      }
+    },
+    {
+      "id": "fine-coil",
+      "label": "Fine Coil",
+      "description": "A thin, tight spring-like coil in soft sage that reads as a delicate technical accent.",
+      "askedAs": [
+        "thin spring line",
+        "delicate coil accent",
+        "tight spiral stroke",
+        "тонкая пружинка",
+        "спиральная тонкая линия"
+      ],
+      "props": {
+        "shape": "coil",
+        "color": "#9cc5a1",
+        "weight": 1.5,
+        "amplitude": 10,
+        "wavelength": 16
+      }
+    },
+    {
+      "id": "rising-diagonal",
+      "label": "Rising Diagonal",
+      "description": "A medium lilac wave climbing at a diagonal to connect two corners of the frame.",
+      "askedAs": [
+        "diagonal connecting line",
+        "wave going up at an angle",
+        "line linking two corners",
+        "диагональная волна",
+        "линия между углами кадра"
+      ],
+      "props": {
+        "color": "#b9a7f0",
+        "angle": -30,
+        "length": 720,
+        "x": 0.2,
+        "y": 0.75,
+        "amplitude": 18
+      }
+    },
+    {
+      "id": "quiet-divider",
+      "label": "Quiet Divider",
+      "description": "A long, near-flat graphite ripple that draws slowly and settles into a calm section rule.",
+      "askedAs": [
+        "subtle section divider",
+        "almost straight animated line",
+        "minimal separator line",
+        "спокойный разделитель",
+        "почти прямая линия"
+      ],
+      "props": {
+        "color": "#8a8f98",
+        "weight": 2,
+        "amplitude": 5,
+        "wavelength": 120,
+        "length": 900,
+        "settle": 1
+      }
+    }
+  ]
+}

@@ -1,0 +1,103 @@
+{
+  "component": "max-q",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "mission-control",
+      "label": "Mission Control",
+      "description": "A deep navy console with amber telemetry set in a monospaced readout.",
+      "askedAs": [
+        "make it look like a NASA control room",
+        "monospace amber telemetry on dark",
+        "retro flight console look",
+        "как пульт управления полётом",
+        "янтарные цифры на тёмном фоне"
+      ],
+      "props": {
+        "theme": "dark",
+        "background": "#0b0f14",
+        "ink": "#e6edf3",
+        "accent": "#e8a33d",
+        "fontFamily": "JetBrains Mono"
+      }
+    },
+    {
+      "id": "paper-telemetry",
+      "label": "Paper Telemetry",
+      "description": "Warm off-white paper with charcoal serif figures and a burnt orange curve, played a touch slower.",
+      "askedAs": [
+        "light editorial version of the launch chart",
+        "serif numbers on cream background",
+        "make it feel like a printed report",
+        "светлый вариант в стиле журнала",
+        "кремовый фон и шрифт с засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4f1ea",
+        "ink": "#1c1c1c",
+        "accent": "#c2410c",
+        "fontFamily": "Fraunces",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "hard-burn",
+      "label": "Hard Burn",
+      "description": "A punchy, oversized readout with a hot coral curve that climbs fast and flashes the banner briefly.",
+      "askedAs": [
+        "faster more energetic launch",
+        "quick aggressive version for a promo",
+        "bigger and snappier telemetry",
+        "сделай быстрее и динамичнее",
+        "крупно и резко"
+      ],
+      "props": {
+        "speed": 2,
+        "bandHold": 10,
+        "scale": 1.15,
+        "accent": "#ff5a36"
+      }
+    },
+    {
+      "id": "slow-ascent",
+      "label": "Slow Ascent",
+      "description": "A calm, unhurried climb in soft periwinkle with a late start and a long-held peak banner.",
+      "askedAs": [
+        "slow cinematic climb",
+        "let the peak moment linger",
+        "calmer version with a pause before it starts",
+        "медленный плавный подъём",
+        "подольше держать баннер"
+      ],
+      "props": {
+        "speed": 0.5,
+        "bandHold": 45,
+        "delay": 12,
+        "fontFamily": "Inter",
+        "accent": "#7aa2f7"
+      }
+    },
+    {
+      "id": "all-nominal",
+      "label": "All Nominal",
+      "description": "A compact dark-green status screen with mint figures that reads as a quiet all-clear.",
+      "askedAs": [
+        "green systems-ok look",
+        "smaller telemetry in green tones",
+        "status dashboard feel",
+        "зелёный вариант всё в норме",
+        "компактный экран статуса"
+      ],
+      "props": {
+        "theme": "dark",
+        "background": "#07130e",
+        "ink": "#d7f5e3",
+        "accent": "#3fb97a",
+        "fontFamily": "Space Grotesk",
+        "scale": 0.85
+      }
+    }
+  ]
+}

@@ -1,0 +1,104 @@
+{
+  "component": "focus-pan-text",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "Light paper ground with an elegant serif and an unhurried, magazine-like reveal.",
+      "askedAs": [
+        "elegant serif version on light background",
+        "slow editorial text reveal",
+        "classy magazine style launch message",
+        "светлый вариант с антиквой",
+        "медленный элегантный текст"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "ground": "paper-crease",
+        "speed": 0.75,
+        "stagger": 5,
+        "scale": 1.15
+      }
+    },
+    {
+      "id": "terminal-checks",
+      "label": "Terminal Checks",
+      "description": "Monospaced, quick-firing status lines on near-black with a muted green accent, like a passing build log.",
+      "askedAs": [
+        "make it look like a terminal build log",
+        "fast monospace checks passing",
+        "developer console style status",
+        "как терминал с моноширинным шрифтом",
+        "быстрые проверки в стиле консоли"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0d1110",
+        "ink": "#d7e4dc",
+        "accent": "#4fae7c",
+        "speed": 1.5,
+        "stagger": 1
+      }
+    },
+    {
+      "id": "midnight-calm",
+      "label": "Midnight Calm",
+      "description": "Deep blue-hour gradient with light-weight type and long holds for a quiet, premium pace.",
+      "askedAs": [
+        "slow calm dark blue version",
+        "thin text with a moody night background",
+        "relaxed premium launch reveal",
+        "спокойный тёмно-синий вариант",
+        "медленно и тонким шрифтом"
+      ],
+      "props": {
+        "ground": "blue-hour",
+        "fontWeight": 300,
+        "speed": 0.5,
+        "firstHold": 60,
+        "accent": "#8fb4ff"
+      }
+    },
+    {
+      "id": "warm-ember",
+      "label": "Warm Ember",
+      "description": "Warm copper-toned ground with Fraunces type and a soft amber accent for a cozy, crafted feel.",
+      "askedAs": [
+        "warm orange cozy look",
+        "copper toned launch message",
+        "friendly serif with warm colors",
+        "тёплый оранжевый вариант",
+        "уютный стиль с медными тонами"
+      ],
+      "props": {
+        "ground": "ember",
+        "fontFamily": "Fraunces",
+        "accent": "#e8a46a",
+        "ink": "#f6ece2"
+      }
+    },
+    {
+      "id": "snappy-launch",
+      "label": "Snappy Launch",
+      "description": "Compact, fast and punchy Space Grotesk reveal with a crisp cobalt accent on a clean light background.",
+      "askedAs": [
+        "quick energetic product launch",
+        "fast short version for social",
+        "bold modern tech style",
+        "быстрый энергичный запуск",
+        "короткая динамичная версия"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Space Grotesk",
+        "accent": "#2f5bea",
+        "speed": 2,
+        "firstHold": 10,
+        "scale": 0.85
+      }
+    }
+  ]
+}

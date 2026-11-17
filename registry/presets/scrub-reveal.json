@@ -1,0 +1,125 @@
+{
+  "component": "scrub-reveal",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-paper",
+      "label": "Editorial Paper",
+      "description": "Warm off-white page with dark serif type and a deep oxblood accent, like a printed magazine spread.",
+      "askedAs": [
+        "make it look like a magazine page",
+        "light serif editorial style",
+        "printed paper look with red accent",
+        "как страница журнала",
+        "светлый редакционный стиль с засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4efe6",
+        "ink": "#1c1a17",
+        "accent": "#9e2a2b",
+        "fontFamily": "Fraunces",
+        "fontWeight": 400
+      }
+    },
+    {
+      "id": "slow-manifesto",
+      "label": "Slow Manifesto",
+      "description": "A long, deliberate scrub in light Instrument Serif on near-black, letting each word land.",
+      "askedAs": [
+        "slower dramatic reveal",
+        "calm cinematic manifesto",
+        "let the text reveal slowly",
+        "медленное появление текста",
+        "спокойный кинематографичный манифест"
+      ],
+      "props": {
+        "scrub": 190,
+        "speed": 0.75,
+        "delay": 20,
+        "fontFamily": "Instrument Serif",
+        "fontWeight": 300,
+        "scale": 1.15
+      }
+    },
+    {
+      "id": "quick-punch",
+      "label": "Quick Punch",
+      "description": "Fast, bold scrub in heavy Space Grotesk with a warm amber highlight for social cuts.",
+      "askedAs": [
+        "fast bold reveal for social",
+        "punchy quick text",
+        "snappy heavy headline",
+        "быстрое резкое появление",
+        "жирный текст для соцсетей"
+      ],
+      "props": {
+        "scrub": 56,
+        "speed": 1.5,
+        "fontFamily": "Space Grotesk",
+        "fontWeight": 700,
+        "accent": "#f2a93b"
+      }
+    },
+    {
+      "id": "midnight-emerald",
+      "label": "Midnight Emerald",
+      "description": "Deep navy background with soft ivory text and a muted emerald gradient phrase.",
+      "askedAs": [
+        "dark blue with green highlight",
+        "luxury navy look",
+        "elegant dark premium style",
+        "тёмно-синий с изумрудным",
+        "премиальный тёмный стиль"
+      ],
+      "props": {
+        "background": "#0e1626",
+        "ink": "#ede8dd",
+        "accent": "#2fa37a",
+        "fontFamily": "Manrope",
+        "scale": 1.05
+      }
+    },
+    {
+      "id": "terminal-note",
+      "label": "Terminal Note",
+      "description": "Compact monospace text on graphite with a cool cyan accent, like a developer changelog.",
+      "askedAs": [
+        "code style monospace text",
+        "developer terminal look",
+        "techy small text reveal",
+        "моноширинный шрифт как в терминале",
+        "технический стиль для разработчиков"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "fontWeight": 400,
+        "background": "#16181c",
+        "ink": "#d6dae0",
+        "accent": "#4fb3d9",
+        "scale": 0.85
+      }
+    },
+    {
+      "id": "clean-studio",
+      "label": "Clean Studio",
+      "description": "Crisp white canvas with Inter type and a soft violet accent for product launches.",
+      "askedAs": [
+        "clean white minimal",
+        "bright startup style",
+        "light modern product look",
+        "чистый белый минимализм",
+        "светлый современный стиль"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#ffffff",
+        "ink": "#111318",
+        "accent": "#6b4ee6",
+        "fontFamily": "Inter",
+        "fontWeight": 600
+      }
+    }
+  ]
+}

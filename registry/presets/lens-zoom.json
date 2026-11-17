@@ -1,0 +1,100 @@
+{
+  "component": "lens-zoom",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "smooth-glide",
+      "label": "Smooth Glide",
+      "description": "A slow, buttery punch-in with dense blur and almost no shake, like a dolly push on a gimbal.",
+      "askedAs": [
+        "smooth slow zoom transition",
+        "cinematic punch-in without shake",
+        "soft dreamy lens zoom",
+        "плавный зум без тряски",
+        "медленный кинематографичный переход"
+      ],
+      "props": {
+        "speed": 0.5,
+        "blurSamples": 24,
+        "lensSteps": 20,
+        "shakeAmount": 0,
+        "shakeTranslatePx": 8
+      }
+    },
+    {
+      "id": "beat-slam",
+      "label": "Beat Slam",
+      "description": "A fast, violent hit with heavy shake and wide travel that lands right on the drop.",
+      "askedAs": [
+        "aggressive zoom on beat drop",
+        "hard hitting shaky transition",
+        "intense camera slam cut",
+        "резкий переход на дроп",
+        "агрессивный зум с сильной тряской"
+      ],
+      "props": {
+        "speed": 2,
+        "shakeAmount": 220,
+        "shakeTranslatePx": 80,
+        "blurSamples": 12
+      }
+    },
+    {
+      "id": "handheld-whip",
+      "label": "Handheld Whip",
+      "description": "A natural, documentary-style whip with moderate shake and short travel at a slightly brisk pace.",
+      "askedAs": [
+        "handheld camera style cut",
+        "realistic camera whip transition",
+        "documentary zoom move",
+        "ручная камера переход",
+        "реалистичный рывок камеры"
+      ],
+      "props": {
+        "speed": 1.25,
+        "shakeAmount": 110,
+        "shakeTranslatePx": 28,
+        "lensSteps": 12
+      }
+    },
+    {
+      "id": "lo-fi-snap",
+      "label": "Lo-Fi Snap",
+      "description": "A quick, stepped punch-in with coarse blur and lens warp for a gritty, stuttery feel.",
+      "askedAs": [
+        "choppy glitchy zoom cut",
+        "low fi stepped transition",
+        "crunchy fast punch in",
+        "рваный глитч зум",
+        "грубый быстрый переход"
+      ],
+      "props": {
+        "speed": 1.75,
+        "lensSteps": 4,
+        "blurSamples": 3,
+        "shakeAmount": 80,
+        "shakeTranslatePx": 40
+      }
+    },
+    {
+      "id": "epic-reveal",
+      "label": "Epic Reveal",
+      "description": "A drawn-out, high-fidelity lens warp with rich blur and a weighty rumble for big trailer moments.",
+      "askedAs": [
+        "epic trailer reveal zoom",
+        "dramatic slow lens transition",
+        "movie trailer punch in",
+        "эпичный переход как в трейлере",
+        "драматичный медленный зум"
+      ],
+      "props": {
+        "speed": 0.75,
+        "lensSteps": 32,
+        "blurSamples": 32,
+        "shakeAmount": 140,
+        "shakeTranslatePx": 50
+      }
+    }
+  ]
+}

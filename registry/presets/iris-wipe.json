@@ -1,0 +1,108 @@
+{
+  "component": "iris-wipe",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "thats-all-folks",
+      "label": "That's All",
+      "description": "A slow, classic black iris that lingers on a generous dot before reopening, like a vintage cartoon sign-off.",
+      "askedAs": [
+        "old cartoon ending iris",
+        "slow classic iris close",
+        "looney tunes style ending",
+        "классическая шторка как в старых мультфильмах",
+        "медленное закрытие кругом"
+      ],
+      "props": {
+        "speed": 0.5,
+        "holdRadius": 24
+      }
+    },
+    {
+      "id": "snap-shut",
+      "label": "Snap Shut",
+      "description": "A quick black iris that slams down to a tiny pinpoint and pops back open almost instantly.",
+      "askedAs": [
+        "fast iris transition",
+        "quick circle wipe",
+        "snappy iris close",
+        "быстрая круглая шторка",
+        "резкий переход кругом"
+      ],
+      "props": {
+        "speed": 2.5,
+        "holdRadius": 4
+      }
+    },
+    {
+      "id": "corner-wink",
+      "label": "Corner Wink",
+      "description": "The iris closes off-centre on the upper right, winking at a subject tucked in the corner.",
+      "askedAs": [
+        "iris on top right corner",
+        "circle wipe focused off center",
+        "close iris on a corner subject",
+        "шторка в правом верхнем углу",
+        "круг закрывается не по центру"
+      ],
+      "props": {
+        "centerX": 0.75,
+        "centerY": 0.3,
+        "holdRadius": 16
+      }
+    },
+    {
+      "id": "cream-paper",
+      "label": "Cream Paper",
+      "description": "A warm off-white iris with a soft medium pace, like an old storybook page closing in.",
+      "askedAs": [
+        "light colored iris wipe",
+        "cream iris transition",
+        "warm paper circle close",
+        "светлая круглая шторка",
+        "кремовый переход кругом"
+      ],
+      "props": {
+        "color": "#f3ead8",
+        "speed": 0.75,
+        "holdRadius": 18
+      }
+    },
+    {
+      "id": "ink-blue-beat",
+      "label": "Ink Blue",
+      "description": "A deep navy iris that closes low on the frame at a brisk pace with a small held dot.",
+      "askedAs": [
+        "navy blue iris wipe",
+        "dark blue circle transition",
+        "iris closing near the bottom",
+        "тёмно-синяя круглая шторка",
+        "круг закрывается внизу кадра"
+      ],
+      "props": {
+        "color": "#1b2a4a",
+        "centerY": 0.65,
+        "speed": 1.5,
+        "holdRadius": 8
+      }
+    },
+    {
+      "id": "tomato-pop",
+      "label": "Tomato Pop",
+      "description": "A muted tomato-red iris with a big lingering dot and lively pace for a cheeky section break.",
+      "askedAs": [
+        "red iris transition",
+        "playful colored circle wipe",
+        "big dot iris pause",
+        "красная шторка кругом",
+        "игривый переход с большим кругом"
+      ],
+      "props": {
+        "color": "#d9483b",
+        "speed": 1.25,
+        "holdRadius": 32
+      }
+    }
+  ]
+}

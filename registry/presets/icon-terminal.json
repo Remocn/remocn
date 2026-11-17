@@ -1,0 +1,100 @@
+{
+  "component": "icon-terminal",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "hero-blinking-prompt",
+      "label": "Hero Prompt",
+      "description": "A large, bold terminal icon in deep green whose cursor keeps blinking on a steady loop.",
+      "askedAs": [
+        "big terminal icon with blinking cursor",
+        "large looping console icon",
+        "green command line icon that keeps animating",
+        "большая иконка терминала с мигающим курсором",
+        "зацикленная иконка консоли крупно"
+      ],
+      "props": {
+        "size": 160,
+        "color": "#15803d",
+        "strokeWidth": 2.5,
+        "animation": "action",
+        "loop": true
+      }
+    },
+    {
+      "id": "fine-line-sketch",
+      "label": "Fine Line",
+      "description": "A thin slate outline that slowly draws itself in for a calm, drafted feel.",
+      "askedAs": [
+        "thin terminal icon drawing slowly",
+        "delicate line art console icon",
+        "slow elegant stroke reveal",
+        "тонкая иконка терминала медленно рисуется",
+        "изящная линейная иконка консоли"
+      ],
+      "props": {
+        "animation": "draw",
+        "strokeWidth": 1.25,
+        "speed": 0.5,
+        "color": "#475569",
+        "size": 96
+      }
+    },
+    {
+      "id": "snappy-blue",
+      "label": "Snappy Blue",
+      "description": "A medium blue icon that draws and types in a quick, energetic burst.",
+      "askedAs": [
+        "fast blue terminal icon",
+        "quick snappy console animation",
+        "energetic command prompt icon",
+        "быстрая синяя иконка терминала",
+        "резкая анимация консоли"
+      ],
+      "props": {
+        "color": "#1f6feb",
+        "speed": 2.5,
+        "size": 72
+      }
+    },
+    {
+      "id": "amber-retro",
+      "label": "Amber Retro",
+      "description": "A heavy-stroked amber terminal evoking old phosphor monitors, looping at a relaxed pace.",
+      "askedAs": [
+        "retro amber terminal icon",
+        "old school monitor style console",
+        "vintage orange command line icon",
+        "ретро иконка терминала янтарного цвета",
+        "старый монитор консоль иконка"
+      ],
+      "props": {
+        "color": "#d97706",
+        "strokeWidth": 3,
+        "loop": true,
+        "speed": 0.75,
+        "size": 120
+      }
+    },
+    {
+      "id": "inline-mini",
+      "label": "Inline Mini",
+      "description": "A small, crisp muted-gray icon that simply draws in quickly, sized for inline UI use.",
+      "askedAs": [
+        "small terminal icon for UI",
+        "tiny console icon inline",
+        "compact gray terminal symbol",
+        "маленькая иконка терминала",
+        "компактная серая иконка консоли"
+      ],
+      "props": {
+        "size": 32,
+        "color": "#6b7280",
+        "animation": "draw",
+        "speed": 1.5,
+        "strokeWidth": 1.75
+      }
+    }
+  ]
+}

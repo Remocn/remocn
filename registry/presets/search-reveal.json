@@ -1,0 +1,121 @@
+{
+  "component": "search-reveal",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "midnight-query",
+      "label": "Midnight Query",
+      "description": "A dark charcoal stage with a graphite search pill, soft grey rings and a deep indigo panel with pale lime accents.",
+      "askedAs": [
+        "dark mode search animation",
+        "night theme search bar",
+        "search reveal on black background",
+        "тёмная тема для поиска",
+        "поисковая строка на тёмном фоне"
+      ],
+      "props": {
+        "backgroundColor": "#121216",
+        "fieldColor": "#24232a",
+        "color": "#f2eff5",
+        "ringColor": "#4a4752",
+        "panelColor": "#4b3fd1",
+        "accentColor": "#d9f28a"
+      }
+    },
+    {
+      "id": "swift-type",
+      "label": "Swift Type",
+      "description": "A compact, fast-paced reveal where the text snaps in quickly and the construction guides are hidden.",
+      "askedAs": [
+        "fast search typing animation",
+        "quick search intro",
+        "snappy search bar reveal",
+        "быстрый ввод текста в поиске",
+        "короткая анимация поиска"
+      ],
+      "props": {
+        "framesPerCharacter": 2,
+        "speed": 1.5,
+        "showGuides": false,
+        "fieldWidth": 400
+      }
+    },
+    {
+      "id": "slow-statement",
+      "label": "Slow Statement",
+      "description": "A wide pill with large type that types out deliberately for a calm, cinematic product reveal.",
+      "askedAs": [
+        "slow cinematic search reveal",
+        "big text search bar",
+        "dramatic product name typing",
+        "медленная печать в поиске",
+        "крупный текст в строке поиска"
+      ],
+      "props": {
+        "fieldWidth": 624,
+        "fontSize": 48,
+        "framesPerCharacter": 8,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "sage-paper",
+      "label": "Sage Paper",
+      "description": "An earthy palette of warm paper, muted sage rings and a forest green panel with sand accents.",
+      "askedAs": [
+        "natural green search animation",
+        "earthy calm search bar",
+        "warm beige search reveal",
+        "спокойные природные цвета поиска",
+        "зелёная палитра для поиска"
+      ],
+      "props": {
+        "backgroundColor": "#f1ede4",
+        "fieldColor": "#fbf9f4",
+        "color": "#2a2e26",
+        "ringColor": "#bcc4b0",
+        "panelColor": "#2f5d46",
+        "accentColor": "#e6c98f"
+      }
+    },
+    {
+      "id": "bare-field",
+      "label": "Bare Field",
+      "description": "A minimal monochrome search pill alone on a cool grey ground, with no panel or guides.",
+      "askedAs": [
+        "minimal search bar only",
+        "clean search field without graphics",
+        "simple monochrome search",
+        "минималистичная строка поиска",
+        "только поле поиска без графики"
+      ],
+      "props": {
+        "showPanel": false,
+        "showGuides": false,
+        "backgroundColor": "#e9ebee",
+        "ringColor": "#9aa1ab",
+        "color": "#1b1e23"
+      }
+    },
+    {
+      "id": "coral-pop",
+      "label": "Coral Pop",
+      "description": "A soft blush backdrop with a coral panel and deep navy accents for a friendly, modern feel.",
+      "askedAs": [
+        "pink coral search intro",
+        "warm friendly search animation",
+        "playful pastel search bar",
+        "коралловый поиск с розовым фоном",
+        "тёплая пастельная анимация поиска"
+      ],
+      "props": {
+        "backgroundColor": "#fbefeb",
+        "ringColor": "#e8c4ba",
+        "panelColor": "#e8664f",
+        "accentColor": "#1f2a4d",
+        "color": "#2b1f22"
+      }
+    }
+  ]
+}

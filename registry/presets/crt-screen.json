@@ -1,0 +1,114 @@
+{
+  "component": "crt-screen",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "arcade-cabinet",
+      "label": "Arcade Cabinet",
+      "description": "A deep-bulging tube with heavy scanlines, a coarse phosphor mask and dark falloff at the rim, like an old arcade monitor.",
+      "askedAs": [
+        "old arcade machine screen",
+        "heavy retro arcade monitor",
+        "chunky pixel arcade look",
+        "экран игрового автомата",
+        "ретро аркадный монитор"
+      ],
+      "props": {
+        "curvature": 1.6,
+        "scanlines": 1.35,
+        "maskScale": 4,
+        "vignette": 1.3
+      }
+    },
+    {
+      "id": "flat-trinitron",
+      "label": "Flat Trinitron",
+      "description": "Nearly flat glass with fine scanlines and a tight mask, which reads as a late-era studio monitor.",
+      "askedAs": [
+        "subtle crt effect",
+        "flat screen crt monitor",
+        "clean professional crt look",
+        "почти плоский кинескоп",
+        "лёгкий эффект crt"
+      ],
+      "props": {
+        "curvature": 0.25,
+        "scanlines": 0.5,
+        "maskScale": 1,
+        "vignette": 0.4
+      }
+    },
+    {
+      "id": "fishbowl-tv",
+      "label": "Fishbowl TV",
+      "description": "Extreme bowed glass with a heavy dark rim, like a tiny portable set from decades ago.",
+      "askedAs": [
+        "very curved old tv",
+        "fisheye tube television",
+        "bulging vintage tv screen",
+        "сильно выпуклый старый телевизор",
+        "кинескоп как аквариум"
+      ],
+      "props": {
+        "curvature": 2,
+        "vignette": 1.5,
+        "maskScale": 3,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "slow-terminal",
+      "label": "Slow Terminal",
+      "description": "A moderately curved green-screen style terminal with soft scanlines and an unhurried, calm motion.",
+      "askedAs": [
+        "slow retro terminal",
+        "calm old computer screen",
+        "gentle crt monitor motion",
+        "медленный ретро терминал",
+        "спокойный старый монитор"
+      ],
+      "props": {
+        "curvature": 0.8,
+        "scanlines": 0.8,
+        "speed": 0.5,
+        "vignette": 0.8
+      }
+    },
+    {
+      "id": "glitchy-broadcast",
+      "label": "Fast Broadcast",
+      "description": "A brisk, punchy tube with strong scanlines and a coarse mask, suited to quick, energetic cuts.",
+      "askedAs": [
+        "fast retro tv effect",
+        "energetic crt broadcast",
+        "quick old tv footage",
+        "быстрый эффект старого телевизора",
+        "динамичная ретро трансляция"
+      ],
+      "props": {
+        "speed": 2,
+        "scanlines": 1.2,
+        "maskScale": 5,
+        "curvature": 1.2
+      }
+    },
+    {
+      "id": "clean-glass",
+      "label": "Clean Glass",
+      "description": "Curved glass with no scanlines and only a light vignette, giving the shape of a tube without the texture.",
+      "askedAs": [
+        "curved screen without lines",
+        "just the crt curve",
+        "smooth curved monitor",
+        "изогнутый экран без полос",
+        "только изгиб кинескопа"
+      ],
+      "props": {
+        "scanlines": 0,
+        "vignette": 0.5,
+        "maskScale": 1
+      }
+    }
+  ]
+}

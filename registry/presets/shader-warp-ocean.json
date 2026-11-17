@@ -1,0 +1,97 @@
+{
+  "component": "shader-warp-ocean",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "still-lagoon",
+      "label": "Still Lagoon",
+      "description": "Slow, barely moving currents with very soft blended edges for a calm backdrop.",
+      "askedAs": [
+        "calm slow water background",
+        "gentle soft ocean motion",
+        "quiet backdrop behind text",
+        "спокойная медленная вода",
+        "мягкий тихий фон океана"
+      ],
+      "props": {
+        "speed": 0.25,
+        "distortion": 0.1,
+        "swirl": 0.2,
+        "softness": 1
+      }
+    },
+    {
+      "id": "riptide",
+      "label": "Riptide",
+      "description": "Fast, heavily warped currents with crisp ink edges and strong churning motion.",
+      "askedAs": [
+        "fast energetic fluid",
+        "aggressive swirling water",
+        "intense turbulent ocean",
+        "быстрые бурные волны",
+        "энергичная жидкость с вихрями"
+      ],
+      "props": {
+        "speed": 2.5,
+        "distortion": 0.8,
+        "swirl": 0.85,
+        "softness": 0.2
+      }
+    },
+    {
+      "id": "ink-marble",
+      "label": "Ink Marble",
+      "description": "Sharp marbled bands with dominant dark ink and tight, crisp transitions.",
+      "askedAs": [
+        "marble pattern with sharp lines",
+        "dark ink veins look",
+        "crisp high contrast swirls",
+        "мраморный узор с тушью",
+        "чёткие тёмные разводы"
+      ],
+      "props": {
+        "softness": 0,
+        "proportion": 0.75,
+        "swirl": 0.65,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "glass-shallows",
+      "label": "Glass Shallows",
+      "description": "Bright, airy aqua dominates with light distortion and smooth glossy flow.",
+      "askedAs": [
+        "light bright water surface",
+        "airy aqua background",
+        "clean glossy liquid",
+        "светлая прозрачная вода",
+        "лёгкий аквамариновый фон"
+      ],
+      "props": {
+        "proportion": 0.2,
+        "distortion": 0.2,
+        "softness": 0.9,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "deep-vortex",
+      "label": "Deep Vortex",
+      "description": "Maximum swirl folds the currents into dense spirals at a measured pace.",
+      "askedAs": [
+        "spiral whirlpool effect",
+        "hypnotic swirling vortex",
+        "twisting liquid spirals",
+        "водоворот спирали",
+        "гипнотический вихрь"
+      ],
+      "props": {
+        "swirl": 1,
+        "distortion": 0.55,
+        "softness": 0.5,
+        "speed": 1.25
+      }
+    }
+  ]
+}

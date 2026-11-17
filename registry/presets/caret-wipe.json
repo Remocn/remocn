@@ -1,0 +1,111 @@
+{
+  "component": "caret-wipe",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "terminal-green-quick",
+      "label": "Quick Terminal",
+      "description": "A thin phosphor-green caret darts across the frame at double speed like a fast shell prompt.",
+      "askedAs": [
+        "fast terminal cursor wipe",
+        "quick green caret transition",
+        "snappy shell typing wipe",
+        "быстрый терминальный курсор",
+        "зелёный курсор быстро"
+      ],
+      "props": {
+        "caretColor": "#4ade80",
+        "caretWidth": 2,
+        "speed": 2
+      }
+    },
+    {
+      "id": "slow-editor-blue",
+      "label": "Calm Editor",
+      "description": "A medium editor-blue caret glides slowly, giving the wipe a measured, deliberate feel.",
+      "askedAs": [
+        "slow blue cursor wipe",
+        "calm code editor transition",
+        "gentle caret sweep",
+        "медленный синий курсор",
+        "спокойный переход редактора"
+      ],
+      "props": {
+        "caretColor": "#60a5fa",
+        "caretWidth": 3,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "bold-amber-block",
+      "label": "Amber Block",
+      "description": "A thick warm-amber block caret sweeps in the reverse direction like a retro terminal erasing text.",
+      "askedAs": [
+        "thick block cursor wipe",
+        "retro amber terminal transition",
+        "backspace erase effect",
+        "толстый янтарный курсор",
+        "ретро стирание текста"
+      ],
+      "props": {
+        "caretColor": "#f5b841",
+        "caretWidth": 8,
+        "direction": "left",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "hairline-white",
+      "label": "Hairline Mono",
+      "description": "A one-pixel off-white caret slices across at a brisk pace for a minimal, neutral look.",
+      "askedAs": [
+        "thin white cursor line",
+        "minimal caret wipe",
+        "subtle hairline transition",
+        "тонкий белый курсор",
+        "минималистичный переход"
+      ],
+      "props": {
+        "caretColor": "#e5e7eb",
+        "caretWidth": 1,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "rewind-coral",
+      "label": "Coral Rewind",
+      "description": "A soft coral caret moves leftward at a steady clip, reading like text being deleted.",
+      "askedAs": [
+        "cursor wipe right to left",
+        "delete text transition",
+        "pink caret going backwards",
+        "курсор справа налево",
+        "удаление текста переход"
+      ],
+      "props": {
+        "caretColor": "#f28b82",
+        "caretWidth": 4,
+        "direction": "left",
+        "speed": 1.25
+      }
+    },
+    {
+      "id": "lightning-violet",
+      "label": "Violet Flash",
+      "description": "A slim lavender caret whips across at maximum speed for an almost instant cut.",
+      "askedAs": [
+        "super fast caret wipe",
+        "instant cursor cut",
+        "purple cursor flash",
+        "мгновенный переход курсором",
+        "фиолетовый быстрый курсор"
+      ],
+      "props": {
+        "caretColor": "#a78bfa",
+        "caretWidth": 2,
+        "speed": 4
+      }
+    }
+  ]
+}

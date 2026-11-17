@@ -1,0 +1,124 @@
+{
+  "component": "torn-edge",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "quick-rip",
+      "label": "Quick Rip",
+      "description": "A fast, snappy tear with a tight spread that punches the headline in for high-energy edits.",
+      "askedAs": [
+        "fast paper rip reveal",
+        "snappy torn paper transition",
+        "quick tear for a punchy cut",
+        "быстрый разрыв бумаги",
+        "резкое появление заголовка"
+      ],
+      "props": {
+        "tear": 16,
+        "spread": 0.13,
+        "speed": 1.5,
+        "fontFamily": "Space Grotesk"
+      }
+    },
+    {
+      "id": "slow-peel",
+      "label": "Slow Peel",
+      "description": "A long, gentle peel with a wide ragged edge and an elegant serif headline on warm paper tones.",
+      "askedAs": [
+        "slow elegant paper tear",
+        "gentle peel reveal with serif",
+        "calm editorial torn page",
+        "медленный разрыв бумаги",
+        "элегантное раскрытие с засечками"
+      ],
+      "props": {
+        "tear": 66,
+        "spread": 0.38,
+        "speed": 0.75,
+        "fontFamily": "Instrument Serif",
+        "theme": "light",
+        "accent": "#b5532e"
+      }
+    },
+    {
+      "id": "kraft-paper",
+      "label": "Kraft Paper",
+      "description": "Warm kraft-brown stage with dark brown ink and a chunky Fraunces headline for a handmade feel.",
+      "askedAs": [
+        "brown cardboard paper look",
+        "handmade kraft style reveal",
+        "warm rustic torn paper",
+        "крафтовая бумага",
+        "тёплый рукодельный стиль"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#d9c2a0",
+        "ink": "#3a2a1c",
+        "accent": "#8c5a2b",
+        "fontFamily": "Fraunces",
+        "spread": 0.3
+      }
+    },
+    {
+      "id": "newsprint",
+      "label": "Newsprint",
+      "description": "Clean off-white newsprint with black ink and a bold red accent, without grain, like a tabloid front page.",
+      "askedAs": [
+        "newspaper headline reveal",
+        "tabloid front page style",
+        "black and red print look",
+        "газетный заголовок",
+        "стиль первой полосы газеты"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f2efe8",
+        "ink": "#111111",
+        "accent": "#d7261e",
+        "fontFamily": "Inter",
+        "grain": false
+      }
+    },
+    {
+      "id": "midnight-zine",
+      "label": "Midnight Zine",
+      "description": "Deep navy stage with a soft mint accent and monospace type, delayed for a moody underground beat.",
+      "askedAs": [
+        "dark zine style reveal",
+        "moody night paper tear",
+        "monospace underground look",
+        "тёмный зин стиль",
+        "ночной разрыв бумаги"
+      ],
+      "props": {
+        "background": "#0e1626",
+        "ink": "#e8f1ec",
+        "accent": "#5fb59a",
+        "fontFamily": "JetBrains Mono",
+        "delay": 18,
+        "scale": 0.85
+      }
+    },
+    {
+      "id": "poster-scale",
+      "label": "Poster Scale",
+      "description": "An oversized headline with a big jagged tear and a violet accent for a loud poster moment.",
+      "askedAs": [
+        "huge headline paper rip",
+        "big bold poster reveal",
+        "oversized torn title",
+        "огромный заголовок",
+        "крупный плакатный разрыв"
+      ],
+      "props": {
+        "scale": 1.35,
+        "spread": 0.46,
+        "accent": "#7a4dff",
+        "fontFamily": "Manrope",
+        "tear": 28
+      }
+    }
+  ]
+}

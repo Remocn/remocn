@@ -1,0 +1,115 @@
+{
+  "component": "slide-swap",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "snappy-shove",
+      "label": "Snappy Shove",
+      "description": "Short, punchy horizontal swaps with a tight entrance window that keeps rapid-fire claims moving.",
+      "askedAs": [
+        "fast punchy slide transitions",
+        "quick horizontal scene swap",
+        "snappy push between slides",
+        "быстрая смена слайдов",
+        "резкий сдвиг сцен"
+      ],
+      "props": {
+        "slideFrames": 14,
+        "inDistance": 0.2,
+        "outDistance": 0.06,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "vertical-feed",
+      "label": "Vertical Feed",
+      "description": "Content rises up from below and is pushed off the top, like scrolling a social feed.",
+      "askedAs": [
+        "slide up like a phone feed",
+        "vertical scroll transition",
+        "scenes moving bottom to top",
+        "вертикальная прокрутка сцен",
+        "слайды снизу вверх"
+      ],
+      "props": {
+        "axis": "y",
+        "inDistance": 0.35,
+        "outDistance": 0.15,
+        "slideFrames": 24
+      }
+    },
+    {
+      "id": "slow-glide",
+      "label": "Slow Glide",
+      "description": "A calm, unhurried swap with a long entrance and almost no exit travel for a refined, editorial pace.",
+      "askedAs": [
+        "slow elegant slide transition",
+        "calm gentle scene change",
+        "smooth relaxed horizontal swap",
+        "медленный плавный переход",
+        "спокойная смена сцен"
+      ],
+      "props": {
+        "slideFrames": 52,
+        "inDistance": 0.14,
+        "outDistance": 0.03,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "full-sweep",
+      "label": "Full Sweep",
+      "description": "Big, dramatic travel where content flies in from far off-canvas and gets thrown hard out the other side.",
+      "askedAs": [
+        "dramatic big slide across screen",
+        "content flies in from the edge",
+        "wide sweeping push transition",
+        "размашистый переход через экран",
+        "контент влетает издалека"
+      ],
+      "props": {
+        "inDistance": 0.7,
+        "outDistance": 0.45,
+        "slideFrames": 36
+      }
+    },
+    {
+      "id": "subtle-drop",
+      "label": "Subtle Drop",
+      "description": "A minimal vertical nudge where content settles in from just above with barely any motion.",
+      "askedAs": [
+        "subtle vertical transition",
+        "minimal small slide down",
+        "barely moving scene change",
+        "едва заметный вертикальный сдвиг",
+        "минималистичный переход"
+      ],
+      "props": {
+        "axis": "y",
+        "inDistance": 0.07,
+        "outDistance": 0,
+        "slideFrames": 20
+      }
+    },
+    {
+      "id": "rapid-fire",
+      "label": "Rapid Fire",
+      "description": "Double-speed vertical shoves with a short window for high-energy countdowns and hype reels.",
+      "askedAs": [
+        "super fast vertical cuts",
+        "hype reel slide transitions",
+        "energetic rapid scene pushes",
+        "очень быстрые переходы",
+        "энергичная нарезка слайдов"
+      ],
+      "props": {
+        "axis": "y",
+        "speed": 2.5,
+        "slideFrames": 12,
+        "inDistance": 0.4,
+        "outDistance": 0.25
+      }
+    }
+  ]
+}

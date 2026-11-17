@@ -1,0 +1,126 @@
+{
+  "component": "walkout-name",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "main-event",
+      "label": "Main Event",
+      "description": "Heavy shake, wide spotlight band and a hot red accent on deep black for a full title-fight entrance.",
+      "askedAs": [
+        "make it feel like a boxing main event",
+        "more shake and a bigger spotlight",
+        "aggressive hype intro with red",
+        "как выход на главный бой",
+        "больше тряски и красный акцент"
+      ],
+      "props": {
+        "impact": 2.4,
+        "bandWidth": 0.32,
+        "accent": "#e5383b",
+        "background": "#0b0b0d",
+        "ink": "#f5f3ef",
+        "scale": 1.15
+      }
+    },
+    {
+      "id": "press-day",
+      "label": "Press Day",
+      "description": "Calm light layout in Inter with a slim band, no shake and an ink-blue accent for a clean announcement.",
+      "askedAs": [
+        "clean light version without shake",
+        "calm corporate launch intro",
+        "minimal white name reveal",
+        "спокойная светлая версия",
+        "без тряски, минималистично"
+      ],
+      "props": {
+        "theme": "light",
+        "impact": 0,
+        "bandWidth": 0.08,
+        "fontFamily": "Inter",
+        "accent": "#1f4fd1",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "gold-belt",
+      "label": "Gold Belt",
+      "description": "Elegant Fraunces type on warm charcoal with a muted gold accent, like a championship belt ceremony.",
+      "askedAs": [
+        "gold and black champion look",
+        "classy serif version",
+        "premium award style intro",
+        "золотой стиль чемпиона",
+        "элегантный вариант с засечками"
+      ],
+      "props": {
+        "fontFamily": "Fraunces",
+        "accent": "#c9a14a",
+        "background": "#1a1714",
+        "ink": "#f2eadb",
+        "impact": 0.6,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "quick-jab",
+      "label": "Quick Jab",
+      "description": "Fast, compact Space Grotesk cut with a punchy orange accent for a snappy social-length beat.",
+      "askedAs": [
+        "faster snappier version",
+        "quick intro for a short clip",
+        "smaller and punchier",
+        "быстрее и резче",
+        "короткая энергичная версия"
+      ],
+      "props": {
+        "speed": 2,
+        "scale": 0.85,
+        "fontFamily": "Space Grotesk",
+        "accent": "#ff6b2c",
+        "impact": 1.5
+      }
+    },
+    {
+      "id": "mint-paper",
+      "label": "Mint Paper",
+      "description": "Soft cream background with forest green ink and a fresh mint accent in Bricolage Grotesque for a friendly, playful reveal.",
+      "askedAs": [
+        "soft friendly pastel version",
+        "light green playful look",
+        "warm cream background intro",
+        "мягкая пастельная версия",
+        "дружелюбный зелёный стиль"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f6f1e7",
+        "ink": "#1e3a2f",
+        "accent": "#2bb08a",
+        "fontFamily": "Bricolage Grotesque",
+        "bandWidth": 0.24
+      }
+    },
+    {
+      "id": "terminal-drop",
+      "label": "Terminal Drop",
+      "description": "Dev-flavoured JetBrains Mono on near-black with a lime accent and a delayed, deliberate entrance.",
+      "askedAs": [
+        "hacker style monospace intro",
+        "developer launch look",
+        "code font with green accent",
+        "в стиле терминала",
+        "моноширинный шрифт для разработчиков"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0e1110",
+        "ink": "#e6ede8",
+        "accent": "#9be15d",
+        "delay": 15,
+        "bandWidth": 0.12
+      }
+    }
+  ]
+}

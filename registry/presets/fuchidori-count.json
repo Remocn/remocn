@@ -1,0 +1,106 @@
+{
+  "component": "fuchidori-count",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "sticker-pop",
+      "label": "Sticker Pop",
+      "description": "Heavy black digits on a warm cream card with a tomato-red stack of outlines that snaps in fast.",
+      "askedAs": [
+        "bright sticker counter on cream",
+        "bold fast number with red outlines",
+        "playful light stat pop",
+        "яркий счётчик в стиле стикера",
+        "жирные цифры с красной обводкой на светлом"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f6efe2",
+        "ink": "#1a1a1a",
+        "accent": "#e2452f",
+        "fontWeight": 900,
+        "countLength": 36
+      }
+    },
+    {
+      "id": "layered-max",
+      "label": "Layered Max",
+      "description": "A dense pile of up to twelve outline rings in deep indigo for a loud, graphic poster feel.",
+      "askedAs": [
+        "lots of stacked borders on the number",
+        "maximal layered outline counter",
+        "graphic poster style stat",
+        "много слоёв обводки вокруг цифр",
+        "плакатный счётчик с толстыми контурами"
+      ],
+      "props": {
+        "maxBorders": 12,
+        "accent": "#5b5bd6",
+        "fontWeight": 800,
+        "fontFamily": "Bricolage Grotesque",
+        "scale": 1.15
+      }
+    },
+    {
+      "id": "slow-serif",
+      "label": "Slow Serif",
+      "description": "An unhurried editorial count in light Fraunces with a single muted terracotta border on dark ink.",
+      "askedAs": [
+        "slow elegant serif counter",
+        "calm editorial number reveal",
+        "minimal outline with serif digits",
+        "медленный элегантный счётчик с засечками",
+        "спокойное число в журнальном стиле"
+      ],
+      "props": {
+        "fontFamily": "Fraunces",
+        "fontWeight": 300,
+        "maxBorders": 1,
+        "accent": "#c4704f",
+        "countLength": 110,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "mono-terminal",
+      "label": "Mono Terminal",
+      "description": "Monospaced digits in mint on near-black with a quick, tight double outline like a dev dashboard.",
+      "askedAs": [
+        "code style monospace counter",
+        "developer dashboard number",
+        "tech stat with green outline",
+        "моноширинный счётчик как в терминале",
+        "цифры в стиле кода на тёмном фоне"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0e1116",
+        "ink": "#e6edf3",
+        "accent": "#3fb950",
+        "maxBorders": 2,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "soft-pastel",
+      "label": "Soft Pastel",
+      "description": "A small, gentle count in Manrope on blush pink with plum outlines and a short lead-in delay.",
+      "askedAs": [
+        "cute pastel number counter",
+        "soft pink sticker stat",
+        "gentle small counter with delay",
+        "нежный пастельный счётчик",
+        "розовый милый стикер с числом"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f9e4e8",
+        "ink": "#3b1f2b",
+        "accent": "#8e4a6b",
+        "fontFamily": "Manrope",
+        "scale": 0.8
+      }
+    }
+  ]
+}

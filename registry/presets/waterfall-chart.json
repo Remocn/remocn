@@ -1,0 +1,123 @@
+{
+  "component": "waterfall-chart",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "boardroom-light",
+      "label": "Boardroom Light",
+      "description": "A clean light-theme bridge with crisp square bars and a deep navy accent, suited to investor decks.",
+      "askedAs": [
+        "clean light finance chart",
+        "investor deck style waterfall",
+        "white background corporate look",
+        "светлый деловой стиль",
+        "график для презентации инвесторам"
+      ],
+      "props": {
+        "theme": "light",
+        "accent": "#1e3a8a",
+        "radius": 0,
+        "fontFamily": "Inter",
+        "grain": false
+      }
+    },
+    {
+      "id": "terminal-ledger",
+      "label": "Terminal Ledger",
+      "description": "A monospaced, near-black ledger with mint accent and snappy bar growth like a trading terminal.",
+      "askedAs": [
+        "trading terminal look",
+        "monospace finance chart",
+        "fast hacker style numbers",
+        "как биржевой терминал",
+        "моноширинный тёмный график"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0b0f0e",
+        "ink": "#d7e4df",
+        "accent": "#34d399",
+        "grow": 7,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "A warm paper backdrop with serif type and a terracotta accent, reading like a printed annual report.",
+      "askedAs": [
+        "annual report style",
+        "magazine serif chart",
+        "warm paper editorial look",
+        "как в годовом отчёте",
+        "журнальный стиль с засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4efe6",
+        "ink": "#2b2420",
+        "accent": "#c2562f",
+        "fontFamily": "Fraunces",
+        "radius": 0
+      }
+    },
+    {
+      "id": "slow-reveal",
+      "label": "Slow Reveal",
+      "description": "A large, deliberate build where each bar rises slowly after a held pause for dramatic emphasis.",
+      "askedAs": [
+        "slow dramatic build",
+        "big cinematic waterfall",
+        "let the bars rise slowly",
+        "медленное эффектное появление",
+        "крупно и неторопливо"
+      ],
+      "props": {
+        "grow": 34,
+        "speed": 0.75,
+        "delay": 24,
+        "scale": 1.2,
+        "accent": "#8b5cf6"
+      }
+    },
+    {
+      "id": "soft-pill",
+      "label": "Soft Pill",
+      "description": "Rounded pill bars in a friendly teal on a deep slate background with a modern geometric face.",
+      "askedAs": [
+        "rounded friendly bars",
+        "soft startup style chart",
+        "pill shaped bars",
+        "скруглённые столбики",
+        "мягкий стиль для стартапа"
+      ],
+      "props": {
+        "radius": 14,
+        "accent": "#14b8a6",
+        "background": "#111827",
+        "ink": "#e5e7eb",
+        "fontFamily": "Manrope"
+      }
+    },
+    {
+      "id": "quick-glance",
+      "label": "Quick Glance",
+      "description": "A compact, fast-paced version for short social cuts, with tight bars and a coral accent.",
+      "askedAs": [
+        "quick short version",
+        "small fast chart for social",
+        "snappy compact waterfall",
+        "быстрый компактный вариант",
+        "для коротких роликов в соцсетях"
+      ],
+      "props": {
+        "scale": 0.8,
+        "speed": 2,
+        "grow": 8,
+        "accent": "#f97366",
+        "fontFamily": "Space Grotesk"
+      }
+    }
+  ]
+}

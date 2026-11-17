@@ -1,0 +1,104 @@
+{
+  "component": "fraction-split",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-paper",
+      "label": "Editorial Paper",
+      "description": "A light, print-like look with a refined serif headline, crisp corners and an ink-blue accent.",
+      "askedAs": [
+        "light editorial version with serif font",
+        "make it look like a magazine page",
+        "white background classy serif",
+        "светлый журнальный стиль с засечками",
+        "сделай как в печатном издании"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Fraunces",
+        "radius": 2,
+        "accent": "#1f4fd8"
+      }
+    },
+    {
+      "id": "mono-terminal",
+      "label": "Mono Terminal",
+      "description": "A dark, square-cornered developer look in monospace type with a muted green accent and quicker motion.",
+      "askedAs": [
+        "code style with monospace font",
+        "dark terminal look green accent",
+        "techy developer version",
+        "моноширинный шрифт как в терминале",
+        "тёмный стиль для разработчиков"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "radius": 0,
+        "background": "#0e1110",
+        "ink": "#e6ede8",
+        "accent": "#3fb68b",
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "soft-pill",
+      "label": "Soft Pill",
+      "description": "Warm cream background with fully rounded pill boxes, a coral accent and a gentle word-by-word cascade.",
+      "askedAs": [
+        "rounded friendly warm version",
+        "soft pastel look with round boxes",
+        "cozy cream and coral style",
+        "мягкий тёплый стиль с круглыми углами",
+        "дружелюбный вариант в пастельных тонах"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#faf4ee",
+        "ink": "#2a211c",
+        "accent": "#e8735a",
+        "radius": 40,
+        "fontFamily": "Manrope"
+      }
+    },
+    {
+      "id": "snappy-punch",
+      "label": "Snappy Punch",
+      "description": "Big, fast and clean with a grotesk headline that lands almost at once and no grain.",
+      "askedAs": [
+        "make it faster and bigger",
+        "punchy quick version for social",
+        "energetic fast cut",
+        "быстрее и крупнее",
+        "динамичный вариант для соцсетей"
+      ],
+      "props": {
+        "speed": 2,
+        "stagger": 1,
+        "scale": 1.15,
+        "fontFamily": "Space Grotesk",
+        "grain": false
+      }
+    },
+    {
+      "id": "slow-gold",
+      "label": "Slow Gold",
+      "description": "A cinematic, unhurried reveal on near-black with an elegant serif and a muted gold accent.",
+      "askedAs": [
+        "slow luxurious premium reveal",
+        "dark and gold elegant version",
+        "cinematic slow intro",
+        "медленное премиальное появление",
+        "тёмный фон с золотым акцентом"
+      ],
+      "props": {
+        "speed": 0.5,
+        "stagger": 8,
+        "delay": 20,
+        "fontFamily": "Instrument Serif",
+        "background": "#121212",
+        "accent": "#c9a45c"
+      }
+    }
+  ]
+}

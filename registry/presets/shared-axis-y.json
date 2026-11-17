@@ -1,0 +1,94 @@
+{
+  "component": "shared-axis-y",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "headline-punch",
+      "label": "Headline Punch",
+      "description": "Oversized bold black type that swaps quickly for a confident magazine-cover feel.",
+      "askedAs": [
+        "big bold fast text swap",
+        "huge headline word change",
+        "punchy title transition",
+        "крупный жирный заголовок быстро",
+        "большой текст резкая смена"
+      ],
+      "props": {
+        "fontSize": 128,
+        "fontWeight": "700",
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "quiet-caption",
+      "label": "Quiet Caption",
+      "description": "Small, regular-weight slate-gray text that steps through words at a calm, unhurried pace.",
+      "askedAs": [
+        "subtle small text transition",
+        "calm caption swap",
+        "soft gray slow words",
+        "спокойная подпись медленно",
+        "мелкий серый текст плавно"
+      ],
+      "props": {
+        "fontSize": 36,
+        "fontWeight": "400",
+        "color": "#64748b",
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "ink-blue-editorial",
+      "label": "Ink Blue",
+      "description": "Medium-weight deep navy type at a slightly larger size for a refined editorial tone.",
+      "askedAs": [
+        "navy blue editorial text",
+        "dark blue elegant swap",
+        "publication style word change",
+        "тёмно-синий редакционный текст",
+        "синий элегантный заголовок"
+      ],
+      "props": {
+        "color": "#1e3a8a",
+        "fontWeight": "500",
+        "fontSize": 88
+      }
+    },
+    {
+      "id": "rapid-ticker",
+      "label": "Rapid Ticker",
+      "description": "Mid-size semibold text in deep red that snaps through the staircase at double speed.",
+      "askedAs": [
+        "very fast word swap",
+        "quick red text change",
+        "urgent snappy transition",
+        "очень быстрая смена слов",
+        "красный текст резко"
+      ],
+      "props": {
+        "speed": 2.5,
+        "color": "#b91c1c",
+        "fontSize": 60
+      }
+    },
+    {
+      "id": "forest-slow-reveal",
+      "label": "Forest Slow",
+      "description": "Large bold forest-green words that cascade slowly for a deliberate, grounded reveal.",
+      "askedAs": [
+        "slow green text reveal",
+        "dramatic slow word swap",
+        "deliberate big green title",
+        "медленный зелёный заголовок",
+        "неспешная смена крупного текста"
+      ],
+      "props": {
+        "color": "#166534",
+        "fontWeight": "700",
+        "fontSize": 104,
+        "speed": 0.75
+      }
+    }
+  ]
+}

@@ -1,0 +1,104 @@
+{
+  "component": "fourier-sum",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "paper-lecture",
+      "label": "Paper Lecture",
+      "description": "Warm off-white paper with deep ink and a brick-red wave, like a printed textbook figure.",
+      "askedAs": [
+        "textbook style light version",
+        "warm paper math diagram",
+        "classic printed lecture look",
+        "светлый как в учебнике",
+        "бумажный стиль с красной волной"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4efe6",
+        "ink": "#1e1b18",
+        "accent": "#b5442e",
+        "fontFamily": "Fraunces"
+      }
+    },
+    {
+      "id": "oscilloscope",
+      "label": "Oscilloscope",
+      "description": "Near-black screen with a thin mint trace, monospace caption and a fast, tight build.",
+      "askedAs": [
+        "lab oscilloscope look",
+        "terminal style signal",
+        "fast technical waveform",
+        "как осциллограф",
+        "технический моноширинный стиль"
+      ],
+      "props": {
+        "background": "#0b0f0e",
+        "ink": "#d6e6df",
+        "accent": "#5fd3a4",
+        "fontFamily": "JetBrains Mono",
+        "waveFill": false,
+        "stagger": 5
+      }
+    },
+    {
+      "id": "slow-reveal",
+      "label": "Slow Reveal",
+      "description": "A patient, spacious build where each harmonic lands deliberately over a single wide period.",
+      "askedAs": [
+        "slow calm explanation",
+        "one period, take your time",
+        "gentle educational pacing",
+        "медленное спокойное построение",
+        "плавно и неспеша"
+      ],
+      "props": {
+        "speed": 0.5,
+        "stagger": 24,
+        "periods": 1,
+        "delay": 20,
+        "fontFamily": "Instrument Serif"
+      }
+    },
+    {
+      "id": "product-clean",
+      "label": "Product Clean",
+      "description": "Crisp white canvas, grotesk type and a cobalt dense wave with no grain for product decks.",
+      "askedAs": [
+        "clean modern product slide",
+        "minimal white tech look",
+        "no grain sans serif version",
+        "чистый продуктовый стиль",
+        "минималистичный белый вариант"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#ffffff",
+        "ink": "#111418",
+        "fontFamily": "Geist",
+        "grain": false,
+        "periods": 4
+      }
+    },
+    {
+      "id": "midnight-amber",
+      "label": "Midnight Amber",
+      "description": "Deep navy field with a warm amber wave and enlarged, bold composition.",
+      "askedAs": [
+        "dark blue with gold wave",
+        "bigger warm dramatic version",
+        "navy and amber signal",
+        "тёмно-синий с янтарным",
+        "крупнее и теплее"
+      ],
+      "props": {
+        "background": "#0e1626",
+        "ink": "#ede6d8",
+        "accent": "#e0a44a",
+        "scale": 1.2,
+        "fontFamily": "Bricolage Grotesque"
+      }
+    }
+  ]
+}

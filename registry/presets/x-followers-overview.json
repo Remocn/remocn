@@ -1,0 +1,102 @@
+{
+  "component": "x-followers-overview",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "vertical-story",
+      "label": "Vertical Story",
+      "description": "A portrait layout in the native X blue, sized for Stories, Reels and Shorts.",
+      "askedAs": [
+        "vertical version for stories",
+        "make it 9:16 for reels",
+        "portrait follower milestone",
+        "вертикальный формат для сторис",
+        "версия для рилс вертикально"
+      ],
+      "props": {
+        "orientation": "vertical"
+      }
+    },
+    {
+      "id": "quick-flip",
+      "label": "Quick Flip",
+      "description": "Notifications flip past at double pace in a muted graphite accent for a brisk, understated recap.",
+      "askedAs": [
+        "faster follower notifications",
+        "quick neutral version",
+        "speed it up, less blue",
+        "быстрее и сдержаннее",
+        "ускорить смену подписчиков"
+      ],
+      "props": {
+        "speed": 2,
+        "accentColor": "#536471"
+      }
+    },
+    {
+      "id": "rapid-fire",
+      "label": "Rapid Fire",
+      "description": "A rapid-fire stream of follows in warm coral that races to the total reveal.",
+      "askedAs": [
+        "super fast follower stream",
+        "rapid burst of new followers",
+        "energetic quick milestone",
+        "очень быстрый поток подписчиков",
+        "энергичная быстрая анимация"
+      ],
+      "props": {
+        "speed": 3.5,
+        "accentColor": "#f4623a"
+      }
+    },
+    {
+      "id": "emerald-growth",
+      "label": "Emerald Growth",
+      "description": "A calm green accent that reads as healthy growth, played at a relaxed default pace.",
+      "askedAs": [
+        "green growth version",
+        "positive growth color",
+        "follower gains in green",
+        "зелёный цвет роста",
+        "вариант с зелёным акцентом"
+      ],
+      "props": {
+        "accentColor": "#00ba7c"
+      }
+    },
+    {
+      "id": "violet-portrait",
+      "label": "Violet Portrait",
+      "description": "A vertical layout with a soft violet accent and a slightly quicker rhythm for creator-style milestones.",
+      "askedAs": [
+        "purple vertical milestone",
+        "creator style follower reveal",
+        "violet portrait version",
+        "фиолетовый вертикальный вариант",
+        "вертикально с фиолетовым акцентом"
+      ],
+      "props": {
+        "orientation": "vertical",
+        "accentColor": "#7856ff",
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "amber-celebration",
+      "label": "Amber Celebration",
+      "description": "A golden amber accent that makes the confetti payoff feel like a celebratory milestone.",
+      "askedAs": [
+        "gold milestone celebration",
+        "warm golden follower reveal",
+        "celebratory version",
+        "золотой праздничный вариант",
+        "тёплый цвет для юбилея подписчиков"
+      ],
+      "props": {
+        "accentColor": "#e8a317",
+        "speed": 1.25
+      }
+    }
+  ]
+}

@@ -1,0 +1,122 @@
+{
+  "component": "word-gap-media",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "A light, magazine-style frame with Instrument Serif type and an unhurried, gently staggered reveal.",
+      "askedAs": [
+        "make it look like a magazine spread",
+        "elegant serif headline with slow reveal",
+        "light editorial style",
+        "сделай как в журнале с засечками",
+        "светлый элегантный вариант"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "ground": "paper-crease",
+        "speed": 0.75,
+        "stagger": 5,
+        "scale": 1.1
+      }
+    },
+    {
+      "id": "keynote-night",
+      "label": "Keynote Night",
+      "description": "A deep midnight stage with a cool blue accent and crisp Geist type, like a product keynote.",
+      "askedAs": [
+        "apple keynote style launch",
+        "dark stage with blue highlight",
+        "product launch event look",
+        "как на презентации эпл",
+        "тёмная сцена с синим акцентом"
+      ],
+      "props": {
+        "theme": "dark",
+        "ground": "blue-hour",
+        "accent": "#5b8def",
+        "fontFamily": "Geist",
+        "scale": 1.15
+      }
+    },
+    {
+      "id": "snappy-cut",
+      "label": "Snappy Cut",
+      "description": "A fast, punchy version where words land almost together and the tile snaps in quickly.",
+      "askedAs": [
+        "make it faster and punchier",
+        "quick social media cut",
+        "snappy energetic reveal",
+        "сделай быстрее и резче",
+        "динамичный вариант для соцсетей"
+      ],
+      "props": {
+        "speed": 2,
+        "stagger": 1,
+        "fontFamily": "Space Grotesk",
+        "ground": "spotlight"
+      }
+    },
+    {
+      "id": "warm-ember",
+      "label": "Warm Ember",
+      "description": "A warm copper-toned dark ground with a soft amber accent and rounded Fraunces lettering.",
+      "askedAs": [
+        "warm cozy dark look",
+        "orange amber tones",
+        "luxurious warm headline",
+        "тёплые оттенки, янтарь",
+        "уютный тёмный тёплый стиль"
+      ],
+      "props": {
+        "ground": "hearth",
+        "accent": "#e0a15a",
+        "fontFamily": "Fraunces",
+        "ink": "#f5ebe0",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "quiet-minimal",
+      "label": "Quiet Minimal",
+      "description": "A flat off-white canvas with charcoal Inter type at a smaller scale and a calm, delayed entrance.",
+      "askedAs": [
+        "clean minimal white background",
+        "understated and quiet",
+        "simple flat light version",
+        "минималистичный белый фон",
+        "спокойный сдержанный вариант"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4f2ee",
+        "ink": "#1c1c1e",
+        "fontFamily": "Inter",
+        "scale": 0.85,
+        "delay": 15
+      }
+    },
+    {
+      "id": "terminal-dev",
+      "label": "Terminal Dev",
+      "description": "A developer-flavoured look with JetBrains Mono on a graphite ground and a muted green accent.",
+      "askedAs": [
+        "code style monospace look",
+        "for a developer tool launch",
+        "techy terminal headline",
+        "моноширинный шрифт как в терминале",
+        "стиль для разработчиков"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "ground": "charcoal-satin",
+        "accent": "#6fcf97",
+        "stagger": 2,
+        "scale": 0.9
+      }
+    }
+  ]
+}

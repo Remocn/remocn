@@ -1,0 +1,106 @@
+{
+  "component": "stage",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "flat-showcase",
+      "label": "Flat Showcase",
+      "description": "A nearly front-on, softly lit plane that tours the site calmly with minimal distortion.",
+      "askedAs": [
+        "make it flat and straight-on",
+        "less tilt, clean front view",
+        "calm website walkthrough",
+        "ровный фронтальный вид без наклона",
+        "спокойный обзор сайта"
+      ],
+      "props": {
+        "preset": "site-tour",
+        "rotateX": 4,
+        "rotateY": 0,
+        "perspective": 2400,
+        "scale": 0.92,
+        "reflection": 0.1
+      }
+    },
+    {
+      "id": "dramatic-hero",
+      "label": "Dramatic Hero",
+      "description": "A steep, wide-angle tilt with a strong push-in, deep shadow and bright key light for a bold reveal.",
+      "askedAs": [
+        "dramatic angled product reveal",
+        "strong perspective push in",
+        "epic hero shot of the screen",
+        "драматичный ракурс с наездом",
+        "эффектный показ продукта крупно"
+      ],
+      "props": {
+        "preset": "hero-push",
+        "rotateX": 28,
+        "rotateY": -34,
+        "perspective": 600,
+        "shadow": 0.9,
+        "light": 0.8
+      }
+    },
+    {
+      "id": "handheld-doc",
+      "label": "Handheld Doc",
+      "description": "A loose handheld camera hopping between sections, like footage shot over someone's shoulder.",
+      "askedAs": [
+        "handheld camera feel",
+        "shaky documentary style",
+        "more organic, less robotic motion",
+        "эффект ручной камеры",
+        "живая съёмка с рук"
+      ],
+      "props": {
+        "preset": "section-hop",
+        "shake": 0.45,
+        "rotateX": 10,
+        "rotateY": -12,
+        "light": 0.4
+      }
+    },
+    {
+      "id": "glossy-tabletop",
+      "label": "Glossy Tabletop",
+      "description": "The page lies back on a polished surface with a strong reflection and rounded corners, like a device on glass.",
+      "askedAs": [
+        "screen lying on a glossy table",
+        "more reflection on the floor",
+        "shiny premium look",
+        "глянцевая поверхность с отражением",
+        "экран лежит на столе"
+      ],
+      "props": {
+        "rotateX": 42,
+        "rotateY": -8,
+        "reflection": 0.6,
+        "radius": 3,
+        "scale": 0.78,
+        "shadow": 0.5
+      }
+    },
+    {
+      "id": "moody-closeup",
+      "label": "Moody Close-Up",
+      "description": "A tight, dimly lit descent that fills the frame with the page and reverses the angle for an intimate feel.",
+      "askedAs": [
+        "dark moody close up",
+        "zoom in tight on the page",
+        "low light cinematic scroll",
+        "тёмный кинематографичный крупный план",
+        "приблизь страницу и сделай мрачнее"
+      ],
+      "props": {
+        "scale": 1.3,
+        "rotateY": 18,
+        "rotateX": 8,
+        "light": 0.2,
+        "shadow": 1,
+        "radius": 0.6
+      }
+    }
+  ]
+}

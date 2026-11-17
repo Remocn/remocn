@@ -1,0 +1,92 @@
+{
+  "component": "push-through",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "gentle-glide",
+      "label": "Gentle Glide",
+      "description": "A slow, shallow dolly with soft focus that eases the viewer into the next scene.",
+      "askedAs": [
+        "slow subtle zoom transition",
+        "soft gentle push into next scene",
+        "calm cinematic dolly in",
+        "медленный мягкий наезд камеры",
+        "плавный переход с лёгким приближением"
+      ],
+      "props": {
+        "zoom": 1.6,
+        "blur": 6,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "hyperdrive",
+      "label": "Hyperdrive",
+      "description": "A fast, deep plunge with heavy motion blur that feels like warping forward.",
+      "askedAs": [
+        "fast warp speed zoom transition",
+        "aggressive punch through scene",
+        "high energy zoom blur cut",
+        "быстрый резкий прорыв сквозь сцену",
+        "переход как прыжок в гиперпространство"
+      ],
+      "props": {
+        "zoom": 3.8,
+        "blur": 28,
+        "speed": 2
+      }
+    },
+    {
+      "id": "crisp-dolly",
+      "label": "Crisp Dolly",
+      "description": "A clean, sharp camera push with no blur for a precise, architectural feel.",
+      "askedAs": [
+        "sharp zoom transition without blur",
+        "clean crisp camera push",
+        "minimal dolly in no motion blur",
+        "чёткий наезд без размытия",
+        "чистый переход с приближением камеры"
+      ],
+      "props": {
+        "blur": 0,
+        "zoom": 2.2,
+        "speed": 1.25
+      }
+    },
+    {
+      "id": "grand-arrival",
+      "label": "Grand Arrival",
+      "description": "A deliberate, deep dolly with dreamy blur that lands weightily on a hero moment.",
+      "askedAs": [
+        "dramatic slow zoom for logo reveal",
+        "epic camera landing on final scene",
+        "cinematic deep push for CTA",
+        "эффектный наезд на логотип",
+        "драматичное приближение к финальной сцене"
+      ],
+      "props": {
+        "zoom": 3.2,
+        "blur": 20,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "quick-snap",
+      "label": "Quick Snap",
+      "description": "A brisk, shallow push with a light smear that keeps edits snappy and tight.",
+      "askedAs": [
+        "quick short zoom cut",
+        "snappy push transition for fast edits",
+        "brief punch in between scenes",
+        "быстрый короткий зум между кадрами",
+        "резкий лёгкий переход с наездом"
+      ],
+      "props": {
+        "zoom": 1.8,
+        "blur": 10,
+        "speed": 3
+      }
+    }
+  ]
+}

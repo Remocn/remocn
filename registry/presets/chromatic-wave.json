@@ -1,0 +1,97 @@
+{
+  "component": "chromatic-wave",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "ambient-drift",
+      "label": "Ambient Drift",
+      "description": "A slow, gentle swell with a narrow band and soft fringes, made for long album-cover holds.",
+      "askedAs": [
+        "slow subtle ripple for an album cover",
+        "calm gentle wave through the title",
+        "barely moving ambient distortion",
+        "медленная мягкая волна по тексту",
+        "спокойное искажение для обложки альбома"
+      ],
+      "props": {
+        "speed": 0.5,
+        "waveHeight": 18,
+        "maxDisplacementPx": 16,
+        "turbulentAmount": 60
+      }
+    },
+    {
+      "id": "glitch-surge",
+      "label": "Glitch Surge",
+      "description": "A fast, tall wave with heavy displacement and turbulence that tears the letters into wide RGB fringes.",
+      "askedAs": [
+        "aggressive glitchy rgb split",
+        "fast heavy distortion for a music video",
+        "intense chromatic tearing on text",
+        "агрессивный глитч с разделением каналов",
+        "быстрое сильное искажение текста"
+      ],
+      "props": {
+        "speed": 2.5,
+        "waveHeight": 40,
+        "maxDisplacementPx": 58,
+        "turbulentAmount": 200
+      }
+    },
+    {
+      "id": "liquid-glass",
+      "label": "Liquid Glass",
+      "description": "A smooth, low-turbulence ripple that bends the type like clean rolling glass.",
+      "askedAs": [
+        "smooth glass refraction on text",
+        "clean liquid wave without noise",
+        "rippling glass title effect",
+        "плавная волна как через стекло",
+        "гладкое жидкое искажение букв"
+      ],
+      "props": {
+        "turbulentAmount": 10,
+        "maxDisplacementPx": 30,
+        "waveHeight": 34,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "vapor-pink",
+      "label": "Vapor Pink",
+      "description": "Soft pastel pink type with a lazy, medium wave for a vaporwave poster mood.",
+      "askedAs": [
+        "vaporwave pink title",
+        "pastel retro wave text",
+        "80s aesthetic pink ripple",
+        "розовый текст в стиле вейпорвейв",
+        "пастельная ретро волна"
+      ],
+      "props": {
+        "fill": "#f4b6d2",
+        "speed": 0.75,
+        "turbulentAmount": 90
+      }
+    },
+    {
+      "id": "cold-scanline",
+      "label": "Cold Scanline",
+      "description": "Icy pale-cyan type crossed by a thin, quick band of crisp distortion like a scan pass.",
+      "askedAs": [
+        "thin quick scan line distortion",
+        "cool blue tech glitch",
+        "narrow fast wave through text",
+        "холодный технологичный скан по тексту",
+        "узкая быстрая полоса искажения"
+      ],
+      "props": {
+        "fill": "#cfeefa",
+        "waveHeight": 8,
+        "speed": 1.75,
+        "maxDisplacementPx": 24,
+        "turbulentAmount": 160
+      }
+    }
+  ]
+}

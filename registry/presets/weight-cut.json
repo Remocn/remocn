@@ -1,0 +1,106 @@
+{
+  "component": "weight-cut",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "hairline-slow",
+      "label": "Hairline Slow",
+      "description": "A slow, deliberate count that thins all the way down to a hairline stroke on a deep charcoal field.",
+      "askedAs": [
+        "slow thin number countdown",
+        "ultra light weight figure animation",
+        "calm elegant size reduction",
+        "медленный тонкий счётчик",
+        "очень тонкий шрифт цифры"
+      ],
+      "props": {
+        "lightWeight": 100,
+        "count": 110,
+        "speed": 0.75,
+        "background": "#111214",
+        "ink": "#e8e6e1",
+        "accent": "#9aa5b1"
+      }
+    },
+    {
+      "id": "paper-serif",
+      "label": "Paper Serif",
+      "description": "Editorial light theme with a Fraunces figure on warm off-white and a muted terracotta eyebrow.",
+      "askedAs": [
+        "editorial serif stat",
+        "light magazine style number",
+        "warm paper background figure",
+        "редакционный стиль с засечками",
+        "светлый фон как бумага"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Fraunces",
+        "background": "#f4efe6",
+        "ink": "#2a2420",
+        "accent": "#b5583a",
+        "lightWeight": 200
+      }
+    },
+    {
+      "id": "terminal-snap",
+      "label": "Terminal Snap",
+      "description": "A fast, compact monospace readout in green-grey on near-black, like a build log reporting savings.",
+      "askedAs": [
+        "monospace bundle size stat",
+        "quick code style number",
+        "developer terminal kilobytes",
+        "моноширинный быстрый счётчик",
+        "как в терминале размер файла"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "speed": 2,
+        "count": 30,
+        "background": "#0d1110",
+        "ink": "#d6e2dc",
+        "accent": "#6fbf8e"
+      }
+    },
+    {
+      "id": "swiss-clean",
+      "label": "Swiss Clean",
+      "description": "Crisp light Inter layout scaled down slightly with a cobalt accent for a clean product-page feel.",
+      "askedAs": [
+        "clean minimal light stat",
+        "product page performance number",
+        "swiss style kilobyte figure",
+        "чистый минималистичный светлый",
+        "аккуратная цифра для сайта"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "accent": "#1f4fd1",
+        "scale": 0.85,
+        "lightWeight": 250
+      }
+    },
+    {
+      "id": "big-reveal",
+      "label": "Big Reveal",
+      "description": "An oversized grotesk figure that waits a beat, then drops weight over a long sweep with an amber accent.",
+      "askedAs": [
+        "huge dramatic number reveal",
+        "delayed big stat animation",
+        "large bold to thin figure",
+        "крупная цифра с задержкой",
+        "эффектное появление большого числа"
+      ],
+      "props": {
+        "fontFamily": "Space Grotesk",
+        "scale": 1.4,
+        "delay": 20,
+        "count": 90,
+        "accent": "#e0a33a",
+        "background": "#16161a"
+      }
+    }
+  ]
+}

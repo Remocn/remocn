@@ -1,0 +1,102 @@
+{
+  "component": "brand-guidelines",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "midnight-navy",
+      "label": "Midnight Navy",
+      "description": "A deep navy accent gives the mark and type a calm, institutional confidence.",
+      "askedAs": [
+        "dark blue brand film",
+        "corporate navy identity",
+        "serious finance brand look",
+        "тёмно-синий фирменный стиль",
+        "строгий корпоративный синий"
+      ],
+      "props": {
+        "accentColor": "#1f3a5f"
+      }
+    },
+    {
+      "id": "sage-slow",
+      "label": "Slow Sage",
+      "description": "A muted sage accent at a slower pace for an unhurried, natural wellness feel.",
+      "askedAs": [
+        "calm green brand video",
+        "slow organic identity",
+        "wellness brand guidelines",
+        "спокойный зелёный брендбук",
+        "медленное природное видео бренда"
+      ],
+      "props": {
+        "accentColor": "#6b7f5e",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "quick-cobalt",
+      "label": "Quick Cobalt",
+      "description": "A crisp cobalt accent with brisk timing for an energetic tech launch.",
+      "askedAs": [
+        "fast tech brand reveal",
+        "energetic blue identity",
+        "snappy startup brand film",
+        "быстрый технологичный брендбук",
+        "энергичный синий стиль"
+      ],
+      "props": {
+        "accentColor": "#2f5bd3",
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "still-graphite",
+      "label": "Still Graphite",
+      "description": "A graphite accent with static layouts for a quiet, editorial presentation.",
+      "askedAs": [
+        "static brand guidelines",
+        "no animation monochrome",
+        "minimal editorial identity",
+        "статичный брендбук без анимации",
+        "минималистичный серый стиль"
+      ],
+      "props": {
+        "accentColor": "#3a3a3c",
+        "reducedMotion": true
+      }
+    },
+    {
+      "id": "plum-luxe",
+      "label": "Plum Luxe",
+      "description": "A rich plum accent with slightly slowed motion for a luxurious, couture tone.",
+      "askedAs": [
+        "luxury purple brand film",
+        "elegant fashion identity",
+        "premium couture guidelines",
+        "люксовый фиолетовый брендбук",
+        "элегантный модный стиль"
+      ],
+      "props": {
+        "accentColor": "#5e2a4f",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "ochre-rush",
+      "label": "Ochre Rush",
+      "description": "A warm ochre accent at double speed for a punchy, social-ready cut.",
+      "askedAs": [
+        "short fast brand teaser",
+        "warm yellow identity quick",
+        "social media brand cut",
+        "быстрый тизер бренда",
+        "тёплый охристый стиль"
+      ],
+      "props": {
+        "accentColor": "#b8862b",
+        "speed": 2
+      }
+    }
+  ]
+}

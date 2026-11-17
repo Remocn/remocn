@@ -1,0 +1,116 @@
+{
+  "component": "matrix-decode",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "slow-decrypt",
+      "label": "Slow Decrypt",
+      "description": "A large, heavy green readout that deciphers deliberately over several seconds.",
+      "askedAs": [
+        "slow dramatic decode",
+        "make the decryption take longer",
+        "big cinematic hacker reveal",
+        "медленная расшифровка",
+        "крупный текст, долго раскрывается"
+      ],
+      "props": {
+        "fontSize": 110,
+        "fontWeight": "700",
+        "revealDuration": 180,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "quick-token",
+      "label": "Quick Token",
+      "description": "A small, light terminal label that snaps into place almost instantly.",
+      "askedAs": [
+        "fast small code reveal",
+        "quick token flash",
+        "snappy terminal label",
+        "быстрое появление кода",
+        "маленький быстрый токен"
+      ],
+      "props": {
+        "fontSize": 36,
+        "fontWeight": "400",
+        "revealDuration": 20,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "amber-terminal",
+      "label": "Amber Terminal",
+      "description": "Warm amber phosphor glyphs evoking a vintage CRT monitor at a steady pace.",
+      "askedAs": [
+        "retro amber monitor look",
+        "old CRT orange text",
+        "vintage terminal decode",
+        "янтарный ретро терминал",
+        "старый монитор оранжевый текст"
+      ],
+      "props": {
+        "color": "#f59e0b",
+        "fontWeight": "500",
+        "revealDuration": 90,
+        "fontSize": 64
+      }
+    },
+    {
+      "id": "ice-cipher",
+      "label": "Ice Cipher",
+      "description": "Cool cyan-blue cipher text with a crisp, mid-speed reveal for a sleek sci-fi feel.",
+      "askedAs": [
+        "blue sci-fi decode",
+        "cyan cyberpunk text",
+        "cold futuristic cipher",
+        "голубой киберпанк текст",
+        "холодная синяя расшифровка"
+      ],
+      "props": {
+        "color": "#38bdf8",
+        "fontWeight": "600",
+        "revealDuration": 45,
+        "speed": 1.25
+      }
+    },
+    {
+      "id": "mono-ghost",
+      "label": "Mono Ghost",
+      "description": "Understated light grey text that resolves quietly for a minimal, editorial tech look.",
+      "askedAs": [
+        "subtle grey decode",
+        "minimal clean scramble",
+        "not green, neutral terminal text",
+        "минималистичная серая расшифровка",
+        "спокойный нейтральный эффект"
+      ],
+      "props": {
+        "color": "#d4d4d8",
+        "fontWeight": "400",
+        "fontSize": 56,
+        "revealDuration": 120
+      }
+    },
+    {
+      "id": "red-alert",
+      "label": "Red Alert",
+      "description": "Bold crimson glyphs that decode rapidly like an urgent breach warning.",
+      "askedAs": [
+        "red hacker warning",
+        "access denied style text",
+        "urgent alert decode",
+        "красное предупреждение взлома",
+        "срочный красный текст"
+      ],
+      "props": {
+        "color": "#ef4444",
+        "fontWeight": "700",
+        "fontSize": 96,
+        "revealDuration": 30,
+        "speed": 2
+      }
+    }
+  ]
+}

@@ -1,0 +1,97 @@
+{
+  "component": "shader-warp-acid",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "slow-lava",
+      "label": "Slow Lava",
+      "description": "A slow, heavily blurred drift where the acid colours ooze gently like a lava lamp.",
+      "askedAs": [
+        "slow dreamy acid background",
+        "calm melting colour blobs",
+        "lava lamp style warp",
+        "медленный плавный кислотный фон",
+        "мягкие текучие пятна как лава-лампа"
+      ],
+      "props": {
+        "speed": 0.25,
+        "softness": 0.9,
+        "swirl": 0.4,
+        "distortion": 0.1
+      }
+    },
+    {
+      "id": "hype-vortex",
+      "label": "Hype Vortex",
+      "description": "A fast, tightly wound whirlpool with crisp edges for maximum energy on a hype cut.",
+      "askedAs": [
+        "fast spinning acid swirl",
+        "high energy vortex background",
+        "crazy hype twist effect",
+        "быстрый закрученный вихрь",
+        "энергичный фон для хайп-нарезки"
+      ],
+      "props": {
+        "speed": 3,
+        "swirl": 1,
+        "softness": 0.05,
+        "distortion": 0.45
+      }
+    },
+    {
+      "id": "glitch-melt",
+      "label": "Glitch Melt",
+      "description": "Sharp, heavily distorted ribbons that warp and tear like a corrupted signal.",
+      "askedAs": [
+        "distorted glitchy liquid",
+        "sharp warped acid stripes",
+        "trippy broken pattern",
+        "искажённый глитч фон",
+        "резкие рваные кислотные полосы"
+      ],
+      "props": {
+        "distortion": 1,
+        "softness": 0,
+        "swirl": 0.2,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "dark-field",
+      "label": "Dark Field",
+      "description": "Mostly black canvas with soft, sparse acid wisps that leave room for bright foreground text.",
+      "askedAs": [
+        "mostly black with a bit of colour",
+        "dark background for text",
+        "subtle acid accents",
+        "тёмный фон с лёгкими цветными всполохами",
+        "больше чёрного, меньше цвета"
+      ],
+      "props": {
+        "proportion": 0.15,
+        "softness": 0.7,
+        "speed": 0.75,
+        "swirl": 0.5
+      }
+    },
+    {
+      "id": "neon-flood",
+      "label": "Neon Flood",
+      "description": "Colour floods most of the frame in broad, bold waves with only thin black seams.",
+      "askedAs": [
+        "full screen bright acid colour",
+        "loud colour wash",
+        "more lime and cyan less black",
+        "яркая заливка во весь экран",
+        "больше цвета, почти без чёрного"
+      ],
+      "props": {
+        "proportion": 0.85,
+        "softness": 0.2,
+        "swirl": 0.85,
+        "speed": 2
+      }
+    }
+  ]
+}

@@ -1,0 +1,126 @@
+{
+  "component": "case-flip",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "A light, magazine-style look with an elegant serif, warm paper tone and slow, unhurried flips.",
+      "askedAs": [
+        "elegant serif headline flip",
+        "magazine style case change",
+        "slow classy letter flip",
+        "элегантный заголовок с засечками",
+        "журнальный стиль смены регистра"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "background": "#f5f1e8",
+        "ink": "#1c1a17",
+        "accent": "#b5482e",
+        "flip": 18
+      }
+    },
+    {
+      "id": "terminal-snap",
+      "label": "Terminal Snap",
+      "description": "A monospace, code-like flip on near-black with a mint accent and quick, tight letter changes.",
+      "askedAs": [
+        "code style case flip",
+        "monospace terminal headline",
+        "fast techy letter flip",
+        "моноширинный шрифт как в терминале",
+        "быстрая смена букв в стиле кода"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0d1117",
+        "ink": "#e6edf3",
+        "accent": "#3fb950",
+        "flip": 5,
+        "stagger": 1
+      }
+    },
+    {
+      "id": "loud-punch",
+      "label": "Loud Punch",
+      "description": "An oversized, fast and guide-free headline that snaps to caps with a bold coral accent.",
+      "askedAs": [
+        "big loud headline flip",
+        "punchy fast uppercase reveal",
+        "huge text quiet to loud",
+        "крупный громкий заголовок",
+        "резкий переход в капс"
+      ],
+      "props": {
+        "scale": 1.4,
+        "showGuides": false,
+        "speed": 1.75,
+        "pause": 4,
+        "accent": "#ff5a4e",
+        "fontFamily": "Space Grotesk"
+      }
+    },
+    {
+      "id": "slow-wave",
+      "label": "Slow Wave",
+      "description": "A calm, rolling wave where each letter flips gently with wide stagger and long pauses.",
+      "askedAs": [
+        "slow gentle letter wave",
+        "calm rippling case change",
+        "relaxed typographic intro",
+        "медленная плавная волна букв",
+        "спокойная смена регистра"
+      ],
+      "props": {
+        "stagger": 6,
+        "flip": 24,
+        "pause": 40,
+        "speed": 0.75,
+        "accent": "#7c6cf2"
+      }
+    },
+    {
+      "id": "swiss-clean",
+      "label": "Swiss Clean",
+      "description": "A crisp light layout in Inter with visible guides and a deep blue accent for a design-system feel.",
+      "askedAs": [
+        "clean minimal type specimen",
+        "swiss style headline with guides",
+        "light neutral typography demo",
+        "минималистичный швейцарский стиль",
+        "светлая типографика с направляющими"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "background": "#ffffff",
+        "ink": "#111111",
+        "accent": "#0047ff",
+        "showGuides": true
+      }
+    },
+    {
+      "id": "forest-fraunces",
+      "label": "Forest Fraunces",
+      "description": "A soft, smaller Fraunces headline on deep green with a muted gold accent and no guides.",
+      "askedAs": [
+        "warm dark green headline",
+        "soft serif with gold accent",
+        "cozy organic title flip",
+        "тёмно-зелёный фон с золотом",
+        "мягкий шрифт с засечками"
+      ],
+      "props": {
+        "fontFamily": "Fraunces",
+        "background": "#14261f",
+        "ink": "#efe9dc",
+        "accent": "#d4a84b",
+        "showGuides": false,
+        "scale": 0.85
+      }
+    }
+  ]
+}

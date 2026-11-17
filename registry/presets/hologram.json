@@ -1,0 +1,97 @@
+{
+  "component": "hologram",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "stable-projection",
+      "label": "Stable Projection",
+      "description": "A calm, steady cyan projection with almost no flicker and a faint ghost, like a well-tuned emitter.",
+      "askedAs": [
+        "steady hologram without flicker",
+        "clean calm projection",
+        "subtle sci-fi hologram",
+        "спокойная голограмма без мерцания",
+        "чистая стабильная проекция"
+      ],
+      "props": {
+        "flicker": 0.2,
+        "ghost": 0.4,
+        "speed": 0.5,
+        "glow": 0.8
+      }
+    },
+    {
+      "id": "damaged-signal",
+      "label": "Damaged Signal",
+      "description": "A failing transmission with heavy flicker, a wide ghost double and fast, jittery motion.",
+      "askedAs": [
+        "glitchy broken hologram",
+        "unstable transmission effect",
+        "hologram losing signal",
+        "глючная голограмма с помехами",
+        "сломанный сигнал проекции"
+      ],
+      "props": {
+        "flicker": 2.6,
+        "ghost": 2.4,
+        "speed": 2.5,
+        "intensity": 0.8
+      }
+    },
+    {
+      "id": "amber-console",
+      "label": "Amber Console",
+      "description": "A warm amber projection with soft glow, evoking retro command-deck displays.",
+      "askedAs": [
+        "orange retro hologram",
+        "warm amber projection",
+        "old sci-fi console look",
+        "тёплая янтарная голограмма",
+        "ретро проекция оранжевого цвета"
+      ],
+      "props": {
+        "tint": "#ffb547",
+        "glow": 1.4,
+        "flicker": 0.6,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "emerald-bloom",
+      "label": "Emerald Bloom",
+      "description": "A saturated green projection with strong bloom that makes bright shapes radiate into the dark.",
+      "askedAs": [
+        "glowing green hologram",
+        "bright bloomy projection",
+        "matrix style green glow",
+        "зелёная светящаяся голограмма",
+        "яркое свечение проекции"
+      ],
+      "props": {
+        "tint": "#5cf2a6",
+        "glow": 2.6,
+        "ghost": 1.3
+      }
+    },
+    {
+      "id": "faint-apparition",
+      "label": "Faint Apparition",
+      "description": "A dim, pale-violet projection that barely holds together, slow and ghostly.",
+      "askedAs": [
+        "faint ghostly hologram",
+        "dim barely visible projection",
+        "soft purple apparition",
+        "тусклая призрачная голограмма",
+        "едва заметная проекция"
+      ],
+      "props": {
+        "tint": "#b9a6ff",
+        "intensity": 0.55,
+        "glow": 0.5,
+        "ghost": 1.8,
+        "speed": 0.5
+      }
+    }
+  ]
+}

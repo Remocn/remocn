@@ -1,0 +1,101 @@
+{
+  "component": "caption-active-pop",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "big-bounce",
+      "label": "Big Bounce",
+      "description": "Oversized heavy type with a strong spring on each spoken word, tuned for punchy shorts.",
+      "askedAs": [
+        "huge bouncy captions",
+        "big pop tiktok subtitles",
+        "loud energetic word pop",
+        "крупные прыгающие субтитры",
+        "субтитры с сильным попом слова"
+      ],
+      "props": {
+        "fontSize": 96,
+        "fontWeight": 900,
+        "popScale": 1.35,
+        "activeColor": "#22c55e",
+        "combineTokensWithinMilliseconds": 800
+      }
+    },
+    {
+      "id": "quiet-lift",
+      "label": "Quiet Lift",
+      "description": "Smaller medium-weight text with a barely-there lift and a soft warm accent for calm interviews.",
+      "askedAs": [
+        "subtle captions for interview",
+        "gentle word highlight",
+        "minimal calm subtitles",
+        "спокойные субтитры для интервью",
+        "едва заметное выделение слова"
+      ],
+      "props": {
+        "fontSize": 48,
+        "fontWeight": 500,
+        "popScale": 1.04,
+        "activeColor": "#fdba74",
+        "combineTokensWithinMilliseconds": 2000,
+        "holdMs": 900
+      }
+    },
+    {
+      "id": "one-word-punch",
+      "label": "One Word Punch",
+      "description": "Rapid single-word pages that pop hard and vanish quickly for fast-cut edits.",
+      "askedAs": [
+        "one word at a time captions",
+        "fast word by word subtitles",
+        "rapid single word pop",
+        "субтитры по одному слову",
+        "быстрые субтитры слово за словом"
+      ],
+      "props": {
+        "combineTokensWithinMilliseconds": 0,
+        "fontSize": 110,
+        "popScale": 1.25,
+        "holdMs": 200,
+        "activeColor": "#ffffff"
+      }
+    },
+    {
+      "id": "ink-on-light",
+      "label": "Ink On Light",
+      "description": "Dark ink text with a deep blue accent and no shadow, made for bright or white footage.",
+      "askedAs": [
+        "dark captions for bright video",
+        "black subtitles on white background",
+        "clean captions without shadow",
+        "тёмные субтитры для светлого видео",
+        "чёрный текст без тени"
+      ],
+      "props": {
+        "color": "#111827",
+        "activeColor": "#1d4ed8",
+        "shadow": false,
+        "fontWeight": 700
+      }
+    },
+    {
+      "id": "coral-pop",
+      "label": "Coral Pop",
+      "description": "Warm off-white type with a coral active word and a lively mid-size spring for lifestyle content.",
+      "askedAs": [
+        "pink coral word highlight",
+        "warm lifestyle captions",
+        "trendy instagram reel subtitles",
+        "субтитры с коралловым акцентом",
+        "тёплые субтитры для рилс"
+      ],
+      "props": {
+        "color": "#fff7ed",
+        "activeColor": "#fb7185",
+        "popScale": 1.2,
+        "fontSize": 72
+      }
+    }
+  ]
+}

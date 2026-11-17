@@ -1,0 +1,106 @@
+{
+  "component": "feather-settle",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "drifting-serif",
+      "label": "Drifting Serif",
+      "description": "Elegant serif words drift down slowly from high above with a generous, swaying fall.",
+      "askedAs": [
+        "slow elegant falling text",
+        "serif words floating down gently",
+        "dreamy drifting headline",
+        "медленно падающий текст с засечками",
+        "плавно парящие слова"
+      ],
+      "props": {
+        "fontFamily": "Instrument Serif",
+        "fall": 150,
+        "sway": 5,
+        "tilt": 14,
+        "speed": 0.5,
+        "scale": 1.2
+      }
+    },
+    {
+      "id": "paper-light",
+      "label": "Paper Light",
+      "description": "Warm off-white paper with deep brown ink and a soft clay accent for a calm daytime sign-off.",
+      "askedAs": [
+        "light warm background version",
+        "cream paper look with dark text",
+        "soft beige light theme",
+        "светлый тёплый фон",
+        "бумажный стиль с тёмным текстом"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4efe7",
+        "ink": "#3b2f26",
+        "accent": "#b5835a",
+        "fontFamily": "Fraunces"
+      }
+    },
+    {
+      "id": "quick-drop",
+      "label": "Quick Drop",
+      "description": "A short, tight fall with almost no sway so the words land briskly and cleanly.",
+      "askedAs": [
+        "faster settle animation",
+        "snappy drop in text",
+        "less floaty more direct",
+        "быстрое появление слов",
+        "резкое падение без раскачивания"
+      ],
+      "props": {
+        "speed": 2,
+        "fall": 30,
+        "sway": 0,
+        "tilt": 2,
+        "stagger": 5,
+        "fontFamily": "Inter"
+      }
+    },
+    {
+      "id": "midnight-calm",
+      "label": "Midnight Calm",
+      "description": "Pale text settles onto a deep navy night with a muted sage accent.",
+      "askedAs": [
+        "dark blue calm ending",
+        "night sky closing line",
+        "navy background soft text",
+        "тёмно-синий спокойный финал",
+        "ночной фон с мягким текстом"
+      ],
+      "props": {
+        "theme": "dark",
+        "background": "#141b2d",
+        "ink": "#e8ebf2",
+        "accent": "#9bb5a0",
+        "fontFamily": "Manrope",
+        "delay": 15
+      }
+    },
+    {
+      "id": "one-by-one",
+      "label": "One By One",
+      "description": "Smaller words arrive one at a time with long gaps and a strong tilting flutter.",
+      "askedAs": [
+        "words appear one after another slowly",
+        "staggered fluttering text",
+        "each word floats in separately",
+        "слова появляются по одному",
+        "текст падает по очереди как перья"
+      ],
+      "props": {
+        "stagger": 34,
+        "tilt": 24,
+        "sway": 8,
+        "fall": 100,
+        "scale": 0.8,
+        "fontFamily": "Geist"
+      }
+    }
+  ]
+}

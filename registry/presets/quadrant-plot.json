@@ -1,0 +1,104 @@
+{
+  "component": "quadrant-plot",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "boardroom-light",
+      "label": "Boardroom Light",
+      "description": "A clean light consulting-deck look with a deep navy accent and crisp Inter type, grain off.",
+      "askedAs": [
+        "clean light business chart",
+        "consulting slide style quadrant",
+        "white corporate positioning map",
+        "светлый деловой стиль графика",
+        "как слайд из консалтинговой презентации"
+      ],
+      "props": {
+        "theme": "light",
+        "accent": "#1e3a8a",
+        "fontFamily": "Inter",
+        "grain": false
+      }
+    },
+    {
+      "id": "terminal-scan",
+      "label": "Terminal Scan",
+      "description": "A near-black analyst terminal with mono type, a muted green accent and quick, tightly staggered dots.",
+      "askedAs": [
+        "hacker terminal style chart",
+        "monospace data plot fast",
+        "dark analyst dashboard look",
+        "график в стиле терминала",
+        "быстрый моноширинный график"
+      ],
+      "props": {
+        "background": "#0b0f0c",
+        "ink": "#d7e3d9",
+        "accent": "#4ade80",
+        "fontFamily": "JetBrains Mono",
+        "speed": 1.5,
+        "stagger": 2
+      }
+    },
+    {
+      "id": "editorial-paper",
+      "label": "Editorial Paper",
+      "description": "A warm off-white print-magazine feel with Fraunces serif, a terracotta accent and slow, deliberate reveals.",
+      "askedAs": [
+        "magazine style positioning chart",
+        "warm paper serif look",
+        "elegant slow editorial plot",
+        "журнальный стиль с засечками",
+        "тёплый бумажный фон и медленно"
+      ],
+      "props": {
+        "background": "#f4efe6",
+        "ink": "#2a2420",
+        "accent": "#c2562f",
+        "fontFamily": "Fraunces",
+        "speed": 0.75,
+        "stagger": 8
+      }
+    },
+    {
+      "id": "midnight-spotlight",
+      "label": "Midnight Spotlight",
+      "description": "A deep indigo stage with a warm amber winner marker, enlarged scale and a dramatic pause before the scatter.",
+      "askedAs": [
+        "dramatic reveal of the winner",
+        "big bold dark chart with gold",
+        "cinematic positioning beat",
+        "драматичное появление победителя",
+        "крупный тёмный график с золотым акцентом"
+      ],
+      "props": {
+        "background": "#12132b",
+        "ink": "#ecebf5",
+        "accent": "#f5b544",
+        "scale": 1.2,
+        "delay": 20,
+        "stagger": 10
+      }
+    },
+    {
+      "id": "snap-launch",
+      "label": "Snap Launch",
+      "description": "A punchy, fast-cut startup look with Space Grotesk, a coral accent and all dots landing almost at once.",
+      "askedAs": [
+        "fast energetic startup chart",
+        "quick punchy quadrant",
+        "snappy launch video plot",
+        "быстрый энергичный график",
+        "динамичный стиль для запуска продукта"
+      ],
+      "props": {
+        "fontFamily": "Space Grotesk",
+        "accent": "#ff6b5b",
+        "speed": 2,
+        "stagger": 1,
+        "grain": false
+      }
+    }
+  ]
+}

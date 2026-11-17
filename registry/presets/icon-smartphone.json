@@ -1,0 +1,100 @@
+{
+  "component": "icon-smartphone",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "hero-slow-draw",
+      "label": "Hero Draw",
+      "description": "A large, thin-lined phone that sketches itself in slowly for an elegant intro.",
+      "askedAs": [
+        "big phone icon drawing slowly",
+        "elegant line drawing of a smartphone",
+        "large thin outline phone reveal",
+        "большая иконка телефона медленно рисуется",
+        "тонкий контур смартфона крупно"
+      ],
+      "props": {
+        "animation": "draw",
+        "size": 160,
+        "strokeWidth": 1.25,
+        "speed": 0.5,
+        "color": "#1e293b"
+      }
+    },
+    {
+      "id": "buzzing-alert",
+      "label": "Buzzing Alert",
+      "description": "A bold red phone that vibrates quickly on a loop like an incoming call.",
+      "askedAs": [
+        "phone ringing vibration loop",
+        "incoming call shaking phone",
+        "urgent buzzing smartphone icon",
+        "вибрирующий телефон входящий звонок",
+        "телефон трясётся по кругу"
+      ],
+      "props": {
+        "animation": "action",
+        "loop": true,
+        "speed": 2,
+        "color": "#dc2626",
+        "strokeWidth": 2.5,
+        "size": 72
+      }
+    },
+    {
+      "id": "brand-blue-loop",
+      "label": "Brand Blue",
+      "description": "A medium blue phone that draws and animates continuously at a calm pace.",
+      "askedAs": [
+        "blue phone icon looping",
+        "app download animation blue",
+        "calm repeating smartphone icon",
+        "синяя иконка телефона в цикле",
+        "спокойная анимация смартфона"
+      ],
+      "props": {
+        "color": "#1f6feb",
+        "loop": true,
+        "size": 96,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "tiny-inline",
+      "label": "Tiny Inline",
+      "description": "A small, crisp phone glyph with a quick snap, sized to sit beside text.",
+      "askedAs": [
+        "small phone icon next to text",
+        "quick tiny smartphone glyph",
+        "inline mobile icon fast",
+        "маленькая иконка телефона рядом с текстом",
+        "мини значок смартфона быстро"
+      ],
+      "props": {
+        "size": 28,
+        "strokeWidth": 1.75,
+        "speed": 1.5,
+        "color": "#525252"
+      }
+    },
+    {
+      "id": "chunky-green",
+      "label": "Chunky Green",
+      "description": "A heavy-stroked deep green phone that pops in with a confident bounce.",
+      "askedAs": [
+        "thick bold phone icon green",
+        "chunky smartphone outline",
+        "heavy line mobile icon",
+        "толстая зелёная иконка телефона",
+        "жирный контур смартфона"
+      ],
+      "props": {
+        "strokeWidth": 3,
+        "color": "#15803d",
+        "size": 120,
+        "speed": 1.25
+      }
+    }
+  ]
+}

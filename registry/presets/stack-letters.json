@@ -1,0 +1,121 @@
+{
+  "component": "stack-letters",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "quick-snap",
+      "label": "Quick Snap",
+      "description": "Letters drop in rapid succession with a tight hold for a punchy, energetic reveal.",
+      "askedAs": [
+        "fast letter drop",
+        "snappy title reveal",
+        "quick punchy word intro",
+        "быстрое появление букв",
+        "резкий заголовок"
+      ],
+      "props": {
+        "stagger": 3,
+        "hold": 4,
+        "speed": 1.75,
+        "fontFamily": "Inter"
+      }
+    },
+    {
+      "id": "slow-stack",
+      "label": "Slow Stack",
+      "description": "Large letters tumble in one by one at an unhurried pace and linger before settling.",
+      "askedAs": [
+        "slow dramatic letter stack",
+        "heavy cinematic title drop",
+        "letters falling slowly one at a time",
+        "медленное падение букв",
+        "драматичный заголовок"
+      ],
+      "props": {
+        "stagger": 16,
+        "hold": 24,
+        "speed": 0.75,
+        "scale": 1.3,
+        "delay": 12
+      }
+    },
+    {
+      "id": "paper-light",
+      "label": "Paper Light",
+      "description": "A light cream background with deep charcoal letters and a terracotta accent for a soft editorial feel.",
+      "askedAs": [
+        "light warm title card",
+        "cream background with dark letters",
+        "soft editorial word reveal",
+        "светлый тёплый фон",
+        "бумажный стиль заголовка"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4ede3",
+        "ink": "#1f1b18",
+        "accent": "#c2562f",
+        "fontFamily": "Fraunces"
+      }
+    },
+    {
+      "id": "midnight-serif",
+      "label": "Midnight Serif",
+      "description": "Elegant serif letters in ivory land on a deep navy field with a muted gold accent.",
+      "askedAs": [
+        "elegant serif title on dark",
+        "luxury navy and gold reveal",
+        "classy word drop",
+        "элегантный шрифт с засечками",
+        "тёмно-синий премиальный стиль"
+      ],
+      "props": {
+        "fontFamily": "Instrument Serif",
+        "background": "#0f1626",
+        "ink": "#f3eee4",
+        "accent": "#c9a45c",
+        "scale": 1.15
+      }
+    },
+    {
+      "id": "terminal-clean",
+      "label": "Terminal Clean",
+      "description": "Compact monospace letters stack crisply on near-black with a mint accent and no grain.",
+      "askedAs": [
+        "monospace code style title",
+        "developer tech word reveal",
+        "clean terminal look",
+        "моноширинный шрифт заголовок",
+        "стиль терминала"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0e1110",
+        "ink": "#e6f2ec",
+        "accent": "#4fbf8f",
+        "grain": false,
+        "scale": 0.85
+      }
+    },
+    {
+      "id": "playful-pop",
+      "label": "Playful Pop",
+      "description": "Chunky rounded grotesque letters bounce in briskly over a warm coral accent.",
+      "askedAs": [
+        "playful bouncy letters",
+        "fun product name reveal",
+        "friendly chunky title",
+        "игривые буквы",
+        "весёлое появление названия"
+      ],
+      "props": {
+        "fontFamily": "Bricolage Grotesque",
+        "accent": "#f26b4f",
+        "stagger": 5,
+        "speed": 1.25,
+        "scale": 1.2
+      }
+    }
+  ]
+}

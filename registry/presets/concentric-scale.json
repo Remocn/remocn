@@ -1,0 +1,104 @@
+{
+  "component": "concentric-scale",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "paper-report",
+      "label": "Paper Report",
+      "description": "A calm light-theme look with serif numerals and an ink-blue accent, like a printed annual report.",
+      "askedAs": [
+        "light version like a printed report",
+        "serif numbers on white background",
+        "elegant editorial data style",
+        "светлый вариант как в годовом отчёте",
+        "версия с засечками на белом фоне"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "fontWeight": 400,
+        "accent": "#1e3a8a",
+        "grain": false
+      }
+    },
+    {
+      "id": "rapid-growth",
+      "label": "Rapid Growth",
+      "description": "Fast, punchy rings that snap outward with bold sans type for a high-energy growth moment.",
+      "askedAs": [
+        "make it faster and punchier",
+        "quick growth animation for a pitch",
+        "energetic bold numbers",
+        "сделай быстрее и энергичнее",
+        "быстрая анимация роста"
+      ],
+      "props": {
+        "beat": 14,
+        "speed": 1.75,
+        "fontFamily": "Space Grotesk",
+        "fontWeight": 600,
+        "accent": "#f97316"
+      }
+    },
+    {
+      "id": "slow-cosmos",
+      "label": "Slow Cosmos",
+      "description": "Unhurried rings drift out over a deep midnight background with a soft violet planet glow.",
+      "askedAs": [
+        "slow cinematic space feel",
+        "dreamy slow version with purple glow",
+        "calm galaxy style",
+        "медленный космический вариант",
+        "спокойная кинематографичная версия"
+      ],
+      "props": {
+        "beat": 52,
+        "speed": 0.75,
+        "background": "#0b0b1f",
+        "ink": "#e6e4f5",
+        "accent": "#8b5cf6",
+        "fontWeight": 200
+      }
+    },
+    {
+      "id": "terminal-metric",
+      "label": "Terminal Metric",
+      "description": "A compact monospace readout in green on near-black, like a live dashboard metric.",
+      "askedAs": [
+        "monospace dashboard style",
+        "developer terminal look",
+        "small techy version",
+        "моноширинный стиль как в терминале",
+        "техничный вид дашборда"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0a0f0d",
+        "ink": "#d1fae5",
+        "accent": "#10b981",
+        "scale": 0.8,
+        "grain": false
+      }
+    },
+    {
+      "id": "warm-sand",
+      "label": "Warm Sand",
+      "description": "Large-scale rings on a warm cream background with terracotta accent and rounded type.",
+      "askedAs": [
+        "warm beige version",
+        "bigger and cozier look",
+        "earthy colors terracotta",
+        "тёплая бежевая версия",
+        "крупнее и в землистых тонах"
+      ],
+      "props": {
+        "background": "#f4ede1",
+        "ink": "#2b2118",
+        "accent": "#c2410c",
+        "fontFamily": "Fraunces",
+        "scale": 1.25
+      }
+    }
+  ]
+}

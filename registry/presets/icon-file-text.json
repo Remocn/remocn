@@ -1,0 +1,100 @@
+{
+  "component": "icon-file-text",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "hairline-slow-draw",
+      "label": "Hairline Sketch",
+      "description": "A large, thin-lined document that slowly draws itself in a soft graphite tone.",
+      "askedAs": [
+        "thin slow drawing file icon",
+        "elegant line document animation",
+        "big delicate text file sketch",
+        "тонкая медленная иконка документа",
+        "изящная прорисовка файла"
+      ],
+      "props": {
+        "animation": "draw",
+        "size": 120,
+        "strokeWidth": 1,
+        "speed": 0.5,
+        "color": "#525252"
+      }
+    },
+    {
+      "id": "bold-snappy-blue",
+      "label": "Bold Snap",
+      "description": "A chunky blue document icon that pops into action at double speed.",
+      "askedAs": [
+        "quick bold file icon",
+        "fast punchy document animation",
+        "thick blue text file",
+        "быстрая жирная иконка файла",
+        "яркий синий документ"
+      ],
+      "props": {
+        "animation": "action",
+        "strokeWidth": 3,
+        "speed": 2,
+        "color": "#1f6feb",
+        "size": 64
+      }
+    },
+    {
+      "id": "looping-loader",
+      "label": "Looping Loader",
+      "description": "A small, steadily repeating draw-and-act cycle in muted slate, suited to loading states.",
+      "askedAs": [
+        "file icon that keeps looping",
+        "loading document animation",
+        "repeating text file icon",
+        "зацикленная иконка документа",
+        "анимация загрузки файла"
+      ],
+      "props": {
+        "loop": true,
+        "size": 32,
+        "color": "#475569",
+        "speed": 1.25
+      }
+    },
+    {
+      "id": "warm-hero",
+      "label": "Warm Hero",
+      "description": "An oversized terracotta document drawn at a calm, deliberate pace for title cards.",
+      "askedAs": [
+        "huge warm colored file icon",
+        "big orange document for intro",
+        "hero text file animation",
+        "большая тёплая иконка документа",
+        "крупный файл для заставки"
+      ],
+      "props": {
+        "size": 200,
+        "color": "#c2410c",
+        "strokeWidth": 1.5,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "forest-gentle-action",
+      "label": "Forest Pulse",
+      "description": "A deep green document that gently repeats its action motion in a slow loop.",
+      "askedAs": [
+        "green file icon pulsing",
+        "calm looping document motion",
+        "slow green text file",
+        "зелёная иконка файла в цикле",
+        "спокойная анимация документа"
+      ],
+      "props": {
+        "animation": "action",
+        "loop": true,
+        "color": "#166534",
+        "speed": 0.5,
+        "size": 80
+      }
+    }
+  ]
+}

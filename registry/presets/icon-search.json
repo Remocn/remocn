@@ -1,0 +1,98 @@
+{
+  "component": "icon-search",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "hairline-slow",
+      "label": "Hairline Slow",
+      "description": "A large, thin-stroked magnifier that draws itself in slowly for a calm, editorial feel.",
+      "askedAs": [
+        "thin elegant search icon slow",
+        "minimal line magnifier drawing in",
+        "delicate slow search animation",
+        "тонкая медленная иконка поиска",
+        "элегантная лупа рисуется плавно"
+      ],
+      "props": {
+        "animation": "draw",
+        "size": 120,
+        "strokeWidth": 1.25,
+        "speed": 0.5,
+        "color": "#3f3f46"
+      }
+    },
+    {
+      "id": "bold-scan",
+      "label": "Bold Scan",
+      "description": "A chunky, heavy-stroked magnifier that loops a quick scanning motion like an active search.",
+      "askedAs": [
+        "searching loading icon loop",
+        "bold magnifier scanning repeatedly",
+        "thick search icon that keeps moving",
+        "жирная лупа ищет в цикле",
+        "индикатор поиска с анимацией"
+      ],
+      "props": {
+        "animation": "action",
+        "loop": true,
+        "strokeWidth": 3,
+        "speed": 1.5,
+        "size": 96
+      }
+    },
+    {
+      "id": "brand-blue",
+      "label": "Brand Blue",
+      "description": "A mid-sized search icon in a confident product blue with a standard draw and action.",
+      "askedAs": [
+        "blue search icon",
+        "search icon in brand color",
+        "product ui magnifier blue",
+        "синяя иконка поиска",
+        "лупа в фирменном синем цвете"
+      ],
+      "props": {
+        "color": "#1f6feb",
+        "size": 72,
+        "strokeWidth": 2.25
+      }
+    },
+    {
+      "id": "quick-pop",
+      "label": "Quick Pop",
+      "description": "A small, snappy magnifier that draws and animates at double speed for fast UI cuts.",
+      "askedAs": [
+        "fast small search icon",
+        "snappy quick magnifier animation",
+        "short punchy search icon",
+        "быстрая маленькая иконка поиска",
+        "резкая анимация лупы"
+      ],
+      "props": {
+        "speed": 2.5,
+        "size": 32,
+        "animation": "both"
+      }
+    },
+    {
+      "id": "hero-terracotta",
+      "label": "Hero Terracotta",
+      "description": "An oversized warm terracotta magnifier that loops gently as a hero visual.",
+      "askedAs": [
+        "huge warm colored search icon",
+        "big orange magnifier looping",
+        "large hero search animation",
+        "большая тёплая лупа в цикле",
+        "огромная иконка поиска терракотовая"
+      ],
+      "props": {
+        "size": 180,
+        "color": "#c2410c",
+        "loop": true,
+        "speed": 0.75,
+        "strokeWidth": 1.75
+      }
+    }
+  ]
+}

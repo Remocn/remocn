@@ -56,8 +56,27 @@ export function useCustomizer(name: string, controls: ControlConfig) {
     };
   }, []);
 
+  // While the agent tunes several controls they make one undo step, and the
+  // describe field reports them as one event instead of one per prop.
+  const batching = useRef(false);
+  const batch = {
+    begin: () => {
+      if (batching.current) return;
+      batching.current = true;
+      setHistory((h) => record(h, current.current, null, Date.now()));
+    },
+    end: () => {
+      batching.current = false;
+    },
+  };
+
   const change = (key: string, value: unknown, source?: ChangeSource) => {
     if (Object.is(current.current[key], value)) return;
+    if (batching.current) {
+      current.current = { ...current.current, [key]: value };
+      setValues((prev) => ({ ...prev, [key]: value }));
+      return;
+    }
     setHistory((h) => record(h, current.current, key, Date.now()));
     setValues((prev) => ({ ...prev, [key]: value }));
     const existing = timers.current.get(key);
@@ -73,6 +92,20 @@ export function useCustomizer(name: string, controls: ControlConfig) {
         timers.current.delete(key);
       }, 500),
     );
+  };
+
+  /** Several values at once, as one undo step: a preset or a description. */
+  const apply = (patch: Record<string, unknown>) => {
+    const changed = Object.keys(patch).filter(
+      (key) => key in controls && !Object.is(current.current[key], patch[key]),
+    );
+    if (changed.length === 0) return;
+    setHistory((h) => record(h, current.current, null, Date.now()));
+    setValues((prev) => {
+      const next = { ...prev };
+      for (const key of changed) next[key] = patch[key];
+      return next;
+    });
   };
 
   const reset = () => {
@@ -97,6 +130,8 @@ export function useCustomizer(name: string, controls: ControlConfig) {
     isDefault,
     change,
     reset,
+    apply,
+    batch,
     undo: () => step("undo"),
     redo: () => step("redo"),
     canUndo: history.past.length > 0,

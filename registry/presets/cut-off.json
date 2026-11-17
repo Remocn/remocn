@@ -1,0 +1,104 @@
+{
+  "component": "cut-off",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "terminal-snap",
+      "label": "Terminal Snap",
+      "description": "Monospace type on near-black with a mint accent, typed fast like a shell interrupting itself.",
+      "askedAs": [
+        "code terminal style interruption",
+        "hacker monospace cut off",
+        "fast typing dark console",
+        "стиль терминала с моноширинным шрифтом",
+        "быстрый текст как в консоли"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0d1117",
+        "ink": "#e6edf3",
+        "accent": "#3fb950",
+        "charFrames": 1,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "editorial-pause",
+      "label": "Editorial Pause",
+      "description": "Light paper background with an elegant serif, typed slowly so the interruption lands with dry wit.",
+      "askedAs": [
+        "slow elegant serif version",
+        "magazine style light cut off",
+        "calm editorial typing",
+        "медленный элегантный вариант с засечками",
+        "светлый журнальный стиль"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "background": "#f5f1ea",
+        "ink": "#1c1a17",
+        "charFrames": 4,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "hard-hit",
+      "label": "Hard Hit",
+      "description": "Oversized bold grotesque with a coral reply card that slams in quickly.",
+      "askedAs": [
+        "big punchy interruption",
+        "make the reply hit harder",
+        "large bold fast text",
+        "крупный жёсткий удар",
+        "сделай ответ резче и больше"
+      ],
+      "props": {
+        "fontFamily": "Bricolage Grotesque",
+        "scale": 1.3,
+        "replyBackground": "#ff6b4a",
+        "accent": "#ff6b4a",
+        "speed": 2
+      }
+    },
+    {
+      "id": "midnight-indigo",
+      "label": "Midnight Indigo",
+      "description": "Deep indigo backdrop with soft lavender text and a pale violet reply card in clean Geist.",
+      "askedAs": [
+        "dark blue purple palette",
+        "moody indigo version",
+        "calm night colors",
+        "тёмно-синий фиолетовый вариант",
+        "ночная палитра"
+      ],
+      "props": {
+        "background": "#1b1838",
+        "ink": "#e4e1ff",
+        "accent": "#a79bff",
+        "replyBackground": "#ece9ff",
+        "fontFamily": "Geist"
+      }
+    },
+    {
+      "id": "quiet-aside",
+      "label": "Quiet Aside",
+      "description": "Small, compact light layout in Inter with a delayed start, like a subtle side comment.",
+      "askedAs": [
+        "small subtle version",
+        "minimal light clean",
+        "understated aside with delay",
+        "маленький сдержанный вариант",
+        "минималистичный светлый стиль"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "scale": 0.75,
+        "delay": 20,
+        "accent": "#2f6fdb"
+      }
+    }
+  ]
+}

@@ -1,0 +1,125 @@
+{
+  "component": "name-gloss",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-paper",
+      "label": "Editorial Paper",
+      "description": "Warm off-white page with dark serif type and a deep green accent, paced slowly like a magazine spread.",
+      "askedAs": [
+        "serif magazine look on cream",
+        "warm paper editorial style",
+        "slow elegant light version",
+        "журнальный стиль с засечками",
+        "светлый тёплый фон с серифом"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4efe6",
+        "ink": "#1c1a17",
+        "accent": "#2f6b4f",
+        "fontFamily": "Instrument Serif",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "snappy-launch",
+      "label": "Snappy Launch",
+      "description": "Fast, punchy reveal with tight word stagger, a short hold and slightly larger grotesk type.",
+      "askedAs": [
+        "make it quick and punchy",
+        "fast product launch reveal",
+        "shorter snappier version",
+        "быстрее и энергичнее",
+        "короткий динамичный вариант"
+      ],
+      "props": {
+        "speed": 1.75,
+        "stagger": 1,
+        "hold": 20,
+        "fontFamily": "Space Grotesk",
+        "scale": 1.1
+      }
+    },
+    {
+      "id": "midnight-indigo",
+      "label": "Midnight Indigo",
+      "description": "Deep navy background with soft white text and a muted periwinkle accent in clean Inter.",
+      "askedAs": [
+        "dark blue night theme",
+        "navy background with soft accent",
+        "calm dark corporate look",
+        "тёмно-синий фон",
+        "спокойная тёмная тема"
+      ],
+      "props": {
+        "theme": "dark",
+        "background": "#0f1629",
+        "ink": "#e8ecf5",
+        "accent": "#8ea2ff",
+        "fontFamily": "Inter"
+      }
+    },
+    {
+      "id": "terminal-mono",
+      "label": "Terminal Mono",
+      "description": "Monospace type on near-black with an amber accent and a steady, deliberate word-by-word cadence.",
+      "askedAs": [
+        "developer code style",
+        "monospace terminal look",
+        "techy dev tool vibe",
+        "как в терминале",
+        "моноширинный шрифт для разработчиков"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0d0d0c",
+        "ink": "#e6e2d8",
+        "accent": "#e0a84a",
+        "stagger": 6,
+        "scale": 0.9
+      }
+    },
+    {
+      "id": "slow-gallery",
+      "label": "Slow Gallery",
+      "description": "Light, airy and unhurried with smaller Fraunces type, a long hold and a gentle lead-in delay.",
+      "askedAs": [
+        "slow and minimal on white",
+        "let it breathe longer",
+        "quiet gallery style",
+        "медленно и воздушно",
+        "минимализм с долгой паузой"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Fraunces",
+        "speed": 0.5,
+        "hold": 96,
+        "delay": 18,
+        "scale": 0.85
+      }
+    },
+    {
+      "id": "bold-clay",
+      "label": "Bold Clay",
+      "description": "Oversized Bricolage type on a terracotta ground with cream text for a confident, warm statement.",
+      "askedAs": [
+        "big bold warm colors",
+        "terracotta brand statement",
+        "huge expressive headline",
+        "крупный яркий заголовок",
+        "тёплый терракотовый фон"
+      ],
+      "props": {
+        "background": "#b5532f",
+        "ink": "#fbf3e8",
+        "accent": "#f2c48d",
+        "fontFamily": "Bricolage Grotesque",
+        "scale": 1.35,
+        "stagger": 4
+      }
+    }
+  ]
+}

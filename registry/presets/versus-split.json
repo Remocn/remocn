@@ -1,0 +1,124 @@
+{
+  "component": "versus-split",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "title-fight",
+      "label": "Title Fight",
+      "description": "A punchy red-corner fight poster on near-black with fast, tightly stacked stat rows.",
+      "askedAs": [
+        "make it look like a boxing poster",
+        "fast aggressive red comparison",
+        "fight night style versus",
+        "сделай как афишу боксёрского боя",
+        "быстрое агрессивное сравнение в красном"
+      ],
+      "props": {
+        "accent": "#e5383b",
+        "background": "#111111",
+        "ink": "#f5f1ea",
+        "speed": 1.5,
+        "stagger": 4,
+        "scale": 1.1
+      }
+    },
+    {
+      "id": "clean-scorecard",
+      "label": "Clean Scorecard",
+      "description": "A light, tidy scorecard in Inter with a calm green winner and relaxed pacing.",
+      "askedAs": [
+        "clean light version for a product page",
+        "minimal white comparison table",
+        "calm corporate versus slide",
+        "светлая минималистичная версия",
+        "спокойное сравнение на белом фоне"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "accent": "#16a34a",
+        "stagger": 10,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "editorial-duel",
+      "label": "Editorial Duel",
+      "description": "A magazine-style matchup in Fraunces on warm cream with a deep ink and terracotta accent.",
+      "askedAs": [
+        "make it feel like a magazine spread",
+        "elegant serif comparison",
+        "warm editorial versus look",
+        "в стиле журнальной вёрстки",
+        "элегантное сравнение с засечками"
+      ],
+      "props": {
+        "fontFamily": "Fraunces",
+        "background": "#f3ede2",
+        "ink": "#2b2420",
+        "accent": "#c2562e",
+        "stagger": 12
+      }
+    },
+    {
+      "id": "terminal-benchmark",
+      "label": "Terminal Benchmark",
+      "description": "A developer benchmark readout in JetBrains Mono with a mint accent on deep slate.",
+      "askedAs": [
+        "make it look like a terminal benchmark",
+        "dev tool style comparison",
+        "monospace stats versus",
+        "в стиле терминала для разработчиков",
+        "моноширинный шрифт и бенчмарк"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0f172a",
+        "ink": "#e2e8f0",
+        "accent": "#34d399",
+        "scale": 0.9,
+        "stagger": 5
+      }
+    },
+    {
+      "id": "slow-reveal",
+      "label": "Slow Reveal",
+      "description": "A dramatic, unhurried reveal with a held start, wide row gaps and a royal violet accent.",
+      "askedAs": [
+        "slow dramatic reveal",
+        "give it suspense before the stats",
+        "cinematic slow versus",
+        "медленное драматичное появление",
+        "добавь паузу перед сравнением"
+      ],
+      "props": {
+        "speed": 0.5,
+        "delay": 20,
+        "stagger": 16,
+        "accent": "#7c3aed",
+        "fontFamily": "Space Grotesk"
+      }
+    },
+    {
+      "id": "sticker-pop",
+      "label": "Sticker Pop",
+      "description": "A big, bouncy light look in Bricolage Grotesque with a sunny amber winner.",
+      "askedAs": [
+        "fun playful bright version",
+        "big bold friendly comparison",
+        "make it pop for social media",
+        "яркая весёлая версия для соцсетей",
+        "крупно и игриво"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Bricolage Grotesque",
+        "accent": "#f59e0b",
+        "ink": "#1c1917",
+        "scale": 1.25,
+        "speed": 1.25
+      }
+    }
+  ]
+}

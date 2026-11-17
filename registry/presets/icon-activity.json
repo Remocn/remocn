@@ -1,0 +1,99 @@
+{
+  "component": "icon-activity",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "heartbeat-monitor",
+      "label": "Heartbeat Monitor",
+      "description": "A large emerald pulse line that redraws quickly and continuously like a medical monitor.",
+      "askedAs": [
+        "make it look like a heart monitor",
+        "green pulse line looping fast",
+        "hospital ECG style",
+        "как кардиомонитор",
+        "зелёный пульс в цикле"
+      ],
+      "props": {
+        "animation": "draw",
+        "color": "#10b981",
+        "size": 120,
+        "speed": 1.75,
+        "strokeWidth": 2.5
+      }
+    },
+    {
+      "id": "calm-hairline",
+      "label": "Calm Hairline",
+      "description": "A thin slate-grey line that moves slowly and quietly for understated interfaces.",
+      "askedAs": [
+        "thin and slow activity icon",
+        "subtle minimal pulse",
+        "quiet grey line",
+        "тонкая спокойная иконка",
+        "медленно и минималистично"
+      ],
+      "props": {
+        "strokeWidth": 1.25,
+        "color": "#64748b",
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "bold-alert",
+      "label": "Bold Alert",
+      "description": "A heavy crimson stroke with a fast, punchy action motion that grabs attention.",
+      "askedAs": [
+        "urgent red activity icon",
+        "thick fast warning pulse",
+        "alarm style heartbeat",
+        "красный тревожный пульс",
+        "жирная быстрая иконка"
+      ],
+      "props": {
+        "color": "#dc2626",
+        "strokeWidth": 3,
+        "speed": 2.5,
+        "animation": "action",
+        "size": 96
+      }
+    },
+    {
+      "id": "single-reveal",
+      "label": "Single Reveal",
+      "description": "A deep indigo line drawn once at a measured pace, ideal for an intro moment.",
+      "askedAs": [
+        "draw it once without looping",
+        "one-time reveal animation",
+        "intro line drawing",
+        "нарисовать один раз",
+        "без повтора, плавное появление"
+      ],
+      "props": {
+        "loop": false,
+        "animation": "draw",
+        "color": "#4338ca",
+        "speed": 0.75,
+        "size": 160
+      }
+    },
+    {
+      "id": "tiny-indicator",
+      "label": "Tiny Indicator",
+      "description": "A compact blue status glyph with a gentle looping action, sized for inline UI.",
+      "askedAs": [
+        "small status indicator",
+        "tiny blue live icon",
+        "inline activity badge",
+        "маленький индикатор активности",
+        "крошечная синяя иконка"
+      ],
+      "props": {
+        "size": 28,
+        "color": "#2563eb",
+        "animation": "action",
+        "strokeWidth": 1.75
+      }
+    }
+  ]
+}

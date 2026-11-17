@@ -1,0 +1,105 @@
+{
+  "component": "font-cycle",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "rapid-roulette",
+      "label": "Rapid Roulette",
+      "description": "A frantic, many-pass font spin with one-frame beats that snaps hard onto the final face.",
+      "askedAs": [
+        "fast font shuffle",
+        "quick typeface roulette",
+        "rapid flicker through fonts",
+        "быстрая смена шрифтов",
+        "шрифтовая рулетка быстро"
+      ],
+      "props": {
+        "passes": 6,
+        "beat": 1,
+        "speed": 1.5,
+        "accent": "#e5484d"
+      }
+    },
+    {
+      "id": "slow-specimen",
+      "label": "Slow Specimen",
+      "description": "A calm, deliberate type specimen on warm paper, lingering on each face with guides visible.",
+      "askedAs": [
+        "slow font showcase",
+        "type specimen style",
+        "leisurely typeface reveal",
+        "медленный показ шрифтов",
+        "спокойная смена шрифтов"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4efe6",
+        "ink": "#1f1b16",
+        "accent": "#b5532a",
+        "beat": 8,
+        "passes": 1
+      }
+    },
+    {
+      "id": "clean-hero",
+      "label": "Clean Hero",
+      "description": "An oversized word with no guides, label or grain, landing quickly in a crisp gradient face.",
+      "askedAs": [
+        "big clean word reveal",
+        "minimal hero title",
+        "no guides large text",
+        "крупное слово без лишнего",
+        "чистый заголовок"
+      ],
+      "props": {
+        "guides": false,
+        "showLabel": false,
+        "grain": false,
+        "scale": 1.4,
+        "passes": 1,
+        "accent": "#7c5cff"
+      }
+    },
+    {
+      "id": "midnight-mint",
+      "label": "Midnight Mint",
+      "description": "Deep navy backdrop with soft mint accent and a slightly delayed, measured cycle.",
+      "askedAs": [
+        "dark blue with mint",
+        "night mode font cycle",
+        "cool teal type reveal",
+        "тёмно-синий с мятным",
+        "ночная тема шрифты"
+      ],
+      "props": {
+        "theme": "dark",
+        "background": "#0e1a2b",
+        "ink": "#e6f2ee",
+        "accent": "#3fc9a0",
+        "beat": 5,
+        "delay": 15
+      }
+    },
+    {
+      "id": "compact-tag",
+      "label": "Compact Tag",
+      "description": "A small, tidy word on light ground that cycles briskly, suited as an inline branding sticker.",
+      "askedAs": [
+        "small font cycle",
+        "compact word animation",
+        "subtle light font swap",
+        "маленький вариант шрифтов",
+        "компактная анимация слова"
+      ],
+      "props": {
+        "theme": "light",
+        "scale": 0.65,
+        "guides": false,
+        "accent": "#1f6feb",
+        "beat": 2,
+        "speed": 1.25
+      }
+    }
+  ]
+}

@@ -1,0 +1,101 @@
+{
+  "component": "chat-gpt",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "brisk-demo",
+      "label": "Brisk Demo",
+      "description": "Keeps the default blue but types and morphs at double speed for a snappy feature teaser.",
+      "askedAs": [
+        "faster typing",
+        "quick chatgpt demo",
+        "speed it up",
+        "быстрее печатает",
+        "ускорить анимацию"
+      ],
+      "props": {
+        "speed": 2
+      }
+    },
+    {
+      "id": "openai-green",
+      "label": "OpenAI Green",
+      "description": "A muted teal-green accent echoing classic OpenAI branding at a calm, unhurried pace.",
+      "askedAs": [
+        "green send button",
+        "openai brand color",
+        "teal accent",
+        "зелёная кнопка",
+        "цвет как у openai"
+      ],
+      "props": {
+        "accentColor": "#10a37f"
+      }
+    },
+    {
+      "id": "graphite-mono",
+      "label": "Graphite Mono",
+      "description": "A near-black graphite accent for a minimal, monochrome interface look.",
+      "askedAs": [
+        "black button",
+        "minimal monochrome",
+        "no blue accent",
+        "чёрная кнопка",
+        "минималистичный вариант"
+      ],
+      "props": {
+        "accentColor": "#202123",
+        "speed": 1.25
+      }
+    },
+    {
+      "id": "violet-flash",
+      "label": "Violet Flash",
+      "description": "A soft indigo-violet accent with very fast motion for punchy social cuts.",
+      "askedAs": [
+        "purple accent fast",
+        "violet chatgpt",
+        "quick purple version",
+        "фиолетовый и быстро",
+        "сиреневая кнопка"
+      ],
+      "props": {
+        "accentColor": "#6e56cf",
+        "speed": 3
+      }
+    },
+    {
+      "id": "warm-amber",
+      "label": "Warm Amber",
+      "description": "A burnt amber accent that gives the composer a warmer, editorial feel at a moderate pace.",
+      "askedAs": [
+        "orange send button",
+        "warm color accent",
+        "amber theme",
+        "оранжевая кнопка",
+        "тёплый оттенок"
+      ],
+      "props": {
+        "accentColor": "#d9822b",
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "turbo-crimson",
+      "label": "Turbo Crimson",
+      "description": "A deep crimson accent at maximum speed for an energetic, urgent reveal.",
+      "askedAs": [
+        "red button max speed",
+        "fastest version",
+        "urgent red accent",
+        "красная кнопка",
+        "максимальная скорость"
+      ],
+      "props": {
+        "accentColor": "#c2364b",
+        "speed": 4
+      }
+    }
+  ]
+}

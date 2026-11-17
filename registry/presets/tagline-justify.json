@@ -1,0 +1,126 @@
+{
+  "component": "tagline-justify",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "A warm cream page with a Fraunces column and a terracotta italic accent, set slowly like a magazine closer.",
+      "askedAs": [
+        "make it look like a magazine page",
+        "serif tagline on cream paper",
+        "elegant slow editorial ending",
+        "сделай в стиле журнала с засечками",
+        "кремовый фон и элегантный шрифт"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Fraunces",
+        "background": "#f4efe6",
+        "ink": "#2a2420",
+        "accent": "#c2562f",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "swiss-light",
+      "label": "Swiss Light",
+      "description": "Crisp white grotesk poster with no grain, a confident cobalt accent and a brisk word cadence.",
+      "askedAs": [
+        "clean white minimal poster",
+        "swiss style tagline",
+        "bright crisp corporate look",
+        "чистый белый минимализм",
+        "швейцарский стиль плакат"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "grain": false,
+        "accent": "#1f4fe0",
+        "stagger": 3,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "midnight-luxe",
+      "label": "Midnight Luxe",
+      "description": "Deep navy field with Instrument Serif type and a soft gold italic that unfolds gracefully.",
+      "askedAs": [
+        "luxury dark gold tagline",
+        "premium brand ending",
+        "slow elegant navy and gold",
+        "дорогой премиальный стиль",
+        "тёмно-синий с золотом"
+      ],
+      "props": {
+        "fontFamily": "Instrument Serif",
+        "background": "#0e1424",
+        "ink": "#ede6d6",
+        "accent": "#c9a45c",
+        "stagger": 10,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "tech-terminal",
+      "label": "Tech Terminal",
+      "description": "Monospaced graphite block with a mint accent and rapid, almost typed word reveal.",
+      "askedAs": [
+        "developer style tagline",
+        "monospace code look",
+        "fast techy ending",
+        "в стиле кода моноширинный",
+        "быстрый технический стиль"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#111315",
+        "ink": "#d8dee4",
+        "accent": "#3fbf8f",
+        "stagger": 2,
+        "scale": 0.85
+      }
+    },
+    {
+      "id": "bold-statement",
+      "label": "Bold Statement",
+      "description": "Oversized Bricolage Grotesque in a dark frame with a coral accent, landing after a brief pause.",
+      "askedAs": [
+        "big loud tagline",
+        "make the text huge and punchy",
+        "bold poster closing line",
+        "крупный жирный слоган",
+        "сделай текст огромным"
+      ],
+      "props": {
+        "fontFamily": "Bricolage Grotesque",
+        "scale": 1.35,
+        "accent": "#ff6b4a",
+        "delay": 12,
+        "grain": false
+      }
+    },
+    {
+      "id": "sage-calm",
+      "label": "Sage Calm",
+      "description": "Muted sage background with Manrope type and a forest-green accent, revealed at an unhurried, airy pace.",
+      "askedAs": [
+        "calm natural green look",
+        "soft wellness tagline",
+        "gentle slow pastel ending",
+        "спокойный зелёный стиль",
+        "мягкий природный вид"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Manrope",
+        "background": "#e3e8df",
+        "ink": "#1f2a22",
+        "accent": "#3f6b4e",
+        "stagger": 12
+      }
+    }
+  ]
+}

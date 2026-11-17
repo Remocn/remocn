@@ -1,0 +1,123 @@
+{
+  "component": "testimonial-stack",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "midnight-wall",
+      "label": "Midnight Wall",
+      "description": "Dark cards with a soft violet highlight that fan out into a full wall of quotes at the end.",
+      "askedAs": [
+        "dark testimonials ending in a grid",
+        "night mode review wall",
+        "all quotes spread out on dark",
+        "тёмная стена отзывов",
+        "отзывы веером на тёмном фоне"
+      ],
+      "props": {
+        "theme": "dark",
+        "ending": "fan",
+        "accent": "#8b7cf6",
+        "ground": "nightfold",
+        "fontFamily": "Geist"
+      }
+    },
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "Warm paper tones with serif type, gentle corners and a slow, considered pace.",
+      "askedAs": [
+        "magazine style quotes",
+        "elegant serif testimonials",
+        "slow classy reviews",
+        "отзывы в журнальном стиле",
+        "элегантные цитаты с засечками"
+      ],
+      "props": {
+        "fontFamily": "Fraunces",
+        "background": "#f4efe6",
+        "ink": "#2a2420",
+        "accent": "#b5532e",
+        "radius": 8,
+        "framesPerQuote": 80
+      }
+    },
+    {
+      "id": "rapid-fire",
+      "label": "Rapid Fire",
+      "description": "Quick-cut quotes that land fast in a messy, heavily tilted pile with a punchy orange highlight.",
+      "askedAs": [
+        "fast testimonials",
+        "quick burst of reviews",
+        "energetic pile of quotes",
+        "быстрые отзывы",
+        "динамичная пачка отзывов"
+      ],
+      "props": {
+        "framesPerQuote": 24,
+        "speed": 1.5,
+        "tilt": 2.4,
+        "accent": "#f25c2a",
+        "fontFamily": "Bricolage Grotesque"
+      }
+    },
+    {
+      "id": "clean-stack",
+      "label": "Clean Stack",
+      "description": "Square-edged, perfectly aligned cards in a crisp mono-adjacent sans with a teal accent.",
+      "askedAs": [
+        "minimal straight card stack",
+        "no tilt neat testimonials",
+        "clean corporate reviews",
+        "ровная аккуратная стопка карточек",
+        "минималистичные отзывы"
+      ],
+      "props": {
+        "tilt": 0,
+        "radius": 4,
+        "fontFamily": "Inter",
+        "accent": "#0f9d8a",
+        "ground": "polar"
+      }
+    },
+    {
+      "id": "dev-terminal",
+      "label": "Dev Terminal",
+      "description": "Dark monospace cards with a green highlight, suited to developer tool launches.",
+      "askedAs": [
+        "code style testimonials",
+        "developer reviews monospace",
+        "hacker look quotes",
+        "отзывы для девелоперов",
+        "моноширинный тёмный стиль"
+      ],
+      "props": {
+        "theme": "dark",
+        "fontFamily": "JetBrains Mono",
+        "accent": "#3fb950",
+        "ground": "charcoal-satin",
+        "radius": 10
+      }
+    },
+    {
+      "id": "warm-spotlight",
+      "label": "Warm Spotlight",
+      "description": "Large, rounded cards on a glowing ember ground that drift in slowly after a short pause.",
+      "askedAs": [
+        "big cozy testimonials",
+        "warm glowing reviews",
+        "slow large quote cards",
+        "крупные тёплые отзывы",
+        "медленные отзывы с тёплым светом"
+      ],
+      "props": {
+        "scale": 1.2,
+        "radius": 32,
+        "ground": "ember",
+        "accent": "#e8a33d",
+        "speed": 0.75,
+        "delay": 15
+      }
+    }
+  ]
+}

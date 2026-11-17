@@ -1,0 +1,104 @@
+{
+  "component": "launch-days",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "A light, magazine-like layout with Instrument Serif type, a warm ink accent and an unhurried reveal.",
+      "askedAs": [
+        "make it look like a magazine spread",
+        "elegant serif launch schedule",
+        "light editorial version with slow motion",
+        "сделай в стиле журнала с засечками",
+        "светлая элегантная версия"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "accent": "#b5532c",
+        "ground": "paper-crease",
+        "speed": 0.75,
+        "stagger": 5
+      }
+    },
+    {
+      "id": "midnight-cobalt",
+      "label": "Midnight Cobalt",
+      "description": "Deep dark blue ground with a crisp cobalt accent and Geist type for a polished product-launch feel.",
+      "askedAs": [
+        "dark blue premium launch look",
+        "sleek tech keynote style",
+        "night mode with blue glow",
+        "тёмно-синяя премиальная тема",
+        "как презентация технологичного продукта"
+      ],
+      "props": {
+        "ground": "cobalt-rise",
+        "fontFamily": "Geist",
+        "accent": "#5b8cff",
+        "radius": 20
+      }
+    },
+    {
+      "id": "terminal-sprint",
+      "label": "Terminal Sprint",
+      "description": "Sharp square corners, monospace type and a fast, snappy cadence for a developer-focused week.",
+      "askedAs": [
+        "make it feel like a developer changelog",
+        "fast monospace version",
+        "sharp corners code style",
+        "быстрая версия в моноширинном шрифте",
+        "стиль для разработчиков"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "radius": 0,
+        "speed": 1.75,
+        "stagger": 1,
+        "accent": "#3fb68b",
+        "ground": "charcoal-satin"
+      }
+    },
+    {
+      "id": "ember-roadmap",
+      "label": "Ember Roadmap",
+      "description": "Warm copper glow behind rounded cards with Fraunces headlines and the full week revealed.",
+      "askedAs": [
+        "warm cozy roadmap look",
+        "show all days with a warm palette",
+        "copper tones with soft rounded cards",
+        "тёплая версия с медными тонами",
+        "показать все дни в тёплых цветах"
+      ],
+      "props": {
+        "ground": "copper",
+        "fontFamily": "Fraunces",
+        "accent": "#e08a4f",
+        "radius": 32,
+        "revealUpcoming": true
+      }
+    },
+    {
+      "id": "gallery-mono",
+      "label": "Gallery Mono",
+      "description": "A stark off-white canvas with near-black ink, a graphite accent and slightly smaller, airy composition.",
+      "askedAs": [
+        "minimal black and white version",
+        "clean gallery style with lots of space",
+        "monochrome understated look",
+        "минималистичная чёрно-белая версия",
+        "строгий монохромный стиль"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4f2ee",
+        "ink": "#141414",
+        "accent": "#2b2b2b",
+        "scale": 0.85,
+        "fontFamily": "Inter"
+      }
+    }
+  ]
+}

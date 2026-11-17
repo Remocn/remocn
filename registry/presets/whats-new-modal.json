@@ -1,0 +1,120 @@
+{
+  "component": "whats-new-modal",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "midnight-release",
+      "label": "Midnight Release",
+      "description": "A dark dashboard under a deep blue-hour ground with a soft violet accent and Geist type.",
+      "askedAs": [
+        "dark mode release announcement",
+        "night themed what's new popup",
+        "sleek dark product update modal",
+        "тёмная тема для анонса обновления",
+        "ночной стиль модального окна новинок"
+      ],
+      "props": {
+        "theme": "dark",
+        "ground": "blue-hour",
+        "accent": "#8b7cf6",
+        "fontFamily": "Geist"
+      }
+    },
+    {
+      "id": "editorial-paper",
+      "label": "Editorial Paper",
+      "description": "Warm paper tones with serif headlines and an unhurried slide hold for a magazine-like changelog.",
+      "askedAs": [
+        "elegant serif changelog",
+        "warm paper style update notes",
+        "slow classy feature announcement",
+        "элегантный анонс с засечками",
+        "тёплый бумажный стиль обновлений"
+      ],
+      "props": {
+        "ground": "paper-crease",
+        "fontFamily": "Instrument Serif",
+        "accent": "#b4532a",
+        "background": "#f6f1e8",
+        "ink": "#2a2420",
+        "dwell": 96
+      }
+    },
+    {
+      "id": "quick-recap",
+      "label": "Quick Recap",
+      "description": "A brisk, punchy pass through the slides with tight holds and doubled speed for social cuts.",
+      "askedAs": [
+        "fast what's new for social",
+        "snappy feature recap",
+        "short quick release teaser",
+        "быстрый обзор новых функций",
+        "короткий динамичный анонс"
+      ],
+      "props": {
+        "speed": 2,
+        "dwell": 40,
+        "fontFamily": "Space Grotesk",
+        "accent": "#ff5a36"
+      }
+    },
+    {
+      "id": "developer-console",
+      "label": "Developer Console",
+      "description": "A charcoal dark scene with monospaced type and a mint accent suited to dev-tool releases.",
+      "askedAs": [
+        "developer tool release notes look",
+        "monospace changelog modal",
+        "terminal style update popup",
+        "анонс для разработчиков в моноширинном шрифте",
+        "стиль консоли для релиза"
+      ],
+      "props": {
+        "theme": "dark",
+        "ground": "charcoal-satin",
+        "fontFamily": "JetBrains Mono",
+        "accent": "#34d399",
+        "scale": 0.9
+      }
+    },
+    {
+      "id": "spotlight-launch",
+      "label": "Spotlight Launch",
+      "description": "A large, centered modal under a spotlight ground with a short lead-in and slow, deliberate motion.",
+      "askedAs": [
+        "big dramatic launch announcement",
+        "zoomed in hero feature reveal",
+        "slow cinematic new feature modal",
+        "крупный эффектный анонс запуска",
+        "медленное кинематографичное появление окна"
+      ],
+      "props": {
+        "ground": "spotlight",
+        "scale": 1.25,
+        "speed": 0.75,
+        "delay": 18,
+        "fontFamily": "Bricolage Grotesque",
+        "accent": "#e8b04a"
+      }
+    },
+    {
+      "id": "fresh-greenhouse",
+      "label": "Fresh Greenhouse",
+      "description": "A light, airy look with a greenhouse ground, forest-green accent and Manrope type.",
+      "askedAs": [
+        "fresh green product update",
+        "calm light eco style announcement",
+        "soft natural what's new modal",
+        "свежий зелёный анонс обновления",
+        "светлый спокойный стиль новинок"
+      ],
+      "props": {
+        "ground": "greenhouse",
+        "accent": "#1f7a4d",
+        "fontFamily": "Manrope",
+        "dwell": 80
+      }
+    }
+  ]
+}

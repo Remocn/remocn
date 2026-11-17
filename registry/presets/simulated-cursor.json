@@ -1,0 +1,106 @@
+{
+  "component": "simulated-cursor",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "slow-guided",
+      "label": "Slow Guided",
+      "description": "A larger white cursor that glides at half speed, easy to follow during careful walkthroughs.",
+      "askedAs": [
+        "slow cursor for tutorial",
+        "make the mouse move slowly and bigger",
+        "easy to follow pointer",
+        "медленный курсор для обучения",
+        "крупный медленный указатель"
+      ],
+      "props": {
+        "size": 44,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "quick-demo",
+      "label": "Quick Demo",
+      "description": "A compact cursor that snaps between targets at double speed for brisk product reels.",
+      "askedAs": [
+        "fast cursor movement",
+        "snappy mouse for quick demo",
+        "speed up the pointer",
+        "быстрый курсор",
+        "шустрая мышка для демо"
+      ],
+      "props": {
+        "size": 24,
+        "speed": 2
+      }
+    },
+    {
+      "id": "ink-on-light",
+      "label": "Ink On Light",
+      "description": "A near-black cursor at standard pace that stays crisp over bright, white interfaces.",
+      "askedAs": [
+        "dark cursor for light UI",
+        "black mouse pointer",
+        "cursor visible on white background",
+        "тёмный курсор для светлого интерфейса",
+        "чёрный указатель мыши"
+      ],
+      "props": {
+        "color": "#111827",
+        "size": 30
+      }
+    },
+    {
+      "id": "brand-blue",
+      "label": "Brand Blue",
+      "description": "A calm blue cursor at a slightly relaxed pace that reads as an accent in product videos.",
+      "askedAs": [
+        "blue cursor",
+        "colored pointer for branding",
+        "accent color mouse",
+        "синий курсор",
+        "курсор в цвете бренда"
+      ],
+      "props": {
+        "color": "#2563eb",
+        "size": 36,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "presenter-spotlight",
+      "label": "Presenter Spotlight",
+      "description": "An oversized warm amber cursor moving deliberately, built to be seen on big screens and mobile crops.",
+      "askedAs": [
+        "huge cursor for presentation",
+        "big visible mouse on small screens",
+        "attention grabbing pointer",
+        "огромный курсор для презентации",
+        "заметный большой указатель"
+      ],
+      "props": {
+        "color": "#f59e0b",
+        "size": 64,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "subtle-hint",
+      "label": "Subtle Hint",
+      "description": "A small soft-gray cursor at normal speed that hints at interaction without stealing focus.",
+      "askedAs": [
+        "small subtle cursor",
+        "discreet mouse pointer",
+        "tiny unobtrusive cursor",
+        "маленький незаметный курсор",
+        "аккуратный тонкий указатель"
+      ],
+      "props": {
+        "color": "#cbd5e1",
+        "size": 18,
+        "speed": 1.25
+      }
+    }
+  ]
+}

@@ -1,0 +1,90 @@
+{
+  "component": "resizable",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "code-preview-split",
+      "label": "Code Preview",
+      "description": "A wide left pane at a 65/35 split with a calm, unhurried transition, like an editor beside its live preview.",
+      "askedAs": [
+        "editor with preview on the side",
+        "wide left panel split",
+        "code and preview pane layout",
+        "редактор и превью рядом",
+        "широкая левая панель"
+      ],
+      "props": {
+        "ratio": 0.65,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "active-drag",
+      "label": "Active Drag",
+      "description": "The handle shown in its pressed state with a visible grab ring, moving briskly as if being dragged.",
+      "askedAs": [
+        "show the handle being dragged",
+        "pressed resize handle",
+        "drag interaction demo",
+        "перетаскивание разделителя",
+        "нажатая ручка ресайза"
+      ],
+      "props": {
+        "handleState": "press",
+        "ratio": 0.4,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "stacked-hover",
+      "label": "Stacked Hover",
+      "description": "A vertical top-and-bottom split with the grip in its hover state, inviting a resize.",
+      "askedAs": [
+        "top and bottom panels",
+        "vertical split with hover handle",
+        "stacked resizable panes",
+        "вертикальное разделение панелей",
+        "верхняя и нижняя панель"
+      ],
+      "props": {
+        "direction": "vertical",
+        "handleState": "hover",
+        "ratio": 0.55
+      }
+    },
+    {
+      "id": "sidebar-snap",
+      "label": "Sidebar Snap",
+      "description": "A narrow 25% sidebar that snaps into place with a fast, punchy transition.",
+      "askedAs": [
+        "narrow sidebar layout",
+        "quick snap resize",
+        "thin left panel",
+        "узкая боковая панель",
+        "быстрое изменение размера"
+      ],
+      "props": {
+        "ratio": 0.25,
+        "speed": 2.5
+      }
+    },
+    {
+      "id": "slow-reveal",
+      "label": "Slow Reveal",
+      "description": "A slow, cinematic vertical split weighted toward the bottom for gradual before/after reveals.",
+      "askedAs": [
+        "slow before and after reveal",
+        "gentle split animation",
+        "cinematic resize",
+        "медленное раскрытие до и после",
+        "плавная анимация разделения"
+      ],
+      "props": {
+        "direction": "vertical",
+        "ratio": 0.3,
+        "speed": 0.5
+      }
+    }
+  ]
+}

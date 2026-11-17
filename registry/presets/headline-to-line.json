@@ -1,0 +1,124 @@
+{
+  "component": "headline-to-line",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "A slow, elegant serif headline on warm paper that types its line at a measured, literary pace.",
+      "askedAs": [
+        "elegant serif headline on light paper",
+        "slow magazine style title",
+        "classy editorial intro text",
+        "элегантный заголовок с засечками",
+        "медленный журнальный заголовок"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "ground": "paper-crease",
+        "speed": 0.75,
+        "charsPerFrame": 0.5,
+        "stagger": 10
+      }
+    },
+    {
+      "id": "terminal-type",
+      "label": "Terminal Type",
+      "description": "A monospace headline that snaps in fast and types its tagline like a command line on a cold dark ground.",
+      "askedAs": [
+        "code style typing headline",
+        "fast monospace terminal text",
+        "developer product intro",
+        "заголовок как в терминале",
+        "быстрый моноширинный текст"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "ground": "coldlight",
+        "accent": "#4ade80",
+        "charsPerFrame": 2.5,
+        "stagger": 2,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "ember-launch",
+      "label": "Ember Launch",
+      "description": "A large, bold grotesque headline glowing over a warm ember horizon for a confident product reveal.",
+      "askedAs": [
+        "big bold launch headline",
+        "warm orange glowing title",
+        "dramatic product name reveal",
+        "большой яркий заголовок запуска",
+        "тёплый оранжевый заголовок"
+      ],
+      "props": {
+        "fontFamily": "Bricolage Grotesque",
+        "ground": "ember",
+        "accent": "#f59e0b",
+        "scale": 1.3,
+        "stagger": 8
+      }
+    },
+    {
+      "id": "blue-hour-calm",
+      "label": "Blue Hour",
+      "description": "A quiet, unhurried headline in soft blue twilight that settles gently after a short pause.",
+      "askedAs": [
+        "calm slow blue intro",
+        "soft twilight headline",
+        "gentle relaxed title animation",
+        "спокойный синий заголовок",
+        "мягкая медленная анимация текста"
+      ],
+      "props": {
+        "ground": "blue-hour",
+        "fontFamily": "Manrope",
+        "speed": 0.5,
+        "delay": 20,
+        "stagger": 14
+      }
+    },
+    {
+      "id": "crisp-minimal",
+      "label": "Crisp Minimal",
+      "description": "A compact, light-themed Inter headline with near-black ink and a single cobalt accent for clean UI copy.",
+      "askedAs": [
+        "clean white minimal headline",
+        "small simple light title",
+        "corporate tidy text intro",
+        "минималистичный светлый заголовок",
+        "чистый простой текст на белом"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "background": "#f7f7f5",
+        "ink": "#111418",
+        "accent": "#1f6feb",
+        "scale": 0.8
+      }
+    },
+    {
+      "id": "velvet-fraunces",
+      "label": "Velvet Night",
+      "description": "A rich Fraunces headline over a deep velvet glow with a rose accent and swift typing.",
+      "askedAs": [
+        "luxurious dark purple title",
+        "moody night headline with serif",
+        "premium brand intro",
+        "роскошный тёмный заголовок",
+        "фиолетовый ночной заголовок"
+      ],
+      "props": {
+        "fontFamily": "Fraunces",
+        "ground": "velvet-hour",
+        "accent": "#e8a0bf",
+        "charsPerFrame": 1.75,
+        "scale": 1.15
+      }
+    }
+  ]
+}

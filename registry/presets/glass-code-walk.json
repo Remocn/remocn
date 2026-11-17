@@ -1,0 +1,94 @@
+{
+  "component": "glass-code-walk",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "macro-crawl",
+      "label": "Macro Crawl",
+      "description": "A tight, slow close-up that lingers on each line as it types before pulling back.",
+      "askedAs": [
+        "slow zoomed in code typing",
+        "close up camera on code lines",
+        "dramatic slow code reveal",
+        "медленный крупный план кода",
+        "код печатается медленно с зумом"
+      ],
+      "props": {
+        "zoom": 3.6,
+        "staggerFrames": 18,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "quick-skim",
+      "label": "Quick Skim",
+      "description": "A light zoom with rapid line stagger for a brisk, energetic pass through the file.",
+      "askedAs": [
+        "fast code scroll",
+        "quick code reveal",
+        "snappy typing code block",
+        "быстрый показ кода",
+        "код быстро печатается"
+      ],
+      "props": {
+        "zoom": 1.6,
+        "staggerFrames": 4,
+        "speed": 2
+      }
+    },
+    {
+      "id": "wide-file",
+      "label": "Wide File",
+      "description": "A broad, tall panel with smaller type that reads like a full editor window.",
+      "askedAs": [
+        "show a bigger code file",
+        "wide editor window",
+        "full file code panel",
+        "большое окно редактора кода",
+        "широкий блок кода"
+      ],
+      "props": {
+        "width": 1080,
+        "height": 640,
+        "fontSize": 14,
+        "zoom": 2
+      }
+    },
+    {
+      "id": "compact-card",
+      "label": "Compact Card",
+      "description": "A small glass card with large type that feels like a focused snippet tile.",
+      "askedAs": [
+        "small code card",
+        "short snippet with big text",
+        "compact code block",
+        "маленькая карточка с кодом",
+        "компактный сниппет крупным шрифтом"
+      ],
+      "props": {
+        "width": 560,
+        "height": 280,
+        "fontSize": 24,
+        "zoom": 1.8
+      }
+    },
+    {
+      "id": "steady-overview",
+      "label": "Steady Overview",
+      "description": "Almost no magnification so the whole block stays visible with a calm, even typing rhythm.",
+      "askedAs": [
+        "no zoom code typing",
+        "calm code overview",
+        "see whole code while typing",
+        "код без приближения",
+        "спокойный обзор всего кода"
+      ],
+      "props": {
+        "zoom": 1.2,
+        "staggerFrames": 14,
+        "speed": 0.5
+      }
+    }
+  ]
+}

@@ -1,0 +1,118 @@
+{
+  "component": "check-list",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "red-pen-review",
+      "label": "Red Pen",
+      "description": "Dark ink labels checked off with bold teacher-red ticks and strikes.",
+      "askedAs": [
+        "red ticks like a teacher grading",
+        "checklist with red pen marks",
+        "bold red check marks",
+        "красные галочки как у учителя",
+        "список с красной ручкой"
+      ],
+      "props": {
+        "tickColor": "#c0392b",
+        "strokeWidth": 4,
+        "color": "#1f1d24"
+      }
+    },
+    {
+      "id": "quick-scribble",
+      "label": "Quick Scribble",
+      "description": "A fast, jittery hand that dashes off the list and ticks items in rapid succession.",
+      "askedAs": [
+        "fast handwritten checklist",
+        "quickly tick everything off",
+        "snappy scribbled to-do list",
+        "быстрый рукописный список",
+        "быстро отметить все пункты"
+      ],
+      "props": {
+        "speed": 1.75,
+        "perStep": 2.6,
+        "itemGap": 9,
+        "closeGap": 3,
+        "step": 2
+      }
+    },
+    {
+      "id": "slow-deliberate",
+      "label": "Slow Deliberate",
+      "description": "Large, calm lettering written slowly with long, satisfying pauses between each tick.",
+      "askedAs": [
+        "slow calm checklist",
+        "big letters written slowly",
+        "relaxed pace ticking items",
+        "медленный спокойный чек-лист",
+        "крупный текст пишется медленно"
+      ],
+      "props": {
+        "fontSize": 52,
+        "speed": 0.75,
+        "perStep": 1.2,
+        "itemGap": 30,
+        "closeGap": 18
+      }
+    },
+    {
+      "id": "blueprint-ink",
+      "label": "Blueprint Ink",
+      "description": "Navy fountain-pen labels with fine steel-blue ticks for a tidy, technical notebook feel.",
+      "askedAs": [
+        "blue ink checklist",
+        "fountain pen notebook style",
+        "thin blue check marks",
+        "список синими чернилами",
+        "тонкие синие галочки"
+      ],
+      "props": {
+        "color": "#1e2f4f",
+        "tickColor": "#3a6ea5",
+        "strokeWidth": 2,
+        "fontSize": 36
+      }
+    },
+    {
+      "id": "marker-bold",
+      "label": "Thick Marker",
+      "description": "Chunky marker strokes with a stop-motion step and a warm amber tick for a punchy sketch look.",
+      "askedAs": [
+        "thick marker checklist",
+        "bold stop motion handwriting",
+        "chunky orange check marks",
+        "толстый маркер чек-лист",
+        "жирные оранжевые галочки"
+      ],
+      "props": {
+        "strokeWidth": 7,
+        "tickColor": "#d0812a",
+        "fontSize": 48,
+        "step": 5,
+        "color": "#2b2622"
+      }
+    },
+    {
+      "id": "pencil-notes",
+      "label": "Pencil Notes",
+      "description": "Small graphite-grey notes with a thin moss tick, quiet and understated like margin jottings.",
+      "askedAs": [
+        "pencil sketch checklist",
+        "small quiet grey notes",
+        "subtle handwritten list",
+        "карандашные заметки списком",
+        "тихий серый рукописный список"
+      ],
+      "props": {
+        "color": "#5a5862",
+        "tickColor": "#7d8a5a",
+        "strokeWidth": 1,
+        "fontSize": 30,
+        "step": 4
+      }
+    }
+  ]
+}

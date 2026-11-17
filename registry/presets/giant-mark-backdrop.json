@@ -1,0 +1,122 @@
+{
+  "component": "giant-mark-backdrop",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "warm-paper-serif",
+      "label": "Warm Paper",
+      "description": "Light editorial look with a serif wordmark on cream paper, soft grain and an unhurried scroll.",
+      "askedAs": [
+        "light cream background with serif logo",
+        "editorial paper look, slow",
+        "warm print-style brand backdrop",
+        "светлый фон под бумагу с засечками",
+        "тёплый редакционный стиль"
+      ],
+      "props": {
+        "theme": "light",
+        "ground": "paper-crease",
+        "fontFamily": "Instrument Serif",
+        "accent": "#b5532c",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "midnight-cobalt",
+      "label": "Midnight Cobalt",
+      "description": "Deep navy night ground with a cool blue accent and crisp Geist type for a tech launch feel.",
+      "askedAs": [
+        "dark blue tech launch look",
+        "navy background with blue accent",
+        "cool night mode brand reveal",
+        "тёмно-синий технологичный стиль",
+        "ночной синий фон для запуска"
+      ],
+      "props": {
+        "theme": "dark",
+        "ground": "blue-hour",
+        "fontFamily": "Geist",
+        "accent": "#4c8dff"
+      }
+    },
+    {
+      "id": "ember-glow",
+      "label": "Ember Glow",
+      "description": "Warm dark ground with copper accents and a confident Fraunces wordmark that moves a touch faster.",
+      "askedAs": [
+        "warm dark copper look",
+        "orange glow behind big logo",
+        "cozy premium dark backdrop",
+        "тёплый тёмный фон с медью",
+        "оранжевое свечение за логотипом"
+      ],
+      "props": {
+        "theme": "dark",
+        "ground": "ember",
+        "fontFamily": "Fraunces",
+        "accent": "#d98a4e",
+        "speed": 1.25
+      }
+    },
+    {
+      "id": "clean-mono-terminal",
+      "label": "Terminal Clean",
+      "description": "Grain-free charcoal with a monospace wordmark and mint accent for a developer-tool prompt.",
+      "askedAs": [
+        "developer terminal style prompt",
+        "monospace code look, no grain",
+        "clean dark dev tool backdrop",
+        "стиль терминала для разработчиков",
+        "моноширинный шрифт без зерна"
+      ],
+      "props": {
+        "theme": "dark",
+        "ground": "charcoal-satin",
+        "fontFamily": "JetBrains Mono",
+        "accent": "#5fd4a8",
+        "grain": false
+      }
+    },
+    {
+      "id": "bold-close-up",
+      "label": "Bold Close-Up",
+      "description": "Oversized wordmark on a bright polar ground with fast, punchy motion and a short lead-in.",
+      "askedAs": [
+        "huge logo fast and punchy",
+        "bright energetic closing lockup",
+        "zoomed in big brand mark",
+        "крупный логотип, быстро и ярко",
+        "энергичная концовка с большим логотипом"
+      ],
+      "props": {
+        "theme": "light",
+        "ground": "polar",
+        "fontFamily": "Bricolage Grotesque",
+        "scale": 1.3,
+        "speed": 2,
+        "delay": 6
+      }
+    },
+    {
+      "id": "velvet-slow",
+      "label": "Velvet Hour",
+      "description": "Plum-toned dusk ground with a soft rose accent and a slow, delayed drift for a calm luxury beat.",
+      "askedAs": [
+        "slow calm luxury purple look",
+        "elegant dusk backdrop, delayed start",
+        "soft plum premium reveal",
+        "медленный роскошный фиолетовый стиль",
+        "спокойный элегантный фон с задержкой"
+      ],
+      "props": {
+        "theme": "dark",
+        "ground": "velvet-hour",
+        "fontFamily": "Manrope",
+        "accent": "#e3a3b8",
+        "speed": 0.5,
+        "delay": 20
+      }
+    }
+  ]
+}

@@ -1,0 +1,119 @@
+{
+  "component": "said-who",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "paper-editorial",
+      "label": "Paper Editorial",
+      "description": "Warm off-white paper with deep ink and a Fraunces serif for a magazine pull-quote feel.",
+      "askedAs": [
+        "make it look like a printed magazine quote",
+        "light cream background with serif text",
+        "editorial print style quote",
+        "как цитата в журнале",
+        "светлый бумажный фон с засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4efe6",
+        "ink": "#1c1a17",
+        "accent": "#9a3b26",
+        "fontFamily": "Fraunces"
+      }
+    },
+    {
+      "id": "slow-reveal",
+      "label": "Slow Reveal",
+      "description": "Words arrive one by one at a deliberate, unhurried pace after a short pause.",
+      "askedAs": [
+        "reveal the quote slowly word by word",
+        "more dramatic slow buildup",
+        "give it a pause before the words appear",
+        "медленное появление слов",
+        "драматичная пауза перед цитатой"
+      ],
+      "props": {
+        "stagger": 10,
+        "speed": 0.5,
+        "delay": 20
+      }
+    },
+    {
+      "id": "snappy-tech",
+      "label": "Snappy Tech",
+      "description": "A fast, near-instant monospace reveal in a cool blue accent for a developer audience.",
+      "askedAs": [
+        "make it feel like code",
+        "quick monospace quote",
+        "fast techy testimonial",
+        "быстрая цитата моноширинным шрифтом",
+        "стиль для разработчиков"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "speed": 2,
+        "stagger": 1,
+        "accent": "#5b9cf5",
+        "scale": 0.85
+      }
+    },
+    {
+      "id": "midnight-gold",
+      "label": "Midnight Gold",
+      "description": "Deep navy backdrop with ivory text and a muted gold accent in an elegant Instrument Serif.",
+      "askedAs": [
+        "luxury dark blue and gold quote",
+        "elegant premium testimonial",
+        "navy background with gold accent",
+        "роскошная цитата синий с золотом",
+        "элегантный тёмный стиль"
+      ],
+      "props": {
+        "background": "#0f1626",
+        "ink": "#f3ede1",
+        "accent": "#c9a45c",
+        "fontFamily": "Instrument Serif",
+        "scale": 1.15
+      }
+    },
+    {
+      "id": "bold-statement",
+      "label": "Bold Statement",
+      "description": "Oversized grotesque type that lands all at once for a punchy, poster-like claim.",
+      "askedAs": [
+        "make the quote huge and bold",
+        "big punchy sans serif text",
+        "poster style statement",
+        "крупная жирная цитата",
+        "сделай текст огромным"
+      ],
+      "props": {
+        "fontFamily": "Bricolage Grotesque",
+        "scale": 1.4,
+        "stagger": 0,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "quiet-minimal",
+      "label": "Quiet Minimal",
+      "description": "Small, light-grey Inter type on a soft white ground with a gentle sage accent.",
+      "askedAs": [
+        "minimal clean light quote",
+        "subtle understated testimonial",
+        "small sans serif on white",
+        "минималистичная светлая цитата",
+        "спокойный сдержанный стиль"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#fafaf8",
+        "ink": "#2b2d2f",
+        "accent": "#6b8f71",
+        "fontFamily": "Inter",
+        "scale": 0.75
+      }
+    }
+  ]
+}

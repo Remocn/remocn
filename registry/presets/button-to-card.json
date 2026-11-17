@@ -1,0 +1,117 @@
+{
+  "component": "button-to-card",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "boutique-light",
+      "label": "Boutique Light",
+      "description": "A bright editorial storefront with serif type, warm paper ground and a deep olive accent.",
+      "askedAs": [
+        "light elegant shop look",
+        "serif boutique store card",
+        "clean bright product listing",
+        "светлый бутик с засечками",
+        "элегантная светлая витрина"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Fraunces",
+        "ground": "paper-crease",
+        "accent": "#4f5d2f"
+      }
+    },
+    {
+      "id": "midnight-luxe",
+      "label": "Midnight Luxe",
+      "description": "A slow, cinematic dark reveal on a velvet ground with a soft champagne gold accent.",
+      "askedAs": [
+        "slow luxury dark version",
+        "gold on black premium store",
+        "cinematic product reveal",
+        "медленный люксовый тёмный",
+        "золото на чёрном витрина"
+      ],
+      "props": {
+        "theme": "dark",
+        "ground": "velvet-hour",
+        "accent": "#d4b483",
+        "fontFamily": "Instrument Serif",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "snappy-tech",
+      "label": "Snappy Tech",
+      "description": "A fast, crisp morph in Geist on a cool blue ground with an electric blue accent.",
+      "askedAs": [
+        "fast modern saas demo",
+        "quick blue tech morph",
+        "snappy product builder",
+        "быстрая техно анимация",
+        "синий современный стиль"
+      ],
+      "props": {
+        "fontFamily": "Geist",
+        "ground": "blue-hour",
+        "accent": "#3b82f6",
+        "speed": 1.75
+      }
+    },
+    {
+      "id": "hero-closeup",
+      "label": "Hero Closeup",
+      "description": "An enlarged, slightly delayed morph on a spotlight ground that fills the frame for a launch moment.",
+      "askedAs": [
+        "bigger hero shot",
+        "zoomed in launch beat",
+        "large card with spotlight",
+        "крупный план для запуска",
+        "большая карточка в центре"
+      ],
+      "props": {
+        "scale": 1.3,
+        "ground": "spotlight",
+        "delay": 15,
+        "fontFamily": "Manrope"
+      }
+    },
+    {
+      "id": "inventory-mono",
+      "label": "Inventory Mono",
+      "description": "A utilitarian solid-charcoal look with monospace type and a mint accent, like an inventory console.",
+      "askedAs": [
+        "monospace inventory tool",
+        "developer console style",
+        "minimal dark grey catalogue",
+        "моноширинный стиль склада",
+        "минималистичная консоль"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#16181b",
+        "ink": "#e6e8e3",
+        "accent": "#5fc9a0",
+        "scale": 0.85
+      }
+    },
+    {
+      "id": "terracotta-market",
+      "label": "Terracotta Market",
+      "description": "A warm kiln-fired ground with a terracotta accent and friendly grotesque type for lifestyle shops.",
+      "askedAs": [
+        "warm earthy shop",
+        "terracotta handmade store",
+        "cozy lifestyle brand",
+        "тёплый терракотовый магазин",
+        "уютная витрина ремесла"
+      ],
+      "props": {
+        "ground": "kiln",
+        "accent": "#c8643b",
+        "fontFamily": "Bricolage Grotesque",
+        "speed": 1.25
+      }
+    }
+  ]
+}

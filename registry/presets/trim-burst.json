@@ -1,0 +1,107 @@
+{
+  "component": "trim-burst",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "tap-spark",
+      "label": "Tap Spark",
+      "description": "A tight, fast ring of short thin strokes that flicks out and vanishes like a button press.",
+      "askedAs": [
+        "small quick click burst",
+        "tiny tap sparkle",
+        "fast short lines around a button",
+        "маленький быстрый всплеск на клик",
+        "короткие штрихи при нажатии"
+      ],
+      "props": {
+        "count": 6,
+        "reach": 32,
+        "strokeLength": 20,
+        "weight": 1.5,
+        "speed": 1.75,
+        "jitter": 0.2
+      }
+    },
+    {
+      "id": "badge-halo",
+      "label": "Badge Halo",
+      "description": "Many evenly spaced strokes born well outside a wide center, forming a precise halo around a landing badge or number.",
+      "askedAs": [
+        "even ring of lines around an icon",
+        "burst around a badge",
+        "clean symmetric halo of strokes",
+        "ровное кольцо линий вокруг иконки",
+        "вспышка вокруг значка"
+      ],
+      "props": {
+        "count": 16,
+        "innerRadius": 72,
+        "reach": 56,
+        "strokeLength": 32,
+        "jitter": 0,
+        "cap": "butt"
+      }
+    },
+    {
+      "id": "bold-pop",
+      "label": "Bold Pop",
+      "description": "A few heavy warm-amber strokes with dot tips that punch out far and slow for a confident accent.",
+      "askedAs": [
+        "thick chunky burst lines",
+        "big bold pop with dots",
+        "heavy celebratory burst",
+        "толстые линии с точками на концах",
+        "крупный жирный взрыв"
+      ],
+      "props": {
+        "count": 5,
+        "weight": 6,
+        "reach": 140,
+        "strokeLength": 90,
+        "dots": true,
+        "color": "#f2b544"
+      }
+    },
+    {
+      "id": "corner-fan",
+      "label": "Corner Fan",
+      "description": "A narrow fan of ink-blue strokes spraying upward from the lower left like a directional swoosh.",
+      "askedAs": [
+        "burst only in one direction",
+        "fan of lines from the corner",
+        "half burst spraying upward",
+        "веер линий из угла",
+        "всплеск в одну сторону"
+      ],
+      "props": {
+        "spread": 90,
+        "rotation": -45,
+        "count": 7,
+        "x": 0.2,
+        "y": 0.8,
+        "color": "#2f5bd3"
+      }
+    },
+    {
+      "id": "hairline-drift",
+      "label": "Hairline Drift",
+      "description": "Long hairline strokes in soft slate gray drift out slowly and irregularly for a calm, editorial feel.",
+      "askedAs": [
+        "slow thin elegant burst",
+        "delicate hairline rays",
+        "calm subtle line explosion",
+        "медленные тонкие лучи",
+        "нежный спокойный всплеск линий"
+      ],
+      "props": {
+        "weight": 0.5,
+        "speed": 0.5,
+        "count": 12,
+        "reach": 180,
+        "jitter": 0.9,
+        "color": "#9aa4b2"
+      }
+    }
+  ]
+}

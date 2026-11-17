@@ -1,0 +1,113 @@
+{
+  "component": "inline-highlight",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "cobalt-calm",
+      "label": "Cobalt Calm",
+      "description": "A composed cobalt-blue shift on a medium-weight word that eases in at a relaxed pace.",
+      "askedAs": [
+        "blue keyword highlight",
+        "calm corporate color emphasis",
+        "soft blue word pop",
+        "синее выделение слова",
+        "спокойный акцент синим цветом"
+      ],
+      "props": {
+        "highlightColor": "#2f5bea",
+        "fontWeight": "500",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "editorial-rust",
+      "label": "Editorial Rust",
+      "description": "Light-weight, smaller type that slowly warms into a muted rust tone like a magazine pull quote.",
+      "askedAs": [
+        "elegant magazine style highlight",
+        "slow subtle warm word color",
+        "thin text with rust accent",
+        "элегантное выделение в журнальном стиле",
+        "медленный тёплый акцент на слове"
+      ],
+      "props": {
+        "baseColor": "#2b2b2b",
+        "highlightColor": "#b8432f",
+        "fontSize": 56,
+        "fontWeight": "400",
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "bold-punch",
+      "label": "Bold Punch",
+      "description": "Oversized heavy type that snaps quickly into a confident crimson.",
+      "askedAs": [
+        "big bold red word pop",
+        "fast punchy keyword emphasis",
+        "huge headline color hit",
+        "крупное жирное выделение красным",
+        "быстрый яркий акцент на слове"
+      ],
+      "props": {
+        "fontSize": 120,
+        "fontWeight": "700",
+        "highlightColor": "#e63946",
+        "speed": 2
+      }
+    },
+    {
+      "id": "forest-quiet",
+      "label": "Forest Quiet",
+      "description": "Deep green-black text that gently shifts to a natural forest green.",
+      "askedAs": [
+        "green eco keyword highlight",
+        "natural muted green emphasis",
+        "gentle green color shift",
+        "зелёное выделение слова",
+        "природный спокойный зелёный акцент"
+      ],
+      "props": {
+        "baseColor": "#1f2a24",
+        "highlightColor": "#2f8f5b",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "snap-caption",
+      "label": "Snap Caption",
+      "description": "Compact caption-sized text with a near-instant flip to a refined violet.",
+      "askedAs": [
+        "quick subtitle word highlight",
+        "small text fast purple emphasis",
+        "caption keyword color snap",
+        "быстрое выделение в субтитрах",
+        "фиолетовый акцент в мелком тексте"
+      ],
+      "props": {
+        "fontSize": 40,
+        "highlightColor": "#7c3aed",
+        "speed": 3
+      }
+    },
+    {
+      "id": "amber-glow",
+      "label": "Amber Glow",
+      "description": "Large bold lettering that slowly warms into a rich amber gold.",
+      "askedAs": [
+        "slow golden word highlight",
+        "warm amber keyword reveal",
+        "premium gold text emphasis",
+        "медленное золотое выделение слова",
+        "тёплый янтарный акцент"
+      ],
+      "props": {
+        "highlightColor": "#d98a00",
+        "fontSize": 88,
+        "fontWeight": "700",
+        "speed": 0.5
+      }
+    }
+  ]
+}

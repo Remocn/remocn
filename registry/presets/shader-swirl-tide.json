@@ -1,0 +1,99 @@
+{
+  "component": "shader-swirl-tide",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "slow-abyss",
+      "label": "Slow Abyss",
+      "description": "A barely moving, wide-banded whirlpool sinking into near-black navy.",
+      "askedAs": [
+        "very slow dark swirl",
+        "calm deep ocean background",
+        "minimal slow whirlpool",
+        "медленный тёмный водоворот",
+        "спокойный глубокий фон"
+      ],
+      "props": {
+        "speed": 0.25,
+        "bandCount": 2,
+        "twist": 0.1,
+        "colorBack": "#020c1b"
+      }
+    },
+    {
+      "id": "tight-vortex",
+      "label": "Tight Vortex",
+      "description": "Many crisp bands wound into a hard, energetic spiral.",
+      "askedAs": [
+        "fast tight spiral",
+        "sharp hypnotic swirl",
+        "energetic vortex background",
+        "быстрая плотная спираль",
+        "резкий гипнотический вихрь"
+      ],
+      "props": {
+        "speed": 2,
+        "bandCount": 10,
+        "twist": 0.8,
+        "softness": 0.2
+      }
+    },
+    {
+      "id": "midnight-silk",
+      "label": "Midnight Silk",
+      "description": "Soft, flowing bands with a gentle twist over a deep indigo field.",
+      "askedAs": [
+        "silky indigo swirl",
+        "soft luxurious background",
+        "smooth purple-blue flow",
+        "шелковистый индиго фон",
+        "мягкий премиальный водоворот"
+      ],
+      "props": {
+        "speed": 0.5,
+        "bandCount": 4,
+        "twist": 0.4,
+        "softness": 1,
+        "colorBack": "#1a1446"
+      }
+    },
+    {
+      "id": "graphic-rings",
+      "label": "Graphic Rings",
+      "description": "Hard-edged, untwisted bands forming clean concentric rings on slate.",
+      "askedAs": [
+        "flat graphic circles",
+        "crisp rings no twist",
+        "bold geometric whirlpool",
+        "чёткие графичные кольца",
+        "геометрический фон с кругами"
+      ],
+      "props": {
+        "bandCount": 7,
+        "twist": 0,
+        "softness": 0,
+        "colorBack": "#1c2733"
+      }
+    },
+    {
+      "id": "teal-current",
+      "label": "Teal Current",
+      "description": "A brisk, moderately twisted swirl over a dark teal sea.",
+      "askedAs": [
+        "dark teal swirl",
+        "ocean current motion",
+        "green-blue whirlpool",
+        "тёмно-бирюзовый водоворот",
+        "морское течение фон"
+      ],
+      "props": {
+        "speed": 1.5,
+        "bandCount": 6,
+        "twist": 0.55,
+        "softness": 0.6,
+        "colorBack": "#03363d"
+      }
+    }
+  ]
+}

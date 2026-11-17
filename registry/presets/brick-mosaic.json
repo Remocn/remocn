@@ -1,0 +1,116 @@
+{
+  "component": "brick-mosaic",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "chunky-quick",
+      "label": "Chunky Quick",
+      "description": "Big, few bricks snap into place fast on a classic green baseplate for a bold toy-box feel.",
+      "askedAs": [
+        "big chunky bricks fast build",
+        "low resolution quick lego logo",
+        "fast build with large blocks on green",
+        "крупные кубики быстрая сборка",
+        "быстрая сборка из больших блоков"
+      ],
+      "props": {
+        "cols": 12,
+        "rows": 8,
+        "rowDelay": 2,
+        "background": "#2f7d4a",
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "fine-detail",
+      "label": "Fine Detail",
+      "description": "A dense grid of small bricks builds slowly on a deep navy plate for a crisp, detailed mosaic.",
+      "askedAs": [
+        "high resolution brick mosaic",
+        "lots of small bricks detailed logo",
+        "slow detailed pixel build",
+        "детальная мозаика из мелких кубиков",
+        "высокое разрешение медленная сборка"
+      ],
+      "props": {
+        "cols": 40,
+        "rows": 24,
+        "rowDelay": 2,
+        "background": "#14213d",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "slow-stack",
+      "label": "Slow Stack",
+      "description": "Rows settle one by one with long pauses on a warm grey plate for a calm, deliberate reveal.",
+      "askedAs": [
+        "slow relaxed brick build",
+        "calm row by row reveal",
+        "dramatic slow logo construction",
+        "медленная спокойная сборка",
+        "неспешное появление по рядам"
+      ],
+      "props": {
+        "rowDelay": 7,
+        "background": "#3a3632",
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "rapid-fire",
+      "label": "Rapid Fire",
+      "description": "Bricks rain down almost all at once on a near-black plate for a punchy, energetic snap.",
+      "askedAs": [
+        "super fast brick drop",
+        "instant logo build",
+        "quick energetic mosaic reveal",
+        "очень быстрая сборка логотипа",
+        "мгновенное появление из кубиков"
+      ],
+      "props": {
+        "rowDelay": 1,
+        "speed": 3,
+        "background": "#0b0b0f"
+      }
+    },
+    {
+      "id": "sunny-plate",
+      "label": "Sunny Plate",
+      "description": "A medium grid builds at an easy pace on a soft mustard baseplate for a cheerful kids look.",
+      "askedAs": [
+        "yellow baseplate playful build",
+        "bright cheerful kids brick logo",
+        "warm colourful lego reveal",
+        "жёлтая пластина для детей",
+        "яркая весёлая сборка из кубиков"
+      ],
+      "props": {
+        "background": "#e0a526",
+        "cols": 20,
+        "rows": 12,
+        "rowDelay": 4
+      }
+    },
+    {
+      "id": "retro-console",
+      "label": "Retro Console",
+      "description": "A tiny 16-wide grid stacks briskly on a muted purple plate like an 8-bit game sprite.",
+      "askedAs": [
+        "8-bit retro game sprite build",
+        "pixel art gaming logo bricks",
+        "retro console style mosaic",
+        "ретро пиксель-арт как в игре",
+        "8-битная сборка логотипа"
+      ],
+      "props": {
+        "cols": 16,
+        "rows": 10,
+        "rowDelay": 3,
+        "background": "#2d2a4a",
+        "speed": 1.25
+      }
+    }
+  ]
+}

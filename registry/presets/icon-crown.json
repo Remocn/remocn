@@ -1,0 +1,99 @@
+{
+  "component": "icon-crown",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "royal-gold",
+      "label": "Royal Gold",
+      "description": "A large, warm gold crown that draws itself in and settles with a celebratory bounce.",
+      "askedAs": [
+        "gold crown icon",
+        "make the crown look golden and big",
+        "premium winner crown",
+        "золотая корона",
+        "большая золотая корона"
+      ],
+      "props": {
+        "color": "#c9a227",
+        "size": 120,
+        "strokeWidth": 2.25,
+        "animation": "both"
+      }
+    },
+    {
+      "id": "fine-line-sketch",
+      "label": "Fine Line",
+      "description": "A thin, slow line drawing of the crown in soft slate, elegant and understated.",
+      "askedAs": [
+        "thin elegant crown outline",
+        "slow drawing crown",
+        "minimal line crown",
+        "тонкая линия корона",
+        "медленная отрисовка короны"
+      ],
+      "props": {
+        "animation": "draw",
+        "strokeWidth": 1,
+        "speed": 0.5,
+        "color": "#475569",
+        "size": 96
+      }
+    },
+    {
+      "id": "bold-badge",
+      "label": "Bold Badge",
+      "description": "A chunky, heavy-stroked crown in deep navy that pops with a quick action.",
+      "askedAs": [
+        "thick bold crown",
+        "punchy crown icon",
+        "heavy stroke crown",
+        "жирная корона",
+        "толстая иконка короны"
+      ],
+      "props": {
+        "strokeWidth": 3,
+        "color": "#1e3a8a",
+        "animation": "action",
+        "speed": 1.5,
+        "size": 72
+      }
+    },
+    {
+      "id": "looping-accent",
+      "label": "Looping Accent",
+      "description": "A small burgundy crown that keeps animating on a gentle repeating loop.",
+      "askedAs": [
+        "crown that keeps moving",
+        "looping crown animation",
+        "repeat the crown animation",
+        "корона в цикле",
+        "повторяющаяся анимация короны"
+      ],
+      "props": {
+        "loop": true,
+        "color": "#9f1239",
+        "speed": 0.75,
+        "animation": "action"
+      }
+    },
+    {
+      "id": "quick-snap",
+      "label": "Quick Snap",
+      "description": "A compact emerald crown that draws and reacts at double speed for snappy UI moments.",
+      "askedAs": [
+        "fast crown animation",
+        "small quick crown",
+        "snappy crown icon",
+        "быстрая корона",
+        "маленькая быстрая иконка короны"
+      ],
+      "props": {
+        "speed": 2.5,
+        "size": 32,
+        "color": "#047857",
+        "strokeWidth": 2.5
+      }
+    }
+  ]
+}

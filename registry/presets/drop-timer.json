@@ -1,0 +1,122 @@
+{
+  "component": "drop-timer",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "snap-drop",
+      "label": "Snap Drop",
+      "description": "A rapid-fire countdown with a hot orange gradient that slams straight into the payoff.",
+      "askedAs": [
+        "fast punchy countdown",
+        "quick hype timer",
+        "snappy launch countdown",
+        "быстрый отсчёт до запуска",
+        "резкий таймер с оранжевым"
+      ],
+      "props": {
+        "tick": 8,
+        "hold": 4,
+        "speed": 1.5,
+        "accent": "#ff5a2e",
+        "fontFamily": "Space Grotesk"
+      }
+    },
+    {
+      "id": "slow-burn",
+      "label": "Slow Burn",
+      "description": "Unhurried serif numerals on warm charcoal with an amber glow that lingers on zero.",
+      "askedAs": [
+        "slow dramatic countdown",
+        "elegant suspense timer",
+        "luxury launch reveal",
+        "медленный драматичный отсчёт",
+        "элегантный таймер с паузой"
+      ],
+      "props": {
+        "tick": 28,
+        "hold": 24,
+        "fontFamily": "Instrument Serif",
+        "accent": "#e3a33f",
+        "background": "#14110f",
+        "ink": "#f4ede4"
+      }
+    },
+    {
+      "id": "daylight",
+      "label": "Daylight",
+      "description": "Clean light theme with crisp Inter type and a fresh teal accent.",
+      "askedAs": [
+        "light clean countdown",
+        "white background launch timer",
+        "minimal bright drop",
+        "светлый минималистичный таймер",
+        "белый фон отсчёт"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f6f4ef",
+        "ink": "#151515",
+        "accent": "#0f9d76",
+        "fontFamily": "Inter"
+      }
+    },
+    {
+      "id": "terminal",
+      "label": "Terminal",
+      "description": "Monospaced digits on near-black with a soft green accent for a dev-launch feel.",
+      "askedAs": [
+        "hacker style countdown",
+        "code terminal timer",
+        "developer product launch",
+        "таймер в стиле терминала",
+        "моноширинный отсчёт для разработчиков"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0b0f0c",
+        "ink": "#d7f5dd",
+        "accent": "#3ddc84",
+        "tick": 10
+      }
+    },
+    {
+      "id": "big-impact",
+      "label": "Big Impact",
+      "description": "Oversized chunky numerals with a pink gradient and a longer beat on zero.",
+      "askedAs": [
+        "huge bold countdown",
+        "giant numbers drop timer",
+        "loud hype launch",
+        "огромные цифры отсчёта",
+        "громкий яркий таймер"
+      ],
+      "props": {
+        "scale": 1.3,
+        "fontFamily": "Bricolage Grotesque",
+        "accent": "#ff3d7f",
+        "hold": 16
+      }
+    },
+    {
+      "id": "editorial",
+      "label": "Editorial",
+      "description": "Refined Fraunces type on cream paper with a rust accent at a compact scale.",
+      "askedAs": [
+        "magazine style countdown",
+        "warm serif launch timer",
+        "classy cream reveal",
+        "журнальный стиль отсчёта",
+        "таймер на кремовом фоне"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Fraunces",
+        "background": "#f3eee6",
+        "ink": "#1e1b18",
+        "accent": "#b5452b",
+        "scale": 0.85
+      }
+    }
+  ]
+}

@@ -1,0 +1,121 @@
+{
+  "component": "shader-water",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "still-lagoon",
+      "label": "Still Lagoon",
+      "description": "A near-motionless deep navy surface with faint, slow caustics for quiet backgrounds.",
+      "askedAs": [
+        "very calm slow water",
+        "barely moving dark water background",
+        "subtle water behind text",
+        "спокойная тихая вода",
+        "медленная тёмная вода фоном"
+      ],
+      "props": {
+        "speed": 0.25,
+        "waves": 0.15,
+        "caustic": 0.04,
+        "highlights": 0.02,
+        "colorBack": "#0d1620"
+      }
+    },
+    {
+      "id": "sunlit-pool",
+      "label": "Sunlit Pool",
+      "description": "Bright teal pool water with strong dancing caustic light, like sun through a swimming pool.",
+      "askedAs": [
+        "swimming pool light patterns",
+        "bright sunny water",
+        "teal pool caustics",
+        "бассейн с солнечными бликами",
+        "яркая бирюзовая вода"
+      ],
+      "props": {
+        "speed": 1.25,
+        "waves": 0.4,
+        "caustic": 0.5,
+        "highlights": 0.3,
+        "colorBack": "#1f6f7a"
+      }
+    },
+    {
+      "id": "open-current",
+      "label": "Open Current",
+      "description": "Fast, choppy waves with crisp highlights that suggest flowing data streams.",
+      "askedAs": [
+        "fast flowing water",
+        "energetic streaming water",
+        "choppy waves for data flow",
+        "быстрое течение воды",
+        "динамичные волны поток данных"
+      ],
+      "props": {
+        "speed": 2.5,
+        "waves": 0.75,
+        "caustic": 0.2,
+        "highlights": 0.18,
+        "colorBack": "#14304a"
+      }
+    },
+    {
+      "id": "midnight-depths",
+      "label": "Midnight Depths",
+      "description": "Almost-black abyssal water with rare glints of refracted light for a moody, premium feel.",
+      "askedAs": [
+        "deep ocean at night",
+        "dark moody underwater",
+        "black water with faint glints",
+        "глубина океана ночью",
+        "тёмная мрачная вода"
+      ],
+      "props": {
+        "speed": 0.5,
+        "waves": 0.5,
+        "caustic": 0.12,
+        "highlights": 0.1,
+        "colorBack": "#070b12"
+      }
+    },
+    {
+      "id": "glacier-melt",
+      "label": "Glacier Melt",
+      "description": "Cool slate-blue meltwater with soft, broad ripples and gentle pale caustics.",
+      "askedAs": [
+        "icy cold water",
+        "pale blue glacier water",
+        "soft frosty ripples",
+        "ледниковая вода",
+        "холодная светлая вода"
+      ],
+      "props": {
+        "speed": 0.75,
+        "waves": 0.25,
+        "caustic": 0.3,
+        "highlights": 0.14,
+        "colorBack": "#3a5a72"
+      }
+    },
+    {
+      "id": "emerald-reef",
+      "label": "Emerald Reef",
+      "description": "Deep green reef water with medium motion and lively, scattered caustic light.",
+      "askedAs": [
+        "green tropical water",
+        "reef underwater look",
+        "emerald sea background",
+        "изумрудная вода рифа",
+        "зелёное тропическое море"
+      ],
+      "props": {
+        "speed": 1,
+        "waves": 0.45,
+        "caustic": 0.36,
+        "highlights": 0.12,
+        "colorBack": "#0f3a34"
+      }
+    }
+  ]
+}

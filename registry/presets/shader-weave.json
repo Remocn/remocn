@@ -1,0 +1,118 @@
+{
+  "component": "shader-weave",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "fine-linen",
+      "label": "Fine Linen",
+      "description": "A tight, calm linen weave with a slow, barely-there sheen.",
+      "askedAs": [
+        "fine fabric texture slow",
+        "subtle linen background",
+        "tight weave calm sheen",
+        "мелкая льняная текстура",
+        "спокойная тонкая ткань"
+      ],
+      "props": {
+        "scale": 40,
+        "speed": 0.5,
+        "warp": 0.01
+      }
+    },
+    {
+      "id": "chunky-burlap",
+      "label": "Chunky Burlap",
+      "description": "Coarse oversized threads with a warm earthy tint and gentle drift.",
+      "askedAs": [
+        "coarse rough fabric",
+        "big chunky weave warm",
+        "burlap sack texture",
+        "грубая мешковина",
+        "крупное плетение тёплое"
+      ],
+      "props": {
+        "scale": 9,
+        "warp": 0.06,
+        "accent": "#a07850",
+        "accentAmount": 0.45,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "silk-flow",
+      "label": "Silk Flow",
+      "description": "Fluid, heavily warped silk with a quick champagne sheen gliding across.",
+      "askedAs": [
+        "flowing silk texture",
+        "wavy luxurious fabric",
+        "shiny satin moving",
+        "струящийся шёлк",
+        "блестящая волнистая ткань"
+      ],
+      "props": {
+        "warp": 0.16,
+        "speed": 1.75,
+        "scale": 28,
+        "accent": "#d9c29a",
+        "accentAmount": 0.35
+      }
+    },
+    {
+      "id": "indigo-denim",
+      "label": "Indigo Denim",
+      "description": "A medium twill weave dyed deep indigo with a steady, workwear feel.",
+      "askedAs": [
+        "denim jeans texture",
+        "blue fabric weave",
+        "indigo woven background",
+        "джинсовая ткань",
+        "синее плетение"
+      ],
+      "props": {
+        "accent": "#2b3f6b",
+        "accentAmount": 0.7,
+        "scale": 18,
+        "warp": 0.02
+      }
+    },
+    {
+      "id": "tech-mesh",
+      "label": "Tech Mesh",
+      "description": "A fine, rigid technical mesh in cool graphite with a brisk sweeping highlight.",
+      "askedAs": [
+        "technical mesh grid",
+        "carbon fibre style weave",
+        "fast sheen sporty mesh",
+        "техническая сетка",
+        "карбоновое плетение"
+      ],
+      "props": {
+        "scale": 34,
+        "warp": 0,
+        "speed": 2.5,
+        "accent": "#4a5560",
+        "accentAmount": 0.5
+      }
+    },
+    {
+      "id": "velvet-plum",
+      "label": "Velvet Plum",
+      "description": "Soft, slow, rich plum weave with a languid velvet glow.",
+      "askedAs": [
+        "velvet purple fabric",
+        "rich dark luxurious texture",
+        "slow plum weave",
+        "бархатная ткань",
+        "тёмно-сливовая текстура"
+      ],
+      "props": {
+        "accent": "#5e2a4f",
+        "accentAmount": 0.8,
+        "speed": 0.25,
+        "scale": 14,
+        "warp": 0.08
+      }
+    }
+  ]
+}

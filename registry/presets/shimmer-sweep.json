@@ -1,0 +1,98 @@
+{
+  "component": "shimmer-sweep",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "gold-leaf",
+      "label": "Gold Leaf",
+      "description": "Warm bronze lettering catches a slow, soft gold gleam like gilded signage.",
+      "askedAs": [
+        "gold shimmer text",
+        "luxury golden shine",
+        "slow warm metallic gleam",
+        "золотой блеск текста",
+        "роскошный золотой отлив"
+      ],
+      "props": {
+        "baseColor": "#5c4a2e",
+        "shineColor": "#f5d78e",
+        "speed": 0.5,
+        "fontWeight": "600"
+      }
+    },
+    {
+      "id": "platinum-tier",
+      "label": "Platinum Tier",
+      "description": "Cool slate type with an icy silver-blue sweep for top pricing tiers.",
+      "askedAs": [
+        "silver shine for pricing plan",
+        "cool platinum gleam",
+        "icy metallic text sweep",
+        "платиновый блеск для тарифа",
+        "холодный серебристый отблеск"
+      ],
+      "props": {
+        "baseColor": "#334155",
+        "shineColor": "#e2e8f0",
+        "speed": 0.75,
+        "fontSize": 120
+      }
+    },
+    {
+      "id": "rose-quartz",
+      "label": "Rose Quartz",
+      "description": "Muted mauve text with a gentle blush-pink highlight in light, elegant type.",
+      "askedAs": [
+        "pink soft shimmer",
+        "elegant rose gold shine",
+        "light weight blush gleam",
+        "розовый мягкий блеск",
+        "нежное мерцание розового золота"
+      ],
+      "props": {
+        "baseColor": "#5b3a48",
+        "shineColor": "#f9d5dc",
+        "fontWeight": "400",
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "quick-glint",
+      "label": "Quick Glint",
+      "description": "A fast, crisp white flash across compact bold text for snappy emphasis.",
+      "askedAs": [
+        "fast shine across text",
+        "quick glint effect",
+        "snappy highlight sweep",
+        "быстрый блик по тексту",
+        "резкий яркий отблеск"
+      ],
+      "props": {
+        "speed": 2.5,
+        "fontSize": 72,
+        "baseColor": "#27272a",
+        "shineColor": "#ffffff"
+      }
+    },
+    {
+      "id": "emerald-sheen",
+      "label": "Emerald Sheen",
+      "description": "Deep forest-green headline with a slow pale-jade shine at a large display size.",
+      "askedAs": [
+        "green metallic shimmer",
+        "emerald glow headline",
+        "big slow jade shine",
+        "изумрудный блеск заголовка",
+        "зелёное медленное мерцание"
+      ],
+      "props": {
+        "baseColor": "#1f3d33",
+        "shineColor": "#c7f0dc",
+        "fontSize": 160,
+        "fontWeight": "500",
+        "speed": 0.75
+      }
+    }
+  ]
+}

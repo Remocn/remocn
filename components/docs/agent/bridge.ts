@@ -29,12 +29,18 @@ export function allowStep(
 
 let agent: ReturnType<typeof createAgent> | undefined;
 
-export function connectAgent(): () => void {
+/** The page's one bridge: the browser's agent and the describe field share it. */
+export function getAgent(): ReturnType<typeof createAgent> {
   agent ??= createAgent({ allow: allowStep });
+  return agent;
+}
+
+export function connectAgent(): () => void {
+  const bridge = getAgent();
   if (process.env.NODE_ENV === "development") {
-    (window as unknown as { remocnAgent: typeof agent }).remocnAgent = agent;
+    (window as unknown as { remocnAgent: typeof bridge }).remocnAgent = bridge;
   }
   // The bridge's allow already decides each step; asking again here would
   // only repeat it.
-  return registerTools(agent, { allow: () => true });
+  return registerTools(bridge, { allow: () => true });
 }

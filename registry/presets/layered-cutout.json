@@ -1,0 +1,125 @@
+{
+  "component": "layered-cutout",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "kraft-paper",
+      "label": "Kraft Paper",
+      "description": "Warm brown kraft sheets with dark ink and a serif wordmark for a handmade feel.",
+      "askedAs": [
+        "warm brown paper look",
+        "cardboard craft style logo reveal",
+        "handmade kraft intro",
+        "крафтовая бумага",
+        "тёплый бумажный стиль"
+      ],
+      "props": {
+        "background": "#c8a77e",
+        "ink": "#2b1d12",
+        "fontFamily": "Fraunces",
+        "layers": 8,
+        "grain": true
+      }
+    },
+    {
+      "id": "midnight-stack",
+      "label": "Midnight Stack",
+      "description": "Deep navy sheets stacked high with heavy depth blur and a slow, cinematic push.",
+      "askedAs": [
+        "dark moody paper layers",
+        "slow cinematic night intro",
+        "deep blue layered reveal",
+        "тёмная медленная заставка",
+        "ночной синий стиль"
+      ],
+      "props": {
+        "theme": "dark",
+        "background": "#0f1626",
+        "ink": "#e8e4da",
+        "layers": 12,
+        "depthBlur": 2.4,
+        "push": 220
+      }
+    },
+    {
+      "id": "quick-snap",
+      "label": "Quick Snap",
+      "description": "A short, brisk dolly through a few crisp sheets with no blur for a punchy reveal.",
+      "askedAs": [
+        "fast logo reveal",
+        "short snappy intro",
+        "quick sharp paper cut",
+        "быстрая заставка",
+        "резкое короткое появление"
+      ],
+      "props": {
+        "push": 60,
+        "speed": 1.5,
+        "layers": 3,
+        "depthBlur": 0,
+        "fontFamily": "Space Grotesk"
+      }
+    },
+    {
+      "id": "gallery-white",
+      "label": "Gallery White",
+      "description": "Clean off-white sheets without grain, a smaller centered mark and an elegant serif.",
+      "askedAs": [
+        "minimal clean white intro",
+        "elegant gallery style reveal",
+        "no grain soft white",
+        "минималистичная белая заставка",
+        "элегантный чистый стиль"
+      ],
+      "props": {
+        "background": "#f6f4ef",
+        "ink": "#1c1c1c",
+        "grain": false,
+        "fontFamily": "Instrument Serif",
+        "scale": 0.8,
+        "depthBlur": 0.6
+      }
+    },
+    {
+      "id": "sage-dream",
+      "label": "Sage Dream",
+      "description": "Muted sage green layers drifting slowly with soft blur and a delayed start.",
+      "askedAs": [
+        "soft green calm intro",
+        "dreamy slow paper layers",
+        "muted pastel reveal",
+        "спокойная зелёная заставка",
+        "мягкие пастельные слои"
+      ],
+      "props": {
+        "background": "#b9c4ad",
+        "ink": "#25301f",
+        "speed": 0.75,
+        "depthBlur": 1.8,
+        "delay": 20,
+        "fontFamily": "Manrope"
+      }
+    },
+    {
+      "id": "terminal-cut",
+      "label": "Terminal Cut",
+      "description": "Charcoal sheets with a large monospace mark and a mid-length dolly for a technical feel.",
+      "askedAs": [
+        "dev tool style logo reveal",
+        "monospace dark intro",
+        "technical charcoal look",
+        "заставка в стиле терминала",
+        "моноширинный тёмный стиль"
+      ],
+      "props": {
+        "theme": "dark",
+        "background": "#1a1a1a",
+        "ink": "#d9e4d3",
+        "fontFamily": "JetBrains Mono",
+        "scale": 1.25,
+        "layers": 7
+      }
+    }
+  ]
+}

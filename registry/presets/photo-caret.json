@@ -1,0 +1,105 @@
+{
+  "component": "photo-caret",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "gallery-light",
+      "label": "Gallery Light",
+      "description": "A bright, airy editorial look with a warm serif accent on soft paper tones.",
+      "askedAs": [
+        "light editorial headline with photos",
+        "clean white magazine style typing",
+        "airy bright brand statement",
+        "светлый журнальный стиль",
+        "белый фон с элегантным шрифтом"
+      ],
+      "props": {
+        "theme": "light",
+        "ground": "paper-crease",
+        "accentFont": "Fraunces",
+        "accent": "#9a5b3c",
+        "ink": "#1c1a17"
+      }
+    },
+    {
+      "id": "slow-velvet",
+      "label": "Slow Velvet",
+      "description": "A slow, lingering reveal on a deep velvet ground with a muted rose accent.",
+      "askedAs": [
+        "slow luxurious typing headline",
+        "moody dark premium reveal",
+        "calm elegant text with long hold",
+        "медленный премиальный текст",
+        "тёмный бархатный фон"
+      ],
+      "props": {
+        "ground": "velvet-hour",
+        "speed": 0.5,
+        "hold": 90,
+        "accent": "#d9a5a0",
+        "ink": "#f4ece6"
+      }
+    },
+    {
+      "id": "tech-mono",
+      "label": "Tech Mono",
+      "description": "A quick, code-like typing feel in monospace over a cool blue-hour ground.",
+      "askedAs": [
+        "terminal style typing headline",
+        "fast tech product launch text",
+        "monospace caret typing",
+        "текст как в терминале",
+        "быстрый технологичный заголовок"
+      ],
+      "props": {
+        "fontFamily": "Geist",
+        "accentFont": "JetBrains Mono",
+        "ground": "blue-hour",
+        "accent": "#7fb7e8",
+        "speed": 1.75,
+        "hold": 25
+      }
+    },
+    {
+      "id": "bold-statement",
+      "label": "Bold Statement",
+      "description": "An oversized, punchy grotesque headline on charcoal with a copper accent.",
+      "askedAs": [
+        "big bold headline with photos",
+        "large confident brand statement",
+        "punchy oversized text",
+        "крупный жирный заголовок",
+        "смелое заявление бренда"
+      ],
+      "props": {
+        "fontFamily": "Bricolage Grotesque",
+        "accentFont": "Bricolage Grotesque",
+        "scale": 1.3,
+        "ground": "charcoal-satin",
+        "accent": "#d08a55",
+        "ink": "#f2eee8"
+      }
+    },
+    {
+      "id": "quiet-greenhouse",
+      "label": "Quiet Greenhouse",
+      "description": "A smaller, gentle lifestyle look on a soft green ground with sage tones.",
+      "askedAs": [
+        "natural calm lifestyle headline",
+        "soft green organic look",
+        "gentle wellness brand typing",
+        "спокойный природный стиль",
+        "мягкий зелёный фон"
+      ],
+      "props": {
+        "ground": "greenhouse",
+        "fontFamily": "Manrope",
+        "accentFont": "Instrument Serif",
+        "accent": "#b9cba4",
+        "scale": 0.85,
+        "speed": 0.75
+      }
+    }
+  ]
+}

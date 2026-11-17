@@ -1,0 +1,103 @@
+{
+  "component": "analytics-funnel",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "midnight-ops",
+      "label": "Midnight Ops",
+      "description": "Dark dashboard with a cool teal accent on a deep night ground, set in a crisp mono face.",
+      "askedAs": [
+        "dark mode funnel with monospace font",
+        "night dashboard look for conversion chart",
+        "techy dark analytics style",
+        "тёмная воронка в стиле дашборда",
+        "моноширинный шрифт на тёмном фоне"
+      ],
+      "props": {
+        "theme": "dark",
+        "accent": "#2dd4bf",
+        "ground": "nightfold",
+        "fontFamily": "JetBrains Mono"
+      }
+    },
+    {
+      "id": "editorial-report",
+      "label": "Editorial Report",
+      "description": "Warm paper background with serif type and a muted terracotta accent, paced slowly like a printed annual report.",
+      "askedAs": [
+        "make it look like a printed report",
+        "serif funnel on cream paper",
+        "slow elegant editorial chart",
+        "воронка в стиле журнального отчёта",
+        "медленная анимация с засечками"
+      ],
+      "props": {
+        "background": "#f5f0e6",
+        "ink": "#2b2622",
+        "accent": "#b5532e",
+        "fontFamily": "Fraunces",
+        "ground": "paper-crease",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "launch-punch",
+      "label": "Launch Punch",
+      "description": "Oversized, fast-moving funnel with a bold grotesk and a saturated violet accent for high-energy launch cuts.",
+      "askedAs": [
+        "fast big funnel for a launch video",
+        "punchy energetic conversion chart",
+        "zoomed in quick animation",
+        "быстрая крупная воронка для запуска",
+        "энергичный стиль для промо"
+      ],
+      "props": {
+        "scale": 1.3,
+        "speed": 1.75,
+        "accent": "#7c3aed",
+        "fontFamily": "Bricolage Grotesque",
+        "ground": "iris"
+      }
+    },
+    {
+      "id": "calm-insight",
+      "label": "Calm Insight",
+      "description": "Small, unhurried funnel on a pale polar ground with a soft green accent and a delayed entrance.",
+      "askedAs": [
+        "slow calm funnel chart",
+        "minimal soft green analytics",
+        "gentle delayed reveal",
+        "спокойная медленная воронка",
+        "минималистичный светлый график"
+      ],
+      "props": {
+        "scale": 0.85,
+        "speed": 0.5,
+        "delay": 20,
+        "accent": "#16a34a",
+        "ground": "polar",
+        "fontFamily": "Manrope"
+      }
+    },
+    {
+      "id": "ember-growth",
+      "label": "Ember Growth",
+      "description": "Dark charcoal setting with a warm amber accent and early tooltip highlighting the top-of-funnel drop.",
+      "askedAs": [
+        "dark funnel with orange accent",
+        "warm moody growth chart",
+        "show tooltip on first step",
+        "тёмная воронка с оранжевым акцентом",
+        "тёплый тёмный стиль аналитики"
+      ],
+      "props": {
+        "theme": "dark",
+        "accent": "#f59e0b",
+        "ground": "ember",
+        "fontFamily": "Space Grotesk",
+        "tooltipStep": 1
+      }
+    }
+  ]
+}

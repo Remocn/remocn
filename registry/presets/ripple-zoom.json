@@ -1,0 +1,115 @@
+{
+  "component": "ripple-zoom",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "gentle-drift",
+      "label": "Gentle Drift",
+      "description": "A slow, shallow push through soft, hazy rings for calm, understated arrivals.",
+      "askedAs": [
+        "slow soft zoom transition",
+        "subtle dreamy ripple",
+        "calm gentle camera push",
+        "медленный мягкий зум",
+        "плавный спокойный переход"
+      ],
+      "props": {
+        "zoom": 2,
+        "intensity": 0.3,
+        "softness": 0.85,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "hyperdrive",
+      "label": "Hyperdrive",
+      "description": "A fast, deep plunge through crisp, high-contrast rings that hits with energy.",
+      "askedAs": [
+        "fast punchy zoom through",
+        "aggressive deep ripple dive",
+        "energetic warp transition",
+        "быстрый резкий зум",
+        "энергичный переход в глубину"
+      ],
+      "props": {
+        "zoom": 7,
+        "intensity": 0.9,
+        "softness": 0.15,
+        "speed": 2.5
+      }
+    },
+    {
+      "id": "ink-void",
+      "label": "Ink Void",
+      "description": "Pure black depths with sharp, moderate rings for a stark, cinematic dolly.",
+      "askedAs": [
+        "pitch black ripple zoom",
+        "dark cinematic tunnel",
+        "sharp moody rings",
+        "черный кинематографичный зум",
+        "темный туннель с кольцами"
+      ],
+      "props": {
+        "colorBack": "#050505",
+        "intensity": 0.65,
+        "softness": 0.25,
+        "zoom": 5
+      }
+    },
+    {
+      "id": "midnight-velvet",
+      "label": "Midnight Velvet",
+      "description": "Deep navy backdrop with plush, diffused ripples at an unhurried pace.",
+      "askedAs": [
+        "navy blue soft zoom",
+        "luxury velvet ripple",
+        "elegant dark blue transition",
+        "темно-синий бархатный переход",
+        "элегантный мягкий зум синий"
+      ],
+      "props": {
+        "colorBack": "#0f1a2e",
+        "softness": 0.75,
+        "intensity": 0.45,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "bone-paper",
+      "label": "Bone Paper",
+      "description": "A light, warm off-white field with faint grainy rings for an airy editorial feel.",
+      "askedAs": [
+        "light cream ripple zoom",
+        "bright minimal zoom transition",
+        "paper white grain rings",
+        "светлый бежевый зум",
+        "минималистичный светлый переход"
+      ],
+      "props": {
+        "colorBack": "#ede8df",
+        "intensity": 0.35,
+        "softness": 0.6,
+        "zoom": 3
+      }
+    },
+    {
+      "id": "oxblood-rush",
+      "label": "Oxblood Rush",
+      "description": "A rich burgundy backdrop with strong, quick rings for a bold dramatic reveal.",
+      "askedAs": [
+        "dark red dramatic zoom",
+        "burgundy ripple reveal",
+        "bold wine colored transition",
+        "бордовый драматичный зум",
+        "смелый красный переход"
+      ],
+      "props": {
+        "colorBack": "#2a0e12",
+        "intensity": 0.8,
+        "speed": 1.75,
+        "zoom": 6
+      }
+    }
+  ]
+}

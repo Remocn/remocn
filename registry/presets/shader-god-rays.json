@@ -1,0 +1,119 @@
+{
+  "component": "shader-god-rays",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "cathedral-dawn",
+      "label": "Cathedral Dawn",
+      "description": "Slow, dense, glowing shafts of light over a warm deep brown backdrop, like sunrise through stained glass.",
+      "askedAs": [
+        "slow warm light beams through a window",
+        "church light rays",
+        "soft sunrise god rays",
+        "тёплые лучи света как в соборе",
+        "медленные лучи рассвета"
+      ],
+      "props": {
+        "speed": 0.5,
+        "intensity": 1.1,
+        "density": 0.6,
+        "bloom": 0.7,
+        "colorBack": "#1c140f"
+      }
+    },
+    {
+      "id": "faint-haze",
+      "label": "Faint Haze",
+      "description": "Barely-there sparse rays drifting slowly over near-black, a quiet atmosphere for text.",
+      "askedAs": [
+        "subtle light rays behind title",
+        "very soft background glow",
+        "minimal haze rays",
+        "едва заметные лучи на фоне",
+        "тихий фон с дымкой"
+      ],
+      "props": {
+        "speed": 0.5,
+        "intensity": 0.35,
+        "density": 0.15,
+        "bloom": 0.2,
+        "colorBack": "#0b0b0f"
+      }
+    },
+    {
+      "id": "stage-burst",
+      "label": "Stage Burst",
+      "description": "Fast, bright, high-bloom beams with a punchy concert-lighting energy.",
+      "askedAs": [
+        "bright energetic light beams",
+        "concert spotlight rays",
+        "intense fast god rays",
+        "яркие быстрые лучи как на сцене",
+        "энергичные световые лучи"
+      ],
+      "props": {
+        "speed": 2.5,
+        "intensity": 1.7,
+        "density": 0.45,
+        "bloom": 0.9
+      }
+    },
+    {
+      "id": "deep-ocean",
+      "label": "Deep Ocean",
+      "description": "Dense, soft rays filtering down through a dark navy field like light underwater.",
+      "askedAs": [
+        "underwater light rays",
+        "blue ocean sunbeams",
+        "rays through deep water",
+        "подводные лучи света",
+        "лучи в тёмно-синей воде"
+      ],
+      "props": {
+        "speed": 0.75,
+        "intensity": 0.9,
+        "density": 0.75,
+        "bloom": 0.5,
+        "colorBack": "#08162a"
+      }
+    },
+    {
+      "id": "crisp-shafts",
+      "label": "Crisp Shafts",
+      "description": "Sharp, low-bloom rays with clear separation against a cool graphite background.",
+      "askedAs": [
+        "sharp defined light rays",
+        "clean rays without glow",
+        "crisp beams of light",
+        "чёткие лучи без свечения",
+        "резкие световые полосы"
+      ],
+      "props": {
+        "intensity": 1.2,
+        "density": 0.35,
+        "bloom": 0,
+        "colorBack": "#1a1d22"
+      }
+    },
+    {
+      "id": "velvet-plum",
+      "label": "Velvet Plum",
+      "description": "Moody, medium-paced rays glowing softly over a rich dark plum backdrop.",
+      "askedAs": [
+        "moody purple light rays",
+        "luxury dark rays background",
+        "elegant plum glow",
+        "лучи на фиолетовом фоне",
+        "элегантное сияние в сливовых тонах"
+      ],
+      "props": {
+        "speed": 1.25,
+        "intensity": 0.7,
+        "density": 0.4,
+        "bloom": 0.6,
+        "colorBack": "#1e1124"
+      }
+    }
+  ]
+}

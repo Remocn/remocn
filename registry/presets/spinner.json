@@ -1,0 +1,92 @@
+{
+  "component": "spinner",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "hairline-calm",
+      "label": "Hairline Calm",
+      "description": "A large, thin arc that turns slowly for a quiet, elegant wait.",
+      "askedAs": [
+        "thin slow spinner",
+        "elegant minimal loader",
+        "calm big loading ring",
+        "тонкий медленный спиннер",
+        "спокойный элегантный лоадер"
+      ],
+      "props": {
+        "size": 40,
+        "strokeWidth": 1,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "button-inline",
+      "label": "Button Inline",
+      "description": "A compact, quick spinner sized to sit beside button text.",
+      "askedAs": [
+        "small spinner for a button",
+        "tiny inline loader",
+        "spinner inside button",
+        "маленький спиннер в кнопке",
+        "крошечный загрузчик рядом с текстом"
+      ],
+      "props": {
+        "size": 14,
+        "strokeWidth": 2,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "bold-hero",
+      "label": "Bold Hero",
+      "description": "A big, chunky ring at steady pace that reads clearly as a centerpiece.",
+      "askedAs": [
+        "big thick loading spinner",
+        "large bold loader",
+        "hero loading indicator",
+        "большой толстый спиннер",
+        "крупный жирный индикатор загрузки"
+      ],
+      "props": {
+        "size": 64,
+        "strokeWidth": 6,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "rapid-fetch",
+      "label": "Rapid Fetch",
+      "description": "A medium spinner with a tight stroke that whips around for an urgent, busy feel.",
+      "askedAs": [
+        "fast spinning loader",
+        "quick busy spinner",
+        "urgent loading animation",
+        "быстрый спиннер",
+        "шустрая анимация загрузки"
+      ],
+      "props": {
+        "size": 24,
+        "strokeWidth": 1.5,
+        "speed": 3
+      }
+    },
+    {
+      "id": "soft-pulse",
+      "label": "Soft Pulse",
+      "description": "A mid-size, sturdy arc drifting very slowly for a relaxed, ambient loop.",
+      "askedAs": [
+        "very slow lazy spinner",
+        "ambient background loader",
+        "relaxed loading ring",
+        "очень медленный спиннер",
+        "ленивый фоновый лоадер"
+      ],
+      "props": {
+        "size": 32,
+        "strokeWidth": 3.5,
+        "speed": 0.25
+      }
+    }
+  ]
+}

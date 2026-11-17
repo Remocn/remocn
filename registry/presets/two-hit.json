@@ -1,0 +1,124 @@
+{
+  "component": "two-hit",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "punchy-fast",
+      "label": "Punchy Fast",
+      "description": "Heavy, oversized type that lands both hits in quick succession for a snappy social reel.",
+      "askedAs": [
+        "fast bold headline",
+        "quick punchy two-beat text",
+        "big heavy fast reveal",
+        "быстрый жирный заголовок",
+        "резкий крупный текст"
+      ],
+      "props": {
+        "fontWeight": 800,
+        "scale": 1.3,
+        "speed": 1.75,
+        "hitGap": 10,
+        "fontFamily": "Bricolage Grotesque"
+      }
+    },
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "A slow, elegant serif on warm paper with a terracotta second line, like a magazine premiere card.",
+      "askedAs": [
+        "elegant serif premiere card",
+        "slow classy magazine title",
+        "warm paper background headline",
+        "элегантный шрифт с засечками",
+        "медленный журнальный заголовок"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "background": "#f4efe6",
+        "ink": "#1c1a17",
+        "accent": "#b4532a",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "terminal-mono",
+      "label": "Terminal Mono",
+      "description": "Monospaced green-on-charcoal text with a tight, mechanical beat for dev launches.",
+      "askedAs": [
+        "code style release text",
+        "monospace terminal headline",
+        "developer launch announcement",
+        "моноширинный шрифт как в терминале",
+        "заголовок в стиле кода"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0f1412",
+        "ink": "#d7e3dc",
+        "accent": "#4fbf7f",
+        "scale": 0.85,
+        "hitGap": 14
+      }
+    },
+    {
+      "id": "clean-light",
+      "label": "Clean Light",
+      "description": "Crisp light theme with medium Inter and a deep indigo accent for a calm product update.",
+      "askedAs": [
+        "white background clean title",
+        "minimal light product update",
+        "simple bright announcement",
+        "светлый минималистичный заголовок",
+        "чистый белый фон"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "fontWeight": 500,
+        "accent": "#3b4fd8"
+      }
+    },
+    {
+      "id": "slow-teaser",
+      "label": "Slow Teaser",
+      "description": "Thin, small type that waits, then lingers long between beats for a suspenseful premiere tease.",
+      "askedAs": [
+        "slow dramatic teaser",
+        "suspenseful premiere reveal",
+        "thin lingering text",
+        "медленный интригующий тизер",
+        "драматичная пауза между строками"
+      ],
+      "props": {
+        "fontWeight": 200,
+        "scale": 0.8,
+        "speed": 0.5,
+        "hitGap": 48,
+        "delay": 20,
+        "accent": "#c9a86a"
+      }
+    },
+    {
+      "id": "midnight-grotesk",
+      "label": "Midnight Grotesk",
+      "description": "Bold Space Grotesk on deep navy with a soft coral second hit for a modern social card.",
+      "askedAs": [
+        "navy background bold title",
+        "coral accent social card",
+        "modern grotesk announcement",
+        "тёмно-синий фон с коралловым",
+        "современный жирный гротеск"
+      ],
+      "props": {
+        "fontFamily": "Space Grotesk",
+        "fontWeight": 700,
+        "background": "#101a33",
+        "ink": "#eef1f7",
+        "accent": "#ff8a6b",
+        "scale": 1.1
+      }
+    }
+  ]
+}

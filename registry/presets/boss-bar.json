@@ -1,0 +1,120 @@
+{
+  "component": "boss-bar",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "arcade-crimson",
+      "label": "Arcade Crimson",
+      "description": "Classic dark arcade look with a blood-red bar and rapid-fire hits.",
+      "askedAs": [
+        "red retro game boss bar",
+        "fast arcade style health bar",
+        "dark mode with red hp bar",
+        "аркадный красный бар босса",
+        "быстрые удары в стиле ретро-игры"
+      ],
+      "props": {
+        "accent": "#e5484d",
+        "hitGap": 14,
+        "speed": 1.5,
+        "fontFamily": "JetBrains Mono"
+      }
+    },
+    {
+      "id": "slow-epic",
+      "label": "Epic Showdown",
+      "description": "A slow, weighty fight with large type and long pauses between heavy hits.",
+      "askedAs": [
+        "dramatic slow boss fight",
+        "make the hits feel heavy and cinematic",
+        "bigger and slower boss bar",
+        "эпичная медленная битва с боссом",
+        "крупный бар с тяжёлыми ударами"
+      ],
+      "props": {
+        "hitGap": 48,
+        "speed": 0.75,
+        "scale": 1.3,
+        "accent": "#d4a72c",
+        "fontFamily": "Bricolage Grotesque"
+      }
+    },
+    {
+      "id": "paper-light",
+      "label": "Paper Light",
+      "description": "A clean light layout with warm off-white paper, dark ink and a forest-green bar.",
+      "askedAs": [
+        "light version of the boss bar",
+        "clean minimal white background",
+        "boss bar for a light slide deck",
+        "светлая версия бара босса",
+        "минималистичный светлый стиль"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f6f3ec",
+        "ink": "#1c1b19",
+        "accent": "#2f7d4f",
+        "fontFamily": "Inter"
+      }
+    },
+    {
+      "id": "storybook-serif",
+      "label": "Storybook",
+      "description": "A whimsical serif take on deep plum with a soft rose bar, like a fairy-tale villain.",
+      "askedAs": [
+        "elegant serif boss battle",
+        "storybook fairy tale villain bar",
+        "soft purple fantasy look",
+        "сказочный стиль с засечками",
+        "фиолетовый элегантный бар злодея"
+      ],
+      "props": {
+        "background": "#221a2e",
+        "ink": "#f3eaf5",
+        "accent": "#e58fb0",
+        "fontFamily": "Fraunces",
+        "hitGap": 34
+      }
+    },
+    {
+      "id": "speedrun",
+      "label": "Speedrun",
+      "description": "A compact, ultra-fast sequence where the boss melts in a flurry of quick hits.",
+      "askedAs": [
+        "super quick boss bar",
+        "speedrun style fast defeat",
+        "small and snappy hp bar",
+        "очень быстрый спидран босса",
+        "компактный быстрый бар"
+      ],
+      "props": {
+        "speed": 2.5,
+        "hitGap": 10,
+        "scale": 0.8,
+        "accent": "#14b8a6",
+        "fontFamily": "Space Grotesk"
+      }
+    },
+    {
+      "id": "midnight-delayed",
+      "label": "Midnight Entrance",
+      "description": "A navy night palette with an amber bar that waits a beat before the fight begins.",
+      "askedAs": [
+        "boss bar that starts after a pause",
+        "navy blue with orange health bar",
+        "delayed entrance boss fight",
+        "бар босса с задержкой появления",
+        "тёмно-синий с оранжевой полосой"
+      ],
+      "props": {
+        "background": "#0e1626",
+        "ink": "#e8edf5",
+        "accent": "#f59e0b",
+        "delay": 30,
+        "fontFamily": "Manrope"
+      }
+    }
+  ]
+}

@@ -1,0 +1,92 @@
+{
+  "component": "shader-mesh-gradient-aurora",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "still-night",
+      "label": "Still Night",
+      "description": "A slow, calm drift with soft, barely bending ribbons for a quiet backdrop.",
+      "askedAs": [
+        "slow calm aurora background",
+        "subtle gentle gradient motion",
+        "quiet dark backdrop barely moving",
+        "медленное спокойное сияние",
+        "тихий фон почти без движения"
+      ],
+      "props": {
+        "speed": 0.25,
+        "distortion": 0.4,
+        "swirl": 0.3
+      }
+    },
+    {
+      "id": "solar-storm",
+      "label": "Solar Storm",
+      "description": "Fast, heavily warped ribbons that twist hard for an energetic launch moment.",
+      "askedAs": [
+        "fast intense aurora",
+        "energetic swirling gradient",
+        "dramatic high motion background",
+        "быстрое бурное северное сияние",
+        "энергичный закрученный градиент"
+      ],
+      "props": {
+        "speed": 3,
+        "distortion": 1.5,
+        "swirl": 1
+      }
+    },
+    {
+      "id": "silk-curtains",
+      "label": "Silk Curtains",
+      "description": "Long, smooth ribbons with no swirl that sway like hanging fabric at an easy pace.",
+      "askedAs": [
+        "smooth flowing ribbons no swirl",
+        "soft silky aurora waves",
+        "clean flowing gradient curtains",
+        "плавные шелковые ленты",
+        "мягкие волны без закручивания"
+      ],
+      "props": {
+        "speed": 0.75,
+        "distortion": 0.7,
+        "swirl": 0
+      }
+    },
+    {
+      "id": "deep-vortex",
+      "label": "Deep Vortex",
+      "description": "Tight, hypnotic whirlpools turning slowly with minimal warping.",
+      "askedAs": [
+        "slow hypnotic swirl",
+        "whirlpool gradient background",
+        "spiral aurora effect",
+        "гипнотический медленный вихрь",
+        "спиральный фон градиента"
+      ],
+      "props": {
+        "speed": 0.5,
+        "distortion": 0.25,
+        "swirl": 1
+      }
+    },
+    {
+      "id": "data-pulse",
+      "label": "Data Pulse",
+      "description": "Brisk, moderately warped flow with light swirl that feels like streaming data.",
+      "askedAs": [
+        "upbeat tech gradient motion",
+        "lively flowing data background",
+        "quick but clean aurora",
+        "бодрый технологичный фон",
+        "живой поток данных градиент"
+      ],
+      "props": {
+        "speed": 2,
+        "distortion": 0.6,
+        "swirl": 0.4
+      }
+    }
+  ]
+}

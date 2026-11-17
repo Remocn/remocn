@@ -1,0 +1,117 @@
+{
+  "component": "word-push",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "slow-luxe",
+      "label": "Slow Luxe",
+      "description": "Large, light type that drifts in at an unhurried, even pace for a refined closing line.",
+      "askedAs": [
+        "slow elegant tagline",
+        "luxury calm word build",
+        "gentle premium ending text",
+        "медленный элегантный слоган",
+        "спокойное премиальное появление слов"
+      ],
+      "props": {
+        "fontSize": 96,
+        "wordGap": 22,
+        "accel": 1,
+        "speed": 0.75,
+        "color": "#2b2622"
+      }
+    },
+    {
+      "id": "punchy-bold",
+      "label": "Punchy Bold",
+      "description": "Heavy, compact type where words slam in fast and the rhythm tightens sharply.",
+      "askedAs": [
+        "fast bold word push",
+        "energetic punchy tagline",
+        "aggressive accelerating words",
+        "быстрые жирные слова",
+        "энергичный слоган с ускорением"
+      ],
+      "props": {
+        "fontWeight": "700",
+        "wordGap": 6,
+        "accel": 0.6,
+        "speed": 1.5,
+        "fontSize": 84
+      }
+    },
+    {
+      "id": "voiceover-steady",
+      "label": "Voiceover Steady",
+      "description": "Medium-weight text with a constant word cadence that tracks natural speech.",
+      "askedAs": [
+        "words timed to narration",
+        "steady pace for voiceover",
+        "even rhythm subtitle line",
+        "слова под озвучку",
+        "ровный темп под голос"
+      ],
+      "props": {
+        "wordGap": 14,
+        "accel": 1,
+        "fontWeight": "500",
+        "fontSize": 64
+      }
+    },
+    {
+      "id": "midnight-ink",
+      "label": "Midnight Ink",
+      "description": "Deep navy semibold lettering with a moderate, gently quickening build.",
+      "askedAs": [
+        "navy blue tagline",
+        "dark blue corporate words",
+        "classy blue text push",
+        "тёмно-синий слоган",
+        "синий текст премиум"
+      ],
+      "props": {
+        "color": "#1e2a44",
+        "fontWeight": "600",
+        "wordGap": 12,
+        "accel": 0.9
+      }
+    },
+    {
+      "id": "giant-statement",
+      "label": "Giant Statement",
+      "description": "Oversized bold headline that fills the frame with a deliberate, weighty push.",
+      "askedAs": [
+        "huge headline words",
+        "big statement closing line",
+        "massive text build",
+        "огромный заголовок",
+        "крупный финальный текст"
+      ],
+      "props": {
+        "fontSize": 140,
+        "fontWeight": "700",
+        "wordGap": 18,
+        "accel": 0.85
+      }
+    },
+    {
+      "id": "quiet-whisper",
+      "label": "Quiet Whisper",
+      "description": "Small, soft gray type that builds quickly and discreetly like a subtle caption.",
+      "askedAs": [
+        "small subtle caption",
+        "soft gray quick text",
+        "understated tagline",
+        "маленькая тихая подпись",
+        "серый ненавязчивый текст"
+      ],
+      "props": {
+        "fontSize": 40,
+        "color": "#6b6b6b",
+        "wordGap": 8,
+        "speed": 1.25
+      }
+    }
+  ]
+}

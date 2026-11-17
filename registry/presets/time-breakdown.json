@@ -1,0 +1,106 @@
+{
+  "component": "time-breakdown",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "clean-light-report",
+      "label": "Clean Report",
+      "description": "A crisp light layout with a calm teal accent and no grain, like a polished analytics slide.",
+      "askedAs": [
+        "light clean version for a report",
+        "white background corporate look",
+        "minimal bright dashboard style",
+        "светлая чистая версия",
+        "как слайд из отчёта"
+      ],
+      "props": {
+        "theme": "light",
+        "accent": "#0f8b8d",
+        "fontFamily": "Inter",
+        "grain": false,
+        "radius": 6
+      }
+    },
+    {
+      "id": "terminal-mono",
+      "label": "Terminal Mono",
+      "description": "Square bars, monospace digits and a soft green accent on near-black for a technical, dev-tool feel.",
+      "askedAs": [
+        "make it look like a terminal",
+        "monospace dev tool style",
+        "hacker console vibe",
+        "как в терминале",
+        "моноширинный шрифт для разработчиков"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "radius": 0,
+        "accent": "#4ade80",
+        "background": "#0b0f0c",
+        "ink": "#d7e5da",
+        "stagger": 6
+      }
+    },
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "Warm cream paper with a serif face and a terracotta accent, paced slowly like a magazine feature.",
+      "askedAs": [
+        "elegant magazine style",
+        "serif editorial look",
+        "warm and slow classy version",
+        "журнальный стиль с засечками",
+        "элегантно и неспешно"
+      ],
+      "props": {
+        "fontFamily": "Fraunces",
+        "background": "#f4ede1",
+        "ink": "#2a211b",
+        "accent": "#c0583a",
+        "speed": 0.75,
+        "radius": 20
+      }
+    },
+    {
+      "id": "punchy-fast",
+      "label": "Punchy Fast",
+      "description": "A large, quick reveal with pill-shaped bars and a vivid orange accent for social cuts.",
+      "askedAs": [
+        "fast punchy version for reels",
+        "make it big and quick",
+        "energetic social media style",
+        "быстро и крупно",
+        "динамичная версия для соцсетей"
+      ],
+      "props": {
+        "speed": 2,
+        "scale": 1.25,
+        "radius": 40,
+        "accent": "#ff6a3d",
+        "fontFamily": "Bricolage Grotesque",
+        "stagger": 1
+      }
+    },
+    {
+      "id": "midnight-violet",
+      "label": "Midnight Violet",
+      "description": "A deep navy canvas with a muted violet accent and a gentle delayed entrance for a premium tone.",
+      "askedAs": [
+        "dark premium purple look",
+        "navy and violet style",
+        "subtle luxury tech vibe",
+        "тёмно-синий премиальный стиль",
+        "фиолетовый акцент на тёмном"
+      ],
+      "props": {
+        "background": "#0e1226",
+        "ink": "#e6e8f5",
+        "accent": "#8b7cf6",
+        "fontFamily": "Geist",
+        "delay": 15,
+        "scale": 0.9
+      }
+    }
+  ]
+}

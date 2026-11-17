@@ -1,0 +1,92 @@
+{
+  "component": "shader-mesh-gradient-mint",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "still-breeze",
+      "label": "Still Breeze",
+      "description": "A barely moving, softly blended wash that feels calm and almost static behind text.",
+      "askedAs": [
+        "slow calm mint background",
+        "very subtle gradient movement",
+        "gentle quiet backdrop",
+        "спокойный медленный мятный фон",
+        "почти неподвижный градиент"
+      ],
+      "props": {
+        "speed": 0.25,
+        "distortion": 0.3,
+        "swirl": 0.05
+      }
+    },
+    {
+      "id": "fresh-current",
+      "label": "Fresh Current",
+      "description": "Brisk, flowing motion with lively distortion for an energetic, upbeat intro.",
+      "askedAs": [
+        "faster energetic mint gradient",
+        "lively flowing background",
+        "upbeat moving pastel colors",
+        "быстрый живой градиент",
+        "энергичный мятный фон"
+      ],
+      "props": {
+        "speed": 2.5,
+        "distortion": 1.1,
+        "swirl": 0.3
+      }
+    },
+    {
+      "id": "mint-whirl",
+      "label": "Mint Whirl",
+      "description": "Strong swirling eddies twist the mint and sky tones into a marbled, liquid pattern.",
+      "askedAs": [
+        "swirly marble mint look",
+        "twisting liquid gradient",
+        "more whirlpool motion",
+        "закрученный мраморный градиент",
+        "вихревой мятный фон"
+      ],
+      "props": {
+        "speed": 1.25,
+        "distortion": 1,
+        "swirl": 0.85
+      }
+    },
+    {
+      "id": "clean-bands",
+      "label": "Clean Bands",
+      "description": "Low distortion keeps the colours in smooth, orderly bands for a minimal, corporate feel.",
+      "askedAs": [
+        "smooth minimal gradient",
+        "less wavy cleaner background",
+        "simple soft color bands",
+        "минималистичный ровный градиент",
+        "чистый фон без волн"
+      ],
+      "props": {
+        "distortion": 0.1,
+        "swirl": 0,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "spring-ripple",
+      "label": "Spring Ripple",
+      "description": "Maximum distortion at an easy pace creates rich, organic ripples across the pastel field.",
+      "askedAs": [
+        "organic rippling mint texture",
+        "wavy dreamy pastel backdrop",
+        "more warped gradient shapes",
+        "волнистый пастельный фон",
+        "органичная рябь градиента"
+      ],
+      "props": {
+        "distortion": 1.5,
+        "speed": 0.5,
+        "swirl": 0.45
+      }
+    }
+  ]
+}

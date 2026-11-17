@@ -1,0 +1,103 @@
+{
+  "component": "cta-collapse-mark",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-ember",
+      "label": "Editorial Ember",
+      "description": "A slow, serif sign-off glowing over a warm ember horizon with copper accents.",
+      "askedAs": [
+        "warm elegant serif ending",
+        "slow cinematic logo outro",
+        "luxury warm call to action",
+        "тёплая элегантная концовка",
+        "медленный кинематографичный финал"
+      ],
+      "props": {
+        "ground": "ember",
+        "fontFamily": "Instrument Serif",
+        "accent": "#e07a4b",
+        "speed": 0.75,
+        "stagger": 4
+      }
+    },
+    {
+      "id": "paper-light",
+      "label": "Paper Light",
+      "description": "A clean light theme on a soft paper ground with a crisp ink-blue accent.",
+      "askedAs": [
+        "light minimal outro",
+        "white background call to action",
+        "clean bright ending",
+        "светлая минималистичная концовка",
+        "белый фон для призыва"
+      ],
+      "props": {
+        "theme": "light",
+        "ground": "paper-crease",
+        "fontFamily": "Inter",
+        "accent": "#1f3fd1",
+        "ink": "#14161c"
+      }
+    },
+    {
+      "id": "snappy-terminal",
+      "label": "Snappy Terminal",
+      "description": "A fast, monospaced developer sign-off over a cold cyan drift.",
+      "askedAs": [
+        "fast tech ending",
+        "developer style outro",
+        "quick mono font logo reveal",
+        "быстрая техничная концовка",
+        "моноширинный шрифт для финала"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "ground": "cyan-drift",
+        "accent": "#3fb8c9",
+        "speed": 1.75,
+        "stagger": 1
+      }
+    },
+    {
+      "id": "velvet-statement",
+      "label": "Velvet Statement",
+      "description": "An oversized, deliberate headline over a deep violet velvet glow.",
+      "askedAs": [
+        "big bold purple outro",
+        "large text dramatic finish",
+        "premium violet call to action",
+        "крупный фиолетовый финал",
+        "большой драматичный призыв"
+      ],
+      "props": {
+        "ground": "velvet-hour",
+        "fontFamily": "Bricolage Grotesque",
+        "accent": "#8b6cf0",
+        "scale": 1.3,
+        "stagger": 6,
+        "delay": 12
+      }
+    },
+    {
+      "id": "lunar-quiet",
+      "label": "Lunar Quiet",
+      "description": "A small, restrained grayscale sign-off over a pale lunar horizon.",
+      "askedAs": [
+        "subtle monochrome ending",
+        "quiet understated outro",
+        "small gray logo finish",
+        "спокойная монохромная концовка",
+        "сдержанный серый финал"
+      ],
+      "props": {
+        "ground": "lunar",
+        "fontFamily": "Geist",
+        "accent": "#a7b0be",
+        "scale": 0.8,
+        "speed": 0.75
+      }
+    }
+  ]
+}

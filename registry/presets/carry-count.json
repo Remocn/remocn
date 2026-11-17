@@ -1,0 +1,124 @@
+{
+  "component": "carry-count",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "ledger-paper",
+      "label": "Ledger Paper",
+      "description": "A clean light ledger look with Geist numerals on warm off-white and a muted rust carry disc.",
+      "askedAs": [
+        "light accounting style counter",
+        "clean paper tally numbers",
+        "bookkeeping look for a stat",
+        "светлый счётчик как в бухгалтерской книге",
+        "чистый бумажный стиль цифр"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Geist",
+        "background": "#f6f3ee",
+        "ink": "#1e1d1b",
+        "accent": "#b5562e",
+        "fontWeight": 600
+      }
+    },
+    {
+      "id": "slow-tally",
+      "label": "Slow Tally",
+      "description": "An unhurried serif count that rolls over in many small chunks for a calm, deliberate build.",
+      "askedAs": [
+        "slow counting number animation",
+        "gentle step by step tally",
+        "calm elegant counter",
+        "медленный плавный счётчик",
+        "спокойный подсчёт по шагам"
+      ],
+      "props": {
+        "steps": 10,
+        "speed": 0.5,
+        "fontFamily": "Fraunces",
+        "fontWeight": 400
+      }
+    },
+    {
+      "id": "quick-snap",
+      "label": "Quick Snap",
+      "description": "A punchy, oversized grotesk counter that jumps in a few fast chunks.",
+      "askedAs": [
+        "fast punchy number jump",
+        "big bold quick counter",
+        "snappy stat reveal",
+        "быстрый резкий счётчик",
+        "крупные цифры с быстрым скачком"
+      ],
+      "props": {
+        "steps": 3,
+        "speed": 2,
+        "fontFamily": "Space Grotesk",
+        "fontWeight": 700,
+        "scale": 1.2
+      }
+    },
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "A magazine-style light layout with refined Instrument Serif figures and a deep green accent.",
+      "askedAs": [
+        "elegant magazine number",
+        "serif stat for editorial video",
+        "classy light counter",
+        "элегантные цифры как в журнале",
+        "изящный счётчик с засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "fontWeight": 400,
+        "background": "#f4f1ea",
+        "ink": "#1c1b19",
+        "accent": "#2f5d50"
+      }
+    },
+    {
+      "id": "night-terminal",
+      "label": "Night Terminal",
+      "description": "A developer-flavoured dark screen with monospaced digits and a soft green carry disc.",
+      "askedAs": [
+        "code terminal style counter",
+        "monospace dark stat",
+        "hacker look number tally",
+        "счётчик в стиле терминала",
+        "моноширинные цифры на тёмном фоне"
+      ],
+      "props": {
+        "theme": "dark",
+        "fontFamily": "JetBrains Mono",
+        "background": "#0e1116",
+        "ink": "#e6edf3",
+        "accent": "#3fb68b",
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "heavy-amber",
+      "label": "Heavy Amber",
+      "description": "A heavy, large display counter on warm charcoal with an amber carry accent.",
+      "askedAs": [
+        "huge bold warm number",
+        "heavy stat with orange accent",
+        "chunky impactful counter",
+        "огромные жирные цифры",
+        "тёплый тёмный счётчик с янтарным акцентом"
+      ],
+      "props": {
+        "fontFamily": "Bricolage Grotesque",
+        "fontWeight": 800,
+        "scale": 1.3,
+        "background": "#161412",
+        "ink": "#f5efe6",
+        "accent": "#f2a541"
+      }
+    }
+  ]
+}

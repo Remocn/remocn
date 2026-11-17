@@ -1,0 +1,87 @@
+{
+  "component": "drawer",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "slow-reveal",
+      "label": "Slow Reveal",
+      "description": "The sheet glides up gently at half speed for a calm, deliberate opening.",
+      "askedAs": [
+        "slow drawer opening",
+        "gentle bottom sheet slide up",
+        "calm sheet reveal",
+        "медленное открытие шторки",
+        "плавно выезжающая нижняя панель"
+      ],
+      "props": {
+        "state": "opened",
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "snappy-open",
+      "label": "Snappy Open",
+      "description": "A quick, punchy slide-up that feels like a responsive native app.",
+      "askedAs": [
+        "fast bottom sheet",
+        "quick drawer pop up",
+        "snappy mobile sheet open",
+        "быстрое открытие шторки",
+        "резкая нижняя панель"
+      ],
+      "props": {
+        "state": "opened",
+        "speed": 2
+      }
+    },
+    {
+      "id": "soft-dismiss",
+      "label": "Soft Dismiss",
+      "description": "The sheet slides back down slowly while the backdrop gently clears.",
+      "askedAs": [
+        "slow drawer close",
+        "bottom sheet sliding down",
+        "gentle dismiss of tray",
+        "медленное закрытие шторки",
+        "панель плавно уезжает вниз"
+      ],
+      "props": {
+        "state": "closed",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "swipe-away",
+      "label": "Swipe Away",
+      "description": "A brisk close that mimics a fast swipe-down gesture.",
+      "askedAs": [
+        "fast close bottom sheet",
+        "swipe down drawer quickly",
+        "quick dismiss tray",
+        "быстро закрыть шторку",
+        "смахнуть нижнюю панель"
+      ],
+      "props": {
+        "state": "closed",
+        "speed": 2.5
+      }
+    },
+    {
+      "id": "cinematic-rise",
+      "label": "Cinematic Rise",
+      "description": "An ultra-slow, dramatic rise suited to hero shots and product walkthroughs.",
+      "askedAs": [
+        "very slow sheet animation",
+        "dramatic drawer slide",
+        "slow motion bottom panel",
+        "очень медленная шторка",
+        "кинематографичное появление панели"
+      ],
+      "props": {
+        "state": "opened",
+        "speed": 0.25
+      }
+    }
+  ]
+}

@@ -1,0 +1,124 @@
+{
+  "component": "bubble-pack",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "paper-report",
+      "label": "Paper Report",
+      "description": "A calm light editorial look with serif type, warm paper background and a deep green hero bubble.",
+      "askedAs": [
+        "light editorial bubble chart",
+        "calm report style on paper",
+        "serif look like a magazine infographic",
+        "светлый журнальный стиль",
+        "спокойный отчёт на бумаге"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4f1ea",
+        "ink": "#1c1b19",
+        "accent": "#2f6b4f",
+        "fontFamily": "Fraunces",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "rapid-pop",
+      "label": "Rapid Pop",
+      "description": "Bubbles burst in fast and almost together with a bold coral hero and heavy grotesque type.",
+      "askedAs": [
+        "fast punchy bubbles",
+        "quick pop-in for social",
+        "energetic bold version",
+        "быстрое появление пузырей",
+        "энергичный яркий вариант"
+      ],
+      "props": {
+        "speed": 2,
+        "stagger": 1,
+        "accent": "#ff5a4e",
+        "fontWeight": 800,
+        "fontFamily": "Space Grotesk"
+      }
+    },
+    {
+      "id": "terminal-data",
+      "label": "Terminal Data",
+      "description": "A clean grain-free dark slate with monospace labels and a cool teal hero bubble.",
+      "askedAs": [
+        "techy monospace data look",
+        "developer dashboard style",
+        "clean dark terminal chart",
+        "моноширинный технический стиль",
+        "тёмный дашборд без зерна"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0e1116",
+        "ink": "#d6dee6",
+        "accent": "#2bb3a3",
+        "grain": false,
+        "fontWeight": 400
+      }
+    },
+    {
+      "id": "slow-reveal",
+      "label": "Slow Reveal",
+      "description": "A patient, cinematic build where bubbles unfold one by one after a pause with a strong highlight on the hero.",
+      "askedAs": [
+        "slow dramatic bubble reveal",
+        "cinematic build up one by one",
+        "give it a pause then grow slowly",
+        "медленное драматичное появление",
+        "кинематографичный неспешный вариант"
+      ],
+      "props": {
+        "speed": 0.5,
+        "stagger": 10,
+        "delay": 20,
+        "highlight": 7,
+        "accent": "#8b6cf6"
+      }
+    },
+    {
+      "id": "minimal-light",
+      "label": "Minimal Light",
+      "description": "A crisp white, grain-free layout with light Inter type, slightly smaller scale and a quiet blue accent.",
+      "askedAs": [
+        "minimal clean white version",
+        "airy light corporate look",
+        "simple modern bubble chart",
+        "минималистичный белый вариант",
+        "чистый светлый корпоративный стиль"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "fontWeight": 300,
+        "grain": false,
+        "scale": 0.85,
+        "accent": "#2f5bd3"
+      }
+    },
+    {
+      "id": "hero-focus",
+      "label": "Hero Focus",
+      "description": "An enlarged, heavy-weight composition with maximum highlight so the dominant amber bubble owns the frame.",
+      "askedAs": [
+        "make the big bubble stand out",
+        "zoomed in hero category",
+        "emphasize the winner bubble",
+        "выделить главный пузырь",
+        "крупный акцент на лидере"
+      ],
+      "props": {
+        "scale": 1.3,
+        "highlight": 10,
+        "fontWeight": 700,
+        "accent": "#e8a23a",
+        "fontFamily": "Manrope"
+      }
+    }
+  ]
+}

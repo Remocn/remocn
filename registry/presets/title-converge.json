@@ -1,0 +1,123 @@
+{
+  "component": "title-converge",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "cinematic-slow",
+      "label": "Cinematic Slow",
+      "description": "A long, deep pull-back on a near-black ground with a warm gold accent and film grain.",
+      "askedAs": [
+        "slow movie trailer title",
+        "dramatic pull back logo reveal",
+        "epic cinematic opener",
+        "медленная кинематографичная заставка",
+        "эпичное появление логотипа"
+      ],
+      "props": {
+        "converge": 160,
+        "zoom": 8,
+        "background": "#0b0b0d",
+        "ink": "#f2ede4",
+        "accent": "#c9a45c",
+        "grain": true
+      }
+    },
+    {
+      "id": "editorial-paper",
+      "label": "Editorial Paper",
+      "description": "A light, print-like card with charcoal type, a deep red rule and no grain.",
+      "askedAs": [
+        "magazine style title",
+        "clean light editorial heading",
+        "print look title card",
+        "титул в стиле журнала",
+        "светлая редакционная заставка"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f5f1ea",
+        "ink": "#1c1c1c",
+        "accent": "#a3312a",
+        "grain": false,
+        "zoom": 2
+      }
+    },
+    {
+      "id": "quick-snap",
+      "label": "Quick Snap",
+      "description": "A fast, punchy convergence with a shallow zoom for short social cuts.",
+      "askedAs": [
+        "fast logo snap",
+        "quick title for reels",
+        "snappy short intro",
+        "быстрая заставка с логотипом",
+        "короткое резкое появление"
+      ],
+      "props": {
+        "converge": 60,
+        "zoom": 2.5,
+        "speed": 1.5,
+        "grain": false
+      }
+    },
+    {
+      "id": "midnight-navy",
+      "label": "Midnight Navy",
+      "description": "Deep navy backdrop with soft ice-blue type and a teal rule, slightly larger lettering.",
+      "askedAs": [
+        "dark blue tech launch title",
+        "navy corporate intro",
+        "calm blue logo reveal",
+        "тёмно-синяя заставка",
+        "логотип на синем фоне"
+      ],
+      "props": {
+        "background": "#0e1a2b",
+        "ink": "#e6eef7",
+        "accent": "#3fb8af",
+        "scale": 1.2,
+        "converge": 110
+      }
+    },
+    {
+      "id": "minimal-mono",
+      "label": "Minimal Mono",
+      "description": "A restrained black-on-white monochrome with small type, gray rules and a short held pause.",
+      "askedAs": [
+        "minimal black and white title",
+        "simple monochrome logo",
+        "understated clean intro",
+        "минималистичная чёрно-белая заставка",
+        "простой монохромный титр"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#ffffff",
+        "ink": "#111111",
+        "accent": "#8a8a8a",
+        "scale": 0.8,
+        "delay": 20
+      }
+    },
+    {
+      "id": "forest-dusk",
+      "label": "Forest Dusk",
+      "description": "A dark green ground with cream type and a sage rule, unfolding at a gentle half speed.",
+      "askedAs": [
+        "earthy green title card",
+        "natural organic brand intro",
+        "slow calm green opener",
+        "зелёная природная заставка",
+        "спокойный титр в тёмно-зелёном"
+      ],
+      "props": {
+        "background": "#14231c",
+        "ink": "#efe9da",
+        "accent": "#9db88a",
+        "speed": 0.75,
+        "zoom": 4
+      }
+    }
+  ]
+}

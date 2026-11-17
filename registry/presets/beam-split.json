@@ -1,0 +1,106 @@
+{
+  "component": "beam-split",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "gallery-light",
+      "label": "Gallery Light",
+      "description": "A bright paper-white canvas with deep ink type and a warm terracotta beam, calm and editorial.",
+      "askedAs": [
+        "light version with warm accent",
+        "clean white editorial look",
+        "museum style bright reveal",
+        "светлый вариант с тёплым акцентом",
+        "белый фон как в журнале"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f5f1ea",
+        "ink": "#1c1a17",
+        "accent": "#c4572f",
+        "innerColor": "#8a3a1f",
+        "grain": false
+      }
+    },
+    {
+      "id": "gold-noir",
+      "label": "Gold Noir",
+      "description": "Near-black backdrop with a champagne gold beam and soft ivory type for a luxury feel.",
+      "askedAs": [
+        "black and gold luxury",
+        "premium gold reveal",
+        "elegant dark with gold light",
+        "чёрный с золотом",
+        "люксовый золотой вариант"
+      ],
+      "props": {
+        "background": "#0b0a09",
+        "ink": "#f3ede1",
+        "accent": "#c9a45c",
+        "innerColor": "#e8d3a3",
+        "speed": 0.75,
+        "hold": 48
+      }
+    },
+    {
+      "id": "slow-cinema",
+      "label": "Slow Cinema",
+      "description": "A slow, drawn-out split with a long hold and a large serif headline, like a film title card.",
+      "askedAs": [
+        "slow cinematic title",
+        "make it dramatic and slow",
+        "movie title card feel",
+        "медленно и кинематографично",
+        "как титры в фильме"
+      ],
+      "props": {
+        "speed": 0.5,
+        "hold": 80,
+        "scale": 1.2,
+        "fontFamily": "Fraunces",
+        "delay": 12
+      }
+    },
+    {
+      "id": "snap-tech",
+      "label": "Snap Tech",
+      "description": "A fast, crisp split in monospace with a cool cyan beam on graphite, built for punchy tech reveals.",
+      "askedAs": [
+        "fast techy version",
+        "quick snappy reveal",
+        "developer style monospace",
+        "быстрый технологичный вариант",
+        "моноширинный шрифт и быстро"
+      ],
+      "props": {
+        "speed": 2,
+        "hold": 16,
+        "fontFamily": "JetBrains Mono",
+        "background": "#14171c",
+        "ink": "#e6edf3",
+        "accent": "#3fb8c9"
+      }
+    },
+    {
+      "id": "forest-quiet",
+      "label": "Forest Quiet",
+      "description": "A deep green backdrop with a sage beam and soft cream type at a compact, understated scale.",
+      "askedAs": [
+        "green calm look",
+        "understated natural palette",
+        "smaller and quieter",
+        "спокойный зелёный вариант",
+        "сдержанно и поменьше"
+      ],
+      "props": {
+        "background": "#13221c",
+        "ink": "#eae6d8",
+        "accent": "#8fb39a",
+        "innerColor": "#d7e6da",
+        "scale": 0.8,
+        "fontFamily": "Manrope"
+      }
+    }
+  ]
+}

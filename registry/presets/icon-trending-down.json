@@ -1,0 +1,99 @@
+{
+  "component": "icon-trending-down",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "bold-alert",
+      "label": "Bold Alert",
+      "description": "A large, heavy-stroked muted red arrow that draws in and dips at a brisk pace.",
+      "askedAs": [
+        "big red falling arrow",
+        "thick downward trend icon warning",
+        "bold decline indicator",
+        "крупная красная стрелка вниз",
+        "жирная иконка падения"
+      ],
+      "props": {
+        "size": 120,
+        "color": "#c2410c",
+        "strokeWidth": 2.75,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "fine-line",
+      "label": "Fine Line",
+      "description": "A thin slate-grey line that slowly draws itself in, calm and editorial.",
+      "askedAs": [
+        "thin elegant trending down icon",
+        "slow line drawing arrow down",
+        "minimal hairline decline icon",
+        "тонкая линия тренд вниз",
+        "медленная отрисовка иконки"
+      ],
+      "props": {
+        "animation": "draw",
+        "strokeWidth": 1.25,
+        "color": "#475569",
+        "speed": 0.5,
+        "size": 96
+      }
+    },
+    {
+      "id": "ticker-loop",
+      "label": "Ticker Loop",
+      "description": "A compact crimson arrow that repeatedly dips like a live market ticker.",
+      "askedAs": [
+        "looping stock drop icon",
+        "repeating downward arrow animation",
+        "small live market decline",
+        "зацикленная стрелка падения акций",
+        "повторяющаяся анимация вниз"
+      ],
+      "props": {
+        "animation": "action",
+        "loop": true,
+        "color": "#b91c1c",
+        "size": 32,
+        "speed": 1.25
+      }
+    },
+    {
+      "id": "soft-ink",
+      "label": "Soft Ink",
+      "description": "A medium indigo stroke with a gentle, unhurried draw and dip.",
+      "askedAs": [
+        "calm blue decline icon",
+        "soft indigo downward trend",
+        "gentle slow arrow down",
+        "спокойная синяя стрелка вниз",
+        "мягкая анимация тренда вниз"
+      ],
+      "props": {
+        "color": "#3730a3",
+        "speed": 0.75,
+        "size": 72,
+        "strokeWidth": 1.75
+      }
+    },
+    {
+      "id": "quick-snap",
+      "label": "Quick Snap",
+      "description": "An oversized charcoal arrow that snaps into place at double speed.",
+      "askedAs": [
+        "fast trending down icon",
+        "snappy arrow drop animation",
+        "quick big decline arrow",
+        "быстрая стрелка вниз",
+        "резкая анимация падения"
+      ],
+      "props": {
+        "speed": 2.5,
+        "size": 160,
+        "strokeWidth": 2.5,
+        "color": "#262626"
+      }
+    }
+  ]
+}

@@ -1,0 +1,125 @@
+{
+  "component": "beta-thanks",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-light",
+      "label": "Editorial Light",
+      "description": "Warm paper background with an elegant serif and a deep forest-green accent, revealed at an unhurried pace.",
+      "askedAs": [
+        "elegant serif thank you on light background",
+        "magazine style beta thanks",
+        "soft classy release ending",
+        "элегантный шрифт с засечками на светлом фоне",
+        "спокойная благодарность в журнальном стиле"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "fontWeight": 400,
+        "background": "#f5f1e8",
+        "ink": "#1c1a17",
+        "accent": "#2f6b4f"
+      }
+    },
+    {
+      "id": "terminal-mono",
+      "label": "Terminal Mono",
+      "description": "Monospaced type on near-black with a mint accent and quick, tight word timing like a CLI release note.",
+      "askedAs": [
+        "developer terminal style announcement",
+        "monospace code look for release",
+        "fast techy beta out screen",
+        "моноширинный шрифт как в терминале",
+        "быстрая анимация в стиле кода"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0d1117",
+        "ink": "#e6edf3",
+        "accent": "#3fb950",
+        "speed": 1.75,
+        "stagger": 2
+      }
+    },
+    {
+      "id": "bold-poster",
+      "label": "Bold Poster",
+      "description": "Oversized heavy condensed lettering that snaps in fast for a punchy launch moment.",
+      "askedAs": [
+        "big bold launch text",
+        "make it huge and punchy",
+        "loud poster style announcement",
+        "крупный жирный текст для запуска",
+        "сделай текст большим и ярким"
+      ],
+      "props": {
+        "fontWeight": 700,
+        "scale": 1.35,
+        "speed": 1.5,
+        "stagger": 3,
+        "accent": "#22c55e"
+      }
+    },
+    {
+      "id": "slow-cinematic",
+      "label": "Slow Cinematic",
+      "description": "Light-weight type on deep navy that drifts in slowly with wide word spacing in time.",
+      "askedAs": [
+        "slow cinematic thank you ending",
+        "calm dramatic reveal",
+        "gentle slow fade in for credits",
+        "медленное кинематографичное появление",
+        "спокойная плавная концовка"
+      ],
+      "props": {
+        "fontWeight": 300,
+        "background": "#0b1220",
+        "ink": "#dbe4f0",
+        "accent": "#7dd3a8",
+        "speed": 0.5,
+        "stagger": 10
+      }
+    },
+    {
+      "id": "clean-product",
+      "label": "Clean Product",
+      "description": "Crisp Inter on pure white with a calm blue accent and a short beat before it starts.",
+      "askedAs": [
+        "minimal saas product style",
+        "clean white startup look",
+        "simple modern sans serif thanks",
+        "минималистичный стиль как у стартапа",
+        "чистый белый фон с синим акцентом"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "fontWeight": 600,
+        "accent": "#1f6feb",
+        "scale": 0.85,
+        "delay": 12
+      }
+    },
+    {
+      "id": "warm-grotesk",
+      "label": "Warm Grotesk",
+      "description": "Friendly Bricolage Grotesque on a dark espresso background with a soft amber accent.",
+      "askedAs": [
+        "friendly warm community thanks",
+        "cozy dark brown theme",
+        "playful but tasteful beta thank you",
+        "тёплая дружелюбная благодарность",
+        "тёмный коричневый фон с янтарным акцентом"
+      ],
+      "props": {
+        "fontFamily": "Bricolage Grotesque",
+        "background": "#1f1a16",
+        "ink": "#f3ece3",
+        "accent": "#e0a458",
+        "stagger": 6
+      }
+    }
+  ]
+}

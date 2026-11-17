@@ -1,0 +1,115 @@
+{
+  "component": "perlin-dissolve",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "morning-mist",
+      "label": "Morning Mist",
+      "description": "Pale fog-grey dissolve with very soft, feathered noise edges drifting in slowly.",
+      "askedAs": [
+        "soft foggy fade",
+        "slow misty transition",
+        "light airy dissolve",
+        "туманный плавный переход",
+        "мягкое светлое растворение"
+      ],
+      "props": {
+        "colorFront": "#d9dde3",
+        "colorBack": "#2a2f36",
+        "softness": 0.6,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "forest-moss",
+      "label": "Forest Moss",
+      "description": "Deep green field with muted sage noise for calm, organic nature cuts.",
+      "askedAs": [
+        "green nature transition",
+        "earthy organic dissolve",
+        "moss textured fade",
+        "зелёный природный переход",
+        "органичное растворение в лесных тонах"
+      ],
+      "props": {
+        "colorFront": "#8fa68a",
+        "colorBack": "#141c16",
+        "softness": 0.3,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "ember-burn",
+      "label": "Ember Burn",
+      "description": "Warm amber edges eat quickly through a charcoal base like burning film.",
+      "askedAs": [
+        "burning film transition",
+        "warm orange dissolve",
+        "fast fiery edge wipe",
+        "переход как горящая плёнка",
+        "тёплое быстрое растворение"
+      ],
+      "props": {
+        "colorFront": "#e0894a",
+        "colorBack": "#1a1210",
+        "softness": 0.05,
+        "speed": 2
+      }
+    },
+    {
+      "id": "paper-grain",
+      "label": "Paper Grain",
+      "description": "Ink-dark noise on warm paper cream with crisp edges for an editorial feel.",
+      "askedAs": [
+        "light paper dissolve",
+        "editorial ink transition",
+        "crisp cream noise fade",
+        "переход на светлой бумаге",
+        "чёткое чернильное растворение"
+      ],
+      "props": {
+        "colorFront": "#2b2622",
+        "colorBack": "#f2ece1",
+        "softness": 0,
+        "speed": 1.25
+      }
+    },
+    {
+      "id": "deep-tide",
+      "label": "Deep Tide",
+      "description": "Slate-blue noise rolling through midnight navy at a slow, oceanic pace.",
+      "askedAs": [
+        "slow ocean dissolve",
+        "blue ambient transition",
+        "calm deep water fade",
+        "медленный морской переход",
+        "спокойное синее растворение"
+      ],
+      "props": {
+        "colorFront": "#6f8fb3",
+        "colorBack": "#0d1522",
+        "softness": 0.45,
+        "speed": 0.25
+      }
+    },
+    {
+      "id": "quick-snap",
+      "label": "Quick Snap",
+      "description": "Neutral grey noise with hard edges that snaps through the scene change fast.",
+      "askedAs": [
+        "fast sharp dissolve",
+        "quick noise cut",
+        "snappy textured transition",
+        "быстрый резкий переход",
+        "короткое шумовое растворение"
+      ],
+      "props": {
+        "colorFront": "#b8b8bc",
+        "colorBack": "#111113",
+        "softness": 0,
+        "speed": 3.5
+      }
+    }
+  ]
+}

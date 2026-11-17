@@ -1,0 +1,103 @@
+{
+  "component": "ink-bloom",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "sumi-night",
+      "label": "Sumi Night",
+      "description": "A dark, inky sheet where a warm vermilion bloom slowly settles into a serif logo.",
+      "askedAs": [
+        "dark ink reveal with red accent",
+        "japanese ink on black paper",
+        "moody calligraphy logo intro",
+        "тёмная заставка с тушью",
+        "логотип из чернил на чёрном фоне"
+      ],
+      "props": {
+        "theme": "dark",
+        "accent": "#c8402e",
+        "speed": 0.75,
+        "resolveAt": 130,
+        "sink": 0.45
+      }
+    },
+    {
+      "id": "editorial-cream",
+      "label": "Editorial Cream",
+      "description": "Warm cream stock with deep brown ink and an elegant Instrument Serif wordmark.",
+      "askedAs": [
+        "magazine style ink reveal",
+        "cream paper with brown ink",
+        "elegant serif publishing intro",
+        "редакционная заставка на кремовой бумаге",
+        "элегантный логотип с засечками"
+      ],
+      "props": {
+        "background": "#f3ebdd",
+        "ink": "#2b2118",
+        "accent": "#8a5a2b",
+        "fontFamily": "Instrument Serif",
+        "scale": 1.15
+      }
+    },
+    {
+      "id": "quick-stamp",
+      "label": "Quick Stamp",
+      "description": "A fast, shallow ink splash that snaps into a clean sans logo for short stings.",
+      "askedAs": [
+        "fast ink logo sting",
+        "short snappy ink reveal",
+        "quick splash into logo",
+        "быстрая заставка с кляксой",
+        "короткий динамичный логотип"
+      ],
+      "props": {
+        "speed": 2,
+        "resolveAt": 55,
+        "sink": 0.18,
+        "fontFamily": "Space Grotesk",
+        "seed": 7
+      }
+    },
+    {
+      "id": "indigo-wash",
+      "label": "Indigo Wash",
+      "description": "A pale blue-grey page flooded by deep indigo ink, slow and contemplative.",
+      "askedAs": [
+        "slow indigo watercolor reveal",
+        "calm blue ink bloom",
+        "meditative paper logo animation",
+        "медленное индиго на бумаге",
+        "спокойная акварельная заставка"
+      ],
+      "props": {
+        "background": "#e8ecf1",
+        "ink": "#1b2440",
+        "accent": "#2e3a87",
+        "speed": 0.5,
+        "sink": 0.55,
+        "seed": 9
+      }
+    },
+    {
+      "id": "clean-mono",
+      "label": "Clean Mono",
+      "description": "A grain-free, crisp white page with charcoal ink and a monospaced logo for tech tools.",
+      "askedAs": [
+        "clean ink reveal without texture",
+        "minimal monospace logo intro",
+        "crisp ink for a dev tool",
+        "минималистичная заставка без зерна",
+        "моноширинный логотип из чернил"
+      ],
+      "props": {
+        "grain": false,
+        "fontFamily": "JetBrains Mono",
+        "accent": "#2f2f2f",
+        "scale": 0.85,
+        "seed": 1
+      }
+    }
+  ]
+}

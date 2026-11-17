@@ -1,0 +1,124 @@
+{
+  "component": "streamgraph",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-paper",
+      "label": "Editorial Paper",
+      "description": "A warm light page with serif type and a deep terracotta layer, like a print magazine chart.",
+      "askedAs": [
+        "magazine style chart on cream paper",
+        "light serif editorial streamgraph",
+        "print look with warm colors",
+        "светлый журнальный стиль",
+        "график как в печатном журнале"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4efe6",
+        "ink": "#1f1a17",
+        "accent": "#b5502e",
+        "fontFamily": "Fraunces",
+        "dim": 0.3
+      }
+    },
+    {
+      "id": "slow-drift",
+      "label": "Slow Drift",
+      "description": "An unhurried, ambient flow that takes its time before landing on the headline share.",
+      "askedAs": [
+        "slow calm atmospheric version",
+        "make the layers flow slowly",
+        "ambient background data scene",
+        "медленная спокойная анимация",
+        "плавный неспешный поток"
+      ],
+      "props": {
+        "speed": 0.5,
+        "landAt": 130,
+        "delay": 20,
+        "dim": 0.55,
+        "accent": "#6e8bff"
+      }
+    },
+    {
+      "id": "quick-punch",
+      "label": "Quick Punch",
+      "description": "A fast, tight cut where the highlight snaps in early and the other layers fade hard.",
+      "askedAs": [
+        "fast snappy version for social",
+        "quick punchy reveal",
+        "short energetic trend beat",
+        "быстрая резкая анимация",
+        "короткий динамичный вариант"
+      ],
+      "props": {
+        "speed": 2,
+        "landAt": 36,
+        "dim": 0.18,
+        "accent": "#ff5a36",
+        "scale": 1.15,
+        "fontFamily": "Space Grotesk"
+      }
+    },
+    {
+      "id": "terminal-green",
+      "label": "Terminal",
+      "description": "A near-black console look with monospace type and a muted green highlight layer.",
+      "askedAs": [
+        "developer terminal style chart",
+        "monospace dark tech look",
+        "hacker green on black",
+        "стиль терминала для разработчиков",
+        "моноширинный тёмный вариант"
+      ],
+      "props": {
+        "background": "#0b0f0d",
+        "ink": "#d6e8dc",
+        "accent": "#3fb97a",
+        "fontFamily": "JetBrains Mono",
+        "grain": false
+      }
+    },
+    {
+      "id": "clean-corporate",
+      "label": "Clean Corporate",
+      "description": "A crisp grain-free light layout in Inter with a confident navy accent for board decks.",
+      "askedAs": [
+        "clean business presentation style",
+        "minimal light corporate chart",
+        "no grain crisp version",
+        "строгий корпоративный стиль",
+        "чистый светлый минимализм"
+      ],
+      "props": {
+        "theme": "light",
+        "grain": false,
+        "fontFamily": "Inter",
+        "accent": "#1e3a8a",
+        "scale": 0.9
+      }
+    },
+    {
+      "id": "midnight-plum",
+      "label": "Midnight Plum",
+      "description": "A deep plum night palette with a soft rose highlight and elegant serif numerals.",
+      "askedAs": [
+        "moody purple dark version",
+        "elegant night palette with pink",
+        "luxury dark chart look",
+        "тёмный фиолетовый вариант",
+        "элегантный ночной стиль"
+      ],
+      "props": {
+        "background": "#1a1226",
+        "ink": "#f3e9f1",
+        "accent": "#e58fb0",
+        "fontFamily": "Instrument Serif",
+        "highlight": 4,
+        "dim": 0.45
+      }
+    }
+  ]
+}

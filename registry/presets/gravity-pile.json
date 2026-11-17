@@ -1,0 +1,96 @@
+{
+  "component": "gravity-pile",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "moon-drop",
+      "label": "Moon Drop",
+      "description": "Low gravity and a slightly slower clock let pale blue shapes drift down and float through soft bounces on a deep navy ground.",
+      "askedAs": [
+        "floaty low gravity pile",
+        "shapes falling slowly like on the moon",
+        "soft dreamy drop on dark blue",
+        "мягкое падение как на луне",
+        "медленно парящие фигуры"
+      ],
+      "props": {
+        "gravity": 0.5,
+        "speed": 0.75,
+        "backgroundColor": "#0e1726",
+        "accentColor": "#9fb7d9"
+      }
+    },
+    {
+      "id": "heavy-slam",
+      "label": "Heavy Slam",
+      "description": "Maximum gravity at a quicker pace makes warm amber shapes crash hard and settle fast on a near-black floor.",
+      "askedAs": [
+        "heavy fast falling pile",
+        "shapes slam down hard",
+        "punchy quick drop",
+        "тяжёлое быстрое падение",
+        "фигуры резко падают вниз"
+      ],
+      "props": {
+        "gravity": 2.5,
+        "speed": 1.5,
+        "accentColor": "#f2b33d",
+        "backgroundColor": "#161412"
+      }
+    },
+    {
+      "id": "paper-light",
+      "label": "Paper Light",
+      "description": "Crisp cobalt shapes tumble onto a warm off-white background for a clean, editorial light-mode look.",
+      "askedAs": [
+        "light background version",
+        "blue shapes on white",
+        "clean bright pile",
+        "светлый фон с синими фигурами",
+        "чистая светлая версия"
+      ],
+      "props": {
+        "backgroundColor": "#f4f1ea",
+        "accentColor": "#1f6feb",
+        "seed": 19
+      }
+    },
+    {
+      "id": "slow-motion",
+      "label": "Slow Motion",
+      "description": "Quarter-speed playback with terracotta shapes on charcoal shows every bounce and collision in dramatic detail.",
+      "askedAs": [
+        "slow motion falling shapes",
+        "dramatic slow bounce",
+        "show every collision slowly",
+        "замедленная съёмка падения",
+        "очень медленные отскоки"
+      ],
+      "props": {
+        "speed": 0.25,
+        "gravity": 1.2,
+        "accentColor": "#e07a5f",
+        "backgroundColor": "#1b1b1f"
+      }
+    },
+    {
+      "id": "mint-fresh",
+      "label": "Mint Fresh",
+      "description": "Soft mint shapes rain a touch faster onto a deep forest green for a calm, fresh palette.",
+      "askedAs": [
+        "green and mint palette",
+        "fresh calm colors pile",
+        "mint shapes on dark green",
+        "мятные фигуры на зелёном",
+        "свежая зелёная палитра"
+      ],
+      "props": {
+        "backgroundColor": "#0f2a24",
+        "accentColor": "#7ed6b2",
+        "speed": 1.25,
+        "seed": 23
+      }
+    }
+  ]
+}

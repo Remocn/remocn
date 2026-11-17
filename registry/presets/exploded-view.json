@@ -1,0 +1,91 @@
+{
+  "component": "exploded-view",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "blueprint-slow",
+      "label": "Blueprint",
+      "description": "A deep navy drafting backdrop with pale blue labels and an unhurried, deliberate separation.",
+      "askedAs": [
+        "blueprint style diagram",
+        "slow technical drawing look",
+        "navy engineering schematic",
+        "в стиле чертежа",
+        "медленная синяя схема"
+      ],
+      "props": {
+        "backgroundColor": "#0f1e33",
+        "labelColor": "#cfe3f7",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "paper-light",
+      "label": "Paper Light",
+      "description": "A warm off-white page with near-black labels for a clean, printed-documentation feel.",
+      "askedAs": [
+        "light background version",
+        "white paper documentation style",
+        "bright clean diagram",
+        "светлый фон как на бумаге",
+        "белая версия схемы"
+      ],
+      "props": {
+        "backgroundColor": "#f4f1ea",
+        "labelColor": "#1c1c1c"
+      }
+    },
+    {
+      "id": "snap-fast",
+      "label": "Quick Snap",
+      "description": "Pure black with crisp white labels and a fast, punchy break-apart and click-back.",
+      "askedAs": [
+        "fast exploded view",
+        "quick snappy animation",
+        "short punchy product breakdown",
+        "быстрая анимация разборки",
+        "резкий и быстрый вариант"
+      ],
+      "props": {
+        "backgroundColor": "#000000",
+        "labelColor": "#ffffff",
+        "speed": 2
+      }
+    },
+    {
+      "id": "graphite-calm",
+      "label": "Graphite Calm",
+      "description": "Soft graphite grey with muted silver labels and a slow, presentation-paced reveal.",
+      "askedAs": [
+        "calm slow keynote style",
+        "grey muted product diagram",
+        "soft presentation pace",
+        "спокойный серый стиль",
+        "медленно для презентации"
+      ],
+      "props": {
+        "backgroundColor": "#2a2d31",
+        "labelColor": "#c9cdd2",
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "forest-terminal",
+      "label": "Terminal Green",
+      "description": "A dark green-black console backdrop with mint labels at a slightly brisk tempo.",
+      "askedAs": [
+        "terminal hacker look",
+        "dark green console style",
+        "developer tool vibe",
+        "в стиле терминала",
+        "тёмно-зелёная техно схема"
+      ],
+      "props": {
+        "backgroundColor": "#0c1a14",
+        "labelColor": "#a8e6c3",
+        "speed": 1.25
+      }
+    }
+  ]
+}

@@ -1,0 +1,107 @@
+{
+  "component": "dumbbell-shift",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "snappy-light",
+      "label": "Snappy Light",
+      "description": "A clean light layout where rows pop in quickly and the dots snap apart.",
+      "askedAs": [
+        "fast light version",
+        "quick snappy comparison on white",
+        "punchy before and after",
+        "быстрая светлая версия",
+        "резкая анимация на белом фоне"
+      ],
+      "props": {
+        "theme": "light",
+        "stagger": 2,
+        "slideDuration": 12,
+        "accent": "#2f54eb",
+        "fontFamily": "Inter",
+        "grain": false
+      }
+    },
+    {
+      "id": "slow-editorial",
+      "label": "Slow Editorial",
+      "description": "Warm paper tones and a serif face with a slow, deliberate slide between dots.",
+      "askedAs": [
+        "calm magazine style chart",
+        "slow elegant serif look",
+        "warm paper editorial comparison",
+        "медленный журнальный стиль",
+        "спокойная элегантная версия с засечками"
+      ],
+      "props": {
+        "background": "#f4efe6",
+        "ink": "#2a2420",
+        "accent": "#b5532e",
+        "fontFamily": "Fraunces",
+        "slideDuration": 48,
+        "stagger": 9
+      }
+    },
+    {
+      "id": "terminal-mono",
+      "label": "Terminal Mono",
+      "description": "A near-black console look with monospace type and a muted green accent.",
+      "askedAs": [
+        "code terminal style",
+        "developer dashboard look",
+        "monospace dark green chart",
+        "стиль терминала",
+        "моноширинный шрифт на тёмном фоне"
+      ],
+      "props": {
+        "background": "#0e1110",
+        "ink": "#d6e2da",
+        "accent": "#4cb782",
+        "fontFamily": "JetBrains Mono",
+        "grain": false,
+        "speed": 1.25
+      }
+    },
+    {
+      "id": "big-keynote",
+      "label": "Big Keynote",
+      "description": "Oversized rows on deep navy with a delayed, confident reveal for stage screens.",
+      "askedAs": [
+        "large text for presentation",
+        "keynote stage version",
+        "big bold slide comparison",
+        "крупная версия для презентации",
+        "большой шрифт для сцены"
+      ],
+      "props": {
+        "scale": 1.35,
+        "background": "#0b1530",
+        "ink": "#f2f4fa",
+        "accent": "#f2b33d",
+        "fontFamily": "Space Grotesk",
+        "delay": 15
+      }
+    },
+    {
+      "id": "quiet-minimal",
+      "label": "Quiet Minimal",
+      "description": "A compact, soft grey layout with a graphite accent and gentle half-speed motion.",
+      "askedAs": [
+        "subtle minimal chart",
+        "small calm grey version",
+        "understated slow comparison",
+        "минималистичная серая версия",
+        "тихая медленная анимация"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#ededeb",
+        "ink": "#2b2b2b",
+        "accent": "#5a6270",
+        "scale": 0.85,
+        "speed": 0.5
+      }
+    }
+  ]
+}

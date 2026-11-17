@@ -1,0 +1,105 @@
+{
+  "component": "ruler-align",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "drafting-paper",
+      "label": "Drafting Paper",
+      "description": "Warm off-white paper with dark serif type and a red ruler edge, like a draftsman's desk.",
+      "askedAs": [
+        "architect blueprint paper look",
+        "light serif with red ruler",
+        "vintage drafting table style",
+        "светлый чертёжный стиль",
+        "бумага и красная линейка"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4efe6",
+        "ink": "#1f1b16",
+        "accent": "#c2412d",
+        "fontFamily": "Instrument Serif",
+        "fontWeight": 400
+      }
+    },
+    {
+      "id": "machinist",
+      "label": "Machinist",
+      "description": "Monospaced bold type on graphite with an amber ruler, snapping into place quickly.",
+      "askedAs": [
+        "technical mono engineering look",
+        "fast precise snap on dark",
+        "industrial tool style",
+        "моноширинный технический стиль",
+        "быстрое выравнивание на тёмном"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "fontWeight": 500,
+        "background": "#16181c",
+        "ink": "#e8e6e1",
+        "accent": "#e0a030",
+        "speed": 1.75
+      }
+    },
+    {
+      "id": "slow-precision",
+      "label": "Slow Precision",
+      "description": "A large, light-weight line that straightens slowly with a long letter-by-letter cascade.",
+      "askedAs": [
+        "slow elegant alignment",
+        "big thin text calm reveal",
+        "cinematic slow ruler",
+        "медленное элегантное выравнивание",
+        "крупный тонкий текст медленно"
+      ],
+      "props": {
+        "speed": 0.5,
+        "stagger": 6,
+        "scale": 1.3,
+        "fontWeight": 200,
+        "delay": 12
+      }
+    },
+    {
+      "id": "studio-white",
+      "label": "Studio White",
+      "description": "Crisp white background with heavy grotesk type and a deep green ruler for a confident brand feel.",
+      "askedAs": [
+        "bold clean white version",
+        "strong headline on white",
+        "brand tagline light theme",
+        "жирный текст на белом",
+        "чистый светлый брендовый стиль"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Space Grotesk",
+        "fontWeight": 700,
+        "accent": "#1f7a5a",
+        "scale": 1.1
+      }
+    },
+    {
+      "id": "midnight-ink",
+      "label": "Midnight Ink",
+      "description": "Deep navy field with soft cream Fraunces lettering and a pale gold ruler that all snap together at once.",
+      "askedAs": [
+        "navy and gold elegant",
+        "luxury dark serif tagline",
+        "all letters align together",
+        "тёмно-синий с золотом",
+        "элегантный премиальный стиль"
+      ],
+      "props": {
+        "background": "#0f1a2e",
+        "ink": "#f2ebdd",
+        "accent": "#c9a961",
+        "fontFamily": "Fraunces",
+        "stagger": 0,
+        "fontWeight": 300
+      }
+    }
+  ]
+}

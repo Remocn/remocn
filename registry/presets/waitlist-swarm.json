@@ -1,0 +1,104 @@
+{
+  "component": "waitlist-swarm",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "paper-launch",
+      "label": "Paper Launch",
+      "description": "A light, editorial take with serif numerals, an ink-blue accent and a calm, unhurried swarm.",
+      "askedAs": [
+        "light version with serif font",
+        "clean white editorial waitlist",
+        "calm elegant signup counter",
+        "светлая версия с засечками",
+        "спокойный белый вариант"
+      ],
+      "props": {
+        "theme": "light",
+        "ground": "paper-crease",
+        "fontFamily": "Instrument Serif",
+        "accent": "#1f3a8a",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "ember-rush",
+      "label": "Ember Rush",
+      "description": "Warm copper tones on a dark ground with a fast, energetic swarm and slightly larger dots.",
+      "askedAs": [
+        "warm orange fast swarm",
+        "energetic launch day hype",
+        "copper dark punchy version",
+        "тёплый быстрый вариант",
+        "оранжевый энергичный рой"
+      ],
+      "props": {
+        "ground": "ember",
+        "accent": "#e8743b",
+        "speed": 1.75,
+        "dotSize": 1.3,
+        "fontFamily": "Space Grotesk"
+      }
+    },
+    {
+      "id": "terminal-quiet",
+      "label": "Terminal Quiet",
+      "description": "A monochrome developer look with monospace type, fine dots and no pulse.",
+      "askedAs": [
+        "developer terminal style",
+        "monospace minimal waitlist",
+        "tech dark no pulse",
+        "моноширинный шрифт как терминал",
+        "минималистичный для разработчиков"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "ground": "charcoal-satin",
+        "accent": "#9ca3af",
+        "pulse": false,
+        "dotSize": 0.7
+      }
+    },
+    {
+      "id": "velvet-slow",
+      "label": "Velvet Slow",
+      "description": "A slow, cinematic reveal in muted violet with a delayed start and generous scale.",
+      "askedAs": [
+        "slow cinematic purple reveal",
+        "dramatic big moody version",
+        "luxury violet slow motion",
+        "медленный кинематографичный фиолетовый",
+        "драматичное крупное появление"
+      ],
+      "props": {
+        "ground": "velvet-hour",
+        "accent": "#a78bfa",
+        "speed": 0.5,
+        "delay": 24,
+        "scale": 1.25,
+        "fontFamily": "Fraunces"
+      }
+    },
+    {
+      "id": "polar-fresh",
+      "label": "Polar Fresh",
+      "description": "A crisp cool palette of icy blue and teal with compact framing and a brisk tempo.",
+      "askedAs": [
+        "cool icy blue fresh look",
+        "teal compact quick version",
+        "crisp clean startup style",
+        "холодный голубой вариант",
+        "свежий бирюзовый компактный"
+      ],
+      "props": {
+        "theme": "light",
+        "ground": "polar",
+        "accent": "#0e9f9a",
+        "fontFamily": "Manrope",
+        "scale": 0.85,
+        "speed": 1.25
+      }
+    }
+  ]
+}

@@ -1,0 +1,93 @@
+{
+  "component": "kinetic-warp",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "drum-roll",
+      "label": "Drum Roll",
+      "description": "Fast, tight beats that snap the word into a new pose every few frames like a snare roll.",
+      "askedAs": [
+        "fast staccato warp",
+        "quick beat distortion",
+        "rapid snapping word",
+        "быстрые рывки слова",
+        "частый ритм искажения"
+      ],
+      "props": {
+        "keyframeStride": 8,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "slow-groove",
+      "label": "Slow Groove",
+      "description": "Long, lazy holds between poses for a relaxed half-time bend in warm cream type.",
+      "askedAs": [
+        "slow warp beat",
+        "relaxed bending text",
+        "half-time distortion",
+        "медленный изгиб слова",
+        "спокойный ритм текста"
+      ],
+      "props": {
+        "keyframeStride": 36,
+        "speed": 0.75,
+        "textColor": "#f3e9d2"
+      }
+    },
+    {
+      "id": "giant-poster",
+      "label": "Giant Poster",
+      "description": "Oversized heavy word that overflows the frame so each bend feels massive.",
+      "askedAs": [
+        "huge word filling screen",
+        "bigger warped text",
+        "massive display type",
+        "огромное слово на весь экран",
+        "крупный текст с искажением"
+      ],
+      "props": {
+        "fontSize": 160,
+        "layerScale": 640,
+        "textColor": "#ffd24a"
+      }
+    },
+    {
+      "id": "soft-coral",
+      "label": "Soft Coral",
+      "description": "Lighter medium-weight coral lettering at a smaller scale for a gentler, friendlier wobble.",
+      "askedAs": [
+        "lighter softer warp",
+        "friendly pink bending text",
+        "smaller gentle distortion",
+        "мягкий коралловый текст",
+        "лёгкое искажение слова"
+      ],
+      "props": {
+        "fontWeight": "500",
+        "textColor": "#ff8a7a",
+        "layerScale": 320,
+        "fontSize": 90
+      }
+    },
+    {
+      "id": "club-hit",
+      "label": "Club Hit",
+      "description": "Mint-green bold type bending on a punchy mid-tempo beat at double speed.",
+      "askedAs": [
+        "energetic beat sync warp",
+        "party kinetic word",
+        "punchy green text bounce",
+        "энергичный ритм под бит",
+        "клубная анимация слова"
+      ],
+      "props": {
+        "textColor": "#7ce0b5",
+        "keyframeStride": 14,
+        "speed": 2,
+        "layerScale": 540
+      }
+    }
+  ]
+}

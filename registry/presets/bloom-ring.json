@@ -1,0 +1,126 @@
+{
+  "component": "bloom-ring",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "ember-glow",
+      "label": "Ember Glow",
+      "description": "A warm, slow bloom of amber light over ember and hearth grounds with an elegant serif.",
+      "askedAs": [
+        "warm golden light reveal",
+        "slow cinematic glowing logo",
+        "amber burst ending",
+        "тёплое свечение логотипа",
+        "медленное золотое раскрытие"
+      ],
+      "props": {
+        "groundA": "ember",
+        "groundB": "hearth",
+        "accent": "#f2a65a",
+        "fontFamily": "Instrument Serif",
+        "transition": 48,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "cold-flash",
+      "label": "Cold Flash",
+      "description": "A fast, crisp icy-blue ring snaps from coldlight into polar with tight word timing.",
+      "askedAs": [
+        "quick blue flash reveal",
+        "snappy cool logo burst",
+        "fast techy ring transition",
+        "быстрая холодная вспышка",
+        "резкое синее раскрытие"
+      ],
+      "props": {
+        "groundA": "coldlight",
+        "groundB": "polar",
+        "accent": "#7fc8f8",
+        "transition": 16,
+        "stagger": 1,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "velvet-night",
+      "label": "Velvet Night",
+      "description": "A deep after-dark palette with a soft rose bloom and a generous, unhurried reveal.",
+      "askedAs": [
+        "moody night logo reveal",
+        "dark luxurious glow ending",
+        "soft pink light on dark",
+        "тёмное бархатное раскрытие",
+        "ночной премиальный финал"
+      ],
+      "props": {
+        "groundA": "nightfold",
+        "groundB": "velvet-hour",
+        "accent": "#e8a0b4",
+        "fontFamily": "Fraunces",
+        "sceneB": 110,
+        "stagger": 5
+      }
+    },
+    {
+      "id": "paper-light",
+      "label": "Paper Light",
+      "description": "A light editorial look on paper and lunar grounds with dark ink and a muted copper ring.",
+      "askedAs": [
+        "light clean logo reveal",
+        "bright minimal ending",
+        "white editorial bloom",
+        "светлое минималистичное раскрытие",
+        "чистый светлый финал"
+      ],
+      "props": {
+        "groundA": "paper-crease",
+        "groundB": "lunar",
+        "ink": "#1c1b19",
+        "accent": "#b8743f",
+        "fontFamily": "Manrope"
+      }
+    },
+    {
+      "id": "mono-signal",
+      "label": "Mono Signal",
+      "description": "A compact, technical reveal in monospace on charcoal with a mint signal ring.",
+      "askedAs": [
+        "developer style logo reveal",
+        "terminal look glow transition",
+        "small techy ring burst",
+        "техничное раскрытие моноширинным",
+        "кодерский стиль логотипа"
+      ],
+      "props": {
+        "groundA": "charcoal-satin",
+        "groundB": "mercury",
+        "fontFamily": "JetBrains Mono",
+        "accent": "#8fd9b6",
+        "scale": 0.85,
+        "stagger": 0
+      }
+    },
+    {
+      "id": "grand-solstice",
+      "label": "Grand Solstice",
+      "description": "An oversized, slow-building sunrise bloom from solstice into corona for big hero moments.",
+      "askedAs": [
+        "big dramatic sunrise reveal",
+        "huge hero logo burst",
+        "epic slow light ending",
+        "большое драматичное раскрытие",
+        "эпичный рассвет логотипа"
+      ],
+      "props": {
+        "groundA": "solstice",
+        "groundB": "corona",
+        "scale": 1.3,
+        "transition": 60,
+        "speed": 0.5,
+        "fontFamily": "Bricolage Grotesque"
+      }
+    }
+  ]
+}

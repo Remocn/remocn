@@ -1,0 +1,123 @@
+{
+  "component": "galton-stack",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "paper-report",
+      "label": "Paper Report",
+      "description": "Light warm paper background with a serif headline and deep ink-blue dots, like a printed research figure.",
+      "askedAs": [
+        "make it look like a printed report",
+        "light academic chart style",
+        "serif paper look for the bell curve",
+        "светлый стиль как в научной статье",
+        "бумажный отчёт с засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4f0e8",
+        "ink": "#1c1b19",
+        "accent": "#1f3a8a",
+        "fontFamily": "Fraunces"
+      }
+    },
+    {
+      "id": "terminal-bench",
+      "label": "Terminal Bench",
+      "description": "Near-black background with mono type and a muted green accent, styled like a benchmark readout.",
+      "askedAs": [
+        "make it look like a terminal benchmark",
+        "monospace dev style chart",
+        "green on black performance stats",
+        "стиль терминала с моноширинным шрифтом",
+        "как вывод бенчмарка в консоли"
+      ],
+      "props": {
+        "background": "#0d1110",
+        "ink": "#d6e4dc",
+        "accent": "#3fb67a",
+        "fontFamily": "JetBrains Mono",
+        "grain": false,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "slow-cascade",
+      "label": "Slow Cascade",
+      "description": "A long, unhurried pour with lighter type so each dot's fall can be watched settling into the curve.",
+      "askedAs": [
+        "slow down the falling dots",
+        "calm slow pour animation",
+        "let the bell curve build gradually",
+        "медленное падение шариков",
+        "спокойная плавная анимация"
+      ],
+      "props": {
+        "pourLength": 95,
+        "speed": 0.5,
+        "fontWeight": 300,
+        "accent": "#8fa8ff"
+      }
+    },
+    {
+      "id": "quick-punch",
+      "label": "Quick Punch",
+      "description": "Fast, bold and oversized, with a coral accent that lands the stat in a couple of seconds.",
+      "askedAs": [
+        "fast punchy version for social",
+        "make it quick and bold",
+        "bigger and snappier stat",
+        "быстро и крупно для соцсетей",
+        "резкая энергичная версия"
+      ],
+      "props": {
+        "pourLength": 18,
+        "speed": 2,
+        "scale": 1.3,
+        "fontWeight": 700,
+        "fontFamily": "Space Grotesk",
+        "accent": "#ff6b4a"
+      }
+    },
+    {
+      "id": "clean-minimal",
+      "label": "Clean Minimal",
+      "description": "Crisp white canvas, no grain, neutral graphite dots and a smaller centred composition.",
+      "askedAs": [
+        "clean white minimal chart",
+        "no grain simple light version",
+        "minimal neutral bell curve",
+        "минималистичный белый вариант",
+        "чистый стиль без шума"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#ffffff",
+        "ink": "#111418",
+        "accent": "#3a4250",
+        "grain": false,
+        "scale": 0.85
+      }
+    },
+    {
+      "id": "midnight-amber",
+      "label": "Midnight Amber",
+      "description": "Deep navy background with warm amber dots and rounded Manrope type for an elegant evening feel.",
+      "askedAs": [
+        "dark blue with gold accents",
+        "warm amber on navy",
+        "elegant dark data scene",
+        "тёмно-синий фон с янтарным",
+        "элегантная тёмная версия"
+      ],
+      "props": {
+        "background": "#0f1a2e",
+        "ink": "#ede6d6",
+        "accent": "#f2b544",
+        "fontFamily": "Manrope",
+        "fontWeight": 500
+      }
+    }
+  ]
+}

@@ -1,0 +1,96 @@
+{
+  "component": "shader-grain-gradient-sunrise",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "slow-dawn",
+      "label": "Slow Dawn",
+      "description": "A languid, buttery-smooth sunrise that drifts gently with almost no grain.",
+      "askedAs": [
+        "calm slow sunrise background",
+        "smooth gentle gradient with little grain",
+        "relaxed dawn glow",
+        "медленный спокойный рассвет",
+        "плавный градиент без зерна"
+      ],
+      "props": {
+        "speed": 0.25,
+        "softness": 1,
+        "noise": 0.05,
+        "intensity": 0.1
+      }
+    },
+    {
+      "id": "film-grain",
+      "label": "Film Grain",
+      "description": "Heavy analog grain over a deeper, inkier night for a textured cinematic feel.",
+      "askedAs": [
+        "grainy film look sunrise",
+        "vintage textured gradient",
+        "cinematic noisy background",
+        "зернистый плёночный градиент",
+        "винтажный шум на фоне"
+      ],
+      "props": {
+        "noise": 0.7,
+        "softness": 0.6,
+        "colorBack": "#120720",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "bold-flare",
+      "label": "Bold Flare",
+      "description": "Fast, high-contrast waves with crisp edges that make the launch moment feel energetic.",
+      "askedAs": [
+        "energetic launch background",
+        "fast bold sunrise waves",
+        "high contrast dynamic gradient",
+        "энергичный яркий фон для запуска",
+        "быстрые контрастные волны"
+      ],
+      "props": {
+        "speed": 2.5,
+        "intensity": 0.6,
+        "softness": 0.3,
+        "noise": 0.3
+      }
+    },
+    {
+      "id": "midnight-ember",
+      "label": "Midnight Ember",
+      "description": "A near-black field where the coral glow stays subdued like embers before dawn.",
+      "askedAs": [
+        "dark moody sunrise",
+        "subtle glow on almost black",
+        "night background with faint warm light",
+        "тёмный фон с тлеющим светом",
+        "почти чёрный градиент с тёплым свечением"
+      ],
+      "props": {
+        "colorBack": "#0a0510",
+        "intensity": 0.1,
+        "speed": 0.5,
+        "noise": 0.15
+      }
+    },
+    {
+      "id": "dusk-teal",
+      "label": "Dusk Teal",
+      "description": "Coral and gold rising over a deep teal-navy night for a cooler, sophisticated contrast.",
+      "askedAs": [
+        "sunrise over dark blue",
+        "cool navy background with warm waves",
+        "teal night gradient",
+        "рассвет на тёмно-синем фоне",
+        "холодный фон с тёплыми волнами"
+      ],
+      "props": {
+        "colorBack": "#0b1e2b",
+        "intensity": 0.35,
+        "softness": 0.9
+      }
+    }
+  ]
+}

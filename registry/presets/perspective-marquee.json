@@ -1,0 +1,102 @@
+{
+  "component": "perspective-marquee",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "slow-cinema",
+      "label": "Slow Cinema",
+      "description": "Large, light-weight type drifting slowly into a deep, dramatic vanishing point.",
+      "askedAs": [
+        "slow cinematic text scroll",
+        "big title drifting into distance",
+        "calm film-like marquee",
+        "медленная кинематографичная бегущая строка",
+        "крупный текст уходит вдаль медленно"
+      ],
+      "props": {
+        "fontSize": 140,
+        "fontWeight": "400",
+        "pixelsPerFrame": 1,
+        "rotateY": -40,
+        "perspective": 800
+      }
+    },
+    {
+      "id": "warm-gold",
+      "label": "Warm Gold",
+      "description": "Champagne-gold lettering over a deep espresso fade for a luxury feel.",
+      "askedAs": [
+        "gold text marquee luxury",
+        "warm premium scrolling words",
+        "champagne on dark brown",
+        "золотой текст на тёмном фоне",
+        "люксовая тёплая бегущая строка"
+      ],
+      "props": {
+        "color": "#e8d3a2",
+        "fadeColor": "#14100b",
+        "fontWeight": "500",
+        "rotateY": -22
+      }
+    },
+    {
+      "id": "fast-ticker",
+      "label": "Fast Ticker",
+      "description": "Compact bold type racing toward the horizon with a gentle tilt and high energy.",
+      "askedAs": [
+        "fast energetic 3d ticker",
+        "quick scrolling feature list",
+        "high speed marquee",
+        "быстрая бегущая строка",
+        "энергичный тикер с наклоном"
+      ],
+      "props": {
+        "fontSize": 56,
+        "pixelsPerFrame": 5,
+        "speed": 1.5,
+        "rotateY": -14,
+        "rotateX": 4,
+        "perspective": 1800
+      }
+    },
+    {
+      "id": "paper-light",
+      "label": "Paper Light",
+      "description": "Near-black type on a soft off-white fade for an editorial, daylight look.",
+      "askedAs": [
+        "light background marquee",
+        "dark text on white 3d scroll",
+        "editorial minimal ticker",
+        "светлая версия бегущей строки",
+        "тёмный текст на белом фоне"
+      ],
+      "props": {
+        "color": "#1a1a1a",
+        "fadeColor": "#f4f1ea",
+        "fontWeight": "600",
+        "rotateY": 28
+      }
+    },
+    {
+      "id": "midnight-tilt",
+      "label": "Midnight Tilt",
+      "description": "Cool steel-blue words falling away beneath a steep overhead tilt on navy.",
+      "askedAs": [
+        "blue tech marquee from above",
+        "navy cool scrolling text",
+        "tilted from top 3d words",
+        "синяя бегущая строка сверху",
+        "холодный техно текст с наклоном"
+      ],
+      "props": {
+        "color": "#a9c4e8",
+        "fadeColor": "#070b16",
+        "rotateX": 24,
+        "rotateY": -10,
+        "perspective": 600,
+        "fontSize": 100
+      }
+    }
+  ]
+}

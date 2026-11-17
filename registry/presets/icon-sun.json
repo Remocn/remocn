@@ -1,0 +1,115 @@
+{
+  "component": "icon-sun",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "golden-hour",
+      "label": "Golden Hour",
+      "description": "A large warm amber sun that draws in slowly with a soft, thin stroke.",
+      "askedAs": [
+        "warm orange sun slow",
+        "big golden sun icon",
+        "sunset style sun",
+        "тёплое золотое солнце",
+        "большое оранжевое солнце"
+      ],
+      "props": {
+        "color": "#d97706",
+        "size": 120,
+        "strokeWidth": 1.5,
+        "speed": 0.5,
+        "animation": "draw"
+      }
+    },
+    {
+      "id": "spinning-loop",
+      "label": "Spinning Loop",
+      "description": "A medium sun whose rays keep animating on repeat at a brisk pace.",
+      "askedAs": [
+        "looping sun animation",
+        "sun that keeps spinning",
+        "continuous sun loader",
+        "солнце крутится по кругу",
+        "зацикленная анимация солнца"
+      ],
+      "props": {
+        "loop": true,
+        "animation": "action",
+        "speed": 1.5,
+        "size": 64
+      }
+    },
+    {
+      "id": "bold-badge",
+      "label": "Bold Badge",
+      "description": "A chunky, heavy-stroked sun in deep slate that reads clearly at a glance.",
+      "askedAs": [
+        "thick bold sun icon",
+        "heavy stroke sun",
+        "strong dark sun symbol",
+        "жирная иконка солнца",
+        "толстые линии солнце"
+      ],
+      "props": {
+        "strokeWidth": 3,
+        "size": 96,
+        "color": "#1e293b"
+      }
+    },
+    {
+      "id": "fine-line",
+      "label": "Fine Line",
+      "description": "A delicate hairline sun in muted grey that sketches itself in gently.",
+      "askedAs": [
+        "thin minimal sun",
+        "hairline sun icon",
+        "subtle light sun drawing",
+        "тонкое минималистичное солнце",
+        "лёгкая линия солнца"
+      ],
+      "props": {
+        "strokeWidth": 1,
+        "color": "#6b7280",
+        "animation": "draw",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "quick-pop",
+      "label": "Quick Pop",
+      "description": "A small coral sun that snaps in fast for snappy UI moments.",
+      "askedAs": [
+        "fast small sun icon",
+        "quick sun pop",
+        "snappy sun animation",
+        "быстрое маленькое солнце",
+        "солнце появляется быстро"
+      ],
+      "props": {
+        "size": 32,
+        "speed": 2.5,
+        "color": "#e76f51"
+      }
+    },
+    {
+      "id": "hero-sunrise",
+      "label": "Hero Sunrise",
+      "description": "An oversized honey-yellow sun that draws and animates slowly in a calm loop.",
+      "askedAs": [
+        "huge sun for title screen",
+        "slow looping big sun",
+        "sunrise hero icon",
+        "огромное солнце для заставки",
+        "медленный восход солнца"
+      ],
+      "props": {
+        "size": 200,
+        "color": "#e9a23b",
+        "speed": 0.5,
+        "loop": true,
+        "strokeWidth": 2.5
+      }
+    }
+  ]
+}

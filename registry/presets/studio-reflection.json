@@ -1,0 +1,103 @@
+{
+  "component": "studio-reflection",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "gallery-white",
+      "label": "Gallery White",
+      "description": "A bright, airy light-theme take with a serif numeral and soft silver shine, like a product shot on seamless paper.",
+      "askedAs": [
+        "light background chrome number",
+        "white studio look for a stat",
+        "elegant serif milestone on white",
+        "светлая студийная цифра",
+        "белый фон с серифным числом"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "accent": "#1f2937",
+        "shine": "#e5e7eb",
+        "grain": false
+      }
+    },
+    {
+      "id": "gold-reserve",
+      "label": "Gold Reserve",
+      "description": "Warm champagne-gold chrome on a deep espresso background for a luxurious milestone moment.",
+      "askedAs": [
+        "gold chrome number",
+        "luxury milestone stat",
+        "warm premium golden counter",
+        "золотая цифра премиум",
+        "роскошный золотой стиль"
+      ],
+      "props": {
+        "background": "#14100c",
+        "ink": "#f3e9d8",
+        "accent": "#c9a45c",
+        "shine": "#f5dfa8",
+        "fontFamily": "Fraunces"
+      }
+    },
+    {
+      "id": "slow-reveal",
+      "label": "Slow Reveal",
+      "description": "A large, unhurried reveal with a delayed start and a late caption for a cinematic hero beat.",
+      "askedAs": [
+        "slow cinematic number reveal",
+        "big dramatic stat entrance",
+        "make it slower and bigger",
+        "медленное кинематографичное появление",
+        "крупная цифра медленно"
+      ],
+      "props": {
+        "speed": 0.5,
+        "scale": 1.3,
+        "delay": 20,
+        "captionAt": 85
+      }
+    },
+    {
+      "id": "quick-tech",
+      "label": "Quick Tech",
+      "description": "A snappy, compact monospace stat with cool cyan shine and an early caption for fast-paced edits.",
+      "askedAs": [
+        "fast techy number",
+        "quick monospace stat",
+        "snappy developer counter",
+        "быстрая техно цифра",
+        "моноширинный шрифт быстро"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "speed": 2,
+        "scale": 0.85,
+        "captionAt": 20,
+        "accent": "#22b8cf",
+        "shine": "#a5f3fc"
+      }
+    },
+    {
+      "id": "midnight-ice",
+      "label": "Midnight Ice",
+      "description": "Clean icy-blue chrome on navy with no grain for a crisp, polished corporate look.",
+      "askedAs": [
+        "navy blue chrome stat",
+        "clean crisp corporate number",
+        "icy blue premium look",
+        "тёмно-синий премиальный стиль",
+        "чистая холодная цифра"
+      ],
+      "props": {
+        "background": "#0b1426",
+        "ink": "#e6eef8",
+        "accent": "#7da2ff",
+        "shine": "#dce6ff",
+        "grain": false,
+        "fontFamily": "Manrope"
+      }
+    }
+  ]
+}

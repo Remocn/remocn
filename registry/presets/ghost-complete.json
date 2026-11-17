@@ -1,0 +1,117 @@
+{
+  "component": "ghost-complete",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "code-editor",
+      "label": "Code Editor",
+      "description": "Monospaced type on a deep charcoal ground with a quick, IDE-like rhythm.",
+      "askedAs": [
+        "make it look like a code editor",
+        "monospace dark terminal style",
+        "developer IDE autocomplete look",
+        "как в редакторе кода",
+        "моноширинный шрифт на тёмном фоне"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "ground": "charcoal-satin",
+        "speed": 1.5,
+        "hold": 10
+      }
+    },
+    {
+      "id": "paper-draft",
+      "label": "Paper Draft",
+      "description": "A calm light page with serif type, like a writing assistant finishing a manuscript.",
+      "askedAs": [
+        "light writing app look",
+        "serif text on paper",
+        "elegant editorial autocomplete",
+        "светлый фон как бумага",
+        "шрифт с засечками для текста"
+      ],
+      "props": {
+        "theme": "light",
+        "ground": "paper-crease",
+        "fontFamily": "Instrument Serif",
+        "scale": 1.15,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "slow-reveal",
+      "label": "Slow Reveal",
+      "description": "Lingering ghost text and an unhurried pace on a dusky blue ground for a thoughtful beat.",
+      "askedAs": [
+        "slower so people can read the suggestion",
+        "let the ghost text linger",
+        "calm slow autocomplete",
+        "помедленнее, чтобы успеть прочитать",
+        "подсказка дольше висит на экране"
+      ],
+      "props": {
+        "hold": 36,
+        "speed": 0.5,
+        "ground": "blue-hour",
+        "delay": 12
+      }
+    },
+    {
+      "id": "rapid-fire",
+      "label": "Rapid Fire",
+      "description": "Snappy, near-instant accepts in compact Space Grotesk over a cobalt glow.",
+      "askedAs": [
+        "fast punchy autocomplete",
+        "quick tab tab tab",
+        "energetic speedy version",
+        "быстрое автодополнение",
+        "сделай резче и быстрее"
+      ],
+      "props": {
+        "speed": 2.5,
+        "hold": 4,
+        "fontFamily": "Space Grotesk",
+        "ground": "cobalt-rise"
+      }
+    },
+    {
+      "id": "minimal-mono",
+      "label": "Minimal Ink",
+      "description": "A plain near-black canvas with soft off-white text, no logo, and larger type.",
+      "askedAs": [
+        "clean minimal black background",
+        "no logo just text",
+        "simple big text autocomplete",
+        "минималистичный чёрный фон",
+        "без логотипа, только текст"
+      ],
+      "props": {
+        "background": "#0e0e10",
+        "ink": "#edebe6",
+        "showLogo": false,
+        "scale": 1.3,
+        "fontFamily": "Inter"
+      }
+    },
+    {
+      "id": "warm-hearth",
+      "label": "Warm Hearth",
+      "description": "Cozy amber-toned ground with Fraunces type for a friendly, human writing feel.",
+      "askedAs": [
+        "warm cozy writing assistant",
+        "friendly orange tones",
+        "soft human feel autocomplete",
+        "тёплые цвета и уютный вид",
+        "дружелюбный стиль для текста"
+      ],
+      "props": {
+        "ground": "hearth",
+        "fontFamily": "Fraunces",
+        "hold": 22,
+        "scale": 1.1
+      }
+    }
+  ]
+}

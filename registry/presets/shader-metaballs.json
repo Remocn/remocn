@@ -1,0 +1,96 @@
+{
+  "component": "shader-metaballs",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "slow-lava",
+      "label": "Slow Lava",
+      "description": "A few large blobs drift lazily over a deep warm-brown ground like an old lava lamp.",
+      "askedAs": [
+        "slow lava lamp blobs",
+        "big lazy merging blobs",
+        "calm relaxing blob background",
+        "медленная лавовая лампа",
+        "крупные медленные капли"
+      ],
+      "props": {
+        "speed": 0.5,
+        "count": 5,
+        "size": 1.25,
+        "colorBack": "#1f1410"
+      }
+    },
+    {
+      "id": "bubbly-swarm",
+      "label": "Bubbly Swarm",
+      "description": "Many small blobs zip around quickly on a near-black navy field for an energetic, fizzy feel.",
+      "askedAs": [
+        "lots of small fast blobs",
+        "energetic bubbly background",
+        "busy swarm of droplets",
+        "много маленьких быстрых капель",
+        "энергичные пузырьки"
+      ],
+      "props": {
+        "speed": 2.5,
+        "count": 18,
+        "size": 0.4,
+        "colorBack": "#0b1020"
+      }
+    },
+    {
+      "id": "paper-light",
+      "label": "Paper Light",
+      "description": "Medium blobs move gently across a soft off-white background for a clean, airy look.",
+      "askedAs": [
+        "light background metaballs",
+        "soft white blob animation",
+        "airy minimal blobs",
+        "светлый фон с каплями",
+        "минималистичные капли на белом"
+      ],
+      "props": {
+        "speed": 0.75,
+        "colorBack": "#f3efe8",
+        "size": 0.7
+      }
+    },
+    {
+      "id": "single-drop",
+      "label": "Single Drop",
+      "description": "One oversized blob slowly breathes and wobbles alone on a muted slate backdrop.",
+      "askedAs": [
+        "one big blob",
+        "single organic shape moving",
+        "minimal hero blob",
+        "одна большая капля",
+        "одиночная органическая форма"
+      ],
+      "props": {
+        "count": 1,
+        "size": 1.5,
+        "speed": 0.5,
+        "colorBack": "#1e2329"
+      }
+    },
+    {
+      "id": "deep-plum",
+      "label": "Deep Plum",
+      "description": "A balanced cluster of blobs merges at a brisk pace over a rich plum background.",
+      "askedAs": [
+        "purple background blobs",
+        "brisk merging blobs dark purple",
+        "moody plum metaballs",
+        "капли на фиолетовом фоне",
+        "сливовый фон с каплями"
+      ],
+      "props": {
+        "speed": 1.5,
+        "count": 8,
+        "size": 0.95,
+        "colorBack": "#2a1430"
+      }
+    }
+  ]
+}

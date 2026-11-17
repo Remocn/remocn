@@ -1,0 +1,127 @@
+{
+  "component": "cell-divide",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "lab-paper",
+      "label": "Lab Paper",
+      "description": "Warm off-white paper with a deep green accent and an elegant serif count, like a page from a research notebook.",
+      "askedAs": [
+        "make it look like a scientific journal",
+        "light paper background with serif numbers",
+        "calm biology notebook style",
+        "как страница научного журнала",
+        "светлый фон с зелёными клетками"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4f1ea",
+        "ink": "#1c1c1a",
+        "accent": "#2f6b4f",
+        "fontFamily": "Instrument Serif",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "terminal-mono",
+      "label": "Terminal",
+      "description": "Near-black screen with muted sage dots and a monospaced count that divides at a brisk, clean pace.",
+      "askedAs": [
+        "hacker terminal look",
+        "monospace dark data style",
+        "fast clean code console vibe",
+        "как в терминале с моноширинным шрифтом",
+        "тёмный техно стиль без шума"
+      ],
+      "props": {
+        "background": "#0e1110",
+        "ink": "#d8e0da",
+        "accent": "#8fbf9f",
+        "fontFamily": "JetBrains Mono",
+        "grain": false,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "swiss-bold",
+      "label": "Swiss Bold",
+      "description": "Crisp white canvas, heavy black type and a red accent at a larger scale for a poster-like stat.",
+      "askedAs": [
+        "big bold poster number",
+        "clean white swiss design",
+        "make the number huge and heavy",
+        "крупная жирная цифра на белом",
+        "плакатный стиль с красным акцентом"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#ffffff",
+        "ink": "#111111",
+        "accent": "#d93a3f",
+        "fontFamily": "Inter",
+        "fontWeight": 700
+      }
+    },
+    {
+      "id": "slow-mitosis",
+      "label": "Slow Mitosis",
+      "description": "Dark, airy and unhurried, with soft lavender cells that linger between each division and thin type.",
+      "askedAs": [
+        "slow meditative cell division",
+        "calm dark version with long pauses",
+        "gentle purple organic growth",
+        "медленное деление клеток",
+        "спокойный тёмный вариант с паузами"
+      ],
+      "props": {
+        "accent": "#9c8cf0",
+        "speed": 0.5,
+        "pause": 12,
+        "fontFamily": "Manrope",
+        "fontWeight": 200,
+        "scale": 0.9
+      }
+    },
+    {
+      "id": "rapid-burst",
+      "label": "Rapid Burst",
+      "description": "Charcoal backdrop with amber dots that split in a fast, pause-free burst beside a confident grotesk count.",
+      "askedAs": [
+        "fast explosive growth",
+        "quick doubling with no pauses",
+        "energetic amber startup stat",
+        "быстрый взрывной рост",
+        "энергичное удвоение без пауз"
+      ],
+      "props": {
+        "background": "#141210",
+        "ink": "#f2eee8",
+        "accent": "#f5a524",
+        "fontFamily": "Space Grotesk",
+        "fontWeight": 600,
+        "speed": 2.5
+      }
+    },
+    {
+      "id": "petri-dish",
+      "label": "Petri Dish",
+      "description": "Soft blush background with terracotta cells and a warm Fraunces number for an organic, editorial feel.",
+      "askedAs": [
+        "warm organic biology look",
+        "soft peach background with orange dots",
+        "editorial serif growth chart",
+        "тёплый органический стиль",
+        "персиковый фон и терракотовые точки"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#fbf3ec",
+        "ink": "#2a1d17",
+        "accent": "#c2410c",
+        "fontFamily": "Fraunces",
+        "fontWeight": 400
+      }
+    }
+  ]
+}

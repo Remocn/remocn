@@ -1,0 +1,104 @@
+{
+  "component": "rotary-dial",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "studio-amp",
+      "label": "Studio Amp",
+      "description": "Warm copper accent on a charcoal ground with a slow, weighty turn like a vintage amplifier knob.",
+      "askedAs": [
+        "make it feel like an old amp knob",
+        "slow warm analog dial",
+        "copper vintage hardware look",
+        "тёплая винтажная ручка усилителя",
+        "медленный аналоговый поворот"
+      ],
+      "props": {
+        "accent": "#d9824a",
+        "ground": "copper",
+        "turn": 96,
+        "minorTicks": 4,
+        "fontFamily": "Fraunces"
+      }
+    },
+    {
+      "id": "lab-instrument",
+      "label": "Lab Instrument",
+      "description": "Clean light panel with fine tick marks, monospace numerals and a precise teal accent.",
+      "askedAs": [
+        "precise lab equipment style",
+        "light technical dial with mono font",
+        "measurement instrument look",
+        "светлый технический прибор",
+        "точная шкала с моноширинным шрифтом"
+      ],
+      "props": {
+        "theme": "light",
+        "accent": "#0f8a7e",
+        "minorTicks": 10,
+        "fontFamily": "JetBrains Mono",
+        "ground": "polar"
+      }
+    },
+    {
+      "id": "redline",
+      "label": "Redline",
+      "description": "A fast, snappy crank into a deep garnet glow that feels like hitting the rev limiter.",
+      "askedAs": [
+        "quick aggressive turn to max",
+        "red hot performance dial",
+        "fast punchy speed boost",
+        "быстрый резкий поворот на максимум",
+        "красная агрессивная шкала"
+      ],
+      "props": {
+        "accent": "#e5484d",
+        "ground": "garnet",
+        "turn": 20,
+        "speed": 1.5,
+        "minorTicks": 2
+      }
+    },
+    {
+      "id": "midnight-hero",
+      "label": "Midnight Hero",
+      "description": "Oversized dial on a deep blue-hour ground with a soft periwinkle accent and calm, cinematic pacing.",
+      "askedAs": [
+        "big cinematic dial on dark blue",
+        "hero shot of the knob",
+        "large slow premium reveal",
+        "крупный кинематографичный регулятор",
+        "большая ручка на тёмно-синем фоне"
+      ],
+      "props": {
+        "scale": 1.35,
+        "ground": "blue-hour",
+        "accent": "#8fa2ff",
+        "delay": 12,
+        "speed": 0.75,
+        "fontFamily": "Geist"
+      }
+    },
+    {
+      "id": "paper-minimal",
+      "label": "Paper Minimal",
+      "description": "Compact dial on warm off-white paper with graphite ink and an editorial serif readout.",
+      "askedAs": [
+        "minimal editorial version on paper",
+        "small quiet dial with serif numbers",
+        "soft beige print style",
+        "минималистичный вариант на бумаге",
+        "спокойная шкала с антиквой"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4f0e8",
+        "ink": "#26231f",
+        "accent": "#b5532e",
+        "fontFamily": "Instrument Serif",
+        "scale": 0.8
+      }
+    }
+  ]
+}

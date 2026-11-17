@@ -1,0 +1,119 @@
+{
+  "component": "level-up",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "arcade-night",
+      "label": "Arcade Night",
+      "description": "Deep navy backdrop with a warm amber accent and monospace type for a retro arcade cabinet feel.",
+      "askedAs": [
+        "retro arcade level up",
+        "pixel game style with amber glow",
+        "old-school console look",
+        "ретро аркадный стиль",
+        "как в старой игре на приставке"
+      ],
+      "props": {
+        "background": "#0e1424",
+        "ink": "#f2eee3",
+        "accent": "#f5a524",
+        "fontFamily": "JetBrains Mono"
+      }
+    },
+    {
+      "id": "speedrun",
+      "label": "Speedrun",
+      "description": "Fast, punchy timing with a hot coral accent so the level ticks over in a quick burst.",
+      "askedAs": [
+        "make it faster and snappier",
+        "quick hype level up",
+        "speedy energetic version",
+        "быстрее и энергичнее",
+        "резкий быстрый апгрейд"
+      ],
+      "props": {
+        "speed": 2,
+        "accent": "#ff5a4e",
+        "fontFamily": "Space Grotesk"
+      }
+    },
+    {
+      "id": "paper-quest",
+      "label": "Paper Quest",
+      "description": "Light cream page with forest green accent and serif type, like an achievement in a storybook RPG.",
+      "askedAs": [
+        "light storybook level up",
+        "elegant serif achievement",
+        "cream and green fantasy look",
+        "светлый сказочный стиль",
+        "элегантный шрифт с засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f6f1e4",
+        "ink": "#1f2a22",
+        "accent": "#2f7d4f",
+        "fontFamily": "Fraunces",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "boss-reveal",
+      "label": "Boss Reveal",
+      "description": "Oversized, slow and dramatic with a crimson accent on near-black for a big-moment reveal.",
+      "askedAs": [
+        "big dramatic level up",
+        "slow cinematic boss reveal",
+        "huge text with red accent",
+        "крупно и драматично",
+        "медленное эпичное появление"
+      ],
+      "props": {
+        "scale": 1.35,
+        "speed": 0.5,
+        "delay": 15,
+        "background": "#0b0b0d",
+        "ink": "#f4f4f5",
+        "accent": "#e5383b"
+      }
+    },
+    {
+      "id": "clean-patch",
+      "label": "Clean Patch",
+      "description": "Minimal light theme in Inter with a calm teal accent, compact enough for a product changelog.",
+      "askedAs": [
+        "clean minimal light version",
+        "subtle product release style",
+        "small tidy level up",
+        "минималистичный светлый вариант",
+        "аккуратный и спокойный стиль"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "accent": "#0f9d8a",
+        "scale": 0.8
+      }
+    },
+    {
+      "id": "neon-lilac",
+      "label": "Lilac Glow",
+      "description": "Soft violet accent on a dark plum background with rounded Bricolage type for a friendly, playful glow.",
+      "askedAs": [
+        "purple playful level up",
+        "soft violet dark theme",
+        "cute friendly gaming look",
+        "фиолетовый игривый стиль",
+        "мягкое фиолетовое свечение"
+      ],
+      "props": {
+        "background": "#1a1226",
+        "ink": "#f1eafb",
+        "accent": "#a78bfa",
+        "fontFamily": "Bricolage Grotesque",
+        "speed": 1.25
+      }
+    }
+  ]
+}

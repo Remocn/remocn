@@ -1,0 +1,123 @@
+{
+  "component": "phrase-list-bridge",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-paper",
+      "label": "Editorial Paper",
+      "description": "Warm light paper ground with an elegant serif and a deep terracotta chip, unhurried and literary.",
+      "askedAs": [
+        "serif magazine style on light paper",
+        "elegant slow editorial look",
+        "warm cream background with classy font",
+        "светлый журнальный стиль с засечками",
+        "элегантно и медленно на бумажном фоне"
+      ],
+      "props": {
+        "theme": "light",
+        "ground": "paper-crease",
+        "fontFamily": "Instrument Serif",
+        "accent": "#b4532a",
+        "speed": 0.75,
+        "stagger": 5
+      }
+    },
+    {
+      "id": "snappy-mono",
+      "label": "Snappy Mono",
+      "description": "Fast, tight monospace on near-black with a cool mint chip, like a terminal flicking through options.",
+      "askedAs": [
+        "quick techy code style",
+        "fast monospace developer look",
+        "terminal vibe flipping through words",
+        "быстрый стиль как в терминале",
+        "моноширинный шрифт, тёмный и шустрый"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0e1116",
+        "ink": "#e6edf3",
+        "accent": "#3fb68b",
+        "speed": 1.75,
+        "stagger": 1
+      }
+    },
+    {
+      "id": "cobalt-bold",
+      "label": "Cobalt Bold",
+      "description": "Large grotesque type over a rising cobalt glow with a crisp sky-blue chip for a confident headline beat.",
+      "askedAs": [
+        "big bold blue headline",
+        "large confident text on blue gradient",
+        "punchy oversized title",
+        "крупный жирный заголовок на синем",
+        "большой уверенный текст с синим фоном"
+      ],
+      "props": {
+        "ground": "cobalt-rise",
+        "fontFamily": "Space Grotesk",
+        "accent": "#4c8dff",
+        "scale": 1.3
+      }
+    },
+    {
+      "id": "ember-glow",
+      "label": "Ember Glow",
+      "description": "Moody ember backdrop with soft Fraunces type and an amber chip, revealed slowly after a short pause.",
+      "askedAs": [
+        "warm cinematic slow reveal",
+        "moody orange dark look",
+        "cozy fireplace style text",
+        "тёплое медленное кинематографичное появление",
+        "тёмный тёплый оранжевый стиль"
+      ],
+      "props": {
+        "ground": "ember",
+        "fontFamily": "Fraunces",
+        "accent": "#e0913a",
+        "speed": 0.5,
+        "delay": 20,
+        "stagger": 6
+      }
+    },
+    {
+      "id": "polar-minimal",
+      "label": "Polar Minimal",
+      "description": "Cool pale polar ground with compact Inter type and a slate-blue chip for a quiet, product-like feel.",
+      "askedAs": [
+        "clean minimal light version",
+        "small subtle cool tones",
+        "calm corporate product look",
+        "минималистичный светлый холодный стиль",
+        "спокойный аккуратный вариант для продукта"
+      ],
+      "props": {
+        "theme": "light",
+        "ground": "polar",
+        "fontFamily": "Inter",
+        "accent": "#3d5a80",
+        "scale": 0.85
+      }
+    },
+    {
+      "id": "velvet-night",
+      "label": "Velvet Night",
+      "description": "Deep velvet-hour gradient with rounded Bricolage type and a dusty rose chip, playful but refined.",
+      "askedAs": [
+        "purple evening gradient with pink highlight",
+        "soft playful night look",
+        "stylish rosy accent on dark",
+        "фиолетовый вечерний градиент с розовым",
+        "игривый, но стильный тёмный вариант"
+      ],
+      "props": {
+        "ground": "velvet-hour",
+        "fontFamily": "Bricolage Grotesque",
+        "accent": "#d98ca6",
+        "speed": 1.25,
+        "scale": 1.1
+      }
+    }
+  ]
+}

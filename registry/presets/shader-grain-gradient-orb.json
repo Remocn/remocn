@@ -1,0 +1,114 @@
+{
+  "component": "shader-grain-gradient-orb",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "slow-velvet",
+      "label": "Slow Velvet",
+      "description": "A barely drifting, very soft orb with almost no grain for calm, luxurious openers.",
+      "askedAs": [
+        "calm smooth glowing sphere",
+        "slow soft orb background",
+        "minimal grain luxury glow",
+        "медленный мягкий шар",
+        "спокойное гладкое свечение"
+      ],
+      "props": {
+        "speed": 0.25,
+        "softness": 0.9,
+        "noise": 0.05,
+        "intensity": 0.2
+      }
+    },
+    {
+      "id": "film-grain",
+      "label": "Film Grain",
+      "description": "A heavily textured orb with coarse analog grain and crisper edges, like a scanned photograph.",
+      "askedAs": [
+        "grainy film texture orb",
+        "analog noisy sphere",
+        "retro photo grain glow",
+        "зернистый шар как плёнка",
+        "аналоговый шум на сфере"
+      ],
+      "props": {
+        "noise": 0.6,
+        "softness": 0.35,
+        "intensity": 0.45,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "pulse-energy",
+      "label": "Pulse Energy",
+      "description": "A fast, intense orb with strong color shifts for energetic launches and reveals.",
+      "askedAs": [
+        "fast energetic glowing orb",
+        "intense moving sphere",
+        "dynamic product launch glow",
+        "быстрый яркий шар",
+        "энергичное свечение для запуска"
+      ],
+      "props": {
+        "speed": 2.5,
+        "intensity": 0.75,
+        "softness": 0.5,
+        "noise": 0.2
+      }
+    },
+    {
+      "id": "midnight-navy",
+      "label": "Midnight Navy",
+      "description": "The orb floats on a deep navy field with moderate softness for a cool, corporate premium feel.",
+      "askedAs": [
+        "orb on dark blue background",
+        "navy premium glow",
+        "cool blue night sphere",
+        "шар на тёмно-синем фоне",
+        "глубокий синий премиум фон"
+      ],
+      "props": {
+        "colorBack": "#0b1224",
+        "softness": 0.7,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "plum-haze",
+      "label": "Plum Haze",
+      "description": "A warm aubergine background with a hazy, diffused orb that blends into the field.",
+      "askedAs": [
+        "purple dark background glow",
+        "warm plum hazy orb",
+        "diffused violet sphere",
+        "сливовый фон со свечением",
+        "размытый фиолетовый шар"
+      ],
+      "props": {
+        "colorBack": "#1a0d1f",
+        "softness": 1,
+        "intensity": 0.15,
+        "noise": 0.25
+      }
+    },
+    {
+      "id": "pure-black",
+      "label": "Pure Black",
+      "description": "A crisp, high-contrast orb on true black with tight edges and subtle grain.",
+      "askedAs": [
+        "orb on pure black",
+        "sharp contrast glowing sphere",
+        "crisp minimal dark orb",
+        "шар на чистом чёрном",
+        "контрастная чёткая сфера"
+      ],
+      "props": {
+        "colorBack": "#000000",
+        "softness": 0.2,
+        "intensity": 0.55,
+        "noise": 0.1
+      }
+    }
+  ]
+}

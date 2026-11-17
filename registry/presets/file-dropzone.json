@@ -1,0 +1,116 @@
+{
+  "component": "file-dropzone",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "midnight-vault",
+      "label": "Midnight Vault",
+      "description": "Dark interface on a deep blue ground with a cool cyan accent and an unhurried upload pace.",
+      "askedAs": [
+        "dark mode file upload",
+        "night blue dropzone",
+        "slow calm dark upload",
+        "тёмная загрузка файлов",
+        "ночной синий дропзон"
+      ],
+      "props": {
+        "theme": "dark",
+        "ground": "blue-hour",
+        "accent": "#5cc8e0",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "paper-archive",
+      "label": "Paper Archive",
+      "description": "Warm paper background with dark ink, a serif face and a muted terracotta accent for an editorial feel.",
+      "askedAs": [
+        "warm paper document upload",
+        "serif editorial file drop",
+        "cozy archive look",
+        "бумажный стиль загрузки",
+        "тёплый архив с засечками"
+      ],
+      "props": {
+        "background": "#f4efe6",
+        "ink": "#2b2622",
+        "fontFamily": "Fraunces",
+        "accent": "#b85c38",
+        "ground": "paper-crease"
+      }
+    },
+    {
+      "id": "dev-terminal",
+      "label": "Dev Terminal",
+      "description": "Monospaced dark setup on charcoal with a green accent and brisk, snappy uploads.",
+      "askedAs": [
+        "developer style upload",
+        "monospace dark file drop",
+        "fast techy dropzone",
+        "загрузка в стиле терминала",
+        "моноширинный тёмный дропзон"
+      ],
+      "props": {
+        "theme": "dark",
+        "fontFamily": "JetBrains Mono",
+        "ground": "charcoal-satin",
+        "accent": "#3fb970",
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "hero-closeup",
+      "label": "Hero Closeup",
+      "description": "Enlarged, slower-paced composition on a soft polar ground for a launch hero shot.",
+      "askedAs": [
+        "big zoomed in upload",
+        "hero shot file dropzone",
+        "large slow product reveal",
+        "крупный план загрузки",
+        "большой медленный дропзон"
+      ],
+      "props": {
+        "scale": 1.3,
+        "speed": 0.5,
+        "ground": "polar",
+        "delay": 15
+      }
+    },
+    {
+      "id": "violet-studio",
+      "label": "Violet Studio",
+      "description": "Light theme with a refined violet accent, Manrope type and a gentle iris ground.",
+      "askedAs": [
+        "purple accent upload",
+        "soft violet file drop",
+        "modern friendly dropzone",
+        "фиолетовая загрузка файлов",
+        "мягкий сиреневый стиль"
+      ],
+      "props": {
+        "accent": "#7b5cf0",
+        "fontFamily": "Manrope",
+        "ground": "iris"
+      }
+    },
+    {
+      "id": "quick-glance",
+      "label": "Quick Glance",
+      "description": "Compact, fast-moving version on a neutral mercury ground for short social cuts.",
+      "askedAs": [
+        "quick small upload clip",
+        "fast compact dropzone",
+        "snappy file upload for social",
+        "быстрая компактная загрузка",
+        "короткий ролик загрузки"
+      ],
+      "props": {
+        "scale": 0.8,
+        "speed": 2,
+        "ground": "mercury",
+        "fontFamily": "Inter"
+      }
+    }
+  ]
+}

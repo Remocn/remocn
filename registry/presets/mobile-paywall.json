@@ -1,0 +1,120 @@
+{
+  "component": "mobile-paywall",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "midnight-pro",
+      "label": "Midnight Pro",
+      "description": "A dark paywall with a soft violet accent floating on a deep night ground.",
+      "askedAs": [
+        "dark mode paywall",
+        "night themed subscription screen",
+        "moody purple upgrade",
+        "тёмный пейвол",
+        "ночная тема подписки"
+      ],
+      "props": {
+        "theme": "dark",
+        "accent": "#8b7cf6",
+        "ground": "nightfold",
+        "fontFamily": "Geist"
+      }
+    },
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "A warm paper-toned paywall set in an elegant serif with a terracotta accent, played slower.",
+      "askedAs": [
+        "elegant serif paywall",
+        "magazine style upgrade screen",
+        "warm calm premium look",
+        "элегантный пейвол с засечками",
+        "тёплый журнальный стиль"
+      ],
+      "props": {
+        "fontFamily": "Fraunces",
+        "accent": "#c4553a",
+        "background": "#f6f1e9",
+        "ink": "#2a2420",
+        "ground": "paper-crease",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "quick-launch",
+      "label": "Quick Launch",
+      "description": "A brisk, punchy run-through with an emerald accent and a slightly larger phone.",
+      "askedAs": [
+        "fast paywall animation",
+        "snappy upgrade demo",
+        "quick trial start clip",
+        "быстрая анимация пейвола",
+        "энергичный показ подписки"
+      ],
+      "props": {
+        "speed": 1.75,
+        "accent": "#10a37f",
+        "scale": 1.15,
+        "fontFamily": "Manrope",
+        "ground": "greenhouse"
+      }
+    },
+    {
+      "id": "ember-glow",
+      "label": "Ember Glow",
+      "description": "A dark paywall with a warm amber accent over a glowing ember ground.",
+      "askedAs": [
+        "warm dark paywall",
+        "orange glow subscription",
+        "cozy premium upgrade",
+        "тёплый тёмный пейвол",
+        "оранжевое свечение подписки"
+      ],
+      "props": {
+        "theme": "dark",
+        "accent": "#f59e0b",
+        "ground": "ember",
+        "fontFamily": "Bricolage Grotesque"
+      }
+    },
+    {
+      "id": "tech-minimal",
+      "label": "Tech Minimal",
+      "description": "A cool, compact monospace paywall on a polar ground with a slate-blue accent and a gentle delayed start.",
+      "askedAs": [
+        "developer style paywall",
+        "minimal monospace upgrade",
+        "small cool tech screen",
+        "минималистичный технический пейвол",
+        "моноширинный шрифт подписка"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "accent": "#475569",
+        "ground": "polar",
+        "scale": 0.85,
+        "delay": 15
+      }
+    },
+    {
+      "id": "cinematic-slow",
+      "label": "Cinematic Slow",
+      "description": "A large, slow-paced paywall in a refined serif on a blue-hour ground for a calm hero moment.",
+      "askedAs": [
+        "slow cinematic paywall",
+        "big hero upgrade shot",
+        "calm premium reveal",
+        "медленный кинематографичный пейвол",
+        "крупный спокойный показ"
+      ],
+      "props": {
+        "speed": 0.5,
+        "scale": 1.3,
+        "ground": "blue-hour",
+        "fontFamily": "Instrument Serif",
+        "accent": "#4f7cac"
+      }
+    }
+  ]
+}

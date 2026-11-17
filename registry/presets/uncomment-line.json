@@ -1,0 +1,109 @@
+{
+  "component": "uncomment-line",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "terminal-mono",
+      "label": "Terminal Mono",
+      "description": "Classic monospace terminal look with a soft green accent on near-black.",
+      "askedAs": [
+        "make it look like a terminal",
+        "monospace code editor style",
+        "green on black console"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0b0f0c",
+        "ink": "#e6ede8",
+        "accent": "#5fd38d",
+        "dim": 0.22
+      }
+    },
+    {
+      "id": "paper-light",
+      "label": "Paper Light",
+      "description": "Clean light editor theme with dark ink and a calm blue accent.",
+      "askedAs": [
+        "light mode version",
+        "white background code style",
+        "bright clean editor look"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f7f6f2",
+        "ink": "#1c1d21",
+        "accent": "#2f6feb",
+        "dim": 0.36
+      }
+    },
+    {
+      "id": "rapid-fire",
+      "label": "Rapid Fire",
+      "description": "Lines snap on in quick succession for an energetic, punchy beat.",
+      "askedAs": [
+        "faster uncommenting",
+        "make lines switch on quickly",
+        "snappy quick reveal"
+      ],
+      "props": {
+        "stagger": 5,
+        "speed": 2,
+        "fontFamily": "Space Grotesk",
+        "accent": "#ff7a45"
+      }
+    },
+    {
+      "id": "slow-reveal",
+      "label": "Slow Reveal",
+      "description": "A measured, deliberate reveal with deeply muted comments and generous pacing.",
+      "askedAs": [
+        "slow dramatic reveal",
+        "calm unhurried line by line",
+        "give each line time to breathe"
+      ],
+      "props": {
+        "stagger": 26,
+        "speed": 0.5,
+        "dim": 0.12,
+        "delay": 15,
+        "accent": "#a78bfa"
+      }
+    },
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "Large elegant serif type on warm charcoal for a refined, magazine-like tagline.",
+      "askedAs": [
+        "elegant serif version",
+        "make it feel premium and editorial",
+        "big classy typography"
+      ],
+      "props": {
+        "fontFamily": "Instrument Serif",
+        "scale": 1.3,
+        "background": "#1a1816",
+        "ink": "#f2ede4",
+        "accent": "#d9a35b"
+      }
+    },
+    {
+      "id": "compact-focus",
+      "label": "Compact Focus",
+      "description": "Smaller, tight layout that highlights the first line in a cool teal accent.",
+      "askedAs": [
+        "smaller compact text",
+        "highlight the first line",
+        "subtle minimal version"
+      ],
+      "props": {
+        "scale": 0.8,
+        "highlight": 0,
+        "fontFamily": "Inter",
+        "accent": "#2bb3a3",
+        "background": "#0e1417",
+        "ink": "#e3ecef"
+      }
+    }
+  ]
+}

@@ -1,0 +1,108 @@
+{
+  "component": "dropdown-menu",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "slow-reveal",
+      "label": "Slow Reveal",
+      "description": "The panel opens at a calm, unhurried pace with no item highlighted, letting the menu settle in gently.",
+      "askedAs": [
+        "slow opening dropdown",
+        "gentle menu reveal",
+        "calm unhurried dropdown animation",
+        "медленное открытие меню",
+        "плавный выпадающий список"
+      ],
+      "props": {
+        "state": "opened",
+        "speed": 0.5,
+        "highlightedIndex": -1
+      }
+    },
+    {
+      "id": "snappy-open",
+      "label": "Snappy Open",
+      "description": "A quick, crisp pop-open that lands with the first item already highlighted.",
+      "askedAs": [
+        "fast dropdown open",
+        "quick snappy menu",
+        "dropdown that pops open instantly",
+        "быстрое открытие меню",
+        "резкий выпадающий список"
+      ],
+      "props": {
+        "state": "opened",
+        "speed": 2.5,
+        "highlightedIndex": 0
+      }
+    },
+    {
+      "id": "deep-hover",
+      "label": "Deep Hover",
+      "description": "The menu opens at a measured pace with the highlight resting on the last item, as if the cursor has travelled down the list.",
+      "askedAs": [
+        "highlight the bottom menu item",
+        "dropdown with last option hovered",
+        "menu showing hover lower down",
+        "подсветка последнего пункта меню",
+        "наведение на нижний пункт"
+      ],
+      "props": {
+        "state": "opened",
+        "speed": 0.75,
+        "highlightedIndex": 3
+      }
+    },
+    {
+      "id": "collapsed-trigger",
+      "label": "Collapsed Trigger",
+      "description": "Only the trigger button is shown, with the panel closing smoothly away for a minimal resting state.",
+      "askedAs": [
+        "closed dropdown just the button",
+        "menu collapsing shut",
+        "hide the dropdown panel",
+        "закрытое выпадающее меню",
+        "только кнопка без списка"
+      ],
+      "props": {
+        "state": "closed",
+        "speed": 0.75,
+        "highlightedIndex": -1
+      }
+    },
+    {
+      "id": "quick-dismiss",
+      "label": "Quick Dismiss",
+      "description": "The panel snaps shut fast, like a menu dismissed by a decisive click elsewhere.",
+      "askedAs": [
+        "dropdown closing quickly",
+        "fast menu dismiss",
+        "snap the menu shut",
+        "быстрое закрытие меню",
+        "меню резко закрывается"
+      ],
+      "props": {
+        "state": "closed",
+        "speed": 3
+      }
+    },
+    {
+      "id": "mid-focus",
+      "label": "Mid Focus",
+      "description": "A relaxed open with the highlight sitting on a middle item, suggesting a deliberate choice mid-list.",
+      "askedAs": [
+        "highlight middle option in dropdown",
+        "menu with second item selected",
+        "relaxed dropdown with focus in the middle",
+        "выделен средний пункт меню",
+        "фокус на пункте в середине списка"
+      ],
+      "props": {
+        "state": "opened",
+        "speed": 1.5,
+        "highlightedIndex": 1
+      }
+    }
+  ]
+}

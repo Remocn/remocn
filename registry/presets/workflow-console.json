@@ -1,0 +1,105 @@
+{
+  "component": "workflow-console",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "midnight-mint",
+      "label": "Midnight Mint",
+      "description": "A deep green-black console with cool mint highlights for a calm, modern terminal feel.",
+      "askedAs": [
+        "green terminal look",
+        "dark console with mint accents",
+        "calm hacker green theme",
+        "зелёный терминал",
+        "тёмная консоль с мятным акцентом"
+      ],
+      "props": {
+        "backgroundColor": "#0b1512",
+        "accentColor": "#6fe3b4"
+      }
+    },
+    {
+      "id": "graphite-amber",
+      "label": "Graphite Amber",
+      "description": "Warm charcoal background with amber result bars, like a vintage phosphor monitor.",
+      "askedAs": [
+        "warm amber terminal",
+        "retro orange console",
+        "charcoal and gold CLI",
+        "янтарный ретро терминал",
+        "тёплая тёмная консоль"
+      ],
+      "props": {
+        "backgroundColor": "#161514",
+        "accentColor": "#f2b56b"
+      }
+    },
+    {
+      "id": "brisk-run",
+      "label": "Brisk Run",
+      "description": "An indigo-night palette with periwinkle highlights played at a fast, punchy pace.",
+      "askedAs": [
+        "faster demo",
+        "speed it up for social",
+        "quick snappy CLI run",
+        "ускорить демо",
+        "быстрая версия ролика"
+      ],
+      "props": {
+        "speed": 1.75,
+        "backgroundColor": "#12122a",
+        "accentColor": "#a5b4fc"
+      }
+    },
+    {
+      "id": "slow-walkthrough",
+      "label": "Slow Walkthrough",
+      "description": "A relaxed, slower playback on a muted slate background with soft teal accents for easy reading.",
+      "askedAs": [
+        "slower so people can read",
+        "tutorial pace",
+        "relaxed explainer speed",
+        "медленнее чтобы успеть прочитать",
+        "спокойный темп для обучения"
+      ],
+      "props": {
+        "speed": 0.75,
+        "backgroundColor": "#101820",
+        "accentColor": "#9fd3c7"
+      }
+    },
+    {
+      "id": "crimson-ops",
+      "label": "Crimson Ops",
+      "description": "A dark wine background with soft coral highlights for an urgent, incident-response mood.",
+      "askedAs": [
+        "red alert console",
+        "incident response vibe",
+        "dark red terminal theme",
+        "красная тема консоли",
+        "тревожный красный стиль"
+      ],
+      "props": {
+        "backgroundColor": "#1a1013",
+        "accentColor": "#f08a7e"
+      }
+    },
+    {
+      "id": "pure-mono",
+      "label": "Pure Mono",
+      "description": "Near-black background with neutral light-grey highlights for a minimal monochrome look.",
+      "askedAs": [
+        "black and white terminal",
+        "minimal monochrome",
+        "no colour just grey",
+        "чёрно-белая консоль",
+        "минималистичный монохром"
+      ],
+      "props": {
+        "backgroundColor": "#0a0a0a",
+        "accentColor": "#e6e6e6"
+      }
+    }
+  ]
+}

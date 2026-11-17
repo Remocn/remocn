@@ -1,0 +1,107 @@
+{
+  "component": "dot-map",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "paper-atlas",
+      "label": "Paper Atlas",
+      "description": "A warm off-white map with ink-dark type in a classic serif and a slow, considered sweep.",
+      "askedAs": [
+        "light vintage map with serif numbers",
+        "calm paper style world map",
+        "editorial atlas look",
+        "светлая карта в стиле старого атласа",
+        "спокойная бумажная карта с засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f3eee4",
+        "ink": "#1f1b16",
+        "accent": "#b5452b",
+        "fontFamily": "Instrument Serif",
+        "sweep": 96
+      }
+    },
+    {
+      "id": "terminal-ops",
+      "label": "Terminal Ops",
+      "description": "A near-black console map with mono type, green-teal points and a quick, crisp reveal.",
+      "askedAs": [
+        "hacker terminal style map",
+        "monospace data dashboard map",
+        "fast techy coverage map",
+        "карта в стиле терминала",
+        "моноширинный технический вид карты"
+      ],
+      "props": {
+        "background": "#0b0f0e",
+        "ink": "#d7e4df",
+        "accent": "#3fbf94",
+        "fontFamily": "JetBrains Mono",
+        "sweep": 36,
+        "grain": false
+      }
+    },
+    {
+      "id": "bold-keynote",
+      "label": "Bold Keynote",
+      "description": "An oversized, heavy-weight stat on deep navy with a warm amber accent for big-stage moments.",
+      "askedAs": [
+        "big bold number for keynote",
+        "large heavy stat on world map",
+        "presentation hero map",
+        "крупная жирная цифра на карте",
+        "карта для большой презентации"
+      ],
+      "props": {
+        "background": "#0e1530",
+        "ink": "#f4f1ea",
+        "accent": "#f2a93b",
+        "fontFamily": "Space Grotesk",
+        "fontWeight": 700,
+        "scale": 1.3
+      }
+    },
+    {
+      "id": "quiet-minimal",
+      "label": "Quiet Minimal",
+      "description": "A clean light map with thin Inter type, a muted slate accent and a slow, delayed entrance.",
+      "askedAs": [
+        "minimal clean light map",
+        "subtle understated coverage map",
+        "slow gentle world map reveal",
+        "минималистичная светлая карта",
+        "спокойная медленная карта мира"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "fontWeight": 300,
+        "accent": "#4a5a6a",
+        "speed": 0.75,
+        "delay": 20
+      }
+    },
+    {
+      "id": "rapid-pulse",
+      "label": "Rapid Pulse",
+      "description": "A brisk, compact take with fast-lighting coral points on charcoal for punchy social cuts.",
+      "askedAs": [
+        "fast energetic map animation",
+        "quick map for social video",
+        "snappy cities lighting up",
+        "быстрая энергичная карта",
+        "короткая динамичная анимация карты"
+      ],
+      "props": {
+        "background": "#1a1a1d",
+        "ink": "#f5f2ee",
+        "accent": "#ff6b57",
+        "speed": 2,
+        "sweep": 24,
+        "fontFamily": "Bricolage Grotesque"
+      }
+    }
+  ]
+}

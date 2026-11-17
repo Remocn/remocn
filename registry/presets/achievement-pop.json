@@ -1,0 +1,100 @@
+{
+  "component": "achievement-pop",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "arcade-rush",
+      "label": "Arcade Rush",
+      "description": "Fast, punchy unlocks in a chunky grotesque on a warm ember ground, like a game that just leveled up.",
+      "askedAs": [
+        "fast energetic game achievement",
+        "quick arcade style unlocks",
+        "punchy gamer toast animation",
+        "быстрые игровые ачивки",
+        "энергичный аркадный стиль"
+      ],
+      "props": {
+        "speed": 2,
+        "fontFamily": "Bricolage Grotesque",
+        "ground": "ember",
+        "scale": 1.1
+      }
+    },
+    {
+      "id": "paper-trophy",
+      "label": "Paper Trophy",
+      "description": "A calm light card stack on soft cream paper with dark ink and an editorial serif.",
+      "askedAs": [
+        "light clean achievement cards",
+        "elegant serif milestone toasts",
+        "soft paper background unlocks",
+        "светлые элегантные достижения",
+        "спокойный бумажный фон"
+      ],
+      "props": {
+        "theme": "light",
+        "ground": "paper-crease",
+        "fontFamily": "Fraunces",
+        "background": "#f6f1e7",
+        "ink": "#2a2420",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "terminal-unlock",
+      "label": "Terminal Unlock",
+      "description": "Monospace toasts on a near-black ground with mint text, like achievements logged by a dev console.",
+      "askedAs": [
+        "developer console achievements",
+        "monospace hacker style unlocks",
+        "dark code themed milestones",
+        "ачивки в стиле терминала",
+        "моноширинный шрифт для разработчиков"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0d1110",
+        "ink": "#b8f2d0",
+        "ground": "nightfold"
+      }
+    },
+    {
+      "id": "slow-ceremony",
+      "label": "Slow Ceremony",
+      "description": "Large, unhurried unlocks on a deep velvet ground that let each milestone land with weight.",
+      "askedAs": [
+        "slow dramatic achievement reveal",
+        "big cinematic milestone unlock",
+        "ceremonial award animation",
+        "медленное торжественное появление",
+        "крупные драматичные достижения"
+      ],
+      "props": {
+        "speed": 0.5,
+        "scale": 1.3,
+        "ground": "velvet-hour",
+        "delay": 20,
+        "fontFamily": "Instrument Serif"
+      }
+    },
+    {
+      "id": "cool-orbit",
+      "label": "Cool Orbit",
+      "description": "Compact toasts in a crisp geometric face over a cool blue-hour ground for a tidy product-recap feel.",
+      "askedAs": [
+        "cool blue product recap",
+        "small tidy achievement stack",
+        "modern tech launch milestones",
+        "холодные синие тона",
+        "компактные карточки для запуска продукта"
+      ],
+      "props": {
+        "ground": "blue-hour",
+        "fontFamily": "Space Grotesk",
+        "scale": 0.85,
+        "speed": 1.25
+      }
+    }
+  ]
+}

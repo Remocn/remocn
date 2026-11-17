@@ -1,0 +1,106 @@
+{
+  "component": "lean-count",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "hard-surge",
+      "label": "Hard Surge",
+      "description": "A steep, heavy figure that slams in through quick, punchy beats.",
+      "askedAs": [
+        "make it punchier and faster",
+        "aggressive fast count up",
+        "more kinetic slanted number",
+        "быстрее и агрессивнее",
+        "резкий жирный счётчик"
+      ],
+      "props": {
+        "lean": 26,
+        "fontWeight": 800,
+        "beat": 8,
+        "speed": 1.5,
+        "steps": 5
+      }
+    },
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "A light italic serif on warm paper that settles in slowly like a magazine headline.",
+      "askedAs": [
+        "elegant serif magazine style",
+        "calm light version for print look",
+        "classy slow number on cream",
+        "элегантный журнальный стиль",
+        "спокойный светлый вариант с засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "fontWeight": 400,
+        "background": "#f3eee4",
+        "ink": "#1c1a17",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "terminal-bench",
+      "label": "Terminal Bench",
+      "description": "An upright monospaced readout with a green accent, like a benchmark log result.",
+      "askedAs": [
+        "make it look like a terminal benchmark",
+        "monospace tech stat",
+        "developer style result number",
+        "как в терминале",
+        "моноширинный технический стиль"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "lean": 0,
+        "background": "#0d1110",
+        "ink": "#e6ede9",
+        "accent": "#3fb950",
+        "grain": false
+      }
+    },
+    {
+      "id": "midnight-gold",
+      "label": "Midnight Gold",
+      "description": "A large figure on deep navy with a muted gold cross for a luxury feel.",
+      "askedAs": [
+        "luxury dark blue and gold",
+        "premium big number",
+        "fancy keynote stat",
+        "премиальный тёмно-синий с золотом",
+        "дорогой крупный вариант"
+      ],
+      "props": {
+        "background": "#0e1424",
+        "ink": "#f2ede1",
+        "accent": "#c9a45c",
+        "fontFamily": "Fraunces",
+        "scale": 1.25,
+        "beat": 24
+      }
+    },
+    {
+      "id": "clean-swiss",
+      "label": "Clean Swiss",
+      "description": "A crisp, compact grotesk on white with a gentle lean and no grain.",
+      "askedAs": [
+        "minimal clean white version",
+        "simple corporate stat",
+        "smaller tidy number",
+        "минималистичный белый вариант",
+        "чистый аккуратный стиль"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "fontWeight": 700,
+        "lean": 8,
+        "scale": 0.85,
+        "grain": false
+      }
+    }
+  ]
+}

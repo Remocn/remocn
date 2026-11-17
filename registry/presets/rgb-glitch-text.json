@@ -1,0 +1,118 @@
+{
+  "component": "rgb-glitch-text",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "subtle-flicker",
+      "label": "Subtle Flicker",
+      "description": "A quick, barely-there RGB shiver on lighter type for a refined tech accent.",
+      "askedAs": [
+        "light quick glitch",
+        "subtle digital flicker on title",
+        "minimal glitch effect",
+        "лёгкий быстрый глитч",
+        "едва заметное мерцание текста"
+      ],
+      "props": {
+        "intensity": 2,
+        "glitchDuration": 4,
+        "fontWeight": "500",
+        "color": "#334155"
+      }
+    },
+    {
+      "id": "heavy-corruption",
+      "label": "Heavy Corruption",
+      "description": "A long, violent channel split on oversized bold type that feels like a broken signal.",
+      "askedAs": [
+        "strong long glitch",
+        "heavy distortion on big text",
+        "broken signal title",
+        "сильный долгий глитч",
+        "мощное искажение заголовка"
+      ],
+      "props": {
+        "intensity": 22,
+        "glitchDuration": 30,
+        "fontSize": 160,
+        "color": "#0a0a0a"
+      }
+    },
+    {
+      "id": "terminal-green",
+      "label": "Terminal Green",
+      "description": "Muted terminal-green type with a medium, steady glitch for hacker scenes.",
+      "askedAs": [
+        "hacker terminal glitch",
+        "green code text glitch",
+        "matrix style title",
+        "глитч в стиле хакера",
+        "зелёный текст как в терминале"
+      ],
+      "props": {
+        "color": "#15803d",
+        "fontWeight": "600",
+        "intensity": 8,
+        "glitchDuration": 14,
+        "fontSize": 80
+      }
+    },
+    {
+      "id": "slow-drift",
+      "label": "Slow Drift",
+      "description": "A slowed, drawn-out glitch in deep indigo that lingers like a decaying transmission.",
+      "askedAs": [
+        "slow motion glitch",
+        "long drifting rgb split",
+        "dreamy glitch title",
+        "медленный глитч",
+        "плавное растянутое искажение"
+      ],
+      "props": {
+        "speed": 0.5,
+        "glitchDuration": 40,
+        "intensity": 10,
+        "color": "#312e81"
+      }
+    },
+    {
+      "id": "instant-snap",
+      "label": "Instant Snap",
+      "description": "An early, hyper-fast stutter on compact type that hits right at the start of the clip.",
+      "askedAs": [
+        "fast glitch at start",
+        "quick snap glitch early",
+        "rapid stutter on text",
+        "быстрый глитч в начале",
+        "резкий мгновенный сбой"
+      ],
+      "props": {
+        "glitchAt": 3,
+        "glitchDuration": 6,
+        "speed": 2.5,
+        "fontSize": 64,
+        "intensity": 12
+      }
+    },
+    {
+      "id": "crimson-alert",
+      "label": "Crimson Alert",
+      "description": "Deep crimson headline with a late, mid-strength glitch suggesting a system warning.",
+      "askedAs": [
+        "red warning glitch",
+        "error alert title effect",
+        "system failure text",
+        "красный глитч предупреждения",
+        "эффект ошибки системы"
+      ],
+      "props": {
+        "color": "#b91c1c",
+        "glitchAt": 60,
+        "glitchDuration": 18,
+        "intensity": 14,
+        "fontSize": 120
+      }
+    }
+  ]
+}

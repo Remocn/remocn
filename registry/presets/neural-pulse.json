@@ -1,0 +1,122 @@
+{
+  "component": "neural-pulse",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "deep-thought",
+      "label": "Deep Thought",
+      "description": "A slow, deliberate pass through the network on near-black with a soft violet accent, like a model taking its time.",
+      "askedAs": [
+        "slow thinking AI reveal",
+        "make the network fire slowly",
+        "calm deliberate model reasoning",
+        "медленное раскрытие нейросети",
+        "спокойная анимация размышления ИИ"
+      ],
+      "props": {
+        "hop": 26,
+        "speed": 0.75,
+        "accent": "#8b7cf6",
+        "background": "#0b0b12",
+        "ink": "#e8e6f5"
+      }
+    },
+    {
+      "id": "instant-inference",
+      "label": "Instant Inference",
+      "description": "Snappy layer hops and doubled speed for a punchy, near-instant answer on a dark ground with an electric blue accent.",
+      "askedAs": [
+        "fast snappy AI pulse",
+        "quick inference animation",
+        "energetic short reveal",
+        "быстрая вспышка нейросети",
+        "резкая короткая анимация ИИ"
+      ],
+      "props": {
+        "hop": 8,
+        "speed": 2,
+        "accent": "#2f7bff",
+        "fontFamily": "Space Grotesk"
+      }
+    },
+    {
+      "id": "paper-lab",
+      "label": "Paper Lab",
+      "description": "A light, editorial take on warm off-white with a deep ink and a burnt orange accent set in a refined serif.",
+      "askedAs": [
+        "light editorial version",
+        "warm paper background AI",
+        "elegant serif neural network",
+        "светлая версия с засечками",
+        "тёплый бумажный фон"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4f0e8",
+        "ink": "#1c1a17",
+        "accent": "#d9572b",
+        "fontFamily": "Fraunces",
+        "grain": true
+      }
+    },
+    {
+      "id": "terminal-green",
+      "label": "Terminal",
+      "description": "A monospaced console look with muted green signals on a dark graphite background and no grain.",
+      "askedAs": [
+        "terminal style AI",
+        "hacker console look",
+        "monospace green network",
+        "стиль терминала",
+        "моноширинный шрифт и зелёный"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0e1210",
+        "ink": "#d4e8da",
+        "accent": "#3fbf7f",
+        "grain": false
+      }
+    },
+    {
+      "id": "clean-studio",
+      "label": "Clean Studio",
+      "description": "A crisp, grain-free light theme with a cobalt accent in Geist, scaled up for a bold product moment.",
+      "askedAs": [
+        "clean minimal light version",
+        "big bold product launch",
+        "crisp white tech look",
+        "чистый минималистичный светлый",
+        "крупная анимация для запуска продукта"
+      ],
+      "props": {
+        "theme": "light",
+        "grain": false,
+        "fontFamily": "Geist",
+        "accent": "#1d4ed8",
+        "scale": 1.2
+      }
+    },
+    {
+      "id": "ember-signal",
+      "label": "Ember Signal",
+      "description": "A compact, delayed reveal with amber pulses on a warm charcoal background for a moody, cinematic beat.",
+      "askedAs": [
+        "moody cinematic AI reveal",
+        "warm amber network glow",
+        "delayed small reveal",
+        "кинематографичная тёмная версия",
+        "янтарные импульсы на тёмном фоне"
+      ],
+      "props": {
+        "background": "#161210",
+        "ink": "#f2e7da",
+        "accent": "#e8a23a",
+        "scale": 0.8,
+        "delay": 20,
+        "fontFamily": "Instrument Serif"
+      }
+    }
+  ]
+}

@@ -1,0 +1,126 @@
+{
+  "component": "block-city",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "midnight-blueprint",
+      "label": "Midnight Blueprint",
+      "description": "Deep navy night with a cool cyan accent and slow, cinematic count-up in monospace type.",
+      "askedAs": [
+        "dark technical skyline with cyan",
+        "slow cinematic data city",
+        "blueprint style 3D growth stat",
+        "тёмный город в стиле чертежа",
+        "медленный кинематографичный рост"
+      ],
+      "props": {
+        "background": "#0a1020",
+        "ink": "#e6f1ff",
+        "accent": "#38bdf8",
+        "fontFamily": "JetBrains Mono",
+        "speed": 0.5,
+        "countUp": 90
+      }
+    },
+    {
+      "id": "paper-model",
+      "label": "Paper Model",
+      "description": "Light architectural-model look on warm off-white with a terracotta accent and elegant serif numerals.",
+      "askedAs": [
+        "light architectural model skyline",
+        "warm editorial 3D chart",
+        "serif number on white city",
+        "светлый макет города",
+        "тёплый редакционный стиль"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4efe6",
+        "ink": "#1f1b16",
+        "accent": "#c2562f",
+        "fontFamily": "Fraunces",
+        "fontWeight": 500
+      }
+    },
+    {
+      "id": "rapid-launch",
+      "label": "Rapid Launch",
+      "description": "Fast, punchy build with a heavy grotesk number snapping in over a bright violet accent.",
+      "askedAs": [
+        "fast energetic skyline reveal",
+        "quick punchy percentage",
+        "bold launch stat animation",
+        "быстрый энергичный рост",
+        "жирные цифры для запуска"
+      ],
+      "props": {
+        "speed": 2,
+        "countUp": 16,
+        "fontFamily": "Space Grotesk",
+        "fontWeight": 800,
+        "accent": "#7c5cff"
+      }
+    },
+    {
+      "id": "emerald-growth",
+      "label": "Emerald Growth",
+      "description": "Dark forest-green palette with a fresh emerald accent and a large, confident scale.",
+      "askedAs": [
+        "green growth city",
+        "big finance style percentage",
+        "dark green revenue skyline",
+        "зелёный рост выручки",
+        "крупный финансовый показатель"
+      ],
+      "props": {
+        "background": "#0b1a14",
+        "ink": "#e8f5ee",
+        "accent": "#34d399",
+        "scale": 1.25,
+        "fontFamily": "Manrope",
+        "fontWeight": 700
+      }
+    },
+    {
+      "id": "clean-minimal",
+      "label": "Clean Minimal",
+      "description": "Crisp white, grain-free scene with a graphite accent and thin Inter numerals at a smaller scale.",
+      "askedAs": [
+        "minimal clean white skyline",
+        "no grain simple data city",
+        "subtle understated stat",
+        "минималистичный белый стиль",
+        "чистый без зерна"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#ffffff",
+        "ink": "#111827",
+        "accent": "#374151",
+        "grain": false,
+        "fontWeight": 200
+      }
+    },
+    {
+      "id": "amber-dusk",
+      "label": "Amber Dusk",
+      "description": "Warm charcoal dusk with a glowing amber accent and a delayed, unhurried reveal.",
+      "askedAs": [
+        "sunset glow city skyline",
+        "warm amber dark stat",
+        "delayed dramatic reveal",
+        "закатный янтарный город",
+        "тёплый тёмный с задержкой"
+      ],
+      "props": {
+        "background": "#17130f",
+        "ink": "#fff4e2",
+        "accent": "#f59e0b",
+        "delay": 24,
+        "speed": 0.75,
+        "fontFamily": "Bricolage Grotesque"
+      }
+    }
+  ]
+}

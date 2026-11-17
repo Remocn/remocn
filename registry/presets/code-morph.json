@@ -1,0 +1,96 @@
+{
+  "component": "code-morph",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "keynote-slow",
+      "label": "Keynote Slow",
+      "description": "Large type on a dark panel with a long, unhurried morph so every token's journey reads from the back of the room.",
+      "askedAs": [
+        "big slow code transition for a launch keynote",
+        "large font code morph for stage presentation",
+        "slow readable before and after code animation",
+        "крупный код с медленной анимацией для презентации",
+        "медленный морфинг кода для выступления на сцене"
+      ],
+      "props": {
+        "fontSize": 28,
+        "morphDuration": 72,
+        "speed": 0.75,
+        "accentColor": "#a78bfa"
+      }
+    },
+    {
+      "id": "docs-light",
+      "label": "Docs Light",
+      "description": "A clean light editor with a deep blue accent that sits naturally inside documentation and blog pages.",
+      "askedAs": [
+        "light mode code editor animation for docs",
+        "white background code change for a blog post",
+        "clean bright code refactor animation",
+        "светлая тема редактора кода для документации",
+        "анимация кода на белом фоне для блога"
+      ],
+      "props": {
+        "theme": "light",
+        "accentColor": "#1d4ed8",
+        "fontSize": 18
+      }
+    },
+    {
+      "id": "snappy-social",
+      "label": "Snappy Social",
+      "description": "A fast, punchy morph with an emerald accent that keeps short social clips moving.",
+      "askedAs": [
+        "quick code diff animation for twitter",
+        "fast snappy code morph for social video",
+        "short punchy refactor clip",
+        "быстрая анимация изменения кода для соцсетей",
+        "резкий короткий морфинг кода"
+      ],
+      "props": {
+        "morphDuration": 18,
+        "speed": 1.5,
+        "accentColor": "#10b981",
+        "fontSize": 22
+      }
+    },
+    {
+      "id": "bare-minimal",
+      "label": "Bare Minimal",
+      "description": "A stripped-back dark panel with no window chrome, line numbers or highlights, letting only the moving tokens speak.",
+      "askedAs": [
+        "minimal code animation without window dots",
+        "plain code morph no line numbers",
+        "clean distraction free code transition",
+        "минималистичный код без номеров строк и рамки",
+        "простая анимация кода без подсветки"
+      ],
+      "props": {
+        "windowDots": false,
+        "lineNumbers": false,
+        "highlight": false,
+        "accentColor": ""
+      }
+    },
+    {
+      "id": "dense-walkthrough",
+      "label": "Dense Walkthrough",
+      "description": "Compact type in a warm amber-accented light editor that fits longer files in a step-by-step build.",
+      "askedAs": [
+        "small font code walkthrough for longer files",
+        "compact code step by step tutorial animation",
+        "fit a whole file in the code morph",
+        "мелкий шрифт для пошагового разбора кода",
+        "компактный редактор для длинного файла"
+      ],
+      "props": {
+        "theme": "light",
+        "fontSize": 14,
+        "accentColor": "#d97706",
+        "morphDuration": 48
+      }
+    }
+  ]
+}

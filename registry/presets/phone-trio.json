@@ -1,0 +1,120 @@
+{
+  "component": "phone-trio",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-paper",
+      "label": "Editorial Paper",
+      "description": "A light, magazine-like frame with a serif headline and a deep ink-red accent on a warm paper ground.",
+      "askedAs": [
+        "light editorial magazine look",
+        "serif headline on cream paper",
+        "clean print style phone mockup",
+        "светлый журнальный стиль",
+        "серифный шрифт на бумажном фоне"
+      ],
+      "props": {
+        "theme": "light",
+        "ground": "paper-crease",
+        "fontFamily": "Instrument Serif",
+        "accent": "#b3261e",
+        "background": "#f4efe6",
+        "ink": "#1c1a17"
+      }
+    },
+    {
+      "id": "midnight-cobalt",
+      "label": "Midnight Cobalt",
+      "description": "A deep blue night scene with a cool cobalt accent and crisp geometric type.",
+      "askedAs": [
+        "dark blue tech launch",
+        "cool night premium look",
+        "blue accent on dark background",
+        "тёмно-синий ночной стиль",
+        "холодный синий запуск"
+      ],
+      "props": {
+        "theme": "dark",
+        "ground": "blue-hour",
+        "accent": "#4c8dff",
+        "fontFamily": "Geist"
+      }
+    },
+    {
+      "id": "slow-velvet",
+      "label": "Slow Velvet",
+      "description": "A languid, cinematic reveal on a plum velvet ground with a soft rose accent and elegant serif type.",
+      "askedAs": [
+        "slow luxurious reveal",
+        "cinematic elegant creator intro",
+        "soft pink luxury vibe",
+        "медленный роскошный показ",
+        "элегантный кинематографичный стиль"
+      ],
+      "props": {
+        "ground": "velvet-hour",
+        "accent": "#e8a0b4",
+        "fontFamily": "Fraunces",
+        "speed": 0.5,
+        "delay": 12
+      }
+    },
+    {
+      "id": "quick-drop",
+      "label": "Quick Drop",
+      "description": "A punchy, fast-paced launch with tight framing, bold grotesque type and a warm ember glow.",
+      "askedAs": [
+        "fast energetic we are live",
+        "snappy social launch",
+        "bold quick promo",
+        "быстрый энергичный запуск",
+        "динамичный промо ролик"
+      ],
+      "props": {
+        "speed": 2,
+        "scale": 1.15,
+        "ground": "ember",
+        "fontFamily": "Bricolage Grotesque",
+        "accent": "#ffb020"
+      }
+    },
+    {
+      "id": "mono-studio",
+      "label": "Mono Studio",
+      "description": "A restrained charcoal frame with monospaced type and a muted sage accent, pulled back for breathing room.",
+      "askedAs": [
+        "minimal developer portfolio",
+        "monospace dark minimal",
+        "understated grey look",
+        "минималистичный тёмный стиль",
+        "моноширинный шрифт портфолио"
+      ],
+      "props": {
+        "ground": "charcoal-satin",
+        "fontFamily": "JetBrains Mono",
+        "accent": "#8fb39a",
+        "scale": 0.85
+      }
+    },
+    {
+      "id": "polar-light",
+      "label": "Polar Light",
+      "description": "An airy, icy light theme with a teal accent and neutral sans type for a calm, fresh feel.",
+      "askedAs": [
+        "bright clean fresh look",
+        "light airy minimal phones",
+        "white and teal calm style",
+        "светлый свежий минимализм",
+        "бело-бирюзовый спокойный стиль"
+      ],
+      "props": {
+        "theme": "light",
+        "ground": "polar",
+        "accent": "#0f8b8d",
+        "fontFamily": "Inter",
+        "speed": 0.75
+      }
+    }
+  ]
+}

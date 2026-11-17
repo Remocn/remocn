@@ -1,0 +1,122 @@
+{
+  "component": "video-call",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "after-hours-standup",
+      "label": "After Hours",
+      "description": "A dark charcoal call with a soft violet accent and an unhurried pace, like a late-evening team sync.",
+      "askedAs": [
+        "dark mode video call",
+        "late night meeting look",
+        "moody dark call grid",
+        "тёмный видеозвонок",
+        "вечерний созвон в тёмной теме"
+      ],
+      "props": {
+        "ground": "afterhours",
+        "background": "#15161b",
+        "ink": "#ecedf2",
+        "accent": "#8b7cf6",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "paper-webinar",
+      "label": "Paper Webinar",
+      "description": "A warm off-white editorial call set in Fraunces with an ink-blue accent for a calm, premium webinar feel.",
+      "askedAs": [
+        "light elegant webinar",
+        "serif video call",
+        "warm paper meeting style",
+        "светлый вебинар с засечками",
+        "элегантный светлый звонок"
+      ],
+      "props": {
+        "ground": "paper-crease",
+        "background": "#f5f1ea",
+        "ink": "#1f1d1a",
+        "accent": "#2f4a7a",
+        "fontFamily": "Fraunces"
+      }
+    },
+    {
+      "id": "hype-reactions",
+      "label": "Hype Burst",
+      "description": "A fast, punchy call on a warm ember ground with a coral accent so reactions fly in energetically.",
+      "askedAs": [
+        "energetic emoji reactions",
+        "fast exciting launch call",
+        "lively social demo",
+        "быстрые реакции эмодзи",
+        "энергичный звонок для запуска"
+      ],
+      "props": {
+        "ground": "ember",
+        "accent": "#ff6b4a",
+        "fontFamily": "Bricolage Grotesque",
+        "speed": 1.75,
+        "scale": 1.1
+      }
+    },
+    {
+      "id": "dev-sync",
+      "label": "Dev Sync",
+      "description": "A cool slate engineering call in JetBrains Mono with a mint accent, compact and technical.",
+      "askedAs": [
+        "developer team call",
+        "monospace tech meeting",
+        "engineering standup look",
+        "звонок для разработчиков",
+        "технический созвон моноширинный"
+      ],
+      "props": {
+        "ground": "coldlight",
+        "background": "#0f1720",
+        "ink": "#d7e3ea",
+        "accent": "#3dd9a4",
+        "fontFamily": "JetBrains Mono",
+        "scale": 0.9
+      }
+    },
+    {
+      "id": "spotlight-presenter",
+      "label": "Spotlight Intro",
+      "description": "A slow, enlarged reveal on a spotlight ground that lets the shared dashboard land after a short beat.",
+      "askedAs": [
+        "dramatic presenter reveal",
+        "slow cinematic call intro",
+        "focus on the shared screen",
+        "медленное появление звонка",
+        "акцент на презентации экрана"
+      ],
+      "props": {
+        "ground": "spotlight",
+        "accent": "#f2b84b",
+        "fontFamily": "Space Grotesk",
+        "scale": 1.25,
+        "delay": 20,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "fresh-greenhouse",
+      "label": "Greenhouse",
+      "description": "A fresh green-tinted call in Manrope with a leafy accent for a friendly, upbeat collaboration tool.",
+      "askedAs": [
+        "fresh green meeting",
+        "friendly collaboration call",
+        "calm natural colors call",
+        "зелёный дружелюбный звонок",
+        "свежий стиль для командной работы"
+      ],
+      "props": {
+        "ground": "greenhouse",
+        "accent": "#2e9e6a",
+        "fontFamily": "Manrope",
+        "speed": 1.25
+      }
+    }
+  ]
+}

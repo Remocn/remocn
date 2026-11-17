@@ -1,0 +1,94 @@
+{
+  "component": "shader-warp-deep-sea",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "still-depths",
+      "label": "Still Depths",
+      "description": "Slow, barely drifting bands with almost no warp for a calm, near-static backdrop.",
+      "askedAs": [
+        "very slow calm background",
+        "subtle barely moving waves",
+        "quiet minimal ocean bands",
+        "спокойный медленный фон",
+        "едва двигающиеся волны"
+      ],
+      "props": {
+        "speed": 0.25,
+        "distortion": 0.05,
+        "swirl": 0.1
+      }
+    },
+    {
+      "id": "riptide",
+      "label": "Riptide",
+      "description": "Fast, heavily swirled currents that churn the teal through the dark field.",
+      "askedAs": [
+        "fast swirling energetic background",
+        "turbulent water motion",
+        "high energy twisting bands",
+        "быстрый закрученный фон",
+        "бурные потоки"
+      ],
+      "props": {
+        "speed": 2.5,
+        "swirl": 0.85,
+        "distortion": 0.45
+      }
+    },
+    {
+      "id": "sharp-stripes",
+      "label": "Sharp Stripes",
+      "description": "Crisp hard-edged diagonal stripes with a steady, graphic rhythm.",
+      "askedAs": [
+        "hard edge stripes",
+        "crisp graphic diagonal lines",
+        "sharp bands no blur",
+        "чёткие полосы",
+        "резкие диагональные линии"
+      ],
+      "props": {
+        "softness": 0.1,
+        "swirl": 0.05,
+        "distortion": 0.1,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "midnight-veil",
+      "label": "Midnight Veil",
+      "description": "Mostly dark blue field with thin, soft teal glints for maximum contrast behind light text.",
+      "askedAs": [
+        "darker background less teal",
+        "mostly navy with hints of color",
+        "dark field for white text",
+        "более тёмный фон",
+        "меньше бирюзового"
+      ],
+      "props": {
+        "proportion": 0.2,
+        "speed": 0.5,
+        "softness": 1
+      }
+    },
+    {
+      "id": "liquid-glow",
+      "label": "Liquid Glow",
+      "description": "Teal-dominant, molten bands that bend and ripple organically.",
+      "askedAs": [
+        "more teal brighter waves",
+        "liquid organic warping",
+        "melting flowing color",
+        "больше бирюзы",
+        "жидкие плавные волны"
+      ],
+      "props": {
+        "proportion": 0.85,
+        "distortion": 0.7,
+        "swirl": 0.5,
+        "speed": 0.75
+      }
+    }
+  ]
+}

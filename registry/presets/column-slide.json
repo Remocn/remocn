@@ -1,0 +1,105 @@
+{
+  "component": "column-slide",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "Warm paper background with a serif headline and slow, wide columns for a magazine feel.",
+      "askedAs": [
+        "magazine style headline swap",
+        "elegant serif title change",
+        "slow warm paper look",
+        "журнальный стиль со шрифтом с засечками",
+        "спокойная элегантная смена заголовка"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "background": "#f3eee4",
+        "ink": "#1e1b16",
+        "accent": "#b5532e",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "rapid-blinds",
+      "label": "Rapid Blinds",
+      "description": "Many thin columns snap across fast with a tight stagger for an energetic cut.",
+      "askedAs": [
+        "fast punchy headline swipe",
+        "lots of thin stripes quick",
+        "energetic blinds transition",
+        "быстрая смена заголовка полосками",
+        "много узких колонок резко"
+      ],
+      "props": {
+        "columns": 12,
+        "stagger": 2,
+        "speed": 1.75,
+        "fontFamily": "Space Grotesk"
+      }
+    },
+    {
+      "id": "monolith",
+      "label": "Monolith",
+      "description": "Three heavy columns sweep slowly across a deep charcoal frame with an oversized headline.",
+      "askedAs": [
+        "big bold slow reveal",
+        "few wide columns dramatic",
+        "architectural heavy title cut",
+        "крупный медленный заголовок",
+        "три широкие колонки драматично"
+      ],
+      "props": {
+        "columns": 3,
+        "stagger": 6,
+        "speed": 0.5,
+        "scale": 1.3,
+        "background": "#121417",
+        "ink": "#edebe6"
+      }
+    },
+    {
+      "id": "terminal-mono",
+      "label": "Terminal Mono",
+      "description": "Monospaced type on near-black with a muted green accent and no grain for a technical, code-like beat.",
+      "askedAs": [
+        "developer style title swap",
+        "monospace code look",
+        "tech launch headline",
+        "моноширинный шрифт как в терминале",
+        "технический стиль заголовка"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "fontWeight": 400,
+        "background": "#0d1110",
+        "ink": "#d6e4dc",
+        "accent": "#3fa37a",
+        "grain": false
+      }
+    },
+    {
+      "id": "clean-swiss",
+      "label": "Clean Swiss",
+      "description": "Crisp white frame, Inter type and a red accent with an even, grain-free rhythm.",
+      "askedAs": [
+        "minimal white swiss design",
+        "clean corporate headline change",
+        "simple light red accent",
+        "минималистичный белый стиль",
+        "чистый швейцарский дизайн"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "accent": "#e03a2f",
+        "grain": false,
+        "columns": 7,
+        "scale": 0.9
+      }
+    }
+  ]
+}

@@ -1,0 +1,123 @@
+{
+  "component": "hook-punch",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "rapid-fire",
+      "label": "Rapid Fire",
+      "description": "Fast, tight beats with a hot coral accent on a deep ember ground for maximum scroll-stopping urgency.",
+      "askedAs": [
+        "make it faster and more aggressive",
+        "quick punchy hook with warm red",
+        "snappy energetic opening",
+        "сделай быстрее и резче",
+        "энергичный хук с красным акцентом"
+      ],
+      "props": {
+        "speed": 1.75,
+        "hold": 16,
+        "accent": "#ff5a3c",
+        "ground": "ember",
+        "scale": 1.15
+      }
+    },
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "A slower, magazine-style hook set in Instrument Serif on warm paper with an ink-black payoff.",
+      "askedAs": [
+        "elegant serif version",
+        "calm magazine style hook",
+        "light editorial look",
+        "элегантный вариант с засечками",
+        "спокойный журнальный стиль"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "ground": "paper-crease",
+        "accent": "#b4532a",
+        "speed": 0.75,
+        "hold": 48
+      }
+    },
+    {
+      "id": "terminal-dev",
+      "label": "Terminal Dev",
+      "description": "Monospaced type with a mint accent on charcoal, made for developer tool launches.",
+      "askedAs": [
+        "code style hook for dev tool",
+        "monospace terminal look",
+        "hacker vibe green on dark",
+        "стиль терминала для разработчиков",
+        "моноширинный шрифт на тёмном"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "ground": "charcoal-satin",
+        "accent": "#3ddc97",
+        "ink": "#e6edf3",
+        "scale": 0.9
+      }
+    },
+    {
+      "id": "clean-minimal",
+      "label": "Clean Minimal",
+      "description": "Plain white background, near-black Inter type and a cobalt payoff with a measured pace.",
+      "askedAs": [
+        "simple clean white version",
+        "minimal corporate hook",
+        "no gradient background plain",
+        "минималистичный белый вариант",
+        "чистый строгий стиль"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#ffffff",
+        "ink": "#111318",
+        "fontFamily": "Inter",
+        "accent": "#2747e8",
+        "hold": 40
+      }
+    },
+    {
+      "id": "velvet-night",
+      "label": "Velvet Night",
+      "description": "Moody violet ground with a soft orchid accent and oversized Fraunces type for a premium late-night feel.",
+      "askedAs": [
+        "moody purple premium look",
+        "dark luxurious hook",
+        "big bold night vibe",
+        "тёмный фиолетовый премиум",
+        "атмосферный ночной стиль"
+      ],
+      "props": {
+        "ground": "velvet-hour",
+        "fontFamily": "Fraunces",
+        "accent": "#c58bff",
+        "scale": 1.3,
+        "delay": 10
+      }
+    },
+    {
+      "id": "cool-glacier",
+      "label": "Cool Glacier",
+      "description": "Icy polar ground with Space Grotesk and a teal accent, slightly slower and smaller for a calm tech tone.",
+      "askedAs": [
+        "cool blue icy look",
+        "calm techy hook",
+        "softer slower teal version",
+        "холодный голубой стиль",
+        "спокойный технологичный вариант"
+      ],
+      "props": {
+        "ground": "polar",
+        "fontFamily": "Space Grotesk",
+        "accent": "#14b8a6",
+        "speed": 0.75,
+        "scale": 0.85
+      }
+    }
+  ]
+}

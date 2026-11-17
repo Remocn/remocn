@@ -1,0 +1,116 @@
+{
+  "component": "caption-cube",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "rapid-flip",
+      "label": "Rapid Flip",
+      "description": "Short one-beat phrases that flip over quickly with a tight hold, for high-energy social cuts.",
+      "askedAs": [
+        "fast flipping captions",
+        "quick cube turns every word",
+        "snappy short phrases",
+        "быстрые переворачивающиеся субтитры",
+        "короткие фразы быстро"
+      ],
+      "props": {
+        "combineTokensWithinMilliseconds": 200,
+        "holdMs": 200,
+        "fontSize": 84,
+        "fontWeight": 900
+      }
+    },
+    {
+      "id": "karaoke-gold",
+      "label": "Karaoke Gold",
+      "description": "White bold captions with the spoken word lit in warm amber as the cube turns.",
+      "askedAs": [
+        "highlight the current word",
+        "karaoke style cube captions",
+        "yellow active word",
+        "подсветка текущего слова",
+        "караоке субтитры"
+      ],
+      "props": {
+        "tintActive": true,
+        "activeColor": "#f59e0b",
+        "fontSize": 72
+      }
+    },
+    {
+      "id": "calm-explainer",
+      "label": "Calm Explainer",
+      "description": "Longer phrases in a lighter weight that linger before rolling over, suited to measured narration.",
+      "askedAs": [
+        "slower calmer captions",
+        "longer phrases per face",
+        "relaxed explainer subtitles",
+        "спокойные субтитры",
+        "длинные фразы медленно"
+      ],
+      "props": {
+        "combineTokensWithinMilliseconds": 2000,
+        "holdMs": 1200,
+        "fontWeight": 500,
+        "fontSize": 52
+      }
+    },
+    {
+      "id": "ink-on-light",
+      "label": "Ink On Light",
+      "description": "Flat charcoal text with no shadow and a teal active word, made for bright backgrounds.",
+      "askedAs": [
+        "dark text for light video",
+        "no shadow black captions",
+        "captions on white background",
+        "тёмный текст на светлом фоне",
+        "субтитры без тени"
+      ],
+      "props": {
+        "color": "#1f2937",
+        "shadow": false,
+        "tintActive": true,
+        "activeColor": "#0d9488",
+        "fontWeight": 700
+      }
+    },
+    {
+      "id": "giant-punch",
+      "label": "Giant Punch",
+      "description": "Oversized heavy type with a coral accent that slams each phrase over like a big beat.",
+      "askedAs": [
+        "huge bold captions",
+        "massive text that flips",
+        "big punchy words",
+        "огромные жирные субтитры",
+        "крупный текст с акцентом"
+      ],
+      "props": {
+        "fontSize": 124,
+        "fontWeight": 900,
+        "tintActive": true,
+        "activeColor": "#fb7185",
+        "combineTokensWithinMilliseconds": 400
+      }
+    },
+    {
+      "id": "soft-mint",
+      "label": "Soft Mint",
+      "description": "Small medium-weight captions in pale mint with a gentle pace, quiet and unobtrusive.",
+      "askedAs": [
+        "subtle small captions",
+        "minimal pastel subtitles",
+        "quiet understated text",
+        "незаметные маленькие субтитры",
+        "мягкие пастельные титры"
+      ],
+      "props": {
+        "fontSize": 40,
+        "fontWeight": 600,
+        "color": "#d1fae5",
+        "holdMs": 900
+      }
+    }
+  ]
+}

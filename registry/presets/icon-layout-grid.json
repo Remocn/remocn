@@ -1,0 +1,119 @@
+{
+  "component": "icon-layout-grid",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "hairline-slow-draw",
+      "label": "Hairline Draw",
+      "description": "A large, thin-stroked grid that slowly sketches itself in a soft slate tone.",
+      "askedAs": [
+        "thin lines slow drawing grid",
+        "elegant outline grid icon",
+        "delicate sketch animation",
+        "тонкие линии медленная отрисовка",
+        "изящная сетка контуром"
+      ],
+      "props": {
+        "animation": "draw",
+        "strokeWidth": 1,
+        "speed": 0.5,
+        "size": 120,
+        "color": "#475569"
+      }
+    },
+    {
+      "id": "bold-snappy",
+      "label": "Bold Snap",
+      "description": "A chunky, heavy-stroked grid that pops into place with a quick action burst.",
+      "askedAs": [
+        "thick fast grid icon",
+        "punchy bold animation",
+        "quick snappy layout icon",
+        "жирная быстрая иконка",
+        "резкая анимация сетки"
+      ],
+      "props": {
+        "animation": "action",
+        "strokeWidth": 3,
+        "speed": 2,
+        "size": 96
+      }
+    },
+    {
+      "id": "ocean-loop",
+      "label": "Ocean Loop",
+      "description": "A medium blue grid that continuously draws and animates in a calm, steady loop.",
+      "askedAs": [
+        "looping blue grid icon",
+        "repeat animation forever blue",
+        "calm continuous loop",
+        "синяя иконка по кругу",
+        "зацикленная анимация сетки"
+      ],
+      "props": {
+        "loop": true,
+        "color": "#1f6feb",
+        "size": 72,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "tiny-ui-hint",
+      "label": "Tiny Hint",
+      "description": "A small, fine-lined muted grey icon with a brisk action cue, suited to subtle UI hints.",
+      "askedAs": [
+        "small subtle grid icon",
+        "minimal ui hint animation",
+        "tiny grey layout icon",
+        "маленькая незаметная иконка",
+        "мини подсказка интерфейса"
+      ],
+      "props": {
+        "size": 32,
+        "strokeWidth": 1.5,
+        "color": "#737373",
+        "animation": "action",
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "terracotta-hero",
+      "label": "Terracotta Hero",
+      "description": "An oversized warm terracotta grid drawn deliberately as a hero graphic.",
+      "askedAs": [
+        "big warm orange grid",
+        "huge hero icon earthy color",
+        "large statement layout icon",
+        "большая тёплая иконка",
+        "крупная сетка терракотового цвета"
+      ],
+      "props": {
+        "size": 200,
+        "color": "#c2410c",
+        "strokeWidth": 2.5,
+        "speed": 0.75,
+        "animation": "both"
+      }
+    },
+    {
+      "id": "forest-pulse",
+      "label": "Forest Pulse",
+      "description": "A deep green grid that loops its action motion at a lively tempo.",
+      "askedAs": [
+        "green repeating grid",
+        "pulsing layout icon loop",
+        "fast looping green icon",
+        "зелёная пульсирующая иконка",
+        "быстрый повтор анимации"
+      ],
+      "props": {
+        "color": "#15803d",
+        "animation": "action",
+        "loop": true,
+        "speed": 1.5,
+        "size": 64
+      }
+    }
+  ]
+}

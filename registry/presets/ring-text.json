@@ -1,0 +1,106 @@
+{
+  "component": "ring-text",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "slow-orbit",
+      "label": "Slow Orbit",
+      "description": "A wide, gently tilted ring in cream on deep navy that drifts around at a calm, unhurried pace.",
+      "askedAs": [
+        "slow calm spinning ring",
+        "elegant slow rotating text band",
+        "wide ring that turns gently",
+        "медленное вращение кольца с текстом",
+        "спокойное широкое кольцо"
+      ],
+      "props": {
+        "color": "#f4ecd8",
+        "band": "#14213d",
+        "radius": 290,
+        "tilt": 22,
+        "roll": -6,
+        "period": 600
+      }
+    },
+    {
+      "id": "fast-badge",
+      "label": "Spin Badge",
+      "description": "A small, steeply tilted coral badge with bold white type that whips around quickly.",
+      "askedAs": [
+        "small fast spinning badge",
+        "quick rotating sticker text",
+        "tight energetic ring loop",
+        "маленький быстрый бейдж",
+        "быстро крутящийся значок"
+      ],
+      "props": {
+        "color": "#ffffff",
+        "band": "#e4572e",
+        "radius": 120,
+        "fontSize": 28,
+        "tilt": 55,
+        "speed": 2.5
+      }
+    },
+    {
+      "id": "flat-halo",
+      "label": "Flat Halo",
+      "description": "A nearly face-on ring with soft lilac text on charcoal that reads like a rotating halo.",
+      "askedAs": [
+        "flat ring seen from the front",
+        "halo of text circling",
+        "minimal round text loop",
+        "плоское кольцо текста анфас",
+        "текст по кругу как нимб"
+      ],
+      "props": {
+        "color": "#c9b8ff",
+        "band": "#1c1b22",
+        "tilt": 6,
+        "roll": 0,
+        "period": 360
+      }
+    },
+    {
+      "id": "steep-headline",
+      "label": "Big Headline",
+      "description": "Oversized black type on a warm yellow band, rolled hard for a loud, poster-like statement.",
+      "askedAs": [
+        "huge bold ring headline",
+        "big chunky spinning slogan",
+        "loud yellow rotating band",
+        "огромный жирный текст на кольце",
+        "яркий жёлтый слоган по кругу"
+      ],
+      "props": {
+        "color": "#111111",
+        "band": "#ffd23f",
+        "radius": 320,
+        "fontSize": 78,
+        "tilt": 48,
+        "roll": -34
+      }
+    },
+    {
+      "id": "mint-tilt",
+      "label": "Mint Tumble",
+      "description": "A mid-size forest-green band with mint lettering, tilted the other way and spinning briskly.",
+      "askedAs": [
+        "green ring tilted to the right",
+        "fresh mint rotating text",
+        "playful tilted band spinning",
+        "зелёное наклонное кольцо",
+        "мятный текст на вращающейся ленте"
+      ],
+      "props": {
+        "color": "#b8f2d0",
+        "band": "#1f4d3a",
+        "radius": 170,
+        "tilt": 66,
+        "roll": 28,
+        "period": 150
+      }
+    }
+  ]
+}

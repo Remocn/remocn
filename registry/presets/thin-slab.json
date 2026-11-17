@@ -1,0 +1,105 @@
+{
+  "component": "thin-slab",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-paper",
+      "label": "Editorial Paper",
+      "description": "Warm off-white page with serif numerals, a deep ink-red slab and a slow, considered squeeze.",
+      "askedAs": [
+        "make it look like a magazine page",
+        "serif light version, slower",
+        "elegant print style with warm paper",
+        "в стиле журнала с засечками",
+        "светлый вариант как бумага"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4efe6",
+        "ink": "#1c1a17",
+        "accent": "#b23a2e",
+        "fontFamily": "Instrument Serif",
+        "squeezeDuration": 56
+      }
+    },
+    {
+      "id": "terminal-snap",
+      "label": "Terminal Snap",
+      "description": "Near-black console look with monospace type, square corners and a fast, punchy squeeze in muted green.",
+      "askedAs": [
+        "developer terminal style",
+        "monospace and fast",
+        "hacker look with sharp corners",
+        "как в терминале, моноширинный шрифт",
+        "быстрее и в стиле кода"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0d1110",
+        "ink": "#d7e4dc",
+        "accent": "#3fb27f",
+        "radius": 0,
+        "squeezeDuration": 18
+      }
+    },
+    {
+      "id": "soft-pill",
+      "label": "Soft Pill",
+      "description": "Clean light theme with a fully rounded violet slab and friendly geometric type at a relaxed pace.",
+      "askedAs": [
+        "rounder and softer",
+        "friendly light startup look",
+        "pill shaped bar on white",
+        "мягкий скруглённый вариант",
+        "светлая дружелюбная версия"
+      ],
+      "props": {
+        "theme": "light",
+        "accent": "#6d5df6",
+        "radius": 40,
+        "fontFamily": "Manrope",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "midnight-hero",
+      "label": "Midnight Hero",
+      "description": "Oversized launch-claim framing on deep navy with an amber slab and bold grotesque type.",
+      "askedAs": [
+        "bigger and bolder for a launch",
+        "make the number huge",
+        "dramatic dark navy with gold",
+        "крупнее и эффектнее для запуска",
+        "тёмно-синий фон с золотым"
+      ],
+      "props": {
+        "background": "#0b1426",
+        "ink": "#f2f4f8",
+        "accent": "#e8a93b",
+        "fontFamily": "Bricolage Grotesque",
+        "scale": 1.3,
+        "radius": 6
+      }
+    },
+    {
+      "id": "quiet-overlay",
+      "label": "Quiet Overlay",
+      "description": "Compact, understated version with a cool slate accent and a short lead-in, sized to sit over footage.",
+      "askedAs": [
+        "smaller so it fits over video",
+        "subtle overlay version",
+        "minimal compact with a delay",
+        "поменьше, чтобы наложить на видео",
+        "сдержанный вариант с задержкой"
+      ],
+      "props": {
+        "scale": 0.7,
+        "accent": "#8fa3b8",
+        "fontFamily": "Geist",
+        "delay": 20,
+        "squeezeDuration": 44
+      }
+    }
+  ]
+}

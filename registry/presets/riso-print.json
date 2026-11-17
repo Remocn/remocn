@@ -1,0 +1,104 @@
+{
+  "component": "riso-print",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "blue-fluoro-pink",
+      "label": "Blue And Pink",
+      "description": "Classic riso pairing of medium blue key and fluorescent-leaning pink on warm off-white stock.",
+      "askedAs": [
+        "blue and pink riso",
+        "zine print in blue with pink",
+        "two color risograph pastel poster",
+        "синий и розовый ризограф",
+        "зин в сине-розовых тонах"
+      ],
+      "props": {
+        "keyInk": "#3255a4",
+        "accentInk": "#ff48b0",
+        "paper": "#f7f3ea",
+        "grain": 0.6
+      }
+    },
+    {
+      "id": "gig-poster",
+      "label": "Gig Poster",
+      "description": "Loud, heavily misregistered black and yellow on kraft-toned paper with thick speckle and a fast, jumpy wobble.",
+      "askedAs": [
+        "messy punk gig poster",
+        "heavy grain off-register flyer",
+        "rough concert poster print",
+        "грязная афиша концерта",
+        "панк-флаер с сильным смещением"
+      ],
+      "props": {
+        "keyInk": "#1a1a1a",
+        "accentInk": "#ffc21a",
+        "paper": "#d9c7a5",
+        "grain": 0.85,
+        "jitter": 4,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "clean-editorial",
+      "label": "Clean Editorial",
+      "description": "Nearly registered navy and teal on bright white with fine grain, no crop marks and a slow, calm settle.",
+      "askedAs": [
+        "subtle clean risograph",
+        "minimal print look for title",
+        "almost aligned two ink print",
+        "аккуратная печать без меток",
+        "минималистичный ризо титр"
+      ],
+      "props": {
+        "keyInk": "#1d2b4f",
+        "accentInk": "#00838a",
+        "paper": "#fbfbf8",
+        "grain": 0.2,
+        "jitter": 0.4,
+        "marks": false
+      }
+    },
+    {
+      "id": "dark-stock",
+      "label": "Dark Stock",
+      "description": "Light inks printed on charcoal paper, cream key with a coral accent for a moody night-edition feel.",
+      "askedAs": [
+        "riso on black paper",
+        "dark background print look",
+        "night edition poster",
+        "ризограф на тёмной бумаге",
+        "тёмный постер с кремовой краской"
+      ],
+      "props": {
+        "keyInk": "#efe6d2",
+        "accentInk": "#ff7a59",
+        "paper": "#232323",
+        "grain": 0.45,
+        "jitter": 1.6
+      }
+    },
+    {
+      "id": "green-slow-zine",
+      "label": "Slow Zine",
+      "description": "Earthy forest green and burnt orange on recycled cream stock, drifting in slowly with a lazy wobble.",
+      "askedAs": [
+        "slow earthy zine look",
+        "green and orange print",
+        "recycled paper poster vibe",
+        "медленный зин в зелёных тонах",
+        "эко постер на крафтовой бумаге"
+      ],
+      "props": {
+        "keyInk": "#2e4a3a",
+        "accentInk": "#d9692b",
+        "paper": "#ece3cf",
+        "grain": 0.7,
+        "jitter": 2.2,
+        "speed": 0.5
+      }
+    }
+  ]
+}

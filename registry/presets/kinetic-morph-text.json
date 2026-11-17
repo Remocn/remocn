@@ -1,0 +1,126 @@
+{
+  "component": "kinetic-morph-text",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "calm-drift",
+      "label": "Calm Drift",
+      "description": "Slow, gentle letter flights with soft rotation on a deep navy ground with pale cream type.",
+      "askedAs": [
+        "slow gentle text morph",
+        "calm letters rearranging",
+        "soft relaxed word animation",
+        "спокойная анимация букв",
+        "медленное плавное превращение текста"
+      ],
+      "props": {
+        "spread": 80,
+        "rotation": 30,
+        "transitionFrames": 80,
+        "holdFrames": 70,
+        "color": "#f3ead8",
+        "backgroundColor": "#1c2541"
+      }
+    },
+    {
+      "id": "wild-scatter",
+      "label": "Wild Scatter",
+      "description": "Fast, wide letter flights with heavy spins and strong trails in coral on charcoal.",
+      "askedAs": [
+        "energetic chaotic letters",
+        "fast spinning text shuffle",
+        "explosive word transition",
+        "буквы разлетаются хаотично",
+        "быстрая энергичная смена слов"
+      ],
+      "props": {
+        "spread": 230,
+        "rotation": 240,
+        "trails": 0.8,
+        "transitionFrames": 30,
+        "color": "#ff8a6b",
+        "backgroundColor": "#1e1e22"
+      }
+    },
+    {
+      "id": "clean-editorial",
+      "label": "Clean Editorial",
+      "description": "Crisp ink-on-paper type with minimal morphing and no trails for a tidy, magazine feel.",
+      "askedAs": [
+        "minimal clean text swap",
+        "black text on white morph",
+        "subtle elegant letter rearrange",
+        "минималистичный текст на белом",
+        "аккуратная смена фраз без эффектов"
+      ],
+      "props": {
+        "fontWeight": "500",
+        "morph": 0.2,
+        "trails": 0,
+        "rotation": 20,
+        "color": "#141414",
+        "backgroundColor": "#f5f2ec"
+      }
+    },
+    {
+      "id": "bold-poster",
+      "label": "Bold Poster",
+      "description": "Huge heavy letters in mustard on forest green that loop through phrases with punchy timing.",
+      "askedAs": [
+        "big bold looping title",
+        "large heavy kinetic type",
+        "poster style word loop",
+        "крупный жирный заголовок",
+        "зацикленный большой текст"
+      ],
+      "props": {
+        "fontSize": 160,
+        "fontWeight": "700",
+        "loop": true,
+        "holdFrames": 24,
+        "color": "#f2c14e",
+        "backgroundColor": "#1f3d2b"
+      }
+    },
+    {
+      "id": "dreamy-ghost",
+      "label": "Dreamy Ghost",
+      "description": "Soft lilac letters melt fully between phrases with long echoing outline trails on dusk purple.",
+      "askedAs": [
+        "dreamy melting text",
+        "ghostly trailing letters",
+        "soft blurry morph words",
+        "мечтательный плывущий текст",
+        "буквы со шлейфом и плавным перетеканием"
+      ],
+      "props": {
+        "morph": 1,
+        "trails": 1,
+        "speed": 0.75,
+        "color": "#e4d9ff",
+        "backgroundColor": "#2e2346"
+      }
+    },
+    {
+      "id": "snappy-small",
+      "label": "Snappy Caption",
+      "description": "Small, quick caption-sized text with tight flights and short pauses in white on slate blue.",
+      "askedAs": [
+        "quick small text swap",
+        "fast caption word change",
+        "compact snappy morph",
+        "быстрая смена подписей",
+        "маленький шустрый текст"
+      ],
+      "props": {
+        "fontSize": 56,
+        "spread": 60,
+        "speed": 2,
+        "holdFrames": 18,
+        "color": "#ffffff",
+        "backgroundColor": "#3a4f6b"
+      }
+    }
+  ]
+}

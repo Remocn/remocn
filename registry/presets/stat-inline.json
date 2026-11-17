@@ -1,0 +1,124 @@
+{
+  "component": "stat-inline",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "A warm light page with an elegant serif sentence and a deep terracotta number, centered like a magazine pull quote.",
+      "askedAs": [
+        "magazine style stat sentence",
+        "serif quote with highlighted number",
+        "elegant editorial light look",
+        "журнальный стиль с цифрой",
+        "элегантная цитата с засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "background": "#f6f1e9",
+        "ink": "#2a2420",
+        "accent": "#b5532e",
+        "align": "center"
+      }
+    },
+    {
+      "id": "terminal-mono",
+      "label": "Terminal Mono",
+      "description": "A near-black console with monospaced text and a soft green number that snaps in quickly.",
+      "askedAs": [
+        "developer terminal stat",
+        "code style monospace number",
+        "hacker console look",
+        "стиль терминала для разработчиков",
+        "моноширинный шрифт как в консоли"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0d1117",
+        "ink": "#c9d1d9",
+        "accent": "#3fb950",
+        "moveDuration": 14,
+        "speed": 1.25
+      }
+    },
+    {
+      "id": "slow-statement",
+      "label": "Slow Statement",
+      "description": "A large, centered sentence that eases in slowly and lingers, giving the number real weight.",
+      "askedAs": [
+        "slow dramatic stat reveal",
+        "big centered statement",
+        "let the number breathe",
+        "медленное эффектное появление",
+        "крупная фраза по центру"
+      ],
+      "props": {
+        "scale": 1.3,
+        "align": "center",
+        "moveDuration": 48,
+        "hold": 90,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "quick-proof",
+      "label": "Quick Proof",
+      "description": "A compact, fast social-proof beat in Inter that appears and moves on without lingering.",
+      "askedAs": [
+        "fast social proof line",
+        "quick stat for a short video",
+        "snappy small number sentence",
+        "быстрая строка с цифрой",
+        "короткий социальный пруф"
+      ],
+      "props": {
+        "fontFamily": "Inter",
+        "scale": 0.85,
+        "moveDuration": 10,
+        "hold": 28,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "midnight-amber",
+      "label": "Midnight Amber",
+      "description": "A deep navy backdrop with off-white grotesk text and a warm amber number for a premium night look.",
+      "askedAs": [
+        "dark blue with gold number",
+        "premium night style stat",
+        "navy background warm accent",
+        "тёмно-синий фон с золотой цифрой",
+        "премиальный ночной стиль"
+      ],
+      "props": {
+        "background": "#0f172a",
+        "ink": "#e8e6e1",
+        "accent": "#f2a93b",
+        "fontFamily": "Space Grotesk",
+        "delay": 12
+      }
+    },
+    {
+      "id": "soft-sage",
+      "label": "Soft Sage",
+      "description": "A calm pale-sage page with friendly rounded type and a forest-green number.",
+      "askedAs": [
+        "calm green light stat",
+        "soft natural palette sentence",
+        "friendly gentle number highlight",
+        "спокойный зелёный светлый стиль",
+        "мягкая природная палитра"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#eef2ea",
+        "ink": "#1f2a22",
+        "accent": "#2f6b4f",
+        "fontFamily": "Manrope",
+        "scale": 1.1
+      }
+    }
+  ]
+}

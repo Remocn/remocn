@@ -1,0 +1,103 @@
+{
+  "component": "kerning-snap",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-ivory",
+      "label": "Editorial Ivory",
+      "description": "Warm ivory page with deep ink and an oxblood accent in a delicate Instrument Serif, assembling at an unhurried pace.",
+      "askedAs": [
+        "light editorial serif title",
+        "elegant magazine style word reveal",
+        "warm paper look with dark red accent",
+        "светлый журнальный стиль заголовка",
+        "элегантный серифный текст на бумаге"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4efe6",
+        "ink": "#1c1a17",
+        "accent": "#8c2f2b",
+        "fontFamily": "Instrument Serif",
+        "interval": 10
+      }
+    },
+    {
+      "id": "rapid-set",
+      "label": "Rapid Set",
+      "description": "Tight, fast-firing snaps that lock the word together almost in one burst for an energetic open.",
+      "askedAs": [
+        "fast kerning snap",
+        "quick letters snapping together",
+        "punchy rapid title assembly",
+        "быстрая сборка букв",
+        "резкий быстрый заголовок"
+      ],
+      "props": {
+        "interval": 3,
+        "firstSnap": 12,
+        "speed": 1.5,
+        "scale": 1.2
+      }
+    },
+    {
+      "id": "midnight-gold",
+      "label": "Midnight Gold",
+      "description": "Near-black navy ground with soft cream letters and a muted gold accent for a luxurious, slow reveal.",
+      "askedAs": [
+        "luxury gold title on dark",
+        "premium dark navy and gold",
+        "slow elegant reveal with gold",
+        "люксовый золотой заголовок",
+        "тёмный фон с золотом"
+      ],
+      "props": {
+        "background": "#0e1320",
+        "ink": "#f2ebdd",
+        "accent": "#c9a45c",
+        "interval": 12,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "type-lab",
+      "label": "Type Lab",
+      "description": "Clean monospace letters on a cool grey canvas with a teal accent, grain off, for a technical spec-sheet feel.",
+      "askedAs": [
+        "monospace technical title",
+        "clean code style letters",
+        "minimal tech look no grain",
+        "моноширинный технический стиль",
+        "чистый минималистичный шрифт"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "JetBrains Mono",
+        "background": "#e9ecef",
+        "ink": "#15191e",
+        "accent": "#0f7c7a",
+        "grain": false
+      }
+    },
+    {
+      "id": "quiet-grotesk",
+      "label": "Quiet Grotesk",
+      "description": "A smaller, modern Geist wordmark in soft violet that settles in after a held pause.",
+      "askedAs": [
+        "modern sans serif small title",
+        "subtle minimal wordmark",
+        "delayed calm text reveal",
+        "современный гротеск заголовок",
+        "спокойное появление слова"
+      ],
+      "props": {
+        "fontFamily": "Geist",
+        "scale": 0.8,
+        "accent": "#7a6ff0",
+        "delay": 20,
+        "interval": 9
+      }
+    }
+  ]
+}

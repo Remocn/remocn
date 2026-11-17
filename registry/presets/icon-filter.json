@@ -1,0 +1,99 @@
+{
+  "component": "icon-filter",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "hairline-slow",
+      "label": "Hairline Draw",
+      "description": "A large, thin-stroked filter icon that traces itself in slowly, like a pen sketch.",
+      "askedAs": [
+        "thin line filter icon drawing slowly",
+        "elegant outline filter animation",
+        "slow sketch style icon",
+        "тонкая иконка фильтра рисуется медленно",
+        "изящная линейная анимация фильтра"
+      ],
+      "props": {
+        "animation": "draw",
+        "strokeWidth": 1.25,
+        "speed": 0.5,
+        "size": 120,
+        "color": "#334155"
+      }
+    },
+    {
+      "id": "bold-snap",
+      "label": "Bold Snap",
+      "description": "A chunky, heavy-stroke filter icon that plays its action quickly and decisively.",
+      "askedAs": [
+        "thick filter icon fast",
+        "bold punchy filter animation",
+        "quick heavy icon motion",
+        "жирная иконка фильтра быстро",
+        "резкая анимация фильтра"
+      ],
+      "props": {
+        "animation": "action",
+        "strokeWidth": 3,
+        "speed": 2,
+        "size": 96
+      }
+    },
+    {
+      "id": "ui-loop-blue",
+      "label": "Accent Loop",
+      "description": "A compact blue filter icon that loops continuously as a lively interface accent.",
+      "askedAs": [
+        "looping blue filter icon",
+        "small animated filter button",
+        "repeating filter icon for UI",
+        "синяя иконка фильтра по кругу",
+        "зацикленная иконка фильтра"
+      ],
+      "props": {
+        "loop": true,
+        "color": "#1f6feb",
+        "size": 40,
+        "speed": 1.25
+      }
+    },
+    {
+      "id": "hero-terracotta",
+      "label": "Warm Hero",
+      "description": "An oversized terracotta filter icon with medium weight, drawn and animated at a calm pace.",
+      "askedAs": [
+        "big warm colored filter icon",
+        "large hero filter animation",
+        "terracotta icon slow",
+        "большая тёплая иконка фильтра",
+        "крупная иконка фильтра для заставки"
+      ],
+      "props": {
+        "size": 180,
+        "color": "#c2410c",
+        "strokeWidth": 1.75,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "muted-ambient",
+      "label": "Ambient Pulse",
+      "description": "A soft grey-green filter icon that gently repeats its action at a slow, ambient rhythm.",
+      "askedAs": [
+        "subtle looping filter icon",
+        "calm background icon animation",
+        "muted slow repeating filter",
+        "спокойная повторяющаяся иконка",
+        "приглушённая медленная анимация фильтра"
+      ],
+      "props": {
+        "animation": "action",
+        "loop": true,
+        "speed": 0.5,
+        "color": "#5f7a6b",
+        "size": 72
+      }
+    }
+  ]
+}

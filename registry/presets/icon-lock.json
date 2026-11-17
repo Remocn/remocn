@@ -1,0 +1,98 @@
+{
+  "component": "icon-lock",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "hero-slow-draw",
+      "label": "Hero Draw",
+      "description": "A large, fine-lined lock that slowly sketches itself in deep navy.",
+      "askedAs": [
+        "big lock icon drawing slowly",
+        "large thin outline lock reveal",
+        "elegant slow lock animation",
+        "большой замок медленно рисуется",
+        "тонкий крупный замок с отрисовкой"
+      ],
+      "props": {
+        "animation": "draw",
+        "size": 160,
+        "strokeWidth": 1.25,
+        "speed": 0.5,
+        "color": "#1e3a5f"
+      }
+    },
+    {
+      "id": "snap-lock",
+      "label": "Quick Snap",
+      "description": "A bold, compact lock that clicks shut fast with a heavy stroke.",
+      "askedAs": [
+        "fast lock closing",
+        "quick bold lock snap",
+        "lock clicks shut quickly",
+        "быстро закрывающийся замок",
+        "жирный замок защёлкивается"
+      ],
+      "props": {
+        "animation": "action",
+        "strokeWidth": 2.75,
+        "speed": 2,
+        "size": 64
+      }
+    },
+    {
+      "id": "secure-green-loop",
+      "label": "Secure Loop",
+      "description": "A forest-green lock that repeatedly locks as a calm security indicator.",
+      "askedAs": [
+        "looping green security lock",
+        "repeating lock for secure status",
+        "green lock animation on loop",
+        "зелёный замок в цикле",
+        "повторяющаяся анимация защиты"
+      ],
+      "props": {
+        "loop": true,
+        "color": "#2f7d4f",
+        "speed": 0.75,
+        "size": 96
+      }
+    },
+    {
+      "id": "brand-blue-medium",
+      "label": "Brand Blue",
+      "description": "A mid-sized lock in confident product blue with a standard draw-and-lock sequence.",
+      "askedAs": [
+        "blue lock icon for app",
+        "product style lock animation",
+        "medium blue padlock",
+        "синий замок для интерфейса",
+        "замок в фирменном синем цвете"
+      ],
+      "props": {
+        "color": "#1f6feb",
+        "size": 80,
+        "strokeWidth": 2.25
+      }
+    },
+    {
+      "id": "tiny-alert-lock",
+      "label": "Alert Badge",
+      "description": "A small brick-red lock that loops briskly to flag restricted content.",
+      "askedAs": [
+        "small red locked icon",
+        "restricted access lock looping",
+        "red padlock warning",
+        "маленький красный замок",
+        "замок для закрытого доступа"
+      ],
+      "props": {
+        "color": "#b42318",
+        "size": 32,
+        "loop": true,
+        "speed": 1.5,
+        "animation": "action"
+      }
+    }
+  ]
+}

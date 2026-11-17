@@ -1,0 +1,124 @@
+{
+  "component": "plain-license",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "paper-serif",
+      "label": "Paper Serif",
+      "description": "Warm off-white page with a calm editorial serif and a deep forest green accent.",
+      "askedAs": [
+        "light serif license card",
+        "editorial look for terms",
+        "calm paper style free promise",
+        "светлый вариант с засечками",
+        "спокойный редакционный стиль"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "background": "#f5f1e8",
+        "ink": "#1c1b18",
+        "accent": "#2f6b3f",
+        "fontWeight": 400
+      }
+    },
+    {
+      "id": "snap-quick",
+      "label": "Snap Quick",
+      "description": "Fast, tight word cadence in heavy condensed type for a punchy beat.",
+      "askedAs": [
+        "faster punchier version",
+        "quick snappy license reveal",
+        "bold and fast free text",
+        "быстрее и резче",
+        "жирный быстрый вариант"
+      ],
+      "props": {
+        "speed": 2,
+        "stagger": 1,
+        "step": 20,
+        "fontWeight": 800,
+        "scale": 1.15
+      }
+    },
+    {
+      "id": "slow-reassure",
+      "label": "Slow Reassure",
+      "description": "Unhurried, generously spaced reveal in light geometric type on deep navy.",
+      "askedAs": [
+        "slow calm reveal",
+        "gentle trustworthy pacing",
+        "relaxed minimal terms moment",
+        "медленное спокойное появление",
+        "мягкий вариант для доверия"
+      ],
+      "props": {
+        "speed": 0.5,
+        "stagger": 8,
+        "step": 80,
+        "fontFamily": "Manrope",
+        "fontWeight": 300,
+        "background": "#0f1a2b"
+      }
+    },
+    {
+      "id": "mono-terminal",
+      "label": "Mono Terminal",
+      "description": "Developer-style monospace on near-black with a soft mint accent.",
+      "askedAs": [
+        "code style open source license",
+        "monospace developer look",
+        "terminal vibe free for anyone",
+        "моноширинный стиль для разработчиков",
+        "как в терминале"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0b0d0c",
+        "ink": "#d8e2dc",
+        "accent": "#6fcf97",
+        "scale": 0.85,
+        "fontWeight": 500
+      }
+    },
+    {
+      "id": "clean-swiss",
+      "label": "Clean Swiss",
+      "description": "Crisp white ground with compact Inter type and a confident emerald accent.",
+      "askedAs": [
+        "clean white corporate style",
+        "swiss minimal pricing look",
+        "simple sans on white",
+        "чистый белый минимализм",
+        "строгий швейцарский стиль"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "background": "#ffffff",
+        "ink": "#111111",
+        "accent": "#0e9f6e",
+        "fontWeight": 600
+      }
+    },
+    {
+      "id": "bold-statement",
+      "label": "Bold Statement",
+      "description": "Oversized black-weight condensed type with emphasis highlight for a loud promise.",
+      "askedAs": [
+        "huge bold free headline",
+        "make it big and loud",
+        "emphasize the promise strongly",
+        "крупно и жирно",
+        "громкий акцентный вариант"
+      ],
+      "props": {
+        "scale": 1.4,
+        "fontWeight": 900,
+        "highlight": 6,
+        "accent": "#22c55e"
+      }
+    }
+  ]
+}

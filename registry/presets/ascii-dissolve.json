@@ -1,0 +1,109 @@
+{
+  "component": "ascii-dissolve",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "green-phosphor",
+      "label": "Green Phosphor",
+      "description": "Classic CRT terminal look with soft green glyphs on a near-black screen.",
+      "askedAs": [
+        "old terminal green text",
+        "matrix style dissolve",
+        "retro crt computer screen",
+        "зелёный терминал",
+        "как старый монитор"
+      ],
+      "props": {
+        "colorBack": "#07110a",
+        "colorFront": "#5fd38a",
+        "cellSize": 18
+      }
+    },
+    {
+      "id": "amber-teletype",
+      "label": "Amber Teletype",
+      "description": "Warm amber glyphs on dark brown, slowed down like a vintage teletype.",
+      "askedAs": [
+        "amber monitor look",
+        "slow vintage terminal",
+        "warm orange retro text",
+        "янтарный экран",
+        "медленный ретро терминал"
+      ],
+      "props": {
+        "colorBack": "#140d05",
+        "colorFront": "#f0a843",
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "risograph-paper",
+      "label": "Risograph Paper",
+      "description": "Large ink-blue glyphs on warm off-white paper for a printed zine feel.",
+      "askedAs": [
+        "print zine texture",
+        "light paper background ascii",
+        "risograph style transition",
+        "эффект печати ризограф",
+        "светлый бумажный фон"
+      ],
+      "props": {
+        "colorBack": "#f3eee3",
+        "colorFront": "#2b4c9a",
+        "cellSize": 30
+      }
+    },
+    {
+      "id": "fine-grain-fast",
+      "label": "Fine Grain",
+      "description": "Tiny dense glyphs racing past for a quick, high-resolution digital cut.",
+      "askedAs": [
+        "fast small characters",
+        "quick dense ascii wipe",
+        "snappy glitchy cut",
+        "быстрый мелкий шрифт",
+        "резкий переход символами"
+      ],
+      "props": {
+        "cellSize": 10,
+        "speed": 2.5
+      }
+    },
+    {
+      "id": "chunky-slow",
+      "label": "Chunky Blocks",
+      "description": "Oversized glyphs drifting slowly in muted grey for a calm, bold texture.",
+      "askedAs": [
+        "big slow letters",
+        "large calm ascii blocks",
+        "chunky readable glyphs",
+        "крупные медленные символы",
+        "спокойный переход большими буквами"
+      ],
+      "props": {
+        "colorBack": "#1c1d21",
+        "colorFront": "#b8bcc6",
+        "cellSize": 36,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "ink-on-white",
+      "label": "Ink On White",
+      "description": "Crisp black glyphs on clean white for a minimal, editorial dev-doc style.",
+      "askedAs": [
+        "black text on white",
+        "clean light mode transition",
+        "minimal docs style",
+        "чёрное на белом",
+        "светлая тема минимализм"
+      ],
+      "props": {
+        "colorBack": "#fafafa",
+        "colorFront": "#111214",
+        "speed": 1.5
+      }
+    }
+  ]
+}

@@ -1,0 +1,124 @@
+{
+  "component": "inline-pill-takeover",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "slow-luxe",
+      "label": "Slow Luxe",
+      "description": "A slow, graceful reveal with a gentle punch-in and soft, dreamy blur on the departing words.",
+      "askedAs": [
+        "slow elegant pill reveal",
+        "gentle luxury zoom",
+        "soft cinematic takeover",
+        "медленное элегантное появление",
+        "плавный премиальный зум"
+      ],
+      "props": {
+        "expandFrames": 28,
+        "pillGrowFrames": 34,
+        "outerExitFrames": 28,
+        "takeoverAt": 24,
+        "takeoverScale": 1.6,
+        "blur": 20
+      }
+    },
+    {
+      "id": "hard-punch",
+      "label": "Hard Punch",
+      "description": "A snappy, aggressive reveal that slams into a big camera punch-in with bold type.",
+      "askedAs": [
+        "fast aggressive zoom in",
+        "punchy snappy CTA",
+        "quick bold takeover",
+        "резкий быстрый зум",
+        "агрессивное появление кнопки"
+      ],
+      "props": {
+        "expandFrames": 7,
+        "pillGrowFrames": 10,
+        "outerExitFrames": 8,
+        "takeoverScale": 3.2,
+        "fontWeight": "700",
+        "speed": 1.25
+      }
+    },
+    {
+      "id": "cobalt-cta",
+      "label": "Cobalt CTA",
+      "description": "A deep cobalt pill with white label stands out against cool pale copy for a confident tech CTA.",
+      "askedAs": [
+        "blue button in sentence",
+        "tech style call to action",
+        "cool blue pill",
+        "синяя кнопка в тексте",
+        "технологичный синий призыв"
+      ],
+      "props": {
+        "color": "#dbe4f3",
+        "pillColor": "#2149c9",
+        "pillTextColor": "#ffffff",
+        "fontWeight": "600",
+        "pillGrowHeightScale": 1.3
+      }
+    },
+    {
+      "id": "amber-ember",
+      "label": "Amber Ember",
+      "description": "A warm amber pill with dark espresso lettering glows within cream text for a rich editorial feel.",
+      "askedAs": [
+        "warm gold pill",
+        "orange highlight CTA",
+        "cozy warm takeover",
+        "тёплая янтарная плашка",
+        "золотистая кнопка"
+      ],
+      "props": {
+        "color": "#f3e6d0",
+        "pillColor": "#e09a3e",
+        "pillTextColor": "#24150b",
+        "fontWeight": "500",
+        "blur": 16
+      }
+    },
+    {
+      "id": "wide-headline",
+      "label": "Wide Headline",
+      "description": "Large type and an extra-wide pill that grows tall, with a modest zoom for big statement lines.",
+      "askedAs": [
+        "big headline pill",
+        "large text wide button",
+        "oversized statement reveal",
+        "крупный заголовок с плашкой",
+        "большой широкий текст"
+      ],
+      "props": {
+        "fontSize": 84,
+        "pillWidth": 460,
+        "pillGrowWidthScale": 1.15,
+        "pillGrowHeightScale": 1.35,
+        "takeoverScale": 1.45
+      }
+    },
+    {
+      "id": "crisp-minimal",
+      "label": "Crisp Minimal",
+      "description": "A clean cut with no blur, a tiny height reveal and a restrained zoom for understated interfaces.",
+      "askedAs": [
+        "clean minimal reveal",
+        "no blur subtle zoom",
+        "simple understated pill",
+        "минималистичное появление",
+        "без размытия и спокойно"
+      ],
+      "props": {
+        "blur": 0,
+        "pillRevealHeightScale": 0.1,
+        "pillGrowWidthScale": 1,
+        "pillGrowHeightScale": 1.05,
+        "takeoverScale": 1.3,
+        "outerExitFrames": 12
+      }
+    }
+  ]
+}

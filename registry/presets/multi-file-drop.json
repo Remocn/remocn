@@ -1,0 +1,116 @@
+{
+  "component": "multi-file-drop",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "paper-studio",
+      "label": "Paper Studio",
+      "description": "A calm light theme on a warm paper ground with a deep ink-blue accent and Manrope type.",
+      "askedAs": [
+        "light version on paper background",
+        "clean bright upload scene",
+        "soft white minimal look",
+        "светлая версия на бумажном фоне",
+        "чистый светлый стиль"
+      ],
+      "props": {
+        "theme": "light",
+        "ground": "paper-crease",
+        "accent": "#2f4bc7",
+        "fontFamily": "Manrope"
+      }
+    },
+    {
+      "id": "terminal-dev",
+      "label": "Terminal Dev",
+      "description": "A dark developer look in JetBrains Mono with a muted green accent on charcoal, played briskly.",
+      "askedAs": [
+        "monospace hacker style",
+        "developer terminal look",
+        "fast dark code vibe",
+        "моноширинный стиль для разработчиков",
+        "как терминал, быстро"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "ground": "charcoal-satin",
+        "accent": "#3fb97a",
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "ember-editorial",
+      "label": "Ember Editorial",
+      "description": "A warm, slower editorial feel with Fraunces serif type and a copper accent over an ember glow.",
+      "askedAs": [
+        "warm orange cinematic version",
+        "slow elegant serif look",
+        "cozy premium feel",
+        "тёплый медленный вариант",
+        "элегантный стиль с засечками"
+      ],
+      "props": {
+        "ground": "ember",
+        "accent": "#d9824a",
+        "fontFamily": "Fraunces",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "close-up-hero",
+      "label": "Close Up Hero",
+      "description": "An enlarged, punchy close-up on a cobalt glow with Space Grotesk type and quick pacing.",
+      "askedAs": [
+        "bigger zoomed in prompt box",
+        "bold hero shot for launch",
+        "large and fast",
+        "крупный план, покрупнее",
+        "быстрый яркий вариант для запуска"
+      ],
+      "props": {
+        "scale": 1.3,
+        "ground": "cobalt-rise",
+        "fontFamily": "Space Grotesk",
+        "speed": 1.25
+      }
+    },
+    {
+      "id": "quiet-violet",
+      "label": "Quiet Violet",
+      "description": "A small, unhurried composition on a violet iris ground with a soft lavender accent and a short lead-in.",
+      "askedAs": [
+        "subtle purple background",
+        "smaller slower calm version",
+        "gentle violet mood",
+        "фиолетовый спокойный вариант",
+        "меньше и медленнее"
+      ],
+      "props": {
+        "ground": "iris",
+        "accent": "#9c8cf2",
+        "scale": 0.85,
+        "speed": 0.75,
+        "delay": 15
+      }
+    },
+    {
+      "id": "flat-mono",
+      "label": "Flat Mono",
+      "description": "A flat near-black background with off-white text and a white accent in Geist for a stark product look.",
+      "askedAs": [
+        "plain black background no gradient",
+        "monochrome minimal",
+        "stark black and white",
+        "простой чёрный фон",
+        "чёрно-белый минимализм"
+      ],
+      "props": {
+        "background": "#0e0e10",
+        "ink": "#f2f2f0",
+        "accent": "#e8e8e6",
+        "fontFamily": "Geist"
+      }
+    }
+  ]
+}

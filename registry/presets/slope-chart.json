@@ -1,0 +1,123 @@
+{
+  "component": "slope-chart",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-paper",
+      "label": "Editorial Paper",
+      "description": "A warm off-white page with serif type and a deep brick accent, like a chart from a printed annual report.",
+      "askedAs": [
+        "make it look like a newspaper chart",
+        "light serif editorial style",
+        "print magazine look for the slope chart",
+        "в стиле газетной инфографики",
+        "светлый вариант с засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4efe6",
+        "ink": "#1e1b17",
+        "accent": "#b5442c",
+        "fontFamily": "Fraunces"
+      }
+    },
+    {
+      "id": "terminal-mono",
+      "label": "Terminal Mono",
+      "description": "A near-black console look in monospace with a muted green hero line and a quick, clipped climb.",
+      "askedAs": [
+        "developer terminal style chart",
+        "monospace dark with green line",
+        "make it feel like code output",
+        "в стиле терминала",
+        "моноширинный шрифт и зелёная линия"
+      ],
+      "props": {
+        "background": "#0d1110",
+        "ink": "#d6e2da",
+        "accent": "#3fb97a",
+        "fontFamily": "JetBrains Mono",
+        "grain": false,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "slow-reveal",
+      "label": "Slow Reveal",
+      "description": "A patient, cinematic build with wide line stagger and a late, unhurried climb for the hero line.",
+      "askedAs": [
+        "slower dramatic version",
+        "let the lines come in one by one slowly",
+        "build suspense before the big rise",
+        "медленное драматичное появление",
+        "сделай анимацию спокойнее"
+      ],
+      "props": {
+        "speed": 0.75,
+        "stagger": 10,
+        "climbAt": 90,
+        "delay": 15
+      }
+    },
+    {
+      "id": "snap-punch",
+      "label": "Snap Punch",
+      "description": "A fast, oversized social cut where all lines land at once and the hero spikes almost immediately in hot coral.",
+      "askedAs": [
+        "fast punchy version for social",
+        "make it bigger and quicker",
+        "instant spike for reels",
+        "быстрая версия для соцсетей",
+        "крупнее и резче"
+      ],
+      "props": {
+        "speed": 2,
+        "stagger": 0,
+        "climbAt": 25,
+        "scale": 1.25,
+        "accent": "#ff5a4e",
+        "fontFamily": "Space Grotesk"
+      }
+    },
+    {
+      "id": "clean-deck",
+      "label": "Clean Deck",
+      "description": "A crisp grain-free light slide in Inter with a calm indigo accent, sized down to sit beside other content.",
+      "askedAs": [
+        "clean light chart for a presentation",
+        "minimal slide style",
+        "smaller, no grain, corporate",
+        "чистый светлый слайд для презентации",
+        "минималистичный вариант без зерна"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#ffffff",
+        "ink": "#111827",
+        "accent": "#4f46e5",
+        "fontFamily": "Inter",
+        "grain": false
+      }
+    },
+    {
+      "id": "midnight-gold",
+      "label": "Midnight Gold",
+      "description": "A deep navy ground with a soft gold hero line and Manrope type for a premium investor-update feel.",
+      "askedAs": [
+        "premium dark blue and gold",
+        "investor deck luxury style",
+        "navy background with gold accent",
+        "тёмно-синий с золотом",
+        "премиальный вид для инвесторов"
+      ],
+      "props": {
+        "background": "#0e1626",
+        "ink": "#e8e4da",
+        "accent": "#d4a84b",
+        "fontFamily": "Manrope",
+        "stagger": 6
+      }
+    }
+  ]
+}

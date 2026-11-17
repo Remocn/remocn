@@ -1,0 +1,120 @@
+{
+  "component": "got-em",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "quick-snap",
+      "label": "Quick Snap",
+      "description": "A fast, punchy reveal with almost no suspense and a dense burst of rays.",
+      "askedAs": [
+        "make it faster and snappier",
+        "short punchy got em",
+        "quick reveal no waiting",
+        "быстрее и резче",
+        "короткая резкая версия"
+      ],
+      "props": {
+        "speed": 2,
+        "pause": 4,
+        "rays": 56
+      }
+    },
+    {
+      "id": "slow-tease",
+      "label": "Slow Tease",
+      "description": "A drawn-out suspense beat with a long pause before a broad, slow sunburst reveal.",
+      "askedAs": [
+        "more suspense before the reveal",
+        "slow dramatic build up",
+        "longer wait then explode",
+        "больше напряжения перед раскрытием",
+        "медленно и драматично"
+      ],
+      "props": {
+        "speed": 0.75,
+        "pause": 32,
+        "rays": 20,
+        "scale": 1.15
+      }
+    },
+    {
+      "id": "sunny-pop",
+      "label": "Sunny Pop",
+      "description": "A light cream backdrop with a warm tangerine burst and chunky grotesque type.",
+      "askedAs": [
+        "bright cheerful orange version",
+        "light warm sunburst",
+        "happy summer look",
+        "светлый тёплый вариант",
+        "яркий оранжевый стиль"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#fff6e8",
+        "accent": "#f26b1d",
+        "ink": "#2a1a0e",
+        "fontFamily": "Bricolage Grotesque"
+      }
+    },
+    {
+      "id": "midnight-mint",
+      "label": "Midnight Mint",
+      "description": "A deep navy ground with a cool mint sunburst and crisp off-white lettering.",
+      "askedAs": [
+        "dark teal green look",
+        "cool night version",
+        "navy and mint colors",
+        "тёмный с мятным акцентом",
+        "холодная ночная палитра"
+      ],
+      "props": {
+        "theme": "dark",
+        "background": "#0e1626",
+        "accent": "#3ccfa0",
+        "ink": "#f2f5f0",
+        "fontFamily": "Space Grotesk"
+      }
+    },
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "A refined light take with elegant serif type, a deep berry burst and fewer rays.",
+      "askedAs": [
+        "classy serif version",
+        "elegant magazine style",
+        "less meme more stylish",
+        "элегантный вариант с засечками",
+        "стильно как в журнале"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Fraunces",
+        "accent": "#a3284f",
+        "background": "#f7f1ec",
+        "ink": "#1e1418",
+        "rays": 16
+      }
+    },
+    {
+      "id": "terminal-hit",
+      "label": "Terminal Hit",
+      "description": "A compact monospace reveal in hacker green over near-black with a tight ray pattern.",
+      "askedAs": [
+        "coder hacker style",
+        "monospace terminal look",
+        "smaller techy version",
+        "в стиле терминала",
+        "хакерский моноширинный вариант"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0b0f0c",
+        "accent": "#4ade80",
+        "ink": "#e6f2e9",
+        "scale": 0.85,
+        "rays": 64
+      }
+    }
+  ]
+}

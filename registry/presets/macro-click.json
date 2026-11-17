@@ -1,0 +1,121 @@
+{
+  "component": "macro-click",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-light",
+      "label": "Editorial Light",
+      "description": "A calm light page set in Instrument Serif with an ink-blue accent on soft paper.",
+      "askedAs": [
+        "light editorial site builder",
+        "serif magazine style click reveal",
+        "clean paper look for publishing launch",
+        "светлый журнальный стиль",
+        "редакционный вариант с засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "accent": "#1e3a8a",
+        "ground": "paper-crease",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "midnight-snap",
+      "label": "Midnight Snap",
+      "description": "A fast, punchy dark cut on a deep blue-hour ground with a cool cyan accent.",
+      "askedAs": [
+        "quick dark tech click",
+        "fast snappy site builder reveal",
+        "energetic dark launch opener",
+        "быстрый тёмный клик",
+        "динамичная тёмная заставка"
+      ],
+      "props": {
+        "theme": "dark",
+        "ground": "blue-hour",
+        "accent": "#38bdf8",
+        "fontFamily": "Space Grotesk",
+        "speed": 1.75
+      }
+    },
+    {
+      "id": "warm-studio",
+      "label": "Warm Studio",
+      "description": "A slow, cosy reveal over a copper ground with a terracotta accent and Fraunces type.",
+      "askedAs": [
+        "warm cozy builder animation",
+        "slow elegant reveal with warm tones",
+        "terracotta site launch look",
+        "тёплый уютный стиль",
+        "медленное тёплое появление"
+      ],
+      "props": {
+        "ground": "copper",
+        "accent": "#c2410c",
+        "fontFamily": "Fraunces",
+        "speed": 0.5,
+        "delay": 12
+      }
+    },
+    {
+      "id": "dev-console",
+      "label": "Dev Console",
+      "description": "A monospaced, near-black developer look with a muted green accent and tighter framing.",
+      "askedAs": [
+        "developer style click demo",
+        "monospace terminal look",
+        "hacker vibe site builder",
+        "стиль для разработчиков",
+        "моноширинный тёмный вариант"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0b0f0c",
+        "ink": "#e5f2e8",
+        "accent": "#4ade80",
+        "scale": 0.85
+      }
+    },
+    {
+      "id": "bold-closeup",
+      "label": "Bold Close-Up",
+      "description": "An oversized, tight macro framing in Bricolage Grotesque with a violet accent on an iris ground.",
+      "askedAs": [
+        "big zoomed in click",
+        "large bold macro shot",
+        "dramatic close up launch",
+        "крупный план клика",
+        "большой жирный вариант"
+      ],
+      "props": {
+        "scale": 1.35,
+        "fontFamily": "Bricolage Grotesque",
+        "ground": "iris",
+        "accent": "#8b5cf6",
+        "delay": 6
+      }
+    },
+    {
+      "id": "polar-minimal",
+      "label": "Polar Minimal",
+      "description": "A crisp, airy light scene on a polar ground with a slate accent and Inter type.",
+      "askedAs": [
+        "minimal white saas look",
+        "clean cool light reveal",
+        "airy simple product launch",
+        "минималистичный светлый стиль",
+        "чистый холодный вариант"
+      ],
+      "props": {
+        "theme": "light",
+        "ground": "polar",
+        "accent": "#334155",
+        "fontFamily": "Inter",
+        "scale": 0.9
+      }
+    }
+  ]
+}

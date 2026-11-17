@@ -1,0 +1,102 @@
+{
+  "component": "accordion-unfold",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "road-map",
+      "label": "Road Map",
+      "description": "Many tight folds on warm manila paper over deep green, unfolding at an easy pace like a travel map.",
+      "askedAs": [
+        "unfold like a travel map",
+        "lots of folds slow reveal",
+        "old map paper look",
+        "как развернуть карту",
+        "много складок, медленно"
+      ],
+      "props": {
+        "panels": 10,
+        "foldAngle": 86,
+        "color": "#efe4c8",
+        "backgroundColor": "#1f3a32",
+        "speed": 0.75,
+        "shade": 0.6
+      }
+    },
+    {
+      "id": "trifold-brochure",
+      "label": "Trifold Brochure",
+      "description": "A clean three-panel brochure opening on a soft grey backdrop with gentle shading.",
+      "askedAs": [
+        "simple brochure fold",
+        "three panel leaflet opening",
+        "light clean paper reveal",
+        "как буклет из трёх частей",
+        "светлый простой буклет"
+      ],
+      "props": {
+        "panels": 3,
+        "foldAngle": 70,
+        "shade": 0.35,
+        "backgroundColor": "#d9d6d0",
+        "color": "#fafaf7"
+      }
+    },
+    {
+      "id": "quick-snap",
+      "label": "Quick Snap",
+      "description": "A shallow zigzag that snaps flat fast, bright white card on black for a punchy sting.",
+      "askedAs": [
+        "fast paper snap",
+        "quick short logo sting",
+        "snappy unfold",
+        "быстро раскрыть",
+        "короткая резкая заставка"
+      ],
+      "props": {
+        "speed": 2,
+        "foldAngle": 45,
+        "panels": 5,
+        "backgroundColor": "#000000"
+      }
+    },
+    {
+      "id": "kraft-label",
+      "label": "Kraft Label",
+      "description": "Brown kraft paper with deep fold shadows unfolding over charcoal, like a craft packaging tag.",
+      "askedAs": [
+        "kraft paper look",
+        "brown cardboard label",
+        "craft packaging unfold",
+        "крафтовая бумага",
+        "коричневая этикетка"
+      ],
+      "props": {
+        "color": "#c49a6c",
+        "backgroundColor": "#2a2622",
+        "shade": 0.75,
+        "panels": 6,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "editorial-ink",
+      "label": "Editorial Ink",
+      "description": "Off-white stock on a navy ground with soft, barely-there fold shading for a refined editorial feel.",
+      "askedAs": [
+        "elegant magazine reveal",
+        "navy and cream paper",
+        "refined editorial unfold",
+        "элегантно, как журнал",
+        "тёмно-синий фон и кремовая бумага"
+      ],
+      "props": {
+        "color": "#f4f0e8",
+        "backgroundColor": "#14213d",
+        "shade": 0.25,
+        "panels": 8,
+        "speed": 0.5
+      }
+    }
+  ]
+}

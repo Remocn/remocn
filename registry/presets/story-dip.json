@@ -1,0 +1,106 @@
+{
+  "component": "story-dip",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "warm-paper",
+      "label": "Warm Paper",
+      "description": "Cream paper background with dark brown ink and a serif face, told at an unhurried pace.",
+      "askedAs": [
+        "cozy paper storybook look",
+        "serif text on cream background",
+        "slow warm anecdote",
+        "тёплая бумага с засечками",
+        "медленная история на кремовом фоне"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4ede1",
+        "ink": "#2b2420",
+        "accent": "#b5532c",
+        "fontFamily": "Fraunces",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "night-log",
+      "label": "Night Log",
+      "description": "Monospace lines on deep navy with a soft green accent, like a timestamped terminal log.",
+      "askedAs": [
+        "terminal style story log",
+        "monospace timestamps on dark",
+        "developer changelog vibe",
+        "история в стиле терминала",
+        "моноширинный шрифт на тёмном фоне"
+      ],
+      "props": {
+        "theme": "dark",
+        "background": "#0f1620",
+        "ink": "#d7e0ea",
+        "accent": "#6fbf8e",
+        "fontFamily": "JetBrains Mono",
+        "scale": 0.9
+      }
+    },
+    {
+      "id": "deep-dip",
+      "label": "Deep Dip",
+      "description": "A strongly faded snag line in large Instrument Serif that makes the middle beat sink before the fix.",
+      "askedAs": [
+        "make the problem line really fade",
+        "dramatic dip in the middle",
+        "big editorial serif story",
+        "сильно приглушить среднюю строку",
+        "драматичный провал в середине"
+      ],
+      "props": {
+        "dim": 0.3,
+        "fontFamily": "Instrument Serif",
+        "scale": 1.3,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "brisk-founder",
+      "label": "Brisk Founder",
+      "description": "Bold Space Grotesk on clean white with a cobalt accent, moving quickly for social clips.",
+      "askedAs": [
+        "fast punchy founder story",
+        "bold modern text on white",
+        "quick social media anecdote",
+        "быстрая история основателя",
+        "жирный современный шрифт на белом"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#ffffff",
+        "ink": "#111418",
+        "accent": "#2f5bd3",
+        "fontFamily": "Space Grotesk",
+        "fontWeight": 500,
+        "speed": 1.75
+      }
+    },
+    {
+      "id": "quiet-margin",
+      "label": "Quiet Margin",
+      "description": "Small, gentle Manrope lines on warm charcoal with a muted clay accent and a delayed start.",
+      "askedAs": [
+        "subtle small story text",
+        "understated calm anecdote",
+        "delayed soft intro",
+        "спокойный небольшой текст",
+        "сдержанная история с задержкой"
+      ],
+      "props": {
+        "background": "#26221f",
+        "ink": "#ece4d8",
+        "accent": "#c98a6b",
+        "fontFamily": "Manrope",
+        "scale": 0.75,
+        "delay": 20
+      }
+    }
+  ]
+}

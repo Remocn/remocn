@@ -1,0 +1,97 @@
+{
+  "component": "shader-grain-gradient-dune",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "still-desert",
+      "label": "Still Desert",
+      "description": "Barely drifting dunes with soft blending and light grain for a calm, meditative backdrop.",
+      "askedAs": [
+        "slow calm sand background",
+        "subtle sandy gradient barely moving",
+        "quiet desert texture",
+        "спокойный песочный фон",
+        "медленный тёплый градиент"
+      ],
+      "props": {
+        "speed": 0.25,
+        "softness": 1,
+        "noise": 0.25,
+        "intensity": 0.2
+      }
+    },
+    {
+      "id": "sandstorm",
+      "label": "Sandstorm",
+      "description": "Fast, churning waves with heavy coarse grain like wind-blown sand.",
+      "askedAs": [
+        "fast gritty sand animation",
+        "heavy grain energetic background",
+        "stormy desert texture",
+        "песчаная буря фон",
+        "быстрый зернистый градиент"
+      ],
+      "props": {
+        "speed": 2.5,
+        "noise": 0.9,
+        "intensity": 0.6,
+        "softness": 0.6
+      }
+    },
+    {
+      "id": "night-dune",
+      "label": "Night Dune",
+      "description": "Deep near-black brown field with restrained grain that lets bright foregrounds pop.",
+      "askedAs": [
+        "dark brown grainy background",
+        "moody desert at night",
+        "dark backdrop for light text",
+        "тёмный коричневый фон с зерном",
+        "ночная пустыня"
+      ],
+      "props": {
+        "colorBack": "#120b06",
+        "intensity": 0.25,
+        "speed": 0.5,
+        "noise": 0.35
+      }
+    },
+    {
+      "id": "carved-ridges",
+      "label": "Carved Ridges",
+      "description": "Crisp, defined wave bands with strong contrast for a sculpted, graphic dune look.",
+      "askedAs": [
+        "sharp sand wave lines",
+        "high contrast dune pattern",
+        "graphic sculpted sand",
+        "чёткие волны песка",
+        "контрастный рисунок дюн"
+      ],
+      "props": {
+        "softness": 0.1,
+        "intensity": 0.75,
+        "noise": 0.4,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "rust-canyon",
+      "label": "Rust Canyon",
+      "description": "Warm oxidized red-brown ground with medium grain for a richer, terracotta feel.",
+      "askedAs": [
+        "reddish rust grain background",
+        "terracotta canyon gradient",
+        "warm red earthy texture",
+        "ржавый красно-коричневый фон",
+        "терракотовый градиент с зерном"
+      ],
+      "props": {
+        "colorBack": "#3d1a10",
+        "intensity": 0.5,
+        "noise": 0.55,
+        "speed": 1.25
+      }
+    }
+  ]
+}

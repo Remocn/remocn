@@ -1,0 +1,122 @@
+{
+  "component": "flank-roll-swap",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "A slow, magazine-style card in Instrument Serif on warm paper with deep ink.",
+      "askedAs": [
+        "elegant serif magazine look",
+        "slow classy light version",
+        "editorial title card on cream",
+        "элегантный журнальный стиль с засечками",
+        "светлый медленный вариант"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "background": "#f4efe6",
+        "ink": "#1c1a17",
+        "speed": 0.75,
+        "stagger": 2
+      }
+    },
+    {
+      "id": "snap-launch",
+      "label": "Snap Launch",
+      "description": "A fast, punchy swap with tight letter timing in Space Grotesk for quick social cuts.",
+      "askedAs": [
+        "make it fast and punchy",
+        "quick swap for reels",
+        "snappy launch title",
+        "быстрая резкая смена слов",
+        "энергичный вариант для соцсетей"
+      ],
+      "props": {
+        "speed": 1.75,
+        "swapAt": 24,
+        "stagger": 0.4,
+        "fontFamily": "Space Grotesk",
+        "scale": 1.15
+      }
+    },
+    {
+      "id": "velvet-night",
+      "label": "Velvet Night",
+      "description": "A moody dark card on the velvet-hour ground with a soft rose-gold accent and Fraunces type.",
+      "askedAs": [
+        "moody luxury dark look",
+        "premium night style with warm accent",
+        "velvet dark background",
+        "тёмный премиальный стиль",
+        "бархатный вечерний фон"
+      ],
+      "props": {
+        "ground": "velvet-hour",
+        "accent": "#d9a38f",
+        "fontFamily": "Fraunces",
+        "stagger": 1.8
+      }
+    },
+    {
+      "id": "cold-tech",
+      "label": "Cold Tech",
+      "description": "A cool developer-flavoured card in JetBrains Mono over a coldlight ground with an icy blue accent.",
+      "askedAs": [
+        "developer monospace style",
+        "cool blue tech look",
+        "code style launch card",
+        "моноширинный шрифт для разработчиков",
+        "холодный технологичный стиль"
+      ],
+      "props": {
+        "ground": "coldlight",
+        "fontFamily": "JetBrains Mono",
+        "accent": "#7cb7ff",
+        "scale": 0.9,
+        "stagger": 0.8
+      }
+    },
+    {
+      "id": "slow-reveal",
+      "label": "Slow Reveal",
+      "description": "A patient, cinematic beat that holds longer before the swap with wide letter stagger and a copper glow.",
+      "askedAs": [
+        "slower cinematic reveal",
+        "hold longer before the swap",
+        "dramatic slow title",
+        "медленное кинематографичное появление",
+        "подольше задержка перед сменой"
+      ],
+      "props": {
+        "speed": 0.5,
+        "delay": 18,
+        "swapAt": 80,
+        "stagger": 3,
+        "ground": "copper"
+      }
+    },
+    {
+      "id": "clean-minimal",
+      "label": "Clean Minimal",
+      "description": "A crisp light card on pure white with near-black Inter and a restrained cobalt accent.",
+      "askedAs": [
+        "clean white minimal",
+        "simple light corporate look",
+        "plain white background with blue",
+        "минималистичный белый фон",
+        "чистый светлый стиль"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#ffffff",
+        "ink": "#111418",
+        "accent": "#2f5bd3",
+        "fontFamily": "Inter",
+        "scale": 0.85
+      }
+    }
+  ]
+}

@@ -1,0 +1,116 @@
+{
+  "component": "overnight",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "slow-night",
+      "label": "Long Night",
+      "description": "A stretched-out, unhurried night in a serif face, with the evening lingering before dark falls.",
+      "askedAs": [
+        "make the night feel longer",
+        "slow calm overnight story",
+        "stretch the timing out",
+        "медленная долгая ночь",
+        "растянуть по времени"
+      ],
+      "props": {
+        "nightAt": 70,
+        "morningAt": 150,
+        "speed": 0.75,
+        "fontFamily": "Instrument Serif"
+      }
+    },
+    {
+      "id": "quick-turnaround",
+      "label": "Quick Turnaround",
+      "description": "A fast, punchy version where night and morning arrive in quick succession in a bold grotesque.",
+      "askedAs": [
+        "make it faster",
+        "quick snappy version",
+        "short overnight for social",
+        "быстрая версия",
+        "сделать динамичнее"
+      ],
+      "props": {
+        "nightAt": 30,
+        "morningAt": 64,
+        "speed": 1.5,
+        "fontFamily": "Space Grotesk"
+      }
+    },
+    {
+      "id": "light-paper",
+      "label": "Light Paper",
+      "description": "A light theme on warm cream paper with a deep ink-blue accent and a classic Fraunces serif.",
+      "askedAs": [
+        "light editorial look",
+        "cream paper background",
+        "bright newspaper style",
+        "светлая бумажная версия",
+        "кремовый фон с синим"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4ecd8",
+        "accent": "#1e3a5f",
+        "fontFamily": "Fraunces"
+      }
+    },
+    {
+      "id": "midnight-ink",
+      "label": "Midnight Ink",
+      "description": "A dark navy ground with a soft amber accent, like a desk lamp burning late.",
+      "askedAs": [
+        "dark blue night mood",
+        "late night lamp look",
+        "navy and amber",
+        "тёмно-синяя ночная тема",
+        "ночной режим с янтарным"
+      ],
+      "props": {
+        "theme": "dark",
+        "background": "#141b2d",
+        "accent": "#e0a84a",
+        "fontFamily": "Manrope"
+      }
+    },
+    {
+      "id": "terminal-log",
+      "label": "Terminal Log",
+      "description": "A compact monospace changelog feel on near-black with a muted green accent and a short lead-in.",
+      "askedAs": [
+        "make it look like a dev log",
+        "monospace code style",
+        "terminal timestamp look",
+        "как лог в терминале",
+        "моноширинный шрифт"
+      ],
+      "props": {
+        "theme": "dark",
+        "background": "#101311",
+        "accent": "#7fbf8e",
+        "fontFamily": "JetBrains Mono",
+        "scale": 0.85,
+        "delay": 12
+      }
+    },
+    {
+      "id": "big-headline",
+      "label": "Big Headline",
+      "description": "An oversized, poster-like take in Bricolage Grotesque with a terracotta accent.",
+      "askedAs": [
+        "make the text bigger",
+        "poster headline style",
+        "bold large type",
+        "крупный заголовок",
+        "сделать текст больше"
+      ],
+      "props": {
+        "scale": 1.3,
+        "fontFamily": "Bricolage Grotesque",
+        "accent": "#c4532d"
+      }
+    }
+  ]
+}

@@ -1,0 +1,119 @@
+{
+  "component": "ndot-resolve",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "instant-flip",
+      "label": "Instant Flip",
+      "description": "Dot-matrix text snaps to solid type almost immediately with a fast, tight letter cascade.",
+      "askedAs": [
+        "fast resolve title",
+        "quick dot matrix reveal",
+        "snappy display refresh",
+        "быстрое появление текста",
+        "резкий переход из точек"
+      ],
+      "props": {
+        "resolveAt": 12,
+        "stagger": 0.8,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "slow-scan",
+      "label": "Slow Scan",
+      "description": "The dot-matrix face lingers before refreshing one letter at a time in a slow, deliberate wave.",
+      "askedAs": [
+        "slow dot matrix reveal",
+        "letters resolve one by one slowly",
+        "long scanning headline",
+        "медленное проявление букв",
+        "долгий матричный эффект"
+      ],
+      "props": {
+        "resolveAt": 70,
+        "stagger": 5,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "terminal-green",
+      "label": "Terminal Green",
+      "description": "Monospaced phosphor-green type on a near-black screen, like an old terminal refreshing.",
+      "askedAs": [
+        "green terminal text",
+        "retro computer screen title",
+        "hacker console headline",
+        "зелёный текст как в терминале",
+        "ретро экран компьютера"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0a0f0b",
+        "ink": "#b8f5c8",
+        "accent": "#3ddc84",
+        "stagger": 1.4
+      }
+    },
+    {
+      "id": "paper-display",
+      "label": "Paper Display",
+      "description": "A light, e-ink style panel with dark graphite type and a warm orange accent.",
+      "askedAs": [
+        "light e-ink display title",
+        "white background dot matrix",
+        "clean light tech headline",
+        "светлый экран как e-ink",
+        "светлый технологичный заголовок"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f2f0eb",
+        "ink": "#1c1c1e",
+        "accent": "#e5582b",
+        "fontFamily": "Space Grotesk"
+      }
+    },
+    {
+      "id": "hero-signage",
+      "label": "Hero Signage",
+      "description": "Oversized type that resolves like a big LED sign with a crisp red accent.",
+      "askedAs": [
+        "big LED sign headline",
+        "large bold display title",
+        "giant dot matrix text",
+        "большая светодиодная вывеска",
+        "крупный заголовок табло"
+      ],
+      "props": {
+        "scale": 1.4,
+        "background": "#111214",
+        "ink": "#f5f5f2",
+        "accent": "#ff4d3d",
+        "fontFamily": "Inter",
+        "stagger": 3
+      }
+    },
+    {
+      "id": "editorial-resolve",
+      "label": "Editorial Resolve",
+      "description": "A delayed, compact serif headline on deep navy that refreshes into elegant type with a gold accent.",
+      "askedAs": [
+        "elegant serif dot matrix",
+        "classy tech title",
+        "serif headline resolving",
+        "элегантный заголовок с засечками",
+        "изысканное появление текста"
+      ],
+      "props": {
+        "fontFamily": "Instrument Serif",
+        "background": "#0e1626",
+        "ink": "#ede6d6",
+        "accent": "#d4a853",
+        "delay": 15,
+        "scale": 0.85
+      }
+    }
+  ]
+}

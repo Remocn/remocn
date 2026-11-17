@@ -1,0 +1,96 @@
+{
+  "component": "icon-menu",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "hairline-slow",
+      "label": "Hairline Slow",
+      "description": "A large, thin-stroked menu icon that draws itself in at a calm, unhurried pace.",
+      "askedAs": [
+        "thin elegant menu icon",
+        "slow drawing hamburger",
+        "delicate line menu animation",
+        "тонкая иконка меню",
+        "медленная отрисовка меню"
+      ],
+      "props": {
+        "animation": "draw",
+        "size": 120,
+        "strokeWidth": 1,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "bold-snap",
+      "label": "Bold Snap",
+      "description": "A chunky, heavy-stroked menu icon that snaps into its action quickly.",
+      "askedAs": [
+        "thick fast menu toggle",
+        "bold hamburger icon",
+        "punchy menu animation",
+        "жирная иконка меню",
+        "быстрое переключение меню"
+      ],
+      "props": {
+        "animation": "action",
+        "strokeWidth": 3,
+        "speed": 2,
+        "size": 96
+      }
+    },
+    {
+      "id": "brand-blue-loop",
+      "label": "Brand Loop",
+      "description": "A medium blue menu icon that continuously draws and toggles on a steady loop.",
+      "askedAs": [
+        "looping blue menu icon",
+        "repeating hamburger animation",
+        "blue menu on repeat",
+        "синяя иконка меню по кругу",
+        "зацикленная анимация меню"
+      ],
+      "props": {
+        "color": "#1f6feb",
+        "loop": true,
+        "size": 72
+      }
+    },
+    {
+      "id": "muted-slate",
+      "label": "Muted Slate",
+      "description": "A small, soft slate-grey menu icon with a gentle draw for understated interfaces.",
+      "askedAs": [
+        "subtle grey menu icon",
+        "small quiet hamburger",
+        "minimal muted menu",
+        "серая неброская иконка меню",
+        "маленькое минималистичное меню"
+      ],
+      "props": {
+        "color": "#64748b",
+        "size": 32,
+        "strokeWidth": 1.5,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "terracotta-hero",
+      "label": "Terracotta Hero",
+      "description": "An oversized warm terracotta menu icon with a confident stroke for title cards.",
+      "askedAs": [
+        "huge warm menu icon",
+        "big orange hamburger for intro",
+        "hero menu icon",
+        "большая тёплая иконка меню",
+        "огромное меню для заставки"
+      ],
+      "props": {
+        "color": "#c2410c",
+        "size": 200,
+        "strokeWidth": 2.5,
+        "animation": "both"
+      }
+    }
+  ]
+}

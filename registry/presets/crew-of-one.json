@@ -1,0 +1,125 @@
+{
+  "component": "crew-of-one",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "film-noir-serif",
+      "label": "Film Noir",
+      "description": "Classic cinema credits in a light-weight serif on near-black with a warm gold accent, rolling slowly.",
+      "askedAs": [
+        "old movie credits look",
+        "classic film ending credits",
+        "elegant serif credits on black",
+        "как титры старого кино",
+        "классические киношные титры"
+      ],
+      "props": {
+        "fontFamily": "Instrument Serif",
+        "background": "#0b0a09",
+        "ink": "#f2ede4",
+        "accent": "#c9a45c",
+        "fontWeight": 300,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "paper-light",
+      "label": "Paper Light",
+      "description": "Clean light-theme credits on warm off-white with a terracotta accent and a confident medium weight.",
+      "askedAs": [
+        "light background credits",
+        "white minimal credits roll",
+        "clean bright version",
+        "светлые титры",
+        "минималистичные титры на белом"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f6f2ea",
+        "ink": "#1d1b18",
+        "accent": "#c4552d",
+        "fontFamily": "Manrope",
+        "fontWeight": 500
+      }
+    },
+    {
+      "id": "terminal-dev",
+      "label": "Terminal",
+      "description": "Monospaced dev-console credits in soft green on deep charcoal, quick and compact.",
+      "askedAs": [
+        "hacker terminal credits",
+        "code style monospace credits",
+        "developer console look",
+        "титры в стиле терминала",
+        "моноширинный шрифт как в коде"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0f1412",
+        "ink": "#d6e4dc",
+        "accent": "#6fcf97",
+        "nameScale": 1.8,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "big-you",
+      "label": "Big You",
+      "description": "Bold heavy grotesk with an oversized final name and a punchy coral accent for maximum payoff.",
+      "askedAs": [
+        "make the name huge",
+        "bold loud ending",
+        "giant you at the end",
+        "огромное имя в конце",
+        "жирный крупный шрифт"
+      ],
+      "props": {
+        "fontFamily": "Bricolage Grotesque",
+        "fontWeight": 800,
+        "nameScale": 3.6,
+        "accent": "#ff6b5a",
+        "scale": 1.15
+      }
+    },
+    {
+      "id": "midnight-indigo",
+      "label": "Midnight Indigo",
+      "description": "Calm editorial credits in Fraunces on deep indigo with lavender accents, delayed and unhurried.",
+      "askedAs": [
+        "moody blue credits",
+        "slow calm ending titles",
+        "soft elegant night look",
+        "спокойные синие титры",
+        "медленные элегантные титры"
+      ],
+      "props": {
+        "fontFamily": "Fraunces",
+        "background": "#151a33",
+        "ink": "#e8e6f5",
+        "accent": "#a99cf0",
+        "speed": 0.5,
+        "delay": 20
+      }
+    },
+    {
+      "id": "snappy-geist",
+      "label": "Snappy",
+      "description": "Fast, small-scale Geist credits with a crisp blue accent that zip by for a quick gag.",
+      "askedAs": [
+        "quick fast credits",
+        "short snappy roll",
+        "speed it up a lot",
+        "быстрые титры",
+        "короткая быстрая анимация"
+      ],
+      "props": {
+        "fontFamily": "Geist",
+        "speed": 2.5,
+        "scale": 0.85,
+        "fontWeight": 600,
+        "accent": "#4f8cff"
+      }
+    }
+  ]
+}

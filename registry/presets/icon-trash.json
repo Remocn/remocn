@@ -1,0 +1,101 @@
+{
+  "component": "icon-trash",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "delicate-draw",
+      "label": "Delicate Draw",
+      "description": "A large, hairline trash can that slowly sketches itself in a soft slate grey.",
+      "askedAs": [
+        "thin slow line drawing trash icon",
+        "elegant outline delete icon",
+        "big minimal bin that draws in",
+        "тонкая иконка корзины рисуется медленно",
+        "изящная линейная иконка удаления"
+      ],
+      "props": {
+        "animation": "draw",
+        "size": 120,
+        "strokeWidth": 1.25,
+        "speed": 0.5,
+        "color": "#64748b"
+      }
+    },
+    {
+      "id": "danger-alert",
+      "label": "Danger Alert",
+      "description": "A bold crimson bin that snaps through its lid action quickly, like a destructive warning.",
+      "askedAs": [
+        "red delete warning icon",
+        "fast bold trash animation",
+        "destructive action bin",
+        "красная иконка удаления",
+        "быстрая анимация корзины предупреждение"
+      ],
+      "props": {
+        "animation": "action",
+        "color": "#dc2626",
+        "strokeWidth": 2.75,
+        "speed": 2,
+        "size": 64
+      }
+    },
+    {
+      "id": "idle-loop",
+      "label": "Idle Loop",
+      "description": "A small, muted bin that gently repeats its lid motion as an ambient UI hint.",
+      "askedAs": [
+        "looping small trash icon",
+        "subtle repeating delete animation",
+        "bin icon on repeat",
+        "зацикленная маленькая корзина",
+        "повторяющаяся анимация мусорки"
+      ],
+      "props": {
+        "animation": "action",
+        "loop": true,
+        "size": 32,
+        "color": "#525252",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "hero-showcase",
+      "label": "Hero Showcase",
+      "description": "An oversized deep-indigo trash can that draws and then animates at an unhurried pace on a loop.",
+      "askedAs": [
+        "huge trash icon for title slide",
+        "large animated bin centerpiece",
+        "big looping delete icon",
+        "огромная иконка корзины на весь экран",
+        "крупная анимированная мусорка"
+      ],
+      "props": {
+        "size": 200,
+        "color": "#3730a3",
+        "strokeWidth": 1.75,
+        "speed": 0.75,
+        "loop": true
+      }
+    },
+    {
+      "id": "quick-snap",
+      "label": "Quick Snap",
+      "description": "A compact, heavy-stroke charcoal bin that draws and acts in a brisk burst.",
+      "askedAs": [
+        "fast snappy trash icon",
+        "quick delete icon animation",
+        "thick small bin fast",
+        "быстрая иконка корзины",
+        "резкая анимация удаления"
+      ],
+      "props": {
+        "speed": 3,
+        "strokeWidth": 3,
+        "size": 40,
+        "color": "#1c1917"
+      }
+    }
+  ]
+}

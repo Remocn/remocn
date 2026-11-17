@@ -1,0 +1,99 @@
+{
+  "component": "icon-chevron-right",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "hairline-draw",
+      "label": "Hairline Draw",
+      "description": "A large, thin chevron that slowly sketches itself in muted slate.",
+      "askedAs": [
+        "thin slow drawing arrow",
+        "elegant line chevron",
+        "minimal big arrow sketch",
+        "тонкая стрелка рисуется медленно",
+        "элегантный шеврон линией"
+      ],
+      "props": {
+        "animation": "draw",
+        "size": 120,
+        "strokeWidth": 1,
+        "speed": 0.5,
+        "color": "#475569"
+      }
+    },
+    {
+      "id": "bold-nudge",
+      "label": "Bold Nudge",
+      "description": "A chunky blue chevron that keeps nudging forward on a quick loop.",
+      "askedAs": [
+        "looping next arrow hint",
+        "bouncing right arrow",
+        "thick blue arrow pointing forward",
+        "стрелка вправо зацикленная",
+        "толстая синяя стрелка дальше"
+      ],
+      "props": {
+        "animation": "action",
+        "loop": true,
+        "strokeWidth": 3,
+        "color": "#1f6feb",
+        "speed": 1.5,
+        "size": 64
+      }
+    },
+    {
+      "id": "quick-tick",
+      "label": "Quick Tick",
+      "description": "A small chevron that snaps in and gestures at double speed.",
+      "askedAs": [
+        "fast small arrow",
+        "snappy chevron icon",
+        "quick next icon",
+        "быстрая маленькая стрелка",
+        "резкий шеврон"
+      ],
+      "props": {
+        "speed": 2.5,
+        "size": 32,
+        "strokeWidth": 2.5
+      }
+    },
+    {
+      "id": "hero-terracotta",
+      "label": "Hero Terracotta",
+      "description": "An oversized warm terracotta chevron that draws and moves at a calm pace.",
+      "askedAs": [
+        "huge warm arrow",
+        "big orange chevron slow",
+        "statement arrow for title",
+        "огромная тёплая стрелка",
+        "большой оранжевый шеврон"
+      ],
+      "props": {
+        "size": 180,
+        "color": "#c2410c",
+        "strokeWidth": 1.5,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "forest-pulse",
+      "label": "Forest Pulse",
+      "description": "A medium deep-green chevron that redraws and moves in a steady, gentle loop.",
+      "askedAs": [
+        "looping green arrow",
+        "calm repeating chevron",
+        "green continue icon animation",
+        "зелёная стрелка по кругу",
+        "спокойная повторяющаяся стрелка"
+      ],
+      "props": {
+        "loop": true,
+        "color": "#166534",
+        "size": 80,
+        "speed": 0.75
+      }
+    }
+  ]
+}

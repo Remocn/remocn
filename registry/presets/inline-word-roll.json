@@ -1,0 +1,99 @@
+{
+  "component": "inline-word-roll",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "slow-editorial",
+      "label": "Slow Editorial",
+      "description": "Large warm-ivory type that lingers on each word and rolls with an unhurried, even rhythm.",
+      "askedAs": [
+        "slow calm word cycling",
+        "elegant big headline rotation",
+        "words change slowly without speeding up",
+        "медленная смена слов",
+        "спокойный крупный заголовок"
+      ],
+      "props": {
+        "fontSize": 96,
+        "interval": 36,
+        "acceleration": 1,
+        "transitionFrames": 14,
+        "color": "#f3ede2"
+      }
+    },
+    {
+      "id": "rapid-fire",
+      "label": "Rapid Fire",
+      "description": "Words snap past quickly and accelerate hard into a blur of options.",
+      "askedAs": [
+        "fast word shuffle",
+        "words speed up a lot",
+        "quick snappy rotating words",
+        "быстрая смена слов",
+        "слова ускоряются"
+      ],
+      "props": {
+        "interval": 8,
+        "acceleration": 0.75,
+        "transitionFrames": 3,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "compact-caption",
+      "label": "Compact Caption",
+      "description": "Small cool-grey type with a steady, moderate roll suited to subtitles and lower thirds.",
+      "askedAs": [
+        "small rotating text",
+        "subtle caption word swap",
+        "lower third word roll",
+        "маленький текст со сменой слов",
+        "аккуратная подпись"
+      ],
+      "props": {
+        "fontSize": 32,
+        "interval": 20,
+        "acceleration": 0.97,
+        "color": "#c9d1d9"
+      }
+    },
+    {
+      "id": "bold-billboard",
+      "label": "Bold Billboard",
+      "description": "Oversized type in a confident amber with a gentle build in pace.",
+      "askedAs": [
+        "huge headline word changer",
+        "big bold rotating words",
+        "poster style word cycle",
+        "огромный заголовок",
+        "крупные яркие слова"
+      ],
+      "props": {
+        "fontSize": 140,
+        "interval": 24,
+        "acceleration": 0.92,
+        "transitionFrames": 10,
+        "color": "#f2b84b"
+      }
+    },
+    {
+      "id": "soft-glide",
+      "label": "Soft Glide",
+      "description": "Muted sage text with long, smooth rolls played at a relaxed half speed.",
+      "askedAs": [
+        "smooth soft word transition",
+        "gentle slow motion text roll",
+        "dreamy rotating words",
+        "плавная смена слов",
+        "мягкая анимация текста"
+      ],
+      "props": {
+        "transitionFrames": 18,
+        "interval": 28,
+        "color": "#a8c3a0",
+        "speed": 0.75
+      }
+    }
+  ]
+}

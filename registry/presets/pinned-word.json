@@ -1,0 +1,126 @@
+{
+  "component": "pinned-word",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-ivory",
+      "label": "Editorial Ivory",
+      "description": "Warm ivory page with deep ink and a Fraunces accent word in oxblood, like a print magazine cover line.",
+      "askedAs": [
+        "magazine style light version",
+        "warm paper background with serif accent",
+        "classy editorial print look",
+        "светлый журнальный стиль",
+        "тёплый бумажный фон с засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4efe6",
+        "ink": "#1c1a17",
+        "accent": "#8a2b2b",
+        "accentFont": "Fraunces",
+        "hold": 48
+      }
+    },
+    {
+      "id": "slow-luxe",
+      "label": "Slow Luxe",
+      "description": "Near-black stage with a champagne gold accent, long holds and soft unhurried transitions.",
+      "askedAs": [
+        "slow luxury gold on black",
+        "elegant premium slow reveal",
+        "calm expensive feeling",
+        "медленно и роскошно золото",
+        "дорогой спокойный стиль"
+      ],
+      "props": {
+        "background": "#0e0d0b",
+        "ink": "#ede6d8",
+        "accent": "#c9a86a",
+        "hold": 72,
+        "flick": 32,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "rapid-pitch",
+      "label": "Rapid Pitch",
+      "description": "Quick-fire cuts with short holds and snappy flicks in clean Inter for punchy social edits.",
+      "askedAs": [
+        "make it faster and punchier",
+        "quick cuts for social reel",
+        "snappy energetic version",
+        "быстрее и энергичнее",
+        "динамичная нарезка для соцсетей"
+      ],
+      "props": {
+        "hold": 14,
+        "flick": 8,
+        "speed": 1.5,
+        "fontFamily": "Inter",
+        "grain": false
+      }
+    },
+    {
+      "id": "terminal-mono",
+      "label": "Terminal Mono",
+      "description": "Developer-flavoured mono type on graphite with a muted green accent and no grain.",
+      "askedAs": [
+        "code style monospace look",
+        "developer tool vibe",
+        "techy terminal font",
+        "моноширинный шрифт как в коде",
+        "стиль для разработчиков"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "accentFont": "JetBrains Mono",
+        "background": "#15171a",
+        "ink": "#d6dad3",
+        "accent": "#7fb685",
+        "grain": false
+      }
+    },
+    {
+      "id": "bold-statement",
+      "label": "Bold Statement",
+      "description": "Oversized Bricolage type on clean white with a vivid coral accent for a loud headline moment.",
+      "askedAs": [
+        "bigger bolder text",
+        "large headline on white",
+        "loud statement slide",
+        "крупный жирный текст",
+        "большой заголовок на белом"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#ffffff",
+        "ink": "#111111",
+        "fontFamily": "Bricolage Grotesque",
+        "accent": "#e2553d",
+        "scale": 1.35
+      }
+    },
+    {
+      "id": "quiet-midnight",
+      "label": "Quiet Midnight",
+      "description": "Small, restrained type on deep navy with a soft periwinkle accent and a gentle delayed start.",
+      "askedAs": [
+        "subtle minimal dark blue",
+        "smaller quieter text",
+        "understated night look",
+        "тихий минимализм тёмно-синий",
+        "сдержанный мелкий текст"
+      ],
+      "props": {
+        "background": "#0f1626",
+        "ink": "#dce2f0",
+        "accent": "#9db0f5",
+        "scale": 0.75,
+        "delay": 20,
+        "fontFamily": "Geist"
+      }
+    }
+  ]
+}

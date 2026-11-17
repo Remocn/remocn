@@ -1,0 +1,120 @@
+{
+  "component": "dot-sort",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-light",
+      "label": "Editorial Light",
+      "description": "Warm paper background with dark serif type and a deep red accent, like a printed newspaper chart.",
+      "askedAs": [
+        "newspaper style chart",
+        "light serif print look",
+        "editorial paper background",
+        "светлый газетный стиль",
+        "как в журнале на бумаге"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4efe6",
+        "ink": "#1c1a17",
+        "accent": "#b23a2e",
+        "fontFamily": "Fraunces",
+        "grain": true
+      }
+    },
+    {
+      "id": "swift-snap",
+      "label": "Swift Snap",
+      "description": "Dots fly into place fast and the whole sequence plays at double speed for a punchy beat.",
+      "askedAs": [
+        "make the dots sort faster",
+        "quick snappy version",
+        "fast paced dot animation",
+        "быстрая анимация точек",
+        "сделать резче и быстрее"
+      ],
+      "props": {
+        "fly": 12,
+        "speed": 2,
+        "grain": false
+      }
+    },
+    {
+      "id": "slow-drift",
+      "label": "Slow Drift",
+      "description": "Long, unhurried dot flights at half speed with a short lead-in for a calm, contemplative reveal.",
+      "askedAs": [
+        "slow calm dot sorting",
+        "gentle drifting dots",
+        "take it slower and smoother",
+        "медленная плавная сортировка",
+        "спокойный медленный вариант"
+      ],
+      "props": {
+        "fly": 52,
+        "speed": 0.5,
+        "delay": 15
+      }
+    },
+    {
+      "id": "terminal-mint",
+      "label": "Terminal Mint",
+      "description": "Near-black background with monospaced type and a soft mint accent for a technical data feel.",
+      "askedAs": [
+        "code terminal look",
+        "monospace data style",
+        "dark tech dashboard",
+        "стиль терминала",
+        "технический тёмный вид"
+      ],
+      "props": {
+        "theme": "dark",
+        "background": "#0e1110",
+        "ink": "#e6ede9",
+        "accent": "#5fd3a4",
+        "fontFamily": "JetBrains Mono",
+        "grain": false
+      }
+    },
+    {
+      "id": "bold-close-up",
+      "label": "Bold Close Up",
+      "description": "Scaled-up layout with chunky grotesque type and a warm amber accent on a clean light ground.",
+      "askedAs": [
+        "bigger bolder dots",
+        "zoomed in chart",
+        "large type for mobile",
+        "крупнее и жирнее",
+        "увеличить для телефона"
+      ],
+      "props": {
+        "theme": "light",
+        "scale": 1.3,
+        "fontFamily": "Bricolage Grotesque",
+        "accent": "#e07a1f",
+        "ink": "#161616",
+        "background": "#fafaf7"
+      }
+    },
+    {
+      "id": "midnight-violet",
+      "label": "Midnight Violet",
+      "description": "Deep navy backdrop with a muted violet accent and clean Geist type, slightly smaller for breathing room.",
+      "askedAs": [
+        "dark purple theme",
+        "night blue elegant look",
+        "minimal dark violet",
+        "тёмно-синий с фиолетовым",
+        "элегантная ночная тема"
+      ],
+      "props": {
+        "background": "#0f1424",
+        "ink": "#e8e9f2",
+        "accent": "#8b7cf6",
+        "fontFamily": "Geist",
+        "scale": 0.85
+      }
+    }
+  ]
+}

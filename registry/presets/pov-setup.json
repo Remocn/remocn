@@ -1,0 +1,122 @@
+{
+  "component": "pov-setup",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "quick-roast",
+      "label": "Quick Roast",
+      "description": "Snappy word pops and an early punchline for fast-scrolling feeds.",
+      "askedAs": [
+        "make it faster and punchier",
+        "quick tiktok timing",
+        "speed up the joke",
+        "быстрее и резче",
+        "ускорь панчлайн"
+      ],
+      "props": {
+        "stagger": 1,
+        "punchAt": 30,
+        "speed": 1.5,
+        "fontFamily": "Bricolage Grotesque",
+        "scale": 1.15
+      }
+    },
+    {
+      "id": "slow-burn",
+      "label": "Slow Burn",
+      "description": "Unhurried word-by-word reveal with a long pause before the punchline lands.",
+      "askedAs": [
+        "slower dramatic pause before punchline",
+        "let the setup breathe",
+        "deadpan timing",
+        "медленно с паузой",
+        "драматичная пауза перед панчем"
+      ],
+      "props": {
+        "stagger": 8,
+        "punchAt": 100,
+        "speed": 0.75,
+        "ground": "velvet-hour",
+        "accent": "#c9a0ff"
+      }
+    },
+    {
+      "id": "paper-note",
+      "label": "Paper Note",
+      "description": "Light cream page with dark ink and a warm terracotta accent, like a handwritten aside.",
+      "askedAs": [
+        "light version on cream",
+        "warm paper look",
+        "editorial light background",
+        "светлый тёплый вариант",
+        "как на бумаге"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4efe6",
+        "ink": "#1e1b18",
+        "accent": "#c2562e",
+        "fontFamily": "Fraunces",
+        "ground": "paper-crease"
+      }
+    },
+    {
+      "id": "dev-terminal",
+      "label": "Dev Terminal",
+      "description": "Monospace type on near-black with a mint accent for engineering in-jokes.",
+      "askedAs": [
+        "developer meme style",
+        "code terminal look",
+        "monospace hacker vibe",
+        "как терминал для разработчиков",
+        "моноширинный шрифт"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0d1110",
+        "ink": "#e6f2ec",
+        "accent": "#5fd3a0",
+        "stagger": 2,
+        "scale": 0.9
+      }
+    },
+    {
+      "id": "ember-glow",
+      "label": "Ember Glow",
+      "description": "Dark warm ember ground with an amber accent and larger type for a cosy late-night mood.",
+      "askedAs": [
+        "warm dark orange mood",
+        "late night cozy vibe",
+        "bigger text with warm glow",
+        "тёплый тёмный вариант",
+        "ночной уютный стиль"
+      ],
+      "props": {
+        "ground": "ember",
+        "accent": "#f2a65a",
+        "scale": 1.25,
+        "fontFamily": "Manrope"
+      }
+    },
+    {
+      "id": "cool-minimal",
+      "label": "Cool Minimal",
+      "description": "Crisp polar ground with clean Geist type and a steel-blue accent, all at once with no stagger.",
+      "askedAs": [
+        "clean minimal blue",
+        "show all words at once",
+        "calm corporate look",
+        "минималистичный холодный стиль",
+        "без анимации по словам"
+      ],
+      "props": {
+        "ground": "polar",
+        "fontFamily": "Geist",
+        "stagger": 0,
+        "accent": "#4a7ba6",
+        "delay": 10
+      }
+    }
+  ]
+}

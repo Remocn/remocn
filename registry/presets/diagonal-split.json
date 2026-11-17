@@ -1,0 +1,106 @@
+{
+  "component": "diagonal-split",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "A slow, steep seam on warm ivory paper with refined serif type and a terracotta band.",
+      "askedAs": [
+        "slow elegant magazine style transition",
+        "serif split on cream background",
+        "classy editorial before and after",
+        "элегантный переход с засечками",
+        "медленный журнальный стиль"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "background": "#f4efe6",
+        "ink": "#1e1b17",
+        "accent": "#c2593a",
+        "move": 56
+      }
+    },
+    {
+      "id": "snap-cut",
+      "label": "Snap Cut",
+      "description": "A fast, shallow wipe that pushes the scene off almost sideways for punchy launch beats.",
+      "askedAs": [
+        "quick punchy diagonal wipe",
+        "fast hard cut between statements",
+        "snappy launch reveal",
+        "быстрая резкая шторка",
+        "динамичный переход для запуска"
+      ],
+      "props": {
+        "move": 16,
+        "angle": 12,
+        "speed": 1.5,
+        "fontFamily": "Space Grotesk",
+        "scale": 1.15
+      }
+    },
+    {
+      "id": "midnight-gold",
+      "label": "Midnight Gold",
+      "description": "Deep navy backdrop with a muted gold band and a measured, luxurious slide.",
+      "askedAs": [
+        "dark luxury gold transition",
+        "navy and gold premium split",
+        "high end dark reveal",
+        "тёмный люкс с золотом",
+        "премиальный переход тёмно-синий"
+      ],
+      "props": {
+        "background": "#0e1424",
+        "ink": "#f2ebdd",
+        "accent": "#c9a45c",
+        "fontFamily": "Fraunces",
+        "move": 48,
+        "angle": 40
+      }
+    },
+    {
+      "id": "terminal-steep",
+      "label": "Terminal Steep",
+      "description": "Monospace type on near-black with a steep, near-vertical seam and a sage green band, no grain.",
+      "askedAs": [
+        "developer style code transition",
+        "monospace dark split screen",
+        "clean techy diagonal cut",
+        "переход в стиле терминала",
+        "моноширинный шрифт тёмная тема"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0b0d0c",
+        "ink": "#e3e8e4",
+        "accent": "#6fa88a",
+        "angle": 72,
+        "grain": false
+      }
+    },
+    {
+      "id": "soft-studio",
+      "label": "Soft Studio",
+      "description": "A light, airy look with cool grey paper, compact type and a gentle delayed slide.",
+      "askedAs": [
+        "minimal light clean transition",
+        "soft calm diagonal reveal",
+        "airy white product split",
+        "минималистичный светлый переход",
+        "спокойная мягкая шторка"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#eef0f3",
+        "ink": "#1a1d24",
+        "accent": "#5b6cf0",
+        "scale": 0.85,
+        "delay": 12
+      }
+    }
+  ]
+}

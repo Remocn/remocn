@@ -1,0 +1,102 @@
+{
+  "component": "particle-dissolve",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "fine-sand",
+      "label": "Fine Sand",
+      "description": "Tiny grains drift gently with little sparkle, like sand slipping away in slow motion.",
+      "askedAs": [
+        "soft fine dust dissolve",
+        "slow sand-like disintegration",
+        "subtle grainy transition",
+        "мелкий песок растворение",
+        "медленный рассыпающийся переход"
+      ],
+      "props": {
+        "particleSize": 1,
+        "scatter": 0.05,
+        "shimmer": 0.2,
+        "aberration": 0.1,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "wind-sweep",
+      "label": "Wind Sweep",
+      "description": "The picture blows away to the right in a wide staggered wave, as if caught by a gust.",
+      "askedAs": [
+        "blow away to the side",
+        "wind carries the image off",
+        "sideways dust sweep",
+        "изображение сдувает ветром",
+        "рассыпание вбок волной"
+      ],
+      "props": {
+        "direction": "right",
+        "scatter": 0.25,
+        "stagger": 0.85,
+        "particleSize": 3
+      }
+    },
+    {
+      "id": "digital-glitch",
+      "label": "Digital Glitch",
+      "description": "Chunky blocks split into strong RGB fringes and snap apart quickly with heavy shimmer.",
+      "askedAs": [
+        "glitchy pixel breakup",
+        "fast rgb split dissolve",
+        "blocky digital disintegration",
+        "глитч распад на пиксели",
+        "быстрый цифровой распад"
+      ],
+      "props": {
+        "particleSize": 12,
+        "aberration": 1.4,
+        "shimmer": 1.2,
+        "stagger": 0.15,
+        "speed": 2
+      }
+    },
+    {
+      "id": "ascend",
+      "label": "Ascend",
+      "description": "Glittering motes rise upward and scatter wide, a luminous, almost spiritual lift.",
+      "askedAs": [
+        "particles float upward",
+        "sparkly rising dust",
+        "ascending glitter transition",
+        "частицы улетают вверх",
+        "сверкающая пыль поднимается"
+      ],
+      "props": {
+        "direction": "up",
+        "shimmer": 1.5,
+        "scatter": 0.35,
+        "particleSize": 2,
+        "aberration": 0.25
+      }
+    },
+    {
+      "id": "ash-fall",
+      "label": "Ash Fall",
+      "description": "Coarse, dull flakes sink downward slowly with no colour fringing, heavy and somber.",
+      "askedAs": [
+        "image crumbles to ash",
+        "heavy falling dust",
+        "dark slow collapse transition",
+        "осыпается пеплом",
+        "медленное падение частиц вниз"
+      ],
+      "props": {
+        "direction": "down",
+        "particleSize": 8,
+        "shimmer": 0,
+        "aberration": 0,
+        "speed": 0.75,
+        "stagger": 0.7
+      }
+    }
+  ]
+}

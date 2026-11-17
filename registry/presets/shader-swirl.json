@@ -1,0 +1,97 @@
+{
+  "component": "shader-swirl",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "slow-hypnosis",
+      "label": "Slow Hypnosis",
+      "description": "A slow, deeply twisted spiral with soft blended bands that pulls the eye inward.",
+      "askedAs": [
+        "slow hypnotic spiral",
+        "calm swirling background",
+        "gentle twisting vortex",
+        "медленная гипнотическая спираль",
+        "плавный вихрь на фоне"
+      ],
+      "props": {
+        "speed": 0.5,
+        "twist": 0.6,
+        "softness": 0.6,
+        "bandCount": 3
+      }
+    },
+    {
+      "id": "tight-rings",
+      "label": "Tight Rings",
+      "description": "Many crisp concentric rings with almost no twist, turning at a steady pace like a target.",
+      "askedAs": [
+        "lots of thin rings",
+        "crisp concentric circles",
+        "target-like rings background",
+        "много тонких колец",
+        "чёткие концентрические круги"
+      ],
+      "props": {
+        "bandCount": 10,
+        "twist": 0,
+        "softness": 0.05
+      }
+    },
+    {
+      "id": "spin-up",
+      "label": "Spin Up",
+      "description": "Fast, sharply twisted bands that read as energy building toward the center.",
+      "askedAs": [
+        "fast spinning vortex",
+        "energetic swirl for a reveal",
+        "high speed spiral",
+        "быстрый вращающийся вихрь",
+        "энергичная спираль"
+      ],
+      "props": {
+        "speed": 3,
+        "twist": 0.85,
+        "bandCount": 6,
+        "softness": 0.1
+      }
+    },
+    {
+      "id": "midnight-mist",
+      "label": "Midnight Mist",
+      "description": "Two wide, very soft bands drifting over a deep navy ground for a quiet premium backdrop.",
+      "askedAs": [
+        "soft blurry swirl on navy",
+        "subtle dark blue background",
+        "misty minimal swirl",
+        "мягкий размытый вихрь на тёмно-синем",
+        "спокойный тёмный фон"
+      ],
+      "props": {
+        "colorBack": "#0b1426",
+        "bandCount": 2,
+        "softness": 0.9,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "bordeaux-coil",
+      "label": "Bordeaux Coil",
+      "description": "Medium-tight coiled bands on a rich wine-dark background with a moderate twist.",
+      "askedAs": [
+        "dark red swirl",
+        "wine colored spiral background",
+        "luxurious burgundy vortex",
+        "бордовая спираль",
+        "тёмно-красный вихрь"
+      ],
+      "props": {
+        "colorBack": "#2a0d14",
+        "bandCount": 7,
+        "twist": 0.4,
+        "softness": 0.3,
+        "speed": 1.25
+      }
+    }
+  ]
+}

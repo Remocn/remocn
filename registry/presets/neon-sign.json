@@ -1,0 +1,120 @@
+{
+  "component": "neon-sign",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "cool-cyan-bar",
+      "label": "Cool Cyan",
+      "description": "Icy cyan tubes with a soft blue halo over a deep navy wall, lit at an unhurried pace.",
+      "askedAs": [
+        "blue neon sign",
+        "cold cyan glow on dark blue",
+        "calm icy neon",
+        "голубой неон",
+        "холодная неоновая вывеска"
+      ],
+      "props": {
+        "color": "#3fd0e0",
+        "glowColor": "#1e90c8",
+        "backgroundColor": "#0a1220",
+        "tubeColor": "#1c2633",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "warm-amber-diner",
+      "label": "Amber Diner",
+      "description": "Thick warm amber tubes glowing like an old roadside diner sign on brick-brown dusk.",
+      "askedAs": [
+        "retro diner neon",
+        "orange vintage sign",
+        "warm amber glow",
+        "ретро вывеска закусочной",
+        "тёплый оранжевый неон"
+      ],
+      "props": {
+        "color": "#f2a23a",
+        "glowColor": "#e07b1f",
+        "coreColor": "#fff4dc",
+        "backgroundColor": "#1a100b",
+        "tubeColor": "#33261c",
+        "strokeWidth": 9
+      }
+    },
+    {
+      "id": "fine-pink-script",
+      "label": "Fine Pink",
+      "description": "Delicate thin pink tubes, small in frame, with a gentle rose halo for boutique-style lettering.",
+      "askedAs": [
+        "thin pink neon",
+        "delicate neon script",
+        "small elegant neon sign",
+        "тонкий розовый неон",
+        "изящная неоновая надпись"
+      ],
+      "props": {
+        "color": "#f27bb0",
+        "glowColor": "#d9488b",
+        "strokeWidth": 3,
+        "fit": 0.45,
+        "backgroundColor": "#140c12"
+      }
+    },
+    {
+      "id": "quick-flicker",
+      "label": "Quick Flicker",
+      "description": "A fast, jittery power-up with a different stutter pattern that snaps the sign on in a hurry.",
+      "askedAs": [
+        "fast neon flicker",
+        "quick buzzing sign",
+        "snappy neon intro",
+        "быстрое мерцание неона",
+        "резко включающаяся вывеска"
+      ],
+      "props": {
+        "speed": 2.5,
+        "seed": 42
+      }
+    },
+    {
+      "id": "bold-green-billboard",
+      "label": "Bold Green",
+      "description": "Chunky mint-green tubes filling the frame like a big rooftop billboard over near-black.",
+      "askedAs": [
+        "big green neon",
+        "huge bold neon sign",
+        "full screen neon text",
+        "крупный зелёный неон",
+        "большая неоновая вывеска"
+      ],
+      "props": {
+        "color": "#5be3a0",
+        "glowColor": "#22b573",
+        "strokeWidth": 13,
+        "fit": 0.85,
+        "backgroundColor": "#08110d",
+        "tubeColor": "#1b2621"
+      }
+    },
+    {
+      "id": "violet-slow-hum",
+      "label": "Violet Hum",
+      "description": "Soft violet tubes warming up slowly with a lingering lavender glow, moody and late-night.",
+      "askedAs": [
+        "slow purple neon",
+        "moody violet glow",
+        "late night lounge sign",
+        "медленный фиолетовый неон",
+        "атмосферная вывеска лаунж"
+      ],
+      "props": {
+        "color": "#a98bff",
+        "glowColor": "#7552e0",
+        "backgroundColor": "#0e0b18",
+        "speed": 0.5,
+        "seed": 19
+      }
+    }
+  ]
+}

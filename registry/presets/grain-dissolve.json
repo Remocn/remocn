@@ -1,0 +1,117 @@
+{
+  "component": "grain-dissolve",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "film-stock",
+      "label": "Film Stock",
+      "description": "Heavy organic grain over a warm near-black, like a reel dissolving between frames.",
+      "askedAs": [
+        "film grain transition",
+        "analog movie dissolve",
+        "grainy cinematic fade",
+        "переход с плёночным зерном",
+        "аналоговое растворение кадра"
+      ],
+      "props": {
+        "shape": "blob",
+        "noise": 0.7,
+        "colorBack": "#1c1712",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "halftone-print",
+      "label": "Halftone Print",
+      "description": "Fine halftone dots on warm paper stock, reading like an editorial print press.",
+      "askedAs": [
+        "halftone dot transition",
+        "print magazine dissolve",
+        "newspaper dots effect",
+        "переход полутоновыми точками",
+        "эффект печати журнала"
+      ],
+      "props": {
+        "shape": "dots",
+        "zoom": 3.5,
+        "noise": 0.2,
+        "colorBack": "#ede6d8"
+      }
+    },
+    {
+      "id": "slow-tide",
+      "label": "Slow Tide",
+      "description": "Large, calm waves drifting slowly through a deep ink-blue field.",
+      "askedAs": [
+        "calm wave transition",
+        "slow ocean dissolve",
+        "soft gentle mood change",
+        "спокойный волновой переход",
+        "медленное растворение волнами"
+      ],
+      "props": {
+        "shape": "wave",
+        "zoom": 1,
+        "speed": 0.5,
+        "colorBack": "#0f1a24",
+        "noise": 0.15
+      }
+    },
+    {
+      "id": "volume-orb",
+      "label": "Volume Orb",
+      "description": "A clean volumetric sphere condensing from a cool graphite backdrop with barely any grain.",
+      "askedAs": [
+        "3d sphere transition",
+        "clean volumetric dissolve",
+        "minimal orb reveal",
+        "переход со сферой",
+        "объёмный минималистичный переход"
+      ],
+      "props": {
+        "shape": "sphere",
+        "noise": 0.05,
+        "zoom": 1.5,
+        "colorBack": "#22252b"
+      }
+    },
+    {
+      "id": "tile-glitch",
+      "label": "Tile Pattern",
+      "description": "Fast, dense truchet tiles breaking the scene apart with a graphic, structured energy.",
+      "askedAs": [
+        "geometric tile transition",
+        "fast pattern dissolve",
+        "maze tiles effect",
+        "переход геометрическими плитками",
+        "быстрый узорный переход"
+      ],
+      "props": {
+        "shape": "truchet",
+        "zoom": 3,
+        "speed": 2,
+        "noise": 0.4,
+        "colorBack": "#2a1f2d"
+      }
+    },
+    {
+      "id": "ripple-pond",
+      "label": "Ripple Pond",
+      "description": "Concentric ripples spreading quickly across a muted forest-green ground with soft grain.",
+      "askedAs": [
+        "ripple transition",
+        "water ripple dissolve",
+        "circular wave reveal",
+        "переход с рябью",
+        "круги на воде переход"
+      ],
+      "props": {
+        "shape": "ripple",
+        "speed": 1.5,
+        "zoom": 2.5,
+        "colorBack": "#14201a"
+      }
+    }
+  ]
+}

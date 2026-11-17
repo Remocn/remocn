@@ -1,0 +1,124 @@
+{
+  "component": "word-acts",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "paper-poster",
+      "label": "Paper Poster",
+      "description": "Warm off-white paper with deep ink, a brick-red accent and a chunky grotesque for a printed-poster feel.",
+      "askedAs": [
+        "light poster style",
+        "warm paper background with red",
+        "print look for words",
+        "светлый постер",
+        "бумажный фон с красным"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4efe6",
+        "ink": "#1c1a17",
+        "accent": "#d9480f",
+        "fontFamily": "Bricolage Grotesque"
+      }
+    },
+    {
+      "id": "rapid-fire",
+      "label": "Rapid Fire",
+      "description": "Double-speed acts with almost no hold, a bold lime accent on black for an energetic montage.",
+      "askedAs": [
+        "make it fast and punchy",
+        "quick word montage",
+        "high energy words",
+        "быстрые слова",
+        "энергичный монтаж"
+      ],
+      "props": {
+        "speed": 2,
+        "hold": 8,
+        "accent": "#a3e635",
+        "fontFamily": "Space Grotesk",
+        "background": "#0b0b0c",
+        "ink": "#f5f5f4"
+      }
+    },
+    {
+      "id": "editorial-slow",
+      "label": "Editorial Slow",
+      "description": "Unhurried serif words on a deep plum ground, each holding long like a magazine spread.",
+      "askedAs": [
+        "elegant slow serif",
+        "calm editorial words",
+        "luxury slow pace",
+        "медленный элегантный",
+        "журнальный стиль"
+      ],
+      "props": {
+        "fontFamily": "Instrument Serif",
+        "speed": 0.5,
+        "hold": 72,
+        "background": "#1e1424",
+        "ink": "#f3e9f7",
+        "accent": "#e3a857"
+      }
+    },
+    {
+      "id": "terminal-mono",
+      "label": "Terminal Mono",
+      "description": "Small monospace words in mint on a near-black slate, like a code demo.",
+      "askedAs": [
+        "code style words",
+        "developer monospace look",
+        "terminal vibe",
+        "моноширинный шрифт",
+        "как в терминале"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "scale": 0.8,
+        "background": "#0f1417",
+        "ink": "#d7e3e0",
+        "accent": "#34d399"
+      }
+    },
+    {
+      "id": "giant-pop",
+      "label": "Giant Pop",
+      "description": "Oversized words on a cobalt field with a sunny yellow accent, filling the frame.",
+      "askedAs": [
+        "huge bold words",
+        "big colorful type",
+        "fill the screen",
+        "огромные слова",
+        "крупный яркий текст"
+      ],
+      "props": {
+        "scale": 1.4,
+        "background": "#1d3fd6",
+        "ink": "#ffffff",
+        "accent": "#ffd43b",
+        "fontFamily": "Manrope"
+      }
+    },
+    {
+      "id": "soft-fraunces",
+      "label": "Soft Sage",
+      "description": "Gentle Fraunces type on pale sage with a forest accent and a short lead-in delay.",
+      "askedAs": [
+        "soft natural colors",
+        "gentle green light",
+        "calm friendly words",
+        "мягкий зелёный",
+        "спокойный светлый стиль"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Fraunces",
+        "background": "#e8efe6",
+        "ink": "#1f2a22",
+        "accent": "#2f6b45",
+        "delay": 15
+      }
+    }
+  ]
+}

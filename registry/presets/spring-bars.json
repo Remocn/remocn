@@ -1,0 +1,105 @@
+{
+  "component": "spring-bars",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "paper-report",
+      "label": "Paper Report",
+      "description": "A calm light editorial look with serif type, deep ink text and a muted forest-green highlight bar.",
+      "askedAs": [
+        "light chart like a printed report",
+        "editorial bar chart with serif font",
+        "clean white background bars",
+        "светлый график в стиле журнала",
+        "столбцы на белом фоне с засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4f1ea",
+        "ink": "#1c1b19",
+        "accent": "#2f6b4f",
+        "fontFamily": "Fraunces",
+        "grain": false
+      }
+    },
+    {
+      "id": "bouncy-pop",
+      "label": "Bouncy Pop",
+      "description": "Playful fast springs with a wide cascade, tight coils and a warm coral highlight on dark.",
+      "askedAs": [
+        "playful bouncy bar chart",
+        "fast springy bars with lots of bounce",
+        "fun energetic comparison chart",
+        "игривые прыгающие столбцы",
+        "быстрая пружинистая диаграмма"
+      ],
+      "props": {
+        "speed": 1.5,
+        "stagger": 6,
+        "coils": 17,
+        "accent": "#ff6b4a",
+        "fontFamily": "Bricolage Grotesque"
+      }
+    },
+    {
+      "id": "slow-settle",
+      "label": "Slow Settle",
+      "description": "Heavy, deliberate springs that rise slowly and settle under load in a muted slate palette.",
+      "askedAs": [
+        "slow heavy spring animation",
+        "calm bars settling under weight",
+        "slow motion bar chart",
+        "медленные тяжёлые пружины",
+        "спокойная анимация столбцов"
+      ],
+      "props": {
+        "speed": 0.5,
+        "stagger": 8,
+        "coils": 7,
+        "background": "#14171c",
+        "ink": "#e6e8ec",
+        "accent": "#8fa9c9"
+      }
+    },
+    {
+      "id": "terminal-spec",
+      "label": "Terminal Spec",
+      "description": "A technical monospace look with an amber highlight on near-black, no grain and tight timing.",
+      "askedAs": [
+        "engineering spec sheet chart",
+        "monospace technical bar chart",
+        "benchmark results look",
+        "технический график моноширинным шрифтом",
+        "бенчмарк в стиле терминала"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0b0c0e",
+        "ink": "#d9d6cf",
+        "accent": "#f2a93b",
+        "grain": false,
+        "stagger": 1
+      }
+    },
+    {
+      "id": "big-claim",
+      "label": "Big Claim",
+      "description": "An oversized, punchy light layout with a bold violet highlight that drops in after a short beat.",
+      "askedAs": [
+        "huge stat with big bars",
+        "bold product claim chart",
+        "large hero bar chart",
+        "крупная диаграмма с большой цифрой",
+        "смелый слайд с цифрой 3.4x"
+      ],
+      "props": {
+        "theme": "light",
+        "scale": 1.3,
+        "accent": "#5b3fd9",
+        "fontFamily": "Space Grotesk",
+        "delay": 12
+      }
+    }
+  ]
+}

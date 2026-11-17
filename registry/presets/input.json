@@ -1,0 +1,96 @@
+{
+  "component": "input",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "calm-focus",
+      "label": "Calm Focus",
+      "description": "A large field settling into a slow, deep-blue focus ring.",
+      "askedAs": [
+        "slow focus on a big input",
+        "large text field with blue focus ring",
+        "gentle input focus animation",
+        "медленный фокус на большом поле",
+        "крупное поле ввода с синей рамкой"
+      ],
+      "props": {
+        "size": "lg",
+        "state": "active",
+        "primary": "#1f4fd1",
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "quick-typing",
+      "label": "Quick Typing",
+      "description": "A compact field filling in briskly with a crisp teal caret and ring.",
+      "askedAs": [
+        "fast typing in a small input",
+        "snappy text entry animation",
+        "compact field being typed into quickly",
+        "быстрый набор текста в поле",
+        "маленькое поле с быстрым вводом"
+      ],
+      "props": {
+        "size": "sm",
+        "state": "typing",
+        "primary": "#0f766e",
+        "speed": 2
+      }
+    },
+    {
+      "id": "error-shake",
+      "label": "Error Shake",
+      "description": "A full-size field flagging an invalid entry with a muted red border and shake.",
+      "askedAs": [
+        "input showing a validation error",
+        "red border shake on wrong value",
+        "invalid email field animation",
+        "поле ввода с ошибкой",
+        "красная рамка и тряска при ошибке"
+      ],
+      "props": {
+        "state": "invalid",
+        "primary": "#b42318",
+        "speed": 1.25
+      }
+    },
+    {
+      "id": "soft-hover",
+      "label": "Soft Hover",
+      "description": "A large idle field warming up under a slow, violet-tinted hover.",
+      "askedAs": [
+        "hover over a text field",
+        "cursor hovering on an input",
+        "subtle hover state on a big field",
+        "наведение курсора на поле ввода",
+        "мягкий ховер на текстовом поле"
+      ],
+      "props": {
+        "size": "lg",
+        "state": "hover",
+        "primary": "#6d28d9",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "done-blur",
+      "label": "Done Blur",
+      "description": "A small field losing focus after entry, its forest-green ring fading out quickly.",
+      "askedAs": [
+        "input losing focus after typing",
+        "field blur when user moves on",
+        "completed input unfocusing",
+        "поле теряет фокус после ввода",
+        "завершённый ввод и снятие фокуса"
+      ],
+      "props": {
+        "size": "sm",
+        "state": "blur",
+        "primary": "#166534",
+        "speed": 1.5
+      }
+    }
+  ]
+}

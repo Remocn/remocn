@@ -1,0 +1,98 @@
+{
+  "component": "icon-folder",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "hairline-slow",
+      "label": "Hairline Slow",
+      "description": "A large, thin-lined folder that sketches itself in slowly with a calm, drafting feel.",
+      "askedAs": [
+        "thin slow drawing folder",
+        "elegant line folder icon",
+        "big delicate folder outline",
+        "тонкая медленная папка",
+        "изящная иконка папки линией"
+      ],
+      "props": {
+        "animation": "draw",
+        "size": 120,
+        "strokeWidth": 1.25,
+        "speed": 0.5,
+        "color": "#3f4a5a"
+      }
+    },
+    {
+      "id": "bold-snap",
+      "label": "Bold Snap",
+      "description": "A heavy-stroked folder that pops open quickly with a punchy action-only motion.",
+      "askedAs": [
+        "thick fast folder icon",
+        "punchy folder open animation",
+        "bold quick folder",
+        "жирная быстрая папка",
+        "резкое открытие папки"
+      ],
+      "props": {
+        "animation": "action",
+        "strokeWidth": 3,
+        "speed": 2,
+        "size": 64
+      }
+    },
+    {
+      "id": "ocean-loop",
+      "label": "Ocean Loop",
+      "description": "A deep blue folder that draws and opens on a continuous, steady loop.",
+      "askedAs": [
+        "blue looping folder",
+        "repeating folder animation",
+        "folder icon that keeps animating",
+        "синяя папка по кругу",
+        "зацикленная анимация папки"
+      ],
+      "props": {
+        "color": "#1f6feb",
+        "loop": true,
+        "size": 80
+      }
+    },
+    {
+      "id": "terracotta-hero",
+      "label": "Terracotta Hero",
+      "description": "An oversized warm clay-toned folder with medium weight, made for a title card.",
+      "askedAs": [
+        "huge warm folder icon",
+        "big orange-brown folder",
+        "folder for intro screen",
+        "большая тёплая папка",
+        "крупная папка для заставки"
+      ],
+      "props": {
+        "color": "#c2410c",
+        "size": 180,
+        "strokeWidth": 1.75,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "mini-busy",
+      "label": "Mini Busy",
+      "description": "A small sage-green folder that flaps open repeatedly at a brisk pace like a loading indicator.",
+      "askedAs": [
+        "small folder loading icon",
+        "tiny fast looping folder",
+        "green folder spinner",
+        "маленькая папка загрузки",
+        "быстрая зелёная папка"
+      ],
+      "props": {
+        "size": 32,
+        "color": "#4d7c5a",
+        "animation": "action",
+        "loop": true,
+        "speed": 1.5
+      }
+    }
+  ]
+}

@@ -1,0 +1,119 @@
+{
+  "component": "live-dashboard",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "midnight-ops",
+      "label": "Midnight Ops",
+      "description": "Dark dashboard on a deep charcoal ground with a cool teal accent and calm pacing.",
+      "askedAs": [
+        "dark mode revenue dashboard",
+        "night-time stats screen with teal highlights",
+        "moody dark metrics panel",
+        "тёмный дашборд платежей",
+        "ночная тема для панели метрик"
+      ],
+      "props": {
+        "theme": "dark",
+        "ground": "charcoal-satin",
+        "accent": "#2dd4bf",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "editorial-ledger",
+      "label": "Editorial Ledger",
+      "description": "Warm paper ground with serif type and a muted copper accent for a refined, print-like feel.",
+      "askedAs": [
+        "elegant serif finance dashboard",
+        "warm paper look for stats",
+        "classy editorial metrics screen",
+        "дашборд с засечками в тёплых тонах",
+        "элегантная финансовая панель как в журнале"
+      ],
+      "props": {
+        "theme": "light",
+        "ground": "paper-crease",
+        "fontFamily": "Fraunces",
+        "accent": "#b5653a"
+      }
+    },
+    {
+      "id": "terminal-feed",
+      "label": "Terminal Feed",
+      "description": "Monospaced dark dashboard with a soft green accent that ticks in quickly like a live console.",
+      "askedAs": [
+        "hacker style payments dashboard",
+        "monospace live metrics",
+        "fast developer console stats",
+        "дашборд в стиле терминала",
+        "моноширинный шрифт и быстрая анимация"
+      ],
+      "props": {
+        "theme": "dark",
+        "fontFamily": "JetBrains Mono",
+        "accent": "#4ade80",
+        "ground": "nightfold",
+        "speed": 1.75
+      }
+    },
+    {
+      "id": "launch-hero",
+      "label": "Launch Hero",
+      "description": "Oversized dashboard on a bright cobalt ground with bold grotesque type for a punchy launch moment.",
+      "askedAs": [
+        "big bold dashboard for product launch",
+        "zoomed in hero stats screen",
+        "energetic blue launch metrics",
+        "крупный дашборд для запуска продукта",
+        "яркая синяя панель с большими цифрами"
+      ],
+      "props": {
+        "ground": "cobalt-rise",
+        "scale": 1.25,
+        "fontFamily": "Space Grotesk",
+        "accent": "#6366f1",
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "quiet-glass",
+      "label": "Quiet Glass",
+      "description": "Small, slow-building light dashboard on a soft glassy ground with a gentle violet accent.",
+      "askedAs": [
+        "minimal calm dashboard intro",
+        "soft light stats with slow reveal",
+        "subtle SaaS metrics screen",
+        "спокойный минималистичный дашборд",
+        "медленная плавная анимация метрик"
+      ],
+      "props": {
+        "theme": "light",
+        "ground": "glasswork",
+        "accent": "#8b5cf6",
+        "scale": 0.85,
+        "speed": 0.5,
+        "delay": 15
+      }
+    },
+    {
+      "id": "ember-revenue",
+      "label": "Ember Revenue",
+      "description": "Dark dashboard glowing on a warm ember ground with an amber accent and Manrope type.",
+      "askedAs": [
+        "warm dark revenue dashboard",
+        "orange glow payments stats",
+        "cozy evening metrics look",
+        "тёплый тёмный дашборд выручки",
+        "оранжевый акцент на тёмном фоне"
+      ],
+      "props": {
+        "theme": "dark",
+        "ground": "ember",
+        "accent": "#f59e0b",
+        "fontFamily": "Manrope"
+      }
+    }
+  ]
+}

@@ -1,0 +1,100 @@
+{
+  "component": "icon-target",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "bullseye-hero",
+      "label": "Bullseye Hero",
+      "description": "A large, bold crimson target that draws in and then pulses at a measured pace.",
+      "askedAs": [
+        "big red target icon",
+        "large bold bullseye animation",
+        "hero target with thick lines",
+        "большая красная мишень",
+        "крупная иконка цели жирными линиями"
+      ],
+      "props": {
+        "size": 160,
+        "color": "#c2410c",
+        "strokeWidth": 2.75,
+        "animation": "both"
+      }
+    },
+    {
+      "id": "fine-line-draw",
+      "label": "Fine Line",
+      "description": "A thin slate outline that slowly sketches itself in, with no follow-up action.",
+      "askedAs": [
+        "thin line target drawing slowly",
+        "elegant minimal target sketch",
+        "slow hairline icon draw",
+        "тонкая мишень медленно рисуется",
+        "минималистичная линия цели"
+      ],
+      "props": {
+        "animation": "draw",
+        "strokeWidth": 1,
+        "speed": 0.5,
+        "color": "#475569",
+        "size": 96
+      }
+    },
+    {
+      "id": "rapid-lock-on",
+      "label": "Rapid Lock-On",
+      "description": "A compact blue target that snaps into its action quickly and repeats on loop.",
+      "askedAs": [
+        "fast looping target",
+        "quick lock on animation",
+        "target icon repeating snappy",
+        "быстрая зацикленная мишень",
+        "прицел быстро повторяется"
+      ],
+      "props": {
+        "animation": "action",
+        "loop": true,
+        "speed": 2.5,
+        "color": "#1d4ed8"
+      }
+    },
+    {
+      "id": "calm-focus-loop",
+      "label": "Calm Focus",
+      "description": "A medium sage-green target that gently loops through draw and action at half speed.",
+      "askedAs": [
+        "slow calm looping target",
+        "relaxed focus icon animation",
+        "soft green target loop",
+        "спокойная медленная мишень по кругу",
+        "мягкая зеленая иконка цели"
+      ],
+      "props": {
+        "loop": true,
+        "speed": 0.5,
+        "color": "#4d7c5f",
+        "size": 72,
+        "strokeWidth": 1.5
+      }
+    },
+    {
+      "id": "inline-badge",
+      "label": "Inline Badge",
+      "description": "A small, heavy-stroked amber target suited to sitting beside text, drawn in briskly.",
+      "askedAs": [
+        "small target icon next to text",
+        "tiny bold goal icon",
+        "quick small target draw",
+        "маленькая иконка цели рядом с текстом",
+        "крошечная жирная мишень"
+      ],
+      "props": {
+        "size": 28,
+        "strokeWidth": 2.5,
+        "color": "#b45309",
+        "animation": "draw",
+        "speed": 1.5
+      }
+    }
+  ]
+}

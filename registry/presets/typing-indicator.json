@@ -1,0 +1,92 @@
+{
+  "component": "typing-indicator",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "calm-pulse",
+      "label": "Calm Pulse",
+      "description": "Slow, shallow bounce that feels patient and unhurried.",
+      "askedAs": [
+        "slow gentle typing dots",
+        "relaxed typing indicator",
+        "subtle calm bounce",
+        "медленные точки набора",
+        "спокойный индикатор печати"
+      ],
+      "props": {
+        "speed": 0.5,
+        "amplitude": 2
+      }
+    },
+    {
+      "id": "eager-bounce",
+      "label": "Eager Bounce",
+      "description": "Quick, high hops that read as an energetic reply on the way.",
+      "askedAs": [
+        "fast bouncy typing dots",
+        "excited typing animation",
+        "energetic typing indicator",
+        "быстрые прыгающие точки",
+        "энергичная анимация набора"
+      ],
+      "props": {
+        "speed": 2,
+        "amplitude": 10
+      }
+    },
+    {
+      "id": "tiny-ticker",
+      "label": "Tiny Ticker",
+      "description": "Small, tight dots with a minimal flick, sized for compact chat UIs.",
+      "askedAs": [
+        "small typing dots",
+        "compact typing indicator",
+        "minimal tiny dots",
+        "маленькие точки набора",
+        "компактный индикатор"
+      ],
+      "props": {
+        "size": 5,
+        "amplitude": 3,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "bold-wave",
+      "label": "Bold Wave",
+      "description": "Large dots rolling in a long, deliberate five-step wave.",
+      "askedAs": [
+        "big typing dots wave",
+        "large bold typing indicator",
+        "five dot wave animation",
+        "большие точки волной",
+        "крупный индикатор набора"
+      ],
+      "props": {
+        "size": 14,
+        "dotCount": 5,
+        "amplitude": 12,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "still-pair",
+      "label": "Still Pair",
+      "description": "Two medium dots with almost no lift, a quiet thinking cue.",
+      "askedAs": [
+        "two dot thinking indicator",
+        "barely moving dots",
+        "quiet waiting dots",
+        "две точки ожидания",
+        "тихий индикатор раздумья"
+      ],
+      "props": {
+        "dotCount": 2,
+        "size": 10,
+        "amplitude": 1,
+        "speed": 0.75
+      }
+    }
+  ]
+}

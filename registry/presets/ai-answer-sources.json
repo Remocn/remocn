@@ -1,0 +1,120 @@
+{
+  "component": "ai-answer-sources",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "midnight-research",
+      "label": "Midnight Research",
+      "description": "A dark, focused answer panel with a cool teal accent over a deep blue-hour ground.",
+      "askedAs": [
+        "dark mode ai answer",
+        "night research assistant look",
+        "moody answer with sources",
+        "тёмная тема ответа ии",
+        "ночной стиль с источниками"
+      ],
+      "props": {
+        "theme": "dark",
+        "ground": "blue-hour",
+        "accent": "#3fb8c4",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "A warm paper-toned answer set in Fraunces, reading like a cited magazine column.",
+      "askedAs": [
+        "newspaper style answer",
+        "serif editorial citations",
+        "warm paper look for sources",
+        "газетный стиль ответа",
+        "ответ с засечками как в журнале"
+      ],
+      "props": {
+        "fontFamily": "Fraunces",
+        "background": "#f6f1e7",
+        "ink": "#2a2420",
+        "accent": "#b5562e",
+        "ground": "paper-crease"
+      }
+    },
+    {
+      "id": "terminal-quick",
+      "label": "Terminal Quick",
+      "description": "A fast, monospaced dark readout with a green accent that streams like a dev console.",
+      "askedAs": [
+        "developer console answer",
+        "monospace fast streaming",
+        "code style ai response",
+        "ответ в стиле терминала",
+        "быстрый моноширинный ответ"
+      ],
+      "props": {
+        "theme": "dark",
+        "fontFamily": "JetBrains Mono",
+        "accent": "#4ade80",
+        "ground": "charcoal-satin",
+        "speed": 1.75
+      }
+    },
+    {
+      "id": "launch-hero",
+      "label": "Launch Hero",
+      "description": "An oversized, slow-building answer on a cobalt ground for a big product reveal moment.",
+      "askedAs": [
+        "big hero shot for launch",
+        "large slow answer reveal",
+        "dramatic answer engine intro",
+        "крупный план для запуска",
+        "медленное эффектное появление ответа"
+      ],
+      "props": {
+        "scale": 1.3,
+        "speed": 0.5,
+        "delay": 20,
+        "ground": "cobalt-rise",
+        "accent": "#2563eb",
+        "fontFamily": "Manrope"
+      }
+    },
+    {
+      "id": "polar-minimal",
+      "label": "Polar Minimal",
+      "description": "A crisp, compact light card in Inter with a slate accent on an icy polar ground.",
+      "askedAs": [
+        "minimal clean light answer",
+        "small compact citation card",
+        "icy white ai search",
+        "минималистичный светлый ответ",
+        "компактная карточка с источниками"
+      ],
+      "props": {
+        "ground": "polar",
+        "fontFamily": "Inter",
+        "accent": "#475569",
+        "scale": 0.85
+      }
+    },
+    {
+      "id": "velvet-violet",
+      "label": "Velvet Violet",
+      "description": "A dark, plush answer with a soft violet accent and Space Grotesk type on a velvet-hour ground.",
+      "askedAs": [
+        "purple dark ai answer",
+        "premium violet citations",
+        "stylish night answer engine",
+        "фиолетовый тёмный ответ",
+        "премиальный стиль с источниками"
+      ],
+      "props": {
+        "theme": "dark",
+        "ground": "velvet-hour",
+        "accent": "#a78bfa",
+        "fontFamily": "Space Grotesk",
+        "speed": 1.25
+      }
+    }
+  ]
+}

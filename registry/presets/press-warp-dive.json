@@ -1,0 +1,127 @@
+{
+  "component": "press-warp-dive",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "hyperdrive",
+      "label": "Hyperdrive",
+      "description": "A fast, punchy dark warp in electric blue that snaps from button to scene.",
+      "askedAs": [
+        "fast blue warp transition",
+        "snappy dark launch into video",
+        "quick tech dive effect",
+        "быстрый синий переход в видео",
+        "резкий тёмный запуск сцены"
+      ],
+      "props": {
+        "theme": "dark",
+        "accent": "#3b82f6",
+        "ground": "cobalt-rise",
+        "groundB": "low-orbit",
+        "fontFamily": "Space Grotesk",
+        "speed": 1.75
+      }
+    },
+    {
+      "id": "studio-light",
+      "label": "Studio Light",
+      "description": "A clean, bright paper-toned press with a calm dive and crisp graphite text.",
+      "askedAs": [
+        "light clean product demo",
+        "white minimal button dive",
+        "bright calm launch transition",
+        "светлый минималистичный переход",
+        "чистое светлое демо продукта"
+      ],
+      "props": {
+        "theme": "light",
+        "ground": "paper-crease",
+        "groundB": "polar",
+        "fontFamily": "Inter",
+        "accent": "#2563eb",
+        "ink": "#1f2328"
+      }
+    },
+    {
+      "id": "slow-reveal",
+      "label": "Slow Reveal",
+      "description": "A cinematic, half-speed plunge with a held beat before the press and warm film tones.",
+      "askedAs": [
+        "slow cinematic dive",
+        "dramatic delayed reveal",
+        "film style launch moment",
+        "медленный кинематографичный переход",
+        "драматичное раскрытие сцены"
+      ],
+      "props": {
+        "speed": 0.5,
+        "delay": 20,
+        "ground": "projector",
+        "groundB": "velvet-hour",
+        "fontFamily": "Instrument Serif",
+        "accent": "#e0a458"
+      }
+    },
+    {
+      "id": "terminal-build",
+      "label": "Terminal Build",
+      "description": "A developer-flavoured monospace press in muted green on near-black, like shipping a build.",
+      "askedAs": [
+        "code terminal style launch",
+        "developer build transition",
+        "monospace green tech dive",
+        "терминальный стиль для разработчиков",
+        "зелёный моноширинный запуск"
+      ],
+      "props": {
+        "theme": "dark",
+        "fontFamily": "JetBrains Mono",
+        "accent": "#4ade80",
+        "background": "#0b0f0c",
+        "ink": "#d1fae5",
+        "ground": "greenhouse"
+      }
+    },
+    {
+      "id": "ember-launch",
+      "label": "Ember Launch",
+      "description": "A warm copper-and-ember palette with a slightly larger, confident button for launch videos.",
+      "askedAs": [
+        "warm orange launch video",
+        "copper toned button press",
+        "bold warm product reveal",
+        "тёплый оранжевый запуск",
+        "медный переход для презентации"
+      ],
+      "props": {
+        "ground": "ember",
+        "groundB": "copper",
+        "accent": "#f97316",
+        "fontFamily": "Bricolage Grotesque",
+        "scale": 1.2,
+        "speed": 1.25
+      }
+    },
+    {
+      "id": "compact-iris",
+      "label": "Compact Iris",
+      "description": "A smaller, tidy violet press that dives quickly, suited to inset UI moments.",
+      "askedAs": [
+        "small purple button warp",
+        "compact UI dive",
+        "subtle violet transition",
+        "маленькая фиолетовая кнопка",
+        "компактный переход интерфейса"
+      ],
+      "props": {
+        "scale": 0.75,
+        "ground": "iris",
+        "groundB": "nightfold",
+        "accent": "#8b5cf6",
+        "fontFamily": "Geist",
+        "speed": 1.5
+      }
+    }
+  ]
+}

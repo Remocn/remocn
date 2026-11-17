@@ -1,0 +1,98 @@
+{
+  "component": "line-by-line-slide",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "gentle-drift",
+      "label": "Gentle Drift",
+      "description": "Light-weight lines glide in slowly over a short distance for a calm, editorial read.",
+      "askedAs": [
+        "slow subtle text slide",
+        "calm paragraph reveal",
+        "soft gentle line animation",
+        "медленное плавное появление строк",
+        "спокойный мягкий текст"
+      ],
+      "props": {
+        "distance": 20,
+        "speed": 0.5,
+        "fontWeight": "400",
+        "color": "#3f3f46"
+      }
+    },
+    {
+      "id": "bold-sweep",
+      "label": "Bold Sweep",
+      "description": "Large heavy lines sweep across a long distance at a brisk pace for punchy headlines.",
+      "askedAs": [
+        "big bold fast headline",
+        "punchy text slide in",
+        "strong dramatic line reveal",
+        "крупный жирный заголовок быстро",
+        "энергичное появление текста"
+      ],
+      "props": {
+        "distance": 140,
+        "fontSize": 110,
+        "fontWeight": "700",
+        "speed": 1.75
+      }
+    },
+    {
+      "id": "quick-notes",
+      "label": "Quick Notes",
+      "description": "Compact body-size lines snap in quickly with minimal travel, ideal for bullet lists.",
+      "askedAs": [
+        "small fast bullet points",
+        "quick list reveal",
+        "compact body text animation",
+        "быстрый список пунктов",
+        "мелкий текст быстро"
+      ],
+      "props": {
+        "fontSize": 40,
+        "fontWeight": "500",
+        "distance": 24,
+        "speed": 2
+      }
+    },
+    {
+      "id": "navy-editorial",
+      "label": "Navy Editorial",
+      "description": "Deep navy medium-weight type with a measured slide for a refined corporate feel.",
+      "askedAs": [
+        "dark blue professional text",
+        "corporate paragraph reveal",
+        "elegant navy headline",
+        "тёмно-синий деловой текст",
+        "строгий корпоративный стиль"
+      ],
+      "props": {
+        "color": "#1e3a5f",
+        "fontWeight": "500",
+        "fontSize": 64,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "warm-statement",
+      "label": "Warm Statement",
+      "description": "Oversized terracotta lines roll in at a relaxed pace for a warm, expressive statement.",
+      "askedAs": [
+        "warm colored big quote",
+        "earthy tone headline reveal",
+        "large expressive text slide",
+        "тёплый крупный текст",
+        "цитата терракотовым цветом"
+      ],
+      "props": {
+        "color": "#9a3412",
+        "fontSize": 96,
+        "fontWeight": "600",
+        "distance": 80,
+        "speed": 0.75
+      }
+    }
+  ]
+}

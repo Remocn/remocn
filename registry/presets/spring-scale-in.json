@@ -1,0 +1,118 @@
+{
+  "component": "spring-scale-in",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "snappy-pop",
+      "label": "Snappy Pop",
+      "description": "Words burst in quickly from a tiny scale with tight staggering for a punchy, energetic entrance.",
+      "askedAs": [
+        "fast bouncy word pop",
+        "quick punchy text entrance",
+        "energetic pop-in words",
+        "быстрое появление слов с отскоком",
+        "резкий пружинистый текст"
+      ],
+      "props": {
+        "staggerDelay": 1,
+        "scaleFrom": 0.2,
+        "speed": 2,
+        "fontWeight": "700"
+      }
+    },
+    {
+      "id": "gentle-settle",
+      "label": "Gentle Settle",
+      "description": "Words ease in slowly from near full size with a light weight for a calm, soft landing.",
+      "askedAs": [
+        "slow soft text appear",
+        "subtle gentle scale in",
+        "calm elegant word reveal",
+        "мягкое плавное появление текста",
+        "спокойная анимация слов"
+      ],
+      "props": {
+        "staggerDelay": 7,
+        "scaleFrom": 0.9,
+        "speed": 0.5,
+        "fontWeight": "400",
+        "color": "#4a4a4a"
+      }
+    },
+    {
+      "id": "big-headline",
+      "label": "Big Headline",
+      "description": "Oversized bold words drop in one by one from small scale for a loud launch-day headline.",
+      "askedAs": [
+        "huge bold title pop in",
+        "big launch headline animation",
+        "giant words bounce in",
+        "огромный заголовок с отскоком",
+        "крупный жирный текст появляется"
+      ],
+      "props": {
+        "fontSize": 140,
+        "fontWeight": "700",
+        "scaleFrom": 0.4,
+        "staggerDelay": 5
+      }
+    },
+    {
+      "id": "coral-celebration",
+      "label": "Coral Celebration",
+      "description": "Warm coral semibold words spring in at a lively pace for festive, celebratory moments.",
+      "askedAs": [
+        "colorful celebration text",
+        "warm festive word pop",
+        "party style bouncy title",
+        "праздничный яркий текст",
+        "тёплый цветной заголовок с пружиной"
+      ],
+      "props": {
+        "color": "#e5533d",
+        "scaleFrom": 0.5,
+        "speed": 1.5,
+        "staggerDelay": 2
+      }
+    },
+    {
+      "id": "subtle-caption",
+      "label": "Subtle Caption",
+      "description": "Small medium-weight slate text pops in quietly, suited to captions and secondary lines.",
+      "askedAs": [
+        "small caption pop in",
+        "understated subtitle animation",
+        "light text bounce for captions",
+        "маленькие подписи с анимацией",
+        "скромный текст субтитров"
+      ],
+      "props": {
+        "fontSize": 32,
+        "fontWeight": "500",
+        "color": "#475569",
+        "scaleFrom": 0.8,
+        "staggerDelay": 2
+      }
+    },
+    {
+      "id": "deep-teal-cta",
+      "label": "Deep Teal CTA",
+      "description": "Bold deep-teal words snap in deliberately with generous spacing between beats for a confident call to action.",
+      "askedAs": [
+        "confident call to action text",
+        "bold teal button words",
+        "deliberate word by word cta",
+        "уверенный призыв к действию",
+        "текст для кнопки по словам"
+      ],
+      "props": {
+        "color": "#0f5e5a",
+        "fontWeight": "700",
+        "staggerDelay": 9,
+        "scaleFrom": 0.3,
+        "fontSize": 96
+      }
+    }
+  ]
+}

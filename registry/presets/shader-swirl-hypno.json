@@ -1,0 +1,112 @@
+{
+  "component": "shader-swirl-hypno",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "slow-trance",
+      "label": "Slow Trance",
+      "description": "A wide, gently rotating spiral with few bands that drifts calmly toward the center.",
+      "askedAs": [
+        "slow calm hypnotic spiral",
+        "gentle relaxing swirl background",
+        "wide slow spinning bands",
+        "медленная спокойная спираль",
+        "плавный гипнотический фон"
+      ],
+      "props": {
+        "speed": 0.5,
+        "bandCount": 3,
+        "twist": 0.15
+      }
+    },
+    {
+      "id": "tight-vortex",
+      "label": "Tight Vortex",
+      "description": "Many thin, heavily twisted bands spinning fast into a dizzying vortex.",
+      "askedAs": [
+        "fast dizzy spiral",
+        "intense tightly wound vortex",
+        "crazy spinning hypno effect",
+        "быстрая головокружительная воронка",
+        "интенсивная закрученная спираль"
+      ],
+      "props": {
+        "speed": 2.5,
+        "bandCount": 12,
+        "twist": 0.8
+      }
+    },
+    {
+      "id": "soft-haze",
+      "label": "Soft Haze",
+      "description": "Blurred, feathered bands that melt into a smoky, dreamy swirl.",
+      "askedAs": [
+        "blurry soft swirl",
+        "dreamy smoky spiral background",
+        "spiral with soft edges",
+        "размытая мягкая спираль",
+        "мечтательный дымчатый вихрь"
+      ],
+      "props": {
+        "softness": 0.7,
+        "speed": 0.75,
+        "bandCount": 5,
+        "twist": 0.4
+      }
+    },
+    {
+      "id": "midnight-navy",
+      "label": "Midnight Navy",
+      "description": "A crisp spiral set on a deep navy field for a cooler, more polished tone.",
+      "askedAs": [
+        "dark blue hypnotic spiral",
+        "navy swirl background",
+        "cool toned spiral for titles",
+        "спираль на тёмно-синем фоне",
+        "холодная синяя спираль"
+      ],
+      "props": {
+        "colorBack": "#0f1a2e",
+        "bandCount": 8,
+        "twist": 0.35,
+        "softness": 0.15
+      }
+    },
+    {
+      "id": "bold-pinwheel",
+      "label": "Bold Pinwheel",
+      "description": "Two chunky, nearly straight arms spinning like a graphic pinwheel.",
+      "askedAs": [
+        "simple pinwheel spin",
+        "two big bands rotating",
+        "bold graphic rotating background",
+        "крупная вертушка",
+        "простая вращающаяся спираль с двумя лучами"
+      ],
+      "props": {
+        "bandCount": 2,
+        "twist": 0.05,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "wine-glow",
+      "label": "Wine Glow",
+      "description": "A softly blended spiral over a deep burgundy ground with a warm, moody feel.",
+      "askedAs": [
+        "warm dark red swirl",
+        "burgundy hypnotic background",
+        "moody wine colored spiral",
+        "бордовая гипнотическая спираль",
+        "тёплый тёмно-красный вихрь"
+      ],
+      "props": {
+        "colorBack": "#2a0d14",
+        "softness": 0.35,
+        "twist": 0.55,
+        "bandCount": 7
+      }
+    }
+  ]
+}

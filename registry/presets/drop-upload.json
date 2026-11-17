@@ -1,0 +1,100 @@
+{
+  "component": "drop-upload",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "paper-light",
+      "label": "Paper Light",
+      "description": "A calm light card on a warm paper ground with an ink-blue accent and Inter type.",
+      "askedAs": [
+        "light clean upload",
+        "white minimal file upload",
+        "bright docs style upload",
+        "светлая загрузка файла",
+        "минималистичная белая загрузка"
+      ],
+      "props": {
+        "theme": "light",
+        "ground": "paper-crease",
+        "accent": "#2f4bd8",
+        "fontFamily": "Inter"
+      }
+    },
+    {
+      "id": "terminal-quick",
+      "label": "Terminal Quick",
+      "description": "A fast, monospaced dark upload on charcoal with a muted green confirmation accent.",
+      "askedAs": [
+        "developer style upload",
+        "fast mono font upload",
+        "code tool file import",
+        "быстрая загрузка для разработчиков",
+        "моноширинный шрифт загрузка"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "ground": "charcoal-satin",
+        "accent": "#3fb57a",
+        "speed": 1.75
+      }
+    },
+    {
+      "id": "editorial-slow",
+      "label": "Editorial Slow",
+      "description": "A slow, large serif upload on a warm hearth ground with a copper accent.",
+      "askedAs": [
+        "elegant slow upload",
+        "serif cinematic file drop",
+        "premium warm upload animation",
+        "элегантная медленная загрузка",
+        "тёплая загрузка с засечками"
+      ],
+      "props": {
+        "fontFamily": "Fraunces",
+        "ground": "hearth",
+        "accent": "#c7794a",
+        "speed": 0.75,
+        "scale": 1.2
+      }
+    },
+    {
+      "id": "blue-hour-focus",
+      "label": "Blue Hour",
+      "description": "A deep blue dusk ground with a soft sky accent and Geist type for a product-launch feel.",
+      "askedAs": [
+        "blue night upload",
+        "saas launch upload scene",
+        "cool blue file import",
+        "синяя загрузка файла",
+        "холодный синий стиль загрузки"
+      ],
+      "props": {
+        "ground": "blue-hour",
+        "accent": "#7fb2ff",
+        "fontFamily": "Geist",
+        "delay": 12
+      }
+    },
+    {
+      "id": "compact-inset",
+      "label": "Compact Inset",
+      "description": "A smaller, quick upload card on a plain off-white background for tight UI inserts.",
+      "askedAs": [
+        "small upload for dashboard",
+        "compact file upload widget",
+        "tiny quick upload inset",
+        "маленькая компактная загрузка",
+        "загрузка для дашборда"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4f4f1",
+        "ink": "#1a1c22",
+        "accent": "#1f6feb",
+        "scale": 0.75,
+        "speed": 1.5
+      }
+    }
+  ]
+}

@@ -1,0 +1,125 @@
+{
+  "component": "halftone-cut",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "newsprint",
+      "label": "Newsprint",
+      "description": "Cream paper, black ink and coarse dots for a classic broadsheet press feel.",
+      "askedAs": [
+        "old newspaper look",
+        "black ink on cream paper",
+        "vintage print halftone",
+        "газетный стиль",
+        "как старая газета"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f3ede1",
+        "ink": "#1a1a1a",
+        "accent": "#1a1a1a",
+        "dotSize": 32,
+        "fontFamily": "Instrument Serif"
+      }
+    },
+    {
+      "id": "risograph",
+      "label": "Risograph",
+      "description": "Warm off-white stock with a coral riso ink and medium dots in a grotesque face.",
+      "askedAs": [
+        "riso print style",
+        "coral ink zine look",
+        "indie print poster",
+        "эффект ризографии",
+        "как зин на ризографе"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f6f1e7",
+        "ink": "#2b2a33",
+        "accent": "#e85d4a",
+        "fontFamily": "Bricolage Grotesque",
+        "dotSize": 24
+      }
+    },
+    {
+      "id": "midnight-fine",
+      "label": "Midnight Fine",
+      "description": "Deep navy ground with tiny gold dots and a slow, wide wave for a luxe reveal.",
+      "askedAs": [
+        "luxury dark gold",
+        "slow elegant reveal",
+        "fine dots on navy",
+        "премиальный тёмный с золотом",
+        "медленный элегантный переход"
+      ],
+      "props": {
+        "theme": "dark",
+        "background": "#0f1424",
+        "ink": "#f2ebdd",
+        "accent": "#c9a45c",
+        "dotSize": 10,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "snap-cut",
+      "label": "Snap Cut",
+      "description": "Fast, tight wave with chunky dots for a punchy, almost instant swap.",
+      "askedAs": [
+        "quick punchy swap",
+        "fast halftone cut",
+        "snappy headline change",
+        "быстрая резкая смена",
+        "динамичный переход"
+      ],
+      "props": {
+        "speed": 2,
+        "spread": 14,
+        "dotSize": 40,
+        "fontFamily": "Space Grotesk"
+      }
+    },
+    {
+      "id": "terminal-draft",
+      "label": "Terminal Draft",
+      "description": "Clean grainless charcoal with a mono typeface and sage dots for a technical changelog feel.",
+      "askedAs": [
+        "developer style monospace",
+        "code draft to final",
+        "clean tech look",
+        "моноширинный технический стиль",
+        "для разработчиков"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#16181b",
+        "ink": "#e6e8e3",
+        "accent": "#7fa38a",
+        "grain": false,
+        "scale": 0.85
+      }
+    },
+    {
+      "id": "gallery-slow",
+      "label": "Gallery Slow",
+      "description": "Oversized serif headline on pale stone with a long, gentle dot wave after a short pause.",
+      "askedAs": [
+        "big editorial headline",
+        "slow museum style",
+        "calm art gallery look",
+        "крупный редакционный заголовок",
+        "спокойный галерейный стиль"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#e9e6e0",
+        "ink": "#232220",
+        "scale": 1.3,
+        "spread": 62,
+        "delay": 20
+      }
+    }
+  ]
+}

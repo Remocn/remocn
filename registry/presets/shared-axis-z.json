@@ -1,0 +1,111 @@
+{
+  "component": "shared-axis-z",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "slow-cinematic-push",
+      "label": "Cinematic Push",
+      "description": "Large, light-weight type that drifts forward slowly like a deliberate camera dolly.",
+      "askedAs": [
+        "slow dramatic zoom transition",
+        "cinematic camera push text",
+        "big slow zoom in title",
+        "медленный кинематографичный зум",
+        "плавный наезд камеры на текст"
+      ],
+      "props": {
+        "fontSize": 120,
+        "fontWeight": "400",
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "snappy-ui",
+      "label": "Snappy UI",
+      "description": "Compact bold text that swaps with a quick, interface-like depth snap.",
+      "askedAs": [
+        "fast app style zoom swap",
+        "quick snappy depth transition",
+        "small bold text fast zoom",
+        "быстрый переход как в интерфейсе",
+        "резкая смена текста с зумом"
+      ],
+      "props": {
+        "fontSize": 48,
+        "fontWeight": "700",
+        "speed": 2
+      }
+    },
+    {
+      "id": "deep-navy",
+      "label": "Deep Navy",
+      "description": "Medium-weight navy type with a calm, steady zoom for corporate storytelling.",
+      "askedAs": [
+        "navy blue zoom text",
+        "professional corporate depth transition",
+        "calm blue focus shift",
+        "тёмно-синий текст с зумом",
+        "спокойный деловой переход"
+      ],
+      "props": {
+        "color": "#1e3a5f",
+        "fontWeight": "500",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "editorial-headline",
+      "label": "Editorial Headline",
+      "description": "Oversized heavy headline in warm charcoal-brown that punches forward at a brisk pace.",
+      "askedAs": [
+        "huge bold headline zoom",
+        "magazine style title push",
+        "heavy warm headline transition",
+        "огромный жирный заголовок с наездом",
+        "журнальный заголовок с зумом"
+      ],
+      "props": {
+        "fontSize": 150,
+        "fontWeight": "700",
+        "color": "#3b2f2a",
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "soft-slate",
+      "label": "Soft Slate",
+      "description": "Muted slate-gray text at a modest size with a gentle, unhurried focus shift.",
+      "askedAs": [
+        "subtle gray zoom caption",
+        "soft minimal depth transition",
+        "quiet understated text swap",
+        "мягкий серый текст с переходом",
+        "минималистичный тихий зум"
+      ],
+      "props": {
+        "fontSize": 56,
+        "color": "#64748b",
+        "fontWeight": "400",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "forest-focus",
+      "label": "Forest Focus",
+      "description": "Deep forest-green semibold type with a lively, slightly quickened zoom.",
+      "askedAs": [
+        "green text zoom transition",
+        "natural eco style focus shift",
+        "dark green depth swap",
+        "зелёный текст с зумом",
+        "экологичный переход с приближением"
+      ],
+      "props": {
+        "color": "#1f4d3a",
+        "fontSize": 88,
+        "speed": 1.25
+      }
+    }
+  ]
+}

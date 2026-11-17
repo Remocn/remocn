@@ -1,0 +1,120 @@
+{
+  "component": "stripe-count",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "cobalt-punch",
+      "label": "Cobalt Punch",
+      "description": "A saturated cobalt band with a crisp white number in Space Grotesk that counts up briskly.",
+      "askedAs": [
+        "blue background bold number",
+        "make it cobalt with white digits",
+        "snappy blue stat frame",
+        "синий фон с белой цифрой",
+        "яркий синий счётчик"
+      ],
+      "props": {
+        "accent": "#2b50e6",
+        "ink": "#ffffff",
+        "fontFamily": "Space Grotesk",
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "A calm sand-toned band with a near-black Instrument Serif figure that paints in slowly.",
+      "askedAs": [
+        "elegant serif number",
+        "magazine style stat beige",
+        "soft classy count up",
+        "элегантная цифра с засечками",
+        "спокойный бежевый стиль"
+      ],
+      "props": {
+        "theme": "light",
+        "accent": "#e8d9c4",
+        "ink": "#1a1a1a",
+        "fontFamily": "Instrument Serif",
+        "paintDuration": 100,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "fast-pinstripe",
+      "label": "Fast Pinstripe",
+      "description": "Dense thin stripes fill the monospaced number in a quick, punchy burst.",
+      "askedAs": [
+        "lots of thin stripes fast",
+        "quick techy number fill",
+        "monospace counter snappy",
+        "много тонких полосок быстро",
+        "быстрый моноширинный счётчик"
+      ],
+      "props": {
+        "stripes": 32,
+        "paintDuration": 20,
+        "stagger": 0,
+        "speed": 2,
+        "fontFamily": "JetBrains Mono"
+      }
+    },
+    {
+      "id": "slow-reveal",
+      "label": "Slow Reveal",
+      "description": "A few wide stripes thicken the Fraunces figure gradually after a short pause, with words drifting in one by one.",
+      "askedAs": [
+        "slow dramatic number reveal",
+        "wide stripes gentle fill",
+        "cinematic count with pause",
+        "медленное появление цифры",
+        "плавное раскрытие числа"
+      ],
+      "props": {
+        "stripes": 4,
+        "paintDuration": 120,
+        "stagger": 8,
+        "delay": 20,
+        "speed": 0.5,
+        "fontFamily": "Fraunces"
+      }
+    },
+    {
+      "id": "forest-cream",
+      "label": "Forest Cream",
+      "description": "A deep forest-green band with an oversized cream number in Bricolage Grotesque.",
+      "askedAs": [
+        "dark green with cream text",
+        "bigger number earthy palette",
+        "green brand stat",
+        "зелёный фон крупная цифра",
+        "тёмно-зелёный с кремовым"
+      ],
+      "props": {
+        "accent": "#1f5c45",
+        "ink": "#f2ebdd",
+        "fontFamily": "Bricolage Grotesque",
+        "scale": 1.2
+      }
+    },
+    {
+      "id": "lemon-compact",
+      "label": "Lemon Compact",
+      "description": "A sunny lemon band with a smaller, tidy charcoal number set in Manrope.",
+      "askedAs": [
+        "yellow background smaller number",
+        "compact cheerful stat",
+        "lemon color count",
+        "жёлтый фон компактно",
+        "маленькая цифра на жёлтом"
+      ],
+      "props": {
+        "accent": "#f2d33c",
+        "ink": "#141414",
+        "fontFamily": "Manrope",
+        "scale": 0.75
+      }
+    }
+  ]
+}

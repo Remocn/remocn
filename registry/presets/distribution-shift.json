@@ -1,0 +1,120 @@
+{
+  "component": "distribution-shift",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "terminal-mono",
+      "label": "Terminal Mono",
+      "description": "A dark engineering console look with monospace type and a crisp green accent on near-black.",
+      "askedAs": [
+        "make it look like a terminal",
+        "monospace dev style latency chart",
+        "hacker console look",
+        "в стиле терминала",
+        "моноширинный шрифт как в консоли"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0b0f0c",
+        "ink": "#d7e4da",
+        "accent": "#3fb67a",
+        "grain": false
+      }
+    },
+    {
+      "id": "paper-report",
+      "label": "Paper Report",
+      "description": "A light editorial chart with serif type and a deep ink-blue accent, like a printed performance report.",
+      "askedAs": [
+        "light editorial version",
+        "make it look like a printed report",
+        "serif paper style chart",
+        "светлая версия как в отчёте",
+        "редакционный стиль с засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Fraunces",
+        "background": "#f5f1e8",
+        "ink": "#1c1b19",
+        "accent": "#1f3a8a"
+      }
+    },
+    {
+      "id": "snap-collapse",
+      "label": "Snap Collapse",
+      "description": "A fast, punchy shift where the curve snaps left almost instantly for a quick cut.",
+      "askedAs": [
+        "make the shift faster",
+        "quick snappy collapse",
+        "short punchy version",
+        "сделай быстрее",
+        "резкий быстрый сдвиг"
+      ],
+      "props": {
+        "shiftDuration": 16,
+        "speed": 1.5,
+        "accent": "#f25f3a"
+      }
+    },
+    {
+      "id": "slow-reveal",
+      "label": "Slow Reveal",
+      "description": "A calm, drawn-out collapse with a short lead-in so the speedup lands deliberately.",
+      "askedAs": [
+        "slow dramatic version",
+        "let the curve shift slowly",
+        "calm cinematic reveal",
+        "медленная плавная анимация",
+        "неторопливое раскрытие"
+      ],
+      "props": {
+        "shiftDuration": 112,
+        "speed": 0.75,
+        "delay": 24,
+        "fontFamily": "Instrument Serif",
+        "accent": "#c9a86a"
+      }
+    },
+    {
+      "id": "keynote-big",
+      "label": "Keynote Big",
+      "description": "An oversized, clean slate-and-violet keynote frame with grain off for stage screens.",
+      "askedAs": [
+        "bigger for a keynote slide",
+        "large clean stage version",
+        "make it fill the screen",
+        "крупно для презентации",
+        "большой чистый вариант для сцены"
+      ],
+      "props": {
+        "scale": 1.3,
+        "fontFamily": "Geist",
+        "background": "#14121f",
+        "ink": "#eeeaf7",
+        "accent": "#8b7cf6",
+        "grain": false
+      }
+    },
+    {
+      "id": "minimal-light",
+      "label": "Minimal Light",
+      "description": "A bright, compact Inter layout with a soft teal accent for product docs and changelogs.",
+      "askedAs": [
+        "clean minimal white version",
+        "small light chart for docs",
+        "simple bright style",
+        "минималистичный светлый вариант",
+        "компактно на белом фоне"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "scale": 0.85,
+        "accent": "#0f8b8d",
+        "grain": false
+      }
+    }
+  ]
+}

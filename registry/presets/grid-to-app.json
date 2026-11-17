@@ -1,0 +1,117 @@
+{
+  "component": "grid-to-app",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "gallery-light",
+      "label": "Gallery Light",
+      "description": "A bright, airy light theme on a soft paper ground with a deep ink-blue accent and a refined serif.",
+      "askedAs": [
+        "clean light version with serif font",
+        "bright minimal store dashboard",
+        "white editorial product grid",
+        "светлая версия с засечками",
+        "минималистичный светлый магазин"
+      ],
+      "props": {
+        "theme": "light",
+        "ground": "paper-crease",
+        "accent": "#1f3a5f",
+        "fontFamily": "Instrument Serif"
+      }
+    },
+    {
+      "id": "midnight-cobalt",
+      "label": "Midnight Cobalt",
+      "description": "A deep cobalt night ground with a cool blue accent and crisp Geist type at an unhurried pace.",
+      "askedAs": [
+        "dark blue tech look",
+        "slower cool-toned reveal",
+        "navy dashboard with blue accent",
+        "тёмно-синий стиль",
+        "медленная холодная анимация"
+      ],
+      "props": {
+        "ground": "cobalt-rise",
+        "accent": "#5b8cff",
+        "fontFamily": "Geist",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "ember-luxe",
+      "label": "Ember Luxe",
+      "description": "Warm copper ground with a gold accent and Fraunces type for a rich, boutique-commerce feel.",
+      "askedAs": [
+        "warm luxury shop look",
+        "gold and copper premium style",
+        "boutique brand dashboard",
+        "тёплый премиальный стиль",
+        "золотой роскошный вариант"
+      ],
+      "props": {
+        "ground": "copper",
+        "accent": "#d9a441",
+        "fontFamily": "Fraunces",
+        "scale": 1.1
+      }
+    },
+    {
+      "id": "quick-mono",
+      "label": "Quick Mono",
+      "description": "A snappy, developer-flavoured cut with monospace type, charcoal ground and a mint accent.",
+      "askedAs": [
+        "fast techy version",
+        "monospace developer style",
+        "quick snappy reveal",
+        "быстрая версия для разработчиков",
+        "моноширинный шрифт"
+      ],
+      "props": {
+        "ground": "charcoal-satin",
+        "accent": "#4fd1a5",
+        "fontFamily": "JetBrains Mono",
+        "speed": 1.75
+      }
+    },
+    {
+      "id": "velvet-cinematic",
+      "label": "Velvet Cinematic",
+      "description": "A slow, cinematic pull on a velvet-hour ground with a soft rose accent and a delayed start.",
+      "askedAs": [
+        "slow dramatic reveal",
+        "moody purple cinematic look",
+        "elegant delayed zoom",
+        "медленное кинематографичное появление",
+        "фиолетовый атмосферный стиль"
+      ],
+      "props": {
+        "ground": "velvet-hour",
+        "accent": "#e58fa8",
+        "speed": 0.5,
+        "delay": 20,
+        "fontFamily": "Manrope"
+      }
+    },
+    {
+      "id": "greenhouse-fresh",
+      "label": "Greenhouse Fresh",
+      "description": "A light theme on a greenhouse ground with a forest-green accent and compact, friendly Bricolage type.",
+      "askedAs": [
+        "fresh green light theme",
+        "natural organic store look",
+        "smaller compact light layout",
+        "свежий зелёный стиль",
+        "светлая эко версия"
+      ],
+      "props": {
+        "theme": "light",
+        "ground": "greenhouse",
+        "accent": "#2f7a4f",
+        "fontFamily": "Bricolage Grotesque",
+        "scale": 0.9
+      }
+    }
+  ]
+}

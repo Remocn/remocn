@@ -1,0 +1,100 @@
+{
+  "component": "caption-prosody",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "dramatic-swing",
+      "label": "Dramatic Swing",
+      "description": "Exaggerated contrast where stretched words balloon and quick asides shrink to a whisper, highlighted in warm coral.",
+      "askedAs": [
+        "make the slow words really huge",
+        "extreme size difference between words",
+        "over the top expressive captions",
+        "очень контрастные по размеру субтитры",
+        "драматичные слова разного размера"
+      ],
+      "props": {
+        "minScale": 0.45,
+        "maxScale": 2.3,
+        "activeColor": "#ff7a59",
+        "fontWeight": 900
+      }
+    },
+    {
+      "id": "subtle-cadence",
+      "label": "Subtle Cadence",
+      "description": "Gentle size variation in a lighter weight with a soft sky-blue highlight for calm, documentary-style captions.",
+      "askedAs": [
+        "calm understated captions",
+        "only slight size changes",
+        "soft minimal subtitles for interviews",
+        "спокойные субтитры без резких скачков",
+        "мягкие аккуратные титры"
+      ],
+      "props": {
+        "minScale": 0.9,
+        "maxScale": 1.2,
+        "fontWeight": 500,
+        "fontSize": 56,
+        "activeColor": "#7dd3fc"
+      }
+    },
+    {
+      "id": "word-by-word",
+      "label": "Word Pop",
+      "description": "One large word at a time with no page grouping, so each beat of the voice pops on its own.",
+      "askedAs": [
+        "show one word at a time",
+        "big single word captions",
+        "punchy word by word subtitles",
+        "по одному слову на экране",
+        "крупные слова по очереди"
+      ],
+      "props": {
+        "combineTokensWithinMilliseconds": 0,
+        "fontSize": 110,
+        "holdMs": 200,
+        "maxScale": 1.8,
+        "activeColor": "#a3e635"
+      }
+    },
+    {
+      "id": "ink-on-paper",
+      "label": "Ink On Paper",
+      "description": "Flat dark charcoal type with a muted red accent and no shadow, made for light backgrounds.",
+      "askedAs": [
+        "dark text for a white background",
+        "captions without shadow",
+        "clean print style subtitles",
+        "тёмный текст на светлом фоне",
+        "субтитры без тени"
+      ],
+      "props": {
+        "color": "#1c1917",
+        "activeColor": "#dc2626",
+        "shadow": false,
+        "fontWeight": 700
+      }
+    },
+    {
+      "id": "long-read",
+      "label": "Long Lines",
+      "description": "Smaller type grouped into long pages that linger on screen, with a pale lavender accent for dense speech.",
+      "askedAs": [
+        "more words on screen at once",
+        "longer lingering subtitle lines",
+        "small captions for fast talkers",
+        "больше слов в одной строке",
+        "субтитры дольше держатся на экране"
+      ],
+      "props": {
+        "fontSize": 44,
+        "combineTokensWithinMilliseconds": 2600,
+        "holdMs": 1200,
+        "activeColor": "#c4b5fd",
+        "fontWeight": 600
+      }
+    }
+  ]
+}

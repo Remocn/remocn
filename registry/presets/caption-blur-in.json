@@ -1,0 +1,98 @@
+{
+  "component": "caption-blur-in",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "whisper-light",
+      "label": "Whisper Light",
+      "description": "Thin, smaller type drifting out of a heavy haze for a hushed, editorial feel.",
+      "askedAs": [
+        "soft thin captions",
+        "quiet elegant subtitles",
+        "light airy text that fades in from blur",
+        "тонкие мягкие субтитры",
+        "тихие элегантные титры"
+      ],
+      "props": {
+        "fontWeight": 400,
+        "fontSize": 52,
+        "blur": 24,
+        "holdMs": 900
+      }
+    },
+    {
+      "id": "crisp-snap",
+      "label": "Crisp Snap",
+      "description": "Bold words sharpen quickly from a light blur, one at a time, for brisk pacing.",
+      "askedAs": [
+        "fast word by word captions",
+        "quick sharp subtitles",
+        "one word at a time snappy",
+        "быстрые субтитры по одному слову",
+        "резкие короткие титры"
+      ],
+      "props": {
+        "blur": 6,
+        "combineTokensWithinMilliseconds": 0,
+        "holdMs": 200,
+        "fontWeight": 900
+      }
+    },
+    {
+      "id": "warm-cinema",
+      "label": "Warm Cinema",
+      "description": "Warm ivory medium-weight lines that hold longer, like film subtitles.",
+      "askedAs": [
+        "cinematic movie subtitles",
+        "warm cream colored captions",
+        "film style long lines",
+        "кинематографичные субтитры",
+        "тёплые кремовые титры"
+      ],
+      "props": {
+        "color": "#f3e9d2",
+        "fontWeight": 500,
+        "fontSize": 48,
+        "combineTokensWithinMilliseconds": 2400,
+        "holdMs": 1200
+      }
+    },
+    {
+      "id": "bold-statement",
+      "label": "Bold Statement",
+      "description": "Oversized heavy headline words emerging from deep blur for launch moments.",
+      "askedAs": [
+        "huge bold captions",
+        "big impactful launch text",
+        "giant words for keynote",
+        "огромные жирные субтитры",
+        "крупный текст для презентации"
+      ],
+      "props": {
+        "fontSize": 120,
+        "fontWeight": 900,
+        "blur": 32,
+        "combineTokensWithinMilliseconds": 600
+      }
+    },
+    {
+      "id": "ink-on-paper",
+      "label": "Ink On Paper",
+      "description": "Dark charcoal text without shadow for bright, clean backgrounds.",
+      "askedAs": [
+        "dark captions for white background",
+        "black text no shadow",
+        "minimal captions on light video",
+        "тёмные субтитры на светлом фоне",
+        "чёрный текст без тени"
+      ],
+      "props": {
+        "color": "#1c1c1e",
+        "shadow": false,
+        "fontWeight": 600,
+        "blur": 10
+      }
+    }
+  ]
+}

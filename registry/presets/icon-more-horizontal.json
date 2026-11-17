@@ -1,0 +1,98 @@
+{
+  "component": "icon-more-horizontal",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "hairline-draw",
+      "label": "Hairline Draw",
+      "description": "A large, thin-stroked ellipsis that slowly draws itself in a soft slate tone.",
+      "askedAs": [
+        "thin slow drawing dots",
+        "elegant fine line three dots",
+        "minimal slow sketch menu icon",
+        "тонкие точки медленно рисуются",
+        "элегантное многоточие тонкой линией"
+      ],
+      "props": {
+        "animation": "draw",
+        "size": 120,
+        "strokeWidth": 1,
+        "speed": 0.5,
+        "color": "#475569"
+      }
+    },
+    {
+      "id": "typing-pulse",
+      "label": "Typing Pulse",
+      "description": "A looping, brisk dot bounce in muted blue that reads like a typing indicator.",
+      "askedAs": [
+        "typing indicator dots",
+        "looping chat dots animation",
+        "someone is typing bounce",
+        "индикатор набора текста",
+        "точки печатает в чате"
+      ],
+      "props": {
+        "animation": "action",
+        "loop": true,
+        "speed": 1.5,
+        "color": "#2563eb"
+      }
+    },
+    {
+      "id": "bold-snap",
+      "label": "Bold Snap",
+      "description": "Chunky heavy dots that pop in quickly at a big scale for punchy callouts.",
+      "askedAs": [
+        "big bold fast three dots",
+        "thick punchy more icon",
+        "heavy quick ellipsis",
+        "жирное быстрое многоточие",
+        "крупные толстые точки"
+      ],
+      "props": {
+        "size": 160,
+        "strokeWidth": 3,
+        "speed": 2,
+        "color": "#0f172a"
+      }
+    },
+    {
+      "id": "calm-loader",
+      "label": "Calm Loader",
+      "description": "A gentle, slow looping motion in sage green suited to a waiting state.",
+      "askedAs": [
+        "slow calm loading dots",
+        "relaxed waiting animation",
+        "soft green looping ellipsis",
+        "спокойная загрузка точками",
+        "медленные зелёные точки по кругу"
+      ],
+      "props": {
+        "loop": true,
+        "speed": 0.5,
+        "color": "#4d7c63",
+        "size": 72
+      }
+    },
+    {
+      "id": "warm-accent",
+      "label": "Warm Accent",
+      "description": "A medium terracotta ellipsis with slightly lighter strokes that draws in and gestures once.",
+      "askedAs": [
+        "orange warm more icon",
+        "terracotta dots menu",
+        "warm accent three dots",
+        "тёплое оранжевое многоточие",
+        "терракотовые точки меню"
+      ],
+      "props": {
+        "color": "#c2410c",
+        "size": 96,
+        "strokeWidth": 1.5,
+        "speed": 1.25
+      }
+    }
+  ]
+}

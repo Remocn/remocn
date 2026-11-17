@@ -1,0 +1,90 @@
+{
+  "component": "whip-pan",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "snap-cut",
+      "label": "Snap Cut",
+      "description": "A very fast, heavily blurred whip that reads almost like a hard cut with a streak.",
+      "askedAs": [
+        "super fast whip transition",
+        "quick snappy swipe cut",
+        "blink and you miss it pan",
+        "очень быстрый переход свайпом",
+        "резкая склейка с размытием"
+      ],
+      "props": {
+        "speed": 2.5,
+        "blur": 40
+      }
+    },
+    {
+      "id": "lazy-glide",
+      "label": "Lazy Glide",
+      "description": "A slow, gently blurred slide to the right that feels calm and deliberate.",
+      "askedAs": [
+        "slow smooth slide transition",
+        "gentle pan to the right",
+        "relaxed sideways scene change",
+        "медленный плавный сдвиг",
+        "спокойный переход вбок"
+      ],
+      "props": {
+        "speed": 0.5,
+        "blur": 8,
+        "direction": "right"
+      }
+    },
+    {
+      "id": "stack-drop",
+      "label": "Stack Drop",
+      "description": "Scenes plunge downward with a strong vertical streak, like flipping down a feed.",
+      "askedAs": [
+        "vertical whip down",
+        "scroll down transition",
+        "drop to next scene",
+        "переход вниз как скролл",
+        "вертикальный свайп вниз"
+      ],
+      "props": {
+        "direction": "down",
+        "speed": 1.5,
+        "blur": 32
+      }
+    },
+    {
+      "id": "rise-up",
+      "label": "Rise Up",
+      "description": "A brisk upward whip with moderate blur for an uplifting, ascending beat.",
+      "askedAs": [
+        "whip pan upward",
+        "swipe up transition",
+        "scene flies up",
+        "переход вверх",
+        "свайп вверх между сценами"
+      ],
+      "props": {
+        "direction": "up",
+        "speed": 1.25,
+        "blur": 20
+      }
+    },
+    {
+      "id": "crisp-slide",
+      "label": "Crisp Slide",
+      "description": "A clean, blur-free horizontal push that keeps both scenes sharp in motion.",
+      "askedAs": [
+        "slide transition without blur",
+        "sharp clean push",
+        "no motion blur pan",
+        "чистый сдвиг без размытия",
+        "четкий переход слайдом"
+      ],
+      "props": {
+        "blur": 0,
+        "speed": 0.75
+      }
+    }
+  ]
+}

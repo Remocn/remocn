@@ -1,0 +1,105 @@
+{
+  "component": "grid-montage",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "fast-cut",
+      "label": "Fast Cut",
+      "description": "Tight, punchy cuts with sharp square tiles and a cool cobalt glow for high-energy recaps.",
+      "askedAs": [
+        "quick rhythmic montage",
+        "fast beat cuts grid",
+        "energetic recap wall",
+        "быстрый монтаж в сетке",
+        "динамичная нарезка под бит"
+      ],
+      "props": {
+        "beat": 8,
+        "speed": 1.5,
+        "radius": 0,
+        "ground": "cobalt-rise",
+        "accent": "#5b7cff"
+      }
+    },
+    {
+      "id": "gallery-light",
+      "label": "Gallery Light",
+      "description": "Bright paper-toned ground with soft rounded tiles and an unhurried rhythm, like a clean editorial wall.",
+      "askedAs": [
+        "light clean grid montage",
+        "white gallery wall of shots",
+        "calm bright recap",
+        "светлая галерея кадров",
+        "спокойный светлый монтаж"
+      ],
+      "props": {
+        "theme": "light",
+        "ground": "paper-crease",
+        "radius": 24,
+        "beat": 20,
+        "grain": false,
+        "accent": "#1f2937"
+      }
+    },
+    {
+      "id": "slow-cinema",
+      "label": "Slow Cinema",
+      "description": "Long, deliberate beats on a warm dark film ground with a serif voice and gentle grain.",
+      "askedAs": [
+        "cinematic slow montage",
+        "moody film grid",
+        "slow elegant recap",
+        "кинематографичный медленный монтаж",
+        "атмосферная сетка кадров"
+      ],
+      "props": {
+        "beat": 32,
+        "speed": 0.75,
+        "ground": "velvet-hour",
+        "fontFamily": "Fraunces",
+        "accent": "#d4a373",
+        "radius": 6
+      }
+    },
+    {
+      "id": "tech-wall",
+      "label": "Tech Wall",
+      "description": "Cold monospace look on a charcoal ground with crisp small tiles for product breadth showcases.",
+      "askedAs": [
+        "techy product grid",
+        "developer style montage",
+        "monospace screenshot wall",
+        "техничная сетка скриншотов",
+        "монтаж для продукта в стиле кода"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "ground": "charcoal-satin",
+        "accent": "#22c3a6",
+        "radius": 4,
+        "scale": 0.9,
+        "grain": false
+      }
+    },
+    {
+      "id": "warm-ember",
+      "label": "Warm Ember",
+      "description": "Glowing copper-red ground with big pillowy tiles and a medium groove for warm, inviting openers.",
+      "askedAs": [
+        "warm orange grid opener",
+        "cozy montage intro",
+        "big rounded tiles warm",
+        "тёплый монтаж для интро",
+        "оранжевая сетка с крупными плитками"
+      ],
+      "props": {
+        "ground": "ember",
+        "accent": "#f28c38",
+        "radius": 36,
+        "scale": 1.15,
+        "fontFamily": "Bricolage Grotesque"
+      }
+    }
+  ]
+}

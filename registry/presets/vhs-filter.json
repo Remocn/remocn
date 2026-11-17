@@ -1,0 +1,114 @@
+{
+  "component": "vhs-filter",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "subtle-tape",
+      "label": "Subtle Tape",
+      "description": "A light analog touch with faint colour fringing and barely-there grain that keeps the scene crisp.",
+      "askedAs": [
+        "light vhs effect",
+        "just a hint of tape",
+        "subtle retro look",
+        "лёгкий эффект vhs",
+        "едва заметная плёнка"
+      ],
+      "props": {
+        "bleed": 0.5,
+        "wobble": 0.3,
+        "noise": 0.4,
+        "intensity": 0.5
+      }
+    },
+    {
+      "id": "worn-cassette",
+      "label": "Worn Cassette",
+      "description": "A heavily played tape with wide colour smears, strong row wobble and thick grain throughout.",
+      "askedAs": [
+        "badly damaged vhs",
+        "old worn out tape",
+        "heavy tape distortion",
+        "сильно потёртая кассета",
+        "жёсткий эффект vhs"
+      ],
+      "props": {
+        "bleed": 2.5,
+        "wobble": 2.4,
+        "noise": 2.2,
+        "speed": 1.25
+      }
+    },
+    {
+      "id": "color-smear",
+      "label": "Color Smear",
+      "description": "Chroma bleeds far off every edge while the picture stays steady and mostly clean.",
+      "askedAs": [
+        "rgb color bleed",
+        "chromatic smear on edges",
+        "color fringing vhs",
+        "растекание цвета",
+        "цветные ореолы по краям"
+      ],
+      "props": {
+        "bleed": 3,
+        "wobble": 0.2,
+        "noise": 0.3
+      }
+    },
+    {
+      "id": "tracking-error",
+      "label": "Tracking Error",
+      "description": "Rows jitter fast and out of line like a deck struggling to lock tracking.",
+      "askedAs": [
+        "vhs tracking glitch",
+        "shaky tape lines",
+        "jittery rewind look",
+        "сбой трекинга",
+        "дрожащие строки кассеты"
+      ],
+      "props": {
+        "wobble": 3,
+        "speed": 2.5,
+        "bleed": 1.2,
+        "noise": 0.8
+      }
+    },
+    {
+      "id": "static-haze",
+      "label": "Static Haze",
+      "description": "A dense, slow-drifting blanket of luma noise that softens everything like a faded recording.",
+      "askedAs": [
+        "grainy static overlay",
+        "snowy old tape",
+        "noisy faded footage",
+        "зернистый шум плёнки",
+        "старая запись с помехами"
+      ],
+      "props": {
+        "noise": 3,
+        "bleed": 0.6,
+        "wobble": 0.5,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "slow-drift",
+      "label": "Slow Drift",
+      "description": "A dreamy, unhurried tape feel with gentle wobble and soft colour bleed moving at half pace.",
+      "askedAs": [
+        "dreamy slow vhs",
+        "calm nostalgic tape",
+        "lazy lo-fi warp",
+        "медленный ностальгический vhs",
+        "мягкая плёнка lo-fi"
+      ],
+      "props": {
+        "speed": 0.25,
+        "wobble": 1.6,
+        "bleed": 1.4,
+        "intensity": 0.75
+      }
+    }
+  ]
+}

@@ -1,0 +1,98 @@
+{
+  "component": "icon-gem",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "hero-sapphire",
+      "label": "Hero Sapphire",
+      "description": "A large, deep blue gem drawn slowly with a confident stroke, made for title cards.",
+      "askedAs": [
+        "big blue gem for intro",
+        "slow large diamond icon",
+        "hero gem in sapphire",
+        "большой синий кристалл",
+        "медленная крупная иконка алмаза"
+      ],
+      "props": {
+        "size": 160,
+        "color": "#1e3a8a",
+        "strokeWidth": 2.5,
+        "speed": 0.5,
+        "animation": "draw"
+      }
+    },
+    {
+      "id": "fine-line-gold",
+      "label": "Fine Line Gold",
+      "description": "A delicate, thin-stroked gem in muted gold that draws itself gracefully.",
+      "askedAs": [
+        "thin gold diamond outline",
+        "elegant luxury gem icon",
+        "hairline gold jewel",
+        "тонкий золотой бриллиант",
+        "элегантная иконка драгоценности"
+      ],
+      "props": {
+        "color": "#b08d57",
+        "strokeWidth": 1,
+        "size": 96,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "sparkle-loop",
+      "label": "Sparkle Loop",
+      "description": "A small emerald gem that keeps repeating its action at a lively pace.",
+      "askedAs": [
+        "looping gem animation",
+        "repeating sparkle diamond",
+        "green gem that keeps moving",
+        "зацикленный кристалл",
+        "повторяющаяся анимация изумруда"
+      ],
+      "props": {
+        "animation": "action",
+        "loop": true,
+        "color": "#047857",
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "quick-pop",
+      "label": "Quick Pop",
+      "description": "A compact, bold ruby gem that snaps in with a fast, punchy motion.",
+      "askedAs": [
+        "fast red gem icon",
+        "quick bold diamond",
+        "snappy ruby animation",
+        "быстрый красный кристалл",
+        "резкая жирная иконка алмаза"
+      ],
+      "props": {
+        "color": "#9f1239",
+        "strokeWidth": 3,
+        "speed": 2.5,
+        "size": 64
+      }
+    },
+    {
+      "id": "slate-ui",
+      "label": "Slate UI",
+      "description": "A small, neutral slate gem that simply draws in at a calm pace for interface overlays.",
+      "askedAs": [
+        "small grey gem icon",
+        "subtle ui diamond",
+        "minimal gray jewel outline",
+        "маленькая серая иконка",
+        "минималистичный кристалл для интерфейса"
+      ],
+      "props": {
+        "size": 32,
+        "color": "#475569",
+        "strokeWidth": 1.5,
+        "animation": "draw"
+      }
+    }
+  ]
+}

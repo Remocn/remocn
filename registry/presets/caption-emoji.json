@@ -1,0 +1,98 @@
+{
+  "component": "caption-emoji",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "big-punchline",
+      "label": "Big Punchline",
+      "description": "Oversized heavy captions with a giant emoji that dominates the frame on the key word.",
+      "askedAs": [
+        "huge emoji over the word",
+        "big bold meme captions",
+        "make the emoji really large",
+        "огромный эмодзи над словом",
+        "крупные жирные субтитры"
+      ],
+      "props": {
+        "fontSize": 96,
+        "fontWeight": 900,
+        "emojiSize": 1.6,
+        "holdMs": 900
+      }
+    },
+    {
+      "id": "rapid-fire",
+      "label": "Rapid Fire",
+      "description": "One or two words at a time flash by quickly with small emoji for fast-cut energetic edits.",
+      "askedAs": [
+        "fast word by word captions",
+        "quick snappy subtitles for tiktok",
+        "one word at a time with emoji",
+        "быстрые субтитры по одному слову",
+        "резкие динамичные подписи"
+      ],
+      "props": {
+        "combineTokensWithinMilliseconds": 300,
+        "holdMs": 150,
+        "fontSize": 80,
+        "emojiSize": 0.7
+      }
+    },
+    {
+      "id": "soft-subtitle",
+      "label": "Soft Subtitle",
+      "description": "Small, medium-weight warm off-white lines with a subtle emoji and long, relaxed pages.",
+      "askedAs": [
+        "calm subtle captions",
+        "small readable subtitles with tiny emoji",
+        "gentle vlog style text",
+        "спокойные аккуратные субтитры",
+        "мелкий текст с маленьким эмодзи"
+      ],
+      "props": {
+        "fontSize": 44,
+        "fontWeight": 500,
+        "color": "#f5efe6",
+        "emojiSize": 0.6,
+        "combineTokensWithinMilliseconds": 2400,
+        "holdMs": 1000
+      }
+    },
+    {
+      "id": "flat-ink",
+      "label": "Flat Ink",
+      "description": "Dark charcoal text with no shadow for clean captions over bright or light footage.",
+      "askedAs": [
+        "dark text for light background",
+        "black captions without shadow",
+        "clean flat subtitles",
+        "тёмный текст на светлом фоне",
+        "субтитры без тени"
+      ],
+      "props": {
+        "color": "#1c1c1e",
+        "shadow": false,
+        "fontWeight": 700
+      }
+    },
+    {
+      "id": "sunny-pop",
+      "label": "Sunny Pop",
+      "description": "Warm butter-yellow heavy captions with a bouncy, slightly enlarged emoji for upbeat clips.",
+      "askedAs": [
+        "yellow meme captions",
+        "bright fun subtitles with emoji",
+        "cheerful bold text",
+        "жёлтые весёлые субтитры",
+        "яркие подписи с эмодзи"
+      ],
+      "props": {
+        "color": "#ffd84d",
+        "fontWeight": 900,
+        "fontSize": 72,
+        "emojiSize": 1.15
+      }
+    }
+  ]
+}

@@ -1,0 +1,95 @@
+{
+  "component": "icon-scatter",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "gentle-drift",
+      "label": "Gentle Drift",
+      "description": "A few soft cream icons drift a short way over a warm charcoal cover at a slow, calm pace.",
+      "askedAs": [
+        "slow calm icon transition",
+        "subtle few icons floating",
+        "soft gentle scatter",
+        "медленный спокойный переход",
+        "мало иконок плавно"
+      ],
+      "props": {
+        "count": 8,
+        "flyDistance": 140,
+        "speed": 0.5,
+        "color": "#e8e2d6",
+        "coverColor": "#2b2a28"
+      }
+    },
+    {
+      "id": "paper-light",
+      "label": "Paper Light",
+      "description": "Dark slate icons scatter across a warm off-white paper cover for light-themed scenes.",
+      "askedAs": [
+        "light background icon scatter",
+        "white cover with dark icons",
+        "clean bright transition",
+        "светлый фон с тёмными иконками",
+        "белый переход"
+      ],
+      "props": {
+        "color": "#1f2937",
+        "coverColor": "#f5f1e8"
+      }
+    },
+    {
+      "id": "brand-blue",
+      "label": "Brand Blue",
+      "description": "Crisp white icons fly over a saturated product blue cover at a slightly brisker pace.",
+      "askedAs": [
+        "blue brand transition",
+        "white icons on blue",
+        "app style icon cut",
+        "синий фон с белыми иконками",
+        "фирменный синий переход"
+      ],
+      "props": {
+        "coverColor": "#1f6feb",
+        "color": "#ffffff",
+        "speed": 1.25
+      }
+    },
+    {
+      "id": "snap-pop",
+      "label": "Snap Pop",
+      "description": "Coral icons snap out in a quick, tight pop over an inky cover for a punchy cut.",
+      "askedAs": [
+        "fast snappy icon pop",
+        "quick punchy transition",
+        "short sharp scatter",
+        "быстрый резкий переход",
+        "иконки быстро выскакивают"
+      ],
+      "props": {
+        "speed": 2.5,
+        "flyDistance": 200,
+        "count": 12,
+        "color": "#ff6b5b",
+        "coverColor": "#101418"
+      }
+    },
+    {
+      "id": "mint-soft",
+      "label": "Mint Soft",
+      "description": "Deep green icons float outward across a pale mint cover for a fresh, friendly feel.",
+      "askedAs": [
+        "mint green transition",
+        "fresh pastel icon scatter",
+        "soft green background",
+        "мятный пастельный переход",
+        "зелёные иконки на светлом"
+      ],
+      "props": {
+        "coverColor": "#d8f0e6",
+        "color": "#1e5b4a",
+        "flyDistance": 320
+      }
+    }
+  ]
+}

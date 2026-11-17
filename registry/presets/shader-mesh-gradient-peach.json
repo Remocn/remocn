@@ -1,0 +1,92 @@
+{
+  "component": "shader-mesh-gradient-peach",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "still-morning",
+      "label": "Still Morning",
+      "description": "A barely moving, gently blended peach haze that feels calm and almost static.",
+      "askedAs": [
+        "very slow calm peach background",
+        "almost still warm gradient",
+        "subtle soft glow with little motion",
+        "спокойный медленный персиковый фон",
+        "почти неподвижный тёплый градиент"
+      ],
+      "props": {
+        "speed": 0.25,
+        "distortion": 0.25,
+        "swirl": 0
+      }
+    },
+    {
+      "id": "silk-drift",
+      "label": "Silk Drift",
+      "description": "Slow, flowing folds of cream and peach like draped silk catching light.",
+      "askedAs": [
+        "flowing silky warm gradient",
+        "soft fabric-like peach waves",
+        "elegant slow wavy background",
+        "шелковистый плавный персиковый фон",
+        "мягкие волны как ткань"
+      ],
+      "props": {
+        "speed": 0.5,
+        "distortion": 1,
+        "swirl": 0.3
+      }
+    },
+    {
+      "id": "honey-swirl",
+      "label": "Honey Swirl",
+      "description": "Warm tones curl into each other in rich, spiraling eddies at an unhurried pace.",
+      "askedAs": [
+        "swirly peach gradient",
+        "warm colors mixing in spirals",
+        "creamy twirling background",
+        "закрученный тёплый градиент",
+        "персиковые завихрения"
+      ],
+      "props": {
+        "speed": 0.75,
+        "distortion": 0.8,
+        "swirl": 0.75
+      }
+    },
+    {
+      "id": "sunlit-pulse",
+      "label": "Sunlit Pulse",
+      "description": "A lively, energetic peach glow that shifts quickly for upbeat moments.",
+      "askedAs": [
+        "faster energetic warm gradient",
+        "lively peach animated background",
+        "upbeat moving glow",
+        "быстрый энергичный персиковый фон",
+        "живой тёплый градиент"
+      ],
+      "props": {
+        "speed": 2.5,
+        "distortion": 0.7,
+        "swirl": 0.25
+      }
+    },
+    {
+      "id": "liquid-apricot",
+      "label": "Liquid Apricot",
+      "description": "Strongly warped, molten blobs of apricot and cream with bold organic movement.",
+      "askedAs": [
+        "liquid melting peach shapes",
+        "bold distorted warm gradient",
+        "molten fluid background",
+        "жидкий абрикосовый градиент",
+        "сильно искажённый тёплый фон"
+      ],
+      "props": {
+        "speed": 1.5,
+        "distortion": 1.4,
+        "swirl": 0.5
+      }
+    }
+  ]
+}

@@ -1,0 +1,122 @@
+{
+  "component": "chore-fold",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "paper-editorial",
+      "label": "Paper Editorial",
+      "description": "Warm off-white page with dark serif type and a deep teal accent, unfolding at an unhurried pace.",
+      "askedAs": [
+        "light serif version",
+        "editorial magazine look",
+        "calm elegant reveal",
+        "светлая версия с засечками",
+        "спокойный журнальный стиль"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "background": "#f5f1e8",
+        "ink": "#1c1b19",
+        "accent": "#0f6b63",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "snappy-launch",
+      "label": "Snappy Launch",
+      "description": "Fast, tight cascade in bold grotesque type for punchy launch cuts.",
+      "askedAs": [
+        "make it faster and punchier",
+        "quick energetic reveal",
+        "snappy launch text",
+        "быстрее и энергичнее",
+        "резкая анимация текста"
+      ],
+      "props": {
+        "speed": 2,
+        "stagger": 1,
+        "lineStagger": 4,
+        "fontFamily": "Space Grotesk",
+        "scale": 1.15
+      }
+    },
+    {
+      "id": "midnight-mint",
+      "label": "Midnight Mint",
+      "description": "Deep navy backdrop with soft mint accent and pale text for a cool, polished night look.",
+      "askedAs": [
+        "dark blue background",
+        "navy with mint highlight",
+        "cool night palette",
+        "тёмно-синий фон",
+        "мятный акцент на тёмном"
+      ],
+      "props": {
+        "background": "#0e1726",
+        "ink": "#e6edf5",
+        "accent": "#5fd4b4",
+        "fontFamily": "Manrope"
+      }
+    },
+    {
+      "id": "slow-cinematic",
+      "label": "Slow Cinematic",
+      "description": "Large, slow word-by-word reveal with a held pause before it starts, for dramatic endings.",
+      "askedAs": [
+        "slow dramatic reveal",
+        "big cinematic text",
+        "let it breathe",
+        "медленно и кинематографично",
+        "крупный текст с паузой"
+      ],
+      "props": {
+        "speed": 0.5,
+        "stagger": 6,
+        "lineStagger": 20,
+        "scale": 1.3,
+        "delay": 20
+      }
+    },
+    {
+      "id": "terminal-note",
+      "label": "Terminal Note",
+      "description": "Compact monospace type in a muted dev-tool palette with an amber accent.",
+      "askedAs": [
+        "monospace code style",
+        "developer terminal look",
+        "small techy text",
+        "моноширинный шрифт",
+        "стиль терминала"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#151515",
+        "ink": "#d8d4cc",
+        "accent": "#e0a84a",
+        "scale": 0.85
+      }
+    },
+    {
+      "id": "soft-clay",
+      "label": "Soft Clay",
+      "description": "Light terracotta-tinted page with rounded Fraunces type and a rust accent, all lines landing together.",
+      "askedAs": [
+        "warm earthy colors",
+        "friendly soft light look",
+        "terracotta palette",
+        "тёплые землистые цвета",
+        "мягкий светлый стиль"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f3e6dc",
+        "ink": "#2b1f1a",
+        "accent": "#b5532f",
+        "fontFamily": "Fraunces",
+        "lineStagger": 0
+      }
+    }
+  ]
+}

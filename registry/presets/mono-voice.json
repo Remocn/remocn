@@ -1,0 +1,106 @@
+{
+  "component": "mono-voice",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "Warm paper background with Instrument Serif type and a deep terracotta accent, paced slowly like a magazine spread.",
+      "askedAs": [
+        "elegant serif light version",
+        "magazine style text on cream",
+        "slow classy editorial look",
+        "элегантный шрифт с засечками на светлом фоне",
+        "журнальный стиль медленно"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "background": "#f4efe6",
+        "ink": "#1f1b16",
+        "accent": "#b4532a",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "terminal-quick",
+      "label": "Terminal Quick",
+      "description": "JetBrains Mono on near-black with a soft green accent, snapping through the voice change fast.",
+      "askedAs": [
+        "code terminal style",
+        "fast monospace developer look",
+        "hacker console text",
+        "моноширинный шрифт как в терминале",
+        "быстро в стиле кода"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0d1117",
+        "ink": "#c9d1d9",
+        "accent": "#3fb950",
+        "speed": 1.75,
+        "voiceAt": 14
+      }
+    },
+    {
+      "id": "slow-reveal",
+      "label": "Slow Reveal",
+      "description": "Large Fraunces type with wide line stagger and a late voice shift for a dramatic, unhurried read.",
+      "askedAs": [
+        "dramatic slow build",
+        "big text revealed line by line",
+        "cinematic slow statement",
+        "медленное драматичное появление",
+        "крупный текст по строчкам"
+      ],
+      "props": {
+        "fontFamily": "Fraunces",
+        "scale": 1.25,
+        "stagger": 10,
+        "voiceAt": 60,
+        "speed": 0.5,
+        "accent": "#e0a458"
+      }
+    },
+    {
+      "id": "bold-ink",
+      "label": "Bold Ink",
+      "description": "Deep navy field with off-white Bricolage Grotesque and a coral accent for a punchy brand statement.",
+      "askedAs": [
+        "bold brand colours",
+        "punchy navy and coral",
+        "expressive grotesk headline",
+        "яркий фирменный стиль",
+        "смелый заголовок на синем фоне"
+      ],
+      "props": {
+        "fontFamily": "Bricolage Grotesque",
+        "background": "#14213d",
+        "ink": "#f5f3ee",
+        "accent": "#ff7a59",
+        "scale": 1.1
+      }
+    },
+    {
+      "id": "minimal-light",
+      "label": "Minimal Light",
+      "description": "Clean white Geist layout at a compact scale with a cobalt accent and tight, brisk staggering.",
+      "askedAs": [
+        "clean white minimal",
+        "simple light corporate look",
+        "small tidy text blue accent",
+        "минималистичный светлый вариант",
+        "чистый белый фон с синим акцентом"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Geist",
+        "accent": "#1f6feb",
+        "scale": 0.85,
+        "stagger": 2,
+        "speed": 1.25
+      }
+    }
+  ]
+}

@@ -1,0 +1,106 @@
+{
+  "component": "cue-word",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "snap-pop",
+      "label": "Snap Pop",
+      "description": "Fast, punchy cuts with tight word timing and oversized Bricolage type on hot pink.",
+      "askedAs": [
+        "make it faster and punchier",
+        "quick snappy cuts with big text",
+        "energetic fast word reveals",
+        "быстрее и энергичнее",
+        "резкие быстрые смены слов"
+      ],
+      "props": {
+        "speed": 1.75,
+        "stagger": 1,
+        "fontFamily": "Bricolage Grotesque",
+        "scale": 1.2,
+        "accent": "#ff3d7f",
+        "hold": 20
+      }
+    },
+    {
+      "id": "editorial-blush",
+      "label": "Editorial Blush",
+      "description": "A slower, airy serif look on a soft blush ground with deep plum text.",
+      "askedAs": [
+        "elegant serif version on light pink",
+        "slower magazine style",
+        "soft and classy pastel",
+        "элегантный шрифт с засечками",
+        "мягкий светлый розовый стиль"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "fontWeight": 400,
+        "background": "#f7e1e6",
+        "ink": "#3b1530",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "midnight-coral",
+      "label": "Midnight Coral",
+      "description": "Clean Inter type on deep navy with a warm coral accent word.",
+      "askedAs": [
+        "dark blue background with coral highlight",
+        "calm dark corporate look",
+        "navy and coral version",
+        "тёмно-синий фон с коралловым акцентом",
+        "сдержанный тёмный вариант"
+      ],
+      "props": {
+        "background": "#14182b",
+        "ink": "#f2efe9",
+        "accent": "#ff7a59",
+        "fontFamily": "Inter",
+        "stagger": 5
+      }
+    },
+    {
+      "id": "terminal-mint",
+      "label": "Terminal Mint",
+      "description": "Monospaced type on near-black with a muted mint accent and steady pacing.",
+      "askedAs": [
+        "code style monospace look",
+        "techy developer vibe",
+        "black background mono font",
+        "моноширинный шрифт как в терминале",
+        "технический стиль для разработчиков"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "fontWeight": 400,
+        "background": "#0f1412",
+        "ink": "#e4ece8",
+        "accent": "#6fd3a8",
+        "scale": 0.85
+      }
+    },
+    {
+      "id": "slow-statement",
+      "label": "Slow Statement",
+      "description": "Large Fraunces type that rolls in word by word with a long, confident final hold.",
+      "askedAs": [
+        "slow dramatic reveal",
+        "big text that lingers at the end",
+        "cinematic word by word",
+        "медленное драматичное появление",
+        "крупный текст с долгой паузой"
+      ],
+      "props": {
+        "fontFamily": "Fraunces",
+        "speed": 0.5,
+        "stagger": 9,
+        "scale": 1.3,
+        "hold": 75,
+        "delay": 12
+      }
+    }
+  ]
+}

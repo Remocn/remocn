@@ -1,0 +1,87 @@
+{
+  "component": "dropdown-menu-item",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "resting-idle",
+      "label": "Resting Idle",
+      "description": "The row sits quietly in its idle state with an unhurried, calm transition.",
+      "askedAs": [
+        "menu item at rest",
+        "no hover just default row",
+        "calm idle menu row",
+        "пункт меню в покое",
+        "обычное состояние пункта"
+      ],
+      "props": {
+        "state": "idle",
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "slow-hover",
+      "label": "Slow Hover",
+      "description": "A gentle, slowed-down hover highlight that eases in like a cinematic close-up.",
+      "askedAs": [
+        "slow motion hover effect",
+        "gentle hover highlight",
+        "leisurely menu hover",
+        "медленное наведение",
+        "плавная подсветка при наведении"
+      ],
+      "props": {
+        "state": "hover",
+        "speed": 0.25
+      }
+    },
+    {
+      "id": "snappy-hover",
+      "label": "Snappy Hover",
+      "description": "A quick, responsive hover highlight that feels like a fast cursor sweep.",
+      "askedAs": [
+        "fast hover highlight",
+        "quick cursor over menu item",
+        "snappy menu hover",
+        "быстрое наведение курсора",
+        "резкая подсветка пункта"
+      ],
+      "props": {
+        "state": "hover",
+        "speed": 2
+      }
+    },
+    {
+      "id": "firm-press",
+      "label": "Firm Press",
+      "description": "The row shows its pressed state with a deliberate, readable click timing.",
+      "askedAs": [
+        "clicked menu item",
+        "show the press state",
+        "tap on dropdown option",
+        "нажатие на пункт меню",
+        "клик по пункту"
+      ],
+      "props": {
+        "state": "press",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "quick-click",
+      "label": "Quick Click",
+      "description": "A brisk pressed state that plays like a rapid, decisive click.",
+      "askedAs": [
+        "rapid click animation",
+        "fast press feedback",
+        "instant menu selection",
+        "быстрый клик",
+        "мгновенное нажатие"
+      ],
+      "props": {
+        "state": "press",
+        "speed": 3
+      }
+    }
+  ]
+}

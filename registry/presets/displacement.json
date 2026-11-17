@@ -1,0 +1,101 @@
+{
+  "component": "displacement",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "coarse-blocks",
+      "label": "Coarse Blocks",
+      "description": "A few large square tiles lurch far out of place with heavy colour fringing, like a codec dropping keyframes.",
+      "askedAs": [
+        "big chunky glitch blocks",
+        "large tile displacement transition",
+        "heavy datamosh cut",
+        "крупные блоки глитча",
+        "переход крупными плитками"
+      ],
+      "props": {
+        "grid": 8,
+        "shift": 2.6,
+        "aberration": 2.2,
+        "stagger": 0.25
+      }
+    },
+    {
+      "id": "scanline-tear",
+      "label": "Scanline Tear",
+      "description": "Wide, thin horizontal strips slide sideways in a fast wave, reading as a torn video signal.",
+      "askedAs": [
+        "horizontal line tearing transition",
+        "vhs scanline glitch",
+        "signal tear effect",
+        "горизонтальные полосы разрыва",
+        "глитч как сломанный сигнал"
+      ],
+      "props": {
+        "grid": 40,
+        "cellAspect": 4,
+        "shift": 1.8,
+        "stagger": 0.7,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "clean-pixel",
+      "label": "Clean Pixel",
+      "description": "A fine, grain-free mosaic nudges slightly out of register with no fringing for a crisp product-UI cut.",
+      "askedAs": [
+        "subtle clean glitch",
+        "minimal pixel shift transition",
+        "no grain no rgb split",
+        "аккуратный тонкий глитч",
+        "чистый переход без шума"
+      ],
+      "props": {
+        "grid": 90,
+        "shift": 0.5,
+        "aberration": 0,
+        "grain": 0,
+        "stagger": 0.2
+      }
+    },
+    {
+      "id": "snap-cut",
+      "label": "Snap Cut",
+      "description": "The whole frame jolts apart and back almost instantly in a single unstaggered hit.",
+      "askedAs": [
+        "very fast glitch cut",
+        "instant displacement hit",
+        "quick punchy glitch",
+        "очень быстрый глитч",
+        "резкий мгновенный переход"
+      ],
+      "props": {
+        "speed": 3,
+        "stagger": 0,
+        "shift": 1.4,
+        "grid": 30
+      }
+    },
+    {
+      "id": "slow-drift",
+      "label": "Slow Drift",
+      "description": "Tall vertical slats drift apart leisurely under thick film grain and soft fringing.",
+      "askedAs": [
+        "slow cinematic glitch",
+        "vertical slices drifting",
+        "grainy slow displacement",
+        "медленный зернистый глитч",
+        "вертикальные полосы плавно"
+      ],
+      "props": {
+        "speed": 0.5,
+        "cellAspect": 0.25,
+        "grid": 24,
+        "grain": 0.85,
+        "stagger": 0.85,
+        "aberration": 0.6
+      }
+    }
+  ]
+}

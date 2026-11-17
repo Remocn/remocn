@@ -1,0 +1,105 @@
+{
+  "component": "slit-scan",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "A light, paper-toned frame with an elegant serif word resolving slowly through fine flutes.",
+      "askedAs": [
+        "elegant serif slit scan on light background",
+        "magazine style slow reveal",
+        "classy light version with serif font",
+        "элегантный светлый вариант с антиквой",
+        "журнальный стиль, медленное проявление"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "fontWeight": 400,
+        "background": "#f4f1ea",
+        "ink": "#1c1a17",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "warp-burst",
+      "label": "Warp Burst",
+      "description": "A fast, heavy word that snaps in through dense slices with a long streaking trail.",
+      "askedAs": [
+        "make it feel super fast",
+        "long streaks and quick reveal",
+        "aggressive speed blur",
+        "очень быстрый эффект с длинными шлейфами",
+        "агрессивный скоростной вариант"
+      ],
+      "props": {
+        "speed": 2,
+        "trail": 70,
+        "slices": 240,
+        "fontWeight": 700,
+        "accent": "#ff5a36"
+      }
+    },
+    {
+      "id": "terminal-bench",
+      "label": "Terminal Bench",
+      "description": "A technical monospace look on near-black with a green accent and crisp, short trails.",
+      "askedAs": [
+        "benchmark style with code font",
+        "developer terminal look",
+        "monospace tech version",
+        "вариант в стиле терминала",
+        "моноширинный шрифт для бенчмарка"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0b0f0c",
+        "ink": "#e6f2ea",
+        "accent": "#3ddc84",
+        "trail": 16,
+        "grain": false
+      }
+    },
+    {
+      "id": "wide-flutes",
+      "label": "Wide Flutes",
+      "description": "Chunky, coarse fluted slices give a bold glass-ribbed reveal at a slightly larger scale.",
+      "askedAs": [
+        "bigger thicker slices",
+        "ribbed glass effect",
+        "coarse fluted reveal",
+        "крупные широкие полосы",
+        "эффект рифлёного стекла"
+      ],
+      "props": {
+        "slices": 36,
+        "trail": 44,
+        "scale": 1.2,
+        "fontFamily": "Space Grotesk",
+        "fontWeight": 600
+      }
+    },
+    {
+      "id": "quiet-luxe",
+      "label": "Quiet Luxe",
+      "description": "A slow, light-weight word on deep navy with a soft gold accent and delayed entrance.",
+      "askedAs": [
+        "luxury slow reveal",
+        "subtle premium dark gold",
+        "calm minimal version",
+        "премиальный спокойный вариант с золотом",
+        "медленное элегантное появление"
+      ],
+      "props": {
+        "background": "#0e1424",
+        "ink": "#f2ede3",
+        "accent": "#c9a45c",
+        "fontWeight": 300,
+        "speed": 0.5,
+        "delay": 12
+      }
+    }
+  ]
+}

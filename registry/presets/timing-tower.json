@@ -1,0 +1,118 @@
+{
+  "component": "timing-tower",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "pit-wall",
+      "label": "Pit Wall",
+      "description": "Classic dark broadcast tower with a racing-red accent and brisk, punchy reordering.",
+      "askedAs": [
+        "formula one style red timing board",
+        "fast aggressive race leaderboard",
+        "red accent broadcast tower",
+        "таблица гонки в стиле формулы 1",
+        "быстрый красный лидерборд"
+      ],
+      "props": {
+        "theme": "dark",
+        "accent": "#e10600",
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "paddock-light",
+      "label": "Paddock Light",
+      "description": "Clean daylight tower on warm off-white with a deep green accent and neutral Inter type.",
+      "askedAs": [
+        "light version of the timing tower",
+        "clean white race standings",
+        "daytime motorsport leaderboard",
+        "светлая таблица позиций",
+        "белый рейтинг в гоночном стиле"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4f2ee",
+        "ink": "#14161a",
+        "accent": "#0b6e4f",
+        "fontFamily": "Inter"
+      }
+    },
+    {
+      "id": "night-race",
+      "label": "Night Race",
+      "description": "Deep navy floodlit look with a golden accent and slightly quicker overtakes.",
+      "askedAs": [
+        "night race leaderboard with gold",
+        "navy and gold ranking tower",
+        "under the lights race standings",
+        "ночная гонка таблица с золотом",
+        "тёмно-синий лидерборд"
+      ],
+      "props": {
+        "background": "#0a0e1a",
+        "ink": "#e8ecf4",
+        "accent": "#f5b700",
+        "speed": 1.25
+      }
+    },
+    {
+      "id": "slow-replay",
+      "label": "Slow Replay",
+      "description": "Enlarged, unhurried tower that holds a beat before easing through each overtake.",
+      "askedAs": [
+        "slow motion overtake replay",
+        "bigger leaderboard that moves slowly",
+        "dramatic slow ranking climb",
+        "медленный повтор обгона",
+        "крупная медленная таблица позиций"
+      ],
+      "props": {
+        "speed": 0.5,
+        "delay": 20,
+        "scale": 1.15,
+        "fontFamily": "Space Grotesk"
+      }
+    },
+    {
+      "id": "telemetry-mono",
+      "label": "Telemetry Mono",
+      "description": "Compact engineering-screen look in monospace with a muted green on near-black.",
+      "askedAs": [
+        "telemetry data screen style",
+        "monospace race timing",
+        "engineer console leaderboard",
+        "телеметрия моноширинный шрифт",
+        "табло как у инженеров команды"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0f1412",
+        "ink": "#d7e4dc",
+        "accent": "#2bb673",
+        "scale": 0.9
+      }
+    },
+    {
+      "id": "editorial-podium",
+      "label": "Editorial Podium",
+      "description": "Magazine-style light tower in Fraunces serif with a burgundy accent and calm pacing.",
+      "askedAs": [
+        "elegant serif race result",
+        "magazine style winner poster",
+        "classy burgundy standings",
+        "элегантная таблица победителя",
+        "журнальный стиль рейтинга"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Fraunces",
+        "background": "#faf7f2",
+        "ink": "#1e1a17",
+        "accent": "#8c2f39",
+        "speed": 0.75
+      }
+    }
+  ]
+}

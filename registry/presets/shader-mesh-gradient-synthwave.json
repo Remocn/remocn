@@ -1,0 +1,92 @@
+{
+  "component": "shader-mesh-gradient-synthwave",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "slow-drift",
+      "label": "Slow Drift",
+      "description": "A calm, barely moving haze where the coral glow seeps gently into the purple night.",
+      "askedAs": [
+        "slow calm synthwave background",
+        "subtle ambient gradient",
+        "gentle moving sunset glow",
+        "медленный спокойный фон",
+        "плавный градиент заката"
+      ],
+      "props": {
+        "speed": 0.25,
+        "distortion": 0.4,
+        "swirl": 0.1
+      }
+    },
+    {
+      "id": "neon-vortex",
+      "label": "Neon Vortex",
+      "description": "Fast, heavily twisted colour currents that spiral the sunset through the dark field.",
+      "askedAs": [
+        "fast swirling retro background",
+        "energetic twisting gradient",
+        "hypnotic spiral synthwave",
+        "быстрый закрученный фон",
+        "вихрь ретро градиент"
+      ],
+      "props": {
+        "speed": 2.5,
+        "distortion": 1.3,
+        "swirl": 0.9
+      }
+    },
+    {
+      "id": "clean-horizon",
+      "label": "Clean Horizon",
+      "description": "Smooth, undistorted bands of purple and coral that read like a soft horizon line.",
+      "askedAs": [
+        "clean smooth gradient no warping",
+        "minimal sunset bands",
+        "flat calm horizon background",
+        "чистый ровный градиент",
+        "минималистичный горизонт"
+      ],
+      "props": {
+        "distortion": 0.1,
+        "swirl": 0,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "liquid-heat",
+      "label": "Liquid Heat",
+      "description": "Thick, molten warping that makes the warm glow ripple like heat over asphalt.",
+      "askedAs": [
+        "liquid melting gradient",
+        "wavy heat distortion background",
+        "molten synthwave look",
+        "жидкий плавящийся фон",
+        "волнистый горячий градиент"
+      ],
+      "props": {
+        "distortion": 1.5,
+        "swirl": 0.2,
+        "speed": 1.25
+      }
+    },
+    {
+      "id": "pulse-drive",
+      "label": "Pulse Drive",
+      "description": "Quick, punchy motion with moderate curl for an upbeat retro-tech intro.",
+      "askedAs": [
+        "upbeat fast retro background",
+        "driving synthwave motion",
+        "dynamic tech intro gradient",
+        "быстрый динамичный фон",
+        "энергичная ретро заставка"
+      ],
+      "props": {
+        "speed": 3.5,
+        "distortion": 0.7,
+        "swirl": 0.55
+      }
+    }
+  ]
+}

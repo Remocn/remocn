@@ -1,0 +1,90 @@
+{
+  "component": "terminal-cursor-zoom",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "extreme-closeup",
+      "label": "Extreme Closeup",
+      "description": "Camera pushed in to maximum zoom so each typed character fills the frame with tight, kinetic motion.",
+      "askedAs": [
+        "zoom in really close on the cursor",
+        "huge letters typing up close",
+        "tightest crop on the command",
+        "максимальный зум на курсор",
+        "крупный план набора текста"
+      ],
+      "props": {
+        "zoom": 4,
+        "fontSize": 24
+      }
+    },
+    {
+      "id": "wide-context",
+      "label": "Wide Context",
+      "description": "A gentle, pulled-back framing that shows more of the terminal line around the cursor at a calm typing pace.",
+      "askedAs": [
+        "show more of the terminal",
+        "less zoomed in view",
+        "wider shot of the command",
+        "показать больше терминала",
+        "меньше зума, общий план"
+      ],
+      "props": {
+        "zoom": 1.6,
+        "fontSize": 16,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "rapid-fire",
+      "label": "Rapid Fire",
+      "description": "Fast typing with a brisk camera dolly for punchy, high-energy social cuts.",
+      "askedAs": [
+        "make it type really fast",
+        "quick snappy typing for reels",
+        "speed up the command",
+        "быстрый набор команды",
+        "ускорить печать"
+      ],
+      "props": {
+        "speed": 2.5,
+        "zoom": 3.2
+      }
+    },
+    {
+      "id": "slow-reveal",
+      "label": "Slow Reveal",
+      "description": "Deliberate, unhurried typing with large type so the viewer reads every character as it lands.",
+      "askedAs": [
+        "slow dramatic typing",
+        "let people read each letter",
+        "calm deliberate install command",
+        "медленный набор текста",
+        "спокойная печать команды"
+      ],
+      "props": {
+        "speed": 0.5,
+        "fontSize": 26,
+        "zoom": 2.4
+      }
+    },
+    {
+      "id": "mobile-bold",
+      "label": "Mobile Bold",
+      "description": "Oversized type at a moderate zoom tuned for legibility in vertical and small-screen crops.",
+      "askedAs": [
+        "readable on a phone screen",
+        "big text for vertical video",
+        "legible in stories format",
+        "крупный шрифт для вертикального видео",
+        "читаемо на телефоне"
+      ],
+      "props": {
+        "fontSize": 32,
+        "zoom": 2,
+        "speed": 1.25
+      }
+    }
+  ]
+}

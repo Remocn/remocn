@@ -1,0 +1,99 @@
+{
+  "component": "per-character-rise",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "subtle-lift",
+      "label": "Subtle Lift",
+      "description": "Small, light letters drift up a short distance at an unhurried pace for a quiet, refined entrance.",
+      "askedAs": [
+        "gentle letter rise",
+        "subtle calm text entrance",
+        "soft minimal heading reveal",
+        "мягкое появление букв снизу",
+        "спокойная анимация текста"
+      ],
+      "props": {
+        "distance": 12,
+        "fontSize": 56,
+        "fontWeight": "400",
+        "speed": 0.75,
+        "color": "#3f3f46"
+      }
+    },
+    {
+      "id": "bold-snap",
+      "label": "Bold Snap",
+      "description": "Large heavy letters shoot up from deep below at double speed for a punchy, energetic hit.",
+      "askedAs": [
+        "fast punchy title",
+        "big bold letters snap in",
+        "energetic heading animation",
+        "быстрый жирный заголовок",
+        "резкое появление крупных букв"
+      ],
+      "props": {
+        "distance": 90,
+        "fontSize": 120,
+        "fontWeight": "700",
+        "speed": 2
+      }
+    },
+    {
+      "id": "slow-editorial",
+      "label": "Slow Editorial",
+      "description": "Medium-weight navy letters rise slowly over a long travel for a deliberate, magazine-style reveal.",
+      "askedAs": [
+        "slow elegant title reveal",
+        "editorial heading animation",
+        "deliberate letter by letter rise",
+        "медленное элегантное появление текста",
+        "журнальный стиль заголовка"
+      ],
+      "props": {
+        "distance": 60,
+        "fontSize": 88,
+        "fontWeight": "500",
+        "speed": 0.5,
+        "color": "#1e3a5f"
+      }
+    },
+    {
+      "id": "accent-blue",
+      "label": "Accent Blue",
+      "description": "Crisp semibold letters in a calm product blue rise briskly for a clean tech-brand feel.",
+      "askedAs": [
+        "blue tech heading",
+        "product launch text rise",
+        "clean brand color title",
+        "синий заголовок для продукта",
+        "технологичная анимация текста"
+      ],
+      "props": {
+        "color": "#1f6feb",
+        "speed": 1.5,
+        "distance": 40
+      }
+    },
+    {
+      "id": "compact-label",
+      "label": "Compact Label",
+      "description": "Small bold letters in warm terracotta pop up a short distance quickly, suited to captions and tags.",
+      "askedAs": [
+        "small caption text pop",
+        "quick label animation",
+        "tiny tag letters rising",
+        "маленькая подпись с анимацией",
+        "быстрое появление короткой метки"
+      ],
+      "props": {
+        "fontSize": 32,
+        "fontWeight": "700",
+        "distance": 16,
+        "speed": 1.75,
+        "color": "#b4532a"
+      }
+    }
+  ]
+}

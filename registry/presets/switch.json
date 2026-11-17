@@ -1,0 +1,106 @@
+{
+  "component": "switch",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "ios-green",
+      "label": "iOS Green",
+      "description": "A large switch with a soft system green fill and an easy, relaxed slide.",
+      "askedAs": [
+        "green toggle like iPhone settings",
+        "big green on/off switch",
+        "apple style switch",
+        "зелёный переключатель как в айфоне",
+        "большой зелёный тумблер"
+      ],
+      "props": {
+        "size": "lg",
+        "primary": "#34c759",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "snappy-blue",
+      "label": "Snappy Blue",
+      "description": "A compact blue switch that flips with a quick, crisp motion.",
+      "askedAs": [
+        "fast small blue toggle",
+        "quick switch flip",
+        "compact blue on off control",
+        "быстрый синий переключатель",
+        "маленький синий тумблер"
+      ],
+      "props": {
+        "size": "sm",
+        "primary": "#1f6feb",
+        "speed": 2
+      }
+    },
+    {
+      "id": "slow-reveal",
+      "label": "Slow Reveal",
+      "description": "An oversized ink-black switch that slides deliberately for close-up explanation.",
+      "askedAs": [
+        "slow motion toggle",
+        "large switch for tutorial",
+        "dramatic slow switch flip",
+        "медленный большой переключатель",
+        "тумблер в замедленном темпе"
+      ],
+      "props": {
+        "size": "lg",
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "switched-off",
+      "label": "Switched Off",
+      "description": "A muted slate switch resting in its unchecked state for disabled-feature scenes.",
+      "askedAs": [
+        "toggle turned off",
+        "show switch in off position",
+        "grey disabled looking switch",
+        "выключенный переключатель",
+        "тумблер в положении выкл"
+      ],
+      "props": {
+        "state": "unchecked",
+        "primary": "#64748b"
+      }
+    },
+    {
+      "id": "warm-amber",
+      "label": "Warm Amber",
+      "description": "A warm amber fill with a steady, slightly brisk slide for friendly product demos.",
+      "askedAs": [
+        "orange toggle switch",
+        "warm colored on off switch",
+        "amber settings toggle",
+        "оранжевый переключатель",
+        "тёплый янтарный тумблер"
+      ],
+      "props": {
+        "primary": "#d97706",
+        "speed": 1.25
+      }
+    },
+    {
+      "id": "indigo-pro",
+      "label": "Indigo Pro",
+      "description": "A small, refined indigo switch with a measured pace suited to dense settings panels.",
+      "askedAs": [
+        "purple small toggle",
+        "indigo switch for dashboard",
+        "subtle violet on off control",
+        "фиолетовый маленький переключатель",
+        "индиго тумблер для настроек"
+      ],
+      "props": {
+        "size": "sm",
+        "primary": "#4f46e5",
+        "speed": 0.75
+      }
+    }
+  ]
+}

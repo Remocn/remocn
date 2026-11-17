@@ -1,0 +1,116 @@
+{
+  "component": "caption-word-pop",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "mega-punch",
+      "label": "Mega Punch",
+      "description": "Huge black-weight words that slam in from tiny scale for maximum impact.",
+      "askedAs": [
+        "make each word huge and hit hard",
+        "giant punchy single words",
+        "bigger more aggressive word pop",
+        "огромные слова с сильным ударом",
+        "крупные слова, которые выпрыгивают"
+      ],
+      "props": {
+        "fontSize": 180,
+        "fontWeight": 900,
+        "popScale": 0.3,
+        "holdMs": 400
+      }
+    },
+    {
+      "id": "soft-glide",
+      "label": "Soft Glide",
+      "description": "Smaller, medium-weight words that ease in gently from near full size and linger longer.",
+      "askedAs": [
+        "calmer subtle word captions",
+        "gentle pop without bounce",
+        "softer readable word by word text",
+        "спокойные мягкие субтитры по словам",
+        "менее резкая анимация слов"
+      ],
+      "props": {
+        "fontSize": 72,
+        "fontWeight": 500,
+        "popScale": 0.9,
+        "holdMs": 1000
+      }
+    },
+    {
+      "id": "phrase-chunks",
+      "label": "Phrase Chunks",
+      "description": "Groups nearby words into short phrases so fast speech reads in comfortable bites.",
+      "askedAs": [
+        "show a few words at a time",
+        "group words into short phrases",
+        "less flicker for fast talking",
+        "показывать несколько слов сразу",
+        "субтитры короткими фразами"
+      ],
+      "props": {
+        "combineTokensWithinMilliseconds": 1200,
+        "fontSize": 84,
+        "popScale": 0.8,
+        "holdMs": 800
+      }
+    },
+    {
+      "id": "highlighter-yellow",
+      "label": "Highlighter Yellow",
+      "description": "Bold warm-yellow words with a crisp shadow in the classic short-form creator style.",
+      "askedAs": [
+        "yellow tiktok style captions",
+        "bright yellow popping words",
+        "creator style colored subtitles",
+        "жёлтые субтитры как в тикток",
+        "яркие жёлтые слова"
+      ],
+      "props": {
+        "color": "#ffd43b",
+        "fontWeight": 900,
+        "fontSize": 110,
+        "popScale": 0.5
+      }
+    },
+    {
+      "id": "clean-minimal",
+      "label": "Clean Minimal",
+      "description": "Flat, shadowless regular-weight words in soft off-white for an editorial, understated feel.",
+      "askedAs": [
+        "minimal captions without shadow",
+        "clean thin word subtitles",
+        "elegant understated text pop",
+        "минималистичные субтитры без тени",
+        "тонкий аккуратный шрифт для слов"
+      ],
+      "props": {
+        "shadow": false,
+        "fontWeight": 400,
+        "color": "#f5f1e8",
+        "fontSize": 88,
+        "popScale": 0.85
+      }
+    },
+    {
+      "id": "rapid-fire",
+      "label": "Rapid Fire",
+      "description": "Snappy coral words with almost no hold, flicking past at the speed of speech.",
+      "askedAs": [
+        "super fast word captions",
+        "quick snappy word switching",
+        "words disappear right away",
+        "очень быстрые субтитры по словам",
+        "резкая смена слов"
+      ],
+      "props": {
+        "holdMs": 100,
+        "popScale": 0.4,
+        "color": "#ff8a65",
+        "fontSize": 120
+      }
+    }
+  ]
+}

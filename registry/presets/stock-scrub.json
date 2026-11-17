@@ -1,0 +1,119 @@
+{
+  "component": "stock-scrub",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "daylight-broker",
+      "label": "Daylight Broker",
+      "description": "A clean light theme with a deep green accent on a soft paper ground, like a calm retail brokerage.",
+      "askedAs": [
+        "light mode stock app",
+        "clean white trading screen",
+        "green bullish light look",
+        "светлая тема для биржевого приложения",
+        "чистый белый экран трейдинга"
+      ],
+      "props": {
+        "theme": "light",
+        "accent": "#0e9f6e",
+        "ground": "paper-crease",
+        "fontFamily": "Inter"
+      }
+    },
+    {
+      "id": "terminal-night",
+      "label": "Terminal Night",
+      "description": "A dark monospace terminal feel with an amber accent and brisk, trader-paced motion.",
+      "askedAs": [
+        "bloomberg terminal style",
+        "monospace dark trading look",
+        "fast pro trader vibe",
+        "стиль торгового терминала",
+        "моноширинный тёмный шрифт для графика"
+      ],
+      "props": {
+        "theme": "dark",
+        "fontFamily": "JetBrains Mono",
+        "accent": "#f5a524",
+        "ground": "charcoal-satin",
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "after-hours",
+      "label": "After Hours",
+      "description": "A slow, moody violet session on an after-hours ground with a slightly enlarged phone.",
+      "askedAs": [
+        "slow moody evening trading",
+        "after market close feel",
+        "purple night stock chart",
+        "медленный вечерний вид торгов",
+        "фиолетовый ночной график акций"
+      ],
+      "props": {
+        "ground": "afterhours",
+        "accent": "#8b7cf6",
+        "speed": 0.75,
+        "scale": 1.15
+      }
+    },
+    {
+      "id": "private-wealth",
+      "label": "Private Wealth",
+      "description": "An editorial serif treatment in warm copper tones for a premium, wealth-management tone.",
+      "askedAs": [
+        "luxury investing app look",
+        "elegant serif finance style",
+        "premium wealth management",
+        "премиальный стиль инвестиций",
+        "элегантный шрифт с засечками для финансов"
+      ],
+      "props": {
+        "fontFamily": "Fraunces",
+        "accent": "#c8875a",
+        "ground": "copper",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "cobalt-launch",
+      "label": "Cobalt Launch",
+      "description": "A punchy cobalt launch beat with bold grotesque type, quick pacing and a short lead-in.",
+      "askedAs": [
+        "energetic fintech launch",
+        "bold blue product reveal",
+        "snappy app promo for stocks",
+        "энергичный запуск финтех приложения",
+        "яркий синий промо ролик"
+      ],
+      "props": {
+        "ground": "cobalt-rise",
+        "fontFamily": "Space Grotesk",
+        "accent": "#4d7cff",
+        "speed": 2,
+        "delay": 10
+      }
+    },
+    {
+      "id": "polar-minimal",
+      "label": "Polar Minimal",
+      "description": "A cool icy light layout with slate text and a teal accent, scaled down for breathing room.",
+      "askedAs": [
+        "minimal cool light chart",
+        "icy calm investing screen",
+        "small phone with lots of space",
+        "минималистичный холодный стиль",
+        "маленький телефон с воздухом вокруг"
+      ],
+      "props": {
+        "theme": "light",
+        "ground": "polar",
+        "accent": "#0f8b8d",
+        "ink": "#1e293b",
+        "scale": 0.85,
+        "fontFamily": "Manrope"
+      }
+    }
+  ]
+}

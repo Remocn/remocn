@@ -1,0 +1,123 @@
+{
+  "component": "aspect-slit",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "ivory-premiere",
+      "label": "Ivory Premiere",
+      "description": "A warm light card on ivory with deep ink, bronze accents and soft charcoal bars.",
+      "askedAs": [
+        "light cream film title",
+        "elegant ivory title card",
+        "warm light cinematic opener",
+        "светлая кремовая заставка фильма",
+        "элегантный светлый титр"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4efe6",
+        "ink": "#1c1a17",
+        "accent": "#9a6b3f",
+        "barColor": "#1c1a17"
+      }
+    },
+    {
+      "id": "slow-epic",
+      "label": "Slow Epic",
+      "description": "A wide, slow anamorphic reveal with a larger title and a held beat before it opens.",
+      "askedAs": [
+        "slow dramatic movie opening",
+        "epic widescreen title reveal",
+        "cinematic slow slit open",
+        "медленное эпичное открытие титра",
+        "драматичная широкоэкранная заставка"
+      ],
+      "props": {
+        "slit": 0.22,
+        "speed": 0.5,
+        "scale": 1.2,
+        "delay": 20
+      }
+    },
+    {
+      "id": "noir-gold",
+      "label": "Noir Gold",
+      "description": "Near-black stage with a pale gold Fraunces title and muted brass accent.",
+      "askedAs": [
+        "black and gold film title",
+        "luxury noir title card",
+        "dark premium gold opener",
+        "чёрно-золотой титр фильма",
+        "люксовая тёмная заставка"
+      ],
+      "props": {
+        "background": "#0e0d0b",
+        "ink": "#eadbb8",
+        "accent": "#c2a15b",
+        "barColor": "#050504",
+        "fontFamily": "Fraunces"
+      }
+    },
+    {
+      "id": "tech-launch",
+      "label": "Tech Launch",
+      "description": "A crisp, fast sans-serif reveal on graphite with a cool blue accent and no grain.",
+      "askedAs": [
+        "clean modern product launch title",
+        "fast tech release card",
+        "sans serif minimal opener",
+        "быстрый современный титр запуска",
+        "минималистичная техно заставка"
+      ],
+      "props": {
+        "fontFamily": "Geist",
+        "speed": 1.75,
+        "grain": false,
+        "background": "#111316",
+        "ink": "#f2f4f7",
+        "accent": "#5b8cff"
+      }
+    },
+    {
+      "id": "indie-sage",
+      "label": "Indie Sage",
+      "description": "A quiet arthouse look with a small title on muted sage and a thin slit.",
+      "askedAs": [
+        "indie film festival title",
+        "soft green arthouse card",
+        "small understated movie title",
+        "инди титр в зелёных тонах",
+        "спокойная артхаусная заставка"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#dde3d6",
+        "ink": "#23291f",
+        "accent": "#5e7255",
+        "scale": 0.85,
+        "slit": 0.06
+      }
+    },
+    {
+      "id": "mono-credits",
+      "label": "Mono Credits",
+      "description": "A terse monospace credit card in stark black and white with a rapid snap open.",
+      "askedAs": [
+        "monospace credits style title",
+        "black and white typewriter title",
+        "quick documentary opener",
+        "моноширинный титр в стиле титров",
+        "чёрно-белая документальная заставка"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#000000",
+        "ink": "#ffffff",
+        "accent": "#8a8a8a",
+        "speed": 2.5,
+        "scale": 0.8
+      }
+    }
+  ]
+}

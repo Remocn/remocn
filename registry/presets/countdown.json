@@ -1,0 +1,107 @@
+{
+  "component": "countdown",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "Warm ivory page with large Instrument Serif numerals and a deep oxblood accent, paced slowly like a print magazine opener.",
+      "askedAs": [
+        "elegant serif countdown on cream",
+        "slow classy magazine style countdown",
+        "light luxury countdown with red accent",
+        "элегантный отсчёт с засечками на светлом фоне",
+        "медленный журнальный обратный отсчёт"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "background": "#f4efe6",
+        "ink": "#1c1a17",
+        "accent": "#8c2f2b",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "terminal-launch",
+      "label": "Terminal Launch",
+      "description": "Near-black screen with crisp JetBrains Mono digits and a mint accent, snapping through the count quickly with no halo.",
+      "askedAs": [
+        "fast tech countdown monospace",
+        "developer launch timer dark green",
+        "code style countdown for product release",
+        "быстрый отсчёт моноширинным шрифтом",
+        "технический таймер запуска в стиле терминала"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0b0f0e",
+        "ink": "#e6f2ec",
+        "accent": "#3fbf8f",
+        "halo": false,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "gallery-minimal",
+      "label": "Gallery Minimal",
+      "description": "Clean white field with light-weight Inter numerals, graphite accent, no grain or ring indicator for a quiet, airy reveal.",
+      "askedAs": [
+        "minimal white countdown no effects",
+        "clean simple light countdown",
+        "thin font quiet countdown",
+        "минималистичный белый отсчёт",
+        "простой чистый отсчёт без эффектов"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "fontWeight": 300,
+        "accent": "#2b2b2b",
+        "grain": false,
+        "indicator": false
+      }
+    },
+    {
+      "id": "stadium-impact",
+      "label": "Stadium Impact",
+      "description": "Oversized bold Space Grotesk numerals on deep navy with a hot amber accent, counting down from five with long dramatic holds.",
+      "askedAs": [
+        "big bold dramatic countdown from five",
+        "huge numbers event hype intro",
+        "sports style countdown orange",
+        "большой жирный драматичный отсчёт",
+        "эффектный отсчёт для мероприятия с крупными цифрами"
+      ],
+      "props": {
+        "fontFamily": "Space Grotesk",
+        "fontWeight": 700,
+        "scale": 1.35,
+        "background": "#0a1428",
+        "accent": "#f29a2e",
+        "from": 5
+      }
+    },
+    {
+      "id": "noir-velvet",
+      "label": "Noir Velvet",
+      "description": "Smaller Fraunces numerals in soft champagne on velvet black, with a muted gold accent and a lingering beat between counts.",
+      "askedAs": [
+        "luxury black and gold countdown",
+        "premium slow cinematic count",
+        "refined small serif countdown dark",
+        "люксовый отсчёт чёрный с золотом",
+        "кинематографичный медленный отсчёт"
+      ],
+      "props": {
+        "fontFamily": "Fraunces",
+        "background": "#0e0c0b",
+        "ink": "#ede3d1",
+        "accent": "#c8a96a",
+        "scale": 0.8,
+        "beat": 36
+      }
+    }
+  ]
+}

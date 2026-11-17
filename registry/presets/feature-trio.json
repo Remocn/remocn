@@ -1,0 +1,106 @@
+{
+  "component": "feature-trio",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "paper-editorial",
+      "label": "Paper Editorial",
+      "description": "Warm off-white page with dark serif type and a muted terracotta accent, paced slowly.",
+      "askedAs": [
+        "light serif magazine look",
+        "calm editorial feature list",
+        "warm paper background with serif text",
+        "светлый журнальный стиль с засечками",
+        "спокойный редакционный вид"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4efe6",
+        "ink": "#1e1b18",
+        "accent": "#b5532e",
+        "fontFamily": "Instrument Serif",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "terminal-snap",
+      "label": "Terminal Snap",
+      "description": "Near-black background with monospace type and a soft green accent that snaps in quickly.",
+      "askedAs": [
+        "developer terminal style features",
+        "fast monospace feature list",
+        "code-like dark look",
+        "стиль терминала для разработчиков",
+        "быстрый моноширинный шрифт"
+      ],
+      "props": {
+        "background": "#0d1110",
+        "ink": "#e6ede9",
+        "accent": "#3fb97a",
+        "fontFamily": "JetBrains Mono",
+        "speed": 1.75,
+        "hold": 24
+      }
+    },
+    {
+      "id": "bold-billboard",
+      "label": "Bold Billboard",
+      "description": "Oversized grotesque words on deep navy with a warm amber accent and a long hold.",
+      "askedAs": [
+        "big bold feature words",
+        "large headline features to read slowly",
+        "make the text huge",
+        "крупный жирный текст",
+        "большие слова надолго на экране"
+      ],
+      "props": {
+        "background": "#101a33",
+        "ink": "#f5f3ee",
+        "accent": "#f2a93b",
+        "fontFamily": "Space Grotesk",
+        "scale": 1.35,
+        "hold": 66
+      }
+    },
+    {
+      "id": "quiet-minimal",
+      "label": "Quiet Minimal",
+      "description": "Clean white layout with small Inter type, graphite accent and an unhurried entrance after a short pause.",
+      "askedAs": [
+        "minimal clean light features",
+        "subtle understated summary",
+        "small text white background",
+        "минималистичный светлый вариант",
+        "сдержанный и тихий стиль"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "accent": "#3a3f47",
+        "scale": 0.8,
+        "delay": 18,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "plum-night",
+      "label": "Plum Night",
+      "description": "Dark plum background with soft cream text, rounded Fraunces type and a dusty rose accent.",
+      "askedAs": [
+        "elegant dark purple features",
+        "moody premium feature recap",
+        "warm dark serif style",
+        "элегантный тёмно-фиолетовый фон",
+        "премиальный тёмный стиль"
+      ],
+      "props": {
+        "background": "#221628",
+        "ink": "#f3e9e2",
+        "accent": "#d98a9e",
+        "fontFamily": "Fraunces",
+        "scale": 1.1
+      }
+    }
+  ]
+}

@@ -1,0 +1,115 @@
+{
+  "component": "icon-monitor",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "hero-slow-draw",
+      "label": "Hero Draw",
+      "description": "A large, thin-lined monitor that sketches itself in slowly for a calm intro moment.",
+      "askedAs": [
+        "big monitor icon drawing slowly",
+        "large elegant screen outline animation",
+        "slow line drawing computer icon",
+        "большая иконка монитора медленно рисуется",
+        "крупный монитор тонкими линиями"
+      ],
+      "props": {
+        "animation": "draw",
+        "size": 160,
+        "strokeWidth": 1.25,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "snappy-accent",
+      "label": "Snappy Blue",
+      "description": "A bold blue monitor with a quick, punchy action motion suited to UI callouts.",
+      "askedAs": [
+        "fast blue computer icon",
+        "quick punchy monitor animation",
+        "bold accent screen icon",
+        "быстрая синяя иконка монитора",
+        "яркий монитор с резкой анимацией"
+      ],
+      "props": {
+        "animation": "action",
+        "color": "#1f6feb",
+        "strokeWidth": 2.5,
+        "speed": 2
+      }
+    },
+    {
+      "id": "ambient-loop",
+      "label": "Ambient Loop",
+      "description": "A soft slate monitor that keeps gently looping in the background at a relaxed pace.",
+      "askedAs": [
+        "looping monitor icon in background",
+        "subtle repeating screen animation",
+        "calm grey computer icon loop",
+        "монитор анимируется по кругу",
+        "спокойная зацикленная иконка экрана"
+      ],
+      "props": {
+        "loop": true,
+        "color": "#64748b",
+        "speed": 0.75,
+        "size": 96
+      }
+    },
+    {
+      "id": "tiny-inline",
+      "label": "Tiny Inline",
+      "description": "A compact, heavy-stroked monitor that stays legible at small sizes next to text.",
+      "askedAs": [
+        "small monitor icon for text",
+        "compact screen icon thick lines",
+        "inline computer icon",
+        "маленькая иконка монитора",
+        "компактный значок экрана"
+      ],
+      "props": {
+        "size": 28,
+        "strokeWidth": 2.75,
+        "animation": "action"
+      }
+    },
+    {
+      "id": "forest-blueprint",
+      "label": "Forest Sketch",
+      "description": "A muted green monitor drawn with fine lines in a leisurely full sequence.",
+      "askedAs": [
+        "green outline monitor icon",
+        "muted earthy computer icon",
+        "fine line sketch screen",
+        "зелёная иконка монитора",
+        "тонкий контурный монитор"
+      ],
+      "props": {
+        "color": "#2f6f4f",
+        "strokeWidth": 1.5,
+        "size": 120,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "warm-rapid-loop",
+      "label": "Warm Pulse",
+      "description": "A terracotta monitor that repeats its action briskly as an attention cue.",
+      "askedAs": [
+        "orange monitor icon repeating",
+        "attention grabbing screen icon loop",
+        "warm colored fast computer icon",
+        "оранжевый монитор зациклен",
+        "быстро повторяющаяся иконка экрана"
+      ],
+      "props": {
+        "color": "#c2410c",
+        "loop": true,
+        "animation": "action",
+        "speed": 1.5,
+        "size": 72
+      }
+    }
+  ]
+}

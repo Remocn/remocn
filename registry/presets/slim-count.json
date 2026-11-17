@@ -1,0 +1,117 @@
+{
+  "component": "slim-count",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "quick-drain",
+      "label": "Quick Drain",
+      "description": "A snappy countdown that empties fast with tight word timing on the default dark look.",
+      "askedAs": [
+        "make the countdown faster",
+        "quick snappy count to zero",
+        "fast draining number",
+        "быстрый обратный отсчёт",
+        "счётчик побыстрее"
+      ],
+      "props": {
+        "countDuration": 24,
+        "stagger": 1,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "slow-tank",
+      "label": "Slow Tank",
+      "description": "A long, unhurried drain with widely staggered caption words and a short lead-in pause.",
+      "askedAs": [
+        "slow dramatic countdown",
+        "let the number drain slowly",
+        "take your time counting down",
+        "медленный отсчёт до нуля",
+        "плавное убывание числа"
+      ],
+      "props": {
+        "countDuration": 110,
+        "stagger": 8,
+        "delay": 12,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "paper-light",
+      "label": "Paper Light",
+      "description": "Warm off-white paper with charcoal type and a tomato-red accent for a friendly print feel.",
+      "askedAs": [
+        "light version on cream",
+        "white background countdown",
+        "print style light look",
+        "светлая версия на бумаге",
+        "кремовый фон и тёмный текст"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4efe6",
+        "ink": "#1f1d1a",
+        "accent": "#d9482b"
+      }
+    },
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "An elegant Instrument Serif number on deep ink navy with a soft gold accent.",
+      "askedAs": [
+        "elegant serif countdown",
+        "magazine style number",
+        "classy navy and gold",
+        "элегантный шрифт с засечками",
+        "журнальный стиль счётчика"
+      ],
+      "props": {
+        "fontFamily": "Instrument Serif",
+        "background": "#14192b",
+        "ink": "#f2ede3",
+        "accent": "#c9a45c",
+        "scale": 1.15
+      }
+    },
+    {
+      "id": "terminal-mono",
+      "label": "Terminal Mono",
+      "description": "A compact JetBrains Mono readout in mint on near-black, like a build log ticking down.",
+      "askedAs": [
+        "code style countdown",
+        "monospace terminal number",
+        "developer console look",
+        "моноширинный шрифт как в терминале",
+        "стиль консоли"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0d1110",
+        "ink": "#d7e4dc",
+        "accent": "#5fd3a0",
+        "scale": 0.85,
+        "stagger": 2
+      }
+    },
+    {
+      "id": "big-bold",
+      "label": "Big Bold",
+      "description": "An oversized Bricolage Grotesque number with a punchy cobalt accent filling the frame.",
+      "askedAs": [
+        "make it huge and bold",
+        "giant playful number",
+        "bigger countdown text",
+        "огромное яркое число",
+        "крупный жирный счётчик"
+      ],
+      "props": {
+        "fontFamily": "Bricolage Grotesque",
+        "scale": 1.4,
+        "accent": "#3b5bff",
+        "countDuration": 45
+      }
+    }
+  ]
+}

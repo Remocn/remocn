@@ -1,0 +1,107 @@
+{
+  "component": "tittle-drop",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "A warm cream page with Instrument Serif type and a terracotta dot that lands with unhurried grace.",
+      "askedAs": [
+        "elegant serif headline with a slow dot drop",
+        "magazine style title on cream paper",
+        "classy editorial launch line",
+        "элегантный заголовок с засечками",
+        "журнальный стиль на кремовом фоне"
+      ],
+      "props": {
+        "fontFamily": "Instrument Serif",
+        "background": "#f5efe4",
+        "ink": "#2b2622",
+        "accent": "#c2562f",
+        "speed": 0.75,
+        "hopGap": 18
+      }
+    },
+    {
+      "id": "midnight-mono",
+      "label": "Midnight Mono",
+      "description": "Dark navy ground with JetBrains Mono text and a mint dot hopping in quick, tight beats.",
+      "askedAs": [
+        "dark developer style headline",
+        "monospace code look title",
+        "techy dark launch text",
+        "тёмный заголовок в стиле кода",
+        "моноширинный шрифт на тёмном фоне"
+      ],
+      "props": {
+        "theme": "dark",
+        "fontFamily": "JetBrains Mono",
+        "background": "#0f1420",
+        "ink": "#e6eaf2",
+        "accent": "#5fd3a6",
+        "hopGap": 6
+      }
+    },
+    {
+      "id": "snappy-launch",
+      "label": "Snappy Launch",
+      "description": "A punchy, oversized Space Grotesk line that drops in fast with almost no word stagger.",
+      "askedAs": [
+        "fast energetic hero title",
+        "big bold quick headline",
+        "punchy launch video text",
+        "быстрый энергичный заголовок",
+        "крупный дерзкий текст для запуска"
+      ],
+      "props": {
+        "fontFamily": "Space Grotesk",
+        "scale": 1.3,
+        "speed": 1.75,
+        "stagger": 1,
+        "hopGap": 5,
+        "accent": "#ff5a36"
+      }
+    },
+    {
+      "id": "quiet-sage",
+      "label": "Quiet Sage",
+      "description": "A small, calm Fraunces line on soft sage with a deep green dot and long, patient hops.",
+      "askedAs": [
+        "calm gentle tagline",
+        "soft muted green title",
+        "slow relaxed headline animation",
+        "спокойный мягкий слоган",
+        "медленная анимация в зелёных тонах"
+      ],
+      "props": {
+        "fontFamily": "Fraunces",
+        "background": "#e7ece3",
+        "ink": "#26332b",
+        "accent": "#3f7a55",
+        "speed": 0.5,
+        "scale": 0.85
+      }
+    },
+    {
+      "id": "ink-on-graphite",
+      "label": "Graphite Pop",
+      "description": "Charcoal ground with crisp Geist type and a golden dot, words cascading in with a wide stagger.",
+      "askedAs": [
+        "dark minimal title with gold accent",
+        "sleek charcoal headline",
+        "cascading words on dark background",
+        "минималистичный тёмный заголовок с золотом",
+        "слова появляются по очереди на тёмном фоне"
+      ],
+      "props": {
+        "theme": "dark",
+        "fontFamily": "Geist",
+        "background": "#1c1c1e",
+        "ink": "#f2f0eb",
+        "accent": "#e8b44a",
+        "stagger": 12
+      }
+    }
+  ]
+}

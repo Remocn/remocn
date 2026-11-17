@@ -1,0 +1,119 @@
+{
+  "component": "answer-first",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "snap-hook",
+      "label": "Snap Hook",
+      "description": "A fast, punchy reveal where the answer barely lands before the question rattles in.",
+      "askedAs": [
+        "make it faster and punchier",
+        "quick hook for the intro",
+        "snappy answer reveal",
+        "быстрее и резче",
+        "динамичный хук в начале"
+      ],
+      "props": {
+        "speed": 1.75,
+        "moveAt": 18,
+        "stagger": 2,
+        "fontFamily": "Space Grotesk"
+      }
+    },
+    {
+      "id": "editorial-serif",
+      "label": "Editorial Serif",
+      "description": "A calm cream page with a large serif answer and slow, deliberate pacing.",
+      "askedAs": [
+        "elegant magazine style",
+        "slow serif look on light background",
+        "classy editorial answer",
+        "элегантный журнальный стиль",
+        "медленно и с засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "background": "#f4efe6",
+        "ink": "#1f1b16",
+        "accent": "#b4532a",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "terminal-reply",
+      "label": "Terminal Reply",
+      "description": "A dark developer console look with monospace type and a soft green accent.",
+      "askedAs": [
+        "code terminal style",
+        "developer monospace look",
+        "hacker vibe answer",
+        "стиль терминала",
+        "моноширинный шрифт как в коде"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0d1117",
+        "ink": "#e6edf3",
+        "accent": "#3fb950",
+        "stagger": 7
+      }
+    },
+    {
+      "id": "long-pause",
+      "label": "Long Pause",
+      "description": "The answer hangs alone on screen for a dramatic beat before the question slowly arrives.",
+      "askedAs": [
+        "let the answer sit longer",
+        "dramatic pause before question",
+        "slow suspenseful reveal",
+        "подольше задержать ответ",
+        "драматичная пауза"
+      ],
+      "props": {
+        "moveAt": 72,
+        "stagger": 10,
+        "speed": 0.75,
+        "delay": 12
+      }
+    },
+    {
+      "id": "bold-poster",
+      "label": "Bold Poster",
+      "description": "Oversized chunky type on a warm coral background for a loud, playful poster feel.",
+      "askedAs": [
+        "big bold colorful poster",
+        "huge playful text",
+        "loud fun look",
+        "крупный яркий постер",
+        "большой игривый текст"
+      ],
+      "props": {
+        "fontFamily": "Bricolage Grotesque",
+        "scale": 1.3,
+        "background": "#ff6b4a",
+        "ink": "#1a1414",
+        "accent": "#fff4e0"
+      }
+    },
+    {
+      "id": "quiet-minimal",
+      "label": "Quiet Minimal",
+      "description": "Small, clean Inter type on a light gray canvas with a muted blue accent.",
+      "askedAs": [
+        "clean minimal light version",
+        "subtle and small",
+        "simple corporate style",
+        "минималистичный светлый вариант",
+        "спокойный аккуратный стиль"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "scale": 0.8,
+        "accent": "#3b6ea8"
+      }
+    }
+  ]
+}

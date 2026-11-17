@@ -1,0 +1,109 @@
+{
+  "component": "spotlight",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "warm-tungsten",
+      "label": "Warm Tungsten",
+      "description": "A golden incandescent beam sweeps a deep brown-black stage like an old theatre follow spot.",
+      "askedAs": [
+        "warm theatre spotlight",
+        "golden stage light reveal",
+        "vintage tungsten beam",
+        "тёплый театральный прожектор",
+        "золотой свет на сцене"
+      ],
+      "props": {
+        "beamColor": "#f4c27a",
+        "stageColor": "#1a120c",
+        "dim": 0.12
+      }
+    },
+    {
+      "id": "blackout-slow",
+      "label": "Blackout Slow",
+      "description": "Near-total darkness and a slow, deliberate search make the landing feel weighty and dramatic.",
+      "askedAs": [
+        "slow dramatic reveal",
+        "pitch black stage",
+        "suspenseful logo reveal",
+        "медленное драматичное появление",
+        "полная темнота перед логотипом"
+      ],
+      "props": {
+        "dim": 0.03,
+        "stageColor": "#050505",
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "cool-keynote",
+      "label": "Cool Keynote",
+      "description": "A crisp ice-blue beam over a navy stage gives a clean tech keynote feel.",
+      "askedAs": [
+        "tech keynote spotlight",
+        "blue cold light reveal",
+        "product launch stage",
+        "синий свет для презентации",
+        "холодный прожектор для запуска"
+      ],
+      "props": {
+        "beamColor": "#cfe3ff",
+        "stageColor": "#0b1424",
+        "dim": 0.2
+      }
+    },
+    {
+      "id": "quick-cue",
+      "label": "Quick Cue",
+      "description": "A fast, snappy beam that finds the logo in a beat, suited to short social intros.",
+      "askedAs": [
+        "fast spotlight intro",
+        "quick logo sting",
+        "short snappy reveal",
+        "быстрое появление логотипа",
+        "короткая заставка с прожектором"
+      ],
+      "props": {
+        "speed": 2,
+        "dim": 0.24
+      }
+    },
+    {
+      "id": "velvet-rose",
+      "label": "Velvet Rose",
+      "description": "A soft blush beam on a deep plum stage for an elegant, fashion-led reveal.",
+      "askedAs": [
+        "elegant pink spotlight",
+        "fashion event reveal",
+        "luxury velvet stage",
+        "элегантный розовый свет",
+        "люксовая сцена бархат"
+      ],
+      "props": {
+        "beamColor": "#f3d3d8",
+        "stageColor": "#1c0e18",
+        "speed": 0.75,
+        "dim": 0.1
+      }
+    },
+    {
+      "id": "gallery-haze",
+      "label": "Gallery Haze",
+      "description": "A brighter charcoal stage with a gentle neutral beam keeps the logo half-visible for a subtle, airy reveal.",
+      "askedAs": [
+        "subtle soft spotlight",
+        "logo slightly visible before reveal",
+        "gentle minimal light",
+        "мягкий ненавязчивый прожектор",
+        "логотип чуть виден в темноте"
+      ],
+      "props": {
+        "dim": 0.38,
+        "stageColor": "#2a2a2c",
+        "beamColor": "#f5f2ec"
+      }
+    }
+  ]
+}

@@ -7,9 +7,14 @@ import { CopyButton } from "@/components/docs/copy-button";
 import { agentPrompt } from "@/lib/agent-prompt";
 import { type ChangeSource, useTrackEvent } from "@/lib/analytics";
 import type { ControlConfig } from "@/lib/customizer-config";
+import { usePrefersReducedMotion } from "@/lib/use-prefers-reduced-motion";
+import { AgentCursor, type AgentCursorHandle } from "../agent/agent-cursor";
+import { INSTANT, PACE, tuneWithAgent } from "../agent/tune";
 import { useAgentBridge } from "../agent/use-agent-bridge";
 import { ComponentCustomizer } from "../component-customizer";
 import { OpenInAgent } from "../open-in-agent";
+import { DescribeField } from "./describe-field";
+import { useDockOwner } from "./dock-claim";
 
 const CHIP =
   "flex h-8 shrink-0 cursor-pointer items-center gap-1.5 rounded-tile bg-white/5 px-3 text-caption font-medium text-white/70 outline-none transition-colors duration-150 hover:bg-white/10 hover:text-[#fafafa] focus-visible:ring-2 focus-visible:ring-white/40 disabled:cursor-default disabled:opacity-40 disabled:hover:bg-white/5 disabled:hover:text-white/70 max-md:h-11 max-md:flex-1 max-md:justify-center max-md:rounded-[10px] max-md:bg-white/8";
@@ -60,6 +65,46 @@ function SlidersIcon() {
 const ICON_BUTTON =
   "flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-tile text-white/70 outline-none transition-colors duration-150 hover:bg-white/10 hover:text-[#fafafa] focus-visible:ring-2 focus-visible:ring-white/40 disabled:cursor-default disabled:opacity-40 disabled:hover:bg-transparent max-md:size-11";
 
+/** Room above an element when the page scrolls to it: the sticky header. */
+const SCROLL_OFFSET = 96;
+
+/** Scrolls the page so the element sits under the header; resolves when done. */
+function scrollToTop(element: HTMLElement, smooth: boolean): Promise<void> {
+  const top = Math.max(
+    0,
+    element.getBoundingClientRect().top + window.scrollY - SCROLL_OFFSET,
+  );
+  if (Math.abs(window.scrollY - top) < 2) return Promise.resolve();
+  return new Promise((resolve) => {
+    const done = () => {
+      window.removeEventListener("scrollend", done);
+      clearTimeout(fallback);
+      resolve();
+    };
+    // Safari before 26 has no scrollend.
+    const fallback = setTimeout(done, smooth ? 900 : 50);
+    window.addEventListener("scrollend", done);
+    window.scrollTo({ top, behavior: smooth ? "smooth" : "auto" });
+  });
+}
+
+function titleOf(name: string): string {
+  return name
+    .split("-")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
+/** A colour the component shows, for the dock's chip. */
+function swatchOf(values: Record<string, unknown>): string | undefined {
+  for (const key of ["background", "accent", "color", "ink"]) {
+    const value = values[key];
+    if (typeof value === "string" && /^#[0-9a-f]{3,8}$/i.test(value)) {
+      return value;
+    }
+  }
+}
+
 export type UndoControls = {
   undo: () => void;
   redo: () => void;
@@ -84,6 +129,8 @@ export function CustomizePanel({
   isDefault,
   onChange,
   onReset,
+  onApply,
+  batch,
   history,
 }: {
   name: string;
@@ -93,11 +140,73 @@ export function CustomizePanel({
   isDefault: boolean;
   onChange: (key: string, value: unknown, source?: ChangeSource) => void;
   onReset: () => void;
+  /** Sets several props as one undo step; enables the describe field. */
+  onApply?: (patch: Record<string, unknown>) => void;
+  /** Groups the agent's changes into one undo step. */
+  batch?: { begin: () => void; end: () => void };
   history?: UndoControls;
 }) {
   const trackEvent = useTrackEvent();
   const pathname = usePathname();
   useAgentBridge();
+  const root = useRef<HTMLDivElement>(null);
+  const reducedMotion = usePrefersReducedMotion();
+  const cursor = useRef<AgentCursorHandle>(null);
+  const ownsDock = useDockOwner();
+
+  // A preset or a description is applied by the ui-sdk agent, control by
+  // control, with a cursor showing where it is; reduced motion skips the show.
+  const tune = async (
+    patch: Record<string, unknown>,
+    origin?: HTMLElement | null,
+  ) => {
+    const panel = root.current;
+    if (!panel || !batch) {
+      onApply?.(patch);
+      return;
+    }
+    const pace = reducedMotion ? INSTANT : PACE;
+    const show = pace.move > 0;
+    const place = (element: HTMLElement | null, duration: number) => {
+      if (!element) return cursor.current?.moveTo(null, 0);
+      const box = element.getBoundingClientRect();
+      // Small targets (a thumb, a swatch) under the tip, wide ones near their label.
+      const x =
+        box.width < 40
+          ? box.left + box.width / 2
+          : box.left + Math.min(28, box.width * 0.3);
+      cursor.current?.moveTo({ x, y: box.top + box.height * 0.55 }, duration);
+    };
+    const { getAgent } = await import("../agent/bridge");
+    if (show && origin) {
+      place(origin, 0);
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+    }
+    // Bring the controls up, let the agent work through them in view, then
+    // go back to the video to show what changed.
+    if (show) await scrollToTop(panel, true);
+    batch.begin();
+    try {
+      const missed = await tuneWithAgent({
+        agent: getAgent(),
+        root: panel,
+        controls,
+        values,
+        patch,
+        pace,
+        onStep: show ? place : undefined,
+        onPopup: show ? () => cursor.current?.raise() : undefined,
+      });
+      for (const [key, value] of Object.entries(missed)) {
+        onChange(key, value, "programmatic");
+      }
+    } finally {
+      batch.end();
+      cursor.current?.moveTo(null, 0);
+    }
+    const player = panel.closest<HTMLElement>("[data-docs-player]");
+    if (player) await scrollToTop(player, show);
+  };
   const [shared, setShared] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(
@@ -136,8 +245,9 @@ export function CustomizePanel({
   return (
     // biome-ignore lint/a11y/noStaticElementInteractions: listens for shortcuts bubbling from the controls inside
     <div
+      ref={root}
       onKeyDown={onKeyDown}
-      className="flex flex-col gap-2 max-md:border-t max-md:border-white/6 max-md:pt-2.5"
+      className="relative flex flex-col gap-2 max-md:border-t max-md:border-white/6 max-md:pt-2.5"
     >
       <div className="flex min-h-[34px] shrink-0 flex-wrap items-center justify-between gap-x-3 gap-y-1.5 pr-1 pl-2 max-md:flex-col max-md:flex-nowrap max-md:items-stretch max-md:gap-2 max-md:p-0">
         <div className="flex items-center gap-2.5 max-md:min-h-7 max-md:px-1.5">
@@ -209,6 +319,21 @@ export function CustomizePanel({
           <CopyButton value={code} label="Copy code" variant="light" />
         </div>
       </div>
+      {onApply && ownsDock ? (
+        <DescribeField
+          name={name}
+          title={titleOf(name)}
+          swatch={swatchOf(values)}
+          controls={controls}
+          values={values}
+          onApply={tune}
+          anchor={() =>
+            root.current?.closest<HTMLElement>("[data-docs-player]") ??
+            root.current
+          }
+        />
+      ) : null}
+      <AgentCursor ref={cursor} />
       <ComponentCustomizer
         controls={controls}
         values={values}

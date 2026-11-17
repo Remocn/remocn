@@ -1,0 +1,124 @@
+{
+  "component": "escalate-cards",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "slow-burn-serif",
+      "label": "Slow Burn",
+      "description": "A measured, editorial build in Instrument Serif on warm ivory, with long opening beats and a gentle climax.",
+      "askedAs": [
+        "slow elegant buildup",
+        "luxury serif word reveal",
+        "calm editorial countdown",
+        "медленное элегантное нарастание",
+        "спокойный премиальный анонс"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Instrument Serif",
+        "firstBeat": 44,
+        "accel": 0.35,
+        "background": "#f4efe6",
+        "ink": "#1c1a17"
+      }
+    },
+    {
+      "id": "hype-rush",
+      "label": "Hype Rush",
+      "description": "Short first beat and steep acceleration that slams into a hard-pushed final word with a crimson accent.",
+      "askedAs": [
+        "fast aggressive hype",
+        "quick intense word flashes",
+        "energetic launch teaser",
+        "быстрый агрессивный хайп",
+        "резкое ускорение слов"
+      ],
+      "props": {
+        "firstBeat": 14,
+        "accel": 1.4,
+        "push": 0.12,
+        "accent": "#e5383b",
+        "dateDelay": 6
+      }
+    },
+    {
+      "id": "midnight-gold",
+      "label": "Midnight Gold",
+      "description": "Deep navy ground with champagne-gold accents and Fraunces type for an upscale launch night feel.",
+      "askedAs": [
+        "navy and gold premium",
+        "luxury dark announcement",
+        "classy gold date reveal",
+        "тёмно-синий с золотом",
+        "люксовый тёмный анонс"
+      ],
+      "props": {
+        "background": "#0e1424",
+        "ink": "#f3ede0",
+        "accent": "#c9a45c",
+        "fontFamily": "Fraunces",
+        "dateDelay": 24
+      }
+    },
+    {
+      "id": "tech-mono",
+      "label": "Tech Mono",
+      "description": "Crisp JetBrains Mono on near-black with a mint accent and a slightly smaller, precise frame.",
+      "askedAs": [
+        "developer product launch",
+        "monospace tech style",
+        "code terminal look",
+        "моноширинный технический стиль",
+        "запуск для разработчиков"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0b0d0e",
+        "ink": "#e6edf3",
+        "accent": "#3fb68b",
+        "scale": 0.85,
+        "accel": 0.8
+      }
+    },
+    {
+      "id": "clean-swiss",
+      "label": "Clean Swiss",
+      "description": "Light theme with Inter, a cobalt accent and an even, steady rhythm for a minimal corporate reveal.",
+      "askedAs": [
+        "minimal white clean",
+        "corporate simple announcement",
+        "light modern sans",
+        "минималистичный светлый",
+        "чистый корпоративный стиль"
+      ],
+      "props": {
+        "theme": "light",
+        "fontFamily": "Inter",
+        "accent": "#1f4fe0",
+        "accel": 0.2,
+        "push": 0.02
+      }
+    },
+    {
+      "id": "bold-poster",
+      "label": "Bold Poster",
+      "description": "Oversized Bricolage Grotesque words on charcoal with a tangerine accent and a big climax push.",
+      "askedAs": [
+        "huge bold words",
+        "poster style big type",
+        "loud chunky reveal",
+        "огромные жирные слова",
+        "плакатный стиль"
+      ],
+      "props": {
+        "fontFamily": "Bricolage Grotesque",
+        "scale": 1.3,
+        "push": 0.09,
+        "background": "#1a1a1a",
+        "ink": "#f5f2ec",
+        "accent": "#f27a2e"
+      }
+    }
+  ]
+}

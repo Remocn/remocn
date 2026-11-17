@@ -1,0 +1,106 @@
+{
+  "component": "zoom-blur",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "snap-punch",
+      "label": "Snap Punch",
+      "description": "A fast, tight punch-in with light blur that lands almost like a hard cut.",
+      "askedAs": [
+        "quick zoom cut",
+        "snappy punch in transition",
+        "fast depth cut with little blur",
+        "быстрый зум-переход",
+        "резкий наезд камерой"
+      ],
+      "props": {
+        "speed": 2.5,
+        "blur": 6
+      }
+    },
+    {
+      "id": "dreamy-drift",
+      "label": "Dreamy Drift",
+      "description": "A slow, heavily blurred push that dissolves scenes into each other like a soft focus pull.",
+      "askedAs": [
+        "slow soft zoom transition",
+        "dreamy blurry fade between scenes",
+        "gentle out of focus push",
+        "медленный размытый переход",
+        "мягкий мечтательный зум"
+      ],
+      "props": {
+        "speed": 0.5,
+        "blur": 34
+      }
+    },
+    {
+      "id": "lift-off",
+      "label": "Lift Off",
+      "description": "A medium-paced zoom where the incoming scene rises up from below as it sharpens.",
+      "askedAs": [
+        "zoom with upward motion",
+        "transition that rises into frame",
+        "push in and slide up",
+        "зум с подъёмом снизу",
+        "переход с движением вверх"
+      ],
+      "props": {
+        "rise": 100,
+        "blur": 20,
+        "speed": 1.25
+      }
+    },
+    {
+      "id": "crisp-depth",
+      "label": "Crisp Depth",
+      "description": "A pure scale push with no blur at all for a sharp, graphic sense of depth.",
+      "askedAs": [
+        "zoom transition without blur",
+        "clean sharp scale cut",
+        "no blur punch in",
+        "зум без размытия",
+        "чёткий переход с приближением"
+      ],
+      "props": {
+        "blur": 0,
+        "speed": 1.5
+      }
+    },
+    {
+      "id": "hyper-rush",
+      "label": "Hyper Rush",
+      "description": "A very fast, maximum-blur warp that rockets through the frame with a strong upward kick.",
+      "askedAs": [
+        "warp speed zoom",
+        "energetic hyperspace transition",
+        "aggressive blurry zoom cut",
+        "переход как гиперпрыжок",
+        "очень быстрый зум с размытием"
+      ],
+      "props": {
+        "speed": 3.5,
+        "blur": 40,
+        "rise": 60
+      }
+    },
+    {
+      "id": "slow-reveal",
+      "label": "Slow Reveal",
+      "description": "An unhurried, cinematic push with a gentle rise and moderate blur for calm storytelling.",
+      "askedAs": [
+        "slow cinematic zoom",
+        "calm elegant scene transition",
+        "gentle reveal with depth",
+        "медленный кинематографичный переход",
+        "спокойное плавное появление"
+      ],
+      "props": {
+        "speed": 0.75,
+        "rise": 40,
+        "blur": 12
+      }
+    }
+  ]
+}

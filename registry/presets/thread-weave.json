@@ -1,0 +1,98 @@
+{
+  "component": "thread-weave",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "linen-day",
+      "label": "Linen Day",
+      "description": "A light, warm linen ground with deep indigo threads and a classic serif caption.",
+      "askedAs": [
+        "light paper version with serif font",
+        "cream background woven number",
+        "soft daylight craft look",
+        "светлая бумажная версия",
+        "кремовый фон с синими нитками"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f3ecdd",
+        "ink": "#2a2622",
+        "accent": "#2f3e8f",
+        "fontFamily": "Fraunces"
+      }
+    },
+    {
+      "id": "slow-loom",
+      "label": "Slow Loom",
+      "description": "A long, unhurried weave that builds the figure patiently row by row.",
+      "askedAs": [
+        "slower weaving animation",
+        "make it build up slowly",
+        "calm meditative reveal",
+        "медленное плетение",
+        "спокойная долгая анимация"
+      ],
+      "props": {
+        "weave": 168,
+        "speed": 0.75,
+        "delay": 12
+      }
+    },
+    {
+      "id": "quick-shuttle",
+      "label": "Quick Shuttle",
+      "description": "A snappy, compact weave with a clean sans and no counter for fast cuts.",
+      "askedAs": [
+        "fast weave for a quick cut",
+        "snappy short version",
+        "no counter, just the number quickly",
+        "быстрое плетение",
+        "короткая резкая версия"
+      ],
+      "props": {
+        "weave": 56,
+        "speed": 1.5,
+        "stats": false,
+        "fontFamily": "Inter"
+      }
+    },
+    {
+      "id": "madder-mark",
+      "label": "Madder Mark",
+      "description": "A brand mark woven in madder red on a dark charcoal loom, shown large.",
+      "askedAs": [
+        "weave the logo instead of a number",
+        "red brand mark reveal",
+        "big logo on dark background",
+        "логотип вытканный нитками",
+        "красный знак бренда"
+      ],
+      "props": {
+        "motif": "mark",
+        "accent": "#b8472f",
+        "background": "#1e1b19",
+        "ink": "#efe6d8",
+        "scale": 1.25
+      }
+    },
+    {
+      "id": "pattern-draft",
+      "label": "Pattern Draft",
+      "description": "A technical, clean-cut look with monospace type, sage threads and no grain.",
+      "askedAs": [
+        "technical blueprint style",
+        "monospace clean version without grain",
+        "green muted weave",
+        "техничный стиль с моноширинным шрифтом",
+        "без зерна, зелёные нитки"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "accent": "#4f7a63",
+        "grain": false,
+        "scale": 0.85
+      }
+    }
+  ]
+}

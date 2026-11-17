@@ -1,0 +1,122 @@
+{
+  "component": "string-art",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "blueprint",
+      "label": "Blueprint",
+      "description": "Pale cyan threads on deep engineering blue with a soft white accent sweep, like a technical drawing.",
+      "askedAs": [
+        "make it look like a blueprint",
+        "technical drawing style on blue",
+        "engineering schematic look",
+        "как чертёж на синем фоне",
+        "стиль технического чертежа"
+      ],
+      "props": {
+        "background": "#0b2545",
+        "color": "#bfe3f2",
+        "accent": "#ffffff",
+        "threadOpacity": 0.5,
+        "pins": 240
+      }
+    },
+    {
+      "id": "paper-ink",
+      "label": "Paper Ink",
+      "description": "Fine dark ink threads on warm off-white paper with a muted rust accent and no label.",
+      "askedAs": [
+        "light version on paper",
+        "black lines on white background",
+        "print-like clean look",
+        "светлый вариант как на бумаге",
+        "тёмные нити на белом фоне"
+      ],
+      "props": {
+        "background": "#f4f1ea",
+        "color": "#1c1c1c",
+        "accent": "#b5532e",
+        "threadOpacity": 0.3,
+        "showLabel": false
+      }
+    },
+    {
+      "id": "slow-ambient",
+      "label": "Slow Ambient",
+      "description": "A long, unhurried morph across many multipliers with faint threads, made for a calm background loop.",
+      "askedAs": [
+        "slow background version",
+        "calm ambient loop",
+        "subtle moving backdrop",
+        "медленный фон",
+        "спокойная фоновая анимация"
+      ],
+      "props": {
+        "to": 8,
+        "morphFrames": 600,
+        "speed": 0.5,
+        "threadOpacity": 0.22,
+        "sweep": 0.04,
+        "showLabel": false
+      }
+    },
+    {
+      "id": "rapid-morph",
+      "label": "Rapid Morph",
+      "description": "A quick, punchy transformation through high multipliers with a wide accent sweep for energetic intros.",
+      "askedAs": [
+        "fast energetic version",
+        "quick transform for intro",
+        "make it snappy",
+        "быстрая трансформация",
+        "энергичная заставка"
+      ],
+      "props": {
+        "from": 2,
+        "to": 10,
+        "morphFrames": 90,
+        "speed": 2,
+        "sweep": 0.18
+      }
+    },
+    {
+      "id": "coarse-gold",
+      "label": "Coarse Gold",
+      "description": "Fewer, bolder threads in warm gold on near-black with an amber sweep for a graphic, premium figure.",
+      "askedAs": [
+        "bold gold lines",
+        "fewer thicker looking threads",
+        "luxury dark and gold",
+        "золотые нити на чёрном",
+        "крупный графичный вариант"
+      ],
+      "props": {
+        "pins": 80,
+        "threadOpacity": 0.8,
+        "background": "#0e0d0b",
+        "color": "#d9b46a",
+        "accent": "#f2e3c0"
+      }
+    },
+    {
+      "id": "terminal-green",
+      "label": "Terminal",
+      "description": "Dense phosphor-green linework on black with a teal sweep, like an oscilloscope readout.",
+      "askedAs": [
+        "hacker terminal style",
+        "green on black oscilloscope",
+        "retro computer screen look",
+        "как экран терминала",
+        "зелёные линии на чёрном"
+      ],
+      "props": {
+        "background": "#050a07",
+        "color": "#7fd69a",
+        "accent": "#3fb8af",
+        "pins": 360,
+        "threadOpacity": 0.3
+      }
+    }
+  ]
+}

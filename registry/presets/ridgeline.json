@@ -1,0 +1,103 @@
+{
+  "component": "ridgeline",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "editorial-paper",
+      "label": "Editorial Paper",
+      "description": "A light, print-like chart on warm off-white with serif type and a deep ink-blue accent.",
+      "askedAs": [
+        "make it look like a magazine chart",
+        "light version with serif font",
+        "newspaper style ridgeline",
+        "светлая версия как в журнале",
+        "график в стиле газеты с засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f4efe6",
+        "ink": "#1c1a17",
+        "accent": "#1e3a8a",
+        "fontFamily": "Fraunces",
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "terminal-quick",
+      "label": "Terminal Quick",
+      "description": "A fast, tight cascade in monospace on near-black with a cool green accent and no grain.",
+      "askedAs": [
+        "fast techy version",
+        "monospace dark chart, snappy",
+        "developer terminal look",
+        "быстрая версия в стиле терминала",
+        "моноширинный шрифт и быстрая анимация"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "background": "#0b0f0e",
+        "ink": "#d7e4df",
+        "accent": "#3fb68b",
+        "speed": 2,
+        "stagger": 3
+      }
+    },
+    {
+      "id": "slow-reveal",
+      "label": "Slow Reveal",
+      "description": "A moody, unhurried build where each year's ridge arrives with a long, deliberate stagger.",
+      "askedAs": [
+        "slow dramatic reveal",
+        "make the ridges appear one by one slowly",
+        "cinematic moody chart",
+        "медленное драматичное появление",
+        "пусть слои появляются по очереди не спеша"
+      ],
+      "props": {
+        "speed": 0.5,
+        "stagger": 16,
+        "delay": 20,
+        "accent": "#7c5cff"
+      }
+    },
+    {
+      "id": "clean-light",
+      "label": "Clean Light",
+      "description": "A crisp, grain-free light layout with Inter and a confident blue accent for product decks.",
+      "askedAs": [
+        "clean white corporate version",
+        "light theme without noise",
+        "simple chart for a pitch deck",
+        "чистая светлая версия без шума",
+        "минималистичный график для презентации"
+      ],
+      "props": {
+        "theme": "light",
+        "grain": false,
+        "fontFamily": "Inter",
+        "accent": "#2563eb"
+      }
+    },
+    {
+      "id": "ember-closeup",
+      "label": "Ember Closeup",
+      "description": "A larger, punchier frame on deep charcoal with a warm amber accent and grotesk type.",
+      "askedAs": [
+        "bigger chart with warm orange highlight",
+        "zoomed in dark version",
+        "bold warm accent",
+        "крупнее и с тёплым оранжевым акцентом",
+        "увеличенный тёмный вариант"
+      ],
+      "props": {
+        "scale": 1.2,
+        "background": "#17130f",
+        "ink": "#f2e8dc",
+        "accent": "#e8833a",
+        "fontFamily": "Space Grotesk",
+        "speed": 1.25
+      }
+    }
+  ]
+}

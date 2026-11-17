@@ -1,0 +1,99 @@
+{
+  "component": "word-stream",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "keynote-punch",
+      "label": "Keynote Punch",
+      "description": "Large bold words snap in quickly while the line drifts briskly left, like a fast-paced product launch.",
+      "askedAs": [
+        "fast bold keynote intro",
+        "punchy big text that moves quickly",
+        "apple launch style words",
+        "быстрый жирный текст как на презентации",
+        "энергичное интро крупными словами"
+      ],
+      "props": {
+        "fontSize": 110,
+        "fontWeight": "700",
+        "wordGap": 4,
+        "hold": 12,
+        "drift": 4
+      }
+    },
+    {
+      "id": "calm-narration",
+      "label": "Calm Narration",
+      "description": "Unhurried, light-weight words arrive slowly with a gentle drift and long pauses between phrases.",
+      "askedAs": [
+        "slow calm voiceover text",
+        "gentle meditative word reveal",
+        "relaxed narration pace",
+        "медленный спокойный текст под голос",
+        "плавное появление слов"
+      ],
+      "props": {
+        "wordGap": 14,
+        "hold": 45,
+        "drift": 0.5,
+        "color": "#4a4a4a"
+      }
+    },
+    {
+      "id": "still-editorial",
+      "label": "Still Editorial",
+      "description": "A static, medium-weight line in deep ink navy that builds without drifting, like a magazine headline.",
+      "askedAs": [
+        "no movement just words appearing",
+        "static headline word by word",
+        "editorial serious text build",
+        "текст без сдвига, просто появляются слова",
+        "строгий заголовок по словам"
+      ],
+      "props": {
+        "drift": 0,
+        "fontWeight": "500",
+        "color": "#1b2a41",
+        "fontSize": 84
+      }
+    },
+    {
+      "id": "quiet-caption",
+      "label": "Quiet Caption",
+      "description": "Small, understated caption-sized words in warm grey that follow speech at a natural pace.",
+      "askedAs": [
+        "small subtitle style words",
+        "subtle caption text",
+        "understated small narration",
+        "маленькие субтитры по словам",
+        "скромные подписи под озвучку"
+      ],
+      "props": {
+        "fontSize": 40,
+        "color": "#5c5650",
+        "drift": 1,
+        "hold": 24
+      }
+    },
+    {
+      "id": "rapid-fire",
+      "label": "Rapid Fire",
+      "description": "Semibold words in deep oxblood rush through at double speed with hard, quick cuts between phrases.",
+      "askedAs": [
+        "really fast word flashes",
+        "hyper quick text cuts",
+        "rapid montage words",
+        "очень быстрая смена слов",
+        "динамичный нарезной текст"
+      ],
+      "props": {
+        "speed": 2,
+        "fontWeight": "600",
+        "color": "#6b1e2b",
+        "hold": 9,
+        "drift": 3
+      }
+    }
+  ]
+}

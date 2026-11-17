@@ -1,0 +1,86 @@
+{
+  "component": "context-menu",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "snappy-open",
+      "label": "Snappy Open",
+      "description": "The menu pops open quickly with the first row highlighted, like a fast power-user right-click.",
+      "askedAs": [
+        "fast right click menu",
+        "quick context menu pop",
+        "snappy menu with top item selected",
+        "быстрое контекстное меню",
+        "меню открывается резко"
+      ],
+      "props": {
+        "speed": 2.5,
+        "highlightedIndex": 0
+      }
+    },
+    {
+      "id": "slow-reveal",
+      "label": "Slow Reveal",
+      "description": "A gentle, unhurried scale-and-lift from the click point with no row highlighted.",
+      "askedAs": [
+        "slow context menu animation",
+        "gentle menu reveal",
+        "calm right click menu",
+        "медленное появление меню",
+        "плавное контекстное меню"
+      ],
+      "props": {
+        "speed": 0.5,
+        "highlightedIndex": -1
+      }
+    },
+    {
+      "id": "dismissed",
+      "label": "Dismissed",
+      "description": "The menu sits in its closed state, ready to show a dismissal or an empty click point.",
+      "askedAs": [
+        "closed context menu",
+        "hide the right click menu",
+        "menu dismissed state",
+        "закрытое контекстное меню",
+        "меню скрыто"
+      ],
+      "props": {
+        "state": "closed"
+      }
+    },
+    {
+      "id": "deep-pick",
+      "label": "Deep Pick",
+      "description": "Opens at a measured pace with a lower row highlighted, suggesting the user is reaching for Inspect.",
+      "askedAs": [
+        "highlight bottom menu item",
+        "context menu pointing at inspect",
+        "last option selected",
+        "выделен нижний пункт меню",
+        "меню с выбором внизу"
+      ],
+      "props": {
+        "highlightedIndex": 4,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "quick-close",
+      "label": "Quick Close",
+      "description": "A brisk closing motion that snaps the panel away toward its origin.",
+      "askedAs": [
+        "fast close context menu",
+        "menu disappears quickly",
+        "snap menu shut",
+        "быстро закрыть меню",
+        "меню резко исчезает"
+      ],
+      "props": {
+        "state": "closed",
+        "speed": 2
+      }
+    }
+  ]
+}

@@ -1,0 +1,124 @@
+{
+  "component": "ring-burst",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "snap-hit",
+      "label": "Snap Hit",
+      "description": "A fast, tight burst with near-simultaneous rings for a punchy cut on the beat.",
+      "askedAs": [
+        "fast punchy ring burst",
+        "quick snappy reveal",
+        "burst that hits on the beat",
+        "быстрая резкая вспышка",
+        "короткий удар кольца"
+      ],
+      "props": {
+        "expand": 14,
+        "stagger": 1,
+        "delay": 6,
+        "speed": 1.5,
+        "fontFamily": "Space Grotesk",
+        "accent": "#ff5a36"
+      }
+    },
+    {
+      "id": "slow-bloom",
+      "label": "Slow Bloom",
+      "description": "Wide, slowly unfolding rings in warm gold on deep black with an elegant serif.",
+      "askedAs": [
+        "slow elegant ring reveal",
+        "luxury gold burst",
+        "cinematic slow bloom",
+        "медленное элегантное раскрытие",
+        "золотое кольцо премиум"
+      ],
+      "props": {
+        "expand": 64,
+        "stagger": 10,
+        "speed": 0.75,
+        "accent": "#c9a45c",
+        "background": "#0e0c0a",
+        "ink": "#f3ebdd"
+      }
+    },
+    {
+      "id": "paper-light",
+      "label": "Paper Light",
+      "description": "A clean light theme with an ink-blue ring and crisp sans type, grain off.",
+      "askedAs": [
+        "light clean ring burst",
+        "white background minimal reveal",
+        "bright corporate burst",
+        "светлая чистая версия",
+        "минималистичный белый фон"
+      ],
+      "props": {
+        "theme": "light",
+        "accent": "#1f3a8a",
+        "fontFamily": "Inter",
+        "grain": false
+      }
+    },
+    {
+      "id": "editorial-sage",
+      "label": "Editorial Sage",
+      "description": "Muted sage ring on warm cream with an editorial serif for a calm, magazine feel.",
+      "askedAs": [
+        "soft editorial reveal",
+        "muted green ring on cream",
+        "calm magazine style burst",
+        "спокойный журнальный стиль",
+        "мягкий зелёный на кремовом"
+      ],
+      "props": {
+        "theme": "light",
+        "background": "#f2ede3",
+        "ink": "#1e2420",
+        "accent": "#6b8f71",
+        "fontFamily": "Instrument Serif",
+        "stagger": 7
+      }
+    },
+    {
+      "id": "terminal-mono",
+      "label": "Terminal Mono",
+      "description": "A compact mint ring on graphite with monospace type for a technical, product-launch tone.",
+      "askedAs": [
+        "techy developer launch reveal",
+        "monospace dark burst",
+        "small code style ring",
+        "технический стиль для разработчиков",
+        "моноширинный шрифт тёмный"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "accent": "#4fd1a5",
+        "background": "#111417",
+        "ink": "#e6edf3",
+        "scale": 0.8,
+        "grain": false
+      }
+    },
+    {
+      "id": "big-finale",
+      "label": "Big Finale",
+      "description": "An oversized violet burst with bold grotesque type for a large closing brand moment.",
+      "askedAs": [
+        "big dramatic ending burst",
+        "huge logo reveal finale",
+        "bold large ring closing",
+        "большой эффектный финал",
+        "крупная вспышка для логотипа"
+      ],
+      "props": {
+        "scale": 1.4,
+        "expand": 44,
+        "accent": "#7c5cff",
+        "fontFamily": "Bricolage Grotesque",
+        "delay": 32
+      }
+    }
+  ]
+}

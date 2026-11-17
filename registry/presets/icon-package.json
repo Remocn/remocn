@@ -1,0 +1,117 @@
+{
+  "component": "icon-package",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "hero-slow-draw",
+      "label": "Hero Draw",
+      "description": "A large, fine-lined package that slowly sketches itself in once, like a title-card reveal.",
+      "askedAs": [
+        "big slow drawing package icon",
+        "large thin line box reveal",
+        "elegant slow box animation",
+        "большая иконка коробки медленно рисуется",
+        "тонкая линия коробка крупно"
+      ],
+      "props": {
+        "animation": "draw",
+        "size": 160,
+        "strokeWidth": 1.25,
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "bold-bounce-loop",
+      "label": "Bold Loop",
+      "description": "A chunky, heavy-stroked package that repeats its action motion briskly on a loop.",
+      "askedAs": [
+        "thick package icon looping",
+        "bold box bouncing repeatedly",
+        "heavy stroke delivery icon loop",
+        "жирная иконка посылки по кругу",
+        "толстая коробка анимация повторяется"
+      ],
+      "props": {
+        "animation": "action",
+        "loop": true,
+        "strokeWidth": 3,
+        "speed": 1.5,
+        "size": 96
+      }
+    },
+    {
+      "id": "shipping-blue",
+      "label": "Shipping Blue",
+      "description": "A medium package in calm logistics blue with a gentle, continuous draw-and-move cycle.",
+      "askedAs": [
+        "blue delivery box icon",
+        "calm shipping package animation",
+        "order shipped icon blue",
+        "синяя иконка доставки",
+        "коробка заказ отправлен синяя"
+      ],
+      "props": {
+        "color": "#1f6feb",
+        "size": 72,
+        "loop": true,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "kraft-parcel",
+      "label": "Kraft Parcel",
+      "description": "A warm cardboard-brown package drawn with a slightly heavier line for a handmade feel.",
+      "askedAs": [
+        "brown cardboard box icon",
+        "kraft paper parcel animation",
+        "warm brown package",
+        "коричневая картонная коробка",
+        "посылка крафт цвет"
+      ],
+      "props": {
+        "color": "#9a6b3f",
+        "strokeWidth": 2.5,
+        "size": 80,
+        "animation": "both"
+      }
+    },
+    {
+      "id": "quick-ui-tick",
+      "label": "Quick UI",
+      "description": "A small, slate-gray package that snaps through its action fast, sized for inline interface use.",
+      "askedAs": [
+        "small fast package icon for ui",
+        "tiny quick box animation",
+        "snappy inline package icon",
+        "маленькая быстрая иконка коробки",
+        "быстрая анимация посылки для интерфейса"
+      ],
+      "props": {
+        "animation": "action",
+        "size": 32,
+        "speed": 2,
+        "color": "#475569",
+        "strokeWidth": 1.75
+      }
+    },
+    {
+      "id": "delivered-green",
+      "label": "Delivered Green",
+      "description": "A sage-green package that draws in steadily and settles, signalling a completed delivery.",
+      "askedAs": [
+        "green package delivered icon",
+        "success box animation",
+        "order complete parcel green",
+        "зелёная иконка посылка доставлена",
+        "коробка успешная доставка"
+      ],
+      "props": {
+        "color": "#2f855a",
+        "animation": "draw",
+        "size": 64,
+        "speed": 1.25
+      }
+    }
+  ]
+}

@@ -1,0 +1,115 @@
+{
+  "component": "caption-knockout",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "ink-slab",
+      "label": "Ink Slab",
+      "description": "A near-black plate with heavy, oversized letters punched through it for a moody, cinematic frame.",
+      "askedAs": [
+        "black plate with cutout words",
+        "dark cinematic knockout captions",
+        "big heavy letters through black block",
+        "чёрная плашка с вырезанными словами",
+        "тёмные кинематографичные субтитры"
+      ],
+      "props": {
+        "plateColor": "#111214",
+        "fontSize": 96,
+        "fontWeight": 900,
+        "upcomingOpacity": 0.1
+      }
+    },
+    {
+      "id": "brand-cobalt",
+      "label": "Brand Cobalt",
+      "description": "A confident cobalt-blue plate with bold cutouts for launch and brand video.",
+      "askedAs": [
+        "blue brand block caption",
+        "launch video colour plate captions",
+        "bold blue knockout text",
+        "синяя плашка для запуска продукта",
+        "яркие брендовые субтитры с вырезом"
+      ],
+      "props": {
+        "plateColor": "#1f4fd1",
+        "fontWeight": 800,
+        "fontSize": 80
+      }
+    },
+    {
+      "id": "rapid-fire",
+      "label": "Rapid Fire",
+      "description": "Short, punchy pages that flip fast with almost no hold, so each phrase hits and clears quickly.",
+      "askedAs": [
+        "fast snappy captions",
+        "quick word pages for energetic edits",
+        "short punchy subtitle pages",
+        "быстрые резкие субтитры",
+        "короткие фразы для динамичного монтажа"
+      ],
+      "props": {
+        "combineTokensWithinMilliseconds": 400,
+        "holdMs": 150,
+        "fontSize": 104,
+        "fontWeight": 900
+      }
+    },
+    {
+      "id": "quiet-editorial",
+      "label": "Quiet Editorial",
+      "description": "A warm off-white plate with smaller, lighter type and long, unhurried pages for a refined documentary feel.",
+      "askedAs": [
+        "subtle elegant captions",
+        "calm documentary subtitles",
+        "lighter smaller knockout text",
+        "спокойные элегантные субтитры",
+        "мягкие титры для документалки"
+      ],
+      "props": {
+        "plateColor": "#f3eee6",
+        "fontSize": 44,
+        "fontWeight": 500,
+        "combineTokensWithinMilliseconds": 2400,
+        "holdMs": 1200
+      }
+    },
+    {
+      "id": "full-reveal",
+      "label": "Full Reveal",
+      "description": "A deep forest-green plate where upcoming words are already nearly cut through, so the whole line reads at once and spoken words simply sharpen.",
+      "askedAs": [
+        "show whole sentence in advance",
+        "captions with upcoming words visible",
+        "green plate readable caption",
+        "показывать всю фразу сразу",
+        "зелёная плашка с видимыми словами"
+      ],
+      "props": {
+        "plateColor": "#1e3a2f",
+        "upcomingOpacity": 0.6,
+        "combineTokensWithinMilliseconds": 2000,
+        "fontWeight": 700
+      }
+    },
+    {
+      "id": "terracotta-block",
+      "label": "Terracotta Block",
+      "description": "An earthy terracotta plate with mid-size heavy cutouts and fully hidden upcoming words for a crisp word-by-word punch.",
+      "askedAs": [
+        "warm orange plate captions",
+        "earthy colour block subtitles",
+        "word by word punch out reveal",
+        "тёплая терракотовая плашка",
+        "слова появляются по одному"
+      ],
+      "props": {
+        "plateColor": "#c4623f",
+        "upcomingOpacity": 0,
+        "fontSize": 72,
+        "holdMs": 800
+      }
+    }
+  ]
+}

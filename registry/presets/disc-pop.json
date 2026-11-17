@@ -1,0 +1,124 @@
+{
+  "component": "disc-pop",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "snappy-launch",
+      "label": "Snappy Launch",
+      "description": "Short scenes and a quick, punchy pop on cobalt grounds for fast-paced launch reels.",
+      "askedAs": [
+        "fast punchy scene swap",
+        "quick pop transition for launch video",
+        "snappy disc cut",
+        "быстрый переход с диском",
+        "резкая смена сцен для запуска"
+      ],
+      "props": {
+        "sceneA": 48,
+        "sceneB": 48,
+        "transition": 14,
+        "speed": 1.5,
+        "groundA": "cobalt-rise",
+        "groundB": "cyan-drift"
+      }
+    },
+    {
+      "id": "paper-studio",
+      "label": "Paper Studio",
+      "description": "A light, calm editorial look with paper grounds and a soft serif headline.",
+      "askedAs": [
+        "light clean version",
+        "bright paper style transition",
+        "editorial serif look",
+        "светлый спокойный вариант",
+        "бумажный стиль с засечками"
+      ],
+      "props": {
+        "theme": "light",
+        "groundA": "paper-crease",
+        "groundB": "polar",
+        "fontFamily": "Instrument Serif",
+        "ink": "#1c1c1f",
+        "transition": 40
+      }
+    },
+    {
+      "id": "terminal-render",
+      "label": "Terminal Render",
+      "description": "Monospace type on deep charcoal, framing the prompt-to-video moment like a dev tool.",
+      "askedAs": [
+        "code terminal look",
+        "developer style AI prompt",
+        "monospace dark transition",
+        "как терминал разработчика",
+        "моноширинный тёмный стиль"
+      ],
+      "props": {
+        "fontFamily": "JetBrains Mono",
+        "groundA": "charcoal-satin",
+        "groundB": "low-orbit",
+        "background": "#0e1114",
+        "ink": "#d7e3dc"
+      }
+    },
+    {
+      "id": "slow-reveal",
+      "label": "Slow Reveal",
+      "description": "Long, unhurried scenes with a drawn-out pop and warm ember-to-velvet grounds for a cinematic feel.",
+      "askedAs": [
+        "slow cinematic reveal",
+        "calm dramatic transition",
+        "long warm pop",
+        "медленное кинематографичное раскрытие",
+        "плавный тёплый переход"
+      ],
+      "props": {
+        "sceneA": 140,
+        "sceneB": 150,
+        "transition": 54,
+        "speed": 0.75,
+        "groundA": "ember",
+        "groundB": "velvet-hour"
+      }
+    },
+    {
+      "id": "big-bold",
+      "label": "Big Bold",
+      "description": "Oversized disc and chunky grotesque type on vivid spectral grounds for a playful, graphic beat.",
+      "askedAs": [
+        "bigger playful disc",
+        "bold colorful pop",
+        "large graphic transition",
+        "крупный яркий диск",
+        "смелый игривый переход"
+      ],
+      "props": {
+        "scale": 1.3,
+        "fontFamily": "Bricolage Grotesque",
+        "groundA": "spectral-sea",
+        "groundB": "petal-arc",
+        "speed": 1.25
+      }
+    },
+    {
+      "id": "compact-inset",
+      "label": "Compact Inset",
+      "description": "A smaller, restrained disc with a short lead-in on cool lunar grounds, suited to tight layouts.",
+      "askedAs": [
+        "smaller subtle version",
+        "minimal compact transition",
+        "understated cool grey pop",
+        "компактный минималистичный вариант",
+        "маленький сдержанный диск"
+      ],
+      "props": {
+        "scale": 0.75,
+        "delay": 12,
+        "groundA": "lunar",
+        "groundB": "mercury",
+        "fontFamily": "Geist"
+      }
+    }
+  ]
+}

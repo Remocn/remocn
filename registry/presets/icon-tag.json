@@ -1,0 +1,100 @@
+{
+  "component": "icon-tag",
+  "model": "claude-opus-5-5",
+  "generatedAt": "2026-11-17",
+  "presets": [
+    {
+      "id": "hero-slow-draw",
+      "label": "Hero Draw",
+      "description": "A large, fine-lined tag that slowly sketches itself in deep navy.",
+      "askedAs": [
+        "big tag icon drawing slowly",
+        "large thin line tag animation",
+        "elegant slow outline tag",
+        "большая иконка ярлыка медленно рисуется",
+        "тонкий контур тега крупно"
+      ],
+      "props": {
+        "animation": "draw",
+        "size": 160,
+        "strokeWidth": 1.25,
+        "speed": 0.5,
+        "color": "#1e3a5f"
+      }
+    },
+    {
+      "id": "price-pop",
+      "label": "Price Pop",
+      "description": "A bold, chunky tag that snaps into its action quickly in warm coral.",
+      "askedAs": [
+        "punchy sale tag icon",
+        "fast bold price tag animation",
+        "thick tag that swings quickly",
+        "яркий ценник быстрая анимация",
+        "жирная иконка скидки"
+      ],
+      "props": {
+        "animation": "action",
+        "strokeWidth": 3,
+        "speed": 2,
+        "size": 96,
+        "color": "#e4572e"
+      }
+    },
+    {
+      "id": "idle-loop",
+      "label": "Idle Loop",
+      "description": "A small muted-teal tag that gently repeats its motion as an ambient indicator.",
+      "askedAs": [
+        "looping tag icon",
+        "small tag that keeps animating",
+        "subtle repeating label icon",
+        "зацикленная иконка тега",
+        "маленький ярлык анимируется по кругу"
+      ],
+      "props": {
+        "loop": true,
+        "speed": 0.75,
+        "size": 32,
+        "color": "#2a7f7a"
+      }
+    },
+    {
+      "id": "forest-label",
+      "label": "Forest Label",
+      "description": "A medium tag in deep forest green that draws and acts at a relaxed pace with a soft stroke.",
+      "askedAs": [
+        "green eco tag icon",
+        "calm natural label animation",
+        "organic tag outline",
+        "зелёная иконка ярлыка",
+        "спокойный эко тег"
+      ],
+      "props": {
+        "color": "#2f5d3a",
+        "size": 72,
+        "strokeWidth": 1.75,
+        "speed": 0.75
+      }
+    },
+    {
+      "id": "quick-sketch",
+      "label": "Quick Sketch",
+      "description": "A crisp slate tag that rapidly draws itself on a continuous loop.",
+      "askedAs": [
+        "fast drawing tag loop",
+        "tag icon sketching repeatedly",
+        "quick outline tag animation",
+        "быстро рисующийся тег",
+        "иконка тега рисуется в цикле"
+      ],
+      "props": {
+        "animation": "draw",
+        "loop": true,
+        "speed": 3,
+        "color": "#475569",
+        "size": 64
+      }
+    }
+  ]
+}
