@@ -272,7 +272,7 @@ export function ComponentCustomizer({
             key={group.id}
             aria-label={group.title}
             className={cn(
-              "flex flex-col pb-2 max-md:gap-1.5",
+              "flex flex-col max-md:gap-1.5",
               index > 0 && "border-t border-white/6",
             )}
           >
@@ -292,7 +292,7 @@ export function ComponentCustomizer({
               <CollapsiblePanel
                 keepMounted
                 className={cn(
-                  "flex flex-wrap gap-1.5",
+                  "flex flex-wrap gap-1.5 pb-2",
                   autoCollapsed && "max-md:hidden",
                 )}
               >
