@@ -19,10 +19,8 @@ Load the `remocn` skill first for the tier conventions and Canvas & timing.
 2. **Read its page.** Fetch the `.md` docs URL the index gives for it. Note the props, the example,
    `Length` and any `Avoid for` note. If the avoid note matches what the user wants, say so and
    suggest the replacement it names.
-3. **Prepare the project once.** If `components.json` has no `@remocn` registry, run
-   `node "${CLAUDE_SKILL_DIR}/../video/scripts/setup.mjs" <project-root>` first (outside Claude
-   Code: `../video/scripts/setup.mjs` from this skill's folder). Its JSON result says which files it
-   wrote; relay any `warning`.
+3. **Prepare the project once.** If `components.json` has no `@remocn` registry, follow the `setup`
+   skill first. It says which files it touched and what, if anything, the user has to add by hand.
 4. **Install.** `npx shadcn add @remocn/<name>`. Dependencies install transitively; list which
    files landed.
 5. **Use it.** Show a usage snippet built from the docs example, sized to the canvas, inside a

@@ -39,4 +39,4 @@ storyboard the `video` skill shows next is where they confirm it, so don't stop 
 
 Run the `video` skill with the brief "changelog video for <product> <version>", the archetype
 `changelog`, and the approved lines as content. It plans the storyboard, installs, composes, checks the
-render and offers the Remocn Studio hand-off.
+render and hands off.

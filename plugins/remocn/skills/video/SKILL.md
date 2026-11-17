@@ -3,7 +3,7 @@ name: video
 description: >
   Make a complete Remotion video from a short brief with remocn components: pick the archetype, plan
   a storyboard with frame budgets, install the components, compose the scenes, check the render and
-  offer to open the project in Remocn Studio. Use when the user asks for a whole video (product demo,
+  point to Remocn Studio for tuning and export. Use when the user asks for a whole video (product demo,
   launch, feature announcement, changelog, OSS showcase, CLI demo, testimonials, year in review,
   pricing, logo bumper), not a single component.
 ---
@@ -51,29 +51,17 @@ Find out which case you are in:
   of remocn; this is the only time you create it.
 - **An existing Remotion project**: work in it as it is. Don't restructure the user's code.
 
-Then, in both cases:
-
-1. Make `shadcn add` work in the project:
-
-   ```bash
-   node "${CLAUDE_SKILL_DIR}/scripts/setup.mjs" <project-root>
-   ```
-
-   (Outside Claude Code: `scripts/setup.mjs` next to this file.) `shadcn init` refuses Remotion
-   projects, and Remotion's bundler ignores tsconfig paths, so the script writes `components.json`
-   with the `@remocn` registry, adds the `@/*` path to `tsconfig.json`, and resolves the same alias
-   in `remotion.config.ts`. Each step is skipped when the project already has it; relay any
-   `warning` in the result.
-2. Make the project open in Remocn Studio as-is by following the `studio` skill's **Prepare** step.
-
-For an existing project, say which files these two steps will touch and ask before running them.
+Then make `shadcn add` work in the project: follow the `setup` skill with the project root. It
+adds the `@remocn` registry to `components.json`, the `@/*` path to `tsconfig.json` and the same alias
+to `remotion.config.ts`, skipping what the project already has. For an existing project it says which
+files it will touch and asks first.
 
 ## 4. Install and compose
 
 1. Run the storyboard's install line: `npx shadcn add @remocn/<a> @remocn/<b> ...`. Dependencies
    install transitively.
-2. Write the video as **`src/videos/<slug>/index.tsx`**. This layout is what Remocn Studio scans,
-   and the scan registers it as a Remotion composition with id `<slug>`:
+2. Write the video as **`src/videos/<slug>/index.tsx`**. Remocn Studio identifies a video by this
+   folder, so keep the layout:
 
    ```tsx
    export const meta = {
@@ -90,10 +78,21 @@ For an existing project, say which files these two steps will touch and ask befo
 
    Scenes that grow past a screen of code go next to it in the same folder
    (`src/videos/<slug>/scenes/hook.tsx`), never beside the video folder. Optional extra exports:
-   `defaultProps` and a zod `schema`, both forwarded to the composition.
-3. Use the exact props from each component's docs page. Sequence lengths come from the storyboard,
+   `defaultProps` and a zod `schema`.
+3. Register it as a composition with id `<slug>` in the root component, the one passed to
+   `registerRoot` (`src/Root.tsx` in a fresh project). Add it next to the compositions already there
+   and leave those alone:
+
+   ```tsx
+   import LaunchVideo, { meta as launchVideoMeta } from "./videos/launch-video";
+
+   <Composition id="launch-video" component={LaunchVideo} {...launchVideoMeta} />
+   ```
+
+   Pass `defaultProps` and `schema` too when the video exports them.
+4. Use the exact props from each component's docs page. Sequence lengths come from the storyboard,
    not from guesses.
-4. Typecheck (`npx tsc --noEmit`) and list compositions (`npx remotion compositions`). The slug
+5. Typecheck (`npx tsc --noEmit`) and list compositions (`npx remotion compositions`). The slug
    must be in the list. Fix every error before moving on. A missing declaration file for a
    component's dependency is fixed with `npm i -D @types/<package>`, not with `any`.
 
@@ -112,6 +111,7 @@ The agent that writes the code never sees the frames, so look at them.
 
 1. Tell the user how to preview (`npx remotion studio`) and render
    (`npx remotion render <slug> out/<slug>.mp4`).
-2. Offer **"Open in Remocn Studio to tweak and export?"** and, on a yes, follow the `studio` skill's
-   **Open** step. Remocn Studio is a desktop app for tuning elements visually and exporting mp4;
-   skip the offer on Windows, where it isn't available.
+2. Mention Remocn Studio (https://remocn.studio), a desktop app for macOS and Linux that previews
+   the project live, lets the user tune elements by hand and exports mp4: install it, choose **Open
+   Folder** (⌘O on macOS, Ctrl+O on Linux) and pick the project root. Skip this on Windows, where it
+   isn't available.

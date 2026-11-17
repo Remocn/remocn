@@ -36,7 +36,7 @@ Remotion is a prerequisite. The plugin creates a project in an empty folder; by 
 
 `/remocn:video` runs brief → storyboard → install → compose → visual check → hand-off. It stops after the storyboard so you can change direction before any code is written. Then the `scene-reviewer` agent renders stills of every beat and checks them for clipped text, empty frames and low contrast. The video lands in `src/videos/<slug>/index.tsx`; render it with `npx remotion render <slug>` or open it in [Remocn Studio](https://remocn.studio).
 
-Also in the plugin: `/remocn:changelog` turns git tags, commits or merged PRs into a changelog video, `/remocn:add <name>` installs and places one component, `/remocn:studio` opens the project in Remocn Studio. [Plugin docs](https://remocn.dev/docs/getting-started/plugin).
+Also in the plugin: `/remocn:changelog` turns git tags, commits or merged PRs into a changelog video, `/remocn:add <name>` installs and places one component, `/remocn:setup` prepares a Remotion project for `shadcn add`. [Plugin docs](https://remocn.dev/docs/getting-started/plugin).
 
 ## What you can make
 
