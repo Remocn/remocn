@@ -1,8 +1,20 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const spineTurnConfig: ComponentConfig = {
   componentName: "SpineTurn",
   importPath: "@/components/remocn/spine-turn",
+  lists: {
+    titles: {
+      default: ["Kickoff", "Deep dive", "Wrap-up"],
+      description: "Titles",
+    },
+  },
   controls: {
     theme: {
       type: "enum",
@@ -22,6 +34,26 @@ export const spineTurnConfig: ComponentConfig = {
       description: "Hold",
       hiddenFromList: false,
     },
+    turn: {
+      type: "number",
+      default: 26,
+      min: 6,
+      max: 60,
+      step: 1,
+      description: "Turn (frames)",
+      hiddenFromList: false,
+    },
+    fontWeight: {
+      type: "number",
+      default: 500,
+      min: 400,
+      max: 500,
+      step: 100,
+      description: "Weight",
+      hiddenFromList: false,
+    },
+    accent: { type: "color", default: undefined, description: "Accent" },
+    ...sceneControls({ font: "IBM Plex Sans", ink: false }),
     speed: {
       type: "number",
       default: 1,

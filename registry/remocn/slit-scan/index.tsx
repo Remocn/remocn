@@ -1,6 +1,7 @@
 "use client";
 
 import { loadFont as loadBricolage } from "@remotion/google-fonts/BricolageGrotesque";
+import type React from "react";
 import { useId } from "react";
 import {
   AbsoluteFill,
@@ -19,7 +20,21 @@ export interface SlitScanProps {
   word?: string;
   caption?: string;
   slices?: number;
+  /** Frames the farthest slice lags behind the word at the start. */
+  trail?: number;
+  fontWeight?: number;
   accent?: string;
+  /** Text color of the settled word; overrides the theme ink. */
+  ink?: string;
+  /** Solid fill in place of the fluted ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the word and caption. Load it yourself; Bricolage Grotesque by default. */
+  fontFamily?: string;
+  grain?: boolean;
+  /** Size of the word and caption, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -131,15 +146,39 @@ function splitTail(word: string) {
   return m ? [m[1], m[2]] : [word, ""];
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function SlitScan({
   word = "Faster.",
   caption = "First render in 1.8s, down from 4.7s",
   slices = 120,
+  trail = LAG,
+  fontWeight = 500,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = bricolage,
+  grain = true,
+  scale = 1,
+  delay = 0,
   theme = "dark",
   speed = 1,
 }: SlitScanProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const u = H / 720;
   const stage = THEMES[theme];
@@ -153,10 +192,10 @@ export function SlitScan({
   const lift = -0.06 * H;
 
   const lag =
-    LAG *
+    trail *
     interpolate(t, [0, 14], [0.35, 1], CLAMP) *
     (1 - RESOLVE(interpolate(t, [RESOLVE_AT, RESOLVE_END], [0, 1], CLAMP)));
-  const lagK = lag / LAG;
+  const lagK = lag / Math.max(1, trail);
   const pos = (tau: number) =>
     travel * (1 - MOVE(interpolate(tau, [MOVE_AT, MOVE_END], [0, 1], CLAMP)));
 
@@ -195,7 +234,7 @@ export function SlitScan({
     const isStale = Math.abs(x - now) > stale;
     const color = isStale
       ? sample(heat, (Math.abs(x - now) / (0.75 * wordW)) ** 0.7)
-      : stage.fg;
+      : (ink ?? stage.fg);
     cols.push(
       <div
         key={i}
@@ -223,8 +262,8 @@ export function SlitScan({
         >
           <div
             style={{
-              fontFamily: bricolage,
-              fontWeight: 500,
+              fontFamily,
+              fontWeight,
               fontSize: size,
               letterSpacing: "-0.035em",
               lineHeight: 1,
@@ -242,58 +281,74 @@ export function SlitScan({
   }
 
   return (
-    <AbsoluteFill style={{ background: stage.bg, overflow: "hidden" }}>
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          opacity: bandIn * stage.band,
-          backgroundImage: `linear-gradient(90deg, ${bandStops})`,
-          WebkitMaskImage: `radial-gradient(72% 40% at 50% ${50 + (lift / H) * 100 + 4}%, #000 0%, rgba(0,0,0,0.4) 55%, transparent 100%)`,
-          maskImage: `radial-gradient(72% 40% at 50% ${50 + (lift / H) * 100 + 4}%, #000 0%, rgba(0,0,0,0.4) 55%, transparent 100%)`,
-        }}
-      />
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          opacity: bandIn,
-          backgroundImage: `repeating-linear-gradient(90deg, ${stage.bg}00 0px, ${stage.bg}00 ${ribW / 2}px, ${stage.bg}${stage.rib} ${ribW / 2}px, ${stage.bg}${stage.rib} ${ribW}px)`,
-        }}
-      />
-      {cols}
-      <div
-        style={{
-          position: "absolute",
-          left: W / 2 - (wordW * 0.5 * ruleIn) / 1,
-          top: baseY + 34 * u,
-          width: wordW * ruleIn,
-          height: Math.max(1, u),
-          background: stage.hair,
-        }}
-      />
-      {caption ? (
+    <AbsoluteFill
+      style={{
+        background:
+          background === undefined
+            ? stage.bg
+            : background === "transparent"
+              ? undefined
+              : background,
+        overflow: "hidden",
+      }}
+    >
+      {background === undefined ? (
+        <>
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              opacity: bandIn * stage.band,
+              backgroundImage: `linear-gradient(90deg, ${bandStops})`,
+              WebkitMaskImage: `radial-gradient(72% 40% at 50% ${50 + (lift / H) * 100 + 4}%, #000 0%, rgba(0,0,0,0.4) 55%, transparent 100%)`,
+              maskImage: `radial-gradient(72% 40% at 50% ${50 + (lift / H) * 100 + 4}%, #000 0%, rgba(0,0,0,0.4) 55%, transparent 100%)`,
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              opacity: bandIn,
+              backgroundImage: `repeating-linear-gradient(90deg, ${stage.bg}00 0px, ${stage.bg}00 ${ribW / 2}px, ${stage.bg}${stage.rib} ${ribW / 2}px, ${stage.bg}${stage.rib} ${ribW}px)`,
+            }}
+          />
+        </>
+      ) : null}
+      <ScaleLayer scale={scale}>
+        {cols}
         <div
           style={{
             position: "absolute",
-            left: 0.08 * W,
-            right: 0.08 * W,
-            top: baseY + 58 * u,
-            textAlign: "center",
-            fontFamily: bricolage,
-            fontWeight: 400,
-            fontSize: capSize,
-            letterSpacing: "-0.005em",
-            fontVariantNumeric: "tabular-nums",
-            color: stage.muted,
-            opacity: capIn,
-            transform: `translateY(${(1 - capIn) * 10 * u}px)`,
+            left: W / 2 - (wordW * 0.5 * ruleIn) / 1,
+            top: baseY + 34 * u,
+            width: wordW * ruleIn,
+            height: Math.max(1, u),
+            background: stage.hair,
           }}
-        >
-          {caption}
-        </div>
-      ) : null}
-      <Grain opacity={stage.grain} />
+        />
+        {caption ? (
+          <div
+            style={{
+              position: "absolute",
+              left: 0.08 * W,
+              right: 0.08 * W,
+              top: baseY + 58 * u,
+              textAlign: "center",
+              fontFamily,
+              fontWeight: 400,
+              fontSize: capSize,
+              letterSpacing: "-0.005em",
+              fontVariantNumeric: "tabular-nums",
+              color: stage.muted,
+              opacity: capIn,
+              transform: `translateY(${(1 - capIn) * 10 * u}px)`,
+            }}
+          >
+            {caption}
+          </div>
+        ) : null}
+      </ScaleLayer>
+      {grain ? <Grain opacity={stage.grain} /> : null}
     </AbsoluteFill>
   );
 }

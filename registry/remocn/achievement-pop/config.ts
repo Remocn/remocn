@@ -1,4 +1,11 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const achievementPopConfig: ComponentConfig = {
   componentName: "AchievementPop",
@@ -13,11 +20,18 @@ export const achievementPopConfig: ComponentConfig = {
       },
       description: "Theme",
     },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
+    totalLabel: {
+      type: "text-content",
+      default: "Launch week",
+      description: "Total label",
     },
+    unit: {
+      type: "text-content",
+      default: "XP",
+      description: "Points unit",
+    },
+    ground: groundControl(),
+    ...sceneControls({ font: "Geist" }),
     speed: {
       type: "number",
       default: 1,

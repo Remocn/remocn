@@ -28,7 +28,17 @@ export interface EdgeFitProps {
   letterGap?: number;
   hold?: number;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the words and caption. Load it yourself; Anton by default. */
+  fontFamily?: string;
+  /** Share of the frame width each word fills, edge to edge. */
+  fit?: number;
+  /** Size of the copy, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -98,7 +108,7 @@ interface Metrics {
   baseline: number;
 }
 
-function measure(words: string[]): Metrics {
+function measure(words: string[], family: string): Metrics {
   const probe = document.createElement("span");
   Object.assign(probe.style, {
     position: "absolute",
@@ -106,7 +116,7 @@ function measure(words: string[]): Metrics {
     top: "0",
     visibility: "hidden",
     whiteSpace: "pre",
-    fontFamily: `"${anton.fontFamily}"`,
+    fontFamily: `"${family}"`,
     fontWeight: "400",
     fontSize: `${FONT_PX}px`,
     lineHeight: "1",
@@ -122,7 +132,7 @@ function measure(words: string[]): Metrics {
   canvas.height = 10;
   const ctx = canvas.getContext("2d");
   if (ctx) {
-    ctx.font = `400 ${FONT_PX}px "${anton.fontFamily}"`;
+    ctx.font = `400 ${FONT_PX}px "${family}"`;
     ctx.letterSpacing = `${TRACK * FONT_PX}px`;
   }
 
@@ -162,7 +172,7 @@ function measure(words: string[]): Metrics {
   return { words: out, baseline };
 }
 
-function useMetrics(words: string[]) {
+function useMetrics(words: string[], family: string) {
   const key = words.join("\u0001");
   const [state, setState] = useState<{ key: string; m: Metrics } | null>(null);
   const [handle] = useState(() => delayRender("edge-fit: measuring"));
@@ -172,12 +182,12 @@ function useMetrics(words: string[]) {
     Promise.all([
       anton.waitUntilDone(),
       manrope.waitUntilDone(),
-      document.fonts.load(`400 100px "${anton.fontFamily}"`),
+      document.fonts.load(`400 100px "${family}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
-        setState({ key, m: measure(key.split("\u0001")) });
+        setState({ key, m: measure(key.split("\u0001"), family) });
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -186,7 +196,7 @@ function useMetrics(words: string[]) {
     return () => {
       live = false;
     };
-  }, [key, handle]);
+  }, [key, handle, family]);
   return state && state.key === key ? state.m : null;
 }
 
@@ -200,6 +210,22 @@ export function edgeFitTiming(words: string[], letterGap = 3, hold = 14) {
   return { starts, end: at };
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function EdgeFit({
   words = ["intros", "teasers", "recaps"],
   caption = "Fresh from the registry",
@@ -207,16 +233,22 @@ export function EdgeFit({
   letterGap = 3,
   hold = 14,
   accent,
+  ink,
   background,
+  fontFamily = anton.fontFamily,
+  fit = 0.9,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: EdgeFitProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const c = THEMES[theme];
-  const spot = accent ?? c.ink;
+  const fg = ink ?? c.ink;
+  const spot = accent ?? fg;
   const list = useMemo(() => (words.length > 0 ? words : ["remocn"]), [words]);
-  const m = useMetrics(list);
+  const m = useMetrics(list, fontFamily);
 
   const transparent = background === "transparent";
   const stage = transparent ? "transparent" : (background ?? c.bg);
@@ -237,7 +269,7 @@ export function EdgeFit({
   const local = t - starts[wi];
   const n = wm.chars.length;
 
-  const measureW = W * (portrait ? 0.9 : 0.9);
+  const measureW = W * fit;
   const maxInk = H * (portrait ? 0.3 : 0.66);
   const inkH = wm.inkTop + wm.inkBottom;
   const fitOf = (k: number) => {
@@ -288,94 +320,96 @@ export function EdgeFit({
   const logoNode =
     logo === null
       ? null
-      : (logo ?? <RemocnLogo fontSize={smallFs * 1.25} color={c.ink} />);
+      : (logo ?? <RemocnLogo fontSize={smallFs * 1.25} color={fg} />);
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          width: W,
-          top: maskTop,
-          height: maskH,
-        }}
-      >
-        {wm.chars.map((ch, j) => {
-          if (open[j] <= 0.001) return null;
-          const first = j === 0;
-          const rp = first
-            ? wi === 0
-              ? interpolate(local, [0, RISE + 2], [0, 1], {
+      <ScaleLayer scale={scale}>
+        <div
+          style={{
+            position: "absolute",
+            left: 0,
+            width: W,
+            top: maskTop,
+            height: maskH,
+          }}
+        >
+          {wm.chars.map((ch, j) => {
+            if (open[j] <= 0.001) return null;
+            const first = j === 0;
+            const rp = first
+              ? wi === 0
+                ? interpolate(local, [0, RISE + 2], [0, 1], {
+                    ...CLAMP,
+                    easing: EASE_OUT,
+                  })
+                : 1
+              : interpolate(local - j * letterGap, [0, RISE], [0, 1], {
                   ...CLAMP,
                   easing: EASE_OUT,
-                })
-              : 1
-            : interpolate(local - j * letterGap, [0, RISE], [0, 1], {
-                ...CLAMP,
-                easing: EASE_OUT,
-              });
-          const x = left + xs[j] * S;
-          return (
-            <div
-              key={`${wi}-${j}-${ch}`}
-              style={{
-                position: "absolute",
-                left: x,
-                top: boxTop - maskTop,
-                height: S,
-                lineHeight: `${S}px`,
-                whiteSpace: "pre",
-                fontFamily: anton.fontFamily,
-                fontWeight: 400,
-                fontSize: S,
-                opacity: interpolate(rp, [0, 0.55], [0, 1], CLAMP),
-                transform: `translateY(${((1 - rp) * S * 0.22).toFixed(2)}px)`,
-                color: spot,
-              }}
-            >
-              {ch}
-            </div>
-          );
-        })}
-      </div>
+                });
+            const x = left + xs[j] * S;
+            return (
+              <div
+                key={`${wi}-${j}-${ch}`}
+                style={{
+                  position: "absolute",
+                  left: x,
+                  top: boxTop - maskTop,
+                  height: S,
+                  lineHeight: `${S}px`,
+                  whiteSpace: "pre",
+                  fontFamily,
+                  fontWeight: 400,
+                  fontSize: S,
+                  opacity: interpolate(rp, [0, 0.55], [0, 1], CLAMP),
+                  transform: `translateY(${((1 - rp) * S * 0.22).toFixed(2)}px)`,
+                  color: spot,
+                }}
+              >
+                {ch}
+              </div>
+            );
+          })}
+        </div>
 
-      {sign > 0 ? (
-        <>
-          {caption ? (
-            <div
-              style={{
-                position: "absolute",
-                left: margin,
-                bottom: margin,
-                fontFamily: anton.fontFamily,
-                fontWeight: 400,
-                fontSize: smallFs,
-                letterSpacing: "0.005em",
-                lineHeight: 1,
-                color: c.ink,
-                opacity: sign,
-                transform: `translateY(${((1 - sign) * smallFs * 0.8).toFixed(2)}px)`,
-              }}
-            >
-              {caption}
-            </div>
-          ) : null}
-          {logoNode ? (
-            <div
-              style={{
-                position: "absolute",
-                right: margin,
-                bottom: margin,
-                opacity: sign,
-                transform: `translateY(${((1 - sign) * smallFs * 0.8).toFixed(2)}px)`,
-              }}
-            >
-              {logoNode}
-            </div>
-          ) : null}
-        </>
-      ) : null}
+        {sign > 0 ? (
+          <>
+            {caption ? (
+              <div
+                style={{
+                  position: "absolute",
+                  left: margin,
+                  bottom: margin,
+                  fontFamily,
+                  fontWeight: 400,
+                  fontSize: smallFs,
+                  letterSpacing: "0.005em",
+                  lineHeight: 1,
+                  color: fg,
+                  opacity: sign,
+                  transform: `translateY(${((1 - sign) * smallFs * 0.8).toFixed(2)}px)`,
+                }}
+              >
+                {caption}
+              </div>
+            ) : null}
+            {logoNode ? (
+              <div
+                style={{
+                  position: "absolute",
+                  right: margin,
+                  bottom: margin,
+                  opacity: sign,
+                  transform: `translateY(${((1 - sign) * smallFs * 0.8).toFixed(2)}px)`,
+                }}
+              >
+                {logoNode}
+              </div>
+            ) : null}
+          </>
+        ) : null}
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

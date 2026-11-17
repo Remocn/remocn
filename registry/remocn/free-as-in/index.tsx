@@ -1,6 +1,7 @@
 "use client";
 
 import { loadFont } from "@remotion/google-fonts/AlbertSans";
+import type React from "react";
 import { useEffect, useRef, useState } from "react";
 import {
   AbsoluteFill,
@@ -21,7 +22,19 @@ export interface FreeAsInProps {
   word?: string;
   glosses?: string[];
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the copy. Load it yourself; Albert Sans by default. */
+  fontFamily?: string;
+  /** Weight of the big word. */
+  fontWeight?: number;
+  /** Frames the last gloss holds before the end. */
+  hold?: number;
+  /** Size of the foreground, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -49,8 +62,8 @@ const CLAMP = {
   extrapolateRight: "clamp",
 } as const;
 
-function useWidths(keys: string[]) {
-  const key = keys.join("\u0001");
+function useWidths(keys: string[], fontFamily: string, fontWeight: number) {
+  const key = `${fontFamily}\u0001${keys.join("\u0001")}`;
   const [state, setState] = useState<{
     key: string;
     w: Record<string, number>;
@@ -63,8 +76,8 @@ function useWidths(keys: string[]) {
     let live = true;
     Promise.all([
       albert.waitUntilDone(),
-      document.fonts.load(`400 100px "${albert.fontFamily}"`),
-      document.fonts.load(`500 100px "${albert.fontFamily}"`),
+      document.fonts.load(`400 100px "${fontFamily}"`),
+      document.fonts.load(`${fontWeight} 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
@@ -75,7 +88,7 @@ function useWidths(keys: string[]) {
           const cut = k.indexOf("|");
           const wt = k.slice(0, cut);
           const s = k.slice(cut + 1);
-          if (ctx) ctx.font = `${wt} 100px "${albert.fontFamily}"`;
+          if (ctx) ctx.font = `${wt} 100px "${fontFamily}"`;
           w[k] = ctx ? ctx.measureText(s).width / 100 : s.length * 0.5;
         }
         setState({ key, w });
@@ -87,29 +100,52 @@ function useWidths(keys: string[]) {
     return () => {
       live = false;
     };
-  }, [key, handle]);
+  }, [key, handle, fontFamily, fontWeight]);
   return state && state.key === key ? state.w : null;
+}
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
 }
 
 export function FreeAsIn({
   word = "Free",
   glosses = DEFAULT_GLOSSES,
   accent,
+  ink,
   background,
+  fontFamily = albert.fontFamily,
+  fontWeight = 500,
+  hold = 46,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: FreeAsInProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, durationInFrames } = useVideoConfig();
-  const T = durationInFrames * speed;
+  const T = (durationInFrames - delay) * speed;
   const c = THEMES[theme];
+  const fg = ink ?? c.ink;
   const hi = accent ?? c.accent;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
 
   const list = glosses.filter((s) => s.trim().length > 0);
-  const keys = [`500|${word}`, ...list.map((s) => `400|${s}`)];
-  const w = useWidths(keys);
+  const keys = [`${fontWeight}|${word}`, ...list.map((s) => `400|${s}`)];
+  const w = useWidths(keys, fontFamily, fontWeight);
 
   if (!w) {
     return (
@@ -123,7 +159,7 @@ export function FreeAsIn({
   const portrait = H > W * 1.1;
   const n = list.length;
   const left = W * (portrait ? 0.08 : 0.07);
-  const wordEm = Math.max(0.01, adv(500, word, TRACK_WORD));
+  const wordEm = Math.max(0.01, adv(fontWeight, word, TRACK_WORD));
   const glossEm = Math.max(0.01, ...list.map((s) => adv(400, s, TRACK_GLOSS)));
 
   let Fw: number;
@@ -154,7 +190,7 @@ export function FreeAsIn({
     easing: EASE_OUT,
   });
   const first = 22;
-  const tail = 46;
+  const tail = hold;
   const step =
     n > 0 ? Math.max(12, Math.min(30, (T - first - tail) / Math.max(1, n))) : 0;
   const startOf = (k: number) => first + k * step;
@@ -192,7 +228,7 @@ export function FreeAsIn({
         fontSize={Fg}
         fontWeight={400}
         letterSpacing={`${TRACK_GLOSS}em`}
-        fill={last ? hi : c.ink}
+        fill={last ? hi : fg}
         opacity={enter * fade}
       >
         {s}
@@ -202,28 +238,30 @@ export function FreeAsIn({
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
-      <svg
-        width={W}
-        height={H}
-        viewBox={`0 0 ${W} ${H}`}
-        style={{ position: "absolute", inset: 0 }}
-        fontFamily={albert.fontFamily}
-        aria-hidden
-      >
-        <text
-          x={left - Fw * 0.04}
-          y={wordBase}
-          fontSize={Fw}
-          fontWeight={500}
-          letterSpacing={`${TRACK_WORD}em`}
-          fill={c.ink}
-          opacity={wordIn}
-          transform={`translate(0 ${((1 - wordIn) * Fw * 0.12).toFixed(2)})`}
+      <ScaleLayer scale={scale}>
+        <svg
+          width={W}
+          height={H}
+          viewBox={`0 0 ${W} ${H}`}
+          style={{ position: "absolute", inset: 0 }}
+          fontFamily={fontFamily}
+          aria-hidden
         >
-          {word}
-        </text>
-        {glossNodes}
-      </svg>
+          <text
+            x={left - Fw * 0.04}
+            y={wordBase}
+            fontSize={Fw}
+            fontWeight={fontWeight}
+            letterSpacing={`${TRACK_WORD}em`}
+            fill={fg}
+            opacity={wordIn}
+            transform={`translate(0 ${((1 - wordIn) * Fw * 0.12).toFixed(2)})`}
+          >
+            {word}
+          </text>
+          {glossNodes}
+        </svg>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

@@ -15,7 +15,7 @@ import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
 
-const { fontFamily } = loadGeist("normal", {
+const { fontFamily: sans } = loadGeist("normal", {
   weights: ["300", "400"],
   subsets: ["latin"],
 });
@@ -42,7 +42,23 @@ export interface AiAnswerSourcesProps {
   answer?: AnswerBlock[];
   related?: string[];
   brand?: string;
+  /** Placeholder in the empty search box. */
+  placeholder?: string;
+  /** Placeholder in the follow-up bar under the answer. */
+  followUpPlaceholder?: string;
+  /** Label of the first research step. */
+  searchLabel?: string;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the interface copy. Load it yourself; Geist by default. */
+  fontFamily?: string;
+  /** Size of the app window, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "light" | "dark";
   ground?: GshPresetId;
@@ -241,10 +257,12 @@ function Favicon({
   src,
   size = 16,
   ring,
+  font,
 }: {
   src: AnswerSource;
   size?: number;
   ring?: string;
+  font: string;
 }) {
   return (
     <div
@@ -262,7 +280,7 @@ function Favicon({
         boxShadow: ring
           ? `0 0 0 2px ${ring}`
           : "inset 0 0 0 1px rgba(0,0,0,0.1)",
-        fontFamily,
+        fontFamily: font,
       }}
     >
       {src.site[0].toUpperCase()}
@@ -443,6 +461,7 @@ function CitePill({
   pop,
   active,
   c,
+  font,
   children,
 }: {
   ids: number[];
@@ -450,6 +469,7 @@ function CitePill({
   pop: number;
   active: boolean;
   c: Palette;
+  font: string;
   children?: React.ReactNode;
 }) {
   const first = sources[ids[0]] ?? sources[0];
@@ -464,7 +484,7 @@ function CitePill({
         marginLeft: 5,
         borderRadius: 7,
         background: active ? c.ink : c.chip,
-        fontFamily,
+        fontFamily: font,
         fontSize: 15,
         color: active ? c.main : c.muted,
         verticalAlign: 2,
@@ -488,12 +508,14 @@ function HoverCard({
   ids,
   sources,
   c,
+  font,
   v,
   out,
 }: {
   ids: number[];
   sources: AnswerSource[];
   c: Palette;
+  font: string;
   v: number;
   out: number;
 }) {
@@ -529,7 +551,7 @@ function HoverCard({
           color: c.muted,
         }}
       >
-        <Favicon src={src} size={18} />
+        <Favicon src={src} size={18} font={font} />
         <span style={{ flex: 1 }}>{src.site}</span>
         {ids.length > 1 ? (
           <span style={{ fontVariantNumeric: "tabular-nums", color: c.faint }}>
@@ -567,23 +589,48 @@ function HoverCard({
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function AiAnswerSources({
   query = "What is the fastest way to make a launch video?",
   sources = DEFAULT_SOURCES,
   answer = DEFAULT_ANSWER,
   related = DEFAULT_RELATED,
   brand = "sift",
+  placeholder = "Ask anything",
+  followUpPlaceholder = "Ask a follow-up",
+  searchLabel = "Searching the web",
   accent = "#20808D",
+  ink,
+  background,
+  fontFamily = sans,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "light",
   ground,
   groundParams,
 }: AiAnswerSourcesProps) {
-  const frame = useCurrentFrame();
+  const frame = Math.max(0, useCurrentFrame() - delay);
   const { fps, width, height } = useVideoConfig();
   const f = frame * speed;
   const dark = theme === "dark";
-  const c = dark ? DARK : LIGHT;
+  const base = dark ? DARK : LIGHT;
+  const c: Palette = ink ? { ...base, ink } : base;
   const portrait = height > width;
   const stageW = portrait ? 720 : 1280;
   const stageH = portrait ? 1280 : 720;
@@ -733,12 +780,14 @@ export function AiAnswerSources({
                   pop={sp(popAt, CHIP)}
                   active={isHover && hoverOn}
                   c={c}
+                  font={fontFamily}
                 >
                   {isHover && card > 0.01 && cardOut > 0 ? (
                     <HoverCard
                       ids={tk.ids}
                       sources={sources}
                       c={c}
+                      font={fontFamily}
                       v={card}
                       out={cardOut}
                     />
@@ -822,740 +871,767 @@ export function AiAnswerSources({
 
   return (
     <AbsoluteFill style={{ fontFamily, overflow: "hidden" }}>
-      <GshGround
-        preset={resolvedGround}
-        params={groundParams}
-        timeOffset={4}
-        timeScale={0.35}
-      />
-      <div
-        style={{
-          position: "absolute",
-          left: (width - stageW * s) / 2,
-          top: (height - stageH * s) / 2,
-          width: stageW,
-          height: stageH,
-          transform: `scale(${s})`,
-          transformOrigin: "0 0",
-        }}
-      >
+      {background === undefined ? (
+        <GshGround
+          preset={resolvedGround}
+          params={groundParams}
+          timeOffset={4}
+          timeScale={0.35}
+        />
+      ) : (
+        <AbsoluteFill
+          style={{
+            background: background === "transparent" ? undefined : background,
+          }}
+        />
+      )}
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            left: win.x,
-            top: win.y,
-            width: AW,
-            height: AH,
-            borderRadius: 24,
-            overflow: "hidden",
-            background: c.main,
-            boxShadow: c.window,
-            color: c.ink,
-            WebkitFontSmoothing: "antialiased",
-            opacity: ease(0, 12),
-            transform: `translateY(${(1 - sp(0, HEAVY)) * 48}px) scale(${0.96 + 0.04 * sp(0, HEAVY)})`,
+            left: (width - stageW * s) / 2,
+            top: (height - stageH * s) / 2,
+            width: stageW,
+            height: stageH,
+            transform: `scale(${s})`,
+            transformOrigin: "0 0",
           }}
         >
-          {home > 0 ? (
-            <div
-              style={{
-                position: "absolute",
-                inset: 0,
-                opacity: home,
-                transform: `translateY(${(1 - home) * -20}px)`,
-              }}
-            >
+          <div
+            style={{
+              position: "absolute",
+              left: win.x,
+              top: win.y,
+              width: AW,
+              height: AH,
+              borderRadius: 24,
+              overflow: "hidden",
+              background: c.main,
+              boxShadow: c.window,
+              color: c.ink,
+              WebkitFontSmoothing: "antialiased",
+              opacity: ease(0, 12),
+              transform: `translateY(${(1 - sp(0, HEAVY)) * 48}px) scale(${0.96 + 0.04 * sp(0, HEAVY)})`,
+            }}
+          >
+            {home > 0 ? (
               <div
                 style={{
                   position: "absolute",
-                  left: COL_X,
-                  width: COL,
-                  top: inputTop - 96,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 14,
-                  ...enter(sp(2), 14),
+                  inset: 0,
+                  opacity: home,
+                  transform: `translateY(${(1 - home) * -20}px)`,
                 }}
               >
                 <div
                   style={{
-                    width: 44,
-                    height: 44,
-                    borderRadius: 13,
-                    background: c.ink,
+                    position: "absolute",
+                    left: COL_X,
+                    width: COL,
+                    top: inputTop - 96,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
+                    gap: 14,
+                    ...enter(sp(2), 14),
                   }}
                 >
-                  <Icon d={ICONS.sift} size={26} color={c.main} sw={2} />
-                </div>
-                <span
-                  style={{
-                    fontFamily: serif,
-                    fontSize: 60,
-                    fontWeight: 300,
-                    letterSpacing: "-0.035em",
-                    lineHeight: 1,
-                  }}
-                >
-                  {brand}
-                </span>
-              </div>
-              <div
-                style={{
-                  position: "absolute",
-                  left: COL_X,
-                  top: inputTop,
-                  width: COL,
-                  height: inputH,
-                  borderRadius: 20,
-                  background: c.card,
-                  boxShadow: c.raised,
-                  boxSizing: "border-box",
-                  padding: "20px 22px 0",
-                  ...enter(sp(5), 18),
-                }}
-              >
-                <div
-                  style={{
-                    fontSize: 20,
-                    color: shown ? c.ink : c.faint,
-                    height: 28,
-                  }}
-                >
-                  {shown || "Ask anything"}
-                  {f < SUBMIT && Math.floor(f / 8) % 2 === 0 ? (
-                    <span
-                      style={{
-                        display: "inline-block",
-                        width: 2,
-                        height: 22,
-                        marginLeft: 2,
-                        background: accent,
-                        verticalAlign: -4,
-                      }}
-                    />
-                  ) : null}
+                  <div
+                    style={{
+                      width: 44,
+                      height: 44,
+                      borderRadius: 13,
+                      background: c.ink,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Icon d={ICONS.sift} size={26} color={c.main} sw={2} />
+                  </div>
+                  <span
+                    style={{
+                      fontFamily: serif,
+                      fontSize: 60,
+                      fontWeight: 300,
+                      letterSpacing: "-0.035em",
+                      lineHeight: 1,
+                    }}
+                  >
+                    {brand}
+                  </span>
                 </div>
                 <div
                   style={{
                     position: "absolute",
-                    left: 16,
-                    right: 16,
-                    bottom: 14,
+                    left: COL_X,
+                    top: inputTop,
+                    width: COL,
+                    height: inputH,
+                    borderRadius: 20,
+                    background: c.card,
+                    boxShadow: c.raised,
+                    boxSizing: "border-box",
+                    padding: "20px 22px 0",
+                    ...enter(sp(5), 18),
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: 20,
+                      color: shown ? c.ink : c.faint,
+                      height: 28,
+                    }}
+                  >
+                    {shown || placeholder}
+                    {f < SUBMIT && Math.floor(f / 8) % 2 === 0 ? (
+                      <span
+                        style={{
+                          display: "inline-block",
+                          width: 2,
+                          height: 22,
+                          marginLeft: 2,
+                          background: accent,
+                          verticalAlign: -4,
+                        }}
+                      />
+                    ) : null}
+                  </div>
+                  <div
+                    style={{
+                      position: "absolute",
+                      left: 16,
+                      right: 16,
+                      bottom: 14,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        padding: 3,
+                        gap: 2,
+                        borderRadius: 11,
+                        background: c.chip,
+                      }}
+                    >
+                      {["Search", "Research"].map((t, i) => (
+                        <div
+                          key={t}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 6,
+                            height: 30,
+                            padding: "0 12px",
+                            borderRadius: 8,
+                            fontSize: 15,
+                            color: i === 0 ? c.ink : c.muted,
+                            background: i === 0 ? c.card : "transparent",
+                            boxShadow:
+                              i === 0
+                                ? `0 0 0 1px ${c.hair}, 0 1px 2px ${c.hair}`
+                                : "none",
+                          }}
+                        >
+                          <Icon
+                            d={i === 0 ? ICONS.search : ICONS.layers}
+                            size={15}
+                            color={i === 0 ? c.ink : c.muted}
+                          />
+                          {t}
+                        </div>
+                      ))}
+                    </div>
+                    <div style={{ flex: 1 }} />
+                    {[ICONS.globe, ICONS.clip, ICONS.mic].map((d) => (
+                      <div
+                        key={d}
+                        style={{
+                          width: 34,
+                          display: "flex",
+                          justifyContent: "center",
+                        }}
+                      >
+                        <Icon d={d} size={19} color={c.muted} />
+                      </div>
+                    ))}
+                    <div
+                      style={{
+                        width: 40,
+                        height: 40,
+                        borderRadius: 20,
+                        background: shown ? accent : c.chip,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        transform: `scale(${1 - 0.06 * press})`,
+                      }}
+                    >
+                      <Icon
+                        d={ICONS.up}
+                        size={19}
+                        color={shown ? "#fff" : c.faint}
+                        sw={1.8}
+                      />
+                    </div>
+                  </div>
+                </div>
+                <Cursor
+                  x={homeCur.x}
+                  y={homeCur.y}
+                  press={press}
+                  opacity={homeCur.o}
+                />
+              </div>
+            ) : null}
+
+            {threadIn > 0 ? (
+              <div
+                style={{ position: "absolute", inset: 0, opacity: threadIn }}
+              >
+                <div
+                  style={{
+                    position: "absolute",
+                    left: 0,
+                    right: 0,
+                    top: 0,
+                    height: TOP,
+                    background: c.main,
+                    zIndex: 4,
                     display: "flex",
-                    alignItems: "center",
-                    gap: 8,
+                    alignItems: "flex-end",
+                    padding: "0 24px",
+                    boxShadow: `inset 0 -1px 0 ${c.hair}`,
                   }}
                 >
                   <div
                     style={{
                       display: "flex",
-                      padding: 3,
-                      gap: 2,
-                      borderRadius: 11,
-                      background: c.chip,
+                      gap: 26,
+                      marginLeft: COL_X - 24 - panel * SHIFT,
+                      flex: 1,
                     }}
                   >
-                    {["Search", "Research"].map((t, i) => (
+                    {(
+                      [
+                        ["Answer", ICONS.sift],
+                        ["Links", ICONS.link],
+                        ["Images", ICONS.image],
+                      ] as const
+                    ).map(([t, d], i) => (
                       <div
                         key={t}
                         style={{
                           display: "flex",
                           alignItems: "center",
-                          gap: 6,
-                          height: 30,
-                          padding: "0 12px",
-                          borderRadius: 8,
-                          fontSize: 15,
+                          gap: 7,
+                          height: 46,
+                          fontSize: 16,
                           color: i === 0 ? c.ink : c.muted,
-                          background: i === 0 ? c.card : "transparent",
                           boxShadow:
-                            i === 0
-                              ? `0 0 0 1px ${c.hair}, 0 1px 2px ${c.hair}`
-                              : "none",
+                            i === 0 ? `inset 0 -1.5px 0 ${c.ink}` : "none",
                         }}
                       >
                         <Icon
-                          d={i === 0 ? ICONS.search : ICONS.layers}
-                          size={15}
+                          d={d}
+                          size={16}
                           color={i === 0 ? c.ink : c.muted}
                         />
                         {t}
                       </div>
                     ))}
                   </div>
-                  <div style={{ flex: 1 }} />
-                  {[ICONS.globe, ICONS.clip, ICONS.mic].map((d) => (
-                    <div
-                      key={d}
-                      style={{
-                        width: 34,
-                        display: "flex",
-                        justifyContent: "center",
-                      }}
-                    >
-                      <Icon d={d} size={19} color={c.muted} />
-                    </div>
-                  ))}
-                  <div
-                    style={{
-                      width: 40,
-                      height: 40,
-                      borderRadius: 20,
-                      background: shown ? accent : c.chip,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      transform: `scale(${1 - 0.06 * press})`,
-                    }}
-                  >
-                    <Icon
-                      d={ICONS.up}
-                      size={19}
-                      color={shown ? "#fff" : c.faint}
-                      sw={1.8}
-                    />
-                  </div>
-                </div>
-              </div>
-              <Cursor
-                x={homeCur.x}
-                y={homeCur.y}
-                press={press}
-                opacity={homeCur.o}
-              />
-            </div>
-          ) : null}
-
-          {threadIn > 0 ? (
-            <div style={{ position: "absolute", inset: 0, opacity: threadIn }}>
-              <div
-                style={{
-                  position: "absolute",
-                  left: 0,
-                  right: 0,
-                  top: 0,
-                  height: TOP,
-                  background: c.main,
-                  zIndex: 4,
-                  display: "flex",
-                  alignItems: "flex-end",
-                  padding: "0 24px",
-                  boxShadow: `inset 0 -1px 0 ${c.hair}`,
-                }}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    gap: 26,
-                    marginLeft: COL_X - 24 - panel * SHIFT,
-                    flex: 1,
-                  }}
-                >
-                  {(
-                    [
-                      ["Answer", ICONS.sift],
-                      ["Links", ICONS.link],
-                      ["Images", ICONS.image],
-                    ] as const
-                  ).map(([t, d], i) => (
-                    <div
-                      key={t}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 7,
-                        height: 46,
-                        fontSize: 16,
-                        color: i === 0 ? c.ink : c.muted,
-                        boxShadow:
-                          i === 0 ? `inset 0 -1.5px 0 ${c.ink}` : "none",
-                      }}
-                    >
-                      <Icon d={d} size={16} color={i === 0 ? c.ink : c.muted} />
-                      {t}
-                    </div>
-                  ))}
-                </div>
-                {portrait ? null : (
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 8,
-                      height: 34,
-                      marginBottom: 6,
-                      padding: "0 14px",
-                      borderRadius: 10,
-                      background: c.share,
-                      color: c.shareText,
-                      fontSize: 15,
-                      marginRight: panel * PANEL,
-                    }}
-                  >
-                    <Icon d={ICONS.share} size={15} color={c.shareText} />
-                    Share
-                  </div>
-                )}
-              </div>
-
-              <div
-                style={{
-                  position: "absolute",
-                  left: COL_X - panel * SHIFT,
-                  width: COL,
-                  top: TOP,
-                  bottom: FOOT,
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "flex-end",
-                }}
-              >
-                <div style={{ flexShrink: 0, paddingTop: 28 }}>
-                  <div
-                    style={{
-                      fontFamily: serif,
-                      fontSize: 34,
-                      fontWeight: 300,
-                      lineHeight: 1.18,
-                      letterSpacing: "-0.025em",
-                      marginBottom: 22,
-                      ...enter(sp(THREAD), 20),
-                    }}
-                  >
-                    {query}
-                  </div>
-                  <div
-                    style={{
-                      position: "relative",
-                      height: interpolate(
-                        stepsCollapse,
-                        [0, 1],
-                        [f >= STEP1 ? 122 : 0, 32],
-                      ),
-                      overflow: "hidden",
-                      marginBottom: 14,
-                    }}
-                  >
-                    <div style={{ opacity: 1 - stepsCollapse }}>
-                      {stepRow(STEP1, STEP2 - 2, "Searching the web", [
-                        queryChip("fastest launch video workflow", STEP1 + 4),
-                        portrait
-                          ? null
-                          : queryChip("remotion launch templates", STEP1 + 9),
-                      ])}
-                      {stepRow(
-                        STEP2,
-                        STEPS_DONE,
-                        `Reading ${sources.length} sources`,
-                        [
-                          <div
-                            key="fav"
-                            style={{
-                              display: "flex",
-                              ...enter(sp(STEP2 + 4, CHIP), 6),
-                            }}
-                          >
-                            {sources.slice(0, 6).map((src, i) => (
-                              <div
-                                key={`${src.site}${src.title}`}
-                                style={{ marginLeft: i ? -5 : 0 }}
-                              >
-                                <Favicon src={src} size={22} ring={c.main} />
-                              </div>
-                            ))}
-                          </div>,
-                        ],
-                      )}
-                    </div>
-                    <div
-                      style={{
-                        position: "absolute",
-                        top: 4,
-                        left: 0,
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 9,
-                        fontSize: 16,
-                        color: c.muted,
-                        opacity: stepsCollapse,
-                      }}
-                    >
-                      <Icon
-                        d={ICONS.check}
-                        size={18}
-                        color={c.muted}
-                        sw={1.8}
-                      />
-                      Reviewed {sources.length} sources
-                    </div>
-                  </div>
-                  <div
-                    style={{
-                      display: "flex",
-                      gap: 10,
-                      maxHeight: interpolate(sourcesRow, [0, 1], [0, 112]),
-                      marginBottom: 20 * Math.min(1, sourcesRow),
-                    }}
-                  >
-                    {[...sources.slice(0, tiles), null].map((src, i) => {
-                      const v = sp(STEP2 + 8 + i * 4, CARD);
-                      return (
-                        <div
-                          key={src ? `${src.site}${i}` : "more"}
-                          style={{
-                            flex: src ? 1 : 0.7,
-                            height: 96,
-                            borderRadius: 12,
-                            background: c.tile,
-                            padding: "12px 14px",
-                            boxSizing: "border-box",
-                            display: "flex",
-                            flexDirection: "column",
-                            justifyContent: "space-between",
-                            opacity: Math.min(1, v * 1.5),
-                            transform: `translateY(${(1 - v) * 14}px) scale(${0.92 + 0.08 * v})`,
-                          }}
-                        >
-                          {src ? (
-                            <>
-                              <div
-                                style={{
-                                  fontSize: 15,
-                                  lineHeight: "20px",
-                                  height: 40,
-                                  overflow: "hidden",
-                                  display: "-webkit-box",
-                                  WebkitLineClamp: 2,
-                                  WebkitBoxOrient: "vertical",
-                                }}
-                              >
-                                {src.title}
-                              </div>
-                              <div
-                                style={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  gap: 7,
-                                  fontSize: 15,
-                                  color: c.muted,
-                                  whiteSpace: "nowrap",
-                                  overflow: "hidden",
-                                }}
-                              >
-                                <Favicon src={src} size={16} />
-                                <span
-                                  style={{
-                                    overflow: "hidden",
-                                    textOverflow: "ellipsis",
-                                  }}
-                                >
-                                  {src.site}
-                                </span>
-                              </div>
-                            </>
-                          ) : (
-                            <>
-                              <div style={{ display: "flex" }}>
-                                {sources
-                                  .slice(tiles, tiles + 4)
-                                  .map((s2, j) => (
-                                    <div
-                                      key={`${s2.site}${s2.title}`}
-                                      style={{ marginLeft: j ? -4 : 0 }}
-                                    >
-                                      <Favicon
-                                        src={s2}
-                                        size={18}
-                                        ring={c.tile}
-                                      />
-                                    </div>
-                                  ))}
-                              </div>
-                              <div style={{ fontSize: 15, color: c.muted }}>
-                                +{Math.max(0, sources.length - tiles)} more
-                              </div>
-                            </>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                  {units.map(renderUnit)}
-                  <div
-                    style={{
-                      maxHeight: interpolate(actionsIn, [0, 1], [0, 60]),
-                      overflow: "hidden",
-                      opacity: actionsIn,
-                    }}
-                  >
+                  {portrait ? null : (
                     <div
                       style={{
                         display: "flex",
                         alignItems: "center",
-                        gap: 18,
-                        padding: "10px 0 16px",
-                        boxShadow: `inset 0 -1px 0 ${c.hair}`,
+                        gap: 8,
+                        height: 34,
+                        marginBottom: 6,
+                        padding: "0 14px",
+                        borderRadius: 10,
+                        background: c.share,
+                        color: c.shareText,
+                        fontSize: 15,
+                        marginRight: panel * PANEL,
                       }}
                     >
-                      {[ICONS.share, ICONS.copy, ICONS.redo].map((d) => (
-                        <Icon key={d} d={d} size={18} color={c.muted} />
-                      ))}
-                      <div style={{ flex: 1 }} />
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 8,
-                          height: 30,
-                          padding: "0 12px 0 6px",
-                          borderRadius: 15,
-                          background: c.chip,
-                          fontSize: 15,
-                          color: c.muted,
-                        }}
-                      >
-                        <div style={{ display: "flex" }}>
-                          {hoverIds.slice(0, 3).map((id, j) => (
-                            <div key={id} style={{ marginLeft: j ? -5 : 0 }}>
-                              <Favicon
-                                src={sources[id] ?? sources[0]}
-                                size={18}
-                                ring={c.main}
-                              />
-                            </div>
-                          ))}
-                        </div>
-                        {sources.length} sources
-                      </div>
+                      <Icon d={ICONS.share} size={15} color={c.shareText} />
+                      Share
                     </div>
-                  </div>
-                  {related.length > 0 ? (
-                    <div
-                      style={{
-                        maxHeight: interpolate(
-                          sp(RELATED, MORPH),
-                          [0, 1],
-                          [0, 52 + related.length * 52],
-                        ),
-                        overflow: "hidden",
-                      }}
-                    >
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 9,
-                          fontSize: 17,
-                          padding: "20px 0 8px",
-                          ...enter(sp(RELATED), 8),
-                        }}
-                      >
-                        <Icon d={ICONS.related} size={18} color={c.ink} />
-                        Related
-                      </div>
-                      {related.map((q, i) => (
-                        <div
-                          key={q}
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            height: 52,
-                            boxShadow: i ? `inset 0 1px 0 ${c.hair}` : "none",
-                            fontSize: 17,
-                            color: c.body,
-                            ...enter(sp(RELATED + 4 + i * 4), 10),
-                          }}
-                        >
-                          <span style={{ flex: 1 }}>{q}</span>
-                          <Icon d={ICONS.plus} size={18} color={accent} />
-                        </div>
-                      ))}
-                    </div>
-                  ) : null}
+                  )}
                 </div>
-              </div>
 
-              <div
-                style={{
-                  position: "absolute",
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  height: FOOT,
-                  background: `linear-gradient(transparent, ${c.main} 28%)`,
-                  zIndex: 3,
-                }}
-              >
                 <div
                   style={{
                     position: "absolute",
                     left: COL_X - panel * SHIFT,
                     width: COL,
-                    bottom: 22,
-                    height: 92,
-                    borderRadius: 20,
-                    background: c.card,
-                    boxShadow: c.raised,
-                    boxSizing: "border-box",
-                    padding: "16px 18px",
-                    fontSize: 17,
-                    color: c.faint,
-                    opacity: Math.min(1, barIn * 1.4),
-                    transform: `translateY(${(1 - barIn) * 48}px)`,
+                    top: TOP,
+                    bottom: FOOT,
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "flex-end",
                   }}
                 >
-                  Ask a follow-up
-                  <div
-                    style={{
-                      position: "absolute",
-                      left: 14,
-                      right: 14,
-                      bottom: 12,
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 10,
-                    }}
-                  >
-                    <Icon d={ICONS.plus} size={20} color={c.muted} />
-                    <div style={{ flex: 1 }} />
-                    <Icon d={ICONS.mic} size={19} color={c.muted} />
+                  <div style={{ flexShrink: 0, paddingTop: 28 }}>
                     <div
                       style={{
-                        width: 34,
-                        height: 34,
-                        borderRadius: 17,
-                        background: c.chip,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
+                        fontFamily: serif,
+                        fontSize: 34,
+                        fontWeight: 300,
+                        lineHeight: 1.18,
+                        letterSpacing: "-0.025em",
+                        marginBottom: 22,
+                        ...enter(sp(THREAD), 20),
                       }}
                     >
-                      <Icon d={ICONS.up} size={17} color={c.faint} sw={1.8} />
+                      {query}
                     </div>
-                  </div>
-                </div>
-              </div>
-
-              {portrait ? (
-                <div
-                  style={{
-                    position: "absolute",
-                    inset: 0,
-                    background: dark ? "#000" : "#1C1C1A",
-                    opacity: (dark ? 0.3 : 0.08) * panel,
-                    zIndex: 5,
-                  }}
-                />
-              ) : null}
-              <div
-                style={{
-                  position: "absolute",
-                  ...(portrait
-                    ? {
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        height: 580,
-                        borderRadius: "24px 24px 0 0",
-                        boxShadow: `0 -1px 0 ${c.border}, 0 -24px 48px -24px rgba(0,0,0,${dark ? 0.6 : 0.2})`,
-                        transform: `translateY(${(1 - panel) * 620}px)`,
-                      }
-                    : {
-                        top: 0,
-                        right: 0,
-                        bottom: 0,
-                        width: PANEL,
-                        boxShadow: `-1px 0 0 ${c.border}, -24px 0 48px -24px rgba(0,0,0,${dark ? 0.6 : 0.16})`,
-                        transform: `translateX(${(1 - panel) * (PANEL + 48)}px)`,
-                      }),
-                  background: c.main,
-                  zIndex: 6,
-                  padding: "20px 24px",
-                  boxSizing: "border-box",
-                }}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    fontSize: 18,
-                    height: 30,
-                  }}
-                >
-                  <span style={{ flex: 1 }}>{hoverIds.length} sources</span>
-                  <Icon d={ICONS.close} size={18} color={c.muted} />
-                </div>
-                <div
-                  style={{
-                    fontSize: 15,
-                    color: c.muted,
-                    margin: "22px 0 16px",
-                  }}
-                >
-                  Cited in this answer
-                </div>
-                {hoverIds.map((id, i) => {
-                  const src = sources[id] ?? sources[0];
-                  const v = sp(PANEL_AT + 6 + i * 4);
-                  return (
                     <div
-                      key={`${id}`}
                       style={{
-                        padding: "16px 0",
-                        boxShadow: i ? `inset 0 1px 0 ${c.hair}` : "none",
-                        ...enter(v, 14),
+                        position: "relative",
+                        height: interpolate(
+                          stepsCollapse,
+                          [0, 1],
+                          [f >= STEP1 ? 122 : 0, 32],
+                        ),
+                        overflow: "hidden",
+                        marginBottom: 14,
+                      }}
+                    >
+                      <div style={{ opacity: 1 - stepsCollapse }}>
+                        {stepRow(STEP1, STEP2 - 2, searchLabel, [
+                          queryChip("fastest launch video workflow", STEP1 + 4),
+                          portrait
+                            ? null
+                            : queryChip("remotion launch templates", STEP1 + 9),
+                        ])}
+                        {stepRow(
+                          STEP2,
+                          STEPS_DONE,
+                          `Reading ${sources.length} sources`,
+                          [
+                            <div
+                              key="fav"
+                              style={{
+                                display: "flex",
+                                ...enter(sp(STEP2 + 4, CHIP), 6),
+                              }}
+                            >
+                              {sources.slice(0, 6).map((src, i) => (
+                                <div
+                                  key={`${src.site}${src.title}`}
+                                  style={{ marginLeft: i ? -5 : 0 }}
+                                >
+                                  <Favicon
+                                    src={src}
+                                    size={22}
+                                    ring={c.main}
+                                    font={fontFamily}
+                                  />
+                                </div>
+                              ))}
+                            </div>,
+                          ],
+                        )}
+                      </div>
+                      <div
+                        style={{
+                          position: "absolute",
+                          top: 4,
+                          left: 0,
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 9,
+                          fontSize: 16,
+                          color: c.muted,
+                          opacity: stepsCollapse,
+                        }}
+                      >
+                        <Icon
+                          d={ICONS.check}
+                          size={18}
+                          color={c.muted}
+                          sw={1.8}
+                        />
+                        Reviewed {sources.length} sources
+                      </div>
+                    </div>
+                    <div
+                      style={{
+                        display: "flex",
+                        gap: 10,
+                        maxHeight: interpolate(sourcesRow, [0, 1], [0, 112]),
+                        marginBottom: 20 * Math.min(1, sourcesRow),
+                      }}
+                    >
+                      {[...sources.slice(0, tiles), null].map((src, i) => {
+                        const v = sp(STEP2 + 8 + i * 4, CARD);
+                        return (
+                          <div
+                            key={src ? `${src.site}${i}` : "more"}
+                            style={{
+                              flex: src ? 1 : 0.7,
+                              height: 96,
+                              borderRadius: 12,
+                              background: c.tile,
+                              padding: "12px 14px",
+                              boxSizing: "border-box",
+                              display: "flex",
+                              flexDirection: "column",
+                              justifyContent: "space-between",
+                              opacity: Math.min(1, v * 1.5),
+                              transform: `translateY(${(1 - v) * 14}px) scale(${0.92 + 0.08 * v})`,
+                            }}
+                          >
+                            {src ? (
+                              <>
+                                <div
+                                  style={{
+                                    fontSize: 15,
+                                    lineHeight: "20px",
+                                    height: 40,
+                                    overflow: "hidden",
+                                    display: "-webkit-box",
+                                    WebkitLineClamp: 2,
+                                    WebkitBoxOrient: "vertical",
+                                  }}
+                                >
+                                  {src.title}
+                                </div>
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 7,
+                                    fontSize: 15,
+                                    color: c.muted,
+                                    whiteSpace: "nowrap",
+                                    overflow: "hidden",
+                                  }}
+                                >
+                                  <Favicon
+                                    src={src}
+                                    size={16}
+                                    font={fontFamily}
+                                  />
+                                  <span
+                                    style={{
+                                      overflow: "hidden",
+                                      textOverflow: "ellipsis",
+                                    }}
+                                  >
+                                    {src.site}
+                                  </span>
+                                </div>
+                              </>
+                            ) : (
+                              <>
+                                <div style={{ display: "flex" }}>
+                                  {sources
+                                    .slice(tiles, tiles + 4)
+                                    .map((s2, j) => (
+                                      <div
+                                        key={`${s2.site}${s2.title}`}
+                                        style={{ marginLeft: j ? -4 : 0 }}
+                                      >
+                                        <Favicon
+                                          src={s2}
+                                          size={18}
+                                          ring={c.tile}
+                                          font={fontFamily}
+                                        />
+                                      </div>
+                                    ))}
+                                </div>
+                                <div style={{ fontSize: 15, color: c.muted }}>
+                                  +{Math.max(0, sources.length - tiles)} more
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                    {units.map(renderUnit)}
+                    <div
+                      style={{
+                        maxHeight: interpolate(actionsIn, [0, 1], [0, 60]),
+                        overflow: "hidden",
+                        opacity: actionsIn,
                       }}
                     >
                       <div
                         style={{
                           display: "flex",
                           alignItems: "center",
-                          gap: 8,
-                          fontSize: 15,
-                          color: c.muted,
+                          gap: 18,
+                          padding: "10px 0 16px",
+                          boxShadow: `inset 0 -1px 0 ${c.hair}`,
                         }}
                       >
-                        <Favicon src={src} size={18} />
-                        {src.site}
-                      </div>
-                      <div
-                        style={{
-                          fontSize: 18,
-                          lineHeight: 1.3,
-                          marginTop: 8,
-                          letterSpacing: "-0.01em",
-                        }}
-                      >
-                        {src.title}
-                      </div>
-                      {src.snippet ? (
+                        {[ICONS.share, ICONS.copy, ICONS.redo].map((d) => (
+                          <Icon key={d} d={d} size={18} color={c.muted} />
+                        ))}
+                        <div style={{ flex: 1 }} />
                         <div
                           style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 8,
+                            height: 30,
+                            padding: "0 12px 0 6px",
+                            borderRadius: 15,
+                            background: c.chip,
                             fontSize: 15,
-                            lineHeight: 1.45,
                             color: c.muted,
-                            marginTop: 6,
-                            display: "-webkit-box",
-                            WebkitLineClamp: 2,
-                            WebkitBoxOrient: "vertical",
-                            overflow: "hidden",
                           }}
                         >
-                          {src.snippet}
+                          <div style={{ display: "flex" }}>
+                            {hoverIds.slice(0, 3).map((id, j) => (
+                              <div key={id} style={{ marginLeft: j ? -5 : 0 }}>
+                                <Favicon
+                                  src={sources[id] ?? sources[0]}
+                                  size={18}
+                                  ring={c.main}
+                                  font={fontFamily}
+                                />
+                              </div>
+                            ))}
+                          </div>
+                          {sources.length} sources
                         </div>
-                      ) : null}
+                      </div>
                     </div>
-                  );
-                })}
+                    {related.length > 0 ? (
+                      <div
+                        style={{
+                          maxHeight: interpolate(
+                            sp(RELATED, MORPH),
+                            [0, 1],
+                            [0, 52 + related.length * 52],
+                          ),
+                          overflow: "hidden",
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 9,
+                            fontSize: 17,
+                            padding: "20px 0 8px",
+                            ...enter(sp(RELATED), 8),
+                          }}
+                        >
+                          <Icon d={ICONS.related} size={18} color={c.ink} />
+                          Related
+                        </div>
+                        {related.map((q, i) => (
+                          <div
+                            key={q}
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              height: 52,
+                              boxShadow: i ? `inset 0 1px 0 ${c.hair}` : "none",
+                              fontSize: 17,
+                              color: c.body,
+                              ...enter(sp(RELATED + 4 + i * 4), 10),
+                            }}
+                          >
+                            <span style={{ flex: 1 }}>{q}</span>
+                            <Icon d={ICONS.plus} size={18} color={accent} />
+                          </div>
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    position: "absolute",
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    height: FOOT,
+                    background: `linear-gradient(transparent, ${c.main} 28%)`,
+                    zIndex: 3,
+                  }}
+                >
+                  <div
+                    style={{
+                      position: "absolute",
+                      left: COL_X - panel * SHIFT,
+                      width: COL,
+                      bottom: 22,
+                      height: 92,
+                      borderRadius: 20,
+                      background: c.card,
+                      boxShadow: c.raised,
+                      boxSizing: "border-box",
+                      padding: "16px 18px",
+                      fontSize: 17,
+                      color: c.faint,
+                      opacity: Math.min(1, barIn * 1.4),
+                      transform: `translateY(${(1 - barIn) * 48}px)`,
+                    }}
+                  >
+                    {followUpPlaceholder}
+                    <div
+                      style={{
+                        position: "absolute",
+                        left: 14,
+                        right: 14,
+                        bottom: 12,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 10,
+                      }}
+                    >
+                      <Icon d={ICONS.plus} size={20} color={c.muted} />
+                      <div style={{ flex: 1 }} />
+                      <Icon d={ICONS.mic} size={19} color={c.muted} />
+                      <div
+                        style={{
+                          width: 34,
+                          height: 34,
+                          borderRadius: 17,
+                          background: c.chip,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        <Icon d={ICONS.up} size={17} color={c.faint} sw={1.8} />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {portrait ? (
+                  <div
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      background: dark ? "#000" : "#1C1C1A",
+                      opacity: (dark ? 0.3 : 0.08) * panel,
+                      zIndex: 5,
+                    }}
+                  />
+                ) : null}
+                <div
+                  style={{
+                    position: "absolute",
+                    ...(portrait
+                      ? {
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          height: 580,
+                          borderRadius: "24px 24px 0 0",
+                          boxShadow: `0 -1px 0 ${c.border}, 0 -24px 48px -24px rgba(0,0,0,${dark ? 0.6 : 0.2})`,
+                          transform: `translateY(${(1 - panel) * 620}px)`,
+                        }
+                      : {
+                          top: 0,
+                          right: 0,
+                          bottom: 0,
+                          width: PANEL,
+                          boxShadow: `-1px 0 0 ${c.border}, -24px 0 48px -24px rgba(0,0,0,${dark ? 0.6 : 0.16})`,
+                          transform: `translateX(${(1 - panel) * (PANEL + 48)}px)`,
+                        }),
+                    background: c.main,
+                    zIndex: 6,
+                    padding: "20px 24px",
+                    boxSizing: "border-box",
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      fontSize: 18,
+                      height: 30,
+                    }}
+                  >
+                    <span style={{ flex: 1 }}>{hoverIds.length} sources</span>
+                    <Icon d={ICONS.close} size={18} color={c.muted} />
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 15,
+                      color: c.muted,
+                      margin: "22px 0 16px",
+                    }}
+                  >
+                    Cited in this answer
+                  </div>
+                  {hoverIds.map((id, i) => {
+                    const src = sources[id] ?? sources[0];
+                    const v = sp(PANEL_AT + 6 + i * 4);
+                    return (
+                      <div
+                        key={`${id}`}
+                        style={{
+                          padding: "16px 0",
+                          boxShadow: i ? `inset 0 1px 0 ${c.hair}` : "none",
+                          ...enter(v, 14),
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 8,
+                            fontSize: 15,
+                            color: c.muted,
+                          }}
+                        >
+                          <Favicon src={src} size={18} font={fontFamily} />
+                          {src.site}
+                        </div>
+                        <div
+                          style={{
+                            fontSize: 18,
+                            lineHeight: 1.3,
+                            marginTop: 8,
+                            letterSpacing: "-0.01em",
+                          }}
+                        >
+                          {src.title}
+                        </div>
+                        {src.snippet ? (
+                          <div
+                            style={{
+                              fontSize: 15,
+                              lineHeight: 1.45,
+                              color: c.muted,
+                              marginTop: 6,
+                              display: "-webkit-box",
+                              WebkitLineClamp: 2,
+                              WebkitBoxOrient: "vertical",
+                              overflow: "hidden",
+                            }}
+                          >
+                            {src.snippet}
+                          </div>
+                        ) : null}
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          ) : null}
+            ) : null}
+          </div>
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

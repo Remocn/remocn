@@ -31,7 +31,21 @@ export interface WaitlistSwarmProps {
   value?: number;
   label?: string;
   count?: number;
+  /** Size of each dot, as a multiple of the default. */
+  dotSize?: number;
+  /** Ripple of accent light across the swarm once it has packed. */
+  pulse?: boolean;
   accent?: string;
+  /** Color of the counter; overrides the theme ink. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the counter and label. Load it yourself; Bricolage Grotesque by default. */
+  fontFamily?: string;
+  /** Size of the swarm and counter, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
   ground?: GshPresetId;
@@ -295,18 +309,41 @@ function bezier(p: Particle, e: number) {
   };
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function WaitlistSwarm({
   shape = DEFAULT_SHAPE,
   value = 12480,
   label = "on the waitlist",
   count = 760,
+  dotSize = 1,
+  pulse = true,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = sans,
+  scale: sceneScale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
   ground,
   groundParams,
 }: WaitlistSwarmProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, fps } = useVideoConfig();
   const tall = height > width;
   const u = height / 720;
@@ -410,7 +447,7 @@ export function WaitlistSwarm({
   }, [particles]);
   const pulseR = (t - pulseStart) * 11 * u;
   const pulseW = 54 * u;
-  const pulseOn = t > pulseStart && pulseR < markH * 1.6;
+  const pulseOn = pulse && t > pulseStart && pulseR < markH * 1.6;
 
   const els: React.ReactNode[] = [];
   const ghosts: React.ReactNode[] = [];
@@ -453,7 +490,7 @@ export function WaitlistSwarm({
     const rest = p.accent ? 1 : 1 - docked * 0.16;
     opacity *= rest + (1 - rest) * glow;
 
-    const r = (sp * p.size * scale) / 2;
+    const r = ((sp * p.size * scale) / 2) * dotSize;
     const [mr, mg, mb] = p.accent
       ? hexRgb(accent)
       : meshAt(p.ux, p.uy, meshCols, drift);
@@ -566,80 +603,97 @@ export function WaitlistSwarm({
       };
 
   return (
-    <AbsoluteFill style={{ background: pal.bg, overflow: "hidden" }}>
-      <GshGround
-        preset={groundParams ? undefined : (ground ?? pal.ground)}
-        params={
-          groundParams ??
-          (theme === "light" && !ground ? LIGHT_GLASS : undefined)
-        }
-        timeOffset={theme === "dark" ? 2 : 11}
-        timeScale={0.45}
-      />
-      <AbsoluteFill
-        style={{
-          background: `radial-gradient(${tall ? "95% 48%" : "70% 80%"} at ${tall ? 50 : 45}% ${tall ? 42 : 50}%, rgba(${pal.scrim},${pal.scrimA}) 0%, rgba(${pal.scrim},0) 100%)`,
-        }}
-      />
-      <AbsoluteFill
-        style={{
-          transform: `translateY(${camY}px) scale(${cam})`,
-          transformOrigin: `${(fx / width) * 100}% ${(fy / height) * 100}%`,
-        }}
-      >
-        <svg
-          width={width}
-          height={height}
-          viewBox={`0 0 ${width} ${height}`}
-          style={{ position: "absolute", inset: 0, overflow: "visible" }}
-          aria-hidden
+    <AbsoluteFill
+      style={{
+        background: background === undefined ? pal.bg : undefined,
+        overflow: "hidden",
+      }}
+    >
+      {background === undefined ? (
+        <>
+          <GshGround
+            preset={groundParams ? undefined : (ground ?? pal.ground)}
+            params={
+              groundParams ??
+              (theme === "light" && !ground ? LIGHT_GLASS : undefined)
+            }
+            timeOffset={theme === "dark" ? 2 : 11}
+            timeScale={0.45}
+          />
+          <AbsoluteFill
+            style={{
+              background: `radial-gradient(${tall ? "95% 48%" : "70% 80%"} at ${tall ? 50 : 45}% ${tall ? 42 : 50}%, rgba(${pal.scrim},${pal.scrimA}) 0%, rgba(${pal.scrim},0) 100%)`,
+            }}
+          />
+        </>
+      ) : (
+        <AbsoluteFill
+          style={{
+            background: background === "transparent" ? undefined : background,
+          }}
+        />
+      )}
+      <ScaleLayer scale={sceneScale}>
+        <AbsoluteFill
+          style={{
+            transform: `translateY(${camY}px) scale(${cam})`,
+            transformOrigin: `${(fx / width) * 100}% ${(fy / height) * 100}%`,
+          }}
         >
-          <g>{ghosts}</g>
-          <g>{els}</g>
-        </svg>
-      </AbsoluteFill>
+          <svg
+            width={width}
+            height={height}
+            viewBox={`0 0 ${width} ${height}`}
+            style={{ position: "absolute", inset: 0, overflow: "visible" }}
+            aria-hidden
+          >
+            <g>{ghosts}</g>
+            <g>{els}</g>
+          </svg>
+        </AbsoluteFill>
 
-      <div
-        style={{
-          position: "absolute",
-          ...counterBox,
-          display: "flex",
-          flexDirection: "column",
-          gap: labelFs * 0.5,
-          fontFamily: sans,
-          color: pal.fg,
-        }}
-      >
-        <span
+        <div
           style={{
-            fontWeight: 300,
-            fontSize: numFs,
-            lineHeight: 1,
-            letterSpacing: "-0.045em",
-            fontVariantNumeric: "tabular-nums",
-            opacity: counterIn,
-            transformOrigin: tall ? "50% 60%" : "0% 60%",
-            transform: `translateY(${(1 - counterRise) * 0.18 * numFs}px) scale(${punch})`,
-            filter: `blur(${(1 - counterIn) * 6 * u}px)`,
+            position: "absolute",
+            ...counterBox,
+            display: "flex",
+            flexDirection: "column",
+            gap: labelFs * 0.5,
+            fontFamily,
+            color: ink ?? pal.fg,
           }}
         >
-          {formatNumber(shown)}
-        </span>
-        <span
-          style={{
-            fontWeight: 400,
-            fontSize: labelFs,
-            lineHeight: 1.1,
-            letterSpacing: "-0.01em",
-            paddingLeft: tall ? 0 : numFs * 0.05,
-            color: pal.muted,
-            opacity: labelIn,
-            transform: `translateY(${(1 - labelIn) * 0.4 * labelFs}px)`,
-          }}
-        >
-          {label}
-        </span>
-      </div>
+          <span
+            style={{
+              fontWeight: 300,
+              fontSize: numFs,
+              lineHeight: 1,
+              letterSpacing: "-0.045em",
+              fontVariantNumeric: "tabular-nums",
+              opacity: counterIn,
+              transformOrigin: tall ? "50% 60%" : "0% 60%",
+              transform: `translateY(${(1 - counterRise) * 0.18 * numFs}px) scale(${punch})`,
+              filter: `blur(${(1 - counterIn) * 6 * u}px)`,
+            }}
+          >
+            {formatNumber(shown)}
+          </span>
+          <span
+            style={{
+              fontWeight: 400,
+              fontSize: labelFs,
+              lineHeight: 1.1,
+              letterSpacing: "-0.01em",
+              paddingLeft: tall ? 0 : numFs * 0.05,
+              color: pal.muted,
+              opacity: labelIn,
+              transform: `translateY(${(1 - labelIn) * 0.4 * labelFs}px)`,
+            }}
+          >
+            {label}
+          </span>
+        </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

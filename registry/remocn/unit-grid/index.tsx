@@ -26,6 +26,21 @@ export interface UnitGridProps {
   highlighted?: number;
   caption?: string;
   accent?: string;
+  /** Text color of the count and caption; overrides the theme. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the count and caption. Load it yourself; Geist by default. */
+  fontFamily?: string;
+  /** Frames each highlighted unit takes to flip. */
+  flip?: number;
+  /** Unit radius as a share of the grid pitch. */
+  dotSize?: number;
+  grain?: boolean;
+  /** Size of the grid and copy, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -117,6 +132,22 @@ function Grain({ opacity }: { opacity: number }) {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 function gridShape(total: number) {
   if (total === 100) return { cols: 10, rows: 10 };
   const cols = Math.max(1, Math.ceil(Math.sqrt(total)));
@@ -128,13 +159,24 @@ export function UnitGrid({
   highlighted = 33,
   caption = "1 in 3 teams ship weekly",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = sans,
+  flip = FLIP_DUR,
+  dotSize = 0.34,
+  grain = true,
+  scale = 1,
+  delay = 0,
   theme = "dark",
   speed = 1,
 }: UnitGridProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const u = H / 720;
   const pal = THEMES[theme];
+  const fg = ink ?? pal.fg;
+  const stage =
+    background === "transparent" ? "transparent" : (background ?? pal.bg);
   const n = Math.max(1, Math.round(total));
   const hi = Math.max(0, Math.min(n, Math.round(highlighted)));
 
@@ -147,10 +189,10 @@ export function UnitGrid({
   const gap = W * 0.07;
   const left = (W - (gw + gap + colW)) / 2;
   const top = (H - gh) / 2;
-  const r = pitch * 0.34;
+  const r = pitch * dotSize;
 
   const span = flipSpan(hi);
-  const flipEnd = FLIP_START + span + FLIP_DUR;
+  const flipEnd = FLIP_START + span + flip;
 
   const units = useMemo(
     () =>
@@ -200,7 +242,7 @@ export function UnitGrid({
     let fill: string = mix(pal.unit, pal.unitLit, d.light);
     let opacity = a * (1 - settle * 0.22);
     if (d.flip >= 0) {
-      const p = interpolate(t - d.flip, [0, FLIP_DUR], [0, 1], CLAMP);
+      const p = interpolate(t - d.flip, [0, flip], [0, 1], CLAMP);
       if (p > 0) {
         const e = EASE_IO(p);
         sx = Math.max(0.06, Math.abs(Math.cos(Math.PI * e)));
@@ -245,7 +287,7 @@ export function UnitGrid({
   const colLeft = left + gw + gap;
 
   return (
-    <AbsoluteFill style={{ background: pal.bg, overflow: "hidden" }}>
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
       <AbsoluteFill
         style={{
           background: `radial-gradient(ellipse 55% 60% at 40% 42%, ${pal.light}, transparent 75%)`,
@@ -257,102 +299,104 @@ export function UnitGrid({
           background: `radial-gradient(ellipse ${gw * 0.9}px ${gh * 0.55}px at ${left + gw / 2}px ${top + gh * 0.2}px, ${pal.glow}, transparent 80%)`,
         }}
       />
-      <AbsoluteFill
-        style={{ transform: `scale(${cam})`, transformOrigin: "50% 50%" }}
-      >
-        <svg
-          width={W}
-          height={H}
-          viewBox={`0 0 ${W} ${H}`}
-          style={{ position: "absolute", inset: 0 }}
-          aria-hidden
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill
+          style={{ transform: `scale(${cam})`, transformOrigin: "50% 50%" }}
         >
-          {dots}
-        </svg>
-        <div
-          style={{
-            position: "absolute",
-            left: colLeft,
-            top: top - numSize * 0.16,
-            width: colW,
-            display: "flex",
-            alignItems: "baseline",
-            gap: 10 * u,
-            color: pal.fg,
-            opacity: numIn,
-            transform: `translateY(${(1 - numIn) * 14 * u}px)`,
-            filter: `blur(${(1 - numIn) * 6 * u}px)`,
-          }}
-        >
-          <span
-            style={{
-              fontFamily: sans,
-              fontWeight: 400,
-              fontSize: numSize,
-              lineHeight: 1,
-              letterSpacing: "-0.04em",
-              fontVariantNumeric: "tabular-nums",
-              width: `calc(${digits}ch - ${digits * 0.04}em)`,
-              textAlign: "right",
-              flexShrink: 0,
-            }}
+          <svg
+            width={W}
+            height={H}
+            viewBox={`0 0 ${W} ${H}`}
+            style={{ position: "absolute", inset: 0 }}
+            aria-hidden
           >
-            {count}
-          </span>
-          <span
-            style={{
-              fontFamily: mono,
-              fontWeight: 400,
-              fontSize: numSize * 0.22,
-              lineHeight: 1,
-              letterSpacing: "-0.01em",
-              fontVariantNumeric: "tabular-nums",
-              color: pal.muted,
-            }}
-          >
-            / {n}
-          </span>
-        </div>
-        <div
-          style={{
-            position: "absolute",
-            left: colLeft,
-            top,
-            width: colW,
-            height: gh,
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "flex-end",
-          }}
-        >
+            {dots}
+          </svg>
           <div
             style={{
-              width: colW * EASE_IO(capIn),
-              height: Math.max(1, u),
-              marginBottom: 20 * u,
-              background: accent,
-              opacity: 0.8,
-            }}
-          />
-          <div
-            style={{
-              fontFamily: sans,
-              fontWeight: 400,
-              fontSize: 34 * u,
-              lineHeight: 1.15,
-              letterSpacing: "-0.02em",
-              textWrap: "balance",
-              color: pal.fg,
-              opacity: capIn,
-              transform: `translateY(${(1 - capIn) * 12 * u}px)`,
-              filter: `blur(${(1 - capIn) * 5 * u}px)`,
+              position: "absolute",
+              left: colLeft,
+              top: top - numSize * 0.16,
+              width: colW,
+              display: "flex",
+              alignItems: "baseline",
+              gap: 10 * u,
+              color: fg,
+              opacity: numIn,
+              transform: `translateY(${(1 - numIn) * 14 * u}px)`,
+              filter: `blur(${(1 - numIn) * 6 * u}px)`,
             }}
           >
-            {caption}
+            <span
+              style={{
+                fontFamily,
+                fontWeight: 400,
+                fontSize: numSize,
+                lineHeight: 1,
+                letterSpacing: "-0.04em",
+                fontVariantNumeric: "tabular-nums",
+                width: `calc(${digits}ch - ${digits * 0.04}em)`,
+                textAlign: "right",
+                flexShrink: 0,
+              }}
+            >
+              {count}
+            </span>
+            <span
+              style={{
+                fontFamily: mono,
+                fontWeight: 400,
+                fontSize: numSize * 0.22,
+                lineHeight: 1,
+                letterSpacing: "-0.01em",
+                fontVariantNumeric: "tabular-nums",
+                color: pal.muted,
+              }}
+            >
+              / {n}
+            </span>
           </div>
-        </div>
-      </AbsoluteFill>
-      <Grain opacity={pal.grain} />
+          <div
+            style={{
+              position: "absolute",
+              left: colLeft,
+              top,
+              width: colW,
+              height: gh,
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "flex-end",
+            }}
+          >
+            <div
+              style={{
+                width: colW * EASE_IO(capIn),
+                height: Math.max(1, u),
+                marginBottom: 20 * u,
+                background: accent,
+                opacity: 0.8,
+              }}
+            />
+            <div
+              style={{
+                fontFamily,
+                fontWeight: 400,
+                fontSize: 34 * u,
+                lineHeight: 1.15,
+                letterSpacing: "-0.02em",
+                textWrap: "balance",
+                color: fg,
+                opacity: capIn,
+                transform: `translateY(${(1 - capIn) * 12 * u}px)`,
+                filter: `blur(${(1 - capIn) * 5 * u}px)`,
+              }}
+            >
+              {caption}
+            </div>
+          </div>
+        </AbsoluteFill>
+      </ScaleLayer>
+      {grain ? <Grain opacity={pal.grain} /> : null}
     </AbsoluteFill>
   );
 }

@@ -1,4 +1,11 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const dropUploadConfig: ComponentConfig = {
   componentName: "DropUpload",
@@ -12,11 +19,6 @@ export const dropUploadConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     title: {
       type: "text-content",
@@ -42,6 +44,37 @@ export const dropUploadConfig: ComponentConfig = {
       type: "text-content",
       default: "MD, PDF or ZIP · up to 50 MB",
       description: "Hint",
+    },
+    dropLabel: {
+      type: "text-content",
+      default: "Drag and drop a file, or",
+      description: "Drop label",
+    },
+    releaseLabel: {
+      type: "text-content",
+      default: "Release to upload",
+      description: "Release label",
+    },
+    doneLabel: {
+      type: "text-content",
+      default: "Uploaded",
+      description: "Done label",
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ground: groundControl(),
+    ...sceneControls({ font: "Instrument Sans" }),
+    speed: {
+      type: "number",
+      default: 1,
+      min: 0.25,
+      max: 4,
+      step: 0.25,
+      description: "Speed",
+      hiddenFromList: false,
     },
   },
   durationInFrames: 162,

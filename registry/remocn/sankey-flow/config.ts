@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const sankeyFlowConfig: ComponentConfig = {
   componentName: "SankeyFlow",
@@ -13,11 +19,6 @@ export const sankeyFlowConfig: ComponentConfig = {
       },
       description: "Theme",
     },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
-    },
     target: {
       type: "text-content",
       default: "remocn",
@@ -28,6 +29,30 @@ export const sankeyFlowConfig: ComponentConfig = {
       default: "videos rendered",
       description: "Label",
     },
+    stagger: {
+      type: "number",
+      default: 6,
+      min: 0,
+      max: 20,
+      step: 1,
+      description: "Flow stagger",
+      hiddenFromList: false,
+    },
+    flowLength: {
+      type: "number",
+      default: 34,
+      min: 8,
+      max: 90,
+      step: 1,
+      description: "Flow length (frames)",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Geist", grain: true }),
     speed: {
       type: "number",
       default: 1,

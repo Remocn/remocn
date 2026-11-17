@@ -2,6 +2,7 @@
 
 import { loadFont as loadGeistMono } from "@remotion/google-fonts/GeistMono";
 import { loadFont as loadHanken } from "@remotion/google-fonts/HankenGrotesk";
+import type React from "react";
 import { Fragment, useId } from "react";
 import {
   AbsoluteFill,
@@ -25,8 +26,23 @@ export interface IndentStepsProps {
   highlight?: string;
   lineNumbers?: boolean;
   exit?: boolean;
+  /** Frames between lines; long lists tighten it so every line lands. */
+  stagger?: number;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /**
+   * Typeface for the lines. Load it yourself; Hanken Grotesk by default.
+   * Layout uses Hanken Grotesk metrics, so another face may set looser or tighter.
+   */
+  fontFamily?: string;
+  /** Size of the text block, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  /** Film grain over the scene. */
+  grain?: boolean;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -153,20 +169,45 @@ function wrapRows(
   return rows;
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function IndentSteps({
   lines = ["Write it in React.", "Render it in Remotion.", "Ship it tonight."],
   highlight = "tonight",
   lineNumbers = true,
   exit = false,
+  stagger = 20,
   accent = "#3B5BFD",
+  ink,
   background,
+  fontFamily = hanken.fontFamily,
+  scale = 1,
+  delay = 0,
+  grain = true,
   speed = 1,
   theme = "dark",
 }: IndentStepsProps) {
-  const raw = useCurrentFrame();
+  // The exit stays pinned to the end of the clip, so it reads the undelayed frame.
+  const now = useCurrentFrame();
+  const raw = Math.max(0, now - delay);
   const frame = raw * speed;
   const { width, height, durationInFrames } = useVideoConfig();
   const p = PALETTES[theme];
+  const fg = ink ?? p.fg;
   const logical = lines.slice(0, 5);
   const n = Math.max(1, logical.length);
 
@@ -216,14 +257,14 @@ export function IndentSteps({
     return { first, count: rows.filter((r) => r.line === i).length };
   });
 
-  const beat = n > 1 ? Math.min(20, 60 / (n - 1)) : 20;
+  const beat = n > 1 ? Math.min(stagger, 60 / (n - 1)) : stagger;
   const enter = (i: number) => 4 + i * beat;
   const tabAt = (i: number) => enter(i) + Math.min(10, beat * 0.5);
   const done = n > 1 ? tabAt(n - 1) + 8 : enter(0) + 16;
   const EXIT = 18;
   const exitStart = durationInFrames - EXIT;
   const outdent = exit
-    ? interpolate(raw, [exitStart, exitStart + 8], [0, 1], {
+    ? interpolate(now, [exitStart, exitStart + 8], [0, 1], {
         ...CLAMP,
         easing: EASE_OUT,
       })
@@ -231,7 +272,7 @@ export function IndentSteps({
   const leave = (r: number) =>
     exit
       ? interpolate(
-          raw,
+          now,
           [exitStart + 6 + r * 2, exitStart + 15 + r * 2],
           [0, 1],
           {
@@ -285,137 +326,144 @@ export function IndentSteps({
               transform: `translate(${(-drift * 2).toFixed(3)}%, ${(-drift * 1.5).toFixed(3)}%) scale(1.06)`,
             }}
           />
-          <Grain opacity={p.grain} />
+          {grain ? <Grain opacity={p.grain} /> : null}
         </>
       ) : null}
 
-      {logical.map((_, i) => {
-        const { first, count } = span[i];
-        if (first < 0) return null;
-        const pos = indent(i);
-        const r = rise(rows[first]) * (1 - leave(first));
-        if (r <= 0) return null;
-        const stops = Math.min(i, Math.ceil(pos - 0.001));
-        return Array.from({ length: stops }, (_, k) => {
-          const grow = Math.min(1, pos - k);
-          const heat =
-            k === i - 1
-              ? interpolate(frame, [tabAt(i) + 2, tabAt(i) + 20], [1, 0], CLAMP)
-              : 0;
-          return (
-            <div
-              key={`${i}-${k}`}
-              style={{
-                position: "absolute",
-                left: x0 + k * tab * fs + fs * 0.03,
-                top: top + first * lh - lh * 0.04,
-                width: guideW,
-                height: count * lh * grow,
-                background: heat > 0.01 ? accent : p.guide,
-                opacity: (heat > 0.01 ? 0.35 + 0.65 * heat : 1) * r,
-              }}
-            />
-          );
-        });
-      })}
-
-      {lineNumbers
-        ? logical.map((_, i) => {
-            const { first } = span[i];
-            if (first < 0) return null;
-            const r = rise(rows[first]) * (1 - leave(first));
-            if (r <= 0) return null;
-            const nfs = Math.max(12, fs * 0.22);
+      <ScaleLayer scale={scale}>
+        {logical.map((_, i) => {
+          const { first, count } = span[i];
+          if (first < 0) return null;
+          const pos = indent(i);
+          const r = rise(rows[first]) * (1 - leave(first));
+          if (r <= 0) return null;
+          const stops = Math.min(i, Math.ceil(pos - 0.001));
+          return Array.from({ length: stops }, (_, k) => {
+            const grow = Math.min(1, pos - k);
+            const heat =
+              k === i - 1
+                ? interpolate(
+                    frame,
+                    [tabAt(i) + 2, tabAt(i) + 20],
+                    [1, 0],
+                    CLAMP,
+                  )
+                : 0;
             return (
               <div
-                key={`n${i}`}
+                key={`${i}-${k}`}
                 style={{
                   position: "absolute",
-                  left: x0 - gutterEm * fs,
-                  width: gutterEm * fs * 0.62,
-                  top: top + first * lh + baseline - nfs * 0.98,
-                  textAlign: "right",
-                  fontFamily: mono.fontFamily,
-                  fontWeight: 400,
-                  fontSize: nfs,
-                  lineHeight: 1,
-                  color: p.muted,
-                  fontVariantNumeric: "tabular-nums",
-                  opacity: r,
+                  left: x0 + k * tab * fs + fs * 0.03,
+                  top: top + first * lh - lh * 0.04,
+                  width: guideW,
+                  height: count * lh * grow,
+                  background: heat > 0.01 ? accent : p.guide,
+                  opacity: (heat > 0.01 ? 0.35 + 0.65 * heat : 1) * r,
                 }}
-              >
-                {i + 1}
-              </div>
+              />
             );
-          })
-        : null}
+          });
+        })}
 
-      {rows.map((row, ri) => {
-        const r = rise(row);
-        if (r <= 0) return null;
-        const out = leave(ri);
-        const pos = indent(row.line);
-        const parts: [string, boolean][] = row.hl
-          ? [
-              [row.text.slice(0, row.hl[0]), false],
-              [row.text.slice(row.hl[0], row.hl[1]), true],
-              [row.text.slice(row.hl[1]), false],
-            ]
-          : [[row.text, false]];
-        return (
-          <div
-            key={`l${ri}`}
-            style={{
-              position: "absolute",
-              left: x0 + pos * tab * fs,
-              top: top + ri * lh,
-              height: lh,
-              overflow: "hidden",
-              paddingRight: "0.1em",
-              fontFamily: hanken.fontFamily,
-              fontWeight: 500,
-              fontSize: fs,
-              lineHeight: `${lh}px`,
-              letterSpacing: `${TRACK}em`,
-              whiteSpace: "nowrap",
-              color: p.fg,
-            }}
-          >
+        {lineNumbers
+          ? logical.map((_, i) => {
+              const { first } = span[i];
+              if (first < 0) return null;
+              const r = rise(rows[first]) * (1 - leave(first));
+              if (r <= 0) return null;
+              const nfs = Math.max(12, fs * 0.22);
+              return (
+                <div
+                  key={`n${i}`}
+                  style={{
+                    position: "absolute",
+                    left: x0 - gutterEm * fs,
+                    width: gutterEm * fs * 0.62,
+                    top: top + first * lh + baseline - nfs * 0.98,
+                    textAlign: "right",
+                    fontFamily: mono.fontFamily,
+                    fontWeight: 400,
+                    fontSize: nfs,
+                    lineHeight: 1,
+                    color: p.muted,
+                    fontVariantNumeric: "tabular-nums",
+                    opacity: r,
+                  }}
+                >
+                  {i + 1}
+                </div>
+              );
+            })
+          : null}
+
+        {rows.map((row, ri) => {
+          const r = rise(row);
+          if (r <= 0) return null;
+          const out = leave(ri);
+          const pos = indent(row.line);
+          const parts: [string, boolean][] = row.hl
+            ? [
+                [row.text.slice(0, row.hl[0]), false],
+                [row.text.slice(row.hl[0], row.hl[1]), true],
+                [row.text.slice(row.hl[1]), false],
+              ]
+            : [[row.text, false]];
+          return (
             <div
+              key={`l${ri}`}
               style={{
-                transform: `translateY(${((1 - r) * 100 - out * 100).toFixed(2)}%)`,
+                position: "absolute",
+                left: x0 + pos * tab * fs,
+                top: top + ri * lh,
+                height: lh,
+                overflow: "hidden",
+                paddingRight: "0.1em",
+                fontFamily,
+                fontWeight: 500,
+                fontSize: fs,
+                lineHeight: `${lh}px`,
+                letterSpacing: `${TRACK}em`,
+                whiteSpace: "nowrap",
+                color: fg,
               }}
             >
-              {parts.map(([text, hl], k) =>
-                hl ? (
-                  <span key={k} style={{ position: "relative" }}>
-                    <span style={{ opacity: 1 - lightT }}>{text}</span>
-                    <span
-                      style={{
-                        position: "absolute",
-                        left: 0,
-                        top: 0,
-                        opacity: lightT,
-                        backgroundImage: p.highlight,
-                        backgroundSize: "160% 100%",
-                        backgroundPosition: `${(drift * 60).toFixed(2)}% 0%`,
-                        WebkitBackgroundClip: "text",
-                        backgroundClip: "text",
-                        color: "transparent",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      {text}
+              <div
+                style={{
+                  transform: `translateY(${((1 - r) * 100 - out * 100).toFixed(2)}%)`,
+                }}
+              >
+                {parts.map(([text, hl], k) =>
+                  hl ? (
+                    <span key={k} style={{ position: "relative" }}>
+                      <span style={{ opacity: 1 - lightT }}>{text}</span>
+                      <span
+                        style={{
+                          position: "absolute",
+                          left: 0,
+                          top: 0,
+                          opacity: lightT,
+                          backgroundImage: p.highlight,
+                          backgroundSize: "160% 100%",
+                          backgroundPosition: `${(drift * 60).toFixed(2)}% 0%`,
+                          WebkitBackgroundClip: "text",
+                          backgroundClip: "text",
+                          color: "transparent",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {text}
+                      </span>
                     </span>
-                  </span>
-                ) : (
-                  <Fragment key={k}>{text}</Fragment>
-                ),
-              )}
+                  ) : (
+                    <Fragment key={k}>{text}</Fragment>
+                  ),
+                )}
+              </div>
             </div>
-          </div>
-        );
-      })}
+          );
+        })}
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

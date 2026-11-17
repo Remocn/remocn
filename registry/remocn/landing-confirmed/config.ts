@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const landingConfirmedConfig: ComponentConfig = {
   componentName: "LandingConfirmed",
@@ -12,11 +18,6 @@ export const landingConfirmedConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     confirm: {
       type: "text-content",
@@ -33,6 +34,11 @@ export const landingConfirmedConfig: ComponentConfig = {
       default: "Nailed the landing.",
       description: "Subtitle",
     },
+    altitudeLabel: {
+      type: "text-content",
+      default: "Altitude",
+      description: "Altitude label",
+    },
     from: {
       type: "number",
       default: 1200,
@@ -42,6 +48,21 @@ export const landingConfirmedConfig: ComponentConfig = {
       description: "From",
       hiddenFromList: false,
     },
+    descent: {
+      type: "number",
+      default: 50,
+      min: 10,
+      max: 120,
+      step: 1,
+      description: "Descent (frames)",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Space Grotesk", grain: true }),
     speed: {
       type: "number",
       default: 1,

@@ -30,7 +30,18 @@ export interface RewriteBarsProps {
   align?: "center" | "left";
   hold?: number;
   accent?: string;
+  /** Text color of the headlines; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the headlines. Load it yourself; Figtree by default. */
+  fontFamily?: string;
+  fontWeight?: number;
+  /** Frames between lines as the bars sweep a headline in and out. */
+  stagger?: number;
+  /** Size of the text block, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -84,7 +95,11 @@ const LINE_STAGGER = 3;
 
 const norm = (w: string) => w.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, "");
 
-function useWordWidths(words: string[]) {
+function useWordWidths(
+  words: string[],
+  fontFamily: string,
+  fontWeight: number,
+) {
   const key = words.join("\u0001");
   const estimate = words.map((w) => w.length * 0.5);
   const [widths, setWidths] = useState<{
@@ -97,7 +112,7 @@ function useWordWidths(words: string[]) {
 
   useEffect(() => {
     let live = true;
-    const font = `500 100px "${figtree.fontFamily}"`;
+    const font = `${fontWeight} 100px "${fontFamily}"`;
     Promise.all([figtree.waitUntilDone(), document.fonts.load(font)])
       .catch(() => undefined)
       .then(() => {
@@ -122,7 +137,7 @@ function useWordWidths(words: string[]) {
     return () => {
       live = false;
     };
-  }, [key, handle]);
+  }, [key, handle, fontFamily, fontWeight]);
 
   return widths && widths.key === key
     ? widths
@@ -164,6 +179,22 @@ function balance(w: number[], space: number, lines: number) {
   return { rows, widest: best[lines][n], rowW };
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 interface Line {
   words: string[];
   x: number;
@@ -187,18 +218,24 @@ export function RewriteBars({
   align = "center",
   hold = 20,
   accent = "#3B5BFD",
+  ink,
   background,
+  fontFamily = figtree.fontFamily,
+  fontWeight = 500,
+  stagger: lineStagger = LINE_STAGGER,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: RewriteBarsProps) {
-  const frame = useCurrentFrame() * speed;
+  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height } = useVideoConfig();
   const t = THEMES[theme];
 
   const heads = headlines.length > 0 ? headlines : ["remocn"];
   const split = heads.map((h) => h.split(/\s+/).filter(Boolean));
   const all = split.flat();
-  const measured = useWordWidths(all);
+  const measured = useWordWidths(all, fontFamily, fontWeight);
 
   const portrait = height > width * 1.1;
   const s = portrait
@@ -252,7 +289,7 @@ export function RewriteBars({
   const collapseEnd: number[] = [];
   let tt = 12;
   for (let h = 0; h < heads.length; h++) {
-    const stagger = LINE_STAGGER * (layouts[h].lines.length - 1);
+    const stagger = lineStagger * (layouts[h].lines.length - 1);
     resolveAt.push(tt);
     collapseAt.push(tt + RESOLVE + stagger + hold);
     collapseEnd.push(collapseAt[h] + COLLAPSE + stagger);
@@ -316,12 +353,12 @@ export function RewriteBars({
       barO *= interpolate(frame, [-2, 4], [0, 1], CLAMP);
 
     const lineIdx = Math.min(j, L.lines.length - 1);
-    const rs = resolveAt[cur] + lineIdx * LINE_STAGGER;
+    const rs = resolveAt[cur] + lineIdx * lineStagger;
     const res = interpolate(frame, [rs, rs + RESOLVE], [0, 1], {
       ...CLAMP,
       easing: EASE_SWEEP,
     });
-    const cs = collapseAt[cur] + lineIdx * LINE_STAGGER;
+    const cs = collapseAt[cur] + lineIdx * lineStagger;
     const col =
       cur < last
         ? interpolate(frame, [cs, cs + COLLAPSE], [0, 1], {
@@ -399,12 +436,12 @@ export function RewriteBars({
             top: ln.base - fs * 0.86,
             height: lineH,
             whiteSpace: "pre",
-            fontFamily: figtree.fontFamily,
-            fontWeight: 500,
+            fontFamily,
+            fontWeight,
             fontSize: fs,
             lineHeight: `${fs * 0.86 + fs * 0.22}px`,
             letterSpacing: `${TRACK}em`,
-            color: t.fg,
+            color: ink ?? t.fg,
             width: lw,
             clipPath: `inset(-20% ${lw - rightEdge}px -30% ${leftEdge}px)`,
           }}
@@ -502,9 +539,11 @@ export function RewriteBars({
           }}
         />
       ) : null}
-      {eyebrow}
-      {bars}
-      {texts}
+      <ScaleLayer scale={scale}>
+        {eyebrow}
+        {bars}
+        {texts}
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

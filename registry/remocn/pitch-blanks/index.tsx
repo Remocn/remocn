@@ -1,6 +1,7 @@
 "use client";
 
 import { loadFont } from "@remotion/google-fonts/Bitter";
+import type React from "react";
 import { useEffect, useRef, useState } from "react";
 import {
   AbsoluteFill,
@@ -22,7 +23,19 @@ export interface PitchBlanksProps {
   line?: string;
   labels?: string[];
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the line. Load it yourself; Bitter by default. */
+  fontFamily?: string;
+  /** Frame the first blank fills in. */
+  firstFill?: number;
+  /** Frames between one blank filling and the next. */
+  fillGap?: number;
+  /** Size of the line, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -93,7 +106,7 @@ function parse(line: string, labels: string[]) {
   return { toks, blanks: n };
 }
 
-function useFontsReady() {
+function useFontsReady(family: string) {
   const [ready, setReady] = useState(false);
   const [handle] = useState(() => delayRender("pitch-blanks: fonts"));
   const released = useRef(false);
@@ -101,8 +114,8 @@ function useFontsReady() {
     let live = true;
     Promise.all([
       bitter.waitUntilDone(),
-      document.fonts.load(`400 100px "${bitter.fontFamily}"`),
-      document.fonts.load(`500 100px "${bitter.fontFamily}"`),
+      document.fonts.load(`400 100px "${family}"`),
+      document.fonts.load(`500 100px "${family}"`),
     ])
       .catch(() => undefined)
       .then(() => {
@@ -115,22 +128,22 @@ function useFontsReady() {
     return () => {
       live = false;
     };
-  }, [handle]);
+  }, [handle, family]);
   return ready;
 }
 
-function useMeasure() {
+function useMeasure(family: string) {
   const ctx = useRef<CanvasRenderingContext2D | null>(null);
   const cache = useRef(new Map<string, number>());
   return (text: string, weight: 400 | 500, track: number) => {
-    const key = `${weight}\u0001${track}\u0001${text}`;
+    const key = `${family}\u0001${weight}\u0001${track}\u0001${text}`;
     const hit = cache.current.get(key);
     if (hit !== undefined) return hit;
     if (!ctx.current)
       ctx.current = document.createElement("canvas").getContext("2d");
     let w = text.length * 0.5;
     if (ctx.current) {
-      ctx.current.font = `${weight} 100px "${bitter.fontFamily}"`;
+      ctx.current.font = `${weight} 100px "${family}"`;
       w = ctx.current.measureText(text).width / 100;
     }
     const em = w + track * Array.from(text).length;
@@ -167,22 +180,45 @@ function breakLines(
   return starts;
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function PitchBlanks({
   line = "{remocn} is a {launch-film kit} for {teams of one}.",
   labels = ["product", "category", "audience"],
   accent,
+  ink,
   background,
+  fontFamily = bitter.fontFamily,
+  firstFill = FIRST_FILL,
+  fillGap = FILL_GAP,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: PitchBlanksProps) {
-  const frame = useCurrentFrame() * speed;
+  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, durationInFrames: T } = useVideoConfig();
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
+  const fg = ink ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
-  const ready = useFontsReady();
-  const measure = useMeasure();
+  const ready = useFontsReady(fontFamily);
+  const measure = useMeasure(fontFamily);
 
   if (!ready) {
     return (
@@ -191,10 +227,9 @@ export function PitchBlanks({
   }
 
   const { toks, blanks } = parse(line, labels);
-  const motionEnd =
-    FIRST_FILL + Math.max(0, blanks - 1) * FILL_GAP + MOTION_TAIL;
+  const motionEnd = firstFill + Math.max(0, blanks - 1) * fillGap + MOTION_TAIL;
   const tail = Math.max(30, T * 0.18);
-  const pace = Math.min(1.5, Math.max(0.5, (T - tail) / motionEnd));
+  const pace = Math.min(1.5, Math.max(0.5, (T - delay - tail) / motionEnd));
   const t = frame / pace;
 
   const portrait = H > W * 1.1;
@@ -255,7 +290,7 @@ export function PitchBlanks({
     return l;
   });
 
-  const fillAt = (b: number) => FIRST_FILL + b * FILL_GAP;
+  const fillAt = (b: number) => firstFill + b * fillGap;
   const fillP = (b: number) =>
     interpolate(t, [fillAt(b), fillAt(b) + 14], [0, 1], {
       ...CLAMP,
@@ -294,101 +329,103 @@ export function PitchBlanks({
     <AbsoluteFill
       style={{
         background: stage,
-        color: c.ink,
-        fontFamily: bitter.fontFamily,
+        color: fg,
+        fontFamily,
         fontWeight: 400,
         overflow: "hidden",
       }}
     >
-      {toks.map((tk, i) => {
-        const left = mx + xs[i] * Fs;
-        const top = top0 + lineOf[i] * pitch;
-        const w = curW[i] * Fs;
-        if (tk.blank < 0) {
-          const p = intro(i);
+      <ScaleLayer scale={scale}>
+        {toks.map((tk, i) => {
+          const left = mx + xs[i] * Fs;
+          const top = top0 + lineOf[i] * pitch;
+          const w = curW[i] * Fs;
+          if (tk.blank < 0) {
+            const p = intro(i);
+            return (
+              <div
+                key={`w${i}`}
+                style={{
+                  position: "absolute",
+                  left,
+                  top,
+                  height: BOX * Fs,
+                  lineHeight: `${BOX * Fs}px`,
+                  fontSize: Fs,
+                  letterSpacing: `${TRACK}em`,
+                  whiteSpace: "pre",
+                  opacity: p,
+                  transform: `translateY(${((1 - p) * Fs * 0.3).toFixed(2)}px)`,
+                }}
+              >
+                {tk.text}
+              </div>
+            );
+          }
+          const draw = interpolate(t, [4 + i * 2, 22 + i * 2], [0, 1], {
+            ...CLAMP,
+            easing: EASE_OUT,
+          });
+          const lab = interpolate(t, [12 + i * 2, 28 + i * 2], [0, 1], {
+            ...CLAMP,
+            easing: EASE_OUT,
+          });
+          const f = fillP(tk.blank);
+          const wp = wordP(tk.blank);
           return (
-            <div
-              key={`w${i}`}
-              style={{
-                position: "absolute",
-                left,
-                top,
-                height: BOX * Fs,
-                lineHeight: `${BOX * Fs}px`,
-                fontSize: Fs,
-                letterSpacing: `${TRACK}em`,
-                whiteSpace: "pre",
-                opacity: p,
-                transform: `translateY(${((1 - p) * Fs * 0.3).toFixed(2)}px)`,
-              }}
-            >
-              {tk.text}
+            <div key={`b${i}`}>
+              <div
+                style={{
+                  position: "absolute",
+                  left,
+                  top: top + RULE_Y * Fs,
+                  width: w,
+                  height: ruleH,
+                  background: interpolateColors(f, [0, 1], [fg, hi]),
+                  opacity: 0.4 + 0.6 * f,
+                  transform: `scaleX(${draw.toFixed(4)})`,
+                  transformOrigin: "0 50%",
+                }}
+              />
+              <div
+                style={{
+                  position: "absolute",
+                  left,
+                  top,
+                  height: BOX * Fs,
+                  lineHeight: `${BOX * Fs}px`,
+                  fontSize: Fs,
+                  fontWeight: 500,
+                  letterSpacing: `${TRACK}em`,
+                  whiteSpace: "pre",
+                  opacity: wp,
+                  transform: `translateY(${((1 - wp) * Fs * 0.42).toFixed(2)}px)`,
+                }}
+              >
+                {tk.text}
+              </div>
+              <div
+                style={{
+                  position: "absolute",
+                  left,
+                  width: w,
+                  top: top + RULE_Y * Fs + ruleH + Fs * 0.1,
+                  fontSize: Fl,
+                  lineHeight: 1.2,
+                  letterSpacing: `${LABEL_TRACK}em`,
+                  textTransform: "uppercase",
+                  textAlign: "center",
+                  whiteSpace: "pre",
+                  color: interpolateColors(f, [0, 1], [fg, hi]),
+                  opacity: lab * (0.55 + 0.35 * f),
+                }}
+              >
+                {tk.label}
+              </div>
             </div>
           );
-        }
-        const draw = interpolate(t, [4 + i * 2, 22 + i * 2], [0, 1], {
-          ...CLAMP,
-          easing: EASE_OUT,
-        });
-        const lab = interpolate(t, [12 + i * 2, 28 + i * 2], [0, 1], {
-          ...CLAMP,
-          easing: EASE_OUT,
-        });
-        const f = fillP(tk.blank);
-        const wp = wordP(tk.blank);
-        return (
-          <div key={`b${i}`}>
-            <div
-              style={{
-                position: "absolute",
-                left,
-                top: top + RULE_Y * Fs,
-                width: w,
-                height: ruleH,
-                background: interpolateColors(f, [0, 1], [c.ink, hi]),
-                opacity: 0.4 + 0.6 * f,
-                transform: `scaleX(${draw.toFixed(4)})`,
-                transformOrigin: "0 50%",
-              }}
-            />
-            <div
-              style={{
-                position: "absolute",
-                left,
-                top,
-                height: BOX * Fs,
-                lineHeight: `${BOX * Fs}px`,
-                fontSize: Fs,
-                fontWeight: 500,
-                letterSpacing: `${TRACK}em`,
-                whiteSpace: "pre",
-                opacity: wp,
-                transform: `translateY(${((1 - wp) * Fs * 0.42).toFixed(2)}px)`,
-              }}
-            >
-              {tk.text}
-            </div>
-            <div
-              style={{
-                position: "absolute",
-                left,
-                width: w,
-                top: top + RULE_Y * Fs + ruleH + Fs * 0.1,
-                fontSize: Fl,
-                lineHeight: 1.2,
-                letterSpacing: `${LABEL_TRACK}em`,
-                textTransform: "uppercase",
-                textAlign: "center",
-                whiteSpace: "pre",
-                color: interpolateColors(f, [0, 1], [c.ink, hi]),
-                opacity: lab * (0.55 + 0.35 * f),
-              }}
-            >
-              {tk.label}
-            </div>
-          </div>
-        );
-      })}
+        })}
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

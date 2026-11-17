@@ -68,10 +68,55 @@ A boss HP bar fills in, each named hit slams in and drains the bar, and when it 
       description: "Word slammed in when the bar breaks.",
     },
     {
+      name: "tag",
+      type: "string",
+      default: "\"BOSS\"",
+      description: "Small label in the accent tag before the boss name.",
+    },
+    {
+      name: "hitGap",
+      type: "number",
+      default: "26",
+      description: "Frames between hits.",
+    },
+    {
       name: "accent",
       type: "string",
       default: "\"#3B5BFD\"",
       description: "The small \"BOSS\" tag and the hit slash.",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Chakra Petch\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "logo",
+      type: "React.ReactNode",
+      description: "Replaces the remocn mark.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
     {
       name: "theme",

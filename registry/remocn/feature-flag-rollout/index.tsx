@@ -2,7 +2,7 @@
 
 import { loadFont } from "@remotion/google-fonts/Figtree";
 import { loadFont as loadMono } from "@remotion/google-fonts/GeistMono";
-import { useId } from "react";
+import { type ReactNode, useId } from "react";
 import {
   AbsoluteFill,
   Easing,
@@ -50,11 +50,43 @@ export interface FeatureFlagRolloutProps {
   history?: FlagAuditEntry[];
   metrics?: GuardrailMetric[];
   workspace?: string;
+  /** Status once the rollout reaches 100%. */
+  doneLabel?: string;
+  /** Status next to the guardrails heading. */
+  passingLabel?: string;
+  /** Frames between one slider drag and the next. */
+  stepGap?: number;
   theme?: "light" | "dark";
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Figtree by default. */
+  fontFamily?: string;
+  /** Size of the window, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+}
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
 }
 
 const DEFAULT_HISTORY: FlagAuditEntry[] = [
@@ -274,6 +306,7 @@ function GuardrailChart({
   onAt,
   accent,
   pal,
+  font,
   w,
   h,
 }: {
@@ -284,6 +317,7 @@ function GuardrailChart({
   onAt: number;
   accent: string;
   pal: Pal;
+  font: string;
   w: number;
   h: number;
 }) {
@@ -365,7 +399,7 @@ function GuardrailChart({
                 y={h + 20}
                 textAnchor="middle"
                 fontSize={16}
-                fontFamily={fontFamily}
+                fontFamily={font}
                 fill={accent}
                 style={{ fontVariantNumeric: "tabular-nums" }}
               >
@@ -417,15 +451,24 @@ export function FeatureFlagRollout({
   actor = "Maya Chen",
   history = DEFAULT_HISTORY,
   metrics = DEFAULT_METRICS,
+  doneLabel = "Fully rolled out",
+  passingLabel = "All passing",
+  stepGap = 48,
   theme = "light",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily: font = fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   ground,
   groundParams,
 }: FeatureFlagRolloutProps) {
-  const frame = useCurrentFrame() * speed;
+  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const pal = palette(theme);
+  const fg = ink ?? pal.text;
   const tall = H > W * 1.2;
   const D = tall ? { w: 800, h: 1422 } : { w: 1280, h: 720 };
   const s = Math.min(W / D.w, H / D.h);
@@ -454,7 +497,7 @@ export function FeatureFlagRollout({
 
   const T_TOGGLE = 30;
   const drags = stepList.slice(1).map((to, k) => {
-    const grab = k === 0 ? 62 : 62 + 48 * k;
+    const grab = k === 0 ? 62 : 62 + stepGap * k;
     return { from: stepList[k], to, grab, start: grab + 3, release: grab + 22 };
   });
   const toggleOn = sp(T_TOGGLE + 2, CHIP);
@@ -540,7 +583,7 @@ export function FeatureFlagRollout({
   const statusLabel = !isOn
     ? "Off"
     : fullyOut
-      ? "Fully rolled out"
+      ? doneLabel
       : `Rolling out · ${shownPct}%`;
   const statusColor = !isOn ? pal.faint : fullyOut ? pal.green : accent;
   const q = Math.floor(frame / 6) * 6;
@@ -593,213 +636,69 @@ export function FeatureFlagRollout({
   return (
     <AbsoluteFill
       style={{
-        fontFamily,
+        fontFamily: font,
         fontWeight: 400,
         overflow: "hidden",
         WebkitFontSmoothing: "antialiased",
-        background: pal.dark ? "#02030A" : "#EEF0F6",
+        background: background ?? (pal.dark ? "#02030A" : "#EEF0F6"),
       }}
     >
-      <GshGround
-        preset={ground ?? (pal.dark ? "cobalt-rise" : "glasswork")}
-        params={groundParams}
-        timeOffset={pal.dark ? 3 : 12}
-        timeScale={0.3}
-      />
-      <AbsoluteFill style={{ background: pal.scrim }} />
-      <div
-        style={{
-          position: "absolute",
-          left: (W - D.w * s) / 2,
-          top: (H - D.h * s) / 2,
-          width: D.w,
-          height: D.h,
-          transformOrigin: "0 0",
-          transform: `scale(${s})`,
-        }}
-      >
+      {background === undefined ? (
+        <>
+          <GshGround
+            preset={ground ?? (pal.dark ? "cobalt-rise" : "glasswork")}
+            params={groundParams}
+            timeOffset={pal.dark ? 3 : 12}
+            timeScale={0.3}
+          />
+          <AbsoluteFill style={{ background: pal.scrim }} />
+        </>
+      ) : null}
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            inset: 0,
-            transformOrigin: `${WIN.x + TRACK.x + TRACK.w}px ${WIN.y + TRACK.y}px`,
-            transform: `scale(${1 + 0.03 * cam})`,
+            left: (W - D.w * s) / 2,
+            top: (H - D.h * s) / 2,
+            width: D.w,
+            height: D.h,
+            transformOrigin: "0 0",
+            transform: `scale(${s})`,
           }}
         >
-          {tall ? (
-            <div style={{ position: "absolute", left: 48, top: 80 }}>
-              <div
-                style={{
-                  fontSize: 26,
-                  color: pal.stageMuted,
-                  opacity: tween(frame, 4, 14),
-                }}
-              >
-                {environment} rollout
-              </div>
-              <div style={{ marginTop: 10, overflow: "hidden" }}>
-                <div
-                  style={{
-                    transform: `translateY(${(1 - tween(frame, 6, 20)) * 100}%)`,
-                  }}
-                >
-                  {bigPct(180, pal.stageText)}
-                </div>
-              </div>
-              <div
-                style={{
-                  marginTop: 14,
-                  fontSize: 26,
-                  color: pal.stageMuted,
-                  fontVariantNumeric: "tabular-nums",
-                }}
-              >
-                ≈ {fmtInt(users)} of {fmtInt(totalUsers)} users
-              </div>
-            </div>
-          ) : null}
-
           <div
             style={{
               position: "absolute",
-              left: WIN.x,
-              top: WIN.y,
-              width: WIN.w,
-              height: WIN.h,
-              opacity: winA,
-              transform: `translateY(${(1 - win) * 48}px) scale(${0.97 + 0.03 * win})`,
-              transformOrigin: "50% 100%",
-              borderRadius: 16,
-              background: pal.win,
-              boxShadow: pal.winShadow,
-              overflow: "hidden",
+              inset: 0,
+              transformOrigin: `${WIN.x + TRACK.x + TRACK.w}px ${WIN.y + TRACK.y}px`,
+              transform: `scale(${1 + 0.03 * cam})`,
             }}
           >
-            <div
-              style={{
-                height: HEAD_H,
-                display: "flex",
-                alignItems: "center",
-                padding: `0 ${PAD}px`,
-                borderBottom: `1px solid ${pal.line}`,
-              }}
-            >
-              <div>
+            {tall ? (
+              <div style={{ position: "absolute", left: 48, top: 80 }}>
                 <div
                   style={{
-                    display: "flex",
-                    alignItems: "baseline",
-                    gap: 14,
-                    fontSize: 22,
-                    color: pal.text,
-                    letterSpacing: "-0.01em",
+                    fontSize: 26,
+                    color: pal.stageMuted,
+                    opacity: tween(frame, 4, 14),
                   }}
                 >
-                  {flagName}
-                  <span
+                  {environment} rollout
+                </div>
+                <div style={{ marginTop: 10, overflow: "hidden" }}>
+                  <div
                     style={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: 8,
-                      fontSize: 16,
-                      color: statusColor,
-                      letterSpacing: 0,
-                      fontVariantNumeric: "tabular-nums",
+                      transform: `translateY(${(1 - tween(frame, 6, 20)) * 100}%)`,
                     }}
                   >
-                    <span
-                      style={{
-                        width: 7,
-                        height: 7,
-                        borderRadius: 9,
-                        background: statusColor,
-                        transform: `scale(${fullyOut ? 0.6 + 0.4 * done : 1})`,
-                      }}
-                    />
-                    {statusLabel}
-                  </span>
+                    {bigPct(180, ink ?? pal.stageText)}
+                  </div>
                 </div>
                 <div
                   style={{
-                    marginTop: 4,
-                    fontFamily: monoFamily,
-                    fontSize: 16,
-                    color: pal.faint,
-                  }}
-                >
-                  {flagKey}
-                </div>
-              </div>
-              <div style={{ flex: 1 }} />
-            </div>
-            <div
-              style={{
-                position: "absolute",
-                left: TOG.x,
-                top: TOG.y,
-                width: 150,
-                height: 44,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "flex-end",
-                gap: 12,
-                fontSize: 16,
-                color: pal.muted,
-              }}
-            >
-              <div
-                style={{
-                  width: 40,
-                  height: 24,
-                  borderRadius: 99,
-                  position: "relative",
-                  background: isOn ? accent : pal.knobOff,
-                  transform: `scale(${1 - 0.04 * clamp(clickPress, 0, 1.2)})`,
-                  order: -1,
-                }}
-              >
-                <div
-                  style={{
-                    position: "absolute",
-                    top: 3,
-                    left: 3 + 16 * toggleOn,
-                    width: 18,
-                    height: 18,
-                    borderRadius: 99,
-                    background: "#fff",
-                    boxShadow: "0 1px 2px rgba(0,0,0,0.25)",
-                  }}
-                />
-              </div>
-              <span style={{ color: pal.text }}>{environment}</span>
-            </div>
-
-            <div
-              style={{
-                position: "absolute",
-                left: LEFT.x,
-                top: BIG_Y,
-                fontSize: 16,
-                color: pal.muted,
-              }}
-            >
-              Serving <span style={{ fontFamily: monoFamily }}>true</span> to
-            </div>
-            {!tall ? (
-              <div
-                style={{
-                  position: "absolute",
-                  left: LEFT.x - 4,
-                  top: BIG_Y + 34,
-                }}
-              >
-                {bigPct(108, pal.text)}
-                <div
-                  style={{
-                    marginTop: 12,
-                    marginLeft: 4,
-                    fontSize: 16,
-                    color: pal.muted,
+                    marginTop: 14,
+                    fontSize: 26,
+                    color: pal.stageMuted,
                     fontVariantNumeric: "tabular-nums",
                   }}
                 >
@@ -811,244 +710,394 @@ export function FeatureFlagRollout({
             <div
               style={{
                 position: "absolute",
-                left: TRACK.x,
-                top: TRACK.y,
-                width: TRACK.w,
-                height: 8,
-                borderRadius: 4,
-                background: pal.track,
+                left: WIN.x,
+                top: WIN.y,
+                width: WIN.w,
+                height: WIN.h,
+                opacity: winA,
+                transform: `translateY(${(1 - win) * 48}px) scale(${0.97 + 0.03 * win})`,
+                transformOrigin: "50% 100%",
+                borderRadius: 16,
+                background: pal.win,
+                boxShadow: pal.winShadow,
+                overflow: "hidden",
               }}
             >
               <div
                 style={{
-                  width: THUMB_R + (pct / 100) * (TRACK.w - THUMB_R * 2),
-                  height: "100%",
-                  borderRadius: 4,
-                  background: accent,
-                  opacity: isOn ? 1 : 0.4,
-                }}
-              />
-              <div
-                style={{
-                  position: "absolute",
-                  left: THUMB_R + (pct / 100) * (TRACK.w - THUMB_R * 2),
-                  top: 4,
-                  width: THUMB_R * 2,
-                  height: THUMB_R * 2,
-                  borderRadius: 99,
-                  background: "#fff",
-                  boxShadow: `0 0 0 1px ${pal.dark ? "rgba(0,0,0,0.3)" : "rgba(17,19,24,0.12)"}, 0 2px 6px rgba(17,19,24,0.25)`,
-                  transform: `translate(-50%, -50%) scale(${1 + 0.12 * dragHold})`,
-                }}
-              />
-            </div>
-            {[0, 25, 50, 75, 100].map((t) => (
-              <div
-                key={t}
-                style={{
-                  position: "absolute",
-                  left:
-                    t === 0
-                      ? TRACK.x
-                      : t === 100
-                        ? TRACK.x + TRACK.w
-                        : thumbX(t),
-                  top: TRACK.y + 24,
-                  transform: `translateX(${t === 0 ? 0 : t === 100 ? -100 : -50}%)`,
-                  fontSize: 16,
-                  color: pal.faint,
-                  fontVariantNumeric: "tabular-nums",
+                  height: HEAD_H,
+                  display: "flex",
+                  alignItems: "center",
+                  padding: `0 ${PAD}px`,
+                  borderBottom: `1px solid ${pal.line}`,
                 }}
               >
-                {t}%
+                <div>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "baseline",
+                      gap: 14,
+                      fontSize: 22,
+                      color: fg,
+                      letterSpacing: "-0.01em",
+                    }}
+                  >
+                    {flagName}
+                    <span
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 8,
+                        fontSize: 16,
+                        color: statusColor,
+                        letterSpacing: 0,
+                        fontVariantNumeric: "tabular-nums",
+                      }}
+                    >
+                      <span
+                        style={{
+                          width: 7,
+                          height: 7,
+                          borderRadius: 9,
+                          background: statusColor,
+                          transform: `scale(${fullyOut ? 0.6 + 0.4 * done : 1})`,
+                        }}
+                      />
+                      {statusLabel}
+                    </span>
+                  </div>
+                  <div
+                    style={{
+                      marginTop: 4,
+                      fontFamily: monoFamily,
+                      fontSize: 16,
+                      color: pal.faint,
+                    }}
+                  >
+                    {flagKey}
+                  </div>
+                </div>
+                <div style={{ flex: 1 }} />
               </div>
-            ))}
-
-            {!tall ? (
               <div
                 style={{
                   position: "absolute",
-                  left: RIGHT.x - 22,
-                  top: HEAD_H,
-                  bottom: 0,
-                  width: 1,
-                  background: pal.line,
+                  left: TOG.x,
+                  top: TOG.y,
+                  width: 150,
+                  height: 44,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "flex-end",
+                  gap: 12,
+                  fontSize: 16,
+                  color: pal.muted,
                 }}
-              />
-            ) : (
-              <div
-                style={{
-                  position: "absolute",
-                  left: PAD,
-                  right: PAD,
-                  top: RIGHT.y - 26,
-                  height: 1,
-                  background: pal.line,
-                }}
-              />
-            )}
-
-            <div
-              style={{
-                position: "absolute",
-                left: RIGHT.x,
-                top: RIGHT.y,
-                width: RIGHT.w,
-                display: "flex",
-                fontSize: 16,
-                color: pal.muted,
-              }}
-            >
-              Guardrails
-              <div style={{ flex: 1 }} />
-              <span style={{ color: pal.green }}>All passing</span>
-            </div>
-            {metrics.slice(0, 2).map((m, i) => {
-              const live = treatAt(m, i, q);
-              const ctrl = controlAt(m, i, q);
-              const top = RIGHT.y + 40 + i * (tall ? 232 : 186);
-              const a = tween(frame, 8 + i * 4, 20 + i * 4);
-              return (
+              >
                 <div
-                  key={m.label}
                   style={{
-                    position: "absolute",
-                    left: RIGHT.x,
-                    top,
-                    width: RIGHT.w,
-                    opacity: a,
-                    transform: `translateY(${(1 - a) * 10}px)`,
+                    width: 40,
+                    height: 24,
+                    borderRadius: 99,
+                    position: "relative",
+                    background: isOn ? accent : pal.knobOff,
+                    transform: `scale(${1 - 0.04 * clamp(clickPress, 0, 1.2)})`,
+                    order: -1,
                   }}
                 >
                   <div
                     style={{
-                      display: "flex",
-                      alignItems: "baseline",
-                      gap: 10,
-                      fontVariantNumeric: "tabular-nums",
+                      position: "absolute",
+                      top: 3,
+                      left: 3 + 16 * toggleOn,
+                      width: 18,
+                      height: 18,
+                      borderRadius: 99,
+                      background: "#fff",
+                      boxShadow: "0 1px 2px rgba(0,0,0,0.25)",
                     }}
-                  >
-                    <span style={{ fontSize: 16, color: pal.text }}>
-                      {m.label}
-                    </span>
-                    <div style={{ flex: 1 }} />
-                    <span style={{ fontSize: 16, color: pal.faint }}>
-                      limit {fmtVal(m, m.threshold).replace(".00", ".0")}
-                    </span>
-                  </div>
+                  />
+                </div>
+                <span style={{ color: fg }}>{environment}</span>
+              </div>
+
+              <div
+                style={{
+                  position: "absolute",
+                  left: LEFT.x,
+                  top: BIG_Y,
+                  fontSize: 16,
+                  color: pal.muted,
+                }}
+              >
+                Serving <span style={{ fontFamily: monoFamily }}>true</span> to
+              </div>
+              {!tall ? (
+                <div
+                  style={{
+                    position: "absolute",
+                    left: LEFT.x - 4,
+                    top: BIG_Y + 34,
+                  }}
+                >
+                  {bigPct(108, fg)}
                   <div
                     style={{
-                      display: "flex",
-                      alignItems: "baseline",
-                      gap: 10,
-                      marginTop: 4,
+                      marginTop: 12,
+                      marginLeft: 4,
+                      fontSize: 16,
+                      color: pal.muted,
                       fontVariantNumeric: "tabular-nums",
                     }}
                   >
-                    <span
-                      style={{
-                        fontSize: 30,
-                        fontWeight: 300,
-                        letterSpacing: "-0.02em",
-                        color: pal.text,
-                      }}
-                    >
-                      {fmtVal(m, isOn ? live : ctrl)}
-                    </span>
-                    <span style={{ fontSize: 16, color: pal.muted }}>
-                      vs {fmtVal(m, ctrl)} control
-                    </span>
-                  </div>
-                  <div style={{ marginTop: 12 }}>
-                    <GuardrailChart
-                      metric={m}
-                      index={i}
-                      frame={frame}
-                      markers={markers}
-                      onAt={T_TOGGLE + 2}
-                      accent={accent}
-                      pal={pal}
-                      w={RIGHT.w}
-                      h={CHART_H}
-                    />
+                    ≈ {fmtInt(users)} of {fmtInt(totalUsers)} users
                   </div>
                 </div>
-              );
-            })}
+              ) : null}
 
-            <div
-              style={{
-                position: "absolute",
-                left: LEFT.x,
-                top: HIST_Y,
-                fontSize: 16,
-                color: pal.muted,
-              }}
-            >
-              Changes
-            </div>
-            <div
-              style={{
-                position: "absolute",
-                left: LEFT.x,
-                top: HIST_Y + 34,
-                width: LEFT.w,
-                height: ROW * 3,
-                overflow: "hidden",
-              }}
-            >
-              {(() => {
-                let y = 0;
-                return rows.map((r) => {
-                  const g = r.at < 0 ? 1 : clamp(sp(r.at, CARD), 0, 1.05);
-                  const top = y;
-                  y += ROW * Math.min(1, g);
-                  const fade = r.at < 0 ? 1 : tween(frame, r.at + 2, r.at + 10);
-                  if (top > ROW * 3) return null;
-                  return (
+              <div
+                style={{
+                  position: "absolute",
+                  left: TRACK.x,
+                  top: TRACK.y,
+                  width: TRACK.w,
+                  height: 8,
+                  borderRadius: 4,
+                  background: pal.track,
+                }}
+              >
+                <div
+                  style={{
+                    width: THUMB_R + (pct / 100) * (TRACK.w - THUMB_R * 2),
+                    height: "100%",
+                    borderRadius: 4,
+                    background: accent,
+                    opacity: isOn ? 1 : 0.4,
+                  }}
+                />
+                <div
+                  style={{
+                    position: "absolute",
+                    left: THUMB_R + (pct / 100) * (TRACK.w - THUMB_R * 2),
+                    top: 4,
+                    width: THUMB_R * 2,
+                    height: THUMB_R * 2,
+                    borderRadius: 99,
+                    background: "#fff",
+                    boxShadow: `0 0 0 1px ${pal.dark ? "rgba(0,0,0,0.3)" : "rgba(17,19,24,0.12)"}, 0 2px 6px rgba(17,19,24,0.25)`,
+                    transform: `translate(-50%, -50%) scale(${1 + 0.12 * dragHold})`,
+                  }}
+                />
+              </div>
+              {[0, 25, 50, 75, 100].map((t) => (
+                <div
+                  key={t}
+                  style={{
+                    position: "absolute",
+                    left:
+                      t === 0
+                        ? TRACK.x
+                        : t === 100
+                          ? TRACK.x + TRACK.w
+                          : thumbX(t),
+                    top: TRACK.y + 24,
+                    transform: `translateX(${t === 0 ? 0 : t === 100 ? -100 : -50}%)`,
+                    fontSize: 16,
+                    color: pal.faint,
+                    fontVariantNumeric: "tabular-nums",
+                  }}
+                >
+                  {t}%
+                </div>
+              ))}
+
+              {!tall ? (
+                <div
+                  style={{
+                    position: "absolute",
+                    left: RIGHT.x - 22,
+                    top: HEAD_H,
+                    bottom: 0,
+                    width: 1,
+                    background: pal.line,
+                  }}
+                />
+              ) : (
+                <div
+                  style={{
+                    position: "absolute",
+                    left: PAD,
+                    right: PAD,
+                    top: RIGHT.y - 26,
+                    height: 1,
+                    background: pal.line,
+                  }}
+                />
+              )}
+
+              <div
+                style={{
+                  position: "absolute",
+                  left: RIGHT.x,
+                  top: RIGHT.y,
+                  width: RIGHT.w,
+                  display: "flex",
+                  fontSize: 16,
+                  color: pal.muted,
+                }}
+              >
+                Guardrails
+                <div style={{ flex: 1 }} />
+                <span style={{ color: pal.green }}>{passingLabel}</span>
+              </div>
+              {metrics.slice(0, 2).map((m, i) => {
+                const live = treatAt(m, i, q);
+                const ctrl = controlAt(m, i, q);
+                const top = RIGHT.y + 40 + i * (tall ? 232 : 186);
+                const a = tween(frame, 8 + i * 4, 20 + i * 4);
+                return (
+                  <div
+                    key={m.label}
+                    style={{
+                      position: "absolute",
+                      left: RIGHT.x,
+                      top,
+                      width: RIGHT.w,
+                      opacity: a,
+                      transform: `translateY(${(1 - a) * 10}px)`,
+                    }}
+                  >
                     <div
-                      key={r.key}
                       style={{
-                        position: "absolute",
-                        left: 0,
-                        right: 0,
-                        top,
-                        height: ROW,
                         display: "flex",
-                        alignItems: "center",
-                        gap: 12,
-                        fontSize: 16,
-                        opacity: fade,
-                        transform: `translateY(${(1 - fade) * -6}px)`,
-                        borderTop: `1px solid ${pal.line}`,
+                        alignItems: "baseline",
+                        gap: 10,
+                        fontVariantNumeric: "tabular-nums",
                       }}
                     >
-                      <Avatar name={r.who} size={26} />
-                      <span style={{ color: pal.text, whiteSpace: "nowrap" }}>
-                        {r.who}
+                      <span style={{ fontSize: 16, color: fg }}>{m.label}</span>
+                      <div style={{ flex: 1 }} />
+                      <span style={{ fontSize: 16, color: pal.faint }}>
+                        limit {fmtVal(m, m.threshold).replace(".00", ".0")}
                       </span>
+                    </div>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "baseline",
+                        gap: 10,
+                        marginTop: 4,
+                        fontVariantNumeric: "tabular-nums",
+                      }}
+                    >
                       <span
                         style={{
-                          color: r.at < 0 ? pal.muted : accent,
-                          fontFamily: r.at < 0 ? fontFamily : monoFamily,
-                          whiteSpace: "nowrap",
+                          fontSize: 30,
+                          fontWeight: 300,
+                          letterSpacing: "-0.02em",
+                          color: fg,
                         }}
                       >
-                        {r.change}
+                        {fmtVal(m, isOn ? live : ctrl)}
                       </span>
-                      <div style={{ flex: 1 }} />
-                      <span style={{ color: pal.faint }}>{r.time}</span>
+                      <span style={{ fontSize: 16, color: pal.muted }}>
+                        vs {fmtVal(m, ctrl)} control
+                      </span>
                     </div>
-                  );
-                });
-              })()}
+                    <div style={{ marginTop: 12 }}>
+                      <GuardrailChart
+                        metric={m}
+                        index={i}
+                        frame={frame}
+                        markers={markers}
+                        onAt={T_TOGGLE + 2}
+                        accent={accent}
+                        pal={pal}
+                        font={font}
+                        w={RIGHT.w}
+                        h={CHART_H}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+
+              <div
+                style={{
+                  position: "absolute",
+                  left: LEFT.x,
+                  top: HIST_Y,
+                  fontSize: 16,
+                  color: pal.muted,
+                }}
+              >
+                Changes
+              </div>
+              <div
+                style={{
+                  position: "absolute",
+                  left: LEFT.x,
+                  top: HIST_Y + 34,
+                  width: LEFT.w,
+                  height: ROW * 3,
+                  overflow: "hidden",
+                }}
+              >
+                {(() => {
+                  let y = 0;
+                  return rows.map((r) => {
+                    const g = r.at < 0 ? 1 : clamp(sp(r.at, CARD), 0, 1.05);
+                    const top = y;
+                    y += ROW * Math.min(1, g);
+                    const fade =
+                      r.at < 0 ? 1 : tween(frame, r.at + 2, r.at + 10);
+                    if (top > ROW * 3) return null;
+                    return (
+                      <div
+                        key={r.key}
+                        style={{
+                          position: "absolute",
+                          left: 0,
+                          right: 0,
+                          top,
+                          height: ROW,
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 12,
+                          fontSize: 16,
+                          opacity: fade,
+                          transform: `translateY(${(1 - fade) * -6}px)`,
+                          borderTop: `1px solid ${pal.line}`,
+                        }}
+                      >
+                        <Avatar name={r.who} size={26} />
+                        <span style={{ color: fg, whiteSpace: "nowrap" }}>
+                          {r.who}
+                        </span>
+                        <span
+                          style={{
+                            color: r.at < 0 ? pal.muted : accent,
+                            fontFamily: r.at < 0 ? font : monoFamily,
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {r.change}
+                        </span>
+                        <div style={{ flex: 1 }} />
+                        <span style={{ color: pal.faint }}>{r.time}</span>
+                      </div>
+                    );
+                  });
+                })()}
+              </div>
+            </div>
+            <div style={{ opacity: cursorA }}>
+              <Cursor x={cur.x} y={cur.y} scale={1 - 0.04 * press} />
             </div>
           </div>
-          <div style={{ opacity: cursorA }}>
-            <Cursor x={cur.x} y={cur.y} scale={1 - 0.04 * press} />
-          </div>
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

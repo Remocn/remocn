@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const diagonalSplitConfig: ComponentConfig = {
   componentName: "DiagonalSplit",
@@ -12,11 +18,6 @@ export const diagonalSplitConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     from: {
       type: "text-content",
@@ -37,6 +38,21 @@ export const diagonalSplitConfig: ComponentConfig = {
       description: "Angle",
       hiddenFromList: false,
     },
+    move: {
+      type: "number",
+      default: 36,
+      min: 12,
+      max: 72,
+      step: 1,
+      description: "Slide (frames)",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Geist", grain: true }),
     speed: {
       type: "number",
       default: 1,

@@ -23,8 +23,20 @@ export interface LayoverProps {
   word?: string;
   stops?: string[];
   to?: string;
+  /** Frames for each hop of the word between stops. */
+  leg?: number;
+  /** Frames the word holds at each stop. */
+  hold?: number;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the copy. Load it yourself; Red Hat Display by default. */
+  fontFamily?: string;
+  /** Size of the text, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -59,11 +71,11 @@ interface Metrics {
   desc: number;
 }
 
-function measureAll(texts: string[]): Metrics {
+function measureAll(texts: string[], fontFamily: string): Metrics {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("layover: no 2d context");
-  ctx.font = `${WGHT} ${FONT_PX}px "${redHat.fontFamily}"`;
+  ctx.font = `${WGHT} ${FONT_PX}px "${fontFamily}"`;
   const w: Record<string, number> = {};
   for (const s of texts) {
     w[s] = ctx.measureText(s).width / FONT_PX + TRACK * Array.from(s).length;
@@ -76,7 +88,7 @@ function measureAll(texts: string[]): Metrics {
   };
 }
 
-function useMetrics(texts: string[]) {
+function useMetrics(texts: string[], fontFamily: string) {
   const key = texts.join("\u0001");
   const [state, setState] = useState<{ key: string; m: Metrics } | null>(null);
   const [handle] = useState(() => delayRender("layover: measuring"));
@@ -85,12 +97,12 @@ function useMetrics(texts: string[]) {
     let live = true;
     Promise.all([
       redHat.waitUntilDone(),
-      document.fonts.load(`${WGHT} 100px "${redHat.fontFamily}"`),
+      document.fonts.load(`${WGHT} 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
-        setState({ key, m: measureAll(key.split("\u0001")) });
+        setState({ key, m: measureAll(key.split("\u0001"), fontFamily) });
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -99,8 +111,24 @@ function useMetrics(texts: string[]) {
     return () => {
       live = false;
     };
-  }, [key, handle]);
+  }, [key, handle, fontFamily]);
   return state && state.key === key ? state.m : null;
+}
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
 }
 
 export function Layover({
@@ -108,15 +136,22 @@ export function Layover({
   word = "here.",
   stops = ["w", "every"],
   to = "Plays",
+  leg = LEG,
+  hold = HOLD,
   accent,
+  ink,
   background,
+  fontFamily = redHat.fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: LayoverProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
+  const fg = ink ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
 
@@ -124,15 +159,18 @@ export function Layover({
   const fromWords = from.split(" ").filter(Boolean);
   const lineA = `${from} ${word}`;
   const lineB = `${to} ${finalWord}`;
-  const m = useMetrics([
-    lineA,
-    lineB,
-    word,
-    finalWord,
-    ...stops,
-    ...fromWords.map((_, i) => fromWords.slice(0, i).join(" ")),
-    ...fromWords.map((_, i) => `${fromWords.slice(0, i + 1).join(" ")} `),
-  ]);
+  const m = useMetrics(
+    [
+      lineA,
+      lineB,
+      word,
+      finalWord,
+      ...stops,
+      ...fromWords.map((_, i) => fromWords.slice(0, i).join(" ")),
+      ...fromWords.map((_, i) => `${fromWords.slice(0, i + 1).join(" ")} `),
+    ],
+    fontFamily,
+  );
 
   if (!m) {
     return (
@@ -159,8 +197,8 @@ export function Layover({
   const leftB = rx3 - m.w[lineB] * F;
 
   const n = stops.length;
-  const legStart = (k: number) => LIFT + k * (LEG + HOLD);
-  const arriveAt = (k: number) => legStart(k) + LEG;
+  const legStart = (k: number) => LIFT + k * (leg + hold);
+  const arriveAt = (k: number) => legStart(k) + leg;
   const landAt = arriveAt(n);
   const fracs = Array.from({ length: n + 2 }, (_, k) => k / (n + 1));
 
@@ -190,7 +228,7 @@ export function Layover({
     height: size,
     lineHeight: `${size}px`,
     whiteSpace: "pre",
-    fontFamily: redHat.fontFamily,
+    fontFamily,
     fontWeight: WGHT,
     fontSize: size,
     letterSpacing: `${TRACK}em`,
@@ -226,7 +264,7 @@ export function Layover({
             ...textStyle(F),
             position: "relative",
             top: F * 0.1,
-            color: c.ink,
+            color: fg,
             transform: `translateY(${((1 - p) * F * 1.4).toFixed(2)}px)`,
           }}
         >
@@ -253,7 +291,7 @@ export function Layover({
           ...textStyle(F),
           position: "relative",
           top: F * 0.1,
-          color: c.ink,
+          color: fg,
           transform: `translateY(${((1 - toIn) * F * 1.4).toFixed(2)}px)`,
         }}
       >
@@ -300,7 +338,7 @@ export function Layover({
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
-      {nodes}
+      <ScaleLayer scale={scale}>{nodes}</ScaleLayer>
     </AbsoluteFill>
   );
 }

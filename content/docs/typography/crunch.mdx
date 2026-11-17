@@ -74,9 +74,43 @@ A timestamped story plays in three beats: a setup line fades out, a tense snag l
       description: "Color for the slug and resolution; defaults to the theme accent.",
     },
     {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
       name: "background",
       type: "string",
       description: "Stage fill color; pass \"transparent\" to overlay your own footage.",
+    },
+    {
+      name: "wall",
+      type: "string",
+      description: "Color of the walls that close in; overrides the theme.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Afacad\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "fontWeight",
+      type: "number",
+      default: "400",
+      description: "Weight of the story lines; the slugs keep 500.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
     {
       name: "speed",

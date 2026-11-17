@@ -32,9 +32,20 @@ export interface WordActsProps {
    * strokes, so it supports lowercase a–z only.
    */
   acts?: WordActBeat[];
+  /** Words for the acts, in order; each replaces its act's word. */
+  words?: string[];
   /** Extra frames the final word holds as a poster. */
   hold?: number;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
+  background?: string;
+  /** Typeface for the words. Load it yourself; Geist by default. */
+  fontFamily?: string;
+  /** Size of the words, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   /** Playback multiplier. */
   speed?: number;
   theme?: "dark" | "light";
@@ -96,13 +107,18 @@ interface ActProps {
   ink: string[];
   guide: string;
   fps: number;
+  fontFamily: string;
 }
 
 const fitSize = (word: string, target: number, maxWidth: number) =>
   Math.min(target, maxWidth / Math.max(1, word.length * ADVANCE));
 
-const wordStyle = (size: number, weight: number): React.CSSProperties => ({
-  fontFamily: display,
+const wordStyle = (
+  size: number,
+  weight: number,
+  fontFamily: string,
+): React.CSSProperties => ({
+  fontFamily,
   fontWeight: weight,
   fontSize: size,
   lineHeight: 1,
@@ -110,7 +126,7 @@ const wordStyle = (size: number, weight: number): React.CSSProperties => ({
   whiteSpace: "nowrap",
 });
 
-function Stretch({ word, t, W, H, fg }: ActProps) {
+function Stretch({ word, t, W, H, fg, fontFamily }: ActProps) {
   const size = fitSize(word, H * 0.3, W * 0.42);
   const p = interpolate(t, [2, 17], [0, 1], { ...CLAMP, easing: EASE_IO });
   const sx = 1 + p * 0.95;
@@ -122,7 +138,7 @@ function Stretch({ word, t, W, H, fg }: ActProps) {
     <AbsoluteFill style={{ alignItems: "center", justifyContent: "center" }}>
       <div
         style={{
-          ...wordStyle(size, 500),
+          ...wordStyle(size, 500, fontFamily),
           fontVariationSettings: `"wght" ${wght}`,
           color: fg,
           transform: `scale(${sx}, ${sy})`,
@@ -134,7 +150,7 @@ function Stretch({ word, t, W, H, fg }: ActProps) {
   );
 }
 
-function Split({ word, t, W, H, fg, ink }: ActProps) {
+function Split({ word, t, W, H, fg, ink, fontFamily }: ActProps) {
   const size = fitSize(word, H * 0.4, W * 0.6);
   const draw = interpolate(t, [2, 8], [0, 1], { ...CLAMP, easing: EASE_OUT });
   const open = interpolate(t, [8, 19], [0, 1], { ...CLAMP, easing: EASE_OUT });
@@ -156,7 +172,7 @@ function Split({ word, t, W, H, fg, ink }: ActProps) {
     >
       <div
         style={{
-          ...wordStyle(size, 500),
+          ...wordStyle(size, 500, fontFamily),
           color: fg,
           textAlign: "center",
           marginTop: top ? 0 : -X_MID * size,
@@ -187,7 +203,7 @@ function Split({ word, t, W, H, fg, ink }: ActProps) {
   );
 }
 
-function Heavy({ word, t, W, H, fg, ink, fps }: ActProps) {
+function Heavy({ word, t, W, H, fg, ink, fps, fontFamily }: ActProps) {
   const size = fitSize(word, H * 0.36, W * 0.58);
   const LAND = 9;
   const fall = interpolate(t, [0, LAND], [0, 1], {
@@ -219,7 +235,7 @@ function Heavy({ word, t, W, H, fg, ink, fps }: ActProps) {
           right: 0,
           top,
           textAlign: "center",
-          ...wordStyle(size, 500),
+          ...wordStyle(size, 500, fontFamily),
           // Weight builds with the fall, hairline to 500; the face is variable.
           fontVariationSettings: `"wght" ${Math.round(100 + fall * 400)}`,
           color: fg,
@@ -243,7 +259,7 @@ function Heavy({ word, t, W, H, fg, ink, fps }: ActProps) {
   );
 }
 
-function Faster({ word, t, W, H, fg, ink }: ActProps) {
+function Faster({ word, t, W, H, fg, ink, fontFamily }: ActProps) {
   const size = fitSize(word, H * 0.34, W * 0.6);
   const SNAP = 7;
   const overshoot = -W * 0.018;
@@ -278,7 +294,7 @@ function Faster({ word, t, W, H, fg, ink }: ActProps) {
       >
         <div
           style={{
-            ...wordStyle(size, 500),
+            ...wordStyle(size, 500, fontFamily),
             color: fg,
             transform: `skewX(${skew}deg)`,
           }}
@@ -587,16 +603,40 @@ const ACTS: Record<WordAct, (p: ActProps) => React.ReactElement> = {
   rebuilt: Rebuilt,
 };
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function WordActs({
   acts = DEFAULT_ACTS,
+  words,
   hold = 32,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = display,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: WordActsProps) {
-  const frame = useCurrentFrame() * speed;
+  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const c = THEMES[theme];
+  const stage =
+    background === "transparent" ? "transparent" : (background ?? c.bg);
 
   let start = 0;
   let index = acts.length - 1;
@@ -617,21 +657,24 @@ export function WordActs({
   const Act = ACTS[beat.act];
 
   return (
-    <AbsoluteFill style={{ backgroundColor: c.bg, overflow: "hidden" }}>
-      {beat ? (
-        <Act
-          word={beat.word}
-          t={local}
-          dur={dur}
-          W={W}
-          H={H}
-          fg={c.fg}
-          accent={accent}
-          ink={inkStops(theme)}
-          guide={c.guide}
-          fps={fps}
-        />
-      ) : null}
+    <AbsoluteFill style={{ backgroundColor: stage, overflow: "hidden" }}>
+      <ScaleLayer scale={scale}>
+        {beat ? (
+          <Act
+            word={words?.[index] ?? beat.word}
+            t={local}
+            dur={dur}
+            W={W}
+            H={H}
+            fg={ink ?? c.fg}
+            accent={accent}
+            ink={inkStops(theme)}
+            guide={c.guide}
+            fps={fps}
+            fontFamily={fontFamily}
+          />
+        ) : null}
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

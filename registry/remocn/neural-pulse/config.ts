@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const neuralPulseConfig: ComponentConfig = {
   componentName: "NeuralPulse",
@@ -13,11 +19,6 @@ export const neuralPulseConfig: ComponentConfig = {
       },
       description: "Theme",
     },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
-    },
     input: {
       type: "text-content",
       default: "Make a launch film",
@@ -28,6 +29,21 @@ export const neuralPulseConfig: ComponentConfig = {
       default: "remocn",
       description: "Output",
     },
+    hop: {
+      type: "number",
+      default: 15,
+      min: 6,
+      max: 30,
+      step: 1,
+      description: "Layer hop (frames)",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Manrope", grain: true }),
     speed: {
       type: "number",
       default: 1,

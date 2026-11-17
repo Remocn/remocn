@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const magnitudePushConfig: ComponentConfig = {
   componentName: "MagnitudePush",
@@ -12,11 +18,6 @@ export const magnitudePushConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     value: {
       type: "text-content",
@@ -33,6 +34,30 @@ export const magnitudePushConfig: ComponentConfig = {
       default: "fewer keyframes to set by hand",
       description: "Label",
     },
+    pushGap: {
+      type: "number",
+      default: 15,
+      min: 4,
+      max: 40,
+      step: 1,
+      description: "Push gap (frames)",
+      hiddenFromList: false,
+    },
+    stagger: {
+      type: "number",
+      default: 4,
+      min: 0,
+      max: 12,
+      step: 1,
+      description: "Word stagger",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Schibsted Grotesk", grain: true }),
     speed: {
       type: "number",
       default: 1,

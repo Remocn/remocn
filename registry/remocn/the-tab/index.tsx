@@ -1,6 +1,7 @@
 "use client";
 
 import { loadFont } from "@remotion/google-fonts/AlbertSans";
+import type React from "react";
 import { useEffect, useRef, useState } from "react";
 import {
   AbsoluteFill,
@@ -28,7 +29,19 @@ export interface TheTabProps {
   totalLabel?: string;
   total?: string;
   accent?: string;
+  /** Text color of the rows, rule and total label; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the receipt. Load it yourself; Albert Sans by default. */
+  fontFamily?: string;
+  /** Frames between words of the total as it lands. */
+  stagger?: number;
+  /** Dotted leaders between each item and its price. */
+  leaders?: boolean;
+  /** Size of the receipt, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -56,8 +69,8 @@ const CLAMP = {
   extrapolateRight: "clamp",
 } as const;
 
-function useWidths(keys: string[]) {
-  const key = keys.join("\u0001");
+function useWidths(keys: string[], fontFamily: string) {
+  const key = `${fontFamily}\u0002${keys.join("\u0001")}`;
   const [state, setState] = useState<{
     key: string;
     w: Record<string, number>;
@@ -70,8 +83,8 @@ function useWidths(keys: string[]) {
     let live = true;
     Promise.all([
       albert.waitUntilDone(),
-      document.fonts.load(`400 100px "${albert.fontFamily}"`),
-      document.fonts.load(`500 100px "${albert.fontFamily}"`),
+      document.fonts.load(`400 100px "${fontFamily}"`),
+      document.fonts.load(`500 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
@@ -82,7 +95,7 @@ function useWidths(keys: string[]) {
           const cut = k.indexOf("|");
           const wt = k.slice(0, cut);
           const s = k.slice(cut + 1);
-          if (ctx) ctx.font = `${wt} 100px "${albert.fontFamily}"`;
+          if (ctx) ctx.font = `${wt} 100px "${fontFamily}"`;
           w[k] = ctx ? ctx.measureText(s).width / 100 : s.length * 0.5;
         }
         setState({ key, w });
@@ -94,8 +107,24 @@ function useWidths(keys: string[]) {
     return () => {
       live = false;
     };
-  }, [key, handle]);
+  }, [key, handle, fontFamily]);
   return state && state.key === key ? state.w : null;
+}
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
 }
 
 export function TheTab({
@@ -104,15 +133,22 @@ export function TheTab({
   totalLabel = "Total",
   total = "one Sunday morning.",
   accent,
+  ink,
   background,
+  fontFamily = albert.fontFamily,
+  stagger = 5,
+  leaders = true,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: TheTabProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, durationInFrames } = useVideoConfig();
   const T = durationInFrames * speed;
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
+  const fg = ink ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
 
@@ -128,7 +164,7 @@ export function TheTab({
     ...totalWords.map((s) => `500|${s}`),
     "500| ",
   ];
-  const w = useWidths(keys);
+  const w = useWidths(keys, fontFamily);
 
   if (!w) {
     return (
@@ -208,19 +244,19 @@ export function TheTab({
           fontSize={F}
           fontWeight={400}
           letterSpacing={`${TRACK}em`}
-          fill={c.ink}
+          fill={fg}
           opacity={lIn}
           transform={`translate(0 ${((1 - lIn) * F * 0.5).toFixed(2)})`}
         >
           {r.item}
         </text>
-        {lead > 0 && x1 > x0 ? (
+        {leaders && lead > 0 && x1 > x0 ? (
           <line
             x1={x0}
             y1={cy}
             x2={xe}
             y2={cy}
-            stroke={c.ink}
+            stroke={fg}
             strokeOpacity={0.4}
             strokeWidth={dotR * 2}
             strokeLinecap="round"
@@ -234,7 +270,7 @@ export function TheTab({
           fontSize={F}
           fontWeight={400}
           letterSpacing={`${TRACK}em`}
-          fill={c.ink}
+          fill={fg}
           opacity={pIn}
           transform={`translate(0 ${((1 - pIn) * -F * 0.4).toFixed(2)})`}
         >
@@ -265,7 +301,7 @@ export function TheTab({
   const valueNodes = totalWords.map((s, k) => {
     const x = valueX0 + cursor * Ft;
     cursor += wordWs[k] + space;
-    const at = totalAt + 8 + k * 5;
+    const at = totalAt + 8 + k * stagger;
     const v = interpolate(t, [at, at + 14], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
@@ -289,38 +325,40 @@ export function TheTab({
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
-      <svg
-        width={W}
-        height={H}
-        viewBox={`0 0 ${W} ${H}`}
-        style={{ position: "absolute", inset: 0 }}
-        fontFamily={albert.fontFamily}
-        aria-hidden
-      >
-        {rowNodes}
-        {rule > 0 ? (
-          <rect
-            x={mx}
-            y={ruleY - Math.max(1, F * 0.03)}
-            width={inner * rule}
-            height={Math.max(2, F * 0.06)}
-            fill={c.ink}
-          />
-        ) : null}
-        <text
-          x={mx}
-          y={totalBase}
-          fontSize={Ft}
-          fontWeight={500}
-          letterSpacing={`${TRACK_TOTAL}em`}
-          fill={c.ink}
-          opacity={tlIn}
-          transform={`translate(0 ${((1 - tlIn) * Ft * 0.45).toFixed(2)})`}
+      <ScaleLayer scale={scale}>
+        <svg
+          width={W}
+          height={H}
+          viewBox={`0 0 ${W} ${H}`}
+          style={{ position: "absolute", inset: 0 }}
+          fontFamily={fontFamily}
+          aria-hidden
         >
-          {totalLabel}
-        </text>
-        {valueNodes}
-      </svg>
+          {rowNodes}
+          {rule > 0 ? (
+            <rect
+              x={mx}
+              y={ruleY - Math.max(1, F * 0.03)}
+              width={inner * rule}
+              height={Math.max(2, F * 0.06)}
+              fill={fg}
+            />
+          ) : null}
+          <text
+            x={mx}
+            y={totalBase}
+            fontSize={Ft}
+            fontWeight={500}
+            letterSpacing={`${TRACK_TOTAL}em`}
+            fill={fg}
+            opacity={tlIn}
+            transform={`translate(0 ${((1 - tlIn) * Ft * 0.45).toFixed(2)})`}
+          >
+            {totalLabel}
+          </text>
+          {valueNodes}
+        </svg>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

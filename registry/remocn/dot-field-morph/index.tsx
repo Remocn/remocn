@@ -2,6 +2,7 @@
 
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
 import { getLength, getPointAtLength, getSubpaths } from "@remotion/paths";
+import type React from "react";
 import { useId, useMemo } from "react";
 import {
   AbsoluteFill,
@@ -48,6 +49,22 @@ export interface DotFieldMorphProps {
   /** 1,500–2,500 reads as a field; more costs render time. */
   count?: number;
   accent?: string;
+  /** Frames each shape holds before the next morph. */
+  hold?: number;
+  /** Frames of each morph between shapes (the last morph keeps its own length). */
+  morph?: number;
+  /** Color of the labels; overrides the theme ink. */
+  ink?: string;
+  /** Solid fill in place of the toned ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the labels. Load it yourself; Manrope by default. */
+  fontFamily?: string;
+  /** Size of the dots and labels, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  /** Film grain over the scene. */
+  grain?: boolean;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -122,18 +139,21 @@ const FLIGHT = 0.62;
 const INOUT = Easing.bezier(0.65, 0, 0.35, 1);
 const OUT = Easing.bezier(0.22, 1, 0.36, 1);
 
-function morphStarts(shapeCount: number): number[] {
+function morphStarts(shapeCount: number, hold = HOLD, morph = MORPH): number[] {
   const starts: number[] = [];
   let t = FIELD;
   for (let i = 0; i < shapeCount; i++) {
     starts.push(t);
-    t += (i === shapeCount - 1 ? LAST_MORPH : MORPH) + HOLD;
+    t += (i === shapeCount - 1 ? LAST_MORPH : morph) + hold;
   }
   return starts;
 }
 
-export const dotFieldMorphLength = (shapeCount = DEFAULT_SHAPES.length) =>
-  morphStarts(shapeCount)[shapeCount - 1] + LAST_MORPH;
+export const dotFieldMorphLength = (
+  shapeCount = DEFAULT_SHAPES.length,
+  hold = HOLD,
+  morph = MORPH,
+) => morphStarts(shapeCount, hold, morph)[shapeCount - 1] + LAST_MORPH;
 
 // ── Deterministic noise ─────────────────────────────────────────────────────
 
@@ -430,20 +450,45 @@ function bySpace(pts: Pt[]): Pt[] {
 
 // ── Component ───────────────────────────────────────────────────────────────
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function DotFieldMorph({
   shapes = DEFAULT_SHAPES,
   labels = DEFAULT_LABELS,
   count = 2000,
   accent = "#3B5BFD",
+  hold = HOLD,
+  morph = MORPH,
+  ink,
+  background,
+  fontFamily = MANROPE,
+  scale = 1,
+  // renamed: the per-dot stagger below is also called `delay`
+  delay: wait = 0,
+  grain = true,
   speed = 1,
   theme = "dark",
 }: DotFieldMorphProps) {
-  const frame = useCurrentFrame() * speed;
+  const frame = Math.max(0, useCurrentFrame() - wait) * speed;
   const { width: W, height: H } = useVideoConfig();
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const isLight = theme === "light";
   const bg = isLight ? "#F5F4F0" : "#0A0A0B";
-  const ink = isLight ? "#141416" : "#EEEEF0";
+  const fg = ink ?? (isLight ? "#141416" : "#EEEEF0");
   const n = Math.max(200, Math.round(count));
   const list = shapes.length ? shapes : DEFAULT_SHAPES;
 
@@ -459,13 +504,13 @@ export function DotFieldMorph({
     return out;
   }, [list, n, W, H]);
 
-  const starts = morphStarts(list.length);
+  const starts = morphStarts(list.length, hold, morph);
   // Which transition we are in (0 = still the field).
   let k = 0;
   for (let i = 0; i < starts.length; i++) if (frame >= starts[i]) k = i + 1;
   const from = states[k - 1] ?? states[0];
   const to = states[k] ?? states[0];
-  const winLen = k === list.length ? LAST_MORPH : MORPH;
+  const winLen = k === list.length ? LAST_MORPH : morph;
   const local = k === 0 ? 0 : (frame - starts[k - 1]) / winLen;
 
   const unit = Math.min(W, H) / 720;
@@ -481,7 +526,7 @@ export function DotFieldMorph({
   const accented: string[][] = Array.from({ length: BUCKETS }, () => []);
 
   // The highlight that sweeps across a settled shape during each hold.
-  const holdT = k === 0 ? -1 : (frame - starts[k - 1] - winLen) / HOLD;
+  const holdT = k === 0 ? -1 : (frame - starts[k - 1] - winLen) / hold;
 
   for (let i = 0; i < n; i++) {
     const a = from[i];
@@ -525,7 +570,7 @@ export function DotFieldMorph({
   }
 
   // Slow push-in over the whole shot.
-  const end = dotFieldMorphLength(list.length);
+  const end = dotFieldMorphLength(list.length, hold, morph);
   const push = interpolate(frame, [0, end + 40], [1, 1.06], {
     easing: INOUT,
     extrapolateRight: "clamp",
@@ -564,141 +609,151 @@ export function DotFieldMorph({
     : `radial-gradient(55% 60% at ${62 - drift * 8}% 92%, rgba(46,69,183,0.16) 0%, rgba(46,69,183,0) 70%), radial-gradient(80% 75% at 50% 44%, #0d1130 0%, ${bg} 72%)`;
 
   return (
-    <AbsoluteFill style={{ background: ground, overflow: "hidden" }}>
-      <svg
-        width={W}
-        height={H}
-        viewBox={`0 0 ${W} ${H}`}
-        style={{
-          position: "absolute",
-          inset: 0,
-          transform: `scale(${push})`,
-          transformOrigin: `${cx}px ${cy}px`,
-        }}
-        aria-hidden
-      >
-        <defs>
-          <linearGradient
-            id={`${uid}-field`}
-            gradientUnits="userSpaceOnUse"
-            x1={gx}
-            y1={gy}
-            x2={W - gx * 0.5}
-            y2={H - gy}
-          >
-            {fieldStops.map((c, i) => (
-              <stop
-                key={c + String(i)}
-                offset={i / (fieldStops.length - 1)}
-                stopColor={c}
-              />
-            ))}
-          </linearGradient>
-          <linearGradient
-            id={`${uid}-mark`}
-            gradientUnits="userSpaceOnUse"
-            x1={0}
-            y1={H * 0.36}
-            x2={0}
-            y2={H * 0.64}
-          >
-            {markStops.map((c, i) => (
-              <stop
-                key={c + String(i)}
-                offset={i / (markStops.length - 1)}
-                stopColor={c}
-              />
-            ))}
-          </linearGradient>
-        </defs>
-        {neutral.map((segs, i) =>
-          segs.length ? (
-            <path
-              key={`n${i}`}
-              d={segs.join("")}
-              fill={`url(#${uid}-field)`}
-              opacity={0.28 + (i / (BUCKETS - 1)) * 0.72}
-            />
-          ) : null,
-        )}
-        {accented.map((segs, i) =>
-          segs.length ? (
-            <path
-              key={`a${i}`}
-              d={segs.join("")}
-              fill={`url(#${uid}-mark)`}
-              opacity={0.6 + (i / (BUCKETS - 1)) * 0.4}
-            />
-          ) : null,
-        )}
-      </svg>
-      {label ? (
-        <div
-          style={{
-            position: "absolute",
-            left: 0,
-            right: 0,
-            top: H * 0.79,
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "baseline",
-            gap: H * 0.018,
-            fontFamily: MANROPE,
-            color: ink,
-            opacity: labelOp,
-            transform: `translateY(${(1 - labelIn) * H * 0.012}px)`,
-            filter: `blur(${(1 - labelOp) * 4}px)`,
-          }}
-        >
-          <span
-            style={{
-              fontWeight: 500,
-              fontSize: H * 0.022,
-              letterSpacing: "0.04em",
-              fontVariantNumeric: "tabular-nums",
-              color: isLight ? "#2e45b7" : "#8796ee",
-            }}
-          >
-            {String(k).padStart(2, "0")}
-          </span>
-          <span
-            style={{
-              fontWeight: 400,
-              fontSize: H * 0.042,
-              letterSpacing: "-0.025em",
-              opacity: 0.92,
-            }}
-          >
-            {label}
-          </span>
-        </div>
-      ) : null}
-      <svg
-        width={W}
-        height={H}
-        style={{ position: "absolute", inset: 0, pointerEvents: "none" }}
-        aria-hidden
-      >
-        <filter id={`${uid}-grain`}>
-          <feTurbulence
-            type="fractalNoise"
-            baseFrequency={0.85}
-            numOctaves={2}
-            seed={3}
-          />
-          <feColorMatrix
-            type="matrix"
-            values="0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 1 0"
-          />
-        </filter>
-        <rect
+    <AbsoluteFill
+      style={{
+        background:
+          background === "transparent" ? undefined : (background ?? ground),
+        overflow: "hidden",
+      }}
+    >
+      <ScaleLayer scale={scale}>
+        <svg
           width={W}
           height={H}
-          filter={`url(#${uid}-grain)`}
-          opacity={isLight ? 0.05 : 0.06}
-          style={{ mixBlendMode: isLight ? "multiply" : "screen" }}
-        />
-      </svg>
+          viewBox={`0 0 ${W} ${H}`}
+          style={{
+            position: "absolute",
+            inset: 0,
+            transform: `scale(${push})`,
+            transformOrigin: `${cx}px ${cy}px`,
+          }}
+          aria-hidden
+        >
+          <defs>
+            <linearGradient
+              id={`${uid}-field`}
+              gradientUnits="userSpaceOnUse"
+              x1={gx}
+              y1={gy}
+              x2={W - gx * 0.5}
+              y2={H - gy}
+            >
+              {fieldStops.map((c, i) => (
+                <stop
+                  key={c + String(i)}
+                  offset={i / (fieldStops.length - 1)}
+                  stopColor={c}
+                />
+              ))}
+            </linearGradient>
+            <linearGradient
+              id={`${uid}-mark`}
+              gradientUnits="userSpaceOnUse"
+              x1={0}
+              y1={H * 0.36}
+              x2={0}
+              y2={H * 0.64}
+            >
+              {markStops.map((c, i) => (
+                <stop
+                  key={c + String(i)}
+                  offset={i / (markStops.length - 1)}
+                  stopColor={c}
+                />
+              ))}
+            </linearGradient>
+          </defs>
+          {neutral.map((segs, i) =>
+            segs.length ? (
+              <path
+                key={`n${i}`}
+                d={segs.join("")}
+                fill={`url(#${uid}-field)`}
+                opacity={0.28 + (i / (BUCKETS - 1)) * 0.72}
+              />
+            ) : null,
+          )}
+          {accented.map((segs, i) =>
+            segs.length ? (
+              <path
+                key={`a${i}`}
+                d={segs.join("")}
+                fill={`url(#${uid}-mark)`}
+                opacity={0.6 + (i / (BUCKETS - 1)) * 0.4}
+              />
+            ) : null,
+          )}
+        </svg>
+        {label ? (
+          <div
+            style={{
+              position: "absolute",
+              left: 0,
+              right: 0,
+              top: H * 0.79,
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "baseline",
+              gap: H * 0.018,
+              fontFamily,
+              color: fg,
+              opacity: labelOp,
+              transform: `translateY(${(1 - labelIn) * H * 0.012}px)`,
+              filter: `blur(${(1 - labelOp) * 4}px)`,
+            }}
+          >
+            <span
+              style={{
+                fontWeight: 500,
+                fontSize: H * 0.022,
+                letterSpacing: "0.04em",
+                fontVariantNumeric: "tabular-nums",
+                color: isLight ? "#2e45b7" : "#8796ee",
+              }}
+            >
+              {String(k).padStart(2, "0")}
+            </span>
+            <span
+              style={{
+                fontWeight: 400,
+                fontSize: H * 0.042,
+                letterSpacing: "-0.025em",
+                opacity: 0.92,
+              }}
+            >
+              {label}
+            </span>
+          </div>
+        ) : null}
+      </ScaleLayer>
+      {grain ? (
+        <svg
+          width={W}
+          height={H}
+          style={{ position: "absolute", inset: 0, pointerEvents: "none" }}
+          aria-hidden
+        >
+          <filter id={`${uid}-grain`}>
+            <feTurbulence
+              type="fractalNoise"
+              baseFrequency={0.85}
+              numOctaves={2}
+              seed={3}
+            />
+            <feColorMatrix
+              type="matrix"
+              values="0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 1 0"
+            />
+          </filter>
+          <rect
+            width={W}
+            height={H}
+            filter={`url(#${uid}-grain)`}
+            opacity={isLight ? 0.05 : 0.06}
+            style={{ mixBlendMode: isLight ? "multiply" : "screen" }}
+          />
+        </svg>
+      ) : null}
     </AbsoluteFill>
   );
 }

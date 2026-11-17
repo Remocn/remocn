@@ -18,8 +18,20 @@ const barlow = loadFont("normal", { weights: ["500"], subsets: ["latin"] });
 
 export interface NegationDropProps {
   lines?: string[];
+  /** Frame the first contraction drops. */
+  dropAt?: number;
+  /** Frames between one line's drop and the next. */
+  stagger?: number;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the lines. Load it yourself; Barlow Condensed by default. */
+  fontFamily?: string;
+  /** Size of the text block, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -98,7 +110,7 @@ function splitLine(line: string): Part[][] {
 
 const upper = (s: string) => s.toUpperCase();
 
-function useWidths(strings: string[]) {
+function useWidths(strings: string[], family: string) {
   const key = strings.join("\u0001");
   const [state, setState] = useState<{
     key: string;
@@ -113,7 +125,7 @@ function useWidths(strings: string[]) {
     let live = true;
     Promise.all([
       barlow.waitUntilDone(),
-      document.fonts.load(`500 100px "${barlow.fontFamily}"`),
+      document.fonts.load(`500 100px "${family}"`),
     ])
       .catch(() => undefined)
       .then(() => {
@@ -125,7 +137,7 @@ function useWidths(strings: string[]) {
           top: "0",
           visibility: "hidden",
           whiteSpace: "pre",
-          fontFamily: `"${barlow.fontFamily}"`,
+          fontFamily: `"${family}"`,
           fontWeight: "500",
           fontSize: "100px",
           lineHeight: "1",
@@ -150,14 +162,14 @@ function useWidths(strings: string[]) {
         let capTop = 0.7;
         const ctx = document.createElement("canvas").getContext("2d");
         if (ctx) {
-          ctx.font = `500 200px "${barlow.fontFamily}"`;
+          ctx.font = `500 200px "${family}"`;
           const fm = ctx.measureText("H");
           const asc = fm.fontBoundingBoxAscent / 200;
           const desc = fm.fontBoundingBoxDescent / 200;
           baseline = (1 - (asc + desc)) / 2 + asc;
           capTop = fm.actualBoundingBoxAscent / 200;
         }
-        setState({ key, w, space, baseline, capTop });
+        setState({ key: key + family, w, space, baseline, capTop });
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -166,20 +178,43 @@ function useWidths(strings: string[]) {
     return () => {
       live = false;
     };
-  }, [key, handle]);
-  return state && state.key === key ? state : null;
+  }, [key, family, handle]);
+  return state && state.key === key + family ? state : null;
+}
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
 }
 
 export function NegationDrop({
   lines = DEFAULT_LINES,
+  dropAt = FLIP_AT,
+  stagger = FLIP_GAP,
   accent,
+  ink,
   background,
+  fontFamily = barlow.fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: NegationDropProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const c = THEMES[theme];
+  const fg = ink ?? c.ink;
   const block = accent ?? c.accent;
 
   const rows = useMemo(() => lines.map(splitLine), [lines]);
@@ -188,7 +223,7 @@ export function NegationDrop({
     for (const r of rows) for (const w of r) for (const p of w) set.add(p.text);
     return [...set];
   }, [rows]);
-  const m = useWidths(strings);
+  const m = useWidths(strings, fontFamily);
 
   const transparent = background === "transparent";
   const stage = transparent ? "transparent" : (background ?? c.bg);
@@ -215,7 +250,7 @@ export function NegationDrop({
     return { full, drop };
   });
 
-  const flipAt = (i: number) => FLIP_AT + i * FLIP_GAP;
+  const flipAt = (i: number) => dropAt + i * stagger;
   const close = rows.map((_, i) =>
     spring({
       frame: t - flipAt(i) - CLOSE_DELAY,
@@ -240,115 +275,117 @@ export function NegationDrop({
   let lineTop = blockTop;
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
-      {rows.map((r, i) => {
-        const F = sizes[i];
-        const top = lineTop;
-        lineTop += F * LINE_H;
-        const enter = interpolate(
-          t,
-          [
-            ENTER_AT + i * ENTER_STAGGER,
-            ENTER_AT + i * ENTER_STAGGER + ENTER_LEN,
-          ],
-          [0, 1],
-          { ...CLAMP, easing: EASE_OUT },
-        );
-        const f0 = flipAt(i);
-        const tint = interpolate(t, [f0 - 8, f0 - 1], [0, 1], CLAMP);
-        const fall = interpolate(t, [f0, f0 + FALL_LEN], [0, 1], {
-          ...CLAMP,
-          easing: EASE_FALL,
-        });
-        const lit = interpolate(
-          t,
-          [f0 + LIT_DELAY, f0 + LIT_DELAY + 10],
-          [0, 1],
-          { ...CLAMP, easing: EASE_OUT },
-        );
-        const clipTop = top - F * 0.2;
-        const baseY = top + m.baseline * F;
-        const clipBottom = baseY + F * 0.1;
-        const lineW = (lineEm[i].full - lineEm[i].drop * close[i]) * F;
-        const left = (W - lineW) / 2;
-        const bpad = F * 0.05;
+      <ScaleLayer scale={scale}>
+        {rows.map((r, i) => {
+          const F = sizes[i];
+          const top = lineTop;
+          lineTop += F * LINE_H;
+          const enter = interpolate(
+            t,
+            [
+              ENTER_AT + i * ENTER_STAGGER,
+              ENTER_AT + i * ENTER_STAGGER + ENTER_LEN,
+            ],
+            [0, 1],
+            { ...CLAMP, easing: EASE_OUT },
+          );
+          const f0 = flipAt(i);
+          const tint = interpolate(t, [f0 - 8, f0 - 1], [0, 1], CLAMP);
+          const fall = interpolate(t, [f0, f0 + FALL_LEN], [0, 1], {
+            ...CLAMP,
+            easing: EASE_FALL,
+          });
+          const lit = interpolate(
+            t,
+            [f0 + LIT_DELAY, f0 + LIT_DELAY + 10],
+            [0, 1],
+            { ...CLAMP, easing: EASE_OUT },
+          );
+          const clipTop = top - F * 0.2;
+          const baseY = top + m.baseline * F;
+          const clipBottom = baseY + F * 0.1;
+          const lineW = (lineEm[i].full - lineEm[i].drop * close[i]) * F;
+          const left = (W - lineW) / 2;
+          const bpad = F * 0.05;
 
-        const pieces: React.ReactNode[] = [];
-        let x = 0;
-        let passedDrop = false;
-        r.forEach((word, wi) => {
-          if (wi > 0) x += m.space * F;
-          for (const p of word) {
-            const pw = wOf(p.text) * F;
-            const shift = passedDrop ? -lineEm[i].drop * F * close[i] : 0;
-            const style: React.CSSProperties = {
-              position: "absolute",
-              left: left + x + shift,
-              top: top - clipTop,
-              height: F,
-              lineHeight: `${F}px`,
-              whiteSpace: "pre",
-              color: c.ink,
-            };
-            if (p.kind === "drop") {
-              style.color = interpolateHex(c.ink, c.dim, tint);
-              style.transform = `translateY(${(fall * F * 0.95).toFixed(2)}px)`;
-              passedDrop = true;
-            }
-            if (p.kind === "keep" && lit > 0) {
-              style.color = `color-mix(in oklab, ${c.ink} ${((1 - lit) * 100).toFixed(1)}%, ${c.onBlock})`;
+          const pieces: React.ReactNode[] = [];
+          let x = 0;
+          let passedDrop = false;
+          r.forEach((word, wi) => {
+            if (wi > 0) x += m.space * F;
+            for (const p of word) {
+              const pw = wOf(p.text) * F;
+              const shift = passedDrop ? -lineEm[i].drop * F * close[i] : 0;
+              const style: React.CSSProperties = {
+                position: "absolute",
+                left: left + x + shift,
+                top: top - clipTop,
+                height: F,
+                lineHeight: `${F}px`,
+                whiteSpace: "pre",
+                color: fg,
+              };
+              if (p.kind === "drop") {
+                style.color = interpolateHex(fg, c.dim, tint);
+                style.transform = `translateY(${(fall * F * 0.95).toFixed(2)}px)`;
+                passedDrop = true;
+              }
+              if (p.kind === "keep" && lit > 0) {
+                style.color = `color-mix(in oklab, ${fg} ${((1 - lit) * 100).toFixed(1)}%, ${c.onBlock})`;
+                pieces.push(
+                  <div
+                    key={`b${wi}`}
+                    style={{
+                      position: "absolute",
+                      left: left + x - bpad,
+                      top: baseY - m.capTop * F - bpad - clipTop,
+                      width: pw + bpad * 2,
+                      height: m.capTop * F + bpad * 2,
+                      background: block,
+                      transformOrigin: "0 50%",
+                      transform: `scaleX(${lit.toFixed(4)})`,
+                    }}
+                  />,
+                );
+              }
               pieces.push(
-                <div
-                  key={`b${wi}`}
-                  style={{
-                    position: "absolute",
-                    left: left + x - bpad,
-                    top: baseY - m.capTop * F - bpad - clipTop,
-                    width: pw + bpad * 2,
-                    height: m.capTop * F + bpad * 2,
-                    background: block,
-                    transformOrigin: "0 50%",
-                    transform: `scaleX(${lit.toFixed(4)})`,
-                  }}
-                />,
+                <span key={`${wi}-${p.kind}-${p.text}`} style={style}>
+                  {upper(p.text)}
+                </span>,
               );
+              x += pw;
             }
-            pieces.push(
-              <span key={`${wi}-${p.kind}-${p.text}`} style={style}>
-                {upper(p.text)}
-              </span>,
-            );
-            x += pw;
-          }
-        });
+          });
 
-        return (
-          <div
-            key={i}
-            style={{
-              position: "absolute",
-              left: 0,
-              width: W,
-              top: clipTop,
-              height: clipBottom - clipTop,
-              overflow: "hidden",
-              fontFamily: barlow.fontFamily,
-              fontWeight: 500,
-              fontSize: F,
-              letterSpacing: `${TRACK}em`,
-            }}
-          >
+          return (
             <div
+              key={i}
               style={{
                 position: "absolute",
-                inset: 0,
-                transform: `translateY(${((1 - enter) * (clipBottom - clipTop + F * 0.05)).toFixed(2)}px)`,
+                left: 0,
+                width: W,
+                top: clipTop,
+                height: clipBottom - clipTop,
+                overflow: "hidden",
+                fontFamily,
+                fontWeight: 500,
+                fontSize: F,
+                letterSpacing: `${TRACK}em`,
               }}
             >
-              {pieces}
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  transform: `translateY(${((1 - enter) * (clipBottom - clipTop + F * 0.05)).toFixed(2)}px)`,
+                }}
+              >
+                {pieces}
+              </div>
             </div>
-          </div>
-        );
-      })}
+          );
+        })}
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

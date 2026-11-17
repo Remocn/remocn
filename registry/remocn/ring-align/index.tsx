@@ -1,6 +1,7 @@
 "use client";
 
 import { loadFont as loadDisplay } from "@remotion/google-fonts/Geist";
+import type React from "react";
 import { useId } from "react";
 import {
   AbsoluteFill,
@@ -21,6 +22,22 @@ export interface RingAlignProps {
   /** Number of concentric rings. */
   rings?: number;
   accent?: string;
+  /** Frames between rings locking into place. */
+  stagger?: number;
+  /** Radius of the ring dots, in px at 720p. */
+  dotSize?: number;
+  /** Solid color for the word and ring dots in place of the theme. */
+  ink?: string;
+  /** Solid fill in place of the toned ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the word. Load it yourself; Geist by default. */
+  fontFamily?: string;
+  /** Size of the rings and word, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  /** Film grain over the scene. */
+  grain?: boolean;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -33,8 +50,8 @@ const TAIL_DELAY = 8;
 const TAIL = 16;
 const HOLD = 32;
 
-export const ringAlignLength = (rings = 6) =>
-  FIRST_LOCK + (rings - 1) * LOCK_STEP + BEAM_GAP + TAIL_DELAY + TAIL + HOLD;
+export const ringAlignLength = (rings = 6, stagger = LOCK_STEP) =>
+  FIRST_LOCK + (rings - 1) * stagger + BEAM_GAP + TAIL_DELAY + TAIL + HOLD;
 
 const LOCK = Easing.bezier(0.3, 0.55, 0.32, 1.05);
 const WIPE = Easing.bezier(0.22, 1, 0.36, 1);
@@ -98,18 +115,42 @@ function Grain({ opacity, light }: { opacity: number; light: boolean }) {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function RingAlign({
   word = "Aligned.",
   rings = 6,
   accent = "#3B5BFD",
+  stagger = LOCK_STEP,
+  dotSize = 3.1,
+  ink,
+  background,
+  fontFamily = display,
+  scale = 1,
+  delay = 0,
+  grain = true,
   speed = 1,
   theme = "dark",
 }: RingAlignProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const isLight = theme === "light";
   const bg = isLight ? "#F5F4F0" : "#0A0A0B";
-  const ink = isLight ? "#141416" : "#EEEEF0";
+  const fg = ink ?? (isLight ? "#141416" : "#EEEEF0");
   const u = Math.min(W, H) / 720;
   const n = Math.max(3, Math.min(9, Math.round(rings)));
   const cx = W / 2;
@@ -119,10 +160,10 @@ export function RingAlign({
   const pad = 9 * u;
   const rIn = H * 0.165;
   const rOut = H * 0.44;
-  const dotR = 3.1 * u;
+  const dotR = dotSize * u;
   const pitch = 17 * u;
 
-  const lastLock = FIRST_LOCK + (n - 1) * LOCK_STEP;
+  const lastLock = FIRST_LOCK + (n - 1) * stagger;
   const beamStart = lastLock + BEAM_GAP;
 
   const ringPaths: { d: string; opacity: number }[] = [];
@@ -131,7 +172,7 @@ export function RingAlign({
     const r = rOut - ((rOut - rIn) * k) / (n - 1);
     const count = Math.round((Math.PI * 2 * r) / pitch);
     const gap = 2 * Math.asin(Math.min(0.98, (band / 2 + pad) / r));
-    const lockAt = FIRST_LOCK + k * LOCK_STEP;
+    const lockAt = FIRST_LOCK + k * stagger;
     const dir = k % 2 === 0 ? 1 : -1;
     const offset = dir * Math.PI * (1.35 + hash(k * 4.1) * 0.5);
     const x = Math.min(1, Math.max(0, t / lockAt));
@@ -169,10 +210,17 @@ export function RingAlign({
   const dot = word.endsWith(".");
   const body = dot ? word.slice(0, -1) : word;
   const [g0, g1, g2, g3] = GLOW;
-  const drift = interpolate(t, [beamStart, ringAlignLength(n)], [0, 1], CLAMP);
-  const wordFill = isLight
-    ? `linear-gradient(90deg, ${g2} ${(-10 + 20 * drift).toFixed(1)}%, ${g3} ${(45 + 10 * drift).toFixed(1)}%, ${g2} ${(110 + 10 * drift).toFixed(1)}%)`
-    : `linear-gradient(90deg, ${g1} ${(-10 + 20 * drift).toFixed(1)}%, ${g0} ${(45 + 10 * drift).toFixed(1)}%, ${g1} ${(110 + 10 * drift).toFixed(1)}%)`;
+  const drift = interpolate(
+    t,
+    [beamStart, ringAlignLength(n, stagger)],
+    [0, 1],
+    CLAMP,
+  );
+  const wordFill = ink
+    ? `linear-gradient(${ink}, ${ink})`
+    : isLight
+      ? `linear-gradient(90deg, ${g2} ${(-10 + 20 * drift).toFixed(1)}%, ${g3} ${(45 + 10 * drift).toFixed(1)}%, ${g2} ${(110 + 10 * drift).toFixed(1)}%)`
+      : `linear-gradient(90deg, ${g1} ${(-10 + 20 * drift).toFixed(1)}%, ${g0} ${(45 + 10 * drift).toFixed(1)}%, ${g1} ${(110 + 10 * drift).toFixed(1)}%)`;
   const beamFill = `linear-gradient(90deg, ${g3} 0%, ${g2} 45%, color-mix(in oklab, ${g2} 55%, ${g1}) 88%, ${g1} 98%, ${g0} 100%)`;
   const wordLayer = (fill: string, l: number, r: number) => (
     <div
@@ -190,7 +238,7 @@ export function RingAlign({
     >
       <div
         style={{
-          fontFamily: display,
+          fontFamily,
           fontWeight: 500,
           fontSize,
           letterSpacing: "-0.035em",
@@ -223,46 +271,54 @@ export function RingAlign({
   return (
     <AbsoluteFill
       style={{
-        backgroundColor: bg,
-        backgroundImage: isLight
-          ? `radial-gradient(34% 58% at 50% 50%, color-mix(in oklab, ${GLOW[1]} 16%, transparent) 0%, transparent 100%), radial-gradient(70% 70% at 50% 50%, #FBFAF7 0%, ${bg} 72%)`
-          : `radial-gradient(34% 58% at 50% 50%, color-mix(in oklab, ${GLOW[2]} 22%, transparent) 0%, transparent 100%), radial-gradient(70% 70% at 50% 50%, #121215 0%, ${bg} 72%)`,
+        backgroundColor:
+          background === "transparent" ? undefined : (background ?? bg),
+        backgroundImage:
+          background !== undefined
+            ? undefined
+            : isLight
+              ? `radial-gradient(34% 58% at 50% 50%, color-mix(in oklab, ${GLOW[1]} 16%, transparent) 0%, transparent 100%), radial-gradient(70% 70% at 50% 50%, #FBFAF7 0%, ${bg} 72%)`
+              : `radial-gradient(34% 58% at 50% 50%, color-mix(in oklab, ${GLOW[2]} 22%, transparent) 0%, transparent 100%), radial-gradient(70% 70% at 50% 50%, #121215 0%, ${bg} 72%)`,
         overflow: "hidden",
       }}
     >
-      <svg
-        width={W}
-        height={H}
-        viewBox={`0 0 ${W} ${H}`}
-        style={{ position: "absolute", inset: 0 }}
-        aria-hidden
-      >
-        {ringPaths.map((p, k) => (
-          <path
-            key={`ring-${k.toString()}`}
-            d={p.d}
-            fill={ink}
-            opacity={p.opacity}
+      <ScaleLayer scale={scale}>
+        <svg
+          width={W}
+          height={H}
+          viewBox={`0 0 ${W} ${H}`}
+          style={{ position: "absolute", inset: 0 }}
+          aria-hidden
+        >
+          {ringPaths.map((p, k) => (
+            <path
+              key={`ring-${k.toString()}`}
+              d={p.d}
+              fill={fg}
+              opacity={p.opacity}
+            />
+          ))}
+        </svg>
+        {tail > 0 ? wordLayer(wordFill, 0, tail) : null}
+        {head > tail + 0.5 ? (
+          <div
+            style={{
+              position: "absolute",
+              left: tail,
+              top: cy - band / 2,
+              width: head - tail,
+              height: band,
+              backgroundImage: beamFill,
+            }}
           />
-        ))}
-      </svg>
-      {tail > 0 ? wordLayer(wordFill, 0, tail) : null}
-      {head > tail + 0.5 ? (
-        <div
-          style={{
-            position: "absolute",
-            left: tail,
-            top: cy - band / 2,
-            width: head - tail,
-            height: band,
-            backgroundImage: beamFill,
-          }}
-        />
+        ) : null}
+        {head > tail + 0.5
+          ? wordLayer("linear-gradient(#FFFFFF, #FFFFFF)", tail, head)
+          : null}
+      </ScaleLayer>
+      {grain ? (
+        <Grain opacity={isLight ? 0.045 : 0.06} light={isLight} />
       ) : null}
-      {head > tail + 0.5
-        ? wordLayer("linear-gradient(#FFFFFF, #FFFFFF)", tail, head)
-        : null}
-      <Grain opacity={isLight ? 0.045 : 0.06} light={isLight} />
     </AbsoluteFill>
   );
 }

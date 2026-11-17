@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const pixelBarsConfig: ComponentConfig = {
   componentName: "PixelBars",
@@ -13,11 +19,6 @@ export const pixelBarsConfig: ComponentConfig = {
       },
       description: "Theme",
     },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
-    },
     label: {
       type: "text-content",
       default: "this quarter",
@@ -28,6 +29,30 @@ export const pixelBarsConfig: ComponentConfig = {
       default: "+64%",
       description: "Metric",
     },
+    stagger: {
+      type: "number",
+      default: 5,
+      min: 0,
+      max: 15,
+      step: 1,
+      description: "Column stagger",
+      hiddenFromList: false,
+    },
+    rows: {
+      type: "number",
+      default: 14,
+      min: 6,
+      max: 24,
+      step: 1,
+      description: "Rows",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Space Grotesk", grain: true }),
     speed: {
       type: "number",
       default: 1,

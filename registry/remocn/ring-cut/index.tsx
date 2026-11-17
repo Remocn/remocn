@@ -50,7 +50,25 @@ export interface RingCutProps {
   from?: string;
   to?: string;
   origin?: { x: number; y: number };
+  /** Frames between one ring and the next. */
+  stagger?: number;
+  /** Frames each ring takes to grow past the frame's edge. */
+  expand?: number;
   accent?: string;
+  /** Text color of both headlines; overrides the theme. */
+  ink?: string;
+  /** Solid fill in place of the incoming gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the headlines. Load it yourself; Manrope by default. */
+  fontFamily?: string;
+  /** Replaces the remocn mark shown when `to` is "remocn". */
+  logo?: React.ReactNode;
+  /** Size of the headlines, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  /** Film grain over the scene. */
+  grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -173,6 +191,22 @@ function Grain({ opacity }: { opacity: number }) {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 function Title({
   text,
   size,
@@ -180,6 +214,8 @@ function Title({
   scale,
   lift,
   logo,
+  mark,
+  fontFamily,
 }: {
   text: string;
   size: number;
@@ -187,9 +223,11 @@ function Title({
   scale: number;
   lift: number;
   logo?: boolean;
+  mark?: React.ReactNode;
+  fontFamily: string;
 }) {
   const style: React.CSSProperties = {
-    fontFamily: manrope.fontFamily,
+    fontFamily,
     fontWeight: 500,
     fontSize: size,
     letterSpacing: `${TRACK}em`,
@@ -202,7 +240,7 @@ function Title({
   return (
     <AbsoluteFill style={{ alignItems: "center", justifyContent: "center" }}>
       <div style={style}>
-        {logo ? <RemocnLogo fontSize={size} color={color} /> : text}
+        {logo ? (mark ?? <RemocnLogo fontSize={size} color={color} />) : text}
       </div>
     </AbsoluteFill>
   );
@@ -212,11 +250,20 @@ export function RingCut({
   from = "One idea",
   to = "remocn",
   origin = { x: 0.2, y: 0.74 },
+  stagger = 3,
+  expand = DUR,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = manrope.fontFamily,
+  logo,
+  scale = 1,
+  delay = 0,
+  grain = true,
   theme = "dark",
   speed = 1,
 }: RingCutProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const u = H / 720;
   const stage = STAGES[theme];
@@ -231,9 +278,17 @@ export function RingCut({
   );
   const rMax = 1.18 * reach;
   const line = Math.max(3, 4.5 * u);
+  const ringAt = (at: number) => (at * stagger) / 3;
   const radius = (at: number) =>
     rMax *
-    EXPAND(interpolate(t, [START + at, START + at + DUR], [0, 1], CLAMP));
+    EXPAND(
+      interpolate(
+        t,
+        [START + ringAt(at), START + ringAt(at) + expand],
+        [0, 1],
+        CLAMP,
+      ),
+    );
 
   const isLogo = to.trim().toLowerCase() === "remocn";
   const fsA = Math.min(150 * u, (0.8 * W) / widthEm(from));
@@ -241,14 +296,16 @@ export function RingCut({
     (isLogo ? 172 : 160) * u,
     (0.66 * W) / (isLogo ? LOGO_EM : widthEm(to)),
   );
-  const finalAt = RINGS[RINGS.length - 1].at;
-  const finalR = radius(finalAt);
+  const finalAt = ringAt(RINGS[RINGS.length - 1].at);
+  const finalR = radius(RINGS[RINGS.length - 1].at);
   const titleDist = Math.hypot(W / 2 - cx, H / 2 - cy);
   let tReach = START + finalAt;
-  for (let f = START + finalAt; f <= START + finalAt + DUR; f += 0.25) {
+  for (let f = START + finalAt; f <= START + finalAt + expand; f += 0.25) {
     const r =
       rMax *
-      EXPAND(interpolate(f, [START + finalAt, START + finalAt + DUR], [0, 1]));
+      EXPAND(
+        interpolate(f, [START + finalAt, START + finalAt + expand], [0, 1]),
+      );
     if (r >= titleDist) {
       tReach = f;
       break;
@@ -273,13 +330,16 @@ export function RingCut({
       {covered ? null : (
         <>
           <AbsoluteFill style={{ background: light(stage.aLight) }} />
-          <Title
-            text={from}
-            size={fsA}
-            color={stage.aFg}
-            scale={driftA}
-            lift={0}
-          />
+          <ScaleLayer scale={scale}>
+            <Title
+              text={from}
+              size={fsA}
+              color={ink ?? stage.aFg}
+              scale={driftA}
+              lift={0}
+              fontFamily={fontFamily}
+            />
+          </ScaleLayer>
         </>
       )}
       {RINGS.map((ring) => {
@@ -290,18 +350,27 @@ export function RingCut({
             <AbsoluteFill
               key={ring.at}
               style={{
-                background: meshGround(stage, drift),
+                background:
+                  background === undefined
+                    ? meshGround(stage, drift)
+                    : background === "transparent"
+                      ? undefined
+                      : background,
                 clipPath: covered ? undefined : clip(r),
               }}
             >
-              <Title
-                text={to}
-                size={fsB}
-                color={stage.endFg}
-                scale={scaleB}
-                lift={liftB}
-                logo={isLogo}
-              />
+              <ScaleLayer scale={scale}>
+                <Title
+                  text={to}
+                  size={fsB}
+                  color={ink ?? stage.endFg}
+                  scale={scaleB}
+                  lift={liftB}
+                  logo={isLogo}
+                  mark={logo}
+                  fontFamily={fontFamily}
+                />
+              </ScaleLayer>
             </AbsoluteFill>
           );
         }
@@ -336,7 +405,7 @@ export function RingCut({
           />
         );
       })}
-      <Grain opacity={theme === "light" ? 0.04 : 0.055} />
+      {grain ? <Grain opacity={theme === "light" ? 0.04 : 0.055} /> : null}
     </AbsoluteFill>
   );
 }

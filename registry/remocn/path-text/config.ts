@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const pathTextConfig: ComponentConfig = {
   componentName: "PathText",
@@ -41,6 +47,25 @@ export const pathTextConfig: ComponentConfig = {
       description: "Looseness",
       hiddenFromList: false,
     },
+    stagger: {
+      type: "number",
+      default: 2,
+      min: 0,
+      max: 8,
+      step: 1,
+      description: "Letter stagger",
+      hiddenFromList: false,
+    },
+    pullAt: {
+      type: "number",
+      default: 46,
+      min: 20,
+      max: 90,
+      step: 1,
+      description: "Pull taut at (frame)",
+      hiddenFromList: false,
+    },
+    ...sceneControls({ font: "Instrument Serif" }),
     speed: {
       type: "number",
       default: 1,

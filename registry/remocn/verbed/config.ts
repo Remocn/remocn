@@ -1,8 +1,20 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const verbedConfig: ComponentConfig = {
   componentName: "Verbed",
   importPath: "@/components/remocn/verbed",
+  lists: {
+    inflections: {
+      default: ["remocns", "remocned", "remocning"],
+      description: "Inflections",
+    },
+  },
   controls: {
     theme: {
       type: "enum",
@@ -50,6 +62,26 @@ export const verbedConfig: ComponentConfig = {
       default: "We remocned the changelog before lunch.",
       description: "Example",
     },
+    turnAt: {
+      type: "number",
+      default: 84,
+      min: 30,
+      max: 150,
+      step: 1,
+      description: "Turn at (frame)",
+      hiddenFromList: false,
+    },
+    stagger: {
+      type: "number",
+      default: 2,
+      min: 0,
+      max: 8,
+      step: 1,
+      description: "Word stagger",
+      hiddenFromList: false,
+    },
+    accent: { type: "color", default: undefined, description: "Accent" },
+    ...sceneControls({ font: "Bitter" }),
     speed: {
       type: "number",
       default: 1,

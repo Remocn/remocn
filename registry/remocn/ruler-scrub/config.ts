@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const rulerScrubConfig: ComponentConfig = {
   componentName: "RulerScrub",
@@ -12,11 +18,6 @@ export const rulerScrubConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     format: {
       type: "text-content",
@@ -55,6 +56,21 @@ export const rulerScrubConfig: ComponentConfig = {
       description: "Step",
       hiddenFromList: false,
     },
+    scrubLength: {
+      type: "number",
+      default: 70,
+      min: 20,
+      max: 140,
+      step: 1,
+      description: "Scrub length (frames)",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Geist", grain: true }),
     speed: {
       type: "number",
       default: 1,

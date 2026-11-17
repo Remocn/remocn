@@ -1,6 +1,7 @@
 "use client";
 
 import { loadVariableFont } from "@remotion/google-fonts/Archivo";
+import type React from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AbsoluteFill,
@@ -21,7 +22,19 @@ export interface RomanEditionProps {
   tagline?: string;
   showNumber?: boolean;
   accent?: string;
+  /** Color of the eyebrow and tagline; overrides the theme ink. */
+  ink?: string;
+  /** Fill of the band behind the numeral; overrides the theme. */
+  band?: string;
   background?: string;
+  /** Typeface for the numeral and copy. Load it yourself; Archivo by default. */
+  fontFamily?: string;
+  /** Frames between tagline words rising in. */
+  stagger?: number;
+  /** Size of the band and copy, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -115,7 +128,7 @@ interface Metrics {
   baseline: number;
 }
 
-function measure(): Metrics {
+function measure(fontFamily: string): Metrics {
   const probe = document.createElement("span");
   Object.assign(probe.style, {
     position: "absolute",
@@ -123,7 +136,7 @@ function measure(): Metrics {
     top: "0",
     visibility: "hidden",
     whiteSpace: "pre",
-    fontFamily: `"${archivo.fontFamily}"`,
+    fontFamily: `"${fontFamily}"`,
     fontVariationSettings: FVS_NUMERAL,
     fontSize: `${FONT_PX}px`,
     lineHeight: "1",
@@ -139,7 +152,7 @@ function measure(): Metrics {
   let baseline = 0.8;
   const ctx = document.createElement("canvas").getContext("2d");
   if (ctx) {
-    ctx.font = `500 ${FONT_PX}px "${archivo.fontFamily}"`;
+    ctx.font = `500 ${FONT_PX}px "${fontFamily}"`;
     const box = ctx.measureText("IVXLCDM");
     const asc = box.fontBoundingBoxAscent / FONT_PX;
     const desc = box.fontBoundingBoxDescent / FONT_PX;
@@ -149,7 +162,7 @@ function measure(): Metrics {
   return { adv, capTop, baseline };
 }
 
-function useMetrics() {
+function useMetrics(fontFamily: string) {
   const [metrics, setMetrics] = useState<Metrics | null>(null);
   const [handle] = useState(() => delayRender("roman-edition: measuring"));
   const released = useRef(false);
@@ -157,12 +170,12 @@ function useMetrics() {
     let live = true;
     Promise.all([
       archivo.waitUntilDone(),
-      document.fonts.load(`500 100px "${archivo.fontFamily}"`),
+      document.fonts.load(`500 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
-        setMetrics(measure());
+        setMetrics(measure(fontFamily));
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -171,7 +184,7 @@ function useMetrics() {
     return () => {
       live = false;
     };
-  }, [handle]);
+  }, [handle, fontFamily]);
   return metrics;
 }
 
@@ -195,6 +208,22 @@ function layout(str: string, adv: Record<string, number>): Glyph[] {
   });
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function RomanEdition({
   value = 14,
   from = 1,
@@ -202,16 +231,23 @@ export function RomanEdition({
   tagline = "Five days of new scenes, one every morning.",
   showNumber = true,
   accent,
+  ink,
+  band,
   background,
+  fontFamily = archivo.fontFamily,
+  stagger = 3,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: RomanEditionProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
   const spot = accent ?? c.accent;
+  const fg = ink ?? c.ink;
   const bg = background ?? c.bg;
-  const m = useMetrics();
+  const m = useMetrics(fontFamily);
 
   const seq = useMemo(() => sequence(from, value), [from, value]);
   const romans = useMemo(() => seq.map(toRoman), [seq]);
@@ -272,7 +308,7 @@ export function RomanEdition({
     position: "absolute" as const,
     left: W / 2 + x * F,
     top: lineTop - bandTop + y,
-    fontFamily: archivo.fontFamily,
+    fontFamily,
     fontVariationSettings: FVS_NUMERAL,
     fontSize: F,
     lineHeight: `${F}px`,
@@ -351,7 +387,7 @@ export function RomanEdition({
   const numLabel = `No. ${String(arabic).padStart(Math.max(2, digits), "0")}`;
   const tagWords = tagline ? tagline.split(" ") : [];
   const textBase = {
-    fontFamily: archivo.fontFamily,
+    fontFamily,
     fontVariationSettings: FVS_TEXT,
     lineHeight: 1.15,
     letterSpacing: "-0.01em",
@@ -360,91 +396,93 @@ export function RomanEdition({
 
   return (
     <AbsoluteFill style={{ background: bg, overflow: "hidden" }}>
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          top: bandTop,
-          width: W,
-          height: bandH,
-          background: c.band,
-          overflow: "hidden",
-          clipPath: `inset(0 ${((1 - bandP) * 50).toFixed(3)}% 0 ${((1 - bandP) * 50).toFixed(3)}%)`,
-        }}
-      >
-        {nodes}
-      </div>
-      {eyebrow ? (
+      <ScaleLayer scale={scale}>
         <div
           style={{
-            ...textBase,
             position: "absolute",
-            left: M,
-            top: bandTop - smallSize * 1.7,
-            fontSize: smallSize,
-            color: c.ink,
-            opacity: intro,
-            transform: `translateY(${((1 - intro) * smallSize * 0.6).toFixed(2)}px)`,
+            left: 0,
+            top: bandTop,
+            width: W,
+            height: bandH,
+            background: band ?? c.band,
+            overflow: "hidden",
+            clipPath: `inset(0 ${((1 - bandP) * 50).toFixed(3)}% 0 ${((1 - bandP) * 50).toFixed(3)}%)`,
           }}
         >
-          {eyebrow}
+          {nodes}
         </div>
-      ) : null}
-      {showNumber ? (
-        <div
-          style={{
-            ...textBase,
-            position: "absolute",
-            right: M,
-            top: bandTop - smallSize * 1.7,
-            fontSize: smallSize,
-            fontFeatureSettings: '"tnum" 1',
-            color: spot,
-            opacity: intro,
-            transform: `translateY(${((1 - intro) * smallSize * 0.6).toFixed(2)}px)`,
-          }}
-        >
-          {numLabel}
-        </div>
-      ) : null}
-      {tagWords.length > 0 ? (
-        <div
-          style={{
-            ...textBase,
-            position: "absolute",
-            left: M,
-            width: portrait ? W - M * 2 : W * 0.62,
-            top: bandTop + bandH + tagSize * 0.7,
-            fontSize: tagSize,
-            whiteSpace: "normal",
-            textWrap: "balance",
-            color: c.ink,
-          }}
-        >
-          {tagWords.map((w, i) => {
-            const p = interpolate(
-              t,
-              [tagAt + i * 3, tagAt + i * 3 + 16],
-              [0, 1],
-              { ...CLAMP, easing: EASE_OUT },
-            );
-            return (
-              <span key={`${w}-${i}`}>
-                <span
-                  style={{
-                    display: "inline-block",
-                    opacity: p,
-                    transform: `translateY(${((1 - p) * tagSize * 0.6).toFixed(2)}px)`,
-                  }}
-                >
-                  {w}
+        {eyebrow ? (
+          <div
+            style={{
+              ...textBase,
+              position: "absolute",
+              left: M,
+              top: bandTop - smallSize * 1.7,
+              fontSize: smallSize,
+              color: fg,
+              opacity: intro,
+              transform: `translateY(${((1 - intro) * smallSize * 0.6).toFixed(2)}px)`,
+            }}
+          >
+            {eyebrow}
+          </div>
+        ) : null}
+        {showNumber ? (
+          <div
+            style={{
+              ...textBase,
+              position: "absolute",
+              right: M,
+              top: bandTop - smallSize * 1.7,
+              fontSize: smallSize,
+              fontFeatureSettings: '"tnum" 1',
+              color: spot,
+              opacity: intro,
+              transform: `translateY(${((1 - intro) * smallSize * 0.6).toFixed(2)}px)`,
+            }}
+          >
+            {numLabel}
+          </div>
+        ) : null}
+        {tagWords.length > 0 ? (
+          <div
+            style={{
+              ...textBase,
+              position: "absolute",
+              left: M,
+              width: portrait ? W - M * 2 : W * 0.62,
+              top: bandTop + bandH + tagSize * 0.7,
+              fontSize: tagSize,
+              whiteSpace: "normal",
+              textWrap: "balance",
+              color: fg,
+            }}
+          >
+            {tagWords.map((w, i) => {
+              const p = interpolate(
+                t,
+                [tagAt + i * stagger, tagAt + i * stagger + 16],
+                [0, 1],
+                { ...CLAMP, easing: EASE_OUT },
+              );
+              return (
+                <span key={`${w}-${i}`}>
+                  <span
+                    style={{
+                      display: "inline-block",
+                      opacity: p,
+                      transform: `translateY(${((1 - p) * tagSize * 0.6).toFixed(2)}px)`,
+                    }}
+                  >
+                    {w}
+                  </span>
+                  {i < tagWords.length - 1 ? " " : ""}
                 </span>
-                {i < tagWords.length - 1 ? " " : ""}
-              </span>
-            );
-          })}
-        </div>
-      ) : null}
+              );
+            })}
+          </div>
+        ) : null}
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

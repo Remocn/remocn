@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const monoVoiceConfig: ComponentConfig = {
   componentName: "MonoVoice",
@@ -23,6 +29,26 @@ export const monoVoiceConfig: ComponentConfig = {
       default: "delivery.",
       description: "Highlight",
     },
+    voiceAt: {
+      type: "number",
+      default: 28,
+      min: 0,
+      max: 90,
+      step: 1,
+      description: "Voice at (frame)",
+      hiddenFromList: false,
+    },
+    stagger: {
+      type: "number",
+      default: 4,
+      min: 0,
+      max: 12,
+      step: 1,
+      description: "Line stagger",
+      hiddenFromList: false,
+    },
+    accent: { type: "color", default: undefined, description: "Accent" },
+    ...sceneControls({ font: "Inter Tight" }),
     speed: {
       type: "number",
       default: 1,

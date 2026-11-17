@@ -22,8 +22,18 @@ export interface TheyAreYouProps {
   facts?: string[];
   from?: string;
   to?: string;
+  /** Frames between one fact's pronoun flipping and the next. */
+  stagger?: number;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the facts. Load it yourself; Gabarito by default. */
+  fontFamily?: string;
+  /** Size of the facts, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -70,16 +80,21 @@ interface Metrics {
   desc: number;
 }
 
-function measure(texts: string[], from: string, to: string): Metrics {
+function measure(
+  texts: string[],
+  from: string,
+  to: string,
+  fontFamily: string,
+): Metrics {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("they-are-you: no 2d context");
-  ctx.font = `${PRO_W} ${FONT_PX}px "${gabarito.fontFamily}"`;
+  ctx.font = `${PRO_W} ${FONT_PX}px "${fontFamily}"`;
   const em = (s: string) =>
     ctx.measureText(s).width / FONT_PX + TRACK * Array.from(s).length;
   const wFrom = em(from);
   const wTo = em(to);
-  ctx.font = `${REST_W} ${FONT_PX}px "${gabarito.fontFamily}"`;
+  ctx.font = `${REST_W} ${FONT_PX}px "${fontFamily}"`;
   const cache: Record<string, number> = {};
   for (const s of texts) cache[s] = em(s);
   const fm = ctx.measureText("Hxg");
@@ -95,7 +110,12 @@ function measure(texts: string[], from: string, to: string): Metrics {
   };
 }
 
-function useMetrics(facts: string[], from: string, to: string) {
+function useMetrics(
+  facts: string[],
+  from: string,
+  to: string,
+  fontFamily: string,
+) {
   const key = [from, to, ...facts].join("\u0001");
   const [state, setState] = useState<{ key: string; m: Metrics } | null>(null);
   const [handle] = useState(() => delayRender("they-are-you: measuring"));
@@ -104,14 +124,14 @@ function useMetrics(facts: string[], from: string, to: string) {
     let live = true;
     Promise.all([
       gabarito.waitUntilDone(),
-      document.fonts.load(`${REST_W} 100px "${gabarito.fontFamily}"`),
-      document.fonts.load(`${PRO_W} 100px "${gabarito.fontFamily}"`),
+      document.fonts.load(`${REST_W} 100px "${fontFamily}"`),
+      document.fonts.load(`${PRO_W} 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
         const [f, tt, ...rest] = key.split("\u0001");
-        setState({ key, m: measure(rest, f, tt) });
+        setState({ key, m: measure(rest, f, tt, fontFamily) });
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -120,7 +140,7 @@ function useMetrics(facts: string[], from: string, to: string) {
     return () => {
       live = false;
     };
-  }, [key, handle]);
+  }, [key, fontFamily, handle]);
   return state && state.key === key ? state.m : null;
 }
 
@@ -147,6 +167,22 @@ function wrap(
   return lines;
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function TheyAreYou({
   facts = [
     "They write React for a living.",
@@ -155,17 +191,23 @@ export function TheyAreYou({
   ],
   from = "They",
   to = "You",
+  stagger = 6,
   accent,
+  ink,
   background,
+  fontFamily = gabarito.fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: TheyAreYouProps) {
-  const frame = useCurrentFrame();
+  const frame = Math.max(0, useCurrentFrame() - delay);
   const { width: W, height: H, durationInFrames } = useVideoConfig();
   const t = frame * speed;
   const D = Math.max(100, durationInFrames);
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
+  const fg = ink ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
   const list = facts.length > 0 ? facts : [`${from} build things.`];
@@ -174,6 +216,7 @@ export function TheyAreYou({
     parsed.map((p) => p.rest),
     from,
     to,
+    fontFamily,
   );
 
   if (!m) {
@@ -214,7 +257,7 @@ export function TheyAreYou({
   const gapIn = Math.min(22, Math.max(12, (D * 0.3) / list.length));
   const lastIn = inStart + (list.length - 1) * gapIn;
   const flipStart = Math.max(lastIn + 26, D * 0.44);
-  const flipStagger = 6;
+  const flipStagger = stagger;
   const flipLen = 11;
 
   const base: React.CSSProperties = {
@@ -222,7 +265,7 @@ export function TheyAreYou({
     height: F,
     lineHeight: `${F}px`,
     whiteSpace: "pre",
-    fontFamily: gabarito.fontFamily,
+    fontFamily,
     fontSize: F,
     letterSpacing: `${TRACK}em`,
   };
@@ -286,7 +329,7 @@ export function TheyAreYou({
               left: lineX,
               top: textTop + offset,
               fontWeight: REST_W,
-              color: c.ink,
+              color: fg,
             }}
           >
             {ln}
@@ -298,7 +341,7 @@ export function TheyAreYou({
                 left: marginX,
                 top: textTop + offset,
                 fontWeight: PRO_W,
-                color: c.ink,
+                color: fg,
               }}
             >
               {from}
@@ -315,7 +358,7 @@ export function TheyAreYou({
               left: marginX,
               top: y + textTop - out * F * 0.32,
               fontWeight: PRO_W,
-              color: c.ink,
+              color: fg,
               opacity: 1 - out,
             }}
           >
@@ -343,7 +386,7 @@ export function TheyAreYou({
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
-      {nodes}
+      <ScaleLayer scale={scale}>{nodes}</ScaleLayer>
     </AbsoluteFill>
   );
 }

@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const diffSwapConfig: ComponentConfig = {
   componentName: "DiffSwap",
@@ -33,6 +39,25 @@ export const diffSwapConfig: ComponentConfig = {
       default: "Edit the props.",
       description: "Highlight",
     },
+    fontWeight: {
+      type: "number",
+      default: 500,
+      min: 400,
+      max: 700,
+      step: 100,
+      description: "Weight",
+      hiddenFromList: false,
+    },
+    foldAt: {
+      type: "number",
+      default: 72,
+      min: 40,
+      max: 110,
+      step: 1,
+      description: "Fold at (frame)",
+      hiddenFromList: false,
+    },
+    ...sceneControls({ font: "Instrument Sans" }),
     speed: {
       type: "number",
       default: 1,

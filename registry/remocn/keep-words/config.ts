@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const keepWordsConfig: ComponentConfig = {
   componentName: "KeepWords",
@@ -13,6 +19,17 @@ export const keepWordsConfig: ComponentConfig = {
       },
       description: "Theme",
     },
+    hold: {
+      type: "number",
+      default: 34,
+      min: 0,
+      max: 90,
+      step: 1,
+      description: "Hold (frames)",
+      hiddenFromList: false,
+    },
+    accent: { type: "color", default: undefined, description: "Accent" },
+    ...sceneControls({ font: "Gloock" }),
     speed: {
       type: "number",
       default: 1,

@@ -23,7 +23,23 @@ export interface StemStretchProps {
   value?: string;
   label?: string;
   steps?: number;
+  /** Frames between the stretch's snaps. */
+  snapGap?: number;
+  /** Frames between label words. */
+  stagger?: number;
   accent?: string;
+  /** Text color of the figure; overrides the theme ink. */
+  ink?: string;
+  /** Background fill in place of the theme ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Instrument Sans by default. */
+  fontFamily?: string;
+  /** Film grain over the scene. */
+  grain?: boolean;
+  /** Size of the figure and label, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -71,12 +87,17 @@ interface Metrics {
   desc: number;
 }
 
-function findCut(ctx: CanvasRenderingContext2D, text: string, cap: number) {
+function findCut(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  cap: number,
+  font: string,
+) {
   const W = Math.ceil(ctx.measureText(text).width) + 40;
   const H = Math.ceil(FONT_PX * 1.4);
   ctx.canvas.width = W;
   ctx.canvas.height = H;
-  ctx.font = `500 ${FONT_PX}px "${instrument.fontFamily}"`;
+  ctx.font = `500 ${FONT_PX}px "${font}"`;
   ctx.textBaseline = "alphabetic";
   ctx.fillStyle = "#000";
   const base = Math.round(FONT_PX * 1.1);
@@ -105,11 +126,11 @@ function findCut(ctx: CanvasRenderingContext2D, text: string, cap: number) {
   return best * cap;
 }
 
-function measure(text: string, label: string): Metrics {
+function measure(text: string, label: string, font: string): Metrics {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d", { willReadFrequently: true });
   if (!ctx) throw new Error("stem-stretch: no 2d context");
-  ctx.font = `500 ${FONT_PX}px "${instrument.fontFamily}"`;
+  ctx.font = `500 ${FONT_PX}px "${font}"`;
   const chars = Array.from(text);
   const adv = chars.map((ch) => ctx.measureText(ch).width / FONT_PX + TRACK);
   const width =
@@ -123,9 +144,9 @@ function measure(text: string, label: string): Metrics {
     0,
     ctx.measureText(text).actualBoundingBoxDescent / FONT_PX,
   );
-  ctx.font = `400 ${FONT_PX}px "${instrument.fontFamily}"`;
+  ctx.font = `400 ${FONT_PX}px "${font}"`;
   const lab = label ? ctx.measureText(label).width / FONT_PX : 0;
-  const cut = findCut(ctx, text, cap);
+  const cut = findCut(ctx, text, cap, font);
   return {
     width,
     label: lab,
@@ -137,23 +158,23 @@ function measure(text: string, label: string): Metrics {
   };
 }
 
-function useMetrics(text: string, label: string) {
-  const key = `${text}\u0000${label}`;
+function useMetrics(text: string, label: string, font: string) {
+  const key = `${text}\u0000${label}\u0000${font}`;
   const [state, setState] = useState<{ key: string; m: Metrics } | null>(null);
   const [handle] = useState(() => delayRender("stem-stretch: measuring"));
   const released = useRef(false);
   useEffect(() => {
     let live = true;
-    const [tx, lb] = key.split("\u0000");
+    const [tx, lb, ff] = key.split("\u0000");
     Promise.all([
       instrument.waitUntilDone(),
-      document.fonts.load(`500 100px "${instrument.fontFamily}"`),
-      document.fonts.load(`400 100px "${instrument.fontFamily}"`),
+      document.fonts.load(`500 100px "${ff}"`),
+      document.fonts.load(`400 100px "${ff}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
-        setState({ key, m: measure(tx, lb) });
+        setState({ key, m: measure(tx, lb, ff) });
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -199,30 +220,45 @@ export function StemStretch({
   value = "4 hours",
   label = "back, every week",
   steps = 4,
+  snapGap = SNAP_GAP,
+  stagger = 3,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = instrument.fontFamily,
+  grain = true,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: StemStretchProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const c = THEMES[theme];
-  const m = useMetrics(value, label);
+  const fg = ink ?? c.ink;
+  const bg = background ?? c.bg;
+  const m = useMetrics(value, label, fontFamily);
 
   if (!m) {
-    return <div style={{ position: "absolute", inset: 0, background: c.bg }} />;
+    return <div style={{ position: "absolute", inset: 0, background: bg }} />;
   }
 
   const n = Math.max(1, Math.round(steps));
   const portrait = H > W;
-  const F = Math.min(H * (portrait ? 0.2 : 0.3), (W * 0.84) / m.width);
+  // Scaled through the layout, not a transformed layer: a transform would
+  // isolate the stretch band's blend modes from the background.
+  const F = Math.min(H * (portrait ? 0.2 : 0.3), (W * 0.84) / m.width) * scale;
   const capPx = m.cap * F;
-  const gapMax = Math.max(capPx * 0.6, H * (portrait ? 0.42 : 0.62) - capPx);
+  const gapMax = Math.max(
+    capPx * 0.6,
+    H * (portrait ? 0.42 : 0.62) * scale - capPx,
+  );
   const block = gapMax / n;
 
   let snapped = 0;
   for (let k = 0; k < n; k++) {
     snapped += spring({
-      frame: t - (SNAP_AT + k * SNAP_GAP),
+      frame: t - (SNAP_AT + k * snapGap),
       fps,
       config: { damping: 13, stiffness: 210, mass: 0.7 },
     });
@@ -230,11 +266,11 @@ export function StemStretch({
   const gap = block * snapped;
 
   const labelSize = Math.min(
-    Math.max(F * 0.17, H * 0.044),
-    H * 0.056,
-    (W * 0.84) / Math.max(0.1, m.label),
+    Math.max(F * 0.17, H * 0.044 * scale),
+    H * 0.056 * scale,
+    (W * 0.84 * scale) / Math.max(0.1, m.label),
   );
-  const labelGap = label ? Math.max(F * 0.2, H * 0.04) : 0;
+  const labelGap = label ? Math.max(F * 0.2, H * 0.04 * scale) : 0;
   const groupH = capPx + gap + (label ? labelGap + labelSize : 0);
   const capTop = (H - groupH) / 2;
   const baseY = capTop + capPx + gap;
@@ -278,7 +314,7 @@ export function StemStretch({
     height: F,
     lineHeight: `${F}px`,
     whiteSpace: "pre",
-    fontFamily: instrument.fontFamily,
+    fontFamily,
     fontWeight: 500,
     fontSize: F,
     fontFeatureSettings: '"tnum" 1',
@@ -296,15 +332,17 @@ export function StemStretch({
   const labelWords = label ? label.split(" ") : [];
 
   return (
-    <AbsoluteFill style={{ background: c.bg, overflow: "hidden" }}>
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          backgroundImage: GLOW[theme],
-          transform: `translateY(${(Math.sin(drift * 0.3) * H * 0.01).toFixed(2)}px)`,
-        }}
-      />
+    <AbsoluteFill style={{ background: bg, overflow: "hidden" }}>
+      {background === undefined ? (
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            backgroundImage: GLOW[theme],
+            transform: `translateY(${(Math.sin(drift * 0.3) * H * 0.01).toFixed(2)}px)`,
+          }}
+        />
+      ) : null}
       <div
         style={{
           position: "absolute",
@@ -315,7 +353,7 @@ export function StemStretch({
           overflow: "hidden",
         }}
       >
-        <div style={{ ...lineStyle, top: lineTop0 - maskTop, color: c.ink }}>
+        <div style={{ ...lineStyle, top: lineTop0 - maskTop, color: fg }}>
           {glyphs("top", {})}
         </div>
       </div>
@@ -387,7 +425,7 @@ export function StemStretch({
           style={{
             ...lineStyle,
             top: -cutLocal,
-            color: c.ink,
+            color: fg,
           }}
         >
           {glyphs("bot", {})}
@@ -401,7 +439,7 @@ export function StemStretch({
             width: W,
             top: baseY + labelGap,
             textAlign: "center",
-            fontFamily: instrument.fontFamily,
+            fontFamily,
             fontWeight: 400,
             fontSize: labelSize,
             letterSpacing: "-0.01em",
@@ -413,7 +451,7 @@ export function StemStretch({
           {labelWords.map((w, i) => {
             const p = interpolate(
               t,
-              [LABEL_AT + i * 3, LABEL_AT + i * 3 + 16],
+              [LABEL_AT + i * stagger, LABEL_AT + i * stagger + 16],
               [0, 1],
               { ...CLAMP, easing: EASE_OUT },
             );
@@ -433,7 +471,7 @@ export function StemStretch({
           })}
         </div>
       ) : null}
-      <Grain opacity={c.grain} />
+      {grain ? <Grain opacity={c.grain} /> : null}
     </AbsoluteFill>
   );
 }

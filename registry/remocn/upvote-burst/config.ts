@@ -1,4 +1,11 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const upvoteBurstConfig: ComponentConfig = {
   componentName: "UpvoteBurst",
@@ -12,11 +19,6 @@ export const upvoteBurstConfig: ComponentConfig = {
         dark: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     title: {
       type: "text-content",
@@ -32,6 +34,16 @@ export const upvoteBurstConfig: ComponentConfig = {
       type: "text-content",
       default: "Product of the day",
       description: "Badge label",
+    },
+    liveLabel: {
+      type: "text-content",
+      default: "Live",
+      description: "Live label",
+    },
+    votesLabel: {
+      type: "text-content",
+      default: "upvotes in 24 hours",
+      description: "Votes label",
     },
     startRank: {
       type: "number",
@@ -60,6 +72,13 @@ export const upvoteBurstConfig: ComponentConfig = {
       description: "End votes",
       hiddenFromList: false,
     },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ground: groundControl(),
+    ...sceneControls({ font: "Geist" }),
     speed: {
       type: "number",
       default: 1,

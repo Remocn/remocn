@@ -1,4 +1,11 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const buttonToCardConfig: ComponentConfig = {
   componentName: "ButtonToCard",
@@ -12,11 +19,6 @@ export const buttonToCardConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#f2552c",
-      description: "Accent",
     },
     buttonLabel: {
       type: "text-content",
@@ -37,6 +39,37 @@ export const buttonToCardConfig: ComponentConfig = {
       type: "text-content",
       default: "Studio Goods",
       description: "Store name",
+    },
+    formTitle: {
+      type: "text-content",
+      default: "New product",
+      description: "Form title",
+    },
+    saveLabel: {
+      type: "text-content",
+      default: "Add to store",
+      description: "Save label",
+    },
+    dropLabel: {
+      type: "text-content",
+      default: "Drop an image here",
+      description: "Drop label",
+    },
+    accent: {
+      type: "color",
+      default: "#f2552c",
+      description: "Accent",
+    },
+    ground: groundControl(),
+    ...sceneControls({ font: "Hanken Grotesk" }),
+    speed: {
+      type: "number",
+      default: 1,
+      min: 0.25,
+      max: 4,
+      step: 0.25,
+      description: "Speed",
+      hiddenFromList: false,
     },
   },
   durationInFrames: 162,

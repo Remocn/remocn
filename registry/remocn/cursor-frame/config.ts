@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const cursorFrameConfig: ComponentConfig = {
   componentName: "CursorFrame",
@@ -23,6 +29,17 @@ export const cursorFrameConfig: ComponentConfig = {
       default: "Launch videos, in code.",
       description: "Title",
     },
+    fontWeight: {
+      type: "number",
+      default: 400,
+      min: 100,
+      max: 900,
+      step: 100,
+      description: "Weight",
+      hiddenFromList: false,
+    },
+    showCursor: { type: "boolean", default: true, description: "Cursor" },
+    ...sceneControls({ font: "Geist" }),
     speed: {
       type: "number",
       default: 1,

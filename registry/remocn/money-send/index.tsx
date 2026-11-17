@@ -16,7 +16,7 @@ import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
 
-const { fontFamily } = loadFont("normal", {
+const hanken = loadFont("normal", {
   weights: ["300", "400"],
   subsets: ["latin"],
 });
@@ -32,7 +32,23 @@ export interface MoneySendProps {
   note?: string;
   /** Three lines beside the phone: amount, note, sent. */
   lines?: [string, string, string];
+  /** Placeholder of the note field. */
+  notePlaceholder?: string;
+  /** Button on the sent screen. */
+  doneLabel?: string;
+  /** Frames between keypad taps as the amount is typed. */
+  stagger?: number;
   accent?: string;
+  /** Color of the lines beside the phone; overrides the theme. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Hanken Grotesk by default. */
+  fontFamily?: string;
+  /** Size of the phone and lines, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "light" | "dark";
   ground?: GshPresetId;
@@ -430,23 +446,48 @@ function Flag({ currency, color }: { currency: string; color: string }) {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function MoneySend({
   recipient = "Maya Chen",
   amount = 120,
   currency = "USD",
   note = "Dinner 🍜",
   lines = ["Type any amount.", "Say what it’s for.", "Sent in a second."],
+  notePlaceholder = "Add a note",
+  doneLabel = "Done",
+  stagger = 11,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = hanken.fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
   ground,
   groundParams,
 }: MoneySendProps) {
-  const frame = useCurrentFrame();
+  const frame = Math.max(0, useCurrentFrame() - delay);
   const { fps, width, height } = useVideoConfig();
   const f = frame * speed;
   const dark = theme !== "light";
   const c: Palette = dark ? DARK : LIGHT_PAL;
+  const fg = ink ?? c.copy;
   const tall = height > width;
   const W = tall ? 720 : 1280;
   const H = tall ? 1280 : 720;
@@ -472,7 +513,7 @@ export function MoneySend({
     .slice(0, 2)
     .toUpperCase();
 
-  const keyTimes = digits.split("").map((_, i) => 30 + i * 11);
+  const keyTimes = digits.split("").map((_, i) => 30 + i * stagger);
   const NOTE_TAP = keyTimes[keyTimes.length - 1] + 22;
   const KB_SWAP = NOTE_TAP + 3;
   const gap = Math.min(5, 36 / Math.max(1, word.length));
@@ -673,688 +714,709 @@ export function MoneySend({
 
   return (
     <AbsoluteFill style={{ fontFamily, overflow: "hidden" }}>
-      <GshGround
-        preset={ground ?? (dark ? "cobalt-rise" : "paper-crease")}
-        params={groundParams}
-        timeOffset={dark ? 4 : 6}
-        timeScale={0.35}
-      />
-      <AbsoluteFill
-        style={{
-          background: dark ? "rgba(2,3,8,0.32)" : "rgba(243,241,237,0.35)",
-        }}
-      />
-      <div
-        style={{
-          position: "absolute",
-          left: (width - W * u) / 2,
-          top: (height - H * u) / 2,
-          width: W,
-          height: H,
-          transformOrigin: "0 0",
-          transform: `scale(${u})`,
-        }}
-      >
+      {background === undefined ? (
+        <>
+          <GshGround
+            preset={ground ?? (dark ? "cobalt-rise" : "paper-crease")}
+            params={groundParams}
+            timeOffset={dark ? 4 : 6}
+            timeScale={0.35}
+          />
+          <AbsoluteFill
+            style={{
+              background: dark ? "rgba(2,3,8,0.32)" : "rgba(243,241,237,0.35)",
+            }}
+          />
+        </>
+      ) : (
+        <AbsoluteFill
+          style={{
+            background: background === "transparent" ? undefined : background,
+          }}
+        />
+      )}
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            left: tall ? 56 : 92,
-            top: tall ? 88 : H / 2 - 80,
-            width: tall ? W - 112 : 500,
-            height: 160,
-            fontSize: tall ? 60 : 72,
-            fontWeight: 300,
-            lineHeight: 1.04,
-            letterSpacing: "-0.035em",
-            color: c.copy,
-            overflow: "hidden",
-            textWrap: "balance",
+            left: (width - W * u) / 2,
+            top: (height - H * u) / 2,
+            width: W,
+            height: H,
+            transformOrigin: "0 0",
+            transform: `scale(${u})`,
           }}
         >
-          {[0, 1, 2].map((i) => copyLine(i))}
-        </div>
-        <div
-          style={{
-            position: "absolute",
-            left: phoneCx - BW / 2,
-            top: phoneCy - BH / 2,
-            width: BW,
-            height: BH,
-            transform: `translateY(${(1 - rise) * H * 0.9}px) scale(${k * camS})`,
-          }}
-        >
-          <Phone c={c}>
-            <StatusBar color={c.text} />
-            <div
-              style={{
-                position: "absolute",
-                top: 58,
-                left: 20,
-                right: 20,
-                height: 44,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                opacity: 1 - away,
-                transform: `translateY(${-away * 8}px)`,
-              }}
-            >
-              <Glyph d={ICON.back} size={24} color={c.text} />
-              <div style={{ textAlign: "center", lineHeight: 1.25 }}>
-                <div style={{ fontSize: 17, color: c.text }}>{recipient}</div>
-                <div style={{ fontSize: 14, color: c.muted }}>
-                  @{recipient.toLowerCase().replace(/[^a-z]+/g, "")}
-                </div>
-              </div>
-              <Avatar initials={initials} size={36} />
-            </div>
-            <div
-              style={{
-                position: "absolute",
-                left: 0,
-                right: 0,
-                top: AMOUNT_Y - 50,
-                height: 100,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: 92,
-                fontWeight: 300,
-                letterSpacing: "-0.05em",
-                fontVariantNumeric: "tabular-nums",
-                color: nTyped ? c.text : c.muted,
-                transform: `translateY(${fly * (118 - AMOUNT_Y)}px) scale(${1 - fly * 0.5})`,
-                zIndex: 5,
-              }}
-            >
-              <span>{symbol}</span>
-              {amountChars.map(({ ch, di }, i) => {
-                const pop = nTyped && di >= 0 ? sp(keyTimes[di], CHIP) : 1;
-                return (
-                  <span
-                    key={i}
-                    style={{
-                      display: "inline-block",
-                      width: `${(ch === "," ? 0.26 : 0.56) * Math.min(1, pop * 1.3)}em`,
-                      textAlign: "center",
-                      transform: `translateY(${(1 - pop) * 18}px) scale(${0.88 + pop * 0.12})`,
-                      opacity: Math.min(1, pop * 1.6),
-                    }}
-                  >
-                    {ch}
-                  </span>
-                );
-              })}
-              <span
-                style={{
-                  width: 3,
-                  height: 70,
-                  marginLeft: 6,
-                  borderRadius: 2,
-                  background: accent,
-                  opacity: caretOn ? 1 : 0,
-                }}
-              />
-            </div>
-            <div
-              style={{
-                position: "absolute",
-                left: 0,
-                right: 0,
-                top: AMOUNT_Y + 56,
-                display: "flex",
-                justifyContent: "center",
-                opacity: 1 - away,
-                transform: `translateY(${-away * 10}px)`,
-              }}
-            >
-              <div
-                style={{
-                  height: 36,
-                  padding: "0 12px 0 8px",
-                  borderRadius: 18,
-                  background: c.field,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
-                  fontSize: 15,
-                  color: c.text,
-                }}
-              >
-                <Flag currency={currency} color={c.muted} />
-                Main · {currency}
-                <span style={{ color: c.muted }}>No fees</span>
-                <Glyph d={ICON.chev} size={16} color={c.muted} />
-              </div>
-            </div>
-            <div
-              style={{
-                position: "absolute",
-                left: 16,
-                right: 16,
-                top: NOTE_Y,
-                height: 58,
-                borderRadius: 14,
-                background: c.field,
-                opacity: 1 - away,
-                transform: `translateY(${-away * 10}px) scale(${1 - pressAt(NOTE_TAP) * 0.03})`,
-              }}
-            >
-              <span
-                style={{
-                  position: "absolute",
-                  left: 16,
-                  top: 18,
-                  fontSize: 17,
-                  lineHeight: "22px",
-                  color: c.muted,
-                  transformOrigin: "0 0",
-                  transform: `translateY(${-lbl * 10}px) scale(${1 - lbl * 0.3})`,
-                }}
-              >
-                Add a note
-              </span>
-              {noteFocused ? (
-                <span
-                  style={{
-                    position: "absolute",
-                    left: 16,
-                    top: 26,
-                    fontSize: 17,
-                    lineHeight: "22px",
-                    color: c.text,
-                    display: "flex",
-                    alignItems: "center",
-                    opacity: lbl,
-                  }}
-                >
-                  {word.slice(0, nLetters).join("")}
-                  {emojiIn > 0 ? (
-                    <span
-                      style={{
-                        display: "inline-block",
-                        marginLeft: 5,
-                        transform: `scale(${0.5 + emojiIn * 0.5})`,
-                        opacity: Math.min(1, emojiIn * 2),
-                      }}
-                    >
-                      {emoji}
-                    </span>
-                  ) : null}
-                  <span
-                    style={{
-                      width: 2,
-                      height: 21,
-                      marginLeft: 1,
-                      borderRadius: 1,
-                      background: accent,
-                      opacity: Math.floor(f / 14) % 2 === 0 ? 1 : 0,
-                    }}
-                  />
-                </span>
-              ) : null}
+          <div
+            style={{
+              position: "absolute",
+              left: tall ? 56 : 92,
+              top: tall ? 88 : H / 2 - 80,
+              width: tall ? W - 112 : 500,
+              height: 160,
+              fontSize: tall ? 60 : 72,
+              fontWeight: 300,
+              lineHeight: 1.04,
+              letterSpacing: "-0.035em",
+              color: fg,
+              overflow: "hidden",
+              textWrap: "balance",
+            }}
+          >
+            {[0, 1, 2].map((i) => copyLine(i))}
+          </div>
+          <div
+            style={{
+              position: "absolute",
+              left: phoneCx - BW / 2,
+              top: phoneCy - BH / 2,
+              width: BW,
+              height: BH,
+              transform: `translateY(${(1 - rise) * H * 0.9}px) scale(${k * camS})`,
+            }}
+          >
+            <Phone c={c}>
+              <StatusBar color={c.text} />
               <div
                 style={{
                   position: "absolute",
-                  right: 16,
-                  top: 19,
-                  width: 20,
-                  height: 20,
-                  borderRadius: 10,
-                  background: c.muted,
+                  top: 58,
+                  left: 20,
+                  right: 20,
+                  height: 44,
                   display: "flex",
                   alignItems: "center",
-                  justifyContent: "center",
-                  opacity: nLetters > 0 ? 0.6 : 0,
+                  justifyContent: "space-between",
+                  opacity: 1 - away,
+                  transform: `translateY(${-away * 8}px)`,
                 }}
               >
-                <Glyph d={ICON.x} size={14} color={c.field} sw={2} />
-              </div>
-            </div>
-            <div
-              style={{
-                position: "absolute",
-                left: 16,
-                right: 16,
-                top: PILL_Y,
-                height: 56,
-                borderRadius: 28,
-                background: interpolateColors(
-                  enabled,
-                  [0, 1],
-                  [c.pillOff, c.pill],
-                ),
-                color: interpolateColors(
-                  enabled,
-                  [0, 1],
-                  [c.pillOffText, c.pillText],
-                ),
-                fontSize: 17,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                transform: `translateY(${-away * 10}px) scale(${1 - sendPress * 0.04})`,
-                opacity: 1 - away,
-              }}
-            >
-              Send to {first}
-            </div>
-            {NUM_KEYS.map((d, i) => {
-              const r = numRect(i);
-              const idx = digits
-                .split("")
-                .findIndex(
-                  (x, j) =>
-                    x === d && f >= keyTimes[j] - 1 && f < keyTimes[j] + 10,
-                );
-              const p = idx >= 0 ? pressAt(keyTimes[idx]) : 0;
-              return (
-                <div
-                  key={d}
-                  style={{
-                    position: "absolute",
-                    left: r.x,
-                    top: r.y + kbOut * (SH - KB_TOP),
-                    width: r.w,
-                    height: r.h,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    color: c.text,
-                  }}
-                >
-                  <div
-                    style={{
-                      position: "absolute",
-                      width: 64,
-                      height: 64,
-                      borderRadius: 32,
-                      background: c.pad,
-                      opacity: Math.min(1, p * 3),
-                      transform: `scale(${0.7 + p * 0.3})`,
-                    }}
-                  />
-                  {d === "del" ? (
-                    <Glyph d={ICON.left} size={26} color={c.text} />
-                  ) : (
-                    <span
-                      style={{
-                        position: "relative",
-                        fontSize: 30,
-                        fontWeight: 300,
-                        transform: `scale(${1 - p * 0.04})`,
-                      }}
-                    >
-                      {d === "." ? "·" : d}
-                    </span>
-                  )}
+                <Glyph d={ICON.back} size={24} color={c.text} />
+                <div style={{ textAlign: "center", lineHeight: 1.25 }}>
+                  <div style={{ fontSize: 17, color: c.text }}>{recipient}</div>
+                  <div style={{ fontSize: 14, color: c.muted }}>
+                    @{recipient.toLowerCase().replace(/[^a-z]+/g, "")}
+                  </div>
                 </div>
-              );
-            })}
-            {qIn > 0 ? (
+                <Avatar initials={initials} size={36} />
+              </div>
               <div
                 style={{
                   position: "absolute",
                   left: 0,
                   right: 0,
-                  top: KB_TOP,
-                  bottom: 0,
-                  background: c.kb,
-                  transform: `translateY(${qY}px)`,
+                  top: AMOUNT_Y - 50,
+                  height: 100,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 92,
+                  fontWeight: 300,
+                  letterSpacing: "-0.05em",
+                  fontVariantNumeric: "tabular-nums",
+                  color: nTyped ? c.text : c.muted,
+                  transform: `translateY(${fly * (118 - AMOUNT_Y)}px) scale(${1 - fly * 0.5})`,
+                  zIndex: 5,
+                }}
+              >
+                <span>{symbol}</span>
+                {amountChars.map(({ ch, di }, i) => {
+                  const pop = nTyped && di >= 0 ? sp(keyTimes[di], CHIP) : 1;
+                  return (
+                    <span
+                      key={i}
+                      style={{
+                        display: "inline-block",
+                        width: `${(ch === "," ? 0.26 : 0.56) * Math.min(1, pop * 1.3)}em`,
+                        textAlign: "center",
+                        transform: `translateY(${(1 - pop) * 18}px) scale(${0.88 + pop * 0.12})`,
+                        opacity: Math.min(1, pop * 1.6),
+                      }}
+                    >
+                      {ch}
+                    </span>
+                  );
+                })}
+                <span
+                  style={{
+                    width: 3,
+                    height: 70,
+                    marginLeft: 6,
+                    borderRadius: 2,
+                    background: accent,
+                    opacity: caretOn ? 1 : 0,
+                  }}
+                />
+              </div>
+              <div
+                style={{
+                  position: "absolute",
+                  left: 0,
+                  right: 0,
+                  top: AMOUNT_Y + 56,
+                  display: "flex",
+                  justifyContent: "center",
+                  opacity: 1 - away,
+                  transform: `translateY(${-away * 10}px)`,
                 }}
               >
                 <div
                   style={{
+                    height: 36,
+                    padding: "0 12px 0 8px",
+                    borderRadius: 18,
+                    background: c.field,
                     display: "flex",
-                    height: 44,
                     alignItems: "center",
-                    fontSize: 16,
+                    gap: 8,
+                    fontSize: 15,
                     color: c.text,
                   }}
                 >
-                  {[
-                    `“${word.slice(0, nLetters).join("")}”`,
-                    nLetters >= 3 && emoji ? emoji : word.join(""),
-                    "with",
-                  ].map((s, i) => (
-                    <div
-                      key={i}
-                      style={{
-                        flex: 1,
-                        textAlign: "center",
-                        fontSize: i === 1 && nLetters >= 3 ? 22 : 16,
-                        borderLeft:
-                          i > 0
-                            ? `1px solid ${c.keyAlt}`
-                            : "1px solid transparent",
-                        height: 24,
-                        lineHeight: "24px",
-                        opacity: i === 1 ? 1 - pressAt(SUGG_TAP) * 0.5 : 0.9,
-                      }}
-                    >
-                      {s}
-                    </div>
-                  ))}
+                  <Flag currency={currency} color={c.muted} />
+                  Main · {currency}
+                  <span style={{ color: c.muted }}>No fees</span>
+                  <Glyph d={ICON.chev} size={16} color={c.muted} />
                 </div>
-                {QWERTY.map((q) => {
-                  const hit = word.findIndex(
-                    (ch, i) =>
-                      letterKey(ch).id === q.id &&
-                      f >= letterTimes[i] - 1 &&
-                      f < letterTimes[i] + 7,
-                  );
-                  const p = hit >= 0 ? pressAt(letterTimes[hit]) : 0;
-                  const shiftOn = q.id === "shift" && caps;
-                  return (
-                    <div
-                      key={q.id}
+              </div>
+              <div
+                style={{
+                  position: "absolute",
+                  left: 16,
+                  right: 16,
+                  top: NOTE_Y,
+                  height: 58,
+                  borderRadius: 14,
+                  background: c.field,
+                  opacity: 1 - away,
+                  transform: `translateY(${-away * 10}px) scale(${1 - pressAt(NOTE_TAP) * 0.03})`,
+                }}
+              >
+                <span
+                  style={{
+                    position: "absolute",
+                    left: 16,
+                    top: 18,
+                    fontSize: 17,
+                    lineHeight: "22px",
+                    color: c.muted,
+                    transformOrigin: "0 0",
+                    transform: `translateY(${-lbl * 10}px) scale(${1 - lbl * 0.3})`,
+                  }}
+                >
+                  {notePlaceholder}
+                </span>
+                {noteFocused ? (
+                  <span
+                    style={{
+                      position: "absolute",
+                      left: 16,
+                      top: 26,
+                      fontSize: 17,
+                      lineHeight: "22px",
+                      color: c.text,
+                      display: "flex",
+                      alignItems: "center",
+                      opacity: lbl,
+                    }}
+                  >
+                    {word.slice(0, nLetters).join("")}
+                    {emojiIn > 0 ? (
+                      <span
+                        style={{
+                          display: "inline-block",
+                          marginLeft: 5,
+                          transform: `scale(${0.5 + emojiIn * 0.5})`,
+                          opacity: Math.min(1, emojiIn * 2),
+                        }}
+                      >
+                        {emoji}
+                      </span>
+                    ) : null}
+                    <span
                       style={{
-                        ...keyStyle(
-                          q.x,
-                          q.y - KB_TOP,
-                          q.w,
-                          QH,
-                          shiftOn ? c.key : q.alt ? c.keyAlt : c.key,
-                        ),
-                        filter:
-                          p > 0.3 && q.id === " " ? "brightness(1.3)" : "none",
-                        fontSize: q.alt || q.id === " " ? 15 : 22,
+                        width: 2,
+                        height: 21,
+                        marginLeft: 1,
+                        borderRadius: 1,
+                        background: accent,
+                        opacity: Math.floor(f / 14) % 2 === 0 ? 1 : 0,
                       }}
-                    >
-                      {q.id === "shift" ? (
-                        <Glyph d={ICON.shift} size={20} color={c.text} />
-                      ) : q.id === "del" ? (
-                        <Glyph d={ICON.del} size={22} color={c.text} />
-                      ) : q.id === "emoji" ? (
-                        <Glyph d={ICON.smile} size={22} color={c.text} />
-                      ) : caps && !q.alt ? (
-                        q.label.toUpperCase()
-                      ) : (
-                        q.label
-                      )}
-                    </div>
+                    />
+                  </span>
+                ) : null}
+                <div
+                  style={{
+                    position: "absolute",
+                    right: 16,
+                    top: 19,
+                    width: 20,
+                    height: 20,
+                    borderRadius: 10,
+                    background: c.muted,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    opacity: nLetters > 0 ? 0.6 : 0,
+                  }}
+                >
+                  <Glyph d={ICON.x} size={14} color={c.field} sw={2} />
+                </div>
+              </div>
+              <div
+                style={{
+                  position: "absolute",
+                  left: 16,
+                  right: 16,
+                  top: PILL_Y,
+                  height: 56,
+                  borderRadius: 28,
+                  background: interpolateColors(
+                    enabled,
+                    [0, 1],
+                    [c.pillOff, c.pill],
+                  ),
+                  color: interpolateColors(
+                    enabled,
+                    [0, 1],
+                    [c.pillOffText, c.pillText],
+                  ),
+                  fontSize: 17,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  transform: `translateY(${-away * 10}px) scale(${1 - sendPress * 0.04})`,
+                  opacity: 1 - away,
+                }}
+              >
+                Send to {first}
+              </div>
+              {NUM_KEYS.map((d, i) => {
+                const r = numRect(i);
+                const idx = digits
+                  .split("")
+                  .findIndex(
+                    (x, j) =>
+                      x === d && f >= keyTimes[j] - 1 && f < keyTimes[j] + 10,
                   );
-                })}
-                {[ICON.globe, ICON.mic].map((d, i) => (
+                const p = idx >= 0 ? pressAt(keyTimes[idx]) : 0;
+                return (
                   <div
                     key={d}
                     style={{
                       position: "absolute",
-                      left: i ? SW - 46 : 22,
-                      top: qRowY(3) - KB_TOP + QH + 18,
+                      left: r.x,
+                      top: r.y + kbOut * (SH - KB_TOP),
+                      width: r.w,
+                      height: r.h,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      color: c.text,
                     }}
                   >
-                    <Glyph d={d} size={24} color={c.text} />
+                    <div
+                      style={{
+                        position: "absolute",
+                        width: 64,
+                        height: 64,
+                        borderRadius: 32,
+                        background: c.pad,
+                        opacity: Math.min(1, p * 3),
+                        transform: `scale(${0.7 + p * 0.3})`,
+                      }}
+                    />
+                    {d === "del" ? (
+                      <Glyph d={ICON.left} size={26} color={c.text} />
+                    ) : (
+                      <span
+                        style={{
+                          position: "relative",
+                          fontSize: 30,
+                          fontWeight: 300,
+                          transform: `scale(${1 - p * 0.04})`,
+                        }}
+                      >
+                        {d === "." ? "·" : d}
+                      </span>
+                    )}
                   </div>
-                ))}
-                {lastLetter >= 0 && pressAt(letterTimes[lastLetter]) > 0.05
-                  ? (() => {
-                      const q = letterKey(word[lastLetter]);
-                      if (q.id === " ") return null;
-                      const bw = q.w + 22;
-                      const bl = balloon(bw, q.w, QH);
-                      return (
-                        <div
-                          style={{
-                            position: "absolute",
-                            left: q.x - 11,
-                            top: q.y - KB_TOP + QH - bl.h,
-                            width: bw,
-                            height: bl.h,
-                            filter: "drop-shadow(0 1px 3px rgba(0,0,0,0.3))",
-                          }}
-                        >
-                          <svg
-                            width={bw}
-                            height={bl.h}
-                            style={{ position: "absolute" }}
-                          >
-                            <path d={bl.d} fill={c.key} />
-                          </svg>
+                );
+              })}
+              {qIn > 0 ? (
+                <div
+                  style={{
+                    position: "absolute",
+                    left: 0,
+                    right: 0,
+                    top: KB_TOP,
+                    bottom: 0,
+                    background: c.kb,
+                    transform: `translateY(${qY}px)`,
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      height: 44,
+                      alignItems: "center",
+                      fontSize: 16,
+                      color: c.text,
+                    }}
+                  >
+                    {[
+                      `“${word.slice(0, nLetters).join("")}”`,
+                      nLetters >= 3 && emoji ? emoji : word.join(""),
+                      "with",
+                    ].map((s, i) => (
+                      <div
+                        key={i}
+                        style={{
+                          flex: 1,
+                          textAlign: "center",
+                          fontSize: i === 1 && nLetters >= 3 ? 22 : 16,
+                          borderLeft:
+                            i > 0
+                              ? `1px solid ${c.keyAlt}`
+                              : "1px solid transparent",
+                          height: 24,
+                          lineHeight: "24px",
+                          opacity: i === 1 ? 1 - pressAt(SUGG_TAP) * 0.5 : 0.9,
+                        }}
+                      >
+                        {s}
+                      </div>
+                    ))}
+                  </div>
+                  {QWERTY.map((q) => {
+                    const hit = word.findIndex(
+                      (ch, i) =>
+                        letterKey(ch).id === q.id &&
+                        f >= letterTimes[i] - 1 &&
+                        f < letterTimes[i] + 7,
+                    );
+                    const p = hit >= 0 ? pressAt(letterTimes[hit]) : 0;
+                    const shiftOn = q.id === "shift" && caps;
+                    return (
+                      <div
+                        key={q.id}
+                        style={{
+                          ...keyStyle(
+                            q.x,
+                            q.y - KB_TOP,
+                            q.w,
+                            QH,
+                            shiftOn ? c.key : q.alt ? c.keyAlt : c.key,
+                          ),
+                          filter:
+                            p > 0.3 && q.id === " "
+                              ? "brightness(1.3)"
+                              : "none",
+                          fontSize: q.alt || q.id === " " ? 15 : 22,
+                        }}
+                      >
+                        {q.id === "shift" ? (
+                          <Glyph d={ICON.shift} size={20} color={c.text} />
+                        ) : q.id === "del" ? (
+                          <Glyph d={ICON.del} size={22} color={c.text} />
+                        ) : q.id === "emoji" ? (
+                          <Glyph d={ICON.smile} size={22} color={c.text} />
+                        ) : caps && !q.alt ? (
+                          q.label.toUpperCase()
+                        ) : (
+                          q.label
+                        )}
+                      </div>
+                    );
+                  })}
+                  {[ICON.globe, ICON.mic].map((d, i) => (
+                    <div
+                      key={d}
+                      style={{
+                        position: "absolute",
+                        left: i ? SW - 46 : 22,
+                        top: qRowY(3) - KB_TOP + QH + 18,
+                      }}
+                    >
+                      <Glyph d={d} size={24} color={c.text} />
+                    </div>
+                  ))}
+                  {lastLetter >= 0 && pressAt(letterTimes[lastLetter]) > 0.05
+                    ? (() => {
+                        const q = letterKey(word[lastLetter]);
+                        if (q.id === " ") return null;
+                        const bw = q.w + 22;
+                        const bl = balloon(bw, q.w, QH);
+                        return (
                           <div
                             style={{
                               position: "absolute",
-                              left: 0,
-                              right: 0,
-                              top: 4,
-                              height: 44,
-                              color: c.text,
-                              fontSize: 32,
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
+                              left: q.x - 11,
+                              top: q.y - KB_TOP + QH - bl.h,
+                              width: bw,
+                              height: bl.h,
+                              filter: "drop-shadow(0 1px 3px rgba(0,0,0,0.3))",
                             }}
                           >
-                            {word[lastLetter]}
+                            <svg
+                              width={bw}
+                              height={bl.h}
+                              style={{ position: "absolute" }}
+                            >
+                              <path d={bl.d} fill={c.key} />
+                            </svg>
+                            <div
+                              style={{
+                                position: "absolute",
+                                left: 0,
+                                right: 0,
+                                top: 4,
+                                height: 44,
+                                color: c.text,
+                                fontSize: 32,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                              }}
+                            >
+                              {word[lastLetter]}
+                            </div>
                           </div>
-                        </div>
-                      );
-                    })()
-                  : null}
-              </div>
-            ) : null}
-            {f >= PROG ? (
-              <>
-                <div
-                  style={{
-                    position: "absolute",
-                    left: SW / 2 - 60,
-                    top: RING_Y - 60,
-                    width: 120,
-                    height: 120,
-                    transform: `scale(${0.86 + ringIn * 0.14})`,
-                    opacity: Math.min(1, ringIn * 1.6),
-                  }}
-                >
-                  <svg
-                    width={120}
-                    height={120}
-                    viewBox="0 0 120 120"
-                    style={{
-                      position: "absolute",
-                      inset: 0,
-                      overflow: "visible",
-                    }}
-                  >
-                    <circle
-                      cx={60}
-                      cy={60}
-                      r={46 + pulse * 40}
-                      fill="none"
-                      stroke={accent}
-                      strokeWidth={1.5}
-                      opacity={(1 - pulse) * 0.4 * (pulse > 0 ? 1 : 0)}
-                    />
-                    <circle
-                      cx={60}
-                      cy={60}
-                      r={46}
-                      fill="none"
-                      stroke={c.field}
-                      strokeWidth={3}
-                    />
-                    <circle
-                      cx={60}
-                      cy={60}
-                      r={46}
-                      fill="none"
-                      stroke={accent}
-                      strokeWidth={3}
-                      strokeLinecap="round"
-                      pathLength={1}
-                      strokeDasharray={`${arc} 1`}
-                      transform={`rotate(${spin - 90} 60 60)`}
-                    />
-                  </svg>
-                  <div style={{ position: "absolute", left: 22, top: 22 }}>
-                    <Avatar initials={initials} size={76} />
-                  </div>
+                        );
+                      })()
+                    : null}
+                </div>
+              ) : null}
+              {f >= PROG ? (
+                <>
                   <div
                     style={{
                       position: "absolute",
-                      left: 14,
-                      top: 14,
-                      width: 92,
-                      height: 92,
-                      borderRadius: 46,
-                      background: accent,
-                      transform: `scale(${0.5 + disc * 0.5})`,
-                      opacity: Math.min(1, disc * 2.5),
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
+                      left: SW / 2 - 60,
+                      top: RING_Y - 60,
+                      width: 120,
+                      height: 120,
+                      transform: `scale(${0.86 + ringIn * 0.14})`,
+                      opacity: Math.min(1, ringIn * 1.6),
                     }}
                   >
-                    <svg width={52} height={52} viewBox="0 0 24 24" fill="none">
-                      <path
-                        d={ICON.check}
-                        stroke="#fff"
-                        strokeWidth={1.8}
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        pathLength={1}
-                        strokeDasharray={1}
-                        strokeDashoffset={1 - tick}
-                      />
-                    </svg>
-                  </div>
-                </div>
-                <div
-                  style={{
-                    position: "absolute",
-                    left: 0,
-                    right: 0,
-                    top: RING_Y + 82,
-                    textAlign: "center",
-                    fontSize: 30,
-                    fontWeight: 300,
-                    letterSpacing: "-0.03em",
-                    color: c.text,
-                    ...enter(title),
-                  }}
-                >
-                  <span
-                    style={{
-                      display: "inline-block",
-                      opacity: f < DONE + 4 ? 0.55 : Math.min(1, swap * 1.5),
-                      transform: `scale(${f < DONE + 4 ? 1 : 0.92 + swap * 0.08})`,
-                    }}
-                  >
-                    {f < DONE + 4 ? `Sending to ${first}…` : `Sent to ${first}`}
-                  </span>
-                </div>
-                <div
-                  style={{
-                    position: "absolute",
-                    left: 0,
-                    right: 0,
-                    top: RING_Y + 124,
-                    textAlign: "center",
-                    fontSize: 15,
-                    color: c.muted,
-                    ...enter(sub),
-                  }}
-                >
-                  {note} · Just now
-                </div>
-                <div
-                  style={{
-                    position: "absolute",
-                    left: 16,
-                    right: 16,
-                    top: RING_Y + 170,
-                    borderRadius: 16,
-                    background: c.field,
-                    padding: "2px 16px",
-                    opacity: Math.min(1, rows[0] * 2),
-                  }}
-                >
-                  {receipt.map(([kk, v], i) => (
-                    <div
-                      key={kk}
+                    <svg
+                      width={120}
+                      height={120}
+                      viewBox="0 0 120 120"
                       style={{
-                        height: 46,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        fontSize: 15,
-                        boxShadow: i ? `inset 0 1px 0 ${c.hair}` : "none",
-                        ...enter(rows[i], 10),
+                        position: "absolute",
+                        inset: 0,
+                        overflow: "visible",
                       }}
                     >
-                      <span style={{ color: c.muted }}>{kk}</span>
-                      <span
+                      <circle
+                        cx={60}
+                        cy={60}
+                        r={46 + pulse * 40}
+                        fill="none"
+                        stroke={accent}
+                        strokeWidth={1.5}
+                        opacity={(1 - pulse) * 0.4 * (pulse > 0 ? 1 : 0)}
+                      />
+                      <circle
+                        cx={60}
+                        cy={60}
+                        r={46}
+                        fill="none"
+                        stroke={c.field}
+                        strokeWidth={3}
+                      />
+                      <circle
+                        cx={60}
+                        cy={60}
+                        r={46}
+                        fill="none"
+                        stroke={accent}
+                        strokeWidth={3}
+                        strokeLinecap="round"
+                        pathLength={1}
+                        strokeDasharray={`${arc} 1`}
+                        transform={`rotate(${spin - 90} 60 60)`}
+                      />
+                    </svg>
+                    <div style={{ position: "absolute", left: 22, top: 22 }}>
+                      <Avatar initials={initials} size={76} />
+                    </div>
+                    <div
+                      style={{
+                        position: "absolute",
+                        left: 14,
+                        top: 14,
+                        width: 92,
+                        height: 92,
+                        borderRadius: 46,
+                        background: accent,
+                        transform: `scale(${0.5 + disc * 0.5})`,
+                        opacity: Math.min(1, disc * 2.5),
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <svg
+                        width={52}
+                        height={52}
+                        viewBox="0 0 24 24"
+                        fill="none"
+                      >
+                        <path
+                          d={ICON.check}
+                          stroke="#fff"
+                          strokeWidth={1.8}
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          pathLength={1}
+                          strokeDasharray={1}
+                          strokeDashoffset={1 - tick}
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                  <div
+                    style={{
+                      position: "absolute",
+                      left: 0,
+                      right: 0,
+                      top: RING_Y + 82,
+                      textAlign: "center",
+                      fontSize: 30,
+                      fontWeight: 300,
+                      letterSpacing: "-0.03em",
+                      color: c.text,
+                      ...enter(title),
+                    }}
+                  >
+                    <span
+                      style={{
+                        display: "inline-block",
+                        opacity: f < DONE + 4 ? 0.55 : Math.min(1, swap * 1.5),
+                        transform: `scale(${f < DONE + 4 ? 1 : 0.92 + swap * 0.08})`,
+                      }}
+                    >
+                      {f < DONE + 4
+                        ? `Sending to ${first}…`
+                        : `Sent to ${first}`}
+                    </span>
+                  </div>
+                  <div
+                    style={{
+                      position: "absolute",
+                      left: 0,
+                      right: 0,
+                      top: RING_Y + 124,
+                      textAlign: "center",
+                      fontSize: 15,
+                      color: c.muted,
+                      ...enter(sub),
+                    }}
+                  >
+                    {note} · Just now
+                  </div>
+                  <div
+                    style={{
+                      position: "absolute",
+                      left: 16,
+                      right: 16,
+                      top: RING_Y + 170,
+                      borderRadius: 16,
+                      background: c.field,
+                      padding: "2px 16px",
+                      opacity: Math.min(1, rows[0] * 2),
+                    }}
+                  >
+                    {receipt.map(([kk, v], i) => (
+                      <div
+                        key={kk}
                         style={{
-                          color: c.text,
-                          fontVariantNumeric: "tabular-nums",
+                          height: 46,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          fontSize: 15,
+                          boxShadow: i ? `inset 0 1px 0 ${c.hair}` : "none",
+                          ...enter(rows[i], 10),
                         }}
                       >
-                        {v}
-                      </span>
+                        <span style={{ color: c.muted }}>{kk}</span>
+                        <span
+                          style={{
+                            color: c.text,
+                            fontVariantNumeric: "tabular-nums",
+                          }}
+                        >
+                          {v}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                  <div
+                    style={{
+                      position: "absolute",
+                      left: 16,
+                      right: 16,
+                      bottom: 40,
+                      display: "flex",
+                      gap: 10,
+                      ...enter(done, 24),
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: 56,
+                        height: 56,
+                        borderRadius: 28,
+                        background: c.field,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <Glyph d={ICON.share} size={22} color={c.text} />
                     </div>
-                  ))}
-                </div>
-                <div
-                  style={{
-                    position: "absolute",
-                    left: 16,
-                    right: 16,
-                    bottom: 40,
-                    display: "flex",
-                    gap: 10,
-                    ...enter(done, 24),
-                  }}
-                >
-                  <div
-                    style={{
-                      width: 56,
-                      height: 56,
-                      borderRadius: 28,
-                      background: c.field,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <Glyph d={ICON.share} size={22} color={c.text} />
+                    <div
+                      style={{
+                        flex: 1,
+                        height: 56,
+                        borderRadius: 28,
+                        background: c.pill,
+                        color: c.pillText,
+                        fontSize: 17,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      {doneLabel}
+                    </div>
                   </div>
-                  <div
-                    style={{
-                      flex: 1,
-                      height: 56,
-                      borderRadius: 28,
-                      background: c.pill,
-                      color: c.pillText,
-                      fontSize: 17,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    Done
-                  </div>
-                </div>
-              </>
-            ) : null}
-            <div
-              style={{
-                position: "absolute",
-                left: touch.x - 22,
-                top: touch.y - 22,
-                width: 44,
-                height: 44,
-                borderRadius: 22,
-                background: c.touch,
-                boxShadow:
-                  "inset 0 0 0 1.5px rgba(255,255,255,0.7), 0 2px 10px rgba(0,0,0,0.2)",
-                opacity: touchOpacity,
-                transform: `scale(${1 - touchPress * 0.12})`,
-                zIndex: 35,
-              }}
-            />
-          </Phone>
+                </>
+              ) : null}
+              <div
+                style={{
+                  position: "absolute",
+                  left: touch.x - 22,
+                  top: touch.y - 22,
+                  width: 44,
+                  height: 44,
+                  borderRadius: 22,
+                  background: c.touch,
+                  boxShadow:
+                    "inset 0 0 0 1.5px rgba(255,255,255,0.7), 0 2px 10px rgba(0,0,0,0.2)",
+                  opacity: touchOpacity,
+                  transform: `scale(${1 - touchPress * 0.12})`,
+                  zIndex: 35,
+                }}
+              />
+            </Phone>
+          </div>
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

@@ -1,8 +1,20 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const stackedShiftConfig: ComponentConfig = {
   componentName: "StackedShift",
   importPath: "@/components/remocn/stacked-shift",
+  lists: {
+    years: {
+      default: ["2023", "2024", "2025"],
+      description: "Years",
+    },
+  },
   controls: {
     theme: {
       type: "enum",
@@ -12,11 +24,6 @@ export const stackedShiftConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     caption: {
       type: "text-content",
@@ -32,6 +39,21 @@ export const stackedShiftConfig: ComponentConfig = {
       description: "Highlight",
       hiddenFromList: false,
     },
+    hold: {
+      type: "number",
+      default: 54,
+      min: 44,
+      max: 120,
+      step: 1,
+      description: "Year hold (frames)",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Figtree", grain: true }),
     speed: {
       type: "number",
       default: 1,

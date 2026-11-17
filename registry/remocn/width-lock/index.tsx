@@ -22,7 +22,18 @@ export interface WidthLockProps {
   after?: string;
   hold?: number;
   accent?: string;
+  /** Text color of the fixed lines; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the copy; needs a variable width axis. Roboto Flex by default. */
+  fontFamily?: string;
+  /** Weight of the lines (variable "wght" axis). */
+  fontWeight?: number;
+  /** Size of the text block, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  grain?: boolean;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -70,8 +81,8 @@ const CLAMP = {
 } as const;
 const LOCK_SPRING = { damping: 13, stiffness: 120, mass: 0.9 };
 
-const fvs = (wdth: number) =>
-  `"wdth" ${wdth.toFixed(2)}, "wght" ${WGHT}, "slnt" 0, "opsz" 72`;
+const fvs = (wdth: number, wght: number) =>
+  `"wdth" ${wdth.toFixed(2)}, "wght" ${wght}, "slnt" 0, "opsz" 72`;
 
 type Curve = number[];
 
@@ -97,7 +108,11 @@ function solveWdth(curve: Curve, target: number) {
   return WDTH_MAX;
 }
 
-function measure(strings: string[]): Curve[] {
+function measure(
+  strings: string[],
+  fontFamily: string,
+  fontWeight: number,
+): Curve[] {
   const probe = document.createElement("span");
   Object.assign(probe.style, {
     position: "absolute",
@@ -105,7 +120,7 @@ function measure(strings: string[]): Curve[] {
     top: "0",
     visibility: "hidden",
     whiteSpace: "pre",
-    fontFamily: `"${flex.fontFamily}"`,
+    fontFamily: `"${fontFamily}"`,
     fontStyle: "normal",
     fontSize: "100px",
     lineHeight: "1",
@@ -114,7 +129,7 @@ function measure(strings: string[]): Curve[] {
   document.body.appendChild(probe);
   const curves = strings.map((s) =>
     SAMPLES.map((wd) => {
-      probe.style.fontVariationSettings = fvs(wd);
+      probe.style.fontVariationSettings = fvs(wd, fontWeight);
       probe.textContent = s;
       return probe.getBoundingClientRect().width / 100 - TRACK;
     }),
@@ -123,21 +138,30 @@ function measure(strings: string[]): Curve[] {
   return curves;
 }
 
-function useCurves(strings: string[]) {
+function useCurves(strings: string[], fontFamily: string, fontWeight: number) {
   const key = strings.join("\u0001");
-  const [state, setState] = useState<{ key: string; c: Curve[] } | null>(null);
+  const font = `${fontWeight}\u0002${fontFamily}`;
+  const [state, setState] = useState<{
+    key: string;
+    font: string;
+    c: Curve[];
+  } | null>(null);
   const [handle] = useState(() => delayRender("width-lock: measuring"));
   const released = useRef(false);
   useEffect(() => {
     let live = true;
     Promise.all([
       flex.waitUntilDone(),
-      document.fonts.load(`${WGHT} 100px "${flex.fontFamily}"`),
+      document.fonts.load(`${fontWeight} 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
-        setState({ key, c: measure(key.split("\u0001")) });
+        setState({
+          key,
+          font,
+          c: measure(key.split("\u0001"), fontFamily, fontWeight),
+        });
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -146,8 +170,8 @@ function useCurves(strings: string[]) {
     return () => {
       live = false;
     };
-  }, [key, handle]);
-  return state && state.key === key ? state.c : null;
+  }, [key, handle, font, fontFamily, fontWeight]);
+  return state && state.key === key && state.font === font ? state.c : null;
 }
 
 function Grain({ opacity }: { opacity: number }) {
@@ -181,25 +205,48 @@ interface Fit {
 
 const NATURAL: Fit = { wdth: 100, extra: 0 };
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function WidthLock({
   before = "Ship the",
   words = ["trailer", "transitions", "captions", "launch video"],
   after = "by tonight.",
   hold = 30,
   accent = "#3B5BFD",
+  ink,
   background,
+  fontFamily = flex.fontFamily,
+  fontWeight = WGHT,
+  scale = 1,
+  delay = 0,
+  grain = true,
   speed = 1,
   theme = "dark",
 }: WidthLockProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const c = THEMES[theme];
+  const fg = ink ?? c.ink;
   const list = words.length > 0 ? words : ["launch video"];
   const strings = useMemo(
     () => [before, after, ...list].map((s) => s || " "),
     [before, after, list],
   );
-  const curves = useCurves(strings);
+  const curves = useCurves(strings, fontFamily, fontWeight);
 
   const transparent = background === "transparent";
   const stage = transparent ? "transparent" : (background ?? c.bg);
@@ -274,12 +321,12 @@ export function WidthLock({
           height: lineH * 1.24,
           lineHeight: `${lineH * 1.24}px`,
           whiteSpace: "pre",
-          fontFamily: flex.fontFamily,
+          fontFamily,
           fontStyle: "normal",
           fontSize: F,
-          fontVariationSettings: fvs(state.wdth),
+          fontVariationSettings: fvs(state.wdth, fontWeight),
           letterSpacing: `${TRACK + state.extra}em`,
-          color: c.ink,
+          color: fg,
           ...(gradient
             ? {
                 backgroundImage: c.hl(accent),
@@ -411,8 +458,8 @@ export function WidthLock({
           }}
         />
       )}
-      {bands}
-      {transparent ? null : <Grain opacity={c.grain} />}
+      <ScaleLayer scale={scale}>{bands}</ScaleLayer>
+      {transparent || !grain ? null : <Grain opacity={c.grain} />}
     </AbsoluteFill>
   );
 }

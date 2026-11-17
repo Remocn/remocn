@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const featureTrioConfig: ComponentConfig = {
   componentName: "FeatureTrio",
@@ -13,11 +19,21 @@ export const featureTrioConfig: ComponentConfig = {
       },
       description: "Theme",
     },
+    hold: {
+      type: "number",
+      default: 36,
+      min: 0,
+      max: 90,
+      step: 1,
+      description: "Hold (frames)",
+      hiddenFromList: false,
+    },
     accent: {
       type: "color",
       default: "#3B5BFD",
       description: "Accent",
     },
+    ...sceneControls({ font: "Bricolage Grotesque" }),
     speed: {
       type: "number",
       default: 1,

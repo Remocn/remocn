@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const pitchOverConfig: ComponentConfig = {
   componentName: "PitchOver",
@@ -55,6 +61,26 @@ export const pitchOverConfig: ComponentConfig = {
       description: "Decimals",
       hiddenFromList: false,
     },
+    countLength: {
+      type: "number",
+      default: 46,
+      min: 16,
+      max: 120,
+      step: 2,
+      description: "Count length (frames)",
+      hiddenFromList: false,
+    },
+    ticks: {
+      type: "number",
+      default: 10,
+      min: 2,
+      max: 20,
+      step: 1,
+      description: "Major ticks",
+      hiddenFromList: false,
+    },
+    accent: { type: "color", default: undefined, description: "Accent" },
+    ...sceneControls({ font: "Space Grotesk" }),
     speed: {
       type: "number",
       default: 1,

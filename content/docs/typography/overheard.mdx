@@ -63,14 +63,49 @@ Two voices play as dialogue: the first quote types in word by word with natural 
       description: "Phrase in the last quote to color with the accent.",
     },
     {
+      name: "stagger",
+      type: "number",
+      default: "4",
+      description: "Frames between words of a quote.",
+    },
+    {
+      name: "pause",
+      type: "number",
+      default: "26",
+      description: "Frames between one speaker's line and the next.",
+    },
+    {
       name: "accent",
       type: "string",
       description: "Color for the highlighted phrase; defaults to the theme accent.",
     },
     {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
       name: "background",
       type: "string",
       description: "Stage fill color; pass \"transparent\" to overlay your own footage.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Young Serif\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
     {
       name: "speed",

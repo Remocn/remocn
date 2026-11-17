@@ -73,10 +73,55 @@ Elimination lines drop into a game-style feed one by one with streak callouts, a
       description: "Small line under the banner, next to the logo.",
     },
     {
+      name: "streakLabel",
+      type: "string",
+      default: "\"Streak\"",
+      description: "Label over each streak callout, followed by the streak count.",
+    },
+    {
+      name: "logo",
+      type: "React.ReactNode",
+      description: "Replaces the remocn mark.",
+    },
+    {
+      name: "shake",
+      type: "number",
+      default: "1",
+      description: "Strength of the camera kick on each hit; 0 holds the frame still.",
+    },
+    {
       name: "accent",
       type: "string",
       default: "\"#3B5BFD\"",
       description: "Small markers: the streak tick and the caption rule.",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Chakra Petch\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
     {
       name: "theme",

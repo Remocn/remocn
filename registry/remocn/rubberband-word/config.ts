@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const rubberbandWordConfig: ComponentConfig = {
   componentName: "RubberbandWord",
@@ -12,11 +18,6 @@ export const rubberbandWordConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     word: {
       type: "text-content",
@@ -33,6 +34,30 @@ export const rubberbandWordConfig: ComponentConfig = {
       default: true,
       description: "Period",
     },
+    hold: {
+      type: "number",
+      default: 8,
+      min: 1,
+      max: 40,
+      step: 1,
+      description: "Hold (frames)",
+      hiddenFromList: false,
+    },
+    stretch: {
+      type: "number",
+      default: 1,
+      min: 0.4,
+      max: 1.6,
+      step: 0.1,
+      description: "Stretch",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({}),
     speed: {
       type: "number",
       default: 1,

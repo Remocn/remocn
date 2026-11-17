@@ -1,6 +1,7 @@
 "use client";
 
 import { loadFont } from "@remotion/google-fonts/Geist";
+import type React from "react";
 import {
   type ReactNode,
   useCallback,
@@ -43,7 +44,21 @@ export interface NdotResolveProps {
   text?: string;
   /** Word that stays in dots, in the gradient. Empty string = none. */
   emphasis?: string;
+  /** Frame the dots start resolving into solid type. */
+  resolveAt?: number;
+  /** Frames between letters resolving, left to right. */
+  stagger?: number;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface the dots resolve into. Load it yourself; Geist by default. */
+  fontFamily?: string;
+  /** Size of the headline, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -58,11 +73,11 @@ const TRACK = -0.032;
 type Measure = (s: string) => number;
 
 /** Waits for Geist, then measures with a canvas (em, kerning included). */
-function useMeasurer() {
+function useMeasurer(family: string) {
   const [ready, setReady] = useState(false);
   const [handle] = useState(() => delayRender("ndot-resolve: measuring"));
   const released = useRef(false);
-  const font = `${WEIGHT} 100px "${geist.fontFamily}"`;
+  const font = `${WEIGHT} 100px "${family}"`;
 
   useEffect(() => {
     let live = true;
@@ -354,18 +369,44 @@ const DOT_R = 0.47;
 const dotPath = (x: number, y: number, r: number) =>
   `M${(x - r).toFixed(2)} ${y.toFixed(2)}a${r.toFixed(2)} ${r.toFixed(2)} 0 1 0 ${(2 * r).toFixed(2)} 0a${r.toFixed(2)} ${r.toFixed(2)} 0 1 0 ${(-2 * r).toFixed(2)} 0`;
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function NdotResolve({
   text = "Less noise. More launch.",
   emphasis = "launch",
+  resolveAt = RES_START,
+  stagger = STAGGER,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = geist.fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: NdotResolveProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const pal = THEMES[theme];
-  const metrics = useMeasurer();
+  const fg = ink ?? pal.ink;
+  const stage =
+    background === "transparent" ? undefined : (background ?? pal.bg);
+  const metrics = useMeasurer(fontFamily);
 
   const maxFs = H * 0.235;
   const laid = useMemo(
@@ -378,7 +419,7 @@ export function NdotResolve({
 
   if (!metrics || !laid) {
     return (
-      <div style={{ position: "absolute", inset: 0, background: pal.bg }} />
+      <div style={{ position: "absolute", inset: 0, background: stage }} />
     );
   }
 
@@ -399,7 +440,7 @@ export function NdotResolve({
   const hotDim: string[] = [];
   const wiping: ReactNode[] = [];
   const solid: ReactNode[] = [];
-  const resEnd = RES_START + (count - 1) * STAGGER + WIPE_LEN;
+  const resEnd = resolveAt + (count - 1) * stagger + WIPE_LEN;
   // Extent of the emphasis word, for its gradient.
   let hotX0 = Number.POSITIVE_INFINITY;
   let hotX1 = Number.NEGATIVE_INFINITY;
@@ -412,7 +453,7 @@ export function NdotResolve({
     const inkLeft = penX + (g.adv * fs - g.cols * p) / 2;
     const cx = (c: number) => inkLeft + (c + 0.5) * p;
     const cy = (r: number) => baseline - (6.5 - r) * p;
-    const start = RES_START + g.order * STAGGER;
+    const start = resolveAt + g.order * stagger;
 
     if (g.emphasis) {
       hotX0 = Math.min(hotX0, inkLeft);
@@ -463,8 +504,8 @@ export function NdotResolve({
         key={`t${g.order}-${g.line}`}
         x={penX}
         y={baseline}
-        fill={pal.ink}
-        fontFamily={geist.fontFamily}
+        fill={fg}
+        fontFamily={fontFamily}
         fontWeight={WEIGHT}
         fontSize={fs}
         style={{ fontKerning: "none" }}
@@ -500,43 +541,47 @@ export function NdotResolve({
   const gradId = `${uid}-hot`;
 
   return (
-    <AbsoluteFill style={{ background: pal.bg, overflow: "hidden" }}>
-      <svg
-        width={W}
-        height={H}
-        viewBox={`0 0 ${W} ${H}`}
-        style={{ position: "absolute", inset: 0 }}
-        aria-hidden
-      >
-        <defs>
-          <linearGradient
-            id={gradId}
-            gradientUnits="userSpaceOnUse"
-            x1={hotX0 - 0.08 * hotW + sway}
-            y1={hotY - CAP * fs * 0.6}
-            x2={hotX1 + 0.04 * hotW + sway}
-            y2={hotY + CAP * fs * 0.1}
-          >
-            <stop offset={0} stopColor={pal.hot[0]} />
-            <stop offset={0.5} stopColor={pal.hot[1]} />
-            <stop offset={1} stopColor={accent} />
-          </linearGradient>
-        </defs>
-        {ink2.length ? (
-          <path d={ink2.join("")} fill={pal.ink} fillOpacity={0.45} />
-        ) : null}
-        {ink3.length ? <path d={ink3.join("")} fill={pal.ink} /> : null}
-        {wiping}
-        {solid}
-        {hot.length ? <path d={hot.join("")} fill={`url(#${gradId})`} /> : null}
-        {hotDim.length ? (
-          <path
-            d={hotDim.join("")}
-            fill={`url(#${gradId})`}
-            fillOpacity={0.45}
-          />
-        ) : null}
-      </svg>
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
+      <ScaleLayer scale={scale}>
+        <svg
+          width={W}
+          height={H}
+          viewBox={`0 0 ${W} ${H}`}
+          style={{ position: "absolute", inset: 0 }}
+          aria-hidden
+        >
+          <defs>
+            <linearGradient
+              id={gradId}
+              gradientUnits="userSpaceOnUse"
+              x1={hotX0 - 0.08 * hotW + sway}
+              y1={hotY - CAP * fs * 0.6}
+              x2={hotX1 + 0.04 * hotW + sway}
+              y2={hotY + CAP * fs * 0.1}
+            >
+              <stop offset={0} stopColor={pal.hot[0]} />
+              <stop offset={0.5} stopColor={pal.hot[1]} />
+              <stop offset={1} stopColor={accent} />
+            </linearGradient>
+          </defs>
+          {ink2.length ? (
+            <path d={ink2.join("")} fill={fg} fillOpacity={0.45} />
+          ) : null}
+          {ink3.length ? <path d={ink3.join("")} fill={fg} /> : null}
+          {wiping}
+          {solid}
+          {hot.length ? (
+            <path d={hot.join("")} fill={`url(#${gradId})`} />
+          ) : null}
+          {hotDim.length ? (
+            <path
+              d={hotDim.join("")}
+              fill={`url(#${gradId})`}
+              fillOpacity={0.45}
+            />
+          ) : null}
+        </svg>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

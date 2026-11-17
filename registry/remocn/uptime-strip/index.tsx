@@ -2,6 +2,7 @@
 
 import { loadFont as loadSans } from "@remotion/google-fonts/InstrumentSans";
 import { loadFont as loadSerif } from "@remotion/google-fonts/InstrumentSerif";
+import type React from "react";
 import { useId } from "react";
 import {
   AbsoluteFill,
@@ -27,6 +28,23 @@ export interface UptimeStripProps {
   incidents?: number[];
   label?: string;
   accent?: string;
+  /** Text color of the figure; overrides the theme. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the figure and axis. Load it yourself; Instrument Sans by default. */
+  fontFamily?: string;
+  /** Axis label after the day count at the strip's left end. */
+  agoLabel?: string;
+  /** Axis label at the strip's right end. */
+  todayLabel?: string;
+  /** Frames between characters of the figure as it rises. */
+  stagger?: number;
+  grain?: boolean;
+  /** Size of the strip and figure, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -164,19 +182,47 @@ function RisingText({
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function UptimeStrip({
   value = "99.99%",
   days = 90,
   incidents = [27, 63],
   label = "uptime",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = sans,
+  agoLabel = "days ago",
+  todayLabel = "Today",
+  stagger = 2,
+  grain = true,
+  scale = 1,
+  delay = 0,
   theme = "dark",
   speed = 1,
 }: UptimeStripProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height } = useVideoConfig();
   const u = Math.min(width / 1280, height / 720);
   const p = THEMES[theme];
+  const fg = ink ?? p.fg;
+  const transparent = background === "transparent";
+  const fill = transparent ? "transparent" : (background ?? p.bg);
   const n = Math.max(7, Math.min(180, Math.round(days)));
   const down = new Set(incidents.map((i) => Math.round(i)));
 
@@ -227,7 +273,7 @@ export function UptimeStrip({
   const headSize = 132 * u;
   const headTop = stripY - barH / 2 - 44 * u - headSize * 0.92;
   const valueChars = Array.from(value).length;
-  const wordStart = LAND + valueChars * 2 + 4;
+  const wordStart = LAND + valueChars * stagger + 4;
 
   const capA = interpolate(t, [4, 18], [0, 1], { ...CLAMP, easing: EASE_OUT });
   const capB = interpolate(
@@ -238,192 +284,206 @@ export function UptimeStrip({
   );
 
   return (
-    <AbsoluteFill style={{ background: p.bg, overflow: "hidden" }}>
-      <AbsoluteFill
-        style={{
-          transform: `scale(${push})`,
-          transformOrigin: "50% 55%",
-          opacity: stage,
-        }}
-      >
-        <svg
-          width={width}
-          height={height}
-          style={{ position: "absolute", inset: 0 }}
-          aria-hidden
+    <AbsoluteFill style={{ background: fill, overflow: "hidden" }}>
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill
+          style={{
+            transform: `scale(${push})`,
+            transformOrigin: "50% 55%",
+            opacity: stage,
+          }}
         >
-          <defs>
-            <linearGradient
-              id={gid}
-              gradientUnits="userSpaceOnUse"
-              x1={left - stripW * 0.06 * drift}
-              y1={stripY + barH}
-              x2={left + stripW * (1.02 - 0.04 * drift)}
-              y2={stripY - barH}
-            >
-              <stop offset={0} stopColor={p.aurora[0]} />
-              <stop offset={0.55} stopColor={p.aurora[1]} />
-              <stop offset={1} stopColor={p.aurora[2]} />
-            </linearGradient>
-          </defs>
-          {Array.from({ length: n }, (_, i) => {
-            const x = left + i * pitch;
-            const isDown = down.has(i);
-            const g = interpolate(t, [frontAt(i), frontAt(i) + GROW], [0, 1], {
-              ...CLAMP,
-              easing: EASE_OUT,
-            });
-            const flash = interpolate(
-              t,
-              [frontAt(i), frontAt(i) + 2, frontAt(i) + 16],
-              [0, 1, 0],
-              CLAMP,
-            );
-            const s = interpolate(t, [settleAt(i), settleAt(i) + 10], [0, 1], {
-              ...CLAMP,
-              easing: EASE_IO,
-            });
-            const bump = Math.sin(Math.PI * s) * 0.09;
-            const full = isDown ? barH * 0.4 : barH;
-            const h = (barW + (full - barW) * g) * (1 + bump);
-            const base = isDown ? p.dim : p.bar;
-            const neutral = interpolateColors(
-              flash,
-              [0, 1],
-              [base, isDown ? p.soft : p.flash],
-            );
-            const opacity = isDown ? 1 - 0.35 * s : 1;
-            return (
-              <g key={i}>
-                <rect
-                  x={x}
-                  y={stripY - barH / 2}
-                  width={barW}
-                  height={barH}
-                  rx={barW / 2}
-                  fill={p.track}
-                  opacity={1 - g}
-                />
-                <rect
-                  x={x}
-                  y={stripY - h / 2}
-                  width={barW}
-                  height={h}
-                  rx={barW / 2}
-                  fill={neutral}
-                  opacity={g > 0 ? opacity : 0}
-                />
-                {!isDown && s > 0 ? (
+          <svg
+            width={width}
+            height={height}
+            style={{ position: "absolute", inset: 0 }}
+            aria-hidden
+          >
+            <defs>
+              <linearGradient
+                id={gid}
+                gradientUnits="userSpaceOnUse"
+                x1={left - stripW * 0.06 * drift}
+                y1={stripY + barH}
+                x2={left + stripW * (1.02 - 0.04 * drift)}
+                y2={stripY - barH}
+              >
+                <stop offset={0} stopColor={p.aurora[0]} />
+                <stop offset={0.55} stopColor={p.aurora[1]} />
+                <stop offset={1} stopColor={p.aurora[2]} />
+              </linearGradient>
+            </defs>
+            {Array.from({ length: n }, (_, i) => {
+              const x = left + i * pitch;
+              const isDown = down.has(i);
+              const g = interpolate(
+                t,
+                [frontAt(i), frontAt(i) + GROW],
+                [0, 1],
+                {
+                  ...CLAMP,
+                  easing: EASE_OUT,
+                },
+              );
+              const flash = interpolate(
+                t,
+                [frontAt(i), frontAt(i) + 2, frontAt(i) + 16],
+                [0, 1, 0],
+                CLAMP,
+              );
+              const s = interpolate(
+                t,
+                [settleAt(i), settleAt(i) + 10],
+                [0, 1],
+                {
+                  ...CLAMP,
+                  easing: EASE_IO,
+                },
+              );
+              const bump = Math.sin(Math.PI * s) * 0.09;
+              const full = isDown ? barH * 0.4 : barH;
+              const h = (barW + (full - barW) * g) * (1 + bump);
+              const base = isDown ? p.dim : p.bar;
+              const neutral = interpolateColors(
+                flash,
+                [0, 1],
+                [base, isDown ? p.soft : p.flash],
+              );
+              const opacity = isDown ? 1 - 0.35 * s : 1;
+              return (
+                <g key={i}>
+                  <rect
+                    x={x}
+                    y={stripY - barH / 2}
+                    width={barW}
+                    height={barH}
+                    rx={barW / 2}
+                    fill={p.track}
+                    opacity={1 - g}
+                  />
                   <rect
                     x={x}
                     y={stripY - h / 2}
                     width={barW}
                     height={h}
                     rx={barW / 2}
-                    fill={`url(#${gid})`}
-                    opacity={s}
+                    fill={neutral}
+                    opacity={g > 0 ? opacity : 0}
                   />
-                ) : null}
-              </g>
-            );
-          })}
-          <line
-            x1={frontX + pitch * 0.9}
-            y1={stripY - barH * 0.78}
-            x2={frontX + pitch * 0.9}
-            y2={stripY + barH * 0.78}
-            stroke={accent}
-            strokeWidth={Math.max(1, 1.5 * u)}
-            opacity={scanO * 0.8}
-          />
-        </svg>
+                  {!isDown && s > 0 ? (
+                    <rect
+                      x={x}
+                      y={stripY - h / 2}
+                      width={barW}
+                      height={h}
+                      rx={barW / 2}
+                      fill={`url(#${gid})`}
+                      opacity={s}
+                    />
+                  ) : null}
+                </g>
+              );
+            })}
+            <line
+              x1={frontX + pitch * 0.9}
+              y1={stripY - barH * 0.78}
+              x2={frontX + pitch * 0.9}
+              y2={stripY + barH * 0.78}
+              stroke={accent}
+              strokeWidth={Math.max(1, 1.5 * u)}
+              opacity={scanO * 0.8}
+            />
+          </svg>
 
-        <div
-          style={{
-            position: "absolute",
-            left: 0,
-            right: 0,
-            top: headTop,
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "baseline",
-            gap: headSize * 0.2,
-            fontWeight: 400,
-            fontSize: headSize,
-            lineHeight: 0.92,
-            letterSpacing: "-0.04em",
-            fontVariantNumeric: "tabular-nums",
-            whiteSpace: "nowrap",
-          }}
-        >
-          <RisingText
-            text={value}
-            t={t}
-            start={LAND}
-            stagger={2}
-            fontSize={headSize}
-            color={p.fg}
-            family={sans}
-          />
-          <span
-            style={{ fontSize: headSize * 1.12, letterSpacing: "-0.015em" }}
+          <div
+            style={{
+              position: "absolute",
+              left: 0,
+              right: 0,
+              top: headTop,
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "baseline",
+              gap: headSize * 0.2,
+              fontWeight: 400,
+              fontSize: headSize,
+              lineHeight: 0.92,
+              letterSpacing: "-0.04em",
+              fontVariantNumeric: "tabular-nums",
+              whiteSpace: "nowrap",
+            }}
           >
             <RisingText
-              text={label}
+              text={value}
               t={t}
-              start={wordStart}
-              stagger={1}
-              fontSize={headSize * 1.12}
-              color={p.muted}
-              family={serif}
-              italic
+              start={LAND}
+              stagger={stagger}
+              fontSize={headSize}
+              color={fg}
+              family={fontFamily}
             />
-          </span>
-        </div>
+            <span
+              style={{ fontSize: headSize * 1.12, letterSpacing: "-0.015em" }}
+            >
+              <RisingText
+                text={label}
+                t={t}
+                start={wordStart}
+                stagger={1}
+                fontSize={headSize * 1.12}
+                color={p.muted}
+                family={serif}
+                italic
+              />
+            </span>
+          </div>
 
-        <div
+          <div
+            style={{
+              position: "absolute",
+              left: (width - stripW) / 2 + (pitch - barW) / 2,
+              width: stripW - (pitch - barW),
+              top: stripY + barH / 2 + 20 * u,
+              display: "flex",
+              justifyContent: "space-between",
+              fontFamily,
+              fontWeight: 400,
+              fontSize: 17 * u,
+              letterSpacing: "0",
+              color: p.muted,
+              fontVariantNumeric: "tabular-nums",
+              whiteSpace: "nowrap",
+            }}
+          >
+            <span
+              style={{
+                opacity: capA,
+                transform: `translateY(${(1 - capA) * 8 * u}px)`,
+              }}
+            >
+              {n} {agoLabel}
+            </span>
+            <span
+              style={{
+                opacity: capB,
+                transform: `translateY(${(1 - capB) * 8 * u}px)`,
+              }}
+            >
+              {todayLabel}
+            </span>
+          </div>
+        </AbsoluteFill>
+      </ScaleLayer>
+
+      {transparent ? null : (
+        <AbsoluteFill
           style={{
-            position: "absolute",
-            left: (width - stripW) / 2 + (pitch - barW) / 2,
-            width: stripW - (pitch - barW),
-            top: stripY + barH / 2 + 20 * u,
-            display: "flex",
-            justifyContent: "space-between",
-            fontFamily: sans,
-            fontWeight: 400,
-            fontSize: 17 * u,
-            letterSpacing: "0",
-            color: p.muted,
-            fontVariantNumeric: "tabular-nums",
-            whiteSpace: "nowrap",
+            background: `radial-gradient(ellipse 80% 80% at 50% 50%, transparent 62%, ${fill} 100%)`,
+            opacity: 0.6,
           }}
-        >
-          <span
-            style={{
-              opacity: capA,
-              transform: `translateY(${(1 - capA) * 8 * u}px)`,
-            }}
-          >
-            {n} days ago
-          </span>
-          <span
-            style={{
-              opacity: capB,
-              transform: `translateY(${(1 - capB) * 8 * u}px)`,
-            }}
-          >
-            Today
-          </span>
-        </div>
-      </AbsoluteFill>
-
-      <AbsoluteFill
-        style={{
-          background: `radial-gradient(ellipse 80% 80% at 50% 50%, transparent 62%, ${p.bg} 100%)`,
-          opacity: 0.6,
-        }}
-      />
-      <Grain opacity={p.grain} />
+        />
+      )}
+      {grain ? <Grain opacity={p.grain} /> : null}
     </AbsoluteFill>
   );
 }

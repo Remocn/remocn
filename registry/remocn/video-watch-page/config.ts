@@ -1,4 +1,11 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const videoWatchPageConfig: ComponentConfig = {
   componentName: "VideoWatchPage",
@@ -13,16 +20,33 @@ export const videoWatchPageConfig: ComponentConfig = {
       },
       description: "Theme",
     },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
-    },
     title: {
       type: "text-content",
       default: "Introducing remocn 2.0",
       description: "Title",
     },
+    breadcrumb: {
+      type: "text-content",
+      default: "Launch videos",
+      description: "Breadcrumb",
+    },
+    description: {
+      type: "text-content",
+      default: "Kinetic captions, 40+ transitions, one install command.",
+      description: "Description",
+    },
+    published: {
+      type: "text-content",
+      default: "3 hours ago",
+      description: "Published",
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ground: groundControl(),
+    ...sceneControls({ font: "Geist" }),
     speed: {
       type: "number",
       default: 1,

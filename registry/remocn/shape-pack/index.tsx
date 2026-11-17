@@ -62,6 +62,22 @@ export interface ShapePackProps {
   label?: string;
   logo?: React.ReactNode;
   accent?: string;
+  /** Color of the stat number. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the stat and label. Load it yourself; Bricolage Grotesque by default. */
+  fontFamily?: string;
+  /** Frames each block takes to fall into place. */
+  fall?: number;
+  /** Corner radius of the blocks, in px at 720p. */
+  radius?: number;
+  /** Film grain over the scene. */
+  grain?: boolean;
+  /** Size of the poster, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -174,6 +190,22 @@ function drop(t: number, at: number, fall: number, from: number, to: number) {
   return { y: to, landed: true, since: local - fall };
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function ShapePack({
   value = 3.2,
   decimals = 1,
@@ -181,13 +213,24 @@ export function ShapePack({
   label = "faster renders",
   logo,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = sans,
+  fall = FALL,
+  radius = 2,
+  grain = true,
+  scale = 1,
+  delay = 0,
   theme = "dark",
   speed = 1,
 }: ShapePackProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const u = H / 720;
   const c = THEMES[theme];
+  const fg = ink ?? "#FFF4EC";
+  const stage =
+    background === "transparent" ? "transparent" : (background ?? c.bg);
 
   const g = 10 * u;
   const posterH = H * 0.74;
@@ -265,165 +308,167 @@ export function ShapePack({
   );
 
   return (
-    <AbsoluteFill style={{ background: c.bg, overflow: "hidden" }}>
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
       <AbsoluteFill
         style={{
           background: `radial-gradient(ellipse 70% 80% at 40% 30%, ${c.key}, transparent 70%)`,
         }}
       />
-      <AbsoluteFill
-        style={{
-          transform: `translateY(${shake}px) scale(${push})`,
-          transformOrigin: "50% 50%",
-        }}
-      >
-        <div
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill
           style={{
-            position: "absolute",
-            inset: 0,
-            opacity: guideIn * guideOut,
+            transform: `translateY(${shake}px) scale(${push})`,
+            transformOrigin: "50% 50%",
           }}
         >
-          {Array.from({ length: COLS * ROWS }, (_, i) => {
-            const col = i % COLS;
-            const row = Math.floor(i / COLS);
-            return (
-              <div
-                key={`m${col}-${row}`}
-                style={{
-                  position: "absolute",
-                  left: X(col),
-                  top: Y(row),
-                  width: cell,
-                  height: cell,
-                  boxSizing: "border-box",
-                  border: `${Math.max(1, u)}px solid ${guideFlash > 0.01 ? accent : c.guide}`,
-                  opacity: guideFlash > 0.01 ? 0.35 + guideFlash * 0.4 : 1,
-                }}
-              />
-            );
-          })}
-        </div>
-
-        {BLOCKS.map((b) => {
-          const h = span(b.h);
-          const d = drop(t, b.at, FALL, -h - 40 * u, Y(b.r));
-          const hop = d.landed ? -impact(d.since, 2.5 * u) : 0;
-          const fill = c.tones[b.tone];
-          return (
-            <div
-              key={b.key}
-              style={{
-                position: "absolute",
-                left: X(b.c),
-                top: d.y + hop,
-                width: span(b.w),
-                height: h,
-                background: fill,
-                borderRadius: 2 * u,
-              }}
-            >
-              {b.key === "a" ? (
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              opacity: guideIn * guideOut,
+            }}
+          >
+            {Array.from({ length: COLS * ROWS }, (_, i) => {
+              const col = i % COLS;
+              const row = Math.floor(i / COLS);
+              return (
                 <div
+                  key={`m${col}-${row}`}
                   style={{
                     position: "absolute",
-                    left: pad,
-                    bottom: pad,
+                    left: X(col),
+                    top: Y(row),
+                    width: cell,
+                    height: cell,
+                    boxSizing: "border-box",
+                    border: `${Math.max(1, u)}px solid ${guideFlash > 0.01 ? accent : c.guide}`,
+                    opacity: guideFlash > 0.01 ? 0.35 + guideFlash * 0.4 : 1,
                   }}
-                >
-                  {logo ?? <RemocnLogo fontSize={30 * u} color={c.onTone} />}
-                </div>
-              ) : null}
-            </div>
-          );
-        })}
+                />
+              );
+            })}
+          </div>
 
-        <div
-          style={{
-            position: "absolute",
-            left: X(SLOT.c),
-            top: accentDrop.y,
-            width: statW,
-            height: statH,
-            background: panel,
-            borderRadius: 2 * u,
-            overflow: "hidden",
-          }}
-        >
-          <svg
-            width="100%"
-            height="100%"
-            style={{
-              position: "absolute",
-              inset: 0,
-              opacity: 0.22,
-              mixBlendMode: "overlay",
-            }}
-            aria-hidden
-          >
-            <filter id={`${gid}n`}>
-              <feTurbulence
-                type="fractalNoise"
-                baseFrequency="0.75"
-                numOctaves={2}
-                seed={9}
-                stitchTiles="stitch"
-              />
-              <feColorMatrix values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 1 0" />
-            </filter>
-            <rect width="100%" height="100%" filter={`url(#${gid}n)`} />
-          </svg>
+          {BLOCKS.map((b) => {
+            const h = span(b.h);
+            const d = drop(t, b.at, fall, -h - 40 * u, Y(b.r));
+            const hop = d.landed ? -impact(d.since, 2.5 * u) : 0;
+            const fill = c.tones[b.tone];
+            return (
+              <div
+                key={b.key}
+                style={{
+                  position: "absolute",
+                  left: X(b.c),
+                  top: d.y + hop,
+                  width: span(b.w),
+                  height: h,
+                  background: fill,
+                  borderRadius: radius * u,
+                }}
+              >
+                {b.key === "a" ? (
+                  <div
+                    style={{
+                      position: "absolute",
+                      left: pad,
+                      bottom: pad,
+                    }}
+                  >
+                    {logo ?? <RemocnLogo fontSize={30 * u} color={c.onTone} />}
+                  </div>
+                ) : null}
+              </div>
+            );
+          })}
+
           <div
             style={{
               position: "absolute",
-              inset: 0,
-              background: "#FFFFFF",
-              opacity: flash * 0.3,
-            }}
-          />
-          <div
-            style={{
-              position: "absolute",
-              left: pad,
-              top: pad - 2 * u,
-              fontFamily: sans,
-              fontWeight: 400,
-              fontSize: 20 * u,
-              lineHeight: 1.2,
-              letterSpacing: "-0.01em",
-              color: "rgba(43,16,21,0.82)",
-              opacity: labelIn,
-              transform: `translateY(${(1 - labelIn) * 6 * u}px)`,
-              whiteSpace: "nowrap",
+              left: X(SLOT.c),
+              top: accentDrop.y,
+              width: statW,
+              height: statH,
+              background: panel,
+              borderRadius: radius * u,
+              overflow: "hidden",
             }}
           >
-            {label}
+            <svg
+              width="100%"
+              height="100%"
+              style={{
+                position: "absolute",
+                inset: 0,
+                opacity: 0.22,
+                mixBlendMode: "overlay",
+              }}
+              aria-hidden
+            >
+              <filter id={`${gid}n`}>
+                <feTurbulence
+                  type="fractalNoise"
+                  baseFrequency="0.75"
+                  numOctaves={2}
+                  seed={9}
+                  stitchTiles="stitch"
+                />
+                <feColorMatrix values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 1 0" />
+              </filter>
+              <rect width="100%" height="100%" filter={`url(#${gid}n)`} />
+            </svg>
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                background: "#FFFFFF",
+                opacity: flash * 0.3,
+              }}
+            />
+            <div
+              style={{
+                position: "absolute",
+                left: pad,
+                top: pad - 2 * u,
+                fontFamily,
+                fontWeight: 400,
+                fontSize: 20 * u,
+                lineHeight: 1.2,
+                letterSpacing: "-0.01em",
+                color: "rgba(43,16,21,0.82)",
+                opacity: labelIn,
+                transform: `translateY(${(1 - labelIn) * 6 * u}px)`,
+                whiteSpace: "nowrap",
+              }}
+            >
+              {label}
+            </div>
+            <div
+              style={{
+                position: "absolute",
+                left: pad - 0.04 * numF,
+                bottom: pad - 0.18 * numF,
+                fontFamily,
+                fontWeight: 400,
+                fontSize: numF,
+                lineHeight: 1,
+                letterSpacing: "-0.028em",
+                fontVariantNumeric: "tabular-nums",
+                color: fg,
+                whiteSpace: "nowrap",
+                opacity: statIn,
+                transform: `translateY(${(1 - statIn) * 14 * u}px)`,
+              }}
+            >
+              {shown}
+              <span style={{ fontWeight: 300, marginLeft: "0.02em" }}>
+                {suffix}
+              </span>
+            </div>
           </div>
-          <div
-            style={{
-              position: "absolute",
-              left: pad - 0.04 * numF,
-              bottom: pad - 0.18 * numF,
-              fontFamily: sans,
-              fontWeight: 400,
-              fontSize: numF,
-              lineHeight: 1,
-              letterSpacing: "-0.028em",
-              fontVariantNumeric: "tabular-nums",
-              color: "#FFF4EC",
-              whiteSpace: "nowrap",
-              opacity: statIn,
-              transform: `translateY(${(1 - statIn) * 14 * u}px)`,
-            }}
-          >
-            {shown}
-            <span style={{ fontWeight: 300, marginLeft: "0.02em" }}>
-              {suffix}
-            </span>
-          </div>
-        </div>
-      </AbsoluteFill>
-      <Grain opacity={c.grain} />
+        </AbsoluteFill>
+      </ScaleLayer>
+      {grain ? <Grain opacity={c.grain} /> : null}
     </AbsoluteFill>
   );
 }

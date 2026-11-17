@@ -28,6 +28,19 @@ export interface GridSnapPosterProps {
   name?: string;
   logo?: React.ReactNode;
   accent?: string;
+  /** Color of the title and name; overrides the theme ink. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Geist by default. */
+  fontFamily?: string;
+  /** Frames per grid column as each block snaps into place. */
+  step?: number;
+  /** Size of the foreground, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -198,11 +211,11 @@ interface Snap {
   start: number;
 }
 
-function snapState(t: number, s: Snap) {
+function snapState(t: number, s: Snap, step: number) {
   const steps = Math.abs(s.to - s.from);
   const dir = Math.sign(s.to - s.from);
   const local = t - s.start;
-  const total = steps * STEP;
+  const total = steps * step;
   const appear = interpolate(local, [-8, -2], [0, 1], CLAMP);
   if (local <= 0) {
     return { pos: s.from, appear, moving: 0, landed: s.from, since: local };
@@ -210,8 +223,8 @@ function snapState(t: number, s: Snap) {
   if (local >= total) {
     return { pos: s.to, appear, moving: 0, landed: s.to, since: local - total };
   }
-  const k = Math.floor(local / STEP);
-  const frac = Math.min(1, (local - k * STEP) / MOVE);
+  const k = Math.floor(local / step);
+  const frac = Math.min(1, (local - k * step) / MOVE);
   const e = EASE_SNAP(frac);
   const landedK = frac >= 1 ? k + 1 : k;
   return {
@@ -219,8 +232,24 @@ function snapState(t: number, s: Snap) {
     appear,
     moving: 1,
     landed: s.from + dir * landedK,
-    since: frac >= 1 ? local - k * STEP - MOVE : local - k * STEP,
+    since: frac >= 1 ? local - k * step - MOVE : local - k * step,
   };
+}
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
 }
 
 export function GridSnapPoster({
@@ -230,13 +259,21 @@ export function GridSnapPoster({
   name = "remocn",
   logo,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = geist,
+  step = STEP,
+  scale = 1,
+  delay = 0,
+  grain = true,
   theme = "dark",
   speed = 1,
 }: GridSnapPosterProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const u = H / 720;
   const c = THEMES[theme];
+  const fg = ink ?? c.fg;
 
   const mX = W * 0.075;
   const mY = H * 0.1;
@@ -271,7 +308,7 @@ export function GridSnapPoster({
   const bodySnap: Snap = { from: 6, to: 9, start: 54 };
   const logoSnap: Snap = { from: 10, to: 9, start: 66 };
   const snaps = [numSnap, headSnap, bodySnap, logoSnap].map((s) =>
-    snapState(t, s),
+    snapState(t, s, step),
   );
 
   const gridFade = interpolate(t, [GRID_FADE, GRID_FADE + 22], [1, 0], {
@@ -318,139 +355,147 @@ export function GridSnapPoster({
   };
 
   return (
-    <AbsoluteFill style={{ background: c.bg, overflow: "hidden" }}>
+    <AbsoluteFill
+      style={{
+        background:
+          background === "transparent" ? undefined : (background ?? c.bg),
+        overflow: "hidden",
+      }}
+    >
       <AbsoluteFill
         style={{
           background: `radial-gradient(ellipse 70% 80% at 30% 30%, ${c.key}, transparent 70%)`,
         }}
       />
-      <AbsoluteFill
-        style={{ transform: `scale(${push})`, transformOrigin: "40% 50%" }}
-      >
-        <div style={{ position: "absolute", inset: 0, opacity: gridFade }}>
-          {Array.from({ length: COLS }, (_, i) => {
-            const p = band(i);
-            return (
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill
+          style={{ transform: `scale(${push})`, transformOrigin: "40% 50%" }}
+        >
+          <div style={{ position: "absolute", inset: 0, opacity: gridFade }}>
+            {Array.from({ length: COLS }, (_, i) => {
+              const p = band(i);
+              return (
+                <div
+                  key={`b${i}`}
+                  style={{
+                    position: "absolute",
+                    left: colX(i),
+                    top: mY,
+                    width: colW,
+                    height: (H - mY * 2) * p,
+                    background: hexA(accent, c.band + flash(i) * 0.2),
+                    borderLeft: `${hair}px solid ${hexA(accent, 0.28)}`,
+                    borderRight: `${hair}px solid ${hexA(accent, 0.28)}`,
+                    boxSizing: "border-box",
+                  }}
+                />
+              );
+            })}
+            {[mY, H - mY].map((y) => (
               <div
-                key={`b${i}`}
+                key={`h${y}`}
                 style={{
                   position: "absolute",
-                  left: colX(i),
-                  top: mY,
-                  width: colW,
-                  height: (H - mY * 2) * p,
-                  background: hexA(accent, c.band + flash(i) * 0.2),
-                  borderLeft: `${hair}px solid ${hexA(accent, 0.28)}`,
-                  borderRight: `${hair}px solid ${hexA(accent, 0.28)}`,
-                  boxSizing: "border-box",
+                  left: mX,
+                  top: y - hair / 2,
+                  width: cw * ruleP,
+                  height: hair,
+                  background: c.hair,
                 }}
               />
-            );
-          })}
-          {[mY, H - mY].map((y) => (
-            <div
-              key={`h${y}`}
-              style={{
-                position: "absolute",
-                left: mX,
-                top: y - hair / 2,
-                width: cw * ruleP,
-                height: hair,
-                background: c.hair,
-              }}
-            />
-          ))}
-        </div>
+            ))}
+          </div>
 
-        {[0, 1, 2, 3].map(guide)}
+          {[0, 1, 2, 3].map(guide)}
 
-        <div
-          style={{
-            position: "absolute",
-            left: colX(snaps[0].pos) - 0.05 * numF,
-            top: numTop,
-            fontFamily: geist,
-            fontWeight: 500,
-            fontSize: numF,
-            lineHeight: 1,
-            letterSpacing: `${numTrack}em`,
-            whiteSpace: "pre",
-            backgroundImage: meshFill(theme, t),
-            WebkitBackgroundClip: "text",
-            backgroundClip: "text",
-            color: "transparent",
-            opacity: snaps[0].appear,
-          }}
-        >
-          {number}
-        </div>
-
-        <div
-          style={{
-            position: "absolute",
-            left: colX(snaps[1].pos) - 0.04 * headF,
-            top: headTop,
-            fontFamily: geist,
-            fontWeight: 500,
-            fontSize: headF,
-            lineHeight: headLead,
-            letterSpacing: `${headTrack}em`,
-            whiteSpace: "pre",
-            color: c.fg,
-            opacity: snaps[1].appear,
-          }}
-        >
-          {lines.map((l, i) => (
-            <div key={`${i}-${l}`}>
-              <Accented text={l} accent={accent} />
-            </div>
-          ))}
-        </div>
-
-        {body ? (
           <div
             style={{
               position: "absolute",
-              left: colX(snaps[2].pos),
-              bottom: mY - 0.3 * bodyF,
-              width: span(3),
-              fontFamily: geist,
-              fontWeight: 400,
-              fontSize: bodyF,
-              lineHeight: 1.4,
-              letterSpacing: "-0.005em",
-              color: c.muted,
-              textWrap: "pretty",
-              opacity: snaps[2].appear,
+              left: colX(snaps[0].pos) - 0.05 * numF,
+              top: numTop,
+              fontFamily,
+              fontWeight: 500,
+              fontSize: numF,
+              lineHeight: 1,
+              letterSpacing: `${numTrack}em`,
+              whiteSpace: "pre",
+              backgroundImage: meshFill(theme, t),
+              WebkitBackgroundClip: "text",
+              backgroundClip: "text",
+              color: "transparent",
+              opacity: snaps[0].appear,
             }}
           >
-            {body}
+            {number}
           </div>
-        ) : null}
 
-        <div
-          style={{
-            position: "absolute",
-            left: colX(snaps[3].pos),
-            top: mY,
-            fontFamily: geist,
-            fontWeight: 500,
-            fontSize: 26 * u,
-            lineHeight: 1,
-            letterSpacing: "-0.02em",
-            color: c.fg,
-            opacity: snaps[3].appear,
-          }}
-        >
-          {logo ??
-            (name === "remocn" ? (
-              <RemocnLogo fontSize={28 * u} color={c.fg} />
-            ) : (
-              name
+          <div
+            style={{
+              position: "absolute",
+              left: colX(snaps[1].pos) - 0.04 * headF,
+              top: headTop,
+              fontFamily,
+              fontWeight: 500,
+              fontSize: headF,
+              lineHeight: headLead,
+              letterSpacing: `${headTrack}em`,
+              whiteSpace: "pre",
+              color: fg,
+              opacity: snaps[1].appear,
+            }}
+          >
+            {lines.map((l, i) => (
+              <div key={`${i}-${l}`}>
+                <Accented text={l} accent={accent} />
+              </div>
             ))}
-        </div>
-      </AbsoluteFill>
-      <Grain opacity={c.grain} />
+          </div>
+
+          {body ? (
+            <div
+              style={{
+                position: "absolute",
+                left: colX(snaps[2].pos),
+                bottom: mY - 0.3 * bodyF,
+                width: span(3),
+                fontFamily,
+                fontWeight: 400,
+                fontSize: bodyF,
+                lineHeight: 1.4,
+                letterSpacing: "-0.005em",
+                color: c.muted,
+                textWrap: "pretty",
+                opacity: snaps[2].appear,
+              }}
+            >
+              {body}
+            </div>
+          ) : null}
+
+          <div
+            style={{
+              position: "absolute",
+              left: colX(snaps[3].pos),
+              top: mY,
+              fontFamily,
+              fontWeight: 500,
+              fontSize: 26 * u,
+              lineHeight: 1,
+              letterSpacing: "-0.02em",
+              color: fg,
+              opacity: snaps[3].appear,
+            }}
+          >
+            {logo ??
+              (name === "remocn" ? (
+                <RemocnLogo fontSize={28 * u} color={fg} />
+              ) : (
+                name
+              ))}
+          </div>
+        </AbsoluteFill>
+      </ScaleLayer>
+      {grain ? <Grain opacity={c.grain} /> : null}
     </AbsoluteFill>
   );
 }

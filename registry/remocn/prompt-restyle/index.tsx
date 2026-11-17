@@ -27,8 +27,20 @@ export interface PromptRestyleProps {
   headline?: string;
   highlight?: string;
   instructions?: string[];
+  /** Frames between one instruction landing and the next one being typed. */
+  stepGap?: number;
   accent?: string;
+  /** Final headline color; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the headline. Load it yourself; Geist by default. */
+  fontFamily?: string;
+  /** Italic typeface the highlight turns into. Load it yourself; Instrument Serif by default. */
+  accentFont?: string;
+  /** Size of the headline and prompt, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -128,17 +140,19 @@ function measureLayout(
   W: number,
   H: number,
   heroOn: boolean,
+  sansFamily: string,
+  serifFamily: string,
 ): Layout {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("prompt-restyle: no 2d context");
   const PX = 200;
   const sansW = (s: string) => {
-    ctx.font = `500 ${PX}px "${geist.fontFamily}"`;
+    ctx.font = `500 ${PX}px "${sansFamily}"`;
     return ctx.measureText(s).width / PX + S2.track * Array.from(s).length;
   };
   const serifW = (s: string) => {
-    ctx.font = `400 ${PX}px "${serif.fontFamily}"`;
+    ctx.font = `400 ${PX}px "${serifFamily}"`;
     return (
       (ctx.measureText(s).width / PX + SERIF_TRACK * Array.from(s).length) *
       SERIF_SCALE
@@ -194,9 +208,9 @@ function measureLayout(
     s = c;
   }
   const hero = tokens.find((t) => t.hero);
-  ctx.font = `500 ${PX}px "${geist.fontFamily}"`;
+  ctx.font = `500 ${PX}px "${sansFamily}"`;
   const ms = ctx.measureText("Hg");
-  ctx.font = `italic 400 ${PX}px "${serif.fontFamily}"`;
+  ctx.font = `italic 400 ${PX}px "${serifFamily}"`;
   const mr = ctx.measureText("Hg");
   return {
     sansAsc: ms.fontBoundingBoxAscent / PX,
@@ -210,7 +224,14 @@ function measureLayout(
   };
 }
 
-function useLayout(tokens: Token[], W: number, H: number, heroOn: boolean) {
+function useLayout(
+  tokens: Token[],
+  W: number,
+  H: number,
+  heroOn: boolean,
+  sansFamily: string,
+  serifFamily: string,
+) {
   const [layout, setLayout] = useState<Layout | null>(null);
   const [handle] = useState(() => delayRender("prompt-restyle: measuring"));
   const released = useRef(false);
@@ -220,13 +241,13 @@ function useLayout(tokens: Token[], W: number, H: number, heroOn: boolean) {
       geist.waitUntilDone(),
       serif.waitUntilDone(),
       mono.waitUntilDone(),
-      document.fonts.load(`500 100px "${geist.fontFamily}"`),
-      document.fonts.load(`italic 400 100px "${serif.fontFamily}"`),
+      document.fonts.load(`500 100px "${sansFamily}"`),
+      document.fonts.load(`italic 400 100px "${serifFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
-        setLayout(measureLayout(tokens, W, H, heroOn));
+        setLayout(measureLayout(tokens, W, H, heroOn, sansFamily, serifFamily));
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -235,22 +256,44 @@ function useLayout(tokens: Token[], W: number, H: number, heroOn: boolean) {
     return () => {
       live = false;
     };
-  }, [tokens, W, H, heroOn, handle]);
+  }, [tokens, W, H, heroOn, handle, sansFamily, serifFamily]);
   return layout;
 }
 
 const lerp = (a: number, b: number, k: number) => a + (b - a) * k;
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function PromptRestyle({
   headline = "Launch videos from parts you own.",
   highlight = "you own",
   instructions,
+  stepGap = NEXT_GAP,
   accent = "#3B5BFD",
+  ink: inkProp,
   background,
+  fontFamily = geist.fontFamily,
+  accentFont = serif.fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: PromptRestyleProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
   const bg = background ?? c.bg;
@@ -260,7 +303,7 @@ export function PromptRestyle({
     [headline, highlight],
   );
   const heroOn = tokens.some((tk) => tk.hero);
-  const layout = useLayout(tokens, W, H, heroOn);
+  const layout = useLayout(tokens, W, H, heroOn, fontFamily, accentFont);
 
   const steps = useMemo(() => {
     const d = [
@@ -274,10 +317,10 @@ export function PromptRestyle({
     for (const text of list) {
       const enter = at + Math.ceil(text.length / TYPE_RATE) + ENTER_PAUSE;
       out.push({ text, start: at, enter });
-      at = enter + NEXT_GAP;
+      at = enter + stepGap;
     }
     return out;
-  }, [instructions, highlight, heroOn]);
+  }, [instructions, highlight, heroOn, stepGap]);
 
   if (!layout) {
     return <div style={{ position: "absolute", inset: 0, background: bg }} />;
@@ -302,7 +345,7 @@ export function PromptRestyle({
   };
   const F = layout.F;
   const size = st.size * F;
-  const ink = interpolateColors(k1, [0, 1], [c.draft, c.ink]);
+  const ink = interpolateColors(k1, [0, 1], [c.draft, inkProp ?? c.ink]);
   const enterIn = interpolate(t, [0, 12], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
@@ -313,7 +356,7 @@ export function PromptRestyle({
   const centerY = H * 0.46;
 
   const sansStyle: React.CSSProperties = {
-    fontFamily: geist.fontFamily,
+    fontFamily,
     fontWeight: 400,
     fontVariationSettings: `"wght" ${st.wght.toFixed(1)}`,
     letterSpacing: `${st.track}em`,
@@ -368,7 +411,7 @@ export function PromptRestyle({
             paddingRight: size * 0.1,
             lineHeight: `${lineH}px`,
             whiteSpace: "pre",
-            fontFamily: serif.fontFamily,
+            fontFamily: accentFont,
             fontStyle: "italic",
             fontWeight: 400,
             fontSize: sz,
@@ -452,46 +495,48 @@ export function PromptRestyle({
 
   return (
     <AbsoluteFill style={{ background: bg, overflow: "hidden" }}>
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          width: W,
-          top: centerY - blockH / 2,
-          opacity: enterIn,
-          transform: `translateY(${((1 - enterIn) * F * 0.15).toFixed(2)}px)`,
-          fontSize: size,
-          lineHeight: `${lineH}px`,
-        }}
-      >
-        {layout.lines.map((line, li) => (
-          <div
-            key={`line-${li}-${line.map((tk) => tk.text).join("_")}`}
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              height: lineH,
-              whiteSpace: "pre",
-            }}
-          >
-            {line.map((tk, ti) => {
-              const glued = /^[.,!?;:]+$/.test(tk.text);
-              const lead = ti > 0 && !glued ? " " : "";
-              return (
-                <span key={`${tk.text}-${ti}`} style={{ display: "flex" }}>
-                  {lead ? <span style={sansStyle}>{lead}</span> : null}
-                  {tk.hero && heroOn ? (
-                    heroNode(tk.text)
-                  ) : (
-                    <span style={sansStyle}>{tk.text}</span>
-                  )}
-                </span>
-              );
-            })}
-          </div>
-        ))}
-      </div>
-      {instruction}
+      <ScaleLayer scale={scale}>
+        <div
+          style={{
+            position: "absolute",
+            left: 0,
+            width: W,
+            top: centerY - blockH / 2,
+            opacity: enterIn,
+            transform: `translateY(${((1 - enterIn) * F * 0.15).toFixed(2)}px)`,
+            fontSize: size,
+            lineHeight: `${lineH}px`,
+          }}
+        >
+          {layout.lines.map((line, li) => (
+            <div
+              key={`line-${li}-${line.map((tk) => tk.text).join("_")}`}
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                height: lineH,
+                whiteSpace: "pre",
+              }}
+            >
+              {line.map((tk, ti) => {
+                const glued = /^[.,!?;:]+$/.test(tk.text);
+                const lead = ti > 0 && !glued ? " " : "";
+                return (
+                  <span key={`${tk.text}-${ti}`} style={{ display: "flex" }}>
+                    {lead ? <span style={sansStyle}>{lead}</span> : null}
+                    {tk.hero && heroOn ? (
+                      heroNode(tk.text)
+                    ) : (
+                      <span style={sansStyle}>{tk.text}</span>
+                    )}
+                  </span>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+        {instruction}
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

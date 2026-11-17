@@ -89,6 +89,22 @@ export interface GlassLensProps {
   /** Custom content for the product pane (wins over `src`). */
   children?: React.ReactNode;
   accent?: string;
+  /** Title inside the product pane's preview. */
+  previewTitle?: string;
+  /** How strongly the glass magnifies; 0 for flat glass. */
+  magnify?: number;
+  /** Color of the headline and logo; overrides the theme ink. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the headline. Load it yourself; Newsreader by default. */
+  fontFamily?: string;
+  /** Size of the headline, pane and lens, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  /** Film grain over the scene. */
+  grain?: boolean;
   /** Playback multiplier. */
   speed?: number;
   theme?: "dark" | "light";
@@ -178,18 +194,29 @@ function measureEm(text: string, f: Face) {
 }
 
 /** Holds the frame until the faces are in, so layout is measured once, right. */
-function useFontsReady() {
+function useFontsReady(fontFamily: string) {
   const [handle] = useState(() => delayRender("glass-lens: fonts"));
-  const [ready, setReady] = useState(false);
+  // the family whose faces are in, so a new `fontFamily` re-measures once loaded
+  const [ready, setReady] = useState<string | null>(null);
   useEffect(() => {
+    let live = true;
     Promise.all([
       manrope.waitUntilDone(),
       serifUpright.waitUntilDone(),
       serifItalic.waitUntilDone(),
-    ]).then(() => setReady(true));
-  }, []);
+      document.fonts.load(`400 100px "${fontFamily}"`),
+      document.fonts.load(`italic 400 100px "${fontFamily}"`),
+    ])
+      .catch(() => undefined)
+      .then(() => {
+        if (live) setReady(fontFamily);
+      });
+    return () => {
+      live = false;
+    };
+  }, [fontFamily]);
   useEffect(() => {
-    if (ready) continueRender(handle);
+    if (ready !== null) continueRender(handle);
   }, [ready, handle]);
   return ready;
 }
@@ -268,6 +295,7 @@ function Placeholder({
   p,
   accent,
   t,
+  previewTitle,
 }: {
   w: number;
   h: number;
@@ -275,6 +303,7 @@ function Placeholder({
   p: Palette;
   accent: string;
   t: number;
+  previewTitle: string;
 }) {
   const pad = w * 0.05;
   const bar = (x: number, y: number, bw: number, bh: number, c: string) => (
@@ -340,7 +369,7 @@ function Placeholder({
             color: "#FFF8F2",
           }}
         >
-          Launch day.
+          {previewTitle}
         </div>
         <div
           style={{
@@ -420,6 +449,10 @@ function Scene({
   accent,
   p,
   L,
+  fg,
+  bg,
+  fontFamily,
+  previewTitle,
 }: {
   t: number;
   lines: string[];
@@ -430,6 +463,10 @@ function Scene({
   accent: string;
   p: Palette;
   L: Layout;
+  fg: string;
+  bg: string;
+  fontFamily: string;
+  previewTitle: string;
 }) {
   const { width, height } = useVideoConfig();
   const { u } = L;
@@ -444,7 +481,7 @@ function Scene({
         top: 0,
         width,
         height,
-        background: p.bg,
+        background: bg,
         overflow: "hidden",
       }}
     >
@@ -463,7 +500,7 @@ function Scene({
           opacity: rise(0),
         }}
       >
-        {logo ?? <RemocnLogo fontSize={26 * u} color={p.fg} />}
+        {logo ?? <RemocnLogo fontSize={26 * u} color={fg} />}
       </div>
       {lines.map((line, i) => {
         const italic = italicLast && i === lines.length - 1 && lines.length > 1;
@@ -477,13 +514,13 @@ function Scene({
               height: L.lineH,
               display: "flex",
               alignItems: "center",
-              fontFamily: serif,
+              fontFamily,
               fontStyle: italic ? "italic" : "normal",
               fontWeight: 400,
               fontSize: L.size,
               letterSpacing: `${HEAD_TRACK}em`,
               lineHeight: 1,
-              color: p.fg,
+              color: fg,
               whiteSpace: "pre",
               opacity: rise(i * 3),
               transform: `translateY(${(1 - rise(i * 3)) * 24 * u}px)`,
@@ -522,6 +559,7 @@ function Scene({
               p={p}
               accent={accent}
               t={t}
+              previewTitle={previewTitle}
             />
           ))}
       </div>
@@ -552,6 +590,22 @@ function coreMask(w: number, h: number, edge: number) {
   return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function GlassLens({
   lines = ["Every frame,", "composed."],
   italicLast = true,
@@ -561,17 +615,28 @@ export function GlassLens({
   src,
   children,
   accent = "#3B5BFD",
+  previewTitle = "Launch day.",
+  magnify = 1,
+  ink,
+  background,
+  fontFamily = serif,
+  scale = 1,
+  delay = 0,
+  grain = true,
   speed = 1,
   theme = "dark",
 }: GlassLensProps) {
-  const frame = useCurrentFrame() * speed;
+  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { fps, width } = useVideoConfig();
   const p = THEMES[theme];
+  const fg = ink ?? p.fg;
+  const bg =
+    background === "transparent" ? "transparent" : (background ?? p.bg);
   const fid = `lens${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
-  const ready = useFontsReady();
+  const ready = useFontsReady(fontFamily);
 
   const faceFor = (i: number): Face => ({
-    family: serif,
+    family: fontFamily,
     italic: italicLast && i === lines.length - 1 && lines.length > 1,
     weight: 400,
     track: HEAD_TRACK,
@@ -591,7 +656,7 @@ export function GlassLens({
       track: CTA_TRACK,
     });
     return { lineEms, wordEm, beforeEm, ctaEm };
-  }, [ready, lines, focus.line, focus.word, cta, italicLast]);
+  }, [ready, lines, focus.line, focus.word, cta, italicLast, fontFamily]);
   const L = useLayout(m.lineEms);
   const { u } = L;
 
@@ -668,7 +733,7 @@ export function GlassLens({
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const mag = 1 + (0.08 + 0.1 * still) * (1 - morph);
+  const mag = 1 + (0.08 + 0.1 * still) * (1 - morph) * magnify;
   const disp = (22 + 8 * still) * u * (1 - 0.55 * morph);
   const edge = Math.min(lw, lh) * 0.24;
   const M = Math.ceil(disp + 8 * u);
@@ -700,224 +765,230 @@ export function GlassLens({
     accent,
     p,
     L,
+    fg,
+    bg,
+    fontFamily,
+    previewTitle,
   };
 
   return (
-    <AbsoluteFill style={{ background: p.bg, overflow: "hidden" }}>
-      <Scene {...sceneProps} />
+    <AbsoluteFill style={{ background: bg, overflow: "hidden" }}>
+      <ScaleLayer scale={scale}>
+        <Scene {...sceneProps} />
 
-      <svg width={0} height={0} style={{ position: "absolute" }} aria-hidden>
-        <defs>
-          <filter
-            id={fid}
-            x={0}
-            y={0}
-            width={lw + M * 2}
-            height={lh + M * 2}
-            filterUnits="userSpaceOnUse"
-            primitiveUnits="userSpaceOnUse"
-            colorInterpolationFilters="sRGB"
-          >
-            <feImage
-              href={map}
-              x={M}
-              y={M}
-              width={lw}
-              height={lh}
-              preserveAspectRatio="none"
-              result="map"
-            />
-            <feDisplacementMap
-              in="SourceGraphic"
-              in2="map"
-              scale={disp}
-              xChannelSelector="R"
-              yChannelSelector="G"
-              result="bent"
-            />
-            {/* displacement samples nearest-pixel: soften the bent rim, and
+        <svg width={0} height={0} style={{ position: "absolute" }} aria-hidden>
+          <defs>
+            <filter
+              id={fid}
+              x={0}
+              y={0}
+              width={lw + M * 2}
+              height={lh + M * 2}
+              filterUnits="userSpaceOnUse"
+              primitiveUnits="userSpaceOnUse"
+              colorInterpolationFilters="sRGB"
+            >
+              <feImage
+                href={map}
+                x={M}
+                y={M}
+                width={lw}
+                height={lh}
+                preserveAspectRatio="none"
+                result="map"
+              />
+              <feDisplacementMap
+                in="SourceGraphic"
+                in2="map"
+                scale={disp}
+                xChannelSelector="R"
+                yChannelSelector="G"
+                result="bent"
+              />
+              {/* displacement samples nearest-pixel: soften the bent rim, and
                 keep the flat middle as the crisp (magnified) source */}
-            <feGaussianBlur in="bent" stdDeviation={0.6 * u} result="soft" />
-            <feImage
-              href={core}
-              x={M}
-              y={M}
-              width={lw}
-              height={lh}
-              preserveAspectRatio="none"
-              result="core"
-            />
-            <feComposite
-              in="SourceGraphic"
-              in2="core"
-              operator="in"
-              result="sharp"
-            />
-            <feComposite in="soft" in2="core" operator="out" result="rim" />
-            <feComposite
-              in="sharp"
-              in2="rim"
-              operator="arithmetic"
-              k2={1}
-              k3={1}
-            />
-          </filter>
-        </defs>
-      </svg>
+              <feGaussianBlur in="bent" stdDeviation={0.6 * u} result="soft" />
+              <feImage
+                href={core}
+                x={M}
+                y={M}
+                width={lw}
+                height={lh}
+                preserveAspectRatio="none"
+                result="core"
+              />
+              <feComposite
+                in="SourceGraphic"
+                in2="core"
+                operator="in"
+                result="sharp"
+              />
+              <feComposite in="soft" in2="core" operator="out" result="rim" />
+              <feComposite
+                in="sharp"
+                in2="rim"
+                operator="arithmetic"
+                k2={1}
+                k3={1}
+              />
+            </filter>
+          </defs>
+        </svg>
 
-      {/* soft cast shadow under the glass */}
-      <div
-        style={{
-          position: "absolute",
-          left: lx,
-          top: ly,
-          width: lw,
-          height: lh,
-          borderRadius: radius,
-          boxShadow: `0 0 0 1px ${p.edgeLine}, 0 ${22 * u}px ${44 * u}px -${10 * u}px ${p.lensShadow}, 0 ${4 * u}px ${10 * u}px -${2 * u}px ${p.lensShadow}`,
-          opacity: enter,
-        }}
-      />
-
-      <div
-        style={{
-          position: "absolute",
-          left: lx,
-          top: ly,
-          width: lw,
-          height: lh,
-          borderRadius: radius,
-          overflow: "hidden",
-          opacity: enter,
-          isolation: "isolate",
-        }}
-      >
+        {/* soft cast shadow under the glass */}
         <div
           style={{
             position: "absolute",
-            left: -M,
-            top: -M,
-            width: lw + M * 2,
-            height: lh + M * 2,
-            filter: `url(#${fid})`,
+            left: lx,
+            top: ly,
+            width: lw,
+            height: lh,
+            borderRadius: radius,
+            boxShadow: `0 0 0 1px ${p.edgeLine}, 0 ${22 * u}px ${44 * u}px -${10 * u}px ${p.lensShadow}, 0 ${4 * u}px ${10 * u}px -${2 * u}px ${p.lensShadow}`,
+            opacity: enter,
+          }}
+        />
+
+        <div
+          style={{
+            position: "absolute",
+            left: lx,
+            top: ly,
+            width: lw,
+            height: lh,
+            borderRadius: radius,
+            overflow: "hidden",
+            opacity: enter,
+            isolation: "isolate",
           }}
         >
           <div
             style={{
               position: "absolute",
-              left: M - lx,
-              top: M - ly,
-              width,
-              height: "100%",
-              transform: `scale(${mag})`,
-              transformOrigin: `${cx}px ${pos.y}px`,
+              left: -M,
+              top: -M,
+              width: lw + M * 2,
+              height: lh + M * 2,
+              filter: `url(#${fid})`,
             }}
           >
-            <Scene {...sceneProps} />
+            <div
+              style={{
+                position: "absolute",
+                left: M - lx,
+                top: M - ly,
+                width,
+                height: "100%",
+                transform: `scale(${mag})`,
+                transformOrigin: `${cx}px ${pos.y}px`,
+              }}
+            >
+              <Scene {...sceneProps} />
+            </div>
+          </div>
+
+          {/* body: tint, accent fill for the CTA, inner shade and sheen */}
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              background: p.glassTint,
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              background: accent,
+              opacity: tint,
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              borderRadius: radius,
+              boxShadow: `inset 0 ${-8 * u}px ${18 * u}px -${6 * u}px ${p.innerShade}, inset 0 0 ${10 * u}px ${p.innerShade}`,
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              left: radius * 0.35,
+              right: radius * 0.35,
+              top: 2 * u,
+              height: lh * 0.42,
+              borderRadius: `${radius}px ${radius}px ${radius * 0.6}px ${radius * 0.6}px`,
+              background: `linear-gradient(180deg, rgba(255,255,255,${0.12 * p.rimHi}), rgba(255,255,255,0.03) 55%, rgba(255,255,255,0) 100%)`,
+            }}
+          />
+          {/* specular rim */}
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              borderRadius: radius,
+              padding: 1.5 * u,
+              background: `radial-gradient(ellipse 45% 60% at ${rimX}% 0%, rgba(255,255,255,${p.rimHi}), transparent 100%), radial-gradient(ellipse 40% 55% at ${100 - rimX}% 100%, rgba(255,255,255,${p.rimLo}), transparent 100%), rgba(255,255,255,${p.rimLo * 0.25})`,
+              WebkitMask:
+                "linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)",
+              WebkitMaskComposite: "xor",
+              maskComposite: "exclude",
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              borderRadius: radius,
+              boxShadow: `inset 0 0 0 1px rgba(255,255,255,${p.rimLo * 0.5})`,
+            }}
+          />
+
+          {/* CTA label */}
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 10 * u,
+              fontFamily: sans,
+              fontWeight: 500,
+              fontSize: ctaSize,
+              letterSpacing: `${CTA_TRACK}em`,
+              color: "#FFFFFF",
+              whiteSpace: "nowrap",
+              opacity: label,
+              transform: `translateY(${(1 - label) * 8 * u}px)`,
+            }}
+          >
+            {cta}
+            <svg
+              width={18 * u}
+              height={18 * u}
+              viewBox="0 0 18 18"
+              style={{
+                opacity: arrow,
+                transform: `translateX(${(arrow - 1) * 8 * u}px)`,
+              }}
+              aria-hidden
+            >
+              <path
+                d="M3 9h11M10 4.5 14.5 9 10 13.5"
+                stroke="#FFFFFF"
+                strokeWidth={1.7}
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
           </div>
         </div>
+      </ScaleLayer>
 
-        {/* body: tint, accent fill for the CTA, inner shade and sheen */}
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            background: p.glassTint,
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            background: accent,
-            opacity: tint,
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            borderRadius: radius,
-            boxShadow: `inset 0 ${-8 * u}px ${18 * u}px -${6 * u}px ${p.innerShade}, inset 0 0 ${10 * u}px ${p.innerShade}`,
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            left: radius * 0.35,
-            right: radius * 0.35,
-            top: 2 * u,
-            height: lh * 0.42,
-            borderRadius: `${radius}px ${radius}px ${radius * 0.6}px ${radius * 0.6}px`,
-            background: `linear-gradient(180deg, rgba(255,255,255,${0.12 * p.rimHi}), rgba(255,255,255,0.03) 55%, rgba(255,255,255,0) 100%)`,
-          }}
-        />
-        {/* specular rim */}
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            borderRadius: radius,
-            padding: 1.5 * u,
-            background: `radial-gradient(ellipse 45% 60% at ${rimX}% 0%, rgba(255,255,255,${p.rimHi}), transparent 100%), radial-gradient(ellipse 40% 55% at ${100 - rimX}% 100%, rgba(255,255,255,${p.rimLo}), transparent 100%), rgba(255,255,255,${p.rimLo * 0.25})`,
-            WebkitMask:
-              "linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)",
-            WebkitMaskComposite: "xor",
-            maskComposite: "exclude",
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            borderRadius: radius,
-            boxShadow: `inset 0 0 0 1px rgba(255,255,255,${p.rimLo * 0.5})`,
-          }}
-        />
-
-        {/* CTA label */}
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 10 * u,
-            fontFamily: sans,
-            fontWeight: 500,
-            fontSize: ctaSize,
-            letterSpacing: `${CTA_TRACK}em`,
-            color: "#FFFFFF",
-            whiteSpace: "nowrap",
-            opacity: label,
-            transform: `translateY(${(1 - label) * 8 * u}px)`,
-          }}
-        >
-          {cta}
-          <svg
-            width={18 * u}
-            height={18 * u}
-            viewBox="0 0 18 18"
-            style={{
-              opacity: arrow,
-              transform: `translateX(${(arrow - 1) * 8 * u}px)`,
-            }}
-            aria-hidden
-          >
-            <path
-              d="M3 9h11M10 4.5 14.5 9 10 13.5"
-              stroke="#FFFFFF"
-              strokeWidth={1.7}
-              fill="none"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </div>
-      </div>
-
-      <Grain opacity={p.grain} />
+      {grain ? <Grain opacity={p.grain} /> : null}
     </AbsoluteFill>
   );
 }

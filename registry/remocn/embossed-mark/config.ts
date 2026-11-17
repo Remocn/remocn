@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const embossedMarkConfig: ComponentConfig = {
   componentName: "EmbossedMark",
@@ -13,16 +19,35 @@ export const embossedMarkConfig: ComponentConfig = {
       },
       description: "Theme",
     },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
-    },
     name: {
       type: "text-content",
       default: "emocn",
       description: "Name",
     },
+    stagger: {
+      type: "number",
+      default: 3,
+      min: 0,
+      max: 12,
+      step: 1,
+      description: "Letter stagger",
+      hiddenFromList: false,
+    },
+    relief: {
+      type: "number",
+      default: 1,
+      min: 0,
+      max: 3,
+      step: 0.1,
+      description: "Relief",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Manrope", grain: true }),
     speed: {
       type: "number",
       default: 1,

@@ -20,7 +20,19 @@ export interface ModuleCountProps {
   label?: string;
   steps?: number;
   accent?: string;
+  /** Text color of the label; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the label. Load it yourself; Archivo by default. */
+  fontFamily?: string;
+  /** Weight of the label, set on the variable font's wght axis. */
+  fontWeight?: number;
+  /** Frames between label words as they rise in. */
+  stagger?: number;
+  /** Size of the figure and label, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -113,6 +125,22 @@ function blankLike(cols: number): string[] {
   return Array.from({ length: ROWS }, () => ".".repeat(cols));
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function ModuleCount({
   value = 48,
   from = 0,
@@ -121,11 +149,17 @@ export function ModuleCount({
   label = "Scenes, every one snapped to a single grid",
   steps = 11,
   accent,
+  ink,
   background,
+  fontFamily = archivo.fontFamily,
+  fontWeight = 450,
+  stagger = 3,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: ModuleCountProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
   const bg = background ?? c.bg;
@@ -335,62 +369,64 @@ export function ModuleCount({
           }}
         />
       )}
-      <div
-        style={{
-          position: "absolute",
-          left: boxLeft,
-          top: boxTop,
-          width: boxW,
-          height: boxH,
-        }}
-      >
-        {cells}
-      </div>
-      {label ? (
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            left: labelLeft + P * 0.16,
-            top: labelTop,
-            height: labelRows * P,
-            display: "flex",
-            flexWrap: "wrap",
-            alignContent: "flex-end",
-            paddingBottom: P * 0.16,
-            width: labelCols * P - P * 0.32,
-            fontFamily: archivo.fontFamily,
-            fontVariationSettings: '"wdth" 125, "wght" 450',
-            fontSize: labelSize,
-            lineHeight: 1.18,
-            letterSpacing: `${TRACK_LABEL}em`,
-            color: c.ink,
-            textWrap: "balance",
+            left: boxLeft,
+            top: boxTop,
+            width: boxW,
+            height: boxH,
           }}
         >
-          {words.map((w, k) => {
-            const p = interpolate(
-              t,
-              [labelAt + k * 3, labelAt + k * 3 + 16],
-              [0, 1],
-              { ...CLAMP, easing: EASE_OUT },
-            );
-            return (
-              <span
-                key={`${w}-${k}`}
-                style={{
-                  display: "inline-block",
-                  whiteSpace: "pre",
-                  opacity: p,
-                  transform: `translateY(${((1 - p) * labelSize * 0.6).toFixed(2)}px)`,
-                }}
-              >
-                {w}
-                {k < words.length - 1 ? " " : ""}
-              </span>
-            );
-          })}
+          {cells}
         </div>
-      ) : null}
+        {label ? (
+          <div
+            style={{
+              position: "absolute",
+              left: labelLeft + P * 0.16,
+              top: labelTop,
+              height: labelRows * P,
+              display: "flex",
+              flexWrap: "wrap",
+              alignContent: "flex-end",
+              paddingBottom: P * 0.16,
+              width: labelCols * P - P * 0.32,
+              fontFamily,
+              fontVariationSettings: `"wdth" 125, "wght" ${fontWeight}`,
+              fontSize: labelSize,
+              lineHeight: 1.18,
+              letterSpacing: `${TRACK_LABEL}em`,
+              color: ink ?? c.ink,
+              textWrap: "balance",
+            }}
+          >
+            {words.map((w, k) => {
+              const p = interpolate(
+                t,
+                [labelAt + k * stagger, labelAt + k * stagger + 16],
+                [0, 1],
+                { ...CLAMP, easing: EASE_OUT },
+              );
+              return (
+                <span
+                  key={`${w}-${k}`}
+                  style={{
+                    display: "inline-block",
+                    whiteSpace: "pre",
+                    opacity: p,
+                    transform: `translateY(${((1 - p) * labelSize * 0.6).toFixed(2)}px)`,
+                  }}
+                >
+                  {w}
+                  {k < words.length - 1 ? " " : ""}
+                </span>
+              );
+            })}
+          </div>
+        ) : null}
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

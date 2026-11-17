@@ -1,4 +1,11 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const deviceGrowsAroundConfig: ComponentConfig = {
   componentName: "DeviceGrowsAround",
@@ -12,11 +19,6 @@ export const deviceGrowsAroundConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     name: {
       type: "text-content",
@@ -37,6 +39,21 @@ export const deviceGrowsAroundConfig: ComponentConfig = {
       type: "text-content",
       default: "6,904 (16.7%) today",
       description: "Delta",
+    },
+    unit: {
+      type: "text-content",
+      default: "views",
+      description: "Unit",
+    },
+    liveLabel: {
+      type: "text-content",
+      default: "Live",
+      description: "Live label",
+    },
+    listTitle: {
+      type: "text-content",
+      default: "Top sources",
+      description: "List title",
     },
     metric: {
       type: "number",
@@ -63,6 +80,22 @@ export const deviceGrowsAroundConfig: ComponentConfig = {
       max: 1238640,
       step: 1,
       description: "Gain",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ground: groundControl(),
+    ...sceneControls({ font: "Sora", grain: true }),
+    speed: {
+      type: "number",
+      default: 1,
+      min: 0.25,
+      max: 4,
+      step: 0.25,
+      description: "Speed",
       hiddenFromList: false,
     },
   },

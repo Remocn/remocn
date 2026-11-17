@@ -26,6 +26,20 @@ export interface TileWaveProps {
   /** Frames the outgoing scene holds before the wave. */
   delay?: number;
   accent?: string;
+  /** Text color of the outgoing headline; overrides the theme ink. */
+  ink?: string;
+  /** Stage fill seen between the tiles; "transparent" drops it. */
+  background?: string;
+  /** Typeface for text headlines. Load it yourself; Space Grotesk by default. */
+  fontFamily?: string;
+  /** Frames the wave takes to cross the frame, corner to corner. */
+  spread?: number;
+  /** Frames each tile takes to shrink and grow back. */
+  swap?: number;
+  /** Size of text headlines, around the frame's center. */
+  scale?: number;
+  /** Film grain over the scene. */
+  grain?: boolean;
   /** Playback multiplier. */
   speed?: number;
   /** Stage seen between the tiles; the outgoing scene takes the other tone. */
@@ -47,7 +61,8 @@ const CLAMP = {
   extrapolateRight: "clamp",
 } as const;
 
-export const tileWaveLength = (delay = 16) => delay + SPREAD + TILE + 30;
+export const tileWaveLength = (delay = 16, spread = SPREAD, swap = TILE) =>
+  delay + spread + swap + 30;
 
 /* gradients.sh "beam" palette: deep indigo into the remocn blue, a cold
    highlight rising from the lower right. Drifts a few percent per shot. */
@@ -66,16 +81,42 @@ function beamGround(d: number) {
   ].join(", ");
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill
+      style={{
+        alignItems: "center",
+        justifyContent: "center",
+        transform: `scale(${scale})`,
+      }}
+    >
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 function Headline({
   text,
   bg,
   fg,
   dotColor,
+  fontFamily,
+  scale,
 }: {
   text: string;
   bg: string;
   fg: string;
   dotColor: string;
+  fontFamily: string;
+  scale: number;
 }) {
   const { width: W, height: H } = useVideoConfig();
   const u = H / 720;
@@ -94,21 +135,23 @@ function Headline({
         justifyContent: "center",
       }}
     >
-      <div
-        style={{
-          fontFamily: display,
-          fontWeight: 500,
-          fontSize: size,
-          letterSpacing: "-0.04em",
-          lineHeight: 1,
-          whiteSpace: "nowrap",
-          paddingBottom: size * 0.08,
-          paddingRight: size * 0.04,
-        }}
-      >
-        {body}
-        {dot ? <span style={{ color: dotColor }}>.</span> : null}
-      </div>
+      <ScaleLayer scale={scale}>
+        <div
+          style={{
+            fontFamily,
+            fontWeight: 500,
+            fontSize: size,
+            letterSpacing: "-0.04em",
+            lineHeight: 1,
+            whiteSpace: "nowrap",
+            paddingBottom: size * 0.08,
+            paddingRight: size * 0.04,
+          }}
+        >
+          {body}
+          {dot ? <span style={{ color: dotColor }}>.</span> : null}
+        </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }
@@ -118,15 +161,26 @@ function Scene({
   bg,
   fg,
   dotColor,
+  fontFamily,
+  scale,
 }: {
   content: React.ReactNode;
   bg: string;
   fg: string;
   dotColor: string;
+  fontFamily: string;
+  scale: number;
 }) {
   if (typeof content === "string" || typeof content === "number") {
     return (
-      <Headline text={String(content)} bg={bg} fg={fg} dotColor={dotColor} />
+      <Headline
+        text={String(content)}
+        bg={bg}
+        fg={fg}
+        dotColor={dotColor}
+        fontFamily={fontFamily}
+        scale={scale}
+      />
     );
   }
   return <AbsoluteFill style={{ background: bg }}>{content}</AbsoluteFill>;
@@ -162,16 +216,24 @@ export function TileWave({
   rows = 8,
   delay = 16,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = display,
+  spread = SPREAD,
+  swap = TILE,
+  scale = 1,
+  grain = true,
   speed = 1,
   theme = "dark",
 }: TileWaveProps) {
   const t = useCurrentFrame() * speed;
   const { width: W, height: H } = useVideoConfig();
   const u = H / 720;
-  const stage = STAGE[theme];
+  const stage =
+    background === "transparent" ? "transparent" : (background ?? STAGE[theme]);
   const aTone = theme === "dark" ? "light" : "dark";
   const aBg = STAGE[aTone];
-  const aFg = INK[aTone];
+  const aFg = ink ?? INK[aTone];
   const bFg = "#FFFFFF";
 
   const nRows = Math.max(3, Math.round(rows));
@@ -181,11 +243,31 @@ export function TileWave({
   const minScale = (7 * u) / Math.min(cw, ch);
   const bleed = 0.6;
 
-  const sceneA = <Scene content={from} bg={aBg} fg={aFg} dotColor={accent} />;
-  const bGround = beamGround(Math.min(1, t / tileWaveLength(delay)));
-  const sceneB = <Scene content={to} bg={bGround} fg={bFg} dotColor={bFg} />;
+  const sceneA = (
+    <Scene
+      content={from}
+      bg={aBg}
+      fg={aFg}
+      dotColor={accent}
+      fontFamily={fontFamily}
+      scale={scale}
+    />
+  );
+  const bGround = beamGround(
+    Math.min(1, t / tileWaveLength(delay, spread, swap)),
+  );
+  const sceneB = (
+    <Scene
+      content={to}
+      bg={bGround}
+      fg={bFg}
+      dotColor={bFg}
+      fontFamily={fontFamily}
+      scale={scale}
+    />
+  );
   const before = t <= delay;
-  const after = t >= delay + SPREAD + TILE;
+  const after = t >= delay + spread + swap;
 
   const tiles: React.ReactNode[] = [];
   const tileB = BEAM[2];
@@ -200,8 +282,8 @@ export function TileWave({
       const x = c * cw;
       const y = r * ch;
       const diag = (c / (nCols - 1) + r / (nRows - 1)) / 2;
-      const start = delay + diag * SPREAD;
-      const p = interpolate(t, [start, start + TILE], [0, 1], CLAMP);
+      const start = delay + diag * spread;
+      const p = interpolate(t, [start, start + swap], [0, 1], CLAMP);
       const isB = p >= (SHRINK_END + GROW_START) / 2;
       let s: number;
       if (p <= SHRINK_END) {
@@ -277,7 +359,7 @@ export function TileWave({
         </AbsoluteFill>
       ) : null}
       {tiles}
-      <Grain opacity={0.04} />
+      {grain ? <Grain opacity={0.04} /> : null}
     </AbsoluteFill>
   );
 }

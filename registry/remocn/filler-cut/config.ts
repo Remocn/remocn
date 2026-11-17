@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const fillerCutConfig: ComponentConfig = {
   componentName: "FillerCut",
@@ -12,11 +18,6 @@ export const fillerCutConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     transcript: {
       type: "text-content",
@@ -38,6 +39,30 @@ export const fillerCutConfig: ComponentConfig = {
       default: true,
       description: "Show time",
     },
+    stagger: {
+      type: "number",
+      default: 6,
+      min: 0,
+      max: 20,
+      step: 1,
+      description: "Cut stagger",
+      hiddenFromList: false,
+    },
+    fontWeight: {
+      type: "number",
+      default: 500,
+      min: 400,
+      max: 500,
+      step: 100,
+      description: "Headline weight",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Schibsted Grotesk", grain: true }),
     speed: {
       type: "number",
       default: 1,

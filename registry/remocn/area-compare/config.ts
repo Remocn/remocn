@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const areaCompareConfig: ComponentConfig = {
   componentName: "AreaCompare",
@@ -12,11 +18,6 @@ export const areaCompareConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     label: {
       type: "text-content",
@@ -68,6 +69,30 @@ export const areaCompareConfig: ComponentConfig = {
       max: 252,
       step: 1,
       description: "After value",
+      hiddenFromList: false,
+    },
+    shrink: {
+      type: "number",
+      default: 40,
+      min: 10,
+      max: 90,
+      step: 1,
+      description: "Shrink (frames)",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Instrument Serif", grain: true }),
+    speed: {
+      type: "number",
+      default: 1,
+      min: 0.25,
+      max: 4,
+      step: 0.25,
+      description: "Speed",
       hiddenFromList: false,
     },
   },

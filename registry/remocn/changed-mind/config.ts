@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const changedMindConfig: ComponentConfig = {
   componentName: "ChangedMind",
@@ -18,6 +24,17 @@ export const changedMindConfig: ComponentConfig = {
       default: "Ines Vargas, solo founder",
       description: "Name",
     },
+    transition: {
+      type: "number",
+      default: 18,
+      min: 6,
+      max: 40,
+      step: 1,
+      description: "Rewrite (frames)",
+      hiddenFromList: false,
+    },
+    accent: { type: "color", default: undefined, description: "Accent" },
+    ...sceneControls({ font: "Young Serif" }),
     speed: {
       type: "number",
       default: 1,

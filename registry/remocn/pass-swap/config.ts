@@ -1,8 +1,20 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const passSwapConfig: ComponentConfig = {
   componentName: "PassSwap",
   importPath: "@/components/remocn/pass-swap",
+  lists: {
+    lines: {
+      default: ["Copy the code.", "Own every frame.", "Ship the film."],
+      description: "Lines",
+    },
+  },
   controls: {
     theme: {
       type: "enum",
@@ -33,6 +45,25 @@ export const passSwapConfig: ComponentConfig = {
       default: true,
       description: "Accent last word",
     },
+    passLength: {
+      type: "number",
+      default: 30,
+      min: 10,
+      max: 60,
+      step: 1,
+      description: "Pass length (frames)",
+      hiddenFromList: false,
+    },
+    passGap: {
+      type: "number",
+      default: 46,
+      min: 20,
+      max: 90,
+      step: 1,
+      description: "Pass gap (frames)",
+      hiddenFromList: false,
+    },
+    ...sceneControls({ font: "Hanken Grotesk", grain: true }),
     speed: {
       type: "number",
       default: 1,

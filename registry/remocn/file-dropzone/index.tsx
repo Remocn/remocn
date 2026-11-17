@@ -43,7 +43,23 @@ export interface FileDropzoneProps {
   destination?: string;
   /** Preview used for image files. */
   image?: string;
+  /** Line in the empty drop zone, before the "browse" link. */
+  prompt?: string;
+  /** Line in the drop zone while files hover over it. */
+  releaseLabel?: string;
+  /** Accepted types and size limit under the prompt. */
+  hint?: string;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Geist by default. */
+  fontFamily?: string;
+  /** Size of the window, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "light" | "dark";
   ground?: GshPresetId;
@@ -365,18 +381,42 @@ const ICONS = {
   check: "M5.5 12.5l4 4 9-9.5",
 };
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function FileDropzone({
   files = DEFAULT_FILES,
   title = "Upload files",
   destination = "Research",
   image = staticFile("reel/reel-2.jpg"),
+  prompt = "Drop files here or",
+  releaseLabel = "Release to upload",
+  hint = "PDF, PNG or CSV, up to 50 MB",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = geist.fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "light",
   ground,
   groundParams,
 }: FileDropzoneProps) {
-  const frame = useCurrentFrame() * speed;
+  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, fps } = useVideoConfig();
   const tall = height > width;
   const SW = tall ? 600 : 1280;
@@ -384,6 +424,7 @@ export function FileDropzone({
   const k = width / SW;
   const dark = theme === "dark";
   const c = dark ? DARK : LIGHT;
+  const fg = ink ?? c.text;
   const list = files.slice(0, 3);
   const n = list.length;
   const sp = (at: number, config: Record<string, number>) =>
@@ -516,612 +557,634 @@ export function FileDropzone({
   return (
     <AbsoluteFill
       style={{
-        fontFamily: geist.fontFamily,
+        fontFamily,
         WebkitFontSmoothing: "antialiased",
         overflow: "hidden",
       }}
     >
-      <GshGround
-        preset={ground ?? (dark ? "earthshine" : "paper-crease")}
-        params={groundParams ?? (dark ? undefined : LIGHT_GROUND)}
-        timeOffset={3}
-        timeScale={0.5}
-      />
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          top: 0,
-          width: SW,
-          height: SH,
-          transform: `scale(${k})`,
-          transformOrigin: "0 0",
-        }}
-      >
+      {background === undefined ? (
+        <GshGround
+          preset={ground ?? (dark ? "earthshine" : "paper-crease")}
+          params={groundParams ?? (dark ? undefined : LIGHT_GROUND)}
+          timeOffset={3}
+          timeScale={0.5}
+        />
+      ) : (
+        <AbsoluteFill
+          style={{
+            background: background === "transparent" ? undefined : background,
+          }}
+        />
+      )}
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            inset: 0,
-            transform: `scale(${cam})`,
-            transformOrigin: `${SW / 2}px ${centerY}px`,
+            left: 0,
+            top: 0,
+            width: SW,
+            height: SH,
+            transform: `scale(${k})`,
+            transformOrigin: "0 0",
           }}
         >
           <div
             style={{
               position: "absolute",
-              left: WIN.x,
-              top: WIN.y,
-              width: WIN.w,
-              height: WIN.h,
-              borderRadius: 18,
-              overflow: "hidden",
-              background: c.win,
-              boxShadow: c.winShadow,
-              opacity: winOp,
-              transform: `translateY(${(1 - winIn) * 40}px)`,
+              inset: 0,
+              transform: `scale(${cam})`,
+              transformOrigin: `${SW / 2}px ${centerY}px`,
             }}
           >
             <div
               style={{
                 position: "absolute",
-                inset: 0,
-                padding: tall ? "32px 28px" : "36px 40px",
-                filter: `blur(${dim * 2}px)`,
+                left: WIN.x,
+                top: WIN.y,
+                width: WIN.w,
+                height: WIN.h,
+                borderRadius: 18,
+                overflow: "hidden",
+                background: c.win,
+                boxShadow: c.winShadow,
+                opacity: winOp,
+                transform: `translateY(${(1 - winIn) * 40}px)`,
               }}
             >
-              <div style={{ display: "flex", alignItems: "flex-end" }}>
-                <div>
-                  <div style={{ fontSize: 16, color: c.muted }}>Library</div>
-                  <div
-                    style={{
-                      fontSize: 30,
-                      fontWeight: 400,
-                      letterSpacing: "-0.025em",
-                      color: c.text,
-                      marginTop: 6,
-                    }}
-                  >
-                    {destination}
-                  </div>
-                </div>
-                <div
-                  style={{
-                    marginLeft: "auto",
-                    height: 40,
-                    padding: "0 16px",
-                    borderRadius: 10,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 8,
-                    fontSize: 16,
-                    color: c.text,
-                    boxShadow: c.btnShadow,
-                  }}
-                >
-                  <Icon d={ICONS.upload} size={18} color={c.text} />
-                  Upload
-                </div>
-              </div>
-              <div style={{ marginTop: 30 }}>
-                <div
-                  style={{
-                    display: "flex",
-                    height: 40,
-                    alignItems: "center",
-                    fontSize: 16,
-                    color: c.muted,
-                    borderBottom: `1px solid ${c.line}`,
-                  }}
-                >
-                  {cols.map((col) => (
-                    <span
-                      key={col.i}
-                      style={col.w ? { width: col.w } : { flex: 1 }}
-                    >
-                      {["Name", "Kind", "Size", "Added"][col.i]}
-                    </span>
-                  ))}
-                </div>
-                {table.map((r) => {
-                  const fresh = r.fresh >= 0;
-                  const p = fresh ? sp(TABLE + r.fresh * 4, SPR.card) : 1;
-                  const hgt = 54 * Math.min(1, p);
-                  if (fresh && hgt <= 0.01) return null;
-                  return (
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  padding: tall ? "32px 28px" : "36px 40px",
+                  filter: `blur(${dim * 2}px)`,
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "flex-end" }}>
+                  <div>
+                    <div style={{ fontSize: 16, color: c.muted }}>Library</div>
                     <div
-                      key={r.cells[0]}
                       style={{
-                        height: hgt,
-                        overflow: "hidden",
-                        borderBottom: `1px solid ${c.line}`,
-                        background: fresh
-                          ? withAlpha(accent, (dark ? 0.12 : 0.07) * tint)
-                          : "transparent",
-                        margin: "0 -12px",
-                        padding: "0 12px",
-                        borderRadius: 8,
+                        fontSize: 30,
+                        fontWeight: 400,
+                        letterSpacing: "-0.025em",
+                        color: fg,
+                        marginTop: 6,
                       }}
                     >
+                      {destination}
+                    </div>
+                  </div>
+                  <div
+                    style={{
+                      marginLeft: "auto",
+                      height: 40,
+                      padding: "0 16px",
+                      borderRadius: 10,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      fontSize: 16,
+                      color: fg,
+                      boxShadow: c.btnShadow,
+                    }}
+                  >
+                    <Icon d={ICONS.upload} size={18} color={fg} />
+                    Upload
+                  </div>
+                </div>
+                <div style={{ marginTop: 30 }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      height: 40,
+                      alignItems: "center",
+                      fontSize: 16,
+                      color: c.muted,
+                      borderBottom: `1px solid ${c.line}`,
+                    }}
+                  >
+                    {cols.map((col) => (
+                      <span
+                        key={col.i}
+                        style={col.w ? { width: col.w } : { flex: 1 }}
+                      >
+                        {["Name", "Kind", "Size", "Added"][col.i]}
+                      </span>
+                    ))}
+                  </div>
+                  {table.map((r) => {
+                    const fresh = r.fresh >= 0;
+                    const p = fresh ? sp(TABLE + r.fresh * 4, SPR.card) : 1;
+                    const hgt = 54 * Math.min(1, p);
+                    if (fresh && hgt <= 0.01) return null;
+                    return (
                       <div
+                        key={r.cells[0]}
                         style={{
-                          display: "flex",
-                          alignItems: "center",
-                          height: 54,
-                          fontSize: 17,
-                          color: c.text,
-                          opacity: fresh ? clamp01(p * 1.4 - 0.3) : 1,
-                          transform: `translateY(${(1 - p) * -10}px)`,
+                          height: hgt,
+                          overflow: "hidden",
+                          borderBottom: `1px solid ${c.line}`,
+                          background: fresh
+                            ? withAlpha(accent, (dark ? 0.12 : 0.07) * tint)
+                            : "transparent",
+                          margin: "0 -12px",
+                          padding: "0 12px",
+                          borderRadius: 8,
                         }}
                       >
-                        {cols.map((col) => (
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            height: 54,
+                            fontSize: 17,
+                            color: fg,
+                            opacity: fresh ? clamp01(p * 1.4 - 0.3) : 1,
+                            transform: `translateY(${(1 - p) * -10}px)`,
+                          }}
+                        >
+                          {cols.map((col) => (
+                            <span
+                              key={col.i}
+                              style={{
+                                ...(col.w ? { width: col.w } : { flex: 1 }),
+                                color: col.i === 0 ? fg : c.muted,
+                                fontFamily:
+                                  col.i === 2
+                                    ? geistMono.fontFamily
+                                    : undefined,
+                                fontSize: col.i === 2 ? 15.5 : 17,
+                                fontVariantNumeric: "tabular-nums",
+                                whiteSpace: "nowrap",
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                paddingRight: col.i === 0 ? 16 : 0,
+                              }}
+                            >
+                              {col.i === 3 && fresh ? (
+                                <span style={{ color: accent }}>
+                                  {r.cells[3]}
+                                </span>
+                              ) : (
+                                r.cells[col.i]
+                              )}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  background: c.overlay,
+                  opacity: dim,
+                }}
+              />
+            </div>
+
+            <div
+              style={{
+                position: "absolute",
+                left: modalLeft,
+                top: modalTop,
+                width: MODAL_W,
+                height: modalH,
+                borderRadius: 20,
+                background: c.modal,
+                boxShadow: c.modalShadow,
+                overflow: "hidden",
+                opacity: modalOp * (1 - close),
+                transform: `translateY(${(1 - modalIn) * 18 + close * 10}px) scale(${(0.97 + 0.03 * modalIn) * (1 - 0.03 * close)})`,
+              }}
+            >
+              <div
+                style={{
+                  height: HEADER_H,
+                  display: "flex",
+                  alignItems: "center",
+                  padding: `0 ${PAD}px`,
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: 21,
+                    letterSpacing: "-0.015em",
+                    color: fg,
+                  }}
+                >
+                  {title}
+                </div>
+                <div style={{ marginLeft: "auto" }}>
+                  <Icon d={ICONS.close} size={20} color={c.muted} />
+                </div>
+              </div>
+              <div
+                style={{
+                  position: "relative",
+                  margin: `0 ${PAD}px`,
+                  height: dzH,
+                  borderRadius: 12,
+                  background: dzLive ? withAlpha(accent, 0.06) : c.zone,
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 10,
+                }}
+              >
+                <svg
+                  width="100%"
+                  height="100%"
+                  style={{ position: "absolute", inset: 0 }}
+                  aria-hidden
+                >
+                  <rect
+                    x={0.5}
+                    y={0.5}
+                    width={MODAL_W - PAD * 2 - 1}
+                    height={dzH - 1}
+                    rx={11.5}
+                    fill="none"
+                    stroke={
+                      hot > 0.02 ? withAlpha(accent, 0.3 + 0.7 * hot) : c.dash
+                    }
+                    strokeWidth={1}
+                    strokeDasharray={dzLive ? undefined : "5 5"}
+                  />
+                </svg>
+                <div
+                  style={{
+                    transform: `translateY(${-hot * 4}px)`,
+                  }}
+                >
+                  <Icon
+                    d={ICONS.upload}
+                    size={26}
+                    color={hot > 0.5 ? accent : c.muted}
+                  />
+                </div>
+                <div style={{ fontSize: 17, color: fg }}>
+                  {dzLive ? (
+                    <span style={{ color: accent }}>{releaseLabel}</span>
+                  ) : (
+                    <>
+                      {prompt} <span style={{ color: accent }}>browse</span>
+                    </>
+                  )}
+                </div>
+                <div
+                  style={{
+                    fontSize: 16,
+                    color: c.muted,
+                    opacity: 1 - shut,
+                    height: 22 * (1 - shut),
+                    overflow: "hidden",
+                  }}
+                >
+                  {hint}
+                </div>
+              </div>
+              <div
+                style={{
+                  position: "relative",
+                  margin: `12px ${PAD}px 0`,
+                  height: listH,
+                }}
+              >
+                {list.map((f, i) => {
+                  const p = progress[i];
+                  const done = frame >= doneAt[i];
+                  const tick = tween(frame, doneAt[i], 8, EASE.enter);
+                  const before = rowIn
+                    .slice(0, i)
+                    .reduce((a, b) => a + Math.min(1, b), 0);
+                  const fly = sp(BEAT.drop + i * 3, SPR.card);
+                  return (
+                    <div
+                      key={f.name}
+                      style={{
+                        position: "absolute",
+                        left: 0,
+                        right: 0,
+                        top: before * ROW_H,
+                        height: ROW_H,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 14,
+                        borderTop: i > 0 ? `1px solid ${c.line}` : "none",
+                        opacity: clamp01(rowIn[i] * 1.6),
+                      }}
+                    >
+                      <div style={{ opacity: clamp01((fly - 0.82) / 0.18) }}>
+                        <FilePreview
+                          type={fileType(f)}
+                          w={THUMB.w}
+                          h={THUMB.h}
+                          r={6}
+                          image={image}
+                        />
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "baseline",
+                            fontSize: 17,
+                            color: fg,
+                          }}
+                        >
                           <span
-                            key={col.i}
                             style={{
-                              ...(col.w ? { width: col.w } : { flex: 1 }),
-                              color: col.i === 0 ? c.text : c.muted,
-                              fontFamily:
-                                col.i === 2 ? geistMono.fontFamily : undefined,
-                              fontSize: col.i === 2 ? 15.5 : 17,
-                              fontVariantNumeric: "tabular-nums",
                               whiteSpace: "nowrap",
                               overflow: "hidden",
                               textOverflow: "ellipsis",
-                              paddingRight: col.i === 0 ? 16 : 0,
                             }}
                           >
-                            {col.i === 3 && fresh ? (
-                              <span style={{ color: accent }}>
-                                {r.cells[3]}
-                              </span>
-                            ) : (
-                              r.cells[col.i]
-                            )}
+                            {f.name}
                           </span>
-                        ))}
+                          <span
+                            style={{
+                              marginLeft: "auto",
+                              paddingLeft: 12,
+                              fontFamily: geistMono.fontFamily,
+                              fontSize: 15.5,
+                              color: c.muted,
+                              fontVariantNumeric: "tabular-nums",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            {done
+                              ? formatSize(f.size)
+                              : `${Math.round(p * 100)}%`}
+                          </span>
+                        </div>
+                        <div
+                          style={{
+                            height: 2,
+                            borderRadius: 1,
+                            background: c.track,
+                            marginTop: 10,
+                            overflow: "hidden",
+                            opacity: 1 - tick,
+                          }}
+                        >
+                          <div
+                            style={{
+                              width: `${p * 100}%`,
+                              height: "100%",
+                              background: accent,
+                            }}
+                          />
+                        </div>
+                      </div>
+                      <div
+                        style={{
+                          width: 22,
+                          display: "flex",
+                          justifyContent: "flex-end",
+                        }}
+                      >
+                        <svg
+                          width={22}
+                          height={22}
+                          viewBox="0 0 24 24"
+                          style={{ opacity: done ? 1 : 0 }}
+                          aria-hidden
+                        >
+                          <path
+                            d={ICONS.check}
+                            fill="none"
+                            stroke={accent}
+                            strokeWidth={1.75}
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeDasharray={20}
+                            strokeDashoffset={20 * (1 - tick)}
+                          />
+                        </svg>
                       </div>
                     </div>
                   );
                 })}
               </div>
-            </div>
-            <div
-              style={{
-                position: "absolute",
-                inset: 0,
-                background: c.overlay,
-                opacity: dim,
-              }}
-            />
-          </div>
-
-          <div
-            style={{
-              position: "absolute",
-              left: modalLeft,
-              top: modalTop,
-              width: MODAL_W,
-              height: modalH,
-              borderRadius: 20,
-              background: c.modal,
-              boxShadow: c.modalShadow,
-              overflow: "hidden",
-              opacity: modalOp * (1 - close),
-              transform: `translateY(${(1 - modalIn) * 18 + close * 10}px) scale(${(0.97 + 0.03 * modalIn) * (1 - 0.03 * close)})`,
-            }}
-          >
-            <div
-              style={{
-                height: HEADER_H,
-                display: "flex",
-                alignItems: "center",
-                padding: `0 ${PAD}px`,
-              }}
-            >
               <div
                 style={{
-                  fontSize: 21,
-                  letterSpacing: "-0.015em",
-                  color: c.text,
-                }}
-              >
-                {title}
-              </div>
-              <div style={{ marginLeft: "auto" }}>
-                <Icon d={ICONS.close} size={20} color={c.muted} />
-              </div>
-            </div>
-            <div
-              style={{
-                position: "relative",
-                margin: `0 ${PAD}px`,
-                height: dzH,
-                borderRadius: 12,
-                background: dzLive ? withAlpha(accent, 0.06) : c.zone,
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 10,
-              }}
-            >
-              <svg
-                width="100%"
-                height="100%"
-                style={{ position: "absolute", inset: 0 }}
-                aria-hidden
-              >
-                <rect
-                  x={0.5}
-                  y={0.5}
-                  width={MODAL_W - PAD * 2 - 1}
-                  height={dzH - 1}
-                  rx={11.5}
-                  fill="none"
-                  stroke={
-                    hot > 0.02 ? withAlpha(accent, 0.3 + 0.7 * hot) : c.dash
-                  }
-                  strokeWidth={1}
-                  strokeDasharray={dzLive ? undefined : "5 5"}
-                />
-              </svg>
-              <div
-                style={{
-                  transform: `translateY(${-hot * 4}px)`,
-                }}
-              >
-                <Icon
-                  d={ICONS.upload}
-                  size={26}
-                  color={hot > 0.5 ? accent : c.muted}
-                />
-              </div>
-              <div style={{ fontSize: 17, color: c.text }}>
-                {dzLive ? (
-                  <span style={{ color: accent }}>Release to upload</span>
-                ) : (
-                  <>
-                    Drop files here or{" "}
-                    <span style={{ color: accent }}>browse</span>
-                  </>
-                )}
-              </div>
-              <div
-                style={{
-                  fontSize: 16,
-                  color: c.muted,
-                  opacity: 1 - shut,
-                  height: 22 * (1 - shut),
-                  overflow: "hidden",
-                }}
-              >
-                PDF, PNG or CSV, up to 50 MB
-              </div>
-            </div>
-            <div
-              style={{
-                position: "relative",
-                margin: `12px ${PAD}px 0`,
-                height: listH,
-              }}
-            >
-              {list.map((f, i) => {
-                const p = progress[i];
-                const done = frame >= doneAt[i];
-                const tick = tween(frame, doneAt[i], 8, EASE.enter);
-                const before = rowIn
-                  .slice(0, i)
-                  .reduce((a, b) => a + Math.min(1, b), 0);
-                const fly = sp(BEAT.drop + i * 3, SPR.card);
-                return (
-                  <div
-                    key={f.name}
-                    style={{
-                      position: "absolute",
-                      left: 0,
-                      right: 0,
-                      top: before * ROW_H,
-                      height: ROW_H,
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 14,
-                      borderTop: i > 0 ? `1px solid ${c.line}` : "none",
-                      opacity: clamp01(rowIn[i] * 1.6),
-                    }}
-                  >
-                    <div style={{ opacity: clamp01((fly - 0.82) / 0.18) }}>
-                      <FilePreview
-                        type={fileType(f)}
-                        w={THUMB.w}
-                        h={THUMB.h}
-                        r={6}
-                        image={image}
-                      />
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "baseline",
-                          fontSize: 17,
-                          color: c.text,
-                        }}
-                      >
-                        <span
-                          style={{
-                            whiteSpace: "nowrap",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                          }}
-                        >
-                          {f.name}
-                        </span>
-                        <span
-                          style={{
-                            marginLeft: "auto",
-                            paddingLeft: 12,
-                            fontFamily: geistMono.fontFamily,
-                            fontSize: 15.5,
-                            color: c.muted,
-                            fontVariantNumeric: "tabular-nums",
-                            whiteSpace: "nowrap",
-                          }}
-                        >
-                          {done
-                            ? formatSize(f.size)
-                            : `${Math.round(p * 100)}%`}
-                        </span>
-                      </div>
-                      <div
-                        style={{
-                          height: 2,
-                          borderRadius: 1,
-                          background: c.track,
-                          marginTop: 10,
-                          overflow: "hidden",
-                          opacity: 1 - tick,
-                        }}
-                      >
-                        <div
-                          style={{
-                            width: `${p * 100}%`,
-                            height: "100%",
-                            background: accent,
-                          }}
-                        />
-                      </div>
-                    </div>
-                    <div
-                      style={{
-                        width: 22,
-                        display: "flex",
-                        justifyContent: "flex-end",
-                      }}
-                    >
-                      <svg
-                        width={22}
-                        height={22}
-                        viewBox="0 0 24 24"
-                        style={{ opacity: done ? 1 : 0 }}
-                        aria-hidden
-                      >
-                        <path
-                          d={ICONS.check}
-                          fill="none"
-                          stroke={accent}
-                          strokeWidth={1.75}
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeDasharray={20}
-                          strokeDashoffset={20 * (1 - tick)}
-                        />
-                      </svg>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-            <div
-              style={{
-                position: "absolute",
-                left: 0,
-                right: 0,
-                bottom: 0,
-                height: FOOTER_H,
-                borderTop: `1px solid ${c.line}`,
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-                padding: `0 ${PAD}px`,
-              }}
-            >
-              <span
-                style={{
-                  fontFamily: geistMono.fontFamily,
-                  fontSize: 15.5,
-                  color: c.muted,
-                  fontVariantNumeric: "tabular-nums",
-                  opacity: clamp01(rowIn[0] ?? 0),
-                }}
-              >
-                {n} files · {formatSize(total)}
-              </span>
-              <div
-                style={{
-                  marginLeft: "auto",
-                  height: 42,
-                  padding: "0 18px",
-                  borderRadius: 10,
+                  position: "absolute",
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  height: FOOTER_H,
+                  borderTop: `1px solid ${c.line}`,
                   display: "flex",
                   alignItems: "center",
-                  fontSize: 16,
-                  color: c.text,
-                  boxShadow: c.btnShadow,
+                  gap: 10,
+                  padding: `0 ${PAD}px`,
                 }}
               >
-                Cancel
-              </div>
-              <div
-                style={{
-                  position: "relative",
-                  width: btnW,
-                  height: 42,
-                  borderRadius: 10,
-                  overflow: "hidden",
-                  background: c.disabledBg,
-                  transform: `scale(${1 - 0.04 * press})`,
-                }}
-              >
-                <div
+                <span
                   style={{
-                    position: "absolute",
-                    inset: 0,
-                    background: accent,
-                    opacity: enabled,
-                    boxShadow: "inset 0 1px 0 rgba(255,255,255,0.16)",
-                  }}
-                />
-                <div
-                  style={{
-                    position: "absolute",
-                    inset: 0,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: 16,
-                    color: enabled > 0.5 ? "#FFFFFF" : c.disabledText,
+                    fontFamily: geistMono.fontFamily,
+                    fontSize: 15.5,
+                    color: c.muted,
+                    fontVariantNumeric: "tabular-nums",
+                    opacity: clamp01(rowIn[0] ?? 0),
                   }}
                 >
-                  Upload {n} files
+                  {n} files · {formatSize(total)}
+                </span>
+                <div
+                  style={{
+                    marginLeft: "auto",
+                    height: 42,
+                    padding: "0 18px",
+                    borderRadius: 10,
+                    display: "flex",
+                    alignItems: "center",
+                    fontSize: 16,
+                    color: fg,
+                    boxShadow: c.btnShadow,
+                  }}
+                >
+                  Cancel
+                </div>
+                <div
+                  style={{
+                    position: "relative",
+                    width: btnW,
+                    height: 42,
+                    borderRadius: 10,
+                    overflow: "hidden",
+                    background: c.disabledBg,
+                    transform: `scale(${1 - 0.04 * press})`,
+                  }}
+                >
+                  <div
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      background: accent,
+                      opacity: enabled,
+                      boxShadow: "inset 0 1px 0 rgba(255,255,255,0.16)",
+                    }}
+                  />
+                  <div
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: 16,
+                      color: enabled > 0.5 ? "#FFFFFF" : c.disabledText,
+                    }}
+                  >
+                    Upload {n} files
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          <div
-            style={{
-              position: "absolute",
-              left: SW / 2 - (tall ? 250 : 230),
-              top: tall ? SH - 150 : WIN.y + WIN.h - 92,
-              width: tall ? 500 : 460,
-              height: 60,
-              borderRadius: 14,
-              background: c.toastBg,
-              boxShadow: dark
-                ? "0 18px 40px -12px rgba(0,0,0,0.6)"
-                : "0 2px 6px rgba(24,24,27,0.1), 0 18px 40px -12px rgba(24,24,40,0.45)",
-              display: "flex",
-              alignItems: "center",
-              gap: 12,
-              padding: "0 18px",
-              boxSizing: "border-box",
-              opacity: toastOp,
-              transform: `translateY(${(1 - toastIn) * 28}px) scale(${0.97 + 0.03 * toastIn})`,
-            }}
-          >
-            <Icon d={ICONS.check} size={20} color={c.toastText} width={1.75} />
-            <span style={{ fontSize: 17, color: c.toastText }}>
-              {n} files added to {destination}
-            </span>
-            <span
-              style={{ marginLeft: "auto", fontSize: 16, color: c.toastMuted }}
-            >
-              View
-            </span>
-          </div>
-
-          {list.map((f, i) => {
-            const kk = i - (n - 1) / 2;
-            const appear = sp(BEAT.cursor + i * 2, SPR.card);
-            const rest = {
-              x: held.x + 44 + kk * 20,
-              y: held.y + 62 + Math.abs(kk) * 6,
-            };
-            const target = {
-              x: modalLeft + PAD + THUMB.w / 2,
-              y: rowsTop + i * ROW_H + ROW_H / 2,
-            };
-            const fly = sp(BEAT.drop + i * 3, SPR.card);
-            const x = rest.x + (target.x - rest.x) * fly;
-            const y = rest.y + (target.y - rest.y) * fly;
-            const s = (1 - fly * (1 - THUMB.w / CARD.w)) * (0.9 + 0.1 * appear);
-            const rot = kk * 8 * (1 - fly);
-            const o = clamp01(appear * 2) * (1 - clamp01((fly - 0.82) / 0.18));
-            if (o <= 0.001) return null;
-            return (
-              <div
-                key={f.name}
-                style={{
-                  position: "absolute",
-                  left: x - CARD.w / 2,
-                  top: y - CARD.h / 2,
-                  opacity: o,
-                  transform: `rotate(${rot}deg) scale(${s})`,
-                  borderRadius: 10,
-                  boxShadow: `0 1px 2px rgba(0,0,0,0.12), 0 ${16 * (1 - fly) + 4}px ${30 * (1 - fly) + 8}px -6px rgba(10,12,30,${0.4 * (1 - fly) + 0.1})`,
-                  zIndex: i === 1 ? 3 : 2,
-                }}
-              >
-                <FilePreview
-                  type={fileType(f)}
-                  w={CARD.w}
-                  h={CARD.h}
-                  r={10}
-                  image={image}
-                />
-              </div>
-            );
-          })}
-          {badge > 0.01 ? (
             <div
               style={{
                 position: "absolute",
-                left: cur.x + 92,
-                top: cur.y + 4,
-                width: 28,
-                height: 28,
+                left: SW / 2 - (tall ? 250 : 230),
+                top: tall ? SH - 150 : WIN.y + WIN.h - 92,
+                width: tall ? 500 : 460,
+                height: 60,
                 borderRadius: 14,
-                background: accent,
-                color: "#FFFFFF",
-                fontSize: 16,
-                fontFamily: geistMono.fontFamily,
+                background: c.toastBg,
+                boxShadow: dark
+                  ? "0 18px 40px -12px rgba(0,0,0,0.6)"
+                  : "0 2px 6px rgba(24,24,27,0.1), 0 18px 40px -12px rgba(24,24,40,0.45)",
                 display: "flex",
                 alignItems: "center",
-                justifyContent: "center",
-                boxShadow: "0 4px 10px -2px rgba(10,12,30,0.35)",
-                transform: `scale(${badge})`,
-                zIndex: 4,
+                gap: 12,
+                padding: "0 18px",
+                boxSizing: "border-box",
+                opacity: toastOp,
+                transform: `translateY(${(1 - toastIn) * 28}px) scale(${0.97 + 0.03 * toastIn})`,
               }}
             >
-              {n}
+              <Icon
+                d={ICONS.check}
+                size={20}
+                color={c.toastText}
+                width={1.75}
+              />
+              <span style={{ fontSize: 17, color: c.toastText }}>
+                {n} files added to {destination}
+              </span>
+              <span
+                style={{
+                  marginLeft: "auto",
+                  fontSize: 16,
+                  color: c.toastMuted,
+                }}
+              >
+                View
+              </span>
             </div>
-          ) : null}
-          <svg
-            width={26}
-            height={26}
-            viewBox="0 0 24 24"
-            style={{
-              position: "absolute",
-              left: cur.x,
-              top: cur.y,
-              overflow: "visible",
-              opacity: cursorOp,
-              transform: `scale(${1 - 0.04 * press})`,
-              transformOrigin: "2px 2px",
-              filter: "drop-shadow(0 2px 3px rgba(0,0,0,0.3))",
-              zIndex: 5,
-            }}
-            aria-hidden
-          >
-            <path
-              d={ARROW}
-              fill="#FFFFFF"
-              stroke="#111111"
-              strokeWidth={1.1}
-              strokeLinejoin="round"
-            />
-          </svg>
+
+            {list.map((f, i) => {
+              const kk = i - (n - 1) / 2;
+              const appear = sp(BEAT.cursor + i * 2, SPR.card);
+              const rest = {
+                x: held.x + 44 + kk * 20,
+                y: held.y + 62 + Math.abs(kk) * 6,
+              };
+              const target = {
+                x: modalLeft + PAD + THUMB.w / 2,
+                y: rowsTop + i * ROW_H + ROW_H / 2,
+              };
+              const fly = sp(BEAT.drop + i * 3, SPR.card);
+              const x = rest.x + (target.x - rest.x) * fly;
+              const y = rest.y + (target.y - rest.y) * fly;
+              const s =
+                (1 - fly * (1 - THUMB.w / CARD.w)) * (0.9 + 0.1 * appear);
+              const rot = kk * 8 * (1 - fly);
+              const o =
+                clamp01(appear * 2) * (1 - clamp01((fly - 0.82) / 0.18));
+              if (o <= 0.001) return null;
+              return (
+                <div
+                  key={f.name}
+                  style={{
+                    position: "absolute",
+                    left: x - CARD.w / 2,
+                    top: y - CARD.h / 2,
+                    opacity: o,
+                    transform: `rotate(${rot}deg) scale(${s})`,
+                    borderRadius: 10,
+                    boxShadow: `0 1px 2px rgba(0,0,0,0.12), 0 ${16 * (1 - fly) + 4}px ${30 * (1 - fly) + 8}px -6px rgba(10,12,30,${0.4 * (1 - fly) + 0.1})`,
+                    zIndex: i === 1 ? 3 : 2,
+                  }}
+                >
+                  <FilePreview
+                    type={fileType(f)}
+                    w={CARD.w}
+                    h={CARD.h}
+                    r={10}
+                    image={image}
+                  />
+                </div>
+              );
+            })}
+            {badge > 0.01 ? (
+              <div
+                style={{
+                  position: "absolute",
+                  left: cur.x + 92,
+                  top: cur.y + 4,
+                  width: 28,
+                  height: 28,
+                  borderRadius: 14,
+                  background: accent,
+                  color: "#FFFFFF",
+                  fontSize: 16,
+                  fontFamily: geistMono.fontFamily,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  boxShadow: "0 4px 10px -2px rgba(10,12,30,0.35)",
+                  transform: `scale(${badge})`,
+                  zIndex: 4,
+                }}
+              >
+                {n}
+              </div>
+            ) : null}
+            <svg
+              width={26}
+              height={26}
+              viewBox="0 0 24 24"
+              style={{
+                position: "absolute",
+                left: cur.x,
+                top: cur.y,
+                overflow: "visible",
+                opacity: cursorOp,
+                transform: `scale(${1 - 0.04 * press})`,
+                transformOrigin: "2px 2px",
+                filter: "drop-shadow(0 2px 3px rgba(0,0,0,0.3))",
+                zIndex: 5,
+              }}
+              aria-hidden
+            >
+              <path
+                d={ARROW}
+                fill="#FFFFFF"
+                stroke="#111111"
+                strokeWidth={1.1}
+                strokeLinejoin="round"
+              />
+            </svg>
+          </div>
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

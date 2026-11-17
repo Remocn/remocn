@@ -88,6 +88,24 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       description: "Small line above the headline",
     },
     {
+      name: "searchLabel",
+      type: "string",
+      default: "\"Where to?\"",
+      description: "Search field text in the built-in feed's header.",
+    },
+    {
+      name: "flickGap",
+      type: "number",
+      default: "46",
+      description: "Frames from one flick to the next when there are several stops.",
+    },
+    {
+      name: "motionBlur",
+      type: "boolean",
+      default: "true",
+      description: "Blur the screen along the scroll while it moves fast.",
+    },
+    {
       name: "children",
       type: "React.ReactNode",
       description: "Custom screen content, 393pt wide, scrolled like the screenshot",
@@ -97,6 +115,34 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       type: "string",
       default: "\"#3B5BFD\"",
       description: "Accent color for highlights, buttons and progress",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Solid fill in place of the gradient ground; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Figtree\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
     {
       name: "speed",

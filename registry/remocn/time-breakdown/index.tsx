@@ -2,6 +2,7 @@
 
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
 import { loadFont } from "@remotion/google-fonts/SchibstedGrotesk";
+import type React from "react";
 import { useId } from "react";
 import {
   AbsoluteFill,
@@ -84,6 +85,23 @@ export interface TimeBreakdownProps {
   afterLabel?: string;
   caption?: string;
   accent?: string;
+  /** Text color of the labels and figures; overrides the theme. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Schibsted Grotesk by default. */
+  fontFamily?: string;
+  /** Corner radius of the bar, in px at 720p. */
+  radius?: number;
+  /** Frames between characters of the hero figure as it rolls in. */
+  stagger?: number;
+  /** Replaces the remocn mark when `afterLabel` ends in "remocn". */
+  logo?: React.ReactNode;
+  grain?: boolean;
+  /** Size of the chart, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -171,18 +189,22 @@ function Hero({
   t,
   size,
   color,
+  fontFamily,
+  stagger,
 }: {
   text: string;
   t: number;
   size: number;
   color: string;
+  fontFamily: string;
+  stagger: number;
 }) {
   return (
     <div
       style={{
         display: "flex",
         whiteSpace: "pre",
-        fontFamily: sans,
+        fontFamily,
         fontWeight: 400,
         fontSize: size,
         lineHeight: 1,
@@ -192,7 +214,7 @@ function Hero({
       }}
     >
       {Array.from(text).map((ch, i) => {
-        const p = interpolate(t, [i * 3, i * 3 + 22], [0, 1], {
+        const p = interpolate(t, [i * stagger, i * stagger + 22], [0, 1], {
           ...CLAMP,
           easing: EASE_OUT,
         });
@@ -222,6 +244,22 @@ function Hero({
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function TimeBreakdown({
   before = DEFAULT_BEFORE,
   after = DEFAULT_AFTER,
@@ -230,13 +268,25 @@ export function TimeBreakdown({
   afterLabel = "With remocn",
   caption = "less time per video",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = sans,
+  radius: corner = 12,
+  stagger = 3,
+  logo,
+  grain = true,
+  scale = 1,
+  delay = 0,
   theme = "dark",
   speed = 1,
 }: TimeBreakdownProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height } = useVideoConfig();
   const u = Math.min(width / 1280, height / 720);
   const th = THEMES[theme];
+  const fg = ink ?? th.fg;
+  const transparent = background === "transparent";
+  const stage = transparent ? "transparent" : (background ?? th.bg);
   const clipId = `h${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
 
   const segs = before.slice(0, 5).map((b, i) => ({
@@ -258,7 +308,7 @@ export function TimeBreakdown({
   const barW = width - margin * 2;
   const barH = 84 * u;
   const barTop = height * 0.52;
-  const radius = 12 * u;
+  const radius = corner * u;
 
   const reveal = interpolate(t, [-4, 24], [0, 1], {
     ...CLAMP,
@@ -343,293 +393,308 @@ export function TimeBreakdown({
   const tick = 8 * u;
 
   return (
-    <AbsoluteFill style={{ background: th.bg, overflow: "hidden" }}>
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
       <AbsoluteFill
         style={{
           background: `radial-gradient(ellipse 70% 70% at 40% 45%, ${th.stage}, transparent 75%)`,
         }}
       />
-      <AbsoluteFill
-        style={{ transform: `scale(${drift})`, transformOrigin: "50% 55%" }}
-      >
-        <div
-          style={{
-            position: "absolute",
-            left: x0,
-            top: height * 0.2,
-            fontFamily: sans,
-            fontSize: 22 * u,
-            fontWeight: 500,
-            color: th.muted,
-            whiteSpace: "nowrap",
-            opacity: titleIn,
-            transform: `translateY(${(1 - titleIn) * 8 * u}px)`,
-          }}
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill
+          style={{ transform: `scale(${drift})`, transformOrigin: "50% 55%" }}
         >
-          {title}
-        </div>
+          <div
+            style={{
+              position: "absolute",
+              left: x0,
+              top: height * 0.2,
+              fontFamily,
+              fontSize: 22 * u,
+              fontWeight: 500,
+              color: th.muted,
+              whiteSpace: "nowrap",
+              opacity: titleIn,
+              transform: `translateY(${(1 - titleIn) * 8 * u}px)`,
+            }}
+          >
+            {title}
+          </div>
 
-        <div
-          style={{
-            position: "absolute",
-            left: x0,
-            top: barTop - 70 * u,
-            width: barW * 0.45,
-            height: 40 * u,
-            opacity: titleIn,
-          }}
-        >
-          {[beforeLabel, afterLabel].map((lbl, i) => {
-            const a =
-              i === 0
-                ? interpolate(sw, [0, 0.6], [1, 0], CLAMP)
-                : interpolate(sw, [0.35, 1], [0, 1], CLAMP);
-            const y = i === 0 ? -sw * 14 * u : (1 - sw) * 14 * u;
+          <div
+            style={{
+              position: "absolute",
+              left: x0,
+              top: barTop - 70 * u,
+              width: barW * 0.45,
+              height: 40 * u,
+              opacity: titleIn,
+            }}
+          >
+            {[beforeLabel, afterLabel].map((lbl, i) => {
+              const a =
+                i === 0
+                  ? interpolate(sw, [0, 0.6], [1, 0], CLAMP)
+                  : interpolate(sw, [0.35, 1], [0, 1], CLAMP);
+              const y = i === 0 ? -sw * 14 * u : (1 - sw) * 14 * u;
+              return (
+                <div
+                  key={lbl}
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    height: 40 * u,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10 * u,
+                    opacity: a,
+                    transform: `translateY(${y}px)`,
+                    filter: a < 0.98 ? `blur(${(1 - a) * 4 * u}px)` : undefined,
+                    fontFamily,
+                    fontSize: 30 * u,
+                    fontWeight: 400,
+                    letterSpacing: "-0.025em",
+                    color: fg,
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {i === 1 && BRAND_TAIL.test(lbl) ? (
+                    <>
+                      {lbl.replace(BRAND_TAIL, "").trim()}
+                      <span style={{ marginLeft: 2 * u, marginTop: 2 * u }}>
+                        {logo ?? <RemocnLogo fontSize={31 * u} color={fg} />}
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      {i === 1 ? (
+                        <span
+                          style={{
+                            width: 10 * u,
+                            height: 10 * u,
+                            borderRadius: "50%",
+                            background: accent,
+                          }}
+                        />
+                      ) : null}
+                      {lbl}
+                    </>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {freedW > 1 ? (
+            <div
+              style={{
+                position: "absolute",
+                left: freedX,
+                top: barTop,
+                width: freedW,
+                height: barH,
+                borderRadius: radius,
+                overflow: "hidden",
+                opacity: freedIn,
+                background: auroraFill(th.aurora, auroraDrift),
+                boxShadow: `inset 0 0 0 ${Math.max(1, u)}px ${th.auroraEdge}`,
+              }}
+            />
+          ) : null}
+
+          <svg
+            width={width}
+            height={height}
+            style={{ position: "absolute", inset: 0, overflow: "visible" }}
+            aria-hidden
+          >
+            <defs>
+              <clipPath id={`${clipId}c`}>
+                <rect
+                  x={x0}
+                  y={barTop - 4 * u}
+                  width={barW * reveal}
+                  height={barH + 8 * u}
+                />
+              </clipPath>
+            </defs>
+
+            <g clipPath={`url(#${clipId}c)`}>
+              {geom.map((g, i) => {
+                const tone = th.tones[Math.min(i, th.tones.length - 1)];
+                const split3 = interpolateColors(
+                  split,
+                  [0, 1],
+                  [th.base, tone],
+                );
+                const fill =
+                  i === focus
+                    ? interpolateColors(tint, [0, 1], [split3, accent])
+                    : split3;
+                const first = i === 0;
+                const last = i === geom.length - 1;
+                const rl = first ? radius : radius * split * 0.35;
+                const rr = last ? radius : radius * split * 0.35;
+                const w = Math.max(g.w, 2 * u);
+                const rlc = Math.min(rl, w / 2);
+                const rrc = Math.min(rr, w / 2);
+                const x = g.x;
+                const y = barTop;
+                const h = barH;
+                const d = [
+                  `M ${x + rlc} ${y}`,
+                  `H ${x + w - rrc}`,
+                  `Q ${x + w} ${y} ${x + w} ${y + rrc}`,
+                  `V ${y + h - rrc}`,
+                  `Q ${x + w} ${y + h} ${x + w - rrc} ${y + h}`,
+                  `H ${x + rlc}`,
+                  `Q ${x} ${y + h} ${x} ${y + h - rlc}`,
+                  `V ${y + rlc}`,
+                  `Q ${x} ${y} ${x + rlc} ${y}`,
+                  "Z",
+                ].join(" ");
+                return <path key={segs[i].label} d={d} fill={fill} />;
+              })}
+            </g>
+
+            {saved > 0 ? (
+              <g
+                opacity={bracketIn}
+                stroke={th.hair}
+                strokeWidth={Math.max(1, 1.25 * u)}
+              >
+                <line
+                  x1={finalFreedX}
+                  x2={finalFreedX + (x0 + barW - finalFreedX) * bracketIn}
+                  y1={bracketY}
+                  y2={bracketY}
+                />
+                <line
+                  x1={finalFreedX}
+                  x2={finalFreedX}
+                  y1={bracketY - tick}
+                  y2={bracketY + tick}
+                />
+                <line
+                  x1={x0 + barW}
+                  x2={x0 + barW}
+                  y1={bracketY - tick}
+                  y2={bracketY + tick}
+                  opacity={interpolate(bracketIn, [0.85, 1], [0, 1], CLAMP)}
+                />
+              </g>
+            ) : null}
+          </svg>
+
+          {geom.map((g, i) => {
+            const a = interpolate(
+              t,
+              [T_SPLIT + 6 + i * 4, T_SPLIT + 26 + i * 4],
+              [0, 1],
+              {
+                ...CLAMP,
+                easing: EASE_OUT,
+              },
+            );
+            const countIn = interpolate(
+              t,
+              [T_SPLIT + 6 + i * 4, T_SPLIT + 34 + i * 4],
+              [0, 1],
+              { ...CLAMP, easing: Easing.bezier(0.22, 1, 0.36, 1) },
+            );
+            const isFocus = i === focus;
+            const pct = Math.round((g.v / totalBefore) * 100 * countIn);
             return (
               <div
-                key={lbl}
+                key={segs[i].label}
                 style={{
                   position: "absolute",
-                  top: 0,
-                  left: 0,
-                  height: 40 * u,
+                  left: labelX[i],
+                  top: barTop + barH + 20 * u,
                   display: "flex",
-                  alignItems: "center",
-                  gap: 10 * u,
+                  flexDirection: "column",
+                  gap: 2 * u,
                   opacity: a,
-                  transform: `translateY(${y}px)`,
-                  filter: a < 0.98 ? `blur(${(1 - a) * 4 * u}px)` : undefined,
-                  fontFamily: sans,
-                  fontSize: 30 * u,
-                  fontWeight: 400,
-                  letterSpacing: "-0.025em",
-                  color: th.fg,
+                  transform: `translateY(${(1 - a) * 10 * u}px)`,
                   whiteSpace: "nowrap",
                 }}
               >
-                {i === 1 && BRAND_TAIL.test(lbl) ? (
-                  <>
-                    {lbl.replace(BRAND_TAIL, "").trim()}
-                    <span style={{ marginLeft: 2 * u, marginTop: 2 * u }}>
-                      <RemocnLogo fontSize={31 * u} color={th.fg} />
-                    </span>
-                  </>
-                ) : (
-                  <>
-                    {i === 1 ? (
-                      <span
-                        style={{
-                          width: 10 * u,
-                          height: 10 * u,
-                          borderRadius: "50%",
-                          background: accent,
-                        }}
-                      />
-                    ) : null}
-                    {lbl}
-                  </>
-                )}
+                <span
+                  style={{
+                    fontFamily,
+                    fontSize: 18 * u,
+                    fontWeight: 500,
+                    color: isFocus
+                      ? interpolateColors(tint, [0, 1], [th.muted, accent])
+                      : th.muted,
+                  }}
+                >
+                  {segs[i].label}
+                </span>
+                <span
+                  style={{
+                    fontFamily,
+                    fontSize: 42 * u,
+                    fontWeight: 400,
+                    letterSpacing: "-0.035em",
+                    fontVariantNumeric: "tabular-nums",
+                    color: fg,
+                  }}
+                >
+                  {pct}%
+                </span>
               </div>
             );
           })}
-        </div>
-
-        {freedW > 1 ? (
-          <div
-            style={{
-              position: "absolute",
-              left: freedX,
-              top: barTop,
-              width: freedW,
-              height: barH,
-              borderRadius: radius,
-              overflow: "hidden",
-              opacity: freedIn,
-              background: auroraFill(th.aurora, auroraDrift),
-              boxShadow: `inset 0 0 0 ${Math.max(1, u)}px ${th.auroraEdge}`,
-            }}
-          />
-        ) : null}
-
-        <svg
-          width={width}
-          height={height}
-          style={{ position: "absolute", inset: 0, overflow: "visible" }}
-          aria-hidden
-        >
-          <defs>
-            <clipPath id={`${clipId}c`}>
-              <rect
-                x={x0}
-                y={barTop - 4 * u}
-                width={barW * reveal}
-                height={barH + 8 * u}
-              />
-            </clipPath>
-          </defs>
-
-          <g clipPath={`url(#${clipId}c)`}>
-            {geom.map((g, i) => {
-              const tone = th.tones[Math.min(i, th.tones.length - 1)];
-              const split3 = interpolateColors(split, [0, 1], [th.base, tone]);
-              const fill =
-                i === focus
-                  ? interpolateColors(tint, [0, 1], [split3, accent])
-                  : split3;
-              const first = i === 0;
-              const last = i === geom.length - 1;
-              const rl = first ? radius : radius * split * 0.35;
-              const rr = last ? radius : radius * split * 0.35;
-              const w = Math.max(g.w, 2 * u);
-              const rlc = Math.min(rl, w / 2);
-              const rrc = Math.min(rr, w / 2);
-              const x = g.x;
-              const y = barTop;
-              const h = barH;
-              const d = [
-                `M ${x + rlc} ${y}`,
-                `H ${x + w - rrc}`,
-                `Q ${x + w} ${y} ${x + w} ${y + rrc}`,
-                `V ${y + h - rrc}`,
-                `Q ${x + w} ${y + h} ${x + w - rrc} ${y + h}`,
-                `H ${x + rlc}`,
-                `Q ${x} ${y + h} ${x} ${y + h - rlc}`,
-                `V ${y + rlc}`,
-                `Q ${x} ${y} ${x + rlc} ${y}`,
-                "Z",
-              ].join(" ");
-              return <path key={segs[i].label} d={d} fill={fill} />;
-            })}
-          </g>
 
           {saved > 0 ? (
-            <g
-              opacity={bracketIn}
-              stroke={th.hair}
-              strokeWidth={Math.max(1, 1.25 * u)}
-            >
-              <line
-                x1={finalFreedX}
-                x2={finalFreedX + (x0 + barW - finalFreedX) * bracketIn}
-                y1={bracketY}
-                y2={bracketY}
-              />
-              <line
-                x1={finalFreedX}
-                x2={finalFreedX}
-                y1={bracketY - tick}
-                y2={bracketY + tick}
-              />
-              <line
-                x1={x0 + barW}
-                x2={x0 + barW}
-                y1={bracketY - tick}
-                y2={bracketY + tick}
-                opacity={interpolate(bracketIn, [0.85, 1], [0, 1], CLAMP)}
-              />
-            </g>
-          ) : null}
-        </svg>
-
-        {geom.map((g, i) => {
-          const a = interpolate(
-            t,
-            [T_SPLIT + 6 + i * 4, T_SPLIT + 26 + i * 4],
-            [0, 1],
-            {
-              ...CLAMP,
-              easing: EASE_OUT,
-            },
-          );
-          const countIn = interpolate(
-            t,
-            [T_SPLIT + 6 + i * 4, T_SPLIT + 34 + i * 4],
-            [0, 1],
-            { ...CLAMP, easing: Easing.bezier(0.22, 1, 0.36, 1) },
-          );
-          const isFocus = i === focus;
-          const pct = Math.round((g.v / totalBefore) * 100 * countIn);
-          return (
             <div
-              key={segs[i].label}
               style={{
                 position: "absolute",
-                left: labelX[i],
-                top: barTop + barH + 20 * u,
+                left: finalFreedX - heroSize * 0.04,
+                top: bracketY - 22 * u,
+                transform: "translateY(-100%)",
                 display: "flex",
-                flexDirection: "column",
-                gap: 2 * u,
-                opacity: a,
-                transform: `translateY(${(1 - a) * 10 * u}px)`,
-                whiteSpace: "nowrap",
+                alignItems: "baseline",
+                gap: 18 * u,
               }}
             >
+              <Hero
+                text={`${saved}%`}
+                t={heroT}
+                size={heroSize}
+                color={fg}
+                fontFamily={fontFamily}
+                stagger={stagger}
+              />
               <span
                 style={{
-                  fontFamily: sans,
-                  fontSize: 18 * u,
-                  fontWeight: 500,
-                  color: isFocus
-                    ? interpolateColors(tint, [0, 1], [th.muted, accent])
-                    : th.muted,
-                }}
-              >
-                {segs[i].label}
-              </span>
-              <span
-                style={{
-                  fontFamily: sans,
-                  fontSize: 42 * u,
+                  fontFamily,
+                  fontSize: 32 * u,
                   fontWeight: 400,
-                  letterSpacing: "-0.035em",
-                  fontVariantNumeric: "tabular-nums",
-                  color: th.fg,
+                  letterSpacing: "-0.02em",
+                  color: th.muted,
+                  whiteSpace: "nowrap",
+                  opacity: capIn,
+                  transform: `translateY(${(1 - capIn) * 10 * u}px)`,
                 }}
               >
-                {pct}%
+                {caption}
               </span>
             </div>
-          );
-        })}
+          ) : null}
+        </AbsoluteFill>
+      </ScaleLayer>
 
-        {saved > 0 ? (
-          <div
-            style={{
-              position: "absolute",
-              left: finalFreedX - heroSize * 0.04,
-              top: bracketY - 22 * u,
-              transform: "translateY(-100%)",
-              display: "flex",
-              alignItems: "baseline",
-              gap: 18 * u,
-            }}
-          >
-            <Hero text={`${saved}%`} t={heroT} size={heroSize} color={th.fg} />
-            <span
-              style={{
-                fontFamily: sans,
-                fontSize: 32 * u,
-                fontWeight: 400,
-                letterSpacing: "-0.02em",
-                color: th.muted,
-                whiteSpace: "nowrap",
-                opacity: capIn,
-                transform: `translateY(${(1 - capIn) * 10 * u}px)`,
-              }}
-            >
-              {caption}
-            </span>
-          </div>
-        ) : null}
-      </AbsoluteFill>
-
-      <AbsoluteFill
-        style={{
-          background: `radial-gradient(ellipse 85% 85% at 50% 50%, transparent 60%, ${th.bg} 100%)`,
-          opacity: 0.55,
-        }}
-      />
-      <Grain opacity={th.grain} />
+      {transparent ? null : (
+        <AbsoluteFill
+          style={{
+            background: `radial-gradient(ellipse 85% 85% at 50% 50%, transparent 60%, ${stage} 100%)`,
+            opacity: 0.55,
+          }}
+        />
+      )}
+      {grain ? <Grain opacity={th.grain} /> : null}
     </AbsoluteFill>
   );
 }

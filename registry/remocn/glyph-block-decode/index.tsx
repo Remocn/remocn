@@ -31,6 +31,18 @@ export interface GlyphBlockDecodeProps {
   blockColors?: string[];
   accent?: string;
   ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the name and URL. Load it yourself; Geist by default. */
+  fontFamily?: string;
+  /** Weight of the name. */
+  fontWeight?: number;
+  /** The last URL block stretches into an underline. */
+  underline?: boolean;
+  /** Size of the text and blocks, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
@@ -122,21 +134,21 @@ const CARD = { mass: 0.8, damping: 18, stiffness: 160 };
 
 type Measure = (s: string, weight: number) => number;
 
-function buildMeasure(_version: number): Measure {
+function buildMeasure(_version: number, family: string): Measure {
   const ctx = document.createElement("canvas").getContext("2d");
   const cache: Record<string, number> = {};
   return (s: string, weight: number) => {
     const k = `${weight}|${s}`;
     if (cache[k] === undefined) {
       if (!ctx) return s.length * 0.55;
-      ctx.font = `${weight} ${FONT_PX}px "${geist.fontFamily}"`;
+      ctx.font = `${weight} ${FONT_PX}px "${family}"`;
       cache[k] = ctx.measureText(s).width / FONT_PX;
     }
     return cache[k];
   };
 }
 
-function useMeasure() {
+function useMeasure(family: string, weight: number) {
   const [version, setVersion] = useState(0);
   const [handle] = useState(() => delayRender("glyph-block-decode: fonts"));
   const released = useRef(false);
@@ -150,6 +162,8 @@ function useMeasure() {
       geist.waitUntilDone(),
       document.fonts.load(`400 100px "${geist.fontFamily}"`),
       document.fonts.load(`300 100px "${geist.fontFamily}"`),
+      document.fonts.load(`${weight} 100px "${family}"`),
+      document.fonts.load(`300 100px "${family}"`),
     ])
       .catch(() => undefined)
       .then(() => {
@@ -163,8 +177,8 @@ function useMeasure() {
       live = false;
       document.fonts.removeEventListener("loadingdone", bump);
     };
-  }, [handle]);
-  return useMemo(() => buildMeasure(version), [version]);
+  }, [handle, family, weight]);
+  return useMemo(() => buildMeasure(version, family), [version, family]);
 }
 
 const resolveSrc = (src: string) =>
@@ -246,6 +260,22 @@ function ChipIcon({
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function GlyphBlockDecode({
   name = "Remocn Studio",
   url = "remocn.dev/studio",
@@ -253,13 +283,19 @@ export function GlyphBlockDecode({
   blockColors,
   accent,
   ink,
+  background,
+  fontFamily = geist.fontFamily,
+  fontWeight = 400,
+  underline = true,
+  scale = 1,
+  delay = 0,
   theme = "dark",
   ground,
   groundParams,
   speed = 1,
   seed = 7,
 }: GlyphBlockDecodeProps) {
-  const rawFrame = useCurrentFrame();
+  const rawFrame = Math.max(0, useCurrentFrame() - delay);
   const frame = rawFrame * speed;
   const { width: W, height: H, fps, durationInFrames } = useVideoConfig();
   const c = THEMES[theme];
@@ -268,9 +304,14 @@ export function GlyphBlockDecode({
   const palette = blockColors ?? [hi, ...c.blocks.slice(1)];
   const preset = ground ?? (groundParams ? undefined : c.ground);
   const gParams = groundParams ?? (ground ? undefined : c.groundParams);
-  const bg = gshParams(preset, gParams).background;
+  const bg =
+    background === undefined
+      ? gshParams(preset, gParams).background
+      : background === "transparent"
+        ? undefined
+        : background;
   const portrait = H > W * 1.1;
-  const m = useMeasure();
+  const m = useMeasure(fontFamily, fontWeight);
   const pics = (images.length > 0 ? images : DEFAULT_IMAGES).map(resolveSrc);
 
   let content: ReactNode = <div />;
@@ -279,7 +320,7 @@ export function GlyphBlockDecode({
     const lineEm = (s: string, w: number, tr: number) =>
       m(s, w) + tr * Math.max(0, Array.from(s).length - 1);
     const widest = Math.max(
-      ...nameLines.map((l) => lineEm(l, 400, NAME_TRACK)),
+      ...nameLines.map((l) => lineEm(l, fontWeight, NAME_TRACK)),
     );
     const nameSize = Math.min(
       ((portrait ? 0.82 : 0.62) * W) / widest,
@@ -331,7 +372,14 @@ export function GlyphBlockDecode({
       lineRows.push({ start, end: chars.length, url: isUrl, size });
     };
     nameLines.forEach((l, li) => {
-      place(l, top + nameLH * (li + 0.5), nameSize, 400, NAME_TRACK, false);
+      place(
+        l,
+        top + nameLH * (li + 0.5),
+        nameSize,
+        fontWeight,
+        NAME_TRACK,
+        false,
+      );
     });
     const urlY = top + nameLines.length * nameLH + gap + urlSize / 2;
     place(url, urlY, urlSize, 300, URL_TRACK, true);
@@ -432,7 +480,7 @@ export function GlyphBlockDecode({
     };
     schedule(false, BEAT.nameIn, BEAT.nameOut, BEAT.nameDone);
     const lastUrl = schedule(true, BEAT.urlIn, BEAT.urlOut, BEAT.urlDone);
-    if (lastUrl) {
+    if (lastUrl && underline) {
       const t = tiles[lastUrl.tile];
       t.kind = "color";
       t.color = hi;
@@ -640,7 +688,7 @@ export function GlyphBlockDecode({
             display: "flex",
             alignItems: "center",
             whiteSpace: "pre",
-            fontFamily: geist.fontFamily,
+            fontFamily,
             fontWeight: ch.weight,
             color: ch.url && !flicking ? c.muted : color,
             opacity: flicking ? 0.9 : 1,
@@ -672,18 +720,20 @@ export function GlyphBlockDecode({
 
   return (
     <AbsoluteFill style={{ background: bg, overflow: "hidden" }}>
-      <GshGround
-        preset={preset}
-        params={gParams}
-        timeOffset={c.groundOffset}
-        timeScale={0.5}
-      />
+      {background === undefined ? (
+        <GshGround
+          preset={preset}
+          params={gParams}
+          timeOffset={c.groundOffset}
+          timeScale={0.5}
+        />
+      ) : null}
       <AbsoluteFill
         style={{
           background: `radial-gradient(${portrait ? "95% 50%" : "70% 60%"} at 50% 50%, rgba(${c.scrim},${c.scrimAlpha}) 0%, rgba(${c.scrim},0) 100%)`,
         }}
       />
-      {content}
+      <ScaleLayer scale={scale}>{content}</ScaleLayer>
     </AbsoluteFill>
   );
 }

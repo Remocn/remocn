@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const liquidWordConfig: ComponentConfig = {
   componentName: "LiquidWord",
@@ -13,11 +19,6 @@ export const liquidWordConfig: ComponentConfig = {
       },
       description: "Theme",
     },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
-    },
     from: {
       type: "text-content",
       default: "draft",
@@ -28,6 +29,30 @@ export const liquidWordConfig: ComponentConfig = {
       default: "shipped",
       description: "To",
     },
+    meltAt: {
+      type: "number",
+      default: 12,
+      min: 0,
+      max: 60,
+      step: 1,
+      description: "Melt at (frame)",
+      hiddenFromList: false,
+    },
+    stagger: {
+      type: "number",
+      default: 3,
+      min: 0,
+      max: 12,
+      step: 1,
+      description: "Letter stagger",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Sora", grain: true }),
     speed: {
       type: "number",
       default: 1,

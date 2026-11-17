@@ -2,6 +2,7 @@
 
 import { loadFont as loadGeist } from "@remotion/google-fonts/Geist";
 import { loadFont as loadGeistMono } from "@remotion/google-fonts/GeistMono";
+import type React from "react";
 import {
   AbsoluteFill,
   Easing,
@@ -69,6 +70,23 @@ export interface GlowBornCardProps {
   branch?: string;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /** Primary button label before the press. */
+  actionLabel?: string;
+  /** Primary button label once the import is done. */
+  doneLabel?: string;
+  /** Secondary button label. */
+  cancelLabel?: string;
+  /** Text color of the headline; overrides the theme ink. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the headline and card. Load it yourself; Geist by default. */
+  fontFamily?: string;
+  /** Size of the headline and card, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  speed?: number;
 }
 
 const LIGHT_GROUND: Partial<GradientParams> = {
@@ -141,6 +159,22 @@ function RepoIcon({ size, color }: { size: number; color: string }) {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function GlowBornCard({
   theme = "dark",
   accent = "#45f0d6",
@@ -154,8 +188,17 @@ export function GlowBornCard({
   branch = "main · 214 commits · 3h ago",
   ground,
   groundParams,
+  actionLabel = "Import",
+  doneLabel = "Imported",
+  cancelLabel = "Cancel",
+  ink: inkProp,
+  background,
+  fontFamily = geist.fontFamily,
+  scale = 1,
+  delay = 0,
+  speed = 1,
 }: GlowBornCardProps) {
-  const frame = useCurrentFrame();
+  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, fps } = useVideoConfig();
   const dark = theme === "dark";
   const portrait = height > width * 1.2;
@@ -164,7 +207,7 @@ export function GlowBornCard({
   const sc = width / stageW;
   const u = portrait ? 2.1 : 1.12;
 
-  const ink = dark ? "#f3f6ff" : "#10131c";
+  const ink = inkProp ?? (dark ? "#f3f6ff" : "#10131c");
   const cardInk = dark ? "#eef1f8" : "#141822";
   const muted = dark ? "rgba(226,232,248,0.52)" : "rgba(20,24,34,0.5)";
   const hair = dark ? "rgba(255,255,255,0.1)" : "rgba(20,24,48,0.1)";
@@ -282,7 +325,7 @@ export function GlowBornCard({
           overflow: "hidden",
           display: "flex",
           flexDirection: "column",
-          fontFamily: geist.fontFamily,
+          fontFamily,
           letterSpacing: "-0.005em",
           lineHeight: 1.3,
         }}
@@ -374,7 +417,7 @@ export function GlowBornCard({
               color: cardInk,
             }}
           >
-            Cancel
+            {cancelLabel}
           </div>
           <div
             style={{
@@ -418,7 +461,7 @@ export function GlowBornCard({
                 />
               </svg>
             </div>
-            {doneIn > 0.5 ? "Imported" : "Import"}
+            {doneIn > 0.5 ? doneLabel : actionLabel}
           </div>
         </div>
       </div>
@@ -478,74 +521,86 @@ export function GlowBornCard({
   );
 
   return (
-    <AbsoluteFill style={{ fontFamily: geist.fontFamily, overflow: "hidden" }}>
-      <GshGround
-        preset={resolvedGround}
-        params={resolvedParams}
-        timeOffset={4}
-        timeScale={0.5}
-      />
-      <AbsoluteFill
-        style={{
-          background: dark
-            ? "radial-gradient(60% 50% at 50% 50%, rgba(3,7,18,0.35) 0%, rgba(3,7,18,0) 100%)"
-            : "radial-gradient(60% 50% at 50% 50%, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 100%)",
-        }}
-      />
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          top: 0,
-          width: stageW,
-          height: stageH,
-          transform: `scale(${sc})`,
-          transformOrigin: "0 0",
-          perspective: 1800,
-        }}
-      >
+    <AbsoluteFill style={{ fontFamily, overflow: "hidden" }}>
+      {background === undefined ? (
+        <>
+          <GshGround
+            preset={resolvedGround}
+            params={resolvedParams}
+            timeOffset={4}
+            timeScale={0.5}
+          />
+          <AbsoluteFill
+            style={{
+              background: dark
+                ? "radial-gradient(60% 50% at 50% 50%, rgba(3,7,18,0.35) 0%, rgba(3,7,18,0) 100%)"
+                : "radial-gradient(60% 50% at 50% 50%, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 100%)",
+            }}
+          />
+        </>
+      ) : (
+        <AbsoluteFill
+          style={{
+            background: background === "transparent" ? undefined : background,
+          }}
+        />
+      )}
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            inset: 0,
-            display: "flex",
-            flexDirection: portrait ? "column" : "row",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize,
-            fontWeight: 400,
-            letterSpacing: "-0.03em",
-            lineHeight: 1.1,
-            transform: `scale(${push}) rotateX(${portrait ? tilt : 0}deg) rotateY(${portrait ? 0 : -tilt}deg)`,
-            transformOrigin: "50% 50%",
+            left: 0,
+            top: 0,
+            width: stageW,
+            height: stageH,
+            transform: `scale(${sc})`,
+            transformOrigin: "0 0",
+            perspective: 1800,
           }}
         >
-          <Words
-            text={before}
-            frame={frame}
-            start={B.words}
-            size={fontSize}
-            color={ink}
-          />
           <div
             style={{
-              position: "relative",
-              width: portrait ? 0 : gap,
-              height: portrait ? gap : 0,
-              flexShrink: 0,
+              position: "absolute",
+              inset: 0,
+              display: "flex",
+              flexDirection: portrait ? "column" : "row",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize,
+              fontWeight: 400,
+              letterSpacing: "-0.03em",
+              lineHeight: 1.1,
+              transform: `scale(${push}) rotateX(${portrait ? tilt : 0}deg) rotateY(${portrait ? 0 : -tilt}deg)`,
+              transformOrigin: "50% 50%",
             }}
           >
-            {frame >= B.ignite ? card : null}
+            <Words
+              text={before}
+              frame={frame}
+              start={B.words}
+              size={fontSize}
+              color={ink}
+            />
+            <div
+              style={{
+                position: "relative",
+                width: portrait ? 0 : gap,
+                height: portrait ? gap : 0,
+                flexShrink: 0,
+              }}
+            >
+              {frame >= B.ignite ? card : null}
+            </div>
+            <Words
+              text={after}
+              frame={frame}
+              start={B.words + 10}
+              size={fontSize}
+              color={ink}
+            />
           </div>
-          <Words
-            text={after}
-            frame={frame}
-            start={B.words + 10}
-            size={fontSize}
-            color={ink}
-          />
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

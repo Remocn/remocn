@@ -1,4 +1,11 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const tableFilterConfig: ComponentConfig = {
   componentName: "TableFilter",
@@ -12,11 +19,6 @@ export const tableFilterConfig: ComponentConfig = {
         dark: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     title: {
       type: "text-content",
@@ -43,6 +45,16 @@ export const tableFilterConfig: ComponentConfig = {
       default: "remocn",
       description: "Workspace",
     },
+    filterLabel: {
+      type: "text-content",
+      default: "Filter",
+      description: "Filter button",
+    },
+    selectedLabel: {
+      type: "text-content",
+      default: "selected",
+      description: "Selected label",
+    },
     selectCount: {
       type: "number",
       default: 3,
@@ -52,6 +64,13 @@ export const tableFilterConfig: ComponentConfig = {
       description: "Select count",
       hiddenFromList: false,
     },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ground: groundControl(),
+    ...sceneControls({ font: "Onest" }),
     speed: {
       type: "number",
       default: 1,

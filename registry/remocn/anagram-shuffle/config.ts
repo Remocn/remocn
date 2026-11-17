@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const anagramShuffleConfig: ComponentConfig = {
   componentName: "AnagramShuffle",
@@ -13,11 +19,6 @@ export const anagramShuffleConfig: ComponentConfig = {
       },
       description: "Theme",
     },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
-    },
     from: {
       type: "text-content",
       default: "listen",
@@ -28,6 +29,30 @@ export const anagramShuffleConfig: ComponentConfig = {
       default: "silent",
       description: "To",
     },
+    stagger: {
+      type: "number",
+      default: 3,
+      min: 0,
+      max: 12,
+      step: 1,
+      description: "Letter stagger",
+      hiddenFromList: false,
+    },
+    travel: {
+      type: "number",
+      default: 30,
+      min: 10,
+      max: 60,
+      step: 1,
+      description: "Travel (frames)",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ grain: true }),
     speed: {
       type: "number",
       default: 1,

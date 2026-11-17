@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const versionHeroConfig: ComponentConfig = {
   componentName: "VersionHero",
@@ -33,6 +39,25 @@ export const versionHeroConfig: ComponentConfig = {
       default: "Now available",
       description: "Label",
     },
+    depth: {
+      type: "number",
+      default: 0.2,
+      min: 0,
+      max: 0.5,
+      step: 0.01,
+      description: "Depth",
+      hiddenFromList: false,
+    },
+    stagger: {
+      type: "number",
+      default: 2.2,
+      min: 0,
+      max: 6,
+      step: 0.1,
+      description: "Slice stagger",
+      hiddenFromList: false,
+    },
+    ...sceneControls({ font: "Bricolage Grotesque", grain: true }),
     speed: {
       type: "number",
       default: 1,

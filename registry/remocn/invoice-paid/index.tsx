@@ -16,7 +16,7 @@ import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
 
-const { fontFamily } = loadFont("normal", {
+const geist = loadFont("normal", {
   weights: ["300", "400"],
   subsets: ["latin"],
 });
@@ -50,6 +50,22 @@ export interface InvoicePaidProps {
   currency?: string;
   theme?: "light" | "dark";
   accent?: string;
+  /** Text color of the panel and notification; overrides the theme. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Geist by default. */
+  fontFamily?: string;
+  /** Label of the button the cursor clicks. */
+  sendLabel?: string;
+  /** Title of the payout notification. */
+  payoutTitle?: string;
+  /** Note after the paid date in the panel. */
+  paidNote?: string;
+  /** Size of the invoice and panel, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
@@ -365,7 +381,15 @@ function StatusPill({
   );
 }
 
-function Stamp({ p, date }: { p: number; date: string }) {
+function Stamp({
+  p,
+  date,
+  fontFamily,
+}: {
+  p: number;
+  date: string;
+  fontFamily: string;
+}) {
   const id = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const ink = "#12814E";
   return (
@@ -455,6 +479,7 @@ function InvoiceDoc({
   lines,
   currency,
   stampDate,
+  fontFamily,
 }: {
   frame: number;
   fps: number;
@@ -467,6 +492,7 @@ function InvoiceDoc({
   lines: InvoiceLine[];
   currency: string;
   stampDate: string;
+  fontFamily: string;
 }) {
   const total = lines.reduce((s, l) => s + l.qty * l.unit, 0);
   const ink = "#17181B";
@@ -682,10 +708,30 @@ function InvoiceDoc({
             filter: `drop-shadow(0 ${Math.max(0, 1 - land) * 18}px ${Math.max(0, 1 - land) * 14}px rgba(0,0,0,${0.18 * Math.max(0, 1 - land)}))`,
           }}
         >
-          <Stamp p={Math.min(1, land)} date={stampDate} />
+          <Stamp
+            p={Math.min(1, land)}
+            date={stampDate}
+            fontFamily={fontFamily}
+          />
         </div>
       ) : null}
     </div>
+  );
+}
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
   );
 }
 
@@ -705,17 +751,26 @@ export function InvoicePaid({
   currency = "$",
   theme = "light",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = geist.fontFamily,
+  sendLabel = "Send invoice",
+  payoutTitle = "Payout on the way",
+  paidNote = "11 days early",
+  scale = 1,
+  delay = 0,
   speed = 1,
   ground,
   groundParams,
 }: InvoicePaidProps) {
-  const frame = useCurrentFrame() * speed;
+  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, fps } = useVideoConfig();
   const tall = height > width;
   const DW = tall ? 720 : 1280;
   const DH = tall ? 1280 : 720;
   const u = Math.min(width / DW, height / DH);
   const pal = palette(theme);
+  const fg = ink ?? pal.text;
   const total = lines.reduce((s, l) => s + l.qty * l.unit, 0);
   const paidDay = events[3]?.time.split(",")[0] ?? "";
 
@@ -782,396 +837,405 @@ export function InvoicePaid({
         WebkitFontSmoothing: "antialiased",
       }}
     >
-      <GshGround
-        preset={ground ?? (pal.dark ? "riptide" : "paper-crease")}
-        params={groundParams}
-        timeOffset={pal.dark ? 2 : 6}
-        timeScale={0.3}
-      />
-      <AbsoluteFill style={{ background: pal.scrim }} />
-      <div
-        style={{
-          position: "absolute",
-          left: (width - DW * u) / 2,
-          top: (height - DH * u) / 2,
-          width: DW,
-          height: DH,
-          transformOrigin: "0 0",
-          transform: `scale(${u})`,
-        }}
-      >
-        <div
-          style={{
-            position: "absolute",
-            left: doc.x,
-            top: doc.y,
-            width: DOC.w,
-            height: DOC.h,
-            transformOrigin: "0 0",
-            borderRadius: 6,
-            boxShadow: pal.docShadow,
-            opacity: tween(frame, 0, 10, ENTER2),
-            transform: `translateY(${(1 - docIn) * 60}px) scale(${docScale * (0.97 + 0.03 * docIn)}) rotate(${(1 - docIn) * -2}deg)`,
-          }}
-        >
-          <InvoiceDoc
-            frame={frame}
-            fps={fps}
-            sender={sender}
-            customer={customer}
-            customerAddress={customerAddress}
-            number={number}
-            issued={issued}
-            due={due}
-            lines={lines}
-            currency={currency}
-            stampDate={paidDay.toUpperCase() || "PAID"}
+      {background === undefined ? (
+        <>
+          <GshGround
+            preset={ground ?? (pal.dark ? "riptide" : "paper-crease")}
+            params={groundParams}
+            timeOffset={pal.dark ? 2 : 6}
+            timeScale={0.3}
           />
-        </div>
-
+          <AbsoluteFill style={{ background: pal.scrim }} />
+        </>
+      ) : (
+        <AbsoluteFill
+          style={{
+            background: background === "transparent" ? undefined : background,
+          }}
+        />
+      )}
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            left: panel.x,
-            top: panel.y,
-            width: panelW,
-            height: PANEL_H,
-            borderRadius: 18,
-            background: pal.panel,
-            color: pal.text,
-            boxShadow: pal.panelShadow,
-            opacity: Math.min(1, panelIn * 1.4),
-            transform: `translateY(${(1 - panelIn) * 40}px)`,
+            left: (width - DW * u) / 2,
+            top: (height - DH * u) / 2,
+            width: DW,
+            height: DH,
+            transformOrigin: "0 0",
+            transform: `scale(${u})`,
           }}
         >
           <div
             style={{
               position: "absolute",
-              left: PAD,
-              right: PAD,
-              top: 28,
-              height: 44,
-              display: "flex",
-              alignItems: "center",
-              gap: 12,
-              ...rowIn(0),
+              left: doc.x,
+              top: doc.y,
+              width: DOC.w,
+              height: DOC.h,
+              transformOrigin: "0 0",
+              borderRadius: 6,
+              boxShadow: pal.docShadow,
+              opacity: tween(frame, 0, 10, ENTER2),
+              transform: `translateY(${(1 - docIn) * 60}px) scale(${docScale * (0.97 + 0.03 * docIn)}) rotate(${(1 - docIn) * -2}deg)`,
             }}
           >
-            <span style={{ fontSize: 18, fontVariantNumeric: "tabular-nums" }}>
-              {number}
-            </span>
-            <StatusPill frame={frame} fps={fps} pal={pal} accent={accent} />
-            <div style={{ flex: 1 }} />
+            <InvoiceDoc
+              frame={frame}
+              fps={fps}
+              sender={sender}
+              customer={customer}
+              customerAddress={customerAddress}
+              number={number}
+              issued={issued}
+              due={due}
+              lines={lines}
+              currency={currency}
+              stampDate={paidDay.toUpperCase() || "PAID"}
+              fontFamily={fontFamily}
+            />
+          </div>
+
+          <div
+            style={{
+              position: "absolute",
+              left: panel.x,
+              top: panel.y,
+              width: panelW,
+              height: PANEL_H,
+              borderRadius: 18,
+              background: pal.panel,
+              color: fg,
+              boxShadow: pal.panelShadow,
+              opacity: Math.min(1, panelIn * 1.4),
+              transform: `translateY(${(1 - panelIn) * 40}px)`,
+            }}
+          >
             <div
               style={{
-                width: 156,
+                position: "absolute",
+                left: PAD,
+                right: PAD,
+                top: 28,
                 height: 44,
-                borderRadius: 10,
-                position: "relative",
-                transform: `scale(${1 - 0.04 * press})`,
                 display: "flex",
                 alignItems: "center",
-                justifyContent: "center",
-                fontSize: 16,
-                background: interpolateColors(
-                  sentSwap,
-                  [0, 1],
-                  [accent, pal.btn2],
-                ),
-                color: sentSwap > 0.5 ? pal.text : "#FFFFFF",
-                boxShadow:
-                  sentSwap > 0.5
-                    ? `inset 0 0 0 1px ${pal.line}`
-                    : `0 1px 2px ${withAlpha(accent, 0.3)}, inset 0 1px 0 rgba(255,255,255,0.16)`,
+                gap: 12,
+                ...rowIn(0),
               }}
             >
               <span
+                style={{ fontSize: 18, fontVariantNumeric: "tabular-nums" }}
+              >
+                {number}
+              </span>
+              <StatusPill frame={frame} fps={fps} pal={pal} accent={accent} />
+              <div style={{ flex: 1 }} />
+              <div
                 style={{
-                  position: "absolute",
+                  width: 156,
+                  height: 44,
+                  borderRadius: 10,
+                  position: "relative",
+                  transform: `scale(${1 - 0.04 * press})`,
                   display: "flex",
-                  gap: 8,
                   alignItems: "center",
-                  opacity: 1 - sentSwap,
+                  justifyContent: "center",
+                  fontSize: 16,
+                  background: interpolateColors(
+                    sentSwap,
+                    [0, 1],
+                    [accent, pal.btn2],
+                  ),
+                  color: sentSwap > 0.5 ? fg : "#FFFFFF",
+                  boxShadow:
+                    sentSwap > 0.5
+                      ? `inset 0 0 0 1px ${pal.line}`
+                      : `0 1px 2px ${withAlpha(accent, 0.3)}, inset 0 1px 0 rgba(255,255,255,0.16)`,
                 }}
               >
-                <Icon name="send" color="#FFFFFF" size={16} />
-                Send invoice
-              </span>
-              <span
-                style={{
-                  position: "absolute",
-                  display: "flex",
-                  gap: 8,
-                  alignItems: "center",
-                  opacity: sentSwap * (1 - paidP),
-                }}
-              >
-                <Icon name="bell" color={pal.muted} size={16} />
-                Remind
-              </span>
-              <span
-                style={{
-                  position: "absolute",
-                  display: "flex",
-                  gap: 8,
-                  alignItems: "center",
-                  opacity: paidP,
-                }}
-              >
-                <Icon name="download" color={pal.muted} size={16} />
-                Receipt
-              </span>
+                <span
+                  style={{
+                    position: "absolute",
+                    display: "flex",
+                    gap: 8,
+                    alignItems: "center",
+                    opacity: 1 - sentSwap,
+                  }}
+                >
+                  <Icon name="send" color="#FFFFFF" size={16} />
+                  {sendLabel}
+                </span>
+                <span
+                  style={{
+                    position: "absolute",
+                    display: "flex",
+                    gap: 8,
+                    alignItems: "center",
+                    opacity: sentSwap * (1 - paidP),
+                  }}
+                >
+                  <Icon name="bell" color={pal.muted} size={16} />
+                  Remind
+                </span>
+                <span
+                  style={{
+                    position: "absolute",
+                    display: "flex",
+                    gap: 8,
+                    alignItems: "center",
+                    opacity: paidP,
+                  }}
+                >
+                  <Icon name="download" color={pal.muted} size={16} />
+                  Receipt
+                </span>
+              </div>
             </div>
-          </div>
 
-          <div
-            style={{ position: "absolute", left: PAD, top: 98, ...rowIn(1) }}
-          >
             <div
-              style={{
-                fontSize: 16,
-                display: "inline-grid",
-                color: pal.muted,
-              }}
+              style={{ position: "absolute", left: PAD, top: 98, ...rowIn(1) }}
             >
-              <span style={{ gridArea: "1/1", opacity: 1 - paidP }}>
-                Amount due · {customer}
-              </span>
-              <span
-                style={{ gridArea: "1/1", opacity: paidP, color: pal.green }}
+              <div
+                style={{
+                  fontSize: 16,
+                  display: "inline-grid",
+                  color: pal.muted,
+                }}
               >
-                Paid by {customer}
-              </span>
+                <span style={{ gridArea: "1/1", opacity: 1 - paidP }}>
+                  Amount due · {customer}
+                </span>
+                <span
+                  style={{ gridArea: "1/1", opacity: paidP, color: pal.green }}
+                >
+                  Paid by {customer}
+                </span>
+              </div>
+              <div
+                style={{
+                  fontSize: 54,
+                  fontWeight: 300,
+                  letterSpacing: "-0.04em",
+                  lineHeight: 1,
+                  marginTop: 10,
+                  fontVariantNumeric: "tabular-nums",
+                }}
+              >
+                {fmt(total, currency)}
+              </div>
+              <div
+                style={{
+                  fontSize: 16,
+                  color: pal.muted,
+                  marginTop: 12,
+                  display: "inline-grid",
+                }}
+              >
+                <span style={{ gridArea: "1/1", opacity: 1 - paidP }}>
+                  Due {due.split(",")[0]} · {customerEmail}
+                </span>
+                <span style={{ gridArea: "1/1", opacity: paidP }}>
+                  Paid {paidDay} · {paidNote}
+                </span>
+              </div>
             </div>
             <div
               style={{
-                fontSize: 54,
-                fontWeight: 300,
-                letterSpacing: "-0.04em",
-                lineHeight: 1,
-                marginTop: 10,
-                fontVariantNumeric: "tabular-nums",
+                position: "absolute",
+                left: PAD,
+                right: PAD,
+                top: TL_Y - 34,
+                height: 1,
+                background: pal.line,
+                ...rowIn(2),
               }}
-            >
-              {fmt(total, currency)}
-            </div>
-            <div
-              style={{
-                fontSize: 16,
-                color: pal.muted,
-                marginTop: 12,
-                display: "inline-grid",
-              }}
-            >
-              <span style={{ gridArea: "1/1", opacity: 1 - paidP }}>
-                Due {due.split(",")[0]} · {customerEmail}
-              </span>
-              <span style={{ gridArea: "1/1", opacity: paidP }}>
-                Paid {paidDay} · 11 days early
-              </span>
-            </div>
-          </div>
-          <div
-            style={{
-              position: "absolute",
-              left: PAD,
-              right: PAD,
-              top: TL_Y - 34,
-              height: 1,
-              background: pal.line,
-              ...rowIn(2),
-            }}
-          />
+            />
 
-          {events.slice(0, 4).map((ev, i) => {
-            const at = reachAt[i];
-            const on = tween(frame, at, at + 8, ENTER2);
-            const isPaid = i === 3;
-            const pop = isPaid
-              ? spring({ frame: frame - at, fps, config: CHIP })
-              : 1;
-            const nodeBg = isPaid
-              ? interpolateColors(on, [0, 1], [pal.panel, pal.green])
-              : on > 0.5
-                ? pal.node
-                : pal.panel;
-            const icon = (["file", "send", "eye", "check"] as const)[i];
-            const y = TL_Y + i * STEP;
-            return (
-              <div key={ev.title} style={rowIn(3 + i)}>
-                {i < 3 ? (
+            {events.slice(0, 4).map((ev, i) => {
+              const at = reachAt[i];
+              const on = tween(frame, at, at + 8, ENTER2);
+              const isPaid = i === 3;
+              const pop = isPaid
+                ? spring({ frame: frame - at, fps, config: CHIP })
+                : 1;
+              const nodeBg = isPaid
+                ? interpolateColors(on, [0, 1], [pal.panel, pal.green])
+                : on > 0.5
+                  ? pal.node
+                  : pal.panel;
+              const icon = (["file", "send", "eye", "check"] as const)[i];
+              const y = TL_Y + i * STEP;
+              return (
+                <div key={ev.title} style={rowIn(3 + i)}>
+                  {i < 3 ? (
+                    <div
+                      style={{
+                        position: "absolute",
+                        left: PAD + 15,
+                        top: y + 34,
+                        width: 1.5,
+                        height: STEP - 36,
+                        background: pal.line,
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          background: i === 2 ? pal.green : pal.faint,
+                          transformOrigin: "50% 0",
+                          transform: `scaleY(${tween(frame, reachAt[i + 1] - 8, reachAt[i + 1], MOVE)})`,
+                          opacity: 0.7,
+                        }}
+                      />
+                    </div>
+                  ) : null}
                   <div
                     style={{
                       position: "absolute",
-                      left: PAD + 15,
-                      top: y + 34,
-                      width: 1.5,
-                      height: STEP - 36,
-                      background: pal.line,
+                      left: PAD,
+                      top: y,
+                      width: 32,
+                      height: 32,
+                      borderRadius: 16,
+                      background: nodeBg,
+                      boxShadow:
+                        isPaid && on > 0.5
+                          ? "none"
+                          : `inset 0 0 0 1px ${pal.line}`,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      transform: `scale(${isPaid ? 0.85 + 0.15 * pop : 1})`,
                     }}
                   >
-                    <div
-                      style={{
-                        width: "100%",
-                        height: "100%",
-                        background: i === 2 ? pal.green : pal.faint,
-                        transformOrigin: "50% 0",
-                        transform: `scaleY(${tween(frame, reachAt[i + 1] - 8, reachAt[i + 1], MOVE)})`,
-                        opacity: 0.7,
-                      }}
-                    />
-                  </div>
-                ) : null}
-                <div
-                  style={{
-                    position: "absolute",
-                    left: PAD,
-                    top: y,
-                    width: 32,
-                    height: 32,
-                    borderRadius: 16,
-                    background: nodeBg,
-                    boxShadow:
-                      isPaid && on > 0.5
-                        ? "none"
-                        : `inset 0 0 0 1px ${pal.line}`,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    transform: `scale(${isPaid ? 0.85 + 0.15 * pop : 1})`,
-                  }}
-                >
-                  <div style={{ opacity: 0.3 + 0.7 * on }}>
-                    <Icon
-                      name={icon}
-                      color={isPaid && on > 0.5 ? "#FFFFFF" : pal.text}
-                      size={16}
-                    />
-                  </div>
-                </div>
-                <div
-                  style={{
-                    position: "absolute",
-                    left: PAD + 48,
-                    right: PAD,
-                    top: y - 2,
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "flex-start",
-                  }}
-                >
-                  <div>
-                    <div
-                      style={{
-                        fontSize: 17,
-                        color:
-                          on > 0.5
-                            ? isPaid
-                              ? pal.green
-                              : pal.text
-                            : pal.faint,
-                      }}
-                    >
-                      {ev.title}
+                    <div style={{ opacity: 0.3 + 0.7 * on }}>
+                      <Icon
+                        name={icon}
+                        color={isPaid && on > 0.5 ? "#FFFFFF" : fg}
+                        size={16}
+                      />
                     </div>
-                    <div
+                  </div>
+                  <div
+                    style={{
+                      position: "absolute",
+                      left: PAD + 48,
+                      right: PAD,
+                      top: y - 2,
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "flex-start",
+                    }}
+                  >
+                    <div>
+                      <div
+                        style={{
+                          fontSize: 17,
+                          color:
+                            on > 0.5 ? (isPaid ? pal.green : fg) : pal.faint,
+                        }}
+                      >
+                        {ev.title}
+                      </div>
+                      <div
+                        style={{
+                          fontSize: 16,
+                          color: pal.muted,
+                          marginTop: 2,
+                          opacity: on,
+                          transform: `translateY(${(1 - on) * 4}px)`,
+                        }}
+                      >
+                        {ev.detail}
+                      </div>
+                    </div>
+                    <span
                       style={{
                         fontSize: 16,
-                        color: pal.muted,
-                        marginTop: 2,
+                        color: pal.faint,
+                        fontVariantNumeric: "tabular-nums",
                         opacity: on,
-                        transform: `translateY(${(1 - on) * 4}px)`,
+                        marginTop: 1,
                       }}
                     >
-                      {ev.detail}
-                    </div>
+                      {ev.time}
+                    </span>
                   </div>
-                  <span
-                    style={{
-                      fontSize: 16,
-                      color: pal.faint,
-                      fontVariantNumeric: "tabular-nums",
-                      opacity: on,
-                      marginTop: 1,
-                    }}
-                  >
-                    {ev.time}
-                  </span>
                 </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
 
-        <div style={{ opacity: cursorOp }}>
-          <Cursor x={cur.x} y={cur.y} press={press} />
-        </div>
+          <div style={{ opacity: cursorOp }}>
+            <Cursor x={cur.x} y={cur.y} press={press} />
+          </div>
 
-        <div
-          style={{
-            position: "absolute",
-            left: notif.x,
-            top: notif.y,
-            width: notif.w,
-            borderRadius: 16,
-            padding: "14px 16px",
-            boxSizing: "border-box",
-            background: pal.notif,
-            color: pal.text,
-            display: "flex",
-            alignItems: "center",
-            gap: 14,
-            opacity: Math.min(1, Math.max(0, notifIn) * 1.5),
-            transform: `translateY(${(1 - notifIn) * -70}px) scale(${0.96 + 0.04 * notifIn})`,
-            boxShadow: pal.panelShadow,
-          }}
-        >
           <div
             style={{
-              width: 40,
-              height: 40,
-              borderRadius: 10,
-              background: withAlpha(pal.green, pal.dark ? 0.18 : 0.12),
+              position: "absolute",
+              left: notif.x,
+              top: notif.y,
+              width: notif.w,
+              borderRadius: 16,
+              padding: "14px 16px",
+              boxSizing: "border-box",
+              background: pal.notif,
+              color: fg,
               display: "flex",
               alignItems: "center",
-              justifyContent: "center",
-              flexShrink: 0,
+              gap: 14,
+              opacity: Math.min(1, Math.max(0, notifIn) * 1.5),
+              transform: `translateY(${(1 - notifIn) * -70}px) scale(${0.96 + 0.04 * notifIn})`,
+              boxShadow: pal.panelShadow,
             }}
           >
-            <Icon name="bank" color={pal.green} size={20} />
-          </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
             <div
               style={{
+                width: 40,
+                height: 40,
+                borderRadius: 10,
+                background: withAlpha(pal.green, pal.dark ? 0.18 : 0.12),
                 display: "flex",
-                justifyContent: "space-between",
-                alignItems: "baseline",
-                fontSize: 17,
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0,
               }}
             >
-              <span>Payout on the way</span>
-              <span style={{ fontSize: 15, color: pal.faint }}>now</span>
+              <Icon name="bank" color={pal.green} size={20} />
             </div>
-            <div
-              style={{
-                fontSize: 16,
-                color: pal.muted,
-                marginTop: 2,
-                whiteSpace: "nowrap",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-              }}
-            >
-              <span
-                style={{ color: pal.text, fontVariantNumeric: "tabular-nums" }}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "baseline",
+                  fontSize: 17,
+                }}
               >
-                {fmt(total - payoutFee, currency)}
-              </span>{" "}
-              to ••{payoutAccount.slice(-4)} · arrives {payoutArrival}
+                <span>{payoutTitle}</span>
+                <span style={{ fontSize: 15, color: pal.faint }}>now</span>
+              </div>
+              <div
+                style={{
+                  fontSize: 16,
+                  color: pal.muted,
+                  marginTop: 2,
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                }}
+              >
+                <span style={{ color: fg, fontVariantNumeric: "tabular-nums" }}>
+                  {fmt(total - payoutFee, currency)}
+                </span>{" "}
+                to ••{payoutAccount.slice(-4)} · arrives {payoutArrival}
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { loadFont } from "@remotion/google-fonts/InstrumentSerif";
+import type React from "react";
 import { useId, useMemo } from "react";
 import {
   AbsoluteFill,
@@ -20,6 +21,20 @@ export interface AnagramShuffleProps {
   from?: string;
   to?: string;
   accent?: string;
+  /** Text color of the letters; overrides the theme ink. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Frames between letters as they leave for their new places. */
+  stagger?: number;
+  /** Frames each letter takes to travel to its new place. */
+  travel?: number;
+  /** Film grain over the scene. */
+  grain?: boolean;
+  /** Size of the word, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -212,16 +227,42 @@ interface Mover {
   fadeIn: boolean;
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function AnagramShuffle({
   from = "listen",
   to = "silent",
   accent = "#3B5BFD",
+  ink,
+  background,
+  stagger = STAGGER,
+  travel = TRAVEL,
+  grain = true,
+  scale: zoom = 1,
+  delay = 0,
   theme = "dark",
   speed = 1,
 }: AnagramShuffleProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
+  const fg = ink ?? c.fg;
+  const stage =
+    background === "transparent" ? "transparent" : (background ?? c.bg);
 
   const a = useMemo(() => Array.from(from), [from]);
   const b = useMemo(() => Array.from(to), [to]);
@@ -234,8 +275,8 @@ export function AnagramShuffle({
 
   const movers = useMemo<Mover[]>(() => {
     const { src, orphans } = mapLetters(a, b);
-    const lastStart = SHUFFLE_AT + (a.length - 1) * STAGGER;
-    const accentBase = lastStart + TRAVEL + ACCENT_GAP;
+    const lastStart = SHUFFLE_AT + (a.length - 1) * stagger;
+    const accentBase = lastStart + travel + ACCENT_GAP;
     const list: Mover[] = [];
     b.forEach((ch, j) => {
       const i = src[j];
@@ -267,7 +308,7 @@ export function AnagramShuffle({
         glyphTo: ch,
         x0,
         x1,
-        start: SHUFFLE_AT + i * STAGGER,
+        start: SHUFFLE_AT + i * stagger,
         enterAt: i * ENTER_STAGGER,
         accentAt,
         dir: still ? 1 : dx > 0 ? 1 : -1,
@@ -286,7 +327,7 @@ export function AnagramShuffle({
         glyphTo: a[i],
         x0,
         x1: x0,
-        start: SHUFFLE_AT + i * STAGGER,
+        start: SHUFFLE_AT + i * stagger,
         enterAt: i * ENTER_STAGGER,
         accentAt: Number.POSITIVE_INFINITY,
         dir: -1,
@@ -296,7 +337,7 @@ export function AnagramShuffle({
       });
     }
     return list;
-  }, [a, b, la, lb, F]);
+  }, [a, b, la, lb, F, stagger, travel]);
 
   const ordered = useMemo(
     () => [...movers].sort((m, n) => m.dir - n.dir),
@@ -307,7 +348,7 @@ export function AnagramShuffle({
   const haloShadow = [0, 45, 90, 135, 180, 225, 270, 315]
     .map((deg) => {
       const r = (deg * Math.PI) / 180;
-      return `${(Math.cos(r) * halo).toFixed(2)}px ${(Math.sin(r) * halo).toFixed(2)}px 0 ${c.bg}`;
+      return `${(Math.cos(r) * halo).toFixed(2)}px ${(Math.sin(r) * halo).toFixed(2)}px 0 ${stage}`;
     })
     .join(", ");
 
@@ -330,135 +371,137 @@ export function AnagramShuffle({
   const PAD = 0.12;
 
   return (
-    <AbsoluteFill style={{ background: c.bg, overflow: "hidden" }}>
-      <div
-        style={{
-          position: "absolute",
-          left: W / 2,
-          top: baseline,
-          fontFamily: serif,
-          fontWeight: 400,
-          fontSize: F,
-          lineHeight: LINE,
-          fontKerning: "none",
-          whiteSpace: "pre",
-        }}
-      >
-        {ordered.map((m) => {
-          const p = interpolate(t, [m.start, m.start + TRAVEL], [0, 1], {
-            ...CLAMP,
-            easing: EASE_IO,
-          });
-          const arc = Math.sin(Math.PI * p);
-          const enter = interpolate(t, [m.enterAt, m.enterAt + 16], [0, 1], {
-            ...CLAMP,
-            easing: EASE_OUT,
-          });
-          const x = m.x0 + (m.x1 - m.x0) * p;
-          const over = m.dir > 0;
-          const y =
-            (over ? -m.lift : m.lift * 0.7) * arc + (1 - enter) * F * 0.14;
-          const scale = over ? 1 + 0.09 * arc : 1 - 0.07 * arc;
-          const acc = interpolate(
-            t,
-            [m.accentAt, m.accentAt + ACCENT_LEN],
-            [0, 1],
-            { ...CLAMP, easing: EASE_OUT },
-          );
-          const bump = Math.sin(Math.PI * acc) * F * 0.045;
-          const yOff = y - bump;
-          const solid = over
-            ? c.fg
-            : interpolateColors(arc, [0, 1], [c.fg, c.dim]);
-          // Gradient share: a flash while a letter flies over, then for good.
-          const fill = Math.max(over ? arc * 0.85 : 0, acc);
-          let opacity = enter;
-          if (m.fadeOut) opacity *= interpolate(p, [0, 0.6], [1, 0], CLAMP);
-          if (m.fadeIn)
-            opacity = interpolate(
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
+      <ScaleLayer scale={zoom}>
+        <div
+          style={{
+            position: "absolute",
+            left: W / 2,
+            top: baseline,
+            fontFamily: serif,
+            fontWeight: 400,
+            fontSize: F,
+            lineHeight: LINE,
+            fontKerning: "none",
+            whiteSpace: "pre",
+          }}
+        >
+          {ordered.map((m) => {
+            const p = interpolate(t, [m.start, m.start + travel], [0, 1], {
+              ...CLAMP,
+              easing: EASE_IO,
+            });
+            const arc = Math.sin(Math.PI * p);
+            const enter = interpolate(t, [m.enterAt, m.enterAt + 16], [0, 1], {
+              ...CLAMP,
+              easing: EASE_OUT,
+            });
+            const x = m.x0 + (m.x1 - m.x0) * p;
+            const over = m.dir > 0;
+            const y =
+              (over ? -m.lift : m.lift * 0.7) * arc + (1 - enter) * F * 0.14;
+            const scale = over ? 1 + 0.09 * arc : 1 - 0.07 * arc;
+            const acc = interpolate(
               t,
-              [m.start + TRAVEL * 0.4, m.start + TRAVEL],
+              [m.accentAt, m.accentAt + ACCENT_LEN],
               [0, 1],
               { ...CLAMP, easing: EASE_OUT },
             );
-          const swap = m.glyphFrom !== m.glyphTo;
-          const mix = swap ? interpolate(p, [0.35, 0.65], [0, 1], CLAMP) : 1;
-          const glyph = (o: number, ch: string, key: string) => {
-            if (o <= 0) return null;
-            const left = -advance(ch) * F * 0.5;
-            // Stage position of the gradient span's local origin.
-            const gx = W / 2 + x + scale * (left - PAD * F);
-            const gy = baseline + yOff - scale * ASC * F;
+            const bump = Math.sin(Math.PI * acc) * F * 0.045;
+            const yOff = y - bump;
+            const solid = over
+              ? fg
+              : interpolateColors(arc, [0, 1], [fg, c.dim]);
+            // Gradient share: a flash while a letter flies over, then for good.
+            const fill = Math.max(over ? arc * 0.85 : 0, acc);
+            let opacity = enter;
+            if (m.fadeOut) opacity *= interpolate(p, [0, 0.6], [1, 0], CLAMP);
+            if (m.fadeIn)
+              opacity = interpolate(
+                t,
+                [m.start + travel * 0.4, m.start + travel],
+                [0, 1],
+                { ...CLAMP, easing: EASE_OUT },
+              );
+            const swap = m.glyphFrom !== m.glyphTo;
+            const mix = swap ? interpolate(p, [0.35, 0.65], [0, 1], CLAMP) : 1;
+            const glyph = (o: number, ch: string, key: string) => {
+              if (o <= 0) return null;
+              const left = -advance(ch) * F * 0.5;
+              // Stage position of the gradient span's local origin.
+              const gx = W / 2 + x + scale * (left - PAD * F);
+              const gy = baseline + yOff - scale * ASC * F;
+              return (
+                <div key={key} style={{ opacity: o }}>
+                  {over && arc > 0.02 ? (
+                    <span
+                      style={{
+                        position: "absolute",
+                        left,
+                        top: 0,
+                        color: stage,
+                        textShadow: haloShadow,
+                      }}
+                    >
+                      {ch}
+                    </span>
+                  ) : null}
+                  {fill < 1 ? (
+                    <span
+                      style={{
+                        position: "absolute",
+                        left,
+                        top: 0,
+                        color: solid,
+                        opacity: 1 - fill,
+                      }}
+                    >
+                      {ch}
+                    </span>
+                  ) : null}
+                  {fill > 0 ? (
+                    <span
+                      style={{
+                        position: "absolute",
+                        left: left - PAD * F,
+                        top: 0,
+                        padding: `0 ${PAD}em`,
+                        opacity: fill,
+                        color: "transparent",
+                        backgroundImage: gradient,
+                        backgroundSize: `${W / scale}px ${H / scale}px`,
+                        backgroundPosition: `${-gx / scale}px ${-gy / scale}px`,
+                        backgroundRepeat: "no-repeat",
+                        WebkitBackgroundClip: "text",
+                        backgroundClip: "text",
+                      }}
+                    >
+                      {ch}
+                    </span>
+                  ) : null}
+                </div>
+              );
+            };
             return (
-              <div key={key} style={{ opacity: o }}>
-                {over && arc > 0.02 ? (
-                  <span
-                    style={{
-                      position: "absolute",
-                      left,
-                      top: 0,
-                      color: c.bg,
-                      textShadow: haloShadow,
-                    }}
-                  >
-                    {ch}
-                  </span>
-                ) : null}
-                {fill < 1 ? (
-                  <span
-                    style={{
-                      position: "absolute",
-                      left,
-                      top: 0,
-                      color: solid,
-                      opacity: 1 - fill,
-                    }}
-                  >
-                    {ch}
-                  </span>
-                ) : null}
-                {fill > 0 ? (
-                  <span
-                    style={{
-                      position: "absolute",
-                      left: left - PAD * F,
-                      top: 0,
-                      padding: `0 ${PAD}em`,
-                      opacity: fill,
-                      color: "transparent",
-                      backgroundImage: gradient,
-                      backgroundSize: `${W / scale}px ${H / scale}px`,
-                      backgroundPosition: `${-gx / scale}px ${-gy / scale}px`,
-                      backgroundRepeat: "no-repeat",
-                      WebkitBackgroundClip: "text",
-                      backgroundClip: "text",
-                    }}
-                  >
-                    {ch}
-                  </span>
-                ) : null}
+              <div
+                key={m.key}
+                style={{
+                  position: "absolute",
+                  left: 0,
+                  top: -ASC * F,
+                  opacity,
+                  transform: `translate(${x}px, ${yOff}px) scale(${scale})`,
+                  transformOrigin: `0px ${ASC * F}px`,
+                }}
+              >
+                {swap ? glyph(1 - mix, m.glyphFrom, "from") : null}
+                {glyph(mix, m.glyphTo, "to")}
               </div>
             );
-          };
-          return (
-            <div
-              key={m.key}
-              style={{
-                position: "absolute",
-                left: 0,
-                top: -ASC * F,
-                opacity,
-                transform: `translate(${x}px, ${yOff}px) scale(${scale})`,
-                transformOrigin: `0px ${ASC * F}px`,
-              }}
-            >
-              {swap ? glyph(1 - mix, m.glyphFrom, "from") : null}
-              {glyph(mix, m.glyphTo, "to")}
-            </div>
-          );
-        })}
-      </div>
-      <Grain opacity={c.grain} />
+          })}
+        </div>
+      </ScaleLayer>
+      {grain ? <Grain opacity={c.grain} /> : null}
     </AbsoluteFill>
   );
 }

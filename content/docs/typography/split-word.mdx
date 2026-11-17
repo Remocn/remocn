@@ -63,10 +63,50 @@ export const RemotionRoot = () => (
       description: "The word revealed inside the gap.",
     },
     {
+      name: "stagger",
+      type: "number",
+      default: "3",
+      description: "Frames between letters as the word rises in.",
+    },
+    {
+      name: "hold",
+      type: "number",
+      default: "14",
+      description: "Frames the slit stays wide open before it settles.",
+    },
+    {
       name: "accent",
       type: "string",
       default: "\"#3B5BFD\"",
       description: "Color of the hairline cut.",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "grain",
+      type: "boolean",
+      default: "true",
+      description: "Film grain over the scene.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
     {
       name: "theme",

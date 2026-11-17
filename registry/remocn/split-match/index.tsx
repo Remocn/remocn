@@ -37,6 +37,21 @@ export interface SplitMatchProps {
    */
   words?: string[];
   accent?: string;
+  /** Text color of the stage-side words; overrides the theme ink. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the words. Load it yourself; Bricolage Grotesque by default. */
+  fontFamily?: string;
+  /** Frames each word stays locked before the reels move on. */
+  hold?: number;
+  /** Frames for the reels to travel from one word to the next. */
+  step?: number;
+  /** Size of the split and panel, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -56,10 +71,10 @@ const MERGE_DELAY = 8;
 const MERGE = 16;
 const TAIL = 36;
 
-export function splitMatchDuration(wordCount = 4) {
+export function splitMatchDuration(wordCount = 4, hold = HOLD, step = STEP) {
   return (
     ENTER +
-    Math.max(0, wordCount - 1) * (HOLD + STEP) +
+    Math.max(0, wordCount - 1) * (hold + step) +
     MERGE_DELAY +
     MERGE +
     TAIL
@@ -131,11 +146,11 @@ function panelGradient(theme: "dark" | "light", accent: string, t: number) {
   ].join(", ");
 }
 
-function useMeasurer() {
+function useMeasurer(fontFamily: string) {
   const [ready, setReady] = useState(false);
   const [handle] = useState(() => delayRender("split-match: measuring"));
   const released = useRef(false);
-  const font = `${WEIGHT} 100px "${bricolage.fontFamily}"`;
+  const font = `${WEIGHT} 100px "${fontFamily}"`;
   const logoFont = `600 100px "${manrope.fontFamily}"`;
 
   useEffect(() => {
@@ -239,16 +254,32 @@ function Grain({ opacity }: { opacity: number }) {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 /** Reel position at frame t: integer = locked on that word. */
-function reelAt(t: number, n: number) {
+function reelAt(t: number, n: number, hold: number, step: number) {
   if (t < ENTER) {
     const k = interpolate(t, [-4, ENTER], [0, 1], { ...CLAMP, easing: SNAP });
     return -1 + k;
   }
   let p = 0;
   for (let i = 1; i < n; i++) {
-    const start = ENTER + (i - 1) * (HOLD + STEP) + HOLD;
-    p += interpolate(t, [start, start + STEP], [0, 1], {
+    const start = ENTER + (i - 1) * (hold + step) + hold;
+    p += interpolate(t, [start, start + step], [0, 1], {
       ...CLAMP,
       easing: SNAP,
     });
@@ -259,20 +290,33 @@ function reelAt(t: number, n: number) {
 export function SplitMatch({
   words = ["build", "ship", "launch", "remocn"],
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = bricolage.fontFamily,
+  hold = HOLD,
+  step = STEP,
+  scale = 1,
+  delay = 0,
+  grain = true,
   theme = "dark",
   speed = 1,
 }: SplitMatchProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
+  const fg = ink ?? c.fg;
+  const stage =
+    background === "transparent" ? "transparent" : (background ?? c.bg);
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
-  const measure = useMeasurer();
+  const measure = useMeasurer(fontFamily);
 
   const list = words.length ? words : ["remocn"];
   const n = list.length;
 
   if (!measure) {
-    return <div style={{ position: "absolute", inset: 0, background: c.bg }} />;
+    return (
+      <div style={{ position: "absolute", inset: 0, background: stage }} />
+    );
   }
 
   const layouts = list.map((w) => layoutWord(w, measure));
@@ -284,11 +328,11 @@ export function SplitMatch({
   const pitch = H * 0.5;
   const baseline = cy + F * 0.33;
 
-  const p = reelAt(t, n);
-  const v = (p - reelAt(t - 0.5, n)) * 2 * pitch;
+  const p = reelAt(t, n, hold, step);
+  const v = (p - reelAt(t - 0.5, n, hold, step)) * 2 * pitch;
   const blur = Math.min(Math.abs(v) * 0.15, H * 0.022);
 
-  const lastLock = ENTER + (n - 1) * (HOLD + STEP);
+  const lastLock = ENTER + (n - 1) * (hold + step);
   const merge = interpolate(
     t,
     [lastLock + MERGE_DELAY, lastLock + MERGE_DELAY + MERGE],
@@ -305,7 +349,7 @@ export function SplitMatch({
       easing: Easing.bezier(0.33, 0, 0.2, 1),
     },
   );
-  const scale = 1 + push * 0.035;
+  const pushScale = 1 + push * 0.035;
 
   const reel = (dir: 1 | -1, color: string, dim: number) => {
     const nodes: ReactNode[] = [];
@@ -350,7 +394,7 @@ export function SplitMatch({
           y={y}
           fill={color}
           opacity={opacity}
-          fontFamily={bricolage.fontFamily}
+          fontFamily={fontFamily}
           fontWeight={WEIGHT}
           fontSize={F}
           style={{ letterSpacing: `${TRACK}em` }}
@@ -370,64 +414,66 @@ export function SplitMatch({
   const blurAttr = blur > 0.3 ? `url(#${ids.blur})` : undefined;
 
   return (
-    <AbsoluteFill style={{ background: c.bg, overflow: "hidden" }}>
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
       <AbsoluteFill
         style={{
           background: `radial-gradient(ellipse 60% 80% at 25% 35%, ${c.key}, transparent 70%)`,
         }}
       />
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          transform: `scale(${scale})`,
-          transformOrigin: "50% 50%",
-        }}
-      >
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            inset: `${-H * 0.05}px ${-W * 0.05}px`,
-            background: panelGradient(theme, accent, t),
-            clipPath: `inset(0 0 0 ${edge + W * 0.05}px)`,
+            inset: 0,
+            transform: `scale(${pushScale})`,
+            transformOrigin: "50% 50%",
           }}
-        />
-        <svg
-          width={W}
-          height={H}
-          viewBox={`0 0 ${W} ${H}`}
-          style={{ position: "absolute", inset: 0, overflow: "visible" }}
-          aria-hidden
         >
-          <defs>
-            <clipPath id={ids.left}>
-              <rect x={-W} y={-H} width={W + edge} height={H * 3} />
-            </clipPath>
-            <clipPath id={ids.right}>
-              <rect x={edge} y={-H} width={W * 2} height={H * 3} />
-            </clipPath>
-            <filter
-              id={ids.blur}
-              filterUnits="userSpaceOnUse"
-              x={-W}
-              y={-H}
-              width={W * 3}
-              height={H * 3}
-            >
-              <feGaussianBlur stdDeviation={`0 ${blur.toFixed(2)}`} />
-            </filter>
-          </defs>
+          <div
+            style={{
+              position: "absolute",
+              inset: `${-H * 0.05}px ${-W * 0.05}px`,
+              background: panelGradient(theme, accent, t),
+              clipPath: `inset(0 0 0 ${edge + W * 0.05}px)`,
+            }}
+          />
+          <svg
+            width={W}
+            height={H}
+            viewBox={`0 0 ${W} ${H}`}
+            style={{ position: "absolute", inset: 0, overflow: "visible" }}
+            aria-hidden
+          >
+            <defs>
+              <clipPath id={ids.left}>
+                <rect x={-W} y={-H} width={W + edge} height={H * 3} />
+              </clipPath>
+              <clipPath id={ids.right}>
+                <rect x={edge} y={-H} width={W * 2} height={H * 3} />
+              </clipPath>
+              <filter
+                id={ids.blur}
+                filterUnits="userSpaceOnUse"
+                x={-W}
+                y={-H}
+                width={W * 3}
+                height={H * 3}
+              >
+                <feGaussianBlur stdDeviation={`0 ${blur.toFixed(2)}`} />
+              </filter>
+            </defs>
 
-          <g clipPath={`url(#${ids.left})`}>
-            <g filter={blurAttr}>{reel(1, c.fg, c.dim)}</g>
-          </g>
+            <g clipPath={`url(#${ids.left})`}>
+              <g filter={blurAttr}>{reel(1, fg, c.dim)}</g>
+            </g>
 
-          <g clipPath={`url(#${ids.right})`}>
-            <g filter={blurAttr}>{reel(-1, c.onAccent, c.dimAccent)}</g>
-          </g>
-        </svg>
-      </div>
-      <Grain opacity={c.grain} />
+            <g clipPath={`url(#${ids.right})`}>
+              <g filter={blurAttr}>{reel(-1, c.onAccent, c.dimAccent)}</g>
+            </g>
+          </svg>
+        </div>
+      </ScaleLayer>
+      {grain ? <Grain opacity={c.grain} /> : null}
     </AbsoluteFill>
   );
 }

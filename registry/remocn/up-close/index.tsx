@@ -32,10 +32,22 @@ export interface UpCloseProps {
   aspect?: number;
   focus?: { x: number; y: number };
   zoom?: number;
+  /** Label above the zoom readout. */
+  readoutLabel?: string;
+  /** Frame the shot pulls back from the close-up, at the default 125-frame length. */
+  pullAt?: number;
   accent?: string;
+  /** Text color of the lines and readout; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the lines and readout. Load it yourself; Onest by default. */
+  fontFamily?: string;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /** Size of the shot, readout and lines, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -83,20 +95,20 @@ const CLAMP = {
 
 type Widths = (s: string) => number;
 
-function buildWidths(_version: number): Widths {
+function buildWidths(_version: number, fontFamily: string): Widths {
   const ctx = document.createElement("canvas").getContext("2d");
   const cache: Record<string, number> = {};
   return (s: string) => {
     if (cache[s] === undefined) {
       if (!ctx) return s.length * 0.52;
-      ctx.font = `${WGHT} ${PX}px "${onest.fontFamily}"`;
+      ctx.font = `${WGHT} ${PX}px "${fontFamily}"`;
       cache[s] = ctx.measureText(s).width / PX + TRACK * Array.from(s).length;
     }
     return cache[s];
   };
 }
 
-function useWidths() {
+function useWidths(fontFamily: string) {
   const [version, setVersion] = useState(0);
   const [handle] = useState(() => delayRender("up-close: measuring"));
   const released = useRef(false);
@@ -108,7 +120,7 @@ function useWidths() {
     document.fonts.addEventListener("loadingdone", bump);
     Promise.all([
       onest.waitUntilDone(),
-      document.fonts.load(`${WGHT} 100px "${onest.fontFamily}"`),
+      document.fonts.load(`${WGHT} 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
@@ -122,8 +134,8 @@ function useWidths() {
       live = false;
       document.fonts.removeEventListener("loadingdone", bump);
     };
-  }, [handle]);
-  return useMemo(() => buildWidths(version), [version]);
+  }, [handle, fontFamily]);
+  return useMemo(() => buildWidths(version, fontFamily), [version, fontFamily]);
 }
 
 function wrap(
@@ -156,6 +168,8 @@ function ZoomReadout({
   ink,
   dim,
   faint,
+  label,
+  font,
 }: {
   value: number;
   progress: number;
@@ -163,6 +177,8 @@ function ZoomReadout({
   ink: string;
   dim: string;
   faint: string;
+  label: string;
+  font: string;
 }) {
   const ticks = 25;
   const rulerW = size * 4;
@@ -178,11 +194,11 @@ function ZoomReadout({
           textTransform: "uppercase",
         }}
       >
-        Zoom
+        {label}
       </div>
       <div
         style={{
-          fontFamily: onest.fontFamily,
+          fontFamily: font,
           fontWeight: 300,
           fontSize: size,
           lineHeight: 1,
@@ -230,6 +246,22 @@ function ZoomReadout({
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function UpClose({
   close = "Up close, it’s code.",
   wide = "From here, it’s your launch.",
@@ -237,20 +269,27 @@ export function UpClose({
   aspect = 1200 / 630,
   focus = { x: 0.58, y: 0.52 },
   zoom = 3,
+  readoutLabel = "Zoom",
+  pullAt = 44,
   accent,
+  ink,
   background,
+  fontFamily = onest.fontFamily,
   ground,
   groundParams,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: UpCloseProps) {
-  const frame = useCurrentFrame();
+  const frame = Math.max(0, useCurrentFrame() - delay);
   const { width: W, height: H, durationInFrames: D, fps } = useVideoConfig();
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
+  const fg = ink ?? c.ink;
   const transparent = background === "transparent";
   const image = src ?? staticFile("hero.png");
-  const widths = useWidths();
+  const widths = useWidths(fontFamily);
 
   const closeWords = close.split(/\s+/).filter(Boolean);
   const wideWords = wide.split(/\s+/).filter(Boolean);
@@ -300,7 +339,7 @@ export function UpClose({
     h: finalH,
   };
 
-  const PULL_AT = 44 * k;
+  const PULL_AT = pullAt * k;
   const WIDE_AT = PULL_AT + 20 * k;
 
   const q = Math.min(1, spring({ frame: t - PULL_AT, fps, config: HEAVY }));
@@ -353,7 +392,7 @@ export function UpClose({
   const text = {
     position: "absolute" as const,
     left: textX,
-    fontFamily: onest.fontFamily,
+    fontFamily,
     fontWeight: WGHT,
     fontSize: size,
     lineHeight: 1,
@@ -385,91 +424,95 @@ export function UpClose({
           <AbsoluteFill style={{ background: c.scrim }} />
         </AbsoluteFill>
       ) : null}
-      <div
-        style={{
-          position: "absolute",
-          left: win.x,
-          top: win.y,
-          width: win.w,
-          height: win.h,
-          borderRadius: radius,
-          overflow: "hidden",
-          background: c.well,
-          boxShadow: q > 0.01 ? c.shadow : "none",
-          opacity: fadeIn,
-        }}
-      >
-        <Img
-          src={image}
+      <ScaleLayer scale={scale}>
+        <div
           style={{
             position: "absolute",
-            left,
-            top,
-            width: imgW,
-            height: imgH,
-            maxWidth: "none",
-          }}
-        />
-      </div>
-      <div
-        style={{
-          position: "absolute",
-          left: textX,
-          top: portrait ? H * 0.06 : finalTopY,
-          opacity: readoutIn,
-          transform: `translateY(${(1 - readoutIn) * readSize * 0.3}px)`,
-        }}
-      >
-        <ZoomReadout
-          value={1 + (zoom - 1) * (1 - q)}
-          progress={q}
-          size={readSize}
-          ink={c.ink}
-          dim={c.dim}
-          faint={c.faint}
-        />
-      </div>
-      {closeLines.map((ln, i) => (
-        <div
-          key={`c${i.toString()}`}
-          style={{
-            ...text,
-            top: closeTop + i * step + rise(closeIn),
-            opacity: closeIn,
-            filter: blur(closeIn),
-            color: lift > 0 ? mix(c.ink, c.dim, lift) : c.ink,
+            left: win.x,
+            top: win.y,
+            width: win.w,
+            height: win.h,
+            borderRadius: radius,
+            overflow: "hidden",
+            background: c.well,
+            boxShadow: q > 0.01 ? c.shadow : "none",
+            opacity: fadeIn,
           }}
         >
-          {ln}
+          <Img
+            src={image}
+            style={{
+              position: "absolute",
+              left,
+              top,
+              width: imgW,
+              height: imgH,
+              maxWidth: "none",
+            }}
+          />
         </div>
-      ))}
-      {wideHead.map((ln, i) => (
-        <div
-          key={`w${i.toString()}`}
-          style={{
-            ...text,
-            top: wideTop + i * step + rise(wideIn),
-            opacity: wideIn,
-            filter: blur(wideIn),
-            color: c.ink,
-          }}
-        >
-          {ln}
-        </div>
-      ))}
-      {lastWide !== undefined ? (
         <div
           style={{
-            ...text,
-            top: wideTop + wideHead.length * step + rise(wideIn),
-            opacity: wideIn,
-            filter: blur(wideIn),
-            color: c.ink,
+            position: "absolute",
+            left: textX,
+            top: portrait ? H * 0.06 : finalTopY,
+            opacity: readoutIn,
+            transform: `translateY(${(1 - readoutIn) * readSize * 0.3}px)`,
           }}
         >
-          <Accented line={lastWide} color={hi} />
+          <ZoomReadout
+            value={1 + (zoom - 1) * (1 - q)}
+            progress={q}
+            size={readSize}
+            ink={fg}
+            dim={c.dim}
+            faint={c.faint}
+            label={readoutLabel}
+            font={fontFamily}
+          />
         </div>
-      ) : null}
+        {closeLines.map((ln, i) => (
+          <div
+            key={`c${i.toString()}`}
+            style={{
+              ...text,
+              top: closeTop + i * step + rise(closeIn),
+              opacity: closeIn,
+              filter: blur(closeIn),
+              color: lift > 0 ? mix(fg, c.dim, lift) : fg,
+            }}
+          >
+            {ln}
+          </div>
+        ))}
+        {wideHead.map((ln, i) => (
+          <div
+            key={`w${i.toString()}`}
+            style={{
+              ...text,
+              top: wideTop + i * step + rise(wideIn),
+              opacity: wideIn,
+              filter: blur(wideIn),
+              color: fg,
+            }}
+          >
+            {ln}
+          </div>
+        ))}
+        {lastWide !== undefined ? (
+          <div
+            style={{
+              ...text,
+              top: wideTop + wideHead.length * step + rise(wideIn),
+              opacity: wideIn,
+              filter: blur(wideIn),
+              color: fg,
+            }}
+          >
+            <Accented line={lastWide} color={hi} />
+          </div>
+        ) : null}
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

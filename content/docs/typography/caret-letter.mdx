@@ -81,6 +81,46 @@ A caret blinks in and types the word except for one letter, slides over to that 
       description: "Color of the caret and of the letter it becomes.",
     },
     {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Inter Tight\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "fontWeight",
+      type: "number",
+      default: "300",
+      description: "Weight of the word.",
+    },
+    {
+      name: "typeLength",
+      type: "number",
+      default: "46",
+      description: "Frames the caret takes to type the word; the later beats shift with it.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
+    },
+    {
       name: "theme",
       type: "\"dark\" | \"light\"",
       default: "\"light\"",

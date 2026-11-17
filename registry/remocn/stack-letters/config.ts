@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const stackLettersConfig: ComponentConfig = {
   componentName: "StackLetters",
@@ -13,16 +19,35 @@ export const stackLettersConfig: ComponentConfig = {
       },
       description: "Theme",
     },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
-    },
     word: {
       type: "text-content",
       default: "STACK",
       description: "Word",
     },
+    stagger: {
+      type: "number",
+      default: 8,
+      min: 2,
+      max: 20,
+      step: 1,
+      description: "Drop stagger",
+      hiddenFromList: false,
+    },
+    hold: {
+      type: "number",
+      default: 9,
+      min: 0,
+      max: 40,
+      step: 1,
+      description: "Hold (frames)",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Space Grotesk", grain: true }),
     speed: {
       type: "number",
       default: 1,

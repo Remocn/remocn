@@ -17,7 +17,21 @@ const { fontFamily: sans } = loadFont("normal", {
 
 export interface WordInsertProps {
   states?: string[];
+  /** Frames between one state of the sentence and the next. */
+  beat?: number;
+  /** Frames between words as they enter. */
+  stagger?: number;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
+  background?: string;
+  /** Typeface for the sentence. Load it yourself; Manrope by default. */
+  fontFamily?: string;
+  /** Size of the sentence, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -101,7 +115,6 @@ const STEP = 50;
 const MOVE = 22;
 const INSERT_DELAY = 12;
 const INSERT_LEN = 18;
-const INSERT_STAGGER = 3;
 const ACCENT_HOLD = 12;
 const SETTLE = 16;
 const HOLD = 30;
@@ -412,15 +425,41 @@ export function wordInsertDuration(states: number = DEFAULT_STATES.length) {
   return last + INSERT_DELAY + INSERT_LEN + ACCENT_HOLD + SETTLE + HOLD;
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function WordInsert({
   states = DEFAULT_STATES,
+  beat = STEP,
+  stagger = ENTER_STAGGER,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = sans,
+  scale = 1,
+  delay = 0,
+  grain = true,
   theme = "dark",
   speed = 1,
 }: WordInsertProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
+  const stage =
+    background === "transparent" ? "transparent" : (background ?? c.bg);
 
   const tokenized = useMemo(
     () => (states.length ? states : [""]).map(tokenize),
@@ -446,7 +485,7 @@ export function WordInsert({
     return { F: best.size, tracks: resolveVirtual(plan, laid), layouts: laid };
   }, [tokenized, fillW, H]);
 
-  const startOf = (s: number) => FIRST + (s - 1) * STEP;
+  const startOf = (s: number) => FIRST + (s - 1) * beat;
   let cur = 0;
   for (let s = 1; s < layouts.length; s++) if (t >= startOf(s)) cur = s;
   const p =
@@ -508,7 +547,7 @@ export function WordInsert({
     if (cur === 0 && ib !== null) {
       x = lb.x[ib];
       y = lb.y[ib];
-      const start = ib * ENTER_STAGGER;
+      const start = ib * stagger;
       const e = EASE_OUT(
         interpolate(t, [start, start + ENTER_LEN], [0, 1], CLAMP),
       );
@@ -575,8 +614,7 @@ export function WordInsert({
     }
 
     if (tr.bornAt > 0) {
-      const start =
-        startOf(tr.bornAt) + INSERT_DELAY + tr.bornOrder * INSERT_STAGGER;
+      const start = startOf(tr.bornAt) + INSERT_DELAY + tr.bornOrder * stagger;
       const e = EASE_OUT(
         interpolate(t, [start, start + INSERT_LEN], [0, 1], CLAMP),
       );
@@ -595,7 +633,7 @@ export function WordInsert({
           left: `${x}em`,
           top: `${y - ASC + rise}em`,
           opacity,
-          color: c.fg,
+          color: ink ?? c.fg,
           whiteSpace: "pre",
         }}
       >
@@ -605,23 +643,25 @@ export function WordInsert({
   }
 
   return (
-    <AbsoluteFill style={{ background: c.bg, overflow: "hidden" }}>
-      <div
-        style={{
-          position: "absolute",
-          left: W / 2,
-          top: baseline,
-          fontFamily: sans,
-          fontWeight: 500,
-          fontSize: F,
-          lineHeight: LINE,
-          letterSpacing: `${TRACK}em`,
-          fontKerning: "normal",
-        }}
-      >
-        {words}
-      </div>
-      <Grain opacity={c.grain} />
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
+      <ScaleLayer scale={scale}>
+        <div
+          style={{
+            position: "absolute",
+            left: W / 2,
+            top: baseline,
+            fontFamily,
+            fontWeight: 500,
+            fontSize: F,
+            lineHeight: LINE,
+            letterSpacing: `${TRACK}em`,
+            fontKerning: "normal",
+          }}
+        >
+          {words}
+        </div>
+      </ScaleLayer>
+      {grain ? <Grain opacity={c.grain} /> : null}
     </AbsoluteFill>
   );
 }

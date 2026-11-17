@@ -35,6 +35,21 @@ export interface TreemapSplitProps {
   items?: TreemapItem[];
   highlight?: number;
   accent?: string;
+  /** Text color of the cell labels; overrides the theme. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the labels and figure. Load it yourself; Schibsted Grotesk by default. */
+  fontFamily?: string;
+  /** Frames each split takes to draw its line and open. */
+  split?: number;
+  /** Corner radius of the cells, in px at 720p. */
+  radius?: number;
+  grain?: boolean;
+  /** Size of the treemap, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -216,9 +231,9 @@ interface Line {
   fade: number;
 }
 
-function lastEnd(n: TNode): number {
+function lastEnd(n: TNode, split: number): number {
   if (!n.a || !n.b) return 0;
-  return Math.max(n.start + SPLIT, lastEnd(n.a), lastEnd(n.b));
+  return Math.max(n.start + split, lastEnd(n.a, split), lastEnd(n.b, split));
 }
 
 function layout(
@@ -229,12 +244,13 @@ function layout(
   cells: Cell[],
   lines: Line[],
   settle: number,
+  split: number,
 ) {
   if (!n.a || !n.b || t < n.start) {
     cells.push({ key: n.id, rect: r, leaf: n.leaf, settle });
     return;
   }
-  const p = (t - n.start) / SPLIT;
+  const p = (t - n.start) / split;
   const draw = interpolate(p, [0, 0.38], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
@@ -245,7 +261,7 @@ function layout(
   });
   const f = 0.5 + (n.f - 0.5) * open;
   const g = gap * open;
-  const end = n.start + SPLIT;
+  const end = n.start + split;
   let ra: Rect;
   let rb: Rect;
   if (n.vertical) {
@@ -275,8 +291,8 @@ function layout(
       fade: 1 - open,
     });
   }
-  layout(n.a, ra, t, gap, cells, lines, end);
-  layout(n.b, rb, t, gap, cells, lines, end);
+  layout(n.a, ra, t, gap, cells, lines, end, split);
+  layout(n.b, rb, t, gap, cells, lines, end, split);
 }
 
 function Grain({ opacity }: { opacity: number }) {
@@ -303,17 +319,44 @@ function Grain({ opacity }: { opacity: number }) {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function TreemapSplit({
   items = DEFAULT_ITEMS,
   highlight,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = sans,
+  split = SPLIT,
+  radius: corner = 6,
+  grain = true,
+  scale: zoom = 1,
+  delay = 0,
   theme = "dark",
   speed = 1,
 }: TreemapSplitProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height } = useVideoConfig();
   const u = Math.min(width / 1280, height / 720);
   const p = THEMES[theme];
+  const fg = ink ?? p.fg;
+  const transparent = background === "transparent";
+  const stage = transparent ? "transparent" : (background ?? p.bg);
 
   const list = useMemo(
     () =>
@@ -335,7 +378,7 @@ export function TreemapSplit({
   const my = height * 0.1;
   const root: Rect = { x: mx, y: my, w: width - mx * 2, h: height - my * 2 };
   const gap = 8 * u;
-  const radius = 6 * u;
+  const radius = corner * u;
 
   const tree = useMemo(
     () =>
@@ -350,12 +393,12 @@ export function TreemapSplit({
       ),
     [list, root.w, root.h],
   );
-  const splitsDone = Math.max(lastEnd(tree), T0);
+  const splitsDone = Math.max(lastEnd(tree, split), T0);
   const ACC = splitsDone + 8;
 
   const cells: Cell[] = [];
   const lines: Line[] = [];
-  layout(tree, root, t, gap, cells, lines, 0);
+  layout(tree, root, t, gap, cells, lines, 0, split);
 
   const enter = interpolate(t, [0, 14], [0, 1], { ...CLAMP, easing: EASE_OUT });
   const push = interpolate(t, [0, ACC + 50], [0, 1], {
@@ -387,182 +430,186 @@ export function TreemapSplit({
   });
 
   return (
-    <AbsoluteFill style={{ background: p.bg, overflow: "hidden" }}>
-      <AbsoluteFill
-        style={{
-          transform: `scale(${scale})`,
-          transformOrigin: "50% 50%",
-          opacity: enter,
-        }}
-      >
-        {cells.map((c) => {
-          const isHl = c.leaf === hl;
-          const item = c.leaf !== null ? list[c.leaf] : null;
-          const pct = item ? Math.round((item.value / total) * 100) : 0;
-          const roomy = c.rect.w >= 120 * u && c.rect.h >= 70 * u;
-          const labA =
-            item && roomy
-              ? interpolate(t, [c.settle - 4, c.settle + 12], [0, 1], {
-                  ...CLAMP,
-                  easing: EASE_OUT,
-                })
-              : 0;
-          const smallLab = isHl ? labA * (1 - preFill) : labA;
-          const heroFont = Math.min(
-            136 * u,
-            c.rect.h * 0.42,
-            c.rect.w / (String(pct).length * 0.58 + 0.75),
-          );
-          const cellStyle: React.CSSProperties = {
-            position: "absolute",
-            left: c.rect.x,
-            top: c.rect.y,
-            width: Math.max(0, c.rect.w),
-            height: Math.max(0, c.rect.h),
-            borderRadius: radius,
-            background: p.cell,
-            boxShadow: `inset 0 0 0 ${Math.max(1, u)}px ${p.edge}`,
-            overflow: "hidden",
-          };
-          return (
-            <div key={c.key} style={cellStyle}>
-              {isHl ? (
-                <div
-                  style={{
-                    position: "absolute",
-                    inset: 0,
-                    background: flutedFill(10 + 8 * push, accent, 26 * u),
-                    clipPath: `inset(0 ${(1 - fill) * 100}% 0 0)`,
-                  }}
-                />
-              ) : null}
-              {item ? (
-                <div
-                  style={{
-                    position: "absolute",
-                    left: 16 * u,
-                    top: 14 * u,
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 3 * u,
-                    opacity: smallLab * (isHl ? 1 : 1 - 0.35 * dimOthers),
-                    transform: `translateY(${(1 - labA) * 6 * u}px)`,
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  <span
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
+      <ScaleLayer scale={zoom}>
+        <AbsoluteFill
+          style={{
+            transform: `scale(${scale})`,
+            transformOrigin: "50% 50%",
+            opacity: enter,
+          }}
+        >
+          {cells.map((c) => {
+            const isHl = c.leaf === hl;
+            const item = c.leaf !== null ? list[c.leaf] : null;
+            const pct = item ? Math.round((item.value / total) * 100) : 0;
+            const roomy = c.rect.w >= 120 * u && c.rect.h >= 70 * u;
+            const labA =
+              item && roomy
+                ? interpolate(t, [c.settle - 4, c.settle + 12], [0, 1], {
+                    ...CLAMP,
+                    easing: EASE_OUT,
+                  })
+                : 0;
+            const smallLab = isHl ? labA * (1 - preFill) : labA;
+            const heroFont = Math.min(
+              136 * u,
+              c.rect.h * 0.42,
+              c.rect.w / (String(pct).length * 0.58 + 0.75),
+            );
+            const cellStyle: React.CSSProperties = {
+              position: "absolute",
+              left: c.rect.x,
+              top: c.rect.y,
+              width: Math.max(0, c.rect.w),
+              height: Math.max(0, c.rect.h),
+              borderRadius: radius,
+              background: p.cell,
+              boxShadow: `inset 0 0 0 ${Math.max(1, u)}px ${p.edge}`,
+              overflow: "hidden",
+            };
+            return (
+              <div key={c.key} style={cellStyle}>
+                {isHl ? (
+                  <div
                     style={{
-                      fontFamily: sans,
-                      fontWeight: 500,
-                      fontSize: 18 * u,
-                      letterSpacing: "-0.01em",
-                      color: p.fg,
+                      position: "absolute",
+                      inset: 0,
+                      background: flutedFill(10 + 8 * push, accent, 26 * u),
+                      clipPath: `inset(0 ${(1 - fill) * 100}% 0 0)`,
+                    }}
+                  />
+                ) : null}
+                {item ? (
+                  <div
+                    style={{
+                      position: "absolute",
+                      left: 16 * u,
+                      top: 14 * u,
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 3 * u,
+                      opacity: smallLab * (isHl ? 1 : 1 - 0.35 * dimOthers),
+                      transform: `translateY(${(1 - labA) * 6 * u}px)`,
+                      whiteSpace: "nowrap",
                     }}
                   >
-                    {item.label}
-                  </span>
-                  <span
-                    style={{
-                      fontFamily: sans,
-                      fontWeight: 400,
-                      fontSize: 15 * u,
-                      color: p.muted,
-                      fontVariantNumeric: "tabular-nums",
-                    }}
-                  >
-                    {pct}%
-                  </span>
-                </div>
-              ) : null}
-              {isHl && item ? (
-                <div
-                  style={{
-                    position: "absolute",
-                    left: 26 * u,
-                    bottom: 18 * u,
-                    display: "flex",
-                    flexDirection: "column",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  <span
-                    style={{
-                      fontFamily: sans,
-                      fontWeight: 400,
-                      fontSize: 28 * u,
-                      letterSpacing: "-0.015em",
-                      color: "rgba(255,255,255,0.92)",
-                      opacity: heroLab,
-                      transform: `translateY(${(1 - heroLab) * 8 * u}px)`,
-                      marginLeft: 4 * u,
-                    }}
-                  >
-                    {item.label}
-                  </span>
-                  <span
-                    style={{
-                      fontFamily: sans,
-                      fontWeight: 500,
-                      fontSize: heroFont,
-                      lineHeight: 1,
-                      letterSpacing: "-0.05em",
-                      color: "#FFFFFF",
-                      fontVariantNumeric: "tabular-nums",
-                      opacity: heroIn,
-                      filter:
-                        heroIn < 0.99
-                          ? `blur(${(1 - heroIn) * 8 * u}px)`
-                          : undefined,
-                      transform: `translateY(${(1 - heroIn) * 20 * u}px)`,
-                    }}
-                  >
-                    {Math.round(pct * count)}
                     <span
                       style={{
-                        fontSize: heroFont * 0.55,
-                        letterSpacing: "-0.03em",
+                        fontFamily,
+                        fontWeight: 500,
+                        fontSize: 18 * u,
+                        letterSpacing: "-0.01em",
+                        color: fg,
                       }}
                     >
-                      %
+                      {item.label}
                     </span>
-                  </span>
-                </div>
-              ) : null}
-            </div>
-          );
-        })}
-        <svg
-          width={width}
-          height={height}
-          style={{ position: "absolute", inset: 0 }}
-          aria-hidden
-        >
-          {lines.map((l) => {
-            if (l.draw <= 0 || l.fade <= 0) return null;
-            const x2 = l.x1 + (l.x2 - l.x1) * l.draw;
-            const y2 = l.y1 + (l.y2 - l.y1) * l.draw;
-            return (
-              <line
-                key={l.key}
-                x1={l.x1}
-                y1={l.y1}
-                x2={x2}
-                y2={y2}
-                stroke={p.hair}
-                strokeWidth={Math.max(1, 1.25 * u)}
-                opacity={l.fade}
-              />
+                    <span
+                      style={{
+                        fontFamily,
+                        fontWeight: 400,
+                        fontSize: 15 * u,
+                        color: p.muted,
+                        fontVariantNumeric: "tabular-nums",
+                      }}
+                    >
+                      {pct}%
+                    </span>
+                  </div>
+                ) : null}
+                {isHl && item ? (
+                  <div
+                    style={{
+                      position: "absolute",
+                      left: 26 * u,
+                      bottom: 18 * u,
+                      display: "flex",
+                      flexDirection: "column",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontFamily,
+                        fontWeight: 400,
+                        fontSize: 28 * u,
+                        letterSpacing: "-0.015em",
+                        color: "rgba(255,255,255,0.92)",
+                        opacity: heroLab,
+                        transform: `translateY(${(1 - heroLab) * 8 * u}px)`,
+                        marginLeft: 4 * u,
+                      }}
+                    >
+                      {item.label}
+                    </span>
+                    <span
+                      style={{
+                        fontFamily,
+                        fontWeight: 500,
+                        fontSize: heroFont,
+                        lineHeight: 1,
+                        letterSpacing: "-0.05em",
+                        color: "#FFFFFF",
+                        fontVariantNumeric: "tabular-nums",
+                        opacity: heroIn,
+                        filter:
+                          heroIn < 0.99
+                            ? `blur(${(1 - heroIn) * 8 * u}px)`
+                            : undefined,
+                        transform: `translateY(${(1 - heroIn) * 20 * u}px)`,
+                      }}
+                    >
+                      {Math.round(pct * count)}
+                      <span
+                        style={{
+                          fontSize: heroFont * 0.55,
+                          letterSpacing: "-0.03em",
+                        }}
+                      >
+                        %
+                      </span>
+                    </span>
+                  </div>
+                ) : null}
+              </div>
             );
           })}
-        </svg>
-      </AbsoluteFill>
-      <AbsoluteFill
-        style={{
-          background: `radial-gradient(ellipse 85% 85% at 50% 50%, transparent 65%, ${p.bg} 100%)`,
-          opacity: 0.5,
-        }}
-      />
-      <Grain opacity={p.grain} />
+          <svg
+            width={width}
+            height={height}
+            style={{ position: "absolute", inset: 0 }}
+            aria-hidden
+          >
+            {lines.map((l) => {
+              if (l.draw <= 0 || l.fade <= 0) return null;
+              const x2 = l.x1 + (l.x2 - l.x1) * l.draw;
+              const y2 = l.y1 + (l.y2 - l.y1) * l.draw;
+              return (
+                <line
+                  key={l.key}
+                  x1={l.x1}
+                  y1={l.y1}
+                  x2={x2}
+                  y2={y2}
+                  stroke={p.hair}
+                  strokeWidth={Math.max(1, 1.25 * u)}
+                  opacity={l.fade}
+                />
+              );
+            })}
+          </svg>
+        </AbsoluteFill>
+      </ScaleLayer>
+      {transparent ? null : (
+        <AbsoluteFill
+          style={{
+            background: `radial-gradient(ellipse 85% 85% at 50% 50%, transparent 65%, ${stage} 100%)`,
+            opacity: 0.5,
+          }}
+        />
+      )}
+      {grain ? <Grain opacity={p.grain} /> : null}
     </AbsoluteFill>
   );
 }

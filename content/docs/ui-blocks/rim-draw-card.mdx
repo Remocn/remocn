@@ -76,6 +76,22 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       description: "Color of the save button. Defaults depend on theme.",
     },
     {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Solid fill in place of the gradient ground; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Hanken Grotesk\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
       name: "line",
       type: "string",
       default: "\"Just tell it once.\"",
@@ -130,6 +146,24 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       description: "Label the button shows after the press.",
     },
     {
+      name: "cancelLabel",
+      type: "string",
+      default: "\"Cancel\"",
+      description: "Label of the secondary button next to the action.",
+    },
+    {
+      name: "placeholder",
+      type: "string",
+      default: "\"Describe how this skill should write\"",
+      description: "Hint in the field before the instructions start typing.",
+    },
+    {
+      name: "typeRate",
+      type: "number",
+      default: "2.2",
+      description: "Characters typed per frame in the instructions field.",
+    },
+    {
       name: "uses",
       type: "string[]",
       description: "Chips listing where the saved item is used.",
@@ -149,6 +183,24 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       name: "groundParams",
       type: "Partial<GradientParams>",
       description: "Partial shader parameters that override the ground preset.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
     },
   ]}
 />

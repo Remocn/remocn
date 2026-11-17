@@ -2,6 +2,7 @@
 
 import { loadFont } from "@remotion/google-fonts/HankenGrotesk";
 import { loadFont as loadSerif } from "@remotion/google-fonts/InstrumentSerif";
+import type React from "react";
 import { type ReactNode, useId, useMemo } from "react";
 import {
   AbsoluteFill,
@@ -27,6 +28,23 @@ export interface HiddenWordProps {
   /** The word hiding in it; its letters are found in order inside `text`. */
   word?: string;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
+  /** Background fill in place of the theme bloom; "transparent" drops it. */
+  background?: string;
+  /**
+   * Typeface for the sentence. Load it yourself; Hanken Grotesk by default.
+   * Layout uses Hanken Grotesk metrics, so another face may set looser or tighter.
+   */
+  fontFamily?: string;
+  /** Frames between letters as they lift out of the sentence. */
+  stagger?: number;
+  /** Size of the text, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  /** Film grain over the scene. */
+  grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -380,16 +398,42 @@ interface Glyph {
   line: number;
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function HiddenWord({
   text = "Small teams make their launch film in code and post it by Friday.",
   word = "ship",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = sans,
+  stagger = LIFT_STAGGER,
+  scale: layerScale = 1,
+  delay = 0,
+  grain = true,
   theme = "dark",
   speed = 1,
 }: HiddenWordProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
+  const fg = ink ?? c.fg;
+  const stage =
+    background === "transparent" ? "transparent" : (background ?? c.bg);
 
   const B = Math.min(H * 0.068, W * 0.038);
   const set = useMemo(() => {
@@ -465,8 +509,7 @@ export function HiddenWord({
   picks.forEach((i, j) => {
     if (i >= 0) picked.set(i, j);
   });
-  const lastLand =
-    LIFT_AT + Math.max(0, target.length - 1) * LIFT_STAGGER + FLIGHT;
+  const lastLand = LIFT_AT + Math.max(0, target.length - 1) * stagger + FLIGHT;
   const settle = interpolate(
     t,
     [lastLand + SETTLE_GAP, lastLand + SETTLE_GAP + SETTLE],
@@ -480,7 +523,7 @@ export function HiddenWord({
   const restColor = interpolateColors(
     move,
     [0, 1],
-    [interpolateColors(dim, [0, 1], [c.fg, c.dim]), c.ghost],
+    [interpolateColors(dim, [0, 1], [fg, c.dim]), c.ghost],
   );
 
   const sentence: ReactNode[] = [];
@@ -525,7 +568,7 @@ export function HiddenWord({
       [0, 1],
       { ...CLAMP, easing: EASE_OUT },
     );
-    const liftAt = LIFT_AT + j * LIFT_STAGGER;
+    const liftAt = LIFT_AT + j * stagger;
     const p = interpolate(t, [liftAt, liftAt + FLIGHT], [0, 1], {
       ...CLAMP,
       easing: EASE_IO,
@@ -575,7 +618,7 @@ export function HiddenWord({
     const color = interpolateColors(
       settle,
       [0, 1],
-      [interpolateColors(lit, [0, 1], [restColor, accent]), c.fg],
+      [interpolateColors(lit, [0, 1], [restColor, accent]), fg],
     );
     const layer = (key: string, ch: string, face: Face, o: number) =>
       o > 0 ? (
@@ -586,7 +629,7 @@ export function HiddenWord({
             left: x - (advance(face, ch) * fontSize) / 2,
             top: y - baseOf(face) * fontSize,
             fontSize,
-            fontFamily: face === DISPLAY ? serif : sans,
+            fontFamily: face === DISPLAY ? serif : fontFamily,
             fontStyle: face === DISPLAY ? "italic" : "normal",
             letterSpacing: 0,
             color,
@@ -603,7 +646,7 @@ export function HiddenWord({
   // Letters of the word that the sentence does not contain arrive on their own.
   target.forEach((ch, j) => {
     if (picks[j] >= 0) return;
-    const at = LIFT_AT + j * LIFT_STAGGER + FLIGHT * 0.5;
+    const at = LIFT_AT + j * stagger + FLIGHT * 0.5;
     const v = interpolate(t, [at, at + FLIGHT * 0.5], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
@@ -619,7 +662,7 @@ export function HiddenWord({
           fontSize: F,
           fontFamily: serif,
           fontStyle: "italic",
-          color: interpolateColors(settle, [0, 1], [accent, c.fg]),
+          color: interpolateColors(settle, [0, 1], [accent, fg]),
           opacity: v,
         }}
       >
@@ -636,24 +679,28 @@ export function HiddenWord({
   const ground = `radial-gradient(118% 76% at ${(72 - 8 * drift).toFixed(2)}% ${(104 - 4 * drift).toFixed(2)}%, ${c.mist[0]} 0%, ${c.mist[1]} 22%, ${c.mist[2]} 48%, ${c.mist[3]} 72%, transparent 100%)`;
 
   return (
-    <AbsoluteFill style={{ background: c.bg, overflow: "hidden" }}>
-      <div style={{ position: "absolute", inset: 0, background: ground }} />
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          fontFamily: sans,
-          fontWeight: 400,
-          lineHeight: LINE,
-          fontKerning: "none",
-          whiteSpace: "pre",
-        }}
-      >
-        {sentence}
-        {marks}
-        {flyers}
-      </div>
-      <Grain opacity={c.grain} />
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
+      {background === undefined ? (
+        <div style={{ position: "absolute", inset: 0, background: ground }} />
+      ) : null}
+      <ScaleLayer scale={layerScale}>
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            fontFamily,
+            fontWeight: 400,
+            lineHeight: LINE,
+            fontKerning: "none",
+            whiteSpace: "pre",
+          }}
+        >
+          {sentence}
+          {marks}
+          {flyers}
+        </div>
+      </ScaleLayer>
+      {grain ? <Grain opacity={c.grain} /> : null}
     </AbsoluteFill>
   );
 }

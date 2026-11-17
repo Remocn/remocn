@@ -76,10 +76,55 @@ The `from` headline holds, then a sequence of rings in alternating tones and thi
       description: "Center of the expanding rings as fractions of the frame",
     },
     {
+      name: "stagger",
+      type: "number",
+      default: "3",
+      description: "Frames between one ring and the next",
+    },
+    {
+      name: "expand",
+      type: "number",
+      default: "24",
+      description: "Frames each ring takes to grow past the frame's edge",
+    },
+    {
       name: "accent",
       type: "string",
       default: "\"#3B5BFD\"",
       description: "Accent color used by the scenes",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color of both headlines; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Solid fill in place of the incoming gradient ground; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Manrope\"",
+      description: "Typeface for the headlines. Load the font in your project first.",
+    },
+    {
+      name: "logo",
+      type: "React.ReactNode",
+      description: "Replaces the remocn mark shown when `to` is Remocn.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the headlines around the frame's center; the rings and grounds stay put.",
+    },
+    {
+      name: "grain",
+      type: "boolean",
+      default: "true",
+      description: "Film grain over the scene.",
     },
     {
       name: "theme",
@@ -92,6 +137,12 @@ The `from` headline holds, then a sequence of rings in alternating tones and thi
       type: "number",
       default: "1",
       description: "Playback multiplier for the whole timeline",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
   ]}
 />

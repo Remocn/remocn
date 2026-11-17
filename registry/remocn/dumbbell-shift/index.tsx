@@ -2,6 +2,7 @@
 
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
 import { loadFont } from "@remotion/google-fonts/SchibstedGrotesk";
+import type React from "react";
 import { useId } from "react";
 import {
   AbsoluteFill,
@@ -33,7 +34,25 @@ export interface DumbbellShiftProps {
   afterLabel?: string;
   summaryCaption?: string;
   max?: number;
+  /** Replaces the remocn mark in the after label. */
+  logo?: React.ReactNode;
   accent?: string;
+  /** Text color of the row labels and the big figure; overrides the theme ink. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Schibsted Grotesk by default. */
+  fontFamily?: string;
+  /** Frames between rows as their dots start to slide. */
+  stagger?: number;
+  /** Frames each dot takes to slide from before to after. */
+  slideDuration?: number;
+  /** Size of the chart, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  /** Film grain over the scene. */
+  grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -148,20 +167,47 @@ function Grain({ opacity }: { opacity: number }) {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function DumbbellShift({
   rows = DEFAULT_ROWS,
   beforeLabel = "Before",
   afterLabel = "With remocn",
   summaryCaption,
   max,
+  logo,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = sans,
+  stagger = SLIDE_STAGGER,
+  slideDuration = SLIDE_DUR,
+  scale = 1,
+  delay = 0,
+  grain = true,
   theme = "dark",
   speed = 1,
 }: DumbbellShiftProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height } = useVideoConfig();
   const u = Math.min(width / 1280, height / 720);
   const p = THEMES[theme];
+  const fg = ink ?? p.fg;
+  const bg = background ?? p.bg;
 
   const list = rows.slice(0, 7);
   const n = list.length;
@@ -219,14 +265,14 @@ export function DumbbellShift({
       [0, 1],
       { ...CLAMP, easing: EASE_OUT },
     );
-    const s0 = SLIDE_START + i * SLIDE_STAGGER;
-    const slide = interpolate(t, [s0, s0 + SLIDE_DUR], [0, 1], {
+    const s0 = SLIDE_START + i * stagger;
+    const slide = interpolate(t, [s0, s0 + slideDuration], [0, 1], {
       ...CLAMP,
       easing: EASE_SLIDE,
     });
     const deltaIn = interpolate(
       t,
-      [s0 + SLIDE_DUR - 8, s0 + SLIDE_DUR + 8],
+      [s0 + slideDuration - 8, s0 + slideDuration + 8],
       [0, 1],
       {
         ...CLAMP,
@@ -262,242 +308,244 @@ export function DumbbellShift({
     summaryCaption ?? (win ? `${win.row.label.toLowerCase()} a month` : "");
 
   return (
-    <AbsoluteFill style={{ background: p.bg, overflow: "hidden" }}>
-      <AbsoluteFill
-        style={{ transform: `scale(${push})`, transformOrigin: "50% 50%" }}
-      >
-        <svg
-          width={width}
-          height={height}
-          style={{ position: "absolute", inset: 0 }}
-          aria-hidden
+    <AbsoluteFill style={{ background: bg, overflow: "hidden" }}>
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill
+          style={{ transform: `scale(${push})`, transformOrigin: "50% 50%" }}
         >
-          <defs>
-            <linearGradient id={gid} x1={0} y1={0} x2={1} y2={0}>
-              <stop offset={0} stopColor={p.fluted[0]} />
-              <stop offset={0.38} stopColor={p.fluted[1]} />
-              <stop offset={0.78} stopColor={p.fluted[2]} />
-              <stop offset={1} stopColor={p.fluted[3]} />
-            </linearGradient>
-          </defs>
-          {items.map((it) => (
-            <g key={it.row.label} opacity={it.fade}>
-              <line
-                x1={ax0}
-                x2={ax0 + (ax1 - ax0) * it.enter}
-                y1={it.y}
-                y2={it.y}
-                stroke={p.guide}
-                strokeWidth={Math.max(1, u)}
-              />
-              {it.slide > 0 && Math.abs(it.x - it.xb) > 0.5 ? (
-                <>
-                  <rect
-                    x={Math.min(it.xb, it.x)}
-                    y={it.y - (barH * (it.isWin ? 1 + 0.35 * dim : 1)) / 2}
-                    width={Math.abs(it.x - it.xb)}
-                    height={barH * (it.isWin ? 1 + 0.35 * dim : 1)}
-                    rx={(barH * (it.isWin ? 1 + 0.35 * dim : 1)) / 2}
-                    fill={`url(#${gid})`}
-                    opacity={it.isWin ? 1 : 1 - dim}
-                  />
-                  {it.isWin ? null : (
+          <svg
+            width={width}
+            height={height}
+            style={{ position: "absolute", inset: 0 }}
+            aria-hidden
+          >
+            <defs>
+              <linearGradient id={gid} x1={0} y1={0} x2={1} y2={0}>
+                <stop offset={0} stopColor={p.fluted[0]} />
+                <stop offset={0.38} stopColor={p.fluted[1]} />
+                <stop offset={0.78} stopColor={p.fluted[2]} />
+                <stop offset={1} stopColor={p.fluted[3]} />
+              </linearGradient>
+            </defs>
+            {items.map((it) => (
+              <g key={it.row.label} opacity={it.fade}>
+                <line
+                  x1={ax0}
+                  x2={ax0 + (ax1 - ax0) * it.enter}
+                  y1={it.y}
+                  y2={it.y}
+                  stroke={p.guide}
+                  strokeWidth={Math.max(1, u)}
+                />
+                {it.slide > 0 && Math.abs(it.x - it.xb) > 0.5 ? (
+                  <>
                     <rect
                       x={Math.min(it.xb, it.x)}
-                      y={it.y - barH / 2}
+                      y={it.y - (barH * (it.isWin ? 1 + 0.35 * dim : 1)) / 2}
                       width={Math.abs(it.x - it.xb)}
-                      height={barH}
-                      rx={barH / 2}
-                      fill={p.muted}
-                      opacity={0.42 * dim}
+                      height={barH * (it.isWin ? 1 + 0.35 * dim : 1)}
+                      rx={(barH * (it.isWin ? 1 + 0.35 * dim : 1)) / 2}
+                      fill={`url(#${gid})`}
+                      opacity={it.isWin ? 1 : 1 - dim}
                     />
-                  )}
-                </>
-              ) : null}
-              {it.slide > 0 ? (
+                    {it.isWin ? null : (
+                      <rect
+                        x={Math.min(it.xb, it.x)}
+                        y={it.y - barH / 2}
+                        width={Math.abs(it.x - it.xb)}
+                        height={barH}
+                        rx={barH / 2}
+                        fill={p.muted}
+                        opacity={0.42 * dim}
+                      />
+                    )}
+                  </>
+                ) : null}
+                {it.slide > 0 ? (
+                  <circle
+                    cx={it.x}
+                    cy={it.y}
+                    r={r}
+                    fill={it.tone}
+                    opacity={interpolate(it.slide, [0, 0.12], [0, 1], CLAMP)}
+                  />
+                ) : null}
+                {it.isWin ? (
+                  <circle
+                    cx={it.x}
+                    cy={it.y}
+                    r={r + (4 + 6 * dim) * u}
+                    fill="none"
+                    stroke={accent}
+                    strokeWidth={1.5 * u}
+                    opacity={dim * 0.9}
+                  />
+                ) : null}
                 <circle
-                  cx={it.x}
+                  cx={it.xb}
                   cy={it.y}
-                  r={r}
-                  fill={it.tone}
-                  opacity={interpolate(it.slide, [0, 0.12], [0, 1], CLAMP)}
+                  r={r * (0.6 + 0.4 * it.enter)}
+                  fill={p.dot}
+                  opacity={it.enter}
                 />
-              ) : null}
-              {it.isWin ? (
-                <circle
-                  cx={it.x}
-                  cy={it.y}
-                  r={r + (4 + 6 * dim) * u}
-                  fill="none"
-                  stroke={accent}
-                  strokeWidth={1.5 * u}
-                  opacity={dim * 0.9}
-                />
-              ) : null}
-              <circle
-                cx={it.xb}
-                cy={it.y}
-                r={r * (0.6 + 0.4 * it.enter)}
-                fill={p.dot}
-                opacity={it.enter}
-              />
-            </g>
-          ))}
-        </svg>
+              </g>
+            ))}
+          </svg>
 
-        {items.map((it) => (
-          <div
-            key={it.row.label}
-            style={{
-              position: "absolute",
-              left: m,
-              top: it.y,
-              transform: `translateY(-50%) translateX(${(1 - it.enter) * -10 * u}px)`,
-              fontFamily: sans,
-              fontWeight: it.isWin && dim > 0.5 ? 500 : 400,
-              fontSize: 24 * u,
-              letterSpacing: "-0.015em",
-              color: p.fg,
-              opacity: it.enter * it.fade * duck[it.i],
-              whiteSpace: "nowrap",
-            }}
-          >
-            {it.row.label}
-          </div>
-        ))}
-
-        {items.map((it) => {
-          if (it.isWin) return null;
-          const v = Math.round(deltas[it.i] * it.slide);
-          return (
+          {items.map((it) => (
             <div
               key={it.row.label}
               style={{
                 position: "absolute",
-                left: it.xa + r + 14 * u,
+                left: m,
                 top: it.y,
-                transform: `translateY(-50%) translateX(${(1 - it.deltaIn) * -6 * u}px)`,
-                fontFamily: sans,
-                fontWeight: 400,
-                fontSize: 20 * u,
-                color: p.muted,
-                fontVariantNumeric: "tabular-nums",
-                opacity: it.deltaIn * (1 - dim) * duck[it.i],
+                transform: `translateY(-50%) translateX(${(1 - it.enter) * -10 * u}px)`,
+                fontFamily,
+                fontWeight: it.isWin && dim > 0.5 ? 500 : 400,
+                fontSize: 24 * u,
+                letterSpacing: "-0.015em",
+                color: fg,
+                opacity: it.enter * it.fade * duck[it.i],
                 whiteSpace: "nowrap",
               }}
             >
-              {deltaText(v)}
+              {it.row.label}
             </div>
-          );
-        })}
+          ))}
 
-        {win
-          ? [
-              { key: "b", x: win.xb, text: beforeLabel, a: win.enter },
-              { key: "a", x: win.xa, text: afterLabel, a: win.deltaIn },
-            ].map((nt) => (
+          {items.map((it) => {
+            if (it.isWin) return null;
+            const v = Math.round(deltas[it.i] * it.slide);
+            return (
               <div
-                key={nt.key}
+                key={it.row.label}
                 style={{
                   position: "absolute",
-                  left: nt.x,
-                  top: win.y - r - 10 * u,
-                  transform: `translate(-50%, -100%) translateY(${(1 - nt.a) * 6 * u}px)`,
-                  display: "flex",
-                  alignItems: "baseline",
-                  gap: "0.3em",
-                  fontFamily: sans,
+                  left: it.xa + r + 14 * u,
+                  top: it.y,
+                  transform: `translateY(-50%) translateX(${(1 - it.deltaIn) * -6 * u}px)`,
+                  fontFamily,
                   fontWeight: 400,
-                  fontSize: 17 * u,
-                  color: nt.key === "a" ? p.fg : p.muted,
-                  opacity: nt.a * noteOut,
+                  fontSize: 20 * u,
+                  color: p.muted,
+                  fontVariantNumeric: "tabular-nums",
+                  opacity: it.deltaIn * (1 - dim) * duck[it.i],
                   whiteSpace: "nowrap",
                 }}
               >
-                {nt.key === "a" && /remocn$/i.test(nt.text) ? (
-                  <>
-                    {nt.text.replace(/remocn$/i, "").trim()}
-                    <RemocnLogo fontSize={18 * u} color={p.fg} />
-                  </>
-                ) : (
-                  nt.text
-                )}
+                {deltaText(v)}
               </div>
-            ))
-          : null}
+            );
+          })}
 
-        {win ? (
-          <div
-            style={{
-              position: "absolute",
-              left:
-                win.xa + r + 14 * u + (heroX - (win.xa + r + 14 * u)) * grow,
-              top: win.y,
-              transform: "translateY(-50%)",
-              opacity: win.deltaIn,
-            }}
-          >
-            <div
-              style={{
-                fontFamily: sans,
-                fontWeight: 400,
-                fontSize: 132 * u,
-                lineHeight: 1,
-                letterSpacing: `${interpolate(grow, [0, 1], [0, -0.05])}em`,
-                color: interpolateColors(grow, [0, 1], [p.muted, p.fg]),
-                fontVariantNumeric: "tabular-nums",
-                whiteSpace: "nowrap",
-                transformOrigin: "0% 50%",
-                transform: `scale(${interpolate(grow, [0, 1], [20 / 132, 1])})`,
-              }}
-            >
-              <span style={{ position: "relative", display: "inline-block" }}>
-                {heroText}
-                <span
-                  aria-hidden
+          {win
+            ? [
+                { key: "b", x: win.xb, text: beforeLabel, a: win.enter },
+                { key: "a", x: win.xa, text: afterLabel, a: win.deltaIn },
+              ].map((nt) => (
+                <div
+                  key={nt.key}
                   style={{
                     position: "absolute",
-                    inset: 0,
-                    backgroundImage: p.heroText,
-                    backgroundSize: "100% 100%",
-                    WebkitBackgroundClip: "text",
-                    backgroundClip: "text",
-                    color: "transparent",
-                    opacity: grow,
+                    left: nt.x,
+                    top: win.y - r - 10 * u,
+                    transform: `translate(-50%, -100%) translateY(${(1 - nt.a) * 6 * u}px)`,
+                    display: "flex",
+                    alignItems: "baseline",
+                    gap: "0.3em",
+                    fontFamily,
+                    fontWeight: 400,
+                    fontSize: 17 * u,
+                    color: nt.key === "a" ? fg : p.muted,
+                    opacity: nt.a * noteOut,
+                    whiteSpace: "nowrap",
                   }}
                 >
-                  {heroText}
-                </span>
-              </span>
-            </div>
+                  {nt.key === "a" && /remocn$/i.test(nt.text) ? (
+                    <>
+                      {nt.text.replace(/remocn$/i, "").trim()}
+                      {logo ?? <RemocnLogo fontSize={18 * u} color={fg} />}
+                    </>
+                  ) : (
+                    nt.text
+                  )}
+                </div>
+              ))
+            : null}
+
+          {win ? (
             <div
               style={{
                 position: "absolute",
-                left: 4 * u,
-                top: "100%",
-                marginTop: 6 * u,
-                fontFamily: sans,
-                fontWeight: 400,
-                fontSize: 21 * u,
-                color: p.muted,
-                whiteSpace: "nowrap",
-                opacity: capIn,
-                transform: `translateY(${(1 - capIn) * 6 * u}px)`,
+                left:
+                  win.xa + r + 14 * u + (heroX - (win.xa + r + 14 * u)) * grow,
+                top: win.y,
+                transform: "translateY(-50%)",
+                opacity: win.deltaIn,
               }}
             >
-              {winCaption}
+              <div
+                style={{
+                  fontFamily,
+                  fontWeight: 400,
+                  fontSize: 132 * u,
+                  lineHeight: 1,
+                  letterSpacing: `${interpolate(grow, [0, 1], [0, -0.05])}em`,
+                  color: interpolateColors(grow, [0, 1], [p.muted, fg]),
+                  fontVariantNumeric: "tabular-nums",
+                  whiteSpace: "nowrap",
+                  transformOrigin: "0% 50%",
+                  transform: `scale(${interpolate(grow, [0, 1], [20 / 132, 1])})`,
+                }}
+              >
+                <span style={{ position: "relative", display: "inline-block" }}>
+                  {heroText}
+                  <span
+                    aria-hidden
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      backgroundImage: p.heroText,
+                      backgroundSize: "100% 100%",
+                      WebkitBackgroundClip: "text",
+                      backgroundClip: "text",
+                      color: "transparent",
+                      opacity: grow,
+                    }}
+                  >
+                    {heroText}
+                  </span>
+                </span>
+              </div>
+              <div
+                style={{
+                  position: "absolute",
+                  left: 4 * u,
+                  top: "100%",
+                  marginTop: 6 * u,
+                  fontFamily,
+                  fontWeight: 400,
+                  fontSize: 21 * u,
+                  color: p.muted,
+                  whiteSpace: "nowrap",
+                  opacity: capIn,
+                  transform: `translateY(${(1 - capIn) * 6 * u}px)`,
+                }}
+              >
+                {winCaption}
+              </div>
             </div>
-          </div>
-        ) : null}
-      </AbsoluteFill>
+          ) : null}
+        </AbsoluteFill>
+      </ScaleLayer>
 
       <AbsoluteFill
         style={{
-          background: `radial-gradient(ellipse 85% 85% at 50% 50%, transparent 62%, ${p.bg} 100%)`,
+          background: `radial-gradient(ellipse 85% 85% at 50% 50%, transparent 62%, ${bg} 100%)`,
           opacity: 0.5,
         }}
       />
-      <Grain opacity={p.grain} />
+      {grain ? <Grain opacity={p.grain} /> : null}
     </AbsoluteFill>
   );
 }

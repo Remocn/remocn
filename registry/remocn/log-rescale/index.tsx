@@ -26,7 +26,23 @@ export interface LogRescaleProps {
   data?: LogRescaleDatum[];
   accentIndex?: number;
   title?: string;
+  /** Scale tag before the chart rescales. */
+  linearLabel?: string;
+  /** Scale tag after the chart rescales. */
+  logLabel?: string;
+  /** Frame at which the axis starts morphing from linear to log. */
+  morphAt?: number;
   accent?: string;
+  /** Text color of the title and values; overrides the theme. */
+  ink?: string;
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Hanken Grotesk by default. */
+  fontFamily?: string;
+  grain?: boolean;
+  /** Size of the chart, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -123,18 +139,47 @@ function Grain({ opacity }: { opacity: number }) {
 
 const lerp = (a: number, b: number, k: number) => a + (b - a) * k;
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function LogRescale({
   data = DEFAULT_DATA,
   accentIndex,
   title = "remocn renders per year",
+  linearLabel = "Linear",
+  logLabel = "Log",
+  morphAt = MORPH[0],
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = sans,
+  grain = true,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: LogRescaleProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, fps } = useVideoConfig();
   const u = height / 720;
   const p = THEMES[theme];
+  const fg = ink ?? p.fg;
+  const bg =
+    background === "transparent" ? "transparent" : (background ?? p.bg);
+  const morph = [morphAt, morphAt + MORPH[1] - MORPH[0]];
   const heroId = `hero${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
 
   const rows = data.length > 0 ? data : DEFAULT_DATA;
@@ -153,7 +198,7 @@ export function LogRescale({
   const hi = 10 ** Math.ceil(Math.log10(maxV) + 1e-9);
   const decades = Math.round(Math.log10(hi / lo));
 
-  const m = interpolate(t, MORPH, [0, 1], { ...CLAMP, easing: EASE_IO });
+  const m = interpolate(t, morph, [0, 1], { ...CLAMP, easing: EASE_IO });
   const linN = (v: number) => v / linMax;
   const logN = (v: number) =>
     (Math.log10(Math.max(v, lo)) - Math.log10(lo)) / decades;
@@ -216,7 +261,7 @@ export function LogRescale({
     });
   };
 
-  const scaleSwap = interpolate(t, [MORPH[0] + 4, MORPH[0] + 20], [0, 1], {
+  const scaleSwap = interpolate(t, [morph[0] + 4, morph[0] + 20], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
@@ -240,251 +285,258 @@ export function LogRescale({
   const tagH = 20 * u;
 
   return (
-    <AbsoluteFill style={{ background: p.bg, overflow: "hidden" }}>
-      <svg
-        width={width}
-        height={height}
-        style={{ position: "absolute", inset: 0 }}
-        aria-hidden
-      >
-        <defs>
-          <linearGradient
-            id={heroId}
-            gradientUnits="userSpaceOnUse"
-            x1={0}
+    <AbsoluteFill style={{ background: bg, overflow: "hidden" }}>
+      <ScaleLayer scale={scale}>
+        <svg
+          width={width}
+          height={height}
+          style={{ position: "absolute", inset: 0 }}
+          aria-hidden
+        >
+          <defs>
+            <linearGradient
+              id={heroId}
+              gradientUnits="userSpaceOnUse"
+              x1={0}
+              y1={bottom}
+              x2={0}
+              y2={top - chartH * 0.05}
+            >
+              <stop offset={0} stopColor={p.hero[0]} />
+              <stop offset={0.38} stopColor={accent} />
+              <stop offset={0.78} stopColor={p.hero[2]} />
+              <stop offset={1} stopColor={p.hero[3]} />
+            </linearGradient>
+          </defs>
+          {minors.map((mi) =>
+            mi.y > top - 2 * u && mi.y < bottom - 1 ? (
+              <line
+                key={`mi-${mi.v}`}
+                x1={left}
+                x2={right}
+                y1={mi.y}
+                y2={mi.y}
+                stroke={p.minor}
+                strokeWidth={sw}
+                opacity={minorA}
+              />
+            ) : null,
+          )}
+          {ticks.map((tk) =>
+            tk.a > 0.001 && tk.y < bottom - 1 ? (
+              <line
+                key={`g-${tk.v}`}
+                x1={left}
+                x2={right}
+                y1={tk.y}
+                y2={tk.y}
+                stroke={p.grid}
+                strokeWidth={sw}
+                opacity={tk.a}
+              />
+            ) : null,
+          )}
+
+          {rows.map((d, i) => {
+            const g = growOf(i);
+            const h = Math.max(
+              2 * u * Math.min(1, g * 4),
+              norm(values[i]) * chartH * g,
+            );
+            const x = left + slot * (i + 0.5) - bw / 2;
+            const isA = i === ai;
+            const r = Math.min(4 * u, h / 2, bw / 2);
+            const fill = isA
+              ? `url(#${heroId})`
+              : interpolateColors(dim, [0, 1], [p.barEnd, p.bar]);
+            return (
+              <path
+                key={`b-${d.label}`}
+                d={`M${x} ${bottom} L${x} ${bottom - h + r} Q${x} ${bottom - h} ${x + r} ${bottom - h} L${x + bw - r} ${bottom - h} Q${x + bw} ${bottom - h} ${x + bw} ${bottom - h + r} L${x + bw} ${bottom} Z`}
+                fill={fill}
+                opacity={g > 0 ? 1 : 0}
+              />
+            );
+          })}
+
+          <line
+            x1={left}
+            x2={lerp(left, right, intro)}
             y1={bottom}
-            x2={0}
-            y2={top - chartH * 0.05}
-          >
-            <stop offset={0} stopColor={p.hero[0]} />
-            <stop offset={0.38} stopColor={accent} />
-            <stop offset={0.78} stopColor={p.hero[2]} />
-            <stop offset={1} stopColor={p.hero[3]} />
-          </linearGradient>
-        </defs>
-        {minors.map((mi) =>
-          mi.y > top - 2 * u && mi.y < bottom - 1 ? (
-            <line
-              key={`mi-${mi.v}`}
-              x1={left}
-              x2={right}
-              y1={mi.y}
-              y2={mi.y}
-              stroke={p.minor}
-              strokeWidth={sw}
-              opacity={minorA}
-            />
-          ) : null,
-        )}
+            y2={bottom}
+            stroke={p.base}
+            strokeWidth={Math.max(1, 1.25 * u)}
+          />
+        </svg>
+
         {ticks.map((tk) =>
-          tk.a > 0.001 && tk.y < bottom - 1 ? (
-            <line
-              key={`g-${tk.v}`}
-              x1={left}
-              x2={right}
-              y1={tk.y}
-              y2={tk.y}
-              stroke={p.grid}
-              strokeWidth={sw}
-              opacity={tk.a}
-            />
+          tk.a > 0.001 ? (
+            <div
+              key={`t-${tk.v}`}
+              style={{
+                position: "absolute",
+                left: left - 160 * u,
+                width: 160 * u - 16 * u,
+                top: tk.y - 10 * u,
+                height: 20 * u,
+                lineHeight: `${20 * u}px`,
+                textAlign: "right",
+                fontFamily,
+                fontWeight: 400,
+                fontSize: 16 * u,
+                letterSpacing: "0",
+                fontVariantNumeric: "tabular-nums",
+                color: p.muted,
+                opacity: tk.a,
+                whiteSpace: "nowrap",
+              }}
+            >
+              {compact(tk.v)}
+            </div>
           ) : null,
         )}
 
         {rows.map((d, i) => {
-          const g = growOf(i);
-          const h = Math.max(
-            2 * u * Math.min(1, g * 4),
-            norm(values[i]) * chartH * g,
-          );
-          const x = left + slot * (i + 0.5) - bw / 2;
+          const x = left + slot * (i + 0.5);
           const isA = i === ai;
-          const r = Math.min(4 * u, h / 2, bw / 2);
-          const fill = isA
-            ? `url(#${heroId})`
-            : interpolateColors(dim, [0, 1], [p.barEnd, p.bar]);
+          const g = growOf(i);
+          const h = norm(values[i]) * chartH * g;
+          const order = i < ai ? i : i - 1;
+          const a = isA
+            ? accentIn
+            : interpolate(
+                t,
+                [LABELS_AT + order * 3, LABELS_AT + 12 + order * 3],
+                [0, 1],
+                { ...CLAMP, easing: EASE_OUT },
+              );
+          const fs = isA ? lerp(20, 60, accentBig) * u : 17 * u;
           return (
-            <path
-              key={`b-${d.label}`}
-              d={`M${x} ${bottom} L${x} ${bottom - h + r} Q${x} ${bottom - h} ${x + r} ${bottom - h} L${x + bw - r} ${bottom - h} Q${x + bw} ${bottom - h} ${x + bw} ${bottom - h + r} L${x + bw} ${bottom} Z`}
-              fill={fill}
-              opacity={g > 0 ? 1 : 0}
-            />
-          );
-        })}
-
-        <line
-          x1={left}
-          x2={lerp(left, right, intro)}
-          y1={bottom}
-          y2={bottom}
-          stroke={p.base}
-          strokeWidth={Math.max(1, 1.25 * u)}
-        />
-      </svg>
-
-      {ticks.map((tk) =>
-        tk.a > 0.001 ? (
-          <div
-            key={`t-${tk.v}`}
-            style={{
-              position: "absolute",
-              left: left - 160 * u,
-              width: 160 * u - 16 * u,
-              top: tk.y - 10 * u,
-              height: 20 * u,
-              lineHeight: `${20 * u}px`,
-              textAlign: "right",
-              fontFamily: sans,
-              fontWeight: 400,
-              fontSize: 16 * u,
-              letterSpacing: "0",
-              fontVariantNumeric: "tabular-nums",
-              color: p.muted,
-              opacity: tk.a,
-              whiteSpace: "nowrap",
-            }}
-          >
-            {compact(tk.v)}
-          </div>
-        ) : null,
-      )}
-
-      {rows.map((d, i) => {
-        const x = left + slot * (i + 0.5);
-        const isA = i === ai;
-        const g = growOf(i);
-        const h = norm(values[i]) * chartH * g;
-        const order = i < ai ? i : i - 1;
-        const a = isA
-          ? accentIn
-          : interpolate(
-              t,
-              [LABELS_AT + order * 3, LABELS_AT + 12 + order * 3],
-              [0, 1],
-              { ...CLAMP, easing: EASE_OUT },
-            );
-        const fs = isA ? lerp(20, 60, accentBig) * u : 17 * u;
-        return (
-          <div key={`v-${d.label}`}>
-            <div
-              style={{
-                position: "absolute",
-                left: x - 140 * u,
-                width: 280 * u,
-                top: bottom - h - fs * 1.1 - lerp(8, 6, accentBig) * u,
-                height: fs * 1.1,
-                lineHeight: `${fs * 1.1}px`,
-                textAlign: "center",
-                fontFamily: sans,
-                fontWeight: 500,
-                fontSize: fs,
-                letterSpacing: isA
-                  ? `${lerp(-0.01, -0.04, accentBig)}em`
-                  : "-0.005em",
-                fontVariantNumeric: "tabular-nums",
-                color: p.fg,
-                opacity: a,
-                transform: `translateY(${(1 - a) * 6 * u}px)`,
-                whiteSpace: "nowrap",
-              }}
-            >
-              {compact(values[i])}
-            </div>
-            <div
-              style={{
-                position: "absolute",
-                left: x - 100 * u,
-                width: 200 * u,
-                top: bottom + 14 * u,
-                textAlign: "center",
-                fontFamily: sans,
-                fontWeight: isA ? 500 : 400,
-                fontSize: 16 * u,
-                letterSpacing: "0",
-                fontVariantNumeric: "tabular-nums",
-                color: isA ? p.fg : p.muted,
-                opacity: interpolate(t, [4 + i * 2, 16 + i * 2], [0, 1], CLAMP),
-              }}
-            >
-              {d.label}
-            </div>
-          </div>
-        );
-      })}
-
-      <div
-        style={{
-          position: "absolute",
-          left: left - 16 * u - 2 * u,
-          top: height * 0.085,
-          display: "flex",
-          alignItems: "baseline",
-          justifyContent: "space-between",
-          width: right - left + 18 * u,
-          opacity: titleA,
-          transform: `translateY(${(1 - titleA) * 8 * u}px)`,
-        }}
-      >
-        <div
-          style={{
-            fontFamily: sans,
-            fontWeight: 500,
-            fontSize: 28 * u,
-            letterSpacing: "-0.025em",
-            color: p.fg,
-          }}
-        >
-          {title}
-        </div>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 8 * u,
-            fontFamily: sans,
-            fontWeight: 400,
-            fontSize: 17 * u,
-            color: p.muted,
-          }}
-        >
-          <div
-            style={{
-              position: "relative",
-              height: tagH,
-              width: 52 * u,
-              overflow: "hidden",
-            }}
-          >
-            {["Linear", "Log"].map((w, k) => (
+            <div key={`v-${d.label}`}>
               <div
-                key={w}
                 style={{
                   position: "absolute",
-                  right: 0,
-                  top: (k - scaleSwap) * tagH,
-                  height: tagH,
-                  lineHeight: `${tagH}px`,
-                  color: k === 1 ? p.fg : p.muted,
-                  opacity: k === 0 ? 1 - scaleSwap : scaleSwap,
+                  left: x - 140 * u,
+                  width: 280 * u,
+                  top: bottom - h - fs * 1.1 - lerp(8, 6, accentBig) * u,
+                  height: fs * 1.1,
+                  lineHeight: `${fs * 1.1}px`,
+                  textAlign: "center",
+                  fontFamily,
+                  fontWeight: 500,
+                  fontSize: fs,
+                  letterSpacing: isA
+                    ? `${lerp(-0.01, -0.04, accentBig)}em`
+                    : "-0.005em",
+                  fontVariantNumeric: "tabular-nums",
+                  color: fg,
+                  opacity: a,
+                  transform: `translateY(${(1 - a) * 6 * u}px)`,
                   whiteSpace: "nowrap",
                 }}
               >
-                {w}
+                {compact(values[i])}
               </div>
-            ))}
+              <div
+                style={{
+                  position: "absolute",
+                  left: x - 100 * u,
+                  width: 200 * u,
+                  top: bottom + 14 * u,
+                  textAlign: "center",
+                  fontFamily,
+                  fontWeight: isA ? 500 : 400,
+                  fontSize: 16 * u,
+                  letterSpacing: "0",
+                  fontVariantNumeric: "tabular-nums",
+                  color: isA ? fg : p.muted,
+                  opacity: interpolate(
+                    t,
+                    [4 + i * 2, 16 + i * 2],
+                    [0, 1],
+                    CLAMP,
+                  ),
+                }}
+              >
+                {d.label}
+              </div>
+            </div>
+          );
+        })}
+
+        <div
+          style={{
+            position: "absolute",
+            left: left - 16 * u - 2 * u,
+            top: height * 0.085,
+            display: "flex",
+            alignItems: "baseline",
+            justifyContent: "space-between",
+            width: right - left + 18 * u,
+            opacity: titleA,
+            transform: `translateY(${(1 - titleA) * 8 * u}px)`,
+          }}
+        >
+          <div
+            style={{
+              fontFamily,
+              fontWeight: 500,
+              fontSize: 28 * u,
+              letterSpacing: "-0.025em",
+              color: fg,
+            }}
+          >
+            {title}
           </div>
-          <div style={{ lineHeight: `${tagH}px` }}>scale</div>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8 * u,
+              fontFamily,
+              fontWeight: 400,
+              fontSize: 17 * u,
+              color: p.muted,
+            }}
+          >
+            <div
+              style={{
+                position: "relative",
+                height: tagH,
+                width: 52 * u,
+                overflow: "hidden",
+              }}
+            >
+              {[linearLabel, logLabel].map((w, k) => (
+                <div
+                  key={w}
+                  style={{
+                    position: "absolute",
+                    right: 0,
+                    top: (k - scaleSwap) * tagH,
+                    height: tagH,
+                    lineHeight: `${tagH}px`,
+                    color: k === 1 ? fg : p.muted,
+                    opacity: k === 0 ? 1 - scaleSwap : scaleSwap,
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {w}
+                </div>
+              ))}
+            </div>
+            <div style={{ lineHeight: `${tagH}px` }}>scale</div>
+          </div>
         </div>
-      </div>
+      </ScaleLayer>
 
       <AbsoluteFill
         style={{
-          background: `radial-gradient(ellipse 85% 85% at 50% 50%, transparent 64%, ${p.bg} 100%)`,
+          background: `radial-gradient(ellipse 85% 85% at 50% 50%, transparent 64%, ${bg} 100%)`,
           opacity: 0.5,
         }}
       />
-      <Grain opacity={p.grain} />
+      {grain ? <Grain opacity={p.grain} /> : null}
     </AbsoluteFill>
   );
 }

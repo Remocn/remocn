@@ -71,7 +71,21 @@ export interface IpoOpenProps {
   name?: string;
   /** Replaces the logo / name in the corner bug. */
   logo?: React.ReactNode;
+  /** Tag in the chip before the bell. */
+  priceTag?: string;
+  /** Frames the opening print takes to race to `openPrice`. */
+  countLength?: number;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
+  /** Background fill under the sunrise; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the symbol and price. Load it yourself; Schibsted Grotesk by default. */
+  fontFamily?: string;
+  /** Size of the foreground, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   /** Playback multiplier. */
   speed?: number;
   theme?: "dark" | "light";
@@ -133,7 +147,6 @@ const CLAMP = {
 const BELL = 34;
 const RACE_AT = 37;
 const RACE_LEN = 50;
-const LAND = RACE_AT + RACE_LEN;
 
 // gradients.sh "rise" (bg #030306): #fff1e2 #ff8a3d #a3301a #2a0d0a.
 const THEMES = {
@@ -177,6 +190,22 @@ function columnPos(cents: number, p: number) {
   return Math.floor(cents / p) + carry;
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function IpoOpen({
   symbol = "RMCN",
   label = "Listed today",
@@ -185,14 +214,23 @@ export function IpoOpen({
   openTime = "09:30",
   name = "remocn",
   logo,
+  priceTag = "IPO price",
+  countLength = RACE_LEN,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = sans,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: IpoOpenProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const u = H / 720;
   const p = THEMES[theme];
+  const fg = ink ?? p.fg;
+  const LAND = RACE_AT + countLength;
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
 
   // ---- symbol layout -------------------------------------------------------
@@ -239,11 +277,11 @@ export function IpoOpen({
   const ruleY = H * 0.588;
 
   // ---- timing ----------------------------------------------------------------
-  const race = EASE_RACE(Math.max(0, Math.min(1, (t - RACE_AT) / RACE_LEN)));
+  const race = EASE_RACE(Math.max(0, Math.min(1, (t - RACE_AT) / countLength)));
   const raceAt = (tt: number) =>
     startC +
     (endC - startC) *
-      EASE_RACE(Math.max(0, Math.min(1, (tt - RACE_AT) / RACE_LEN)));
+      EASE_RACE(Math.max(0, Math.min(1, (tt - RACE_AT) / countLength)));
   const cents = raceAt(t);
   const pct = (cents / startC - 1) * 100;
   const flash = t >= BELL && t < BELL + 2;
@@ -342,7 +380,13 @@ export function IpoOpen({
   const ruleSettle = interpolate(t, [BELL + 10, BELL + 26], [0, 1], CLAMP);
 
   return (
-    <AbsoluteFill style={{ background: p.bg, overflow: "hidden" }}>
+    <AbsoluteFill
+      style={{
+        background:
+          background === "transparent" ? undefined : (background ?? p.bg),
+        overflow: "hidden",
+      }}
+    >
       {/* sunrise ground, climbing with the opening print */}
       <div
         style={{
@@ -352,294 +396,299 @@ export function IpoOpen({
         }}
       />
 
-      <svg
-        width={W}
-        height={H}
-        viewBox={`0 0 ${W} ${H}`}
-        style={{ position: "absolute", inset: 0 }}
-        role="img"
-        aria-label={`${symbol} opens at ${fmt(endC)}, IPO price ${fmt(startC)}`}
-      >
-        <defs>
-          <linearGradient id={`${uid}feather`} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor="#fff" stopOpacity={0} />
-            <stop offset="0.16" stopColor="#fff" />
-            <stop offset="0.84" stopColor="#fff" />
-            <stop offset="1" stopColor="#fff" stopOpacity={0} />
-          </linearGradient>
-          <mask
-            id={`${uid}win`}
-            maskUnits="userSpaceOnUse"
-            x={0}
-            y={0}
-            width={W}
-            height={H}
-          >
-            <rect
+      <ScaleLayer scale={scale}>
+        <svg
+          width={W}
+          height={H}
+          viewBox={`0 0 ${W} ${H}`}
+          style={{ position: "absolute", inset: 0 }}
+          role="img"
+          aria-label={`${symbol} opens at ${fmt(endC)}, IPO price ${fmt(startC)}`}
+        >
+          <defs>
+            <linearGradient id={`${uid}feather`} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stopColor="#fff" stopOpacity={0} />
+              <stop offset="0.16" stopColor="#fff" />
+              <stop offset="0.84" stopColor="#fff" />
+              <stop offset="1" stopColor="#fff" stopOpacity={0} />
+            </linearGradient>
+            <mask
+              id={`${uid}win`}
+              maskUnits="userSpaceOnUse"
               x={0}
-              y={priceBase - CAP * P - 0.16 * P}
+              y={0}
               width={W}
-              height={CAP * P + 0.32 * P}
-              fill={`url(#${uid}feather)`}
-            />
-          </mask>
-          <clipPath id={`${uid}symWin`}>
-            <rect x={0} y={0} width={W} height={symBase + 0.02 * S} />
-          </clipPath>
-          <linearGradient id={`${uid}shock`} x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0" stopColor={p.fg} stopOpacity={0} />
-            <stop offset="0.35" stopColor={p.fg} stopOpacity={0.5} />
-            <stop offset="0.5" stopColor={p.fg} />
-            <stop offset="0.65" stopColor={p.fg} stopOpacity={0.5} />
-            <stop offset="1" stopColor={p.fg} stopOpacity={0} />
-          </linearGradient>
-        </defs>
+              height={H}
+            >
+              <rect
+                x={0}
+                y={priceBase - CAP * P - 0.16 * P}
+                width={W}
+                height={CAP * P + 0.32 * P}
+                fill={`url(#${uid}feather)`}
+              />
+            </mask>
+            <clipPath id={`${uid}symWin`}>
+              <rect x={0} y={0} width={W} height={symBase + 0.02 * S} />
+            </clipPath>
+            <linearGradient id={`${uid}shock`} x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0" stopColor={fg} stopOpacity={0} />
+              <stop offset="0.35" stopColor={fg} stopOpacity={0.5} />
+              <stop offset="0.5" stopColor={fg} />
+              <stop offset="0.65" stopColor={fg} stopOpacity={0.5} />
+              <stop offset="1" stopColor={fg} stopOpacity={0} />
+            </linearGradient>
+          </defs>
 
-        {/* the symbol rises out of its baseline, kicks on the bell */}
-        <g
-          clipPath={`url(#${uid}symWin)`}
-          transform={`translate(${W / 2} ${symBase}) scale(${kick}) translate(${-W / 2} ${-symBase})`}
-        >
+          {/* the symbol rises out of its baseline, kicks on the bell */}
           <g
-            fontFamily={sans}
-            fontWeight={500}
-            fontSize={S}
-            fill={p.fg}
-            textAnchor="start"
+            clipPath={`url(#${uid}symWin)`}
+            transform={`translate(${W / 2} ${symBase}) scale(${kick}) translate(${-W / 2} ${-symBase})`}
           >
-            {letters.map((ch, i) => {
-              const x =
-                symX0 +
-                letters
-                  .slice(0, i)
-                  .reduce((w, c) => w + (SCHIBSTED[c] ?? 0.68) + SYM_TRACK, 0) *
-                  S;
-              const k = rise(4 + i * 3, 16);
-              return (
-                <text
-                  key={`${ch}${x}`}
-                  x={x}
-                  y={symBase + (1 - k) * CAP * S * 1.05}
-                >
-                  {ch}
-                </text>
-              );
-            })}
+            <g
+              fontFamily={fontFamily}
+              fontWeight={500}
+              fontSize={S}
+              fill={fg}
+              textAnchor="start"
+            >
+              {letters.map((ch, i) => {
+                const x =
+                  symX0 +
+                  letters
+                    .slice(0, i)
+                    .reduce(
+                      (w, c) => w + (SCHIBSTED[c] ?? 0.68) + SYM_TRACK,
+                      0,
+                    ) *
+                    S;
+                const k = rise(4 + i * 3, 16);
+                return (
+                  <text
+                    key={`${ch}${x}`}
+                    x={x}
+                    y={symBase + (1 - k) * CAP * S * 1.05}
+                  >
+                    {ch}
+                  </text>
+                );
+              })}
+            </g>
           </g>
-        </g>
 
-        {/* shockwave out of the centre, settling into a hairline rule */}
-        {opened ? (
-          <>
-            <rect
-              x={W / 2 - shockW}
-              y={ruleY - shockT / 2}
-              width={shockW * 2}
-              height={shockT}
-              fill={`url(#${uid}shock)`}
-              opacity={1 - ruleSettle * 0.8}
-            />
-            <rect
-              x={W / 2 - shock2 * W * 0.75}
-              y={ruleY - 0.75 * u}
-              width={shock2 * W * 1.5}
-              height={1.5 * u}
-              fill={`url(#${uid}shock)`}
-              opacity={(1 - shock2) * 0.7}
-            />
-          </>
-        ) : null}
-        <rect
-          x={W * 0.08}
-          y={ruleY - 0.5 * u}
-          width={W * 0.84}
-          height={1 * u}
-          fill={p.hair}
-          opacity={ruleSettle}
-        />
+          {/* shockwave out of the centre, settling into a hairline rule */}
+          {opened ? (
+            <>
+              <rect
+                x={W / 2 - shockW}
+                y={ruleY - shockT / 2}
+                width={shockW * 2}
+                height={shockT}
+                fill={`url(#${uid}shock)`}
+                opacity={1 - ruleSettle * 0.8}
+              />
+              <rect
+                x={W / 2 - shock2 * W * 0.75}
+                y={ruleY - 0.75 * u}
+                width={shock2 * W * 1.5}
+                height={1.5 * u}
+                fill={`url(#${uid}shock)`}
+                opacity={(1 - shock2) * 0.7}
+              />
+            </>
+          ) : null}
+          <rect
+            x={W * 0.08}
+            y={ruleY - 0.5 * u}
+            width={W * 0.84}
+            height={1 * u}
+            fill={p.hair}
+            opacity={ruleSettle}
+          />
 
-        {/* the price on reels */}
-        <g
-          fontFamily={sans}
-          fontWeight={500}
-          fontSize={P}
-          fill={p.fg}
-          textAnchor="middle"
-          letterSpacing="0"
-          style={{ fontVariantNumeric: "tabular-nums" }}
-        >
-          <g mask={`url(#${uid}win)`}>
-            {reels.filter((_, i) => typeof glyphs[i].kind === "number")}
+          {/* the price on reels */}
+          <g
+            fontFamily={fontFamily}
+            fontWeight={500}
+            fontSize={P}
+            fill={fg}
+            textAnchor="middle"
+            letterSpacing="0"
+            style={{ fontVariantNumeric: "tabular-nums" }}
+          >
+            <g mask={`url(#${uid}win)`}>
+              {reels.filter((_, i) => typeof glyphs[i].kind === "number")}
+            </g>
+            {reels.filter((_, i) => typeof glyphs[i].kind !== "number")}
           </g>
-          {reels.filter((_, i) => typeof glyphs[i].kind !== "number")}
-        </g>
-      </svg>
+        </svg>
 
-      {/* chip: IPO tag before the bell, live move during the race, gradient on the land */}
-      <div
-        style={{
-          position: "absolute",
-          left: chipX,
-          top: chipY,
-          width: chipW,
-          height: chipH,
-          borderRadius: chipH / 2,
-          boxShadow: `inset 0 0 0 ${1.5 * u}px ${p.hair}`,
-          opacity: rise(18, 16),
-          transform: `translateY(${(1 - rise(18, 16)) * 0.2 * P}px) scale(${landed || t >= LAND - 2 ? pop : 1})`,
-          overflow: "hidden",
-        }}
-      >
+        {/* chip: IPO tag before the bell, live move during the race, gradient on the land */}
         <div
           style={{
             position: "absolute",
-            inset: 0,
-            background: p.chip,
-            opacity: fill,
+            left: chipX,
+            top: chipY,
+            width: chipW,
+            height: chipH,
+            borderRadius: chipH / 2,
+            boxShadow: `inset 0 0 0 ${1.5 * u}px ${p.hair}`,
+            opacity: rise(18, 16),
+            transform: `translateY(${(1 - rise(18, 16)) * 0.2 * P}px) scale(${landed || t >= LAND - 2 ? pop : 1})`,
+            overflow: "hidden",
           }}
-        />
+        >
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              background: p.chip,
+              opacity: fill,
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 0.32 * chipFont,
+              color: fill > 0.5 ? p.chipInk : fg,
+              lineHeight: 1,
+            }}
+          >
+            {opened ? (
+              <>
+                <svg
+                  width={0.62 * chipFont}
+                  height={0.54 * chipFont}
+                  viewBox="0 0 10 8.66"
+                  aria-hidden
+                  style={{ display: "block" }}
+                >
+                  <path
+                    d="M5 0 L10 8.66 L0 8.66 Z"
+                    fill={fill > 0.5 ? p.chipInk : accent}
+                  />
+                </svg>
+                <span
+                  style={{
+                    fontFamily,
+                    fontWeight: 500,
+                    fontSize: chipFont,
+                    letterSpacing: "-0.01em",
+                  }}
+                >
+                  {/* tabular digits so the live move doesn't wobble, a
+                    proportional point so it doesn't gape */}
+                  {Array.from(`+${pct.toFixed(1)}%`).map((ch, i) => (
+                    <span
+                      key={i}
+                      style={{
+                        fontVariantNumeric:
+                          ch === "." ? "normal" : "tabular-nums",
+                      }}
+                    >
+                      {ch}
+                    </span>
+                  ))}
+                </span>
+              </>
+            ) : (
+              <span
+                style={{
+                  fontFamily: mono,
+                  fontWeight: 400,
+                  fontSize: chipFont * 0.6,
+                  letterSpacing: "0.12em",
+                  textTransform: "uppercase",
+                  color: p.muted,
+                }}
+              >
+                {priceTag}
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* label above the symbol */}
         <div
           style={{
             position: "absolute",
-            inset: 0,
+            left: 0,
+            right: 0,
+            top: H * 0.115,
             display: "flex",
-            alignItems: "center",
             justifyContent: "center",
-            gap: 0.32 * chipFont,
-            color: fill > 0.5 ? p.chipInk : p.fg,
+            alignItems: "center",
+            gap: 12 * u,
+            fontFamily: mono,
+            fontWeight: 500,
+            fontSize: 18 * u,
+            letterSpacing: "0.16em",
+            textTransform: "uppercase",
+            color: fg,
+            opacity: rise(0, 14),
+            transform: `translateY(${(1 - rise(0, 14)) * 8 * u}px)`,
             lineHeight: 1,
           }}
         >
-          {opened ? (
-            <>
-              <svg
-                width={0.62 * chipFont}
-                height={0.54 * chipFont}
-                viewBox="0 0 10 8.66"
-                aria-hidden
-                style={{ display: "block" }}
-              >
-                <path
-                  d="M5 0 L10 8.66 L0 8.66 Z"
-                  fill={fill > 0.5 ? p.chipInk : accent}
-                />
-              </svg>
-              <span
-                style={{
-                  fontFamily: sans,
-                  fontWeight: 500,
-                  fontSize: chipFont,
-                  letterSpacing: "-0.01em",
-                }}
-              >
-                {/* tabular digits so the live move doesn't wobble, a
-                    proportional point so it doesn't gape */}
-                {Array.from(`+${pct.toFixed(1)}%`).map((ch, i) => (
-                  <span
-                    key={i}
-                    style={{
-                      fontVariantNumeric:
-                        ch === "." ? "normal" : "tabular-nums",
-                    }}
-                  >
-                    {ch}
-                  </span>
-                ))}
-              </span>
-            </>
-          ) : (
-            <span
-              style={{
-                fontFamily: mono,
-                fontWeight: 400,
-                fontSize: chipFont * 0.6,
-                letterSpacing: "0.12em",
-                textTransform: "uppercase",
-                color: p.muted,
-              }}
-            >
-              IPO price
-            </span>
-          )}
+          <div
+            style={{
+              width: 9 * u,
+              height: 9 * u,
+              borderRadius: 99,
+              background: accent,
+            }}
+          />
+          {label}
         </div>
-      </div>
 
-      {/* label above the symbol */}
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          right: 0,
-          top: H * 0.115,
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          gap: 12 * u,
-          fontFamily: mono,
-          fontWeight: 500,
-          fontSize: 18 * u,
-          letterSpacing: "0.16em",
-          textTransform: "uppercase",
-          color: p.fg,
-          opacity: rise(0, 14),
-          transform: `translateY(${(1 - rise(0, 14)) * 8 * u}px)`,
-          lineHeight: 1,
-        }}
-      >
+        {/* corner bug: logo left, market clock right */}
         <div
           style={{
-            width: 9 * u,
-            height: 9 * u,
-            borderRadius: 99,
-            background: accent,
+            position: "absolute",
+            left: W * 0.045,
+            top: H * 0.06,
+            opacity: rise(-6, 14),
           }}
-        />
-        {label}
-      </div>
-
-      {/* corner bug: logo left, market clock right */}
-      <div
-        style={{
-          position: "absolute",
-          left: W * 0.045,
-          top: H * 0.06,
-          opacity: rise(-6, 14),
-        }}
-      >
-        {logo ??
-          (name.trim().toLowerCase() === "remocn" ? (
-            <RemocnLogo fontSize={24 * u} color={p.fg} />
-          ) : (
-            <span
-              style={{
-                fontFamily: sans,
-                fontWeight: 500,
-                fontSize: 24 * u,
-                letterSpacing: "-0.02em",
-                color: p.fg,
-              }}
-            >
-              {name}
-            </span>
-          ))}
-      </div>
-      <div
-        style={{
-          position: "absolute",
-          right: W * 0.045,
-          top: H * 0.06 + 3 * u,
-          fontFamily: mono,
-          fontWeight: 400,
-          fontSize: 17 * u,
-          letterSpacing: "0.06em",
-          color: opened ? p.fg : p.muted,
-          fontVariantNumeric: "tabular-nums",
-          opacity: rise(-6, 14),
-          lineHeight: 1,
-        }}
-      >
-        {clock}
-      </div>
+        >
+          {logo ??
+            (name.trim().toLowerCase() === "remocn" ? (
+              <RemocnLogo fontSize={24 * u} color={fg} />
+            ) : (
+              <span
+                style={{
+                  fontFamily,
+                  fontWeight: 500,
+                  fontSize: 24 * u,
+                  letterSpacing: "-0.02em",
+                  color: fg,
+                }}
+              >
+                {name}
+              </span>
+            ))}
+        </div>
+        <div
+          style={{
+            position: "absolute",
+            right: W * 0.045,
+            top: H * 0.06 + 3 * u,
+            fontFamily: mono,
+            fontWeight: 400,
+            fontSize: 17 * u,
+            letterSpacing: "0.06em",
+            color: opened ? fg : p.muted,
+            fontVariantNumeric: "tabular-nums",
+            opacity: rise(-6, 14),
+            lineHeight: 1,
+          }}
+        >
+          {clock}
+        </div>
+      </ScaleLayer>
 
       {/* the bell: two inverted frames */}
       {flash ? (

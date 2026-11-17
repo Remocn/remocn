@@ -2,6 +2,7 @@
 
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
 import { loadFont as loadSchibsted } from "@remotion/google-fonts/SchibstedGrotesk";
+import type React from "react";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import {
   AbsoluteFill,
@@ -67,7 +68,23 @@ export interface DeadpanBoxProps {
    * remocn.dev logo; anything else is set as a plain wordmark.
    */
   brand?: string;
+  /** Replaces the brand mark: the remocn logo, or the wordmark set from `brand`. */
+  logo?: React.ReactNode;
   accent?: string;
+  /** Text color inside the box; white by default. */
+  ink?: string;
+  background?: string;
+  /** Typeface for the quote and attribution. Load it yourself; Schibsted Grotesk by default. */
+  fontFamily?: string;
+  /** Frames between quote lines as they rise in. */
+  stagger?: number;
+  /** Frame the box floods the screen for the punchline. */
+  punchAt?: number;
+  /** Size of the box and copy, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -154,15 +171,15 @@ interface FontMetrics {
 
 const PROBE = 200;
 
-function measureFonts(): FontMetrics | null {
+function measureFonts(family: string): FontMetrics | null {
   const ctx = document.createElement("canvas").getContext("2d");
   if (!ctx) return null;
   const width = (text: string, weight: 400 | 500, track: number) => {
-    ctx.font = `${weight} ${PROBE}px "${copy.fontFamily}"`;
+    ctx.font = `${weight} ${PROBE}px "${family}"`;
     const n = [...text].length;
     return ctx.measureText(text).width / PROBE + track * Math.max(0, n - 1);
   };
-  ctx.font = `500 ${PROBE}px "${copy.fontFamily}"`;
+  ctx.font = `500 ${PROBE}px "${family}"`;
   const h = ctx.measureText("H");
   const asc = h.fontBoundingBoxAscent / PROBE;
   const desc = h.fontBoundingBoxDescent / PROBE;
@@ -182,7 +199,7 @@ function measureFonts(): FontMetrics | null {
   };
 }
 
-function useFontMetrics() {
+function useFontMetrics(family: string) {
   const [metrics, setMetrics] = useState<FontMetrics | null>(null);
   const [handle] = useState(() => delayRender("deadpan-box: measuring"));
   const released = useRef(false);
@@ -191,14 +208,14 @@ function useFontMetrics() {
     Promise.all([
       copy.waitUntilDone(),
       manrope.waitUntilDone(),
-      document.fonts.load(`500 100px "${copy.fontFamily}"`),
-      document.fonts.load(`400 100px "${copy.fontFamily}"`),
+      document.fonts.load(`500 100px "${family}"`),
+      document.fonts.load(`400 100px "${family}"`),
       document.fonts.load(`600 100px "${manrope.fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
-        setMetrics(measureFonts());
+        setMetrics(measureFonts(family));
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -207,7 +224,7 @@ function useFontMetrics() {
     return () => {
       live = false;
     };
-  }, [handle]);
+  }, [handle, family]);
   return metrics;
 }
 
@@ -255,19 +272,46 @@ function Grain({ opacity }: { opacity: number }) {
 
 const lerp = (a: number, b: number, p: number) => a + (b - a) * p;
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function DeadpanBox({
   quote = "Nobody watches launch videos.",
   attribution = "Founder. Nobody watched the launch.",
   brand = "remocn",
+  logo,
   accent = "#3B5BFD",
+  ink: inkProp,
+  background,
+  fontFamily = copy.fontFamily,
+  stagger = LINE_STAGGER,
+  punchAt = PUNCH_AT,
+  scale = 1,
+  delay = 0,
+  grain = true,
   theme = "dark",
   speed = 1,
 }: DeadpanBoxProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
-  const ink = "#FFFFFF";
-  const fm = useFontMetrics();
+  const ink = inkProp ?? "#FFFFFF";
+  const stage =
+    background === "transparent" ? "transparent" : (background ?? c.bg);
+  const fm = useFontMetrics(fontFamily);
   const isLogo = brand.trim().toLowerCase() === "remocn";
 
   const layout = useMemo(() => {
@@ -290,7 +334,9 @@ export function DeadpanBox({
   }, [fm, quote, brand, isLogo]);
 
   if (!fm || !layout) {
-    return <div style={{ position: "absolute", inset: 0, background: c.bg }} />;
+    return (
+      <div style={{ position: "absolute", inset: 0, background: stage }} />
+    );
   }
   const { lines, hang, quoteEm, brandEm } = layout;
   const CAP = fm.cap;
@@ -344,7 +390,7 @@ export function DeadpanBox({
     ...CLAMP,
     easing: EASE_IO,
   });
-  const punch = interpolate(t, [PUNCH_AT, PUNCH_AT + PUNCH_LEN], [0, 1], {
+  const punch = interpolate(t, [punchAt, punchAt + PUNCH_LEN], [0, 1], {
     ...CLAMP,
     easing: EASE_SNAP,
   });
@@ -371,15 +417,15 @@ export function DeadpanBox({
   const lineIn = (i: number) =>
     interpolate(
       t,
-      [QUOTE_AT + i * LINE_STAGGER, QUOTE_AT + i * LINE_STAGGER + 22],
+      [QUOTE_AT + i * stagger, QUOTE_AT + i * stagger + 22],
       [0, 1],
       { ...CLAMP, easing: EASE_OUT },
     );
-  const rowIn = interpolate(t, [PUNCH_AT + 8, PUNCH_AT + 26], [0, 1], {
+  const rowIn = interpolate(t, [punchAt + 8, punchAt + 26], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const signIn = interpolate(t, [PUNCH_AT + 16, PUNCH_AT + 34], [0, 1], {
+  const signIn = interpolate(t, [punchAt + 16, punchAt + 34], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
@@ -398,143 +444,147 @@ export function DeadpanBox({
   const sign = 26 * (H / 720);
 
   return (
-    <AbsoluteFill style={{ background: c.bg, overflow: "hidden" }}>
-      <AbsoluteFill
-        style={{ transform: `scale(${breathe})`, transformOrigin: "50% 50%" }}
-      >
-        <div
-          style={{
-            position: "absolute",
-            left: box.x,
-            top: box.y,
-            width: box.w,
-            height: box.h,
-            overflow: "hidden",
-          }}
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill
+          style={{ transform: `scale(${breathe})`, transformOrigin: "50% 50%" }}
         >
           <div
             style={{
               position: "absolute",
-              left: -box.x,
-              top: -box.y,
-              width: W,
-              height: H,
-              background: field,
+              left: box.x,
+              top: box.y,
+              width: box.w,
+              height: box.h,
+              overflow: "hidden",
             }}
-          />
-
-          {mastOut > 0 ? (
+          >
             <div
               style={{
                 position: "absolute",
-                left: mast.x - box.x + padM * M,
-                top: mast.y - box.y + (padM + markCap - markBase) * M,
-                opacity: mastOut,
-                transform: `translateY(${(1 - mastOut) * -0.35 * M}px)`,
+                left: -box.x,
+                top: -box.y,
+                width: W,
+                height: H,
+                background: field,
               }}
-            >
-              {isLogo ? (
-                <RemocnLogo fontSize={M} color={ink} />
-              ) : (
-                <div
-                  style={{
-                    fontFamily: copy.fontFamily,
-                    fontWeight: 500,
-                    fontSize: M,
-                    lineHeight: 1,
-                    letterSpacing: "-0.02em",
-                    color: ink,
-                    whiteSpace: "pre",
-                  }}
-                >
-                  {brand}
-                </div>
-              )}
-            </div>
-          ) : null}
+            />
 
-          {lines.map((l, i) => {
-            const p = lineIn(i);
-            return (
+            {mastOut > 0 ? (
               <div
-                key={`${i}-${l}`}
                 style={{
                   position: "absolute",
-                  left: left - box.x + (padL - (i ? 0 : hang)) * Q,
-                  top: top - box.y + baselines[i] - BASELINE * Q,
-                  height: 1.1 * Q,
-                  overflow: "hidden",
+                  left: mast.x - box.x + padM * M,
+                  top: mast.y - box.y + (padM + markCap - markBase) * M,
+                  opacity: mastOut,
+                  transform: `translateY(${(1 - mastOut) * -0.35 * M}px)`,
                 }}
               >
+                {logo ??
+                  (isLogo ? (
+                    <RemocnLogo fontSize={M} color={ink} />
+                  ) : (
+                    <div
+                      style={{
+                        fontFamily,
+                        fontWeight: 500,
+                        fontSize: M,
+                        lineHeight: 1,
+                        letterSpacing: "-0.02em",
+                        color: ink,
+                        whiteSpace: "pre",
+                      }}
+                    >
+                      {brand}
+                    </div>
+                  ))}
+              </div>
+            ) : null}
+
+            {lines.map((l, i) => {
+              const p = lineIn(i);
+              return (
                 <div
+                  key={`${i}-${l}`}
                   style={{
-                    fontFamily: copy.fontFamily,
-                    fontWeight: 500,
-                    fontSize: Q,
-                    lineHeight: 1,
-                    letterSpacing: `${QUOTE_TRACK}em`,
-                    color: ink,
-                    whiteSpace: "pre",
-                    transform: `translateY(${(1 - p) * 1.1 * Q}px)`,
+                    position: "absolute",
+                    left: left - box.x + (padL - (i ? 0 : hang)) * Q,
+                    top: top - box.y + baselines[i] - BASELINE * Q,
+                    height: 1.1 * Q,
+                    overflow: "hidden",
                   }}
                 >
-                  {l}
+                  <div
+                    style={{
+                      fontFamily,
+                      fontWeight: 500,
+                      fontSize: Q,
+                      lineHeight: 1,
+                      letterSpacing: `${QUOTE_TRACK}em`,
+                      color: ink,
+                      whiteSpace: "pre",
+                      transform: `translateY(${(1 - p) * 1.1 * Q}px)`,
+                    }}
+                  >
+                    {l}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
 
-          <div
-            style={{
-              position: "absolute",
-              // the dash hangs, so the words align with the quote's left edge
-              left: left - box.x + padL * Q - dashEm * S,
-              top: top - box.y + rowBaseline - BASELINE * S,
-              fontFamily: copy.fontFamily,
-              fontWeight: 400,
-              fontSize: S,
-              lineHeight: 1,
-              letterSpacing: `${SMALL_TRACK}em`,
-              color: ink,
-              whiteSpace: "pre",
-              opacity: 0.84 * rowIn,
-              transform: `translateY(${(1 - rowIn) * 0.6 * S}px)`,
-            }}
-          >
-            <span style={{ opacity: 0.7 }}>— </span>
-            {attribution}
+            <div
+              style={{
+                position: "absolute",
+                // the dash hangs, so the words align with the quote's left edge
+                left: left - box.x + padL * Q - dashEm * S,
+                top: top - box.y + rowBaseline - BASELINE * S,
+                fontFamily,
+                fontWeight: 400,
+                fontSize: S,
+                lineHeight: 1,
+                letterSpacing: `${SMALL_TRACK}em`,
+                color: ink,
+                whiteSpace: "pre",
+                opacity: 0.84 * rowIn,
+                transform: `translateY(${(1 - rowIn) * 0.6 * S}px)`,
+              }}
+            >
+              <span style={{ opacity: 0.7 }}>— </span>
+              {attribution}
+            </div>
+            <div
+              style={{
+                position: "absolute",
+                right: box.x + box.w - W + edge,
+                bottom: box.y + box.h - H + edge,
+                opacity: signIn,
+                transform: `translateY(${(1 - signIn) * 8 * (H / 720)}px)`,
+              }}
+            >
+              {logo ??
+                (isLogo ? (
+                  <RemocnLogo fontSize={sign} color={ink} />
+                ) : (
+                  <div
+                    style={{
+                      fontFamily,
+                      fontWeight: 500,
+                      fontSize: sign,
+                      lineHeight: 1,
+                      letterSpacing: "-0.02em",
+                      color: ink,
+                      whiteSpace: "pre",
+                    }}
+                  >
+                    {brand}
+                  </div>
+                ))}
+            </div>
           </div>
-          <div
-            style={{
-              position: "absolute",
-              right: box.x + box.w - W + edge,
-              bottom: box.y + box.h - H + edge,
-              opacity: signIn,
-              transform: `translateY(${(1 - signIn) * 8 * (H / 720)}px)`,
-            }}
-          >
-            {isLogo ? (
-              <RemocnLogo fontSize={sign} color={ink} />
-            ) : (
-              <div
-                style={{
-                  fontFamily: copy.fontFamily,
-                  fontWeight: 500,
-                  fontSize: sign,
-                  lineHeight: 1,
-                  letterSpacing: "-0.02em",
-                  color: ink,
-                  whiteSpace: "pre",
-                }}
-              >
-                {brand}
-              </div>
-            )}
-          </div>
-        </div>
-      </AbsoluteFill>
+        </AbsoluteFill>
+      </ScaleLayer>
 
-      <Grain opacity={c.grain} />
+      {grain ? <Grain opacity={c.grain} /> : null}
     </AbsoluteFill>
   );
 }

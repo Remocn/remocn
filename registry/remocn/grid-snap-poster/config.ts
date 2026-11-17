@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const gridSnapPosterConfig: ComponentConfig = {
   componentName: "GridSnapPoster",
@@ -12,11 +18,6 @@ export const gridSnapPosterConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     title: {
       type: "text-content",
@@ -39,6 +40,21 @@ export const gridSnapPosterConfig: ComponentConfig = {
       default: "remocn",
       description: "Name",
     },
+    step: {
+      type: "number",
+      default: 5,
+      min: 3,
+      max: 15,
+      step: 1,
+      description: "Snap step (frames)",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Geist", grain: true }),
     speed: {
       type: "number",
       default: 1,

@@ -63,6 +63,12 @@ Digits rise out of a mask as the counter climbs from a small start, packing tigh
       description: "Starting number the count climbs from.",
     },
     {
+      name: "countLength",
+      type: "number",
+      default: "64",
+      description: "Frames the count takes to climb to its value; the fill sweep follows it.",
+    },
+    {
       name: "prefix",
       type: "string",
       default: "\"\"",
@@ -86,9 +92,32 @@ Digits rise out of a mask as the counter climbs from a small start, packing tigh
       description: "Color of the final fill sweep; defaults to a sky blue.",
     },
     {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
       name: "background",
       type: "string",
       description: "Stage background color; overrides the theme ground.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Figtree\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
     {
       name: "speed",

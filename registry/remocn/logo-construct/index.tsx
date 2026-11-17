@@ -27,6 +27,22 @@ export interface LogoConstructProps {
   /** Letters set after the R, on its baseline, in Manrope 600. The real logo reads R + "emocn". */
   name?: string;
   accent?: string;
+  /** Color of the name and the R's outline; overrides the theme ink. */
+  ink?: string;
+  /** Paper fill; "transparent" drops it with the vignette and grain. */
+  background?: string;
+  /** Typeface for the name. Load it yourself; Manrope by default. */
+  fontFamily?: string;
+  /** Frames between letters of the name as they rise. */
+  stagger?: number;
+  /** The paper grid behind the construction. */
+  grid?: boolean;
+  /** Size of the drawing around the frame's center; hairlines stay 1px. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  /** Film grain over the scene. */
+  grain?: boolean;
   /** Playback multiplier. */
   speed?: number;
   /** Light = blueprint paper (default); dark = drafting film on black. */
@@ -195,13 +211,25 @@ export function LogoConstruct({
   logo,
   name = "emocn",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = manrope.fontFamily,
+  stagger = 3,
+  grid = true,
+  scale = 1,
+  delay = 0,
+  grain = true,
   speed = 1,
   theme = "light",
 }: LogoConstructProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height } = useVideoConfig();
   const u = height / 720;
   const pal = THEMES[theme];
+  const fg = ink ?? pal.ink;
+  const transparent = background === "transparent";
+  const stage = transparent ? "transparent" : (background ?? pal.bg);
+  const knock = transparent ? pal.bg : stage;
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
 
   const p = (a: number, b: number, easing = EASE_DRAW) =>
@@ -230,7 +258,9 @@ export function LogoConstruct({
     ...CLAMP,
     easing: EASE_IO,
   });
-  const s = sCam * hold;
+  // scale goes through the camera so the grid still fills the frame and
+  // hairlines stay 1px
+  const s = sCam * hold * scale;
   const tx = width / 2 - camX * s;
   const ty = height / 2 - camY * s;
   const px = (n: number) => n / s; // screen px -> units at the current zoom
@@ -390,7 +420,8 @@ export function LogoConstruct({
 
   // wordmark letters rise out of the baseline, 3 frames apart
   const letters = name.split("");
-  const letterP = (i: number) => p(144 + i * 3, 164 + i * 3, EASE_OUT);
+  const letterP = (i: number) =>
+    p(144 + i * stagger, 164 + i * stagger, EASE_OUT);
   const wordGuides = p(140, 160, EASE_OUT);
   const xGrow = p(138, 166);
   const wordSettle = p(198, 232, EASE_IO);
@@ -409,7 +440,7 @@ export function LogoConstruct({
   const legUy = (LEG.y1 - LEG.y0) / legLen;
 
   return (
-    <AbsoluteFill style={{ background: pal.bg, overflow: "hidden" }}>
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
       <svg
         width={width}
         height={height}
@@ -443,7 +474,7 @@ export function LogoConstruct({
           </clipPath>
         </defs>
         <g transform={`translate(${tx} ${ty}) scale(${s})`}>
-          {gridLines}
+          {grid ? gridLines : null}
 
           {/* infinite construction guides */}
           <g stroke={guide} strokeWidth={hair} fill="none">
@@ -544,14 +575,14 @@ export function LogoConstruct({
                     cx={hd.a[0] + (hd.h[0] - hd.a[0]) * handles[i]}
                     cy={hd.a[1] + (hd.h[1] - hd.a[1]) * handles[i]}
                     r={px(3 * u)}
-                    fill={pal.bg}
+                    fill={knock}
                   />
                   <rect
                     x={hd.a[0] - px(3.5 * u)}
                     y={hd.a[1] - px(3.5 * u)}
                     width={px(7 * u)}
                     height={px(7 * u)}
-                    fill={pal.bg}
+                    fill={knock}
                   />
                 </g>
               ) : null,
@@ -619,7 +650,7 @@ export function LogoConstruct({
                 <path
                   d={REMOCN_R_PATH}
                   fill="none"
-                  stroke={pal.ink}
+                  stroke={fg}
                   strokeWidth={px(1.4 * u)}
                   strokeLinejoin="round"
                   pathLength={1}
@@ -695,11 +726,11 @@ export function LogoConstruct({
             <text
               x={WORD_X}
               y={H}
-              fontFamily={manrope.fontFamily}
+              fontFamily={fontFamily}
               fontWeight={600}
               fontSize={FONT}
               letterSpacing={FONT * TRACK}
-              fill={pal.ink}
+              fill={fg}
             >
               {letters.map((ch, i) => {
                 const k = letterP(i);
@@ -738,12 +769,14 @@ export function LogoConstruct({
         </div>
       )}
 
-      <AbsoluteFill
-        style={{
-          background: `radial-gradient(ellipse 75% 70% at 50% 48%, transparent 55%, ${pal.vignette} 100%)`,
-        }}
-      />
-      <Grain opacity={pal.grain} />
+      {!transparent ? (
+        <AbsoluteFill
+          style={{
+            background: `radial-gradient(ellipse 75% 70% at 50% 48%, transparent 55%, ${pal.vignette} 100%)`,
+          }}
+        />
+      ) : null}
+      {!transparent && grain ? <Grain opacity={pal.grain} /> : null}
     </AbsoluteFill>
   );
 }

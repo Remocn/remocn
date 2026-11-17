@@ -35,6 +35,18 @@ export interface HookPunchProps {
   payoff?: string;
   /** Kept for the shared draft API; the colour comes from the ground. */
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the grotesk words. Load it yourself; Bricolage Grotesque by default. */
+  fontFamily?: string;
+  /** Frames the first beat holds before the whip to the payoff. */
+  hold?: number;
+  /** Size of the words, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   /** gradients.sh preset id for the ground. */
   ground?: GshPresetId;
@@ -102,19 +114,55 @@ function shake(d: number, amp: number, seed: number) {
   };
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function HookPunch({
   stop = "Stop",
   scroll = "scrolling.",
   lead = "This video took",
   payoff = "1 day.",
+  ink,
+  background,
+  fontFamily = grotesk,
+  hold = BEATS.whip,
+  scale = 1,
+  delay = 0,
   theme = "dark",
   ground,
   groundParams,
   speed = 1,
 }: HookPunchProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const c = THEMES[theme];
+  const stage =
+    background === undefined
+      ? c.stage
+      : background === "transparent"
+        ? "transparent"
+        : background;
+  const shift = hold - BEATS.whip;
+  const beats = {
+    ...BEATS,
+    whip: BEATS.whip + shift,
+    lead: BEATS.lead + shift,
+    pay: BEATS.pay + shift,
+    rise: BEATS.rise + shift,
+  };
   const tall = H > W;
   const base = tall ? W * 0.56 : H;
   const u = Math.min(W / 1280, H / 720);
@@ -129,38 +177,38 @@ export function HookPunch({
   };
 
   const bump = Math.max(
-    kick(t - BEATS.stop - 4),
-    kick(t - BEATS.scroll - 4),
-    1.3 * kick(t - BEATS.pay - 4),
+    kick(t - beats.stop - 4),
+    kick(t - beats.scroll - 4),
+    1.3 * kick(t - beats.pay - 4),
   );
-  const s1 = shake(t - BEATS.stop - 4, 6 * u, 0.4);
-  const s2 = shake(t - BEATS.scroll - 4, 5 * u, 2.1);
-  const s3 = shake(t - BEATS.pay - 4, 8 * u, 4.2);
+  const s1 = shake(t - beats.stop - 4, 6 * u, 0.4);
+  const s2 = shake(t - beats.scroll - 4, 5 * u, 2.1);
+  const s3 = shake(t - beats.pay - 4, 8 * u, 4.2);
   const camScale = 1 + 0.03 * bump;
 
-  const pStop = slam(BEATS.stop, 1.5);
-  const pScroll = slam(BEATS.scroll, 1.5);
-  const shove = 1 - spring({ frame: t - BEATS.scroll, fps, config: HEAVY });
-  const creep1 = interpolate(t, [BEATS.scroll + 6, BEATS.whip], [1, 1.04], {
+  const pStop = slam(beats.stop, 1.5);
+  const pScroll = slam(beats.scroll, 1.5);
+  const shove = 1 - spring({ frame: t - beats.scroll, fps, config: HEAVY });
+  const creep1 = interpolate(t, [beats.scroll + 6, beats.whip], [1, 1.04], {
     ...CLAMP,
     easing: CAMERA,
   });
-  const whip = EXIT(ramp(t, BEATS.whip, BEATS.whipLen));
+  const whip = EXIT(ramp(t, beats.whip, beats.whipLen));
   const line1Scale = creep1 * (1 + 1.6 * whip);
   const line1Blur = 22 * whip;
-  const line1Opacity = 1 - ramp(t, BEATS.whip + 3, BEATS.whipLen - 3);
+  const line1Opacity = 1 - ramp(t, beats.whip + 3, beats.whipLen - 3);
 
-  const lead2 = spring({ frame: t - BEATS.lead, fps, config: HEAVY });
+  const lead2 = spring({ frame: t - beats.lead, fps, config: HEAVY });
   const leadScale = 0.6 + 0.4 * lead2;
   const leadBlur = Math.max(0, 1 - lead2) * 16;
-  const leadOpacity = ramp(t, BEATS.lead, 3);
-  const pPay = slam(BEATS.pay, 1.6);
-  const creep2 = interpolate(t, [BEATS.pay + 6, BEATS.pay + 62], [1, 1.035], {
+  const leadOpacity = ramp(t, beats.lead, 3);
+  const pPay = slam(beats.pay, 1.6);
+  const creep2 = interpolate(t, [beats.pay + 6, beats.pay + 62], [1, 1.035], {
     ...CLAMP,
     easing: CAMERA,
   });
 
-  const rise = LIGHT(ramp(t, BEATS.rise, 26));
+  const rise = LIGHT(ramp(t, beats.rise, 26));
   const veil = c.veilFrom + (c.veilTo - c.veilFrom) * rise;
   const groundShift = (0.06 + (1 - rise) * 0.14) * H;
 
@@ -192,108 +240,116 @@ export function HookPunch({
   );
 
   return (
-    <AbsoluteFill style={{ background: c.stage, overflow: "hidden" }}>
-      <AbsoluteFill
-        style={{
-          top: -0.3 * H,
-          height: 1.55 * H,
-          transform: `translateY(${groundShift - 0.25 * H}px) scale(1.06)`,
-        }}
-      >
-        <GshGround
-          preset={ground ?? c.preset}
-          params={groundParams ?? c.params}
-          timeOffset={3}
-          timeScale={0.5}
-        />
-      </AbsoluteFill>
-      <AbsoluteFill style={{ background: c.stage, opacity: veil }} />
-
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          transform: `translate(${s1.x + s2.x + s3.x}px, ${s1.y + s2.y + s3.y}px) scale(${camScale})`,
-          transformOrigin: "50% 50%",
-          color: c.ink,
-        }}
-      >
-        {t < BEATS.whip + BEATS.whipLen ? (
-          <div
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
+      {background === undefined ? (
+        <>
+          <AbsoluteFill
             style={{
-              position: "absolute",
-              inset: 0,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 0.01 * base,
-              transform: `scale(${line1Scale})`,
-              filter: line1Blur > 0.2 ? `blur(${line1Blur * u}px)` : undefined,
-              opacity: line1Opacity,
+              top: -0.3 * H,
+              height: 1.55 * H,
+              transform: `translateY(${groundShift - 0.25 * H}px) scale(1.06)`,
             }}
           >
+            <GshGround
+              preset={ground ?? c.preset}
+              params={groundParams ?? c.params}
+              timeOffset={3}
+              timeScale={0.5}
+            />
+          </AbsoluteFill>
+          <AbsoluteFill style={{ background: c.stage, opacity: veil }} />
+        </>
+      ) : null}
+
+      <ScaleLayer scale={scale}>
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            transform: `translate(${s1.x + s2.x + s3.x}px, ${s1.y + s2.y + s3.y}px) scale(${camScale})`,
+            transformOrigin: "50% 50%",
+            color: ink ?? c.ink,
+          }}
+        >
+          {t < beats.whip + beats.whipLen ? (
             <div
               style={{
-                transform: `translateY(${shove * 0.5 * (bigFs * 1.06 * 0.86 + 0.01 * base)}px)`,
+                position: "absolute",
+                inset: 0,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 0.01 * base,
+                transform: `scale(${line1Scale})`,
+                filter:
+                  line1Blur > 0.2 ? `blur(${line1Blur * u}px)` : undefined,
+                opacity: line1Opacity,
               }}
             >
-              {word(stop, grotesk, bigFs, pStop, {
+              <div
+                style={{
+                  transform: `translateY(${shove * 0.5 * (bigFs * 1.06 * 0.86 + 0.01 * base)}px)`,
+                }}
+              >
+                {word(stop, fontFamily, bigFs, pStop, {
+                  fontWeight: 400,
+                  letterSpacing: "-0.05em",
+                  paddingRight: 0.02 * W,
+                })}
+              </div>
+              {word(scroll, serifItalic, bigFs * 1.06, pScroll, {
+                fontStyle: "italic",
                 fontWeight: 400,
-                letterSpacing: "-0.05em",
-                paddingRight: 0.02 * W,
+                letterSpacing: "-0.03em",
+                paddingLeft: (tall ? 0.03 : 0.06) * W,
               })}
             </div>
-            {word(scroll, serifItalic, bigFs * 1.06, pScroll, {
-              fontStyle: "italic",
-              fontWeight: 400,
-              letterSpacing: "-0.03em",
-              paddingLeft: (tall ? 0.03 : 0.06) * W,
-            })}
-          </div>
-        ) : null}
+          ) : null}
 
-        {t >= BEATS.lead ? (
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              transform: `scale(${creep2})`,
-            }}
-          >
+          {t >= beats.lead ? (
             <div
               style={{
-                fontFamily: grotesk,
-                fontWeight: 300,
-                fontSize: leadFs,
-                lineHeight: 1,
-                letterSpacing: "-0.03em",
-                whiteSpace: "nowrap",
-                transform: `scale(${leadScale})`,
-                filter: leadBlur > 0.2 ? `blur(${leadBlur * u}px)` : undefined,
-                opacity: leadOpacity,
-                marginBottom: 0.02 * base,
+                position: "absolute",
+                inset: 0,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                transform: `scale(${creep2})`,
               }}
             >
-              {lead}
+              <div
+                style={{
+                  fontFamily,
+                  fontWeight: 300,
+                  fontSize: leadFs,
+                  lineHeight: 1,
+                  letterSpacing: "-0.03em",
+                  whiteSpace: "nowrap",
+                  transform: `scale(${leadScale})`,
+                  filter:
+                    leadBlur > 0.2 ? `blur(${leadBlur * u}px)` : undefined,
+                  opacity: leadOpacity,
+                  marginBottom: 0.02 * base,
+                }}
+              >
+                {lead}
+              </div>
+              <div style={{ height: payFs * 0.92 }}>
+                {t >= beats.pay - 1
+                  ? word(payoff, fontFamily, payFs, pPay, {
+                      fontWeight: 400,
+                      lineHeight: 1,
+                      letterSpacing: "-0.055em",
+                      paddingRight: 0.03 * payFs,
+                    })
+                  : null}
+              </div>
             </div>
-            <div style={{ height: payFs * 0.92 }}>
-              {t >= BEATS.pay - 1
-                ? word(payoff, grotesk, payFs, pPay, {
-                    fontWeight: 400,
-                    lineHeight: 1,
-                    letterSpacing: "-0.055em",
-                    paddingRight: 0.03 * payFs,
-                  })
-                : null}
-            </div>
-          </div>
-        ) : null}
-      </div>
+          ) : null}
+        </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

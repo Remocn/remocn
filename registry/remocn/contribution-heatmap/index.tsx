@@ -25,6 +25,22 @@ export interface ContributionHeatmapProps {
   label?: string;
   weeks?: number;
   accent?: string;
+  /** Weight of the total. */
+  fontWeight?: number;
+  /** Cell corner radius, as a fraction of the cell size. */
+  radius?: number;
+  /** Text color of the total; overrides the theme ink. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the total and label. Load it yourself; Geist by default. */
+  fontFamily?: string;
+  /** Size of the grid and total, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  /** Film grain over the scene. */
+  grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -147,23 +163,50 @@ function Grain({ opacity }: { opacity: number }) {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function ContributionHeatmap({
   value = 12480,
   label = "renders this year",
   weeks = 52,
   accent = "#3B5BFD",
+  fontWeight = 400,
+  radius: roundness = 0.26,
+  ink,
+  background,
+  fontFamily = sans,
+  scale = 1,
+  delay = 0,
+  grain = true,
   theme = "dark",
   speed = 1,
 }: ContributionHeatmapProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height } = useVideoConfig();
   const u = Math.min(width / 1280, height / 720);
   const p = THEMES[theme];
+  const fg = ink ?? p.fg;
+  const fill =
+    background === "transparent" ? "transparent" : (background ?? p.bg);
   const cols = Math.max(4, Math.round(weeks));
 
   const pitch = Math.min((width * 0.8) / cols, 34 * u);
   const cell = pitch * 0.8;
-  const radius = cell * 0.26;
+  const radius = cell * roundness;
   const gridW = cols * pitch - (pitch - cell);
   const gridH = 7 * pitch - (pitch - cell);
   const gx = (width - gridW) / 2;
@@ -264,171 +307,177 @@ export function ContributionHeatmap({
   const valueSize = 200 * u;
 
   return (
-    <AbsoluteFill style={{ background: p.bg, overflow: "hidden" }}>
+    <AbsoluteFill style={{ background: fill, overflow: "hidden" }}>
       <AbsoluteFill
         style={{
           background: `radial-gradient(70% 55% at ${58 + 10 * drift}% 108%, ${p.ground}, transparent 72%)`,
         }}
       />
-      <AbsoluteFill
-        style={{
-          transform: `translate(${(0.5 - drift) * 14 * u}px, ${gridY}px) scale(${gridScale})`,
-          transformOrigin: "50% 50%",
-          opacity: stage * gridOpacity,
-          filter: gridBlur > 0.05 ? `blur(${gridBlur}px)` : undefined,
-        }}
-      >
-        <svg
-          width={width}
-          height={height}
-          style={{ position: "absolute", inset: 0 }}
-          aria-hidden
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill
+          style={{
+            transform: `translate(${(0.5 - drift) * 14 * u}px, ${gridY}px) scale(${gridScale})`,
+            transformOrigin: "50% 50%",
+            opacity: stage * gridOpacity,
+            filter: gridBlur > 0.05 ? `blur(${gridBlur}px)` : undefined,
+          }}
         >
-          <defs>
-            {p.levels.map((amt, i) => (
-              <linearGradient
-                key={amt}
-                id={`${gradId}${i}`}
-                gradientUnits="userSpaceOnUse"
-                x1={gx - gridW * 0.08 * (1 - drift)}
-                y1={gy + gridH}
-                x2={gx + gridW * (1.02 - 0.06 * drift)}
-                y2={gy}
+          <svg
+            width={width}
+            height={height}
+            style={{ position: "absolute", inset: 0 }}
+            aria-hidden
+          >
+            <defs>
+              {p.levels.map((amt, i) => (
+                <linearGradient
+                  key={amt}
+                  id={`${gradId}${i}`}
+                  gradientUnits="userSpaceOnUse"
+                  x1={gx - gridW * 0.08 * (1 - drift)}
+                  y1={gy + gridH}
+                  x2={gx + gridW * (1.02 - 0.06 * drift)}
+                  y2={gy}
+                >
+                  <stop offset="0" stopColor={mix(accent, p.toward, amt)} />
+                  <stop
+                    offset="0.6"
+                    stopColor={mix(p.ramp[0], p.toward, amt)}
+                  />
+                  <stop
+                    offset="0.86"
+                    stopColor={mix(p.ramp[1], p.toward, amt * 0.9 + 0.12)}
+                  />
+                  <stop offset="1" stopColor={mix(p.ramp[1], p.toward, amt)} />
+                </linearGradient>
+              ))}
+            </defs>
+            {cells}
+          </svg>
+          {MONTHS.map((m, i) => {
+            const c = Math.round((i * cols) / 12);
+            const a = interpolate(t, [2 + i * 1.5, 14 + i * 1.5], [0, 1], {
+              ...CLAMP,
+              easing: EASE_OUT,
+            });
+            return (
+              <div
+                key={m}
+                style={{
+                  position: "absolute",
+                  left: gx + c * pitch,
+                  top: gy - 30 * u,
+                  fontFamily: mono,
+                  fontWeight: 400,
+                  fontSize: 12 * u,
+                  letterSpacing: "0.06em",
+                  textTransform: "uppercase",
+                  color: p.muted,
+                  opacity: a * axisO,
+                  transform: `translateY(${(1 - a) * 6 * u}px)`,
+                }}
               >
-                <stop offset="0" stopColor={mix(accent, p.toward, amt)} />
-                <stop offset="0.6" stopColor={mix(p.ramp[0], p.toward, amt)} />
-                <stop
-                  offset="0.86"
-                  stopColor={mix(p.ramp[1], p.toward, amt * 0.9 + 0.12)}
-                />
-                <stop offset="1" stopColor={mix(p.ramp[1], p.toward, amt)} />
-              </linearGradient>
-            ))}
-          </defs>
-          {cells}
-        </svg>
-        {MONTHS.map((m, i) => {
-          const c = Math.round((i * cols) / 12);
-          const a = interpolate(t, [2 + i * 1.5, 14 + i * 1.5], [0, 1], {
-            ...CLAMP,
-            easing: EASE_OUT,
-          });
-          return (
-            <div
-              key={m}
-              style={{
-                position: "absolute",
-                left: gx + c * pitch,
-                top: gy - 30 * u,
-                fontFamily: mono,
-                fontWeight: 400,
-                fontSize: 12 * u,
-                letterSpacing: "0.06em",
-                textTransform: "uppercase",
-                color: p.muted,
-                opacity: a * axisO,
-                transform: `translateY(${(1 - a) * 6 * u}px)`,
-              }}
-            >
-              {m}
-            </div>
-          );
-        })}
-        {DAYS.map((d, r) =>
-          d ? (
-            <div
-              key={d}
-              style={{
-                position: "absolute",
-                right: width - gx + 14 * u,
-                top: gy + r * pitch + cell / 2 - 8 * u,
-                fontFamily: mono,
-                fontWeight: 400,
-                fontSize: 12 * u,
-                letterSpacing: "0.06em",
-                textTransform: "uppercase",
-                lineHeight: `${16 * u}px`,
-                color: p.muted,
-                opacity: axisO,
-              }}
-            >
-              {d}
-            </div>
-          ) : null,
-        )}
-      </AbsoluteFill>
+                {m}
+              </div>
+            );
+          })}
+          {DAYS.map((d, r) =>
+            d ? (
+              <div
+                key={d}
+                style={{
+                  position: "absolute",
+                  right: width - gx + 14 * u,
+                  top: gy + r * pitch + cell / 2 - 8 * u,
+                  fontFamily: mono,
+                  fontWeight: 400,
+                  fontSize: 12 * u,
+                  letterSpacing: "0.06em",
+                  textTransform: "uppercase",
+                  lineHeight: `${16 * u}px`,
+                  color: p.muted,
+                  opacity: axisO,
+                }}
+              >
+                {d}
+              </div>
+            ) : null,
+          )}
+        </AbsoluteFill>
 
-      <AbsoluteFill
-        style={{
-          background: `radial-gradient(ellipse 46% 34% at 50% 36%, ${p.glow}, transparent 72%)`,
-          opacity: land,
-        }}
-      />
-      <AbsoluteFill
-        style={{
-          alignItems: "center",
-          justifyContent: "center",
-          flexDirection: "column",
-          transform: `translateY(${-0.15 * height}px)`,
-        }}
-      >
-        <div
+        <AbsoluteFill
           style={{
-            fontFamily: sans,
-            fontWeight: 400,
-            fontSize: valueSize,
-            lineHeight: 0.92,
-            letterSpacing: "-0.04em",
-            color: p.fg,
-            fontVariantNumeric: "tabular-nums",
-            whiteSpace: "nowrap",
+            background: `radial-gradient(ellipse 46% 34% at 50% 36%, ${p.glow}, transparent 72%)`,
             opacity: land,
-            filter: land < 0.99 ? `blur(${(1 - land) * 10 * u}px)` : undefined,
-            transform: `translateY(${(1 - land) * 28 * u}px) scale(${1.04 - 0.04 * land})`,
           }}
-        >
-          {shown}
-        </div>
-        <div
+        />
+        <AbsoluteFill
           style={{
-            marginTop: 22 * u,
-            display: "flex",
             alignItems: "center",
-            gap: 12 * u,
-            opacity: labIn,
-            transform: `translateY(${(1 - labIn) * 10 * u}px)`,
+            justifyContent: "center",
+            flexDirection: "column",
+            transform: `translateY(${-0.15 * height}px)`,
           }}
         >
-          <span
+          <div
             style={{
-              width: 44 * u,
-              height: 12 * u,
-              borderRadius: 4 * u,
-              background: `linear-gradient(90deg, ${accent}, ${p.ramp[0]} 62%, ${p.ramp[1]})`,
-            }}
-          />
-          <span
-            style={{
-              fontFamily: sans,
-              fontWeight: 400,
-              fontSize: 24 * u,
-              letterSpacing: "-0.015em",
-              color: p.muted,
+              fontFamily,
+              fontWeight,
+              fontSize: valueSize,
+              lineHeight: 0.92,
+              letterSpacing: "-0.04em",
+              color: fg,
+              fontVariantNumeric: "tabular-nums",
               whiteSpace: "nowrap",
+              opacity: land,
+              filter:
+                land < 0.99 ? `blur(${(1 - land) * 10 * u}px)` : undefined,
+              transform: `translateY(${(1 - land) * 28 * u}px) scale(${1.04 - 0.04 * land})`,
             }}
           >
-            {label}
-          </span>
-        </div>
-      </AbsoluteFill>
+            {shown}
+          </div>
+          <div
+            style={{
+              marginTop: 22 * u,
+              display: "flex",
+              alignItems: "center",
+              gap: 12 * u,
+              opacity: labIn,
+              transform: `translateY(${(1 - labIn) * 10 * u}px)`,
+            }}
+          >
+            <span
+              style={{
+                width: 44 * u,
+                height: 12 * u,
+                borderRadius: 4 * u,
+                background: `linear-gradient(90deg, ${accent}, ${p.ramp[0]} 62%, ${p.ramp[1]})`,
+              }}
+            />
+            <span
+              style={{
+                fontFamily,
+                fontWeight: 400,
+                fontSize: 24 * u,
+                letterSpacing: "-0.015em",
+                color: p.muted,
+                whiteSpace: "nowrap",
+              }}
+            >
+              {label}
+            </span>
+          </div>
+        </AbsoluteFill>
+      </ScaleLayer>
 
       <AbsoluteFill
         style={{
-          background: `radial-gradient(ellipse 80% 80% at 50% 50%, transparent 62%, ${p.bg} 100%)`,
+          background: `radial-gradient(ellipse 80% 80% at 50% 50%, transparent 62%, ${fill} 100%)`,
           opacity: 0.6,
         }}
       />
-      <Grain opacity={p.grain} />
+      {grain ? <Grain opacity={p.grain} /> : null}
     </AbsoluteFill>
   );
 }

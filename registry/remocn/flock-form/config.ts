@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const flockFormConfig: ComponentConfig = {
   componentName: "FlockForm",
@@ -13,11 +19,6 @@ export const flockFormConfig: ComponentConfig = {
       },
       description: "Theme",
     },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
-    },
     count: {
       type: "number",
       default: 340,
@@ -27,6 +28,30 @@ export const flockFormConfig: ComponentConfig = {
       description: "Count",
       hiddenFromList: false,
     },
+    stagger: {
+      type: "number",
+      default: 18,
+      min: 0,
+      max: 30,
+      step: 1,
+      description: "Arrival stagger",
+      hiddenFromList: false,
+    },
+    birdSize: {
+      type: "number",
+      default: 1,
+      min: 0.5,
+      max: 2,
+      step: 0.05,
+      description: "Bird size",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ ink: false, grain: true }),
     speed: {
       type: "number",
       default: 1,

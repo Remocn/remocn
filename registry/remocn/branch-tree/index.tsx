@@ -2,7 +2,7 @@
 
 import { loadFont } from "@remotion/google-fonts/SpaceGrotesk";
 import { evolvePath } from "@remotion/paths";
-import { useId } from "react";
+import { type ReactNode, useId } from "react";
 import {
   AbsoluteFill,
   Easing,
@@ -38,7 +38,23 @@ export interface BranchTreeProps {
   branching?: number | number[];
   title?: string;
   rootLabel?: string;
+  /** Frames each branch takes to grow to its node. */
+  grow?: number;
+  /** Weight of the leaf count. */
+  fontWeight?: number;
   accent?: string;
+  /** Text color of the root label and root node; overrides the theme. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the count and labels. Load it yourself; Space Grotesk by default. */
+  fontFamily?: string;
+  /** Size of the tree and count, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  /** Film grain over the scene. */
+  grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -88,7 +104,7 @@ interface TreeNode {
   start: number;
 }
 
-function buildTree(depth: number, fan: number[]) {
+function buildTree(depth: number, fan: number[], grow: number) {
   const nodes: TreeNode[] = [
     {
       level: 0,
@@ -119,7 +135,7 @@ function buildTree(depth: number, fan: number[]) {
           y: 0,
           path: [...parent.path, j],
           children: [],
-          arrive: start + EDGE,
+          arrive: start + grow,
           start,
         });
         parent.children.push(idx);
@@ -129,6 +145,22 @@ function buildTree(depth: number, fan: number[]) {
     frontier = next;
   }
   return { nodes, leaves: frontier };
+}
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
 }
 
 function Grain({ opacity }: { opacity: number }) {
@@ -160,14 +192,24 @@ export function BranchTree({
   branching = [3, 4, 4],
   title = "variants",
   rootLabel = "1 component",
+  grow = EDGE,
+  fontWeight = 500,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = sans,
+  scale = 1,
+  delay = 0,
+  grain = true,
   theme = "dark",
   speed = 1,
 }: BranchTreeProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, fps } = useVideoConfig();
   const u = Math.min(width / 1280, height / 720);
   const p = THEMES[theme];
+  const fg = ink ?? p.fg;
+  const bgFill = background ?? p.bg;
 
   const D = Math.min(5, Math.max(1, Math.round(depth)));
   const raw = Array.isArray(branching) ? branching : [branching];
@@ -183,7 +225,7 @@ export function BranchTree({
     leafCount *= k;
   }
 
-  const { nodes, leaves } = buildTree(D, fan);
+  const { nodes, leaves } = buildTree(D, fan, grow);
 
   const rootX = width * 0.19;
   const leafX = width * 0.61;
@@ -268,184 +310,186 @@ export function BranchTree({
   const drift = interpolate(t, [0, 150], [0, 1], { ...CLAMP, easing: EASE_IO });
 
   return (
-    <AbsoluteFill style={{ background: p.bg, overflow: "hidden" }}>
-      <AbsoluteFill
-        style={{
-          transform: `scale(${push})`,
-          transformOrigin: "45% 50%",
-          opacity: stage,
-        }}
-      >
-        <svg
-          width={width}
-          height={height}
-          style={{ position: "absolute", inset: 0 }}
-          aria-hidden
-        >
-          <defs>
-            <linearGradient
-              id={`${gid}e`}
-              gradientUnits="userSpaceOnUse"
-              x1={0}
-              y1={top}
-              x2={0}
-              y2={top + treeH}
-            >
-              {aur.map((c, i) => (
-                <stop key={c} offset={i / (aur.length - 1)} stopColor={c} />
-              ))}
-            </linearGradient>
-          </defs>
-          {nodes.map((n, i) => {
-            if (n.parent < 0 || t < n.start) return null;
-            const par = nodes[n.parent];
-            const px = xOf(par.level);
-            const cx = xOf(n.level);
-            const mx = px + (cx - px) * 0.5;
-            const d = `M${px.toFixed(2)} ${par.y.toFixed(2)} C${mx.toFixed(2)} ${par.y.toFixed(2)} ${mx.toFixed(2)} ${n.y.toFixed(2)} ${cx.toFixed(2)} ${n.y.toFixed(2)}`;
-            const k = interpolate(t, [n.start, n.arrive], [0, 1], {
-              ...CLAMP,
-              easing: EASE_GROW,
-            });
-            const evo = evolvePath(k, d);
-            return (
-              <path
-                key={`e${i}`}
-                d={d}
-                fill="none"
-                stroke={n.level === D ? `url(#${gid}e)` : p.hair}
-                strokeWidth={stroke}
-                strokeLinecap="round"
-                strokeDasharray={evo.strokeDasharray}
-                strokeDashoffset={evo.strokeDashoffset}
-                opacity={
-                  n.level === D
-                    ? (theme === "dark" ? 0.5 : 0.6) + 0.25 * settle
-                    : 1 - 0.3 * settle
-                }
-              />
-            );
-          })}
-
-          {nodes.map((n, i) => {
-            if (n.level === 0 || t < n.arrive - 2) return null;
-            const isLeaf = n.level === D;
-            const s = spring({
-              frame: t - n.arrive + 1,
-              fps,
-              config: isLeaf
-                ? { damping: 11, stiffness: 220, mass: 0.6 }
-                : { damping: 18, stiffness: 200, mass: 0.6 },
-            });
-            const o = interpolate(
-              t,
-              [n.arrive - 2, n.arrive + 3],
-              [0, 1],
-              CLAMP,
-            );
-            return (
-              <circle
-                key={`n${i}`}
-                cx={xOf(n.level)}
-                cy={n.y}
-                r={(isLeaf ? leafR : nodeR) * (0.4 + 0.6 * s)}
-                fill={isLeaf ? tint(n.y) : p.node}
-                opacity={o}
-              />
-            );
-          })}
-
-          <circle
-            cx={rootX}
-            cy={nodes[0].y}
-            r={14 * u * (0.7 + 0.3 * rootIn)}
-            fill="none"
-            stroke={accent}
-            strokeWidth={stroke * 1.4}
-            opacity={interpolate(t, [ROOT_IN, ROOT_IN + 6], [0, 1], CLAMP)}
-          />
-          <circle
-            cx={rootX}
-            cy={nodes[0].y}
-            r={7 * u * (0.4 + 0.6 * rootIn)}
-            fill={p.fg}
-            opacity={interpolate(t, [ROOT_IN, ROOT_IN + 5], [0, 1], CLAMP)}
-          />
-        </svg>
-
-        <div
+    <AbsoluteFill style={{ background: bgFill, overflow: "hidden" }}>
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill
           style={{
-            position: "absolute",
-            left: rootX,
-            top: nodes[0].y - 34 * u,
-            transform: `translate(-50%, -100%) translateY(${(1 - rootLab) * 6 * u}px)`,
-            opacity: rootLab,
-            fontFamily: sans,
-            fontWeight: 400,
-            fontSize: 21 * u,
-            letterSpacing: "-0.01em",
-            color: p.fg,
-            whiteSpace: "nowrap",
+            transform: `scale(${push})`,
+            transformOrigin: "45% 50%",
+            opacity: stage,
           }}
         >
-          {rootLabel}
-        </div>
-
-        <div
-          style={{
-            position: "absolute",
-            left: leafX + 64 * u,
-            top: cy,
-            transform: `translateY(${-numSize * 0.6}px)`,
-          }}
-        >
-          <div
-            style={{
-              fontFamily: sans,
-              fontWeight: 500,
-              fontSize: numSize,
-              lineHeight: 0.9,
-              letterSpacing: "-0.05em",
-              paddingRight: 0.06 * numSize,
-              backgroundImage: `linear-gradient(${172 - 10 * drift}deg, ${aur[0]} 4%, ${aur[1]} 34%, ${aur[2]} 70%, ${aur[3]} 100%)`,
-              WebkitBackgroundClip: "text",
-              backgroundClip: "text",
-              color: "transparent",
-              fontVariantNumeric: "tabular-nums",
-              whiteSpace: "nowrap",
-              opacity: landO,
-              filter: blur > 0.01 ? `blur(${blur * 8 * u}px)` : undefined,
-              transform: `translateX(${(1 - land) * -24 * u}px)`,
-            }}
+          <svg
+            width={width}
+            height={height}
+            style={{ position: "absolute", inset: 0 }}
+            aria-hidden
           >
-            {Math.round(leafCount * count)}
-          </div>
+            <defs>
+              <linearGradient
+                id={`${gid}e`}
+                gradientUnits="userSpaceOnUse"
+                x1={0}
+                y1={top}
+                x2={0}
+                y2={top + treeH}
+              >
+                {aur.map((c, i) => (
+                  <stop key={c} offset={i / (aur.length - 1)} stopColor={c} />
+                ))}
+              </linearGradient>
+            </defs>
+            {nodes.map((n, i) => {
+              if (n.parent < 0 || t < n.start) return null;
+              const par = nodes[n.parent];
+              const px = xOf(par.level);
+              const cx = xOf(n.level);
+              const mx = px + (cx - px) * 0.5;
+              const d = `M${px.toFixed(2)} ${par.y.toFixed(2)} C${mx.toFixed(2)} ${par.y.toFixed(2)} ${mx.toFixed(2)} ${n.y.toFixed(2)} ${cx.toFixed(2)} ${n.y.toFixed(2)}`;
+              const k = interpolate(t, [n.start, n.arrive], [0, 1], {
+                ...CLAMP,
+                easing: EASE_GROW,
+              });
+              const evo = evolvePath(k, d);
+              return (
+                <path
+                  key={`e${i}`}
+                  d={d}
+                  fill="none"
+                  stroke={n.level === D ? `url(#${gid}e)` : p.hair}
+                  strokeWidth={stroke}
+                  strokeLinecap="round"
+                  strokeDasharray={evo.strokeDasharray}
+                  strokeDashoffset={evo.strokeDashoffset}
+                  opacity={
+                    n.level === D
+                      ? (theme === "dark" ? 0.5 : 0.6) + 0.25 * settle
+                      : 1 - 0.3 * settle
+                  }
+                />
+              );
+            })}
+
+            {nodes.map((n, i) => {
+              if (n.level === 0 || t < n.arrive - 2) return null;
+              const isLeaf = n.level === D;
+              const s = spring({
+                frame: t - n.arrive + 1,
+                fps,
+                config: isLeaf
+                  ? { damping: 11, stiffness: 220, mass: 0.6 }
+                  : { damping: 18, stiffness: 200, mass: 0.6 },
+              });
+              const o = interpolate(
+                t,
+                [n.arrive - 2, n.arrive + 3],
+                [0, 1],
+                CLAMP,
+              );
+              return (
+                <circle
+                  key={`n${i}`}
+                  cx={xOf(n.level)}
+                  cy={n.y}
+                  r={(isLeaf ? leafR : nodeR) * (0.4 + 0.6 * s)}
+                  fill={isLeaf ? tint(n.y) : p.node}
+                  opacity={o}
+                />
+              );
+            })}
+
+            <circle
+              cx={rootX}
+              cy={nodes[0].y}
+              r={14 * u * (0.7 + 0.3 * rootIn)}
+              fill="none"
+              stroke={accent}
+              strokeWidth={stroke * 1.4}
+              opacity={interpolate(t, [ROOT_IN, ROOT_IN + 6], [0, 1], CLAMP)}
+            />
+            <circle
+              cx={rootX}
+              cy={nodes[0].y}
+              r={7 * u * (0.4 + 0.6 * rootIn)}
+              fill={fg}
+              opacity={interpolate(t, [ROOT_IN, ROOT_IN + 5], [0, 1], CLAMP)}
+            />
+          </svg>
+
           <div
             style={{
-              marginTop: 18 * u,
-              marginLeft: 0.04 * numSize,
-              opacity: cap,
-              transform: `translateY(${(1 - cap) * 8 * u}px)`,
-              fontFamily: sans,
+              position: "absolute",
+              left: rootX,
+              top: nodes[0].y - 34 * u,
+              transform: `translate(-50%, -100%) translateY(${(1 - rootLab) * 6 * u}px)`,
+              opacity: rootLab,
+              fontFamily,
               fontWeight: 400,
-              fontSize: 28 * u,
-              letterSpacing: "-0.015em",
-              color: p.muted,
+              fontSize: 21 * u,
+              letterSpacing: "-0.01em",
+              color: fg,
               whiteSpace: "nowrap",
             }}
           >
-            {title}
+            {rootLabel}
           </div>
-        </div>
-      </AbsoluteFill>
+
+          <div
+            style={{
+              position: "absolute",
+              left: leafX + 64 * u,
+              top: cy,
+              transform: `translateY(${-numSize * 0.6}px)`,
+            }}
+          >
+            <div
+              style={{
+                fontFamily,
+                fontWeight,
+                fontSize: numSize,
+                lineHeight: 0.9,
+                letterSpacing: "-0.05em",
+                paddingRight: 0.06 * numSize,
+                backgroundImage: `linear-gradient(${172 - 10 * drift}deg, ${aur[0]} 4%, ${aur[1]} 34%, ${aur[2]} 70%, ${aur[3]} 100%)`,
+                WebkitBackgroundClip: "text",
+                backgroundClip: "text",
+                color: "transparent",
+                fontVariantNumeric: "tabular-nums",
+                whiteSpace: "nowrap",
+                opacity: landO,
+                filter: blur > 0.01 ? `blur(${blur * 8 * u}px)` : undefined,
+                transform: `translateX(${(1 - land) * -24 * u}px)`,
+              }}
+            >
+              {Math.round(leafCount * count)}
+            </div>
+            <div
+              style={{
+                marginTop: 18 * u,
+                marginLeft: 0.04 * numSize,
+                opacity: cap,
+                transform: `translateY(${(1 - cap) * 8 * u}px)`,
+                fontFamily,
+                fontWeight: 400,
+                fontSize: 28 * u,
+                letterSpacing: "-0.015em",
+                color: p.muted,
+                whiteSpace: "nowrap",
+              }}
+            >
+              {title}
+            </div>
+          </div>
+        </AbsoluteFill>
+      </ScaleLayer>
 
       <AbsoluteFill
         style={{
-          background: `radial-gradient(ellipse 80% 80% at 50% 50%, transparent 62%, ${p.bg} 100%)`,
+          background: `radial-gradient(ellipse 80% 80% at 50% 50%, transparent 62%, ${bgFill} 100%)`,
           opacity: 0.6,
         }}
       />
-      <Grain opacity={p.grain} />
+      {grain ? <Grain opacity={p.grain} /> : null}
     </AbsoluteFill>
   );
 }

@@ -1,8 +1,27 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const appStoreListingConfig: ComponentConfig = {
   componentName: "AppStoreListing",
   importPath: "@/components/remocn/app-store-listing",
+  lists: {
+    lines: {
+      default: [
+        "Now on the App Store.",
+        "One tap to install.",
+        "Every screen, previewed.",
+        "Open it. Ship today.",
+      ],
+      description: "Lines",
+      max: 4,
+    },
+  },
   controls: {
     theme: {
       type: "enum",
@@ -12,11 +31,6 @@ export const appStoreListingConfig: ComponentConfig = {
         dark: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     appName: {
       type: "text-content",
@@ -48,6 +62,21 @@ export const appStoreListingConfig: ComponentConfig = {
       default: "Developer Tools",
       description: "Category",
     },
+    getLabel: {
+      type: "text-content",
+      default: "Get",
+      description: "Get label",
+    },
+    openLabel: {
+      type: "text-content",
+      default: "Open",
+      description: "Open label",
+    },
+    backLabel: {
+      type: "text-content",
+      default: "Search",
+      description: "Back label",
+    },
     rating: {
       type: "number",
       default: 4.8,
@@ -64,6 +93,22 @@ export const appStoreListingConfig: ComponentConfig = {
       max: 10,
       step: 1,
       description: "Chart rank",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ground: groundControl(),
+    ...sceneControls({ font: "Onest" }),
+    speed: {
+      type: "number",
+      default: 1,
+      min: 0.25,
+      max: 4,
+      step: 0.25,
+      description: "Speed",
       hiddenFromList: false,
     },
   },

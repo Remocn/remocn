@@ -74,7 +74,21 @@ export interface LiveTickerProps {
   kicker?: string;
   /** Customer names riding the transaction pills. */
   feed?: string[];
+  /** Small word between the unit and the name. */
+  connector?: string;
+  /** Weight of the counter figures. */
+  fontWeight?: number;
   accent?: string;
+  /** Text color of the kicker, unit and name; overrides the theme. */
+  ink?: string;
+  background?: string;
+  /** Typeface for the counter and label. Load it yourself; Geist by default. */
+  fontFamily?: string;
+  grain?: boolean;
+  /** Size of the counter and its streams, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   /** Playback multiplier. */
   speed?: number;
   theme?: "dark" | "light";
@@ -217,6 +231,22 @@ function Grain({ opacity }: { opacity: number }) {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function LiveTicker({
   value = 12480312,
   unit = "renders",
@@ -224,14 +254,25 @@ export function LiveTicker({
   logo,
   kicker = "Live",
   feed = ["Lumen", "Kite", "Orbit", "Halden", "Nova", "Ferro", "Vela", "Pico"],
+  connector = "on",
+  fontWeight = 300,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = sans,
+  grain = true,
+  scale: zoom = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: LiveTickerProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const u = H / 720;
   const p = THEMES[theme];
+  const fg = ink ?? p.fg;
+  const bg =
+    background === "transparent" ? "transparent" : (background ?? p.bg);
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
 
   const target = Math.max(0, Math.round(value));
@@ -431,433 +472,437 @@ export function LiveTicker({
     `rgba(${p.hair[0]},${p.hair[1]},${p.hair[2]},${a})`;
 
   return (
-    <AbsoluteFill style={{ background: p.bg, overflow: "hidden" }}>
-      <svg
-        width={W}
-        height={H}
-        viewBox={`0 0 ${W} ${H}`}
-        style={{ position: "absolute", inset: 0 }}
-        role="img"
-        aria-label={`${target.toLocaleString("en-US")} ${unit}`}
-      >
-        <defs>
-          {blobs.map((b, i) => (
-            <radialGradient
-              key={`b${b.r}`}
-              id={`${uid}b${i}`}
-              gradientUnits="userSpaceOnUse"
-              cx={gx(b.x)}
-              cy={gy(b.y)}
-              r={numW * b.r}
-            >
-              <stop offset="0" stopColor={p.blobs[i]} />
-              <stop offset="0.7" stopColor={p.blobs[i]} stopOpacity={0} />
-            </radialGradient>
-          ))}
-          {[0, 1].map((side) => (
-            <radialGradient
-              key={`f${side}`}
-              id={`${uid}f${side}`}
-              gradientUnits="userSpaceOnUse"
-              cx={side === 0 ? numLeft : numLeft + numW}
-              cy={cy}
-              r={fs * 1.4}
-            >
-              <stop offset="0" stopColor={p.flash} stopOpacity={0.9} />
-              <stop offset="1" stopColor={p.flash} stopOpacity={0} />
-            </radialGradient>
-          ))}
-          {/* the band: the same palette, wide and low, behind the number */}
-          {p.band.map((c, i) => (
-            <radialGradient
-              key={`band${c}${i}`}
-              id={`${uid}band${i}`}
-              gradientUnits="userSpaceOnUse"
-              cx={W * (0.26 + 0.24 * i + 0.04 * Math.sin(drift * 3 + i * 2))}
-              cy={cy}
-              r={W * (i === 1 ? 0.22 : 0.34)}
-              gradientTransform={`translate(0 ${cy}) scale(1 0.3) translate(0 ${-cy})`}
-            >
-              <stop offset="0" stopColor={c} />
-              <stop offset="1" stopColor={c} stopOpacity={0} />
-            </radialGradient>
-          ))}
-          <linearGradient id={`${uid}feather`} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor="#fff" stopOpacity={0} />
-            <stop offset="0.12" stopColor="#fff" />
-            <stop offset="0.88" stopColor="#fff" />
-            <stop offset="1" stopColor="#fff" stopOpacity={0} />
-          </linearGradient>
-          <linearGradient
-            id={`${uid}sink`}
-            gradientUnits="userSpaceOnUse"
-            x1={0}
-            y1={0}
-            x2={W}
-            y2={0}
-          >
-            <stop offset={(edgeL - feather) / W} stopColor="#fff" />
-            <stop offset={edgeL / W} stopColor="#000" />
-            <stop offset={edgeR / W} stopColor="#000" />
-            <stop offset={(edgeR + feather) / W} stopColor="#fff" />
-          </linearGradient>
-          <mask
-            id={`${uid}streams`}
-            maskUnits="userSpaceOnUse"
-            x={0}
-            y={0}
-            width={W}
-            height={H}
-          >
-            <rect width={W} height={H} fill={`url(#${uid}sink)`} />
-          </mask>
-          <mask
-            id={`${uid}win`}
-            maskUnits="userSpaceOnUse"
-            x={0}
-            y={0}
-            width={W}
-            height={H}
-          >
-            <rect
-              x={0}
-              y={numTop - 0.1 * fs}
-              width={W}
-              height={cap + 0.2 * fs}
-              fill={`url(#${uid}feather)`}
-            />
-          </mask>
-          {cols.out.map((c) => {
-            const v = settled ? 0 : rate(t, c.place);
-            const roll = Math.abs(
-              columnPos(t + 0.5, c.place) - columnPos(t - 0.5, c.place),
-            );
-            const sd =
-              (v >= FAST
-                ? Math.min(0.04, 0.008 + v * 0.01)
-                : Math.min(0.04, roll * 0.12 * (settled ? 0 : 1))) * fs;
-            return (
-              <filter
-                key={`blur${c.place}`}
-                id={`${uid}blur${c.place}`}
-                filterUnits="userSpaceOnUse"
-                x={0}
-                y={0}
-                width={W}
-                height={H}
+    <AbsoluteFill style={{ background: bg, overflow: "hidden" }}>
+      <ScaleLayer scale={zoom}>
+        <svg
+          width={W}
+          height={H}
+          viewBox={`0 0 ${W} ${H}`}
+          style={{ position: "absolute", inset: 0 }}
+          role="img"
+          aria-label={`${target.toLocaleString("en-US")} ${unit}`}
+        >
+          <defs>
+            {blobs.map((b, i) => (
+              <radialGradient
+                key={`b${b.r}`}
+                id={`${uid}b${i}`}
+                gradientUnits="userSpaceOnUse"
+                cx={gx(b.x)}
+                cy={gy(b.y)}
+                r={numW * b.r}
               >
-                <feGaussianBlur stdDeviation={`0 ${sd.toFixed(2)}`} />
-              </filter>
-            );
-          })}
-          <mask
-            id={`${uid}num`}
-            maskUnits="userSpaceOnUse"
-            x={0}
-            y={0}
-            width={W}
-            height={H}
-          >
-            <g
-              fill="#fff"
-              fontFamily={sans}
-              fontWeight={300}
-              fontSize={fs}
-              textAnchor="middle"
-              style={{ fontVariantNumeric: "tabular-nums" }}
-              transform={`translate(0 ${-nudge * 2.2 * u})`}
+                <stop offset="0" stopColor={p.blobs[i]} />
+                <stop offset="0.7" stopColor={p.blobs[i]} stopOpacity={0} />
+              </radialGradient>
+            ))}
+            {[0, 1].map((side) => (
+              <radialGradient
+                key={`f${side}`}
+                id={`${uid}f${side}`}
+                gradientUnits="userSpaceOnUse"
+                cx={side === 0 ? numLeft : numLeft + numW}
+                cy={cy}
+                r={fs * 1.4}
+              >
+                <stop offset="0" stopColor={p.flash} stopOpacity={0.9} />
+                <stop offset="1" stopColor={p.flash} stopOpacity={0} />
+              </radialGradient>
+            ))}
+            {/* the band: the same palette, wide and low, behind the number */}
+            {p.band.map((c, i) => (
+              <radialGradient
+                key={`band${c}${i}`}
+                id={`${uid}band${i}`}
+                gradientUnits="userSpaceOnUse"
+                cx={W * (0.26 + 0.24 * i + 0.04 * Math.sin(drift * 3 + i * 2))}
+                cy={cy}
+                r={W * (i === 1 ? 0.22 : 0.34)}
+                gradientTransform={`translate(0 ${cy}) scale(1 0.3) translate(0 ${-cy})`}
+              >
+                <stop offset="0" stopColor={c} />
+                <stop offset="1" stopColor={c} stopOpacity={0} />
+              </radialGradient>
+            ))}
+            <linearGradient id={`${uid}feather`} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stopColor="#fff" stopOpacity={0} />
+              <stop offset="0.12" stopColor="#fff" />
+              <stop offset="0.88" stopColor="#fff" />
+              <stop offset="1" stopColor="#fff" stopOpacity={0} />
+            </linearGradient>
+            <linearGradient
+              id={`${uid}sink`}
+              gradientUnits="userSpaceOnUse"
+              x1={0}
+              y1={0}
+              x2={W}
+              y2={0}
             >
-              <g mask={`url(#${uid}win)`}>
-                {cols.out.map((c, i) => {
+              <stop offset={(edgeL - feather) / W} stopColor="#fff" />
+              <stop offset={edgeL / W} stopColor="#000" />
+              <stop offset={edgeR / W} stopColor="#000" />
+              <stop offset={(edgeR + feather) / W} stopColor="#fff" />
+            </linearGradient>
+            <mask
+              id={`${uid}streams`}
+              maskUnits="userSpaceOnUse"
+              x={0}
+              y={0}
+              width={W}
+              height={H}
+            >
+              <rect width={W} height={H} fill={`url(#${uid}sink)`} />
+            </mask>
+            <mask
+              id={`${uid}win`}
+              maskUnits="userSpaceOnUse"
+              x={0}
+              y={0}
+              width={W}
+              height={H}
+            >
+              <rect
+                x={0}
+                y={numTop - 0.1 * fs}
+                width={W}
+                height={cap + 0.2 * fs}
+                fill={`url(#${uid}feather)`}
+              />
+            </mask>
+            {cols.out.map((c) => {
+              const v = settled ? 0 : rate(t, c.place);
+              const roll = Math.abs(
+                columnPos(t + 0.5, c.place) - columnPos(t - 0.5, c.place),
+              );
+              const sd =
+                (v >= FAST
+                  ? Math.min(0.04, 0.008 + v * 0.01)
+                  : Math.min(0.04, roll * 0.12 * (settled ? 0 : 1))) * fs;
+              return (
+                <filter
+                  key={`blur${c.place}`}
+                  id={`${uid}blur${c.place}`}
+                  filterUnits="userSpaceOnUse"
+                  x={0}
+                  y={0}
+                  width={W}
+                  height={H}
+                >
+                  <feGaussianBlur stdDeviation={`0 ${sd.toFixed(2)}`} />
+                </filter>
+              );
+            })}
+            <mask
+              id={`${uid}num`}
+              maskUnits="userSpaceOnUse"
+              x={0}
+              y={0}
+              width={W}
+              height={H}
+            >
+              <g
+                fill="#fff"
+                fontFamily={fontFamily}
+                fontWeight={fontWeight}
+                fontSize={fs}
+                textAnchor="middle"
+                style={{ fontVariantNumeric: "tabular-nums" }}
+                transform={`translate(0 ${-nudge * 2.2 * u})`}
+              >
+                <g mask={`url(#${uid}win)`}>
+                  {cols.out.map((c, i) => {
+                    const enter = interpolate(
+                      t,
+                      [i * 1.5 - 14, i * 1.5 + 6],
+                      [0, 1],
+                      { ...CLAMP, easing: EASE_OUT },
+                    );
+                    const pos = settled
+                      ? Math.floor(target / 10 ** c.place)
+                      : columnPos(t, c.place);
+                    const base = Math.floor(pos);
+                    const f = pos - base;
+                    const cx = numLeft + (c.x + DIGIT_ADV / 2) * fs;
+                    const digit = (d: number) => ((d % 10) + 10) % 10;
+                    return (
+                      <g
+                        key={`c${c.place}`}
+                        opacity={enter}
+                        filter={`url(#${uid}blur${c.place})`}
+                        transform={`translate(0 ${(1 - enter) * 0.6 * fs - f * step})`}
+                      >
+                        <text x={cx} y={baseline}>
+                          {digit(base)}
+                        </text>
+                        {f > 0.001 ? (
+                          <text x={cx} y={baseline + step}>
+                            {digit(base + 1)}
+                          </text>
+                        ) : null}
+                      </g>
+                    );
+                  })}
+                </g>
+                {cols.commas.map((c) => {
                   const enter = interpolate(
                     t,
-                    [i * 1.5 - 14, i * 1.5 + 6],
+                    [c.col * 1.5 - 13, c.col * 1.5 + 7],
                     [0, 1],
                     { ...CLAMP, easing: EASE_OUT },
                   );
-                  const pos = settled
-                    ? Math.floor(target / 10 ** c.place)
-                    : columnPos(t, c.place);
-                  const base = Math.floor(pos);
-                  const f = pos - base;
-                  const cx = numLeft + (c.x + DIGIT_ADV / 2) * fs;
-                  const digit = (d: number) => ((d % 10) + 10) % 10;
                   return (
-                    <g
-                      key={`c${c.place}`}
+                    <text
+                      key={`comma${c.x}`}
+                      x={numLeft + (c.x + COMMA_ADV / 2) * fs}
+                      y={baseline + (1 - enter) * 0.3 * fs}
                       opacity={enter}
-                      filter={`url(#${uid}blur${c.place})`}
-                      transform={`translate(0 ${(1 - enter) * 0.6 * fs - f * step})`}
                     >
-                      <text x={cx} y={baseline}>
-                        {digit(base)}
-                      </text>
-                      {f > 0.001 ? (
-                        <text x={cx} y={baseline + step}>
-                          {digit(base + 1)}
-                        </text>
-                      ) : null}
-                    </g>
+                      ,
+                    </text>
                   );
                 })}
               </g>
-              {cols.commas.map((c) => {
-                const enter = interpolate(
-                  t,
-                  [c.col * 1.5 - 13, c.col * 1.5 + 7],
-                  [0, 1],
-                  { ...CLAMP, easing: EASE_OUT },
-                );
+            </mask>
+          </defs>
+
+          {/* gradient band behind the number */}
+          <g opacity={p.bandAlpha * kickIn}>
+            {p.band.map((c, i) => (
+              <rect
+                key={`bandr${c}${i}`}
+                width={W}
+                height={H}
+                fill={`url(#${uid}band${i})`}
+              />
+            ))}
+          </g>
+
+          <g mask={`url(#${uid}streams)`}>
+            {/* lanes */}
+            <g fill="none" opacity={streamsOut}>
+              {LANES.map((lane) => {
+                const q = lanePts(lane);
                 return (
-                  <text
-                    key={`comma${c.x}`}
-                    x={numLeft + (c.x + COMMA_ADV / 2) * fs}
-                    y={baseline + (1 - enter) * 0.3 * fs}
-                    opacity={enter}
-                  >
-                    ,
-                  </text>
+                  <path
+                    key={`lane${lane.side}${lane.y0}`}
+                    d={`M${q.x0} ${q.y0} C${q.x1} ${q.y1} ${q.x2} ${q.y2} ${q.x3} ${q.y3} L${lane.side === 0 ? edgeL + 1 : edgeR - 1} ${q.y3}`}
+                    stroke={hair(lane.pills ? 0.15 : 0.1)}
+                    strokeWidth={Math.max(1, u)}
+                  />
                 );
               })}
             </g>
-          </mask>
-        </defs>
 
-        {/* gradient band behind the number */}
-        <g opacity={p.bandAlpha * kickIn}>
-          {p.band.map((c, i) => (
-            <rect
-              key={`bandr${c}${i}`}
-              width={W}
-              height={H}
-              fill={`url(#${uid}band${i})`}
-            />
-          ))}
-        </g>
-
-        <g mask={`url(#${uid}streams)`}>
-          {/* lanes */}
-          <g fill="none" opacity={streamsOut}>
-            {LANES.map((lane) => {
-              const q = lanePts(lane);
+            {/* dots under the pills */}
+            {items.map((it, k) => {
+              if (it.pill) return null;
+              const pt = itemPoint(it);
+              if (!pt) return null;
+              const acc = k % 4 === 0;
               return (
-                <path
-                  key={`lane${lane.side}${lane.y0}`}
-                  d={`M${q.x0} ${q.y0} C${q.x1} ${q.y1} ${q.x2} ${q.y2} ${q.x3} ${q.y3} L${lane.side === 0 ? edgeL + 1 : edgeR - 1} ${q.y3}`}
-                  stroke={hair(lane.pills ? 0.15 : 0.1)}
-                  strokeWidth={Math.max(1, u)}
+                <circle
+                  key={`d${it.lane}-${it.spawn}`}
+                  cx={pt.x}
+                  cy={pt.y}
+                  r={(acc ? 3.4 : 2.6) * u}
+                  fill={acc ? accent : fg}
+                  opacity={acc ? 1 : 0.5}
                 />
               );
             })}
-          </g>
-
-          {/* dots under the pills */}
-          {items.map((it, k) => {
-            if (it.pill) return null;
-            const pt = itemPoint(it);
-            if (!pt) return null;
-            const acc = k % 4 === 0;
-            return (
-              <circle
-                key={`d${it.lane}-${it.spawn}`}
-                cx={pt.x}
-                cy={pt.y}
-                r={(acc ? 3.4 : 2.6) * u}
-                fill={acc ? accent : p.fg}
-                opacity={acc ? 1 : 0.5}
-              />
-            );
-          })}
-          {/* pills: read on the way in, then fold into a dot */}
-          <g fontFamily={mono} fontSize={pillFs} fontWeight={400}>
-            {items.map((it) => {
-              if (!it.pill) return null;
-              const pt = itemPoint(it);
-              if (!pt) return null;
-              const dir = LANES[it.lane].side === 0 ? 1 : -1;
-              const fullW = pillW(it);
-              const c = smooth((pt.s - 0.58) / 0.26);
-              const dotD = 7 * u;
-              const w = fullW + (dotD - fullW) * c;
-              const h = pillH + (dotD - pillH) * smooth((pt.s - 0.7) / 0.14);
-              // the leading edge rides the lane, the pill folds up behind it
-              const x = dir === 1 ? pt.x - w : pt.x;
-              const textX = dir === 1 ? 24 * u - (fullW - w) : 24 * u;
-              return (
-                <g
-                  key={`p${it.lane}-${it.spawn}`}
-                  transform={`translate(0 ${pt.y})`}
-                >
-                  <rect
-                    x={x}
-                    y={-h / 2}
-                    width={w}
-                    height={h}
-                    rx={h / 2}
-                    fill={p.pillFill}
-                    stroke={p.pillLine}
-                    strokeWidth={Math.max(1, u) * (1 - c)}
-                  />
-                  <rect
-                    x={x}
-                    y={-h / 2}
-                    width={w}
-                    height={h}
-                    rx={h / 2}
-                    fill={accent}
-                    opacity={smooth((c - 0.5) / 0.5)}
-                  />
-                  <svg
-                    x={x}
-                    y={-h / 2}
-                    width={w}
-                    height={h}
-                    overflow="hidden"
-                    opacity={1 - smooth((c - 0.2) / 0.6)}
+            {/* pills: read on the way in, then fold into a dot */}
+            <g fontFamily={mono} fontSize={pillFs} fontWeight={400}>
+              {items.map((it) => {
+                if (!it.pill) return null;
+                const pt = itemPoint(it);
+                if (!pt) return null;
+                const dir = LANES[it.lane].side === 0 ? 1 : -1;
+                const fullW = pillW(it);
+                const c = smooth((pt.s - 0.58) / 0.26);
+                const dotD = 7 * u;
+                const w = fullW + (dotD - fullW) * c;
+                const h = pillH + (dotD - pillH) * smooth((pt.s - 0.7) / 0.14);
+                // the leading edge rides the lane, the pill folds up behind it
+                const x = dir === 1 ? pt.x - w : pt.x;
+                const textX = dir === 1 ? 24 * u - (fullW - w) : 24 * u;
+                return (
+                  <g
+                    key={`p${it.lane}-${it.spawn}`}
+                    transform={`translate(0 ${pt.y})`}
                   >
-                    <circle
-                      cx={textX - 10 * u}
-                      cy={h / 2}
-                      r={3 * u}
-                      fill={accent}
+                    <rect
+                      x={x}
+                      y={-h / 2}
+                      width={w}
+                      height={h}
+                      rx={h / 2}
+                      fill={p.pillFill}
+                      stroke={p.pillLine}
+                      strokeWidth={Math.max(1, u) * (1 - c)}
                     />
-                    <text
-                      x={textX}
-                      y={h / 2 + pillFs * 0.36}
-                      fill={p.pillText}
-                      style={{ whiteSpace: "pre" }}
+                    <rect
+                      x={x}
+                      y={-h / 2}
+                      width={w}
+                      height={h}
+                      rx={h / 2}
+                      fill={accent}
+                      opacity={smooth((c - 0.5) / 0.5)}
+                    />
+                    <svg
+                      x={x}
+                      y={-h / 2}
+                      width={w}
+                      height={h}
+                      overflow="hidden"
+                      opacity={1 - smooth((c - 0.2) / 0.6)}
                     >
-                      {it.text}
-                    </text>
-                  </svg>
-                </g>
-              );
-            })}
+                      <circle
+                        cx={textX - 10 * u}
+                        cy={h / 2}
+                        r={3 * u}
+                        fill={accent}
+                      />
+                      <text
+                        x={textX}
+                        y={h / 2 + pillFs * 0.36}
+                        fill={p.pillText}
+                        style={{ whiteSpace: "pre" }}
+                      >
+                        {it.text}
+                      </text>
+                    </svg>
+                  </g>
+                );
+              })}
+            </g>
           </g>
-        </g>
 
-        {/* the number: mesh gradient poured through the digits */}
-        <g mask={`url(#${uid}num)`}>
-          <rect width={W} height={H} fill={p.base} />
-          {blobs.map((b, i) => (
-            <rect
-              key={`nb${b.r}`}
-              width={W}
-              height={H}
-              fill={`url(#${uid}b${i})`}
-            />
-          ))}
-          {[0, 1].map((side) => (
-            <rect
-              key={`fl${side}`}
-              width={W}
-              height={H}
-              fill={`url(#${uid}f${side})`}
-              opacity={flash[side] * 0.75}
-            />
-          ))}
-        </g>
-      </svg>
-
-      {/* kicker */}
-      <div
-        style={{
-          position: "absolute",
-          left: numLeft + 0.04 * fs,
-          top: numTop - 0.3 * fs - 13 * u,
-          display: "flex",
-          alignItems: "center",
-          gap: 11 * u,
-          fontFamily: mono,
-          fontWeight: 500,
-          fontSize: 13 * u,
-          letterSpacing: "0.14em",
-          textTransform: "uppercase",
-          color: p.fg,
-          opacity: kickIn,
-          lineHeight: 1,
-        }}
-      >
-        <div
-          style={{
-            width: 8 * u,
-            height: 8 * u,
-            borderRadius: 99,
-            background: accent,
-            opacity: settled ? 1 : 0.6 + 0.4 * Math.cos((t / 24) * Math.PI * 2),
-            boxShadow: `0 0 0 ${4 * u}px ${accent}38`,
-          }}
-        />
-        <span>{kicker}</span>
-      </div>
-
-      {/* poster label */}
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          right: 0,
-          top: baseline + 0.22 * fs,
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "baseline",
-          gap: 15 * u,
-          lineHeight: 1,
-        }}
-      >
-        <span
-          style={{
-            fontFamily: serif,
-            fontStyle: "italic",
-            fontWeight: 400,
-            fontSize: 60 * u,
-            letterSpacing: "-0.01em",
-            color: p.fg,
-            opacity: label(0),
-            transform: `translateY(${(1 - label(0)) * 16 * u}px)`,
-          }}
-        >
-          {unit}
-        </span>
-        <span
-          style={{
-            fontFamily: sans,
-            fontWeight: 400,
-            fontSize: 34 * u,
-            letterSpacing: "-0.02em",
-            color: p.muted,
-            opacity: label(4),
-            transform: `translateY(${(1 - label(4)) * 16 * u}px)`,
-          }}
-        >
-          on
-        </span>
-        <div
-          style={{
-            opacity: label(7),
-            transform: `translateY(${(1 - label(7)) * 16 * u}px)`,
-          }}
-        >
-          {logo ??
-            (name.trim().toLowerCase() === "remocn" ? (
-              <RemocnLogo fontSize={38 * u} color={p.fg} />
-            ) : (
-              <span
-                style={{
-                  fontFamily: sans,
-                  fontWeight: 500,
-                  fontSize: 38 * u,
-                  letterSpacing: "-0.03em",
-                  color: p.fg,
-                }}
-              >
-                {name}
-              </span>
+          {/* the number: mesh gradient poured through the digits */}
+          <g mask={`url(#${uid}num)`}>
+            <rect width={W} height={H} fill={p.base} />
+            {blobs.map((b, i) => (
+              <rect
+                key={`nb${b.r}`}
+                width={W}
+                height={H}
+                fill={`url(#${uid}b${i})`}
+              />
             ))}
-        </div>
-      </div>
+            {[0, 1].map((side) => (
+              <rect
+                key={`fl${side}`}
+                width={W}
+                height={H}
+                fill={`url(#${uid}f${side})`}
+                opacity={flash[side] * 0.75}
+              />
+            ))}
+          </g>
+        </svg>
 
-      <Grain opacity={p.grain} />
+        {/* kicker */}
+        <div
+          style={{
+            position: "absolute",
+            left: numLeft + 0.04 * fs,
+            top: numTop - 0.3 * fs - 13 * u,
+            display: "flex",
+            alignItems: "center",
+            gap: 11 * u,
+            fontFamily: mono,
+            fontWeight: 500,
+            fontSize: 13 * u,
+            letterSpacing: "0.14em",
+            textTransform: "uppercase",
+            color: fg,
+            opacity: kickIn,
+            lineHeight: 1,
+          }}
+        >
+          <div
+            style={{
+              width: 8 * u,
+              height: 8 * u,
+              borderRadius: 99,
+              background: accent,
+              opacity: settled
+                ? 1
+                : 0.6 + 0.4 * Math.cos((t / 24) * Math.PI * 2),
+              boxShadow: `0 0 0 ${4 * u}px ${accent}38`,
+            }}
+          />
+          <span>{kicker}</span>
+        </div>
+
+        {/* poster label */}
+        <div
+          style={{
+            position: "absolute",
+            left: 0,
+            right: 0,
+            top: baseline + 0.22 * fs,
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "baseline",
+            gap: 15 * u,
+            lineHeight: 1,
+          }}
+        >
+          <span
+            style={{
+              fontFamily: serif,
+              fontStyle: "italic",
+              fontWeight: 400,
+              fontSize: 60 * u,
+              letterSpacing: "-0.01em",
+              color: fg,
+              opacity: label(0),
+              transform: `translateY(${(1 - label(0)) * 16 * u}px)`,
+            }}
+          >
+            {unit}
+          </span>
+          <span
+            style={{
+              fontFamily,
+              fontWeight: 400,
+              fontSize: 34 * u,
+              letterSpacing: "-0.02em",
+              color: p.muted,
+              opacity: label(4),
+              transform: `translateY(${(1 - label(4)) * 16 * u}px)`,
+            }}
+          >
+            {connector}
+          </span>
+          <div
+            style={{
+              opacity: label(7),
+              transform: `translateY(${(1 - label(7)) * 16 * u}px)`,
+            }}
+          >
+            {logo ??
+              (name.trim().toLowerCase() === "remocn" ? (
+                <RemocnLogo fontSize={38 * u} color={fg} />
+              ) : (
+                <span
+                  style={{
+                    fontFamily,
+                    fontWeight: 500,
+                    fontSize: 38 * u,
+                    letterSpacing: "-0.03em",
+                    color: fg,
+                  }}
+                >
+                  {name}
+                </span>
+              ))}
+          </div>
+        </div>
+      </ScaleLayer>
+
+      {grain ? <Grain opacity={p.grain} /> : null}
     </AbsoluteFill>
   );
 }

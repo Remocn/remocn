@@ -3,6 +3,7 @@
 import { loadFont as loadGeist } from "@remotion/google-fonts/Geist";
 import { loadFont as loadGeistMono } from "@remotion/google-fonts/GeistMono";
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
+import type React from "react";
 import { type CSSProperties, useId } from "react";
 import {
   AbsoluteFill,
@@ -63,7 +64,21 @@ export interface BorderBeamProps {
   description?: string;
   command?: string;
   showLogo?: boolean;
+  /** Replaces the remocn mark at the top of the card. */
+  logo?: React.ReactNode;
   accent?: string;
+  /** Text color of the title and command; overrides the theme. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the title and description. Load it yourself; Geist by default. */
+  fontFamily?: string;
+  /** Frames for one lap of the beam around the card. */
+  lap?: number;
+  /** Size of the card, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
   ground?: GshPresetId;
@@ -144,20 +159,44 @@ function mix(a: string, b: string, t: number) {
   return `rgb(${ch[0]},${ch[1]},${ch[2]})`;
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function BorderBeam({
   title = "Version 2.0",
   description = "Launch videos, written in React. Installed like shadcn.",
   command = "npx shadcn add @remocn/launch-film",
   showLogo = true,
+  logo,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = geist.fontFamily,
+  lap = T.lapDur,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
   ground,
   groundParams,
 }: BorderBeamProps) {
-  const frame = useCurrentFrame() * speed;
+  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const c = THEMES[theme];
+  const fg = ink ?? c.fg;
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const portrait = H > W * 1.1;
   const preset = ground ?? (groundParams ? undefined : c.ground);
@@ -188,7 +227,7 @@ export function BorderBeam({
     easing: EASE_ENTER,
   });
   const lapAt = (start: number) =>
-    interpolate(frame, [start, start + T.lapDur], [0, P], {
+    interpolate(frame, [start, start + lap], [0, P], {
       ...CLAMP,
       easing: EASE_MOVE,
     });
@@ -255,159 +294,171 @@ export function BorderBeam({
 
   return (
     <AbsoluteFill style={{ overflow: "hidden" }}>
-      <GshGround
-        preset={preset}
-        params={gParams}
-        timeOffset={theme === "light" ? 3 : 5}
-        timeScale={0.4}
-      />
-      <div
-        style={{
-          position: "absolute",
-          left: (W - w) / 2,
-          top: (H - h) / 2,
-          width: w,
-          height: h,
-          opacity: enterO,
-          transform: `translateY(${(1 - enter) * H * 0.04}px) scale(${0.97 + 0.03 * enter})`,
-        }}
-      >
-        <div
+      {background === undefined ? (
+        <GshGround
+          preset={preset}
+          params={gParams}
+          timeOffset={theme === "light" ? 3 : 5}
+          timeScale={0.4}
+        />
+      ) : (
+        <AbsoluteFill
           style={{
-            position: "absolute",
-            inset: 0,
-            borderRadius: r,
-            backgroundColor: c.card,
-            boxShadow: c.depth,
+            background: background === "transparent" ? undefined : background,
           }}
         />
-        <svg
-          width={w}
-          height={h}
-          viewBox={`0 0 ${w} ${h}`}
-          style={{ position: "absolute", inset: 0, overflow: "visible" }}
-          aria-hidden
-        >
-          <defs>
-            <filter
-              id={`${uid}-glow`}
-              x={-40 * s}
-              y={-40 * s}
-              width={w + 80 * s}
-              height={h + 80 * s}
-              filterUnits="userSpaceOnUse"
-            >
-              <feGaussianBlur stdDeviation={5 * s} />
-            </filter>
-          </defs>
-          <path d={d} fill="none" stroke={c.hair} strokeWidth={1} />
-          {tailD > 0 ? (
-            <path
-              d={d}
-              fill="none"
-              stroke={c.trail}
-              strokeWidth={1}
-              strokeDasharray={`${tailD} ${P}`}
-            />
-          ) : null}
-          <g filter={`url(#${uid}-glow)`} opacity={c.glow}>
-            {beamPaths(4 * s)}
-          </g>
-          <g>{beamPaths(Math.max(1, 1.5 * s))}</g>
-        </svg>
-
+      )}
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            inset: 0,
-            padding: pad,
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "space-between",
+            left: (W - w) / 2,
+            top: (H - h) / 2,
+            width: w,
+            height: h,
+            opacity: enterO,
+            transform: `translateY(${(1 - enter) * H * 0.04}px) scale(${0.97 + 0.03 * enter})`,
           }}
         >
-          <div style={{ ...item(0), minHeight: logoFs }}>
-            {showLogo ? <RemocnLogo fontSize={logoFs} color={c.logo} /> : null}
-          </div>
-          <div>
-            <div
-              style={{
-                ...item(1),
-                fontFamily: geist.fontFamily,
-                fontWeight: 400,
-                fontSize: titleFs,
-                letterSpacing: "-0.045em",
-                lineHeight: 1,
-                color: c.fg,
-                whiteSpace: "pre",
-              }}
-            >
-              {title}
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              borderRadius: r,
+              backgroundColor: c.card,
+              boxShadow: c.depth,
+            }}
+          />
+          <svg
+            width={w}
+            height={h}
+            viewBox={`0 0 ${w} ${h}`}
+            style={{ position: "absolute", inset: 0, overflow: "visible" }}
+            aria-hidden
+          >
+            <defs>
+              <filter
+                id={`${uid}-glow`}
+                x={-40 * s}
+                y={-40 * s}
+                width={w + 80 * s}
+                height={h + 80 * s}
+                filterUnits="userSpaceOnUse"
+              >
+                <feGaussianBlur stdDeviation={5 * s} />
+              </filter>
+            </defs>
+            <path d={d} fill="none" stroke={c.hair} strokeWidth={1} />
+            {tailD > 0 ? (
+              <path
+                d={d}
+                fill="none"
+                stroke={c.trail}
+                strokeWidth={1}
+                strokeDasharray={`${tailD} ${P}`}
+              />
+            ) : null}
+            <g filter={`url(#${uid}-glow)`} opacity={c.glow}>
+              {beamPaths(4 * s)}
+            </g>
+            <g>{beamPaths(Math.max(1, 1.5 * s))}</g>
+          </svg>
+
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              padding: pad,
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "space-between",
+            }}
+          >
+            <div style={{ ...item(0), minHeight: logoFs }}>
+              {showLogo
+                ? (logo ?? <RemocnLogo fontSize={logoFs} color={c.logo} />)
+                : null}
             </div>
-            <div
-              style={{
-                ...item(2),
-                marginTop: titleFs * 0.32,
-                fontFamily: geist.fontFamily,
-                fontWeight: 300,
-                fontSize: descFs,
-                letterSpacing: "-0.01em",
-                lineHeight: 1.4,
-                color: c.muted,
-                maxWidth: w - pad * 2,
-                textWrap: "balance",
-              }}
-            >
-              {description}
-            </div>
-            {command ? (
+            <div>
               <div
                 style={{
-                  ...item(3),
-                  marginTop: titleFs * 0.5,
-                  paddingTop: monoFs * 1.1,
-                  borderTop: `1px solid ${c.rule}`,
-                  display: "flex",
-                  gap: monoFs * 0.7,
-                  fontFamily: geistMono.fontFamily,
+                  ...item(1),
+                  fontFamily,
                   fontWeight: 400,
-                  fontSize: monoFs,
-                  letterSpacing: "-0.01em",
+                  fontSize: titleFs,
+                  letterSpacing: "-0.045em",
+                  lineHeight: 1,
+                  color: fg,
                   whiteSpace: "pre",
-                  color: c.fg,
                 }}
               >
-                <span style={{ color: c.muted }}>$</span>
-                <span style={{ flex: 1 }}>{command}</span>
-                <svg
-                  width={monoFs * 1.1}
-                  height={monoFs * 1.1}
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke={c.muted}
-                  strokeWidth={1.5}
-                  strokeLinejoin="round"
-                  aria-hidden
-                  style={{ alignSelf: "center" }}
-                >
-                  <rect
-                    x="8.5"
-                    y="8.5"
-                    width="11"
-                    height="11"
-                    rx="2.5"
-                    vectorEffect="non-scaling-stroke"
-                  />
-                  <path
-                    d="M15.5 8.5V6.5a2 2 0 0 0-2-2h-7a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h2"
-                    vectorEffect="non-scaling-stroke"
-                  />
-                </svg>
+                {title}
               </div>
-            ) : null}
+              <div
+                style={{
+                  ...item(2),
+                  marginTop: titleFs * 0.32,
+                  fontFamily,
+                  fontWeight: 300,
+                  fontSize: descFs,
+                  letterSpacing: "-0.01em",
+                  lineHeight: 1.4,
+                  color: c.muted,
+                  maxWidth: w - pad * 2,
+                  textWrap: "balance",
+                }}
+              >
+                {description}
+              </div>
+              {command ? (
+                <div
+                  style={{
+                    ...item(3),
+                    marginTop: titleFs * 0.5,
+                    paddingTop: monoFs * 1.1,
+                    borderTop: `1px solid ${c.rule}`,
+                    display: "flex",
+                    gap: monoFs * 0.7,
+                    fontFamily: geistMono.fontFamily,
+                    fontWeight: 400,
+                    fontSize: monoFs,
+                    letterSpacing: "-0.01em",
+                    whiteSpace: "pre",
+                    color: fg,
+                  }}
+                >
+                  <span style={{ color: c.muted }}>$</span>
+                  <span style={{ flex: 1 }}>{command}</span>
+                  <svg
+                    width={monoFs * 1.1}
+                    height={monoFs * 1.1}
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke={c.muted}
+                    strokeWidth={1.5}
+                    strokeLinejoin="round"
+                    aria-hidden
+                    style={{ alignSelf: "center" }}
+                  >
+                    <rect
+                      x="8.5"
+                      y="8.5"
+                      width="11"
+                      height="11"
+                      rx="2.5"
+                      vectorEffect="non-scaling-stroke"
+                    />
+                    <path
+                      d="M15.5 8.5V6.5a2 2 0 0 0-2-2h-7a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h2"
+                      vectorEffect="non-scaling-stroke"
+                    />
+                  </svg>
+                </div>
+              ) : null}
+            </div>
           </div>
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

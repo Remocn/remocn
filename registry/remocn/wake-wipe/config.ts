@@ -1,8 +1,24 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const wakeWipeConfig: ComponentConfig = {
   componentName: "WakeWipe",
   importPath: "@/components/remocn/wake-wipe",
+  lists: {
+    lines: {
+      default: [
+        "Animations you own.",
+        "Transitions that land.",
+        "Ship the launch video today.",
+      ],
+      description: "Lines",
+    },
+  },
   controls: {
     theme: {
       type: "enum",
@@ -12,11 +28,6 @@ export const wakeWipeConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     highlight: {
       type: "text-content",
@@ -37,6 +48,30 @@ export const wakeWipeConfig: ComponentConfig = {
       description: "Hold",
       hiddenFromList: false,
     },
+    wake: {
+      type: "number",
+      default: 28,
+      min: 8,
+      max: 60,
+      step: 1,
+      description: "Wake (frames)",
+      hiddenFromList: false,
+    },
+    fontWeight: {
+      type: "number",
+      default: 500,
+      min: 400,
+      max: 500,
+      step: 100,
+      description: "Weight",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Figtree", grain: true }),
     speed: {
       type: "number",
       default: 1,

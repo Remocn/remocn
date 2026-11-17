@@ -1,6 +1,7 @@
 "use client";
 
 import { loadFont } from "@remotion/google-fonts/Oswald";
+import type React from "react";
 import { useId } from "react";
 import {
   AbsoluteFill,
@@ -20,7 +21,21 @@ export interface StripeMaskProps {
   title?: string;
   /** Stripe slant in degrees, leaning right. */
   slant?: number;
+  /** Frames between the three bars as they sweep in. */
+  stagger?: number;
+  /** Frames the full slab holds before it breaks back into bars. */
+  hold?: number;
   accent?: string;
+  /** Headline color once it lands on the stage; overrides the theme ink. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the headline. Load it yourself; Oswald by default. */
+  fontFamily?: string;
+  /** Size of the lockup, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -177,16 +192,43 @@ interface Bar {
 
 const mix = (a: number, b: number, p: number) => a + (b - a) * p;
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function StripeMask({
   title = "Faster. Every frame.",
   slant = 18,
+  stagger = SWEEP_STAGGER,
+  hold = 10,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = display,
+  scale = 1,
+  delay = 0,
   theme = "dark",
   speed = 1,
 }: StripeMaskProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
+  const fg = ink ?? c.ink;
+  const stage =
+    background === "transparent" ? "transparent" : (background ?? c.stage);
+  const retractAt = RETRACT_AT - 10 + hold;
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const clipId = `sm${uid}`;
   const beamId = `smb${uid}`;
@@ -239,7 +281,7 @@ export function StripeMask({
     // The rightmost bar leads the sweep; the leftmost leads the retreat, so
     // the bars spread apart on the way back and never overlap.
     const lead = 2 - i;
-    const sweepFrom = SWEEP_AT + lead * SWEEP_STAGGER;
+    const sweepFrom = SWEEP_AT + lead * stagger;
     const sweep = SWEEP(
       interpolate(t, [sweepFrom, sweepFrom + SWEEP_LEN], [0, 1], CLAMP),
     );
@@ -247,7 +289,7 @@ export function StripeMask({
     const widen = WIDEN(
       interpolate(t, [widenFrom, widenFrom + WIDEN_LEN], [0, 1], CLAMP),
     );
-    const retractFrom = RETRACT_AT + i * RETRACT_STAGGER;
+    const retractFrom = retractAt + i * RETRACT_STAGGER;
     const local = interpolate(
       t,
       [retractFrom, retractFrom + RETRACT_LEN],
@@ -294,7 +336,7 @@ export function StripeMask({
         x={tx - metrics[i].lsb * fs + dx}
         y={baselines[i]}
         fill={fill}
-        fontFamily={display}
+        fontFamily={fontFamily}
         fontWeight={500}
         fontSize={fs}
         style={{ letterSpacing: `${TRACK}em`, fontKerning: "normal" }}
@@ -304,45 +346,49 @@ export function StripeMask({
     ));
 
   return (
-    <AbsoluteFill style={{ background: c.stage }}>
-      <svg
-        width={W}
-        height={H}
-        viewBox={`0 0 ${W} ${H}`}
-        style={{ position: "absolute", inset: 0 }}
-        aria-label={title}
-        role="img"
-      >
-        <defs>
-          <linearGradient
-            id={beamId}
-            gradientUnits="userSpaceOnUse"
-            x1={0}
-            y1={fullTop - beamDrift}
-            x2={0.12 * W}
-            y2={fullBottom - beamDrift}
-          >
-            <stop offset="0" stopColor={BEAM[0]} />
-            <stop offset="0.62" stopColor={accent} />
-            <stop offset="0.94" stopColor={BEAM[1]} />
-            {theme === "dark" ? <stop offset="1" stopColor={BEAM[2]} /> : null}
-          </linearGradient>
-          <clipPath id={clipId}>
-            {bars.map((b, i) => (
-              <polygon key={["a", "b", "c"][i]} points={points(b)} />
-            ))}
-          </clipPath>
-        </defs>
-        {merged ? <g>{headline(c.ink, 0)}</g> : null}
-        {bars.map((b, i) => (
-          <polygon
-            key={["a", "b", "c"][i]}
-            points={points(b)}
-            fill={`url(#${beamId})`}
-          />
-        ))}
-        <g clipPath={`url(#${clipId})`}>{headline(c.onAccent, drift)}</g>
-      </svg>
+    <AbsoluteFill style={{ background: stage }}>
+      <ScaleLayer scale={scale}>
+        <svg
+          width={W}
+          height={H}
+          viewBox={`0 0 ${W} ${H}`}
+          style={{ position: "absolute", inset: 0 }}
+          aria-label={title}
+          role="img"
+        >
+          <defs>
+            <linearGradient
+              id={beamId}
+              gradientUnits="userSpaceOnUse"
+              x1={0}
+              y1={fullTop - beamDrift}
+              x2={0.12 * W}
+              y2={fullBottom - beamDrift}
+            >
+              <stop offset="0" stopColor={BEAM[0]} />
+              <stop offset="0.62" stopColor={accent} />
+              <stop offset="0.94" stopColor={BEAM[1]} />
+              {theme === "dark" ? (
+                <stop offset="1" stopColor={BEAM[2]} />
+              ) : null}
+            </linearGradient>
+            <clipPath id={clipId}>
+              {bars.map((b, i) => (
+                <polygon key={["a", "b", "c"][i]} points={points(b)} />
+              ))}
+            </clipPath>
+          </defs>
+          {merged ? <g>{headline(fg, 0)}</g> : null}
+          {bars.map((b, i) => (
+            <polygon
+              key={["a", "b", "c"][i]}
+              points={points(b)}
+              fill={`url(#${beamId})`}
+            />
+          ))}
+          <g clipPath={`url(#${clipId})`}>{headline(c.onAccent, drift)}</g>
+        </svg>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

@@ -2,6 +2,7 @@
 
 import { loadFont as loadInstrument } from "@remotion/google-fonts/InstrumentSans";
 import { loadVariableFont } from "@remotion/google-fonts/RobotoFlex";
+import type React from "react";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import {
   AbsoluteFill,
@@ -28,7 +29,20 @@ export interface TallCountProps {
   suffix?: string;
   label?: string;
   accent?: string;
+  /** Color of the label; overrides the theme. */
+  ink?: string;
   background?: string;
+  /** Typeface for the label. Load it yourself; Instrument Sans by default. The figure keeps Roboto Flex, whose width axis it animates. */
+  fontFamily?: string;
+  /** Frames the figure takes to count up and grow. */
+  growDuration?: number;
+  /** How much taller the figure springs once it lands; 0 keeps it still. */
+  stretch?: number;
+  /** Size of the figure and label, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  grain?: boolean;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -227,6 +241,22 @@ function Grain({ opacity }: { opacity: number }) {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function TallCount({
   value = 240,
   from = 0,
@@ -235,11 +265,18 @@ export function TallCount({
   suffix = "%",
   label = "more watch time on launch posts that move",
   accent = "#3B5BFD",
+  ink,
   background,
+  fontFamily = instrument.fontFamily,
+  growDuration = GROW_END - GROW_AT,
+  stretch = 0.16,
+  scale = 1,
+  delay = 0,
+  grain = true,
   speed = 1,
   theme = "dark",
 }: TallCountProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const c = THEMES[theme];
   const m = useMetrics(prefix, suffix);
@@ -275,7 +312,8 @@ export function TallCount({
   const labelFs = (portrait ? 48 : 38) * s;
   const baseY = portrait ? H * 0.6 : H * 0.84;
 
-  const STRETCH = 0.16;
+  const STRETCH = stretch;
+  const growEnd = GROW_AT + growDuration;
   const maxInk = portrait ? H * 0.36 : H * 0.7;
   const finalCurve = curveOf(finalText);
   const F1 = Math.min(
@@ -286,7 +324,7 @@ export function TallCount({
   const F0 = F1 * 0.3;
   const finalW = widthAt(finalCurve, solveWdth(finalCurve, measureW / F1)) * F1;
 
-  const g = interpolate(t, [GROW_AT, GROW_END], [0, 1], {
+  const g = interpolate(t, [GROW_AT, growEnd], [0, 1], {
     ...CLAMP,
     easing: EASE_GROW,
   });
@@ -300,7 +338,7 @@ export function TallCount({
   const wdth = Math.min(WDTH[1], solveWdth(curve, measureW / F));
   const ytfi = YTFI[0] + (YTFI[1] - YTFI[0]) * g * g;
   const lift = spring({
-    frame: t - LIFT_AT,
+    frame: t - (growEnd - (GROW_END - LIFT_AT)),
     fps,
     config: { damping: 11, stiffness: 110, mass: 0.9 },
   });
@@ -330,72 +368,74 @@ export function TallCount({
             position: "absolute",
             inset: 0,
             background: c.glow(accent),
-            opacity: interpolate(t, [GROW_AT, GROW_END], [0.35, 1], CLAMP),
+            opacity: interpolate(t, [GROW_AT, growEnd], [0.35, 1], CLAMP),
           }}
         />
       )}
 
-      <div
-        style={{
-          position: "absolute",
-          left: numLeft,
-          top: boxTop,
-          height: F,
-          lineHeight: `${F}px`,
-          whiteSpace: "pre",
-          fontFamily: flex.fontFamily,
-          fontStyle: "normal",
-          fontSize: F,
-          fontVariantNumeric: "tabular-nums",
-          fontVariationSettings: fvs(wdth, ytfi),
-          letterSpacing: `${TRACK}em`,
-          transformOrigin: `0 ${(m.baseline * F).toFixed(2)}px`,
-          transform: `scaleY(${sy.toFixed(4)})`,
-          opacity: enter,
-          filter:
-            enter < 1
-              ? `blur(${((1 - enter) * 10 * s).toFixed(2)}px)`
-              : undefined,
-          backgroundImage: fill,
-          backgroundSize: `${W}px ${H}px`,
-          backgroundPosition: `${-numLeft}px ${-boxTop}px`,
-          WebkitBackgroundClip: "text",
-          backgroundClip: "text",
-          color: "transparent",
-        }}
-      >
-        {prefix}
-        {text}
-        {suffix}
-      </div>
-
-      {label ? (
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            left: portrait ? marginX : marginX + finalW + labelGap,
-            width: portrait
-              ? labelW
-              : Math.min(W * 0.32, W - marginX * 2 - finalW - labelGap),
-            ...(portrait
-              ? { top: labelTop, textAlign: "center" as const }
-              : { bottom: H - baseY - labelFs * 0.22 }),
-            fontFamily: instrument.fontFamily,
-            fontWeight: 400,
-            fontSize: labelFs,
-            lineHeight: 1.22,
-            letterSpacing: "-0.012em",
-            textWrap: "balance",
-            color: c.muted,
-            opacity: labelP,
-            transform: `translateY(${((1 - labelP) * labelFs * 0.6).toFixed(2)}px)`,
+            left: numLeft,
+            top: boxTop,
+            height: F,
+            lineHeight: `${F}px`,
+            whiteSpace: "pre",
+            fontFamily: flex.fontFamily,
+            fontStyle: "normal",
+            fontSize: F,
+            fontVariantNumeric: "tabular-nums",
+            fontVariationSettings: fvs(wdth, ytfi),
+            letterSpacing: `${TRACK}em`,
+            transformOrigin: `0 ${(m.baseline * F).toFixed(2)}px`,
+            transform: `scaleY(${sy.toFixed(4)})`,
+            opacity: enter,
+            filter:
+              enter < 1
+                ? `blur(${((1 - enter) * 10 * s).toFixed(2)}px)`
+                : undefined,
+            backgroundImage: fill,
+            backgroundSize: `${W}px ${H}px`,
+            backgroundPosition: `${-numLeft}px ${-boxTop}px`,
+            WebkitBackgroundClip: "text",
+            backgroundClip: "text",
+            color: "transparent",
           }}
         >
-          {label}
+          {prefix}
+          {text}
+          {suffix}
         </div>
-      ) : null}
 
-      {transparent ? null : <Grain opacity={c.grain} />}
+        {label ? (
+          <div
+            style={{
+              position: "absolute",
+              left: portrait ? marginX : marginX + finalW + labelGap,
+              width: portrait
+                ? labelW
+                : Math.min(W * 0.32, W - marginX * 2 - finalW - labelGap),
+              ...(portrait
+                ? { top: labelTop, textAlign: "center" as const }
+                : { bottom: H - baseY - labelFs * 0.22 }),
+              fontFamily,
+              fontWeight: 400,
+              fontSize: labelFs,
+              lineHeight: 1.22,
+              letterSpacing: "-0.012em",
+              textWrap: "balance",
+              color: ink ?? c.muted,
+              opacity: labelP,
+              transform: `translateY(${((1 - labelP) * labelFs * 0.6).toFixed(2)}px)`,
+            }}
+          >
+            {label}
+          </div>
+        ) : null}
+      </ScaleLayer>
+
+      {transparent || !grain ? null : <Grain opacity={c.grain} />}
     </AbsoluteFill>
   );
 }

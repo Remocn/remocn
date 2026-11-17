@@ -27,8 +27,19 @@ export interface PlainLicenseProps {
   clauses?: PlainLicenseClause[];
   highlight?: number;
   step?: number;
+  /** Frames between words of a plain rewrite as they rise in. */
+  stagger?: number;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the text. Load it yourself; Big Shoulders by default. */
+  fontFamily?: string;
+  fontWeight?: number;
+  /** Size of the text block, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -84,11 +95,11 @@ interface Metrics {
   cap: number;
 }
 
-function measureAll(texts: string[]): Metrics {
+function measureAll(texts: string[], family: string, weight: number): Metrics {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("plain-license: no 2d context");
-  ctx.font = `${WGHT} ${PX}px "${shoulders.fontFamily}"`;
+  ctx.font = `${weight} ${PX}px "${family}"`;
   const w: Record<string, number> = {};
   for (const s of texts) w[s] = ctx.measureText(s).width / PX;
   const fm = ctx.measureText("Hgp");
@@ -102,8 +113,8 @@ function measureAll(texts: string[]): Metrics {
   };
 }
 
-function useMetrics(texts: string[]) {
-  const key = texts.join("\u0001");
+function useMetrics(texts: string[], family: string, weight: number) {
+  const key = [family, weight, ...texts].join("\u0001");
   const [state, setState] = useState<{ key: string; m: Metrics } | null>(null);
   const [handle] = useState(() => delayRender("plain-license: measuring"));
   const released = useRef(false);
@@ -111,12 +122,15 @@ function useMetrics(texts: string[]) {
     let live = true;
     Promise.all([
       shoulders.waitUntilDone(),
-      document.fonts.load(`${WGHT} 100px "${shoulders.fontFamily}"`),
+      document.fonts.load(`${weight} 100px "${family}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
-        setState({ key, m: measureAll(key.split("\u0001")) });
+        setState({
+          key,
+          m: measureAll(key.split("\u0001").slice(2), family, weight),
+        });
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -125,7 +139,7 @@ function useMetrics(texts: string[]) {
     return () => {
       live = false;
     };
-  }, [key, handle]);
+  }, [key, handle, family, weight]);
   return state && state.key === key ? state.m : null;
 }
 
@@ -184,19 +198,42 @@ function splitWords(s: string) {
   return s.split(/\s+/).filter(Boolean);
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function PlainLicense({
   clauses = DEFAULT_CLAUSES,
   highlight = 0,
   step = 40,
+  stagger = 3,
   accent,
+  ink,
   background,
+  fontFamily = shoulders.fontFamily,
+  fontWeight = WGHT,
+  scale: layerScale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: PlainLicenseProps) {
-  const frame = useCurrentFrame();
+  const frame = Math.max(0, useCurrentFrame() - delay);
   const { width: W, height: H, durationInFrames } = useVideoConfig();
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
+  const fg = ink ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
 
@@ -206,7 +243,7 @@ export function PlainLicense({
   const S = (k: number) => T0 + k * stepLen;
   const zoomAt = S(n - 1) + 34;
   const naturalEnd = zoomAt + ZOOM + 34;
-  const pace = Math.max(1, naturalEnd / Math.max(1, durationInFrames));
+  const pace = Math.max(1, naturalEnd / Math.max(1, durationInFrames - delay));
   const t = frame * speed * pace;
 
   const legal: Token[][] = list.map((cl, i) =>
@@ -227,7 +264,7 @@ export function PlainLicense({
   );
 
   const texts = [...legal.flat(), ...plain.flat()].map((tk) => tk.text);
-  const m = useMetrics(texts);
+  const m = useMetrics(texts, fontFamily, fontWeight);
 
   if (!m) {
     return (
@@ -314,8 +351,8 @@ export function PlainLicense({
         height: s0,
         lineHeight: `${s0}px`,
         fontSize: s0,
-        fontFamily: shoulders.fontFamily,
-        fontWeight: WGHT,
+        fontFamily,
+        fontWeight,
         whiteSpace: "pre",
         color,
         opacity,
@@ -354,7 +391,7 @@ export function PlainLicense({
               tk.text,
               row.xs[j],
               base,
-              c.ink,
+              fg,
               p * (LEGAL_ALPHA + (1 - LEGAL_ALPHA) * mark) * (1 - out),
               (1 - p) * s0 * 0.3 + out * s0 * 0.16,
             ),
@@ -374,7 +411,7 @@ export function PlainLicense({
     plainB[i].rows.forEach((row, r) => {
       const base = top + m.cap * s0 + r * rowH;
       row.tokens.forEach((tk, j) => {
-        const inAt = st + 24 + j * 3;
+        const inAt = st + 24 + j * stagger;
         const p = interpolate(t, [inAt, inAt + 14], [0, 1], {
           ...CLAMP,
           easing: EASE_OUT,
@@ -386,7 +423,7 @@ export function PlainLicense({
             tk.text,
             row.xs[j],
             base,
-            mix(hi, c.ink, cool),
+            mix(hi, fg, cool),
             p,
             (1 - p) * s0 * 0.28,
           ),
@@ -397,19 +434,21 @@ export function PlainLicense({
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
-      <div
-        style={{
-          position: "absolute",
-          left: marginX,
-          top: marginY,
-          width: boxW,
-          height: boxH,
-          transformOrigin: "0 0",
-          transform: `scale(${scale.toFixed(4)})`,
-        }}
-      >
-        {nodes}
-      </div>
+      <ScaleLayer scale={layerScale}>
+        <div
+          style={{
+            position: "absolute",
+            left: marginX,
+            top: marginY,
+            width: boxW,
+            height: boxH,
+            transformOrigin: "0 0",
+            transform: `scale(${scale.toFixed(4)})`,
+          }}
+        >
+          {nodes}
+        </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

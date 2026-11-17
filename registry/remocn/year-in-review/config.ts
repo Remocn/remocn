@@ -1,14 +1,22 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const yearInReviewConfig: ComponentConfig = {
   componentName: "YearInReview",
   importPath: "@/components/remocn/year-in-review",
-  controls: {
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
+  lists: {
+    chapters: {
+      default: ["Your year", "Shipped", "Top component", "Your rank", "Share"],
+      description: "Chapters",
     },
+  },
+  controls: {
     device: {
       type: "enum",
       default: "phone",
@@ -18,6 +26,18 @@ export const yearInReviewConfig: ComponentConfig = {
       },
       description: "Device",
     },
+    rail: {
+      type: "boolean",
+      default: true,
+      description: "Chapter rail",
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ground: groundControl(),
+    ...sceneControls({ font: "Hanken Grotesk" }),
     speed: {
       type: "number",
       default: 1,

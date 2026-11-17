@@ -2,6 +2,7 @@
 
 import { loadFont } from "@remotion/google-fonts/Geist";
 import { loadFont as loadMono } from "@remotion/google-fonts/GeistMono";
+import type React from "react";
 import { useId, useLayoutEffect, useRef, useState } from "react";
 import {
   AbsoluteFill,
@@ -21,6 +22,19 @@ export interface RulerAlignProps {
   text?: string;
   /** The ruler's straight edge. */
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the line. Load it yourself; Geist by default. */
+  fontFamily?: string;
+  fontWeight?: number;
+  /** Frames between letters as they fade in. */
+  stagger?: number;
+  /** Size of the line and ruler, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -108,22 +122,46 @@ function hop(f: number, at: number) {
   return 0.07 * Math.sin((Math.PI * d) / 10);
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function RulerAlign({
   text = "Made to measure.",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = face.fontFamily,
+  fontWeight = 300,
+  stagger = IN_STAGGER,
+  scale = 1,
+  delay = 0,
   theme = "dark",
   speed = 1,
 }: RulerAlignProps) {
-  const frame = useCurrentFrame() * speed;
+  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height } = useVideoConfig();
   const t = THEMES[theme];
+  const fg = ink ?? t.fg;
   const clipId = `ruler-${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
 
   const em = Math.round(width * 0.088);
   const textStyle = {
-    fontFamily: face.fontFamily,
+    fontFamily,
     fontSize: em,
-    fontWeight: 300,
+    fontWeight,
     letterSpacing: "-0.035em",
     lineHeight: LINE_HEIGHT,
     whiteSpace: "pre",
@@ -139,7 +177,11 @@ export function RulerAlign({
   // biome-ignore lint/correctness/useExhaustiveDependencies: re-measure when the copy or size changes
   useLayoutEffect(() => {
     let live = true;
-    Promise.all([face.waitUntilDone(), mono.waitUntilDone()])
+    Promise.all([
+      face.waitUntilDone(),
+      mono.waitUntilDone(),
+      document.fonts.load(`${fontWeight} 100px "${fontFamily}"`),
+    ])
       .catch(() => undefined)
       .then(() => document.fonts.ready)
       .then(() => {
@@ -168,7 +210,7 @@ export function RulerAlign({
     return () => {
       live = false;
     };
-  }, [text, em, handle]);
+  }, [text, em, handle, fontFamily, fontWeight]);
 
   const L = layout;
   const textW = L?.w ?? 0;
@@ -237,7 +279,7 @@ export function RulerAlign({
 
     const fade = interpolate(
       frame,
-      [IN + i * IN_STAGGER, IN + i * IN_STAGGER + 18],
+      [IN + i * stagger, IN + i * stagger + 18],
       [0, 1],
       { ...clamp, easing: EASE_OUT },
     );
@@ -282,7 +324,7 @@ export function RulerAlign({
           position: "absolute",
           left: x,
           top: rowTop,
-          color: t.fg,
+          color: fg,
           opacity: fade,
           filter: fade < 1 ? `blur(${(1 - fade) * 8}px)` : undefined,
           transformOrigin: `${w / 2}px ${L?.baseline ?? em}px`,
@@ -311,7 +353,13 @@ export function RulerAlign({
   const hair = Math.max(1.5, width / 720);
 
   return (
-    <AbsoluteFill style={{ background: t.bg, overflow: "hidden" }}>
+    <AbsoluteFill
+      style={{
+        background:
+          background === "transparent" ? undefined : (background ?? t.bg),
+        overflow: "hidden",
+      }}
+    >
       {/* measuring row: never shown */}
       <div style={{ position: "absolute", visibility: "hidden", top: 0 }}>
         <div ref={rowRef} style={{ ...textStyle, display: "inline-block" }}>
@@ -327,80 +375,82 @@ export function RulerAlign({
         </div>
       </div>
 
-      <div style={{ position: "absolute", inset: 0, opacity: L ? 1 : 0 }}>
-        <div
-          style={{
-            position: "absolute",
-            left: rulerX,
-            top: rulerTop,
-            width: rulerW,
-            height: em * RULER_H,
-            transformOrigin: "50% 0%",
-            transform: `rotate(${rulerTilt}deg)`,
-            opacity: inP,
-          }}
-        >
-          <svg
-            width={rulerW}
-            height={em * RULER_H}
-            style={{ display: "block", overflow: "visible" }}
-            aria-hidden
+      <ScaleLayer scale={scale}>
+        <div style={{ position: "absolute", inset: 0, opacity: L ? 1 : 0 }}>
+          <div
+            style={{
+              position: "absolute",
+              left: rulerX,
+              top: rulerTop,
+              width: rulerW,
+              height: em * RULER_H,
+              transformOrigin: "50% 0%",
+              transform: `rotate(${rulerTilt}deg)`,
+              opacity: inP,
+            }}
           >
-            <defs>
-              <clipPath id={clipId}>
-                <rect
-                  x={0}
-                  y={0}
-                  width={rulerW}
-                  height={em * RULER_H}
-                  rx={em * 0.04}
-                />
-              </clipPath>
-            </defs>
-            <rect
-              x={0.5}
-              y={0.5}
-              width={rulerW - 1}
-              height={em * RULER_H - 1}
-              rx={em * 0.04}
-              fill={t.rulerFill}
-              stroke={t.rulerLine}
-              strokeWidth={1}
-            />
-            <g clipPath={`url(#${clipId})`}>
-              {ticks.map((tk) => (
-                <line
-                  key={tk.x}
-                  x1={tk.x}
-                  x2={tk.x}
-                  y1={0}
-                  y2={tk.h * em}
-                  stroke={t.tick}
-                  strokeWidth={1}
-                />
-              ))}
-              {ticks.map((tk) =>
-                tk.n === null ? null : (
-                  <text
-                    key={`n${tk.x}`}
-                    x={tk.x + em * 0.035}
-                    y={em * 0.33}
-                    fill={t.num}
-                    fontFamily={mono.fontFamily}
-                    fontSize={em * 0.095}
-                  >
-                    {tk.n}
-                  </text>
-                ),
-              )}
-            </g>
-            {/* the straight edge */}
-            <rect x={0} y={0} width={rulerW} height={hair} fill={accent} />
-          </svg>
-        </div>
+            <svg
+              width={rulerW}
+              height={em * RULER_H}
+              style={{ display: "block", overflow: "visible" }}
+              aria-hidden
+            >
+              <defs>
+                <clipPath id={clipId}>
+                  <rect
+                    x={0}
+                    y={0}
+                    width={rulerW}
+                    height={em * RULER_H}
+                    rx={em * 0.04}
+                  />
+                </clipPath>
+              </defs>
+              <rect
+                x={0.5}
+                y={0.5}
+                width={rulerW - 1}
+                height={em * RULER_H - 1}
+                rx={em * 0.04}
+                fill={t.rulerFill}
+                stroke={t.rulerLine}
+                strokeWidth={1}
+              />
+              <g clipPath={`url(#${clipId})`}>
+                {ticks.map((tk) => (
+                  <line
+                    key={tk.x}
+                    x1={tk.x}
+                    x2={tk.x}
+                    y1={0}
+                    y2={tk.h * em}
+                    stroke={t.tick}
+                    strokeWidth={1}
+                  />
+                ))}
+                {ticks.map((tk) =>
+                  tk.n === null ? null : (
+                    <text
+                      key={`n${tk.x}`}
+                      x={tk.x + em * 0.035}
+                      y={em * 0.33}
+                      fill={t.num}
+                      fontFamily={mono.fontFamily}
+                      fontSize={em * 0.095}
+                    >
+                      {tk.n}
+                    </text>
+                  ),
+                )}
+              </g>
+              {/* the straight edge */}
+              <rect x={0} y={0} width={rulerW} height={hair} fill={accent} />
+            </svg>
+          </div>
 
-        {glyphs}
-      </div>
+          {glyphs}
+        </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

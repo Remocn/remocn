@@ -1,4 +1,11 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const flowBuilderConfig: ComponentConfig = {
   componentName: "FlowBuilder",
@@ -12,11 +19,6 @@ export const flowBuilderConfig: ComponentConfig = {
         dark: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     title: {
       type: "text-content",
@@ -33,6 +35,32 @@ export const flowBuilderConfig: ComponentConfig = {
       default: "Live · runs on every signup",
       description: "Toast",
     },
+    publishLabel: {
+      type: "text-content",
+      default: "Publish",
+      description: "Publish label",
+    },
+    publishedLabel: {
+      type: "text-content",
+      default: "Published",
+      description: "Published label",
+    },
+    stagger: {
+      type: "number",
+      default: 6,
+      min: 0,
+      max: 12,
+      step: 1,
+      description: "Node stagger",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ground: groundControl(),
+    ...sceneControls({ font: "Hanken Grotesk" }),
     speed: {
       type: "number",
       default: 1,

@@ -27,7 +27,17 @@ export interface DiminuendoProps {
   ratio?: number;
   separator?: string;
   accent?: string;
+  /** Text color of the label; overrides the theme. */
+  ink?: string;
   background?: string;
+  /** Typeface for the number and label. Load it yourself; Arimo by default. */
+  fontFamily?: string;
+  /** Frames the count takes to climb from `from` to `value`. */
+  countDuration?: number;
+  /** Size of the number and label, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -88,7 +98,12 @@ interface Metrics {
   figTop: number;
 }
 
-function measure(sep: string, prefix: string, suffix: string): Metrics {
+function measure(
+  sep: string,
+  prefix: string,
+  suffix: string,
+  font: string,
+): Metrics {
   const probe = document.createElement("span");
   Object.assign(probe.style, {
     position: "absolute",
@@ -96,7 +111,7 @@ function measure(sep: string, prefix: string, suffix: string): Metrics {
     top: "0",
     visibility: "hidden",
     whiteSpace: "pre",
-    fontFamily: `"${arimo.fontFamily}"`,
+    fontFamily: `"${font}"`,
     fontSize: "100px",
     lineHeight: "1",
     fontWeight: WEIGHT,
@@ -117,7 +132,7 @@ function measure(sep: string, prefix: string, suffix: string): Metrics {
   let baseline = 0.8;
   let figTop = 0.7;
   if (ctx) {
-    ctx.font = `${WEIGHT} 200px "${arimo.fontFamily}"`;
+    ctx.font = `${WEIGHT} 200px "${font}"`;
     const fm = ctx.measureText("0123456789");
     const asc = fm.fontBoundingBoxAscent / 200;
     const desc = fm.fontBoundingBoxDescent / 200;
@@ -127,23 +142,23 @@ function measure(sep: string, prefix: string, suffix: string): Metrics {
   return { ...m, baseline, figTop };
 }
 
-function useMetrics(sep: string, prefix: string, suffix: string) {
-  const key = [sep, prefix, suffix].join("\u0001");
+function useMetrics(sep: string, prefix: string, suffix: string, font: string) {
+  const key = [sep, prefix, suffix, font].join("\u0001");
   const [state, setState] = useState<{ key: string; m: Metrics } | null>(null);
   const [handle] = useState(() => delayRender("diminuendo: measuring"));
   const released = useRef(false);
   useEffect(() => {
     let live = true;
-    const [a, b, c] = key.split("\u0001");
+    const [a, b, c, f] = key.split("\u0001");
     Promise.all([
       arimo.waitUntilDone(),
-      document.fonts.load(`${WEIGHT} 100px "${arimo.fontFamily}"`),
-      document.fonts.load(`400 100px "${arimo.fontFamily}"`),
+      document.fonts.load(`${WEIGHT} 100px "${f}"`),
+      document.fonts.load(`400 100px "${f}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
-        setState({ key, m: measure(a, b, c) });
+        setState({ key, m: measure(a, b, c, f) });
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -167,6 +182,22 @@ function placesOf(v: number) {
   return Math.max(1, Math.floor(Math.log10(Math.max(1, v))) + 1);
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function Diminuendo({
   value = 860000,
   from = 0,
@@ -176,16 +207,22 @@ export function Diminuendo({
   ratio = 0.8,
   separator = ",",
   accent = "#8ACE00",
+  ink,
   background,
+  fontFamily = arimo.fontFamily,
+  countDuration = COUNT_LEN,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: DiminuendoProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
   const bg = background ?? c.bg(accent);
+  const fg = ink ?? c.label(accent);
   const ramp = c.ramp(accent);
-  const m = useMetrics(separator, prefix, suffix);
+  const m = useMetrics(separator, prefix, suffix, fontFamily);
 
   if (!m) {
     return <div style={{ position: "absolute", inset: 0, background: bg }} />;
@@ -197,7 +234,9 @@ export function Diminuendo({
   const logLo = Math.log10(lo + 1);
   const logHi = Math.log10(hi + 1);
   const valueAt = (f: number) => {
-    const p = EASE_COUNT(Math.min(1, Math.max(0, (f - COUNT_AT) / COUNT_LEN)));
+    const p = EASE_COUNT(
+      Math.min(1, Math.max(0, (f - COUNT_AT) / countDuration)),
+    );
     if (p >= 1) return hi;
     return Math.round(10 ** (logLo + (logHi - logLo) * p) - 1);
   };
@@ -205,10 +244,10 @@ export function Diminuendo({
   const nFinal = placesOf(hi);
   const birthOf = (p: number) => {
     if (p === 0 || placesOf(lo) > p) return Number.NEGATIVE_INFINITY;
-    for (let f = COUNT_AT; f <= COUNT_AT + COUNT_LEN; f += 0.5) {
+    for (let f = COUNT_AT; f <= COUNT_AT + countDuration; f += 0.5) {
       if (valueAt(f) >= 10 ** p) return f;
     }
-    return COUNT_AT + COUNT_LEN;
+    return COUNT_AT + countDuration;
   };
   const presence = Array.from({ length: nFinal }, (_, p) => {
     const b = birthOf(p);
@@ -307,6 +346,7 @@ export function Diminuendo({
         baseY={baseY}
         size={size}
         m={m}
+        font={fontFamily}
         color={colorFor(leadEff)}
         rise={1 - intro}
       />,
@@ -322,7 +362,7 @@ export function Diminuendo({
     const w = slot(p) * unit * scale;
     const digit = Math.floor(v / 10 ** p) % 10;
     const roll = p >= leadNow - 1 ? { from: digit, p: 1 } : rollOf(p);
-    const spin = spinning(p) && t < COUNT_AT + COUNT_LEN;
+    const spin = spinning(p) && t < COUNT_AT + countDuration;
     const base = colorFor(p);
     const color = spin
       ? `color-mix(in oklab, ${base} 72%, ${c.spin(accent)})`
@@ -346,6 +386,7 @@ export function Diminuendo({
           p={roll.p}
           size={size * scale}
           m={m}
+          font={fontFamily}
           color={color}
           rise={p === leadNow && leadNow === 0 ? 1 - intro : 0}
         />
@@ -362,6 +403,7 @@ export function Diminuendo({
           baseY={baseY}
           size={sizeAt(p) * unit}
           m={m}
+          font={fontFamily}
           color={colorFor(p)}
           opacity={a}
         />,
@@ -379,6 +421,7 @@ export function Diminuendo({
         baseY={baseY}
         size={sizeAt(-1) * unit}
         m={m}
+        font={fontFamily}
         color={colorFor(-1)}
         rise={1 - intro}
       />,
@@ -399,26 +442,28 @@ export function Diminuendo({
 
   return (
     <AbsoluteFill style={{ background: bg, overflow: "hidden" }}>
-      {items}
-      {label ? (
-        <div
-          style={{
-            position: "absolute",
-            ...labelBox,
-            fontFamily: arimo.fontFamily,
-            fontWeight: 400,
-            fontSize: labelSize,
-            lineHeight: 1.08,
-            letterSpacing: "-0.025em",
-            color: c.label(accent),
-            textWrap: "balance",
-            opacity: labelIn,
-            transform: `translateY(${((1 - labelIn) * labelSize * 0.6).toFixed(2)}px)`,
-          }}
-        >
-          {label.toLowerCase()}
-        </div>
-      ) : null}
+      <ScaleLayer scale={scale}>
+        {items}
+        {label ? (
+          <div
+            style={{
+              position: "absolute",
+              ...labelBox,
+              fontFamily,
+              fontWeight: 400,
+              fontSize: labelSize,
+              lineHeight: 1.08,
+              letterSpacing: "-0.025em",
+              color: fg,
+              textWrap: "balance",
+              opacity: labelIn,
+              transform: `translateY(${((1 - labelIn) * labelSize * 0.6).toFixed(2)}px)`,
+            }}
+          >
+            {label.toLowerCase()}
+          </div>
+        ) : null}
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }
@@ -429,6 +474,7 @@ function Glyph({
   baseY,
   size,
   m,
+  font,
   color,
   rise = 0,
   opacity = 1,
@@ -438,6 +484,7 @@ function Glyph({
   baseY: number;
   size: number;
   m: Metrics;
+  font: string;
   color: string;
   rise?: number;
   opacity?: number;
@@ -448,7 +495,7 @@ function Glyph({
         position: "absolute",
         left: x,
         top: baseY - m.baseline * size,
-        fontFamily: arimo.fontFamily,
+        fontFamily: font,
         fontWeight: WEIGHT,
         fontFeatureSettings: '"tnum" 1',
         fontSize: size,
@@ -471,6 +518,7 @@ function RollDigit({
   p,
   size,
   m,
+  font,
   color,
   rise,
 }: {
@@ -479,6 +527,7 @@ function RollDigit({
   p: number;
   size: number;
   m: Metrics;
+  font: string;
   color: string;
   rise: number;
 }) {
@@ -490,7 +539,7 @@ function RollDigit({
     right: 0,
     top: top + dy,
     textAlign: "center",
-    fontFamily: arimo.fontFamily,
+    fontFamily: font,
     fontWeight: WEIGHT,
     fontFeatureSettings: '"tnum" 1',
     fontSize: size,

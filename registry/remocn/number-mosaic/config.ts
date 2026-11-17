@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const numberMosaicConfig: ComponentConfig = {
   componentName: "NumberMosaic",
@@ -12,11 +18,6 @@ export const numberMosaicConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     value: {
       type: "text-content",
@@ -33,6 +34,30 @@ export const numberMosaicConfig: ComponentConfig = {
       default: "remocn",
       description: "Name",
     },
+    sweep: {
+      type: "number",
+      default: 26,
+      min: 0,
+      max: 80,
+      step: 1,
+      description: "Light sweep (frames)",
+      hiddenFromList: false,
+    },
+    cellSize: {
+      type: "number",
+      default: 12,
+      min: 8,
+      max: 24,
+      step: 1,
+      description: "Cell size",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Space Grotesk", grain: true }),
     speed: {
       type: "number",
       default: 1,

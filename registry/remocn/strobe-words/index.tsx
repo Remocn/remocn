@@ -69,8 +69,20 @@ function RemocnLogo({ fontSize, color }: { fontSize: number; color: string }) {
 export interface StrobeWordsProps {
   words?: string[];
   rhythm?: number[];
+  /** Frames of the first strobe cut when `rhythm` is unset; cuts speed up to half that. */
+  beat?: number;
+  /** Fewest strobe cuts before the poster when `rhythm` is unset. */
+  cuts?: number;
   logo?: React.ReactNode;
   accent?: string;
+  /** Typeface for the words. Load it yourself; Sora by default. */
+  fontFamily?: string;
+  /** Film grain over the scene. */
+  grain?: boolean;
+  /** Size of the words and logo, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -94,11 +106,11 @@ function widthEm(text: string) {
   return Math.max(w, 0.5);
 }
 
-function defaultRhythm(count: number) {
+function defaultRhythm(count: number, beat: number, cuts: number) {
   let n = count - 1;
-  while (n < 13) n += count;
+  while (n < cuts) n += count;
   return Array.from({ length: n }, (_, i) =>
-    Math.round(6 - (3 * i) / Math.max(1, n - 1)),
+    Math.round(beat - ((beat / 2) * i) / Math.max(1, n - 1)),
   );
 }
 
@@ -132,12 +144,14 @@ function Word({
   color,
   stop,
   fill,
+  fontFamily,
 }: {
   text: string;
   size: number;
   color: string;
   stop: string;
   fill?: string;
+  fontFamily: string;
 }) {
   const { height: H } = useVideoConfig();
   const baseline = H / 2 + (CAP * size) / 2;
@@ -156,7 +170,7 @@ function Word({
     >
       <div
         style={{
-          fontFamily: display,
+          fontFamily,
           fontWeight: 500,
           fontSize: size,
           lineHeight: 1,
@@ -188,20 +202,44 @@ function Word({
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function StrobeWords({
   words = ["Plan.", "Write.", "Render.", "Ship."],
   rhythm,
+  beat = 6,
+  cuts = 13,
   logo,
   accent = "#3B5BFD",
+  fontFamily = display,
+  grain = true,
+  scale = 1,
+  delay = 0,
   theme = "dark",
   speed = 1,
 }: StrobeWordsProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const u = H / 720;
   const list = words.length > 0 ? words : ["Ship."];
   const beats =
-    rhythm && rhythm.length > 0 ? rhythm : defaultRhythm(list.length);
+    rhythm && rhythm.length > 0
+      ? rhythm
+      : defaultRhythm(list.length, beat, cuts);
   const poster: Field = theme === "light" ? "paper" : "ink";
 
   const offset = (((CYCLE.indexOf("accent") - (beats.length - 1)) % 3) + 3) % 3;
@@ -268,31 +306,34 @@ export function StrobeWords({
 
   return (
     <AbsoluteFill style={{ background: bg, overflow: "hidden" }}>
-      <Word
-        text={text}
-        size={isPoster ? posterSize : strobeSize}
-        color={fg}
-        stop={stop}
-        fill={posterFill}
-      />
-      {isPoster ? (
-        <div
-          style={{
-            position: "absolute",
-            left: 0,
-            right: 0,
-            bottom: 0.085 * H,
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            gap: 10 * u,
-            color: fg,
-          }}
-        >
-          {logo ?? <RemocnLogo fontSize={28 * u} color={fg} />}
-        </div>
-      ) : null}
-      <Grain opacity={field === "paper" ? 0.04 : 0.05} />
+      <ScaleLayer scale={scale}>
+        <Word
+          text={text}
+          size={isPoster ? posterSize : strobeSize}
+          color={fg}
+          stop={stop}
+          fill={posterFill}
+          fontFamily={fontFamily}
+        />
+        {isPoster ? (
+          <div
+            style={{
+              position: "absolute",
+              left: 0,
+              right: 0,
+              bottom: 0.085 * H,
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              gap: 10 * u,
+              color: fg,
+            }}
+          >
+            {logo ?? <RemocnLogo fontSize={28 * u} color={fg} />}
+          </div>
+        ) : null}
+      </ScaleLayer>
+      {grain ? <Grain opacity={field === "paper" ? 0.04 : 0.05} /> : null}
     </AbsoluteFill>
   );
 }

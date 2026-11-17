@@ -1,8 +1,21 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const macroClickConfig: ComponentConfig = {
   componentName: "MacroClick",
   importPath: "@/components/remocn/macro-click",
+  lists: {
+    pages: {
+      default: ["Home", "Pricing", "Changelog", "Docs"],
+      description: "Pages",
+    },
+  },
   controls: {
     theme: {
       type: "enum",
@@ -12,11 +25,6 @@ export const macroClickConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     title: {
       type: "text-content",
@@ -57,6 +65,38 @@ export const macroClickConfig: ComponentConfig = {
       type: "text-content",
       default: "Ship the launch today.",
       description: "Hero line",
+    },
+    heroSub: {
+      type: "text-content",
+      default:
+        "Write the brief, pick the beats and render the film before lunch.",
+      description: "Hero subline",
+    },
+    ctaLabel: {
+      type: "text-content",
+      default: "Start free",
+      description: "CTA label",
+    },
+    inviteLabel: {
+      type: "text-content",
+      default: "Invite",
+      description: "Invite label",
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ground: groundControl(),
+    ...sceneControls({ font: "Geist" }),
+    speed: {
+      type: "number",
+      default: 1,
+      min: 0.25,
+      max: 4,
+      step: 0.25,
+      description: "Speed",
+      hiddenFromList: false,
     },
   },
   durationInFrames: 150,

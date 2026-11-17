@@ -82,10 +82,50 @@ The `from` scene holds for `delay` frames, then a diagonal wave shrinks the tile
       description: "Frames the outgoing scene holds before the wave",
     },
     {
+      name: "spread",
+      type: "number",
+      default: "26",
+      description: "Frames the wave takes to cross the frame, corner to corner",
+    },
+    {
+      name: "swap",
+      type: "number",
+      default: "22",
+      description: "Frames each tile takes to shrink and grow back",
+    },
+    {
       name: "accent",
       type: "string",
       default: "\"#3B5BFD\"",
       description: "Color of the trailing period on text headlines",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Color of the outgoing headline; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Stage fill seen between the tiles; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Space Grotesk\"",
+      description: "Typeface for text headlines. Load the font in your project first.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of text headlines around the frame's center; the scene panels stay put.",
+    },
+    {
+      name: "grain",
+      type: "boolean",
+      default: "true",
+      description: "Film grain over the scene.",
     },
     {
       name: "speed",

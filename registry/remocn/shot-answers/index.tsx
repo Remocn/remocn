@@ -30,11 +30,23 @@ export interface ShotAnswersProps {
   answer?: string;
   src?: string;
   aspect?: number;
+  /** Frames between question words appearing, at the default 140-frame length. */
+  stagger?: number;
+  /** Frame the question starts turning into the answer, at the default 140-frame length. */
+  answerAt?: number;
   accent?: string;
+  /** Text color of the question and answer; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the question and answer. Load it yourself; Onest by default. */
+  fontFamily?: string;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
   url?: string;
+  /** Size of the text and screenshot, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -86,20 +98,20 @@ const CLAMP = {
 
 type Widths = (s: string) => number;
 
-function buildWidths(_version: number): Widths {
+function buildWidths(_version: number, fontFamily: string): Widths {
   const ctx = document.createElement("canvas").getContext("2d");
   const cache: Record<string, number> = {};
   return (s: string) => {
     if (cache[s] === undefined) {
       if (!ctx) return s.length * 0.52;
-      ctx.font = `${WGHT} ${PX}px "${onest.fontFamily}"`;
+      ctx.font = `${WGHT} ${PX}px "${fontFamily}"`;
       cache[s] = ctx.measureText(s).width / PX + TRACK * Array.from(s).length;
     }
     return cache[s];
   };
 }
 
-function useWidths() {
+function useWidths(fontFamily: string) {
   const [version, setVersion] = useState(0);
   const [handle] = useState(() => delayRender("shot-answers: measuring"));
   const released = useRef(false);
@@ -111,7 +123,7 @@ function useWidths() {
     document.fonts.addEventListener("loadingdone", bump);
     Promise.all([
       onest.waitUntilDone(),
-      document.fonts.load(`${WGHT} 100px "${onest.fontFamily}"`),
+      document.fonts.load(`${WGHT} 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
@@ -125,8 +137,8 @@ function useWidths() {
       live = false;
       document.fonts.removeEventListener("loadingdone", bump);
     };
-  }, [handle]);
-  return useMemo(() => buildWidths(version), [version]);
+  }, [handle, fontFamily]);
+  return useMemo(() => buildWidths(version, fontFamily), [version, fontFamily]);
 }
 
 const keyOf = (word: string) =>
@@ -196,26 +208,49 @@ function flow(
   return { placed, lines: line + 1 };
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function ShotAnswers({
   question = "What if your launch video were just another pull request?",
   answer = "Your launch video is just another pull request.",
   src,
   aspect = 16 / 9,
+  stagger = 1.6,
+  answerAt = 58,
   accent,
+  ink,
   background,
+  fontFamily = onest.fontFamily,
   ground,
   groundParams,
   url = "remocn.dev/studio",
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: ShotAnswersProps) {
-  const frame = useCurrentFrame();
+  const frame = Math.max(0, useCurrentFrame() - delay);
   const { width: W, height: H, durationInFrames: D, fps } = useVideoConfig();
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
+  const fg = ink ?? c.ink;
   const transparent = background === "transparent";
   const image = src ?? staticFile("studio.png");
-  const widths = useWidths();
+  const widths = useWidths(fontFamily);
 
   const qWords = question.split(/\s+/).filter(Boolean);
   const aWords = answer.split(/\s+/).filter(Boolean);
@@ -268,7 +303,7 @@ export function ShotAnswers({
   const radius = Math.min(W, H) * 0.018;
 
   const SHOT_AT = 26 * k;
-  const MORPH = 58 * k;
+  const MORPH = answerAt * k;
 
   const shotIn = spring({
     frame: t - SHOT_AT,
@@ -294,22 +329,27 @@ export function ShotAnswers({
     position: "absolute" as const,
     left: 0,
     top: 0,
-    fontFamily: onest.fontFamily,
+    fontFamily,
     fontWeight: WGHT,
     fontSize: size,
     lineHeight: 1,
     letterSpacing: `${TRACK}em`,
     whiteSpace: "pre" as const,
-    color: c.ink,
+    color: fg,
   };
 
   const spans: ReactNode[] = [];
 
   qWords.forEach((wd, i) => {
-    const enter = interpolate(t, [i * 1.6 * k, i * 1.6 * k + 12 * k], [0, 1], {
-      ...CLAMP,
-      easing: ENTER,
-    });
+    const enter = interpolate(
+      t,
+      [i * stagger * k, i * stagger * k + 12 * k],
+      [0, 1],
+      {
+        ...CLAMP,
+        easing: ENTER,
+      },
+    );
     const q = Q.placed[i];
     const j = aToB[i];
     if (j < 0) {
@@ -420,86 +460,88 @@ export function ShotAnswers({
           />
         </AbsoluteFill>
       ) : null}
-      {spans}
-      <div
-        style={{
-          position: "absolute",
-          left: shot.x + drift,
-          top: shot.y + rise,
-          width: shot.w,
-          height: shot.h,
-          borderRadius: radius,
-          overflow: "hidden",
-          background: c.chrome,
-          boxShadow: c.shadow,
-          opacity: interpolate(reveal, [0, 0.25], [0, 1], CLAMP),
-          transform: `scale(${0.97 + 0.03 * shotIn})`,
-          transformOrigin: portrait ? "50% 100%" : "100% 50%",
-          clipPath: portrait
-            ? `inset(${(1 - reveal) * 100}% 0 0 0 round ${radius}px)`
-            : `inset(0 0 0 ${(1 - reveal) * 100}% round ${radius}px)`,
-        }}
-      >
+      <ScaleLayer scale={scale}>
+        {spans}
         <div
           style={{
-            height: barH,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            position: "relative",
-            fontFamily: mono.fontFamily,
-            fontWeight: 400,
-            fontSize: Math.max(barH * 0.42, H * 0.022 * (portrait ? 0.6 : 1)),
-            color: c.chromeInk,
-            letterSpacing: "0.01em",
+            position: "absolute",
+            left: shot.x + drift,
+            top: shot.y + rise,
+            width: shot.w,
+            height: shot.h,
+            borderRadius: radius,
+            overflow: "hidden",
+            background: c.chrome,
+            boxShadow: c.shadow,
+            opacity: interpolate(reveal, [0, 0.25], [0, 1], CLAMP),
+            transform: `scale(${0.97 + 0.03 * shotIn})`,
+            transformOrigin: portrait ? "50% 100%" : "100% 50%",
+            clipPath: portrait
+              ? `inset(${(1 - reveal) * 100}% 0 0 0 round ${radius}px)`
+              : `inset(0 0 0 ${(1 - reveal) * 100}% round ${radius}px)`,
           }}
         >
           <div
             style={{
-              position: "absolute",
-              left: barH * 0.5,
-              top: 0,
-              bottom: 0,
+              height: barH,
               display: "flex",
               alignItems: "center",
-              gap: dotD * 0.8,
+              justifyContent: "center",
+              position: "relative",
+              fontFamily: mono.fontFamily,
+              fontWeight: 400,
+              fontSize: Math.max(barH * 0.42, H * 0.022 * (portrait ? 0.6 : 1)),
+              color: c.chromeInk,
+              letterSpacing: "0.01em",
             }}
           >
-            {[0, 1, 2].map((n) => (
-              <span
-                key={n}
-                style={{
-                  width: dotD,
-                  height: dotD,
-                  borderRadius: dotD,
-                  background: c.dot,
-                }}
-              />
-            ))}
+            <div
+              style={{
+                position: "absolute",
+                left: barH * 0.5,
+                top: 0,
+                bottom: 0,
+                display: "flex",
+                alignItems: "center",
+                gap: dotD * 0.8,
+              }}
+            >
+              {[0, 1, 2].map((n) => (
+                <span
+                  key={n}
+                  style={{
+                    width: dotD,
+                    height: dotD,
+                    borderRadius: dotD,
+                    background: c.dot,
+                  }}
+                />
+              ))}
+            </div>
+            {url}
           </div>
-          {url}
-        </div>
-        <div
-          style={{
-            position: "absolute",
-            left: 0,
-            right: 0,
-            top: barH,
-            bottom: 0,
-            overflow: "hidden",
-          }}
-        >
-          <Img
-            src={image}
+          <div
             style={{
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-              transform: `scale(${imgScale})`,
+              position: "absolute",
+              left: 0,
+              right: 0,
+              top: barH,
+              bottom: 0,
+              overflow: "hidden",
             }}
-          />
+          >
+            <Img
+              src={image}
+              style={{
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+                transform: `scale(${imgScale})`,
+              }}
+            />
+          </div>
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

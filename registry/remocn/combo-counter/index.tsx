@@ -2,6 +2,7 @@
 
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
 import { loadFont } from "@remotion/google-fonts/Saira";
+import type React from "react";
 import { useId } from "react";
 import {
   AbsoluteFill,
@@ -15,7 +16,7 @@ const { fontFamily: sairaItalic } = loadFont("italic", {
   weights: ["400", "500"],
   subsets: ["latin"],
 });
-const { fontFamily: saira } = loadFont("normal", {
+loadFont("normal", {
   weights: ["500"],
   subsets: ["latin"],
 });
@@ -67,6 +68,22 @@ export interface ComboCounterProps {
   ratings?: ComboRating[];
   /** Small marker next to the rating. */
   accent?: string;
+  /** Big word next to the count. */
+  hitLabel?: string;
+  /** Small caps label under `hitLabel`. */
+  comboLabel?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Saira by default. */
+  fontFamily?: string;
+  /** Replaces the remocn mark under the poster. */
+  logo?: React.ReactNode;
+  /** Size of the foreground, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -151,6 +168,22 @@ function starPath(L: number, w: number) {
   return `M0 ${-L} L${w} ${-w} L${L} 0 L${w} ${w} L0 ${L} L${-w} ${w} L${-L} 0 L${-w} ${-w} Z`;
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function ComboCounter({
   hits = [
     "Captions",
@@ -172,12 +205,23 @@ export function ComboCounter({
     { from: 12, text: "PERFECT" },
   ],
   accent = "#3B5BFD",
+  hitLabel = "HIT",
+  comboLabel = "COMBO",
+  ink,
+  background,
+  fontFamily = sairaItalic,
+  logo,
+  scale = 1,
+  delay = 0,
   theme = "dark",
   speed = 1,
 }: ComboCounterProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
+  const fg = ink ?? c.ink;
+  const stage =
+    background === "transparent" ? "transparent" : (background ?? c.stage);
   const u = Math.min(W / 1280, H / 720);
   const id = useId().replace(/[^a-zA-Z0-9_-]/g, "");
 
@@ -228,7 +272,7 @@ export function ComboCounter({
   const numberGlyphs = (text: string, gradient: boolean) => (
     <div
       style={{
-        fontFamily: sairaItalic,
+        fontFamily,
         fontStyle: "italic",
         fontWeight: 500,
         fontSize: numFs,
@@ -244,7 +288,7 @@ export function ComboCounter({
               backgroundClip: "text",
               color: "transparent",
             }
-          : { color: c.ink }),
+          : { color: fg }),
       }}
     >
       {text}
@@ -252,7 +296,7 @@ export function ComboCounter({
   );
 
   return (
-    <AbsoluteFill style={{ background: c.stage, overflow: "hidden" }}>
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
       <svg width={0} height={0} style={{ position: "absolute" }} aria-hidden>
         <defs>
           <linearGradient id={`${id}-sw`} x1="0" y1="0" x2="1" y2="1">
@@ -263,259 +307,262 @@ export function ComboCounter({
         </defs>
       </svg>
 
-      {/* Hit-sparks: one per feature. */}
-      {hits.map((word, i) => {
-        const h = times[i];
-        const dd = t - h;
-        if (dd < 0 || dd > WORD_LIFE + 4) return null;
-        const slot = SLOTS[i % SLOTS.length];
-        const x = slot.x * W;
-        const y = slot.y * H;
-        const isFinal = i === hits.length - 1;
-        const wordIn = SLAM(ramp(dd, 0, 4));
-        const out = ramp(dd, WORD_LIFE - 3, 5);
-        const starP = ramp(dd, 0, 7);
-        const L =
-          interpolate(OUT(starP), [0, 1], [50, isFinal ? 190 : 120]) * u;
-        const streak = OUT(ramp(dd, 0, 3));
-        const streakOut = ramp(dd, 3, 6);
-        const sl = 0.2 * W * streak;
-        return (
-          <div key={`${i}-${word}`}>
-            <svg
-              width={W}
-              height={H}
-              style={{ position: "absolute", inset: 0 }}
-              aria-hidden
-            >
-              <g
-                transform={`translate(${x} ${y}) rotate(${-22 + slot.r})`}
-                opacity={1 - streakOut}
+      <ScaleLayer scale={scale}>
+        {/* Hit-sparks: one per feature. */}
+        {hits.map((word, i) => {
+          const h = times[i];
+          const dd = t - h;
+          if (dd < 0 || dd > WORD_LIFE + 4) return null;
+          const slot = SLOTS[i % SLOTS.length];
+          const x = slot.x * W;
+          const y = slot.y * H;
+          const isFinal = i === hits.length - 1;
+          const wordIn = SLAM(ramp(dd, 0, 4));
+          const out = ramp(dd, WORD_LIFE - 3, 5);
+          const starP = ramp(dd, 0, 7);
+          const L =
+            interpolate(OUT(starP), [0, 1], [50, isFinal ? 190 : 120]) * u;
+          const streak = OUT(ramp(dd, 0, 3));
+          const streakOut = ramp(dd, 3, 6);
+          const sl = 0.2 * W * streak;
+          return (
+            <div key={`${i}-${word}`}>
+              <svg
+                width={W}
+                height={H}
+                style={{ position: "absolute", inset: 0 }}
+                aria-hidden
               >
-                <path
-                  d={`M${-sl} 0 L0 ${-5 * u} L${sl} 0 L0 ${5 * u} Z`}
-                  fill={`url(#${id}-sw)`}
-                />
-              </g>
-              <g
-                transform={`translate(${x - word.length * 0.25 * 62 * u - 34 * u} ${y - 6 * u})`}
-                opacity={1 - starP}
+                <g
+                  transform={`translate(${x} ${y}) rotate(${-22 + slot.r})`}
+                  opacity={1 - streakOut}
+                >
+                  <path
+                    d={`M${-sl} 0 L0 ${-5 * u} L${sl} 0 L0 ${5 * u} Z`}
+                    fill={`url(#${id}-sw)`}
+                  />
+                </g>
+                <g
+                  transform={`translate(${x - word.length * 0.25 * 62 * u - 34 * u} ${y - 6 * u})`}
+                  opacity={1 - starP}
+                >
+                  <path d={starPath(L, 7 * u)} fill={`url(#${id}-sw)`} />
+                  <path
+                    d={starPath(L * 0.45, 4 * u)}
+                    fill={c.flash}
+                    transform="rotate(45)"
+                  />
+                </g>
+              </svg>
+              <div
+                style={{
+                  position: "absolute",
+                  left: x - 0.3 * W,
+                  width: 0.6 * W,
+                  top: y - 50 * u,
+                  height: 100 * u,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  transform: `translateY(${-18 * u * out}px) rotate(${slot.r}deg) scale(${interpolate(wordIn, [0, 1], [1.4, 1]) * (1 - 0.08 * out)})`,
+                  opacity: ramp(dd, 0, 2) * (1 - out),
+                  fontFamily,
+                  fontStyle: "italic",
+                  fontWeight: 500,
+                  fontSize: 62 * u,
+                  lineHeight: 1,
+                  letterSpacing: "-0.01em",
+                  color: fg,
+                  whiteSpace: "nowrap",
+                }}
               >
-                <path d={starPath(L, 7 * u)} fill={`url(#${id}-sw)`} />
-                <path
-                  d={starPath(L * 0.45, 4 * u)}
-                  fill={c.flash}
-                  transform="rotate(45)"
-                />
-              </g>
-            </svg>
-            <div
-              style={{
-                position: "absolute",
-                left: x - 0.3 * W,
-                width: 0.6 * W,
-                top: y - 50 * u,
-                height: 100 * u,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                transform: `translateY(${-18 * u * out}px) rotate(${slot.r}deg) scale(${interpolate(wordIn, [0, 1], [1.4, 1]) * (1 - 0.08 * out)})`,
-                opacity: ramp(dd, 0, 2) * (1 - out),
-                fontFamily: sairaItalic,
-                fontStyle: "italic",
-                fontWeight: 500,
-                fontSize: 62 * u,
-                lineHeight: 1,
-                letterSpacing: "-0.01em",
-                color: c.ink,
-                whiteSpace: "nowrap",
-              }}
-            >
-              {word}
+                {word}
+              </div>
             </div>
-          </div>
-        );
-      })}
+          );
+        })}
 
-      {/* Poster slashes behind the meter. */}
-      {glide > 0 ? (
-        <svg
-          width={W}
-          height={H}
-          style={{ position: "absolute", inset: 0 }}
-          aria-hidden
-        >
-          {POSTER_SLASHES.map((p) => {
-            const g = OUT(ramp(t, lastAt + GLIDE_DELAY + 6 + p.delay, 8));
-            const len = p.len * W * g;
-            return (
-              <g
-                key={p.dy}
-                transform={`translate(${W / 2 + p.dx * W} ${0.4 * H + p.dy * H}) rotate(-22)`}
-              >
-                <path
-                  d={`M${-len} 0 L0 ${-p.thick * u} L${len} 0 L0 ${p.thick * u} Z`}
-                  fill={`url(#${id}-sw)`}
-                  opacity={p.op}
-                />
-              </g>
-            );
-          })}
-        </svg>
-      ) : null}
+        {/* Poster slashes behind the meter. */}
+        {glide > 0 ? (
+          <svg
+            width={W}
+            height={H}
+            style={{ position: "absolute", inset: 0 }}
+            aria-hidden
+          >
+            {POSTER_SLASHES.map((p) => {
+              const g = OUT(ramp(t, lastAt + GLIDE_DELAY + 6 + p.delay, 8));
+              const len = p.len * W * g;
+              return (
+                <g
+                  key={p.dy}
+                  transform={`translate(${W / 2 + p.dx * W} ${0.4 * H + p.dy * H}) rotate(-22)`}
+                >
+                  <path
+                    d={`M${-len} 0 L0 ${-p.thick * u} L${len} 0 L0 ${p.thick * u} Z`}
+                    fill={`url(#${id}-sw)`}
+                    opacity={p.op}
+                  />
+                </g>
+              );
+            })}
+          </svg>
+        ) : null}
 
-      {/* The combo meter. */}
-      {n >= 2 ? (
-        <div
-          style={{
-            position: "absolute",
-            left: gx,
-            top: gy,
-            transform: `translate(${shx}px, ${shy}px) translateY(-50%) scale(${gk})`,
-            transformOrigin: "0% 50%",
-            opacity: meterIn,
-          }}
-        >
+        {/* The combo meter. */}
+        {n >= 2 ? (
           <div
             style={{
-              display: "flex",
-              alignItems: "flex-end",
-              gap: 0.16 * numFs,
+              position: "absolute",
+              left: gx,
+              top: gy,
+              transform: `translate(${shx}px, ${shy}px) translateY(-50%) scale(${gk})`,
+              transformOrigin: "0% 50%",
+              opacity: meterIn,
             }}
           >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "flex-end",
+                gap: 0.16 * numFs,
+              }}
+            >
+              <div
+                style={{
+                  position: "relative",
+                  transform: `scale(${pop * interpolate(meterIn, [0, 1], [1.5, 1])})`,
+                  transformOrigin: "100% 100%",
+                }}
+              >
+                {numberGlyphs(String(n), false)}
+                {fillP > 0 ? (
+                  <div
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      clipPath: `inset(0 ${(1 - fillP) * 100}% 0 0)`,
+                    }}
+                  >
+                    {numberGlyphs(String(n), true)}
+                  </div>
+                ) : null}
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  paddingBottom: 0.02 * numFs,
+                }}
+              >
+                <div
+                  style={{
+                    fontFamily,
+                    fontStyle: "italic",
+                    fontWeight: 500,
+                    fontSize: hitFs,
+                    lineHeight: 0.9,
+                    letterSpacing: "0.01em",
+                    color: fg,
+                  }}
+                >
+                  {hitLabel}
+                </div>
+                <div
+                  style={{
+                    fontFamily,
+                    fontWeight: 500,
+                    fontSize: comboFs,
+                    lineHeight: 1,
+                    letterSpacing: "0.28em",
+                    color: c.dim,
+                    marginTop: 0.12 * hitFs,
+                  }}
+                >
+                  {comboLabel}
+                </div>
+              </div>
+            </div>
+
+            {/* Rating: swaps as the combo climbs. */}
             <div
               style={{
                 position: "relative",
-                transform: `scale(${pop * interpolate(meterIn, [0, 1], [1.5, 1])})`,
-                transformOrigin: "100% 100%",
+                height: rateFs * 1.2,
+                marginTop: 0.14 * numFs,
               }}
             >
-              {numberGlyphs(String(n), false)}
-              {fillP > 0 ? (
-                <div
-                  style={{
-                    position: "absolute",
-                    inset: 0,
-                    clipPath: `inset(0 ${(1 - fillP) * 100}% 0 0)`,
-                  }}
-                >
-                  {numberGlyphs(String(n), true)}
-                </div>
-              ) : null}
-            </div>
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                paddingBottom: 0.02 * numFs,
-              }}
-            >
-              <div
-                style={{
-                  fontFamily: sairaItalic,
-                  fontStyle: "italic",
-                  fontWeight: 500,
-                  fontSize: hitFs,
-                  lineHeight: 0.9,
-                  letterSpacing: "0.01em",
-                  color: c.ink,
-                }}
-              >
-                HIT
-              </div>
-              <div
-                style={{
-                  fontFamily: saira,
-                  fontWeight: 500,
-                  fontSize: comboFs,
-                  lineHeight: 1,
-                  letterSpacing: "0.28em",
-                  color: c.dim,
-                  marginTop: 0.12 * hitFs,
-                }}
-              >
-                COMBO
-              </div>
-            </div>
-          </div>
-
-          {/* Rating: swaps as the combo climbs. */}
-          <div
-            style={{
-              position: "relative",
-              height: rateFs * 1.2,
-              marginTop: 0.14 * numFs,
-            }}
-          >
-            {ratings.map((r, k) => {
-              const startAt = times[r.from - 1];
-              if (startAt === undefined) return null;
-              const next = ratings[k + 1];
-              const endAt = next ? times[next.from - 1] : undefined;
-              if (t < startAt) return null;
-              if (endAt !== undefined && t >= endAt + 2) return null;
-              const inP = SLAM(ramp(t, startAt, 5));
-              const outP = endAt !== undefined ? ramp(t, endAt, 2) : 0;
-              const isLast = k === ratings.length - 1;
-              return (
-                <div
-                  key={r.text}
-                  style={{
-                    position: "absolute",
-                    left: 0,
-                    top: 0,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 0.28 * rateFs,
-                    transform: `translateY(${-0.5 * rateFs * outP}px) scale(${interpolate(inP, [0, 1], [1.45, 1])})`,
-                    transformOrigin: "0% 50%",
-                    opacity: ramp(t, startAt + (k > 0 ? 1 : 0), 2) * (1 - outP),
-                    whiteSpace: "nowrap",
-                  }}
-                >
+              {ratings.map((r, k) => {
+                const startAt = times[r.from - 1];
+                if (startAt === undefined) return null;
+                const next = ratings[k + 1];
+                const endAt = next ? times[next.from - 1] : undefined;
+                if (t < startAt) return null;
+                if (endAt !== undefined && t >= endAt + 2) return null;
+                const inP = SLAM(ramp(t, startAt, 5));
+                const outP = endAt !== undefined ? ramp(t, endAt, 2) : 0;
+                const isLast = k === ratings.length - 1;
+                return (
                   <div
+                    key={r.text}
                     style={{
-                      width: 0.16 * rateFs,
-                      height: 0.62 * rateFs,
-                      background: accent,
-                      transform: "skewX(-14deg)",
-                    }}
-                  />
-                  <div
-                    style={{
-                      fontFamily: sairaItalic,
-                      fontStyle: "italic",
-                      fontWeight: isLast ? 500 : 400,
-                      fontSize: rateFs,
-                      lineHeight: 1,
-                      letterSpacing: isLast ? "0.06em" : "-0.01em",
-                      color: c.ink,
+                      position: "absolute",
+                      left: 0,
+                      top: 0,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 0.28 * rateFs,
+                      transform: `translateY(${-0.5 * rateFs * outP}px) scale(${interpolate(inP, [0, 1], [1.45, 1])})`,
+                      transformOrigin: "0% 50%",
+                      opacity:
+                        ramp(t, startAt + (k > 0 ? 1 : 0), 2) * (1 - outP),
+                      whiteSpace: "nowrap",
                     }}
                   >
-                    {r.text}
+                    <div
+                      style={{
+                        width: 0.16 * rateFs,
+                        height: 0.62 * rateFs,
+                        background: accent,
+                        transform: "skewX(-14deg)",
+                      }}
+                    />
+                    <div
+                      style={{
+                        fontFamily,
+                        fontStyle: "italic",
+                        fontWeight: isLast ? 500 : 400,
+                        fontSize: rateFs,
+                        lineHeight: 1,
+                        letterSpacing: isLast ? "0.06em" : "-0.01em",
+                        color: fg,
+                      }}
+                    >
+                      {r.text}
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
-        </div>
-      ) : null}
+        ) : null}
 
-      {/* Logo. */}
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          width: W,
-          top: 0.88 * H,
-          display: "flex",
-          justifyContent: "center",
-          opacity: logoP,
-          transform: `translateY(${(1 - logoP) * 16 * u}px)`,
-        }}
-      >
-        <RemocnLogo fontSize={30 * u} color={c.ink} />
-      </div>
+        {/* Logo. */}
+        <div
+          style={{
+            position: "absolute",
+            left: 0,
+            width: W,
+            top: 0.88 * H,
+            display: "flex",
+            justifyContent: "center",
+            opacity: logoP,
+            transform: `translateY(${(1 - logoP) * 16 * u}px)`,
+          }}
+        >
+          {logo ?? <RemocnLogo fontSize={30 * u} color={c.ink} />}
+        </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const priceSlateConfig: ComponentConfig = {
   componentName: "PriceSlate",
@@ -12,11 +18,6 @@ export const priceSlateConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     price: {
       type: "text-content",
@@ -53,6 +54,30 @@ export const priceSlateConfig: ComponentConfig = {
       default: "remocn",
       description: "Name",
     },
+    reelLength: {
+      type: "number",
+      default: 24,
+      min: 6,
+      max: 60,
+      step: 1,
+      description: "Reel length (frames)",
+      hiddenFromList: false,
+    },
+    turns: {
+      type: "number",
+      default: 13,
+      min: 0,
+      max: 30,
+      step: 1,
+      description: "Reel turns",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Hanken Grotesk" }),
     speed: {
       type: "number",
       default: 1,

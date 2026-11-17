@@ -22,8 +22,20 @@ const figtree = loadFigtree("normal", {
 export interface LessMoreProps {
   less?: string;
   more?: string;
+  /** Frame where the first line starts to shrink and the second to grow. */
+  swapAt?: number;
+  /** Frame where the second line fills with the accent. */
+  fillAt?: number;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the lines. Load it yourself; Figtree by default. */
+  fontFamily?: string;
+  /** Size of the text, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -61,7 +73,7 @@ interface Metrics {
   cap: number;
 }
 
-function measure(lines: string[]): Metrics {
+function measure(lines: string[], fontFamily: string): Metrics {
   const host = document.createElement("div");
   host.style.cssText =
     "position:absolute;left:-100000px;top:0;visibility:hidden;white-space:pre;";
@@ -69,7 +81,7 @@ function measure(lines: string[]): Metrics {
   const make = (text: string) => {
     const s = document.createElement("span");
     s.textContent = text;
-    s.style.fontFamily = `"${figtree.fontFamily}"`;
+    s.style.fontFamily = `"${fontFamily}"`;
     s.style.fontSize = `${MEASURE_PX}px`;
     s.style.fontWeight = "500";
     s.style.fontKerning = "normal";
@@ -96,13 +108,13 @@ function measure(lines: string[]): Metrics {
   const ctx = canvas.getContext("2d");
   let cap = 0.7;
   if (ctx) {
-    ctx.font = `500 ${MEASURE_PX}px "${figtree.fontFamily}"`;
+    ctx.font = `500 ${MEASURE_PX}px "${fontFamily}"`;
     cap = ctx.measureText("H").actualBoundingBoxAscent / MEASURE_PX;
   }
   return { adv, cap };
 }
 
-function useMetrics(lines: string[]) {
+function useMetrics(lines: string[], fontFamily: string) {
   const [metrics, setMetrics] = useState<Metrics | null>(null);
   const [handle] = useState(() => delayRender("less-more: measuring"));
   const released = useRef(false);
@@ -112,12 +124,12 @@ function useMetrics(lines: string[]) {
     const ls = key.split("\u0000");
     Promise.all([
       figtree.waitUntilDone(),
-      document.fonts.load(`500 100px "${figtree.fontFamily}"`),
+      document.fonts.load(`500 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
-        setMetrics(measure(ls));
+        setMetrics(measure(ls, fontFamily));
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -126,7 +138,7 @@ function useMetrics(lines: string[]) {
     return () => {
       live = false;
     };
-  }, [key, handle]);
+  }, [key, handle, fontFamily]);
   return metrics;
 }
 
@@ -175,22 +187,45 @@ function splitRows(
   return best;
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function LessMore({
   less = "Less explaining.",
   more = "More showing.",
+  swapAt = DRAIN_AT,
+  fillAt = FILL_AT,
   accent,
+  ink,
   background,
+  fontFamily = figtree.fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: LessMoreProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const c = THEMES[theme];
+  const fg = ink ?? c.ink;
   const bg = background ?? c.bg;
   const sky = accent ?? SKY;
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const lines = useMemo(() => [less.trim(), more.trim()], [less, more]);
-  const m = useMetrics(lines);
+  const m = useMetrics(lines, fontFamily);
 
   if (!m) {
     return <div style={{ position: "absolute", inset: 0, background: bg }} />;
@@ -247,14 +282,14 @@ export function LessMore({
   const shrink = chars[0].map((_, i) =>
     interpolate(
       t,
-      [DRAIN_AT + i * drainStep, DRAIN_AT + i * drainStep + DRAIN_LEN],
+      [swapAt + i * drainStep, swapAt + i * drainStep + DRAIN_LEN],
       [0, 1],
       { ...CLAMP, easing: EASE_IO },
     ),
   );
   const grow = chars[1].map((_, j) =>
     spring({
-      frame: t - (DRAIN_AT + 3 + j * growStep),
+      frame: t - (swapAt + 3 + j * growStep),
       fps,
       config: { damping: 20, stiffness: 120, mass: 0.9 },
     }),
@@ -304,7 +339,7 @@ export function LessMore({
   const fill = chars[1].map((_, j) =>
     interpolate(
       t,
-      [FILL_AT + j * fillStep, FILL_AT + j * fillStep + FILL_LEN],
+      [fillAt + j * fillStep, fillAt + j * fillStep + FILL_LEN],
       [0, 1],
       { ...CLAMP, easing: EASE_OUT },
     ),
@@ -328,7 +363,7 @@ export function LessMore({
         fill={color}
         opacity={opacity}
         style={{
-          fontFamily: figtree.fontFamily,
+          fontFamily,
           fontWeight: 500,
           fontKerning: "none",
         }}
@@ -348,10 +383,10 @@ export function LessMore({
       const gy = base + (1 - rise(k, i - r.from)) * M * 1.05;
       if (r.group === 0) {
         const mix = interpolate(shrink[i], [0.15, 0.85], [0, 1], CLAMP);
-        nodes.push(glyph(ch, x, gy, sz, c.ink, `i${i}`, 1 - mix));
+        nodes.push(glyph(ch, x, gy, sz, fg, `i${i}`, 1 - mix));
         nodes.push(glyph(ch, x, gy, sz, c.muted, `m${i}`, mix));
       } else {
-        nodes.push(glyph(ch, x, gy, sz, c.ink, `i${i}`, 1 - fill[i]));
+        nodes.push(glyph(ch, x, gy, sz, fg, `i${i}`, 1 - fill[i]));
         nodes.push(glyph(ch, x, gy, sz, sky, `f${i}`, fill[i]));
       }
     }
@@ -379,15 +414,17 @@ export function LessMore({
 
   return (
     <AbsoluteFill style={{ background: bg, overflow: "hidden" }}>
-      <svg
-        width={W}
-        height={H}
-        viewBox={`0 0 ${W} ${H}`}
-        style={{ position: "absolute", inset: 0 }}
-        aria-hidden
-      >
-        {groups}
-      </svg>
+      <ScaleLayer scale={scale}>
+        <svg
+          width={W}
+          height={H}
+          viewBox={`0 0 ${W} ${H}`}
+          style={{ position: "absolute", inset: 0 }}
+          aria-hidden
+        >
+          {groups}
+        </svg>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

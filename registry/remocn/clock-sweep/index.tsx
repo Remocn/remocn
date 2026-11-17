@@ -30,6 +30,22 @@ export interface ClockSweepProps {
   minutes?: number;
   title?: string;
   accent?: string;
+  /** Text color of the headline; overrides the theme ink. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the headline. Load it yourself; Instrument Sans by default. */
+  fontFamily?: string;
+  /** Weight of the headline. */
+  fontWeight?: number;
+  /** Frames between headline words as they rise in. */
+  stagger?: number;
+  /** Size of the dial and headline, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  /** Film grain over the scene. */
+  grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -268,12 +284,20 @@ function Headline({
   minutes,
   size,
   p,
+  fg,
+  fontFamily,
+  fontWeight,
+  stagger,
 }: {
   t: number;
   title: string;
   minutes: number;
   size: number;
   p: Palette;
+  fg: string;
+  fontFamily: string;
+  fontWeight: number;
+  stagger: number;
 }) {
   const lines = title.split("\n").map((l) => l.split(/\s+/).filter(Boolean));
   const flat = lines.flat();
@@ -282,12 +306,12 @@ function Headline({
   return (
     <div
       style={{
-        fontFamily: display,
-        fontWeight: 500,
+        fontFamily,
+        fontWeight,
         fontSize: size,
         lineHeight: 1.06,
         letterSpacing: "-0.032em",
-        color: p.fg,
+        color: fg,
         textWrap: "balance",
       }}
     >
@@ -295,7 +319,7 @@ function Headline({
         <div key={`l${li}-${line.join(" ")}`}>
           {line.map((w, wi) => {
             const i = n++;
-            const at = 82 + i * 2.5;
+            const at = 82 + i * stagger;
             const k = interpolate(t, [at, at + 20], [0, 1], {
               ...CLAMP,
               easing: EASE_OUT,
@@ -317,7 +341,7 @@ function Headline({
                   style={{
                     display: "inline-block",
                     transform: `translateY(${(1 - k) * 135}%)`,
-                    color: p.fg,
+                    color: fg,
                     ...(accentWord
                       ? {
                           fontFamily: serif,
@@ -346,17 +370,44 @@ function Headline({
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function ClockSweep({
   minutes = 4,
   title,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = display,
+  fontWeight = 500,
+  stagger = 2.5,
+  scale = 1,
+  delay = 0,
+  grain = true,
   theme = "dark",
   speed = 1,
 }: ClockSweepProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height } = useVideoConfig();
   const u = height / 720;
   const p: Palette = THEMES[theme];
+  const fg = ink ?? p.fg;
+  const stage =
+    background === "transparent" ? "transparent" : (background ?? p.bg);
   const total = Math.min(59, Math.max(0.25, minutes));
 
   const sweep = interpolate(t, [32, 66], [0, 1], {
@@ -403,7 +454,7 @@ export function ClockSweep({
   const headDrift = interpolate(t, [76, 170], [0, -6 * u], CLAMP);
 
   return (
-    <AbsoluteFill style={{ background: p.bg, overflow: "hidden" }}>
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
       <AbsoluteFill
         style={{
           background: [
@@ -413,65 +464,71 @@ export function ClockSweep({
           ].join(", "),
         }}
       />
-      <div
-        style={{
-          position: "absolute",
-          left: cx,
-          top: cy,
-          width: 0,
-          height: 0,
-          transform: `scale(${dialScale})`,
-        }}
-      >
-        <Dial
-          t={t}
-          r={r}
-          value={value}
-          minutes={total}
-          accent={accent}
-          p={p}
-          u={u}
-        />
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            left: -r,
-            width: r * 2,
-            top: r * 0.34,
-            textAlign: "center",
-            fontFamily: mono,
-            fontWeight: 400,
-            fontSize: r * 0.1,
-            letterSpacing: "0.02em",
-            fontVariantNumeric: "tabular-nums",
-            color: readLit > 0.5 ? accent : p.muted,
-            opacity: readIn,
+            left: cx,
+            top: cy,
+            width: 0,
+            height: 0,
+            transform: `scale(${dialScale})`,
           }}
         >
-          {readout}
+          <Dial
+            t={t}
+            r={r}
+            value={value}
+            minutes={total}
+            accent={accent}
+            p={p}
+            u={u}
+          />
+          <div
+            style={{
+              position: "absolute",
+              left: -r,
+              width: r * 2,
+              top: r * 0.34,
+              textAlign: "center",
+              fontFamily: mono,
+              fontWeight: 400,
+              fontSize: r * 0.1,
+              letterSpacing: "0.02em",
+              fontVariantNumeric: "tabular-nums",
+              color: readLit > 0.5 ? accent : p.muted,
+              opacity: readIn,
+            }}
+          >
+            {readout}
+          </div>
         </div>
-      </div>
-      <div
-        style={{
-          position: "absolute",
-          left: headLeft,
-          width: headW,
-          top: cy,
-          transform: `translateY(calc(-50% + ${headDrift}px))`,
-        }}
-      >
-        <Headline
-          t={t}
-          title={
-            title ??
-            `From idea to video\nin ${minutes} ${minutes === 1 ? "minute" : "minutes"}`
-          }
-          minutes={minutes}
-          size={headSize}
-          p={p}
-        />
-      </div>
-      <Grain opacity={p.grain} />
+        <div
+          style={{
+            position: "absolute",
+            left: headLeft,
+            width: headW,
+            top: cy,
+            transform: `translateY(calc(-50% + ${headDrift}px))`,
+          }}
+        >
+          <Headline
+            t={t}
+            title={
+              title ??
+              `From idea to video\nin ${minutes} ${minutes === 1 ? "minute" : "minutes"}`
+            }
+            minutes={minutes}
+            size={headSize}
+            p={p}
+            fg={fg}
+            fontFamily={fontFamily}
+            fontWeight={fontWeight}
+            stagger={stagger}
+          />
+        </div>
+      </ScaleLayer>
+      {grain ? <Grain opacity={p.grain} /> : null}
     </AbsoluteFill>
   );
 }

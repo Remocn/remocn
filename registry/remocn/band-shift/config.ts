@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const bandShiftConfig: ComponentConfig = {
   componentName: "BandShift",
@@ -33,15 +39,6 @@ export const bandShiftConfig: ComponentConfig = {
       description: "Bands",
       hiddenFromList: false,
     },
-    delay: {
-      type: "number",
-      default: 18,
-      min: 0,
-      max: 54,
-      step: 1,
-      description: "Delay",
-      hiddenFromList: false,
-    },
     stagger: {
       type: "number",
       default: 3,
@@ -49,6 +46,35 @@ export const bandShiftConfig: ComponentConfig = {
       max: 10,
       step: 1,
       description: "Stagger",
+      hiddenFromList: false,
+    },
+    travel: {
+      type: "number",
+      default: 22,
+      min: 8,
+      max: 60,
+      step: 1,
+      description: "Band travel (frames)",
+      hiddenFromList: false,
+    },
+    fontWeight: {
+      type: "number",
+      default: 500,
+      min: 300,
+      max: 800,
+      step: 100,
+      description: "Weight",
+      hiddenFromList: false,
+    },
+    ...sceneControls({ font: "Bricolage Grotesque", grain: true }),
+    // The scene already had `delay` (hold before the shift) with its own default.
+    delay: {
+      type: "number",
+      default: 18,
+      min: 0,
+      max: 54,
+      step: 1,
+      description: "Delay",
       hiddenFromList: false,
     },
     speed: {

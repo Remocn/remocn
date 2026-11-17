@@ -22,8 +22,20 @@ export interface TldrOnTopProps {
   text?: string;
   label?: string;
   lines?: string[];
+  /** Frames the wall of text reads alone before the summary drops in. */
+  read?: number;
+  /** Weight of the label and summary lines. */
+  fontWeight?: number;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the copy. Load it yourself; Rubik by default. */
+  fontFamily?: string;
+  /** Size of the text, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -57,21 +69,31 @@ const CLAMP = {
 
 type Metrics = Record<string, number>;
 
-function measureAll(texts: string[], wall: string): Metrics {
+function measureAll(
+  texts: string[],
+  wall: string,
+  fontFamily: string,
+  weight: number,
+): Metrics {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("tldr-on-top: no 2d context");
-  ctx.font = `${WGHT} 100px "${rubik.fontFamily}"`;
+  ctx.font = `${weight} 100px "${fontFamily}"`;
   const w: Metrics = {};
   for (const s of texts) {
     w[s] = ctx.measureText(s).width / 100 + TRACK * Array.from(s).length;
   }
-  ctx.font = `400 100px "${rubik.fontFamily}"`;
+  ctx.font = `400 100px "${fontFamily}"`;
   w["\u0002wall"] = ctx.measureText(wall).width / 100;
   return w;
 }
 
-function useMetrics(texts: string[], wall: string) {
+function useMetrics(
+  texts: string[],
+  wall: string,
+  fontFamily: string,
+  weight: number,
+) {
   const key = `${texts.join("\u0001")}\u0003${wall}`;
   const [state, setState] = useState<{ key: string; m: Metrics } | null>(null);
   const [handle] = useState(() => delayRender("tldr-on-top: measuring"));
@@ -80,14 +102,17 @@ function useMetrics(texts: string[], wall: string) {
     let live = true;
     Promise.all([
       rubik.waitUntilDone(),
-      document.fonts.load(`${WGHT} 100px "${rubik.fontFamily}"`),
-      document.fonts.load(`400 100px "${rubik.fontFamily}"`),
+      document.fonts.load(`${weight} 100px "${fontFamily}"`),
+      document.fonts.load(`400 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
         const [head, body] = key.split("\u0003");
-        setState({ key, m: measureAll(head.split("\u0001"), body) });
+        setState({
+          key,
+          m: measureAll(head.split("\u0001"), body, fontFamily, weight),
+        });
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -96,7 +121,7 @@ function useMetrics(texts: string[], wall: string) {
     return () => {
       live = false;
     };
-  }, [key, handle]);
+  }, [key, fontFamily, weight, handle]);
   return state && state.key === key ? state.m : null;
 }
 
@@ -127,24 +152,52 @@ function prefixes(text: string): string[] {
   return out;
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function TldrOnTop({
   text = DEFAULT_TEXT,
   label = "TL;DR",
   lines = DEFAULT_LINES,
+  read = 34,
+  fontWeight = WGHT,
   accent,
+  ink,
   background,
+  fontFamily = rubik.fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: TldrOnTopProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, durationInFrames } = useVideoConfig();
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
+  const fg = ink ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
 
   const list = lines.length > 0 ? lines : DEFAULT_LINES;
-  const m = useMetrics([label, ...list.flatMap(prefixes)], text);
+  const m = useMetrics(
+    [label, ...list.flatMap(prefixes)],
+    text,
+    fontFamily,
+    fontWeight,
+  );
 
   if (!m) {
     return (
@@ -193,7 +246,7 @@ export function TldrOnTop({
   const headGap = F * 0.5;
 
   const span = durationInFrames * speed;
-  const READ = 34;
+  const READ = read;
   const STEP = Math.min(30, Math.max(18, (span - READ - 110) / list.length));
   const insertAt = (k: number) => READ + k * STEP;
   const OPEN = 18;
@@ -243,8 +296,8 @@ export function TldrOnTop({
       k === 0 ? (
         <div
           style={{
-            fontFamily: rubik.fontFamily,
-            fontWeight: WGHT,
+            fontFamily,
+            fontWeight,
             fontSize: labelS,
             lineHeight: `${labelS * 1.2}px`,
             letterSpacing: "0.01em",
@@ -260,12 +313,12 @@ export function TldrOnTop({
             key={r}
             style={{
               height: F * LH,
-              fontFamily: rubik.fontFamily,
-              fontWeight: WGHT,
+              fontFamily,
+              fontWeight,
               fontSize: F,
               lineHeight: `${F * LH}px`,
               letterSpacing: `${TRACK}em`,
-              color: c.ink,
+              color: fg,
               whiteSpace: "pre",
             }}
           >
@@ -302,26 +355,28 @@ export function TldrOnTop({
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
-      <div
-        style={{
-          position: "absolute",
-          left: mX,
-          top: wallTop,
-          width: colW,
-          fontFamily: rubik.fontFamily,
-          fontWeight: 400,
-          fontSize: s,
-          lineHeight: `${wallRowH}px`,
-          letterSpacing: "-0.005em",
-          color: c.ink,
-          opacity: wallIn * dim,
-          transform: `translateY(${((1 - wallIn) * s).toFixed(2)}px)`,
-          textWrap: "pretty",
-        }}
-      >
-        {text}
-      </div>
-      {nodes}
+      <ScaleLayer scale={scale}>
+        <div
+          style={{
+            position: "absolute",
+            left: mX,
+            top: wallTop,
+            width: colW,
+            fontFamily,
+            fontWeight: 400,
+            fontSize: s,
+            lineHeight: `${wallRowH}px`,
+            letterSpacing: "-0.005em",
+            color: fg,
+            opacity: wallIn * dim,
+            transform: `translateY(${((1 - wallIn) * s).toFixed(2)}px)`,
+            textWrap: "pretty",
+          }}
+        >
+          {text}
+        </div>
+        {nodes}
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

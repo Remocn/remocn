@@ -1,7 +1,7 @@
 "use client";
 
 import { loadFont } from "@remotion/google-fonts/Manrope";
-import { useId } from "react";
+import { type ReactNode, useId } from "react";
 import {
   AbsoluteFill,
   Easing,
@@ -26,6 +26,22 @@ export interface ChartMorphProps {
   suffix?: string;
   caption?: string;
   accent?: string;
+  /** Text color of the value and the hero label; overrides the theme. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the value and labels. Load it yourself; Manrope by default. */
+  fontFamily?: string;
+  /** Weight of the final value. */
+  fontWeight?: number;
+  /** Frames between bars as they tip up out of the stack. */
+  stagger?: number;
+  /** Size of the chart, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  /** Film grain over the scene. */
+  grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -151,6 +167,22 @@ function bandPath(
   return toPath(spin ? pts.map((q) => rotateAbout(q, center, spin)) : pts);
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 function Grain({ opacity }: { opacity: number }) {
   const id = `g${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   return (
@@ -180,13 +212,25 @@ export function ChartMorph({
   suffix = "k",
   caption,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = sans,
+  fontWeight = 400,
+  stagger = TIP_STAGGER,
+  scale = 1,
+  delay = 0,
+  grain = true,
   theme = "dark",
   speed = 1,
 }: ChartMorphProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height } = useVideoConfig();
   const u = Math.min(width / 1280, height / 720);
   const p = THEMES[theme];
+  const fg = ink ?? p.fg;
+  const stage = background ?? p.bg;
+  // the hollow dots punch out to the stage colour; with no stage, keep the theme's
+  const dotFill = background === "transparent" ? p.bg : stage;
   const gid = `cm${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
 
   const list = data.slice(0, 5).map((d) => ({
@@ -269,7 +313,7 @@ export function ChartMorph({
   const tipK = list.map((_, i) =>
     interpolate(
       t,
-      [TIP_START + i * TIP_STAGGER, TIP_START + i * TIP_STAGGER + TIP_DUR],
+      [TIP_START + i * stagger, TIP_START + i * stagger + TIP_DUR],
       [0, 1],
       { ...CLAMP, easing: EASE_IO },
     ),
@@ -459,208 +503,214 @@ export function ChartMorph({
   const valueText = `${Math.round(last?.value ?? 0)}${suffix}`;
 
   return (
-    <AbsoluteFill style={{ background: p.bg, overflow: "hidden" }}>
-      <AbsoluteFill
-        style={{ transform: `scale(${push})`, transformOrigin: "50% 50%" }}
-      >
-        <svg
-          width={width}
-          height={height}
-          style={{ position: "absolute", inset: 0, opacity: stageIn }}
-          aria-hidden
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill
+          style={{ transform: `scale(${push})`, transformOrigin: "50% 50%" }}
         >
-          <line
-            x1={baseL}
-            x2={lerp(baseL, baseR, baseIn)}
-            y1={yB + 0.5}
-            y2={yB + 0.5}
-            stroke={p.hair}
-            strokeWidth={Math.max(1, u)}
-            opacity={baseIn > 0 ? 1 : 0}
-          />
-          <defs>
-            <linearGradient id={`${gid}-hero`} x1={0} y1={1} x2={1} y2={0}>
-              <stop offset={0} stopColor={p.limb[0]} />
-              <stop offset={0.55 + 0.1 * drift} stopColor={p.limb[1]} />
-              <stop offset={1} stopColor={p.limb[2]} />
-            </linearGradient>
-            <linearGradient
-              id={`${gid}-area`}
-              gradientUnits="userSpaceOnUse"
-              x1={P[0]?.x ?? 0}
-              y1={yB}
-              x2={end?.x ?? width}
-              y2={end?.y ?? 0}
-            >
-              <stop offset={0} stopColor={p.areaStops[0]} stopOpacity={0.2} />
-              <stop
-                offset={0.6}
-                stopColor={p.areaStops[1]}
-                stopOpacity={0.55}
+          <svg
+            width={width}
+            height={height}
+            style={{ position: "absolute", inset: 0, opacity: stageIn }}
+            aria-hidden
+          >
+            <line
+              x1={baseL}
+              x2={lerp(baseL, baseR, baseIn)}
+              y1={yB + 0.5}
+              y2={yB + 0.5}
+              stroke={p.hair}
+              strokeWidth={Math.max(1, u)}
+              opacity={baseIn > 0 ? 1 : 0}
+            />
+            <defs>
+              <linearGradient id={`${gid}-hero`} x1={0} y1={1} x2={1} y2={0}>
+                <stop offset={0} stopColor={p.limb[0]} />
+                <stop offset={0.55 + 0.1 * drift} stopColor={p.limb[1]} />
+                <stop offset={1} stopColor={p.limb[2]} />
+              </linearGradient>
+              <linearGradient
+                id={`${gid}-area`}
+                gradientUnits="userSpaceOnUse"
+                x1={P[0]?.x ?? 0}
+                y1={yB}
+                x2={end?.x ?? width}
+                y2={end?.y ?? 0}
+              >
+                <stop offset={0} stopColor={p.areaStops[0]} stopOpacity={0.2} />
+                <stop
+                  offset={0.6}
+                  stopColor={p.areaStops[1]}
+                  stopOpacity={0.55}
+                />
+                <stop offset={1} stopColor={p.areaStops[2]} stopOpacity={0.9} />
+              </linearGradient>
+              <linearGradient
+                id={`${gid}-fade`}
+                gradientUnits="userSpaceOnUse"
+                x1={0}
+                y1={end?.y ?? 0}
+                x2={0}
+                y2={yB}
+              >
+                <stop offset={0} stopColor="#fff" stopOpacity={1} />
+                <stop offset={1} stopColor="#fff" stopOpacity={0} />
+              </linearGradient>
+              <mask id={`${gid}-mask`}>
+                <rect
+                  width={width}
+                  height={height}
+                  fill={`url(#${gid}-fade)`}
+                />
+              </mask>
+              {shapes.map((s, i) =>
+                s.split ? (
+                  <linearGradient
+                    key={s.key}
+                    id={`${gid}-${i}`}
+                    gradientUnits="userSpaceOnUse"
+                    x1={s.split.x - 0.5}
+                    x2={s.split.x + 0.5}
+                    y1={0}
+                    y2={0}
+                  >
+                    <stop offset="0" stopColor={s.split.left} />
+                    <stop offset="0.5" stopColor={s.split.left} />
+                    <stop offset="0.5" stopColor={s.split.right} />
+                    <stop offset="1" stopColor={s.split.right} />
+                  </linearGradient>
+                ) : null,
+              )}
+            </defs>
+            {areaIn > 0 && n > 1 ? (
+              <path
+                d={`${P.map((q, i) => `${i ? "L" : "M"} ${q.x.toFixed(2)} ${(yB - (yB - q.y) * areaRise).toFixed(2)}`).join(" ")} L ${P[n - 1].x} ${yB} L ${P[0].x} ${yB} Z`}
+                fill={`url(#${gid}-area)`}
+                mask={`url(#${gid}-mask)`}
+                opacity={areaIn * p.area}
               />
-              <stop offset={1} stopColor={p.areaStops[2]} stopOpacity={0.9} />
-            </linearGradient>
-            <linearGradient
-              id={`${gid}-fade`}
-              gradientUnits="userSpaceOnUse"
-              x1={0}
-              y1={end?.y ?? 0}
-              x2={0}
-              y2={yB}
-            >
-              <stop offset={0} stopColor="#fff" stopOpacity={1} />
-              <stop offset={1} stopColor="#fff" stopOpacity={0} />
-            </linearGradient>
-            <mask id={`${gid}-mask`}>
-              <rect width={width} height={height} fill={`url(#${gid}-fade)`} />
-            </mask>
+            ) : null}
             {shapes.map((s, i) =>
-              s.split ? (
-                <linearGradient
+              s.d ? (
+                <path
                   key={s.key}
-                  id={`${gid}-${i}`}
-                  gradientUnits="userSpaceOnUse"
-                  x1={s.split.x - 0.5}
-                  x2={s.split.x + 0.5}
-                  y1={0}
-                  y2={0}
-                >
-                  <stop offset="0" stopColor={s.split.left} />
-                  <stop offset="0.5" stopColor={s.split.left} />
-                  <stop offset="0.5" stopColor={s.split.right} />
-                  <stop offset="1" stopColor={s.split.right} />
-                </linearGradient>
+                  d={s.d}
+                  fill={s.split ? `url(#${gid}-${i})` : s.color}
+                />
               ) : null,
             )}
-          </defs>
-          {areaIn > 0 && n > 1 ? (
-            <path
-              d={`${P.map((q, i) => `${i ? "L" : "M"} ${q.x.toFixed(2)} ${(yB - (yB - q.y) * areaRise).toFixed(2)}`).join(" ")} L ${P[n - 1].x} ${yB} L ${P[0].x} ${yB} Z`}
-              fill={`url(#${gid}-area)`}
-              mask={`url(#${gid}-mask)`}
-              opacity={areaIn * p.area}
-            />
-          ) : null}
-          {shapes.map((s, i) =>
-            s.d ? (
-              <path
-                key={s.key}
-                d={s.d}
-                fill={s.split ? `url(#${gid}-${i})` : s.color}
-              />
-            ) : null,
-          )}
-          {P.slice(0, n - 1).map((q, i) => (
-            <circle
-              key={list[i].label}
-              cx={q.x}
-              cy={q.y}
-              r={(4 + 2 * dotsIn) * u}
-              fill={p.bg}
-              stroke={p.line}
-              strokeWidth={2.5 * u}
-              opacity={dotsIn}
-            />
-          ))}
-          {end ? (
-            <>
+            {P.slice(0, n - 1).map((q, i) => (
               <circle
-                cx={end.x}
-                cy={end.y}
-                r={(10 + 6 * dotsIn) * u}
-                fill="none"
-                stroke={accent}
-                strokeWidth={1.5 * u}
-                opacity={0.7 * dotsIn}
-              />
-              <circle
-                cx={end.x}
-                cy={end.y}
-                r={(5 + 3 * dotsIn) * u}
-                fill={endColor}
+                key={list[i].label}
+                cx={q.x}
+                cy={q.y}
+                r={(4 + 2 * dotsIn) * u}
+                fill={dotFill}
+                stroke={p.line}
+                strokeWidth={2.5 * u}
                 opacity={dotsIn}
               />
-            </>
+            ))}
+            {end ? (
+              <>
+                <circle
+                  cx={end.x}
+                  cy={end.y}
+                  r={(10 + 6 * dotsIn) * u}
+                  fill="none"
+                  stroke={accent}
+                  strokeWidth={1.5 * u}
+                  opacity={0.7 * dotsIn}
+                />
+                <circle
+                  cx={end.x}
+                  cy={end.y}
+                  r={(5 + 3 * dotsIn) * u}
+                  fill={endColor}
+                  opacity={dotsIn}
+                />
+              </>
+            ) : null}
+          </svg>
+
+          {list.map((d, i) => (
+            <div
+              key={d.label}
+              style={{
+                position: "absolute",
+                left: colX[i],
+                top: yB + 18 * u,
+                transform: `translateX(-50%) translateY(${(1 - labelsIn) * 8 * u}px)`,
+                fontFamily,
+                fontWeight: 500,
+                fontSize: 16 * u,
+                letterSpacing: "0.01em",
+                color: i === hl ? fg : p.muted,
+                opacity: labelsIn,
+                whiteSpace: "nowrap",
+              }}
+            >
+              {d.label}
+            </div>
+          ))}
+
+          {end ? (
+            <div
+              style={{
+                position: "absolute",
+                left: end.x + 34 * u,
+                top: end.y,
+                transform: "translateY(-50%)",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "flex-start",
+              }}
+            >
+              <div
+                style={{
+                  fontFamily,
+                  fontWeight,
+                  fontSize: 116 * u,
+                  lineHeight: 0.92,
+                  letterSpacing: "-0.05em",
+                  color: fg,
+                  fontVariantNumeric: "tabular-nums",
+                  whiteSpace: "nowrap",
+                  opacity: labIn,
+                  transform: `translateX(${(1 - labIn) * -18 * u}px)`,
+                  filter:
+                    labIn < 0.99 ? `blur(${(1 - labIn) * 6 * u}px)` : undefined,
+                }}
+              >
+                {valueText}
+              </div>
+              <div
+                style={{
+                  marginTop: 10 * u,
+                  fontFamily,
+                  fontWeight: 400,
+                  fontSize: 21 * u,
+                  letterSpacing: "-0.01em",
+                  color: p.muted,
+                  whiteSpace: "nowrap",
+                  opacity: capIn,
+                  transform: `translateY(${(1 - capIn) * 6 * u}px)`,
+                }}
+              >
+                {endCaption}
+              </div>
+            </div>
           ) : null}
-        </svg>
-
-        {list.map((d, i) => (
-          <div
-            key={d.label}
-            style={{
-              position: "absolute",
-              left: colX[i],
-              top: yB + 18 * u,
-              transform: `translateX(-50%) translateY(${(1 - labelsIn) * 8 * u}px)`,
-              fontFamily: sans,
-              fontWeight: 500,
-              fontSize: 16 * u,
-              letterSpacing: "0.01em",
-              color: i === hl ? p.fg : p.muted,
-              opacity: labelsIn,
-              whiteSpace: "nowrap",
-            }}
-          >
-            {d.label}
-          </div>
-        ))}
-
-        {end ? (
-          <div
-            style={{
-              position: "absolute",
-              left: end.x + 34 * u,
-              top: end.y,
-              transform: "translateY(-50%)",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "flex-start",
-            }}
-          >
-            <div
-              style={{
-                fontFamily: sans,
-                fontWeight: 400,
-                fontSize: 116 * u,
-                lineHeight: 0.92,
-                letterSpacing: "-0.05em",
-                color: p.fg,
-                fontVariantNumeric: "tabular-nums",
-                whiteSpace: "nowrap",
-                opacity: labIn,
-                transform: `translateX(${(1 - labIn) * -18 * u}px)`,
-                filter:
-                  labIn < 0.99 ? `blur(${(1 - labIn) * 6 * u}px)` : undefined,
-              }}
-            >
-              {valueText}
-            </div>
-            <div
-              style={{
-                marginTop: 10 * u,
-                fontFamily: sans,
-                fontWeight: 400,
-                fontSize: 21 * u,
-                letterSpacing: "-0.01em",
-                color: p.muted,
-                whiteSpace: "nowrap",
-                opacity: capIn,
-                transform: `translateY(${(1 - capIn) * 6 * u}px)`,
-              }}
-            >
-              {endCaption}
-            </div>
-          </div>
-        ) : null}
-      </AbsoluteFill>
+        </AbsoluteFill>
+      </ScaleLayer>
 
       <AbsoluteFill
         style={{
-          background: `radial-gradient(ellipse 85% 85% at 50% 50%, transparent 62%, ${p.bg} 100%)`,
+          background: `radial-gradient(ellipse 85% 85% at 50% 50%, transparent 62%, ${stage} 100%)`,
           opacity: 0.5,
         }}
       />
-      <Grain opacity={p.grain} />
+      {grain ? <Grain opacity={p.grain} /> : null}
     </AbsoluteFill>
   );
 }

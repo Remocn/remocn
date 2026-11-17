@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const pathSearchConfig: ComponentConfig = {
   componentName: "PathSearch",
@@ -12,11 +18,6 @@ export const pathSearchConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     startLabel: {
       type: "text-content",
@@ -46,6 +47,30 @@ export const pathSearchConfig: ComponentConfig = {
       description: "Rows",
       hiddenFromList: false,
     },
+    floodStep: {
+      type: "number",
+      default: 1.45,
+      min: 0.25,
+      max: 4,
+      step: 0.05,
+      description: "Flood step (frames)",
+      hiddenFromList: false,
+    },
+    trace: {
+      type: "number",
+      default: 32,
+      min: 8,
+      max: 90,
+      step: 1,
+      description: "Route draw (frames)",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ grain: true }),
     speed: {
       type: "number",
       default: 1,

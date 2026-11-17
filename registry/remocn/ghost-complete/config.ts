@@ -1,4 +1,11 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const ghostCompleteConfig: ComponentConfig = {
   componentName: "GhostComplete",
@@ -13,11 +20,6 @@ export const ghostCompleteConfig: ComponentConfig = {
       },
       description: "Theme",
     },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
-    },
     title: {
       type: "text-content",
       default: "Launch notes",
@@ -27,6 +29,16 @@ export const ghostCompleteConfig: ComponentConfig = {
       type: "text-content",
       default: "Ship the",
       description: "Typed",
+    },
+    keyLabel: {
+      type: "text-content",
+      default: "Tab",
+      description: "Key label",
+    },
+    hintLabel: {
+      type: "text-content",
+      default: "to accept",
+      description: "Hint label",
     },
     keepLastFill: {
       type: "boolean",
@@ -38,6 +50,17 @@ export const ghostCompleteConfig: ComponentConfig = {
       default: true,
       description: "Show logo",
     },
+    hold: {
+      type: "number",
+      default: 16,
+      min: 0,
+      max: 48,
+      step: 1,
+      description: "Ghost hold (frames)",
+      hiddenFromList: false,
+    },
+    ground: groundControl(),
+    ...sceneControls({ font: "Geist" }),
     speed: {
       type: "number",
       default: 1,

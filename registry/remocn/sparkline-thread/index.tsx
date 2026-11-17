@@ -2,6 +2,7 @@
 
 import { loadFont as loadDisplay } from "@remotion/google-fonts/Geist";
 import { loadFont as loadMono } from "@remotion/google-fonts/GeistMono";
+import type React from "react";
 import { useId } from "react";
 import {
   AbsoluteFill,
@@ -26,6 +27,20 @@ export interface SparklineThreadProps {
   metric?: string;
   label?: string;
   accent?: string;
+  /** Color of the metric, the thread and the dots; overrides the theme. */
+  ink?: string;
+  background?: string;
+  /** Typeface for the metric. Load it yourself; Geist by default. */
+  fontFamily?: string;
+  /** Frames between data points as they pop in. */
+  stagger?: number;
+  /** Frames the thread takes to run through the points; the rest of the beat follows it. */
+  drawDuration?: number;
+  /** Size of the chart and metric, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  grain?: boolean;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -170,18 +185,51 @@ function splitMetric(metric: string) {
 
 const lerp = (a: number, b: number, k: number) => a + (b - a) * k;
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function SparklineThread({
   values = DEFAULT_VALUES,
   metric = "+212%",
   label = "weekly renders",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = display,
+  stagger = POP_STAGGER,
+  drawDuration = THREAD[1] - THREAD[0],
+  scale = 1,
+  delay = 0,
+  grain = true,
   speed = 1,
   theme = "dark",
 }: SparklineThreadProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, fps } = useVideoConfig();
   const u = height / 720;
   const p = THEMES[theme];
+  const fg = ink ?? p.fg;
+  const stage = background ?? p.bg;
+  const solid = background !== "transparent";
+  const hole = background && solid ? background : p.bg;
+  const stretch = drawDuration / (THREAD[1] - THREAD[0]);
+  const at = (f: number) => THREAD[0] + (f - THREAD[0]) * stretch;
+  const thread = [THREAD[0], at(THREAD[1])] as const;
+  const thicken = [at(THICKEN[0]), at(THICKEN[1])] as const;
+  const bloomAt = at(BLOOM);
   const id = useId().replace(/[^a-zA-Z0-9_-]/g, "");
 
   const L = width * 0.07;
@@ -203,43 +251,43 @@ export function SparklineThread({
   const curve = monotone(pts);
   const last = pts[pts.length - 1];
 
-  const threadX = interpolate(t, THREAD, [L, R], { ...CLAMP, easing: EASE_IO });
-  const thickX = interpolate(t, THICKEN, [L, R], { ...CLAMP, easing: EASE_IO });
+  const threadX = interpolate(t, thread, [L, R], { ...CLAMP, easing: EASE_IO });
+  const thickX = interpolate(t, thicken, [L, R], { ...CLAMP, easing: EASE_IO });
   const threadPts = cut(curve, threadX);
   const thickPts = cut(curve, thickX);
   const head = threadPts[threadPts.length - 1] ?? pts[0];
   const headO =
-    interpolate(t, [THREAD[0], THREAD[0] + 4], [0, 1], CLAMP) *
-    interpolate(t, [THREAD[1] - 4, THREAD[1] + 2], [1, 0], CLAMP);
+    interpolate(t, [thread[0], thread[0] + 4], [0, 1], CLAMP) *
+    interpolate(t, [thread[1] - 4, thread[1] + 2], [1, 0], CLAMP);
 
   const bloom = spring({
-    frame: t - BLOOM,
+    frame: t - bloomAt,
     fps,
     config: { damping: 14, stiffness: 160, mass: 0.7 },
   });
-  const ring = interpolate(t, [BLOOM, BLOOM + 28], [0, 1], {
+  const ring = interpolate(t, [bloomAt, bloomAt + 28], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const leader = interpolate(t, [BLOOM + 2, BLOOM + 16], [0, 1], {
+  const leader = interpolate(t, [bloomAt + 2, bloomAt + 16], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const numIn = interpolate(t, [BLOOM + 6, BLOOM + 24], [0, 1], {
+  const numIn = interpolate(t, [bloomAt + 6, bloomAt + 24], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const count = interpolate(t, [BLOOM + 6, BLOOM + 30], [0, 1], {
+  const count = interpolate(t, [bloomAt + 6, bloomAt + 30], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const labIn = interpolate(t, [BLOOM + 16, BLOOM + 34], [0, 1], {
+  const labIn = interpolate(t, [bloomAt + 16, bloomAt + 34], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
   const fillIn = interpolate(
     t,
-    [THICKEN[0] + 6, THICKEN[1] + 10],
+    [thicken[0] + 6, thicken[1] + 10],
     [0, 1],
     CLAMP,
   );
@@ -261,264 +309,272 @@ export function SparklineThread({
       : "";
 
   return (
-    <AbsoluteFill style={{ background: p.bg, overflow: "hidden" }}>
-      <AbsoluteFill
-        style={{
-          background: `radial-gradient(circle ${height * 0.55}px at ${t < BLOOM ? head[0] : last[0]}px ${t < BLOOM ? head[1] : last[1]}px, ${p.wash}, transparent 100%)`,
-        }}
-      />
-      <svg
-        width={width}
-        height={height}
-        style={{ position: "absolute", inset: 0 }}
-        aria-hidden
-      >
-        <defs>
-          <linearGradient
-            id={`${id}f`}
-            gradientUnits="userSpaceOnUse"
-            x1={0}
-            y1={T}
-            x2={0}
-            y2={base}
-          >
-            {p.area.map(([c, o], i) => (
-              <stop
-                key={`${c}${i}`}
-                offset={i / (p.area.length - 1)}
-                stopColor={c}
-                stopOpacity={o}
-              />
-            ))}
-          </linearGradient>
-          <linearGradient
-            id={`${id}s`}
-            gradientUnits="userSpaceOnUse"
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill
+          style={{
+            background: `radial-gradient(circle ${height * 0.55}px at ${t < bloomAt ? head[0] : last[0]}px ${t < bloomAt ? head[1] : last[1]}px, ${p.wash}, transparent 100%)`,
+          }}
+        />
+        <svg
+          width={width}
+          height={height}
+          style={{ position: "absolute", inset: 0 }}
+          aria-hidden
+        >
+          <defs>
+            <linearGradient
+              id={`${id}f`}
+              gradientUnits="userSpaceOnUse"
+              x1={0}
+              y1={T}
+              x2={0}
+              y2={base}
+            >
+              {p.area.map(([c, o], i) => (
+                <stop
+                  key={`${c}${i}`}
+                  offset={i / (p.area.length - 1)}
+                  stopColor={c}
+                  stopOpacity={o}
+                />
+              ))}
+            </linearGradient>
+            <linearGradient
+              id={`${id}s`}
+              gradientUnits="userSpaceOnUse"
+              x1={L}
+              y1={B}
+              x2={R}
+              y2={T}
+            >
+              {p.stroke.map((c, i) => (
+                <stop
+                  key={`${c}${i}`}
+                  offset={i / (p.stroke.length - 1)}
+                  stopColor={c}
+                />
+              ))}
+            </linearGradient>
+            <radialGradient id={`${id}h`}>
+              <stop offset="0" stopColor={p.stroke[1]} stopOpacity={0.32} />
+              <stop offset="1" stopColor={p.stroke[1]} stopOpacity={0} />
+            </radialGradient>
+          </defs>
+
+          <line
             x1={L}
-            y1={B}
-            x2={R}
-            y2={T}
-          >
-            {p.stroke.map((c, i) => (
-              <stop
-                key={`${c}${i}`}
-                offset={i / (p.stroke.length - 1)}
-                stopColor={c}
+            y1={base}
+            x2={interpolate(t, [0, 26], [lerp(L, R, 0.3), R], {
+              ...CLAMP,
+              easing: EASE_OUT,
+            })}
+            y2={base}
+            stroke={p.axis}
+            strokeWidth={Math.max(1, u)}
+          />
+          {pts.map(([x], i) => {
+            const a = interpolate(
+              t,
+              [POP + i * stagger, POP + i * stagger + 8],
+              [0, 1],
+              CLAMP,
+            );
+            return (
+              <line
+                key={`tick-${x}`}
+                x1={x}
+                y1={base}
+                x2={x}
+                y2={base + 7 * u}
+                stroke={p.axis}
+                strokeWidth={Math.max(1, u)}
+                opacity={a}
               />
-            ))}
-          </linearGradient>
-          <radialGradient id={`${id}h`}>
-            <stop offset="0" stopColor={p.stroke[1]} stopOpacity={0.32} />
-            <stop offset="1" stopColor={p.stroke[1]} stopOpacity={0} />
-          </radialGradient>
-        </defs>
-
-        <line
-          x1={L}
-          y1={base}
-          x2={interpolate(t, [0, 26], [lerp(L, R, 0.3), R], {
-            ...CLAMP,
-            easing: EASE_OUT,
+            );
           })}
-          y2={base}
-          stroke={p.axis}
-          strokeWidth={Math.max(1, u)}
-        />
-        {pts.map(([x], i) => {
-          const a = interpolate(
-            t,
-            [POP + i * POP_STAGGER, POP + i * POP_STAGGER + 8],
-            [0, 1],
-            CLAMP,
-          );
-          return (
-            <line
-              key={`tick-${x}`}
-              x1={x}
-              y1={base}
-              x2={x}
-              y2={base + 7 * u}
-              stroke={p.axis}
-              strokeWidth={Math.max(1, u)}
-              opacity={a}
-            />
-          );
-        })}
 
-        {fillD && <path d={fillD} fill={`url(#${id}f)`} opacity={fillIn} />}
+          {fillD && <path d={fillD} fill={`url(#${id}f)`} opacity={fillIn} />}
 
-        {threadPts.length > 1 && (
-          <path
-            d={toD(threadPts)}
-            fill="none"
-            stroke={p.fg}
-            strokeOpacity={p.thread}
-            strokeWidth={1.3 * u}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        )}
-        {thickPts.length > 1 && (
-          <path
-            d={toD(thickPts)}
-            fill="none"
-            stroke={`url(#${id}s)`}
-            strokeWidth={3.6 * u}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        )}
-
-        {pts.map(([x, y], i) => {
-          const isLast = i === pts.length - 1;
-          const pop = spring({
-            frame: t - POP - i * POP_STAGGER,
-            fps,
-            config: { damping: 12, stiffness: 200, mass: 0.6 },
-          });
-          const o = interpolate(
-            t,
-            [POP + i * POP_STAGGER, POP + i * POP_STAGGER + 5],
-            [0, 1],
-            CLAMP,
-          );
-          const threaded = interpolate(
-            threadX - x,
-            [0, 2 * u, 40 * u],
-            [0, 1, 0],
-            CLAMP,
-          );
-          const absorbed =
-            isLast || t < THICKEN[0]
-              ? 0
-              : interpolate(thickX - x, [-6 * u, 10 * u], [0, 1], CLAMP);
-          const r =
-            4 * u * (0.5 + 0.5 * pop) * (1 + 0.45 * threaded) * (1 - absorbed);
-          if (isLast && t >= BLOOM) return null;
-          return (
-            <circle
-              key={`dot-${x}`}
-              cx={x}
-              cy={y}
-              r={Math.max(0, r)}
-              fill={absorbed > 0 ? p.stroke[1] : p.fg}
-              opacity={o}
-            />
-          );
-        })}
-
-        <circle
-          cx={head[0]}
-          cy={head[1]}
-          r={16 * u}
-          fill={`url(#${id}h)`}
-          opacity={headO}
-        />
-        <circle
-          cx={head[0]}
-          cy={head[1]}
-          r={2.6 * u}
-          fill={p.fg}
-          opacity={headO}
-        />
-
-        {t >= BLOOM && (
-          <g>
-            <circle
-              cx={last[0]}
-              cy={last[1]}
-              r={30 * u}
-              fill={`url(#${id}h)`}
-              opacity={bloom}
-            />
-            <circle
-              cx={last[0]}
-              cy={last[1]}
-              r={lerp(8, 52, ring) * u}
+          {threadPts.length > 1 && (
+            <path
+              d={toD(threadPts)}
               fill="none"
-              stroke={accent}
-              strokeWidth={1.4 * u}
-              opacity={(1 - ring) * 0.75}
-            />
-            <line
-              x1={last[0] + 14 * u}
-              y1={last[1]}
-              x2={lerp(last[0] + 14 * u, metricX - 18 * u, leader)}
-              y2={last[1]}
-              stroke={p.fg}
-              strokeOpacity={0.3}
-              strokeWidth={Math.max(1, u)}
-              strokeDasharray={`${2 * u} ${5 * u}`}
+              stroke={fg}
+              strokeOpacity={p.thread}
+              strokeWidth={1.3 * u}
               strokeLinecap="round"
+              strokeLinejoin="round"
             />
-            <circle
-              cx={last[0]}
-              cy={last[1]}
-              r={lerp(4, 8, bloom) * u}
-              fill={p.bg}
-              stroke={p.stroke[2]}
-              strokeWidth={3 * u}
+          )}
+          {thickPts.length > 1 && (
+            <path
+              d={toD(thickPts)}
+              fill="none"
+              stroke={`url(#${id}s)`}
+              strokeWidth={3.6 * u}
+              strokeLinecap="round"
+              strokeLinejoin="round"
             />
-            <circle
-              cx={last[0]}
-              cy={last[1]}
-              r={lerp(0, 3, bloom) * u}
-              fill={p.stroke[2]}
-            />
-          </g>
-        )}
-      </svg>
+          )}
 
-      <div
-        style={{
-          position: "absolute",
-          left: metricX,
-          top: last[1] - numSize * 0.52,
-          opacity: numIn,
-          transform: `translateX(${(1 - numIn) * -22 * u}px)`,
-        }}
-      >
+          {pts.map(([x, y], i) => {
+            const isLast = i === pts.length - 1;
+            const pop = spring({
+              frame: t - POP - i * stagger,
+              fps,
+              config: { damping: 12, stiffness: 200, mass: 0.6 },
+            });
+            const o = interpolate(
+              t,
+              [POP + i * stagger, POP + i * stagger + 5],
+              [0, 1],
+              CLAMP,
+            );
+            const threaded = interpolate(
+              threadX - x,
+              [0, 2 * u, 40 * u],
+              [0, 1, 0],
+              CLAMP,
+            );
+            const absorbed =
+              isLast || t < thicken[0]
+                ? 0
+                : interpolate(thickX - x, [-6 * u, 10 * u], [0, 1], CLAMP);
+            const r =
+              4 *
+              u *
+              (0.5 + 0.5 * pop) *
+              (1 + 0.45 * threaded) *
+              (1 - absorbed);
+            if (isLast && t >= bloomAt) return null;
+            return (
+              <circle
+                key={`dot-${x}`}
+                cx={x}
+                cy={y}
+                r={Math.max(0, r)}
+                fill={absorbed > 0 ? p.stroke[1] : fg}
+                opacity={o}
+              />
+            );
+          })}
+
+          <circle
+            cx={head[0]}
+            cy={head[1]}
+            r={16 * u}
+            fill={`url(#${id}h)`}
+            opacity={headO}
+          />
+          <circle
+            cx={head[0]}
+            cy={head[1]}
+            r={2.6 * u}
+            fill={fg}
+            opacity={headO}
+          />
+
+          {t >= bloomAt && (
+            <g>
+              <circle
+                cx={last[0]}
+                cy={last[1]}
+                r={30 * u}
+                fill={`url(#${id}h)`}
+                opacity={bloom}
+              />
+              <circle
+                cx={last[0]}
+                cy={last[1]}
+                r={lerp(8, 52, ring) * u}
+                fill="none"
+                stroke={accent}
+                strokeWidth={1.4 * u}
+                opacity={(1 - ring) * 0.75}
+              />
+              <line
+                x1={last[0] + 14 * u}
+                y1={last[1]}
+                x2={lerp(last[0] + 14 * u, metricX - 18 * u, leader)}
+                y2={last[1]}
+                stroke={fg}
+                strokeOpacity={0.3}
+                strokeWidth={Math.max(1, u)}
+                strokeDasharray={`${2 * u} ${5 * u}`}
+                strokeLinecap="round"
+              />
+              <circle
+                cx={last[0]}
+                cy={last[1]}
+                r={lerp(4, 8, bloom) * u}
+                fill={hole}
+                stroke={p.stroke[2]}
+                strokeWidth={3 * u}
+              />
+              <circle
+                cx={last[0]}
+                cy={last[1]}
+                r={lerp(0, 3, bloom) * u}
+                fill={p.stroke[2]}
+              />
+            </g>
+          )}
+        </svg>
+
         <div
           style={{
-            fontFamily: display,
-            fontWeight: 400,
-            fontSize: numSize,
-            lineHeight: 1,
-            letterSpacing: "-0.05em",
-            color: p.fg,
-            fontVariantNumeric: "tabular-nums",
-            whiteSpace: "nowrap",
+            position: "absolute",
+            left: metricX,
+            top: last[1] - numSize * 0.52,
+            opacity: numIn,
+            transform: `translateX(${(1 - numIn) * -22 * u}px)`,
           }}
         >
-          {shown}
+          <div
+            style={{
+              fontFamily,
+              fontWeight: 400,
+              fontSize: numSize,
+              lineHeight: 1,
+              letterSpacing: "-0.05em",
+              color: fg,
+              fontVariantNumeric: "tabular-nums",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {shown}
+          </div>
+          <div
+            style={{
+              marginTop: 18 * u,
+              marginLeft: 6 * u,
+              fontFamily: mono,
+              fontWeight: 400,
+              fontSize: 18 * u,
+              letterSpacing: "0.08em",
+              textTransform: "uppercase",
+              color: p.muted,
+              opacity: labIn,
+              transform: `translateY(${(1 - labIn) * 8 * u}px)`,
+              whiteSpace: "nowrap",
+            }}
+          >
+            {label}
+          </div>
         </div>
-        <div
-          style={{
-            marginTop: 18 * u,
-            marginLeft: 6 * u,
-            fontFamily: mono,
-            fontWeight: 400,
-            fontSize: 18 * u,
-            letterSpacing: "0.08em",
-            textTransform: "uppercase",
-            color: p.muted,
-            opacity: labIn,
-            transform: `translateY(${(1 - labIn) * 8 * u}px)`,
-            whiteSpace: "nowrap",
-          }}
-        >
-          {label}
-        </div>
-      </div>
+      </ScaleLayer>
 
-      <AbsoluteFill
-        style={{
-          background: `radial-gradient(ellipse 80% 80% at 50% 50%, transparent 60%, ${p.bg} 100%)`,
-          opacity: 0.6,
-          pointerEvents: "none",
-        }}
-      />
-      <Grain opacity={p.grain} />
+      {solid ? (
+        <AbsoluteFill
+          style={{
+            background: `radial-gradient(ellipse 80% 80% at 50% 50%, transparent 60%, ${stage} 100%)`,
+            opacity: 0.6,
+            pointerEvents: "none",
+          }}
+        />
+      ) : null}
+      {grain ? <Grain opacity={p.grain} /> : null}
     </AbsoluteFill>
   );
 }

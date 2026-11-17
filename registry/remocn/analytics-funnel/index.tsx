@@ -14,7 +14,7 @@ import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
 
-const { fontFamily } = loadFont("normal", {
+const { fontFamily: geist } = loadFont("normal", {
   weights: ["300", "400"],
   subsets: ["latin"],
 });
@@ -38,8 +38,24 @@ export interface AnalyticsFunnelProps {
   tooltipStep?: number;
   breakdown?: FunnelBreakdownRow[];
   dateRange?: string;
+  /** Label above the total conversion figure in landscape. */
+  totalLabel?: string;
+  /** Legend label of the chart before the variant is switched on. */
+  allUsersLabel?: string;
+  /** Legend label of the dashed control line. */
+  controlLabel?: string;
   theme?: "light" | "dark";
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Geist by default. */
+  fontFamily?: string;
+  /** Size of the dashboard, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
@@ -228,6 +244,22 @@ const T = {
   end: 165,
 };
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function AnalyticsFunnel({
   steps = DEFAULT_STEPS,
   title = "Activation funnel",
@@ -235,15 +267,24 @@ export function AnalyticsFunnel({
   tooltipStep = 2,
   breakdown = DEFAULT_BREAKDOWN,
   dateRange = "Last 30 days",
+  totalLabel = "Total conversion",
+  allUsersLabel = "All users",
+  controlLabel = "Control",
   theme = "light",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = geist,
+  scale = 1,
+  delay = 0,
   speed = 1,
   ground,
   groundParams,
 }: AnalyticsFunnelProps) {
-  const frame = useCurrentFrame() * speed;
+  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
-  const pal = palette(theme);
+  const themePal = palette(theme);
+  const pal: Pal = ink ? { ...themePal, text: ink, stageText: ink } : themePal;
   const tall = H > W * 1.2;
   const D = tall ? { w: 800, h: 1422 } : { w: 1280, h: 720 };
   const s = Math.min(W / D.w, H / D.h);
@@ -328,7 +369,7 @@ export function AnalyticsFunnel({
     (1 - tween(frame, T.end - 20, T.end - 10, exitEase));
 
   const tint = withAlpha(accent, pal.dark ? 0.16 : 0.1);
-  const ink = (t: number) => (t > 0.5 ? pal.text : pal.muted);
+  const labelInk = (t: number) => (t > 0.5 ? pal.text : pal.muted);
 
   const stat = (label: string, val: React.ReactNode, i: number) => {
     const a = tween(frame, 12 + i * 3, 24 + i * 3);
@@ -397,538 +438,559 @@ export function AnalyticsFunnel({
         fontWeight: 400,
         overflow: "hidden",
         WebkitFontSmoothing: "antialiased",
-        background: pal.dark ? "#03050C" : "#EEF0F6",
+        background:
+          background === undefined
+            ? pal.dark
+              ? "#03050C"
+              : "#EEF0F6"
+            : background === "transparent"
+              ? undefined
+              : background,
       }}
     >
-      <GshGround
-        preset={ground ?? (pal.dark ? "film-blue" : "glasswork")}
-        params={groundParams}
-        timeOffset={pal.dark ? 4 : 3}
-        timeScale={0.3}
-      />
-      <AbsoluteFill style={{ background: pal.scrim }} />
-      <div
-        style={{
-          position: "absolute",
-          left: (W - D.w * s) / 2,
-          top: (H - D.h * s) / 2,
-          width: D.w,
-          height: D.h,
-          transformOrigin: "0 0",
-          transform: `scale(${s})`,
-        }}
-      >
+      {background === undefined ? (
+        <>
+          <GshGround
+            preset={ground ?? (pal.dark ? "film-blue" : "glasswork")}
+            params={groundParams}
+            timeOffset={pal.dark ? 4 : 3}
+            timeScale={0.3}
+          />
+          <AbsoluteFill style={{ background: pal.scrim }} />
+        </>
+      ) : null}
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            inset: 0,
-            transformOrigin: `${WIN.x + tipX}px ${WIN.y + tipY + 120}px`,
-            transform: `scale(${1 + 0.035 * cam})`,
+            left: (W - D.w * s) / 2,
+            top: (H - D.h * s) / 2,
+            width: D.w,
+            height: D.h,
+            transformOrigin: "0 0",
+            transform: `scale(${s})`,
           }}
         >
-          {tall ? (
-            <div style={{ position: "absolute", left: 48, top: 92, right: 48 }}>
-              <div
-                style={{
-                  fontSize: 24,
-                  color: pal.stageMuted,
-                  opacity: tween(frame, 4, 16),
-                }}
-              >
-                Paid conversion · {dateRange.toLowerCase()}
-              </div>
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 22,
-                  marginTop: 10,
-                  overflow: "hidden",
-                }}
-              >
-                <span
-                  style={{
-                    fontSize: 132,
-                    fontWeight: 300,
-                    letterSpacing: "-0.045em",
-                    lineHeight: 1.05,
-                    color: pal.stageText,
-                    fontVariantNumeric: "tabular-nums",
-                    transform: `translateY(${(1 - tween(frame, 6, 20)) * 100}%)`,
-                  }}
-                >
-                  {pct(totalNow)}
-                </span>
-                {badgeEl(30)}
-              </div>
-            </div>
-          ) : null}
           <div
             style={{
               position: "absolute",
-              left: WIN.x,
-              top: WIN.y,
-              width: WIN.w,
-              height: WIN.h,
-              opacity: winA,
-              transform: `translateY(${(1 - win) * 48}px) scale(${0.97 + 0.03 * win})`,
-              transformOrigin: "50% 100%",
+              inset: 0,
+              transformOrigin: `${WIN.x + tipX}px ${WIN.y + tipY + 120}px`,
+              transform: `scale(${1 + 0.035 * cam})`,
             }}
           >
+            {tall ? (
+              <div
+                style={{ position: "absolute", left: 48, top: 92, right: 48 }}
+              >
+                <div
+                  style={{
+                    fontSize: 24,
+                    color: pal.stageMuted,
+                    opacity: tween(frame, 4, 16),
+                  }}
+                >
+                  Paid conversion · {dateRange.toLowerCase()}
+                </div>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 22,
+                    marginTop: 10,
+                    overflow: "hidden",
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: 132,
+                      fontWeight: 300,
+                      letterSpacing: "-0.045em",
+                      lineHeight: 1.05,
+                      color: pal.stageText,
+                      fontVariantNumeric: "tabular-nums",
+                      transform: `translateY(${(1 - tween(frame, 6, 20)) * 100}%)`,
+                    }}
+                  >
+                    {pct(totalNow)}
+                  </span>
+                  {badgeEl(30)}
+                </div>
+              </div>
+            ) : null}
             <div
               style={{
                 position: "absolute",
-                inset: 0,
-                borderRadius: 16,
-                background: pal.win,
-                boxShadow: pal.winShadow,
-                overflow: "hidden",
+                left: WIN.x,
+                top: WIN.y,
+                width: WIN.w,
+                height: WIN.h,
+                opacity: winA,
+                transform: `translateY(${(1 - win) * 48}px) scale(${0.97 + 0.03 * win})`,
+                transformOrigin: "50% 100%",
               }}
             >
               <div
                 style={{
-                  height: HEAD_H,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 14,
-                  padding: `0 ${PAD}px`,
-                  borderBottom: `1px solid ${pal.line}`,
+                  position: "absolute",
+                  inset: 0,
+                  borderRadius: 16,
+                  background: pal.win,
+                  boxShadow: pal.winShadow,
+                  overflow: "hidden",
                 }}
               >
-                <span
-                  style={{
-                    fontSize: 20,
-                    color: pal.text,
-                    letterSpacing: "-0.01em",
-                  }}
-                >
-                  {tall ? "Funnel" : title}
-                </span>
-                <span
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 6,
-                    fontSize: 16,
-                    color: pal.muted,
-                  }}
-                >
-                  <Icon name="calendar" color={pal.faint} />
-                  {dateRange}
-                </span>
-                <div style={{ flex: 1 }} />
                 <div
                   style={{
-                    width: TOG_W,
-                    height: 40,
-                    boxSizing: "border-box",
+                    height: HEAD_H,
                     display: "flex",
                     alignItems: "center",
-                    gap: 10,
-                    padding: "0 14px",
-                    borderRadius: 10,
-                    background: on
-                      ? withAlpha(accent, pal.dark ? 0.14 : 0.07)
-                      : "transparent",
-                    boxShadow: `inset 0 0 0 1px ${on ? withAlpha(accent, 0.4) : pal.line}`,
-                    transform: `scale(${1 - 0.04 * clamp(press, 0, 1.2)})`,
+                    gap: 14,
+                    padding: `0 ${PAD}px`,
+                    borderBottom: `1px solid ${pal.line}`,
                   }}
                 >
+                  <span
+                    style={{
+                      fontSize: 20,
+                      color: pal.text,
+                      letterSpacing: "-0.01em",
+                    }}
+                  >
+                    {tall ? "Funnel" : title}
+                  </span>
+                  <span
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
+                      fontSize: 16,
+                      color: pal.muted,
+                    }}
+                  >
+                    <Icon name="calendar" color={pal.faint} />
+                    {dateRange}
+                  </span>
+                  <div style={{ flex: 1 }} />
                   <div
                     style={{
-                      width: 36,
-                      height: 22,
-                      borderRadius: 99,
-                      position: "relative",
-                      flexShrink: 0,
-                      background: on ? accent : pal.knobOff,
+                      width: TOG_W,
+                      height: 40,
+                      boxSizing: "border-box",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 10,
+                      padding: "0 14px",
+                      borderRadius: 10,
+                      background: on
+                        ? withAlpha(accent, pal.dark ? 0.14 : 0.07)
+                        : "transparent",
+                      boxShadow: `inset 0 0 0 1px ${on ? withAlpha(accent, 0.4) : pal.line}`,
+                      transform: `scale(${1 - 0.04 * clamp(press, 0, 1.2)})`,
                     }}
                   >
                     <div
                       style={{
-                        position: "absolute",
-                        top: 3,
-                        left: 3 + 14 * toggleOn,
-                        width: 16,
-                        height: 16,
+                        width: 36,
+                        height: 22,
                         borderRadius: 99,
-                        background: "#fff",
-                        boxShadow: "0 1px 2px rgba(0,0,0,0.25)",
+                        position: "relative",
+                        flexShrink: 0,
+                        background: on ? accent : pal.knobOff,
                       }}
-                    />
+                    >
+                      <div
+                        style={{
+                          position: "absolute",
+                          top: 3,
+                          left: 3 + 14 * toggleOn,
+                          width: 16,
+                          height: 16,
+                          borderRadius: 99,
+                          background: "#fff",
+                          boxShadow: "0 1px 2px rgba(0,0,0,0.25)",
+                        }}
+                      />
+                    </div>
+                    <span style={{ fontSize: 16, color: pal.text }}>
+                      {variantLabel}
+                    </span>
                   </div>
-                  <span style={{ fontSize: 16, color: pal.text }}>
-                    {variantLabel}
-                  </span>
                 </div>
-              </div>
 
-              {!tall ? (
+                {!tall ? (
+                  <div
+                    style={{
+                      position: "absolute",
+                      left: PAD,
+                      right: PAD,
+                      top: KPI_Y,
+                      display: "flex",
+                      alignItems: "flex-end",
+                      gap: 24,
+                    }}
+                  >
+                    <div>
+                      <div style={{ fontSize: 16, color: pal.muted }}>
+                        {totalLabel}
+                      </div>
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 14,
+                          marginTop: 2,
+                          overflow: "hidden",
+                        }}
+                      >
+                        <span
+                          style={{
+                            fontSize: 54,
+                            fontWeight: 300,
+                            letterSpacing: "-0.04em",
+                            color: pal.text,
+                            fontVariantNumeric: "tabular-nums",
+                            lineHeight: 1.1,
+                            transform: `translateY(${(1 - tween(frame, 8, 22)) * 100}%)`,
+                          }}
+                        >
+                          {pct(totalNow)}
+                        </span>
+                        {badgeEl(18)}
+                      </div>
+                    </div>
+                    <div style={{ flex: 1 }} />
+                    {stat("Visits", fmt(value(0)), 0)}
+                    {stat("Paying users", fmt(value(n - 1)), 1)}
+                    {stat(
+                      "Time to pay",
+                      morph[n - 1] > 0.5 ? "1d 19h" : "2d 6h",
+                      2,
+                    )}
+                  </div>
+                ) : (
+                  <div
+                    style={{
+                      position: "absolute",
+                      left: PAD,
+                      right: PAD,
+                      top: HEAD_H + 20,
+                      display: "flex",
+                      gap: 24,
+                    }}
+                  >
+                    {stat("Visits", fmt(value(0)), 0)}
+                    {stat("Paying users", fmt(value(n - 1)), 1)}
+                    {stat(
+                      "Time to pay",
+                      morph[n - 1] > 0.5 ? "1d 19h" : "2d 6h",
+                      2,
+                    )}
+                  </div>
+                )}
+
                 <div
                   style={{
                     position: "absolute",
                     left: PAD,
                     right: PAD,
-                    top: KPI_Y,
+                    top: CT,
+                    height: 1,
+                    background: pal.line,
+                  }}
+                />
+                <div
+                  style={{
+                    position: "absolute",
+                    left: PAD,
+                    right: PAD,
+                    top: CT + 18,
                     display: "flex",
-                    alignItems: "flex-end",
-                    gap: 24,
+                    alignItems: "center",
+                    gap: 22,
+                    justifyContent: "flex-end",
+                    fontSize: 16,
+                    color: pal.muted,
                   }}
                 >
-                  <div>
-                    <div style={{ fontSize: 16, color: pal.muted }}>
-                      Total conversion
+                  <span
+                    style={{ display: "flex", alignItems: "center", gap: 8 }}
+                  >
+                    <span
+                      style={{
+                        width: 10,
+                        height: 10,
+                        borderRadius: 3,
+                        background: accent,
+                      }}
+                    />
+                    {on ? variantLabel : allUsersLabel}
+                  </span>
+                  <span
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      opacity: tween(frame, T.morph + 4, T.morph + 14),
+                    }}
+                  >
+                    <span
+                      style={{
+                        width: 16,
+                        borderTop: `1.5px dashed ${pal.faint}`,
+                      }}
+                    />
+                    {controlLabel}
+                  </span>
+                </div>
+
+                <svg
+                  width={WIN.w}
+                  height={WIN.h}
+                  style={{ position: "absolute", left: 0, top: 0 }}
+                >
+                  {[0, 50, 100].map((g) => (
+                    <g key={g}>
+                      <line
+                        x1={PLOT.x}
+                        x2={PLOT.x + PLOT.w}
+                        y1={yOf(g)}
+                        y2={yOf(g)}
+                        stroke={pal.line}
+                        strokeDasharray={g ? "2 5" : undefined}
+                      />
+                      <text
+                        x={PLOT.x - 14}
+                        y={yOf(g) + 5}
+                        textAnchor="end"
+                        fontSize={15}
+                        fill={pal.faint}
+                        fontFamily={fontFamily}
+                        style={{ fontVariantNumeric: "tabular-nums" }}
+                      >
+                        {g}%
+                      </text>
+                    </g>
+                  ))}
+                  <rect
+                    x={colX(tt) - 12}
+                    y={PLOT.y - 6}
+                    width={BAR_W + 24}
+                    height={yOf(0) - PLOT.y + 6}
+                    rx={10}
+                    fill={pal.track}
+                    opacity={tipA * 0.7}
+                  />
+                  {steps.map((st, i) => {
+                    const g = grow[i];
+                    const x = colX(i);
+                    const prev = i === 0 ? 100 : ofFirst(i - 1);
+                    const curP = ofFirst(i);
+                    const ctrl = (st.control / steps[0].control) * 100;
+                    const top = yOf(prev * g);
+                    const bar = yOf(curP * g);
+                    const dim = i === tt ? 0 : tipA;
+                    const ghost =
+                      i > 0
+                        ? tween(
+                            frame,
+                            T.morph + 6 + i * 3,
+                            T.morph + 16 + i * 3,
+                          )
+                        : 0;
+                    return (
+                      <g key={st.label}>
+                        <rect
+                          x={x}
+                          y={top}
+                          width={BAR_W}
+                          height={Math.max(0, bar - top)}
+                          rx={6}
+                          fill={tint}
+                        />
+                        <rect
+                          x={x}
+                          y={bar}
+                          width={BAR_W}
+                          height={Math.max(0, yOf(0) - bar)}
+                          rx={6}
+                          fill={accent}
+                          opacity={1 - 0.3 * dim}
+                        />
+                        {ghost > 0 && Math.abs(ctrl - curP) > 0.3 ? (
+                          <line
+                            x1={x - 8}
+                            x2={lerp(x - 8, x + BAR_W + 8, ghost)}
+                            y1={yOf(ctrl)}
+                            y2={yOf(ctrl)}
+                            stroke={pal.dark ? "#FFFFFF" : "#16171A"}
+                            strokeOpacity={0.7}
+                            strokeWidth={1.5}
+                            strokeDasharray="4 4"
+                          />
+                        ) : null}
+                      </g>
+                    );
+                  })}
+                </svg>
+
+                {steps.map((st, i) => {
+                  const x = colX(i);
+                  const lab = tween(
+                    frame,
+                    T.bars + i * 3 + 6,
+                    T.bars + i * 3 + 18,
+                  );
+                  return (
+                    <div key={st.label}>
+                      <div
+                        style={{
+                          position: "absolute",
+                          left: x,
+                          width: BAR_W,
+                          textAlign: "center",
+                          top: yOf(ofFirst(i) * grow[i]) - 30,
+                          opacity: lab,
+                          fontSize: 16,
+                          color: pal.text,
+                          fontVariantNumeric: "tabular-nums",
+                        }}
+                      >
+                        {pct(ofFirst(i))}
+                      </div>
+                      <div
+                        style={{
+                          position: "absolute",
+                          left: x,
+                          top: yOf(0) + 14,
+                          opacity: lab,
+                          transform: `translateY(${(1 - lab) * 6}px)`,
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        <div style={{ fontSize: 17, color: labelInk(1) }}>
+                          {st.label}
+                        </div>
+                        <div
+                          style={{
+                            fontSize: 16,
+                            color: pal.muted,
+                            marginTop: 3,
+                            fontVariantNumeric: "tabular-nums",
+                          }}
+                        >
+                          {fmt(value(i))}
+                        </div>
+                      </div>
                     </div>
+                  );
+                })}
+              </div>
+
+              <div
+                style={{
+                  position: "absolute",
+                  left: tipX,
+                  top: tipY,
+                  width: tipW,
+                  opacity: tipA,
+                  transform: `translateY(${(1 - tip) * 12}px) scale(${0.94 + 0.06 * tip})`,
+                  transformOrigin: "0% 0%",
+                  background: pal.tip,
+                  borderRadius: 14,
+                  boxShadow: pal.tipShadow,
+                  padding: tall ? "16px 18px 14px" : "12px 16px 10px",
+                  boxSizing: "border-box",
+                }}
+              >
+                <div style={{ fontSize: 16, color: pal.muted }}>
+                  {tt + 1} · {steps[tt].event}
+                </div>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "baseline",
+                    gap: 10,
+                    marginTop: tall ? 6 : 4,
+                    fontVariantNumeric: "tabular-nums",
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: tall ? 34 : 30,
+                      lineHeight: 1.2,
+                      fontWeight: 300,
+                      color: pal.text,
+                      letterSpacing: "-0.03em",
+                    }}
+                  >
+                    {fmt(stepV)}
+                  </span>
+                  <span style={{ fontSize: 16, color: pal.muted }}>
+                    {pct(fromPrev(tt))} of{" "}
+                    {steps[Math.max(0, tt - 1)].label.toLowerCase()}
+                  </span>
+                </div>
+                <div
+                  style={{
+                    height: 1,
+                    background: pal.line,
+                    margin: tall ? "14px 0 8px" : "10px 0 6px",
+                  }}
+                />
+                {breakdown.map((b, k) => {
+                  const r = sp(T.tip + 6 + k * 3, CARD);
+                  return (
                     <div
+                      key={b.label}
                       style={{
                         display: "flex",
                         alignItems: "center",
-                        gap: 14,
-                        marginTop: 2,
-                        overflow: "hidden",
-                      }}
-                    >
-                      <span
-                        style={{
-                          fontSize: 54,
-                          fontWeight: 300,
-                          letterSpacing: "-0.04em",
-                          color: pal.text,
-                          fontVariantNumeric: "tabular-nums",
-                          lineHeight: 1.1,
-                          transform: `translateY(${(1 - tween(frame, 8, 22)) * 100}%)`,
-                        }}
-                      >
-                        {pct(totalNow)}
-                      </span>
-                      {badgeEl(18)}
-                    </div>
-                  </div>
-                  <div style={{ flex: 1 }} />
-                  {stat("Visits", fmt(value(0)), 0)}
-                  {stat("Paying users", fmt(value(n - 1)), 1)}
-                  {stat(
-                    "Time to pay",
-                    morph[n - 1] > 0.5 ? "1d 19h" : "2d 6h",
-                    2,
-                  )}
-                </div>
-              ) : (
-                <div
-                  style={{
-                    position: "absolute",
-                    left: PAD,
-                    right: PAD,
-                    top: HEAD_H + 20,
-                    display: "flex",
-                    gap: 24,
-                  }}
-                >
-                  {stat("Visits", fmt(value(0)), 0)}
-                  {stat("Paying users", fmt(value(n - 1)), 1)}
-                  {stat(
-                    "Time to pay",
-                    morph[n - 1] > 0.5 ? "1d 19h" : "2d 6h",
-                    2,
-                  )}
-                </div>
-              )}
-
-              <div
-                style={{
-                  position: "absolute",
-                  left: PAD,
-                  right: PAD,
-                  top: CT,
-                  height: 1,
-                  background: pal.line,
-                }}
-              />
-              <div
-                style={{
-                  position: "absolute",
-                  left: PAD,
-                  right: PAD,
-                  top: CT + 18,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 22,
-                  justifyContent: "flex-end",
-                  fontSize: 16,
-                  color: pal.muted,
-                }}
-              >
-                <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span
-                    style={{
-                      width: 10,
-                      height: 10,
-                      borderRadius: 3,
-                      background: accent,
-                    }}
-                  />
-                  {on ? variantLabel : "All users"}
-                </span>
-                <span
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 8,
-                    opacity: tween(frame, T.morph + 4, T.morph + 14),
-                  }}
-                >
-                  <span
-                    style={{
-                      width: 16,
-                      borderTop: `1.5px dashed ${pal.faint}`,
-                    }}
-                  />
-                  Control
-                </span>
-              </div>
-
-              <svg
-                width={WIN.w}
-                height={WIN.h}
-                style={{ position: "absolute", left: 0, top: 0 }}
-              >
-                {[0, 50, 100].map((g) => (
-                  <g key={g}>
-                    <line
-                      x1={PLOT.x}
-                      x2={PLOT.x + PLOT.w}
-                      y1={yOf(g)}
-                      y2={yOf(g)}
-                      stroke={pal.line}
-                      strokeDasharray={g ? "2 5" : undefined}
-                    />
-                    <text
-                      x={PLOT.x - 14}
-                      y={yOf(g) + 5}
-                      textAnchor="end"
-                      fontSize={15}
-                      fill={pal.faint}
-                      fontFamily={fontFamily}
-                      style={{ fontVariantNumeric: "tabular-nums" }}
-                    >
-                      {g}%
-                    </text>
-                  </g>
-                ))}
-                <rect
-                  x={colX(tt) - 12}
-                  y={PLOT.y - 6}
-                  width={BAR_W + 24}
-                  height={yOf(0) - PLOT.y + 6}
-                  rx={10}
-                  fill={pal.track}
-                  opacity={tipA * 0.7}
-                />
-                {steps.map((st, i) => {
-                  const g = grow[i];
-                  const x = colX(i);
-                  const prev = i === 0 ? 100 : ofFirst(i - 1);
-                  const curP = ofFirst(i);
-                  const ctrl = (st.control / steps[0].control) * 100;
-                  const top = yOf(prev * g);
-                  const bar = yOf(curP * g);
-                  const dim = i === tt ? 0 : tipA;
-                  const ghost =
-                    i > 0
-                      ? tween(frame, T.morph + 6 + i * 3, T.morph + 16 + i * 3)
-                      : 0;
-                  return (
-                    <g key={st.label}>
-                      <rect
-                        x={x}
-                        y={top}
-                        width={BAR_W}
-                        height={Math.max(0, bar - top)}
-                        rx={6}
-                        fill={tint}
-                      />
-                      <rect
-                        x={x}
-                        y={bar}
-                        width={BAR_W}
-                        height={Math.max(0, yOf(0) - bar)}
-                        rx={6}
-                        fill={accent}
-                        opacity={1 - 0.3 * dim}
-                      />
-                      {ghost > 0 && Math.abs(ctrl - curP) > 0.3 ? (
-                        <line
-                          x1={x - 8}
-                          x2={lerp(x - 8, x + BAR_W + 8, ghost)}
-                          y1={yOf(ctrl)}
-                          y2={yOf(ctrl)}
-                          stroke={pal.dark ? "#FFFFFF" : "#16171A"}
-                          strokeOpacity={0.7}
-                          strokeWidth={1.5}
-                          strokeDasharray="4 4"
-                        />
-                      ) : null}
-                    </g>
-                  );
-                })}
-              </svg>
-
-              {steps.map((st, i) => {
-                const x = colX(i);
-                const lab = tween(
-                  frame,
-                  T.bars + i * 3 + 6,
-                  T.bars + i * 3 + 18,
-                );
-                return (
-                  <div key={st.label}>
-                    <div
-                      style={{
-                        position: "absolute",
-                        left: x,
-                        width: BAR_W,
-                        textAlign: "center",
-                        top: yOf(ofFirst(i) * grow[i]) - 30,
-                        opacity: lab,
+                        gap: 12,
+                        height: rowH,
                         fontSize: 16,
                         color: pal.text,
                         fontVariantNumeric: "tabular-nums",
                       }}
                     >
-                      {pct(ofFirst(i))}
-                    </div>
-                    <div
-                      style={{
-                        position: "absolute",
-                        left: x,
-                        top: yOf(0) + 14,
-                        opacity: lab,
-                        transform: `translateY(${(1 - lab) * 6}px)`,
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      <div style={{ fontSize: 17, color: ink(1) }}>
-                        {st.label}
-                      </div>
+                      <span style={{ width: 66 }}>{b.label}</span>
                       <div
                         style={{
-                          fontSize: 16,
-                          color: pal.muted,
-                          marginTop: 3,
-                          fontVariantNumeric: "tabular-nums",
+                          flex: 1,
+                          height: 6,
+                          borderRadius: 3,
+                          background: pal.track,
                         }}
                       >
-                        {fmt(value(i))}
+                        <div
+                          style={{
+                            width: `${b.share * 100 * clamp(r, 0, 1.04)}%`,
+                            height: "100%",
+                            borderRadius: 3,
+                            background: withAlpha(accent, 1 - k * 0.28),
+                          }}
+                        />
                       </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            <div
-              style={{
-                position: "absolute",
-                left: tipX,
-                top: tipY,
-                width: tipW,
-                opacity: tipA,
-                transform: `translateY(${(1 - tip) * 12}px) scale(${0.94 + 0.06 * tip})`,
-                transformOrigin: "0% 0%",
-                background: pal.tip,
-                borderRadius: 14,
-                boxShadow: pal.tipShadow,
-                padding: tall ? "16px 18px 14px" : "12px 16px 10px",
-                boxSizing: "border-box",
-              }}
-            >
-              <div style={{ fontSize: 16, color: pal.muted }}>
-                {tt + 1} · {steps[tt].event}
-              </div>
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "baseline",
-                  gap: 10,
-                  marginTop: tall ? 6 : 4,
-                  fontVariantNumeric: "tabular-nums",
-                }}
-              >
-                <span
-                  style={{
-                    fontSize: tall ? 34 : 30,
-                    lineHeight: 1.2,
-                    fontWeight: 300,
-                    color: pal.text,
-                    letterSpacing: "-0.03em",
-                  }}
-                >
-                  {fmt(stepV)}
-                </span>
-                <span style={{ fontSize: 16, color: pal.muted }}>
-                  {pct(fromPrev(tt))} of{" "}
-                  {steps[Math.max(0, tt - 1)].label.toLowerCase()}
-                </span>
-              </div>
-              <div
-                style={{
-                  height: 1,
-                  background: pal.line,
-                  margin: tall ? "14px 0 8px" : "10px 0 6px",
-                }}
-              />
-              {breakdown.map((b, k) => {
-                const r = sp(T.tip + 6 + k * 3, CARD);
-                return (
-                  <div
-                    key={b.label}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 12,
-                      height: rowH,
-                      fontSize: 16,
-                      color: pal.text,
-                      fontVariantNumeric: "tabular-nums",
-                    }}
-                  >
-                    <span style={{ width: 66 }}>{b.label}</span>
-                    <div
-                      style={{
-                        flex: 1,
-                        height: 6,
-                        borderRadius: 3,
-                        background: pal.track,
-                      }}
-                    >
-                      <div
+                      <span
                         style={{
-                          width: `${b.share * 100 * clamp(r, 0, 1.04)}%`,
-                          height: "100%",
-                          borderRadius: 3,
-                          background: withAlpha(accent, 1 - k * 0.28),
+                          width: 52,
+                          textAlign: "right",
+                          color: pal.muted,
                         }}
-                      />
+                      >
+                        {fmt(stepV * b.share)}
+                      </span>
                     </div>
-                    <span
-                      style={{
-                        width: 52,
-                        textAlign: "right",
-                        color: pal.muted,
-                      }}
-                    >
-                      {fmt(stepV * b.share)}
-                    </span>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
-          </div>
-          <div style={{ opacity: cursorA }}>
-            <Cursor x={cur.x} y={cur.y} scale={cursorScale} />
+            <div style={{ opacity: cursorA }}>
+              <Cursor x={cur.x} y={cur.y} scale={cursorScale} />
+            </div>
           </div>
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

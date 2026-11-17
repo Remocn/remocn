@@ -1,4 +1,11 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const uiCalloutConfig: ComponentConfig = {
   componentName: "UiCallout",
@@ -13,10 +20,15 @@ export const uiCalloutConfig: ComponentConfig = {
       },
       description: "Theme",
     },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
+    nextLabel: {
+      type: "text-content",
+      default: "Next",
+      description: "Next label",
+    },
+    doneLabel: {
+      type: "text-content",
+      default: "Got it",
+      description: "Done label",
     },
     variant: {
       type: "enum",
@@ -36,6 +48,13 @@ export const uiCalloutConfig: ComponentConfig = {
       description: "Stagger",
       hiddenFromList: false,
     },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ground: groundControl(),
+    ...sceneControls({ font: "Instrument Sans" }),
     speed: {
       type: "number",
       default: 1,

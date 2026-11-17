@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const diminuendoConfig: ComponentConfig = {
   componentName: "Diminuendo",
@@ -12,11 +18,6 @@ export const diminuendoConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#8ACE00",
-      description: "Accent",
     },
     prefix: {
       type: "text-content",
@@ -65,6 +66,21 @@ export const diminuendoConfig: ComponentConfig = {
       description: "Ratio",
       hiddenFromList: false,
     },
+    countDuration: {
+      type: "number",
+      default: 64,
+      min: 16,
+      max: 160,
+      step: 4,
+      description: "Count length (frames)",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#8ACE00",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Arimo" }),
     speed: {
       type: "number",
       default: 1,

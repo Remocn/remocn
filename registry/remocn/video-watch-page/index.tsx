@@ -17,7 +17,7 @@ import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
 
-const { fontFamily } = loadFont("normal", {
+const { fontFamily: geist } = loadFont("normal", {
   weights: ["300", "400"],
   subsets: ["latin"],
 });
@@ -53,7 +53,25 @@ export interface VideoWatchPageProps {
   src?: string;
   /** Custom player content (wins over `src`), laid out at 836×470. */
   children?: React.ReactNode;
+  /** Section name next to the logo in the top bar. */
+  breadcrumb?: string;
+  /** Description line under the view count. */
+  description?: string;
+  /** Upload time next to the view count. */
+  published?: string;
+  /** Replaces the remocn mark in the top bar. */
+  logo?: React.ReactNode;
   accent?: string;
+  /** Text color of the title and page copy; overrides the theme. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Geist by default. */
+  fontFamily?: string;
+  /** Size of the page window, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "light" | "dark";
   ground?: GshPresetId;
@@ -584,22 +602,48 @@ function EditorScene({ frame, accent }: { frame: number; accent: string }) {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function VideoWatchPage({
   title = "Introducing remocn 2.0",
   channel,
   stats,
   src,
   children,
+  breadcrumb = "Launch videos",
+  description = "Kinetic captions, 40+ transitions, one install command.",
+  published = "3 hours ago",
+  logo,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = geist,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "light",
   ground,
   groundParams,
 }: VideoWatchPageProps) {
-  const frame = useCurrentFrame() * speed;
+  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, fps } = useVideoConfig();
   const dark = theme === "dark";
   const pal = dark ? DARK : LIGHT;
+  const fg = ink ?? pal.text;
   const tall = height > width;
   const DW = tall ? 720 : 1280;
   const DH = tall ? 1280 : 720;
@@ -761,552 +805,567 @@ export function VideoWatchPage({
 
   return (
     <AbsoluteFill style={{ fontFamily, overflow: "hidden" }}>
-      <GshGround
-        preset={ground ?? "film-blue"}
-        params={
-          groundParams ??
-          (dark
-            ? undefined
-            : {
-                background: "#eef1f6",
-                colors: ["#ffffff", "#b4cdf0", "#6f9ad8", "#e3e9f3"],
-                grain: 0.05,
-              })
-        }
-        timeOffset={dark ? 2 : 4}
-        timeScale={0.35}
-      />
-      <AbsoluteFill style={{ background: pal.scrim }} />
-      <div
-        style={{
-          position: "absolute",
-          left: (width - DW * u) / 2,
-          top: (height - DH * u) / 2,
-          width: DW,
-          height: DH,
-          transformOrigin: "0 0",
-          transform: `scale(${u})`,
-        }}
-      >
+      {background === undefined ? (
+        <>
+          <GshGround
+            preset={ground ?? "film-blue"}
+            params={
+              groundParams ??
+              (dark
+                ? undefined
+                : {
+                    background: "#eef1f6",
+                    colors: ["#ffffff", "#b4cdf0", "#6f9ad8", "#e3e9f3"],
+                    grain: 0.05,
+                  })
+            }
+            timeOffset={dark ? 2 : 4}
+            timeScale={0.35}
+          />
+          <AbsoluteFill style={{ background: pal.scrim }} />
+        </>
+      ) : (
+        <AbsoluteFill
+          style={{
+            background: background === "transparent" ? undefined : background,
+          }}
+        />
+      )}
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            left: L.win.x,
-            top: L.win.y,
-            width: L.win.w,
-            height: L.win.h,
-            transform: `translateY(${(1 - winIn) * 80}px) scale(${(0.96 + 0.04 * winIn) * cam})`,
-            transformOrigin: "50% 60%",
-            opacity: Math.min(1, winIn * 2),
+            left: (width - DW * u) / 2,
+            top: (height - DH * u) / 2,
+            width: DW,
+            height: DH,
+            transformOrigin: "0 0",
+            transform: `scale(${u})`,
           }}
         >
           <div
             style={{
               position: "absolute",
-              inset: 0,
-              borderRadius: 18,
-              background: pal.win,
-              boxShadow: pal.shadow,
-              overflow: "hidden",
+              left: L.win.x,
+              top: L.win.y,
+              width: L.win.w,
+              height: L.win.h,
+              transform: `translateY(${(1 - winIn) * 80}px) scale(${(0.96 + 0.04 * winIn) * cam})`,
+              transformOrigin: "50% 60%",
+              opacity: Math.min(1, winIn * 2),
             }}
           >
             <div
               style={{
                 position: "absolute",
-                left: 0,
-                right: 0,
-                top: 0,
-                height: 60,
-                display: "flex",
-                alignItems: "center",
-                padding: "0 24px",
-                gap: 14,
-                borderBottom: `1px solid ${pal.hair}`,
-              }}
-            >
-              <RemocnLogo fontSize={22} color={pal.text} />
-              <span style={{ fontSize: 16, color: pal.faint }}>/</span>
-              <span style={{ fontSize: 16, color: pal.muted }}>
-                Launch videos
-              </span>
-              <div style={{ flex: 1 }} />
-              <div
-                style={{
-                  ...pill,
-                  height: 36,
-                  padding: "0 16px 0 13px",
-                  background: accent,
-                  color: "#fff",
-                }}
-              >
-                <Icon name="share" size={18} color="#fff" />
-                Share
-              </div>
-              <div
-                style={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: 16,
-                  background: "linear-gradient(140deg,#e6b08f,#a9654a)",
-                  boxShadow: "inset 0 0 0 1px rgba(0,0,0,0.1)",
-                }}
-              />
-            </div>
-
-            <div
-              style={{
-                position: "absolute",
-                left: L.player.x,
-                top: L.player.y,
-                width: PW,
-                height: PH,
-                borderRadius: 12,
+                inset: 0,
+                borderRadius: 18,
+                background: pal.win,
+                boxShadow: pal.shadow,
                 overflow: "hidden",
-                background: "#000",
-                boxShadow: dark
-                  ? "0 0 0 1px rgba(255,255,255,0.08)"
-                  : "0 0 0 1px rgba(0,0,0,0.08)",
               }}
             >
-              {scaled(PW, frame)}
               <div
                 style={{
                   position: "absolute",
                   left: 0,
                   right: 0,
-                  bottom: 0,
-                  height: 120,
-                  background:
-                    "linear-gradient(180deg, transparent, rgba(0,0,0,0.25) 40%, rgba(0,0,0,0.7))",
-                  opacity: Math.max(ctrlShow, 0.6),
-                }}
-              />
-              <div
-                style={{
-                  position: "absolute",
-                  left: 14 + clamp(hoverT * barW - 80, 0, barW - 160),
-                  top: PH - 52 - 132,
-                  width: 160,
-                  opacity: hover,
-                  transform: `translateY(${(1 - hover) * 8}px) scale(${0.94 + 0.06 * hover})`,
-                  transformOrigin: "50% 100%",
-                }}
-              >
-                <div
-                  style={{
-                    position: "relative",
-                    width: 160,
-                    height: 90,
-                    borderRadius: 8,
-                    overflow: "hidden",
-                    background: "#000",
-                    boxShadow:
-                      "0 0 0 1.5px rgba(255,255,255,0.9), 0 10px 24px rgba(0,0,0,0.45)",
-                  }}
-                >
-                  {scaled(160, Math.round(hoverT * 900))}
-                </div>
-                <div
-                  style={{
-                    marginTop: 8,
-                    textAlign: "center",
-                    fontSize: 16,
-                    color: "#fff",
-                    textShadow: "0 1px 4px rgba(0,0,0,0.6)",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {CHAPTERS[hoverI].name}
-                  <span
-                    style={{ fontFamily: mono, opacity: 0.75, marginLeft: 8 }}
-                  >
-                    {mmss(hoverT * DURATION)}
-                  </span>
-                </div>
-              </div>
-              <div
-                style={{
-                  position: "absolute",
-                  left: 14,
-                  right: 14,
-                  top: PH - 52,
-                  height: 4 + hover * 2,
-                  display: "flex",
-                  gap: 3,
-                }}
-              >
-                {CHAPTERS.map((c, i) => {
-                  const end = CHAPTERS[i + 1]?.at ?? 1;
-                  const seg = (x: number) => clamp((x - c.at) / (end - c.at));
-                  return (
-                    <div
-                      key={c.name}
-                      style={{
-                        position: "relative",
-                        flex: end - c.at,
-                        borderRadius: 2,
-                        background: "rgba(255,255,255,0.28)",
-                        overflow: "hidden",
-                      }}
-                    >
-                      <div
-                        style={{
-                          position: "absolute",
-                          inset: 0,
-                          width: `${seg(hover > 0 ? hoverT : 0) * 100}%`,
-                          background: "rgba(255,255,255,0.55)",
-                          opacity: hover,
-                        }}
-                      />
-                      <div
-                        style={{
-                          position: "absolute",
-                          inset: 0,
-                          width: `${seg(vt) * 100}%`,
-                          background: "#fff",
-                        }}
-                      />
-                    </div>
-                  );
-                })}
-              </div>
-              <div
-                style={{
-                  position: "absolute",
-                  left: 16,
-                  right: 16,
-                  bottom: 10,
-                  height: 30,
+                  top: 0,
+                  height: 60,
                   display: "flex",
                   alignItems: "center",
-                  gap: 16,
-                  color: "#fff",
-                  fontSize: 16,
+                  padding: "0 24px",
+                  gap: 14,
+                  borderBottom: `1px solid ${pal.hair}`,
                 }}
               >
-                <Icon name="pause" size={20} color="#fff" sw={2} />
-                <Icon name="vol" size={20} color="#fff" />
-                <span
-                  style={{
-                    fontFamily: mono,
-                    fontVariantNumeric: "tabular-nums",
-                  }}
-                >
-                  {mmss(seconds)} / {mmss(DURATION)}
-                </span>
-                <span style={{ color: "rgba(255,255,255,0.75)" }}>
-                  {CHAPTERS[chapterI].name}
+                {logo ?? <RemocnLogo fontSize={22} color={fg} />}
+                <span style={{ fontSize: 16, color: pal.faint }}>/</span>
+                <span style={{ fontSize: 16, color: pal.muted }}>
+                  {breadcrumb}
                 </span>
                 <div style={{ flex: 1 }} />
-                <Icon name="cc" size={20} color="#fff" />
-                <Icon name="full" size={20} color="#fff" />
+                <div
+                  style={{
+                    ...pill,
+                    height: 36,
+                    padding: "0 16px 0 13px",
+                    background: accent,
+                    color: "#fff",
+                  }}
+                >
+                  <Icon name="share" size={18} color="#fff" />
+                  Share
+                </div>
+                <div
+                  style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: 16,
+                    background: "linear-gradient(140deg,#e6b08f,#a9654a)",
+                    boxShadow: "inset 0 0 0 1px rgba(0,0,0,0.1)",
+                  }}
+                />
               </div>
-            </div>
 
-            <div
-              style={{
-                position: "absolute",
-                left: L.meta.x,
-                top: L.meta.y,
-                width: metaW,
-                fontSize: 26,
-                fontWeight: 400,
-                letterSpacing: "-0.02em",
-                color: pal.text,
-                whiteSpace: "nowrap",
-                ...rise(8),
-              }}
-            >
-              {title}
-            </div>
-            <div
-              style={{
-                position: "absolute",
-                left: L.meta.x,
-                top: rowY,
-                width: metaW,
-                height: 40,
-                display: "flex",
-                alignItems: "center",
-                ...rise(12),
-              }}
-            >
               <div
                 style={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: 20,
-                  background: ch.color,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  flexShrink: 0,
+                  position: "absolute",
+                  left: L.player.x,
+                  top: L.player.y,
+                  width: PW,
+                  height: PH,
+                  borderRadius: 12,
+                  overflow: "hidden",
+                  background: "#000",
+                  boxShadow: dark
+                    ? "0 0 0 1px rgba(255,255,255,0.08)"
+                    : "0 0 0 1px rgba(0,0,0,0.08)",
                 }}
               >
-                <RemocnR height={17} color="#fff" />
-              </div>
-              <div style={{ marginLeft: 12, width: 132 }}>
-                <div style={{ fontSize: 17, color: pal.text, lineHeight: 1.2 }}>
-                  {ch.name}
-                </div>
+                {scaled(PW, frame)}
                 <div
                   style={{
-                    fontSize: 15.5,
-                    color: pal.muted,
-                    fontVariantNumeric: "tabular-nums",
-                    lineHeight: 1.3,
+                    position: "absolute",
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    height: 120,
+                    background:
+                      "linear-gradient(180deg, transparent, rgba(0,0,0,0.25) 40%, rgba(0,0,0,0.7))",
+                    opacity: Math.max(ctrlShow, 0.6),
                   }}
-                >
-                  {compact(subs)} subscribers
-                </div>
-              </div>
-              <div
-                style={{
-                  ...pill,
-                  padding: subbed ? "0 16px 0 12px" : "0 18px",
-                  background: subbed ? pal.surface : pal.strong,
-                  color: subbed ? pal.text : pal.onStrong,
-                  transform: `scale(${(1 - 0.04 * press(SUB_CLICK)) * (subbed ? 0.94 + 0.06 * subPop : 1)})`,
-                }}
-              >
-                {subbed ? (
-                  <>
-                    <div
-                      style={{
-                        transform: `rotate(${bellRot}deg)`,
-                        transformOrigin: "50% 15%",
-                      }}
-                    >
-                      <Icon name="bell" size={18} color={pal.text} />
-                    </div>
-                    Subscribed
-                  </>
-                ) : (
-                  "Subscribe"
-                )}
-              </div>
-              <div style={{ flex: 1 }} />
-              <div
-                style={{
-                  ...pill,
-                  width: 124,
-                  boxSizing: "border-box",
-                  padding: "0 16px 0 14px",
-                  background: liked
-                    ? `color-mix(in oklab, ${accent} ${dark ? 22 : 12}%, ${pal.surface})`
-                    : pal.surface,
-                  color: liked ? (dark ? "#fff" : accent) : pal.text,
-                  transform: `scale(${1 - 0.04 * press(LIKE_CLICK)})`,
-                }}
-              >
+                />
                 <div
                   style={{
-                    transform: `scale(${liked ? 0.8 + 0.2 * likePop : 1}) rotate(${liked ? (1 - likePop) * -14 : 0}deg)`,
-                  }}
-                >
-                  <Icon
-                    name="like"
-                    size={20}
-                    color={liked ? (dark ? "#fff" : accent) : pal.text}
-                    fill={liked ? (dark ? "#fff" : accent) : "none"}
-                  />
-                </div>
-                <div
-                  style={{
-                    position: "relative",
-                    height: 22,
-                    overflow: "hidden",
-                    flex: 1,
-                    fontVariantNumeric: "tabular-nums",
+                    position: "absolute",
+                    left: 14 + clamp(hoverT * barW - 80, 0, barW - 160),
+                    top: PH - 52 - 132,
+                    width: 160,
+                    opacity: hover,
+                    transform: `translateY(${(1 - hover) * 8}px) scale(${0.94 + 0.06 * hover})`,
+                    transformOrigin: "50% 100%",
                   }}
                 >
                   <div
                     style={{
-                      position: "absolute",
-                      top: 0,
-                      lineHeight: "22px",
-                      transform: `translateY(${(1 - rollP) * 12}px)`,
-                      opacity: rollP < 1 ? Math.min(1, rollP * 1.4) : 1,
+                      position: "relative",
+                      width: 160,
+                      height: 90,
+                      borderRadius: 8,
+                      overflow: "hidden",
+                      background: "#000",
+                      boxShadow:
+                        "0 0 0 1.5px rgba(255,255,255,0.9), 0 10px 24px rgba(0,0,0,0.45)",
                     }}
                   >
-                    {likeAt(liked ? stepI : 0)}
+                    {scaled(160, Math.round(hoverT * 900))}
                   </div>
-                  {rollP < 1 ? (
+                  <div
+                    style={{
+                      marginTop: 8,
+                      textAlign: "center",
+                      fontSize: 16,
+                      color: "#fff",
+                      textShadow: "0 1px 4px rgba(0,0,0,0.6)",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {CHAPTERS[hoverI].name}
+                    <span
+                      style={{ fontFamily: mono, opacity: 0.75, marginLeft: 8 }}
+                    >
+                      {mmss(hoverT * DURATION)}
+                    </span>
+                  </div>
+                </div>
+                <div
+                  style={{
+                    position: "absolute",
+                    left: 14,
+                    right: 14,
+                    top: PH - 52,
+                    height: 4 + hover * 2,
+                    display: "flex",
+                    gap: 3,
+                  }}
+                >
+                  {CHAPTERS.map((c, i) => {
+                    const end = CHAPTERS[i + 1]?.at ?? 1;
+                    const seg = (x: number) => clamp((x - c.at) / (end - c.at));
+                    return (
+                      <div
+                        key={c.name}
+                        style={{
+                          position: "relative",
+                          flex: end - c.at,
+                          borderRadius: 2,
+                          background: "rgba(255,255,255,0.28)",
+                          overflow: "hidden",
+                        }}
+                      >
+                        <div
+                          style={{
+                            position: "absolute",
+                            inset: 0,
+                            width: `${seg(hover > 0 ? hoverT : 0) * 100}%`,
+                            background: "rgba(255,255,255,0.55)",
+                            opacity: hover,
+                          }}
+                        />
+                        <div
+                          style={{
+                            position: "absolute",
+                            inset: 0,
+                            width: `${seg(vt) * 100}%`,
+                            background: "#fff",
+                          }}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+                <div
+                  style={{
+                    position: "absolute",
+                    left: 16,
+                    right: 16,
+                    bottom: 10,
+                    height: 30,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 16,
+                    color: "#fff",
+                    fontSize: 16,
+                  }}
+                >
+                  <Icon name="pause" size={20} color="#fff" sw={2} />
+                  <Icon name="vol" size={20} color="#fff" />
+                  <span
+                    style={{
+                      fontFamily: mono,
+                      fontVariantNumeric: "tabular-nums",
+                    }}
+                  >
+                    {mmss(seconds)} / {mmss(DURATION)}
+                  </span>
+                  <span style={{ color: "rgba(255,255,255,0.75)" }}>
+                    {CHAPTERS[chapterI].name}
+                  </span>
+                  <div style={{ flex: 1 }} />
+                  <Icon name="cc" size={20} color="#fff" />
+                  <Icon name="full" size={20} color="#fff" />
+                </div>
+              </div>
+
+              <div
+                style={{
+                  position: "absolute",
+                  left: L.meta.x,
+                  top: L.meta.y,
+                  width: metaW,
+                  fontSize: 26,
+                  fontWeight: 400,
+                  letterSpacing: "-0.02em",
+                  color: fg,
+                  whiteSpace: "nowrap",
+                  ...rise(8),
+                }}
+              >
+                {title}
+              </div>
+              <div
+                style={{
+                  position: "absolute",
+                  left: L.meta.x,
+                  top: rowY,
+                  width: metaW,
+                  height: 40,
+                  display: "flex",
+                  alignItems: "center",
+                  ...rise(12),
+                }}
+              >
+                <div
+                  style={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: 20,
+                    background: ch.color,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
+                  }}
+                >
+                  <RemocnR height={17} color="#fff" />
+                </div>
+                <div style={{ marginLeft: 12, width: 132 }}>
+                  <div style={{ fontSize: 17, color: fg, lineHeight: 1.2 }}>
+                    {ch.name}
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 15.5,
+                      color: pal.muted,
+                      fontVariantNumeric: "tabular-nums",
+                      lineHeight: 1.3,
+                    }}
+                  >
+                    {compact(subs)} subscribers
+                  </div>
+                </div>
+                <div
+                  style={{
+                    ...pill,
+                    padding: subbed ? "0 16px 0 12px" : "0 18px",
+                    background: subbed ? pal.surface : pal.strong,
+                    color: subbed ? pal.text : pal.onStrong,
+                    transform: `scale(${(1 - 0.04 * press(SUB_CLICK)) * (subbed ? 0.94 + 0.06 * subPop : 1)})`,
+                  }}
+                >
+                  {subbed ? (
+                    <>
+                      <div
+                        style={{
+                          transform: `rotate(${bellRot}deg)`,
+                          transformOrigin: "50% 15%",
+                        }}
+                      >
+                        <Icon name="bell" size={18} color={pal.text} />
+                      </div>
+                      Subscribed
+                    </>
+                  ) : (
+                    "Subscribe"
+                  )}
+                </div>
+                <div style={{ flex: 1 }} />
+                <div
+                  style={{
+                    ...pill,
+                    width: 124,
+                    boxSizing: "border-box",
+                    padding: "0 16px 0 14px",
+                    background: liked
+                      ? `color-mix(in oklab, ${accent} ${dark ? 22 : 12}%, ${pal.surface})`
+                      : pal.surface,
+                    color: liked ? (dark ? "#fff" : accent) : pal.text,
+                    transform: `scale(${1 - 0.04 * press(LIKE_CLICK)})`,
+                  }}
+                >
+                  <div
+                    style={{
+                      transform: `scale(${liked ? 0.8 + 0.2 * likePop : 1}) rotate(${liked ? (1 - likePop) * -14 : 0}deg)`,
+                    }}
+                  >
+                    <Icon
+                      name="like"
+                      size={20}
+                      color={liked ? (dark ? "#fff" : accent) : pal.text}
+                      fill={liked ? (dark ? "#fff" : accent) : "none"}
+                    />
+                  </div>
+                  <div
+                    style={{
+                      position: "relative",
+                      height: 22,
+                      overflow: "hidden",
+                      flex: 1,
+                      fontVariantNumeric: "tabular-nums",
+                    }}
+                  >
                     <div
                       style={{
                         position: "absolute",
                         top: 0,
                         lineHeight: "22px",
-                        transform: `translateY(${-rollP * 12}px)`,
-                        opacity: Math.max(0, 1 - rollP * 2.5),
+                        transform: `translateY(${(1 - rollP) * 12}px)`,
+                        opacity: rollP < 1 ? Math.min(1, rollP * 1.4) : 1,
                       }}
                     >
-                      {likeAt(stepI - 1)}
+                      {likeAt(liked ? stepI : 0)}
                     </div>
-                  ) : null}
+                    {rollP < 1 ? (
+                      <div
+                        style={{
+                          position: "absolute",
+                          top: 0,
+                          lineHeight: "22px",
+                          transform: `translateY(${-rollP * 12}px)`,
+                          opacity: Math.max(0, 1 - rollP * 2.5),
+                        }}
+                      >
+                        {likeAt(stepI - 1)}
+                      </div>
+                    ) : null}
+                  </div>
                 </div>
               </div>
-            </div>
-            <div
-              style={{
-                position: "absolute",
-                left: L.meta.x,
-                top: rowY + 58,
-                width: metaW,
-                boxSizing: "border-box",
-                borderRadius: 12,
-                background: pal.surface,
-                padding: "12px 16px",
-                fontSize: 16,
-                lineHeight: "23px",
-                color: pal.muted,
-                ...rise(16),
-              }}
-            >
-              <div
-                style={{ color: pal.text, fontVariantNumeric: "tabular-nums" }}
-              >
-                {views}
-                <span style={{ color: pal.muted, marginLeft: 12 }}>
-                  3 hours ago
-                </span>
-              </div>
               <div
                 style={{
-                  whiteSpace: "nowrap",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
+                  position: "absolute",
+                  left: L.meta.x,
+                  top: rowY + 58,
+                  width: metaW,
+                  boxSizing: "border-box",
+                  borderRadius: 12,
+                  background: pal.surface,
+                  padding: "12px 16px",
+                  fontSize: 16,
+                  lineHeight: "23px",
+                  color: pal.muted,
+                  ...rise(16),
                 }}
               >
-                Kinetic captions, 40+ transitions, one install command.
+                <div style={{ color: fg, fontVariantNumeric: "tabular-nums" }}>
+                  {views}
+                  <span style={{ color: pal.muted, marginLeft: 12 }}>
+                    {published}
+                  </span>
+                </div>
+                <div
+                  style={{
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                  }}
+                >
+                  {description}
+                </div>
               </div>
-            </div>
 
-            <div
-              style={{
-                position: "absolute",
-                left: L.side.x,
-                top: L.side.y,
-                width: L.side.w,
-              }}
-            >
               <div
                 style={{
-                  fontSize: 16,
-                  color: pal.muted,
-                  height: 28,
-                  ...rise(6),
+                  position: "absolute",
+                  left: L.side.x,
+                  top: L.side.y,
+                  width: L.side.w,
                 }}
               >
-                Chapters
+                <div
+                  style={{
+                    fontSize: 16,
+                    color: pal.muted,
+                    height: 28,
+                    ...rise(6),
+                  }}
+                >
+                  Chapters
+                </div>
+                {CHAPTERS.map((c, i) => {
+                  const active = i === chapterI;
+                  const hovered = hover > 0.05 && i === hoverI && !active;
+                  return (
+                    <div
+                      key={c.name}
+                      style={{
+                        height: 44,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 14,
+                        padding: "0 12px",
+                        margin: "0 -12px",
+                        borderRadius: 10,
+                        background: active
+                          ? pal.surface
+                          : hovered
+                            ? `color-mix(in oklab, ${pal.surface} ${Math.round(hover * 55)}%, transparent)`
+                            : "transparent",
+                        ...rise(8 + i * 2, 10),
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontFamily: mono,
+                          fontSize: 16,
+                          width: 48,
+                          color: active ? accent : pal.faint,
+                          fontVariantNumeric: "tabular-nums",
+                        }}
+                      >
+                        {mmss(c.at * DURATION)}
+                      </span>
+                      <span
+                        style={{
+                          fontSize: 16.5,
+                          color: active || hovered ? fg : pal.muted,
+                        }}
+                      >
+                        {c.name}
+                      </span>
+                    </div>
+                  );
+                })}
+                <div
+                  style={{
+                    height: 1,
+                    background: pal.hair,
+                    margin: "16px 0 16px",
+                    ...rise(18),
+                  }}
+                />
+                <div
+                  style={{
+                    fontSize: 16,
+                    color: pal.muted,
+                    height: 28,
+                    ...rise(18),
+                  }}
+                >
+                  Transcript
+                </div>
+                {TRANSCRIPT.slice(
+                  Math.min(lineI, TRANSCRIPT.length - L.lines),
+                  Math.min(lineI, TRANSCRIPT.length - L.lines) + L.lines,
+                ).map((l) => {
+                  const on = seconds >= l.at && l === TRANSCRIPT[lineI];
+                  return (
+                    <div
+                      key={l.at}
+                      style={{
+                        display: "flex",
+                        gap: 14,
+                        padding: "8px 0",
+                        ...rise(20, 10),
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontFamily: mono,
+                          fontSize: 16,
+                          width: 48,
+                          flexShrink: 0,
+                          color: on ? accent : pal.faint,
+                          lineHeight: "23px",
+                        }}
+                      >
+                        {mmss(l.at)}
+                      </span>
+                      <span
+                        style={{
+                          fontSize: 16.5,
+                          lineHeight: "23px",
+                          color: on ? fg : pal.muted,
+                          textWrap: "pretty",
+                        }}
+                      >
+                        {l.text}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
-              {CHAPTERS.map((c, i) => {
-                const active = i === chapterI;
-                const hovered = hover > 0.05 && i === hoverI && !active;
-                return (
-                  <div
-                    key={c.name}
-                    style={{
-                      height: 44,
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 14,
-                      padding: "0 12px",
-                      margin: "0 -12px",
-                      borderRadius: 10,
-                      background: active
-                        ? pal.surface
-                        : hovered
-                          ? `color-mix(in oklab, ${pal.surface} ${Math.round(hover * 55)}%, transparent)`
-                          : "transparent",
-                      ...rise(8 + i * 2, 10),
-                    }}
-                  >
-                    <span
-                      style={{
-                        fontFamily: mono,
-                        fontSize: 16,
-                        width: 48,
-                        color: active ? accent : pal.faint,
-                        fontVariantNumeric: "tabular-nums",
-                      }}
-                    >
-                      {mmss(c.at * DURATION)}
-                    </span>
-                    <span
-                      style={{
-                        fontSize: 16.5,
-                        color: active || hovered ? pal.text : pal.muted,
-                      }}
-                    >
-                      {c.name}
-                    </span>
-                  </div>
-                );
-              })}
-              <div
-                style={{
-                  height: 1,
-                  background: pal.hair,
-                  margin: "16px 0 16px",
-                  ...rise(18),
-                }}
-              />
-              <div
-                style={{
-                  fontSize: 16,
-                  color: pal.muted,
-                  height: 28,
-                  ...rise(18),
-                }}
-              >
-                Transcript
-              </div>
-              {TRANSCRIPT.slice(
-                Math.min(lineI, TRANSCRIPT.length - L.lines),
-                Math.min(lineI, TRANSCRIPT.length - L.lines) + L.lines,
-              ).map((l) => {
-                const on = seconds >= l.at && l === TRANSCRIPT[lineI];
-                return (
-                  <div
-                    key={l.at}
-                    style={{
-                      display: "flex",
-                      gap: 14,
-                      padding: "8px 0",
-                      ...rise(20, 10),
-                    }}
-                  >
-                    <span
-                      style={{
-                        fontFamily: mono,
-                        fontSize: 16,
-                        width: 48,
-                        flexShrink: 0,
-                        color: on ? accent : pal.faint,
-                        lineHeight: "23px",
-                      }}
-                    >
-                      {mmss(l.at)}
-                    </span>
-                    <span
-                      style={{
-                        fontSize: 16.5,
-                        lineHeight: "23px",
-                        color: on ? pal.text : pal.muted,
-                        textWrap: "pretty",
-                      }}
-                    >
-                      {l.text}
-                    </span>
-                  </div>
-                );
-              })}
             </div>
+            <Cursor
+              x={cur.x}
+              y={cur.y}
+              press={curPress}
+              opacity={ease(8, 16)}
+            />
           </div>
-          <Cursor x={cur.x} y={cur.y} press={curPress} opacity={ease(8, 16)} />
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

@@ -78,6 +78,18 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       description: "Image URLs cycled in the middle; defaults to repo-only files.",
     },
     {
+      name: "swapAt",
+      type: "number",
+      default: "48",
+      description: "Frame the left words start to roll; the right side follows 6 frames later.",
+    },
+    {
+      name: "stagger",
+      type: "number",
+      default: "1.2",
+      description: "Frames between letters as a word rolls.",
+    },
+    {
       name: "accent",
       type: "string",
       description: "Accent color override; falls back to the theme accent.",
@@ -86,6 +98,35 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       name: "ink",
       type: "string",
       description: "Text color override; falls back to the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Solid fill in place of the gradient ground; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Hanken Grotesk\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
     },
     {
       name: "theme",

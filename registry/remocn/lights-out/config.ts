@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const lightsOutConfig: ComponentConfig = {
   componentName: "LightsOut",
@@ -12,11 +18,6 @@ export const lightsOutConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     title: {
       type: "text-content",
@@ -41,6 +42,26 @@ export const lightsOutConfig: ComponentConfig = {
       description: "Hold",
       hiddenFromList: false,
     },
+    slant: {
+      type: "number",
+      default: 11,
+      min: 0,
+      max: 20,
+      step: 1,
+      description: "Slant",
+      hiddenFromList: false,
+    },
+    glow: {
+      type: "boolean",
+      default: true,
+      description: "Glow",
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Unbounded" }),
     speed: {
       type: "number",
       default: 1,

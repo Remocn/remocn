@@ -74,6 +74,52 @@ A field of dots ripples outward from the centre and the dots inside the R mark l
       description: "Accent colour for the mark and highlights; any CSS colour.",
     },
     {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Manrope\"",
+      description: "Typeface for the name. Load the font in your project first.",
+    },
+    {
+      name: "stagger",
+      type: "number",
+      default: "2.5",
+      description: "Frames between the name's letters as they slide in.",
+    },
+    {
+      name: "density",
+      type: "number",
+      default: "80",
+      description: "Rows of dots across the frame height; higher is finer.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the mark and name around the frame's center; the dot field still fills the frame.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
+    },
+    {
+      name: "grain",
+      type: "boolean",
+      default: "true",
+      description: "Film grain over the scene.",
+    },
+    {
       name: "theme",
       type: "\"dark\" | \"light\"",
       default: "\"dark\"",

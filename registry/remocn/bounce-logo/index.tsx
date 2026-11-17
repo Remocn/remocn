@@ -2,6 +2,7 @@
 
 import { loadFont as loadSerif } from "@remotion/google-fonts/InstrumentSerif";
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
+import type React from "react";
 import { useId } from "react";
 import {
   AbsoluteFill,
@@ -23,6 +24,24 @@ export interface BounceLogoProps {
   /** Line under the final lockup. Pass "" to hide. */
   line?: string;
   accent?: string;
+  /** Color of the wordmark between hits and on the lockup; overrides the theme ink. */
+  ink?: string;
+  /** Background fill under the key light and the bloom; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the line. Load it yourself; Instrument Serif by default. */
+  fontFamily?: string;
+  /** Replaces the wordmark; it bounces in a box the size of the remocn logo and colors through `currentColor`. */
+  logo?: React.ReactNode;
+  /** Frame of the dead-on corner hit; the path is solved back from it. */
+  cornerAt?: number;
+  /** Flip the wordmark between ink and accent on every edge hit. */
+  flip?: boolean;
+  /** Size of the wordmark and line, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  /** Film grain over the scene. */
+  grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -137,16 +156,16 @@ function fold(v: number) {
 }
 
 /** Unfolded position at frame f, solved back from the corner hit (1, 1). */
-function travel(f: number) {
+function travel(f: number, corner: number) {
   return {
-    x: 1 - (CORNER - f) / PERIOD_X,
-    y: 1 - (CORNER - f) / PERIOD_Y,
+    x: 1 - (corner - f) / PERIOD_X,
+    y: 1 - (corner - f) / PERIOD_Y,
   };
 }
 
-function hitsBefore(f: number) {
-  const a = travel(0);
-  const b = travel(Math.min(f, CORNER - 0.001));
+function hitsBefore(f: number, corner: number) {
+  const a = travel(0, corner);
+  const b = travel(Math.min(f, corner - 0.001), corner);
   return Math.floor(b.x) - Math.floor(a.x) + Math.floor(b.y) - Math.floor(a.y);
 }
 
@@ -182,11 +201,34 @@ function Wordmark({
   brand,
   logo,
   color,
+  mark,
 }: {
   brand: string;
   logo: boolean;
   color: string;
+  mark?: React.ReactNode;
 }) {
+  if (mark) {
+    return (
+      <foreignObject
+        width={100 * (MARK_W + MARK_GAP + LOGO_WORD_W)}
+        height={100 * MARK_H}
+      >
+        <div
+          style={{
+            width: "100%",
+            height: "100%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color,
+          }}
+        >
+          {mark}
+        </div>
+      </foreignObject>
+    );
+  }
   if (logo) {
     return (
       <>
@@ -224,19 +266,48 @@ function Wordmark({
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function BounceLogo({
   brand = "remocn",
   line = "Hit the corner.",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = serif.fontFamily,
+  logo: mark,
+  cornerAt = CORNER,
+  flip = true,
+  scale: zoom = 1,
+  delay = 0,
+  grain = true,
   theme = "dark",
   speed = 1,
 }: BounceLogoProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
+  const fg = ink ?? c.fg;
+  const corner = cornerAt;
+  const resolveAt = corner + RESOLVE_AT - CORNER;
+  const lineAt = corner + LINE_AT - CORNER;
 
   // Logo box in em: top of the R (or caps) to the baseline.
-  const logo = brand.trim().toLowerCase() === "remocn";
+  const logo = mark != null || brand.trim().toLowerCase() === "remocn";
   const boxW = logo ? MARK_W + MARK_GAP + LOGO_WORD_W : wordWidth(brand);
   const boxH = logo ? MARK_H : CAP;
   const fs = (H * 0.068) / boxH;
@@ -244,28 +315,28 @@ export function BounceLogo({
   const lh = boxH * fs;
 
   const at = (f: number) => {
-    const p = travel(Math.min(f, CORNER));
+    const p = travel(Math.min(f, corner), corner);
     return { x: fold(p.x) * (W - lw), y: fold(p.y) * (H - lh) };
   };
 
-  const hits = hitsBefore(t);
-  const bounceColor = hits % 2 === 1 ? accent : c.fg;
+  const hits = hitsBefore(t, corner);
+  const bounceColor = flip && hits % 2 === 1 ? accent : fg;
 
-  const bloom = interpolate(t, [CORNER, CORNER + 26], [0, 1], {
+  const bloom = interpolate(t, [corner, corner + 26], [0, 1], {
     ...CLAMP,
     easing: BLOOM,
   });
   // The hit itself: a short burst of extra light that settles into the bloom.
-  const burst = interpolate(t, [CORNER, CORNER + 1, CORNER + 12], [0, 1, 0], {
+  const burst = interpolate(t, [corner, corner + 1, corner + 12], [0, 1, 0], {
     ...CLAMP,
     easing: EASE_OUT,
   });
-  const drift = Math.max(0, t - CORNER) * 0.35 * (H / 720);
-  const resolve = interpolate(t, [RESOLVE_AT, RESOLVE_AT + RESOLVE], [0, 1], {
+  const drift = Math.max(0, t - corner) * 0.35 * (H / 720);
+  const resolve = interpolate(t, [resolveAt, resolveAt + RESOLVE], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
-  const lineIn = interpolate(t, [LINE_AT, LINE_AT + 16], [0, 1], {
+  const lineIn = interpolate(t, [lineAt, lineAt + 16], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
@@ -282,11 +353,17 @@ export function BounceLogo({
   const x = now.x + (endX - now.x) * resolve;
   const y = now.y + (endY - now.y) * resolve;
 
-  const settled = t >= CORNER;
-  const color = settled ? c.fg : bounceColor;
+  const settled = t >= corner;
+  const color = settled ? fg : bounceColor;
+  const stage = background ?? c.bg;
 
   return (
-    <AbsoluteFill style={{ background: c.bg, overflow: "hidden" }}>
+    <AbsoluteFill
+      style={{
+        background: stage === "transparent" ? undefined : stage,
+        overflow: "hidden",
+      }}
+    >
       <AbsoluteFill
         style={{
           background: `radial-gradient(ellipse 70% 80% at 40% 35%, ${c.key}, transparent 70%)`,
@@ -305,35 +382,37 @@ export function BounceLogo({
           }}
         />
       ) : null}
-      <svg
-        width={W}
-        height={H}
-        viewBox={`0 0 ${W} ${H}`}
-        style={{ position: "absolute", inset: 0 }}
-        aria-hidden
-      >
-        <g transform={`translate(${x} ${y}) scale(${(fs * scale) / 100})`}>
-          <Wordmark brand={brand} logo={logo} color={color} />
-        </g>
-        {line ? (
-          <text
-            x={W / 2}
-            y={endY + lh * finalScale + lineGap + lineSize * 0.75}
-            textAnchor="middle"
-            fill={c.line}
-            opacity={lineIn}
-            fontFamily={serif.fontFamily}
-            fontStyle="italic"
-            fontWeight={400}
-            fontSize={lineSize}
-            transform={`translate(0 ${(1 - lineIn) * lineSize * 0.5})`}
-            style={{ letterSpacing: "-0.01em" }}
-          >
-            {line}
-          </text>
-        ) : null}
-      </svg>
-      <Grain opacity={c.grain} />
+      <ScaleLayer scale={zoom}>
+        <svg
+          width={W}
+          height={H}
+          viewBox={`0 0 ${W} ${H}`}
+          style={{ position: "absolute", inset: 0 }}
+          aria-hidden
+        >
+          <g transform={`translate(${x} ${y}) scale(${(fs * scale) / 100})`}>
+            <Wordmark brand={brand} logo={logo} color={color} mark={mark} />
+          </g>
+          {line ? (
+            <text
+              x={W / 2}
+              y={endY + lh * finalScale + lineGap + lineSize * 0.75}
+              textAnchor="middle"
+              fill={c.line}
+              opacity={lineIn}
+              fontFamily={fontFamily}
+              fontStyle="italic"
+              fontWeight={400}
+              fontSize={lineSize}
+              transform={`translate(0 ${(1 - lineIn) * lineSize * 0.5})`}
+              style={{ letterSpacing: "-0.01em" }}
+            >
+              {line}
+            </text>
+          ) : null}
+        </svg>
+      </ScaleLayer>
+      {grain ? <Grain opacity={c.grain} /> : null}
     </AbsoluteFill>
   );
 }

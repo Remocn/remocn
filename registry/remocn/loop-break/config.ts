@@ -1,8 +1,20 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const loopBreakConfig: ComponentConfig = {
   componentName: "LoopBreak",
   importPath: "@/components/remocn/loop-break",
+  lists: {
+    loop: {
+      default: ["Render the cut.", "Spot a typo.", "Start over."],
+      description: "Lines",
+    },
+  },
   controls: {
     theme: {
       type: "enum",
@@ -32,6 +44,26 @@ export const loopBreakConfig: ComponentConfig = {
       description: "Passes",
       hiddenFromList: false,
     },
+    stagger: {
+      type: "number",
+      default: 3,
+      min: 0,
+      max: 12,
+      step: 1,
+      description: "Word stagger",
+      hiddenFromList: false,
+    },
+    hold: {
+      type: "number",
+      default: 16,
+      min: 0,
+      max: 60,
+      step: 1,
+      description: "Hold (frames)",
+      hiddenFromList: false,
+    },
+    accent: { type: "color", default: undefined, description: "Accent" },
+    ...sceneControls({ font: "DM Sans" }),
     speed: {
       type: "number",
       default: 1,

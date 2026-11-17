@@ -65,14 +65,49 @@ Each glyph leaves its line as a narrow squeezed shape and relaxes into full widt
       description: "Space-separated words to set in the accent color.",
     },
     {
+      name: "squeeze",
+      type: "number",
+      default: "0.26",
+      description: "Width a letter leaves the nozzle at, as a share of its full width.",
+    },
+    {
+      name: "relax",
+      type: "number",
+      default: "30",
+      description: "Frames for a squeezed letter to relax to full width.",
+    },
+    {
       name: "accent",
       type: "string",
       description: "Color of highlighted words; defaults to the theme ink.",
     },
     {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
       name: "background",
       type: "string",
       description: "Override the background color; use \"transparent\" to composite over your own.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Anton\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
     {
       name: "speed",

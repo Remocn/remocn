@@ -1,6 +1,7 @@
 "use client";
 
 import { loadFont } from "@remotion/google-fonts/BricolageGrotesque";
+import type React from "react";
 import { useId } from "react";
 import {
   AbsoluteFill,
@@ -20,7 +21,21 @@ export interface DominoRunProps {
   count?: number;
   value?: string;
   caption?: string;
+  /** Weight of the big value. */
+  fontWeight?: number;
+  /** Frames between dominoes as the row appears. */
+  stagger?: number;
   accent?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the value and caption. Load it yourself; Bricolage Grotesque by default. */
+  fontFamily?: string;
+  /** Size of the dominoes and copy, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  /** Film grain over the scene. */
+  grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -187,18 +202,43 @@ function restAngle(d: Domino, next: Domino, psi: number) {
   return best;
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function DominoRun({
   count = 13,
   value = "10×",
   caption = "Every push tips a bigger one.",
+  fontWeight = 500,
+  stagger = 1.2,
   accent = "#3B5BFD",
+  background,
+  fontFamily = display,
+  scale = 1,
+  delay = 0,
+  grain = true,
   theme = "dark",
   speed = 1,
 }: DominoRunProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height } = useVideoConfig();
   const u = Math.min(width / 1280, height / 720);
   const p = THEMES[theme];
+  const stage =
+    background === "transparent" ? "transparent" : (background ?? p.bg);
   const n = Math.max(5, Math.min(24, Math.round(count)));
   const { ds, extent } = layout(n);
   const last = ds[n - 1];
@@ -237,118 +277,125 @@ export function DominoRun({
   });
 
   return (
-    <AbsoluteFill style={{ background: p.bg, overflow: "hidden" }}>
-      <AbsoluteFill>
-        <svg
-          width={width}
-          height={height}
-          style={{ position: "absolute", inset: 0, overflow: "visible" }}
-          aria-hidden
-        >
-          <defs>
-            <linearGradient id={haloId} x1="0" y1="1" x2="0" y2="0">
-              <stop offset="0" stopColor={accent} />
-              <stop offset="0.55" stopColor="#E2457A" />
-              <stop offset="1" stopColor="#FFB36B" />
-            </linearGradient>
-          </defs>
-          <line
-            x1={width / 2 - width * 0.43 * enter}
-            x2={width / 2 + width * 0.43 * enter}
-            y1={groundY + sw / 2}
-            y2={groundY + sw / 2}
-            stroke={p.axis}
-            strokeWidth={sw}
-          />
-          {ds.map((d, i) => {
-            const isLast = i === n - 1;
-            const appear = interpolate(t, [2 + i * 1.2, 14 + i * 1.2], [0, 1], {
-              ...CLAMP,
-              easing: EASE_OUT,
-            });
-            const fill = isLast
-              ? `url(#${haloId})`
-              : interpolateColors(
-                  i / Math.max(1, n - 2),
-                  [0, 1],
-                  [p.small, p.large],
-                );
-            return (
-              <g
-                key={`d${d.h.toFixed(4)}`}
-                opacity={appear}
-                transform={`translate(${x0 + d.px * S} ${groundY + (1 - appear) * 10 * u}) rotate(${angles[i] * DEG})`}
-              >
-                <rect
-                  x={-d.w * S}
-                  y={-d.h * S}
-                  width={d.w * S}
-                  height={d.h * S}
-                  rx={Math.min(3 * u, d.w * S * 0.3)}
-                  fill={fill}
-                />
-              </g>
-            );
-          })}
-        </svg>
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill>
+          <svg
+            width={width}
+            height={height}
+            style={{ position: "absolute", inset: 0, overflow: "visible" }}
+            aria-hidden
+          >
+            <defs>
+              <linearGradient id={haloId} x1="0" y1="1" x2="0" y2="0">
+                <stop offset="0" stopColor={accent} />
+                <stop offset="0.55" stopColor="#E2457A" />
+                <stop offset="1" stopColor="#FFB36B" />
+              </linearGradient>
+            </defs>
+            <line
+              x1={width / 2 - width * 0.43 * enter}
+              x2={width / 2 + width * 0.43 * enter}
+              y1={groundY + sw / 2}
+              y2={groundY + sw / 2}
+              stroke={p.axis}
+              strokeWidth={sw}
+            />
+            {ds.map((d, i) => {
+              const isLast = i === n - 1;
+              const appear = interpolate(
+                t,
+                [2 + i * stagger, 14 + i * stagger],
+                [0, 1],
+                {
+                  ...CLAMP,
+                  easing: EASE_OUT,
+                },
+              );
+              const fill = isLast
+                ? `url(#${haloId})`
+                : interpolateColors(
+                    i / Math.max(1, n - 2),
+                    [0, 1],
+                    [p.small, p.large],
+                  );
+              return (
+                <g
+                  key={`d${d.h.toFixed(4)}`}
+                  opacity={appear}
+                  transform={`translate(${x0 + d.px * S} ${groundY + (1 - appear) * 10 * u}) rotate(${angles[i] * DEG})`}
+                >
+                  <rect
+                    x={-d.w * S}
+                    y={-d.h * S}
+                    width={d.w * S}
+                    height={d.h * S}
+                    rx={Math.min(3 * u, d.w * S * 0.3)}
+                    fill={fill}
+                  />
+                </g>
+              );
+            })}
+          </svg>
 
-        <div
-          style={{
-            position: "absolute",
-            right: width - valueRight - valueSize * 0.03,
-            bottom: height - valueBottom,
-            fontFamily: display,
-            fontWeight: 500,
-            fontSize: valueSize,
-            lineHeight: 0.74,
-            letterSpacing: "-0.035em",
-            backgroundImage: heroGradient,
-            WebkitBackgroundClip: "text",
-            backgroundClip: "text",
-            color: "transparent",
-            paddingTop: valueSize * 0.08,
-            fontVariantNumeric: "tabular-nums",
-            whiteSpace: "nowrap",
-            opacity: reveal,
-            filter:
-              reveal < 0.99 ? `blur(${(1 - reveal) * 10 * u}px)` : undefined,
-            transform: `translateY(${(1 - reveal) * 22 * u}px)`,
-          }}
-        >
-          {value}
-        </div>
-        {caption ? (
           <div
             style={{
               position: "absolute",
-              right: width - valueRight,
-              top: groundY + 24 * u,
-              display: "flex",
-              alignItems: "center",
-              gap: 10 * u,
-              fontFamily: display,
-              fontWeight: 400,
-              fontSize: 24 * u,
-              letterSpacing: "-0.01em",
-              color: p.muted,
+              right: width - valueRight - valueSize * 0.03,
+              bottom: height - valueBottom,
+              fontFamily,
+              fontWeight,
+              fontSize: valueSize,
+              lineHeight: 0.74,
+              letterSpacing: "-0.035em",
+              backgroundImage: heroGradient,
+              WebkitBackgroundClip: "text",
+              backgroundClip: "text",
+              color: "transparent",
+              paddingTop: valueSize * 0.08,
+              fontVariantNumeric: "tabular-nums",
               whiteSpace: "nowrap",
-              opacity: capIn,
-              transform: `translateY(${(1 - capIn) * 8 * u}px)`,
+              opacity: reveal,
+              filter:
+                reveal < 0.99 ? `blur(${(1 - reveal) * 10 * u}px)` : undefined,
+              transform: `translateY(${(1 - reveal) * 22 * u}px)`,
             }}
           >
-            <span
-              style={{
-                width: 10 * u,
-                height: 10 * u,
-                borderRadius: "50%",
-                background: accent,
-              }}
-            />
-            {caption}
+            {value}
           </div>
-        ) : null}
-      </AbsoluteFill>
-      <Grain opacity={p.grain} />
+          {caption ? (
+            <div
+              style={{
+                position: "absolute",
+                right: width - valueRight,
+                top: groundY + 24 * u,
+                display: "flex",
+                alignItems: "center",
+                gap: 10 * u,
+                fontFamily,
+                fontWeight: 400,
+                fontSize: 24 * u,
+                letterSpacing: "-0.01em",
+                color: p.muted,
+                whiteSpace: "nowrap",
+                opacity: capIn,
+                transform: `translateY(${(1 - capIn) * 8 * u}px)`,
+              }}
+            >
+              <span
+                style={{
+                  width: 10 * u,
+                  height: 10 * u,
+                  borderRadius: "50%",
+                  background: accent,
+                }}
+              />
+              {caption}
+            </div>
+          ) : null}
+        </AbsoluteFill>
+      </ScaleLayer>
+      {grain ? <Grain opacity={p.grain} /> : null}
     </AbsoluteFill>
   );
 }

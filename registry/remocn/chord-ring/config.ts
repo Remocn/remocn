@@ -1,8 +1,30 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const chordRingConfig: ComponentConfig = {
   componentName: "ChordRing",
   importPath: "@/components/remocn/chord-ring",
+  lists: {
+    segments: {
+      default: [
+        "remocn",
+        "Kitebase",
+        "Lumen",
+        "Fernway",
+        "Quarry",
+        "Orbitly",
+        "Halcyon",
+        "Tessel",
+        "Northwind",
+      ],
+      description: "Segments",
+    },
+  },
   controls: {
     theme: {
       type: "enum",
@@ -12,11 +34,6 @@ export const chordRingConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     caption: {
       type: "text-content",
@@ -32,6 +49,30 @@ export const chordRingConfig: ComponentConfig = {
       description: "Brand index",
       hiddenFromList: false,
     },
+    stagger: {
+      type: "number",
+      default: 2.2,
+      min: 0,
+      max: 8,
+      step: 0.1,
+      description: "Chord stagger",
+      hiddenFromList: false,
+    },
+    thickness: {
+      type: "number",
+      default: 10,
+      min: 2,
+      max: 30,
+      step: 1,
+      description: "Ring thickness",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Instrument Sans", grain: true }),
     speed: {
       type: "number",
       default: 1,

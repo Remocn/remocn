@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const waterfallChartConfig: ComponentConfig = {
   componentName: "WaterfallChart",
@@ -28,6 +34,25 @@ export const waterfallChartConfig: ComponentConfig = {
       default: "Net revenue, Q3",
       description: "Title",
     },
+    grow: {
+      type: "number",
+      default: 15,
+      min: 4,
+      max: 40,
+      step: 1,
+      description: "Bar grow (frames)",
+      hiddenFromList: false,
+    },
+    radius: {
+      type: "number",
+      default: 2,
+      min: 0,
+      max: 20,
+      step: 1,
+      description: "Bar radius",
+      hiddenFromList: false,
+    },
+    ...sceneControls({ font: "Instrument Sans", grain: true }),
     speed: {
       type: "number",
       default: 1,

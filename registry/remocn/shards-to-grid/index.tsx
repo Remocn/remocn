@@ -33,12 +33,25 @@ export interface ShardsToGridProps {
   status?: string;
   headline?: string;
   labels?: string[];
+  /** Label of the window's primary button. */
+  ctaLabel?: string;
   theme?: "dark" | "light";
   background?: string;
   accent?: string;
+  /** Text color of the window title; overrides the theme ink. */
+  ink?: string;
+  /** Typeface for the copy. Load it yourself; Geist by default. */
+  fontFamily?: string;
+  /** Replaces the remocn mark in the window toolbar. */
+  logo?: React.ReactNode;
   blooms?: string[];
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /** Size of the shards and window, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  speed?: number;
 }
 
 const THEMES = {
@@ -292,20 +305,43 @@ function PlayOutline({ size, color }: { size: number; color: string }) {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function ShardsToGrid({
   images,
   title = "Launch v1",
   status = "Assembling",
   headline = "Every frame, written in code.",
   labels = ["Motion", "Type", "Sound", "Play reel", "Brand"],
+  ctaLabel = "Publish",
   theme = "dark",
   background,
   accent = "#3B5BFD",
+  ink,
+  fontFamily = geist.fontFamily,
+  logo,
   blooms,
   ground,
   groundParams,
+  scale = 1,
+  delay = 0,
+  speed = 1,
 }: ShardsToGridProps) {
-  const frame = useCurrentFrame();
+  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const t = THEMES[theme];
   const light = theme === "light";
@@ -616,315 +652,324 @@ export function ShardsToGrid({
         timeOffset={t.groundOffset}
         timeScale={0.5}
       />
-      <AbsoluteFill
-        style={{ transform: `scale(${push * (1 + snapPunch * 0.012)})` }}
-      >
-        {order
-          .filter((s) => !s.isCell || frame < beat("morph"))
-          .map(renderShard)}
-        <div
-          style={{
-            position: "absolute",
-            left: winRect.x,
-            top: winRect.y,
-            width: winRect.w,
-            height: winRect.h,
-            borderRadius: winRadius,
-            backgroundColor: fill > 0.01 ? winBg : t.pill,
-            opacity: pillIn,
-            transform: `translateY(${(1 - pillIn) * H * 0.04}px)`,
-            boxShadow: `inset 0 1px 0 rgba(255,255,255,${light ? 0.9 : 0.07}), 0 0 0 1px ${t.pillEdge}, 0 ${(2 + 4 * morph) * unit}px ${(6 + 10 * morph) * unit}px ${shadow(0.5)}, 0 ${(16 + 40 * morph) * unit}px ${(40 + 100 * morph) * unit}px ${shadow(0.6)}`,
-            backdropFilter: fill < 1 ? "blur(14px)" : undefined,
-          }}
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill
+          style={{ transform: `scale(${push * (1 + snapPunch * 0.012)})` }}
         >
+          {order
+            .filter((s) => !s.isCell || frame < beat("morph"))
+            .map(renderShard)}
           <div
             style={{
               position: "absolute",
-              inset: 0,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: pillFont * 0.7,
-              fontFamily: geist.fontFamily,
-              fontSize: pillFont,
-              fontWeight: 400,
-              color: t.pillInk,
-              letterSpacing: "-0.01em",
-              opacity: pillText,
-              whiteSpace: "nowrap",
-            }}
-          >
-            <span
-              style={{
-                width: pillFont * 0.42,
-                height: pillFont * 0.42,
-                borderRadius: "50%",
-                backgroundColor: accent,
-              }}
-            />
-            <span>{title}</span>
-            <span style={{ opacity: 0.5, fontWeight: 300 }}>{status}</span>
-            <span
-              style={{
-                fontFamily: mono.fontFamily,
-                opacity: 0.6,
-                fontSize: pillFont * 0.9,
-                minWidth: "3.4ch",
-                textAlign: "right",
-              }}
-            >
-              {pct}%
-            </span>
-          </div>
-          <div
-            style={{
-              position: "absolute",
-              left: 0,
-              right: 0,
-              top: 0,
-              height: bar,
-              display: "flex",
-              alignItems: "center",
-              padding: `0 ${pad * 1.2}px`,
-              opacity: chrome,
-              fontFamily: geist.fontFamily,
+              left: winRect.x,
+              top: winRect.y,
+              width: winRect.w,
+              height: winRect.h,
+              borderRadius: winRadius,
+              backgroundColor: fill > 0.01 ? winBg : t.pill,
+              opacity: pillIn,
+              transform: `translateY(${(1 - pillIn) * H * 0.04}px)`,
+              boxShadow: `inset 0 1px 0 rgba(255,255,255,${light ? 0.9 : 0.07}), 0 0 0 1px ${t.pillEdge}, 0 ${(2 + 4 * morph) * unit}px ${(6 + 10 * morph) * unit}px ${shadow(0.5)}, 0 ${(16 + 40 * morph) * unit}px ${(40 + 100 * morph) * unit}px ${shadow(0.6)}`,
+              backdropFilter: fill < 1 ? "blur(14px)" : undefined,
             }}
           >
             <div
               style={{
+                position: "absolute",
+                inset: 0,
                 display: "flex",
                 alignItems: "center",
-                gap: label * 0.6,
-                fontSize: label,
-                color: `rgb(${t.ink})`,
+                justifyContent: "center",
+                gap: pillFont * 0.7,
+                fontFamily,
+                fontSize: pillFont,
+                fontWeight: 400,
+                color: t.pillInk,
+                letterSpacing: "-0.01em",
+                opacity: pillText,
                 whiteSpace: "nowrap",
               }}
             >
-              <RemocnR height={label * 0.95} color={`rgb(${t.ink})`} />
+              <span
+                style={{
+                  width: pillFont * 0.42,
+                  height: pillFont * 0.42,
+                  borderRadius: "50%",
+                  backgroundColor: accent,
+                }}
+              />
               <span>{title}</span>
+              <span style={{ opacity: 0.5, fontWeight: 300 }}>{status}</span>
               <span
                 style={{
                   fontFamily: mono.fontFamily,
-                  fontSize: label * 0.86,
-                  color: `rgba(${t.ink},0.55)`,
-                  backgroundColor: t.chip,
-                  padding: `${label * 0.16}px ${label * 0.45}px`,
-                  borderRadius: label * 0.3,
+                  opacity: 0.6,
+                  fontSize: pillFont * 0.9,
+                  minWidth: "3.4ch",
+                  textAlign: "right",
                 }}
               >
-                main
+                {pct}%
               </span>
             </div>
             <div
               style={{
-                marginLeft: "auto",
+                position: "absolute",
+                left: 0,
+                right: 0,
+                top: 0,
+                height: bar,
                 display: "flex",
                 alignItems: "center",
-                gap: label * 0.9,
+                padding: `0 ${pad * 1.2}px`,
+                opacity: chrome,
+                fontFamily,
               }}
             >
-              <PlayOutline size={label * 1.15} color={`rgba(${t.ink},0.6)`} />
               <div
                 style={{
                   display: "flex",
                   alignItems: "center",
-                  height: bar * 0.56,
-                  padding: `0 ${label * 0.75}px`,
-                  borderRadius: label * 0.38,
-                  backgroundColor: accent,
-                  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.22)",
-                  fontSize: label * 0.94,
-                  color: "#ffffff",
-                  transform: `scale(${0.9 + 0.1 * sp(beat("snap") + 6, CHIP)})`,
+                  gap: label * 0.6,
+                  fontSize: label,
+                  color: ink ?? `rgb(${t.ink})`,
+                  whiteSpace: "nowrap",
                 }}
               >
-                Publish
+                {logo ?? (
+                  <RemocnR
+                    height={label * 0.95}
+                    color={ink ?? `rgb(${t.ink})`}
+                  />
+                )}
+                <span>{title}</span>
+                <span
+                  style={{
+                    fontFamily: mono.fontFamily,
+                    fontSize: label * 0.86,
+                    color: `rgba(${t.ink},0.55)`,
+                    backgroundColor: t.chip,
+                    padding: `${label * 0.16}px ${label * 0.45}px`,
+                    borderRadius: label * 0.3,
+                  }}
+                >
+                  main
+                </span>
+              </div>
+              <div
+                style={{
+                  marginLeft: "auto",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: label * 0.9,
+                }}
+              >
+                <PlayOutline size={label * 1.15} color={`rgba(${t.ink},0.6)`} />
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    height: bar * 0.56,
+                    padding: `0 ${label * 0.75}px`,
+                    borderRadius: label * 0.38,
+                    backgroundColor: accent,
+                    boxShadow: "inset 0 1px 0 rgba(255,255,255,0.22)",
+                    fontSize: label * 0.94,
+                    color: "#ffffff",
+                    transform: `scale(${0.9 + 0.1 * sp(beat("snap") + 6, CHIP)})`,
+                  }}
+                >
+                  {ctaLabel}
+                </div>
               </div>
             </div>
           </div>
-        </div>
-        {frame >= beat("morph")
-          ? order.filter((s) => s.isCell).map(renderShard)
-          : null}
-        {cells.map((c, k) => {
-          const p = contentIn(k);
-          const text = labels[k] ?? "";
-          if (k === 0) {
-            const words = headline.split(" ");
-            return (
-              <div
-                key="hero"
-                style={{
-                  position: "absolute",
-                  left: c.x,
-                  top: c.y,
-                  width: c.w,
-                  height: c.h,
-                  borderRadius: cellRadius,
-                  overflow: "hidden",
-                  backgroundImage:
-                    "linear-gradient(180deg, rgba(8,9,14,0) 38%, rgba(8,9,14,0.82) 100%)",
-                  opacity: Math.min(1, p * 1.5),
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "flex-end",
-                  padding: c.w * 0.065,
-                  boxSizing: "border-box",
-                }}
-              >
+          {frame >= beat("morph")
+            ? order.filter((s) => s.isCell).map(renderShard)
+            : null}
+          {cells.map((c, k) => {
+            const p = contentIn(k);
+            const text = labels[k] ?? "";
+            if (k === 0) {
+              const words = headline.split(" ");
+              return (
                 <div
+                  key="hero"
                   style={{
-                    fontFamily: mono.fontFamily,
-                    fontSize: label * 0.9,
-                    color: "rgba(255,255,255,0.66)",
-                    letterSpacing: "0.06em",
-                    textTransform: "uppercase",
-                    marginBottom: label * 0.7,
-                    transform: `translateY(${(1 - p) * label}px)`,
-                  }}
-                >
-                  <span style={{ opacity: 0.55 }}>01</span>
-                  <span style={{ marginLeft: "0.9em" }}>{text}</span>
-                </div>
-                <div
-                  style={{
+                    position: "absolute",
+                    left: c.x,
+                    top: c.y,
+                    width: c.w,
+                    height: c.h,
+                    borderRadius: cellRadius,
+                    overflow: "hidden",
+                    backgroundImage:
+                      "linear-gradient(180deg, rgba(8,9,14,0) 38%, rgba(8,9,14,0.82) 100%)",
+                    opacity: Math.min(1, p * 1.5),
                     display: "flex",
-                    flexWrap: "wrap",
-                    columnGap: "0.24em",
-                    fontFamily: geist.fontFamily,
-                    fontWeight: 400,
-                    fontSize: heroFont,
-                    lineHeight: 1.04,
-                    letterSpacing: "-0.04em",
-                    color: "#ffffff",
-                    maxWidth: "8.4em",
+                    flexDirection: "column",
+                    justifyContent: "flex-end",
+                    padding: c.w * 0.065,
+                    boxSizing: "border-box",
                   }}
                 >
-                  {words.map((w, wi) => (
-                    <span
-                      key={`${w}-${wi}`}
-                      style={{
-                        display: "inline-block",
-                        overflow: "hidden",
-                        padding: "0 0.02em 0.14em",
-                        margin: "0 -0.02em -0.14em",
-                      }}
-                    >
-                      <span
-                        style={{
-                          display: "inline-block",
-                          transform: `translateY(${(1 - headlineIn(wi + 1)) * 105}%)`,
-                        }}
-                      >
-                        {w}
-                      </span>
-                    </span>
-                  ))}
-                </div>
-              </div>
-            );
-          }
-          if (k === 3) {
-            return (
-              <div
-                key="accent"
-                style={{
-                  position: "absolute",
-                  left: c.x,
-                  top: c.y,
-                  width: c.w,
-                  height: c.h,
-                  padding: Math.min(c.w, c.h) * 0.12,
-                  boxSizing: "border-box",
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "space-between",
-                  fontFamily: geist.fontFamily,
-                  color: "#ffffff",
-                }}
-              >
-                <div
-                  style={{
-                    transform: `scale(${sp(beat("content") + 9, CHIP)})`,
-                    transformOrigin: "0% 0%",
-                  }}
-                >
-                  <PlayIcon size={label * 2} color="#ffffff" />
-                </div>
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "baseline",
-                    fontSize: label * 1.08,
-                    fontWeight: 400,
-                    letterSpacing: "-0.01em",
-                    opacity: p,
-                    transform: `translateY(${(1 - p) * label}px)`,
-                  }}
-                >
-                  <span>{text}</span>
-                  <span
+                  <div
                     style={{
                       fontFamily: mono.fontFamily,
                       fontSize: label * 0.9,
-                      opacity: 0.7,
-                      fontVariantNumeric: "tabular-nums",
+                      color: "rgba(255,255,255,0.66)",
+                      letterSpacing: "0.06em",
+                      textTransform: "uppercase",
+                      marginBottom: label * 0.7,
+                      transform: `translateY(${(1 - p) * label}px)`,
                     }}
                   >
-                    0:42
-                  </span>
+                    <span style={{ opacity: 0.55 }}>01</span>
+                    <span style={{ marginLeft: "0.9em" }}>{text}</span>
+                  </div>
+                  <div
+                    style={{
+                      display: "flex",
+                      flexWrap: "wrap",
+                      columnGap: "0.24em",
+                      fontFamily,
+                      fontWeight: 400,
+                      fontSize: heroFont,
+                      lineHeight: 1.04,
+                      letterSpacing: "-0.04em",
+                      color: "#ffffff",
+                      maxWidth: "8.4em",
+                    }}
+                  >
+                    {words.map((w, wi) => (
+                      <span
+                        key={`${w}-${wi}`}
+                        style={{
+                          display: "inline-block",
+                          overflow: "hidden",
+                          padding: "0 0.02em 0.14em",
+                          margin: "0 -0.02em -0.14em",
+                        }}
+                      >
+                        <span
+                          style={{
+                            display: "inline-block",
+                            transform: `translateY(${(1 - headlineIn(wi + 1)) * 105}%)`,
+                          }}
+                        >
+                          {w}
+                        </span>
+                      </span>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              );
+            }
+            if (k === 3) {
+              return (
+                <div
+                  key="accent"
+                  style={{
+                    position: "absolute",
+                    left: c.x,
+                    top: c.y,
+                    width: c.w,
+                    height: c.h,
+                    padding: Math.min(c.w, c.h) * 0.12,
+                    boxSizing: "border-box",
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "space-between",
+                    fontFamily,
+                    color: "#ffffff",
+                  }}
+                >
+                  <div
+                    style={{
+                      transform: `scale(${sp(beat("content") + 9, CHIP)})`,
+                      transformOrigin: "0% 0%",
+                    }}
+                  >
+                    <PlayIcon size={label * 2} color="#ffffff" />
+                  </div>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "baseline",
+                      fontSize: label * 1.08,
+                      fontWeight: 400,
+                      letterSpacing: "-0.01em",
+                      opacity: p,
+                      transform: `translateY(${(1 - p) * label}px)`,
+                    }}
+                  >
+                    <span>{text}</span>
+                    <span
+                      style={{
+                        fontFamily: mono.fontFamily,
+                        fontSize: label * 0.9,
+                        opacity: 0.7,
+                        fontVariantNumeric: "tabular-nums",
+                      }}
+                    >
+                      0:42
+                    </span>
+                  </div>
+                </div>
+              );
+            }
+            const cp = interpolate(
+              frame,
+              [beat("content") + 4 + k * 3, beat("content") + 16 + k * 3],
+              [0, 1],
+              { ...CLAMP, easing: TYPE_IN },
             );
-          }
-          const cp = interpolate(
-            frame,
-            [beat("content") + 4 + k * 3, beat("content") + 16 + k * 3],
-            [0, 1],
-            { ...CLAMP, easing: TYPE_IN },
-          );
-          return (
-            <div
-              key={`cap-${k}`}
-              style={{
-                position: "absolute",
-                left: c.x,
-                top: c.y + c.h * 0.55,
-                width: c.w,
-                height: c.h * 0.45,
-                borderRadius: `0 0 ${cellRadius}px ${cellRadius}px`,
-                backgroundImage:
-                  "linear-gradient(180deg, rgba(8,9,14,0) 0%, rgba(8,9,14,0.28) 45%, rgba(8,9,14,0.62) 100%)",
-                display: "flex",
-                alignItems: "flex-end",
-                gap: label * 0.6,
-                padding: label * 0.8,
-                boxSizing: "border-box",
-                fontFamily: geist.fontFamily,
-                fontSize: label,
-                color: "#ffffff",
-                opacity: cp,
-                whiteSpace: "nowrap",
-              }}
-            >
-              <span
+            return (
+              <div
+                key={`cap-${k}`}
                 style={{
-                  fontFamily: mono.fontFamily,
-                  fontSize: label * 0.86,
-                  opacity: 0.6,
-                  transform: `translateY(${(1 - cp) * label * 0.8}px)`,
+                  position: "absolute",
+                  left: c.x,
+                  top: c.y + c.h * 0.55,
+                  width: c.w,
+                  height: c.h * 0.45,
+                  borderRadius: `0 0 ${cellRadius}px ${cellRadius}px`,
+                  backgroundImage:
+                    "linear-gradient(180deg, rgba(8,9,14,0) 0%, rgba(8,9,14,0.28) 45%, rgba(8,9,14,0.62) 100%)",
+                  display: "flex",
+                  alignItems: "flex-end",
+                  gap: label * 0.6,
+                  padding: label * 0.8,
+                  boxSizing: "border-box",
+                  fontFamily,
+                  fontSize: label,
+                  color: "#ffffff",
+                  opacity: cp,
+                  whiteSpace: "nowrap",
                 }}
               >
-                0{k + 1}
-              </span>
-              <span style={{ transform: `translateY(${(1 - cp) * label}px)` }}>
-                {text}
-              </span>
-            </div>
-          );
-        })}
-      </AbsoluteFill>
+                <span
+                  style={{
+                    fontFamily: mono.fontFamily,
+                    fontSize: label * 0.86,
+                    opacity: 0.6,
+                    transform: `translateY(${(1 - cp) * label * 0.8}px)`,
+                  }}
+                >
+                  0{k + 1}
+                </span>
+                <span
+                  style={{ transform: `translateY(${(1 - cp) * label}px)` }}
+                >
+                  {text}
+                </span>
+              </div>
+            );
+          })}
+        </AbsoluteFill>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

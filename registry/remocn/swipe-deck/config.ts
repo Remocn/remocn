@@ -1,8 +1,27 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const swipeDeckConfig: ComponentConfig = {
   componentName: "SwipeDeck",
   importPath: "@/components/remocn/swipe-deck",
+  lists: {
+    lines: {
+      default: [
+        "Swipe right on what fits.",
+        "Skip the rest.",
+        "Install the match.",
+      ],
+      description: "Lines",
+      min: 3,
+      max: 3,
+    },
+  },
   controls: {
     theme: {
       type: "enum",
@@ -12,11 +31,6 @@ export const swipeDeckConfig: ComponentConfig = {
         dark: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     matchWith: {
       type: "text-content",
@@ -28,6 +42,28 @@ export const swipeDeckConfig: ComponentConfig = {
       default: "MC",
       description: "Initials",
     },
+    deckTitle: {
+      type: "text-content",
+      default: "Discover",
+      description: "Deck title",
+    },
+    matchTitle: {
+      type: "text-content",
+      default: "It’s a match",
+      description: "Match title",
+    },
+    ctaLabel: {
+      type: "text-content",
+      default: "Install",
+      description: "Install button",
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ground: groundControl(),
+    ...sceneControls({ font: "Figtree" }),
     speed: {
       type: "number",
       default: 1,

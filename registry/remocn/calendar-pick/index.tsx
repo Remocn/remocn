@@ -114,8 +114,40 @@ export interface CalendarPickProps {
   timeRange?: string;
   eventLabel?: string;
   busyDays?: number[];
+  /** Label of the button in the calendar header. */
+  todayLabel?: string;
+  /** Placeholder in the opened day before the time is typed. */
+  placeholder?: string;
+  /** Text color of the title, month and day numbers; overrides the theme. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Onest by default. */
+  fontFamily?: string;
+  /** Size of the calendar, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  /** Playback multiplier. */
+  speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+}
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
 }
 
 export function CalendarPick({
@@ -131,10 +163,18 @@ export function CalendarPick({
   timeRange = "10:00 AM – 4:00 PM",
   eventLabel = "Launch",
   busyDays = [3, 11, 12, 22, 25, 29],
+  todayLabel = "Today",
+  placeholder = "Add time",
+  ink: textColor,
+  background,
+  fontFamily = onest.fontFamily,
+  scale = 1,
+  delay = 0,
+  speed = 1,
   ground,
   groundParams,
 }: CalendarPickProps) {
-  const frame = useCurrentFrame();
+  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, fps } = useVideoConfig();
   const dark = theme === "dark";
   const portrait = height > width * 1.2;
@@ -142,7 +182,7 @@ export function CalendarPick({
   const stageH = portrait ? 1920 : 720;
   const s = width / stageW;
 
-  const ink = dark ? "#f6f1ec" : "#1b1612";
+  const ink = textColor ?? (dark ? "#f6f1ec" : "#1b1612");
   const soft = dark ? "rgba(246,241,236,0.7)" : "rgba(27,22,18,0.66)";
   const muted = dark ? "rgba(246,241,236,0.4)" : "rgba(27,22,18,0.38)";
   const hair = dark ? "rgba(255,255,255,0.08)" : "rgba(40,24,10,0.08)";
@@ -381,265 +421,276 @@ export function CalendarPick({
         });
 
   return (
-    <AbsoluteFill style={{ fontFamily: onest.fontFamily, overflow: "hidden" }}>
-      <GshGround
-        preset={resolvedGround}
-        params={resolvedParams}
-        timeOffset={5}
-        timeScale={0.6}
-      />
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          top: 0,
-          width: stageW,
-          height: stageH,
-          transform: `scale(${s})`,
-          transformOrigin: "0 0",
-          perspective: 2200,
-        }}
-      >
-        {portrait ? (
-          <div
-            style={{
-              position: "absolute",
-              left: 90,
-              right: 90,
-              top: 260,
-              overflow: "hidden",
-              paddingBottom: 12,
-            }}
-          >
-            <div
-              style={{
-                fontSize: 104,
-                lineHeight: 1.0,
-                letterSpacing: "-0.045em",
-                fontWeight: 300,
-                color: ink,
-                transform: `translateY(${mix(110, 0, titleIn)}%)`,
-              }}
-            >
-              {title}
-            </div>
-          </div>
-        ) : null}
+    <AbsoluteFill style={{ fontFamily, overflow: "hidden" }}>
+      {background === undefined ? (
+        <GshGround
+          preset={resolvedGround}
+          params={resolvedParams}
+          timeOffset={5}
+          timeScale={0.6}
+        />
+      ) : (
+        <AbsoluteFill
+          style={{
+            background: background === "transparent" ? undefined : background,
+          }}
+        />
+      )}
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            left: screenX - fX * Z,
-            top: screenY - fY * Z + mix(160, 0, enter),
-            width: W,
-            height: H,
+            left: 0,
+            top: 0,
+            width: stageW,
+            height: stageH,
+            transform: `scale(${s})`,
             transformOrigin: "0 0",
-            transform: `scale(${Z})`,
-            opacity: ramp(frame, -6, 8),
-            filter: enterBlur > 0.3 ? `blur(${enterBlur}px)` : undefined,
+            perspective: 2200,
           }}
         >
+          {portrait ? (
+            <div
+              style={{
+                position: "absolute",
+                left: 90,
+                right: 90,
+                top: 260,
+                overflow: "hidden",
+                paddingBottom: 12,
+              }}
+            >
+              <div
+                style={{
+                  fontSize: 104,
+                  lineHeight: 1.0,
+                  letterSpacing: "-0.045em",
+                  fontWeight: 300,
+                  color: ink,
+                  transform: `translateY(${mix(110, 0, titleIn)}%)`,
+                }}
+              >
+                {title}
+              </div>
+            </div>
+          ) : null}
           <div
             style={{
               position: "absolute",
-              inset: 0,
-              transformStyle: "preserve-3d",
-              transformOrigin: `${fX}px ${fY}px`,
-              transform: `rotateX(${rotX}deg) rotateY(${rotY}deg) rotateZ(${rotZ}deg)`,
+              left: screenX - fX * Z,
+              top: screenY - fY * Z + mix(160, 0, enter),
+              width: W,
+              height: H,
+              transformOrigin: "0 0",
+              transform: `scale(${Z})`,
+              opacity: ramp(frame, -6, 8),
+              filter: enterBlur > 0.3 ? `blur(${enterBlur}px)` : undefined,
             }}
           >
             <div
               style={{
                 position: "absolute",
                 inset: 0,
-                borderRadius: 28,
-                background: surface,
-                boxShadow: shadow,
-                border: `1px solid ${hair}`,
-                overflow: "hidden",
+                transformStyle: "preserve-3d",
+                transformOrigin: `${fX}px ${fY}px`,
+                transform: `rotateX(${rotX}deg) rotateY(${rotY}deg) rotateZ(${rotZ}deg)`,
               }}
             >
               <div
                 style={{
                   position: "absolute",
-                  left: padX + 4,
-                  top: 30,
-                  fontSize: 34,
-                  letterSpacing: "-0.03em",
-                  fontWeight: 300,
-                  color: ink,
-                }}
-              >
-                {month}
-                <span style={{ color: muted, marginLeft: 10 }}>{year}</span>
-              </div>
-              <div
-                style={{
-                  position: "absolute",
-                  right: padX,
-                  top: 32,
-                  display: "flex",
-                  gap: 8,
-                  alignItems: "center",
+                  inset: 0,
+                  borderRadius: 28,
+                  background: surface,
+                  boxShadow: shadow,
+                  border: `1px solid ${hair}`,
+                  overflow: "hidden",
                 }}
               >
                 <div
                   style={{
-                    height: 36,
-                    padding: "0 14px",
-                    borderRadius: 10,
-                    border: `1px solid ${hair}`,
-                    display: "flex",
-                    alignItems: "center",
-                    fontSize: 15,
-                    color: soft,
+                    position: "absolute",
+                    left: padX + 4,
+                    top: 30,
+                    fontSize: 34,
+                    letterSpacing: "-0.03em",
+                    fontWeight: 300,
+                    color: ink,
                   }}
                 >
-                  Today
+                  {month}
+                  <span style={{ color: muted, marginLeft: 10 }}>{year}</span>
                 </div>
-                {(["l", "r"] as const).map((dir) => (
+                <div
+                  style={{
+                    position: "absolute",
+                    right: padX,
+                    top: 32,
+                    display: "flex",
+                    gap: 8,
+                    alignItems: "center",
+                  }}
+                >
                   <div
-                    key={dir}
                     style={{
-                      width: 36,
                       height: 36,
+                      padding: "0 14px",
                       borderRadius: 10,
                       border: `1px solid ${hair}`,
                       display: "flex",
                       alignItems: "center",
-                      justifyContent: "center",
+                      fontSize: 15,
+                      color: soft,
                     }}
                   >
-                    <Chevron dir={dir} color={soft} />
+                    {todayLabel}
+                  </div>
+                  {(["l", "r"] as const).map((dir) => (
+                    <div
+                      key={dir}
+                      style={{
+                        width: 36,
+                        height: 36,
+                        borderRadius: 10,
+                        border: `1px solid ${hair}`,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <Chevron dir={dir} color={soft} />
+                    </div>
+                  ))}
+                </div>
+                {weekdays.map((wd, i) => (
+                  <div
+                    key={wd}
+                    style={{
+                      position: "absolute",
+                      left: padX + i * colW + 17,
+                      top: headH,
+                      height: weekH,
+                      fontFamily: mono.fontFamily,
+                      fontSize: 13,
+                      letterSpacing: "0.06em",
+                      color: i >= 5 ? muted : soft,
+                    }}
+                  >
+                    {wd}
                   </div>
                 ))}
-              </div>
-              {weekdays.map((wd, i) => (
+                {days}
                 <div
-                  key={wd}
                   style={{
                     position: "absolute",
-                    left: padX + i * colW + 17,
-                    top: headH,
-                    height: weekH,
-                    fontFamily: mono.fontFamily,
-                    fontSize: 13,
-                    letterSpacing: "0.06em",
-                    color: i >= 5 ? muted : soft,
+                    left: cellX + colW * 0.56 - 30,
+                    top: cellY + rowH * 0.5 - 30,
+                    width: 60,
+                    height: 60,
+                    borderRadius: 30,
+                    border: `1.5px solid ${accent}`,
+                    opacity: frame >= B.click ? (1 - ripple) * 0.8 : 0,
+                    transform: `scale(${mix(0.3, 1.4, ripple)})`,
                   }}
-                >
-                  {wd}
-                </div>
-              ))}
-              {days}
+                />
+                {inputOn ? (
+                  <div
+                    style={{
+                      position: "absolute",
+                      left: cellX + inset,
+                      top: cellY + inset,
+                      width: inputW,
+                      height: rowH - inset * 2,
+                      borderRadius: 14,
+                      background: dark ? "#2a221d" : "#ffffff",
+                      boxShadow: dark
+                        ? `0 0 0 1.5px ${accent}, 0 0 0 5px color-mix(in oklab, ${accent} 22%, transparent), 0 14px 30px rgba(0,0,0,0.4)`
+                        : `0 0 0 1.5px ${accent}, 0 0 0 5px color-mix(in oklab, ${accent} 16%, transparent), 0 14px 30px rgba(120,60,20,0.14)`,
+                      overflow: "hidden",
+                      opacity: Math.min(1, openP * 2),
+                    }}
+                  >
+                    <div
+                      style={{
+                        position: "absolute",
+                        left: 12,
+                        top: 9,
+                        fontSize: 24,
+                        letterSpacing: "-0.02em",
+                        color: ink,
+                      }}
+                    >
+                      {pickDay}
+                    </div>
+                    <div
+                      style={{
+                        position: "absolute",
+                        left: 58,
+                        top: 0,
+                        bottom: 0,
+                        display: "flex",
+                        alignItems: "center",
+                        fontSize: 21,
+                        color: ink,
+                        whiteSpace: "pre",
+                        opacity: ramp(frame, B.open + 4, 8),
+                      }}
+                    >
+                      {chars === 0 ? (
+                        <span style={{ color: muted }}>{placeholder}</span>
+                      ) : (
+                        typed
+                      )}
+                      <span
+                        style={{
+                          width: 2,
+                          height: 24,
+                          marginLeft: 2,
+                          borderRadius: 1,
+                          background: accent,
+                          opacity: caretOn ? 1 : 0,
+                        }}
+                      />
+                    </div>
+                    <div
+                      style={{
+                        position: "absolute",
+                        right: 12,
+                        top: 0,
+                        bottom: 0,
+                        display: "flex",
+                        alignItems: "center",
+                        fontFamily: mono.fontFamily,
+                        fontSize: 12,
+                        color: muted,
+                        opacity: ramp(frame, B.type + 30, 8),
+                      }}
+                    >
+                      ↵
+                    </div>
+                  </div>
+                ) : null}
+              </div>
               <div
                 style={{
                   position: "absolute",
-                  left: cellX + colW * 0.56 - 30,
-                  top: cellY + rowH * 0.5 - 30,
-                  width: 60,
-                  height: 60,
-                  borderRadius: 30,
-                  border: `1.5px solid ${accent}`,
-                  opacity: frame >= B.click ? (1 - ripple) * 0.8 : 0,
-                  transform: `scale(${mix(0.3, 1.4, ripple)})`,
+                  left: cX,
+                  top: cY,
+                  opacity:
+                    ramp(frame, B.cursor, 4) *
+                    (1 - ramp(frame, B.commit + 6, 9)),
+                  transform: `scale(${press})`,
+                  transformOrigin: "20% 15%",
+                  filter: cBlur > 0.3 ? `blur(${cBlur}px)` : undefined,
+                  display: frame >= B.cursor ? "block" : "none",
                 }}
-              />
-              {inputOn ? (
-                <div
-                  style={{
-                    position: "absolute",
-                    left: cellX + inset,
-                    top: cellY + inset,
-                    width: inputW,
-                    height: rowH - inset * 2,
-                    borderRadius: 14,
-                    background: dark ? "#2a221d" : "#ffffff",
-                    boxShadow: dark
-                      ? `0 0 0 1.5px ${accent}, 0 0 0 5px color-mix(in oklab, ${accent} 22%, transparent), 0 14px 30px rgba(0,0,0,0.4)`
-                      : `0 0 0 1.5px ${accent}, 0 0 0 5px color-mix(in oklab, ${accent} 16%, transparent), 0 14px 30px rgba(120,60,20,0.14)`,
-                    overflow: "hidden",
-                    opacity: Math.min(1, openP * 2),
-                  }}
-                >
-                  <div
-                    style={{
-                      position: "absolute",
-                      left: 12,
-                      top: 9,
-                      fontSize: 24,
-                      letterSpacing: "-0.02em",
-                      color: ink,
-                    }}
-                  >
-                    {pickDay}
-                  </div>
-                  <div
-                    style={{
-                      position: "absolute",
-                      left: 58,
-                      top: 0,
-                      bottom: 0,
-                      display: "flex",
-                      alignItems: "center",
-                      fontSize: 21,
-                      color: ink,
-                      whiteSpace: "pre",
-                      opacity: ramp(frame, B.open + 4, 8),
-                    }}
-                  >
-                    {chars === 0 ? (
-                      <span style={{ color: muted }}>Add time</span>
-                    ) : (
-                      typed
-                    )}
-                    <span
-                      style={{
-                        width: 2,
-                        height: 24,
-                        marginLeft: 2,
-                        borderRadius: 1,
-                        background: accent,
-                        opacity: caretOn ? 1 : 0,
-                      }}
-                    />
-                  </div>
-                  <div
-                    style={{
-                      position: "absolute",
-                      right: 12,
-                      top: 0,
-                      bottom: 0,
-                      display: "flex",
-                      alignItems: "center",
-                      fontFamily: mono.fontFamily,
-                      fontSize: 12,
-                      color: muted,
-                      opacity: ramp(frame, B.type + 30, 8),
-                    }}
-                  >
-                    ↵
-                  </div>
-                </div>
-              ) : null}
-            </div>
-            <div
-              style={{
-                position: "absolute",
-                left: cX,
-                top: cY,
-                opacity:
-                  ramp(frame, B.cursor, 4) * (1 - ramp(frame, B.commit + 6, 9)),
-                transform: `scale(${press})`,
-                transformOrigin: "20% 15%",
-                filter: cBlur > 0.3 ? `blur(${cBlur}px)` : undefined,
-                display: frame >= B.cursor ? "block" : "none",
-              }}
-            >
-              <Pointer size={26} dark={dark} />
+              >
+                <Pointer size={26} dark={dark} />
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

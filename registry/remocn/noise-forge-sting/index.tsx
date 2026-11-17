@@ -69,7 +69,22 @@ export interface NoiseForgeStingProps {
   accent?: string;
   ink?: string;
   hot?: string;
+  /** Letters forged after the mark. */
+  name?: string;
   tagline?: string;
+  /** Replaces the remocn mark. */
+  logo?: ReactNode;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the tagline. Load it yourself; Geist by default. */
+  fontFamily?: string;
+  /** Frames between each ring of letters forging outward from the center. */
+  stagger?: number;
+  /** Size of the wordmark and tagline, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
 }
@@ -240,16 +255,20 @@ function ForgedGlyph({
   frame,
   color,
   hot,
+  ring,
+  logo,
 }: {
   glyph: Glyph;
   frame: number;
   color: string;
   hot: string;
+  ring: number;
+  logo: ReactNode;
 }) {
-  const start = B.forge + glyph.order * B.ring;
+  const start = B.forge + glyph.order * ring;
   const len = glyph.mark ? B.markLen : B.glyphLen;
   const seed = `nf-${glyph.key}`;
-  const content = glyph.mark ? <MarkSvg color={color} /> : glyph.char;
+  const content = glyph.mark ? (logo ?? <MarkSvg color={color} />) : glyph.char;
   const locked = frame >= start + len;
   const box = {
     position: "relative" as const,
@@ -288,16 +307,40 @@ function ForgedGlyph({
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function NoiseForgeSting({
   theme = "dark",
   accent,
   ink,
   hot,
+  name = "emocn",
   tagline = "Launch videos, built from parts.",
+  logo,
+  background,
+  fontFamily = geist.fontFamily,
+  stagger = B.ring,
+  scale = 1,
+  delay = 0,
+  speed = 1,
   ground,
   groundParams,
 }: NoiseForgeStingProps) {
-  const frame = useCurrentFrame();
+  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
   const inkC = ink ?? c.ink;
@@ -316,7 +359,7 @@ export function NoiseForgeSting({
   const lift = custom || (portrait && c.tallParams) ? 1 : c.lift;
 
   const fontSize = portrait ? W * 0.205 : W * 0.172;
-  const glyphs = glyphPlan("emocn");
+  const glyphs = glyphPlan(name);
 
   const cool = ramp(frame, B.cool, B.coolLen, COOL);
   const heat = 1 - cool;
@@ -361,118 +404,133 @@ export function NoiseForgeSting({
     <AbsoluteFill
       style={{
         overflow: "hidden",
-        background: gshParams(preset, gParams).background,
+        background:
+          background === undefined
+            ? gshParams(preset, gParams).background
+            : undefined,
       }}
     >
-      <AbsoluteFill
-        style={{
-          opacity: groundFade,
-          transform: lift !== 1 ? `scale(${lift})` : undefined,
-          transformOrigin: "50% 0%",
-        }}
-      >
-        <GshGround
-          preset={preset}
-          params={gParams}
-          timeOffset={4}
-          timeScale={0.5}
-        />
-      </AbsoluteFill>
-      <AbsoluteFill
-        style={{
-          alignItems: "center",
-          justifyContent: "center",
-          transform: `scale(${push * punch})`,
-        }}
-      >
-        <div
+      {background === undefined ? (
+        <AbsoluteFill
           style={{
-            display: "flex",
-            flexDirection: "column",
+            opacity: groundFade,
+            transform: lift !== 1 ? `scale(${lift})` : undefined,
+            transformOrigin: "50% 0%",
+          }}
+        >
+          <GshGround
+            preset={preset}
+            params={gParams}
+            timeOffset={4}
+            timeScale={0.5}
+          />
+        </AbsoluteFill>
+      ) : (
+        <AbsoluteFill
+          style={{
+            background: background === "transparent" ? undefined : background,
+          }}
+        />
+      )}
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill
+          style={{
             alignItems: "center",
-            gap: fontSize * (portrait ? 0.34 : 0.26),
-            marginTop: portrait ? -H * 0.04 : 0,
+            justifyContent: "center",
+            transform: `scale(${push * punch})`,
           }}
         >
           <div
             style={{
-              position: "relative",
               display: "flex",
-              alignItems: "baseline",
-              fontFamily: manrope.fontFamily,
-              fontWeight: 600,
-              fontSize,
-              letterSpacing: "-0.025em",
-              lineHeight: 1,
-              filter: glow,
+              flexDirection: "column",
+              alignItems: "center",
+              gap: fontSize * (portrait ? 0.34 : 0.26),
+              marginTop: portrait ? -H * 0.04 : 0,
             }}
           >
-            <span
+            <div
               style={{
-                position: "absolute",
-                left: "50%",
-                top: "52%",
-                width: `${seamW}em`,
-                height: Math.max(2, fontSize * 0.018) * seamH,
-                transform: "translate(-50%, -50%)",
-                borderRadius: 999,
-                background: hotC,
-                opacity: sparkIn * (1 - seamOut),
+                position: "relative",
+                display: "flex",
+                alignItems: "baseline",
+                fontFamily: manrope.fontFamily,
+                fontWeight: 600,
+                fontSize,
+                letterSpacing: "-0.025em",
+                lineHeight: 1,
+                filter: glow,
               }}
-            />
-            {glyphs.map((g) => (
-              <ForgedGlyph
-                key={g.key}
-                glyph={g}
-                frame={frame}
-                color={g.mark ? markColor : letterC}
-                hot={hotC}
+            >
+              <span
+                style={{
+                  position: "absolute",
+                  left: "50%",
+                  top: "52%",
+                  width: `${seamW}em`,
+                  height: Math.max(2, fontSize * 0.018) * seamH,
+                  transform: "translate(-50%, -50%)",
+                  borderRadius: 999,
+                  background: hotC,
+                  opacity: sparkIn * (1 - seamOut),
+                }}
               />
-            ))}
-          </div>
-          <div
-            style={{
-              display: "flex",
-              flexWrap: "wrap",
-              justifyContent: "center",
-              maxWidth: portrait ? W * 0.8 : W * 0.8,
-              rowGap: tagSize * 0.1,
-              fontFamily: geist.fontFamily,
-              fontWeight: 300,
-              fontSize: tagSize,
-              letterSpacing: "-0.02em",
-              lineHeight: 1.12,
-              color: c.sub,
-            }}
-          >
-            {words.map((w, i) => {
-              const p = ramp(frame, B.tagline + i * 2, 14);
-              return (
-                <span
-                  key={`${w}-${i.toString()}`}
-                  style={{
-                    display: "inline-block",
-                    overflow: "hidden",
-                    paddingBottom: tagSize * 0.14,
-                    marginBottom: -tagSize * 0.14,
-                    marginRight: i < words.length - 1 ? tagSize * 0.26 : 0,
-                  }}
-                >
+              {glyphs.map((g) => (
+                <ForgedGlyph
+                  key={g.key}
+                  glyph={g}
+                  frame={frame}
+                  color={g.mark ? markColor : letterC}
+                  hot={hotC}
+                  ring={stagger}
+                  logo={logo}
+                />
+              ))}
+            </div>
+            <div
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                justifyContent: "center",
+                maxWidth: portrait ? W * 0.8 : W * 0.8,
+                rowGap: tagSize * 0.1,
+                fontFamily,
+                fontWeight: 300,
+                fontSize: tagSize,
+                letterSpacing: "-0.02em",
+                lineHeight: 1.12,
+                color: c.sub,
+              }}
+            >
+              {words.map((w, i) => {
+                const p = ramp(frame, B.tagline + i * 2, 14);
+                return (
                   <span
+                    key={`${w}-${i.toString()}`}
                     style={{
                       display: "inline-block",
-                      transform: `translateY(${(1 - p) * 105}%)`,
-                      filter: p < 1 ? `blur(${(1 - p) * 6}px)` : undefined,
+                      overflow: "hidden",
+                      paddingBottom: tagSize * 0.14,
+                      marginBottom: -tagSize * 0.14,
+                      marginRight: i < words.length - 1 ? tagSize * 0.26 : 0,
                     }}
                   >
-                    {w}
+                    <span
+                      style={{
+                        display: "inline-block",
+                        transform: `translateY(${(1 - p) * 105}%)`,
+                        filter: p < 1 ? `blur(${(1 - p) * 6}px)` : undefined,
+                      }}
+                    >
+                      {w}
+                    </span>
                   </span>
-                </span>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
-        </div>
-      </AbsoluteFill>
+        </AbsoluteFill>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

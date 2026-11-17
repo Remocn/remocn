@@ -2,6 +2,7 @@
 
 import { loadFont as loadGeist } from "@remotion/google-fonts/Geist";
 import { loadFont as loadGeistMono } from "@remotion/google-fonts/GeistMono";
+import type React from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AbsoluteFill,
@@ -25,8 +26,20 @@ const geistMono = loadGeistMono("normal", {
 export interface MonoSettleProps {
   lines?: string[];
   highlight?: string;
+  /** Frame the mono letters start settling into the sans. */
+  settleAt?: number;
+  /** Frames the settle wave takes to cross a line. */
+  sweep?: number;
   accent?: string;
+  /** Text color of the settled sans; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface the letters settle into. Load it yourself; Geist by default. */
+  fontFamily?: string;
+  /** Size of the text block, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -81,7 +94,7 @@ interface Metrics {
 
 const baseOf = (asc: number, desc: number) => (1 - (asc + desc)) / 2 + asc;
 
-function measure(lines: string[]): Metrics {
+function measure(lines: string[], family: string): Metrics {
   const ctx = document.createElement("canvas").getContext("2d");
   if (!ctx) throw new Error("mono-settle: no 2d context");
   const run = (s: string, font: string, track: number) => {
@@ -97,7 +110,7 @@ function measure(lines: string[]): Metrics {
     return { xs, total };
   };
   const monoFont = `400 100px "${geistMono.fontFamily}"`;
-  const propFont = `500 100px "${geist.fontFamily}"`;
+  const propFont = `500 100px "${family}"`;
   const out = lines.map((s) => {
     const mm = run(s, monoFont, 0);
     const pp = run(s, propFont, TRACK);
@@ -121,7 +134,7 @@ function measure(lines: string[]): Metrics {
   };
 }
 
-function useMetrics(lines: string[]) {
+function useMetrics(lines: string[], family: string) {
   const key = lines.join("\u0001");
   const [state, setState] = useState<{ key: string; m: Metrics } | null>(null);
   const [handle] = useState(() => delayRender("mono-settle: measuring"));
@@ -131,13 +144,16 @@ function useMetrics(lines: string[]) {
     Promise.all([
       geist.waitUntilDone(),
       geistMono.waitUntilDone(),
-      document.fonts.load(`500 100px "${geist.fontFamily}"`),
+      document.fonts.load(`500 100px "${family}"`),
       document.fonts.load(`400 100px "${geistMono.fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
-        setState({ key, m: measure(key.split("\u0001")) });
+        setState({
+          key: key + family,
+          m: measure(key.split("\u0001"), family),
+        });
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -146,8 +162,8 @@ function useMetrics(lines: string[]) {
     return () => {
       live = false;
     };
-  }, [key, handle]);
-  return state && state.key === key ? state.m : null;
+  }, [key, family, handle]);
+  return state && state.key === key + family ? state.m : null;
 }
 
 function highlightMask(lines: string[], needle: string) {
@@ -164,24 +180,47 @@ function highlightMask(lines: string[], needle: string) {
   return masks;
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function MonoSettle({
   lines = ["From your editor", "to the edit."],
   highlight = "the edit.",
+  settleAt = WAVE_AT,
+  sweep = WAVE_SPAN,
   accent,
+  ink,
   background,
+  fontFamily = geist.fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: MonoSettleProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
   const spot = accent ?? c.pink;
+  const fg = ink ?? c.ink;
   const list = useMemo(
     () =>
       (lines.length > 0 ? lines : ["From your editor"]).map((l) => l || " "),
     [lines],
   );
-  const m = useMetrics(list);
+  const m = useMetrics(list, fontFamily);
   const hlMask = useMemo(
     () => highlightMask(list, highlight),
     [list, highlight],
@@ -203,7 +242,7 @@ export function MonoSettle({
   const prog = m.lines.map((l, li) =>
     l.xm.map((x) => {
       const at =
-        WAVE_AT + (x / Math.max(0.001, maxMono)) * WAVE_SPAN + li * LINE_LAG;
+        settleAt + (x / Math.max(0.001, maxMono)) * sweep + li * LINE_LAG;
       return interpolate(t, [at, at + MORPH_LEN], [0, 1], CLAMP);
     }),
   );
@@ -246,8 +285,8 @@ export function MonoSettle({
       );
       const lift = (1 - r) * F * 1.1;
       const sansColor = hlMask[li][i]
-        ? `color-mix(in oklab, ${spot} ${(hlP * 100).toFixed(1)}%, ${c.ink})`
-        : c.ink;
+        ? `color-mix(in oklab, ${spot} ${(hlP * 100).toFixed(1)}%, ${fg})`
+        : fg;
       const top = baseY - F * 1.05;
       const h = F * 1.3;
       const cut = (1 - e) * h;
@@ -290,7 +329,7 @@ export function MonoSettle({
                 top: F * 1.05 - m.baseP * F + lift,
                 height: F,
                 lineHeight: `${F}px`,
-                fontFamily: geist.fontFamily,
+                fontFamily,
                 fontWeight: 500,
                 fontSize: F,
                 whiteSpace: "pre",
@@ -311,7 +350,7 @@ export function MonoSettle({
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
-      {glyphs}
+      <ScaleLayer scale={scale}>{glyphs}</ScaleLayer>
     </AbsoluteFill>
   );
 }

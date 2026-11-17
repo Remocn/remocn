@@ -75,6 +75,22 @@ export interface SpeedrunTimerProps {
   banner?: string;
   /** Colour of the current-split marker. */
   accent?: string;
+  /** Text color of the splits and timer; overrides the theme ink. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the splits, timer and banner. Load it yourself; Geist by default. */
+  fontFamily?: string;
+  /** Label above the personal-best time. */
+  pbLabel?: string;
+  /** Corner radius of the splits panel, in px at 1280×720. */
+  radius?: number;
+  /** Replaces the remocn mark in the header. */
+  logo?: React.ReactNode;
+  /** Size of the timer and splits, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   /** gradients.sh preset id for the ground. */
   ground?: GshPresetId;
@@ -221,19 +237,50 @@ function Tabular({ text }: { text: string }) {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function SpeedrunTimer({
   category = "Launch video · Any%",
   splits = DEFAULT_SPLITS,
   banner = "World record",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = geist,
+  pbLabel = "Personal best",
+  radius: panelRadius = 18,
+  logo,
+  scale = 1,
+  delay = 0,
   theme = "dark",
   ground,
   groundParams,
   speed = 1,
 }: SpeedrunTimerProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const c = THEMES[theme];
+  const fg = ink ?? c.ink;
+  const stage =
+    background === undefined
+      ? c.stage
+      : background === "transparent"
+        ? "transparent"
+        : background;
   const tall = H > W;
   const u = Math.min(W / 1280, H / 720);
 
@@ -259,7 +306,7 @@ export function SpeedrunTimer({
   const flash = done ? Math.max(0, 1 - (t - finishAt) / 4) ** 2 : 0;
 
   let tint = 0;
-  let tintColor: string = c.ink;
+  let tintColor: string = fg;
   frames.forEach((f, i) => {
     const d = t - f;
     if (d >= 0 && d < 10 && i < n - 1) {
@@ -267,7 +314,7 @@ export function SpeedrunTimer({
       tintColor = splits[i].time <= splits[i].pb ? c.ahead : c.behind;
     }
   });
-  const timerColor = done ? c.gold : c.ink;
+  const timerColor = done ? c.gold : fg;
 
   const wr = spring({ frame: t - BEATS.banner, fps, config: CARD });
   const blinkOff =
@@ -316,7 +363,7 @@ export function SpeedrunTimer({
         deltaColW: 0.1 * W,
       };
   const inset = 8 * u;
-  const radius = 18 * u;
+  const radius = panelRadius * u;
 
   let bandIndex = 0;
   frames.forEach((f, i) => {
@@ -341,287 +388,295 @@ export function SpeedrunTimer({
   const timerText = clock(runTime);
 
   return (
-    <AbsoluteFill style={{ background: c.stage, overflow: "hidden" }}>
-      <AbsoluteFill
-        style={{
-          top: -0.3 * H,
-          height: 1.55 * H,
-          transform: `translateY(${groundShift - 0.25 * H}px) scale(1.06)`,
-        }}
-      >
-        <GshGround
-          preset={ground ?? c.preset}
-          params={groundParams ?? c.params}
-          timeOffset={5}
-          timeScale={0.4}
-        />
-      </AbsoluteFill>
-      <AbsoluteFill style={{ background: c.stage, opacity: veil }} />
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
+      {background === undefined ? (
+        <>
+          <AbsoluteFill
+            style={{
+              top: -0.3 * H,
+              height: 1.55 * H,
+              transform: `translateY(${groundShift - 0.25 * H}px) scale(1.06)`,
+            }}
+          >
+            <GshGround
+              preset={ground ?? c.preset}
+              params={groundParams ?? c.params}
+              timeOffset={5}
+              timeScale={0.4}
+            />
+          </AbsoluteFill>
+          <AbsoluteFill style={{ background: c.stage, opacity: veil }} />
+        </>
+      ) : null}
 
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          transform: `translate(${hit.x}px, ${hit.y}px) scale(${camScale})`,
-          transformOrigin: "60% 70%",
-        }}
-      >
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            left: L.pad,
-            right: L.pad,
-            top: L.headerTop,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            opacity: ENTER(ramp(t, 0, 10)),
+            inset: 0,
+            transform: `translate(${hit.x}px, ${hit.y}px) scale(${camScale})`,
+            transformOrigin: "60% 70%",
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: 16 * u }}>
-            <RemocnLogo fontSize={L.logoFs} color={c.ink} />
-            <span style={monoLabel}>{category}</span>
+          <div
+            style={{
+              position: "absolute",
+              left: L.pad,
+              right: L.pad,
+              top: L.headerTop,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              opacity: ENTER(ramp(t, 0, 10)),
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 16 * u }}>
+              {logo ?? <RemocnLogo fontSize={L.logoFs} color={fg} />}
+              <span style={monoLabel}>{category}</span>
+            </div>
           </div>
-        </div>
 
-        {tall ? null : (
+          {tall ? null : (
+            <div
+              style={{
+                position: "absolute",
+                right: L.pad,
+                top: L.panelTop + inset + 0.012 * H,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "flex-end",
+                gap: 0.022 * H,
+                opacity: ENTER(ramp(t, 4, 12)),
+                transform: `translateY(${(1 - panelIn) * 0.04 * H}px)`,
+              }}
+            >
+              <span style={monoLabel}>{pbLabel}</span>
+              <span
+                style={{
+                  fontFamily,
+                  fontWeight: 300,
+                  fontSize: 0.1 * H,
+                  lineHeight: 0.8,
+                  letterSpacing: "-0.03em",
+                  fontVariantNumeric: "tabular-nums",
+                  color: done ? c.faint : fg,
+                  textDecoration: done ? "line-through" : undefined,
+                  textDecorationThickness: 2 * u,
+                }}
+              >
+                {pbParts.head}
+                {pbParts.tail}
+              </span>
+              <span
+                style={{
+                  fontFamily: mono,
+                  fontWeight: 400,
+                  fontSize: 0.036 * H,
+                  lineHeight: 1,
+                  fontVariantNumeric: "tabular-nums",
+                  color: c.gold,
+                  opacity: done ? ramp(t, finishAt + 2, 3) : 0,
+                  transform: `scale(${1.3 - 0.3 * pbPop})`,
+                  transformOrigin: "100% 50%",
+                }}
+              >
+                {delta((splits[n - 1]?.time ?? 0) - (splits[n - 1]?.pb ?? 0))}
+              </span>
+            </div>
+          )}
+
+          <div
+            style={{
+              position: "absolute",
+              left: L.pad,
+              top: L.panelTop,
+              width: L.panelW,
+              padding: inset,
+              borderRadius: radius,
+              background: c.panel,
+              boxShadow: c.panelShadow,
+              backdropFilter: "blur(18px)",
+              WebkitBackdropFilter: "blur(18px)",
+              opacity: ramp(t, 0, 4),
+              transform: `translateY(${(1 - panelIn) * 0.05 * H}px)`,
+            }}
+          >
+            <div style={{ position: "relative", height: n * L.rowH }}>
+              <div
+                style={{
+                  position: "absolute",
+                  left: 0,
+                  right: 0,
+                  top: bandIndex * L.rowH,
+                  height: L.rowH,
+                  borderRadius: radius - inset,
+                  background: c.band,
+                  opacity: bandOpacity,
+                }}
+              >
+                <div
+                  style={{
+                    position: "absolute",
+                    left: 9 * u,
+                    top: "28%",
+                    bottom: "28%",
+                    width: 4 * u,
+                    borderRadius: 2 * u,
+                    background: accent,
+                  }}
+                />
+              </div>
+              {splits.map((s, i) => {
+                const at = frames[i];
+                const isLast = i === n - 1;
+                const completed = t >= at;
+                const inK = spring({
+                  frame: t - BEATS.rowIn - 2 - i * BEATS.rowGap,
+                  fps,
+                  config: CARD,
+                });
+                const pop = spring({ frame: t - at, fps, config: CHIP });
+                const ahead = s.time <= s.pb;
+                const deltaColor = isLast ? c.gold : ahead ? c.ahead : c.behind;
+                const rowFlash = completed
+                  ? Math.max(0, 1 - (t - at) / 12) ** 2
+                  : 0;
+                const rowInk = isLast && completed ? c.gold : fg;
+                const parts = clockParts(completed ? s.time : s.pb);
+                return (
+                  <div
+                    key={s.name}
+                    style={{
+                      position: "absolute",
+                      left: 0,
+                      right: 0,
+                      top: i * L.rowH,
+                      height: L.rowH,
+                      display: "flex",
+                      alignItems: "center",
+                      padding: `0 ${22 * u}px 0 ${26 * u}px`,
+                      borderTop: i === 0 ? undefined : `1px solid ${c.rule}`,
+                      opacity: ramp(t, BEATS.rowIn + 2 + i * BEATS.rowGap, 4),
+                      transform: `translateY(${(1 - inK) * 0.4 * L.rowH}px)`,
+                    }}
+                  >
+                    <div
+                      style={{
+                        position: "absolute",
+                        inset: 0,
+                        borderRadius: radius - inset,
+                        background: deltaColor,
+                        opacity: 0.16 * rowFlash,
+                      }}
+                    />
+                    <div
+                      style={{
+                        flex: 1,
+                        fontFamily,
+                        fontWeight: 400,
+                        fontSize: L.rowFs,
+                        letterSpacing: "-0.01em",
+                        color: rowInk,
+                        lineHeight: 1,
+                      }}
+                    >
+                      {s.name}
+                    </div>
+                    <div
+                      style={{
+                        width: L.deltaColW,
+                        textAlign: "right",
+                        fontFamily: mono,
+                        fontWeight: 400,
+                        fontSize: L.deltaFs,
+                        fontVariantNumeric: "tabular-nums",
+                        color: deltaColor,
+                        lineHeight: 1,
+                        opacity: completed ? ramp(t, at, 2) : 0,
+                        transform: `scale(${1.3 - 0.3 * pop})`,
+                        transformOrigin: "100% 50%",
+                      }}
+                    >
+                      {delta(s.time - s.pb)}
+                    </div>
+                    <div
+                      style={{
+                        width: L.timeColW,
+                        textAlign: "right",
+                        fontFamily,
+                        fontWeight: 400,
+                        fontSize: L.rowFs,
+                        fontVariantNumeric: "tabular-nums",
+                        color: completed ? rowInk : c.faint,
+                        lineHeight: 1,
+                      }}
+                    >
+                      {parts.head}
+                      <span style={{ opacity: completed ? 0.55 : 1 }}>
+                        {parts.tail}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
           <div
             style={{
               position: "absolute",
               right: L.pad,
-              top: L.panelTop + inset + 0.012 * H,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "flex-end",
-              gap: 0.022 * H,
-              opacity: ENTER(ramp(t, 4, 12)),
-              transform: `translateY(${(1 - panelIn) * 0.04 * H}px)`,
+              top: L.bannerTop,
+              fontFamily,
+              fontWeight: 300,
+              fontSize: L.bannerFs,
+              lineHeight: 1,
+              letterSpacing: "0.01em",
+              textTransform: "uppercase",
+              whiteSpace: "nowrap",
+              color: c.gold,
+              opacity: wrOpacity,
+              transform: `scale(${1.35 - 0.35 * wr})`,
+              transformOrigin: "100% 100%",
+              filter:
+                wr < 0.97
+                  ? `blur(${Math.max(0, 1 - wr) * 10 * u}px)`
+                  : undefined,
             }}
           >
-            <span style={monoLabel}>Personal best</span>
-            <span
-              style={{
-                fontFamily: geist,
-                fontWeight: 300,
-                fontSize: 0.1 * H,
-                lineHeight: 0.8,
-                letterSpacing: "-0.03em",
-                fontVariantNumeric: "tabular-nums",
-                color: done ? c.faint : c.ink,
-                textDecoration: done ? "line-through" : undefined,
-                textDecorationThickness: 2 * u,
-              }}
-            >
-              {pbParts.head}
-              {pbParts.tail}
-            </span>
-            <span
-              style={{
-                fontFamily: mono,
-                fontWeight: 400,
-                fontSize: 0.036 * H,
-                lineHeight: 1,
-                fontVariantNumeric: "tabular-nums",
-                color: c.gold,
-                opacity: done ? ramp(t, finishAt + 2, 3) : 0,
-                transform: `scale(${1.3 - 0.3 * pbPop})`,
-                transformOrigin: "100% 50%",
-              }}
-            >
-              {delta((splits[n - 1]?.time ?? 0) - (splits[n - 1]?.pb ?? 0))}
-            </span>
+            {banner}
           </div>
-        )}
 
-        <div
-          style={{
-            position: "absolute",
-            left: L.pad,
-            top: L.panelTop,
-            width: L.panelW,
-            padding: inset,
-            borderRadius: radius,
-            background: c.panel,
-            boxShadow: c.panelShadow,
-            backdropFilter: "blur(18px)",
-            WebkitBackdropFilter: "blur(18px)",
-            opacity: ramp(t, 0, 4),
-            transform: `translateY(${(1 - panelIn) * 0.05 * H}px)`,
-          }}
-        >
-          <div style={{ position: "relative", height: n * L.rowH }}>
-            <div
-              style={{
-                position: "absolute",
-                left: 0,
-                right: 0,
-                top: bandIndex * L.rowH,
-                height: L.rowH,
-                borderRadius: radius - inset,
-                background: c.band,
-                opacity: bandOpacity,
-              }}
-            >
+          <div
+            style={{
+              position: "absolute",
+              right: L.pad - 0.02 * L.timerFs,
+              top: L.timerTop,
+              fontFamily,
+              fontWeight: 300,
+              fontSize: L.timerFs,
+              lineHeight: 0.8,
+              letterSpacing: "-0.03em",
+              color: t < BEATS.run ? c.dim : timerColor,
+              whiteSpace: "nowrap",
+            }}
+          >
+            <Tabular text={timerText} />
+            {tint > 0.01 ? (
               <div
                 style={{
                   position: "absolute",
-                  left: 9 * u,
-                  top: "28%",
-                  bottom: "28%",
-                  width: 4 * u,
-                  borderRadius: 2 * u,
-                  background: accent,
+                  inset: 0,
+                  color: tintColor,
+                  opacity: tint,
                 }}
-              />
-            </div>
-            {splits.map((s, i) => {
-              const at = frames[i];
-              const isLast = i === n - 1;
-              const completed = t >= at;
-              const inK = spring({
-                frame: t - BEATS.rowIn - 2 - i * BEATS.rowGap,
-                fps,
-                config: CARD,
-              });
-              const pop = spring({ frame: t - at, fps, config: CHIP });
-              const ahead = s.time <= s.pb;
-              const deltaColor = isLast ? c.gold : ahead ? c.ahead : c.behind;
-              const rowFlash = completed
-                ? Math.max(0, 1 - (t - at) / 12) ** 2
-                : 0;
-              const rowInk = isLast && completed ? c.gold : c.ink;
-              const parts = clockParts(completed ? s.time : s.pb);
-              return (
-                <div
-                  key={s.name}
-                  style={{
-                    position: "absolute",
-                    left: 0,
-                    right: 0,
-                    top: i * L.rowH,
-                    height: L.rowH,
-                    display: "flex",
-                    alignItems: "center",
-                    padding: `0 ${22 * u}px 0 ${26 * u}px`,
-                    borderTop: i === 0 ? undefined : `1px solid ${c.rule}`,
-                    opacity: ramp(t, BEATS.rowIn + 2 + i * BEATS.rowGap, 4),
-                    transform: `translateY(${(1 - inK) * 0.4 * L.rowH}px)`,
-                  }}
-                >
-                  <div
-                    style={{
-                      position: "absolute",
-                      inset: 0,
-                      borderRadius: radius - inset,
-                      background: deltaColor,
-                      opacity: 0.16 * rowFlash,
-                    }}
-                  />
-                  <div
-                    style={{
-                      flex: 1,
-                      fontFamily: geist,
-                      fontWeight: 400,
-                      fontSize: L.rowFs,
-                      letterSpacing: "-0.01em",
-                      color: rowInk,
-                      lineHeight: 1,
-                    }}
-                  >
-                    {s.name}
-                  </div>
-                  <div
-                    style={{
-                      width: L.deltaColW,
-                      textAlign: "right",
-                      fontFamily: mono,
-                      fontWeight: 400,
-                      fontSize: L.deltaFs,
-                      fontVariantNumeric: "tabular-nums",
-                      color: deltaColor,
-                      lineHeight: 1,
-                      opacity: completed ? ramp(t, at, 2) : 0,
-                      transform: `scale(${1.3 - 0.3 * pop})`,
-                      transformOrigin: "100% 50%",
-                    }}
-                  >
-                    {delta(s.time - s.pb)}
-                  </div>
-                  <div
-                    style={{
-                      width: L.timeColW,
-                      textAlign: "right",
-                      fontFamily: geist,
-                      fontWeight: 400,
-                      fontSize: L.rowFs,
-                      fontVariantNumeric: "tabular-nums",
-                      color: completed ? rowInk : c.faint,
-                      lineHeight: 1,
-                    }}
-                  >
-                    {parts.head}
-                    <span style={{ opacity: completed ? 0.55 : 1 }}>
-                      {parts.tail}
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
+              >
+                <Tabular text={timerText} />
+              </div>
+            ) : null}
           </div>
         </div>
-
-        <div
-          style={{
-            position: "absolute",
-            right: L.pad,
-            top: L.bannerTop,
-            fontFamily: geist,
-            fontWeight: 300,
-            fontSize: L.bannerFs,
-            lineHeight: 1,
-            letterSpacing: "0.01em",
-            textTransform: "uppercase",
-            whiteSpace: "nowrap",
-            color: c.gold,
-            opacity: wrOpacity,
-            transform: `scale(${1.35 - 0.35 * wr})`,
-            transformOrigin: "100% 100%",
-            filter:
-              wr < 0.97 ? `blur(${Math.max(0, 1 - wr) * 10 * u}px)` : undefined,
-          }}
-        >
-          {banner}
-        </div>
-
-        <div
-          style={{
-            position: "absolute",
-            right: L.pad - 0.02 * L.timerFs,
-            top: L.timerTop,
-            fontFamily: geist,
-            fontWeight: 300,
-            fontSize: L.timerFs,
-            lineHeight: 0.8,
-            letterSpacing: "-0.03em",
-            color: t < BEATS.run ? c.dim : timerColor,
-            whiteSpace: "nowrap",
-          }}
-        >
-          <Tabular text={timerText} />
-          {tint > 0.01 ? (
-            <div
-              style={{
-                position: "absolute",
-                inset: 0,
-                color: tintColor,
-                opacity: tint,
-              }}
-            >
-              <Tabular text={timerText} />
-            </div>
-          ) : null}
-        </div>
-      </div>
+      </ScaleLayer>
 
       {flash > 0.01 ? (
         <AbsoluteFill

@@ -1,8 +1,28 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const rewriteBarsConfig: ComponentConfig = {
   componentName: "RewriteBars",
   importPath: "@/components/remocn/rewrite-bars",
+  lists: {
+    headlines: {
+      default: [
+        "Scenes you copy, not configure.",
+        "Captions that move with the voice.",
+        "Your launch video, rendered from code.",
+      ],
+      description: "Headlines",
+    },
+    eyebrows: {
+      default: ["01 · Scenes", "02 · Captions", "03 · Render"],
+      description: "Eyebrows",
+    },
+  },
   controls: {
     theme: {
       type: "enum",
@@ -12,11 +32,6 @@ export const rewriteBarsConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     highlight: {
       type: "text-content",
@@ -41,6 +56,30 @@ export const rewriteBarsConfig: ComponentConfig = {
       description: "Hold",
       hiddenFromList: false,
     },
+    stagger: {
+      type: "number",
+      default: 3,
+      min: 0,
+      max: 12,
+      step: 1,
+      description: "Line stagger",
+      hiddenFromList: false,
+    },
+    fontWeight: {
+      type: "number",
+      default: 500,
+      min: 300,
+      max: 700,
+      step: 100,
+      description: "Weight",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Figtree" }),
     speed: {
       type: "number",
       default: 1,

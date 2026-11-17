@@ -1,6 +1,7 @@
 "use client";
 
 import { loadFont as loadSchibsted } from "@remotion/google-fonts/SchibstedGrotesk";
+import type React from "react";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import {
   AbsoluteFill,
@@ -22,8 +23,21 @@ export interface MagnitudePushProps {
   value?: string;
   suffix?: string;
   label?: string;
+  /** Frames between one digit pushing in and the next. */
+  pushGap?: number;
+  /** Frames between label words as they rise. */
+  stagger?: number;
   accent?: string;
+  /** Text color of the first digit, suffix and label; overrides the theme. */
+  ink?: string;
   background?: string;
+  /** Typeface for the figure and label. Load it yourself; Schibsted Grotesk by default. */
+  fontFamily?: string;
+  grain?: boolean;
+  /** Size of the figure and label, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -82,11 +96,16 @@ interface Metrics {
 
 const FONT_PX = 400;
 
-function measure(chars: string[], suffix: string, label: string): Metrics {
+function measure(
+  chars: string[],
+  suffix: string,
+  label: string,
+  fontFamily: string,
+): Metrics {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("magnitude-push: no 2d context");
-  const fam = `"${schibsted.fontFamily}"`;
+  const fam = `"${fontFamily}"`;
   ctx.font = `500 ${FONT_PX}px ${fam}`;
   const adv = chars.map((ch) => ctx.measureText(ch).width / FONT_PX + TRACK);
   const suf = suffix
@@ -112,7 +131,12 @@ function measure(chars: string[], suffix: string, label: string): Metrics {
   };
 }
 
-function useMetrics(chars: string[], suffix: string, label: string) {
+function useMetrics(
+  chars: string[],
+  suffix: string,
+  label: string,
+  fontFamily: string,
+) {
   const [metrics, setMetrics] = useState<Metrics | null>(null);
   const [handle] = useState(() => delayRender("magnitude-push: measuring"));
   const released = useRef(false);
@@ -120,13 +144,13 @@ function useMetrics(chars: string[], suffix: string, label: string) {
     let live = true;
     Promise.all([
       schibsted.waitUntilDone(),
-      document.fonts.load(`500 100px "${schibsted.fontFamily}"`),
-      document.fonts.load(`400 100px "${schibsted.fontFamily}"`),
+      document.fonts.load(`500 100px "${fontFamily}"`),
+      document.fonts.load(`400 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
-        setMetrics(measure(chars, suffix, label));
+        setMetrics(measure(chars, suffix, label, fontFamily));
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -135,7 +159,7 @@ function useMetrics(chars: string[], suffix: string, label: string) {
     return () => {
       live = false;
     };
-  }, [chars, suffix, label, handle]);
+  }, [chars, suffix, label, fontFamily, handle]);
   return metrics;
 }
 
@@ -167,23 +191,47 @@ function Grain({ opacity }: { opacity: number }) {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function MagnitudePush({
   value = "1000",
   suffix = "×",
   label = "fewer keyframes to set by hand",
+  pushGap = PUSH_GAP,
+  stagger = LABEL_GAP,
   accent = "#3B5BFD",
+  ink,
   background,
+  fontFamily = schibsted.fontFamily,
+  grain = true,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: MagnitudePushProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const c = THEMES[theme];
+  const fg = ink ?? c.ink;
   const bg = background ?? c.bg;
   const clear = bg === "transparent";
 
   const chars = useMemo(() => Array.from(value), [value]);
-  const m = useMetrics(chars, suffix, label);
+  const m = useMetrics(chars, suffix, label, fontFamily);
 
   if (!m) {
     return <div style={{ position: "absolute", inset: 0, background: bg }} />;
@@ -204,7 +252,7 @@ export function MagnitudePush({
     i === 0
       ? 1
       : spring({
-          frame: t - (PUSH_AT + (i - 1) * PUSH_GAP),
+          frame: t - (PUSH_AT + (i - 1) * pushGap),
           fps,
           config: { damping: 15, stiffness: 120, mass: 0.9 },
         }),
@@ -212,7 +260,7 @@ export function MagnitudePush({
 
   let F = fitAt(0);
   for (let i = 1; i <= pushes; i++) {
-    const at = PUSH_AT + (i - 1) * PUSH_GAP + CAM_LAG;
+    const at = PUSH_AT + (i - 1) * pushGap + CAM_LAG;
     const k = interpolate(t, [at, at + CAM_LEN], [0, 1], {
       ...CLAMP,
       easing: EASE_IN_OUT,
@@ -220,7 +268,7 @@ export function MagnitudePush({
     F = F + (fitAt(i) - F) * k;
   }
 
-  const endAt = PUSH_AT + Math.max(0, pushes - 1) * PUSH_GAP;
+  const endAt = PUSH_AT + Math.max(0, pushes - 1) * pushGap;
   const labelAt = endAt + (pushes > 0 ? 18 : 6);
   const rest = fitAt(pushes);
   const labelSize = Math.min(
@@ -257,7 +305,7 @@ export function MagnitudePush({
   const glyphBase = {
     position: "absolute" as const,
     top: lineTop - maskTop,
-    fontFamily: schibsted.fontFamily,
+    fontFamily,
     fontWeight: 500,
     fontSize: F,
     lineHeight: `${F}px`,
@@ -277,7 +325,7 @@ export function MagnitudePush({
           style={{
             ...glyphBase,
             left: gx,
-            color: c.ink,
+            color: fg,
             transform: `translateY(${((1 - p) * maskH * 1.05).toFixed(2)}px)`,
           }}
         >
@@ -285,7 +333,7 @@ export function MagnitudePush({
         </div>
       );
     }
-    const at = PUSH_AT + (i - 1) * PUSH_GAP;
+    const at = PUSH_AT + (i - 1) * pushGap;
     const p = rise(at + 3);
     const slot = Math.max(0, w);
     if (slot < 1) return null;
@@ -327,7 +375,7 @@ export function MagnitudePush({
       style={{
         ...glyphBase,
         left: x + sufGap * F,
-        color: c.ink,
+        color: fg,
         transform: `translateY(${((1 - sufP) * maskH * 1.05).toFixed(2)}px)`,
       }}
     >
@@ -355,72 +403,74 @@ export function MagnitudePush({
           }}
         />
       )}
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          width: W,
-          top: maskTop,
-          height: maskH,
-          overflow: "visible",
-        }}
-      >
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
             left: 0,
-            top: 0,
             width: W,
+            top: maskTop,
             height: maskH,
-            overflow: "hidden",
+            overflow: "visible",
           }}
         >
-          {nodes}
-          {sufNode}
+          <div
+            style={{
+              position: "absolute",
+              left: 0,
+              top: 0,
+              width: W,
+              height: maskH,
+              overflow: "hidden",
+            }}
+          >
+            {nodes}
+            {sufNode}
+          </div>
         </div>
-      </div>
-      {label ? (
-        <div
-          style={{
-            position: "absolute",
-            left: 0,
-            width: W,
-            top: midY + (inkH * rest) / 2 + labelGap,
-            display: "flex",
-            justifyContent: "center",
-            fontFamily: schibsted.fontFamily,
-            fontWeight: 400,
-            fontSize: labelSize,
-            lineHeight: 1.2,
-            letterSpacing: `${LABEL_TRACK}em`,
-            color: c.ink,
-            whiteSpace: "pre",
-          }}
-        >
-          {words.map((w, k) => {
-            const p = interpolate(
-              t,
-              [labelAt + k * LABEL_GAP, labelAt + k * LABEL_GAP + 16],
-              [0, 1],
-              { ...CLAMP, easing: EASE_OUT },
-            );
-            return (
-              <span
-                key={`${w}-${k}`}
-                style={{
-                  display: "inline-block",
-                  opacity: p,
-                  transform: `translateY(${((1 - p) * labelSize * 0.7).toFixed(2)}px)`,
-                }}
-              >
-                {w}
-                {k < words.length - 1 ? " " : ""}
-              </span>
-            );
-          })}
-        </div>
-      ) : null}
-      {clear ? null : <Grain opacity={c.grain} />}
+        {label ? (
+          <div
+            style={{
+              position: "absolute",
+              left: 0,
+              width: W,
+              top: midY + (inkH * rest) / 2 + labelGap,
+              display: "flex",
+              justifyContent: "center",
+              fontFamily,
+              fontWeight: 400,
+              fontSize: labelSize,
+              lineHeight: 1.2,
+              letterSpacing: `${LABEL_TRACK}em`,
+              color: fg,
+              whiteSpace: "pre",
+            }}
+          >
+            {words.map((w, k) => {
+              const p = interpolate(
+                t,
+                [labelAt + k * stagger, labelAt + k * stagger + 16],
+                [0, 1],
+                { ...CLAMP, easing: EASE_OUT },
+              );
+              return (
+                <span
+                  key={`${w}-${k}`}
+                  style={{
+                    display: "inline-block",
+                    opacity: p,
+                    transform: `translateY(${((1 - p) * labelSize * 0.7).toFixed(2)}px)`,
+                  }}
+                >
+                  {w}
+                  {k < words.length - 1 ? " " : ""}
+                </span>
+              );
+            })}
+          </div>
+        ) : null}
+      </ScaleLayer>
+      {clear || !grain ? null : <Grain opacity={c.grain} />}
     </AbsoluteFill>
   );
 }

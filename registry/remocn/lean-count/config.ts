@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const leanCountConfig: ComponentConfig = {
   componentName: "LeanCount",
@@ -73,6 +79,26 @@ export const leanCountConfig: ComponentConfig = {
       description: "Steps",
       hiddenFromList: false,
     },
+    beat: {
+      type: "number",
+      default: 16,
+      min: 4,
+      max: 40,
+      step: 1,
+      description: "Surge beat (frames)",
+      hiddenFromList: false,
+    },
+    fontWeight: {
+      type: "number",
+      default: 500,
+      min: 200,
+      max: 800,
+      step: 100,
+      description: "Weight",
+      hiddenFromList: false,
+    },
+    accent: { type: "color", default: undefined, description: "Accent" },
+    ...sceneControls({ font: "Bricolage Grotesque", grain: true }),
     speed: {
       type: "number",
       default: 1,

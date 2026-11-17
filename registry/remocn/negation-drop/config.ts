@@ -1,8 +1,24 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const negationDropConfig: ComponentConfig = {
   componentName: "NegationDrop",
   importPath: "@/components/remocn/negation-drop",
+  lists: {
+    lines: {
+      default: [
+        "You can’t animate.",
+        "You don’t have a team.",
+        "It isn’t done.",
+      ],
+      description: "Lines",
+    },
+  },
   controls: {
     theme: {
       type: "enum",
@@ -13,6 +29,26 @@ export const negationDropConfig: ComponentConfig = {
       },
       description: "Theme",
     },
+    dropAt: {
+      type: "number",
+      default: 44,
+      min: 0,
+      max: 90,
+      step: 1,
+      description: "Drop at (frame)",
+      hiddenFromList: false,
+    },
+    stagger: {
+      type: "number",
+      default: 14,
+      min: 0,
+      max: 40,
+      step: 1,
+      description: "Line stagger",
+      hiddenFromList: false,
+    },
+    accent: { type: "color", default: undefined, description: "Accent" },
+    ...sceneControls({ font: "Barlow Condensed" }),
     speed: {
       type: "number",
       default: 1,

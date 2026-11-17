@@ -1,4 +1,11 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const macroLetterPanConfig: ComponentConfig = {
   componentName: "MacroLetterPan",
@@ -39,6 +46,27 @@ export const macroLetterPanConfig: ComponentConfig = {
       max: 18,
       step: 1,
       description: "Max shots",
+      hiddenFromList: false,
+    },
+    pullLen: {
+      type: "number",
+      default: 30,
+      min: 6,
+      max: 90,
+      step: 1,
+      description: "Pull-back (frames)",
+      hiddenFromList: false,
+    },
+    accent: { type: "color", default: undefined, description: "Accent" },
+    ground: groundControl(),
+    ...sceneControls({ font: "Geist" }),
+    speed: {
+      type: "number",
+      default: 1,
+      min: 0.25,
+      max: 4,
+      step: 0.25,
+      description: "Speed",
       hiddenFromList: false,
     },
   },

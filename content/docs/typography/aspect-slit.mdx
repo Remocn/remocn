@@ -75,6 +75,46 @@ Letterbox bars close to a thin slit, a serif title rises into it, then the bars 
       description: "Accent color for the background light and the title full stop.",
     },
     {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Solid fill in place of the gradient ground; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "barColor",
+      type: "string",
+      default: "\"#0A0A0B\"",
+      description: "Color of the letterbox bars.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Instrument Serif\"",
+      description: "Typeface for the title. Load the font in your project first.",
+    },
+    {
+      name: "grain",
+      type: "boolean",
+      default: "true",
+      description: "Film grain over the scene.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
+    },
+    {
       name: "speed",
       type: "number",
       default: "1",

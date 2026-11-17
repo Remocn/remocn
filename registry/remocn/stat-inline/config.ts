@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const statInlineConfig: ComponentConfig = {
   componentName: "StatInline",
@@ -12,11 +18,6 @@ export const statInlineConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     value: {
       type: "text-content",
@@ -42,6 +43,30 @@ export const statInlineConfig: ComponentConfig = {
       },
       description: "Align",
     },
+    hold: {
+      type: "number",
+      default: 52,
+      min: 10,
+      max: 100,
+      step: 1,
+      description: "Hold (frames)",
+      hiddenFromList: false,
+    },
+    moveDuration: {
+      type: "number",
+      default: 28,
+      min: 6,
+      max: 60,
+      step: 1,
+      description: "Move (frames)",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Geist" }),
     speed: {
       type: "number",
       default: 1,

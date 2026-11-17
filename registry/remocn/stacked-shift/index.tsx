@@ -3,6 +3,7 @@
 import { loadFont } from "@remotion/google-fonts/Figtree";
 import { loadFont as loadManrope } from "@remotion/google-fonts/Manrope";
 import { loadFont as loadDisplay } from "@remotion/google-fonts/Newsreader";
+import type React from "react";
 import { useId } from "react";
 import {
   AbsoluteFill,
@@ -35,7 +36,22 @@ export interface StackedShiftProps {
   years?: string[];
   highlight?: number;
   caption?: string;
+  /** Frames from one year's shift to the next. */
+  hold?: number;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
+  background?: string;
+  /** Typeface for the labels and caption. Load it yourself; Figtree by default. */
+  fontFamily?: string;
+  /** Replaces the remocn mark when the highlighted series is "remocn". */
+  logo?: React.ReactNode;
+  /** Size of the chart, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  /** Film grain over the scene. */
+  grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -221,19 +237,45 @@ function YearTicker({
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function StackedShift({
   series = DEFAULT_SERIES,
   years = DEFAULT_YEARS,
   highlight = 0,
   caption = "of launch videos",
+  hold = SHIFT_EVERY,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = sans,
+  logo,
+  scale = 1,
+  delay = 0,
+  grain = true,
   theme = "dark",
   speed = 1,
 }: StackedShiftProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height } = useVideoConfig();
   const u = Math.min(width / 1280, height / 720);
   const p = THEMES[theme];
+  const fg = ink ?? p.fg;
+  const stage = background ?? p.bg;
   const clipId = `ss${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
 
   const list = series.slice(0, 6);
@@ -274,7 +316,7 @@ export function StackedShift({
   let yearK = 0;
   let laneK = 0;
   for (let k = 0; k < Y - 1; k++) {
-    const T = FIRST_SHIFT + k * SHIFT_EVERY;
+    const T = FIRST_SHIFT + k * hold;
     const mv = interpolate(t, [T + MOVE[0], T + MOVE[1]], [0, 1], {
       ...CLAMP,
       easing: EASE_IO,
@@ -303,7 +345,7 @@ export function StackedShift({
     };
   });
 
-  const lastEnd = FIRST_SHIFT + (Y - 2) * SHIFT_EVERY + IN[1];
+  const lastEnd = FIRST_SHIFT + (Y - 2) * hold + IN[1];
   const reveal = interpolate(t, [ENTER[0], ENTER[1]], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
@@ -349,226 +391,228 @@ export function StackedShift({
     interpolate(y + 20 * u - revealTop, [0, 30 * u], [0, 1], CLAMP);
 
   return (
-    <AbsoluteFill style={{ background: p.bg, overflow: "hidden" }}>
-      <AbsoluteFill
-        style={{ transform: `scale(${push})`, transformOrigin: "50% 50%" }}
-      >
-        <svg
-          width={width}
-          height={height}
-          style={{ position: "absolute", inset: 0 }}
-          aria-hidden
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill
+          style={{ transform: `scale(${push})`, transformOrigin: "50% 50%" }}
         >
-          <defs>
-            <linearGradient
-              id={`${clipId}e`}
-              x1={0.15 + 0.1 * sheen}
-              y1={1}
-              x2={0.85 - 0.1 * sheen}
-              y2={0}
-            >
-              <stop offset={0} stopColor={p.ember[0]} />
-              <stop offset={0.55} stopColor={p.ember[1]} />
-              <stop offset={1} stopColor={p.ember[2]} />
-            </linearGradient>
-            <clipPath id={clipId}>
-              <rect
-                x={0}
-                y={revealTop}
-                width={width}
-                height={Math.max(0, colBottom - revealTop + 2 * u)}
-              />
-            </clipPath>
-          </defs>
-          <line
-            x1={colX - 18 * u}
-            x2={colR + 18 * u}
-            y1={colBottom + 0.5}
-            y2={colBottom + 0.5}
-            stroke={p.hair}
-            strokeWidth={Math.max(1, u)}
-            opacity={yearIn}
-          />
-          <g clipPath={`url(#${clipId})`}>
-            {cur.map((s, i) =>
-              i === hl ? null : (
+          <svg
+            width={width}
+            height={height}
+            style={{ position: "absolute", inset: 0 }}
+            aria-hidden
+          >
+            <defs>
+              <linearGradient
+                id={`${clipId}e`}
+                x1={0.15 + 0.1 * sheen}
+                y1={1}
+                x2={0.85 - 0.1 * sheen}
+                y2={0}
+              >
+                <stop offset={0} stopColor={p.ember[0]} />
+                <stop offset={0.55} stopColor={p.ember[1]} />
+                <stop offset={1} stopColor={p.ember[2]} />
+              </linearGradient>
+              <clipPath id={clipId}>
                 <rect
-                  key={list[i].label}
-                  x={colX}
-                  y={s.y0}
-                  width={colW}
-                  height={Math.max(0, s.y1 - s.y0)}
-                  rx={Math.min(radius, (s.y1 - s.y0) / 2)}
-                  fill={colors[i]}
+                  x={0}
+                  y={revealTop}
+                  width={width}
+                  height={Math.max(0, colBottom - revealTop + 2 * u)}
                 />
-              ),
-            )}
-            <rect
-              x={colX + offX}
-              y={acc.y0}
-              width={colW}
-              height={Math.max(0, acc.y1 - acc.y0)}
-              rx={Math.min(radius, (acc.y1 - acc.y0) / 2)}
-              fill={`url(#${clipId}e)`}
+              </clipPath>
+            </defs>
+            <line
+              x1={colX - 18 * u}
+              x2={colR + 18 * u}
+              y1={colBottom + 0.5}
+              y2={colBottom + 0.5}
+              stroke={p.hair}
+              strokeWidth={Math.max(1, u)}
+              opacity={yearIn}
             />
-          </g>
-        </svg>
+            <g clipPath={`url(#${clipId})`}>
+              {cur.map((s, i) =>
+                i === hl ? null : (
+                  <rect
+                    key={list[i].label}
+                    x={colX}
+                    y={s.y0}
+                    width={colW}
+                    height={Math.max(0, s.y1 - s.y0)}
+                    rx={Math.min(radius, (s.y1 - s.y0) / 2)}
+                    fill={colors[i]}
+                  />
+                ),
+              )}
+              <rect
+                x={colX + offX}
+                y={acc.y0}
+                width={colW}
+                height={Math.max(0, acc.y1 - acc.y0)}
+                rx={Math.min(radius, (acc.y1 - acc.y0) / 2)}
+                fill={`url(#${clipId}e)`}
+              />
+            </g>
+          </svg>
 
-        {cur.map((s, i) => {
-          if (i === hl) return null;
-          const a = labelIn(s.y0) * (1 - 0.45 * finalK);
-          return (
-            <div
-              key={list[i].label}
-              style={{
-                position: "absolute",
-                right: width - colX + 22 * u,
-                top: (s.y0 + s.y1) / 2,
-                transform: "translateY(-50%)",
-                display: "flex",
-                alignItems: "baseline",
-                gap: 12 * u,
-                opacity: a,
-                whiteSpace: "nowrap",
-              }}
-            >
-              <span
+          {cur.map((s, i) => {
+            if (i === hl) return null;
+            const a = labelIn(s.y0) * (1 - 0.45 * finalK);
+            return (
+              <div
+                key={list[i].label}
                 style={{
-                  fontFamily: sans,
-                  fontWeight: 400,
-                  fontSize: 19 * u,
-                  letterSpacing: "-0.01em",
-                  color: p.fg,
+                  position: "absolute",
+                  right: width - colX + 22 * u,
+                  top: (s.y0 + s.y1) / 2,
+                  transform: "translateY(-50%)",
+                  display: "flex",
+                  alignItems: "baseline",
+                  gap: 12 * u,
+                  opacity: a,
+                  whiteSpace: "nowrap",
                 }}
               >
-                {list[i].label}
-              </span>
-              <span
-                style={{
-                  fontFamily: sans,
-                  fontWeight: 400,
-                  fontSize: 19 * u,
-                  color: p.muted,
-                  fontVariantNumeric: "tabular-nums",
-                  minWidth: 42 * u,
-                  textAlign: "right",
-                }}
-              >
-                {Math.round(s.share)}%
-              </span>
-            </div>
-          );
-        })}
-
-        <div
-          style={{
-            position: "absolute",
-            left: colR + offX + 26 * u,
-            top: (acc.y0 + acc.y1) / 2,
-            transform: "translateY(-50%)",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "flex-start",
-            opacity: labelIn(acc.y0),
-          }}
-        >
-          <div
-            style={{
-              fontFamily: display,
-              fontWeight: 400,
-              fontSize: heroSize,
-              lineHeight: 0.92,
-              letterSpacing: `${interpolate(heroSize / u, [30, 150], [-0.01, -0.045], CLAMP)}em`,
-              color: p.fg,
-              fontVariantNumeric: "tabular-nums",
-              whiteSpace: "nowrap",
-            }}
-          >
-            {Math.round(acc.share)}
-            <span style={{ fontSize: heroSize * 0.56 }}>%</span>
-          </div>
-          <div
-            style={{
-              marginTop: interpolate(heroSize / u, [30, 150], [4, 14]) * u,
-              display: "flex",
-              alignItems: "center",
-              gap: 10 * u,
-              whiteSpace: "nowrap",
-            }}
-          >
-            {list[hl].label.toLowerCase() === "remocn" ? (
-              <RemocnLogo fontSize={nameSize * 1.12} color={p.fg} />
-            ) : (
-              <>
                 <span
                   style={{
-                    width: 10 * u,
-                    height: 10 * u,
-                    borderRadius: "50%",
-                    background: accent,
-                  }}
-                />
-                <span
-                  style={{
-                    fontFamily: sans,
-                    fontWeight: 500,
-                    fontSize: nameSize,
+                    fontFamily,
+                    fontWeight: 400,
+                    fontSize: 19 * u,
                     letterSpacing: "-0.01em",
-                    color: p.fg,
+                    color: fg,
                   }}
                 >
-                  {list[hl].label}
+                  {list[i].label}
                 </span>
-              </>
-            )}
-          </div>
-          {caption ? (
+                <span
+                  style={{
+                    fontFamily,
+                    fontWeight: 400,
+                    fontSize: 19 * u,
+                    color: p.muted,
+                    fontVariantNumeric: "tabular-nums",
+                    minWidth: 42 * u,
+                    textAlign: "right",
+                  }}
+                >
+                  {Math.round(s.share)}%
+                </span>
+              </div>
+            );
+          })}
+
+          <div
+            style={{
+              position: "absolute",
+              left: colR + offX + 26 * u,
+              top: (acc.y0 + acc.y1) / 2,
+              transform: "translateY(-50%)",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "flex-start",
+              opacity: labelIn(acc.y0),
+            }}
+          >
             <div
               style={{
-                position: "absolute",
-                left: 2 * u,
-                top: "100%",
-                marginTop: 6 * u,
-                fontFamily: sans,
+                fontFamily: display,
                 fontWeight: 400,
-                fontSize: 20 * u,
-                color: p.muted,
+                fontSize: heroSize,
+                lineHeight: 0.92,
+                letterSpacing: `${interpolate(heroSize / u, [30, 150], [-0.01, -0.045], CLAMP)}em`,
+                color: fg,
+                fontVariantNumeric: "tabular-nums",
                 whiteSpace: "nowrap",
-                opacity: capIn,
-                transform: `translateY(${(1 - capIn) * 6 * u}px)`,
               }}
             >
-              {caption}
+              {Math.round(acc.share)}
+              <span style={{ fontSize: heroSize * 0.56 }}>%</span>
             </div>
-          ) : null}
-        </div>
+            <div
+              style={{
+                marginTop: interpolate(heroSize / u, [30, 150], [4, 14]) * u,
+                display: "flex",
+                alignItems: "center",
+                gap: 10 * u,
+                whiteSpace: "nowrap",
+              }}
+            >
+              {list[hl].label.toLowerCase() === "remocn" ? (
+                (logo ?? <RemocnLogo fontSize={nameSize * 1.12} color={fg} />)
+              ) : (
+                <>
+                  <span
+                    style={{
+                      width: 10 * u,
+                      height: 10 * u,
+                      borderRadius: "50%",
+                      background: accent,
+                    }}
+                  />
+                  <span
+                    style={{
+                      fontFamily,
+                      fontWeight: 500,
+                      fontSize: nameSize,
+                      letterSpacing: "-0.01em",
+                      color: fg,
+                    }}
+                  >
+                    {list[hl].label}
+                  </span>
+                </>
+              )}
+            </div>
+            {caption ? (
+              <div
+                style={{
+                  position: "absolute",
+                  left: 2 * u,
+                  top: "100%",
+                  marginTop: 6 * u,
+                  fontFamily,
+                  fontWeight: 400,
+                  fontSize: 20 * u,
+                  color: p.muted,
+                  whiteSpace: "nowrap",
+                  opacity: capIn,
+                  transform: `translateY(${(1 - capIn) * 6 * u}px)`,
+                }}
+              >
+                {caption}
+              </div>
+            ) : null}
+          </div>
 
-        <div
-          style={{
-            position: "absolute",
-            left: colX + colW / 2,
-            top: colBottom + 16 * u,
-            transform: `translateX(-50%) translateY(${(1 - yearIn) * 8 * u}px)`,
-            opacity: yearIn,
-          }}
-        >
-          <YearTicker
-            from={years[kA] ?? ""}
-            to={years[kB] ?? ""}
-            k={f}
-            size={34 * u}
-            color={p.fg}
-          />
-        </div>
-      </AbsoluteFill>
+          <div
+            style={{
+              position: "absolute",
+              left: colX + colW / 2,
+              top: colBottom + 16 * u,
+              transform: `translateX(-50%) translateY(${(1 - yearIn) * 8 * u}px)`,
+              opacity: yearIn,
+            }}
+          >
+            <YearTicker
+              from={years[kA] ?? ""}
+              to={years[kB] ?? ""}
+              k={f}
+              size={34 * u}
+              color={fg}
+            />
+          </div>
+        </AbsoluteFill>
+      </ScaleLayer>
 
       <AbsoluteFill
         style={{
-          background: `radial-gradient(ellipse 85% 85% at 50% 50%, transparent 62%, ${p.bg} 100%)`,
+          background: `radial-gradient(ellipse 85% 85% at 50% 50%, transparent 62%, ${stage} 100%)`,
           opacity: 0.5,
         }}
       />
-      <Grain opacity={p.grain} />
+      {grain ? <Grain opacity={p.grain} /> : null}
     </AbsoluteFill>
   );
 }

@@ -32,6 +32,19 @@ export interface MaxQProps {
   status?: string;
   /** Vehicle dot on the trajectory and small marks. */
   accent?: string;
+  /** Text color of the numbers, clock and trajectory; overrides the theme. */
+  ink?: string;
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Barlow Condensed by default. */
+  fontFamily?: string;
+  /** Frames the event banner holds across the frame. */
+  bandHold?: number;
+  /** Mission clock reading at the first frame, in seconds. */
+  clockStart?: number;
+  /** Size of the foreground, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   /** Playback multiplier. */
   speed?: number;
@@ -116,6 +129,22 @@ function bez(
   ];
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function MaxQ({
   velocity = 1880,
   altitude = 14.2,
@@ -127,12 +156,22 @@ export function MaxQ({
   eventDetail = "Maximum dynamic pressure",
   status = "Nominal",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = condensed,
+  bandHold = BAND_HOLD,
+  clockStart = 38,
+  scale = 1,
+  delay = 0,
   theme = "dark",
   speed = 1,
 }: MaxQProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
+  const fg = ink ?? c.ink;
+  const bg =
+    background === "transparent" ? "transparent" : (background ?? c.stage);
   const u = Math.min(W / 1280, H / 720);
 
   // ── Values ────────────────────────────────────────────────────────────────
@@ -142,7 +181,7 @@ export function MaxQ({
   const alt = altitude * altRace;
   const spdText = spd.toLocaleString("en-US");
   const altText = alt.toFixed(1);
-  const clockS = 38 + Math.floor((t / 30) * 1);
+  const clockS = clockStart + Math.floor((t / 30) * 1);
   const clock = `T+00:${pad(Math.floor(clockS / 60))}:${pad(clockS % 60)}`;
 
   // ── Layout ────────────────────────────────────────────────────────────────
@@ -169,7 +208,7 @@ export function MaxQ({
 
   // ── Event band ────────────────────────────────────────────────────────────
   const bandIn = OUT(ramp(t, MAXQ_AT, BAND_IN));
-  const bandOut = MOVE(ramp(t, MAXQ_AT + BAND_IN + BAND_HOLD, BAND_OUT));
+  const bandOut = MOVE(ramp(t, MAXQ_AT + BAND_IN + bandHold, BAND_OUT));
   const bandOn = t >= MAXQ_AT && bandOut < 1;
   const bandH = 262 * u;
   const bandY = numCY + numFs * 0.04 - bandH / 2;
@@ -177,7 +216,7 @@ export function MaxQ({
   const textIn = OUT(ramp(t, MAXQ_AT + 2, 8));
   const markerIn = OUT(ramp(t, MAXQ_AT, 10));
 
-  const statusAt = MAXQ_AT + BAND_IN + BAND_HOLD + BAND_OUT - 1;
+  const statusAt = MAXQ_AT + BAND_IN + bandHold + BAND_OUT - 1;
   const statusIn = OUT(ramp(t, statusAt, 12));
   const settleHit = kick(t - RACE_END, 8);
 
@@ -188,7 +227,7 @@ export function MaxQ({
   ].join(", ");
 
   const label: React.CSSProperties = {
-    fontFamily: condensed,
+    fontFamily,
     fontWeight: 500,
     fontSize: 24 * u,
     letterSpacing: "0.16em",
@@ -198,18 +237,18 @@ export function MaxQ({
     lineHeight: 1,
   };
   const number: React.CSSProperties = {
-    fontFamily: condensed,
+    fontFamily,
     fontWeight: 500,
     fontSize: numFs,
     lineHeight: 1,
     letterSpacing: "-0.02em",
     fontVariantNumeric: "tabular-nums",
-    color: c.ink,
+    color: fg,
     whiteSpace: "nowrap",
   };
 
   return (
-    <AbsoluteFill style={{ background: c.stage, overflow: "hidden" }}>
+    <AbsoluteFill style={{ background: bg, overflow: "hidden" }}>
       <div
         style={{
           position: "absolute",
@@ -219,257 +258,259 @@ export function MaxQ({
         }}
       />
 
-      {/* Trajectory. */}
-      <svg
-        width={W}
-        height={H}
-        style={{ position: "absolute", inset: 0 }}
-        aria-hidden
-      >
-        <path
-          d={pathD}
-          fill="none"
-          stroke={c.faint}
-          strokeWidth={2 * u}
-          strokeDasharray={`${2 * u} ${8 * u}`}
-          opacity={intro}
-        />
-        <path
-          d={pathD}
-          fill="none"
-          stroke={c.ink}
-          strokeWidth={2.5 * u}
-          pathLength={1}
-          strokeDasharray={`${drawP} 1`}
-          opacity={0.9 * intro}
-        />
-        {/* Max Q marker. */}
-        <g opacity={markerIn}>
-          <line
-            x1={qPt[0] - 16 * u}
-            y1={qPt[1]}
-            x2={qPt[0] + 16 * u}
-            y2={qPt[1]}
-            stroke={c.ink}
+      <ScaleLayer scale={scale}>
+        {/* Trajectory. */}
+        <svg
+          width={W}
+          height={H}
+          style={{ position: "absolute", inset: 0 }}
+          aria-hidden
+        >
+          <path
+            d={pathD}
+            fill="none"
+            stroke={c.faint}
             strokeWidth={2 * u}
+            strokeDasharray={`${2 * u} ${8 * u}`}
+            opacity={intro}
           />
-          <text
-            x={qPt[0] - 26 * u}
-            y={qPt[1] + 7 * u}
-            textAnchor="end"
-            fontFamily={condensed}
-            fontWeight={500}
-            fontSize={20 * u}
-            letterSpacing="0.16em"
-            fill={c.dim}
-          >
-            {event.toUpperCase()}
-          </text>
-        </g>
-        <circle
-          cx={head[0]}
-          cy={head[1]}
-          r={14 * u}
-          fill="none"
-          stroke={accent}
-          strokeWidth={2 * u}
-          opacity={0.45 * intro}
-        />
-        <circle cx={head[0]} cy={head[1]} r={6 * u} fill={accent} />
-      </svg>
+          <path
+            d={pathD}
+            fill="none"
+            stroke={fg}
+            strokeWidth={2.5 * u}
+            pathLength={1}
+            strokeDasharray={`${drawP} 1`}
+            opacity={0.9 * intro}
+          />
+          {/* Max Q marker. */}
+          <g opacity={markerIn}>
+            <line
+              x1={qPt[0] - 16 * u}
+              y1={qPt[1]}
+              x2={qPt[0] + 16 * u}
+              y2={qPt[1]}
+              stroke={fg}
+              strokeWidth={2 * u}
+            />
+            <text
+              x={qPt[0] - 26 * u}
+              y={qPt[1] + 7 * u}
+              textAnchor="end"
+              fontFamily={fontFamily}
+              fontWeight={500}
+              fontSize={20 * u}
+              letterSpacing="0.16em"
+              fill={c.dim}
+            >
+              {event.toUpperCase()}
+            </text>
+          </g>
+          <circle
+            cx={head[0]}
+            cy={head[1]}
+            r={14 * u}
+            fill="none"
+            stroke={accent}
+            strokeWidth={2 * u}
+            opacity={0.45 * intro}
+          />
+          <circle cx={head[0]} cy={head[1]} r={6 * u} fill={accent} />
+        </svg>
 
-      {/* Mission clock. */}
-      <div
-        style={{
-          ...label,
-          position: "absolute",
-          left: 0,
-          right: 0,
-          top: margin - 10 * u,
-          textAlign: "center",
-          fontVariantNumeric: "tabular-nums",
-          color: c.ink,
-          opacity: intro,
-        }}
-      >
-        {clock}
-      </div>
-
-      {/* SPEED. */}
-      <div
-        style={{
-          position: "absolute",
-          left: margin,
-          top: 0,
-          opacity: intro,
-          transform: `translateY(${(1 - intro) * 30 * u}px)`,
-        }}
-      >
+        {/* Mission clock. */}
         <div
           style={{
             ...label,
-            position: "absolute",
-            left: 4 * u,
-            top: labelY - 24 * u,
-          }}
-        >
-          {speedLabel}
-          <span style={{ color: c.ink, marginLeft: 14 * u }}>{speedUnit}</span>
-        </div>
-        <div
-          style={{
-            ...number,
             position: "absolute",
             left: 0,
-            top: numCY - numFs / 2,
-            transform: `scale(${1 + 0.015 * settleHit})`,
-            transformOrigin: "left center",
-          }}
-        >
-          {spdText}
-        </div>
-      </div>
-
-      {/* ALTITUDE. */}
-      <div
-        style={{
-          position: "absolute",
-          right: margin,
-          top: 0,
-          opacity: intro,
-          transform: `translateY(${(1 - intro) * 30 * u}px)`,
-        }}
-      >
-        <div
-          style={{
-            ...label,
-            position: "absolute",
-            right: 4 * u,
-            top: labelY - 24 * u,
-            textAlign: "right",
-          }}
-        >
-          {altitudeLabel}
-          <span style={{ color: c.ink, marginLeft: 14 * u }}>
-            {altitudeUnit}
-          </span>
-        </div>
-        <div
-          style={{
-            ...number,
-            position: "absolute",
             right: 0,
-            top: numCY - numFs / 2,
-            transform: `scale(${1 + 0.015 * settleHit})`,
-            transformOrigin: "right center",
+            top: margin - 10 * u,
+            textAlign: "center",
+            fontVariantNumeric: "tabular-nums",
+            color: fg,
+            opacity: intro,
           }}
         >
-          {altText}
+          {clock}
         </div>
-      </div>
 
-      {/* Status. */}
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          right: 0,
-          top: margin + 52 * u,
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          gap: 16 * u,
-          opacity: statusIn,
-          transform: `translateY(${(1 - statusIn) * -22 * u}px)`,
-        }}
-      >
+        {/* SPEED. */}
         <div
           style={{
-            width: 12 * u,
-            height: 12 * u,
-            borderRadius: 99,
-            background: `linear-gradient(135deg, ${BEAM[1]}, ${BEAM[2]})`,
-          }}
-        />
-        <div
-          style={{
-            fontFamily: condensed,
-            fontWeight: 500,
-            fontSize: 54 * u,
-            letterSpacing: "0.14em",
-            lineHeight: 1,
-            textTransform: "uppercase",
-            backgroundImage: `linear-gradient(90deg, ${theme === "dark" ? BEAM[0] : BEAM[3]} 0%, ${theme === "dark" ? BEAM[1] : BEAM[2]} 100%)`,
-            WebkitBackgroundClip: "text",
-            backgroundClip: "text",
-            color: "transparent",
+            position: "absolute",
+            left: margin,
+            top: 0,
+            opacity: intro,
+            transform: `translateY(${(1 - intro) * 30 * u}px)`,
           }}
         >
-          {status}
+          <div
+            style={{
+              ...label,
+              position: "absolute",
+              left: 4 * u,
+              top: labelY - 24 * u,
+            }}
+          >
+            {speedLabel}
+            <span style={{ color: fg, marginLeft: 14 * u }}>{speedUnit}</span>
+          </div>
+          <div
+            style={{
+              ...number,
+              position: "absolute",
+              left: 0,
+              top: numCY - numFs / 2,
+              transform: `scale(${1 + 0.015 * settleHit})`,
+              transformOrigin: "left center",
+            }}
+          >
+            {spdText}
+          </div>
         </div>
-      </div>
 
-      {/* MAX Q band. */}
-      {bandOn ? (
+        {/* ALTITUDE. */}
+        <div
+          style={{
+            position: "absolute",
+            right: margin,
+            top: 0,
+            opacity: intro,
+            transform: `translateY(${(1 - intro) * 30 * u}px)`,
+          }}
+        >
+          <div
+            style={{
+              ...label,
+              position: "absolute",
+              right: 4 * u,
+              top: labelY - 24 * u,
+              textAlign: "right",
+            }}
+          >
+            {altitudeLabel}
+            <span style={{ color: fg, marginLeft: 14 * u }}>
+              {altitudeUnit}
+            </span>
+          </div>
+          <div
+            style={{
+              ...number,
+              position: "absolute",
+              right: 0,
+              top: numCY - numFs / 2,
+              transform: `scale(${1 + 0.015 * settleHit})`,
+              transformOrigin: "right center",
+            }}
+          >
+            {altText}
+          </div>
+        </div>
+
+        {/* Status. */}
         <div
           style={{
             position: "absolute",
             left: 0,
-            top: bandY,
-            width: W,
-            height: bandH,
-            clipPath: `inset(0 ${(1 - bandIn) * 100}% 0 ${bandOut * 100}%)`,
-            background: `linear-gradient(90deg, ${BEAM[3]} 0%, ${BEAM[2]} 22%, ${BEAM[1]} 40%, ${BEAM[0]} 52%, ${BEAM[1]} 66%, ${BEAM[2]} 84%, ${BEAM[3]} 100%)`,
+            right: 0,
+            top: margin + 52 * u,
             display: "flex",
-            alignItems: "center",
             justifyContent: "center",
-            gap: 40 * u,
+            alignItems: "center",
+            gap: 16 * u,
+            opacity: statusIn,
+            transform: `translateY(${(1 - statusIn) * -22 * u}px)`,
           }}
         >
+          <div
+            style={{
+              width: 12 * u,
+              height: 12 * u,
+              borderRadius: 99,
+              background: `linear-gradient(135deg, ${BEAM[1]}, ${BEAM[2]})`,
+            }}
+          />
+          <div
+            style={{
+              fontFamily,
+              fontWeight: 500,
+              fontSize: 54 * u,
+              letterSpacing: "0.14em",
+              lineHeight: 1,
+              textTransform: "uppercase",
+              backgroundImage: `linear-gradient(90deg, ${theme === "dark" ? BEAM[0] : BEAM[3]} 0%, ${theme === "dark" ? BEAM[1] : BEAM[2]} 100%)`,
+              WebkitBackgroundClip: "text",
+              backgroundClip: "text",
+              color: "transparent",
+            }}
+          >
+            {status}
+          </div>
+        </div>
+
+        {/* MAX Q band. */}
+        {bandOn ? (
           <div
             style={{
               position: "absolute",
-              inset: 0,
-              background: BEAM[0],
-              opacity: bandHit * 0.8,
-            }}
-          />
-          <div
-            style={{
-              fontFamily: condensed,
-              fontWeight: 500,
-              fontSize: 168 * u,
-              lineHeight: 1,
-              letterSpacing: "-0.01em",
-              textTransform: "uppercase",
-              color: c.bandInk,
-              whiteSpace: "nowrap",
-              transform: `translateX(${(1 - textIn) * -60 * u}px)`,
-              opacity: textIn,
+              left: 0,
+              top: bandY,
+              width: W,
+              height: bandH,
+              clipPath: `inset(0 ${(1 - bandIn) * 100}% 0 ${bandOut * 100}%)`,
+              background: `linear-gradient(90deg, ${BEAM[3]} 0%, ${BEAM[2]} 22%, ${BEAM[1]} 40%, ${BEAM[0]} 52%, ${BEAM[1]} 66%, ${BEAM[2]} 84%, ${BEAM[3]} 100%)`,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 40 * u,
             }}
           >
-            {event}
-          </div>
-          {eventDetail ? (
             <div
               style={{
-                fontFamily: condensed,
+                position: "absolute",
+                inset: 0,
+                background: BEAM[0],
+                opacity: bandHit * 0.8,
+              }}
+            />
+            <div
+              style={{
+                fontFamily,
                 fontWeight: 500,
-                fontSize: 24 * u,
-                letterSpacing: "0.16em",
-                lineHeight: 1.2,
+                fontSize: 168 * u,
+                lineHeight: 1,
+                letterSpacing: "-0.01em",
                 textTransform: "uppercase",
                 color: c.bandInk,
-                width: 200 * u,
+                whiteSpace: "nowrap",
+                transform: `translateX(${(1 - textIn) * -60 * u}px)`,
                 opacity: textIn,
-                transform: `translateX(${(1 - textIn) * -40 * u}px)`,
               }}
             >
-              {eventDetail}
+              {event}
             </div>
-          ) : null}
-        </div>
-      ) : null}
+            {eventDetail ? (
+              <div
+                style={{
+                  fontFamily,
+                  fontWeight: 500,
+                  fontSize: 24 * u,
+                  letterSpacing: "0.16em",
+                  lineHeight: 1.2,
+                  textTransform: "uppercase",
+                  color: c.bandInk,
+                  width: 200 * u,
+                  opacity: textIn,
+                  transform: `translateX(${(1 - textIn) * -40 * u}px)`,
+                }}
+              >
+                {eventDetail}
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

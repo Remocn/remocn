@@ -1,4 +1,11 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const duetSplitConfig: ComponentConfig = {
   componentName: "DuetSplit",
@@ -13,11 +20,6 @@ export const duetSplitConfig: ComponentConfig = {
       },
       description: "Theme",
     },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
-    },
     beforeLabel: {
       type: "text-content",
       default: "Before",
@@ -28,6 +30,31 @@ export const duetSplitConfig: ComponentConfig = {
       default: "With remocn",
       description: "After label",
     },
+    stagger: {
+      type: "number",
+      default: 16,
+      min: 4,
+      max: 40,
+      step: 1,
+      description: "Row stagger",
+      hiddenFromList: false,
+    },
+    hold: {
+      type: "number",
+      default: 24,
+      min: 0,
+      max: 90,
+      step: 1,
+      description: "Hold (frames)",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ground: groundControl(),
+    ...sceneControls({ font: "Bricolage Grotesque" }),
     speed: {
       type: "number",
       default: 1,

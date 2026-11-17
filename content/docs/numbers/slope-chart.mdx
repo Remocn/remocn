@@ -93,10 +93,56 @@ Grey lines draw between a before and an after axis, then the hero line starts lo
       description: "Heading over the after axis.",
     },
     {
+      name: "stagger",
+      type: "number",
+      default: "4",
+      description: "Frames between grey lines as they draw in.",
+    },
+    {
+      name: "climbAt",
+      type: "number",
+      default: "60",
+      description: "Frame the hero line starts to climb; the stat lands as it arrives.",
+    },
+    {
       name: "accent",
       type: "string",
       default: "\"#3B5BFD\"",
       description: "Accent color for the hero element.",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Instrument Sans\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
+    },
+    {
+      name: "grain",
+      type: "boolean",
+      default: "true",
+      description: "Film grain over the scene.",
     },
     {
       name: "speed",

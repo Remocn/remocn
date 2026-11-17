@@ -2,6 +2,7 @@
 
 import { loadFont as loadHanken } from "@remotion/google-fonts/HankenGrotesk";
 import { loadFont as loadJetBrains } from "@remotion/google-fonts/JetBrainsMono";
+import type React from "react";
 import {
   AbsoluteFill,
   Easing,
@@ -134,11 +135,13 @@ function FileFace({
   w,
   h,
   idx,
+  fontFamily,
 }: {
   file: DropFile;
   w: number;
   h: number;
   idx: number;
+  fontFamily: string;
 }) {
   const m = Math.min(w, h);
   if (file.kind === "image") {
@@ -217,7 +220,7 @@ function FileFace({
         position: "absolute",
         inset: 0,
         background: "#ffffff",
-        fontFamily: hanken.fontFamily,
+        fontFamily,
       }}
     >
       <div
@@ -312,6 +315,39 @@ export interface MultiFileDropProps {
   resolveOrder?: number[];
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /** Label on the attach pill before the files land. */
+  attachLabel?: string;
+  /** Label of the mode picker next to the send button. */
+  modeLabel?: string;
+  /** Total size shown once every file has uploaded. */
+  totalSize?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Hanken Grotesk by default. */
+  fontFamily?: string;
+  /** Size of the heading, card and files, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  speed?: number;
+}
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
 }
 
 export function MultiFileDrop({
@@ -323,8 +359,17 @@ export function MultiFileDrop({
   resolveOrder = [0, 2, 1, 3],
   ground,
   groundParams,
+  attachLabel = "Attach",
+  modeLabel = "Build",
+  totalSize = "3.4 MB",
+  ink: inkProp,
+  background,
+  fontFamily = hanken.fontFamily,
+  scale = 1,
+  delay = 0,
+  speed = 1,
 }: MultiFileDropProps) {
-  const frame = useCurrentFrame();
+  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, fps } = useVideoConfig();
   const dark = theme === "dark";
   const portrait = height > width * 1.2;
@@ -333,7 +378,7 @@ export function MultiFileDrop({
   const sc = width / stageW;
   const u = portrait ? 2 : 1.1;
 
-  const ink = dark ? "#eef0fa" : "#141722";
+  const ink = inkProp ?? (dark ? "#eef0fa" : "#141722");
   const soft = dark ? "rgba(226,230,248,0.72)" : "rgba(20,23,34,0.7)";
   const muted = dark ? "rgba(226,230,248,0.46)" : "rgba(20,23,34,0.46)";
   const hair = dark ? "rgba(255,255,255,0.1)" : "rgba(20,24,48,0.1)";
@@ -463,147 +508,180 @@ export function MultiFileDrop({
   const resolvedParams = groundParams;
 
   return (
-    <AbsoluteFill style={{ fontFamily: hanken.fontFamily, overflow: "hidden" }}>
-      <GshGround
-        preset={resolvedGround}
-        params={resolvedParams}
-        timeOffset={3}
-        timeScale={0.5}
-        style={portrait ? { transform: "scaleY(-1)" } : undefined}
-      />
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          top: 0,
-          width: stageW,
-          height: stageH,
-          transform: `scale(${sc})`,
-          transformOrigin: "0 0",
-          perspective: 2200,
-        }}
-      >
+    <AbsoluteFill style={{ fontFamily, overflow: "hidden" }}>
+      {background === undefined ? (
+        <GshGround
+          preset={resolvedGround}
+          params={resolvedParams}
+          timeOffset={3}
+          timeScale={0.5}
+          style={portrait ? { transform: "scaleY(-1)" } : undefined}
+        />
+      ) : (
+        <AbsoluteFill
+          style={{
+            background: background === "transparent" ? undefined : background,
+          }}
+        />
+      )}
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            inset: 0,
-            transformStyle: "preserve-3d",
-            transformOrigin: `${stageW / 2}px ${cardTop + cardH / 2}px`,
-            transform: `scale(${push}) rotateX(${rotX}deg)`,
+            left: 0,
+            top: 0,
+            width: stageW,
+            height: stageH,
+            transform: `scale(${sc})`,
+            transformOrigin: "0 0",
+            perspective: 2200,
           }}
         >
           <div
             style={{
               position: "absolute",
-              left: 0,
-              right: 0,
-              top: groupTop,
-              height: headH,
-              overflow: "hidden",
-              textAlign: "center",
-            }}
-          >
-            <div
-              style={{
-                fontSize: headSize,
-                lineHeight: 1.2,
-                fontWeight: 300,
-                letterSpacing: "-0.035em",
-                color: ink,
-                transform: `translateY(${mix(100, 0, headIn)}%)`,
-              }}
-            >
-              {heading}
-            </div>
-          </div>
-
-          <div
-            style={{
-              position: "absolute",
-              left: cardX,
-              top: cardTop,
-              width: cardW,
-              height: cardH,
-              borderRadius: 20 * u,
-              background: surface,
-              boxShadow: `0 0 0 1px ${dropZone > 0 ? `color-mix(in oklab, ${accent} ${Math.round(dropZone * 85)}%, ${ring})` : ring}, 0 0 0 ${4 * u * dropZone}px color-mix(in oklab, ${accent} ${Math.round(dropZone * 20)}%, transparent), ${shadow}`,
-              opacity: cardIn,
-              transform: `translateY(${mix(40 * u, 0, cardIn)}px)`,
+              inset: 0,
+              transformStyle: "preserve-3d",
+              transformOrigin: `${stageW / 2}px ${cardTop + cardH / 2}px`,
+              transform: `scale(${push}) rotateX(${rotX}deg)`,
             }}
           >
             <div
               style={{
                 position: "absolute",
-                inset: 0,
-                borderRadius: 20 * u,
-                background: `color-mix(in oklab, ${accent} ${Math.round(dropZone * (dark ? 14 : 8))}%, transparent)`,
-              }}
-            />
-            {list.map((f, i) => (
-              <div
-                key={f.name}
-                style={{
-                  position: "absolute",
-                  left: pad + i * (slot + slotGap),
-                  top: pad,
-                  width: slot,
-                  height: slot,
-                  borderRadius: 12 * u,
-                  background: slotBg,
-                  border: `1px dashed ${hair}`,
-                  opacity:
-                    grow * (1 - ramp(frame, B.deal + i * B.dealStep + 6, 4)),
-                }}
-              />
-            ))}
-            <div
-              style={{
-                position: "absolute",
-                left: pad,
-                right: pad,
-                top: pad + grow * (slot + 16 * u),
-                height: textH,
-                fontSize,
-                lineHeight: `${lh}px`,
-                color: ink,
+                left: 0,
+                right: 0,
+                top: groupTop,
+                height: headH,
                 overflow: "hidden",
-              }}
-            >
-              {prompt}
-            </div>
-            <div
-              style={{
-                position: "absolute",
-                left: pad,
-                right: pad,
-                bottom: pad,
-                height: footH,
-                display: "flex",
-                alignItems: "center",
-                gap: 10 * u,
-                fontSize: 17 * u,
-                color: soft,
+                textAlign: "center",
               }}
             >
               <div
                 style={{
-                  height: footH,
-                  padding: `0 ${14 * u}px`,
-                  borderRadius: 99,
-                  border: `1px solid ${hair}`,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8 * u,
+                  fontSize: headSize,
+                  lineHeight: 1.2,
+                  fontWeight: 300,
+                  letterSpacing: "-0.035em",
+                  color: ink,
+                  transform: `translateY(${mix(100, 0, headIn)}%)`,
                 }}
               >
+                {heading}
+              </div>
+            </div>
+
+            <div
+              style={{
+                position: "absolute",
+                left: cardX,
+                top: cardTop,
+                width: cardW,
+                height: cardH,
+                borderRadius: 20 * u,
+                background: surface,
+                boxShadow: `0 0 0 1px ${dropZone > 0 ? `color-mix(in oklab, ${accent} ${Math.round(dropZone * 85)}%, ${ring})` : ring}, 0 0 0 ${4 * u * dropZone}px color-mix(in oklab, ${accent} ${Math.round(dropZone * 20)}%, transparent), ${shadow}`,
+                opacity: cardIn,
+                transform: `translateY(${mix(40 * u, 0, cardIn)}px)`,
+              }}
+            >
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  borderRadius: 20 * u,
+                  background: `color-mix(in oklab, ${accent} ${Math.round(dropZone * (dark ? 14 : 8))}%, transparent)`,
+                }}
+              />
+              {list.map((f, i) => (
+                <div
+                  key={f.name}
+                  style={{
+                    position: "absolute",
+                    left: pad + i * (slot + slotGap),
+                    top: pad,
+                    width: slot,
+                    height: slot,
+                    borderRadius: 12 * u,
+                    background: slotBg,
+                    border: `1px dashed ${hair}`,
+                    opacity:
+                      grow * (1 - ramp(frame, B.deal + i * B.dealStep + 6, 4)),
+                  }}
+                />
+              ))}
+              <div
+                style={{
+                  position: "absolute",
+                  left: pad,
+                  right: pad,
+                  top: pad + grow * (slot + 16 * u),
+                  height: textH,
+                  fontSize,
+                  lineHeight: `${lh}px`,
+                  color: ink,
+                  overflow: "hidden",
+                }}
+              >
+                {prompt}
+              </div>
+              <div
+                style={{
+                  position: "absolute",
+                  left: pad,
+                  right: pad,
+                  bottom: pad,
+                  height: footH,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10 * u,
+                  fontSize: 17 * u,
+                  color: soft,
+                }}
+              >
+                <div
+                  style={{
+                    height: footH,
+                    padding: `0 ${14 * u}px`,
+                    borderRadius: 99,
+                    border: `1px solid ${hair}`,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8 * u,
+                  }}
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    width={18 * u}
+                    height={18 * u}
+                    aria-hidden
+                  >
+                    <path
+                      d="M16.5 7.5 9.4 14.6a1.8 1.8 0 0 0 2.6 2.6l7.4-7.4a3.6 3.6 0 0 0-5.1-5.1l-7.6 7.6a5.4 5.4 0 0 0 7.6 7.6l5.2-5.2"
+                      fill="none"
+                      stroke={soft}
+                      strokeWidth={1.5}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                  <span style={{ fontVariantNumeric: "tabular-nums" }}>
+                    {frame < B.deal
+                      ? attachLabel
+                      : resolvedCount < n
+                        ? `Uploading ${resolvedCount}/${n}`
+                        : `${n} files · ${totalSize}`}
+                  </span>
+                </div>
+                <div style={{ marginLeft: "auto" }}>{modeLabel}</div>
                 <svg
                   viewBox="0 0 24 24"
-                  width={18 * u}
-                  height={18 * u}
+                  width={16 * u}
+                  height={16 * u}
                   aria-hidden
                 >
                   <path
-                    d="M16.5 7.5 9.4 14.6a1.8 1.8 0 0 0 2.6 2.6l7.4-7.4a3.6 3.6 0 0 0-5.1-5.1l-7.6 7.6a5.4 5.4 0 0 0 7.6 7.6l5.2-5.2"
+                    d="m7 10 5 5 5-5"
                     fill="none"
                     stroke={soft}
                     strokeWidth={1.5}
@@ -611,233 +689,218 @@ export function MultiFileDrop({
                     strokeLinejoin="round"
                   />
                 </svg>
-                <span style={{ fontVariantNumeric: "tabular-nums" }}>
-                  {frame < B.deal
-                    ? "Attach"
-                    : resolvedCount < n
-                      ? `Uploading ${resolvedCount}/${n}`
-                      : `${n} files · 3.4 MB`}
-                </span>
-              </div>
-              <div style={{ marginLeft: "auto" }}>Build</div>
-              <svg
-                viewBox="0 0 24 24"
-                width={16 * u}
-                height={16 * u}
-                aria-hidden
-              >
-                <path
-                  d="m7 10 5 5 5-5"
-                  fill="none"
-                  stroke={soft}
-                  strokeWidth={1.5}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-              <svg
-                viewBox="0 0 24 24"
-                width={20 * u}
-                height={20 * u}
-                aria-hidden
-                style={{ marginLeft: 6 * u }}
-              >
-                <g
-                  fill="none"
-                  stroke={soft}
-                  strokeWidth={1.5}
-                  strokeLinecap="round"
-                >
-                  <rect x={9} y={3.5} width={6} height={11} rx={3} />
-                  <path d="M6 11.5a6 6 0 0 0 12 0M12 17.5v3" />
-                </g>
-              </svg>
-              <div
-                style={{
-                  width: 38 * u,
-                  height: 38 * u,
-                  borderRadius: 11 * u,
-                  marginLeft: 4 * u,
-                  background:
-                    ready > 0
-                      ? accent
-                      : dark
-                        ? "rgba(255,255,255,0.1)"
-                        : "rgba(20,24,48,0.08)",
-                  transform: `scale(${(1 + 0.06 * Math.sin(Math.PI * Math.min(1, readyPop)) * ready) * (1 - 0.04 * sendPress)})`,
-                  boxShadow:
-                    ready > 0
-                      ? "inset 0 1px 0 rgba(255,255,255,0.22), 0 1px 2px rgba(4,6,30,0.3)"
-                      : undefined,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
                 <svg
                   viewBox="0 0 24 24"
-                  width={18 * u}
-                  height={18 * u}
+                  width={20 * u}
+                  height={20 * u}
                   aria-hidden
+                  style={{ marginLeft: 6 * u }}
                 >
-                  <path
-                    d="M12 19V5M6 11l6-6 6 6"
+                  <g
                     fill="none"
-                    stroke={ready > 0 ? "#fff" : muted}
-                    strokeWidth={2}
+                    stroke={soft}
+                    strokeWidth={1.5}
                     strokeLinecap="round"
-                    strokeLinejoin="round"
-                    opacity={1 - sent}
-                    transform={`translate(0 ${-4 * sent})`}
-                  />
-                  <rect
-                    x={7.5}
-                    y={7.5}
-                    width={9}
-                    height={9}
-                    rx={2}
-                    fill="#fff"
-                    opacity={sent}
-                    transform={`translate(12 12) scale(${mix(0.4, 1, sent)}) translate(-12 -12)`}
-                  />
+                  >
+                    <rect x={9} y={3.5} width={6} height={11} rx={3} />
+                    <path d="M6 11.5a6 6 0 0 0 12 0M12 17.5v3" />
+                  </g>
                 </svg>
-              </div>
-            </div>
-          </div>
-
-          {list.map((f, i) => {
-            const k = n - 1 - i;
-            const fan = FAN[i] ?? FAN[0];
-            const dealT = B.deal + k * B.dealStep;
-            const go = spring({ frame: frame - dealT, fps, config: CARD });
-            const goPrev = spring({
-              frame: frame - dealT - 1,
-              fps,
-              config: CARD,
-            });
-            const fx = fanCx + fan.x * u * fanSpread;
-            const fy = fanCy + fan.y * u * fanSpread;
-            const x = mix(fx, slotX(i), go);
-            const y = mix(fy, slotY, go);
-            const px = mix(fx, slotX(i), goPrev);
-            const py = mix(fy, slotY, goPrev);
-            const vel = frame > dealT ? Math.hypot(x - px, y - py) : fanSpeed;
-            const w = mix(fanW, slot, go);
-            const h = mix(fanH, slot, go);
-            const r = mix(fan.r * fanSpread + fanTilt, 0, go);
-            const landed = ramp(frame, dealT + B.land - 4, 6);
-            const rs = resolveAt(i);
-            const done = ramp(frame, rs, 6);
-            const pop = spring({ frame: frame - rs, fps, config: CHIP });
-            const punch =
-              1 + 0.07 * Math.sin(Math.PI * Math.min(1, pop)) * done;
-            const loading = landed * (1 - done);
-            const progress = interpolate(
-              frame,
-              [dealT + B.land - 4, rs],
-              [0.06, 1],
-              {
-                extrapolateLeft: "clamp",
-                extrapolateRight: "clamp",
-                easing: MOVE,
-              },
-            );
-            const lift = 1 - go;
-            return (
-              <div
-                key={f.name}
-                style={{
-                  position: "absolute",
-                  left: x - w / 2,
-                  top: y - h / 2,
-                  width: w,
-                  height: h,
-                  transform: `rotate(${r}deg) scale(${punch})`,
-                  borderRadius: mix(14, 12, go) * u,
-                  overflow: "hidden",
-                  outline: `1px solid ${dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"}`,
-                  outlineOffset: -1,
-                  background: slotBg,
-                  boxShadow: `0 ${mix(2, 22, lift) * u}px ${mix(6, 40, lift) * u}px rgba(4,6,30,${dark ? 0.5 : 0.2})`,
-                  opacity: ramp(frame, B.fly, 4),
-                  filter:
-                    vel > 8 ? `blur(${Math.min(5, vel * 0.05)}px)` : undefined,
-                  zIndex: 10 + i,
-                }}
-              >
                 <div
                   style={{
-                    position: "absolute",
-                    inset: 0,
-                    opacity: 1 - 0.78 * loading,
-                    filter:
-                      loading > 0.01
-                        ? `blur(${loading * 6}px) saturate(${1 - loading * 0.6})`
+                    width: 38 * u,
+                    height: 38 * u,
+                    borderRadius: 11 * u,
+                    marginLeft: 4 * u,
+                    background:
+                      ready > 0
+                        ? accent
+                        : dark
+                          ? "rgba(255,255,255,0.1)"
+                          : "rgba(20,24,48,0.08)",
+                    transform: `scale(${(1 + 0.06 * Math.sin(Math.PI * Math.min(1, readyPop)) * ready) * (1 - 0.04 * sendPress)})`,
+                    boxShadow:
+                      ready > 0
+                        ? "inset 0 1px 0 rgba(255,255,255,0.22), 0 1px 2px rgba(4,6,30,0.3)"
                         : undefined,
-                    transform: `scale(${1 + 0.08 * loading})`,
-                  }}
-                >
-                  <FileFace file={f} w={w} h={h} idx={i} />
-                </div>
-                <div
-                  style={{
-                    position: "absolute",
-                    inset: 0,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    opacity: loading,
                   }}
                 >
-                  <Progress
-                    size={30 * u}
-                    color={dark ? "#ffffff" : "#1a1f33"}
-                    value={progress}
-                  />
+                  <svg
+                    viewBox="0 0 24 24"
+                    width={18 * u}
+                    height={18 * u}
+                    aria-hidden
+                  >
+                    <path
+                      d="M12 19V5M6 11l6-6 6 6"
+                      fill="none"
+                      stroke={ready > 0 ? "#fff" : muted}
+                      strokeWidth={2}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      opacity={1 - sent}
+                      transform={`translate(0 ${-4 * sent})`}
+                    />
+                    <rect
+                      x={7.5}
+                      y={7.5}
+                      width={9}
+                      height={9}
+                      rx={2}
+                      fill="#fff"
+                      opacity={sent}
+                      transform={`translate(12 12) scale(${mix(0.4, 1, sent)}) translate(-12 -12)`}
+                    />
+                  </svg>
                 </div>
               </div>
-            );
-          })}
+            </div>
 
-          <div
-            style={{
-              position: "absolute",
-              left: curX,
-              top: curY,
-              transform: `scale(${1 - 0.04 * curPress})`,
-              transformOrigin: "4px 3px",
-              opacity: ramp(frame, B.fly + 2, 6),
-              zIndex: 30,
-            }}
-          >
-            <Cursor size={30 * u} />
+            {list.map((f, i) => {
+              const k = n - 1 - i;
+              const fan = FAN[i] ?? FAN[0];
+              const dealT = B.deal + k * B.dealStep;
+              const go = spring({ frame: frame - dealT, fps, config: CARD });
+              const goPrev = spring({
+                frame: frame - dealT - 1,
+                fps,
+                config: CARD,
+              });
+              const fx = fanCx + fan.x * u * fanSpread;
+              const fy = fanCy + fan.y * u * fanSpread;
+              const x = mix(fx, slotX(i), go);
+              const y = mix(fy, slotY, go);
+              const px = mix(fx, slotX(i), goPrev);
+              const py = mix(fy, slotY, goPrev);
+              const vel = frame > dealT ? Math.hypot(x - px, y - py) : fanSpeed;
+              const w = mix(fanW, slot, go);
+              const h = mix(fanH, slot, go);
+              const r = mix(fan.r * fanSpread + fanTilt, 0, go);
+              const landed = ramp(frame, dealT + B.land - 4, 6);
+              const rs = resolveAt(i);
+              const done = ramp(frame, rs, 6);
+              const pop = spring({ frame: frame - rs, fps, config: CHIP });
+              const punch =
+                1 + 0.07 * Math.sin(Math.PI * Math.min(1, pop)) * done;
+              const loading = landed * (1 - done);
+              const progress = interpolate(
+                frame,
+                [dealT + B.land - 4, rs],
+                [0.06, 1],
+                {
+                  extrapolateLeft: "clamp",
+                  extrapolateRight: "clamp",
+                  easing: MOVE,
+                },
+              );
+              const lift = 1 - go;
+              return (
+                <div
+                  key={f.name}
+                  style={{
+                    position: "absolute",
+                    left: x - w / 2,
+                    top: y - h / 2,
+                    width: w,
+                    height: h,
+                    transform: `rotate(${r}deg) scale(${punch})`,
+                    borderRadius: mix(14, 12, go) * u,
+                    overflow: "hidden",
+                    outline: `1px solid ${dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"}`,
+                    outlineOffset: -1,
+                    background: slotBg,
+                    boxShadow: `0 ${mix(2, 22, lift) * u}px ${mix(6, 40, lift) * u}px rgba(4,6,30,${dark ? 0.5 : 0.2})`,
+                    opacity: ramp(frame, B.fly, 4),
+                    filter:
+                      vel > 8
+                        ? `blur(${Math.min(5, vel * 0.05)}px)`
+                        : undefined,
+                    zIndex: 10 + i,
+                  }}
+                >
+                  <div
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      opacity: 1 - 0.78 * loading,
+                      filter:
+                        loading > 0.01
+                          ? `blur(${loading * 6}px) saturate(${1 - loading * 0.6})`
+                          : undefined,
+                      transform: `scale(${1 + 0.08 * loading})`,
+                    }}
+                  >
+                    <FileFace
+                      file={f}
+                      w={w}
+                      h={h}
+                      idx={i}
+                      fontFamily={fontFamily}
+                    />
+                  </div>
+                  <div
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      opacity: loading,
+                    }}
+                  >
+                    <Progress
+                      size={30 * u}
+                      color={dark ? "#ffffff" : "#1a1f33"}
+                      value={progress}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+
             <div
               style={{
                 position: "absolute",
-                left: 20 * u,
-                top: 22 * u,
-                minWidth: 26 * u,
-                height: 26 * u,
-                padding: `0 ${7 * u}px`,
-                borderRadius: 99,
-                background: accent,
-                border: `${1.5 * u}px solid ${dark ? "#0d0f18" : "#ffffff"}`,
-                color: "#fff",
-                fontFamily: mono.fontFamily,
-                fontSize: 16 * u,
-                lineHeight: 1,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                boxShadow: "0 4px 10px rgba(4,6,30,0.35)",
-                transform: `scale(${badge})`,
+                left: curX,
+                top: curY,
+                transform: `scale(${1 - 0.04 * curPress})`,
+                transformOrigin: "4px 3px",
+                opacity: ramp(frame, B.fly + 2, 6),
+                zIndex: 30,
               }}
             >
-              {n}
+              <Cursor size={30 * u} />
+              <div
+                style={{
+                  position: "absolute",
+                  left: 20 * u,
+                  top: 22 * u,
+                  minWidth: 26 * u,
+                  height: 26 * u,
+                  padding: `0 ${7 * u}px`,
+                  borderRadius: 99,
+                  background: accent,
+                  border: `${1.5 * u}px solid ${dark ? "#0d0f18" : "#ffffff"}`,
+                  color: "#fff",
+                  fontFamily: mono.fontFamily,
+                  fontSize: 16 * u,
+                  lineHeight: 1,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  boxShadow: "0 4px 10px rgba(4,6,30,0.35)",
+                  transform: `scale(${badge})`,
+                }}
+              >
+                {n}
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

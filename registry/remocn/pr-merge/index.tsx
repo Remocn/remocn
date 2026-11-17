@@ -15,7 +15,7 @@ import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
 
-const { fontFamily } = loadFont("normal", {
+const geist = loadFont("normal", {
   weights: ["300", "400"],
   subsets: ["latin"],
 });
@@ -44,7 +44,23 @@ export interface PrMergeProps {
   additions?: number;
   deletions?: number;
   mergeSha?: string;
+  /** Label of the merge button. */
+  mergeLabel?: string;
+  /** Label of the confirm button after the first click. */
+  confirmLabel?: string;
+  /** Frames between one check passing and the next. */
+  stagger?: number;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Geist by default. */
+  fontFamily?: string;
+  /** Size of the title block and card, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "light" | "dark";
   ground?: GshPresetId;
@@ -322,6 +338,22 @@ function StatusGlyph({
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function PrMerge({
   repo = "remocn/remocn",
   title = "Add launch pack",
@@ -335,26 +367,35 @@ export function PrMerge({
   additions = 1248,
   deletions = 96,
   mergeSha = "3f2a9c1",
+  mergeLabel = "Merge",
+  confirmLabel = "Confirm merge",
+  stagger = 12,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = geist.fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "light",
   ground,
   groundParams,
 }: PrMergeProps) {
-  const frame = useCurrentFrame() * speed;
+  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, fps } = useVideoConfig();
   const tall = height > width * 1.2;
   const u = tall ? width / 640 : Math.min(width / 1280, height / 720);
   const dw = width / u;
   const dh = height / u;
-  const c = theme === "dark" ? PAL.dark : PAL.light;
+  const themed = theme === "dark" ? PAL.dark : PAL.light;
+  const c = ink ? { ...themed, text: ink } : themed;
   const sp = (f: number, config: typeof CARD | typeof MORPH) =>
     spring({ frame: f, fps, config });
   const list = checks.map((k) => (typeof k === "string" ? { name: k } : k));
   const n = list.length;
 
   const starts = list.map((_, i) => 10 + i * 3);
-  const dones = list.map((_, i) => 46 + i * 12);
+  const dones = list.map((_, i) => 46 + i * stagger);
   const allDone = (dones[n - 1] ?? 46) + 6;
   const T = {
     mergeClick: allDone + 22,
@@ -445,394 +486,406 @@ export function PrMerge({
         WebkitFontSmoothing: "antialiased",
       }}
     >
-      <GshGround
-        preset={ground ?? (c.dark ? "earthshine" : "glasswork")}
-        params={groundParams}
-        timeOffset={c.dark ? 2 : 4}
-        timeScale={0.35}
-      />
-      <AbsoluteFill style={{ background: c.scrim }} />
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          top: 0,
-          width: dw,
-          height: dh,
-          transform: `scale(${u})`,
-          transformOrigin: "0 0",
-          color: c.text,
-        }}
-      >
+      {background === undefined ? (
+        <>
+          <GshGround
+            preset={ground ?? (c.dark ? "earthshine" : "glasswork")}
+            params={groundParams}
+            timeOffset={c.dark ? 2 : 4}
+            timeScale={0.35}
+          />
+          <AbsoluteFill style={{ background: c.scrim }} />
+        </>
+      ) : (
+        <AbsoluteFill
+          style={{
+            background: background === "transparent" ? undefined : background,
+          }}
+        />
+      )}
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            inset: 0,
-            transform: `scale(${push})`,
-            transformOrigin: "50% 50%",
+            left: 0,
+            top: 0,
+            width: dw,
+            height: dh,
+            transform: `scale(${u})`,
+            transformOrigin: "0 0",
+            color: c.text,
           }}
         >
           <div
             style={{
               position: "absolute",
-              left: leftX,
-              top: leftY,
-              width: leftW,
+              inset: 0,
+              transform: `scale(${push})`,
+              transformOrigin: "50% 50%",
             }}
           >
             <div
-              style={flex(10, {
-                fontFamily: monoFamily,
-                fontSize: 17,
-                color: c.muted,
-                opacity: L(0),
-                transform: `translateY(${(1 - L(0)) * 14}px)`,
-              })}
-            >
-              <span>{repo}</span>
-              <span style={{ color: c.faint }}>#{number}</span>
-            </div>
-            <div
               style={{
-                marginTop: 18,
-                fontSize: tall ? 64 : 58,
-                fontWeight: 300,
-                lineHeight: 1.04,
-                letterSpacing: "-0.035em",
-                opacity: L(1),
-                transform: `translateY(${(1 - L(1)) * 22}px)`,
+                position: "absolute",
+                left: leftX,
+                top: leftY,
+                width: leftW,
               }}
             >
-              {title}
-            </div>
-            <div
-              style={{
-                position: "relative",
-                marginTop: 22,
-                height: 28,
-                opacity: L(2),
-                transform: `translateY(${(1 - L(2)) * 14}px)`,
-              }}
-            >
-              {[false, true].map((m) => {
-                const on = m ? statusP : 1 - ramp(frame, T.merged, 6, EXIT);
-                if (on <= 0.001) return null;
-                return (
-                  <div
-                    key={String(m)}
-                    style={flex(10, {
-                      position: "absolute",
-                      left: 0,
-                      top: 0,
-                      fontSize: 19,
-                      whiteSpace: "nowrap",
-                      opacity: clamp(on),
-                      transform: `translateY(${(1 - on) * (m ? 12 : -8)}px)`,
-                    })}
-                  >
-                    <span
-                      style={{
-                        width: 9,
-                        height: 9,
-                        borderRadius: 5,
-                        background: m ? accent : c.green,
-                        boxShadow: `0 0 0 4px ${withAlpha(m ? accent : c.green, 0.18)}`,
-                        transform: `scale(${m ? 0.5 + 0.5 * statusP : 1})`,
-                      }}
-                    />
-                    <span style={{ color: c.text }}>
-                      {m ? "Merged" : "Open"}
-                    </span>
-                    <span style={{ color: c.muted }}>
-                      {m
-                        ? `${author} merged ${commits} commits`
-                        : `${author} wants to merge ${commits} commits`}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-            <div
-              style={flex(10, {
-                marginTop: 14,
-                fontFamily: monoFamily,
-                fontSize: 17,
-                color: c.muted,
-                opacity: L(3),
-                transform: `translateY(${(1 - L(3)) * 14}px)`,
-              })}
-            >
-              <Icon name="branch" size={18} color={c.muted} />
-              <span>{branch}</span>
-              <Icon name="arrow" size={16} color={c.faint} />
-              <span style={{ color: c.text }}>{base}</span>
-            </div>
-            <div
-              style={flex(16, {
-                marginTop: 28,
-                paddingTop: 18,
-                boxShadow: `inset 0 1px 0 ${c.rule}`,
-                fontFamily: monoFamily,
-                fontSize: 17,
-                fontVariantNumeric: "tabular-nums",
-                color: c.muted,
-                opacity: L(4),
-                transform: `translateY(${(1 - L(4)) * 14}px)`,
-              })}
-            >
-              <span style={{ color: c.green }}>+{fmt(additions)}</span>
-              <span style={{ color: c.muted }}>−{fmt(deletions)}</span>
-              <span style={{ color: c.faint }}>·</span>
-              <span>23 files</span>
-              <span style={{ color: c.faint }}>·</span>
-              <span>{commits} commits</span>
-            </div>
-          </div>
-
-          <div
-            style={{
-              position: "absolute",
-              left: cardX,
-              top: cardY,
-              width: cardW,
-              height: cardH,
-              borderRadius: 22,
-              background: c.card,
-              backdropFilter: c.dark ? "blur(28px)" : undefined,
-              boxShadow: c.depth,
-              overflow: "hidden",
-              opacity: ramp(frame, 4, 10),
-              transform: `translateY(${(1 - enterCard) * 48}px) scale(${0.97 + 0.03 * enterCard})`,
-              transformOrigin: "50% 0%",
-            }}
-          >
-            <div
-              style={flex(14, {
-                height: HEAD,
-                padding: "0 24px",
-                boxShadow: `inset 0 -1px 0 ${c.rule}`,
-                fontSize: 17,
-              })}
-            >
-              <Monogram name={reviewer} c={c} />
-              <span>{reviewer}</span>
-              <span style={{ color: c.muted }}>approved these changes</span>
-              <span
-                style={{
-                  marginLeft: "auto",
+              <div
+                style={flex(10, {
                   fontFamily: monoFamily,
-                  fontSize: 16,
-                  color: c.faint,
-                }}
-              >
-                18m
-              </span>
-            </div>
-            <div
-              style={flex(14, {
-                height: SUM,
-                padding: "0 24px",
-                fontSize: 17,
-              })}
-            >
-              <StatusGlyph
-                state={ok ? "done" : "running"}
-                pop={enable}
-                frame={frame}
-                c={c}
-              />
-              <span style={{ fontVariantNumeric: "tabular-nums" }}>
-                {summary}
-              </span>
-              <span
-                style={{
-                  marginLeft: "auto",
-                  fontSize: 16,
+                  fontSize: 17,
                   color: c.muted,
+                  opacity: L(0),
+                  transform: `translateY(${(1 - L(0)) * 14}px)`,
+                })}
+              >
+                <span>{repo}</span>
+                <span style={{ color: c.faint }}>#{number}</span>
+              </div>
+              <div
+                style={{
+                  marginTop: 18,
+                  fontSize: tall ? 64 : 58,
+                  fontWeight: 300,
+                  lineHeight: 1.04,
+                  letterSpacing: "-0.035em",
+                  opacity: L(1),
+                  transform: `translateY(${(1 - L(1)) * 22}px)`,
                 }}
               >
-                No conflicts with {base}
-              </span>
-            </div>
-            <div
-              style={{
-                height: rowsH * (1 - collapse),
-                overflow: "hidden",
-                opacity: 1 - ramp(frame, T.merged, 8, EXIT),
-              }}
-            >
-              {list.map((k, i) => {
-                const state =
-                  frame >= dones[i]
-                    ? "done"
-                    : frame >= starts[i]
-                      ? "running"
-                      : "queued";
-                const rowIn = ramp(frame, 8 + i * 3, 14);
-                return (
-                  <div
-                    key={k.name}
-                    style={flex(14, {
-                      height: ROW,
-                      margin: "0 12px",
-                      padding: "0 12px",
-                      borderRadius: 12,
-                      background: i % 2 === 0 ? c.ghost : "transparent",
-                      opacity: rowIn,
-                      transform: `translateY(${(1 - rowIn) * 12}px)`,
-                    })}
-                  >
-                    <StatusGlyph
-                      state={state}
-                      pop={sp(frame - dones[i], CHIP)}
-                      frame={frame}
-                      c={c}
-                    />
-                    <span style={{ fontFamily: monoFamily, fontSize: 17 }}>
-                      {k.name}
-                    </span>
-                    <span style={{ fontSize: 16, color: c.faint }}>
-                      {k.workflow ?? "ci"}
-                    </span>
-                    <span
-                      style={{
-                        marginLeft: "auto",
-                        fontFamily: monoFamily,
-                        fontSize: 16,
-                        color: state === "done" ? c.muted : c.faint,
-                        fontVariantNumeric: "tabular-nums",
-                      }}
+                {title}
+              </div>
+              <div
+                style={{
+                  position: "relative",
+                  marginTop: 22,
+                  height: 28,
+                  opacity: L(2),
+                  transform: `translateY(${(1 - L(2)) * 14}px)`,
+                }}
+              >
+                {[false, true].map((m) => {
+                  const on = m ? statusP : 1 - ramp(frame, T.merged, 6, EXIT);
+                  if (on <= 0.001) return null;
+                  return (
+                    <div
+                      key={String(m)}
+                      style={flex(10, {
+                        position: "absolute",
+                        left: 0,
+                        top: 0,
+                        fontSize: 19,
+                        whiteSpace: "nowrap",
+                        opacity: clamp(on),
+                        transform: `translateY(${(1 - on) * (m ? 12 : -8)}px)`,
+                      })}
                     >
-                      {state === "done"
-                        ? `${k.seconds ?? 20 + i * 17}s`
-                        : state === "running"
-                          ? "running"
-                          : "queued"}
-                    </span>
-                  </div>
-                );
-              })}
+                      <span
+                        style={{
+                          width: 9,
+                          height: 9,
+                          borderRadius: 5,
+                          background: m ? accent : c.green,
+                          boxShadow: `0 0 0 4px ${withAlpha(m ? accent : c.green, 0.18)}`,
+                          transform: `scale(${m ? 0.5 + 0.5 * statusP : 1})`,
+                        }}
+                      />
+                      <span style={{ color: c.text }}>
+                        {m ? "Merged" : "Open"}
+                      </span>
+                      <span style={{ color: c.muted }}>
+                        {m
+                          ? `${author} merged ${commits} commits`
+                          : `${author} wants to merge ${commits} commits`}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+              <div
+                style={flex(10, {
+                  marginTop: 14,
+                  fontFamily: monoFamily,
+                  fontSize: 17,
+                  color: c.muted,
+                  opacity: L(3),
+                  transform: `translateY(${(1 - L(3)) * 14}px)`,
+                })}
+              >
+                <Icon name="branch" size={18} color={c.muted} />
+                <span>{branch}</span>
+                <Icon name="arrow" size={16} color={c.faint} />
+                <span style={{ color: c.text }}>{base}</span>
+              </div>
+              <div
+                style={flex(16, {
+                  marginTop: 28,
+                  paddingTop: 18,
+                  boxShadow: `inset 0 1px 0 ${c.rule}`,
+                  fontFamily: monoFamily,
+                  fontSize: 17,
+                  fontVariantNumeric: "tabular-nums",
+                  color: c.muted,
+                  opacity: L(4),
+                  transform: `translateY(${(1 - L(4)) * 14}px)`,
+                })}
+              >
+                <span style={{ color: c.green }}>+{fmt(additions)}</span>
+                <span style={{ color: c.muted }}>−{fmt(deletions)}</span>
+                <span style={{ color: c.faint }}>·</span>
+                <span>23 files</span>
+                <span style={{ color: c.faint }}>·</span>
+                <span>{commits} commits</span>
+              </div>
             </div>
+
             <div
               style={{
-                position: "relative",
-                height: FOOT,
-                boxShadow: `inset 0 1px 0 ${c.rule}`,
+                position: "absolute",
+                left: cardX,
+                top: cardY,
+                width: cardW,
+                height: cardH,
+                borderRadius: 22,
+                background: c.card,
+                backdropFilter: c.dark ? "blur(28px)" : undefined,
+                boxShadow: c.depth,
+                overflow: "hidden",
+                opacity: ramp(frame, 4, 10),
+                transform: `translateY(${(1 - enterCard) * 48}px) scale(${0.97 + 0.03 * enterCard})`,
+                transformOrigin: "50% 0%",
               }}
             >
-              {footA > 0.001 && (
-                <div
-                  style={flex(12, {
-                    position: "absolute",
-                    inset: 0,
-                    padding: "0 24px",
-                    opacity: footA,
-                    transform: `translateY(${(1 - footA) * -10}px)`,
-                    fontSize: 17,
+              <div
+                style={flex(14, {
+                  height: HEAD,
+                  padding: "0 24px",
+                  boxShadow: `inset 0 -1px 0 ${c.rule}`,
+                  fontSize: 17,
+                })}
+              >
+                <Monogram name={reviewer} c={c} />
+                <span>{reviewer}</span>
+                <span style={{ color: c.muted }}>approved these changes</span>
+                <span
+                  style={{
+                    marginLeft: "auto",
+                    fontFamily: monoFamily,
+                    fontSize: 16,
+                    color: c.faint,
+                  }}
+                >
+                  18m
+                </span>
+              </div>
+              <div
+                style={flex(14, {
+                  height: SUM,
+                  padding: "0 24px",
+                  fontSize: 17,
+                })}
+              >
+                <StatusGlyph
+                  state={ok ? "done" : "running"}
+                  pop={enable}
+                  frame={frame}
+                  c={c}
+                />
+                <span style={{ fontVariantNumeric: "tabular-nums" }}>
+                  {summary}
+                </span>
+                <span
+                  style={{
+                    marginLeft: "auto",
+                    fontSize: 16,
                     color: c.muted,
-                  })}
+                  }}
                 >
-                  <span>
-                    Squash {commits} commits into {base}
-                  </span>
-                  <div
-                    style={{
-                      ...btn(true),
-                      marginLeft: "auto",
-                      opacity: 0.35 + 0.65 * clamp(enable),
-                      transform: `scale(${(0.96 + 0.04 * enable) * (1 - 0.04 * pressAt(T.mergeClick))})`,
-                    }}
-                  >
-                    <Icon name="merge" size={18} color={c.onSolid} />
-                    Merge
-                  </div>
-                </div>
-              )}
-              {footB > 0.001 && (
-                <div
-                  style={flex(10, {
-                    position: "absolute",
-                    inset: 0,
-                    padding: "0 24px",
-                    opacity: clamp(footB),
-                    transform: `translateY(${(1 - footB) * 16}px)`,
-                    fontSize: 17,
-                  })}
-                >
-                  <span style={{ color: c.text }}>Merge into {base}?</span>
-                  <div style={{ ...btn(false), marginLeft: "auto" }}>
-                    Cancel
-                  </div>
-                  <div
-                    style={{
-                      ...btn(true),
-                      background: accent,
-                      color: "#FFFFFF",
-                      transform: `scale(${1 - 0.04 * pressAt(T.confirmClick)})`,
-                    }}
-                  >
-                    {merging ? (
-                      <Spinner
-                        color="#FFFFFF"
-                        track="rgba(255,255,255,0.3)"
+                  No conflicts with {base}
+                </span>
+              </div>
+              <div
+                style={{
+                  height: rowsH * (1 - collapse),
+                  overflow: "hidden",
+                  opacity: 1 - ramp(frame, T.merged, 8, EXIT),
+                }}
+              >
+                {list.map((k, i) => {
+                  const state =
+                    frame >= dones[i]
+                      ? "done"
+                      : frame >= starts[i]
+                        ? "running"
+                        : "queued";
+                  const rowIn = ramp(frame, 8 + i * 3, 14);
+                  return (
+                    <div
+                      key={k.name}
+                      style={flex(14, {
+                        height: ROW,
+                        margin: "0 12px",
+                        padding: "0 12px",
+                        borderRadius: 12,
+                        background: i % 2 === 0 ? c.ghost : "transparent",
+                        opacity: rowIn,
+                        transform: `translateY(${(1 - rowIn) * 12}px)`,
+                      })}
+                    >
+                      <StatusGlyph
+                        state={state}
+                        pop={sp(frame - dones[i], CHIP)}
                         frame={frame}
-                        size={18}
+                        c={c}
                       />
-                    ) : null}
-                    {merging ? "Merging" : "Confirm merge"}
-                  </div>
-                </div>
-              )}
-              {isMerged && (
-                <div
-                  style={flex(14, {
-                    position: "absolute",
-                    inset: 0,
-                    padding: "0 24px",
-                    opacity: clamp(mergedIn * 1.4),
-                    transform: `translateY(${(1 - mergedIn) * 18}px)`,
-                    fontSize: 17,
-                  })}
-                >
+                      <span style={{ fontFamily: monoFamily, fontSize: 17 }}>
+                        {k.name}
+                      </span>
+                      <span style={{ fontSize: 16, color: c.faint }}>
+                        {k.workflow ?? "ci"}
+                      </span>
+                      <span
+                        style={{
+                          marginLeft: "auto",
+                          fontFamily: monoFamily,
+                          fontSize: 16,
+                          color: state === "done" ? c.muted : c.faint,
+                          fontVariantNumeric: "tabular-nums",
+                        }}
+                      >
+                        {state === "done"
+                          ? `${k.seconds ?? 20 + i * 17}s`
+                          : state === "running"
+                            ? "running"
+                            : "queued"}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+              <div
+                style={{
+                  position: "relative",
+                  height: FOOT,
+                  boxShadow: `inset 0 1px 0 ${c.rule}`,
+                }}
+              >
+                {footA > 0.001 && (
                   <div
-                    style={flex(0, {
-                      width: 36,
-                      height: 36,
-                      borderRadius: 18,
-                      justifyContent: "center",
-                      background: accent,
-                      flexShrink: 0,
-                      transform: `scale(${0.6 + 0.4 * statusP})`,
+                    style={flex(12, {
+                      position: "absolute",
+                      inset: 0,
+                      padding: "0 24px",
+                      opacity: footA,
+                      transform: `translateY(${(1 - footA) * -10}px)`,
+                      fontSize: 17,
+                      color: c.muted,
                     })}
                   >
-                    <Icon name="merge" size={18} color="#FFFFFF" />
-                  </div>
-                  <div>
-                    <div>Merged into {base}</div>
+                    <span>
+                      Squash {commits} commits into {base}
+                    </span>
                     <div
                       style={{
-                        marginTop: 2,
-                        fontFamily: monoFamily,
-                        fontSize: 16,
-                        color: c.muted,
+                        ...btn(true),
+                        marginLeft: "auto",
+                        opacity: 0.35 + 0.65 * clamp(enable),
+                        transform: `scale(${(0.96 + 0.04 * enable) * (1 - 0.04 * pressAt(T.mergeClick))})`,
                       }}
                     >
-                      {mergeSha} · just now
+                      <Icon name="merge" size={18} color={c.onSolid} />
+                      {mergeLabel}
                     </div>
                   </div>
-                  <div style={{ ...btn(false), marginLeft: "auto" }}>
-                    <Icon name="trash" size={18} color={c.muted} />
-                    Delete branch
+                )}
+                {footB > 0.001 && (
+                  <div
+                    style={flex(10, {
+                      position: "absolute",
+                      inset: 0,
+                      padding: "0 24px",
+                      opacity: clamp(footB),
+                      transform: `translateY(${(1 - footB) * 16}px)`,
+                      fontSize: 17,
+                    })}
+                  >
+                    <span style={{ color: c.text }}>Merge into {base}?</span>
+                    <div style={{ ...btn(false), marginLeft: "auto" }}>
+                      Cancel
+                    </div>
+                    <div
+                      style={{
+                        ...btn(true),
+                        background: accent,
+                        color: "#FFFFFF",
+                        transform: `scale(${1 - 0.04 * pressAt(T.confirmClick)})`,
+                      }}
+                    >
+                      {merging ? (
+                        <Spinner
+                          color="#FFFFFF"
+                          track="rgba(255,255,255,0.3)"
+                          frame={frame}
+                          size={18}
+                        />
+                      ) : null}
+                      {merging ? "Merging" : confirmLabel}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+                {isMerged && (
+                  <div
+                    style={flex(14, {
+                      position: "absolute",
+                      inset: 0,
+                      padding: "0 24px",
+                      opacity: clamp(mergedIn * 1.4),
+                      transform: `translateY(${(1 - mergedIn) * 18}px)`,
+                      fontSize: 17,
+                    })}
+                  >
+                    <div
+                      style={flex(0, {
+                        width: 36,
+                        height: 36,
+                        borderRadius: 18,
+                        justifyContent: "center",
+                        background: accent,
+                        flexShrink: 0,
+                        transform: `scale(${0.6 + 0.4 * statusP})`,
+                      })}
+                    >
+                      <Icon name="merge" size={18} color="#FFFFFF" />
+                    </div>
+                    <div>
+                      <div>Merged into {base}</div>
+                      <div
+                        style={{
+                          marginTop: 2,
+                          fontFamily: monoFamily,
+                          fontSize: 16,
+                          color: c.muted,
+                        }}
+                      >
+                        {mergeSha} · just now
+                      </div>
+                    </div>
+                    <div style={{ ...btn(false), marginLeft: "auto" }}>
+                      <Icon name="trash" size={18} color={c.muted} />
+                      Delete branch
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+            <div style={{ opacity: curOpacity }}>
+              <Cursor x={cur.x} y={cur.y} press={press} />
             </div>
           </div>
-          <div style={{ opacity: curOpacity }}>
-            <Cursor x={cur.x} y={cur.y} press={press} />
-          </div>
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

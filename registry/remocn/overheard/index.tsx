@@ -1,6 +1,7 @@
 "use client";
 
 import { loadFont } from "@remotion/google-fonts/YoungSerif";
+import type React from "react";
 import { useEffect, useRef, useState } from "react";
 import {
   AbsoluteFill,
@@ -22,8 +23,20 @@ export interface OverheardLine {
 export interface OverheardProps {
   lines?: OverheardLine[];
   highlight?: string;
+  /** Frames between words of a quote. */
+  stagger?: number;
+  /** Frames between one speaker's line and the next. */
+  pause?: number;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the quotes. Load it yourself; Young Serif by default. */
+  fontFamily?: string;
+  /** Size of the exchange, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -176,8 +189,8 @@ function wrap(
   return { pos, lines: L, widths };
 }
 
-function useWidths(strings: string[]) {
-  const key = strings.join("\u0001");
+function useWidths(strings: string[], family: string) {
+  const key = `${family}\u0002${strings.join("\u0001")}`;
   const [state, setState] = useState<{
     key: string;
     w: Record<string, number>;
@@ -190,14 +203,14 @@ function useWidths(strings: string[]) {
     let live = true;
     Promise.all([
       serif.waitUntilDone(),
-      document.fonts.load(`400 100px "${serif.fontFamily}"`),
+      document.fonts.load(`400 100px "${family}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
         const ctx = document.createElement("canvas").getContext("2d");
         const w: Record<string, number> = {};
-        if (ctx) ctx.font = `400 100px "${serif.fontFamily}"`;
+        if (ctx) ctx.font = `400 100px "${family}"`;
         for (const s of ref.current) {
           w[s] = ctx ? ctx.measureText(s).width / 100 : s.length * 0.5;
         }
@@ -210,22 +223,45 @@ function useWidths(strings: string[]) {
     return () => {
       live = false;
     };
-  }, [key, handle]);
+  }, [key, family, handle]);
   return state && state.key === key ? state.w : null;
+}
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
 }
 
 export function Overheard({
   lines = DEFAULT_LINES,
   highlight = "It’s in the repo.",
+  stagger = WORD,
+  pause = BETWEEN,
   accent,
+  ink,
   background,
+  fontFamily = serif.fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: OverheardProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, durationInFrames: T } = useVideoConfig();
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
+  const fg = ink ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
 
@@ -241,7 +277,7 @@ export function Overheard({
       ...list.map((l) => `— ${l.name}`),
     ]),
   );
-  const w = useWidths(strings);
+  const w = useWidths(strings, fontFamily);
 
   if (!w) {
     return (
@@ -284,12 +320,12 @@ export function Overheard({
     const times: number[] = [];
     v.forEach((wd) => {
       times.push(clock);
-      clock += WORD;
+      clock += stagger;
       if (/[.?!,…]”?$/.test(wd.text)) clock += PAUSE;
     });
     natural.push(times);
     nameAt.push(clock + 2);
-    clock += i < n - 1 ? BETWEEN : 0;
+    clock += i < n - 1 ? pause : 0;
   });
   const speechEnd = clock + RISE;
   const room = Math.max(1, T - Math.max(30, T * 0.2));
@@ -312,87 +348,89 @@ export function Overheard({
       style={{
         background: stage,
         overflow: "hidden",
-        fontFamily: serif.fontFamily,
+        fontFamily,
         fontWeight: 400,
       }}
     >
-      {voices.map((v, i) => {
-        const right = i % 2 === 1;
-        const lay = lays[i];
-        const next = i < n - 1 ? starts[i + 1] * k : 1e6;
-        const back = interpolate(t, [next, next + 16], [0, 1], {
-          ...CLAMP,
-          easing: EASE_IO,
-        });
-        const dim = 1 - back * 0.55;
-        const nIn = interpolate(
-          t,
-          [nameAt[i] * k, nameAt[i] * k + 16],
-          [0, 1],
-          {
+      <ScaleLayer scale={scale}>
+        {voices.map((v, i) => {
+          const right = i % 2 === 1;
+          const lay = lays[i];
+          const next = i < n - 1 ? starts[i + 1] * k : 1e6;
+          const back = interpolate(t, [next, next + 16], [0, 1], {
             ...CLAMP,
-            easing: EASE_OUT,
-          },
-        );
-        const nameText = `— ${list[i].name}`;
-        const nameW = adv(nameText) * L;
-        const nameTop = tops[i] + lay.lines * lineH + F * nameGap;
-        return (
-          <div
-            key={`v${i}`}
-            style={{ position: "absolute", inset: 0, opacity: dim }}
-          >
-            {v.map((wd, j) => {
-              const p = lay.pos[j];
-              const lw = lay.widths[p.line];
-              const x = right
-                ? W - marginX - (lw - p.x) * F
-                : marginX + p.x * F;
-              const at = natural[i][j] * k;
-              const e = interpolate(t, [at, at + RISE], [0, 1], {
-                ...CLAMP,
-                easing: EASE_OUT,
-              });
-              return (
-                <div
-                  key={`w${j}`}
-                  style={{
-                    position: "absolute",
-                    left: x,
-                    top: tops[i] + p.line * lineH,
-                    height: lineH,
-                    lineHeight: `${lineH}px`,
-                    fontSize: F,
-                    whiteSpace: "pre",
-                    letterSpacing: `${TRACK}em`,
-                    color: wd.hot ? hi : c.ink,
-                    opacity: e,
-                    transform: `translateY(${((1 - e) * F * 0.28).toFixed(2)}px)`,
-                  }}
-                >
-                  {wd.text}
-                </div>
-              );
-            })}
+            easing: EASE_IO,
+          });
+          const dim = 1 - back * 0.55;
+          const nIn = interpolate(
+            t,
+            [nameAt[i] * k, nameAt[i] * k + 16],
+            [0, 1],
+            {
+              ...CLAMP,
+              easing: EASE_OUT,
+            },
+          );
+          const nameText = `— ${list[i].name}`;
+          const nameW = adv(nameText) * L;
+          const nameTop = tops[i] + lay.lines * lineH + F * nameGap;
+          return (
             <div
-              style={{
-                position: "absolute",
-                left: right ? W - marginX - nameW : marginX,
-                top: nameTop,
-                fontSize: L,
-                lineHeight: `${L * 1.3}px`,
-                whiteSpace: "pre",
-                letterSpacing: `${TRACK}em`,
-                color: c.ink,
-                opacity: nIn * 0.7,
-                transform: `translateY(${((1 - nIn) * L * 0.6).toFixed(2)}px)`,
-              }}
+              key={`v${i}`}
+              style={{ position: "absolute", inset: 0, opacity: dim }}
             >
-              {nameText}
+              {v.map((wd, j) => {
+                const p = lay.pos[j];
+                const lw = lay.widths[p.line];
+                const x = right
+                  ? W - marginX - (lw - p.x) * F
+                  : marginX + p.x * F;
+                const at = natural[i][j] * k;
+                const e = interpolate(t, [at, at + RISE], [0, 1], {
+                  ...CLAMP,
+                  easing: EASE_OUT,
+                });
+                return (
+                  <div
+                    key={`w${j}`}
+                    style={{
+                      position: "absolute",
+                      left: x,
+                      top: tops[i] + p.line * lineH,
+                      height: lineH,
+                      lineHeight: `${lineH}px`,
+                      fontSize: F,
+                      whiteSpace: "pre",
+                      letterSpacing: `${TRACK}em`,
+                      color: wd.hot ? hi : fg,
+                      opacity: e,
+                      transform: `translateY(${((1 - e) * F * 0.28).toFixed(2)}px)`,
+                    }}
+                  >
+                    {wd.text}
+                  </div>
+                );
+              })}
+              <div
+                style={{
+                  position: "absolute",
+                  left: right ? W - marginX - nameW : marginX,
+                  top: nameTop,
+                  fontSize: L,
+                  lineHeight: `${L * 1.3}px`,
+                  whiteSpace: "pre",
+                  letterSpacing: `${TRACK}em`,
+                  color: fg,
+                  opacity: nIn * 0.7,
+                  transform: `translateY(${((1 - nIn) * L * 0.6).toFixed(2)}px)`,
+                }}
+              >
+                {nameText}
+              </div>
             </div>
-          </div>
-        );
-      })}
+          );
+        })}
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

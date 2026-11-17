@@ -1,6 +1,7 @@
 "use client";
 
 import { loadVariableFont } from "@remotion/google-fonts/BricolageGrotesque";
+import type React from "react";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import {
   AbsoluteFill,
@@ -26,6 +27,19 @@ export interface ParallaxLockupProps {
   /** Index of the line that lands in the gradient fill. -1 for none. */
   accentLine?: number;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the lines. Load it yourself; Bricolage Grotesque by default. */
+  fontFamily?: string;
+  fontWeight?: number;
+  /** Frame the scroll lands and the block locks. */
+  lockAt?: number;
+  /** Size of the block, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   /** Playback multiplier. */
   speed?: number;
   theme?: "dark" | "light";
@@ -94,14 +108,18 @@ interface LineInk {
   descent: number;
 }
 
-function measure(lines: string[]): LineInk[] {
+function measure(
+  lines: string[],
+  fontFamily: string,
+  weight: number,
+): LineInk[] {
   const ctx = document.createElement("canvas").getContext("2d");
   return lines.map((text) => {
     const n = [...text].length;
     if (!ctx) {
       return { left: 0, right: n * 0.56, ascent: 0.73, descent: 0 };
     }
-    ctx.font = `${WEIGHT} ${PROBE}px "${display.fontFamily}"`;
+    ctx.font = `${weight} ${PROBE}px "${fontFamily}"`;
     const m = ctx.measureText(text);
     return {
       left: -m.actualBoundingBoxLeft / PROBE,
@@ -113,7 +131,7 @@ function measure(lines: string[]): LineInk[] {
   });
 }
 
-function useInk(lines: string[]) {
+function useInk(lines: string[], fontFamily: string, weight: number) {
   const [ink, setInk] = useState<LineInk[] | null>(null);
   const [handle] = useState(() =>
     delayRender("parallax-lockup: measuring lines"),
@@ -124,12 +142,12 @@ function useInk(lines: string[]) {
     let live = true;
     Promise.all([
       display.waitUntilDone(),
-      document.fonts.load(`${WEIGHT} ${PROBE}px "${display.fontFamily}"`),
+      document.fonts.load(`${weight} ${PROBE}px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
-        setInk(measure(lines));
+        setInk(measure(lines, fontFamily, weight));
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -138,27 +156,55 @@ function useInk(lines: string[]) {
     return () => {
       live = false;
     };
-  }, [lines, handle]);
+  }, [lines, handle, fontFamily, weight]);
 
   return ink;
+}
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
 }
 
 export function ParallaxLockup({
   lines = ["Every launch", "deserves", "a film"],
   accentLine = 2,
   accent = "#3B5BFD",
+  ink: inkColor,
+  background,
+  fontFamily = display.fontFamily,
+  fontWeight = WEIGHT,
+  lockAt = SCROLL_END,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: ParallaxLockupProps) {
-  const frame = useCurrentFrame() * speed;
+  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
+  const fg = inkColor ?? c.fg;
+  const stage =
+    background === "transparent" ? "transparent" : (background ?? c.bg);
+  const accentAt = lockAt - (SCROLL_END - ACCENT_AT);
+  const accentEnd = lockAt + (ACCENT_END - SCROLL_END);
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
 
   const key = lines.join("\n");
   // biome-ignore lint/correctness/useExhaustiveDependencies: keyed on content
   const stable = useMemo(() => lines, [key]);
-  const ink = useInk(stable);
+  const ink = useInk(stable, fontFamily, fontWeight);
 
   const layout = useMemo(() => {
     if (!ink) return null;
@@ -199,78 +245,80 @@ export function ParallaxLockup({
     };
   }, [ink, W, H]);
 
-  const scroll = interpolate(frame, [0, SCROLL_END], [0, 1], {
+  const scroll = interpolate(frame, [0, lockAt], [0, 1], {
     ...CLAMP,
     easing: SCROLL,
   });
   const rest = 1 - scroll;
   const rise = H * 0.05 * rest;
-  const push = interpolate(frame, [SCROLL_END - 30, 150], [1, 1.018], {
+  const push = interpolate(frame, [lockAt - 30, lockAt + 56], [1, 1.018], {
     ...CLAMP,
     easing: Easing.bezier(0.33, 0, 0.67, 1),
   });
-  const accentIn = interpolate(frame, [ACCENT_AT, ACCENT_END], [0, 1], {
+  const accentIn = interpolate(frame, [accentAt, accentEnd], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
   });
 
   return (
-    <AbsoluteFill style={{ backgroundColor: c.bg, overflow: "hidden" }}>
-      {layout ? (
-        <svg
-          width={W}
-          height={H}
-          viewBox={`0 0 ${W} ${H}`}
-          style={{
-            position: "absolute",
-            inset: 0,
-            transform: `scale(${push})`,
-            transformOrigin: "50% 50%",
-          }}
-          aria-hidden
-        >
-          <defs>
-            <linearGradient
-              id={`f${uid}`}
-              x1="0"
-              y1="0.2"
-              x2="1"
-              y2={0.8 + Math.sin(frame / 40) * 0.15}
-            >
-              {c.fluted(accent).map(([col, offset]) => (
-                <stop
-                  key={offset}
-                  offset={offset}
-                  stopColor={interpolateColors(accentIn, [0, 1], [c.fg, col])}
-                />
-              ))}
-            </linearGradient>
-          </defs>
-          {layout.lines.map((l, i) => {
-            const dir = i % 2 === 0 ? 1 : -1;
-            const travel = dir * W * 0.66 * l.rate * rest;
-            const color = i === accentLine ? `url(#f${uid})` : c.fg;
-            return (
-              <text
-                key={`${i}-${stable[i]}`}
-                x={l.x + travel}
-                // nearer (bigger) lines also climb further: the leading
-                // closes as the scroll lands
-                y={l.y + rise + H * 0.09 * l.rate * rest}
-                fill={color}
-                style={{
-                  fontFamily: display.fontFamily,
-                  fontWeight: WEIGHT,
-                  fontSize: l.size,
-                  letterSpacing: `${TRACK}em`,
-                }}
+    <AbsoluteFill style={{ backgroundColor: stage, overflow: "hidden" }}>
+      <ScaleLayer scale={scale}>
+        {layout ? (
+          <svg
+            width={W}
+            height={H}
+            viewBox={`0 0 ${W} ${H}`}
+            style={{
+              position: "absolute",
+              inset: 0,
+              transform: `scale(${push})`,
+              transformOrigin: "50% 50%",
+            }}
+            aria-hidden
+          >
+            <defs>
+              <linearGradient
+                id={`f${uid}`}
+                x1="0"
+                y1="0.2"
+                x2="1"
+                y2={0.8 + Math.sin(frame / 40) * 0.15}
               >
-                {stable[i]}
-              </text>
-            );
-          })}
-        </svg>
-      ) : null}
+                {c.fluted(accent).map(([col, offset]) => (
+                  <stop
+                    key={offset}
+                    offset={offset}
+                    stopColor={interpolateColors(accentIn, [0, 1], [fg, col])}
+                  />
+                ))}
+              </linearGradient>
+            </defs>
+            {layout.lines.map((l, i) => {
+              const dir = i % 2 === 0 ? 1 : -1;
+              const travel = dir * W * 0.66 * l.rate * rest;
+              const color = i === accentLine ? `url(#f${uid})` : fg;
+              return (
+                <text
+                  key={`${i}-${stable[i]}`}
+                  x={l.x + travel}
+                  // nearer (bigger) lines also climb further: the leading
+                  // closes as the scroll lands
+                  y={l.y + rise + H * 0.09 * l.rate * rest}
+                  fill={color}
+                  style={{
+                    fontFamily,
+                    fontWeight,
+                    fontSize: l.size,
+                    letterSpacing: `${TRACK}em`,
+                  }}
+                >
+                  {stable[i]}
+                </text>
+              );
+            })}
+          </svg>
+        ) : null}
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

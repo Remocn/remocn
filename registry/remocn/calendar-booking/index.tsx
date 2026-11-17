@@ -51,7 +51,23 @@ export interface CalendarBookingProps {
   pick?: string;
   /** Day of the month the cursor picks. */
   day?: number;
+  /** Label of the button the picked slot splits into. */
+  confirmLabel?: string;
+  /** Line next to the check once the booking lands. */
+  sentLabel?: string;
+  /** Headline of the confirmation, before the host's first name. */
+  bookedLabel?: string;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Instrument Sans by default. */
+  fontFamily?: string;
+  /** Size of the card, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "light" | "dark";
   ground?: GshPresetId;
@@ -267,6 +283,22 @@ function Cursor({
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 function geometry(tall: boolean, gridRows: number) {
   if (tall) {
     const cell = 64;
@@ -329,20 +361,28 @@ export function CalendarBooking({
   slots = DEFAULT_SLOTS,
   pick,
   day = 18,
+  confirmLabel = "Confirm",
+  sentLabel = "Invite sent to your inbox",
+  bookedLabel = "You’re booked with",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = sans.fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "light",
   ground,
   groundParams,
 }: CalendarBookingProps) {
-  const frame = useCurrentFrame() * speed;
+  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, fps } = useVideoConfig();
   const tall = height > width;
   const SW = tall ? 600 : 1280;
   const SH = tall ? (600 * height) / width : 720;
   const k = width / SW;
   const dark = theme === "dark";
-  const c = PALETTES[theme];
+  const c = { ...PALETTES[theme], text: ink ?? PALETTES[theme].text };
   const event = { ...DEFAULT_EVENT, ...eventProp };
   const first = event.firstWeekday ?? 1;
   const days = event.daysInMonth ?? 30;
@@ -449,266 +489,278 @@ export function CalendarBooking({
     <AbsoluteFill
       style={{
         overflow: "hidden",
-        fontFamily: sans.fontFamily,
+        fontFamily,
         WebkitFontSmoothing: "antialiased",
       }}
     >
-      <GshGround
-        preset={ground ?? (dark ? "film-blue" : "glasswork")}
-        params={groundParams ?? (dark ? undefined : LIGHT_GROUND)}
-        timeOffset={2}
-        timeScale={0.45}
-      />
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          top: 0,
-          width: SW,
-          height: SH,
-          transform: `scale(${k})`,
-          transformOrigin: "0 0",
-        }}
-      >
+      {background === undefined ? (
+        <GshGround
+          preset={ground ?? (dark ? "film-blue" : "glasswork")}
+          params={groundParams ?? (dark ? undefined : LIGHT_GROUND)}
+          timeOffset={2}
+          timeScale={0.45}
+        />
+      ) : (
+        <AbsoluteFill
+          style={{
+            background: background === "transparent" ? undefined : background,
+          }}
+        />
+      )}
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            inset: 0,
-            transform: `scale(${cam})`,
-            transformOrigin: `${SW / 2}px ${SH / 2}px`,
+            left: 0,
+            top: 0,
+            width: SW,
+            height: SH,
+            transform: `scale(${k})`,
+            transformOrigin: "0 0",
           }}
         >
           <div
             style={{
               position: "absolute",
-              left: cardX,
-              top: cardY,
-              width: cardW,
-              height: cardH,
-              borderRadius: 22,
-              background: c.card,
-              boxShadow: c.shadow,
-              overflow: "hidden",
-              opacity: cardOp,
+              inset: 0,
+              transform: `scale(${cam})`,
+              transformOrigin: `${SW / 2}px ${SH / 2}px`,
             }}
           >
             <div
               style={{
                 position: "absolute",
-                left: 0,
-                top: 0,
-                width: G.wide.w,
-                height: G.wide.h,
-                opacity: bookOp,
-                transform: `scale(${1 - 0.03 * morph})`,
-                transformOrigin: "50% 40%",
+                left: cardX,
+                top: cardY,
+                width: cardW,
+                height: cardH,
+                borderRadius: 22,
+                background: c.card,
+                boxShadow: c.shadow,
+                overflow: "hidden",
+                opacity: cardOp,
               }}
             >
-              <HostPanel host={host} event={event} c={c} tall={tall} G={G} />
               <div
                 style={{
                   position: "absolute",
-                  left: G.calX,
-                  top: G.calY,
-                  width: 7 * G.cell + 6 * G.gap,
-                  height: 32,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
+                  left: 0,
+                  top: 0,
+                  width: G.wide.w,
+                  height: G.wide.h,
+                  opacity: bookOp,
+                  transform: `scale(${1 - 0.03 * morph})`,
+                  transformOrigin: "50% 40%",
                 }}
               >
-                <div style={{ fontSize: 19, color: c.text }}>
-                  {event.month}{" "}
-                  <span style={{ color: c.muted }}>{event.year}</span>
-                </div>
-                <div style={{ display: "flex", gap: 14 }}>
-                  <Icon name="left" color={c.faint} size={20} />
-                  <Icon name="right" color={c.text} size={20} />
-                </div>
-              </div>
-              {WEEKDAYS.map((w, i) => (
+                <HostPanel host={host} event={event} c={c} tall={tall} G={G} />
                 <div
-                  key={w}
                   style={{
                     position: "absolute",
-                    left: G.calX + i * (G.cell + G.gap),
-                    top: G.weekY,
-                    width: G.cell,
-                    textAlign: "center",
-                    fontSize: 16,
-                    color: c.muted,
+                    left: G.calX,
+                    top: G.calY,
+                    width: 7 * G.cell + 6 * G.gap,
+                    height: 32,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
                   }}
                 >
-                  {w}
+                  <div style={{ fontSize: 19, color: c.text }}>
+                    {event.month}{" "}
+                    <span style={{ color: c.muted }}>{event.year}</span>
+                  </div>
+                  <div style={{ display: "flex", gap: 14 }}>
+                    <Icon name="left" color={c.faint} size={20} />
+                    <Icon name="right" color={c.text} size={20} />
+                  </div>
                 </div>
-              ))}
-              {Array.from({ length: days }, (_, i) => i + 1).map((d) => {
-                const idx = first + d - 1;
-                const open = isOpen(d);
-                const sel = d === day;
-                const pos = cellPos(d);
-                const appear = tween(
-                  frame,
-                  3 + (idx % 7) * 0.7 + Math.floor(idx / 7) * 1.6,
-                  10,
-                  EASE.soft,
-                );
-                return (
+                {WEEKDAYS.map((w, i) => (
                   <div
-                    key={d}
+                    key={w}
                     style={{
                       position: "absolute",
-                      left: pos.x,
-                      top: pos.y,
+                      left: G.calX + i * (G.cell + G.gap),
+                      top: G.weekY,
                       width: G.cell,
-                      height: G.cell,
-                      borderRadius: 12,
-                      background: open ? c.tint : "transparent",
-                      opacity: appear,
-                      transform: `translateY(${(1 - appear) * 8}px)`,
+                      textAlign: "center",
+                      fontSize: 16,
+                      color: c.muted,
                     }}
                   >
-                    {sel ? (
+                    {w}
+                  </div>
+                ))}
+                {Array.from({ length: days }, (_, i) => i + 1).map((d) => {
+                  const idx = first + d - 1;
+                  const open = isOpen(d);
+                  const sel = d === day;
+                  const pos = cellPos(d);
+                  const appear = tween(
+                    frame,
+                    3 + (idx % 7) * 0.7 + Math.floor(idx / 7) * 1.6,
+                    10,
+                    EASE.soft,
+                  );
+                  return (
+                    <div
+                      key={d}
+                      style={{
+                        position: "absolute",
+                        left: pos.x,
+                        top: pos.y,
+                        width: G.cell,
+                        height: G.cell,
+                        borderRadius: 12,
+                        background: open ? c.tint : "transparent",
+                        opacity: appear,
+                        transform: `translateY(${(1 - appear) * 8}px)`,
+                      }}
+                    >
+                      {sel ? (
+                        <div
+                          style={{
+                            position: "absolute",
+                            inset: 0,
+                            borderRadius: 12,
+                            background: c.ink,
+                            transform: `scale(${0.6 + 0.4 * dayFill})`,
+                            opacity: clamp01(dayFill * 3),
+                          }}
+                        />
+                      ) : null}
                       <div
                         style={{
                           position: "absolute",
                           inset: 0,
-                          borderRadius: 12,
-                          background: c.ink,
-                          transform: `scale(${0.6 + 0.4 * dayFill})`,
-                          opacity: clamp01(dayFill * 3),
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: 17,
+                          fontVariantNumeric: "tabular-nums",
+                          color:
+                            sel && dayFill > 0.3
+                              ? c.inkText
+                              : open
+                                ? c.text
+                                : c.faint,
                         }}
-                      />
-                    ) : null}
-                    <div
-                      style={{
-                        position: "absolute",
-                        inset: 0,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontSize: 17,
-                        fontVariantNumeric: "tabular-nums",
-                        color:
-                          sel && dayFill > 0.3
-                            ? c.inkText
-                            : open
-                              ? c.text
-                              : c.faint,
-                      }}
-                    >
-                      {d}
+                      >
+                        {d}
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
-              <div
-                style={{
-                  position: "absolute",
-                  left: tall ? 0 : G.narrow.w,
-                  top: tall ? G.narrow.h - 1 : 0,
-                  width: tall ? G.wide.w : 1,
-                  height: tall ? 1 : G.wide.h,
-                  background: c.line,
-                  opacity: clamp01(widen * 2),
-                }}
-              />
-              <div
-                style={{
-                  position: "absolute",
-                  left: G.slotX,
-                  top: G.slotHeadY,
-                  height: 32,
-                  display: "flex",
-                  alignItems: "center",
-                  fontSize: 19,
-                  color: c.text,
-                  opacity: tween(frame, BEAT.day + 8, 10, EASE.enter),
-                }}
-              >
-                {WEEKDAY_LONG[wd].slice(0, 3)}&nbsp;
-                <span style={{ color: c.muted }}>{day}</span>
-              </div>
-              {shown.map((s, i) => {
-                const inn = sp(BEAT.day + 10 + i * 2, SPR.card);
-                const picked = i === pickIdx;
-                const sv = picked ? split : 0;
-                const pos = slotPos(i);
-                const timeW = G.slotW - (G.slotW - half) * sv;
-                const base: React.CSSProperties = {
-                  position: "absolute",
-                  top: pos.y,
-                  height: G.slotH,
-                  borderRadius: 10,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 8,
-                  fontSize: 17,
-                  boxSizing: "border-box",
-                  overflow: "hidden",
-                  whiteSpace: "nowrap",
-                  fontVariantNumeric: "tabular-nums",
-                };
-                return (
-                  <div key={s}>
-                    <div
-                      style={{
-                        ...base,
-                        left: pos.x + (1 - inn) * 18,
-                        width: timeW,
-                        opacity: clamp01(inn * 1.5),
-                        color: c.text,
-                        background: picked && sv > 0.05 ? c.tint : c.card,
-                        boxShadow:
-                          picked && slotHover > 0 && sv < 0.5
-                            ? `0 0 0 1px ${c.text}`
-                            : c.ghost,
-                      }}
-                    >
-                      {s}
-                    </div>
-                    {picked && sv > 0.01 ? (
+                  );
+                })}
+                <div
+                  style={{
+                    position: "absolute",
+                    left: tall ? 0 : G.narrow.w,
+                    top: tall ? G.narrow.h - 1 : 0,
+                    width: tall ? G.wide.w : 1,
+                    height: tall ? 1 : G.wide.h,
+                    background: c.line,
+                    opacity: clamp01(widen * 2),
+                  }}
+                />
+                <div
+                  style={{
+                    position: "absolute",
+                    left: G.slotX,
+                    top: G.slotHeadY,
+                    height: 32,
+                    display: "flex",
+                    alignItems: "center",
+                    fontSize: 19,
+                    color: c.text,
+                    opacity: tween(frame, BEAT.day + 8, 10, EASE.enter),
+                  }}
+                >
+                  {WEEKDAY_LONG[wd].slice(0, 3)}&nbsp;
+                  <span style={{ color: c.muted }}>{day}</span>
+                </div>
+                {shown.map((s, i) => {
+                  const inn = sp(BEAT.day + 10 + i * 2, SPR.card);
+                  const picked = i === pickIdx;
+                  const sv = picked ? split : 0;
+                  const pos = slotPos(i);
+                  const timeW = G.slotW - (G.slotW - half) * sv;
+                  const base: React.CSSProperties = {
+                    position: "absolute",
+                    top: pos.y,
+                    height: G.slotH,
+                    borderRadius: 10,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 8,
+                    fontSize: 17,
+                    boxSizing: "border-box",
+                    overflow: "hidden",
+                    whiteSpace: "nowrap",
+                    fontVariantNumeric: "tabular-nums",
+                  };
+                  return (
+                    <div key={s}>
                       <div
                         style={{
                           ...base,
-                          left: pos.x + timeW + 8,
-                          width: Math.max(0, G.slotW - timeW - 8),
-                          background: accent,
-                          color: "#FFFFFF",
-                          opacity: clamp01(sv * 2),
-                          boxShadow: "inset 0 1px 0 rgba(255,255,255,0.16)",
-                          transform: `scale(${1 - 0.04 * pressOf(BEAT.confirm)})`,
+                          left: pos.x + (1 - inn) * 18,
+                          width: timeW,
+                          opacity: clamp01(inn * 1.5),
+                          color: c.text,
+                          background: picked && sv > 0.05 ? c.tint : c.card,
+                          boxShadow:
+                            picked && slotHover > 0 && sv < 0.5
+                              ? `0 0 0 1px ${c.text}`
+                              : c.ghost,
                         }}
                       >
-                        Confirm
+                        {s}
                       </div>
-                    ) : null}
-                  </div>
-                );
-              })}
+                      {picked && sv > 0.01 ? (
+                        <div
+                          style={{
+                            ...base,
+                            left: pos.x + timeW + 8,
+                            width: Math.max(0, G.slotW - timeW - 8),
+                            background: accent,
+                            color: "#FFFFFF",
+                            opacity: clamp01(sv * 2),
+                            boxShadow: "inset 0 1px 0 rgba(255,255,255,0.16)",
+                            transform: `scale(${1 - 0.04 * pressOf(BEAT.confirm)})`,
+                          }}
+                        >
+                          {confirmLabel}
+                        </div>
+                      ) : null}
+                    </div>
+                  );
+                })}
+              </div>
+              {morph > 0.01 ? (
+                <SuccessView
+                  frame={frame - BEAT.confirm - 6}
+                  fps={fps}
+                  c={c}
+                  accent={accent}
+                  opacity={doneOp}
+                  left={(cardW - G.done.w) / 2}
+                  top={(cardH - G.done.h) / 2}
+                  w={G.done.w}
+                  h={G.done.h}
+                  host={host}
+                  event={event}
+                  sentLabel={sentLabel}
+                  bookedLabel={bookedLabel}
+                  when={`${WEEKDAY_LONG[wd]}, ${event.month} ${day}`}
+                  time={`${pickLabel}${end ? ` – ${end}` : ""}`}
+                />
+              ) : null}
             </div>
-            {morph > 0.01 ? (
-              <SuccessView
-                frame={frame - BEAT.confirm - 6}
-                fps={fps}
-                c={c}
-                accent={accent}
-                opacity={doneOp}
-                left={(cardW - G.done.w) / 2}
-                top={(cardH - G.done.h) / 2}
-                w={G.done.w}
-                h={G.done.h}
-                host={host}
-                event={event}
-                when={`${WEEKDAY_LONG[wd]}, ${event.month} ${day}`}
-                time={`${pickLabel}${end ? ` – ${end}` : ""}`}
-              />
-            ) : null}
+            <Cursor x={curX} y={curY} press={press} opacity={curOp} />
           </div>
-          <Cursor x={curX} y={curY} press={press} opacity={curOp} />
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }
@@ -833,6 +885,8 @@ function SuccessView({
   h,
   host,
   event,
+  sentLabel,
+  bookedLabel,
   when,
   time,
 }: {
@@ -847,6 +901,8 @@ function SuccessView({
   h: number;
   host: BookingHost;
   event: BookingEvent;
+  sentLabel: string;
+  bookedLabel: string;
   when: string;
   time: string;
 }) {
@@ -916,7 +972,7 @@ function SuccessView({
           </svg>
         </div>
         <div style={{ fontSize: 17, color: c.muted, ...item(0) }}>
-          Invite sent to your inbox
+          {sentLabel}
         </div>
       </div>
       <div
@@ -930,7 +986,7 @@ function SuccessView({
           color: c.text,
         }}
       >
-        You’re booked with {host.name.split(" ")[0]}
+        {bookedLabel} {host.name.split(" ")[0]}
       </div>
       <div
         style={{

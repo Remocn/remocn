@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const packedCountConfig: ComponentConfig = {
   componentName: "PackedCount",
@@ -46,6 +52,21 @@ export const packedCountConfig: ComponentConfig = {
       description: "From",
       hiddenFromList: false,
     },
+    countLength: {
+      type: "number",
+      default: 64,
+      min: 16,
+      max: 160,
+      step: 4,
+      description: "Count length (frames)",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#1185FE",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Figtree" }),
     speed: {
       type: "number",
       default: 1,

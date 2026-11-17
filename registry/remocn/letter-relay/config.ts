@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const letterRelayConfig: ComponentConfig = {
   componentName: "LetterRelay",
@@ -12,11 +18,6 @@ export const letterRelayConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     word: {
       type: "text-content",
@@ -37,6 +38,26 @@ export const letterRelayConfig: ComponentConfig = {
       description: "Hop",
       hiddenFromList: false,
     },
+    lift: {
+      type: "number",
+      default: 0.24,
+      min: 0,
+      max: 0.6,
+      step: 0.02,
+      description: "Hop height",
+      hiddenFromList: false,
+    },
+    floor: {
+      type: "boolean",
+      default: true,
+      description: "Floor glow",
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Manrope", grain: true }),
     speed: {
       type: "number",
       default: 1,

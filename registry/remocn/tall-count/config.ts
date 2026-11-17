@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const tallCountConfig: ComponentConfig = {
   componentName: "TallCount",
@@ -12,11 +18,6 @@ export const tallCountConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     prefix: {
       type: "text-content",
@@ -60,6 +61,30 @@ export const tallCountConfig: ComponentConfig = {
       description: "Decimals",
       hiddenFromList: false,
     },
+    growDuration: {
+      type: "number",
+      default: 58,
+      min: 10,
+      max: 120,
+      step: 1,
+      description: "Grow (frames)",
+      hiddenFromList: false,
+    },
+    stretch: {
+      type: "number",
+      default: 0.16,
+      min: 0,
+      max: 0.5,
+      step: 0.01,
+      description: "Stretch",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Instrument Sans", grain: true }),
     speed: {
       type: "number",
       default: 1,

@@ -1,8 +1,20 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const escalateCardsConfig: ComponentConfig = {
   componentName: "EscalateCards",
   importPath: "@/components/remocn/escalate-cards",
+  lists: {
+    words: {
+      default: ["ONE", "CODEBASE", "EVERY", "LAUNCH"],
+      description: "Words",
+    },
+  },
   controls: {
     theme: {
       type: "enum",
@@ -12,11 +24,6 @@ export const escalateCardsConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     date: {
       type: "text-content",
@@ -41,6 +48,30 @@ export const escalateCardsConfig: ComponentConfig = {
       description: "Accel",
       hiddenFromList: false,
     },
+    dateDelay: {
+      type: "number",
+      default: 14,
+      min: 0,
+      max: 60,
+      step: 1,
+      description: "Date delay (frames)",
+      hiddenFromList: false,
+    },
+    push: {
+      type: "number",
+      default: 0.045,
+      min: 0,
+      max: 0.2,
+      step: 0.005,
+      description: "Climax push",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Oswald" }),
     speed: {
       type: "number",
       default: 1,

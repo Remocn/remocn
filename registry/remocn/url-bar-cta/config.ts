@@ -1,8 +1,21 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const urlBarCtaConfig: ComponentConfig = {
   componentName: "UrlBarCta",
   importPath: "@/components/remocn/url-bar-cta",
+  lists: {
+    navLinks: {
+      default: ["Components", "Templates", "Docs"],
+      description: "Nav links",
+    },
+  },
   controls: {
     theme: {
       type: "enum",
@@ -12,11 +25,6 @@ export const urlBarCtaConfig: ComponentConfig = {
         dark: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     url: {
       type: "text-content",
@@ -54,10 +62,40 @@ export const urlBarCtaConfig: ComponentConfig = {
       default: "Zoom Blur",
       description: "Clip name",
     },
+    navCta: {
+      type: "text-content",
+      default: "Get started",
+      description: "Nav button",
+    },
     showCursor: {
       type: "boolean",
       default: true,
       description: "Show cursor",
+    },
+    typingSpeed: {
+      type: "number",
+      default: 1,
+      min: 0.25,
+      max: 4,
+      step: 0.25,
+      description: "Typing speed",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ground: groundControl(),
+    ...sceneControls({ font: "Geist" }),
+    speed: {
+      type: "number",
+      default: 1,
+      min: 0.25,
+      max: 4,
+      step: 0.25,
+      description: "Speed",
+      hiddenFromList: false,
     },
   },
   durationInFrames: 120,

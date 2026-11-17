@@ -59,14 +59,49 @@ Each entry rolls in as a day name followed by its shipped item, stepping through
       description: "List of `{ day, item }` pairs, one per line.",
     },
     {
+      name: "beat",
+      type: "number",
+      default: "13",
+      description: "Frames between one day and the next.",
+    },
+    {
+      name: "hold",
+      type: "number",
+      default: "36",
+      description: "Frames the last day holds before the end.",
+    },
+    {
       name: "accent",
       type: "string",
       description: "Accent color override; falls back to the theme accent.",
     },
     {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
       name: "background",
       type: "string",
       description: "Background color override; falls back to the theme background.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Unbounded\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
     {
       name: "speed",

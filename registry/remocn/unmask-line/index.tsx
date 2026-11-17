@@ -21,8 +21,20 @@ const plex = loadPlexMono("normal", {
 export interface UnmaskLineProps {
   lines?: string[];
   highlight?: number;
+  /** Frame the dots start opening into letters. */
+  openAt?: number;
+  /** Frames between letters opening. */
+  stagger?: number;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the lines; keep it monospaced so letters sit on the dot grid. Load it yourself; IBM Plex Mono by default. */
+  fontFamily?: string;
+  /** Size of the lines, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -60,10 +72,10 @@ interface Metrics {
   base: number;
 }
 
-function measure(): Metrics {
+function measure(fontFamily: string): Metrics {
   const ctx = document.createElement("canvas").getContext("2d");
   if (!ctx) throw new Error("unmask-line: no 2d context");
-  ctx.font = `500 100px "${plex.fontFamily}"`;
+  ctx.font = `500 100px "${fontFamily}"`;
   const m = ctx.measureText("HHHHHHHHHH");
   const asc = m.fontBoundingBoxAscent / 100;
   const desc = m.fontBoundingBoxDescent / 100;
@@ -75,7 +87,7 @@ function measure(): Metrics {
   };
 }
 
-function useMetrics() {
+function useMetrics(fontFamily: string) {
   const [m, setM] = useState<Metrics | null>(null);
   const [handle] = useState(() => delayRender("unmask-line: measuring"));
   const released = useRef(false);
@@ -83,12 +95,12 @@ function useMetrics() {
     let live = true;
     Promise.all([
       plex.waitUntilDone(),
-      document.fonts.load(`500 100px "${plex.fontFamily}"`),
+      document.fonts.load(`500 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
-        setM(measure());
+        setM(measure(fontFamily));
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -97,23 +109,46 @@ function useMetrics() {
     return () => {
       live = false;
     };
-  }, [handle]);
+  }, [fontFamily, handle]);
   return m;
+}
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
 }
 
 export function UnmaskLine({
   lines = ["Out of", "stealth."],
   highlight = -1,
+  openAt = OPEN_AT,
+  stagger = OPEN_GAP,
   accent,
+  ink,
   background,
+  fontFamily = plex.fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: UnmaskLineProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
   const green = accent ?? GREEN[theme];
-  const m = useMetrics();
+  const fg = ink ?? c.ink;
+  const m = useMetrics(fontFamily);
 
   const transparent = background === "transparent";
   const stage = transparent ? "transparent" : (background ?? c.bg);
@@ -142,7 +177,7 @@ export function UnmaskLine({
   const nodes: React.ReactNode[] = [];
   list.forEach((line, li) => {
     const baseY = firstBase + li * lineH;
-    const color = li === hl ? green : c.ink;
+    const color = li === hl ? green : fg;
     Array.from(line).forEach((ch, ci) => {
       if (ch === " ") return;
       const i = order++;
@@ -160,7 +195,7 @@ export function UnmaskLine({
         bt > 0 && bt < BREATH_LEN ? Math.sin((bt / BREATH_LEN) * Math.PI) : 0;
       const p = interpolate(
         t,
-        [OPEN_AT + i * OPEN_GAP, OPEN_AT + i * OPEN_GAP + OPEN_LEN],
+        [openAt + i * stagger, openAt + i * stagger + OPEN_LEN],
         [0, 1],
         { ...CLAMP, easing: EASE_OPEN },
       );
@@ -196,7 +231,7 @@ export function UnmaskLine({
               top,
               height: F,
               lineHeight: `${F}px`,
-              fontFamily: plex.fontFamily,
+              fontFamily,
               fontWeight: 500,
               fontSize: F,
               whiteSpace: "pre",
@@ -216,7 +251,7 @@ export function UnmaskLine({
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
-      {nodes}
+      <ScaleLayer scale={scale}>{nodes}</ScaleLayer>
     </AbsoluteFill>
   );
 }

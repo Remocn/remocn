@@ -17,7 +17,7 @@ import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
 
-const { fontFamily } = loadFont("normal", {
+const { fontFamily: geist } = loadFont("normal", {
   weights: ["300", "400"],
   subsets: ["latin"],
 });
@@ -51,8 +51,22 @@ export interface UpvoteBurstProps {
   title?: string;
   dateLabel?: string;
   badgeLabel?: string;
+  /** Status label in the board header. */
+  liveLabel?: string;
+  /** Line under the headline, after the vote count. */
+  votesLabel?: string;
   theme?: "light" | "dark";
   accent?: string;
+  /** Text color of the board and headline; overrides the theme ink. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the board and headline. Load it yourself; Geist by default. */
+  fontFamily?: string;
+  /** Size of the board and badge, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
@@ -270,11 +284,13 @@ function Badge({
   label,
   sub,
   id,
+  fontFamily,
 }: {
   accent: string;
   label: string;
   sub: string;
   id: string;
+  fontFamily: string;
 }) {
   const R = 124;
   const tr = R - 26;
@@ -390,6 +406,22 @@ function Cursor() {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function UpvoteBurst({
   product = DEFAULT_PRODUCT,
   rivals = DEFAULT_RIVALS,
@@ -399,13 +431,20 @@ export function UpvoteBurst({
   title = "Top products launching today",
   dateLabel = "Thu, Oct 23",
   badgeLabel = "Product of the day",
+  liveLabel = "Live",
+  votesLabel = "upvotes in 24 hours",
   theme = "light",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = geist,
+  scale = 1,
+  delay = 0,
   speed = 1,
   ground,
   groundParams,
 }: UpvoteBurstProps) {
-  const rawFrame = useCurrentFrame();
+  const rawFrame = Math.max(0, useCurrentFrame() - delay);
   const { fps, width, height } = useVideoConfig();
   const frame = rawFrame * speed;
   const tall = height > width;
@@ -414,7 +453,7 @@ export function UpvoteBurst({
   const stageH = height / k;
   const id = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const dark = theme === "dark";
-  const pal: Palette = dark
+  const basePal: Palette = dark
     ? {
         ink: "#F4F5F8",
         muted: "rgba(236,239,247,0.62)",
@@ -443,6 +482,7 @@ export function UpvoteBurst({
         boxBorder: "rgba(16,20,40,0.12)",
         tileInk: "#2A2E38",
       };
+  const pal: Palette = ink === undefined ? basePal : { ...basePal, ink };
   const sp = (from: number, config: typeof CARD) =>
     spring({ frame: frame - from, fps, config });
 
@@ -572,264 +612,259 @@ export function UpvoteBurst({
 
   return (
     <AbsoluteFill style={{ overflow: "hidden", fontFamily }}>
-      <GshGround
-        preset={ground ?? (dark ? "cobalt-rise" : "paper-crease")}
-        params={groundParams}
-        timeOffset={4}
-        timeScale={0.4}
-      />
-      {dark ? (
+      {background !== undefined ? (
         <AbsoluteFill
           style={{
-            background:
-              "radial-gradient(70% 60% at 50% 40%, rgba(4,6,16,0.55), rgba(4,6,16,0) 100%)",
+            background: background === "transparent" ? undefined : background,
           }}
         />
-      ) : null}
-      <div
-        style={{
-          position: "absolute",
-          width: stageW,
-          height: stageH,
-          transform: `scale(${k * push * camIn}) translate(${shake * Math.sin(tl * 2.9)}px, ${shake * 0.7 * Math.cos(tl * 3.7)}px)`,
-          transformOrigin: `${stageW / 2}px ${stageH / 2}px`,
-          left: (width - stageW) / 2,
-          top: (height - stageH) / 2,
-        }}
-      >
+      ) : (
+        <>
+          <GshGround
+            preset={ground ?? (dark ? "cobalt-rise" : "paper-crease")}
+            params={groundParams}
+            timeOffset={4}
+            timeScale={0.4}
+          />
+          {dark ? (
+            <AbsoluteFill
+              style={{
+                background:
+                  "radial-gradient(70% 60% at 50% 40%, rgba(4,6,16,0.55), rgba(4,6,16,0) 100%)",
+              }}
+            />
+          ) : null}
+        </>
+      )}
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            left: sheetX,
-            top: sheetY,
-            width: sheetW,
-            height: sheetH,
-            borderRadius: 20,
-            background: pal.sheet,
-            boxShadow: pal.sheetShadow,
-            opacity: Math.min(1, sheetIn * 1.4) * (1 - sheetOut),
-            transform: `translateY(${(1 - sheetIn) * 60 + sheetOut * 24}px) scale(${0.97 + 0.03 * sheetIn - sheetOut * 0.03})`,
-            filter: sheetOut > 0 ? `blur(${sheetOut * 6}px)` : undefined,
+            width: stageW,
+            height: stageH,
+            transform: `scale(${k * push * camIn}) translate(${shake * Math.sin(tl * 2.9)}px, ${shake * 0.7 * Math.cos(tl * 3.7)}px)`,
+            transformOrigin: `${stageW / 2}px ${stageH / 2}px`,
+            left: (width - stageW) / 2,
+            top: (height - stageH) / 2,
           }}
         >
           <div
             style={{
               position: "absolute",
-              left: pad + 16,
-              right: pad + 16,
-              top: pad,
-              height: headerH,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              borderBottom: `1px solid ${pal.hairline}`,
+              left: sheetX,
+              top: sheetY,
+              width: sheetW,
+              height: sheetH,
+              borderRadius: 20,
+              background: pal.sheet,
+              boxShadow: pal.sheetShadow,
+              opacity: Math.min(1, sheetIn * 1.4) * (1 - sheetOut),
+              transform: `translateY(${(1 - sheetIn) * 60 + sheetOut * 24}px) scale(${0.97 + 0.03 * sheetIn - sheetOut * 0.03})`,
+              filter: sheetOut > 0 ? `blur(${sheetOut * 6}px)` : undefined,
             }}
           >
             <div
               style={{
-                display: "flex",
-                alignItems: "baseline",
-                gap: 14,
-              }}
-            >
-              <span
-                style={{
-                  fontSize: 22,
-                  fontWeight: 400,
-                  color: pal.ink,
-                  letterSpacing: "-0.02em",
-                }}
-              >
-                {title}
-              </span>
-              <span
-                style={{ fontFamily: mono, fontSize: 16, color: pal.faint }}
-              >
-                {dateLabel}
-              </span>
-            </div>
-            <div
-              style={{
+                position: "absolute",
+                left: pad + 16,
+                right: pad + 16,
+                top: pad,
+                height: headerH,
                 display: "flex",
                 alignItems: "center",
-                gap: 8,
-                fontFamily: mono,
-                fontSize: 16,
-                color: pal.muted,
+                justifyContent: "space-between",
+                borderBottom: `1px solid ${pal.hairline}`,
               }}
             >
-              <span
-                style={{
-                  width: 7,
-                  height: 7,
-                  borderRadius: 9,
-                  background: "#2FB36B",
-                  boxShadow: `0 0 0 ${3 + 2 * Math.sin(frame / 5)}px rgba(47,179,107,0.18)`,
-                }}
-              />
-              Live
-            </div>
-          </div>
-        </div>
-
-        {rows.map(({ item, ri, slot }) => {
-          const isProduct = ri < 0;
-          let y = listTop + slot * rowH;
-          let rank = slot + 1;
-          let lift = 0;
-          let bump = 0;
-          if (isProduct) {
-            for (const c of crossAt) {
-              if (c === null) continue;
-              const s = swap(c);
-              y -= s * rowH;
-              lift = Math.max(lift, Math.sin(Math.PI * Math.min(1, s)));
-              bump = Math.max(
-                bump,
-                interpolate(frame - c, [0, 4, 12], [0, 1, 0], CLAMP),
-              );
-            }
-            rank = sRank - passed;
-          } else {
-            const c = crossAt[ri];
-            if (c !== null) {
-              y += swap(c) * rowH;
-              if (frame >= c + 3) rank += 1;
-            }
-          }
-          const rowIn = sp(BEAT.rows + slot * 2, CARD);
-          const t0 = clearAt + (isProduct ? 2 : (rivals.length - slot) * 1);
-          const out = interpolate(frame, [t0, t0 + 8], [0, 1], {
-            ...CLAMP,
-            easing: EXIT,
-          });
-          const isLast = slot === rivals.length;
-          const voteBorder = isProduct
-            ? hexToRgba(accent, Math.min(1, fill))
-            : pal.boxBorder;
-
-          return (
-            <div
-              key={isProduct ? "product" : `${item.name}-${ri}`}
-              style={{
-                position: "absolute",
-                left: rowX,
-                width: rowW,
-                top: y,
-                height: rowH,
-                zIndex: isProduct ? 10 : 1,
-                opacity:
-                  Math.min(1, rowIn * 1.3) *
-                  (isProduct ? 1 : 1 - dim * 0.55) *
-                  (1 - out),
-                transform: `translateY(${(1 - rowIn) * 16 + out * (isProduct ? -8 : 12)}px) scale(${1 + lift * 0.018})`,
-              }}
-            >
-              {isProduct ? (
-                <div
-                  style={{
-                    position: "absolute",
-                    inset: 0,
-                    borderRadius: 12,
-                    background: pal.raised,
-                    boxShadow: pal.raisedShadow,
-                    opacity: Math.min(1, fill * 1.2),
-                  }}
-                />
-              ) : null}
               <div
                 style={{
-                  position: "absolute",
-                  inset: "0 12px 0 16px",
                   display: "flex",
-                  alignItems: "center",
+                  alignItems: "baseline",
                   gap: 14,
-                  borderBottom:
-                    isProduct || isLast ? "none" : `1px solid ${pal.hairline}`,
                 }}
               >
-                <div
+                <span
                   style={{
-                    width: 24,
-                    fontFamily: mono,
-                    fontSize: 16,
-                    color: isProduct && rank === 1 ? accent : pal.faint,
-                    fontVariantNumeric: "tabular-nums",
+                    fontSize: 22,
+                    fontWeight: 400,
+                    color: pal.ink,
+                    letterSpacing: "-0.02em",
                   }}
                 >
-                  {rank}
-                </div>
-                <Thumb
-                  item={item}
-                  isProduct={isProduct}
-                  accent={accent}
-                  pal={pal}
+                  {title}
+                </span>
+                <span
+                  style={{ fontFamily: mono, fontSize: 16, color: pal.faint }}
+                >
+                  {dateLabel}
+                </span>
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  fontFamily: mono,
+                  fontSize: 16,
+                  color: pal.muted,
+                }}
+              >
+                <span
+                  style={{
+                    width: 7,
+                    height: 7,
+                    borderRadius: 9,
+                    background: "#2FB36B",
+                    boxShadow: `0 0 0 ${3 + 2 * Math.sin(frame / 5)}px rgba(47,179,107,0.18)`,
+                  }}
                 />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "baseline",
-                      gap: 10,
-                    }}
-                  >
-                    <span
-                      style={{
-                        fontSize: 18,
-                        fontWeight: 400,
-                        color: pal.ink,
-                        letterSpacing: "-0.01em",
-                      }}
-                    >
-                      {item.name}
-                    </span>
-                    <span style={{ fontSize: 16, color: pal.faint }}>
-                      {item.topic}
-                    </span>
-                  </div>
-                  <div
-                    style={{
-                      fontSize: 16,
-                      color: pal.muted,
-                      marginTop: 2,
-                      whiteSpace: "nowrap",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                    }}
-                  >
-                    {item.tagline}
-                  </div>
-                </div>
-                <div
-                  style={{
-                    position: "relative",
-                    width: 60,
-                    height: 52,
-                    borderRadius: 10,
-                    flexShrink: 0,
-                    boxShadow: `inset 0 0 0 1px ${voteBorder}`,
-                    overflow: "hidden",
-                    transform: `scale(${(1 + bump * 0.06) * (isProduct ? press : 1)})`,
-                  }}
-                >
+                {liveLabel}
+              </div>
+            </div>
+          </div>
+
+          {rows.map(({ item, ri, slot }) => {
+            const isProduct = ri < 0;
+            let y = listTop + slot * rowH;
+            let rank = slot + 1;
+            let lift = 0;
+            let bump = 0;
+            if (isProduct) {
+              for (const c of crossAt) {
+                if (c === null) continue;
+                const s = swap(c);
+                y -= s * rowH;
+                lift = Math.max(lift, Math.sin(Math.PI * Math.min(1, s)));
+                bump = Math.max(
+                  bump,
+                  interpolate(frame - c, [0, 4, 12], [0, 1, 0], CLAMP),
+                );
+              }
+              rank = sRank - passed;
+            } else {
+              const c = crossAt[ri];
+              if (c !== null) {
+                y += swap(c) * rowH;
+                if (frame >= c + 3) rank += 1;
+              }
+            }
+            const rowIn = sp(BEAT.rows + slot * 2, CARD);
+            const t0 = clearAt + (isProduct ? 2 : (rivals.length - slot) * 1);
+            const out = interpolate(frame, [t0, t0 + 8], [0, 1], {
+              ...CLAMP,
+              easing: EXIT,
+            });
+            const isLast = slot === rivals.length;
+            const voteBorder = isProduct
+              ? hexToRgba(accent, Math.min(1, fill))
+              : pal.boxBorder;
+
+            return (
+              <div
+                key={isProduct ? "product" : `${item.name}-${ri}`}
+                style={{
+                  position: "absolute",
+                  left: rowX,
+                  width: rowW,
+                  top: y,
+                  height: rowH,
+                  zIndex: isProduct ? 10 : 1,
+                  opacity:
+                    Math.min(1, rowIn * 1.3) *
+                    (isProduct ? 1 : 1 - dim * 0.55) *
+                    (1 - out),
+                  transform: `translateY(${(1 - rowIn) * 16 + out * (isProduct ? -8 : 12)}px) scale(${1 + lift * 0.018})`,
+                }}
+              >
+                {isProduct ? (
                   <div
                     style={{
                       position: "absolute",
                       inset: 0,
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: 2,
+                      borderRadius: 12,
+                      background: pal.raised,
+                      boxShadow: pal.raisedShadow,
+                      opacity: Math.min(1, fill * 1.2),
+                    }}
+                  />
+                ) : null}
+                <div
+                  style={{
+                    position: "absolute",
+                    inset: "0 12px 0 16px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 14,
+                    borderBottom:
+                      isProduct || isLast
+                        ? "none"
+                        : `1px solid ${pal.hairline}`,
+                  }}
+                >
+                  <div
+                    style={{
+                      width: 24,
+                      fontFamily: mono,
+                      fontSize: 16,
+                      color: isProduct && rank === 1 ? accent : pal.faint,
+                      fontVariantNumeric: "tabular-nums",
                     }}
                   >
-                    <Chevron color={pal.muted} />
-                    <Odometer
-                      value={isProduct ? productVotes : rivalVotesAt(ri, frame)}
-                      color={pal.ink}
-                    />
+                    {rank}
                   </div>
-                  {isProduct ? (
+                  <Thumb
+                    item={item}
+                    isProduct={isProduct}
+                    accent={accent}
+                    pal={pal}
+                  />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "baseline",
+                        gap: 10,
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontSize: 18,
+                          fontWeight: 400,
+                          color: pal.ink,
+                          letterSpacing: "-0.01em",
+                        }}
+                      >
+                        {item.name}
+                      </span>
+                      <span style={{ fontSize: 16, color: pal.faint }}>
+                        {item.topic}
+                      </span>
+                    </div>
+                    <div
+                      style={{
+                        fontSize: 16,
+                        color: pal.muted,
+                        marginTop: 2,
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                      }}
+                    >
+                      {item.tagline}
+                    </div>
+                  </div>
+                  <div
+                    style={{
+                      position: "relative",
+                      width: 60,
+                      height: 52,
+                      borderRadius: 10,
+                      flexShrink: 0,
+                      boxShadow: `inset 0 0 0 1px ${voteBorder}`,
+                      overflow: "hidden",
+                      transform: `scale(${(1 + bump * 0.06) * (isProduct ? press : 1)})`,
+                    }}
+                  >
                     <div
                       style={{
                         position: "absolute",
@@ -839,125 +874,151 @@ export function UpvoteBurst({
                         alignItems: "center",
                         justifyContent: "center",
                         gap: 2,
-                        background: accent,
-                        clipPath: `circle(${Math.max(0, fill) * 75}% at 50% 30%)`,
                       }}
                     >
-                      <Chevron color="#fff" />
-                      <Odometer value={productVotes} color="#fff" />
+                      <Chevron color={pal.muted} />
+                      <Odometer
+                        value={
+                          isProduct ? productVotes : rivalVotesAt(ri, frame)
+                        }
+                        color={pal.ink}
+                      />
                     </div>
-                  ) : null}
+                    {isProduct ? (
+                      <div
+                        style={{
+                          position: "absolute",
+                          inset: 0,
+                          display: "flex",
+                          flexDirection: "column",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          gap: 2,
+                          background: accent,
+                          clipPath: `circle(${Math.max(0, fill) * 75}% at 50% 30%)`,
+                        }}
+                      >
+                        <Chevron color="#fff" />
+                        <Odometer value={productVotes} color="#fff" />
+                      </div>
+                    ) : null}
+                  </div>
                 </div>
+                {isProduct && frame >= BEAT.press ? (
+                  <div
+                    style={{
+                      position: "absolute",
+                      right: 12,
+                      top: rowH / 2 - 26,
+                      width: 60,
+                      height: 52,
+                      borderRadius: 12,
+                      boxShadow: `0 0 0 1.5px ${accent}`,
+                      opacity: 0.55 * (1 - ripple),
+                      transform: `scale(${1 + ripple * 0.3})`,
+                    }}
+                  />
+                ) : null}
               </div>
-              {isProduct && frame >= BEAT.press ? (
-                <div
-                  style={{
-                    position: "absolute",
-                    right: 12,
-                    top: rowH / 2 - 26,
-                    width: 60,
-                    height: 52,
-                    borderRadius: 12,
-                    boxShadow: `0 0 0 1.5px ${accent}`,
-                    opacity: 0.55 * (1 - ripple),
-                    transform: `scale(${1 + ripple * 0.3})`,
-                  }}
-                />
-              ) : null}
-            </div>
-          );
-        })}
+            );
+          })}
 
-        {curShow > 0 ? (
-          <div
-            style={{
-              position: "absolute",
-              left: curX + curLeave * 40,
-              top: curY + curLeave * 30,
-              opacity: curShow,
-              zIndex: 30,
-              transform: `scale(${frame >= BEAT.press - 1 && frame < BEAT.press + 5 ? 0.9 : 1})`,
-              transformOrigin: "4px 4px",
-            }}
-          >
-            <Cursor />
-          </div>
-        ) : null}
-
-        {frame >= stampAt ? (
-          <>
+          {curShow > 0 ? (
             <div
               style={{
                 position: "absolute",
-                left: badgeC.x,
-                top: badgeC.y,
-                width: 0,
-                height: 0,
+                left: curX + curLeave * 40,
+                top: curY + curLeave * 30,
+                opacity: curShow,
+                zIndex: 30,
+                transform: `scale(${frame >= BEAT.press - 1 && frame < BEAT.press + 5 ? 0.9 : 1})`,
+                transformOrigin: "4px 4px",
               }}
             >
+              <Cursor />
+            </div>
+          ) : null}
+
+          {frame >= stampAt ? (
+            <>
               <div
                 style={{
                   position: "absolute",
-                  left: -150,
-                  top: -150,
-                  width: 300,
-                  height: 300,
-                  borderRadius: 300,
-                  boxShadow: `0 0 0 1.5px ${hexToRgba(accent, 0.6)}`,
-                  opacity: (1 - ring) * Math.min(1, ring * 6),
-                  transform: `scale(${0.8 + ring * 0.5})`,
-                }}
-              />
-              <div
-                style={{
-                  position: "absolute",
-                  left: -124,
-                  top: -124,
-                  transform: `scale(${interpolate(stamp, [0, 1], [1.35, 1])}) rotate(${interpolate(stamp, [0, 1], [-14, -5])}deg)`,
-                  opacity: interpolate(frame - stampAt, [0, 3], [0, 1], CLAMP),
+                  left: badgeC.x,
+                  top: badgeC.y,
+                  width: 0,
+                  height: 0,
                 }}
               >
-                <Badge
-                  accent={accent}
-                  label={badgeLabel}
-                  sub={product.name}
-                  id={id}
-                />
-              </div>
-            </div>
-            <div style={{ position: "absolute", ...capStyle }}>
-              <div style={{ overflow: "hidden", paddingBottom: 6 }}>
                 <div
                   style={{
-                    fontSize: tall ? 76 : 68,
-                    fontWeight: 300,
-                    lineHeight: 1.02,
-                    color: pal.ink,
-                    letterSpacing: "-0.04em",
-                    transform: `translateY(${(1 - captionIn(0)) * 105}%)`,
+                    position: "absolute",
+                    left: -150,
+                    top: -150,
+                    width: 300,
+                    height: 300,
+                    borderRadius: 300,
+                    boxShadow: `0 0 0 1.5px ${hexToRgba(accent, 0.6)}`,
+                    opacity: (1 - ring) * Math.min(1, ring * 6),
+                    transform: `scale(${0.8 + ring * 0.5})`,
+                  }}
+                />
+                <div
+                  style={{
+                    position: "absolute",
+                    left: -124,
+                    top: -124,
+                    transform: `scale(${interpolate(stamp, [0, 1], [1.35, 1])}) rotate(${interpolate(stamp, [0, 1], [-14, -5])}deg)`,
+                    opacity: interpolate(
+                      frame - stampAt,
+                      [0, 3],
+                      [0, 1],
+                      CLAMP,
+                    ),
                   }}
                 >
-                  {product.name} is #1 today
+                  <Badge
+                    accent={accent}
+                    label={badgeLabel}
+                    sub={product.name}
+                    id={id}
+                    fontFamily={fontFamily}
+                  />
                 </div>
               </div>
-              <div
-                style={{
-                  marginTop: 16,
-                  fontFamily: mono,
-                  fontSize: tall ? 24 : 20,
-                  color: pal.muted,
-                  fontVariantNumeric: "tabular-nums",
-                  opacity: captionIn(5),
-                  transform: `translateY(${(1 - captionIn(5)) * 12}px)`,
-                }}
-              >
-                {Math.round(endVotes).toLocaleString("en-US")} upvotes in 24
-                hours
+              <div style={{ position: "absolute", ...capStyle }}>
+                <div style={{ overflow: "hidden", paddingBottom: 6 }}>
+                  <div
+                    style={{
+                      fontSize: tall ? 76 : 68,
+                      fontWeight: 300,
+                      lineHeight: 1.02,
+                      color: pal.ink,
+                      letterSpacing: "-0.04em",
+                      transform: `translateY(${(1 - captionIn(0)) * 105}%)`,
+                    }}
+                  >
+                    {product.name} is #1 today
+                  </div>
+                </div>
+                <div
+                  style={{
+                    marginTop: 16,
+                    fontFamily: mono,
+                    fontSize: tall ? 24 : 20,
+                    color: pal.muted,
+                    fontVariantNumeric: "tabular-nums",
+                    opacity: captionIn(5),
+                    transform: `translateY(${(1 - captionIn(5)) * 12}px)`,
+                  }}
+                >
+                  {Math.round(endVotes).toLocaleString("en-US")} {votesLabel}
+                </div>
               </div>
-            </div>
-          </>
-        ) : null}
-      </div>
+            </>
+          ) : null}
+        </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const counterRevealConfig: ComponentConfig = {
   componentName: "CounterReveal",
@@ -28,6 +34,25 @@ export const counterRevealConfig: ComponentConfig = {
       default: "Out now.",
       description: "Line",
     },
+    stagger: {
+      type: "number",
+      default: 3,
+      min: 0,
+      max: 12,
+      step: 1,
+      description: "Letter stagger",
+      hiddenFromList: false,
+    },
+    liftAt: {
+      type: "number",
+      default: 66,
+      min: 20,
+      max: 100,
+      step: 1,
+      description: "Lift at (frame)",
+      hiddenFromList: false,
+    },
+    ...sceneControls({ font: "Sora", grain: true }),
     speed: {
       type: "number",
       default: 1,

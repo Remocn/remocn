@@ -1,4 +1,11 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const testimonialStackConfig: ComponentConfig = {
   componentName: "TestimonialStack",
@@ -12,11 +19,6 @@ export const testimonialStackConfig: ComponentConfig = {
         dark: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     title: {
       type: "text-content",
@@ -41,6 +43,31 @@ export const testimonialStackConfig: ComponentConfig = {
       description: "Frames per quote",
       hiddenFromList: false,
     },
+    radius: {
+      type: "number",
+      default: 20,
+      min: 0,
+      max: 40,
+      step: 1,
+      description: "Card radius",
+      hiddenFromList: false,
+    },
+    tilt: {
+      type: "number",
+      default: 1,
+      min: 0,
+      max: 3,
+      step: 0.1,
+      description: "Pile tilt",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ground: groundControl(),
+    ...sceneControls({ font: "Instrument Sans" }),
     speed: {
       type: "number",
       default: 1,

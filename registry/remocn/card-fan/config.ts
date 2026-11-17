@@ -1,4 +1,11 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const cardFanConfig: ComponentConfig = {
   componentName: "CardFan",
@@ -39,6 +46,35 @@ export const cardFanConfig: ComponentConfig = {
       max: 10,
       step: 1,
       description: "Pick",
+      hiddenFromList: false,
+    },
+    stagger: {
+      type: "number",
+      default: 3,
+      min: 0,
+      max: 12,
+      step: 1,
+      description: "Title word stagger",
+      hiddenFromList: false,
+    },
+    blur: {
+      type: "number",
+      default: 3,
+      min: 0,
+      max: 12,
+      step: 0.5,
+      description: "Back card blur",
+      hiddenFromList: false,
+    },
+    ground: groundControl(),
+    ...sceneControls({ font: "Onest" }),
+    speed: {
+      type: "number",
+      default: 1,
+      min: 0.25,
+      max: 4,
+      step: 0.25,
+      description: "Speed",
       hiddenFromList: false,
     },
   },

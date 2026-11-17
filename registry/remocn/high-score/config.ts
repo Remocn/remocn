@@ -1,8 +1,22 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const highScoreConfig: ComponentConfig = {
   componentName: "HighScore",
   importPath: "@/components/remocn/high-score",
+  lists: {
+    columns: {
+      default: ["RANK", "NAME", "SCORE"],
+      description: "Columns",
+      min: 3,
+      max: 3,
+    },
+  },
   controls: {
     theme: {
       type: "enum",
@@ -12,11 +26,6 @@ export const highScoreConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     player: {
       type: "text-content",
@@ -42,6 +51,21 @@ export const highScoreConfig: ComponentConfig = {
       description: "Player score",
       hiddenFromList: false,
     },
+    stagger: {
+      type: "number",
+      default: 3,
+      min: 0,
+      max: 12,
+      step: 1,
+      description: "Row stagger",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Silkscreen" }),
     speed: {
       type: "number",
       default: 1,

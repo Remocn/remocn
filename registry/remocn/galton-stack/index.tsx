@@ -2,6 +2,7 @@
 
 import { loadFont } from "@remotion/google-fonts/Geist";
 import { loadFont as loadMono } from "@remotion/google-fonts/GeistMono";
+import type React from "react";
 import { useId, useMemo } from "react";
 import {
   AbsoluteFill,
@@ -33,6 +34,21 @@ export interface GaltonStackProps {
   label?: string;
   markerLabel?: string;
   accent?: string;
+  /** Color of the marker label; overrides the theme ink. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the label. Load it yourself; Geist by default. */
+  fontFamily?: string;
+  /** Weight of the big figure in the label. */
+  fontWeight?: number;
+  /** Frames over which the balls are released. */
+  pourLength?: number;
+  /** Size of the foreground, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -97,7 +113,7 @@ interface Drop {
   spawn: number;
 }
 
-function buildDrops(count: number): Drop[] {
+function buildDrops(count: number, pourLength: number): Drop[] {
   const denom = 2 ** ROWS;
   const target = Array.from({ length: BINS }, (_, b) =>
     Math.round((count * choose(ROWS, b)) / denom),
@@ -127,7 +143,7 @@ function buildDrops(count: number): Drop[] {
       bin,
       slot: filled[bin]++,
       path,
-      spawn: SPAWN0 + (i * SPAWN_WIN) / Math.max(1, bins.length - 1),
+      spawn: SPAWN0 + (i * pourLength) / Math.max(1, bins.length - 1),
     };
   });
 }
@@ -156,21 +172,46 @@ function Grain({ opacity }: { opacity: number }) {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function GaltonStack({
   count = 260,
   marker = 0.733,
   label = "95% of renders under 2s",
   markerLabel = "2s",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = sans,
+  fontWeight = 400,
+  pourLength = SPAWN_WIN,
+  scale = 1,
+  delay = 0,
+  grain = true,
   theme = "dark",
   speed = 1,
 }: GaltonStackProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height } = useVideoConfig();
   const u = Math.min(width / 1280, height / 720);
   const p = THEMES[theme];
+  const fg = ink ?? p.fg;
   const n = Math.max(20, Math.min(600, Math.round(count)));
-  const drops = useMemo(() => buildDrops(n), [n]);
+  const drops = useMemo(() => buildDrops(n, pourLength), [n, pourLength]);
 
   const binP = 52 * u;
   const d = 11 * u;
@@ -321,154 +362,163 @@ export function GaltonStack({
   });
 
   return (
-    <AbsoluteFill style={{ background: p.bg, overflow: "hidden" }}>
-      <AbsoluteFill
-        style={{
-          transform: `translateY(${shift * cam}px) scale(${camScale})`,
-          transformOrigin: `50% ${finalCenter}px`,
-        }}
-      >
-        <svg
-          width={width}
-          height={height}
-          style={{ position: "absolute", inset: 0 }}
-          aria-hidden
+    <AbsoluteFill
+      style={{
+        background:
+          background === "transparent" ? undefined : (background ?? p.bg),
+        overflow: "hidden",
+      }}
+    >
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill
+          style={{
+            transform: `translateY(${shift * cam}px) scale(${camScale})`,
+            transformOrigin: `50% ${finalCenter}px`,
+          }}
         >
-          <defs>
-            <linearGradient
-              id={gid}
-              gradientUnits="userSpaceOnUse"
-              x1={cx + drift * 0.25 * width}
-              y1={stackTop - 6 * u}
-              x2={cx - drift * 0.25 * width}
-              y2={baseY}
-            >
-              <stop offset="0" stopColor={stops[0]} />
-              <stop offset="0.45" stopColor={stops[1]} />
-              <stop offset="1" stopColor={stops[2]} />
-            </linearGradient>
-          </defs>
-          <g opacity={field}>
-            <circle
-              cx={cx}
-              cy={emitY}
-              r={7 * u}
-              fill="none"
-              stroke={accent}
-              strokeWidth={sw * 1.2}
-            />
-            {pegs.map((pg) => (
+          <svg
+            width={width}
+            height={height}
+            style={{ position: "absolute", inset: 0 }}
+            aria-hidden
+          >
+            <defs>
+              <linearGradient
+                id={gid}
+                gradientUnits="userSpaceOnUse"
+                x1={cx + drift * 0.25 * width}
+                y1={stackTop - 6 * u}
+                x2={cx - drift * 0.25 * width}
+                y2={baseY}
+              >
+                <stop offset="0" stopColor={stops[0]} />
+                <stop offset="0.45" stopColor={stops[1]} />
+                <stop offset="1" stopColor={stops[2]} />
+              </linearGradient>
+            </defs>
+            <g opacity={field}>
               <circle
-                key={`p${pg.x.toFixed(1)}-${pg.y.toFixed(1)}`}
-                cx={pg.x}
-                cy={pg.y}
-                r={pegR}
-                fill={p.peg}
+                cx={cx}
+                cy={emitY}
+                r={7 * u}
+                fill="none"
+                stroke={accent}
+                strokeWidth={sw * 1.2}
               />
-            ))}
-          </g>
-          <line
-            x1={cx - ((axisR - axisL) / 2) * axisIn}
-            x2={cx + ((axisR - axisL) / 2) * axisIn}
-            y1={baseY + sw / 2}
-            y2={baseY + sw / 2}
-            stroke={p.axis}
-            strokeWidth={sw}
-          />
-          {dotsSvg}
-          {lineIn > 0 ? (
+              {pegs.map((pg) => (
+                <circle
+                  key={`p${pg.x.toFixed(1)}-${pg.y.toFixed(1)}`}
+                  cx={pg.x}
+                  cy={pg.y}
+                  r={pegR}
+                  fill={p.peg}
+                />
+              ))}
+            </g>
             <line
-              x1={markerX}
-              x2={markerX}
-              y1={baseY + 8 * u}
-              y2={baseY + 8 * u - (baseY + 8 * u - labelTop) * lineIn}
-              stroke={p.marker}
-              strokeWidth={sw * 1.5}
+              x1={cx - ((axisR - axisL) / 2) * axisIn}
+              x2={cx + ((axisR - axisL) / 2) * axisIn}
+              y1={baseY + sw / 2}
+              y2={baseY + sw / 2}
+              stroke={p.axis}
+              strokeWidth={sw}
             />
-          ) : null}
-        </svg>
+            {dotsSvg}
+            {lineIn > 0 ? (
+              <line
+                x1={markerX}
+                x2={markerX}
+                y1={baseY + 8 * u}
+                y2={baseY + 8 * u - (baseY + 8 * u - labelTop) * lineIn}
+                stroke={p.marker}
+                strokeWidth={sw * 1.5}
+              />
+            ) : null}
+          </svg>
 
-        <div
-          style={{
-            position: "absolute",
-            left: markerX,
-            top: baseY + 14 * u,
-            transform: `translate(-50%, ${(1 - tickIn) * 6 * u}px)`,
-            fontFamily: mono,
-            fontWeight: 500,
-            fontSize: 17 * u,
-            letterSpacing: "-0.01em",
-            color: p.fg,
-            fontVariantNumeric: "tabular-nums",
-            whiteSpace: "nowrap",
-            opacity: tickIn,
-          }}
-        >
-          {markerLabel}
-        </div>
-
-        <div
-          style={{
-            position: "absolute",
-            top: labelTop,
-            ...(leftSide
-              ? { right: width - markerX + gapX, alignItems: "flex-end" }
-              : { left: markerX + gapX, alignItems: "flex-start" }),
-            display: "flex",
-            flexDirection: "column",
-            gap: 12 * u,
-            whiteSpace: "nowrap",
-          }}
-        >
           <div
             style={{
-              fontFamily: sans,
-              fontWeight: 400,
-              fontSize: heroSize,
-              lineHeight: 0.9,
-              letterSpacing: "-0.05em",
-              paddingRight: "0.04em",
-              color: "transparent",
-              backgroundImage: heroFill,
-              WebkitBackgroundClip: "text",
-              backgroundClip: "text",
+              position: "absolute",
+              left: markerX,
+              top: baseY + 14 * u,
+              transform: `translate(-50%, ${(1 - tickIn) * 6 * u}px)`,
+              fontFamily: mono,
+              fontWeight: 500,
+              fontSize: 17 * u,
+              letterSpacing: "-0.01em",
+              color: fg,
               fontVariantNumeric: "tabular-nums",
-              opacity: land,
-              filter: land < 0.99 ? `blur(${(1 - land) * 8 * u}px)` : undefined,
-              transform: `translateY(${(1 - land) * 18 * u}px)`,
+              whiteSpace: "nowrap",
+              opacity: tickIn,
             }}
           >
-            {hero}
+            {markerLabel}
           </div>
-          {sub ? (
+
+          <div
+            style={{
+              position: "absolute",
+              top: labelTop,
+              ...(leftSide
+                ? { right: width - markerX + gapX, alignItems: "flex-end" }
+                : { left: markerX + gapX, alignItems: "flex-start" }),
+              display: "flex",
+              flexDirection: "column",
+              gap: 12 * u,
+              whiteSpace: "nowrap",
+            }}
+          >
             <div
               style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 10 * u,
-                fontFamily: sans,
-                fontWeight: 400,
-                fontSize: subSize,
-                lineHeight: 1.2,
-                letterSpacing: "-0.015em",
-                color: p.muted,
-                opacity: subIn,
-                transform: `translateY(${(1 - subIn) * 8 * u}px)`,
+                fontFamily,
+                fontWeight,
+                fontSize: heroSize,
+                lineHeight: 0.9,
+                letterSpacing: "-0.05em",
+                paddingRight: "0.04em",
+                color: "transparent",
+                backgroundImage: heroFill,
+                WebkitBackgroundClip: "text",
+                backgroundClip: "text",
+                fontVariantNumeric: "tabular-nums",
+                opacity: land,
+                filter:
+                  land < 0.99 ? `blur(${(1 - land) * 8 * u}px)` : undefined,
+                transform: `translateY(${(1 - land) * 18 * u}px)`,
               }}
             >
-              <span
-                style={{
-                  width: 10 * u,
-                  height: 10 * u,
-                  borderRadius: "50%",
-                  background: `linear-gradient(160deg, ${stops[0]}, ${stops[2]})`,
-                }}
-              />
-              {sub}
+              {hero}
             </div>
-          ) : null}
-        </div>
-      </AbsoluteFill>
+            {sub ? (
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10 * u,
+                  fontFamily,
+                  fontWeight: 400,
+                  fontSize: subSize,
+                  lineHeight: 1.2,
+                  letterSpacing: "-0.015em",
+                  color: p.muted,
+                  opacity: subIn,
+                  transform: `translateY(${(1 - subIn) * 8 * u}px)`,
+                }}
+              >
+                <span
+                  style={{
+                    width: 10 * u,
+                    height: 10 * u,
+                    borderRadius: "50%",
+                    background: `linear-gradient(160deg, ${stops[0]}, ${stops[2]})`,
+                  }}
+                />
+                {sub}
+              </div>
+            ) : null}
+          </div>
+        </AbsoluteFill>
+      </ScaleLayer>
 
       <AbsoluteFill
         style={{
@@ -476,7 +526,7 @@ export function GaltonStack({
           opacity: 0.5,
         }}
       />
-      <Grain opacity={p.grain} />
+      {grain ? <Grain opacity={p.grain} /> : null}
     </AbsoluteFill>
   );
 }

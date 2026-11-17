@@ -1,8 +1,20 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const walkoutNameConfig: ComponentConfig = {
   componentName: "WalkoutName",
   importPath: "@/components/remocn/walkout-name",
+  lists: {
+    name: {
+      default: ["The", "Launch", "Kid"],
+      description: "Name",
+    },
+  },
   controls: {
     theme: {
       type: "enum",
@@ -12,11 +24,6 @@ export const walkoutNameConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     nickname: {
       type: "text-content",
@@ -43,6 +50,30 @@ export const walkoutNameConfig: ComponentConfig = {
       default: "Main event · Tonight",
       description: "Billing",
     },
+    bandWidth: {
+      type: "number",
+      default: 0.19,
+      min: 0.05,
+      max: 0.5,
+      step: 0.01,
+      description: "Band width",
+      hiddenFromList: false,
+    },
+    impact: {
+      type: "number",
+      default: 1,
+      min: 0,
+      max: 3,
+      step: 0.1,
+      description: "Impact shake",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Oswald" }),
     speed: {
       type: "number",
       default: 1,

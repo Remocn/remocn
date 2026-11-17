@@ -1,4 +1,11 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const cartAddConfig: ComponentConfig = {
   componentName: "CartAdd",
@@ -12,11 +19,6 @@ export const cartAddConfig: ComponentConfig = {
         dark: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     brand: {
       type: "text-content",
@@ -49,6 +51,21 @@ export const cartAddConfig: ComponentConfig = {
       default: "$",
       description: "Currency",
     },
+    addLabel: {
+      type: "text-content",
+      default: "Add to bag",
+      description: "Add button",
+    },
+    addedLabel: {
+      type: "text-content",
+      default: "Added to bag",
+      description: "Added label",
+    },
+    checkoutLabel: {
+      type: "text-content",
+      default: "Checkout",
+      description: "Checkout button",
+    },
     rating: {
       type: "number",
       default: 4.8,
@@ -67,6 +84,49 @@ export const cartAddConfig: ComponentConfig = {
       description: "Start color",
       hiddenFromList: false,
     },
+    pickColor: {
+      type: "number",
+      default: 1,
+      min: 0,
+      max: 10,
+      step: 1,
+      description: "Picked color",
+      hiddenFromList: false,
+    },
+    startSize: {
+      type: "number",
+      default: 1,
+      min: 0,
+      max: 2,
+      step: 1,
+      description: "Start size",
+      hiddenFromList: false,
+    },
+    pickSize: {
+      type: "number",
+      default: 2,
+      min: 0,
+      max: 2,
+      step: 1,
+      description: "Picked size",
+      hiddenFromList: false,
+    },
+    freeShippingAt: {
+      type: "number",
+      default: 75,
+      min: 0,
+      max: 200,
+      step: 5,
+      description: "Free shipping at",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ground: groundControl(),
+    ...sceneControls({ font: "Instrument Sans" }),
   },
   durationInFrames: 200,
   fps: FPS,

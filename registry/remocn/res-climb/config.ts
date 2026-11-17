@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const resClimbConfig: ComponentConfig = {
   componentName: "ResClimb",
@@ -12,11 +18,6 @@ export const resClimbConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     value: {
       type: "text-content",
@@ -33,6 +34,30 @@ export const resClimbConfig: ComponentConfig = {
       default: "remocn registry",
       description: "Eyebrow",
     },
+    snapAt: {
+      type: "number",
+      default: 28,
+      min: 0,
+      max: 90,
+      step: 1,
+      description: "First snap (frame)",
+      hiddenFromList: false,
+    },
+    build: {
+      type: "number",
+      default: 12,
+      min: 0,
+      max: 40,
+      step: 1,
+      description: "Build (frames)",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Onest", grain: true }),
     speed: {
       type: "number",
       default: 1,

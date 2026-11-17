@@ -17,7 +17,7 @@ import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
 
-const { fontFamily } = loadFont("normal", {
+const { fontFamily: hanken } = loadFont("normal", {
   weights: ["300", "400"],
   subsets: ["latin"],
 });
@@ -48,7 +48,25 @@ export interface TimelineEditorProps {
   title?: string;
   /** Name of the audio clip that lands on A1. */
   audioName?: string;
+  /** Tagline under the logo in the intro clip. */
+  tagline?: string;
+  /** Headline of the end-card clip. */
+  headline?: string;
+  /** Link on the end-card clip's second button. */
+  url?: string;
+  /** Replaces the remocn mark in the intro clip. */
+  logo?: React.ReactNode;
   accent?: string;
+  /** Text color of the editor window; overrides the theme. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Hanken Grotesk by default. */
+  fontFamily?: string;
+  /** Size of the editor window, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "light" | "dark";
   ground?: GshPresetId;
@@ -261,6 +279,13 @@ function Cursor({ x, y, press }: { x: number; y: number; press: number }) {
   );
 }
 
+interface ArtCopy {
+  logo?: React.ReactNode;
+  tagline: string;
+  headline: string;
+  url: string;
+}
+
 const sp = (t: number, delay: number, damping = 16, stiffness = 120) =>
   spring({ frame: t * 30 - delay, fps: 30, config: { damping, stiffness } });
 
@@ -268,10 +293,12 @@ function SceneArt({
   scene,
   t,
   accent,
+  art,
 }: {
   scene: EditorScene;
   t: number;
   accent: string;
+  art: ArtCopy;
 }) {
   const abs: React.CSSProperties = { position: "absolute", inset: 0 };
   if (scene === "logo") {
@@ -303,7 +330,7 @@ function SceneArt({
               transform: `translateY(${(1 - w) * 10}px) scale(${0.82 + m * 0.18})`,
             }}
           >
-            <RemocnLogo fontSize={44} color="#fff" />
+            {art.logo ?? <RemocnLogo fontSize={44} color="#fff" />}
           </div>
         </div>
         <div
@@ -319,7 +346,7 @@ function SceneArt({
             textTransform: "uppercase",
           }}
         >
-          Launch videos, built in code
+          {art.tagline}
         </div>
       </div>
     );
@@ -474,7 +501,7 @@ function SceneArt({
           transform: `translateY(${(1 - a) * 14}px)`,
         }}
       >
-        Ship your launch video
+        {art.headline}
       </div>
       <div
         style={{
@@ -516,7 +543,7 @@ function SceneArt({
             fontFamily: mono,
           }}
         >
-          remocn.dev
+          {art.url}
         </div>
       </div>
     </div>
@@ -528,11 +555,13 @@ function Scene({
   t,
   accent,
   w,
+  art,
 }: {
   scene: EditorScene;
   t: number;
   accent: string;
   w: number;
+  art: ArtCopy;
 }) {
   return (
     <div
@@ -553,7 +582,7 @@ function Scene({
           transformOrigin: "0 0",
         }}
       >
-        <SceneArt scene={scene} t={t} accent={accent} />
+        <SceneArt scene={scene} t={t} accent={accent} art={art} />
       </div>
     </div>
   );
@@ -608,6 +637,7 @@ function ClipBlock({
   accent,
   selected,
   glow,
+  art,
 }: {
   clip: EditorClip;
   w: number;
@@ -615,6 +645,7 @@ function ClipBlock({
   accent: string;
   selected: boolean;
   glow: number;
+  art: ArtCopy;
 }) {
   const band = Math.min(24, h * 0.42);
   const fh = h - band;
@@ -646,6 +677,7 @@ function ClipBlock({
               t={1.2 + k * 0.5}
               accent={accent}
               w={tw}
+              art={art}
             />
           </div>
         ))}
@@ -760,18 +792,43 @@ function layoutFor(tall: boolean, dw: number, dh: number): Layout {
   };
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function TimelineEditor({
   clips = DEFAULT_CLIPS,
   projectName = "Launch video",
   title = "Meet remocn",
   audioName = "soundtrack.wav",
+  tagline = "Launch videos, built in code",
+  headline = "Ship your launch video",
+  url = "remocn.dev",
+  logo,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = hanken,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
   ground,
   groundParams,
 }: TimelineEditorProps) {
-  const f = useCurrentFrame() * speed;
+  const f = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, fps } = useVideoConfig();
   const tall = height > width * 1.2;
   const u = tall ? width / 640 : Math.min(width / 1280, height / 720);
@@ -779,6 +836,8 @@ export function TimelineEditor({
   const dh = height / u;
   const L = layoutFor(tall, dw, dh);
   const c: Palette = theme === "light" ? LIGHT : DARK;
+  const fg = ink ?? c.text;
+  const art: ArtCopy = { logo, tagline, headline, url };
   const list = clips.slice(0, 3);
   const starts = list.map((_, i) =>
     list.slice(0, i).reduce((a, k) => a + k.seconds, 0),
@@ -972,684 +1031,721 @@ export function TimelineEditor({
         WebkitFontSmoothing: "antialiased",
       }}
     >
-      <GshGround
-        preset={ground ?? (c.dark ? "film-blue" : "paper-crease")}
-        params={groundParams}
-        timeOffset={c.dark ? 3 : 5}
-        timeScale={0.35}
-      />
-      <AbsoluteFill style={{ background: c.scrim }} />
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          top: 0,
-          width: dw,
-          height: dh,
-          transform: `scale(${u})`,
-          transformOrigin: "0 0",
-        }}
-      >
+      {background === undefined ? (
+        <>
+          <GshGround
+            preset={ground ?? (c.dark ? "film-blue" : "paper-crease")}
+            params={groundParams}
+            timeOffset={c.dark ? 3 : 5}
+            timeScale={0.35}
+          />
+          <AbsoluteFill style={{ background: c.scrim }} />
+        </>
+      ) : (
+        <AbsoluteFill
+          style={{
+            background: background === "transparent" ? undefined : background,
+          }}
+        />
+      )}
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            inset: 0,
-            transform: `scale(${cam})`,
-            transformOrigin: origin,
+            left: 0,
+            top: 0,
+            width: dw,
+            height: dh,
+            transform: `scale(${u})`,
+            transformOrigin: "0 0",
           }}
         >
           <div
             style={{
               position: "absolute",
-              left: L.win.x,
-              top: L.win.y,
-              width: L.win.w,
-              height: L.win.h,
-              borderRadius: 20,
-              background: c.win,
-              backdropFilter: c.dark ? "blur(30px)" : undefined,
-              boxShadow: c.depth,
-              color: c.text,
-              opacity: interpolate(f, [0, 10], [0, 1], {
-                ...clamp,
-                easing: ENTER_SOFT,
-              }),
-              transform: `translateY(${(1 - enter) * 40}px) scale(${0.97 + 0.03 * enter})`,
+              inset: 0,
+              transform: `scale(${cam})`,
+              transformOrigin: origin,
             }}
           >
             <div
               style={{
                 position: "absolute",
-                left: 0,
-                right: 0,
-                top: 0,
-                height: L.topH,
-                boxShadow: `inset 0 -1px 0 ${c.rule}`,
-                display: "flex",
-                alignItems: "center",
-                gap: 12,
-                padding: "0 20px",
-                fontSize: 18,
+                left: L.win.x,
+                top: L.win.y,
+                width: L.win.w,
+                height: L.win.h,
+                borderRadius: 20,
+                background: c.win,
+                backdropFilter: c.dark ? "blur(30px)" : undefined,
+                boxShadow: c.depth,
+                color: fg,
+                opacity: interpolate(f, [0, 10], [0, 1], {
+                  ...clamp,
+                  easing: ENTER_SOFT,
+                }),
+                transform: `translateY(${(1 - enter) * 40}px) scale(${0.97 + 0.03 * enter})`,
               }}
             >
-              <span>{projectName}</span>
-              <span style={{ color: c.faint, fontSize: 16 }}>Saved</span>
-            </div>
-            <div
-              style={{
-                position: "absolute",
-                left: L.btn.x,
-                top: L.btn.y,
-                width: L.btn.w,
-                height: L.btn.h,
-                borderRadius: 12,
-                background: interpolateColors(doneT, [0, 1], [c.solid, GREEN]),
-                color: interpolateColors(doneT, [0, 1], [c.onSolid, "#FFFFFF"]),
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 8,
-                fontSize: 17,
-                transform: `scale(${1 - 0.04 * btnPress})`,
-              }}
-            >
-              <Icon
-                d={doneT > 0.5 ? ICONS.check : ICONS.download}
-                size={18}
-                color={doneT > 0.5 ? "#FFFFFF" : c.onSolid}
-              />
-              {doneT > 0.5 ? "Exported" : exporting ? "Exporting" : "Export"}
-            </div>
-
-            {L.binDivider ? (
               <div
                 style={{
                   position: "absolute",
-                  left: L.binDivider.x,
-                  top: L.binDivider.y0,
-                  width: 1,
-                  height: L.binDivider.y1 - L.binDivider.y0,
-                  background: c.rule,
-                }}
-              />
-            ) : null}
-            <div
-              style={{
-                position: "absolute",
-                left: L.binHeader.x,
-                top: L.binHeader.y,
-                fontSize: 16,
-                color: c.muted,
-              }}
-            >
-              Media
-            </div>
-            {[...list, null].map((k, i) => {
-              const pos = L.item(i);
-              const isPlaced = k ? placed(i) : f >= AUDIO_AT;
-              const lifted = k ? f >= T[i].press && f < T[i].drop : false;
-              const check = spring({
-                frame: f - (k ? T[i].drop : AUDIO_AT),
-                fps,
-                config: CHIP,
-              });
-              const name = k ? k.name : audioName;
-              const meta = k ? `0:0${Math.round(k.seconds)}` : "0:11";
-              return (
-                <div key={name}>
-                  <div
-                    style={{
-                      position: "absolute",
-                      left: pos.x,
-                      top: pos.y,
-                      width: L.thumb.w,
-                      height: L.thumb.h,
-                      borderRadius: 8,
-                      overflow: "hidden",
-                      background: k ? "#151826" : c.audioBg,
-                      opacity: lifted ? 0.35 : 1,
-                      boxShadow: `inset 0 0 0 1px ${c.rule}`,
-                    }}
-                  >
-                    {k ? (
-                      <Scene
-                        scene={k.scene}
-                        t={2.2}
-                        accent={accent}
-                        w={L.thumb.w}
-                      />
-                    ) : (
-                      <div style={{ padding: "0 6px", marginTop: 10 }}>
-                        <Waveform
-                          w={L.thumb.w - 12}
-                          h={L.thumb.h - 20}
-                          color={c.wave}
-                          seed={3}
-                        />
-                      </div>
-                    )}
-                    <div
-                      style={{
-                        position: "absolute",
-                        inset: 0,
-                        borderRadius: 8,
-                        boxShadow: `inset 0 0 0 1px ${c.dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"}`,
-                      }}
-                    />
-                  </div>
-                  {isPlaced ? (
-                    <div
-                      style={{
-                        position: "absolute",
-                        left: pos.x + L.thumb.w - 26,
-                        top: pos.y + 6,
-                        width: 20,
-                        height: 20,
-                        borderRadius: 10,
-                        background: accent,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        transform: `scale(${check})`,
-                      }}
-                    >
-                      <Icon d={ICONS.check} size={13} color="#FFFFFF" sw={2} />
-                    </div>
-                  ) : null}
-                  <div
-                    style={
-                      L.namesBelow
-                        ? {
-                            position: "absolute",
-                            left: pos.x,
-                            top: pos.y + L.thumb.h + 8,
-                            width: L.thumb.w,
-                            fontSize: 16,
-                            whiteSpace: "nowrap",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            color: c.muted,
-                          }
-                        : {
-                            position: "absolute",
-                            left: pos.x + L.thumb.w + 14,
-                            top: pos.y + 6,
-                            width: 150,
-                          }
-                    }
-                  >
-                    <div
-                      style={{
-                        fontSize: L.namesBelow ? 16 : 17,
-                        whiteSpace: "nowrap",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                      }}
-                    >
-                      {name}
-                    </div>
-                    {L.namesBelow ? null : (
-                      <div
-                        style={{
-                          marginTop: 4,
-                          fontFamily: mono,
-                          fontSize: 16,
-                          color: c.faint,
-                        }}
-                      >
-                        {meta}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-
-            <div
-              style={{
-                position: "absolute",
-                left: L.mon.x,
-                top: L.mon.y,
-                width: L.mon.w,
-                height: monH,
-                borderRadius: 10,
-                overflow: "hidden",
-                background: c.well,
-                boxShadow: `0 0 0 1px ${c.rule}`,
-              }}
-            >
-              {shown >= 0 ? (
-                <div style={{ opacity: monIn }}>
-                  <Scene
-                    scene={list[shown].scene}
-                    t={shownT}
-                    accent={accent}
-                    w={L.mon.w}
-                  />
-                </div>
-              ) : (
-                <div
-                  style={{
-                    position: "absolute",
-                    inset: 0,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: 16,
-                    color: c.faint,
-                  }}
-                >
-                  Drop a clip to start
-                </div>
-              )}
-              {titleOn >= 0 ? (
-                <div
-                  style={{
-                    position: "absolute",
-                    left: 0,
-                    right: 0,
-                    bottom: monH * 0.1,
-                    textAlign: "center",
-                    color: "#FFFFFF",
-                    fontSize: L.mon.w * 0.05,
-                    fontWeight: 300,
-                    letterSpacing: "-0.02em",
-                    textShadow: "0 2px 12px rgba(0,0,0,0.4)",
-                    opacity: interpolate(titleOn, [0, 0.3], [0, 1], {
-                      ...clamp,
-                      easing: ENTER,
-                    }),
-                    transform: `translateY(${interpolate(titleOn, [0, 0.4], [10, 0], { ...clamp, easing: ENTER })}px)`,
-                  }}
-                >
-                  {title}
-                </div>
-              ) : null}
-            </div>
-            <div
-              style={{
-                position: "absolute",
-                left: L.mon.x,
-                top: L.transportY,
-                width: L.mon.w,
-                height: 28,
-                display: "flex",
-                alignItems: "center",
-                fontFamily: mono,
-                fontSize: 16,
-                fontVariantNumeric: "tabular-nums",
-              }}
-            >
-              <span>{timecode(p)}</span>
-              <div
-                style={{
-                  flex: 1,
+                  left: 0,
+                  right: 0,
+                  top: 0,
+                  height: L.topH,
+                  boxShadow: `inset 0 -1px 0 ${c.rule}`,
                   display: "flex",
-                  justifyContent: "center",
-                  gap: 18,
+                  alignItems: "center",
+                  gap: 12,
+                  padding: "0 20px",
+                  fontSize: 18,
                 }}
               >
-                <Icon d={ICONS.back} size={18} color={c.muted} />
-                <Icon d={ICONS.play} size={18} color={c.text} fill={c.text} />
-                <Icon d={ICONS.fwd} size={18} color={c.muted} />
+                <span>{projectName}</span>
+                <span style={{ color: c.faint, fontSize: 16 }}>Saved</span>
               </div>
-              <span style={{ color: c.faint }}>{timecode(total)}</span>
-            </div>
+              <div
+                style={{
+                  position: "absolute",
+                  left: L.btn.x,
+                  top: L.btn.y,
+                  width: L.btn.w,
+                  height: L.btn.h,
+                  borderRadius: 12,
+                  background: interpolateColors(
+                    doneT,
+                    [0, 1],
+                    [c.solid, GREEN],
+                  ),
+                  color: interpolateColors(
+                    doneT,
+                    [0, 1],
+                    [c.onSolid, "#FFFFFF"],
+                  ),
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 8,
+                  fontSize: 17,
+                  transform: `scale(${1 - 0.04 * btnPress})`,
+                }}
+              >
+                <Icon
+                  d={doneT > 0.5 ? ICONS.check : ICONS.download}
+                  size={18}
+                  color={doneT > 0.5 ? "#FFFFFF" : c.onSolid}
+                />
+                {doneT > 0.5 ? "Exported" : exporting ? "Exporting" : "Export"}
+              </div>
 
-            <div
-              style={{
-                position: "absolute",
-                left: 0,
-                right: 0,
-                top: L.tlTop,
-                height: 1,
-                background: c.rule,
-              }}
-            />
-            {Array.from({ length: ticks + 1 }, (_, s) => (
-              <div key={s}>
+              {L.binDivider ? (
                 <div
                   style={{
                     position: "absolute",
-                    left: TX + s * PPS,
-                    top: L.rulerY + 16,
+                    left: L.binDivider.x,
+                    top: L.binDivider.y0,
                     width: 1,
-                    height: 8,
-                    background: c.tick,
+                    height: L.binDivider.y1 - L.binDivider.y0,
+                    background: c.rule,
                   }}
                 />
-                {s % L.tickEvery === 0 ? (
+              ) : null}
+              <div
+                style={{
+                  position: "absolute",
+                  left: L.binHeader.x,
+                  top: L.binHeader.y,
+                  fontSize: 16,
+                  color: c.muted,
+                }}
+              >
+                Media
+              </div>
+              {[...list, null].map((k, i) => {
+                const pos = L.item(i);
+                const isPlaced = k ? placed(i) : f >= AUDIO_AT;
+                const lifted = k ? f >= T[i].press && f < T[i].drop : false;
+                const check = spring({
+                  frame: f - (k ? T[i].drop : AUDIO_AT),
+                  fps,
+                  config: CHIP,
+                });
+                const name = k ? k.name : audioName;
+                const meta = k ? `0:0${Math.round(k.seconds)}` : "0:11";
+                return (
+                  <div key={name}>
+                    <div
+                      style={{
+                        position: "absolute",
+                        left: pos.x,
+                        top: pos.y,
+                        width: L.thumb.w,
+                        height: L.thumb.h,
+                        borderRadius: 8,
+                        overflow: "hidden",
+                        background: k ? "#151826" : c.audioBg,
+                        opacity: lifted ? 0.35 : 1,
+                        boxShadow: `inset 0 0 0 1px ${c.rule}`,
+                      }}
+                    >
+                      {k ? (
+                        <Scene
+                          scene={k.scene}
+                          t={2.2}
+                          accent={accent}
+                          w={L.thumb.w}
+                          art={art}
+                        />
+                      ) : (
+                        <div style={{ padding: "0 6px", marginTop: 10 }}>
+                          <Waveform
+                            w={L.thumb.w - 12}
+                            h={L.thumb.h - 20}
+                            color={c.wave}
+                            seed={3}
+                          />
+                        </div>
+                      )}
+                      <div
+                        style={{
+                          position: "absolute",
+                          inset: 0,
+                          borderRadius: 8,
+                          boxShadow: `inset 0 0 0 1px ${c.dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"}`,
+                        }}
+                      />
+                    </div>
+                    {isPlaced ? (
+                      <div
+                        style={{
+                          position: "absolute",
+                          left: pos.x + L.thumb.w - 26,
+                          top: pos.y + 6,
+                          width: 20,
+                          height: 20,
+                          borderRadius: 10,
+                          background: accent,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          transform: `scale(${check})`,
+                        }}
+                      >
+                        <Icon
+                          d={ICONS.check}
+                          size={13}
+                          color="#FFFFFF"
+                          sw={2}
+                        />
+                      </div>
+                    ) : null}
+                    <div
+                      style={
+                        L.namesBelow
+                          ? {
+                              position: "absolute",
+                              left: pos.x,
+                              top: pos.y + L.thumb.h + 8,
+                              width: L.thumb.w,
+                              fontSize: 16,
+                              whiteSpace: "nowrap",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              color: c.muted,
+                            }
+                          : {
+                              position: "absolute",
+                              left: pos.x + L.thumb.w + 14,
+                              top: pos.y + 6,
+                              width: 150,
+                            }
+                      }
+                    >
+                      <div
+                        style={{
+                          fontSize: L.namesBelow ? 16 : 17,
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                        }}
+                      >
+                        {name}
+                      </div>
+                      {L.namesBelow ? null : (
+                        <div
+                          style={{
+                            marginTop: 4,
+                            fontFamily: mono,
+                            fontSize: 16,
+                            color: c.faint,
+                          }}
+                        >
+                          {meta}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+
+              <div
+                style={{
+                  position: "absolute",
+                  left: L.mon.x,
+                  top: L.mon.y,
+                  width: L.mon.w,
+                  height: monH,
+                  borderRadius: 10,
+                  overflow: "hidden",
+                  background: c.well,
+                  boxShadow: `0 0 0 1px ${c.rule}`,
+                }}
+              >
+                {shown >= 0 ? (
+                  <div style={{ opacity: monIn }}>
+                    <Scene
+                      scene={list[shown].scene}
+                      t={shownT}
+                      accent={accent}
+                      w={L.mon.w}
+                      art={art}
+                    />
+                  </div>
+                ) : (
                   <div
                     style={{
                       position: "absolute",
-                      left: TX + s * PPS + 5,
-                      top: L.rulerY,
-                      fontFamily: mono,
+                      inset: 0,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
                       fontSize: 16,
                       color: c.faint,
                     }}
                   >
-                    {s === 0 ? "0" : `${s}s`}
+                    Drop a clip to start
+                  </div>
+                )}
+                {titleOn >= 0 ? (
+                  <div
+                    style={{
+                      position: "absolute",
+                      left: 0,
+                      right: 0,
+                      bottom: monH * 0.1,
+                      textAlign: "center",
+                      color: "#FFFFFF",
+                      fontSize: L.mon.w * 0.05,
+                      fontWeight: 300,
+                      letterSpacing: "-0.02em",
+                      textShadow: "0 2px 12px rgba(0,0,0,0.4)",
+                      opacity: interpolate(titleOn, [0, 0.3], [0, 1], {
+                        ...clamp,
+                        easing: ENTER,
+                      }),
+                      transform: `translateY(${interpolate(titleOn, [0, 0.4], [10, 0], { ...clamp, easing: ENTER })}px)`,
+                    }}
+                  >
+                    {title}
                   </div>
                 ) : null}
               </div>
-            ))}
-            {[
-              ["V2", L.v2],
-              ["V1", L.v1],
-              ["A1", L.a1],
-            ].map(([n, tr]) => {
-              const t = tr as { y: number; h: number };
-              return (
-                <div key={n as string}>
-                  <div
-                    style={{
-                      position: "absolute",
-                      left: 20,
-                      top: t.y + t.h / 2 - 11,
-                      fontFamily: mono,
-                      fontSize: 16,
-                      color: c.muted,
-                    }}
-                  >
-                    {n as string}
-                  </div>
-                  <div
-                    style={{
-                      position: "absolute",
-                      left: TX,
-                      right: 12,
-                      top: t.y,
-                      height: t.h,
-                      borderRadius: 10,
-                      background: c.lane,
-                    }}
-                  />
-                </div>
-              );
-            })}
-
-            {f >= TITLE_AT ? (
               <div
                 style={{
                   position: "absolute",
-                  left: TX + TITLE_SPAN.start * PPS,
-                  top: L.v2.y + 3 - (1 - titleIn) * 30,
-                  width: TITLE_SPAN.len * PPS,
-                  height: L.v2.h - 6,
-                  borderRadius: 8,
-                  background: c.titleBg,
-                  boxShadow: `inset 0 0 0 1px ${titleFlash > 0.05 ? withAlpha(accent, 0.5 + titleFlash * 0.5) : c.titleRing}`,
-                  opacity: clamp01(titleIn * 3),
+                  left: L.mon.x,
+                  top: L.transportY,
+                  width: L.mon.w,
+                  height: 28,
                   display: "flex",
                   alignItems: "center",
-                  gap: 8,
-                  padding: "0 10px",
+                  fontFamily: mono,
                   fontSize: 16,
-                  color: c.titleText,
-                  boxSizing: "border-box",
-                  whiteSpace: "nowrap",
-                  overflow: "hidden",
-                }}
-              >
-                <Icon d={ICONS.type} size={16} color={c.titleText} />
-                {title}
-              </div>
-            ) : null}
-            {f >= AUDIO_AT ? (
-              <div
-                style={{
-                  position: "absolute",
-                  left: TX,
-                  top: L.a1.y + 3 + (1 - audioIn) * 30,
-                  width: total * PPS,
-                  height: L.a1.h - 6,
-                  borderRadius: 8,
-                  background: c.audioBg,
-                  boxShadow: `inset 0 0 0 1px ${c.audioRing}`,
-                  opacity: clamp01(audioIn * 3),
-                  overflow: "hidden",
-                }}
-              >
-                <div
-                  style={{
-                    position: "absolute",
-                    left: 10,
-                    top: 24,
-                    clipPath: `inset(0 ${(1 - wave) * 100}% 0 0)`,
-                    opacity: 0.85,
-                  }}
-                >
-                  <Waveform
-                    w={total * PPS - 20}
-                    h={L.a1.h - 32}
-                    color={c.wave}
-                    seed={7}
-                  />
-                </div>
-                <div
-                  style={{
-                    position: "absolute",
-                    left: 10,
-                    top: 2,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 6,
-                    fontSize: 16,
-                    color: c.audioText,
-                  }}
-                >
-                  <Icon d={ICONS.music} size={14} color={c.audioText} />
-                  {audioName}
-                </div>
-              </div>
-            ) : null}
-            {flashes.map((fl, i) =>
-              fl.v > 0.01 ? (
-                <div
-                  key={`${fl.x}-${i}`}
-                  style={{
-                    position: "absolute",
-                    left: fl.x - 0.75,
-                    top: L.rulerY + 20,
-                    width: 1.5,
-                    height: tlEnd - L.rulerY - 20,
-                    background: accent,
-                    opacity: fl.v,
-                  }}
-                />
-              ) : null,
-            )}
-            {rects.map((r, i) =>
-              r ? (
-                <div
-                  key={list[i].name}
-                  style={{
-                    position: "absolute",
-                    left: r.x,
-                    top: r.y,
-                    zIndex: r.flying ? 30 : 5,
-                    filter: r.flying
-                      ? "drop-shadow(0 18px 30px rgba(0,0,0,0.45))"
-                      : undefined,
-                    transform: r.flying ? "rotate(-1.5deg)" : undefined,
-                  }}
-                >
-                  <ClipBlock
-                    clip={list[i]}
-                    w={r.w}
-                    h={r.h}
-                    accent={accent}
-                    selected={!r.flying && i === shown && f >= SCRUB_AT}
-                    glow={flashes[i].v}
-                  />
-                </div>
-              ) : null,
-            )}
-            {f >= SCRUB_AT - 6 ? (
-              <div
-                style={{
-                  position: "absolute",
-                  left: headX - 0.75,
-                  top: L.rulerY + 4,
-                  width: 1.5,
-                  height: tlEnd - L.rulerY,
-                  background: accent,
-                  zIndex: 20,
-                  opacity: interpolate(f, [SCRUB_AT - 6, SCRUB_AT], [0, 1], {
-                    ...clamp,
-                    easing: ENTER,
-                  }),
-                }}
-              >
-                <div
-                  style={{
-                    position: "absolute",
-                    left: -6,
-                    top: -2,
-                    width: 13,
-                    height: 16,
-                    borderRadius: 4,
-                    background: accent,
-                  }}
-                />
-              </div>
-            ) : null}
-
-            {f >= CLICK_AT ? (
-              <div
-                style={{
-                  position: "absolute",
-                  left: L.pop.x,
-                  top: L.pop.y,
-                  width: L.pop.w,
-                  borderRadius: 16,
-                  background: c.popBg,
-                  boxShadow: c.pop,
-                  padding: 18,
-                  boxSizing: "border-box",
-                  zIndex: 35,
-                  opacity: clamp01(pop * 1.4),
-                  transform: `translateY(${(1 - pop) * -10}px) scale(${0.95 + pop * 0.05})`,
-                  transformOrigin: "80% 0",
                   fontVariantNumeric: "tabular-nums",
                 }}
               >
-                <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-                  <div style={{ position: "relative", width: 56, height: 56 }}>
-                    <svg width={56} height={56} viewBox="0 0 56 56" aria-hidden>
-                      <circle
-                        cx={28}
-                        cy={28}
-                        r={25}
-                        stroke={c.rule}
-                        strokeWidth={2.5}
-                        fill="none"
-                      />
-                      <circle
-                        cx={28}
-                        cy={28}
-                        r={25}
-                        stroke={interpolateColors(
-                          doneT,
-                          [0, 1],
-                          [accent, GREEN],
-                        )}
-                        strokeWidth={2.5}
-                        fill="none"
-                        strokeLinecap="round"
-                        strokeDasharray={2 * Math.PI * 25}
-                        strokeDashoffset={2 * Math.PI * 25 * (1 - prog)}
-                        transform="rotate(-90 28 28)"
-                      />
-                    </svg>
+                <span>{timecode(p)}</span>
+                <div
+                  style={{
+                    flex: 1,
+                    display: "flex",
+                    justifyContent: "center",
+                    gap: 18,
+                  }}
+                >
+                  <Icon d={ICONS.back} size={18} color={c.muted} />
+                  <Icon d={ICONS.play} size={18} color={fg} fill={fg} />
+                  <Icon d={ICONS.fwd} size={18} color={c.muted} />
+                </div>
+                <span style={{ color: c.faint }}>{timecode(total)}</span>
+              </div>
+
+              <div
+                style={{
+                  position: "absolute",
+                  left: 0,
+                  right: 0,
+                  top: L.tlTop,
+                  height: 1,
+                  background: c.rule,
+                }}
+              />
+              {Array.from({ length: ticks + 1 }, (_, s) => (
+                <div key={s}>
+                  <div
+                    style={{
+                      position: "absolute",
+                      left: TX + s * PPS,
+                      top: L.rulerY + 16,
+                      width: 1,
+                      height: 8,
+                      background: c.tick,
+                    }}
+                  />
+                  {s % L.tickEvery === 0 ? (
                     <div
                       style={{
                         position: "absolute",
-                        inset: 0,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
+                        left: TX + s * PPS + 5,
+                        top: L.rulerY,
                         fontFamily: mono,
                         fontSize: 16,
-                        opacity: 1 - doneT,
+                        color: c.faint,
                       }}
                     >
-                      {Math.round(prog * 100)}
+                      {s === 0 ? "0" : `${s}s`}
                     </div>
+                  ) : null}
+                </div>
+              ))}
+              {[
+                ["V2", L.v2],
+                ["V1", L.v1],
+                ["A1", L.a1],
+              ].map(([n, tr]) => {
+                const t = tr as { y: number; h: number };
+                return (
+                  <div key={n as string}>
                     <div
                       style={{
                         position: "absolute",
-                        inset: 0,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        opacity: doneT,
-                        transform: `scale(${0.6 + done * 0.4})`,
-                      }}
-                    >
-                      <Icon d={ICONS.check} size={22} color={GREEN} sw={2} />
-                    </div>
-                  </div>
-                  <div style={{ minWidth: 0 }}>
-                    <div style={{ fontSize: 18 }}>
-                      {doneT > 0.5 ? "Export complete" : "Exporting"}
-                    </div>
-                    <div
-                      style={{
-                        marginTop: 3,
+                        left: 20,
+                        top: t.y + t.h / 2 - 11,
                         fontFamily: mono,
                         fontSize: 16,
                         color: c.muted,
-                        whiteSpace: "nowrap",
                       }}
                     >
-                      {fileName}
+                      {n as string}
                     </div>
+                    <div
+                      style={{
+                        position: "absolute",
+                        left: TX,
+                        right: 12,
+                        top: t.y,
+                        height: t.h,
+                        borderRadius: 10,
+                        background: c.lane,
+                      }}
+                    />
                   </div>
-                </div>
+                );
+              })}
+
+              {f >= TITLE_AT ? (
                 <div
                   style={{
-                    marginTop: 16,
-                    paddingTop: 14,
-                    boxShadow: `inset 0 1px 0 ${c.rule}`,
-                    display: "grid",
-                    gridTemplateColumns: "1fr 1fr 1fr",
+                    position: "absolute",
+                    left: TX + TITLE_SPAN.start * PPS,
+                    top: L.v2.y + 3 - (1 - titleIn) * 30,
+                    width: TITLE_SPAN.len * PPS,
+                    height: L.v2.h - 6,
+                    borderRadius: 8,
+                    background: c.titleBg,
+                    boxShadow: `inset 0 0 0 1px ${titleFlash > 0.05 ? withAlpha(accent, 0.5 + titleFlash * 0.5) : c.titleRing}`,
+                    opacity: clamp01(titleIn * 3),
+                    display: "flex",
+                    alignItems: "center",
                     gap: 8,
+                    padding: "0 10px",
+                    fontSize: 16,
+                    color: c.titleText,
+                    boxSizing: "border-box",
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
                   }}
                 >
-                  {[
-                    ["Size", doneT > 0.5 ? "24.6 MB" : "—"],
-                    ["Res", "1080p"],
-                    [
-                      doneT > 0.5 ? "Time" : "Left",
-                      doneT > 0.5
-                        ? "8.4 s"
-                        : `${Math.max(1, Math.ceil((1 - prog) * 9))} s`,
-                    ],
-                  ].map(([k, v]) => (
-                    <div key={k}>
-                      <div style={{ fontSize: 16, color: c.faint }}>{k}</div>
+                  <Icon d={ICONS.type} size={16} color={c.titleText} />
+                  {title}
+                </div>
+              ) : null}
+              {f >= AUDIO_AT ? (
+                <div
+                  style={{
+                    position: "absolute",
+                    left: TX,
+                    top: L.a1.y + 3 + (1 - audioIn) * 30,
+                    width: total * PPS,
+                    height: L.a1.h - 6,
+                    borderRadius: 8,
+                    background: c.audioBg,
+                    boxShadow: `inset 0 0 0 1px ${c.audioRing}`,
+                    opacity: clamp01(audioIn * 3),
+                    overflow: "hidden",
+                  }}
+                >
+                  <div
+                    style={{
+                      position: "absolute",
+                      left: 10,
+                      top: 24,
+                      clipPath: `inset(0 ${(1 - wave) * 100}% 0 0)`,
+                      opacity: 0.85,
+                    }}
+                  >
+                    <Waveform
+                      w={total * PPS - 20}
+                      h={L.a1.h - 32}
+                      color={c.wave}
+                      seed={7}
+                    />
+                  </div>
+                  <div
+                    style={{
+                      position: "absolute",
+                      left: 10,
+                      top: 2,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
+                      fontSize: 16,
+                      color: c.audioText,
+                    }}
+                  >
+                    <Icon d={ICONS.music} size={14} color={c.audioText} />
+                    {audioName}
+                  </div>
+                </div>
+              ) : null}
+              {flashes.map((fl, i) =>
+                fl.v > 0.01 ? (
+                  <div
+                    key={`${fl.x}-${i}`}
+                    style={{
+                      position: "absolute",
+                      left: fl.x - 0.75,
+                      top: L.rulerY + 20,
+                      width: 1.5,
+                      height: tlEnd - L.rulerY - 20,
+                      background: accent,
+                      opacity: fl.v,
+                    }}
+                  />
+                ) : null,
+              )}
+              {rects.map((r, i) =>
+                r ? (
+                  <div
+                    key={list[i].name}
+                    style={{
+                      position: "absolute",
+                      left: r.x,
+                      top: r.y,
+                      zIndex: r.flying ? 30 : 5,
+                      filter: r.flying
+                        ? "drop-shadow(0 18px 30px rgba(0,0,0,0.45))"
+                        : undefined,
+                      transform: r.flying ? "rotate(-1.5deg)" : undefined,
+                    }}
+                  >
+                    <ClipBlock
+                      clip={list[i]}
+                      w={r.w}
+                      h={r.h}
+                      accent={accent}
+                      selected={!r.flying && i === shown && f >= SCRUB_AT}
+                      glow={flashes[i].v}
+                      art={art}
+                    />
+                  </div>
+                ) : null,
+              )}
+              {f >= SCRUB_AT - 6 ? (
+                <div
+                  style={{
+                    position: "absolute",
+                    left: headX - 0.75,
+                    top: L.rulerY + 4,
+                    width: 1.5,
+                    height: tlEnd - L.rulerY,
+                    background: accent,
+                    zIndex: 20,
+                    opacity: interpolate(f, [SCRUB_AT - 6, SCRUB_AT], [0, 1], {
+                      ...clamp,
+                      easing: ENTER,
+                    }),
+                  }}
+                >
+                  <div
+                    style={{
+                      position: "absolute",
+                      left: -6,
+                      top: -2,
+                      width: 13,
+                      height: 16,
+                      borderRadius: 4,
+                      background: accent,
+                    }}
+                  />
+                </div>
+              ) : null}
+
+              {f >= CLICK_AT ? (
+                <div
+                  style={{
+                    position: "absolute",
+                    left: L.pop.x,
+                    top: L.pop.y,
+                    width: L.pop.w,
+                    borderRadius: 16,
+                    background: c.popBg,
+                    boxShadow: c.pop,
+                    padding: 18,
+                    boxSizing: "border-box",
+                    zIndex: 35,
+                    opacity: clamp01(pop * 1.4),
+                    transform: `translateY(${(1 - pop) * -10}px) scale(${0.95 + pop * 0.05})`,
+                    transformOrigin: "80% 0",
+                    fontVariantNumeric: "tabular-nums",
+                  }}
+                >
+                  <div
+                    style={{ display: "flex", alignItems: "center", gap: 14 }}
+                  >
+                    <div
+                      style={{ position: "relative", width: 56, height: 56 }}
+                    >
+                      <svg
+                        width={56}
+                        height={56}
+                        viewBox="0 0 56 56"
+                        aria-hidden
+                      >
+                        <circle
+                          cx={28}
+                          cy={28}
+                          r={25}
+                          stroke={c.rule}
+                          strokeWidth={2.5}
+                          fill="none"
+                        />
+                        <circle
+                          cx={28}
+                          cy={28}
+                          r={25}
+                          stroke={interpolateColors(
+                            doneT,
+                            [0, 1],
+                            [accent, GREEN],
+                          )}
+                          strokeWidth={2.5}
+                          fill="none"
+                          strokeLinecap="round"
+                          strokeDasharray={2 * Math.PI * 25}
+                          strokeDashoffset={2 * Math.PI * 25 * (1 - prog)}
+                          transform="rotate(-90 28 28)"
+                        />
+                      </svg>
                       <div
                         style={{
-                          marginTop: 2,
+                          position: "absolute",
+                          inset: 0,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
                           fontFamily: mono,
                           fontSize: 16,
+                          opacity: 1 - doneT,
                         }}
                       >
-                        {v}
+                        {Math.round(prog * 100)}
+                      </div>
+                      <div
+                        style={{
+                          position: "absolute",
+                          inset: 0,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          opacity: doneT,
+                          transform: `scale(${0.6 + done * 0.4})`,
+                        }}
+                      >
+                        <Icon d={ICONS.check} size={22} color={GREEN} sw={2} />
                       </div>
                     </div>
-                  ))}
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontSize: 18 }}>
+                        {doneT > 0.5 ? "Export complete" : "Exporting"}
+                      </div>
+                      <div
+                        style={{
+                          marginTop: 3,
+                          fontFamily: mono,
+                          fontSize: 16,
+                          color: c.muted,
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {fileName}
+                      </div>
+                    </div>
+                  </div>
+                  <div
+                    style={{
+                      marginTop: 16,
+                      paddingTop: 14,
+                      boxShadow: `inset 0 1px 0 ${c.rule}`,
+                      display: "grid",
+                      gridTemplateColumns: "1fr 1fr 1fr",
+                      gap: 8,
+                    }}
+                  >
+                    {[
+                      ["Size", doneT > 0.5 ? "24.6 MB" : "—"],
+                      ["Res", "1080p"],
+                      [
+                        doneT > 0.5 ? "Time" : "Left",
+                        doneT > 0.5
+                          ? "8.4 s"
+                          : `${Math.max(1, Math.ceil((1 - prog) * 9))} s`,
+                      ],
+                    ].map(([k, v]) => (
+                      <div key={k}>
+                        <div style={{ fontSize: 16, color: c.faint }}>{k}</div>
+                        <div
+                          style={{
+                            marginTop: 2,
+                            fontFamily: mono,
+                            fontSize: 16,
+                          }}
+                        >
+                          {v}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              ) : null}
+            </div>
+            {f >= 4 ? (
+              <Cursor x={L.win.x + cur.x} y={L.win.y + cur.y} press={press} />
             ) : null}
           </div>
-          {f >= 4 ? (
-            <Cursor x={L.win.x + cur.x} y={L.win.y + cur.y} press={press} />
-          ) : null}
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

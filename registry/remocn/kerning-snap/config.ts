@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const kerningSnapConfig: ComponentConfig = {
   componentName: "KerningSnap",
@@ -12,11 +18,6 @@ export const kerningSnapConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     word: {
       type: "text-content",
@@ -32,6 +33,21 @@ export const kerningSnapConfig: ComponentConfig = {
       description: "Interval",
       hiddenFromList: false,
     },
+    firstSnap: {
+      type: "number",
+      default: 30,
+      min: 0,
+      max: 90,
+      step: 1,
+      description: "First snap (frame)",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Fraunces", grain: true }),
     speed: {
       type: "number",
       default: 1,

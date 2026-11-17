@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const weightWaveConfig: ComponentConfig = {
   componentName: "WeightWave",
@@ -12,11 +18,6 @@ export const weightWaveConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     text: {
       type: "text-content",
@@ -59,6 +60,30 @@ export const weightWaveConfig: ComponentConfig = {
       description: "Waves",
       hiddenFromList: false,
     },
+    waveLength: {
+      type: "number",
+      default: 46,
+      min: 16,
+      max: 120,
+      step: 2,
+      description: "Wave length (frames)",
+      hiddenFromList: false,
+    },
+    stagger: {
+      type: "number",
+      default: 2.4,
+      min: 0,
+      max: 6,
+      step: 0.2,
+      description: "Settle stagger",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Geist", grain: true }),
     speed: {
       type: "number",
       default: 1,

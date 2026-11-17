@@ -72,6 +72,24 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       description: "Workspace name shown in the modal and app.",
     },
     {
+      name: "pageTitle",
+      type: "string",
+      default: "\"Projects\"",
+      description: "Page heading in the app behind the modal.",
+    },
+    {
+      name: "fieldLabel",
+      type: "string",
+      default: "\"Email addresses\"",
+      description: "Label above the email field.",
+    },
+    {
+      name: "doneLabel",
+      type: "string",
+      default: "\"Invites sent\"",
+      description: "Button label once the invites are sent.",
+    },
+    {
       name: "images",
       type: "string[]",
       default: "DEFAULT_IMAGES",
@@ -88,6 +106,34 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       type: "string",
       default: "\"#3B5BFD\"",
       description: "Accent color for highlights and controls.",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Solid fill in place of the gradient ground; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Hanken Grotesk\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
     {
       name: "speed",

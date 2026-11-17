@@ -2,7 +2,7 @@
 
 import { loadFont } from "@remotion/google-fonts/Geist";
 import { loadFont as loadMono } from "@remotion/google-fonts/GeistMono";
-import { useId } from "react";
+import { type ReactNode, useId } from "react";
 import {
   AbsoluteFill,
   Easing,
@@ -49,7 +49,25 @@ export interface BenchmarkRaceProps {
   title?: string;
   /** Digits after the decimal point on the clocks. */
   decimals?: number;
+  /** Faint note at the right of the caption row. */
+  note?: string;
+  /** Frames the product lane takes to cross the finish line. */
+  race?: number;
   accent?: string;
+  /** Text color of the product lane and the clocks; overrides the theme. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the statement and lane labels. Load it yourself; Geist by default. */
+  fontFamily?: string;
+  /** Replaces the remocn mark on the product lane. */
+  logo?: ReactNode;
+  /** Size of the statement and lanes, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  /** Film grain over the scene. */
+  grain?: boolean;
   /** Playback multiplier. */
   speed?: number;
   theme?: "dark" | "light";
@@ -70,7 +88,6 @@ const CLAMP = {
 
 const START = 22;
 const WIN_FRAMES = 42;
-const HIT = START + WIN_FRAMES;
 
 /**
  * gradients.sh "mesh" palette: [#ecdcf2, #8796ee, #2e45b7, #0e1645]. It runs
@@ -181,6 +198,22 @@ function meshHaze(drift: number) {
     .join(", ");
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 function Grain({ opacity }: { opacity: number }) {
   const id = `g${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   return (
@@ -229,6 +262,7 @@ function LandingStatement({
   fontSize,
   lead: fill,
   muted,
+  fontFamily,
 }: {
   text: string;
   t: number;
@@ -236,6 +270,7 @@ function LandingStatement({
   /** Top → bottom stops painted through the figure. */
   lead: readonly string[];
   muted: string;
+  fontFamily: string;
 }) {
   const match = text.match(/^(\d[\d.,]*\s*[×x]?)(.*)$/);
   const lead = match ? match[1] : "";
@@ -250,7 +285,7 @@ function LandingStatement({
         display: "flex",
         alignItems: "baseline",
         whiteSpace: "pre",
-        fontFamily: sans,
+        fontFamily,
         fontWeight: 400,
         fontSize,
         lineHeight: 1.1,
@@ -316,6 +351,11 @@ function Lane({
   unit,
   accent,
   th,
+  hit,
+  fg,
+  cut,
+  fontFamily,
+  logo,
 }: {
   lane: BenchmarkLane;
   index: number;
@@ -331,6 +371,11 @@ function Lane({
   unit: string;
   accent: string;
   th: Theme;
+  hit: number;
+  fg: string;
+  cut: string;
+  fontFamily: string;
+  logo: ReactNode;
 }) {
   const gid = `run${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const enter = interpolate(t, [index * 4, index * 4 + 20], [0, 1], {
@@ -352,7 +397,7 @@ function Lane({
   // losers dim once the winner lands, but keep moving
   const dim = winner
     ? 1
-    : interpolate(t, [HIT - 2, HIT + 16], [1, 0.42], {
+    : interpolate(t, [hit - 2, hit + 16], [1, 0.42], {
         ...CLAMP,
         easing: EASE_OUT,
       });
@@ -363,10 +408,10 @@ function Lane({
 
   // the hit
   const hitP = winner
-    ? interpolate(t, [HIT, HIT + 20], [0, 1], { ...CLAMP, easing: EASE_OUT })
+    ? interpolate(t, [hit, hit + 20], [0, 1], { ...CLAMP, easing: EASE_OUT })
     : 0;
   const pulse = winner
-    ? interpolate(t, [HIT, HIT + 5, HIT + 16], [1, 1.12, 1], {
+    ? interpolate(t, [hit, hit + 5, hit + 16], [1, 1.12, 1], {
         ...CLAMP,
         easing: EASE_OUT,
       })
@@ -401,14 +446,14 @@ function Lane({
           display: "flex",
           alignItems: "center",
           gap: 10 * u,
-          fontFamily: sans,
+          fontFamily,
           fontSize: 23 * u,
           fontWeight: winner ? 500 : 400,
           letterSpacing: "-0.025em",
-          color: winner ? th.fg : th.muted,
+          color: winner ? fg : th.muted,
         }}
       >
-        {isLogo ? <LogoLabel size={25 * u} color={th.fg} /> : lane.label}
+        {isLogo ? (logo ?? <LogoLabel size={25 * u} color={fg} />) : lane.label}
       </div>
 
       <svg
@@ -449,7 +494,7 @@ function Lane({
           x2={x0 + trackW}
           y1={cy - 11 * u}
           y2={cy + 11 * u}
-          stroke={winner && t >= HIT ? accent : th.track}
+          stroke={winner && t >= hit ? accent : th.track}
           strokeWidth={Math.max(1, 1.5 * u)}
           opacity={draw}
         />
@@ -487,7 +532,7 @@ function Lane({
                   opacity={0.22 - g * 0.06}
                 />
               ))}
-            {winner && t >= HIT && (
+            {winner && t >= hit && (
               <circle
                 cx={headX}
                 cy={cy}
@@ -503,7 +548,7 @@ function Lane({
               cy={cy}
               r={headR * pulse}
               fill={headFill}
-              stroke={th.bg}
+              stroke={cut}
               strokeWidth={2 * u}
             />
           </>
@@ -526,7 +571,7 @@ function Lane({
           fontWeight: winner ? 500 : 400,
           letterSpacing: "-0.04em",
           fontVariantNumeric: "tabular-nums",
-          color: winner ? (finished ? accent : th.fg) : th.muted,
+          color: winner ? (finished ? accent : fg) : th.muted,
           transform: `scale(${pulse})`,
           transformOrigin: "100% 50%",
           opacity: interpolate(t, [START - 8, START], [0.35, 1], CLAMP),
@@ -547,14 +592,30 @@ export function BenchmarkRace({
   statement = "12× faster",
   title = "Cold render, 1080p · median of 50 runs",
   decimals = 2,
+  note = "lower is better",
+  race = WIN_FRAMES,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = sans,
+  logo,
+  scale = 1,
+  delay = 0,
+  grain = true,
   speed = 1,
   theme = "dark",
 }: BenchmarkRaceProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height } = useVideoConfig();
   const u = height / 720;
   const th: Theme = THEMES[theme];
+  const fg = ink ?? th.fg;
+  const stage = background ?? th.bg;
+  const cut =
+    background === undefined || background === "transparent"
+      ? th.bg
+      : background;
+  const hit = START + race;
 
   const hasHighlight = lanes.some((l) => l.highlight);
   const fastest = lanes.reduce(
@@ -564,7 +625,7 @@ export function BenchmarkRace({
   const winnerIndex = hasHighlight
     ? lanes.findIndex((l) => l.highlight)
     : fastest;
-  const secPerFrame = lanes[winnerIndex].seconds / WIN_FRAMES;
+  const secPerFrame = lanes[winnerIndex].seconds / race;
 
   const marginX = Math.round(width * 0.094);
   const labelW = 190 * u;
@@ -575,7 +636,7 @@ export function BenchmarkRace({
   const groupH = headerH + lanes.length * rowH;
 
   // camera: lanes start centered, glide down to make room for the statement
-  const glide = interpolate(t, [HIT - 4, HIT + 38], [0, 1], {
+  const glide = interpolate(t, [hit - 4, hit + 38], [0, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
@@ -584,7 +645,7 @@ export function BenchmarkRace({
   const groupTop = topStart + (topEnd - topStart) * glide;
   const groupScale = 1.04 - 0.04 * glide;
 
-  const st = t - (HIT + 2);
+  const st = t - (hit + 2);
   const stP = interpolate(st, [0, 28], [0, 1], { ...CLAMP, easing: EASE_OUT });
   const statementSize = Math.min(150 * u, width * 0.118);
 
@@ -594,7 +655,7 @@ export function BenchmarkRace({
   });
 
   return (
-    <AbsoluteFill style={{ background: th.bg, overflow: "hidden" }}>
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
       <AbsoluteFill
         style={{
           background: `radial-gradient(ellipse 70% 65% at 35% 30%, ${th.stage}, transparent 75%)`,
@@ -611,92 +672,100 @@ export function BenchmarkRace({
         />
       ) : null}
 
-      {/* statement */}
-      <div
-        style={{
-          position: "absolute",
-          left: marginX - statementSize * 0.04,
-          top: groupTop - statementSize - 70 * u,
-          opacity: stP,
-          transform: `translateY(${(1 - stP) * 14 * u}px)`,
-          filter: stP < 0.98 ? `blur(${(1 - stP) * 6 * u}px)` : undefined,
-        }}
-      >
-        <LandingStatement
-          text={statement}
-          t={st}
-          fontSize={statementSize}
-          lead={th.lead}
-          muted={th.muted}
-        />
-      </div>
-
-      {/* lanes */}
-      <div
-        style={{
-          position: "absolute",
-          left: marginX,
-          right: marginX,
-          top: groupTop,
-          height: groupH,
-          transform: `scale(${groupScale})`,
-          transformOrigin: "0% 50%",
-        }}
-      >
+      <ScaleLayer scale={scale}>
+        {/* statement */}
         <div
           style={{
             position: "absolute",
-            left: 0,
-            right: 0,
-            top: 0,
-            height: headerH,
-            display: "flex",
-            justifyContent: "space-between",
-            fontFamily: mono,
-            fontSize: 14 * u,
-            fontWeight: 400,
-            letterSpacing: "-0.01em",
-            color: th.muted,
-            opacity: headerP,
-            transform: `translateY(${(1 - headerP) * 8 * u}px)`,
+            left: marginX - statementSize * 0.04,
+            top: groupTop - statementSize - 70 * u,
+            opacity: stP,
+            transform: `translateY(${(1 - stP) * 14 * u}px)`,
+            filter: stP < 0.98 ? `blur(${(1 - stP) * 6 * u}px)` : undefined,
           }}
         >
-          <span>{title}</span>
-          <span style={{ color: th.faint }}>lower is better</span>
+          <LandingStatement
+            text={statement}
+            t={st}
+            fontSize={statementSize}
+            lead={th.lead}
+            muted={th.muted}
+            fontFamily={fontFamily}
+          />
         </div>
+
+        {/* lanes */}
         <div
           style={{
             position: "absolute",
-            left: 0,
-            right: 0,
-            top: headerH,
-            height: lanes.length * rowH,
-            borderTop: `${Math.max(1, u)}px solid ${th.track}`,
+            left: marginX,
+            right: marginX,
+            top: groupTop,
+            height: groupH,
+            transform: `scale(${groupScale})`,
+            transformOrigin: "0% 50%",
           }}
         >
-          {lanes.map((lane, i) => (
-            <Lane
-              key={lane.label}
-              lane={lane}
-              index={i}
-              winner={i === winnerIndex}
-              t={t}
-              u={u}
-              x0={labelW}
-              trackW={trackW}
-              valueW={valueW}
-              rowH={rowH}
-              secPerFrame={secPerFrame}
-              decimals={decimals}
-              unit={unit}
-              accent={accent}
-              th={th}
-            />
-          ))}
+          <div
+            style={{
+              position: "absolute",
+              left: 0,
+              right: 0,
+              top: 0,
+              height: headerH,
+              display: "flex",
+              justifyContent: "space-between",
+              fontFamily: mono,
+              fontSize: 14 * u,
+              fontWeight: 400,
+              letterSpacing: "-0.01em",
+              color: th.muted,
+              opacity: headerP,
+              transform: `translateY(${(1 - headerP) * 8 * u}px)`,
+            }}
+          >
+            <span>{title}</span>
+            <span style={{ color: th.faint }}>{note}</span>
+          </div>
+          <div
+            style={{
+              position: "absolute",
+              left: 0,
+              right: 0,
+              top: headerH,
+              height: lanes.length * rowH,
+              borderTop: `${Math.max(1, u)}px solid ${th.track}`,
+            }}
+          >
+            {lanes.map((lane, i) => (
+              <Lane
+                key={lane.label}
+                lane={lane}
+                index={i}
+                winner={i === winnerIndex}
+                t={t}
+                u={u}
+                x0={labelW}
+                trackW={trackW}
+                valueW={valueW}
+                rowH={rowH}
+                secPerFrame={secPerFrame}
+                decimals={decimals}
+                unit={unit}
+                accent={accent}
+                th={th}
+                hit={hit}
+                fg={fg}
+                cut={cut}
+                fontFamily={fontFamily}
+                logo={logo}
+              />
+            ))}
+          </div>
         </div>
-      </div>
+      </ScaleLayer>
 
-      <Grain opacity={th.grain} />
+      {grain ? <Grain opacity={th.grain} /> : null}
     </AbsoluteFill>
   );
 }

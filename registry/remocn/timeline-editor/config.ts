@@ -1,4 +1,11 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const timelineEditorConfig: ComponentConfig = {
   componentName: "TimelineEditor",
@@ -12,11 +19,6 @@ export const timelineEditorConfig: ComponentConfig = {
         dark: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     projectName: {
       type: "text-content",
@@ -33,6 +35,28 @@ export const timelineEditorConfig: ComponentConfig = {
       default: "soundtrack.wav",
       description: "Audio name",
     },
+    tagline: {
+      type: "text-content",
+      default: "Launch videos, built in code",
+      description: "Tagline",
+    },
+    headline: {
+      type: "text-content",
+      default: "Ship your launch video",
+      description: "Headline",
+    },
+    url: {
+      type: "text-content",
+      default: "remocn.dev",
+      description: "URL",
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ground: groundControl(),
+    ...sceneControls({ font: "Hanken Grotesk" }),
     speed: {
       type: "number",
       default: 1,

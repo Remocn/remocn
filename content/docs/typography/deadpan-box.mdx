@@ -69,10 +69,61 @@ A small box showing the brand logo grows to hug a flat quote, which holds for a 
       description: "Brand name; \"remocn\" renders the real logo, anything else a wordmark.",
     },
     {
+      name: "logo",
+      type: "React.ReactNode",
+      description: "Replaces the remocn mark.",
+    },
+    {
       name: "accent",
       type: "string",
       default: "\"#3B5BFD\"",
       description: "Main color of the gradient field inside the box.",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color inside the box; white by default.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Background fill; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Schibsted Grotesk\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "stagger",
+      type: "number",
+      default: "5",
+      description: "Frames between quote lines as they rise in.",
+    },
+    {
+      name: "punchAt",
+      type: "number",
+      default: "92",
+      description: "Frame the box floods the screen for the punchline.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
+    },
+    {
+      name: "grain",
+      type: "boolean",
+      default: "true",
+      description: "Film grain over the scene.",
     },
     {
       name: "theme",

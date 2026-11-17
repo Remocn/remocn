@@ -1,4 +1,11 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const screenshotTourConfig: ComponentConfig = {
   componentName: "ScreenshotTour",
@@ -13,10 +20,10 @@ export const screenshotTourConfig: ComponentConfig = {
       },
       description: "Theme",
     },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
+    brand: {
+      type: "text-content",
+      default: "remocn",
+      description: "Brand",
     },
     pullBack: {
       type: "boolean",
@@ -41,6 +48,13 @@ export const screenshotTourConfig: ComponentConfig = {
       description: "Dim",
       hiddenFromList: false,
     },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ground: groundControl(),
+    ...sceneControls({ font: "Geist" }),
     speed: {
       type: "number",
       default: 1,

@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const statSequenceConfig: ComponentConfig = {
   componentName: "StatSequence",
@@ -12,11 +18,6 @@ export const statSequenceConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     name: {
       type: "text-content",
@@ -37,6 +38,30 @@ export const statSequenceConfig: ComponentConfig = {
       description: "Beat",
       hiddenFromList: false,
     },
+    hold: {
+      type: "number",
+      default: 42,
+      min: 0,
+      max: 120,
+      step: 1,
+      description: "Hero hold (frames)",
+      hiddenFromList: false,
+    },
+    stagger: {
+      type: "number",
+      default: 1.6,
+      min: 0,
+      max: 4,
+      step: 0.1,
+      description: "Digit stagger",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Geist", grain: true }),
     speed: {
       type: "number",
       default: 1,

@@ -2,6 +2,7 @@
 
 import { loadFont as loadSerif } from "@remotion/google-fonts/InstrumentSerif";
 import { loadFont } from "@remotion/google-fonts/Sora";
+import type React from "react";
 import {
   AbsoluteFill,
   Easing,
@@ -34,6 +35,20 @@ export interface PovSetupProps {
   punch?: string;
   /** Kept for the shared draft API; the colour comes from the ground. */
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the label, setup and punch word. Load it yourself; Sora by default. */
+  fontFamily?: string;
+  /** Frames between setup words. */
+  stagger?: number;
+  /** Frame the punchline lands. */
+  punchAt?: number;
+  /** Size of the copy, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   /** gradients.sh preset id for the ground. */
   ground?: GshPresetId;
@@ -106,37 +121,75 @@ function shake(d: number, amp: number, seed: number) {
   };
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function PovSetup({
   label = "POV:",
   setup = "you shipped the launch video before standup",
   lead = "and it",
   punch = "slaps.",
+  ink,
+  background,
+  fontFamily = sora,
+  stagger = BEATS.wordGap,
+  punchAt = BEATS.punch,
+  scale = 1,
+  delay = 0,
   theme = "dark",
   ground,
   groundParams,
   speed = 1,
 }: PovSetupProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const c = THEMES[theme];
+  const fg = ink ?? c.ink;
+  const stage =
+    background === undefined
+      ? c.stage
+      : background === "transparent"
+        ? "transparent"
+        : background;
+  const shift = punchAt - BEATS.punch;
+  const beats = {
+    ...BEATS,
+    wordGap: stagger,
+    punch: BEATS.punch + shift,
+    lift: BEATS.lift + shift,
+    rise: BEATS.rise + shift,
+  };
   const tall = H > W;
   const base = tall ? W * 0.75 : H;
   const u = Math.min(W / 1280, H / 720);
 
   const words = setup.split(/\s+/).filter(Boolean);
 
-  const pov = spring({ frame: t - BEATS.pov, fps, config: CHIP });
-  const shrink = spring({ frame: t - BEATS.shrink, fps, config: HEAVY });
-  const lift = spring({ frame: t - BEATS.lift, fps, config: HEAVY });
-  const p = spring({ frame: t - BEATS.punch, fps, config: CARD });
-  const punchOn = t >= BEATS.punch;
+  const pov = spring({ frame: t - beats.pov, fps, config: CHIP });
+  const shrink = spring({ frame: t - beats.shrink, fps, config: HEAVY });
+  const lift = spring({ frame: t - beats.lift, fps, config: HEAVY });
+  const p = spring({ frame: t - beats.punch, fps, config: CARD });
+  const punchOn = t >= beats.punch;
 
   const bump = Math.max(
-    0.5 * kick(t - BEATS.pov - 4),
-    1.2 * kick(t - BEATS.punch - 4),
+    0.5 * kick(t - beats.pov - 4),
+    1.2 * kick(t - beats.punch - 4),
   );
-  const hit = shake(t - BEATS.punch - 4, 8 * u, 2.3);
-  const creep = interpolate(t, [BEATS.setup, BEATS.punch + 70], [1, 1.035], {
+  const hit = shake(t - beats.punch - 4, 8 * u, 2.3);
+  const creep = interpolate(t, [beats.setup, beats.punch + 70], [1, 1.035], {
     ...CLAMP,
     easing: CAMERA,
   });
@@ -147,10 +200,10 @@ export function PovSetup({
   const punchScale = 1.5 - 0.5 * p;
   const punchBlur = Math.max(0, 1 - p) * 14;
   const punchTilt = -4 * (1 - p);
-  const stepBack = LIGHT(ramp(t, BEATS.punch, 12));
+  const stepBack = LIGHT(ramp(t, beats.punch, 12));
   const setupOpacity = 1 - 0.55 * stepBack;
 
-  const rise = LIGHT(ramp(t, BEATS.rise, 30));
+  const rise = LIGHT(ramp(t, beats.rise, 30));
   const veil = c.veilFrom + (c.veilTo - c.veilFrom) * rise;
   const groundShift = (1 - rise) * 0.14 * H;
 
@@ -178,161 +231,167 @@ export function PovSetup({
   const labelScale = POV_BIG - (POV_BIG - 1) * shrink;
 
   return (
-    <AbsoluteFill style={{ background: c.stage, overflow: "hidden" }}>
-      <AbsoluteFill
-        style={{
-          top: -0.3 * H,
-          height: 1.55 * H,
-          transform: `translateY(${groundShift - 0.25 * H}px) scale(1.08)`,
-        }}
-      >
-        <GshGround
-          preset={ground ?? c.preset}
-          params={groundParams ?? c.params}
-          timeOffset={4}
-          timeScale={0.45}
-        />
-      </AbsoluteFill>
-      <AbsoluteFill
-        style={{
-          background: `linear-gradient(180deg, ${c.stage} 0%, ${c.stage} 38%, transparent 100%)`,
-          opacity: veil,
-        }}
-      />
-      <AbsoluteFill style={{ background: c.stage, opacity: veil * 0.55 }} />
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
+      {background === undefined ? (
+        <>
+          <AbsoluteFill
+            style={{
+              top: -0.3 * H,
+              height: 1.55 * H,
+              transform: `translateY(${groundShift - 0.25 * H}px) scale(1.08)`,
+            }}
+          >
+            <GshGround
+              preset={ground ?? c.preset}
+              params={groundParams ?? c.params}
+              timeOffset={4}
+              timeScale={0.45}
+            />
+          </AbsoluteFill>
+          <AbsoluteFill
+            style={{
+              background: `linear-gradient(180deg, ${c.stage} 0%, ${c.stage} 38%, transparent 100%)`,
+              opacity: veil,
+            }}
+          />
+          <AbsoluteFill style={{ background: c.stage, opacity: veil * 0.55 }} />
+        </>
+      ) : null}
 
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          transform: `translate(${hit.x}px, ${hit.y}px) scale(${camScale})`,
-          transformOrigin: "30% 50%",
-        }}
-      >
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            left,
-            right: left,
-            top: blockTop,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "flex-start",
+            inset: 0,
+            transform: `translate(${hit.x}px, ${hit.y}px) scale(${camScale})`,
+            transformOrigin: "30% 50%",
           }}
         >
           <div
             style={{
-              fontFamily: sora,
-              fontWeight: 400,
-              fontSize: labelFs,
-              lineHeight: 1,
-              letterSpacing: "-0.01em",
-              color: c.ink,
-              transform: `scale(${povScale * labelScale})`,
-              transformOrigin: "0% 0%",
-              height: labelFs,
-              filter: povBlur > 0.2 ? `blur(${povBlur * u}px)` : undefined,
-              opacity: ramp(t, BEATS.pov - 1, 2),
-              marginBottom: labelGap,
+              position: "absolute",
+              left,
+              right: left,
+              top: blockTop,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "flex-start",
             }}
           >
-            {label}
-          </div>
+            <div
+              style={{
+                fontFamily,
+                fontWeight: 400,
+                fontSize: labelFs,
+                lineHeight: 1,
+                letterSpacing: "-0.01em",
+                color: fg,
+                transform: `scale(${povScale * labelScale})`,
+                transformOrigin: "0% 0%",
+                height: labelFs,
+                filter: povBlur > 0.2 ? `blur(${povBlur * u}px)` : undefined,
+                opacity: ramp(t, beats.pov - 1, 2),
+                marginBottom: labelGap,
+              }}
+            >
+              {label}
+            </div>
 
-          <div
-            style={{
-              fontFamily: sora,
-              fontWeight: 300,
-              fontSize: setupFs,
-              lineHeight: 1.12,
-              letterSpacing: "-0.035em",
-              color: c.ink,
-              maxWidth: setupWidth,
-              opacity: setupOpacity,
-            }}
-          >
-            {words.map((w, i) => {
-              const at = BEATS.setup + i * BEATS.wordGap;
-              const k = ENTER(ramp(t, at, BEATS.wordLen));
-              return (
-                <span
-                  key={i}
+            <div
+              style={{
+                fontFamily,
+                fontWeight: 300,
+                fontSize: setupFs,
+                lineHeight: 1.12,
+                letterSpacing: "-0.035em",
+                color: fg,
+                maxWidth: setupWidth,
+                opacity: setupOpacity,
+              }}
+            >
+              {words.map((w, i) => {
+                const at = beats.setup + i * beats.wordGap;
+                const k = ENTER(ramp(t, at, beats.wordLen));
+                return (
+                  <span
+                    key={i}
+                    style={{
+                      display: "inline-block",
+                      overflow: "hidden",
+                      verticalAlign: "top",
+                      paddingBottom: "0.14em",
+                      marginBottom: "-0.14em",
+                      marginRight: i < words.length - 1 ? "0.24em" : 0,
+                    }}
+                  >
+                    <span
+                      style={{
+                        display: "inline-block",
+                        transform: `translateY(${(1 - k) * 105}%)`,
+                        opacity: ramp(t, at, 4),
+                      }}
+                    >
+                      {w}
+                    </span>
+                  </span>
+                );
+              })}
+            </div>
+
+            <div
+              style={{
+                height: punchLines * punchFs * 1.02,
+                marginTop: punchGap,
+                display: "flex",
+                alignItems: "flex-end",
+              }}
+            >
+              {punchOn ? (
+                <div
                   style={{
-                    display: "inline-block",
-                    overflow: "hidden",
-                    verticalAlign: "top",
-                    paddingBottom: "0.14em",
-                    marginBottom: "-0.14em",
-                    marginRight: i < words.length - 1 ? "0.24em" : 0,
+                    display: "flex",
+                    flexDirection: tall ? "column" : "row",
+                    alignItems: tall ? "flex-start" : "baseline",
+                    whiteSpace: "nowrap",
+                    transform: `rotate(${punchTilt}deg) scale(${punchScale})`,
+                    transformOrigin: "0% 70%",
+                    filter:
+                      punchBlur > 0.2 ? `blur(${punchBlur * u}px)` : undefined,
+                    opacity: ramp(t, beats.punch, 2),
+                    color: fg,
                   }}
                 >
                   <span
                     style={{
-                      display: "inline-block",
-                      transform: `translateY(${(1 - k) * 105}%)`,
-                      opacity: ramp(t, at, 4),
+                      fontFamily: serifItalic,
+                      fontStyle: "italic",
+                      fontWeight: 400,
+                      fontSize: punchFs * 1.04,
+                      lineHeight: 1,
+                      letterSpacing: "-0.03em",
+                      marginRight: "0.14em",
                     }}
                   >
-                    {w}
+                    {lead}
                   </span>
-                </span>
-              );
-            })}
-          </div>
-
-          <div
-            style={{
-              height: punchLines * punchFs * 1.02,
-              marginTop: punchGap,
-              display: "flex",
-              alignItems: "flex-end",
-            }}
-          >
-            {punchOn ? (
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: tall ? "column" : "row",
-                  alignItems: tall ? "flex-start" : "baseline",
-                  whiteSpace: "nowrap",
-                  transform: `rotate(${punchTilt}deg) scale(${punchScale})`,
-                  transformOrigin: "0% 70%",
-                  filter:
-                    punchBlur > 0.2 ? `blur(${punchBlur * u}px)` : undefined,
-                  opacity: ramp(t, BEATS.punch, 2),
-                  color: c.ink,
-                }}
-              >
-                <span
-                  style={{
-                    fontFamily: serifItalic,
-                    fontStyle: "italic",
-                    fontWeight: 400,
-                    fontSize: punchFs * 1.04,
-                    lineHeight: 1,
-                    letterSpacing: "-0.03em",
-                    marginRight: "0.14em",
-                  }}
-                >
-                  {lead}
-                </span>
-                <span
-                  style={{
-                    fontFamily: sora,
-                    fontWeight: 400,
-                    fontSize: punchFs,
-                    lineHeight: 1,
-                    letterSpacing: "-0.06em",
-                    paddingRight: "0.04em",
-                  }}
-                >
-                  {punch}
-                </span>
-              </div>
-            ) : null}
+                  <span
+                    style={{
+                      fontFamily,
+                      fontWeight: 400,
+                      fontSize: punchFs,
+                      lineHeight: 1,
+                      letterSpacing: "-0.06em",
+                      paddingRight: "0.04em",
+                    }}
+                  >
+                    {punch}
+                  </span>
+                </div>
+              ) : null}
+            </div>
           </div>
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

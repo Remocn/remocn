@@ -74,9 +74,44 @@ Each word of the first line is covered by a block that morphs into the next line
       description: "Accent color (any valid CSS color)",
     },
     {
+      name: "ink",
+      type: "string",
+      description: "Text and block color; overrides the theme ink.",
+    },
+    {
       name: "background",
       type: "string",
       description: "Overrides the theme's stage color",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Space Grotesk\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "hold",
+      type: "number",
+      default: "14",
+      description: "Frames each line holds before the blocks cover it.",
+    },
+    {
+      name: "radius",
+      type: "number",
+      default: "0.2",
+      description: "Corner radius of the blocks, in em of the line size.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
     {
       name: "speed",

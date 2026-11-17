@@ -1,8 +1,20 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const rubyPressConfig: ComponentConfig = {
   componentName: "RubyPress",
   importPath: "@/components/remocn/ruby-press",
+  lists: {
+    words: {
+      default: ["a fortnight", "a morning", "one render"],
+      description: "Words",
+    },
+  },
   controls: {
     theme: {
       type: "enum",
@@ -32,6 +44,26 @@ export const rubyPressConfig: ComponentConfig = {
       description: "Hold",
       hiddenFromList: false,
     },
+    stagger: {
+      type: "number",
+      default: 3,
+      min: 0,
+      max: 12,
+      step: 1,
+      description: "Word stagger",
+      hiddenFromList: false,
+    },
+    press: {
+      type: "number",
+      default: 22,
+      min: 6,
+      max: 48,
+      step: 1,
+      description: "Press (frames)",
+      hiddenFromList: false,
+    },
+    accent: { type: "color", default: "#E03C31", description: "Accent" },
+    ...sceneControls({ font: "Zen Kaku Gothic New" }),
     speed: {
       type: "number",
       default: 1,

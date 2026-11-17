@@ -25,7 +25,19 @@ export interface WhichMeansProps {
   steps?: string[];
   hinge?: string;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the copy. Load it yourself; Geologica by default. */
+  fontFamily?: string;
+  /** Frames between words as a step is written. */
+  stagger?: number;
+  /** Frames the last step holds before the end. */
+  hold?: number;
+  /** Size of the text, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -73,13 +85,13 @@ const TAIL = 76;
 type Metrics = Record<string, number>;
 const key = (w: number, s: string) => `${w}\u0002${s}`;
 
-function measureAll(texts: string[]): Metrics {
+function measureAll(texts: string[], fontFamily: string): Metrics {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("which-means: no 2d context");
   const out: Metrics = {};
   for (const weight of [NAME_W, BODY_W]) {
-    ctx.font = `${weight} ${FONT_PX}px "${geologica.fontFamily}"`;
+    ctx.font = `${weight} ${FONT_PX}px "${fontFamily}"`;
     for (const s of texts) {
       out[key(weight, s)] = ctx.measureText(s).width / FONT_PX;
     }
@@ -87,22 +99,24 @@ function measureAll(texts: string[]): Metrics {
   return out;
 }
 
-function useMetrics(texts: string[]) {
-  const id = texts.join("\u0001");
+function useMetrics(texts: string[], fontFamily: string) {
+  const id = `${fontFamily}\u0003${texts.join("\u0001")}`;
   const [state, setState] = useState<{ id: string; m: Metrics } | null>(null);
   const [handle] = useState(() => delayRender("which-means: measuring"));
   const released = useRef(false);
+  const input = useRef(texts);
+  input.current = texts;
   useEffect(() => {
     let live = true;
     Promise.all([
       geologica.waitUntilDone(),
-      document.fonts.load(`${NAME_W} 100px "${geologica.fontFamily}"`),
-      document.fonts.load(`${BODY_W} 100px "${geologica.fontFamily}"`),
+      document.fonts.load(`${NAME_W} 100px "${fontFamily}"`),
+      document.fonts.load(`${BODY_W} 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
-        setState({ id, m: measureAll(id.split("\u0001")) });
+        setState({ id, m: measureAll(input.current, fontFamily) });
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -111,7 +125,7 @@ function useMetrics(texts: string[]) {
     return () => {
       live = false;
     };
-  }, [id, handle]);
+  }, [id, handle, fontFamily]);
   return state && state.id === id ? state.m : null;
 }
 
@@ -171,6 +185,22 @@ function partitions(words: string[], parts: number): string[][][] {
 
 const stripEnd = (s: string) => s.replace(/[\s,.;:…]+$/u, "");
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 interface Clause {
   lines: string[][];
   h: number;
@@ -182,27 +212,30 @@ export function WhichMeans({
   steps = DEFAULT_STEPS,
   hinge = "which means",
   accent,
+  ink,
   background,
+  fontFamily = geologica.fontFamily,
+  stagger = WORD_STAGGER,
+  hold = TAIL,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: WhichMeansProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, durationInFrames } = useVideoConfig();
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
+  const fg = ink ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
 
   const list = (steps.length > 0 ? steps : DEFAULT_STEPS).map(stripEnd);
   const nameWords = splitWords(name);
-  const m = useMetrics([
-    " ",
-    "…",
-    ...nameWords,
-    ...list.flatMap(splitWords),
-    hinge,
-    label,
-  ]);
+  const m = useMetrics(
+    [" ", "…", ...nameWords, ...list.flatMap(splitWords), hinge, label],
+    fontFamily,
+  );
 
   if (!m) {
     return (
@@ -261,8 +294,8 @@ export function WhichMeans({
     F *= 0.95;
   }
 
-  const span = durationInFrames * speed;
-  const fixed = FIRST_AT + FIRST_READ + TAIL;
+  const span = Math.max(0, durationInFrames - delay) * speed;
+  const fixed = FIRST_AT + FIRST_READ + hold;
   const period =
     n > 2
       ? Math.min(72, Math.max(44, (span - fixed - 10) / (n - 2)))
@@ -295,7 +328,7 @@ export function WhichMeans({
           position: "absolute",
           left: nameX,
           top: nameTop - labelF * 1.9,
-          fontFamily: geologica.fontFamily,
+          fontFamily,
           fontWeight: BODY_W,
           fontSize: labelF,
           lineHeight: 1,
@@ -322,12 +355,12 @@ export function WhichMeans({
           paddingLeft: nameF * 0.04,
           paddingRight: nameF * 0.1,
           overflow: "hidden",
-          fontFamily: geologica.fontFamily,
+          fontFamily,
           fontWeight: NAME_W,
           fontSize: nameF,
           lineHeight: `${nameF * NAME_LH + nameF * 0.16}px`,
           letterSpacing: `${NAME_TRACK}em`,
-          color: c.ink,
+          color: fg,
           whiteSpace: "pre",
         }}
       >
@@ -371,7 +404,7 @@ export function WhichMeans({
           width: colW + F,
           opacity,
           color,
-          fontFamily: geologica.fontFamily,
+          fontFamily,
           fontWeight: BODY_W,
           fontSize: F,
           letterSpacing: `${BODY_TRACK}em`,
@@ -394,7 +427,7 @@ export function WhichMeans({
         {cl.lines.map((line, li) => (
           <div key={line.join(" ")}>
             {line.map((w, wi) => {
-              const e = ease(writeAt + wordIndex++ * WORD_STAGGER, WORD_IN);
+              const e = ease(writeAt + wordIndex++ * stagger, WORD_IN);
               const isEnd =
                 li === cl.lines.length - 1 && wi === line.length - 1;
               return (
@@ -479,9 +512,9 @@ export function WhichMeans({
       ? interpolateColors(
           ease(enter + WRITE_AFTER_RISE + 8, 16),
           [0, 1],
-          [c.ink, hi],
+          [fg, hi],
         )
-      : c.ink;
+      : fg;
 
     nodes.push(renderClause(k, top, opacity, color, writeAt, endDot, ellipsis));
   }
@@ -503,7 +536,7 @@ export function WhichMeans({
           position: "absolute",
           left: colX,
           top: hingeY - hingeF * 0.6,
-          fontFamily: geologica.fontFamily,
+          fontFamily,
           fontWeight: BODY_W,
           fontSize: hingeF,
           lineHeight: `${hingeF * 1.2}px`,
@@ -520,7 +553,7 @@ export function WhichMeans({
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
-      {nodes}
+      <ScaleLayer scale={scale}>{nodes}</ScaleLayer>
     </AbsoluteFill>
   );
 }

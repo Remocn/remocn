@@ -1,8 +1,23 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const moneySendConfig: ComponentConfig = {
   componentName: "MoneySend",
   importPath: "@/components/remocn/money-send",
+  lists: {
+    lines: {
+      default: ["Type any amount.", "Say what it’s for.", "Sent in a second."],
+      description: "Lines",
+      min: 3,
+      max: 3,
+    },
+  },
   controls: {
     theme: {
       type: "enum",
@@ -12,11 +27,6 @@ export const moneySendConfig: ComponentConfig = {
         dark: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     recipient: {
       type: "text-content",
@@ -33,6 +43,16 @@ export const moneySendConfig: ComponentConfig = {
       default: "Dinner 🍜",
       description: "Note",
     },
+    notePlaceholder: {
+      type: "text-content",
+      default: "Add a note",
+      description: "Note placeholder",
+    },
+    doneLabel: {
+      type: "text-content",
+      default: "Done",
+      description: "Done label",
+    },
     amount: {
       type: "number",
       default: 120,
@@ -42,6 +62,22 @@ export const moneySendConfig: ComponentConfig = {
       description: "Amount",
       hiddenFromList: false,
     },
+    stagger: {
+      type: "number",
+      default: 11,
+      min: 4,
+      max: 20,
+      step: 1,
+      description: "Key stagger",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ground: groundControl(),
+    ...sceneControls({ font: "Hanken Grotesk" }),
     speed: {
       type: "number",
       default: 1,

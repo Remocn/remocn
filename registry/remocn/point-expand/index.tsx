@@ -1,9 +1,12 @@
 "use client";
 
 import { loadFont as loadInterTight } from "@remotion/google-fonts/InterTight";
-import { useId } from "react";
+import type React from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import {
   AbsoluteFill,
+  continueRender,
+  delayRender,
   Easing,
   interpolate,
   useCurrentFrame,
@@ -18,7 +21,22 @@ const inter = loadInterTight("normal", {
 export interface PointExpandProps {
   statements?: string[];
   pulses?: number;
+  /** Frames between words as a statement rises in. */
+  stagger?: number;
+  /** Frames the full stop rests before it pulses. */
+  hold?: number;
   accent?: string;
+  /** Text color on the plain scenes; overrides the theme ink. */
+  ink?: string;
+  /** Fill of the plain scenes; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the statements. Load it yourself; Inter Tight by default. */
+  fontFamily?: string;
+  /** Size of the statements, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  grain?: boolean;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -106,16 +124,56 @@ function textEm(text: string) {
   return w;
 }
 
-function breakLines(text: string, maxEm: number) {
+/**
+ * Width in em. Inter Tight uses the advance and kerning tables above;
+ * another family is measured with canvas once it has loaded.
+ */
+function useTextEm(family: string): (text: string) => number {
+  const custom = family !== inter.fontFamily;
+  const [ready, setReady] = useState<string | null>(null);
+  const [handle] = useState(() =>
+    custom ? delayRender("point-expand: measuring") : null,
+  );
+  const released = useRef(false);
+  useEffect(() => {
+    if (!custom) return;
+    let live = true;
+    document.fonts
+      .load(`500 100px "${family}"`)
+      .catch(() => undefined)
+      .then(() => {
+        if (live) setReady(family);
+        if (handle !== null && !released.current) {
+          released.current = true;
+          continueRender(handle);
+        }
+      });
+    return () => {
+      live = false;
+    };
+  }, [custom, family, handle]);
+  if (!custom || ready !== family) return textEm;
+  const ctx = document.createElement("canvas").getContext("2d");
+  if (!ctx) return textEm;
+  ctx.font = `500 100px "${family}"`;
+  return (text: string) =>
+    ctx.measureText(text).width / 100 + TRACK * [...text].length;
+}
+
+function breakLines(
+  text: string,
+  maxEm: number,
+  em: (text: string) => number = textEm,
+) {
   const words = text.split(/\s+/).filter(Boolean);
-  const total = textEm(words.join(" ")) + DOT_GAP + DOT;
+  const total = em(words.join(" ")) + DOT_GAP + DOT;
   const count = Math.max(1, Math.ceil(total / maxEm));
   const greedy = (target: number) => {
     const lines: string[][] = [[]];
     for (const w of words) {
       const cur = lines[lines.length - 1];
       const next = [...cur, w].join(" ");
-      if (cur.length && textEm(next) + DOT_GAP + DOT > target) lines.push([w]);
+      if (cur.length && em(next) + DOT_GAP + DOT > target) lines.push([w]);
       else cur.push(w);
     }
     return lines;
@@ -153,6 +211,22 @@ function Grain({ opacity }: { opacity: number }) {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function PointExpand({
   statements = [
     "Launch films used to take weeks.",
@@ -160,13 +234,35 @@ export function PointExpand({
     "Copy, paste, render.",
   ],
   pulses = 2,
+  stagger = 2,
+  hold = 6,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = inter.fontFamily,
+  scale = 1,
+  delay = 0,
+  grain = true,
   speed = 1,
   theme = "dark",
 }: PointExpandProps) {
-  const frame = useCurrentFrame() * speed;
+  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height } = useVideoConfig();
   const p = PALETTES[theme];
+  const stage =
+    background === "transparent" ? "transparent" : (background ?? p.stage);
+  // the full stop is filled with the next scene's colour; it needs a real one
+  const dotStage = background === "transparent" ? p.stage : stage;
+  const em = useTextEm(fontFamily);
+  // the scaled position of a full stop, so the next scene grows from where it is drawn
+  const at = (pt: { x: number; y: number; r: number }) =>
+    scale === 1
+      ? pt
+      : {
+          x: width / 2 + (pt.x - width / 2) * scale,
+          y: height / 2 + (pt.y - height / 2) * scale,
+          r: pt.r * scale,
+        };
   const list = (statements.length ? statements : [""]).slice(0, 5);
   const count = list.length;
 
@@ -181,10 +277,10 @@ export function PointExpand({
     const text = raw.trim().replace(/[.。]+$/, "");
     const cap = portrait ? 3 : 2;
     let fs = baseFs;
-    let lines = breakLines(text, maxW / fs);
+    let lines = breakLines(text, maxW / fs, em);
     for (let i = 0; i < 10 && lines.length > cap; i++) {
       fs *= 0.9;
-      lines = breakLines(text, maxW / fs);
+      lines = breakLines(text, maxW / fs, em);
     }
     const lh = fs * LINE;
     const top = (height - lines.length * lh) / 2;
@@ -192,7 +288,7 @@ export function PointExpand({
     const rows = lines.map((words, li) => {
       const t = words.join(" ");
       const last = li === lines.length - 1;
-      const w = (textEm(t) + (last ? DOT_GAP + DOT : 0)) * fs;
+      const w = (em(t) + (last ? DOT_GAP + DOT : 0)) * fs;
       return { words, left: (width - w) / 2, w, y: top + li * lh };
     });
     const lastRow = rows[rows.length - 1];
@@ -207,8 +303,8 @@ export function PointExpand({
   });
 
   const RISE = 14;
-  const STAGGER = 2;
-  const HOLD = 6;
+  const STAGGER = stagger;
+  const HOLD = hold;
   const PULSE = 7;
   const EXPAND = 18;
   const starts: number[] = [];
@@ -224,7 +320,7 @@ export function PointExpand({
   }
   const radius = (k: number) => {
     if (k === 0) return Number.POSITIVE_INFINITY;
-    const { point } = scenes[k - 1];
+    const point = at(scenes[k - 1].point);
     const far = Math.max(
       Math.hypot(point.x, point.y),
       Math.hypot(width - point.x, point.y),
@@ -245,19 +341,19 @@ export function PointExpand({
   };
 
   const pointFill = (k: number) => {
-    if (k === count - 1) return scenes[k].beam ? p.stage : accent;
-    return scenes[k + 1].beam ? accent : p.stage;
+    if (k === count - 1) return scenes[k].beam ? dotStage : accent;
+    return scenes[k + 1].beam ? accent : dotStage;
   };
 
   return (
-    <AbsoluteFill style={{ background: p.stage, overflow: "hidden" }}>
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
       {scenes.map((sc, k) => {
         const r = radius(k);
         if (r <= 0.5) return null;
         if (k + 1 < count && radius(k + 1) > Math.hypot(width, height) * 1.5)
           return null;
-        const origin = k > 0 ? scenes[k - 1].point : null;
-        const fg = sc.beam ? p.beamFg : p.stageFg;
+        const origin = k > 0 ? at(scenes[k - 1].point) : null;
+        const fg = sc.beam ? p.beamFg : (ink ?? p.stageFg);
         const sink =
           k + 1 < count
             ? interpolate(frame, [expands[k], expands[k] + EXPAND], [0, 1], {
@@ -280,8 +376,8 @@ export function PointExpand({
               `radial-gradient(60% 60% at 50% 120%, color-mix(in oklab, ${BEAM[1]} 28%, transparent) 0%, transparent 70%)`,
             ].join(", ")
           : origin
-            ? `radial-gradient(circle at ${ox}px ${oy}px, color-mix(in oklab, ${accent} ${theme === "dark" ? 16 : 10}%, ${p.stage}) 0%, ${p.stage} ${(0.7 * width).toFixed(0)}px)`
-            : p.stage;
+            ? `radial-gradient(circle at ${ox}px ${oy}px, color-mix(in oklab, ${accent} ${theme === "dark" ? 16 : 10}%, ${stage}) 0%, ${stage} ${(0.7 * width).toFixed(0)}px)`
+            : stage;
         const words = sc.rows.reduce((m, row) => m + row.words.length, 0);
         const landed = starts[k] + RISE + (words - 1) * STAGGER;
         const drop = interpolate(frame, [landed - 6, landed + 4], [0, 1], {
@@ -339,105 +435,115 @@ export function PointExpand({
                 transformOrigin: `${ox}px ${oy}px`,
               }}
             />
-            <Grain opacity={sc.beam ? 0.07 : theme === "dark" ? 0.05 : 0.035} />
-            <div
-              style={{
-                position: "absolute",
-                inset: 0,
-                transform: `scale(${(1 - sink * 0.05 + settle * 0.02).toFixed(4)})`,
-                transformOrigin: `${sc.point.x}px ${sc.point.y}px`,
-                opacity: 1 - sink * 0.35,
-              }}
-            >
-              {(() => {
-                let wi = 0;
-                return sc.rows.map((row, li) => (
-                  <div
-                    key={li}
-                    style={{
-                      position: "absolute",
-                      left: row.left,
-                      top: row.y,
-                      height: sc.lh,
-                      lineHeight: `${sc.lh}px`,
-                      fontFamily: inter.fontFamily,
-                      fontWeight: 500,
-                      fontSize: sc.fs,
-                      letterSpacing: `${TRACK}em`,
-                      color: fg,
-                      whiteSpace: "nowrap",
-                      display: "flex",
-                      fontVariantLigatures: "none",
-                    }}
-                  >
-                    {row.words.map((w, j) => {
-                      const idx = wi++;
-                      const u = interpolate(
-                        frame,
-                        [
-                          starts[k] + idx * STAGGER,
-                          starts[k] + idx * STAGGER + RISE,
-                        ],
-                        [0, 1],
-                        { ...CLAMP, easing: EASE_OUT },
-                      );
-                      return (
-                        <span
-                          key={j}
-                          style={{
-                            display: "inline-block",
-                            overflow: "hidden",
-                            height: sc.lh + sc.fs * 0.1,
-                            paddingRight: "0.04em",
-                            marginRight:
-                              j < row.words.length - 1
-                                ? `${(INTER_TIGHT_500[0] / 1000 + TRACK - 0.04).toFixed(3)}em`
-                                : "-0.04em",
-                          }}
-                        >
+            {grain ? (
+              <Grain
+                opacity={sc.beam ? 0.07 : theme === "dark" ? 0.05 : 0.035}
+              />
+            ) : null}
+            <ScaleLayer scale={scale}>
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  transform: `scale(${(1 - sink * 0.05 + settle * 0.02).toFixed(4)})`,
+                  transformOrigin: `${sc.point.x}px ${sc.point.y}px`,
+                  opacity: 1 - sink * 0.35,
+                }}
+              >
+                {(() => {
+                  let wi = 0;
+                  return sc.rows.map((row, li) => (
+                    <div
+                      key={li}
+                      style={{
+                        position: "absolute",
+                        left: row.left,
+                        top: row.y,
+                        height: sc.lh,
+                        lineHeight: `${sc.lh}px`,
+                        fontFamily,
+                        fontWeight: 500,
+                        fontSize: sc.fs,
+                        letterSpacing: `${TRACK}em`,
+                        color: fg,
+                        whiteSpace: "nowrap",
+                        display: "flex",
+                        fontVariantLigatures: "none",
+                      }}
+                    >
+                      {row.words.map((w, j) => {
+                        const idx = wi++;
+                        const u = interpolate(
+                          frame,
+                          [
+                            starts[k] + idx * STAGGER,
+                            starts[k] + idx * STAGGER + RISE,
+                          ],
+                          [0, 1],
+                          { ...CLAMP, easing: EASE_OUT },
+                        );
+                        return (
                           <span
+                            key={j}
                             style={{
                               display: "inline-block",
-                              transform: `translateY(${((1 - u) * 118).toFixed(2)}%)`,
+                              overflow: "hidden",
+                              height: sc.lh + sc.fs * 0.1,
+                              paddingRight: "0.04em",
+                              marginRight:
+                                j < row.words.length - 1
+                                  ? `${(em(" ") - 0.04).toFixed(3)}em`
+                                  : "-0.04em",
                             }}
                           >
-                            {w}
+                            <span
+                              style={{
+                                display: "inline-block",
+                                transform: `translateY(${((1 - u) * 118).toFixed(2)}%)`,
+                              }}
+                            >
+                              {w}
+                            </span>
                           </span>
-                        </span>
-                      );
-                    })}
-                  </div>
-                ));
-              })()}
-              <svg
-                width={width}
-                height={height}
-                style={{ position: "absolute", inset: 0, overflow: "visible" }}
-                aria-hidden
-              >
-                {rings.map((ring, i) => (
-                  <circle
-                    key={i}
-                    cx={sc.point.x}
-                    cy={sc.point.y}
-                    r={ring.r}
-                    fill="none"
-                    stroke={fill}
-                    strokeWidth={Math.max(1, 1.6 * s)}
-                    opacity={ring.o}
-                  />
-                ))}
-                {drop > 0 ? (
-                  <circle
-                    cx={sc.point.x}
-                    cy={sc.point.y - (1 - drop) * sc.fs * 0.35}
-                    r={sc.point.r * dotScale}
-                    fill={fill}
-                    opacity={Math.min(1, drop * 2)}
-                  />
-                ) : null}
-              </svg>
-            </div>
+                        );
+                      })}
+                    </div>
+                  ));
+                })()}
+                <svg
+                  width={width}
+                  height={height}
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    overflow: "visible",
+                  }}
+                  aria-hidden
+                >
+                  {rings.map((ring, i) => (
+                    <circle
+                      key={i}
+                      cx={sc.point.x}
+                      cy={sc.point.y}
+                      r={ring.r}
+                      fill="none"
+                      stroke={fill}
+                      strokeWidth={Math.max(1, 1.6 * s)}
+                      opacity={ring.o}
+                    />
+                  ))}
+                  {drop > 0 ? (
+                    <circle
+                      cx={sc.point.x}
+                      cy={sc.point.y - (1 - drop) * sc.fs * 0.35}
+                      r={sc.point.r * dotScale}
+                      fill={fill}
+                      opacity={Math.min(1, drop * 2)}
+                    />
+                  ) : null}
+                </svg>
+              </div>
+            </ScaleLayer>
           </div>
         );
       })}

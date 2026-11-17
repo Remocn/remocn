@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const hiddenWordConfig: ComponentConfig = {
   componentName: "HiddenWord",
@@ -13,11 +19,6 @@ export const hiddenWordConfig: ComponentConfig = {
       },
       description: "Theme",
     },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
-    },
     text: {
       type: "text-content",
       default:
@@ -29,6 +30,21 @@ export const hiddenWordConfig: ComponentConfig = {
       default: "ship",
       description: "Word",
     },
+    stagger: {
+      type: "number",
+      default: 6,
+      min: 0,
+      max: 20,
+      step: 1,
+      description: "Letter stagger",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Hanken Grotesk", grain: true }),
     speed: {
       type: "number",
       default: 1,

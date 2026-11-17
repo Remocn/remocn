@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const bossBarConfig: ComponentConfig = {
   componentName: "BossBar",
@@ -13,11 +19,6 @@ export const bossBarConfig: ComponentConfig = {
       },
       description: "Theme",
     },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
-    },
     boss: {
       type: "text-content",
       default: "THE OLD WORKFLOW",
@@ -28,6 +29,26 @@ export const bossBarConfig: ComponentConfig = {
       default: "DEFEATED",
       description: "Defeated",
     },
+    tag: {
+      type: "text-content",
+      default: "BOSS",
+      description: "Tag",
+    },
+    hitGap: {
+      type: "number",
+      default: 26,
+      min: 10,
+      max: 60,
+      step: 1,
+      description: "Hit gap (frames)",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Chakra Petch" }),
     speed: {
       type: "number",
       default: 1,

@@ -1,4 +1,11 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const looksLikeThisConfig: ComponentConfig = {
   componentName: "LooksLikeThis",
@@ -33,6 +40,27 @@ export const looksLikeThisConfig: ComponentConfig = {
       default: "0:30",
       description: "Duration",
     },
+    stagger: {
+      type: "number",
+      default: 2.5,
+      min: 0,
+      max: 10,
+      step: 0.5,
+      description: "Word stagger",
+      hiddenFromList: false,
+    },
+    radius: {
+      type: "number",
+      default: 16,
+      min: 0,
+      max: 48,
+      step: 1,
+      description: "Corner radius",
+      hiddenFromList: false,
+    },
+    accent: { type: "color", default: undefined, description: "Accent" },
+    ground: groundControl(),
+    ...sceneControls({ font: "Onest" }),
     speed: {
       type: "number",
       default: 1,

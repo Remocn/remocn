@@ -25,8 +25,23 @@ export interface IndexListProps {
   items?: string[];
   highlight?: number;
   title?: string;
+  /** Word after the item count in the top-right corner. */
+  countLabel?: string;
   logo?: React.ReactNode;
+  /** Frames between rows as the list builds. */
+  stagger?: number;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Hanken Grotesk by default. */
+  fontFamily?: string;
+  /** Size of the list, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  /** Film grain over the scene. */
+  grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -168,6 +183,8 @@ interface RowsProps {
   nameX: number;
   numColor: string;
   nameColor: string;
+  fontFamily: string;
+  stagger: number;
 }
 
 function Rows({
@@ -180,6 +197,8 @@ function Rows({
   nameX,
   numColor,
   nameColor,
+  fontFamily,
+  stagger,
 }: RowsProps) {
   const maskH = F * 1.24;
   const cell = (
@@ -193,8 +212,8 @@ function Rows({
     const p = interpolate(
       t,
       [
-        RULE_START + 8 + i * STAGGER + delay,
-        RULE_START + 26 + i * STAGGER + delay,
+        RULE_START + 8 + i * stagger + delay,
+        RULE_START + 26 + i * stagger + delay,
       ],
       [0, 1],
       { ...CLAMP, easing: EASE_OUT },
@@ -238,7 +257,7 @@ function Rows({
             i,
             0,
             {
-              fontFamily: hanken,
+              fontFamily,
               fontWeight: 400,
               letterSpacing: "-0.02em",
               fontVariantNumeric: "tabular-nums",
@@ -252,7 +271,7 @@ function Rows({
             i,
             2,
             {
-              fontFamily: hanken,
+              fontFamily,
               fontWeight: 500,
               letterSpacing: "-0.03em",
               color: nameColor,
@@ -265,19 +284,46 @@ function Rows({
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function IndexList({
   items = DEFAULT_ITEMS,
   highlight = 3,
   title = "What’s inside 3.0",
+  countLabel = "features",
   logo,
+  stagger = STAGGER,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = hanken,
+  scale = 1,
+  delay = 0,
+  grain = true,
   theme = "dark",
   speed = 1,
 }: IndexListProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const u = H / 720;
   const c = THEMES[theme];
+  const fg = ink ?? c.fg;
+  const stage =
+    background === "transparent" ? "transparent" : (background ?? c.bg);
   const n = Math.max(1, items.length);
   const hl = Math.min(Math.max(0, Math.round(highlight)), n - 1);
 
@@ -299,7 +345,7 @@ export function IndexList({
   const rule = (i: number) =>
     interpolate(
       t,
-      [RULE_START + i * STAGGER, RULE_START + 22 + i * STAGGER],
+      [RULE_START + i * stagger, RULE_START + 22 + i * stagger],
       [0, 1],
       { ...CLAMP, easing: EASE_IO },
     );
@@ -336,7 +382,17 @@ export function IndexList({
     easing: Easing.bezier(0.33, 0, 0.2, 1),
   });
 
-  const rowsProps = { items, t, rowTop, rowH, F, numX, nameX };
+  const rowsProps = {
+    items,
+    t,
+    rowTop,
+    rowH,
+    F,
+    numX,
+    nameX,
+    fontFamily,
+    stagger,
+  };
   const arrowSize = F * 0.78;
   const dim = interpolate(t, [parkedAt - 2, parkedAt + 18], [1, 0.42], {
     ...CLAMP,
@@ -344,128 +400,132 @@ export function IndexList({
   });
 
   return (
-    <AbsoluteFill style={{ background: c.bg, overflow: "hidden" }}>
-      <AbsoluteFill
-        style={{
-          background: `radial-gradient(ellipse 70% 80% at 30% 30%, ${c.key}, transparent 70%)`,
-        }}
-      />
-      <AbsoluteFill
-        style={{ transform: `scale(${push})`, transformOrigin: "50% 45%" }}
-      >
-        <div
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
+      {background === undefined ? (
+        <AbsoluteFill
           style={{
-            position: "absolute",
-            left: mX,
-            top: headerY,
-            display: "flex",
-            alignItems: "baseline",
-            gap: 14 * u,
-            fontFamily: hanken,
-            fontWeight: 400,
-            fontSize: 19 * u,
-            lineHeight: 1,
-            letterSpacing: "-0.01em",
-            color: c.muted,
-            opacity: head(0),
-            transform: `translateY(${(1 - head(0)) * 10 * u}px)`,
+            background: `radial-gradient(ellipse 70% 80% at 30% 30%, ${c.key}, transparent 70%)`,
           }}
+        />
+      ) : null}
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill
+          style={{ transform: `scale(${push})`, transformOrigin: "50% 45%" }}
         >
-          {logo ?? <RemocnLogo fontSize={24 * u} color={c.fg} />}
-          <span
+          <div
             style={{
-              width: hair,
-              height: 18 * u,
-              background: c.hair,
-              alignSelf: "center",
+              position: "absolute",
+              left: mX,
+              top: headerY,
+              display: "flex",
+              alignItems: "baseline",
+              gap: 14 * u,
+              fontFamily,
+              fontWeight: 400,
+              fontSize: 19 * u,
+              lineHeight: 1,
+              letterSpacing: "-0.01em",
+              color: c.muted,
+              opacity: head(0),
+              transform: `translateY(${(1 - head(0)) * 10 * u}px)`,
             }}
-          />
-          {title}
-        </div>
-        <div
-          style={{
-            position: "absolute",
-            right: mX,
-            top: headerY,
-            height: 24 * u,
-            display: "flex",
-            alignItems: "center",
-            fontFamily: hanken,
-            fontWeight: 400,
-            fontSize: 18 * u,
-            lineHeight: 1,
-            letterSpacing: "-0.01em",
-            fontVariantNumeric: "tabular-nums",
-            color: c.muted,
-            opacity: head(4),
-            transform: `translateY(${(1 - head(4)) * 10 * u}px)`,
-          }}
-        >
-          {`${pad(n)} features`}
-        </div>
-
-        {Array.from({ length: n + 1 }, (_, i) => {
-          const strong = i === 0;
-          const th = strong ? 2 * u : hair;
-          return (
-            <div
-              key={`r${i}`}
+          >
+            {logo ?? <RemocnLogo fontSize={24 * u} color={fg} />}
+            <span
               style={{
-                position: "absolute",
-                left: mX,
-                top: rowTop(i) - th / 2,
-                width: cw * rule(i),
-                height: th,
-                background: strong ? c.rule : c.hair,
+                width: hair,
+                height: 18 * u,
+                background: c.hair,
+                alignSelf: "center",
               }}
             />
-          );
-        })}
+            {title}
+          </div>
+          <div
+            style={{
+              position: "absolute",
+              right: mX,
+              top: headerY,
+              height: 24 * u,
+              display: "flex",
+              alignItems: "center",
+              fontFamily,
+              fontWeight: 400,
+              fontSize: 18 * u,
+              lineHeight: 1,
+              letterSpacing: "-0.01em",
+              fontVariantNumeric: "tabular-nums",
+              color: c.muted,
+              opacity: head(4),
+              transform: `translateY(${(1 - head(4)) * 10 * u}px)`,
+            }}
+          >
+            {`${pad(n)} ${countLabel}`}
+          </div>
 
-        <div style={{ position: "absolute", inset: 0, opacity: dim }}>
-          <Rows {...rowsProps} numColor={c.muted} nameColor={c.fg} />
-        </div>
+          {Array.from({ length: n + 1 }, (_, i) => {
+            const strong = i === 0;
+            const th = strong ? 2 * u : hair;
+            return (
+              <div
+                key={`r${i}`}
+                style={{
+                  position: "absolute",
+                  left: mX,
+                  top: rowTop(i) - th / 2,
+                  width: cw * rule(i),
+                  height: th,
+                  background: strong ? c.rule : c.hair,
+                }}
+              />
+            );
+          })}
 
-        {wipe > 0 ? (
-          <>
-            <div
-              style={{
-                position: "absolute",
-                left: bLeft,
-                top: bTop,
-                width: bRight - bLeft,
-                height: bBottom - bTop,
-                backgroundImage: beamFill(t, accent),
-              }}
-            />
-            <div
-              style={{
-                position: "absolute",
-                inset: 0,
-                clipPath: `inset(${bTop}px ${W - bRight}px ${H - bBottom}px ${bLeft}px)`,
-              }}
-            >
-              <Rows
-                {...rowsProps}
-                numColor="rgba(255,255,255,0.62)"
-                nameColor={c.onAccent}
+          <div style={{ position: "absolute", inset: 0, opacity: dim }}>
+            <Rows {...rowsProps} numColor={c.muted} nameColor={fg} />
+          </div>
+
+          {wipe > 0 ? (
+            <>
+              <div
+                style={{
+                  position: "absolute",
+                  left: bLeft,
+                  top: bTop,
+                  width: bRight - bLeft,
+                  height: bBottom - bTop,
+                  backgroundImage: beamFill(t, accent),
+                }}
               />
               <div
                 style={{
                   position: "absolute",
-                  left: W - mX - inset - arrowSize,
-                  top: rowTop(hl) + rowH / 2 - arrowSize / 2,
-                  opacity: arrowP,
-                  transform: `translateX(${(1 - arrowP) * -24 * u}px)`,
+                  inset: 0,
+                  clipPath: `inset(${bTop}px ${W - bRight}px ${H - bBottom}px ${bLeft}px)`,
                 }}
               >
-                <Arrow size={arrowSize} color={c.onAccent} />
+                <Rows
+                  {...rowsProps}
+                  numColor="rgba(255,255,255,0.62)"
+                  nameColor={c.onAccent}
+                />
+                <div
+                  style={{
+                    position: "absolute",
+                    left: W - mX - inset - arrowSize,
+                    top: rowTop(hl) + rowH / 2 - arrowSize / 2,
+                    opacity: arrowP,
+                    transform: `translateX(${(1 - arrowP) * -24 * u}px)`,
+                  }}
+                >
+                  <Arrow size={arrowSize} color={c.onAccent} />
+                </div>
               </div>
-            </div>
-          </>
-        ) : null}
-      </AbsoluteFill>
-      <Grain opacity={c.grain} />
+            </>
+          ) : null}
+        </AbsoluteFill>
+      </ScaleLayer>
+      {grain ? <Grain opacity={c.grain} /> : null}
     </AbsoluteFill>
   );
 }

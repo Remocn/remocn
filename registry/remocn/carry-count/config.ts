@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const carryCountConfig: ComponentConfig = {
   componentName: "CarryCount",
@@ -45,6 +51,22 @@ export const carryCountConfig: ComponentConfig = {
       description: "Steps",
       hiddenFromList: false,
     },
+    separator: {
+      type: "text-content",
+      default: ",",
+      description: "Separator",
+    },
+    fontWeight: {
+      type: "number",
+      default: 500,
+      min: 100,
+      max: 900,
+      step: 100,
+      description: "Weight",
+      hiddenFromList: false,
+    },
+    accent: { type: "color", default: undefined, description: "Accent" },
+    ...sceneControls({ font: "Nunito" }),
     speed: {
       type: "number",
       default: 1,

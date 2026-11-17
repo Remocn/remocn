@@ -1,8 +1,21 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const promptSwellConfig: ComponentConfig = {
   componentName: "PromptSwell",
   importPath: "@/components/remocn/prompt-swell",
+  lists: {
+    steps: {
+      default: ["Hero with product shot", "Pricing tiers", "Waitlist form"],
+      description: "Steps",
+    },
+  },
   controls: {
     theme: {
       type: "enum",
@@ -12,11 +25,6 @@ export const promptSwellConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#ff7a3d",
-      description: "Accent",
     },
     prompt: {
       type: "text-content",
@@ -28,6 +36,37 @@ export const promptSwellConfig: ComponentConfig = {
       type: "text-content",
       default: "preview.remocn.dev",
       description: "Url",
+    },
+    headline: {
+      type: "text-content",
+      default: "Launch videos, built from code.",
+      description: "Headline",
+    },
+    pricingTitle: {
+      type: "text-content",
+      default: "Simple pricing",
+      description: "Pricing title",
+    },
+    ctaLabel: {
+      type: "text-content",
+      default: "Join waitlist",
+      description: "Button",
+    },
+    accent: {
+      type: "color",
+      default: "#ff7a3d",
+      description: "Accent",
+    },
+    ground: groundControl(),
+    ...sceneControls({ font: "Geist" }),
+    speed: {
+      type: "number",
+      default: 1,
+      min: 0.25,
+      max: 4,
+      step: 0.25,
+      description: "Speed",
+      hiddenFromList: false,
     },
   },
   durationInFrames: 156,

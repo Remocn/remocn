@@ -1,6 +1,7 @@
 "use client";
 
 import { loadFont as loadRubik } from "@remotion/google-fonts/Rubik";
+import type React from "react";
 import {
   AbsoluteFill,
   Easing,
@@ -24,6 +25,20 @@ export interface MenuPickProps {
   pick?: number;
   accent?: string;
   background?: string;
+  /** Hint next to the B key in the footer. */
+  backLabel?: string;
+  /** Hint next to the A key in the footer. */
+  selectLabel?: string;
+  /** Frames between rows as the menu builds. */
+  stagger?: number;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
+  /** Typeface for the menu. Load it yourself; Rubik by default. */
+  fontFamily?: string;
+  /** Size of the menu, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
   ground?: GshPresetId;
@@ -127,20 +142,44 @@ function Chevron({ size, color }: { size: number; color: string }) {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function MenuPick({
   prompt = "Choose your launch",
   options = ["Keyframe every beat", "Wait on an agency", "Install the scenes"],
   pick = 2,
   accent = RED,
   background,
+  backLabel = "Back",
+  selectLabel = "Select",
+  stagger = ROW_IN,
+  ink,
+  fontFamily = rubik.fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
   ground,
   groundParams,
 }: MenuPickProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const c = THEMES[theme];
+  const fg = ink ?? c.ink;
   const list = options.length > 0 ? options : ["Start"];
   const n = list.length;
   const chosen = Math.max(0, Math.min(n - 1, Math.round(pick)));
@@ -206,7 +245,7 @@ export function MenuPick({
   });
   const footIn = interpolate(
     t,
-    [ROWS_AT + n * ROW_IN, ROWS_AT + n * ROW_IN + 12],
+    [ROWS_AT + n * stagger, ROWS_AT + n * stagger + 12],
     [0, 1],
     {
       ...CLAMP,
@@ -215,10 +254,15 @@ export function MenuPick({
   );
 
   const rowIn = (i: number) =>
-    interpolate(t, [ROWS_AT + i * ROW_IN, ROWS_AT + i * ROW_IN + 12], [0, 1], {
-      ...CLAMP,
-      easing: EASE_ENTER,
-    });
+    interpolate(
+      t,
+      [ROWS_AT + i * stagger, ROWS_AT + i * stagger + 12],
+      [0, 1],
+      {
+        ...CLAMP,
+        easing: EASE_ENTER,
+      },
+    );
 
   const barY = rowsTop + pos * rowH;
 
@@ -242,12 +286,12 @@ export function MenuPick({
             justifyContent: "space-between",
             opacity: p * (onBar ? 1 : dim),
             transform: `translateY(${(1 - p) * rowH * 0.3}px)`,
-            color: onBar ? c.onAccent : c.ink,
+            color: onBar ? c.onAccent : fg,
           }}
         >
           <span
             style={{
-              fontFamily: rubik.fontFamily,
+              fontFamily,
               fontWeight: 400,
               fontSize: F,
               lineHeight: 1,
@@ -280,7 +324,7 @@ export function MenuPick({
           alignItems: "center",
           justifyContent: "center",
           fontSize: smallFs * 0.82,
-          color: c.ink,
+          color: fg,
         }}
       >
         {k}
@@ -304,107 +348,109 @@ export function MenuPick({
           timeScale={0.5}
         />
       )}
-      <div
-        style={{
-          position: "absolute",
-          left: panelX,
-          top: panelY,
-          width: panelW,
-          height: panelH,
-          borderRadius: panelR,
-          backgroundColor: c.panel,
-          boxShadow: c.depth,
-          opacity: panelO,
-          transform: `translateY(${(1 - panelIn) * H * 0.05}px) scale(${0.97 + 0.03 * panelIn})`,
-          fontFamily: rubik.fontFamily,
-          overflow: "hidden",
-        }}
-      >
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            left: panelPad + rowPadX,
-            right: panelPad + rowPadX,
-            top: panelPad,
-            height: headH,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            fontWeight: 400,
-            fontSize: smallFs,
-            letterSpacing: "-0.005em",
-            color: c.soft,
-            opacity: headIn,
-            transform: `translateY(${(1 - headIn) * smallFs * 0.6}px)`,
+            left: panelX,
+            top: panelY,
+            width: panelW,
+            height: panelH,
+            borderRadius: panelR,
+            backgroundColor: c.panel,
+            boxShadow: c.depth,
+            opacity: panelO,
+            transform: `translateY(${(1 - panelIn) * H * 0.05}px) scale(${0.97 + 0.03 * panelIn})`,
+            fontFamily,
+            overflow: "hidden",
           }}
         >
-          <span style={{ color: c.ink }}>{prompt}</span>
-          <span style={{ fontVariantNumeric: "tabular-nums" }}>
-            {`${Math.min(n, Math.round(pos) + 1)} / ${n}`}
-          </span>
-        </div>
-        {list.slice(1).map((label, i) => (
           <div
-            key={`d-${label}`}
             style={{
               position: "absolute",
               left: panelPad + rowPadX,
               right: panelPad + rowPadX,
-              top: rowsTop + (i + 1) * rowH,
-              height: 1,
-              backgroundColor: c.faint,
-              opacity: rowIn(i + 1),
+              top: panelPad,
+              height: headH,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              fontWeight: 400,
+              fontSize: smallFs,
+              letterSpacing: "-0.005em",
+              color: c.soft,
+              opacity: headIn,
+              transform: `translateY(${(1 - headIn) * smallFs * 0.6}px)`,
             }}
-          />
-        ))}
-        {rowText(false)}
-        <div
-          style={{
-            position: "absolute",
-            left: panelPad,
-            top: barY,
-            width: rowW,
-            height: rowH,
-            borderRadius: rowR,
-            overflow: "hidden",
-            backgroundColor: accent,
-            opacity: blinkOff ? 0 : cursorIn,
-            transform: `scale(${barScale * (0.96 + 0.04 * cursorIn)})`,
-          }}
-        >
+          >
+            <span style={{ color: fg }}>{prompt}</span>
+            <span style={{ fontVariantNumeric: "tabular-nums" }}>
+              {`${Math.min(n, Math.round(pos) + 1)} / ${n}`}
+            </span>
+          </div>
+          {list.slice(1).map((label, i) => (
+            <div
+              key={`d-${label}`}
+              style={{
+                position: "absolute",
+                left: panelPad + rowPadX,
+                right: panelPad + rowPadX,
+                top: rowsTop + (i + 1) * rowH,
+                height: 1,
+                backgroundColor: c.faint,
+                opacity: rowIn(i + 1),
+              }}
+            />
+          ))}
+          {rowText(false)}
           <div
             style={{
               position: "absolute",
-              left: -panelPad,
-              top: -barY,
-              width: panelW,
-              height: panelH,
+              left: panelPad,
+              top: barY,
+              width: rowW,
+              height: rowH,
+              borderRadius: rowR,
+              overflow: "hidden",
+              backgroundColor: accent,
+              opacity: blinkOff ? 0 : cursorIn,
+              transform: `scale(${barScale * (0.96 + 0.04 * cursorIn)})`,
             }}
           >
-            {rowText(true)}
+            <div
+              style={{
+                position: "absolute",
+                left: -panelPad,
+                top: -barY,
+                width: panelW,
+                height: panelH,
+              }}
+            >
+              {rowText(true)}
+            </div>
+          </div>
+          <div
+            style={{
+              position: "absolute",
+              left: panelPad + rowPadX,
+              right: panelPad + rowPadX,
+              bottom: panelPad,
+              height: footH,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "flex-end",
+              gap: smallFs * 1.6,
+              fontWeight: 400,
+              fontSize: smallFs,
+              color: c.soft,
+              opacity: footIn,
+            }}
+          >
+            <Key k="B" label={backLabel} />
+            <Key k="A" label={selectLabel} />
           </div>
         </div>
-        <div
-          style={{
-            position: "absolute",
-            left: panelPad + rowPadX,
-            right: panelPad + rowPadX,
-            bottom: panelPad,
-            height: footH,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "flex-end",
-            gap: smallFs * 1.6,
-            fontWeight: 400,
-            fontSize: smallFs,
-            color: c.soft,
-            opacity: footIn,
-          }}
-        >
-          <Key k="B" label="Back" />
-          <Key k="A" label="Select" />
-        </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { loadFont } from "@remotion/google-fonts/Manrope";
+import type React from "react";
 import { useId, useMemo } from "react";
 import {
   AbsoluteFill,
@@ -21,6 +22,21 @@ export interface LetterRelayProps {
   /** Frames per hop; the next letter takes off as the previous one lands. */
   hop?: number;
   accent?: string;
+  /** Text color of the resting letters; overrides the theme ink. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the word. Spacing is measured for Manrope 500; load it yourself. */
+  fontFamily?: string;
+  /** Height of each hop, as a fraction of the letter size. */
+  lift?: number;
+  /** Light pool on the floor the letters land on. */
+  floor?: boolean;
+  /** Size of the word, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
   /** Set the leading "r" as the remocn R mark. */
@@ -195,17 +211,42 @@ function Grain({ opacity }: { opacity: number }) {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function LetterRelay({
   word = "remocn",
   hop = 10,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = sans,
+  lift: liftK = LIFT,
+  floor = true,
+  scale = 1,
+  delay = 0,
+  grain = true,
   theme = "dark",
   speed = 1,
   mark = true,
 }: LetterRelayProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
+  const fg = ink ?? c.fg;
 
   const chars = useMemo(() => Array.from(word), [word]);
   const n = chars.length;
@@ -247,8 +288,13 @@ export function LetterRelay({
     ...CLAMP,
     easing: EASE_IO,
   });
-  const poolX = 50 + ((activeX * F) / W) * 100 * 0.22 * drift;
-  const floorTop = baseline + F * 0.09;
+  // The floor stays out of the scale layer (it runs to the frame's edges), so
+  // it follows the scaled baseline instead.
+  const poolX = 50 + ((activeX * F) / W) * 100 * 0.22 * drift * scale;
+  const floorTop =
+    scale === 1
+      ? baseline + F * 0.09
+      : H / 2 + (baseline + F * 0.09 - H / 2) * scale;
   const mask = `radial-gradient(58% 140% at ${poolX}% 0%, #000 35%, transparent 100%)`;
   const poolIn = interpolate(t, [0, 24], [0, 1], {
     ...CLAMP,
@@ -256,124 +302,134 @@ export function LetterRelay({
   });
 
   return (
-    <AbsoluteFill style={{ background: c.bg, overflow: "hidden" }}>
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          right: 0,
-          top: floorTop,
-          bottom: 0,
-          opacity: poolIn,
-          background: `linear-gradient(180deg, ${c.floor[0]} 0%, ${c.floor[1]} 4%, ${c.floor[2]} 38%, ${c.floor[3]} 100%)`,
-          maskImage: mask,
-          WebkitMaskImage: mask,
-        }}
-      />
-      <div
-        style={{
-          position: "absolute",
-          left: W / 2,
-          top: baseline,
-          fontFamily: sans,
-          fontWeight: 500,
-          fontSize: F,
-          fontKerning: "none",
-        }}
-      >
-        {chars.map((ch, i) => {
-          const last = i === n - 1;
-          const start = HOP_AT + i * hop;
-          const land = start + hop;
+    <AbsoluteFill
+      style={{
+        background:
+          background === "transparent" ? undefined : (background ?? c.bg),
+        overflow: "hidden",
+      }}
+    >
+      {floor ? (
+        <div
+          style={{
+            position: "absolute",
+            left: 0,
+            right: 0,
+            top: floorTop,
+            bottom: 0,
+            opacity: poolIn,
+            background: `linear-gradient(180deg, ${c.floor[0]} 0%, ${c.floor[1]} 4%, ${c.floor[2]} 38%, ${c.floor[3]} 100%)`,
+            maskImage: mask,
+            WebkitMaskImage: mask,
+          }}
+        />
+      ) : null}
+      <ScaleLayer scale={scale}>
+        <div
+          style={{
+            position: "absolute",
+            left: W / 2,
+            top: baseline,
+            fontFamily,
+            fontWeight: 500,
+            fontSize: F,
+            fontKerning: "none",
+          }}
+        >
+          {chars.map((ch, i) => {
+            const last = i === n - 1;
+            const start = HOP_AT + i * hop;
+            const land = start + hop;
 
-          const enter = interpolate(t, [i * 2, i * 2 + 14], [0, 1], {
-            ...CLAMP,
-            easing: EASE_OUT,
-          });
+            const enter = interpolate(t, [i * 2, i * 2 + 14], [0, 1], {
+              ...CLAMP,
+              easing: EASE_OUT,
+            });
 
-          const p = interpolate(t, [start, land], [0, 1], CLAMP);
-          const air = p > 0 && p < 1;
-          const lift = F * LIFT * (last ? 1.25 : 1);
-          const arc = air ? 4 * p * (1 - p) : 0;
+            const p = interpolate(t, [start, land], [0, 1], CLAMP);
+            const air = p > 0 && p < 1;
+            const lift = F * liftK * (last ? 1.25 : 1);
+            const arc = air ? 4 * p * (1 - p) : 0;
 
-          const crouch = interpolate(t, [start - 3, start], [0, 1], {
-            ...CLAMP,
-            easing: EASE_OUT,
-          });
-          const release = interpolate(p, [0, 0.2], [1, 0], CLAMP);
-          const stretch = air ? 0.11 * Math.sin(Math.PI * p) * (1 - p) : 0;
-          const hit = squash(t - land) * 0.085;
-          const sy = 1 - 0.06 * crouch * release + stretch - hit;
-          const sx = 1 + 0.04 * crouch * release - stretch * 0.6 + hit * 0.7;
+            const crouch = interpolate(t, [start - 3, start], [0, 1], {
+              ...CLAMP,
+              easing: EASE_OUT,
+            });
+            const release = interpolate(p, [0, 0.2], [1, 0], CLAMP);
+            const stretch = air ? 0.11 * Math.sin(Math.PI * p) * (1 - p) : 0;
+            const hit = squash(t - land) * 0.085;
+            const sy = 1 - 0.06 * crouch * release + stretch - hit;
+            const sx = 1 + 0.04 * crouch * release - stretch * 0.6 + hit * 0.7;
 
-          const rot = air ? 5 * Math.sin(Math.PI * p) * (1 - 0.35 * p) : 0;
+            const rot = air ? 5 * Math.sin(Math.PI * p) * (1 - 0.35 * p) : 0;
 
-          const take = interpolate(t, [start - 2, start + 2], [0, 1], {
-            ...CLAMP,
-            easing: EASE_OUT,
-          });
-          const give = last
-            ? 0
-            : interpolate(t, [land - 1, land + 5], [0, 1], {
-                ...CLAMP,
-                easing: EASE_OUT,
-              });
-          const color = interpolateColors(
-            take * (1 - give),
-            [0, 1],
-            [c.fg, accent],
-          );
+            const take = interpolate(t, [start - 2, start + 2], [0, 1], {
+              ...CLAMP,
+              easing: EASE_OUT,
+            });
+            const give = last
+              ? 0
+              : interpolate(t, [land - 1, land + 5], [0, 1], {
+                  ...CLAMP,
+                  easing: EASE_OUT,
+                });
+            const color = interpolateColors(
+              take * (1 - give),
+              [0, 1],
+              [fg, accent],
+            );
 
-          const ox = isMark(i) ? R_W / 2 : inkCenter(ch);
-          const x = (xAt(i) + ox) * F;
-          const y = -lift * arc + (1 - enter) * F * 0.16;
+            const ox = isMark(i) ? R_W / 2 : inkCenter(ch);
+            const x = (xAt(i) + ox) * F;
+            const y = -lift * arc + (1 - enter) * F * 0.16;
 
-          return (
-            <div
-              key={`${i}-${ch}`}
-              style={{
-                position: "absolute",
-                left: 0,
-                top: 0,
-                color,
-                opacity: enter,
-                transformOrigin: "0 0",
-                transform: `translate(${x}px, ${y}px) rotate(${rot}deg) scale(${sx}, ${sy})`,
-              }}
-            >
-              {isMark(i) ? (
-                <svg
-                  viewBox="0 0 124.06 134.26"
-                  width={R_W * F}
-                  height={R_H * F}
-                  style={{
-                    position: "absolute",
-                    left: -ox * F,
-                    top: -R_H * F,
-                    display: "block",
-                  }}
-                  aria-hidden
-                >
-                  <path fill="currentColor" d={REMOCN_R_PATH} />
-                </svg>
-              ) : (
-                <span
-                  style={{
-                    position: "absolute",
-                    left: -ox * F,
-                    top: -ASC * F,
-                    lineHeight: LINE,
-                    whiteSpace: "pre",
-                  }}
-                >
-                  {ch}
-                </span>
-              )}
-            </div>
-          );
-        })}
-      </div>
-      <Grain opacity={c.grain} />
+            return (
+              <div
+                key={`${i}-${ch}`}
+                style={{
+                  position: "absolute",
+                  left: 0,
+                  top: 0,
+                  color,
+                  opacity: enter,
+                  transformOrigin: "0 0",
+                  transform: `translate(${x}px, ${y}px) rotate(${rot}deg) scale(${sx}, ${sy})`,
+                }}
+              >
+                {isMark(i) ? (
+                  <svg
+                    viewBox="0 0 124.06 134.26"
+                    width={R_W * F}
+                    height={R_H * F}
+                    style={{
+                      position: "absolute",
+                      left: -ox * F,
+                      top: -R_H * F,
+                      display: "block",
+                    }}
+                    aria-hidden
+                  >
+                    <path fill="currentColor" d={REMOCN_R_PATH} />
+                  </svg>
+                ) : (
+                  <span
+                    style={{
+                      position: "absolute",
+                      left: -ox * F,
+                      top: -ASC * F,
+                      lineHeight: LINE,
+                      whiteSpace: "pre",
+                    }}
+                  >
+                    {ch}
+                  </span>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </ScaleLayer>
+      {grain ? <Grain opacity={c.grain} /> : null}
     </AbsoluteFill>
   );
 }

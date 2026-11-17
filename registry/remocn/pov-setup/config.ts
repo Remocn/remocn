@@ -1,4 +1,11 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const povSetupConfig: ComponentConfig = {
   componentName: "PovSetup",
@@ -12,11 +19,6 @@ export const povSetupConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     label: {
       type: "text-content",
@@ -38,6 +40,31 @@ export const povSetupConfig: ComponentConfig = {
       default: "slaps.",
       description: "Punch",
     },
+    stagger: {
+      type: "number",
+      default: 3,
+      min: 0,
+      max: 12,
+      step: 1,
+      description: "Word stagger",
+      hiddenFromList: false,
+    },
+    punchAt: {
+      type: "number",
+      default: 54,
+      min: 20,
+      max: 120,
+      step: 1,
+      description: "Punch at (frame)",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ground: groundControl(),
+    ...sceneControls({ font: "Sora" }),
     speed: {
       type: "number",
       default: 1,

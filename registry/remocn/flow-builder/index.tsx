@@ -42,8 +42,24 @@ export interface FlowBuilderProps {
   title?: string;
   workspace?: string;
   toast?: string;
+  /** Label of the publish button before it is pressed. */
+  publishLabel?: string;
+  /** Label of the publish button once the flow is live. */
+  publishedLabel?: string;
+  /** Frames between nodes as they drop onto the canvas. */
+  stagger?: number;
   theme?: "light" | "dark";
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Hanken Grotesk by default. */
+  fontFamily?: string;
+  /** Size of the window, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
@@ -338,24 +354,49 @@ function NodeCard({
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function FlowBuilder({
   nodes = DEFAULT_NODES,
   title = "Welcome new signups",
   workspace = "remocn",
   toast = "Live · runs on every signup",
+  publishLabel = "Publish",
+  publishedLabel = "Published",
+  stagger = B.nodeStep,
   theme = "light",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = hanken.fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   ground,
   groundParams,
 }: FlowBuilderProps) {
-  const frame = useCurrentFrame() * speed;
+  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, fps } = useVideoConfig();
   const tall = height > width;
   const SW = tall ? 720 : 1280;
   const SH = tall ? 1280 : 720;
   const u = Math.min(width / SW, height / SH);
-  const pal = palette(theme);
+  const base = palette(theme);
+  const pal = ink === undefined ? base : { ...base, text: ink };
   const sp = (at: number, config: typeof CARD, dur?: number) =>
     spring({ frame: frame - at, fps, config, durationInFrames: dur });
 
@@ -458,7 +499,7 @@ export function FlowBuilder({
     return { x: k("x"), y: k("y") };
   };
 
-  const dropAt = (i: number) => B.node + i * B.nodeStep;
+  const dropAt = (i: number) => B.node + i * stagger;
   const arriveAt = (d: number) => B.run + 4 + d * B.level;
   const checkAt = (d: number) => arriveAt(d) + 8;
   const runEnd = checkAt(maxDepth);
@@ -691,249 +732,259 @@ export function FlowBuilder({
   return (
     <AbsoluteFill
       style={{
-        fontFamily: hanken.fontFamily,
+        fontFamily,
         WebkitFontSmoothing: "antialiased",
         overflow: "hidden",
       }}
     >
-      <GshGround
-        preset={ground ?? (pal.dark ? "earthshine" : "glasswork")}
-        params={
-          groundParams ??
-          (pal.dark || ground
-            ? undefined
-            : { colors: ["#b9c8ff", "#3552ff", "#1d2f9e", "#8fb0ff"] })
-        }
-        timeOffset={pal.dark ? 7 : 6}
-        timeScale={0.4}
-      />
-      <div
-        style={{
-          position: "absolute",
-          left: (width - SW * u) / 2,
-          top: (height - SH * u) / 2,
-          width: SW,
-          height: SH,
-          transform: `scale(${u})`,
-          transformOrigin: "0 0",
-        }}
-      >
-        {tall ? (
+      {background === undefined ? (
+        <GshGround
+          preset={ground ?? (pal.dark ? "earthshine" : "glasswork")}
+          params={
+            groundParams ??
+            (pal.dark || ground
+              ? undefined
+              : { colors: ["#b9c8ff", "#3552ff", "#1d2f9e", "#8fb0ff"] })
+          }
+          timeOffset={pal.dark ? 7 : 6}
+          timeScale={0.4}
+        />
+      ) : (
+        <AbsoluteFill
+          style={{
+            background: background === "transparent" ? undefined : background,
+          }}
+        />
+      )}
+      <ScaleLayer scale={scale}>
+        <div
+          style={{
+            position: "absolute",
+            left: (width - SW * u) / 2,
+            top: (height - SH * u) / 2,
+            width: SW,
+            height: SH,
+            transform: `scale(${u})`,
+            transformOrigin: "0 0",
+          }}
+        >
+          {tall ? (
+            <div
+              style={{
+                position: "absolute",
+                left: WIN.x,
+                top: 150,
+                width: WIN.w,
+                opacity: headIn,
+                transform: `translateY(${(1 - headIn) * 18}px)`,
+                color: ink ?? (pal.dark ? "#F2F3F5" : "#16181D"),
+              }}
+            >
+              <div
+                style={{
+                  fontSize: 52,
+                  fontWeight: 300,
+                  letterSpacing: "-0.035em",
+                  lineHeight: 1.04,
+                }}
+              >
+                {title}
+              </div>
+            </div>
+          ) : null}
           <div
             style={{
               position: "absolute",
               left: WIN.x,
-              top: 150,
+              top: WIN.y,
               width: WIN.w,
-              opacity: headIn,
-              transform: `translateY(${(1 - headIn) * 18}px)`,
-              color: pal.dark ? "#F2F3F5" : "#16181D",
-            }}
-          >
-            <div
-              style={{
-                fontSize: 52,
-                fontWeight: 300,
-                letterSpacing: "-0.035em",
-                lineHeight: 1.04,
-              }}
-            >
-              {title}
-            </div>
-          </div>
-        ) : null}
-        <div
-          style={{
-            position: "absolute",
-            left: WIN.x,
-            top: WIN.y,
-            width: WIN.w,
-            height: WIN.h,
-            opacity: winFade,
-            transformOrigin: "50% 45%",
-            transform: `translateY(${(1 - win) * 60}px) scale(${(0.96 + 0.04 * win) * cam})`,
-          }}
-        >
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              borderRadius: 16,
-              overflow: "hidden",
-              background: pal.window,
-              boxShadow: pal.depth,
+              height: WIN.h,
+              opacity: winFade,
+              transformOrigin: "50% 45%",
+              transform: `translateY(${(1 - win) * 60}px) scale(${(0.96 + 0.04 * win) * cam})`,
             }}
           >
             <div
               style={{
                 position: "absolute",
-                left: 0,
-                top: 0,
-                right: 0,
-                height: BAR,
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-                padding: "0 18px",
-                boxShadow: `inset 0 -1px 0 ${pal.rule}`,
-                fontSize: 15,
+                inset: 0,
+                borderRadius: 16,
+                overflow: "hidden",
+                background: pal.window,
+                boxShadow: pal.depth,
               }}
             >
-              <span style={{ color: pal.muted }}>{workspace}</span>
-              <span style={{ color: pal.faint }}>/</span>
-              <span style={{ color: pal.text }}>
-                {tall ? "Workflows" : title}
-              </span>
               <div
-                style={{
-                  position: "relative",
-                  height: 24,
-                  padding: "0 9px",
-                  borderRadius: 7,
-                  fontSize: 13,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 6,
-                  background: published
-                    ? withAlpha(pal.success, 0.12)
-                    : pal.pill,
-                  color: published ? pal.success : pal.muted,
-                  transform: `scale(${published ? 0.9 + 0.1 * pubS : 1})`,
-                }}
-              >
-                {published ? (
-                  <div
-                    style={{
-                      width: 6,
-                      height: 6,
-                      borderRadius: 3,
-                      background: pal.success,
-                    }}
-                  />
-                ) : null}
-                {published ? "Live" : "Draft"}
-              </div>
-            </div>
-            <div
-              style={{
-                position: "absolute",
-                left: 0,
-                top: BAR,
-                right: 0,
-                bottom: 0,
-                background: pal.canvas,
-                backgroundImage: `radial-gradient(circle, ${pal.dot} 1px, transparent 1.4px)`,
-                backgroundSize: "22px 22px",
-              }}
-            >
-              <svg
-                width={CW}
-                height={CH}
                 style={{
                   position: "absolute",
                   left: 0,
                   top: 0,
-                  overflow: "visible",
+                  right: 0,
+                  height: BAR,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                  padding: "0 18px",
+                  boxShadow: `inset 0 -1px 0 ${pal.rule}`,
+                  fontSize: 15,
                 }}
               >
-                {edgeEls}
-              </svg>
-              {packets}
-              {nodeEls}
-              {frame >= PUBLISH + 8 ? (
+                <span style={{ color: pal.muted }}>{workspace}</span>
+                <span style={{ color: pal.faint }}>/</span>
+                <span style={{ color: pal.text }}>
+                  {tall ? "Workflows" : title}
+                </span>
                 <div
                   style={{
-                    position: "absolute",
-                    left: CW / 2,
-                    top: CH - 64,
-                    transform: `translateX(-50%) translateY(${(1 - toastS) * 26}px)`,
-                    opacity: toastFade,
-                    height: 40,
-                    padding: "0 16px 0 12px",
-                    borderRadius: 12,
-                    background: pal.dark ? "#1E2128" : "#1B1A18",
-                    color: "#F4F3F0",
+                    position: "relative",
+                    height: 24,
+                    padding: "0 9px",
+                    borderRadius: 7,
+                    fontSize: 13,
                     display: "flex",
                     alignItems: "center",
-                    gap: 9,
-                    fontSize: 15,
-                    boxShadow: pal.dark
-                      ? "0 0 0 1px rgba(255,255,255,0.1), 0 16px 32px -12px rgba(0,0,0,0.6)"
-                      : "0 16px 32px -12px rgba(20,18,14,0.35), 0 4px 10px -4px rgba(20,18,14,0.2)",
-                    whiteSpace: "nowrap",
-                    zIndex: 10,
+                    gap: 6,
+                    background: published
+                      ? withAlpha(pal.success, 0.12)
+                      : pal.pill,
+                    color: published ? pal.success : pal.muted,
+                    transform: `scale(${published ? 0.9 + 0.1 * pubS : 1})`,
                   }}
                 >
-                  <Check
-                    color="#5BE39B"
-                    size={16}
-                    draw={interpolate(
-                      frame,
-                      [PUBLISH + 14, PUBLISH + 24],
-                      [0, 1],
-                      { ...CL, easing: ENTER },
-                    )}
-                  />
-                  {toast}
+                  {published ? (
+                    <div
+                      style={{
+                        width: 6,
+                        height: 6,
+                        borderRadius: 3,
+                        background: pal.success,
+                      }}
+                    />
+                  ) : null}
+                  {published ? "Live" : "Draft"}
                 </div>
+              </div>
+              <div
+                style={{
+                  position: "absolute",
+                  left: 0,
+                  top: BAR,
+                  right: 0,
+                  bottom: 0,
+                  background: pal.canvas,
+                  backgroundImage: `radial-gradient(circle, ${pal.dot} 1px, transparent 1.4px)`,
+                  backgroundSize: "22px 22px",
+                }}
+              >
+                <svg
+                  width={CW}
+                  height={CH}
+                  style={{
+                    position: "absolute",
+                    left: 0,
+                    top: 0,
+                    overflow: "visible",
+                  }}
+                >
+                  {edgeEls}
+                </svg>
+                {packets}
+                {nodeEls}
+                {frame >= PUBLISH + 8 ? (
+                  <div
+                    style={{
+                      position: "absolute",
+                      left: CW / 2,
+                      top: CH - 64,
+                      transform: `translateX(-50%) translateY(${(1 - toastS) * 26}px)`,
+                      opacity: toastFade,
+                      height: 40,
+                      padding: "0 16px 0 12px",
+                      borderRadius: 12,
+                      background: pal.dark ? "#1E2128" : "#1B1A18",
+                      color: "#F4F3F0",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 9,
+                      fontSize: 15,
+                      boxShadow: pal.dark
+                        ? "0 0 0 1px rgba(255,255,255,0.1), 0 16px 32px -12px rgba(0,0,0,0.6)"
+                        : "0 16px 32px -12px rgba(20,18,14,0.35), 0 4px 10px -4px rgba(20,18,14,0.2)",
+                      whiteSpace: "nowrap",
+                      zIndex: 10,
+                    }}
+                  >
+                    <Check
+                      color="#5BE39B"
+                      size={16}
+                      draw={interpolate(
+                        frame,
+                        [PUBLISH + 14, PUBLISH + 24],
+                        [0, 1],
+                        { ...CL, easing: ENTER },
+                      )}
+                    />
+                    {toast}
+                  </div>
+                ) : null}
+              </div>
+            </div>
+            <div
+              style={{
+                ...btn,
+                left: runX,
+                width: RUN_W,
+                background: pal.card,
+                boxShadow: pal.cardDepth,
+                color: pal.text,
+                transform: `scale(${1 - 0.04 * runPress})`,
+              }}
+            >
+              {running ? (
+                <Spinner color={accent} track={pal.rule} frame={frame} />
+              ) : (
+                <svg width={11} height={11} viewBox="0 0 12 12">
+                  <path
+                    d="M3 1.8v8.4L10 6z"
+                    fill="none"
+                    stroke={pal.text}
+                    strokeWidth={1.3}
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              )}
+              {running ? "Running" : "Run"}
+            </div>
+            <div
+              style={{
+                ...btn,
+                left: pubX,
+                width: PUB_W,
+                background: accent,
+                color: "#fff",
+                boxShadow: `inset 0 1px 0 rgba(255,255,255,0.2), 0 1px 2px ${withAlpha(accent, 0.4)}, 0 6px 14px -6px ${withAlpha(accent, 0.6)}`,
+                transform: `scale(${1 - 0.04 * pubPress})`,
+              }}
+            >
+              {published ? (
+                <Check color="#fff" size={14} draw={clamp(pubS * 1.4)} />
               ) : null}
+              {published ? publishedLabel : publishLabel}
+            </div>
+            <div
+              style={{
+                position: "absolute",
+                left: cur.x - 2,
+                top: cur.y - 2,
+                opacity: cursorIn,
+                zIndex: 50,
+              }}
+            >
+              <Cursor press={press} />
             </div>
           </div>
-          <div
-            style={{
-              ...btn,
-              left: runX,
-              width: RUN_W,
-              background: pal.card,
-              boxShadow: pal.cardDepth,
-              color: pal.text,
-              transform: `scale(${1 - 0.04 * runPress})`,
-            }}
-          >
-            {running ? (
-              <Spinner color={accent} track={pal.rule} frame={frame} />
-            ) : (
-              <svg width={11} height={11} viewBox="0 0 12 12">
-                <path
-                  d="M3 1.8v8.4L10 6z"
-                  fill="none"
-                  stroke={pal.text}
-                  strokeWidth={1.3}
-                  strokeLinejoin="round"
-                />
-              </svg>
-            )}
-            {running ? "Running" : "Run"}
-          </div>
-          <div
-            style={{
-              ...btn,
-              left: pubX,
-              width: PUB_W,
-              background: accent,
-              color: "#fff",
-              boxShadow: `inset 0 1px 0 rgba(255,255,255,0.2), 0 1px 2px ${withAlpha(accent, 0.4)}, 0 6px 14px -6px ${withAlpha(accent, 0.6)}`,
-              transform: `scale(${1 - 0.04 * pubPress})`,
-            }}
-          >
-            {published ? (
-              <Check color="#fff" size={14} draw={clamp(pubS * 1.4)} />
-            ) : null}
-            {published ? "Published" : "Publish"}
-          </div>
-          <div
-            style={{
-              position: "absolute",
-              left: cur.x - 2,
-              top: cur.y - 2,
-              opacity: cursorIn,
-              zIndex: 50,
-            }}
-          >
-            <Cursor press={press} />
-          </div>
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

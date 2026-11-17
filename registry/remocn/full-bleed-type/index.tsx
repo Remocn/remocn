@@ -1,6 +1,7 @@
 "use client";
 
 import { loadFont } from "@remotion/google-fonts/BarlowCondensed";
+import type React from "react";
 import { useId } from "react";
 import {
   AbsoluteFill,
@@ -20,8 +21,19 @@ export interface FullBleedTypeProps {
   words?: string[];
   /** Frames between two slams. */
   beat?: number;
+  /** Frames a word takes to slam in, before it settles. */
+  slam?: number;
   /** Kept for the shared draft API; the hero word takes the "rise" gradient instead. */
   accent?: string;
+  /** Color of every word but the last; overrides the theme ink. */
+  ink?: string;
+  background?: string;
+  /** Typeface for the words. Load it yourself; Barlow Condensed by default. Row widths are fitted to Barlow Condensed. */
+  fontFamily?: string;
+  /** Size of the word stack, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -216,15 +228,40 @@ function layoutRows(
   return best;
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function FullBleedType({
   words = ["NO", "DAYS", "OFF", "SHIP"],
   beat = 11,
+  slam: slamLen = SLAM_LEN,
+  ink,
+  background,
+  fontFamily = display,
+  scale = 1,
+  delay = 0,
   theme = "dark",
   speed = 1,
 }: FullBleedTypeProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
+  const fg = ink ?? c.ink;
+  const stage =
+    background === "transparent" ? "transparent" : (background ?? c.stage);
   const gradId = `fb${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
 
   const list = words.map((w) => w.trim().toUpperCase()).filter(Boolean);
@@ -244,7 +281,7 @@ export function FullBleedType({
   const left = (W - measure) / 2;
 
   const lastAt = FIRST_AT + (list.length - 1) * beat;
-  const lockAt = lastAt + SLAM_LEN + SETTLE_LEN;
+  const lockAt = lastAt + slamLen + SETTLE_LEN;
   const lock = LOCK(interpolate(t, [lockAt, lockAt + LOCK_LEN], [0, 1], CLAMP));
   const gap = openGap + (lockGap * fit - openGap) * lock;
   const stackH =
@@ -264,11 +301,11 @@ export function FullBleedType({
       const at = FIRST_AT + id * beat;
       const enter = fromLeft ? -(x + w) - 0.04 * W : W - x + 0.04 * W;
       const over = (fromLeft ? 1 : -1) * 0.011 * W;
-      const slam = SLAM(interpolate(t, [at, at + SLAM_LEN], [0, 1], CLAMP));
+      const slam = SLAM(interpolate(t, [at, at + slamLen], [0, 1], CLAMP));
       const settle = SETTLE(
         interpolate(
           t,
-          [at + SLAM_LEN, at + SLAM_LEN + SETTLE_LEN],
+          [at + slamLen, at + slamLen + SETTLE_LEN],
           [0, 1],
           CLAMP,
         ),
@@ -297,46 +334,48 @@ export function FullBleedType({
   const sunY = hero ? hero.baseline + heroCap * (0.14 - 0.12 * climb) : 0;
 
   return (
-    <AbsoluteFill style={{ background: c.stage }}>
-      <svg
-        width={W}
-        height={H}
-        viewBox={`0 0 ${W} ${H}`}
-        style={{ position: "absolute", inset: 0 }}
-        aria-label={list.join(" ")}
-        role="img"
-      >
-        <defs>
-          <linearGradient
-            id={gradId}
-            gradientUnits="userSpaceOnUse"
-            x1={0}
-            y1={sunY}
-            x2={0}
-            y2={sunY - heroCap * 1.12}
-          >
-            <stop offset="0" stopColor={c.rise[0]} />
-            <stop offset="0.42" stopColor={c.rise[1]} />
-            <stop offset="1" stopColor={c.rise[2]} />
-          </linearGradient>
-        </defs>
-        {glyphs.map((g) =>
-          g.visible ? (
-            <text
-              key={g.key}
-              x={g.x}
-              y={g.baseline}
-              fill={g.hero ? `url(#${gradId})` : c.ink}
-              fontFamily={display}
-              fontWeight={500}
-              fontSize={g.fs}
-              style={{ letterSpacing: `${TRACK}em`, fontKerning: "normal" }}
+    <AbsoluteFill style={{ background: stage }}>
+      <ScaleLayer scale={scale}>
+        <svg
+          width={W}
+          height={H}
+          viewBox={`0 0 ${W} ${H}`}
+          style={{ position: "absolute", inset: 0 }}
+          aria-label={list.join(" ")}
+          role="img"
+        >
+          <defs>
+            <linearGradient
+              id={gradId}
+              gradientUnits="userSpaceOnUse"
+              x1={0}
+              y1={sunY}
+              x2={0}
+              y2={sunY - heroCap * 1.12}
             >
-              {g.word}
-            </text>
-          ) : null,
-        )}
-      </svg>
+              <stop offset="0" stopColor={c.rise[0]} />
+              <stop offset="0.42" stopColor={c.rise[1]} />
+              <stop offset="1" stopColor={c.rise[2]} />
+            </linearGradient>
+          </defs>
+          {glyphs.map((g) =>
+            g.visible ? (
+              <text
+                key={g.key}
+                x={g.x}
+                y={g.baseline}
+                fill={g.hero ? `url(#${gradId})` : fg}
+                fontFamily={fontFamily}
+                fontWeight={500}
+                fontSize={g.fs}
+                style={{ letterSpacing: `${TRACK}em`, fontKerning: "normal" }}
+              >
+                {g.word}
+              </text>
+            ) : null,
+          )}
+        </svg>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

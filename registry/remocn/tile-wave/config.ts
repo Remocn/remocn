@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const tileWaveConfig: ComponentConfig = {
   componentName: "TileWave",
@@ -12,11 +18,6 @@ export const tileWaveConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     from: {
       type: "text-content",
@@ -37,6 +38,31 @@ export const tileWaveConfig: ComponentConfig = {
       description: "Rows",
       hiddenFromList: false,
     },
+    spread: {
+      type: "number",
+      default: 26,
+      min: 2,
+      max: 80,
+      step: 1,
+      description: "Wave spread (frames)",
+      hiddenFromList: false,
+    },
+    swap: {
+      type: "number",
+      default: 22,
+      min: 4,
+      max: 60,
+      step: 1,
+      description: "Tile swap (frames)",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Space Grotesk", grain: true }),
+    // After sceneControls so its 0-default delay doesn't replace this one.
     delay: {
       type: "number",
       default: 16,

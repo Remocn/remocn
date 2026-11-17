@@ -1,6 +1,7 @@
 "use client";
 
 import { loadFont } from "@remotion/google-fonts/Newsreader";
+import type React from "react";
 import { useId } from "react";
 import {
   AbsoluteFill,
@@ -27,6 +28,18 @@ export interface ColumnReflowProps {
   accentWord?: string;
   direction?: "widen" | "narrow";
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
+  background?: string;
+  /** Typeface for the roman words. Load it yourself; Newsreader by default. */
+  fontFamily?: string;
+  /** Width of the narrow column, in ems of the type. */
+  measure?: number;
+  /** Size of the paragraph, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -363,10 +376,10 @@ function breakRows(words: Word[], measure: number) {
   return { rows, cost: best[n] };
 }
 
-function chooseMeasure(words: Word[]) {
-  let pick = { measure: NARROW_EM, rows: breakRows(words, NARROW_EM).rows };
+function chooseMeasure(words: Word[], narrowEm: number) {
+  let pick = { measure: narrowEm, rows: breakRows(words, narrowEm).rows };
   let low = Number.POSITIVE_INFINITY;
-  for (let m = NARROW_EM - 1; m <= NARROW_EM + 1.001; m += 0.1) {
+  for (let m = narrowEm - 1; m <= narrowEm + 1.001; m += 0.1) {
     const { rows, cost } = breakRows(words, m);
     const paired: number[] = [];
     for (let r = 0; r + 1 < rows.length - 1; r += 2) {
@@ -374,7 +387,7 @@ function chooseMeasure(words: Word[]) {
     }
     const top = Math.max(1, ...paired);
     const rag = paired.reduce((s, w) => s + ((top - w) / top) ** 2, 0);
-    const score = cost + rag * 40 + Math.abs(m - NARROW_EM) * 0.4;
+    const score = cost + rag * 40 + Math.abs(m - narrowEm) * 0.4;
     if (rows.length > 1 && score < low) {
       low = score;
       pick = { measure: m, rows };
@@ -418,8 +431,8 @@ interface Placed {
  * the move clean: odd rows slide out sideways into empty space, then both
  * halves close vertically, so no word ever crosses another.
  */
-function layout(words: Word[]) {
-  const { measure: narrow, rows } = chooseMeasure(words);
+function layout(words: Word[], narrowEm: number) {
+  const { measure: narrow, rows } = chooseMeasure(words, narrowEm);
   const R = rows.length;
   const T = Math.ceil(R / 2);
   const lines = Array.from({ length: T }, (_, t) => [
@@ -501,20 +514,46 @@ function Grain({ opacity }: { opacity: number }) {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function ColumnReflow({
   text = DEFAULT_TEXT,
   accentWord = "room",
   direction = "widen",
+  ink,
+  background,
+  fontFamily = sans,
+  measure = NARROW_EM,
+  scale = 1,
+  delay = 0,
+  grain = true,
   theme = "dark",
   speed = 1,
 }: ColumnReflowProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const u = H / 720;
   const c = THEMES[theme];
+  const fg = ink ?? c.fg;
+  const stage =
+    background === "transparent" ? "transparent" : (background ?? c.bg);
 
   const words = toWords(text, accentWord);
-  const { placed, R, T, wide, narrow } = layout(words);
+  const { placed, R, T, wide, narrow } = layout(words, measure);
   const F = Math.min(56 * u, (W * 0.86) / wide, (H * 0.74) / (R * LEADING));
   const L = F * LEADING;
   const cx = W / 2;
@@ -565,7 +604,7 @@ export function ColumnReflow({
   const hair = Math.max(1, u);
 
   return (
-    <AbsoluteFill style={{ background: c.bg, overflow: "hidden" }}>
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
       <AbsoluteFill
         style={{
           background: `radial-gradient(ellipse 70% 80% at 40% 35%, ${c.key}, transparent 70%)`,
@@ -581,117 +620,119 @@ export function ColumnReflow({
         }}
       />
 
-      {[-1, 1].map((side) => (
-        <div
-          key={`g${side}`}
-          style={{
-            position: "absolute",
-            left: cx + side * (halfW + 0.55 * F) - hair / 2,
-            top: cy - 0.36 * F - halfH * guideIn,
-            width: hair,
-            height: halfH * 2 * guideIn,
-            background: c.hair,
-            opacity: guideOut,
-          }}
-        />
-      ))}
+      <ScaleLayer scale={scale}>
+        {[-1, 1].map((side) => (
+          <div
+            key={`g${side}`}
+            style={{
+              position: "absolute",
+              left: cx + side * (halfW + 0.55 * F) - hair / 2,
+              top: cy - 0.36 * F - halfH * guideIn,
+              width: hair,
+              height: halfH * 2 * guideIn,
+              background: c.hair,
+              opacity: guideOut,
+            }}
+          />
+        ))}
 
-      {words.map((w, i) => {
-        const p = placed[i];
-        const { px, py } = progress(p, R, v);
-        const x = cx + interpolate(px, [0, 1], [p.x0, p.x1]) * F;
-        const y = cy + interpolate(py, [0, 1], [p.y0, p.y1]) * L;
-        const startRow = narrowing ? Math.round(p.y1 + (T - 1) / 2) : p.row;
-        const enter = interpolate(
-          t,
-          [ENTER + startRow * 1.6, ENTER + startRow * 1.6 + 16],
-          [0, 1],
-          { ...CLAMP, easing: EASE_OUT },
-        );
-        const lift = (1 - enter) * 0.35 * F;
-        if (!w.serif) {
-          return (
-            <div
-              key={`${i}-${w.core}`}
-              style={{
-                position: "absolute",
-                left: x,
-                top: y - BASELINE_SANS * F + lift,
-                fontFamily: sans,
-                fontWeight: 400,
-                fontSize: F,
-                lineHeight: 1,
-                letterSpacing: `${TRACK}em`,
-                whiteSpace: "pre",
-                color: c.fg,
-                opacity: enter,
-              }}
-            >
-              {w.core}
-            </div>
+        {words.map((w, i) => {
+          const p = placed[i];
+          const { px, py } = progress(p, R, v);
+          const x = cx + interpolate(px, [0, 1], [p.x0, p.x1]) * F;
+          const y = cy + interpolate(py, [0, 1], [p.y0, p.y1]) * L;
+          const startRow = narrowing ? Math.round(p.y1 + (T - 1) / 2) : p.row;
+          const enter = interpolate(
+            t,
+            [ENTER + startRow * 1.6, ENTER + startRow * 1.6 + 16],
+            [0, 1],
+            { ...CLAMP, easing: EASE_OUT },
           );
-        }
-        const sF = F * SERIF_SCALE;
-        const serifType = {
-          position: "absolute",
-          left: x - 0.2 * sF,
-          top: y - BASELINE_SERIF * sF + lift,
-          paddingLeft: 0.2 * sF,
-          paddingRight: 0.2 * sF,
-          fontFamily: serif,
-          fontStyle: "italic",
-          fontWeight: 400,
-          fontSize: sF,
-          lineHeight: 1,
-          whiteSpace: "pre",
-        } as const;
-        return (
-          <div key={`${i}-${w.core}`}>
-            <div
-              style={{
-                ...serifType,
-                color: c.fg,
-                opacity: enter * (1 - settle),
-              }}
-            >
-              {w.core}
-            </div>
-            <div
-              style={{
-                ...serifType,
-                color: "transparent",
-                backgroundImage: swirl,
-                WebkitBackgroundClip: "text",
-                backgroundClip: "text",
-                opacity: enter * settle,
-              }}
-            >
-              {w.core}
-            </div>
-            {w.tail ? (
+          const lift = (1 - enter) * 0.35 * F;
+          if (!w.serif) {
+            return (
               <div
+                key={`${i}-${w.core}`}
                 style={{
                   position: "absolute",
-                  left: x + (serifEm(w.core) + 0.04) * F,
+                  left: x,
                   top: y - BASELINE_SANS * F + lift,
-                  fontFamily: sans,
+                  fontFamily,
                   fontWeight: 400,
                   fontSize: F,
                   lineHeight: 1,
                   letterSpacing: `${TRACK}em`,
                   whiteSpace: "pre",
-                  color: c.fg,
+                  color: fg,
                   opacity: enter,
                 }}
               >
-                {w.tail}
+                {w.core}
               </div>
-            ) : null}
-          </div>
-        );
-      })}
+            );
+          }
+          const sF = F * SERIF_SCALE;
+          const serifType = {
+            position: "absolute",
+            left: x - 0.2 * sF,
+            top: y - BASELINE_SERIF * sF + lift,
+            paddingLeft: 0.2 * sF,
+            paddingRight: 0.2 * sF,
+            fontFamily: serif,
+            fontStyle: "italic",
+            fontWeight: 400,
+            fontSize: sF,
+            lineHeight: 1,
+            whiteSpace: "pre",
+          } as const;
+          return (
+            <div key={`${i}-${w.core}`}>
+              <div
+                style={{
+                  ...serifType,
+                  color: fg,
+                  opacity: enter * (1 - settle),
+                }}
+              >
+                {w.core}
+              </div>
+              <div
+                style={{
+                  ...serifType,
+                  color: "transparent",
+                  backgroundImage: swirl,
+                  WebkitBackgroundClip: "text",
+                  backgroundClip: "text",
+                  opacity: enter * settle,
+                }}
+              >
+                {w.core}
+              </div>
+              {w.tail ? (
+                <div
+                  style={{
+                    position: "absolute",
+                    left: x + (serifEm(w.core) + 0.04) * F,
+                    top: y - BASELINE_SANS * F + lift,
+                    fontFamily,
+                    fontWeight: 400,
+                    fontSize: F,
+                    lineHeight: 1,
+                    letterSpacing: `${TRACK}em`,
+                    whiteSpace: "pre",
+                    color: fg,
+                    opacity: enter,
+                  }}
+                >
+                  {w.tail}
+                </div>
+              ) : null}
+            </div>
+          );
+        })}
+      </ScaleLayer>
 
-      <Grain opacity={c.grain} />
+      {grain ? <Grain opacity={c.grain} /> : null}
     </AbsoluteFill>
   );
 }

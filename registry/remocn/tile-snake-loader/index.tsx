@@ -124,6 +124,23 @@ export interface TileSnakeLoaderProps {
   url?: string;
   headline?: string;
   sub?: string;
+  /** Primary button under the headline in the revealed window. */
+  ctaLabel?: string;
+  /** Secondary button next to it. */
+  secondaryLabel?: string;
+  /** Button in the window's top bar. */
+  publishLabel?: string;
+  /** Text color of the name and loading label; overrides the theme ink. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Instrument Sans by default. */
+  fontFamily?: string;
+  /** Size of the scene, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
 }
@@ -474,6 +491,10 @@ function WindowContent({
   headline,
   sub,
   images,
+  fontFamily,
+  ctaLabel,
+  secondaryLabel,
+  publishLabel,
 }: {
   frame: number;
   fps: number;
@@ -484,6 +505,10 @@ function WindowContent({
   headline: string;
   sub: string;
   images: string[];
+  fontFamily: string;
+  ctaLabel: string;
+  secondaryLabel: string;
+  publishLabel: string;
 }) {
   const k = portrait ? 1.55 : 1;
   const step = (i: number) => ramp(frame, B.content + i * 3, 13);
@@ -497,9 +522,7 @@ function WindowContent({
   const barH = 46 * k;
   const railW = portrait ? 0 : 60;
   return (
-    <div
-      style={{ position: "absolute", inset: 0, fontFamily: sans.fontFamily }}
-    >
+    <div style={{ position: "absolute", inset: 0, fontFamily }}>
       <div
         style={{
           position: "absolute",
@@ -568,7 +591,7 @@ function WindowContent({
             boxShadow: "inset 0 1px 0 rgba(255,255,255,0.25)",
           }}
         >
-          Publish
+          {publishLabel}
         </div>
       </div>
       {!portrait ? (
@@ -672,7 +695,7 @@ function WindowContent({
               alignItems: "center",
             }}
           >
-            Start a film
+            {ctaLabel}
           </div>
           <div
             style={{
@@ -686,7 +709,7 @@ function WindowContent({
               alignItems: "center",
             }}
           >
-            See examples
+            {secondaryLabel}
           </div>
         </div>
       </div>
@@ -799,6 +822,22 @@ function WindowContent({
 
 const SCRAMBLE = "abcdefghijklmnopqrstuvwxyz";
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function TileSnakeLoader({
   theme = "dark",
   accent = "#3B5BFD",
@@ -809,12 +848,22 @@ export function TileSnakeLoader({
   url = "lumen.studio",
   headline = "Launch films,\ncut in minutes.",
   sub = "Drop your screens in. Ship the film by Friday.",
+  ctaLabel = "Start a film",
+  secondaryLabel = "See examples",
+  publishLabel = "Publish",
+  ink,
+  background,
+  fontFamily = sans.fontFamily,
+  scale = 1,
+  delay = 0,
+  speed = 1,
   ground,
   groundParams,
 }: TileSnakeLoaderProps) {
-  const frame = useCurrentFrame();
+  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, fps } = useVideoConfig();
   const c = THEMES[theme];
+  const fg = ink ?? c.ink;
   const portrait = height > width * 1.2;
   const stageW = portrait ? 1080 : 1280;
   const stageH = portrait ? 1920 : 720;
@@ -898,8 +947,8 @@ export function TileSnakeLoader({
     if (frame < birth || frame > death + 6) continue;
     const pop = spring({ frame: frame - birth, fps, config: POP });
     const gone = ramp(frame, death, 6, EXIT);
-    const scale = pop * (1 - gone);
-    if (scale <= 0.002) continue;
+    const tileScale = pop * (1 - gone);
+    if (tileScale <= 0.002) continue;
     const spec = KINDS[n % KINDS.length];
     const p = pathPoint(sN);
     const jx = (random(`tsl-jx-${n}`) - 0.5) * 18 * k;
@@ -916,7 +965,7 @@ export function TileSnakeLoader({
           top: p.y + jy - h / 2,
           width: w,
           height: h,
-          transform: `rotate(${mix(tilt * 3, tilt, pop)}deg) scale(${scale})`,
+          transform: `rotate(${mix(tilt * 3, tilt, pop)}deg) scale(${tileScale})`,
           zIndex: n,
         }}
       >
@@ -988,183 +1037,197 @@ export function TileSnakeLoader({
   const gParams = groundParams ?? (ground ? undefined : c.groundParams);
 
   return (
-    <AbsoluteFill style={{ fontFamily: sans.fontFamily, overflow: "hidden" }}>
-      <GshGround
-        preset={preset}
-        params={gParams}
-        timeOffset={5}
-        timeScale={0.45}
-      />
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          top: 0,
-          width: stageW,
-          height: stageH,
-          transform: `scale(${sc})`,
-          transformOrigin: "0 0",
-        }}
-      >
+    <AbsoluteFill style={{ fontFamily, overflow: "hidden" }}>
+      {background === undefined ? (
+        <GshGround
+          preset={preset}
+          params={gParams}
+          timeOffset={5}
+          timeScale={0.45}
+        />
+      ) : (
+        <AbsoluteFill
+          style={{
+            background: background === "transparent" ? undefined : background,
+          }}
+        />
+      )}
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            inset: 0,
-            transform: `scale(${push})`,
-            transformOrigin: "50% 50%",
+            left: 0,
+            top: 0,
+            width: stageW,
+            height: stageH,
+            transform: `scale(${sc})`,
+            transformOrigin: "0 0",
           }}
         >
-          {tiles}
           <div
             style={{
               position: "absolute",
-              left: 0,
-              right: 0,
-              top: cy - nameSize * 0.62,
-              height: nameSize * 1.24,
-              overflow: "hidden",
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
+              inset: 0,
+              transform: `scale(${push})`,
+              transformOrigin: "50% 50%",
             }}
           >
-            <div
-              style={{
-                display: "flex",
-                fontSize: nameSize,
-                fontWeight: 400,
-                letterSpacing: "-0.04em",
-                color: c.ink,
-                whiteSpace: "pre",
-                transform: `translateY(${mix(nameSize, 0, nameIn)}px)`,
-              }}
-            >
-              {chars.map((ch, i) => {
-                const g = ramp(frame, B.breakAt + i * B.letterStep, 7, EXIT);
-                return (
-                  <span
-                    key={`n${i}-${ch}`}
-                    style={{
-                      display: "inline-block",
-                      transform: `scale(${1 - g})`,
-                      opacity: 1 - g * g,
-                      margin: `0 ${g * 0.12}em`,
-                      filter: `blur(${g * 4}px)`,
-                    }}
-                  >
-                    {ch}
-                  </span>
-                );
-              })}
-            </div>
-          </div>
-          {frame >= B.label - 4 && labelOut < 1 ? (
+            {tiles}
             <div
               style={{
                 position: "absolute",
                 left: 0,
                 right: 0,
-                top: cy - skelH0 / 2,
-                height: skelH0,
+                top: cy - nameSize * 0.62,
+                height: nameSize * 1.24,
+                overflow: "hidden",
                 display: "flex",
-                alignItems: "center",
                 justifyContent: "center",
-                gap: 12 * k,
-                opacity: labelIn * (1 - labelOut),
-                filter: `blur(${labelOut * 8 + (1 - labelIn) * 5}px)`,
-                transform: `translateY(${mix(10 * k, 0, labelIn)}px)`,
+                alignItems: "center",
               }}
             >
               <div
                 style={{
-                  width: 8 * k,
-                  height: 8 * k,
-                  borderRadius: 4 * k,
-                  background: accent,
-                  opacity: 0.55 + 0.45 * Math.sin(frame / 3),
-                }}
-              />
-              <div
-                style={{
-                  fontSize: labelSize,
-                  color: c.ink,
-                  letterSpacing: "-0.015em",
-                  minWidth: label.length * labelSize * 0.5,
-                }}
-              >
-                {labelText}
-              </div>
-              <div
-                style={{
-                  height: 38 * k,
-                  minWidth: 76 * k,
-                  padding: `0 ${13 * k}px`,
-                  borderRadius: 19 * k,
-                  background: c.pill,
-                  color: c.soft,
-                  fontFamily: mono.fontFamily,
-                  fontSize: 21 * k,
                   display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontVariantNumeric: "tabular-nums",
+                  fontSize: nameSize,
+                  fontWeight: 400,
+                  letterSpacing: "-0.04em",
+                  color: fg,
+                  whiteSpace: "pre",
+                  transform: `translateY(${mix(nameSize, 0, nameIn)}px)`,
                 }}
               >
-                {`${pct}%`}
+                {chars.map((ch, i) => {
+                  const g = ramp(frame, B.breakAt + i * B.letterStep, 7, EXIT);
+                  return (
+                    <span
+                      key={`n${i}-${ch}`}
+                      style={{
+                        display: "inline-block",
+                        transform: `scale(${1 - g})`,
+                        opacity: 1 - g * g,
+                        margin: `0 ${g * 0.12}em`,
+                        filter: `blur(${g * 4}px)`,
+                      }}
+                    >
+                      {ch}
+                    </span>
+                  );
+                })}
               </div>
             </div>
-          ) : null}
-          {skelIn > 0 ? (
-            <div
-              style={{
-                position: "absolute",
-                left: cx - boxW / 2,
-                top: cy - boxH / 2,
-                width: boxW,
-                height: boxH,
-                borderRadius: boxR,
-                transform: `scale(${winScale})`,
-                opacity: skelIn,
-              }}
-            >
+            {frame >= B.label - 4 && labelOut < 1 ? (
               <div
                 style={{
                   position: "absolute",
-                  inset: 0,
-                  borderRadius: boxR,
-                  background: c.skeleton,
-                  opacity: 1 - winOn,
+                  left: 0,
+                  right: 0,
+                  top: cy - skelH0 / 2,
+                  height: skelH0,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 12 * k,
+                  opacity: labelIn * (1 - labelOut),
+                  filter: `blur(${labelOut * 8 + (1 - labelIn) * 5}px)`,
+                  transform: `translateY(${mix(10 * k, 0, labelIn)}px)`,
                 }}
-              />
-              {winOn > 0 ? (
+              >
+                <div
+                  style={{
+                    width: 8 * k,
+                    height: 8 * k,
+                    borderRadius: 4 * k,
+                    background: accent,
+                    opacity: 0.55 + 0.45 * Math.sin(frame / 3),
+                  }}
+                />
+                <div
+                  style={{
+                    fontSize: labelSize,
+                    color: fg,
+                    letterSpacing: "-0.015em",
+                    minWidth: label.length * labelSize * 0.5,
+                  }}
+                >
+                  {labelText}
+                </div>
+                <div
+                  style={{
+                    height: 38 * k,
+                    minWidth: 76 * k,
+                    padding: `0 ${13 * k}px`,
+                    borderRadius: 19 * k,
+                    background: c.pill,
+                    color: c.soft,
+                    fontFamily: mono.fontFamily,
+                    fontSize: 21 * k,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontVariantNumeric: "tabular-nums",
+                  }}
+                >
+                  {`${pct}%`}
+                </div>
+              </div>
+            ) : null}
+            {skelIn > 0 ? (
+              <div
+                style={{
+                  position: "absolute",
+                  left: cx - boxW / 2,
+                  top: cy - boxH / 2,
+                  width: boxW,
+                  height: boxH,
+                  borderRadius: boxR,
+                  transform: `scale(${winScale})`,
+                  opacity: skelIn,
+                }}
+              >
                 <div
                   style={{
                     position: "absolute",
                     inset: 0,
                     borderRadius: boxR,
-                    background: WIN.bg,
-                    boxShadow: WIN.shadow,
-                    overflow: "hidden",
-                    opacity: winOn,
+                    background: c.skeleton,
+                    opacity: 1 - winOn,
                   }}
-                >
-                  <WindowContent
-                    frame={frame}
-                    fps={fps}
-                    portrait={portrait}
-                    accent={accent}
-                    product={product}
-                    url={url}
-                    headline={headline}
-                    sub={sub}
-                    images={images}
-                  />
-                </div>
-              ) : null}
-            </div>
-          ) : null}
+                />
+                {winOn > 0 ? (
+                  <div
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      borderRadius: boxR,
+                      background: WIN.bg,
+                      boxShadow: WIN.shadow,
+                      overflow: "hidden",
+                      opacity: winOn,
+                    }}
+                  >
+                    <WindowContent
+                      frame={frame}
+                      fps={fps}
+                      portrait={portrait}
+                      accent={accent}
+                      product={product}
+                      url={url}
+                      headline={headline}
+                      sub={sub}
+                      images={images}
+                      fontFamily={fontFamily}
+                      ctaLabel={ctaLabel}
+                      secondaryLabel={secondaryLabel}
+                      publishLabel={publishLabel}
+                    />
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
+          </div>
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

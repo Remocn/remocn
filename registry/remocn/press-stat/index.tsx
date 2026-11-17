@@ -26,7 +26,19 @@ export interface PressStatProps {
   prefix?: string;
   suffix?: string;
   accent?: string;
+  /** Color of the caption words; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the copy. Load it yourself; IBM Plex Mono by default. */
+  fontFamily?: string;
+  /** Frame at which the number presses in and starts counting. */
+  pressAt?: number;
+  /** Frames the count takes to reach `value`. */
+  countLength?: number;
+  /** Size of the foreground, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -57,10 +69,10 @@ interface Metrics {
   base: number;
 }
 
-function measure(): Metrics {
+function measure(fontFamily: string): Metrics {
   const ctx = document.createElement("canvas").getContext("2d");
   if (!ctx) throw new Error("press-stat: no 2d context");
-  ctx.font = `500 100px "${plex.fontFamily}"`;
+  ctx.font = `500 100px "${fontFamily}"`;
   const m = ctx.measureText("0000000000");
   const asc = m.fontBoundingBoxAscent / 100;
   const desc = m.fontBoundingBoxDescent / 100;
@@ -71,7 +83,7 @@ function measure(): Metrics {
   };
 }
 
-function useMetrics() {
+function useMetrics(fontFamily: string) {
   const [m, setM] = useState<Metrics | null>(null);
   const [handle] = useState(() => delayRender("press-stat: measuring"));
   const released = useRef(false);
@@ -79,13 +91,13 @@ function useMetrics() {
     let live = true;
     Promise.all([
       plex.waitUntilDone(),
-      document.fonts.load(`500 100px "${plex.fontFamily}"`),
-      document.fonts.load(`400 100px "${plex.fontFamily}"`),
+      document.fonts.load(`500 100px "${fontFamily}"`),
+      document.fonts.load(`400 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
-        setM(measure());
+        setM(measure(fontFamily));
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -94,11 +106,27 @@ function useMetrics() {
     return () => {
       live = false;
     };
-  }, [handle]);
+  }, [handle, fontFamily]);
   return m;
 }
 
 const fmt = (n: number) => Math.max(0, Math.floor(n)).toLocaleString("en-US");
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
 
 export function PressStat({
   before = "Edit time down",
@@ -107,15 +135,22 @@ export function PressStat({
   prefix = "",
   suffix = "%",
   accent,
+  ink,
   background,
+  fontFamily = plex.fontFamily,
+  pressAt = PRESS_AT,
+  countLength = COUNT_LEN,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: PressStatProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const c = THEMES[theme];
   const green = accent ?? GREEN[theme];
-  const m = useMetrics();
+  const fg = ink ?? c.ink;
+  const m = useMetrics(fontFamily);
 
   const transparent = background === "transparent";
   const stage = transparent ? "transparent" : (background ?? c.bg);
@@ -132,7 +167,7 @@ export function PressStat({
 
   const target = Math.max(0, Math.floor(value));
   const start = Math.min(target, Math.max(0, Math.floor(from)));
-  const pCount = interpolate(t, [PRESS_AT, PRESS_AT + COUNT_LEN], [0, 1], {
+  const pCount = interpolate(t, [pressAt, pressAt + countLength], [0, 1], {
     ...CLAMP,
     easing: EASE_COUNT,
   });
@@ -156,7 +191,7 @@ export function PressStat({
     (M * 0.58) / (len(finalText) * m.adv),
   );
 
-  const g = spring({ frame: t - PRESS_AT, fps, config: INFLATE });
+  const g = spring({ frame: t - pressAt, fps, config: INFLATE });
   const gc = Math.min(1, Math.max(0, g));
   const Fn = Fw + (Fh - Fw) * g;
 
@@ -213,7 +248,7 @@ export function PressStat({
             top: F * 0.2 + m.cap * F - m.base * F + (1 - r) * h,
             height: F,
             lineHeight: `${F}px`,
-            fontFamily: plex.fontFamily,
+            fontFamily,
             fontWeight: weight,
             fontSize: F,
             whiteSpace: "pre",
@@ -229,14 +264,14 @@ export function PressStat({
   const nodes: React.ReactNode[] = [];
   let x = wordsLeft;
   words.forEach((w, i) => {
-    nodes.push(masked(`w${i}`, x, Fwords, rise(i), w, c.ink, 400));
+    nodes.push(masked(`w${i}`, x, Fwords, rise(i), w, fg, 400));
     x += (len(w) + 1) * m.adv * Fwords;
   });
   nodes.push(masked("n", numLeft, Fn, rise(words.length), numText, green, 500));
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
-      {nodes}
+      <ScaleLayer scale={scale}>{nodes}</ScaleLayer>
     </AbsoluteFill>
   );
 }

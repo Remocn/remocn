@@ -96,6 +96,33 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       description: "Show the built-in wordmark at the end.",
     },
     {
+      name: "logo",
+      type: "React.ReactNode",
+      description: "Replaces the remocn mark.",
+    },
+    {
+      name: "motionBlur",
+      type: "number",
+      default: "1",
+      description: "Strength of the motion smear while the list scrolls; 0 turns it off.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Schibsted Grotesk\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Solid fill in place of the gradient ground; pass \"transparent\" to drop it.",
+    },
+    {
       name: "theme",
       type: "\"dark\" | \"light\"",
       default: "\"dark\"",
@@ -112,6 +139,18 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       description: "Partial shader parameters that override the ground preset.",
     },
     {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
+    },
+    {
       name: "speed",
       type: "number",
       default: "1",
@@ -120,7 +159,7 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
     {
       name: "accent",
       type: "string",
-      description: "Declared but not used by the current source.",
+      description: "Highlight color of the term and its underline; overrides the theme.",
     },
   ]}
 />

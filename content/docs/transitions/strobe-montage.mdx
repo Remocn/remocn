@@ -71,6 +71,33 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       description: "Accent color; defaults to the theme accent",
     },
     {
+      name: "ink",
+      type: "string",
+      description: "Text color of both scenes; overrides the theme ink.",
+    },
+    {
+      name: "background",
+      type: "string",
+      description: "Solid fill in place of both gradient grounds; pass \"transparent\" to drop it.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Hanken Grotesk\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "logo",
+      type: "React.ReactNode",
+      description: "Replaces the remocn mark above the opener.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of both scenes' copy and prompt box around the frame's center; the grounds stay put.",
+    },
+    {
       name: "lead",
       type: "string",
       default: "\"Six weekends\"",
@@ -101,10 +128,22 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       description: "Request typed into the scene B prompt box",
     },
     {
+      name: "placeholder",
+      type: "string",
+      default: "\"Describe your launch film\"",
+      description: "Prompt box text before typing starts",
+    },
+    {
       name: "file",
       type: "string",
       default: "\"launch-notes.md\"",
       description: "File name shown on the attachment chip",
+    },
+    {
+      name: "fileMeta",
+      type: "string",
+      default: "\"Release notes · 2.4 KB\"",
+      description: "Size and type line under the file name on the attachment chip",
     },
     {
       name: "ground",
@@ -131,6 +170,18 @@ The ground is a live gradients.sh shader (`GshGround`), installed with the compo
       type: "number",
       default: "STROBE_MONTAGE_TIMING.transition",
       description: "Transition length in frames",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
+    },
+    {
+      name: "speed",
+      type: "number",
+      default: "1",
+      description: "Playback speed multiplier for the whole timeline.",
     },
     {
       name: "montage",

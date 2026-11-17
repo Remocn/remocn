@@ -1,14 +1,15 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const slitRevealConfig: ComponentConfig = {
   componentName: "SlitReveal",
   importPath: "@/components/remocn/slit-reveal",
   controls: {
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
-    },
     title: {
       type: "text-content",
       default: "Introducing remocn",
@@ -23,6 +24,21 @@ export const slitRevealConfig: ComponentConfig = {
       },
       description: "Opening",
     },
+    glow: {
+      type: "number",
+      default: 1,
+      min: 0,
+      max: 3,
+      step: 0.1,
+      description: "Glow",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Newsreader", grain: true }),
     speed: {
       type: "number",
       default: 1,

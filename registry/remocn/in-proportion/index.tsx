@@ -1,6 +1,7 @@
 "use client";
 
 import { loadFont } from "@remotion/google-fonts/HubotSans";
+import type React from "react";
 import { useEffect, useRef, useState } from "react";
 import {
   AbsoluteFill,
@@ -24,8 +25,20 @@ export interface InProportionPair {
 
 export interface InProportionProps {
   pairs?: InProportionPair[];
+  /** Frames between words as a line builds. */
+  stagger?: number;
+  /** Frames the worry takes to shrink into a side note. */
+  shrink?: number;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the copy. Load it yourself; Hubot Sans by default. */
+  fontFamily?: string;
+  /** Size of the text, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -115,7 +128,7 @@ function breakLines(ws: number[], space: number, maxEm: number) {
   });
 }
 
-function useWidths(specs: string[]) {
+function useWidths(specs: string[], fontFamily: string) {
   const key = specs.join("\u0001");
   const [state, setState] = useState<{
     key: string;
@@ -129,8 +142,8 @@ function useWidths(specs: string[]) {
     let live = true;
     Promise.all([
       hubot.waitUntilDone(),
-      document.fonts.load(`400 100px "${hubot.fontFamily}"`),
-      document.fonts.load(`500 100px "${hubot.fontFamily}"`),
+      document.fonts.load(`400 100px "${fontFamily}"`),
+      document.fonts.load(`500 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
@@ -141,7 +154,7 @@ function useWidths(specs: string[]) {
           const cut = spec.indexOf("|");
           const weight = spec.slice(0, cut);
           const text = spec.slice(cut + 1);
-          if (ctx) ctx.font = `${weight} 100px "${hubot.fontFamily}"`;
+          if (ctx) ctx.font = `${weight} 100px "${fontFamily}"`;
           w[spec] = ctx ? ctx.measureText(text).width / 100 : text.length * 0.5;
         }
         setState({ key, w });
@@ -153,7 +166,7 @@ function useWidths(specs: string[]) {
     return () => {
       live = false;
     };
-  }, [key, handle]);
+  }, [key, handle, fontFamily]);
   return state && state.key === key ? state.w : null;
 }
 
@@ -178,17 +191,40 @@ function layout(ws: number[], space: number, maxEm: number) {
   return { placed, lines: lines.length, widest };
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function InProportion({
   pairs = DEFAULT_PAIRS,
+  stagger = WORD,
+  shrink = SHRINK,
   accent,
+  ink,
   background,
+  fontFamily = hubot.fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: InProportionProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, durationInFrames: T } = useVideoConfig();
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
+  const fg = ink ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
 
@@ -203,7 +239,7 @@ export function InProportion({
       ...answers.flat().map((s) => `500|${s}`),
     ]),
   );
-  const w = useWidths(specs);
+  const w = useWidths(specs, fontFamily);
 
   if (!w) {
     return (
@@ -277,10 +313,10 @@ export function InProportion({
   let clock = 4;
   list.forEach((_, i) => {
     worryStart.push(clock);
-    clock += worries[i].length * WORD + RISE + 16;
+    clock += worries[i].length * stagger + RISE + 16;
     shrinkAt.push(clock);
     answerStart.push(clock + 10);
-    clock += 10 + answers[i].length * WORD + RISE;
+    clock += 10 + answers[i].length * stagger + RISE;
     clock += i < list.length - 1 ? 24 : 0;
   });
   const room = Math.max(1, T - Math.max(30, T * 0.18));
@@ -291,91 +327,93 @@ export function InProportion({
       style={{
         background: stage,
         overflow: "hidden",
-        fontFamily: hubot.fontFamily,
+        fontFamily,
         fontWeight: 500,
       }}
     >
-      {list.map((_, i) => {
-        if (t < worryStart[i] * k - 1) return null;
-        const big = bigLays[i];
-        return worries[i].map((word, j) => {
-          const at = (worryStart[i] + j * WORD) * k;
-          const e = interpolate(t, [at, at + RISE], [0, 1], {
-            ...CLAMP,
-            easing: EASE_OUT,
+      <ScaleLayer scale={scale}>
+        {list.map((_, i) => {
+          if (t < worryStart[i] * k - 1) return null;
+          const big = bigLays[i];
+          return worries[i].map((word, j) => {
+            const at = (worryStart[i] + j * stagger) * k;
+            const e = interpolate(t, [at, at + RISE], [0, 1], {
+              ...CLAMP,
+              easing: EASE_OUT,
+            });
+            const s0 = shrinkAt[i] * k;
+            const p = interpolate(t, [s0, s0 + shrink * k], [0, 1], {
+              ...CLAMP,
+              easing: EASE_IO,
+            });
+            const bp = big.lay.placed[j];
+            const bx = mx + bp.x * big.F;
+            const by = big.y0 + bp.line * LH * big.F;
+            const sx = noteLeft + bp.x * Fs;
+            const sy = noteTops[i] + bp.line * LH * Fs;
+            const size = big.F + (Fs - big.F) * p;
+            const x = bx + (sx - bx) * p;
+            const y = by + (sy - by) * p;
+            return (
+              <div
+                key={`w${i}-${j}`}
+                style={{
+                  position: "absolute",
+                  left: x,
+                  top: y,
+                  fontSize: size,
+                  lineHeight: `${size * LH}px`,
+                  letterSpacing: `${TRACK}em`,
+                  whiteSpace: "pre",
+                  color: fg,
+                  opacity: e * (1 - (1 - NOTE_DIM) * p),
+                  transform: `translateY(${((1 - e) * size * 0.18).toFixed(2)}px)`,
+                }}
+              >
+                {word}
+              </div>
+            );
           });
-          const s0 = shrinkAt[i] * k;
-          const p = interpolate(t, [s0, s0 + SHRINK * k], [0, 1], {
+        })}
+        {list.map((_, i) => {
+          const last = i === list.length - 1;
+          const leaveAt = last ? 1e9 : worryStart[i + 1] * k - 2;
+          const leave = interpolate(t, [leaveAt, leaveAt + EXIT], [0, 1], {
             ...CLAMP,
-            easing: EASE_IO,
+            easing: EASE_IN,
           });
-          const bp = big.lay.placed[j];
-          const bx = mx + bp.x * big.F;
-          const by = big.y0 + bp.line * LH * big.F;
-          const sx = noteLeft + bp.x * Fs;
-          const sy = noteTops[i] + bp.line * LH * Fs;
-          const size = big.F + (Fs - big.F) * p;
-          const x = bx + (sx - bx) * p;
-          const y = by + (sy - by) * p;
-          return (
-            <div
-              key={`w${i}-${j}`}
-              style={{
-                position: "absolute",
-                left: x,
-                top: y,
-                fontSize: size,
-                lineHeight: `${size * LH}px`,
-                letterSpacing: `${TRACK}em`,
-                whiteSpace: "pre",
-                color: c.ink,
-                opacity: e * (1 - (1 - NOTE_DIM) * p),
-                transform: `translateY(${((1 - e) * size * 0.18).toFixed(2)}px)`,
-              }}
-            >
-              {word}
-            </div>
-          );
-        });
-      })}
-      {list.map((_, i) => {
-        const last = i === list.length - 1;
-        const leaveAt = last ? 1e9 : worryStart[i + 1] * k - 2;
-        const leave = interpolate(t, [leaveAt, leaveAt + EXIT], [0, 1], {
-          ...CLAMP,
-          easing: EASE_IN,
-        });
-        if (t < answerStart[i] * k - 1 || leave >= 1) return null;
-        const lay = answerLays[i];
-        const top = H - my - lay.lines * LH * Fa;
-        return answers[i].map((word, j) => {
-          const at = (answerStart[i] + j * WORD) * k;
-          const e = interpolate(t, [at, at + RISE], [0, 1], {
-            ...CLAMP,
-            easing: EASE_OUT,
+          if (t < answerStart[i] * k - 1 || leave >= 1) return null;
+          const lay = answerLays[i];
+          const top = H - my - lay.lines * LH * Fa;
+          return answers[i].map((word, j) => {
+            const at = (answerStart[i] + j * stagger) * k;
+            const e = interpolate(t, [at, at + RISE], [0, 1], {
+              ...CLAMP,
+              easing: EASE_OUT,
+            });
+            const p = lay.placed[j];
+            return (
+              <div
+                key={`a${i}-${j}`}
+                style={{
+                  position: "absolute",
+                  left: mx + p.x * Fa,
+                  top: top + p.line * LH * Fa,
+                  fontSize: Fa,
+                  lineHeight: `${Fa * LH}px`,
+                  letterSpacing: `${TRACK}em`,
+                  whiteSpace: "pre",
+                  color: hi,
+                  opacity: e * (1 - leave),
+                  transform: `translateY(${((1 - e) * Fa * 0.22 + leave * H * 0.04).toFixed(2)}px)`,
+                }}
+              >
+                {word}
+              </div>
+            );
           });
-          const p = lay.placed[j];
-          return (
-            <div
-              key={`a${i}-${j}`}
-              style={{
-                position: "absolute",
-                left: mx + p.x * Fa,
-                top: top + p.line * LH * Fa,
-                fontSize: Fa,
-                lineHeight: `${Fa * LH}px`,
-                letterSpacing: `${TRACK}em`,
-                whiteSpace: "pre",
-                color: hi,
-                opacity: e * (1 - leave),
-                transform: `translateY(${((1 - e) * Fa * 0.22 + leave * H * 0.04).toFixed(2)}px)`,
-              }}
-            >
-              {word}
-            </div>
-          );
-        });
-      })}
+        })}
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

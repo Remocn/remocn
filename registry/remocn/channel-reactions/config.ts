@@ -1,4 +1,11 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const channelReactionsConfig: ComponentConfig = {
   componentName: "ChannelReactions",
@@ -12,11 +19,6 @@ export const channelReactionsConfig: ComponentConfig = {
         dark: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     message: {
       type: "text-content",
@@ -39,6 +41,16 @@ export const channelReactionsConfig: ComponentConfig = {
       default: "Launch day, live",
       description: "Headline",
     },
+    time: {
+      type: "text-content",
+      default: "10:30 AM",
+      description: "Time",
+    },
+    lastReplyLabel: {
+      type: "text-content",
+      default: "Last reply just now",
+      description: "Last reply note",
+    },
     replyCount: {
       type: "number",
       default: 14,
@@ -48,6 +60,22 @@ export const channelReactionsConfig: ComponentConfig = {
       description: "Reply count",
       hiddenFromList: false,
     },
+    stagger: {
+      type: "number",
+      default: 6,
+      min: 0,
+      max: 20,
+      step: 1,
+      description: "Reaction stagger",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ground: groundControl(),
+    ...sceneControls({ font: "Onest" }),
     speed: {
       type: "number",
       default: 1,

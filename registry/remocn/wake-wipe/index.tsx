@@ -25,7 +25,22 @@ export interface WakeWipeProps {
   highlight?: string;
   eyebrow?: string;
   hold?: number;
+  /** Frames for one wake to sweep across the frame. */
+  wake?: number;
+  fontWeight?: number;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the lines (the eyebrow stays mono). Load it yourself; Figtree by default. */
+  fontFamily?: string;
+  /** Film grain over the scene. */
+  grain?: boolean;
+  /** Size of the text, around the frame's center; the wake stays full-bleed. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -67,17 +82,17 @@ const CLAMP = {
 const mix = (c: string, a: number) =>
   `color-mix(in oklab, ${c} ${(Math.max(0, Math.min(1, a)) * 100).toFixed(1)}%, transparent)`;
 
-function measure(lines: string[]) {
+function measure(lines: string[], font: string) {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
   if (!ctx) return lines.map((l) => l.length * 0.52);
-  ctx.font = `500 1000px "${figtree.fontFamily}"`;
+  ctx.font = font;
   return lines.map(
     (l) => ctx.measureText(l).width / 1000 + TRACK * Array.from(l).length,
   );
 }
 
-function useWidths(lines: string[]) {
+function useWidths(lines: string[], fontFamily: string, weight: number) {
   const [widths, setWidths] = useState<number[] | null>(null);
   const [handle] = useState(() => delayRender("wake-wipe: measuring"));
   const released = useRef(false);
@@ -87,12 +102,12 @@ function useWidths(lines: string[]) {
     Promise.all([
       figtree.waitUntilDone(),
       mono.waitUntilDone(),
-      document.fonts.load(`500 100px "${figtree.fontFamily}"`),
+      document.fonts.load(`${weight} 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
-        setWidths(measure(key.split("\n")));
+        setWidths(measure(key.split("\n"), `${weight} 1000px "${fontFamily}"`));
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -101,7 +116,7 @@ function useWidths(lines: string[]) {
     return () => {
       live = false;
     };
-  }, [key, handle]);
+  }, [key, fontFamily, weight, handle]);
   return widths;
 }
 
@@ -133,6 +148,22 @@ function Grain({ opacity }: { opacity: number }) {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function WakeWipe({
   lines = [
     "Animations you own.",
@@ -142,18 +173,31 @@ export function WakeWipe({
   highlight = "today.",
   eyebrow = "Inside remocn",
   hold = 54,
+  wake = WAKE_LEN,
+  fontWeight = 500,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = figtree.fontFamily,
+  grain = true,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: WakeWipeProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
+  const fg = ink ?? c.ink;
+  const stage =
+    background === "transparent" ? "transparent" : (background ?? c.bg);
   const items = lines.length ? lines : [""];
-  const widths = useWidths(items);
+  const widths = useWidths(items, fontFamily, fontWeight);
 
   if (!widths) {
-    return <div style={{ position: "absolute", inset: 0, background: c.bg }} />;
+    return (
+      <div style={{ position: "absolute", inset: 0, background: stage }} />
+    );
   }
 
   const portrait = H > W;
@@ -206,7 +250,7 @@ export function WakeWipe({
   );
   const frontAt = (k: number, time: number) => {
     const end = k === last ? rRest : r1;
-    const p = interpolate(time, [startOf(k), startOf(k) + WAKE_LEN], [0, 1], {
+    const p = interpolate(time, [startOf(k), startOf(k) + wake], [0, 1], {
       ...CLAMP,
       easing: EASE_WAKE,
     });
@@ -217,9 +261,9 @@ export function WakeWipe({
   const erasedAt = (k: number) => {
     if (k === 0) return startOf(0);
     const target = far(k - 1);
-    for (let s = 0; s <= WAKE_LEN; s += 0.25)
+    for (let s = 0; s <= wake; s += 0.25)
       if (frontAt(k, startOf(k) + s) >= target) return startOf(k) + s;
-    return startOf(k) + WAKE_LEN;
+    return startOf(k) + wake;
   };
   const revealAt = (k: number, time: number) => {
     const t0 = erasedAt(k);
@@ -251,8 +295,8 @@ export function WakeWipe({
     left: padX,
     width: maxW,
     top: blockTop,
-    fontFamily: figtree.fontFamily,
-    fontWeight: 500,
+    fontFamily,
+    fontWeight,
     fontSize: F,
     lineHeight: 1.04,
     letterSpacing: `${TRACK}em`,
@@ -310,7 +354,7 @@ export function WakeWipe({
   });
 
   return (
-    <AbsoluteFill style={{ background: c.bg, overflow: "hidden" }}>
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
       <div
         style={{
           position: "absolute",
@@ -318,48 +362,50 @@ export function WakeWipe({
           backgroundImage: tail(c.ground),
         }}
       />
-      {k > 0
-        ? layer("old", k - 1, "ink", {
-            color: c.ink,
-            WebkitMaskImage: outside,
-            maskImage: outside,
-          })
-        : null}
-      {layer("new", k, "ink", {
-        color: c.ink,
-        WebkitMaskImage: inside,
-        maskImage: inside,
-      })}
-      {k === last && highlight
-        ? layer("final", k, "final", { color: "transparent" })
-        : null}
-      {layer("lit", k, "lit", {
-        color: "transparent",
-        backgroundImage: revealTint(k === last ? 1 - settled : 1),
-        WebkitBackgroundClip: "text",
-        backgroundClip: "text",
-      })}
-      {eyebrow ? (
-        <div
-          style={{
-            position: "absolute",
-            left: padX,
-            top: blockTop - ebGap - ebSize,
-            lineHeight: 1,
-            fontFamily: mono.fontFamily,
-            fontWeight: 400,
-            fontSize: ebSize,
-            letterSpacing: "0.08em",
-            textTransform: "uppercase",
-            color: c.muted,
-            opacity: eyebrowP,
-            transform: `translateY(${((1 - eyebrowP) * ebSize * 0.6).toFixed(2)}px)`,
-          }}
-        >
-          {eyebrow}
-        </div>
-      ) : null}
-      <Grain opacity={c.grain} />
+      <ScaleLayer scale={scale}>
+        {k > 0
+          ? layer("old", k - 1, "ink", {
+              color: fg,
+              WebkitMaskImage: outside,
+              maskImage: outside,
+            })
+          : null}
+        {layer("new", k, "ink", {
+          color: fg,
+          WebkitMaskImage: inside,
+          maskImage: inside,
+        })}
+        {k === last && highlight
+          ? layer("final", k, "final", { color: "transparent" })
+          : null}
+        {layer("lit", k, "lit", {
+          color: "transparent",
+          backgroundImage: revealTint(k === last ? 1 - settled : 1),
+          WebkitBackgroundClip: "text",
+          backgroundClip: "text",
+        })}
+        {eyebrow ? (
+          <div
+            style={{
+              position: "absolute",
+              left: padX,
+              top: blockTop - ebGap - ebSize,
+              lineHeight: 1,
+              fontFamily: mono.fontFamily,
+              fontWeight: 400,
+              fontSize: ebSize,
+              letterSpacing: "0.08em",
+              textTransform: "uppercase",
+              color: c.muted,
+              opacity: eyebrowP,
+              transform: `translateY(${((1 - eyebrowP) * ebSize * 0.6).toFixed(2)}px)`,
+            }}
+          >
+            {eyebrow}
+          </div>
+        ) : null}
+      </ScaleLayer>
+      {grain ? <Grain opacity={c.grain} /> : null}
     </AbsoluteFill>
   );
 }

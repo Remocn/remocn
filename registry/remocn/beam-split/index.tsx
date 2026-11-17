@@ -50,6 +50,22 @@ export interface BeamSplitProps {
   title?: string;
   inner?: string;
   accent?: string;
+  /** Text color of the title; overrides the theme ink. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Color of the italic line inside the gap. */
+  innerColor?: string;
+  /** Frames the gap stays wide open before it narrows. */
+  hold?: number;
+  /** Typeface for the title. Load it yourself; Bricolage Grotesque by default. */
+  fontFamily?: string;
+  /** Film grain over the scene. */
+  grain?: boolean;
+  /** Size of the title and beam, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -123,12 +139,14 @@ function Line({
   size,
   color,
   italic = false,
+  fontFamily = display,
 }: {
   text: string;
   baseline: number;
   size: number;
   color: string;
   italic?: boolean;
+  fontFamily?: string;
 }) {
   return (
     <div
@@ -143,7 +161,7 @@ function Line({
     >
       <div
         style={{
-          fontFamily: italic ? serif : display,
+          fontFamily: italic ? serif : fontFamily,
           fontStyle: italic ? "italic" : "normal",
           fontWeight: italic ? 400 : 500,
           fontSize: size,
@@ -233,17 +251,46 @@ function Edge({
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function BeamSplit({
   title = "Ship the story",
   inner = "with motion you own",
   accent = "#3B5BFD",
+  ink,
+  background,
+  innerColor = BEAM[0],
+  hold = CLOSE_AT - OPEN_END,
+  fontFamily = display,
+  grain = true,
+  scale = 1,
+  delay = 0,
   theme = "dark",
   speed = 1,
 }: BeamSplitProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const u = H / 720;
   const c = STAGES[theme];
+  const fg = ink ?? c.fg;
+  const stage =
+    background === "transparent" ? "transparent" : (background ?? c.bg);
+  const closeAt = OPEN_END + hold;
+  const closeEnd = closeAt + (CLOSE_END - CLOSE_AT);
 
   const s = Math.min(168 * u, (0.8 * W) / widthEm(title, BRICO_500, TRACK));
   const si = Math.min(
@@ -258,7 +305,7 @@ export function BeamSplit({
   const rise = OUT(interpolate(t, [RISE_AT, RISE_END], [0, 1], CLAMP));
   const draw = DRAW(interpolate(t, [BEAM_AT, BEAM_END], [0, 1], CLAMP));
   const open = MOVE(interpolate(t, [OPEN_AT, OPEN_END], [0, 1], CLAMP));
-  const close = MOVE(interpolate(t, [CLOSE_AT, CLOSE_END], [0, 1], CLAMP));
+  const close = MOVE(interpolate(t, [closeAt, closeEnd], [0, 1], CLAMP));
 
   const G1 = 0.34 * H;
   const G2 = 0.15 * H;
@@ -268,13 +315,13 @@ export function BeamSplit({
   const k = close > 0 ? 1 + (kRes - 1) * close : 1.05 - 0.05 * open;
 
   const moving =
-    (t >= BEAM_AT && t < OPEN_END + 8) || (t >= CLOSE_AT && t < CLOSE_END + 8);
+    (t >= BEAM_AT && t < OPEN_END + 8) || (t >= closeAt && t < closeEnd + 8);
   const glowIn = interpolate(t, [BEAM_AT, BEAM_AT + 6], [0, 1], CLAMP);
   const glowRest = Math.max(
     interpolate(t, [OPEN_END - 4, OPEN_END + 10], [1, 0], CLAMP),
     interpolate(
       t,
-      [CLOSE_AT - 2, CLOSE_AT + 6, CLOSE_END - 2, CLOSE_END + 12],
+      [closeAt - 2, closeAt + 6, closeEnd - 2, closeEnd + 12],
       [0, 1, 1, 0],
       CLAMP,
     ),
@@ -285,7 +332,7 @@ export function BeamSplit({
 
   // The gap is a slab of beam light: deep indigo at the edges of frame, the
   // palette's bright core drifting a few percent across the shot.
-  const sway = interpolate(t, [OPEN_AT, CLOSE_END + 30], [-1, 1], CLAMP);
+  const sway = interpolate(t, [OPEN_AT, closeEnd + 30], [-1, 1], CLAMP);
   const edgeTone = theme === "light" ? "#14104a" : BEAM[4];
   const band = [
     `radial-gradient(38% 160% at ${50 + 6 * sway}% 50%, color-mix(in oklab, ${BEAM[1]} 55%, transparent) 0%, transparent 70%)`,
@@ -297,88 +344,102 @@ export function BeamSplit({
     `inset(${Math.max(0, top)}px 0px ${Math.max(0, H - bottom)}px 0px)`;
 
   return (
-    <AbsoluteFill style={{ background: c.bg, overflow: "hidden" }}>
-      <AbsoluteFill
-        style={{
-          opacity: rise,
-          transform: `translateY(${(1 - rise) * 14 * u}px)`,
-        }}
-      >
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
+      <ScaleLayer scale={scale}>
         <AbsoluteFill
           style={{
-            clipPath: clip(0, cut),
-            transform: `translateY(${-half}px)`,
+            opacity: rise,
+            transform: `translateY(${(1 - rise) * 14 * u}px)`,
           }}
         >
-          <Line text={title} baseline={yB} size={s} color={c.fg} />
-        </AbsoluteFill>
-        <AbsoluteFill
-          style={{
-            clipPath: clip(cut, H),
-            transform: `translateY(${half}px)`,
-          }}
-        >
-          <Line text={title} baseline={yB} size={s} color={c.fg} />
-        </AbsoluteFill>
-      </AbsoluteFill>
-
-      {split ? (
-        <AbsoluteFill style={{ clipPath: clip(cut - half, cut + half) }}>
-          <AbsoluteFill style={{ background: band }} />
           <AbsoluteFill
             style={{
-              transform: `scale(${k})`,
-              transformOrigin: `50% ${cut}px`,
+              clipPath: clip(0, cut),
+              transform: `translateY(${-half}px)`,
             }}
           >
             <Line
-              text={inner}
-              baseline={cut + (SERIF_CAP * si) / 2}
-              size={si}
-              color={BEAM[0]}
-              italic
+              text={title}
+              baseline={yB}
+              size={s}
+              color={fg}
+              fontFamily={fontFamily}
+            />
+          </AbsoluteFill>
+          <AbsoluteFill
+            style={{
+              clipPath: clip(cut, H),
+              transform: `translateY(${half}px)`,
+            }}
+          >
+            <Line
+              text={title}
+              baseline={yB}
+              size={s}
+              color={fg}
+              fontFamily={fontFamily}
             />
           </AbsoluteFill>
         </AbsoluteFill>
-      ) : null}
 
-      {split ? (
-        <>
+        {split ? (
+          <AbsoluteFill style={{ clipPath: clip(cut - half, cut + half) }}>
+            <AbsoluteFill style={{ background: band }} />
+            <AbsoluteFill
+              style={{
+                transform: `scale(${k})`,
+                transformOrigin: `50% ${cut}px`,
+              }}
+            >
+              <Line
+                text={inner}
+                baseline={cut + (SERIF_CAP * si) / 2}
+                size={si}
+                color={innerColor}
+                italic
+              />
+            </AbsoluteFill>
+          </AbsoluteFill>
+        ) : null}
+
+        {split ? (
+          <>
+            <Edge
+              y={cut - half}
+              draw={draw}
+              width={W}
+              lw={lw}
+              accent={accent}
+              glowUp={0}
+              glowDown={glow * (gapGlow / fall)}
+              fall={gapGlow}
+            />
+            <Edge
+              y={cut + half}
+              draw={draw}
+              width={W}
+              lw={lw}
+              accent={accent}
+              glowUp={glow * (gapGlow / fall)}
+              glowDown={0}
+              fall={gapGlow}
+            />
+          </>
+        ) : (
           <Edge
-            y={cut - half}
+            y={cut}
             draw={draw}
             width={W}
             lw={lw}
             accent={accent}
-            glowUp={0}
-            glowDown={glow * (gapGlow / fall)}
-            fall={gapGlow}
+            glowUp={glow}
+            glowDown={glow}
+            fall={fall}
           />
-          <Edge
-            y={cut + half}
-            draw={draw}
-            width={W}
-            lw={lw}
-            accent={accent}
-            glowUp={glow * (gapGlow / fall)}
-            glowDown={0}
-            fall={gapGlow}
-          />
-        </>
-      ) : (
-        <Edge
-          y={cut}
-          draw={draw}
-          width={W}
-          lw={lw}
-          accent={accent}
-          glowUp={glow}
-          glowDown={glow}
-          fall={fall}
-        />
-      )}
+        )}
+      </ScaleLayer>
 
-      <Grain opacity={theme === "light" ? 0.04 : 0.05} />
+      {grain ? <Grain opacity={theme === "light" ? 0.04 : 0.05} /> : null}
     </AbsoluteFill>
   );
 }

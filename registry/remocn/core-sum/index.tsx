@@ -26,7 +26,19 @@ export interface CoreSumProps {
   label?: string;
   partLabel?: string;
   accent?: string;
+  /** Text color of the total and its caption; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the numbers and labels. Load it yourself; Saira by default. */
+  fontFamily?: string;
+  /** Frames between the partial rows as they count in. */
+  stagger?: number;
+  /** Frames between one merge step and the next. */
+  mergeGap?: number;
+  /** Size of the table, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -86,11 +98,11 @@ interface Metrics {
   base: number;
 }
 
-function measure(extra: string): Metrics {
+function measure(extra: string, fontFamily: string): Metrics {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("core-sum: no 2d context");
-  ctx.font = `500 ${FONT_PX}px "${saira.fontFamily}"`;
+  ctx.font = `500 ${FONT_PX}px "${fontFamily}"`;
   ctx.fontKerning = "none";
   const digit = ctx.measureText("0").width / FONT_PX;
   const chars: Record<string, number> = {};
@@ -108,7 +120,7 @@ function measure(extra: string): Metrics {
   };
 }
 
-function useMetrics(extra: string) {
+function useMetrics(extra: string, fontFamily: string) {
   const [metrics, setMetrics] = useState<Metrics | null>(null);
   const [handle] = useState(() => delayRender("core-sum: measuring"));
   const released = useRef(false);
@@ -116,13 +128,13 @@ function useMetrics(extra: string) {
     let live = true;
     Promise.all([
       saira.waitUntilDone(),
-      document.fonts.load(`500 100px "${saira.fontFamily}"`),
-      document.fonts.load(`400 100px "${saira.fontFamily}"`),
+      document.fonts.load(`500 100px "${fontFamily}"`),
+      document.fonts.load(`400 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
-        setMetrics(measure(extra));
+        setMetrics(measure(extra, fontFamily));
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -131,7 +143,7 @@ function useMetrics(extra: string) {
     return () => {
       live = false;
     };
-  }, [extra, handle]);
+  }, [extra, fontFamily, handle]);
   return metrics;
 }
 
@@ -144,6 +156,22 @@ function widthOf(m: Metrics, s: string) {
   return w + TRACK * Math.max(0, chars.length - 1);
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function CoreSum({
   value = 2097152,
   parts = 8,
@@ -152,15 +180,22 @@ export function CoreSum({
   label = "frames per night, every core busy",
   partLabel = "core",
   accent,
+  ink,
   background,
+  fontFamily = saira.fontFamily,
+  stagger = STAGGER,
+  mergeGap = MERGE_GAP,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: CoreSumProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
   const bg = background ?? c.bg;
   const hue = accent ?? c.accent;
+  const fg = ink ?? c.ink;
 
   const count = useMemo(() => {
     const p = Math.round(Math.log2(Math.max(2, parts)));
@@ -177,7 +212,7 @@ export function CoreSum({
     return out;
   }, [count, value]);
 
-  const m = useMetrics(`${prefix}${suffix}`);
+  const m = useMetrics(`${prefix}${suffix}`, fontFamily);
 
   if (!m) {
     return <div style={{ position: "absolute", inset: 0, background: bg }} />;
@@ -215,7 +250,7 @@ export function CoreSum({
     return top + (i + 0.5) * pitch;
   };
 
-  const mergeAt = (l: number) => FIRST_MERGE + (l - 1) * MERGE_GAP;
+  const mergeAt = (l: number) => FIRST_MERGE + (l - 1) * mergeGap;
   const mergeP = (l: number) =>
     interpolate(t, [mergeAt(l), mergeAt(l) + MERGE_LEN], [0, 1], {
       ...CLAMP,
@@ -248,7 +283,7 @@ export function CoreSum({
         left: x,
         top: cy - m.base * F + (m.cap * F) / 2,
         height: F,
-        fontFamily: saira.fontFamily,
+        fontFamily,
         fontWeight: 500,
         fontSize: F,
         lineHeight: `${F}px`,
@@ -293,11 +328,11 @@ export function CoreSum({
           left: margin,
           top: capTop - size * 0.28,
           width: colX - margin - Math.min(W, H) * 0.03,
-          fontFamily: saira.fontFamily,
+          fontFamily,
           fontWeight: 400,
           fontSize: size,
           lineHeight: `${size * 1.25}px`,
-          color: l === levels ? c.ink : c.small,
+          color: l === levels ? fg : c.small,
           opacity,
           textWrap: "balance",
         }}
@@ -310,7 +345,7 @@ export function CoreSum({
   if (level === 0) {
     const F = sizeAt(0);
     leaves.forEach((v, i) => {
-      const start = i * STAGGER;
+      const start = i * stagger;
       const cp = interpolate(t, [start, start + COUNT_LEN], [0, 1], {
         ...CLAMP,
         easing: EASE_OUT,
@@ -352,7 +387,7 @@ export function CoreSum({
     const F = F0 + (F1 - F0) * p;
     const isFinal = l === levels;
     const k = Math.min(1, (l - 1 + p) / Math.max(1, levels - 1));
-    const color = `color-mix(in oklab, ${c.ink} ${(k * 100).toFixed(1)}%, ${c.small})`;
+    const color = `color-mix(in oklab, ${fg} ${(k * 100).toFixed(1)}%, ${c.small})`;
     sums[l].forEach((_, i) => {
       const va = sums[l - 1][2 * i];
       const vb = sums[l - 1][2 * i + 1];
@@ -383,7 +418,7 @@ export function CoreSum({
       if (isFinal) {
         nodes.push(
           glyphs(sa, valX, ay, F, `a${l}-${i}`, {
-            color: `color-mix(in oklab, ${hue} ${(fillP * 100).toFixed(1)}%, ${c.ink})`,
+            color: `color-mix(in oklab, ${hue} ${(fillP * 100).toFixed(1)}%, ${fg})`,
           }),
         );
       } else {
@@ -451,24 +486,26 @@ export function CoreSum({
 
   return (
     <AbsoluteFill style={{ background: bg, overflow: "hidden" }}>
-      <svg
-        width={W}
-        height={H}
-        style={{ position: "absolute", inset: 0 }}
-        aria-hidden
-      >
-        {rules}
-        <line
-          x1={colX}
-          x2={colX}
-          y1={top}
-          y2={top + regionH * drawIn}
-          stroke={c.rule}
-          strokeWidth={1}
-        />
-      </svg>
-      {labels}
-      {nodes}
+      <ScaleLayer scale={scale}>
+        <svg
+          width={W}
+          height={H}
+          style={{ position: "absolute", inset: 0 }}
+          aria-hidden
+        >
+          {rules}
+          <line
+            x1={colX}
+            x2={colX}
+            y1={top}
+            y2={top + regionH * drawIn}
+            stroke={c.rule}
+            strokeWidth={1}
+          />
+        </svg>
+        {labels}
+        {nodes}
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

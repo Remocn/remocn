@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const aspectSlitConfig: ComponentConfig = {
   componentName: "AspectSlit",
@@ -12,11 +18,6 @@ export const aspectSlitConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     title: {
       type: "text-content",
@@ -37,6 +38,13 @@ export const aspectSlitConfig: ComponentConfig = {
       description: "Slit",
       hiddenFromList: false,
     },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    barColor: { type: "color", default: "#0A0A0B", description: "Bars" },
+    ...sceneControls({ font: "Instrument Serif", grain: true }),
     speed: {
       type: "number",
       default: 1,

@@ -1,6 +1,7 @@
 "use client";
 
 import { loadFont as loadAnton } from "@remotion/google-fonts/Anton";
+import type React from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AbsoluteFill,
@@ -17,8 +18,20 @@ const anton = loadAnton("normal", { weights: ["400"], subsets: ["latin"] });
 export interface SqueezeOutProps {
   text?: string;
   highlight?: string;
+  /** Width a letter leaves the nozzle at, as a share of its full width. */
+  squeeze?: number;
+  /** Frames for a squeezed letter to relax to full width. */
+  relax?: number;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the text. Load it yourself; Anton by default. */
+  fontFamily?: string;
+  /** Size of the text, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -59,7 +72,7 @@ interface Metrics {
   desc: number;
 }
 
-function measure(text: string): Metrics {
+function measure(text: string, fontFamily: string): Metrics {
   const probe = document.createElement("span");
   Object.assign(probe.style, {
     position: "absolute",
@@ -67,7 +80,7 @@ function measure(text: string): Metrics {
     top: "0",
     visibility: "hidden",
     whiteSpace: "pre",
-    fontFamily: `"${anton.fontFamily}"`,
+    fontFamily: `"${fontFamily}"`,
     fontWeight: "400",
     fontSize: "100px",
     lineHeight: "1",
@@ -103,7 +116,7 @@ function measure(text: string): Metrics {
   canvas.height = 400;
   const ctx = canvas.getContext("2d");
   if (ctx) {
-    ctx.font = `400 200px "${anton.fontFamily}"`;
+    ctx.font = `400 200px "${fontFamily}"`;
     const fm = ctx.measureText("Hdgpy");
     const asc = fm.fontBoundingBoxAscent / 200;
     const d = fm.fontBoundingBoxDescent / 200;
@@ -114,7 +127,7 @@ function measure(text: string): Metrics {
   return { words, space, baseline, cap, desc };
 }
 
-function useMetrics(text: string) {
+function useMetrics(text: string, fontFamily: string) {
   const [state, setState] = useState<{ key: string; m: Metrics } | null>(null);
   const [handle] = useState(() => delayRender("squeeze-out: measuring"));
   const released = useRef(false);
@@ -122,12 +135,12 @@ function useMetrics(text: string) {
     let live = true;
     Promise.all([
       anton.waitUntilDone(),
-      document.fonts.load(`400 100px "${anton.fontFamily}"`),
+      document.fonts.load(`400 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
-        setState({ key: text, m: measure(text) });
+        setState({ key: text, m: measure(text, fontFamily) });
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -136,7 +149,7 @@ function useMetrics(text: string) {
     return () => {
       live = false;
     };
-  }, [text, handle]);
+  }, [text, fontFamily, handle]);
   return state && state.key === text ? state.m : null;
 }
 
@@ -177,19 +190,42 @@ interface Glyph {
   hi: boolean;
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function SqueezeOut({
   text = "Freshly pressed frames.",
   highlight = "",
+  squeeze = SQ_MIN,
+  relax = RELAX,
   accent,
+  ink,
   background,
+  fontFamily = anton.fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: SqueezeOutProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
-  const spot = accent ?? c.ink;
-  const m = useMetrics(text);
+  const fg = ink ?? c.ink;
+  const spot = accent ?? fg;
+  const m = useMetrics(text, fontFamily);
 
   const hiWords = useMemo(
     () =>
@@ -279,74 +315,76 @@ export function SqueezeOut({
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
-      {rows.map((row, r) => {
-        const lineW = row.reduce((a, g) => a + g.adv, 0) * F;
-        const nozzle = x0 + lineW;
-        const base = firstBase + r * lineH;
-        const top = base - m.cap * F - F * 0.12;
-        const h = (m.cap + m.desc) * F + F * 0.24;
-        const boxTop = base - m.baseline * F;
-        const p = P(r, t);
+      <ScaleLayer scale={scale}>
+        {rows.map((row, r) => {
+          const lineW = row.reduce((a, g) => a + g.adv, 0) * F;
+          const nozzle = x0 + lineW;
+          const base = firstBase + r * lineH;
+          const top = base - m.cap * F - F * 0.12;
+          const h = (m.cap + m.desc) * F + F * 0.24;
+          const boxTop = base - m.baseline * F;
+          const p = P(r, t);
 
-        const cur = row.map((g, j) => {
-          const age = t - leaveAt(r, j);
-          const sq =
-            SQ_MIN +
-            (1 - SQ_MIN) *
-              interpolate(age, [0, RELAX], [0, 1], {
-                ...CLAMP,
-                easing: EASE_RELAX,
-              });
-          const out = Math.min(1, Math.max(0, p - j));
-          return { sq, w: g.adv * sq * F, out };
-        });
-        const xs: number[] = new Array(row.length).fill(0);
-        let edge = nozzle;
-        for (let j = row.length - 1; j >= 0; j--) {
-          edge -= cur[j].out * cur[j].w;
-          xs[j] = edge;
-        }
-        return (
-          <div
-            key={`row-${r}`}
-            style={{
-              position: "absolute",
-              left: 0,
-              top,
-              width: nozzle,
-              height: h,
-              overflow: "hidden",
-            }}
-          >
-            {row.map((g, j) => {
-              if (cur[j].out <= 0 || g.ch === " ") return null;
-              return (
-                <div
-                  key={`g-${r}-${j}`}
-                  style={{
-                    position: "absolute",
-                    left: xs[j],
-                    top: boxTop - top,
-                    height: F,
-                    lineHeight: `${F}px`,
-                    whiteSpace: "pre",
-                    fontFamily: anton.fontFamily,
-                    fontWeight: 400,
-                    fontSize: F,
-                    letterSpacing: `${TRACK}em`,
-                    color: g.hi ? spot : c.ink,
-                    transformOrigin: "0% 50%",
-                    transform: `scaleX(${cur[j].sq.toFixed(4)})`,
-                    opacity: Math.min(1, 0.25 + cur[j].out),
-                  }}
-                >
-                  {g.ch}
-                </div>
-              );
-            })}
-          </div>
-        );
-      })}
+          const cur = row.map((g, j) => {
+            const age = t - leaveAt(r, j);
+            const sq =
+              squeeze +
+              (1 - squeeze) *
+                interpolate(age, [0, relax], [0, 1], {
+                  ...CLAMP,
+                  easing: EASE_RELAX,
+                });
+            const out = Math.min(1, Math.max(0, p - j));
+            return { sq, w: g.adv * sq * F, out };
+          });
+          const xs: number[] = new Array(row.length).fill(0);
+          let edge = nozzle;
+          for (let j = row.length - 1; j >= 0; j--) {
+            edge -= cur[j].out * cur[j].w;
+            xs[j] = edge;
+          }
+          return (
+            <div
+              key={`row-${r}`}
+              style={{
+                position: "absolute",
+                left: 0,
+                top,
+                width: nozzle,
+                height: h,
+                overflow: "hidden",
+              }}
+            >
+              {row.map((g, j) => {
+                if (cur[j].out <= 0 || g.ch === " ") return null;
+                return (
+                  <div
+                    key={`g-${r}-${j}`}
+                    style={{
+                      position: "absolute",
+                      left: xs[j],
+                      top: boxTop - top,
+                      height: F,
+                      lineHeight: `${F}px`,
+                      whiteSpace: "pre",
+                      fontFamily,
+                      fontWeight: 400,
+                      fontSize: F,
+                      letterSpacing: `${TRACK}em`,
+                      color: g.hi ? spot : fg,
+                      transformOrigin: "0% 50%",
+                      transform: `scaleX(${cur[j].sq.toFixed(4)})`,
+                      opacity: Math.min(1, 0.25 + cur[j].out),
+                    }}
+                  >
+                    {g.ch}
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })}
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

@@ -22,8 +22,18 @@ export interface OnApproachProps {
   lead?: string;
   steps?: string[];
   interval?: number;
+  /** Frame of the first swap. */
+  swapAt?: number;
   accent?: string;
+  /** Text color of the lead; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the line. Load it yourself; Red Hat Display by default. */
+  fontFamily?: string;
+  /** Size of the line, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -56,11 +66,11 @@ interface Metrics {
   cap: number;
 }
 
-function measureAll(texts: string[]): Metrics {
+function measureAll(texts: string[], family: string): Metrics {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("on-approach: no 2d context");
-  ctx.font = `${WGHT} ${FONT_PX}px "${redHat.fontFamily}"`;
+  ctx.font = `${WGHT} ${FONT_PX}px "${family}"`;
   const w: Record<string, number> = {};
   for (const s of texts) {
     w[s] = ctx.measureText(s).width / FONT_PX + TRACK * Array.from(s).length;
@@ -75,7 +85,7 @@ function measureAll(texts: string[]): Metrics {
   };
 }
 
-function useMetrics(texts: string[]) {
+function useMetrics(texts: string[], family: string) {
   const key = texts.join("\u0001");
   const [state, setState] = useState<{ key: string; m: Metrics } | null>(null);
   const [handle] = useState(() => delayRender("on-approach: measuring"));
@@ -84,12 +94,15 @@ function useMetrics(texts: string[]) {
     let live = true;
     Promise.all([
       redHat.waitUntilDone(),
-      document.fonts.load(`${WGHT} 100px "${redHat.fontFamily}"`),
+      document.fonts.load(`${WGHT} 100px "${family}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
-        setState({ key, m: measureAll(key.split("\u0001")) });
+        setState({
+          key: key + family,
+          m: measureAll(key.split("\u0001"), family),
+        });
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -98,20 +111,41 @@ function useMetrics(texts: string[]) {
     return () => {
       live = false;
     };
-  }, [key, handle]);
-  return state && state.key === key ? state.m : null;
+  }, [key, family, handle]);
+  return state && state.key === key + family ? state.m : null;
+}
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
 }
 
 export function OnApproach({
   lead = "Wheels up",
   steps = ["in June.", "next week.", "tomorrow.", "today."],
   interval = 30,
+  swapAt = FIRST,
   accent,
+  ink,
   background,
+  fontFamily = redHat.fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: OnApproachProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
@@ -120,7 +154,10 @@ export function OnApproach({
 
   const list = steps.length > 0 ? steps : ["today."];
   const leadSp = `${lead} `;
-  const m = useMetrics([leadSp, lead, ...list, ...list.map((s) => leadSp + s)]);
+  const m = useMetrics(
+    [leadSp, lead, ...list, ...list.map((s) => leadSp + s)],
+    fontFamily,
+  );
 
   if (!m) {
     return (
@@ -150,7 +187,7 @@ export function OnApproach({
     return Math.min(geo, measureW / Math.max(0.1, m.w[leadSp + s]));
   });
 
-  const stepAt = (k: number) => FIRST + (k - 1) * Math.max(16, interval);
+  const stepAt = (k: number) => swapAt + (k - 1) * Math.max(16, interval);
 
   let k = 0;
   for (let i = 1; i <= last; i++) if (t >= stepAt(i)) k = i;
@@ -176,7 +213,7 @@ export function OnApproach({
     height: s,
     lineHeight: `${s}px`,
     whiteSpace: "pre",
-    fontFamily: redHat.fontFamily,
+    fontFamily,
     fontWeight: WGHT,
     fontSize: s,
     letterSpacing: `${TRACK}em`,
@@ -194,7 +231,7 @@ export function OnApproach({
     <div
       key="lead"
       style={{
-        ...textStyle(size, c.ink),
+        ...textStyle(size, ink ?? c.ink),
         left: marginX,
         top: boxTop(base, size),
         opacity: intro,
@@ -262,7 +299,7 @@ export function OnApproach({
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
-      {nodes}
+      <ScaleLayer scale={scale}>{nodes}</ScaleLayer>
     </AbsoluteFill>
   );
 }

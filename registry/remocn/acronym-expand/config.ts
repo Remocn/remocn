@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const acronymExpandConfig: ComponentConfig = {
   componentName: "AcronymExpand",
@@ -12,11 +18,6 @@ export const acronymExpandConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     short: {
       type: "text-content",
@@ -38,6 +39,30 @@ export const acronymExpandConfig: ComponentConfig = {
       default: "Your agent browses, installs and edits every component.",
       description: "Subhead",
     },
+    expandAt: {
+      type: "number",
+      default: 38,
+      min: 10,
+      max: 80,
+      step: 1,
+      description: "Expand at (frame)",
+      hiddenFromList: false,
+    },
+    expandLength: {
+      type: "number",
+      default: 26,
+      min: 8,
+      max: 60,
+      step: 1,
+      description: "Expand length (frames)",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Sora" }),
     speed: {
       type: "number",
       default: 1,

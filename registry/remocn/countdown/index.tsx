@@ -66,6 +66,22 @@ export interface CountdownProps {
   /** Frames per number. */
   beat?: number;
   accent?: string;
+  /** Text color of the numerals, final label and mark; overrides the theme ink. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the numerals and labels. Load it yourself; Bricolage Grotesque by default. */
+  fontFamily?: string;
+  /** Weight of the countdown numerals. */
+  fontWeight?: number;
+  /** Glowing ring behind the numerals that opens around the final label. */
+  halo?: boolean;
+  /** Size of the countdown, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  /** Film grain over the scene. */
+  grain?: boolean;
   /** Playback multiplier. */
   speed?: number;
   theme?: "dark" | "light";
@@ -150,11 +166,15 @@ function Numeral({
   n,
   size,
   color,
+  fontFamily,
+  fontWeight,
   style,
 }: {
   n: number;
   size: number;
   color: string;
+  fontFamily: string;
+  fontWeight: number;
   style?: React.CSSProperties;
 }) {
   return (
@@ -168,8 +188,8 @@ function Numeral({
     >
       <div
         style={{
-          fontFamily: sans,
-          fontWeight: 400,
+          fontFamily,
+          fontWeight,
           fontSize: size,
           lineHeight: 1,
           letterSpacing: "-0.04em",
@@ -185,6 +205,22 @@ function Numeral({
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function Countdown({
   from = 3,
   finalLabel = "Live",
@@ -193,13 +229,23 @@ export function Countdown({
   logo,
   beat = 20,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = sans,
+  fontWeight = 400,
+  halo: showHalo = true,
+  scale: zoom = 1,
+  delay = 0,
+  grain = true,
   speed = 1,
   theme = "dark",
 }: CountdownProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, fps } = useVideoConfig();
   const u = height / 720;
   const p: Palette = THEMES[theme];
+  const fg = ink ?? p.fg;
+  const bg = background ?? p.bg;
   const count = Math.max(1, Math.round(from));
   const size = height * 0.66;
   const ringR = height * 0.36;
@@ -357,7 +403,9 @@ export function Countdown({
                 key={`h${k}${dir}${g}`}
                 n={n}
                 size={size}
-                color={p.fg}
+                color={fg}
+                fontFamily={fontFamily}
+                fontWeight={fontWeight}
                 style={{
                   clipPath: clip,
                   transform: `translate(${dir * sh * shift}px, ${dir * gapY}px) scale(${scale})`,
@@ -408,7 +456,9 @@ export function Countdown({
               key={`g${k}${g}`}
               n={n}
               size={size}
-              color={p.fg}
+              color={fg}
+              fontFamily={fontFamily}
+              fontWeight={fontWeight}
               style={{
                 transform: `scale(${scale * grow(gr)})`,
                 opacity:
@@ -433,7 +483,15 @@ export function Countdown({
         maskImage: mask,
       };
       layers.push(
-        <Numeral key={`n${k}`} n={n} size={size} color={p.fg} style={style} />,
+        <Numeral
+          key={`n${k}`}
+          n={n}
+          size={size}
+          color={fg}
+          fontFamily={fontFamily}
+          fontWeight={fontWeight}
+          style={style}
+        />,
       );
     }
   }
@@ -481,7 +539,7 @@ export function Countdown({
   const capLogo =
     logo ??
     (finalIsLogo && !capMatch ? null : (
-      <RemocnLogo fontSize={27 * u} color={p.fg} />
+      <RemocnLogo fontSize={27 * u} color={fg} />
     ));
   // the whole stage leans in a touch at the cut, then settles
   const stageKick =
@@ -507,97 +565,101 @@ export function Countdown({
   const sweep = 200 + t * 1.1;
 
   return (
-    <AbsoluteFill style={{ background: p.bg, overflow: "hidden" }}>
+    <AbsoluteFill style={{ background: bg, overflow: "hidden" }}>
       <AbsoluteFill
         style={{
           background: `radial-gradient(ellipse 60% 65% at 50% 38%, ${p.stage}, transparent 75%)`,
         }}
       />
-      <AbsoluteFill
-        style={{
-          background: halo,
-          opacity: haloIn,
-          transform: `scale(${haloScale})`,
-          WebkitMaskImage: `conic-gradient(from ${sweep}deg at 50% 50%, rgba(0,0,0,0.55), #000 40%, rgba(0,0,0,0.55) 70%, rgba(0,0,0,0.55))`,
-          maskImage: `conic-gradient(from ${sweep}deg at 50% 50%, rgba(0,0,0,0.55), #000 40%, rgba(0,0,0,0.55) 70%, rgba(0,0,0,0.55))`,
-        }}
-      />
-      <AbsoluteFill style={{ transform: `scale(${stageKick})` }}>
-        {layers}
-        {overlays}
-
-        {t >= final - 1 && (
+      <ScaleLayer scale={zoom}>
+        {showHalo ? (
           <AbsoluteFill
             style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 30 * u,
+              background: halo,
+              opacity: haloIn,
+              transform: `scale(${haloScale})`,
+              WebkitMaskImage: `conic-gradient(from ${sweep}deg at 50% 50%, rgba(0,0,0,0.55), #000 40%, rgba(0,0,0,0.55) 70%, rgba(0,0,0,0.55))`,
+              maskImage: `conic-gradient(from ${sweep}deg at 50% 50%, rgba(0,0,0,0.55), #000 40%, rgba(0,0,0,0.55) 70%, rgba(0,0,0,0.55))`,
             }}
-          >
-            <div
+          />
+        ) : null}
+        <AbsoluteFill style={{ transform: `scale(${stageKick})` }}>
+          {layers}
+          {overlays}
+
+          {t >= final - 1 && (
+            <AbsoluteFill
               style={{
                 display: "flex",
+                flexDirection: "column",
                 alignItems: "center",
-                gap: finalSize * 0.16,
-                opacity: fO,
-                filter: fBlur > 0.2 ? `blur(${fBlur}px)` : undefined,
-                transform: `scale(${0.9 + 0.1 * f})`,
+                justifyContent: "center",
+                gap: 30 * u,
               }}
             >
-              {indicator && (
-                <div
-                  style={{
-                    width: finalSize * 0.2,
-                    height: finalSize * 0.2,
-                    borderRadius: "50%",
-                    background: accent,
-                    transform: `scale(${0.5 + 0.5 * dot})`,
-                    marginTop: finalSize * 0.06,
-                  }}
-                />
-              )}
-              {finalIsLogo ? (
-                <RemocnLogo fontSize={finalSize} color={p.fg} />
-              ) : (
-                <div
-                  style={{
-                    fontFamily: sans,
-                    fontWeight: 500,
-                    fontSize: finalSize,
-                    lineHeight: 1,
-                    letterSpacing: "-0.04em",
-                    color: p.fg,
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {finalLabel}
-                </div>
-              )}
-            </div>
-            {caption !== "" && (
               <div
                 style={{
                   display: "flex",
                   alignItems: "center",
-                  gap: 10 * u,
-                  opacity: cap,
-                  transform: `translateY(${(1 - cap) * 12 * u}px)`,
-                  fontFamily: sans,
-                  fontWeight: 400,
-                  fontSize: 24 * u,
-                  letterSpacing: "-0.01em",
-                  color: p.muted,
+                  gap: finalSize * 0.16,
+                  opacity: fO,
+                  filter: fBlur > 0.2 ? `blur(${fBlur}px)` : undefined,
+                  transform: `scale(${0.9 + 0.1 * f})`,
                 }}
               >
-                {capLogo}
-                {capText}
+                {indicator && (
+                  <div
+                    style={{
+                      width: finalSize * 0.2,
+                      height: finalSize * 0.2,
+                      borderRadius: "50%",
+                      background: accent,
+                      transform: `scale(${0.5 + 0.5 * dot})`,
+                      marginTop: finalSize * 0.06,
+                    }}
+                  />
+                )}
+                {finalIsLogo ? (
+                  <RemocnLogo fontSize={finalSize} color={fg} />
+                ) : (
+                  <div
+                    style={{
+                      fontFamily,
+                      fontWeight: 500,
+                      fontSize: finalSize,
+                      lineHeight: 1,
+                      letterSpacing: "-0.04em",
+                      color: fg,
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {finalLabel}
+                  </div>
+                )}
               </div>
-            )}
-          </AbsoluteFill>
-        )}
-      </AbsoluteFill>
+              {caption !== "" && (
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10 * u,
+                    opacity: cap,
+                    transform: `translateY(${(1 - cap) * 12 * u}px)`,
+                    fontFamily,
+                    fontWeight: 400,
+                    fontSize: 24 * u,
+                    letterSpacing: "-0.01em",
+                    color: p.muted,
+                  }}
+                >
+                  {capLogo}
+                  {capText}
+                </div>
+              )}
+            </AbsoluteFill>
+          )}
+        </AbsoluteFill>
+      </ScaleLayer>
 
       {/* exposure push at the hit: light lifts, no white flash */}
       <AbsoluteFill
@@ -608,11 +670,11 @@ export function Countdown({
       />
       <AbsoluteFill
         style={{
-          background: `radial-gradient(ellipse 80% 80% at 50% 50%, transparent 60%, ${p.bg} 100%)`,
+          background: `radial-gradient(ellipse 80% 80% at 50% 50%, transparent 60%, ${bg} 100%)`,
           opacity: 0.6,
         }}
       />
-      <Grain opacity={p.grain} />
+      {grain ? <Grain opacity={p.grain} /> : null}
     </AbsoluteFill>
   );
 }

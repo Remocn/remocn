@@ -49,6 +49,21 @@ export interface SignalResolveProps {
   /** Number of noisy traces before they resolve. */
   traces?: number;
   accent?: string;
+  /** Color of the traces, the name and the serif sentence; overrides the theme ink. */
+  ink?: string;
+  background?: string;
+  /** Typeface for the caption. Load it yourself; Instrument Sans by default. */
+  fontFamily?: string;
+  /** Frames between caption words as they fade up. */
+  stagger?: number;
+  /** The scope graticule behind the traces. */
+  grid?: boolean;
+  /** Size of the scope, lockup and caption, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  /** Film grain over the scene. */
+  grain?: boolean;
   /** Playback multiplier. */
   speed?: number;
   theme?: "dark" | "light";
@@ -243,18 +258,46 @@ function Graticule({
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function SignalResolve({
   name = "emocn",
   caption = "Less noise. More signal.",
   traces = 5,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = sans,
+  stagger = 3,
+  grid = true,
+  scale = 1,
+  delay = 0,
+  grain = true,
   speed = 1,
   theme = "dark",
 }: SignalResolveProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height } = useVideoConfig();
   const u = height / 720;
   const pal = THEMES[theme];
+  const fg = ink ?? pal.fg;
+  const transparent = background === "transparent";
+  const stage = transparent ? "transparent" : (background ?? pal.bg);
+  const knock = transparent ? pal.bg : stage;
   const beam = BEAM[theme];
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
 
@@ -332,7 +375,7 @@ export function SignalResolve({
             key={`${i}-${lag}`}
             d={tracePath(i, t - lag)}
             fill="none"
-            stroke={pal.fg}
+            stroke={fg}
             strokeWidth={stroke}
             strokeLinejoin="round"
             opacity={base * o * 0.75}
@@ -414,7 +457,7 @@ export function SignalResolve({
     }
   });
   const word = (i: number) =>
-    interpolate(t, [198 + i * 3, 218 + i * 3], [0, 1], {
+    interpolate(t, [198 + i * stagger, 218 + i * stagger], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
     });
@@ -424,256 +467,262 @@ export function SignalResolve({
   const lineGrad = `url(#l${uid})`;
 
   return (
-    <AbsoluteFill style={{ background: pal.bg, overflow: "hidden" }}>
-      <AbsoluteFill
-        style={{
-          background: `radial-gradient(ellipse 60% 50% at 50% 45%, ${pal.wash}, transparent 75%)`,
-        }}
-      />
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
+      {!transparent ? (
+        <AbsoluteFill
+          style={{
+            background: `radial-gradient(ellipse 60% 50% at 50% 45%, ${pal.wash}, transparent 75%)`,
+          }}
+        />
+      ) : null}
 
-      {/* scope */}
-      <AbsoluteFill
-        style={{
-          WebkitMaskImage: reeling ? undefined : edgeMask,
-          maskImage: reeling ? undefined : edgeMask,
-        }}
-      >
-        <svg
-          width={width}
-          height={height}
-          viewBox={`0 0 ${width} ${height}`}
-          style={{ position: "absolute", inset: 0 }}
-          aria-hidden
+      <ScaleLayer scale={scale}>
+        {/* scope */}
+        <AbsoluteFill
+          style={{
+            WebkitMaskImage: reeling ? undefined : edgeMask,
+            maskImage: reeling ? undefined : edgeMask,
+          }}
         >
-          <defs>
-            <linearGradient id={`h${uid}`} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0" stopColor={pal.fg} stopOpacity={0} />
-              <stop offset="0.5" stopColor={pal.fg} stopOpacity={0.42} />
-              <stop offset="1" stopColor={pal.fg} stopOpacity={0} />
-            </linearGradient>
-            <linearGradient
-              id={`l${uid}`}
-              gradientUnits="userSpaceOnUse"
-              x1={width * 0.05}
-              y1={0}
-              x2={width * 0.95}
-              y2={0}
-            >
-              <stop offset="0" stopColor={beam.line[0]} />
-              <stop offset="0.5" stopColor={beam.line[1]} />
-              <stop offset="1" stopColor={beam.line[2]} />
-            </linearGradient>
-            <linearGradient
-              id={`f${uid}`}
-              gradientUnits="userSpaceOnUse"
-              x1={0}
-              y1={0}
-              x2={entryX}
-              y2={0}
-            >
-              <stop offset="0" stopColor="#fff" stopOpacity={0} />
-              <stop offset="0.4" stopColor="#fff" stopOpacity={0.6} />
-              <stop offset="1" stopColor="#fff" stopOpacity={1} />
-            </linearGradient>
-            <mask id={`m${uid}`} maskUnits="userSpaceOnUse">
-              <rect
-                x={0}
-                y={0}
-                width={width}
-                height={height}
-                fill={`url(#f${uid})`}
-              />
-            </mask>
-            <clipPath id={`c${uid}`}>
-              <rect x={0} y={0} width={paintX} height={height} />
-            </clipPath>
-          </defs>
-          <Graticule
+          <svg
             width={width}
             height={height}
-            cy={cy}
-            opacity={gratO}
-            pal={pal}
-            u={u}
-          />
-          {traceEls}
-          {scopeVisible && paintX > 0 ? (
-            <path
-              d={tracePath(0, t, true)}
-              fill="none"
-              stroke={lineGrad}
-              strokeWidth={stroke * 1.5}
-              strokeLinejoin="round"
-              strokeLinecap="round"
-              clipPath={`url(#c${uid})`}
-            />
-          ) : null}
-          {sweepOn ? (
-            <g opacity={sweepO}>
-              <rect
-                x={lockX - 0.5 * u}
-                y={cy - height * 0.3}
-                width={Math.max(1, u)}
-                height={height * 0.6}
-                fill={`url(#h${uid})`}
-              />
-              <circle
-                cx={lockX}
-                cy={lockY}
-                r={5 * u}
-                fill={accent}
-                stroke={pal.bg}
-                strokeWidth={2 * u}
-              />
-            </g>
-          ) : null}
-          {reeling ? (
-            <g>
-              {/* the far end retracts toward the R */}
-              {rightEnd > entryX + 0.5 ? (
-                <line
-                  x1={entryX}
-                  x2={rightEnd}
-                  y1={lineY}
-                  y2={lineY}
-                  stroke={lineGrad}
-                  strokeWidth={stroke * 1.5}
+            viewBox={`0 0 ${width} ${height}`}
+            style={{ position: "absolute", inset: 0 }}
+            aria-hidden
+          >
+            <defs>
+              <linearGradient id={`h${uid}`} x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stopColor={fg} stopOpacity={0} />
+                <stop offset="0.5" stopColor={fg} stopOpacity={0.42} />
+                <stop offset="1" stopColor={fg} stopOpacity={0} />
+              </linearGradient>
+              <linearGradient
+                id={`l${uid}`}
+                gradientUnits="userSpaceOnUse"
+                x1={width * 0.05}
+                y1={0}
+                x2={width * 0.95}
+                y2={0}
+              >
+                <stop offset="0" stopColor={beam.line[0]} />
+                <stop offset="0.5" stopColor={beam.line[1]} />
+                <stop offset="1" stopColor={beam.line[2]} />
+              </linearGradient>
+              <linearGradient
+                id={`f${uid}`}
+                gradientUnits="userSpaceOnUse"
+                x1={0}
+                y1={0}
+                x2={entryX}
+                y2={0}
+              >
+                <stop offset="0" stopColor="#fff" stopOpacity={0} />
+                <stop offset="0.4" stopColor="#fff" stopOpacity={0.6} />
+                <stop offset="1" stopColor="#fff" stopOpacity={1} />
+              </linearGradient>
+              <mask id={`m${uid}`} maskUnits="userSpaceOnUse">
+                <rect
+                  x={0}
+                  y={0}
+                  width={width}
+                  height={height}
+                  fill={`url(#f${uid})`}
                 />
-              ) : null}
-              {/* the lead is reeled in; it fades toward its tail */}
-              {tailX < entryX - 0.5 ? (
-                <line
-                  x1={tailX}
-                  x2={entryX}
-                  y1={lineY}
-                  y2={lineY}
-                  stroke={lineGrad}
-                  strokeWidth={stroke * 1.5}
-                  mask={`url(#m${uid})`}
+              </mask>
+              <clipPath id={`c${uid}`}>
+                <rect x={0} y={0} width={paintX} height={height} />
+              </clipPath>
+            </defs>
+            {grid ? (
+              <Graticule
+                width={width}
+                height={height}
+                cy={cy}
+                opacity={gratO}
+                pal={pal}
+                u={u}
+              />
+            ) : null}
+            {traceEls}
+            {scopeVisible && paintX > 0 ? (
+              <path
+                d={tracePath(0, t, true)}
+                fill="none"
+                stroke={lineGrad}
+                strokeWidth={stroke * 1.5}
+                strokeLinejoin="round"
+                strokeLinecap="round"
+                clipPath={`url(#c${uid})`}
+              />
+            ) : null}
+            {sweepOn ? (
+              <g opacity={sweepO}>
+                <rect
+                  x={lockX - 0.5 * u}
+                  y={cy - height * 0.3}
+                  width={Math.max(1, u)}
+                  height={height * 0.6}
+                  fill={`url(#h${uid})`}
                 />
-              ) : null}
-            </g>
-          ) : null}
-        </svg>
-      </AbsoluteFill>
+                <circle
+                  cx={lockX}
+                  cy={lockY}
+                  r={5 * u}
+                  fill={accent}
+                  stroke={knock}
+                  strokeWidth={2 * u}
+                />
+              </g>
+            ) : null}
+            {reeling ? (
+              <g>
+                {/* the far end retracts toward the R */}
+                {rightEnd > entryX + 0.5 ? (
+                  <line
+                    x1={entryX}
+                    x2={rightEnd}
+                    y1={lineY}
+                    y2={lineY}
+                    stroke={lineGrad}
+                    strokeWidth={stroke * 1.5}
+                  />
+                ) : null}
+                {/* the lead is reeled in; it fades toward its tail */}
+                {tailX < entryX - 0.5 ? (
+                  <line
+                    x1={tailX}
+                    x2={entryX}
+                    y1={lineY}
+                    y2={lineY}
+                    stroke={lineGrad}
+                    strokeWidth={stroke * 1.5}
+                    mask={`url(#m${uid})`}
+                  />
+                ) : null}
+              </g>
+            ) : null}
+          </svg>
+        </AbsoluteFill>
 
-      {/* R + "emocn": the traced R becomes the logo's first letter */}
-      {reeling ? (
+        {/* R + "emocn": the traced R becomes the logo's first letter */}
+        {reeling ? (
+          <div
+            style={{
+              position: "absolute",
+              left: 0,
+              right: 0,
+              top: baselineY - Math.max(markH, MANROPE_ASC * fontSize),
+              display: "flex",
+              justifyContent: "center",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "baseline",
+                transform: `translateX(calc(${(1 - slide) * 50}% - ${(1 - slide) * (markW / 2)}px))`,
+              }}
+            >
+              <svg
+                width={markW}
+                height={markH}
+                viewBox={`0 0 ${VB.w} ${VB.h}`}
+                style={{ overflow: "visible", flexShrink: 0 }}
+                aria-hidden
+              >
+                <defs>
+                  <linearGradient id={`r${uid}`} x1="0" y1="0" x2="0.85" y2="1">
+                    <stop offset="0" stopColor={beam.mark[0]} />
+                    <stop offset="0.5" stopColor={beam.mark[1]} />
+                    <stop offset="1" stopColor={beam.mark[2]} />
+                  </linearGradient>
+                </defs>
+                <path
+                  d={R_TRACE}
+                  fill={`url(#r${uid})`}
+                  fillOpacity={fillIn}
+                  stroke={`url(#r${uid})`}
+                  strokeWidth={localStroke * 1.5}
+                  strokeLinejoin="round"
+                  pathLength={1}
+                  strokeDasharray={`${head} 2`}
+                />
+                {beamPt ? (
+                  <circle
+                    cx={beamPt.x}
+                    cy={beamPt.y}
+                    r={(3 * u) / k}
+                    fill={beam.mark[theme === "dark" ? 0 : 2]}
+                    opacity={beamO}
+                  />
+                ) : null}
+              </svg>
+              <div
+                style={{
+                  clipPath: `inset(-20% ${(1 - wordClip) * 100}% -20% 0)`,
+                  fontFamily: manrope.fontFamily,
+                  fontWeight: 600,
+                  fontSize,
+                  lineHeight: 1,
+                  letterSpacing: "-0.025em",
+                  marginLeft: "0.04em",
+                  color: fg,
+                  paddingRight: 6 * u,
+                  transform: `translateX(${(1 - wordClip) * -28 * u}px)`,
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {name}
+              </div>
+            </div>
+          </div>
+        ) : null}
+
+        {/* caption */}
         <div
           style={{
             position: "absolute",
-            left: 0,
-            right: 0,
-            top: baselineY - Math.max(markH, MANROPE_ASC * fontSize),
-            display: "flex",
-            justifyContent: "center",
+            left: "12%",
+            right: "12%",
+            top:
+              height * 0.43 +
+              (VB.h * kLock) / 2 +
+              MANROPE_DESC * fontSize +
+              34 * u,
+            textAlign: "center",
+            fontFamily,
+            fontWeight: 400,
+            fontSize: 32 * u,
+            lineHeight: 1.3,
+            letterSpacing: "-0.012em",
+            color: pal.muted,
+            textWrap: "balance",
           }}
         >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "baseline",
-              transform: `translateX(calc(${(1 - slide) * 50}% - ${(1 - slide) * (markW / 2)}px))`,
-            }}
-          >
-            <svg
-              width={markW}
-              height={markH}
-              viewBox={`0 0 ${VB.w} ${VB.h}`}
-              style={{ overflow: "visible", flexShrink: 0 }}
-              aria-hidden
-            >
-              <defs>
-                <linearGradient id={`r${uid}`} x1="0" y1="0" x2="0.85" y2="1">
-                  <stop offset="0" stopColor={beam.mark[0]} />
-                  <stop offset="0.5" stopColor={beam.mark[1]} />
-                  <stop offset="1" stopColor={beam.mark[2]} />
-                </linearGradient>
-              </defs>
-              <path
-                d={R_TRACE}
-                fill={`url(#r${uid})`}
-                fillOpacity={fillIn}
-                stroke={`url(#r${uid})`}
-                strokeWidth={localStroke * 1.5}
-                strokeLinejoin="round"
-                pathLength={1}
-                strokeDasharray={`${head} 2`}
-              />
-              {beamPt ? (
-                <circle
-                  cx={beamPt.x}
-                  cy={beamPt.y}
-                  r={(3 * u) / k}
-                  fill={beam.mark[theme === "dark" ? 0 : 2]}
-                  opacity={beamO}
-                />
-              ) : null}
-            </svg>
-            <div
+          {words.map(({ w, serif: isSerif }, i) => (
+            <span
+              key={i}
               style={{
-                clipPath: `inset(-20% ${(1 - wordClip) * 100}% -20% 0)`,
-                fontFamily: manrope.fontFamily,
-                fontWeight: 600,
-                fontSize,
-                lineHeight: 1,
-                letterSpacing: "-0.025em",
-                marginLeft: "0.04em",
-                color: pal.fg,
-                paddingRight: 6 * u,
-                transform: `translateX(${(1 - wordClip) * -28 * u}px)`,
-                whiteSpace: "nowrap",
+                display: "inline-block",
+                whiteSpace: "pre",
+                fontFamily: isSerif ? serif : undefined,
+                fontStyle: isSerif ? "italic" : undefined,
+                fontSize: isSerif ? "1.14em" : undefined,
+                letterSpacing: isSerif ? "-0.005em" : undefined,
+                color: isSerif ? fg : undefined,
+                opacity: word(i),
+                transform: `translateY(${(1 - word(i)) * 10 * u}px)`,
+                filter: `blur(${(1 - word(i)) * 4 * u}px)`,
               }}
             >
-              {name}
-            </div>
-          </div>
+              {i < words.length - 1 ? `${w} ` : w}
+            </span>
+          ))}
         </div>
-      ) : null}
+      </ScaleLayer>
 
-      {/* caption */}
-      <div
-        style={{
-          position: "absolute",
-          left: "12%",
-          right: "12%",
-          top:
-            height * 0.43 +
-            (VB.h * kLock) / 2 +
-            MANROPE_DESC * fontSize +
-            34 * u,
-          textAlign: "center",
-          fontFamily: sans,
-          fontWeight: 400,
-          fontSize: 32 * u,
-          lineHeight: 1.3,
-          letterSpacing: "-0.012em",
-          color: pal.muted,
-          textWrap: "balance",
-        }}
-      >
-        {words.map(({ w, serif: isSerif }, i) => (
-          <span
-            key={i}
-            style={{
-              display: "inline-block",
-              whiteSpace: "pre",
-              fontFamily: isSerif ? serif : undefined,
-              fontStyle: isSerif ? "italic" : undefined,
-              fontSize: isSerif ? "1.14em" : undefined,
-              letterSpacing: isSerif ? "-0.005em" : undefined,
-              color: isSerif ? pal.fg : undefined,
-              opacity: word(i),
-              transform: `translateY(${(1 - word(i)) * 10 * u}px)`,
-              filter: `blur(${(1 - word(i)) * 4 * u}px)`,
-            }}
-          >
-            {i < words.length - 1 ? `${w} ` : w}
-          </span>
-        ))}
-      </div>
-
-      <Grain opacity={pal.grain} />
+      {!transparent && grain ? <Grain opacity={pal.grain} /> : null}
     </AbsoluteFill>
   );
 }

@@ -22,7 +22,17 @@ export interface AndYouProps {
   clauses?: string[];
   last?: string;
   accent?: string;
+  /** Text color of the clauses and last line; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the copy. Load it yourself; Gabarito by default. */
+  fontFamily?: string;
+  /** Frames between words as a clause builds. */
+  stagger?: number;
+  /** Size of the text, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -53,17 +63,17 @@ interface Metrics {
   desc: number;
 }
 
-function measure(): Metrics {
+function measure(fontFamily: string): Metrics {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("and-you: no 2d context");
   const bodyCache: Record<string, number> = {};
   const lastCache: Record<string, number> = {};
   const em = (s: string, w: number, track: number) => {
-    ctx.font = `${w} ${FONT_PX}px "${gabarito.fontFamily}"`;
+    ctx.font = `${w} ${FONT_PX}px "${fontFamily}"`;
     return ctx.measureText(s).width / FONT_PX + track * Array.from(s).length;
   };
-  ctx.font = `${BODY_W} ${FONT_PX}px "${gabarito.fontFamily}"`;
+  ctx.font = `${BODY_W} ${FONT_PX}px "${fontFamily}"`;
   const fm = ctx.measureText("Hxg");
   return {
     body: (s) => {
@@ -79,7 +89,7 @@ function measure(): Metrics {
   };
 }
 
-function useMetrics() {
+function useMetrics(fontFamily: string) {
   const [m, setM] = useState<Metrics | null>(null);
   const [handle] = useState(() => delayRender("and-you: measuring"));
   const released = useRef(false);
@@ -87,13 +97,13 @@ function useMetrics() {
     let live = true;
     Promise.all([
       gabarito.waitUntilDone(),
-      document.fonts.load(`${BODY_W} 100px "${gabarito.fontFamily}"`),
-      document.fonts.load(`${LAST_W} 100px "${gabarito.fontFamily}"`),
+      document.fonts.load(`${BODY_W} 100px "${fontFamily}"`),
+      document.fonts.load(`${LAST_W} 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
-        setM(measure());
+        setM(measure(fontFamily));
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -102,7 +112,7 @@ function useMetrics() {
     return () => {
       live = false;
     };
-  }, [handle]);
+  }, [handle, fontFamily]);
   return m;
 }
 
@@ -147,6 +157,22 @@ function flow(
   return { words, lastLine };
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function AndYou({
   clauses = [
     "For the founder who launches on Monday,",
@@ -156,20 +182,26 @@ export function AndYou({
   ],
   last = "and you.",
   accent,
+  ink,
   background,
+  fontFamily = gabarito.fontFamily,
+  stagger = 2,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: AndYouProps) {
-  const frame = useCurrentFrame();
+  const frame = Math.max(0, useCurrentFrame() - delay);
   const { width: W, height: H, durationInFrames } = useVideoConfig();
   const t = frame * speed;
   const D = Math.max(110, durationInFrames);
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
+  const fg = ink ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
   const list = clauses.length > 0 ? clauses : ["For everyone who builds,"];
-  const m = useMetrics();
+  const m = useMetrics(fontFamily);
 
   if (!m) {
     return (
@@ -229,15 +261,15 @@ export function AndYou({
     height: F0,
     lineHeight: `${F0}px`,
     whiteSpace: "pre",
-    fontFamily: gabarito.fontFamily,
+    fontFamily,
     fontWeight: BODY_W,
     fontSize: F0,
     letterSpacing: `${TRACK}em`,
-    color: c.ink,
+    color: fg,
   };
 
   const nodes = words.map((w, i) => {
-    const at = clauseAt(w.clause) + w.order * 2;
+    const at = clauseAt(w.clause) + w.order * stagger;
     const p = interpolate(t, [at, at + 14], [0, 1], {
       ...CLAMP,
       easing: EASE_OUT,
@@ -282,7 +314,7 @@ export function AndYou({
     height: FY,
     lineHeight: `${FY}px`,
     whiteSpace: "pre",
-    fontFamily: gabarito.fontFamily,
+    fontFamily,
     fontWeight: LAST_W,
     fontSize: FY,
     letterSpacing: `${LAST_TRACK}em`,
@@ -290,52 +322,54 @@ export function AndYou({
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
-      <div
-        style={{
-          position: "absolute",
-          left: marginX,
-          top: marginY,
-          width: room,
-          transformOrigin: "0 0",
-          transform: `scale(${s.toFixed(5)}) translateY(${offY.toFixed(2)}px)`,
-          opacity: dim,
-        }}
-      >
-        {nodes}
-      </div>
-      {lastIn > 0 ? (
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            right: marginX,
-            top: lastTop - FY * 0.2,
-            height: FY * 1.45,
-            overflow: "hidden",
-            display: "flex",
+            left: marginX,
+            top: marginY,
+            width: room,
+            transformOrigin: "0 0",
+            transform: `scale(${s.toFixed(5)}) translateY(${offY.toFixed(2)}px)`,
+            opacity: dim,
           }}
         >
-          <div
-            style={{
-              ...lastStyle,
-              marginTop: FY * 0.2,
-              color: c.ink,
-              transform: `translateY(${((1 - lastIn) * FY * 1.3).toFixed(2)}px)`,
-            }}
-          >
-            {lastHead}
-          </div>
-          <div
-            style={{
-              ...lastStyle,
-              marginTop: FY * 0.2,
-              color: hi,
-              transform: `translateY(${((1 - tailIn) * FY * 1.3).toFixed(2)}px)`,
-            }}
-          >
-            {lastTail}
-          </div>
+          {nodes}
         </div>
-      ) : null}
+        {lastIn > 0 ? (
+          <div
+            style={{
+              position: "absolute",
+              right: marginX,
+              top: lastTop - FY * 0.2,
+              height: FY * 1.45,
+              overflow: "hidden",
+              display: "flex",
+            }}
+          >
+            <div
+              style={{
+                ...lastStyle,
+                marginTop: FY * 0.2,
+                color: fg,
+                transform: `translateY(${((1 - lastIn) * FY * 1.3).toFixed(2)}px)`,
+              }}
+            >
+              {lastHead}
+            </div>
+            <div
+              style={{
+                ...lastStyle,
+                marginTop: FY * 0.2,
+                color: hi,
+                transform: `translateY(${((1 - tailIn) * FY * 1.3).toFixed(2)}px)`,
+              }}
+            >
+              {lastTail}
+            </div>
+          </div>
+        ) : null}
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

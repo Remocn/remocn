@@ -25,7 +25,16 @@ export interface LayoutSwapProps {
   hold?: number;
   move?: number;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the headlines. Load it yourself; Inter Tight by default. */
+  fontFamily?: string;
+  fontWeight?: number;
+  /** Size of the text, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -68,7 +77,11 @@ const EASE_IN = Easing.bezier(0.5, 0, 0.9, 0.4);
 
 const norm = (w: string) => w.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, "");
 
-function useWordWidths(words: string[]) {
+function useWordWidths(
+  words: string[],
+  fontFamily: string,
+  fontWeight: number,
+) {
   const key = words.join("\u0001");
   const estimate = words.map((w) => w.length * 0.52);
   const [widths, setWidths] = useState<{
@@ -81,7 +94,7 @@ function useWordWidths(words: string[]) {
 
   useEffect(() => {
     let live = true;
-    const font = `500 100px "${inter.fontFamily}"`;
+    const font = `${fontWeight} 100px "${fontFamily}"`;
     Promise.all([inter.waitUntilDone(), document.fonts.load(font)])
       .catch(() => undefined)
       .then(() => {
@@ -108,7 +121,7 @@ function useWordWidths(words: string[]) {
     return () => {
       live = false;
     };
-  }, [key, handle]);
+  }, [key, handle, fontFamily, fontWeight]);
 
   return widths && widths.key === key
     ? widths
@@ -210,6 +223,22 @@ function layoutHeadline(
   return placed;
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function LayoutSwap({
   headlines = [
     "Animations.",
@@ -221,18 +250,24 @@ export function LayoutSwap({
   hold = 28,
   move = 28,
   accent = "#3B5BFD",
+  ink,
   background,
+  fontFamily = inter.fontFamily,
+  fontWeight = 500,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: LayoutSwapProps) {
-  const frame = useCurrentFrame() * speed;
+  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, durationInFrames } = useVideoConfig();
   const t = THEMES[theme];
+  const fg = ink ?? t.fg;
   const steps = headlines.length > 0 ? headlines : ["remocn"];
 
   const split = steps.map((h) => h.split(/\s+/).filter(Boolean));
   const all = split.flat();
-  const m = useWordWidths(all);
+  const m = useWordWidths(all, fontFamily, fontWeight);
   let cursor = 0;
   const widthsPer = split.map((ws) => {
     const w = m.w.slice(cursor, cursor + ws.length);
@@ -438,45 +473,47 @@ export function LayoutSwap({
           }}
         />
       ) : null}
-      {draws.map((d) => {
-        const base: React.CSSProperties = {
-          position: "absolute",
-          left: d.x,
-          top: d.y,
-          fontFamily: inter.fontFamily,
-          fontWeight: 500,
-          fontSize: d.fs,
-          lineHeight: LINE,
-          letterSpacing: `${TRACK}em`,
-          whiteSpace: "pre",
-          opacity: d.opacity,
-          filter: d.blur > 0.05 ? `blur(${d.blur.toFixed(2)}px)` : undefined,
-        };
-        return (
-          <div key={d.id} style={base}>
-            <span style={{ color: t.fg, opacity: 1 - d.hl }}>{d.text}</span>
-            {d.hl > 0 ? (
-              <span
-                style={{
-                  position: "absolute",
-                  left: 0,
-                  top: 0,
-                  opacity: d.hl,
-                  backgroundImage: hlImage,
-                  backgroundSize: "180% 100%",
-                  backgroundPosition: `${(drift * 60).toFixed(2)}% 0%`,
-                  WebkitBackgroundClip: "text",
-                  backgroundClip: "text",
-                  color: "transparent",
-                  paddingRight: "0.06em",
-                }}
-              >
-                {d.text}
-              </span>
-            ) : null}
-          </div>
-        );
-      })}
+      <ScaleLayer scale={scale}>
+        {draws.map((d) => {
+          const base: React.CSSProperties = {
+            position: "absolute",
+            left: d.x,
+            top: d.y,
+            fontFamily,
+            fontWeight,
+            fontSize: d.fs,
+            lineHeight: LINE,
+            letterSpacing: `${TRACK}em`,
+            whiteSpace: "pre",
+            opacity: d.opacity,
+            filter: d.blur > 0.05 ? `blur(${d.blur.toFixed(2)}px)` : undefined,
+          };
+          return (
+            <div key={d.id} style={base}>
+              <span style={{ color: fg, opacity: 1 - d.hl }}>{d.text}</span>
+              {d.hl > 0 ? (
+                <span
+                  style={{
+                    position: "absolute",
+                    left: 0,
+                    top: 0,
+                    opacity: d.hl,
+                    backgroundImage: hlImage,
+                    backgroundSize: "180% 100%",
+                    backgroundPosition: `${(drift * 60).toFixed(2)}% 0%`,
+                    WebkitBackgroundClip: "text",
+                    backgroundClip: "text",
+                    color: "transparent",
+                    paddingRight: "0.06em",
+                  }}
+                >
+                  {d.text}
+                </span>
+              ) : null}
+            </div>
+          );
+        })}
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

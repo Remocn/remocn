@@ -2,6 +2,7 @@
 
 import { loadFont as loadFigtree } from "@remotion/google-fonts/Figtree";
 import { loadFont as loadSerif } from "@remotion/google-fonts/InstrumentSerif";
+import type React from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AbsoluteFill,
@@ -32,10 +33,23 @@ export interface PhotoCaretProps {
   images?: string[];
   accent?: string;
   ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Figtree by default. */
+  fontFamily?: string;
+  /** Italic typeface for the accent word. Load it yourself; Instrument Serif by default. */
+  accentFont?: string;
   theme?: "dark" | "light";
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
   firstStep?: number;
+  /** Frames on the finished line after the accent word lands; the slow push runs through it. */
+  hold?: number;
+  /** Size of the copy and photos, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  speed?: number;
 }
 
 const LIGHT_GROUND: Partial<GradientParams> = {
@@ -117,10 +131,14 @@ interface Metrics {
   cap: number;
 }
 
-function buildMetrics(_version: number): Metrics {
+function buildMetrics(
+  _version: number,
+  sansFamily: string,
+  serifFamily: string,
+): Metrics {
   const ctx = document.createElement("canvas").getContext("2d");
-  const sansFont = `400 ${FONT_PX}px "${figtree.fontFamily}"`;
-  const serifFont = `italic 400 ${FONT_PX * SERIF_SCALE}px "${serif.fontFamily}"`;
+  const sansFont = `400 ${FONT_PX}px "${sansFamily}"`;
+  const serifFont = `italic 400 ${FONT_PX * SERIF_SCALE}px "${serifFamily}"`;
   const cache: Record<string, number> = {};
   let cap = 0.7;
   if (ctx) {
@@ -143,7 +161,7 @@ function buildMetrics(_version: number): Metrics {
   };
 }
 
-function useMetrics() {
+function useMetrics(sansFamily: string, serifFamily: string) {
   const [version, setVersion] = useState(0);
   const [handle] = useState(() => delayRender("photo-caret: measuring"));
   const released = useRef(false);
@@ -156,8 +174,8 @@ function useMetrics() {
     Promise.all([
       figtree.waitUntilDone(),
       serif.waitUntilDone(),
-      document.fonts.load(`400 ${FONT_PX}px "${figtree.fontFamily}"`),
-      document.fonts.load(`italic 400 ${FONT_PX}px "${serif.fontFamily}"`),
+      document.fonts.load(`400 ${FONT_PX}px "${sansFamily}"`),
+      document.fonts.load(`italic 400 ${FONT_PX}px "${serifFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
@@ -171,8 +189,11 @@ function useMetrics() {
       live = false;
       document.fonts.removeEventListener("loadingdone", bump);
     };
-  }, [handle]);
-  return useMemo(() => buildMetrics(version), [version]);
+  }, [handle, sansFamily, serifFamily]);
+  return useMemo(
+    () => buildMetrics(version, sansFamily, serifFamily),
+    [version, sansFamily, serifFamily],
+  );
 }
 
 const parseLines = (text: string) =>
@@ -199,10 +220,11 @@ const hopTimes = (count: number, firstStep: number) => {
 export const photoCaretLength = (
   text = "Your launch, / your name / on it.",
   firstStep = 12,
+  hold = BEAT.hold,
 ) => {
   const n = parseLines(text).flat().length;
   const hops = hopTimes(n, firstStep);
-  return hops[hops.length - 1] + BEAT.settle + BEAT.hold;
+  return hops[hops.length - 1] + BEAT.settle + hold;
 };
 
 type Sat = { x: number; y: number; s: number; far: boolean; r: number };
@@ -227,6 +249,22 @@ const SATS_TALL: Sat[] = [
   { x: 0.56, y: 0.95, s: 0.11, far: true, r: 0 },
 ];
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function PhotoCaret({
   text = "Your launch, / your name / on it.",
   accentWord = "it.",
@@ -234,12 +272,19 @@ export function PhotoCaret({
   images,
   accent,
   ink,
+  background,
+  fontFamily = figtree.fontFamily,
+  accentFont = serif.fontFamily,
   theme = "dark",
   ground,
   groundParams,
   firstStep = 12,
+  hold = BEAT.hold,
+  scale: layerScale = 1,
+  delay = 0,
+  speed = 1,
 }: PhotoCaretProps) {
-  const frame = useCurrentFrame();
+  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const c = THEMES[theme];
   const inkC = ink ?? c.ink;
@@ -248,7 +293,7 @@ export function PhotoCaret({
   const gParams = groundParams ?? (ground ? undefined : c.groundParams);
   const bg = gshParams(preset, gParams).background;
   const portrait = H > W * 1.1;
-  const m = useMetrics();
+  const m = useMetrics(fontFamily, accentFont);
   const tileSrc = src ?? staticFile("templates/brand-guidelines/ceramics.jpg");
   const satSrc = (images ?? DEFAULT_IMAGES.map((p) => staticFile(p))).filter(
     Boolean,
@@ -377,7 +422,7 @@ export function PhotoCaret({
     0.03 *
       interpolate(
         frame,
-        [payoff + BEAT.settle, payoff + BEAT.settle + BEAT.hold - 12],
+        [payoff + BEAT.settle, payoff + BEAT.settle + hold - 12],
         [0, 1],
         { ...CLAMP, easing: PUSH },
       );
@@ -483,7 +528,7 @@ export function PhotoCaret({
             y={w.base + rise}
             fill={color}
             filter={blur > 0.1 ? `url(#${filtId})` : undefined}
-            fontFamily={w.accent ? serif.fontFamily : figtree.fontFamily}
+            fontFamily={w.accent ? accentFont : fontFamily}
             fontStyle={w.accent ? "italic" : "normal"}
             fontWeight={400}
             fontSize={w.accent ? F * SERIF_SCALE : F}
@@ -542,51 +587,68 @@ export function PhotoCaret({
   };
 
   return (
-    <AbsoluteFill style={{ background: bg, overflow: "hidden" }}>
-      <GshGround
-        preset={preset}
-        params={gParams}
-        timeOffset={c.groundOffset}
-        timeScale={0.5}
-      />
-      <AbsoluteFill
-        style={{
-          background: `radial-gradient(${portrait ? "90% 46%" : "62% 70%"} at 50% 50%, rgba(${c.scrim},${c.scrimAlpha}) 0%, rgba(${c.scrim},0) 100%)`,
-        }}
-      />
-      {sats.map((st, i) => renderSat(st, i, "far"))}
-      <svg
-        width={W}
-        height={H}
-        viewBox={`0 0 ${W} ${H}`}
-        style={{ position: "absolute", inset: 0, overflow: "visible" }}
-        aria-hidden
-      >
-        <g transform={`translate(${ox} ${oy}) scale(${scale})`}>
-          {words.map((w, i) => renderWord(w, i))}
-        </g>
-      </svg>
-      {sats.map((st, i) => renderSat(st, i, "near"))}
-      <div
-        style={{
-          position: "absolute",
-          left: tileX,
-          top: tileY,
-          width: tileW,
-          height: tileH,
-          borderRadius: Math.max(6, tileW * 0.07),
-          overflow: "hidden",
-          boxShadow: c.shadow,
-          border: `1px solid ${c.border}`,
-          transform: `scale(${tileScale})`,
-          filter: moveBlur > 0.3 ? `blur(${moveBlur * 0.35}px)` : undefined,
-        }}
-      >
-        <Img
-          src={tileSrc}
-          style={{ width: "100%", height: "100%", objectFit: "cover" }}
+    <AbsoluteFill
+      style={{
+        background: background === undefined ? bg : undefined,
+        overflow: "hidden",
+      }}
+    >
+      {background === undefined ? (
+        <>
+          <GshGround
+            preset={preset}
+            params={gParams}
+            timeOffset={c.groundOffset}
+            timeScale={0.5}
+          />
+          <AbsoluteFill
+            style={{
+              background: `radial-gradient(${portrait ? "90% 46%" : "62% 70%"} at 50% 50%, rgba(${c.scrim},${c.scrimAlpha}) 0%, rgba(${c.scrim},0) 100%)`,
+            }}
+          />
+        </>
+      ) : (
+        <AbsoluteFill
+          style={{
+            background: background === "transparent" ? undefined : background,
+          }}
         />
-      </div>
+      )}
+      <ScaleLayer scale={layerScale}>
+        {sats.map((st, i) => renderSat(st, i, "far"))}
+        <svg
+          width={W}
+          height={H}
+          viewBox={`0 0 ${W} ${H}`}
+          style={{ position: "absolute", inset: 0, overflow: "visible" }}
+          aria-hidden
+        >
+          <g transform={`translate(${ox} ${oy}) scale(${scale})`}>
+            {words.map((w, i) => renderWord(w, i))}
+          </g>
+        </svg>
+        {sats.map((st, i) => renderSat(st, i, "near"))}
+        <div
+          style={{
+            position: "absolute",
+            left: tileX,
+            top: tileY,
+            width: tileW,
+            height: tileH,
+            borderRadius: Math.max(6, tileW * 0.07),
+            overflow: "hidden",
+            boxShadow: c.shadow,
+            border: `1px solid ${c.border}`,
+            transform: `scale(${tileScale})`,
+            filter: moveBlur > 0.3 ? `blur(${moveBlur * 0.35}px)` : undefined,
+          }}
+        >
+          <Img
+            src={tileSrc}
+            style={{ width: "100%", height: "100%", objectFit: "cover" }}
+          />
+        </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

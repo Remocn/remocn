@@ -72,6 +72,24 @@ export interface RankClimbProps {
   eyebrow?: string;
   caption?: string;
   accent?: string;
+  /** Color of the names, caption and winning rank; overrides the theme ink. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the names, rank and caption. Load it yourself; Bricolage Grotesque by default. */
+  fontFamily?: string;
+  /** Frame at which the brand starts to climb. */
+  climbAt?: number;
+  /** Frames for the final overtake into the top spot. */
+  finalSwap?: number;
+  /** Replaces the remocn mark on the brand row. */
+  logo?: React.ReactNode;
+  /** Film grain over the scene. */
+  grain?: boolean;
+  /** Size of the rank and list, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -264,6 +282,9 @@ function Row({
   value,
   accent,
   th,
+  fg,
+  fontFamily,
+  logo,
 }: {
   item: RankItem;
   pos: number;
@@ -279,12 +300,15 @@ function Row({
   value: number;
   accent: string;
   th: Theme;
+  fg: string;
+  fontFamily: string;
+  logo?: React.ReactNode;
 }) {
   const pad = 22 * u;
   const pillBg = interpolateColors(win, [0, 1], [th.pill, accent]);
   const nameColor = isBrand
-    ? interpolateColors(win, [0, 1], [th.fg, "#FFFFFF"])
-    : th.fg;
+    ? interpolateColors(win, [0, 1], [fg, "#FFFFFF"])
+    : fg;
   const subColor = isBrand
     ? interpolateColors(win, [0, 1], [th.muted, "rgba(255,255,255,0.78)"])
     : th.muted;
@@ -345,7 +369,7 @@ function Row({
           style={{
             flex: 1,
             display: "flex",
-            fontFamily: sans,
+            fontFamily,
             fontSize: 25 * u,
             fontWeight: isBrand ? 500 : 400,
             letterSpacing: "-0.02em",
@@ -353,11 +377,9 @@ function Row({
             whiteSpace: "nowrap",
           }}
         >
-          {isBrandLabel(item.label) ? (
-            <RemocnLogo fontSize={25 * u} color={nameColor} />
-          ) : (
-            item.label
-          )}
+          {isBrandLabel(item.label)
+            ? (logo ?? <RemocnLogo fontSize={25 * u} color={nameColor} />)
+            : item.label}
         </span>
         <span
           style={{
@@ -379,6 +401,22 @@ function Row({
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function RankClimb({
   items = DEFAULT_ITEMS,
   brand = "remocn",
@@ -387,13 +425,25 @@ export function RankClimb({
   eyebrow = "Product of the day",
   caption = "on Product Hunt",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = sans,
+  climbAt = T_CLIMB,
+  finalSwap = LAST_DUR,
+  logo,
+  grain = true,
+  scale = 1,
+  delay = 0,
   theme = "dark",
   speed = 1,
 }: RankClimbProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height } = useVideoConfig();
   const u = Math.min(width / 1280, height / 720);
   const th: Theme = THEMES[theme];
+  const fg = ink ?? th.fg;
+  const fill =
+    background === "transparent" ? "transparent" : (background ?? th.bg);
 
   const found = items.find((i) => i.label === brand);
   const others = items
@@ -410,18 +460,18 @@ export function RankClimb({
   const K = start - end;
 
   const swaps: { s: number; d: number; passed: number }[] = [];
-  let clock = T_CLIMB;
+  let clock = climbAt;
   for (let k = 0; k < K; k++) {
     const last = k === K - 1;
     const gap = K > 1 ? 13 - (5 * k) / Math.max(1, K - 2) : 13;
     const s = clock + (last && K > 1 ? 3 : 0);
-    const d = last ? LAST_DUR : gap * 1.35;
+    const d = last ? finalSwap : gap * 1.35;
     swaps.push({ s, d, passed: start - 1 - k });
     clock += gap;
   }
   const climbEnd = swaps.length
     ? swaps[swaps.length - 1].s + swaps[swaps.length - 1].d
-    : T_CLIMB;
+    : climbAt;
   const prog = swaps.map((w) =>
     interpolate(t, [w.s, w.s + w.d], [0, 1], { ...CLAMP, easing: EASE_SWAP }),
   );
@@ -453,7 +503,7 @@ export function RankClimb({
   const lift = swaps.length
     ? interpolate(
         t,
-        [T_CLIMB - 4, T_CLIMB + 6, climbEnd - 6, climbEnd + 6],
+        [climbAt - 4, climbAt + 6, climbEnd - 6, climbEnd + 6],
         [0, 1, 1, 0],
         { ...CLAMP, easing: EASE_IO },
       )
@@ -484,230 +534,238 @@ export function RankClimb({
     easing: EASE_OUT,
   });
   const bigSize = Math.min(232 * u, width * 0.18);
-  const bigColor = interpolateColors(win, [0, 1], [th.muted, th.fg]);
+  const bigColor = interpolateColors(win, [0, 1], [th.muted, fg]);
   const push = interpolate(t, [0, climbEnd + 60], [1.03, 1], {
     ...CLAMP,
     easing: EASE_IO,
   });
 
   return (
-    <AbsoluteFill style={{ background: th.bg, overflow: "hidden" }}>
+    <AbsoluteFill style={{ background: fill, overflow: "hidden" }}>
       <AbsoluteFill
         style={{
           background: `radial-gradient(ellipse 60% 70% at 30% 40%, ${th.stage}, transparent 75%)`,
         }}
       />
-      <AbsoluteFill
-        style={{ transform: `scale(${push})`, transformOrigin: "50% 50%" }}
-      >
-        <div
-          style={{
-            position: "absolute",
-            left: margin,
-            top: height / 2,
-            transform: `translateY(-50%) translateY(${(1 - leftIn) * 12 * u}px)`,
-            opacity: leftIn,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "flex-start",
-          }}
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill
+          style={{ transform: `scale(${push})`, transformOrigin: "50% 50%" }}
         >
-          <span
-            style={{
-              fontFamily: mono,
-              fontSize: 15 * u,
-              fontWeight: 400,
-              letterSpacing: "0.08em",
-              textTransform: "uppercase",
-              color: th.muted,
-              whiteSpace: "nowrap",
-              marginBottom: 14 * u,
-            }}
-          >
-            {eyebrow}
-          </span>
           <div
             style={{
+              position: "absolute",
+              left: margin,
+              top: height / 2,
+              transform: `translateY(-50%) translateY(${(1 - leftIn) * 12 * u}px)`,
+              opacity: leftIn,
               display: "flex",
+              flexDirection: "column",
               alignItems: "flex-start",
-              marginLeft: -bigSize * 0.04,
-              letterSpacing: "-0.045em",
             }}
           >
             <span
               style={{
-                position: "relative",
-                fontFamily: sans,
+                fontFamily: mono,
+                fontSize: 15 * u,
                 fontWeight: 400,
-                fontSize: bigSize,
-                lineHeight: `${bigSize * 1.04}px`,
-                color: th.faint,
-                marginRight: bigSize * 0.03,
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+                color: th.muted,
+                whiteSpace: "nowrap",
+                marginBottom: 14 * u,
               }}
             >
-              <span style={{ opacity: 1 - win }}>#</span>
-              <span
-                style={{
-                  position: "absolute",
-                  left: 0,
-                  top: 0,
-                  opacity: win,
-                  backgroundImage: th.paint,
-                  WebkitBackgroundClip: "text",
-                  backgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                }}
-              >
-                #
-              </span>
+              {eyebrow}
             </span>
-            <span style={{ position: "relative", display: "inline-block" }}>
-              <span style={{ display: "inline-block", opacity: 1 - win }}>
-                <RollNumber
-                  value={brandPos + 1}
-                  min={end + 1}
-                  max={start + 1}
-                  size={bigSize}
-                  lineHeight={1.04}
-                  color={bigColor}
-                  font={sans}
-                  weight={500}
-                  blur={14 * u}
-                />
-              </span>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "flex-start",
+                marginLeft: -bigSize * 0.04,
+                letterSpacing: "-0.045em",
+              }}
+            >
               <span
                 style={{
-                  position: "absolute",
-                  left: 0,
-                  top: 0,
-                  opacity: win,
+                  position: "relative",
+                  fontFamily,
+                  fontWeight: 400,
+                  fontSize: bigSize,
+                  lineHeight: `${bigSize * 1.04}px`,
+                  color: th.faint,
+                  marginRight: bigSize * 0.03,
                 }}
               >
-                <RollNumber
-                  value={brandPos + 1}
-                  min={end + 1}
-                  max={start + 1}
-                  size={bigSize}
-                  lineHeight={1.04}
-                  color={bigColor}
-                  font={sans}
-                  weight={500}
-                  blur={14 * u}
-                  paint={th.paint}
-                />
+                <span style={{ opacity: 1 - win }}>#</span>
+                <span
+                  style={{
+                    position: "absolute",
+                    left: 0,
+                    top: 0,
+                    opacity: win,
+                    backgroundImage: th.paint,
+                    WebkitBackgroundClip: "text",
+                    backgroundClip: "text",
+                    WebkitTextFillColor: "transparent",
+                  }}
+                >
+                  #
+                </span>
               </span>
+              <span style={{ position: "relative", display: "inline-block" }}>
+                <span style={{ display: "inline-block", opacity: 1 - win }}>
+                  <RollNumber
+                    value={brandPos + 1}
+                    min={end + 1}
+                    max={start + 1}
+                    size={bigSize}
+                    lineHeight={1.04}
+                    color={bigColor}
+                    font={fontFamily}
+                    weight={500}
+                    blur={14 * u}
+                  />
+                </span>
+                <span
+                  style={{
+                    position: "absolute",
+                    left: 0,
+                    top: 0,
+                    opacity: win,
+                  }}
+                >
+                  <RollNumber
+                    value={brandPos + 1}
+                    min={end + 1}
+                    max={start + 1}
+                    size={bigSize}
+                    lineHeight={1.04}
+                    color={bigColor}
+                    font={fontFamily}
+                    weight={500}
+                    blur={14 * u}
+                    paint={th.paint}
+                  />
+                </span>
+              </span>
+            </div>
+            <span
+              style={{
+                marginTop: 4 * u,
+                fontFamily,
+                fontWeight: 400,
+                fontSize: 50 * u,
+                letterSpacing: "-0.03em",
+                color: fg,
+                whiteSpace: "nowrap",
+                opacity: capIn,
+                transform: `translateY(${(1 - capIn) * 14 * u}px)`,
+                filter:
+                  capIn < 0.98 ? `blur(${(1 - capIn) * 6 * u}px)` : undefined,
+              }}
+            >
+              {caption}
             </span>
           </div>
-          <span
+
+          <div
             style={{
-              marginTop: 4 * u,
-              fontFamily: sans,
-              fontWeight: 400,
-              fontSize: 50 * u,
-              letterSpacing: "-0.03em",
-              color: th.fg,
-              whiteSpace: "nowrap",
-              opacity: capIn,
-              transform: `translateY(${(1 - capIn) * 14 * u}px)`,
-              filter:
-                capIn < 0.98 ? `blur(${(1 - capIn) * 6 * u}px)` : undefined,
+              position: "absolute",
+              left: listX,
+              top: listTop,
+              width: rowW,
+              height: listH,
             }}
           >
-            {caption}
-          </span>
-        </div>
-
-        <div
-          style={{
-            position: "absolute",
-            left: listX,
-            top: listTop,
-            width: rowW,
-            height: listH,
-          }}
-        >
-          {Array.from({ length: n - 1 }).map((_, i) => {
-            const a = interpolate(t, [i * 2 + 4, i * 2 + 22], [0, 1], {
-              ...CLAMP,
-              easing: EASE_IO,
-            });
-            return (
-              <div
-                key={`h${i}`}
-                style={{
-                  position: "absolute",
-                  left: 0,
-                  top: (i + 1) * rowH,
-                  height: Math.max(1, u),
-                  width: rowW * a,
-                  background: th.hair,
-                  opacity: 1 - 0.5 * dim,
-                }}
-              />
-            );
-          })}
-          {others.map((item, i) => {
-            const slot = initialSlot(i);
-            const k = swaps.findIndex((w) => w.passed === i);
-            const pos = slot + (k >= 0 ? prog[k] : 0);
-            const enter = interpolate(
-              t,
-              [slot * 2 - 6, slot * 2 + 14],
-              [0, 1],
-              {
+            {Array.from({ length: n - 1 }).map((_, i) => {
+              const a = interpolate(t, [i * 2 + 4, i * 2 + 22], [0, 1], {
+                ...CLAMP,
+                easing: EASE_IO,
+              });
+              return (
+                <div
+                  key={`h${i}`}
+                  style={{
+                    position: "absolute",
+                    left: 0,
+                    top: (i + 1) * rowH,
+                    height: Math.max(1, u),
+                    width: rowW * a,
+                    background: th.hair,
+                    opacity: 1 - 0.5 * dim,
+                  }}
+                />
+              );
+            })}
+            {others.map((item, i) => {
+              const slot = initialSlot(i);
+              const k = swaps.findIndex((w) => w.passed === i);
+              const pos = slot + (k >= 0 ? prog[k] : 0);
+              const enter = interpolate(
+                t,
+                [slot * 2 - 6, slot * 2 + 14],
+                [0, 1],
+                {
+                  ...CLAMP,
+                  easing: EASE_OUT,
+                },
+              );
+              return (
+                <Row
+                  key={item.label}
+                  item={item}
+                  pos={pos}
+                  isBrand={false}
+                  n={n}
+                  rowH={rowH}
+                  rowW={rowW}
+                  u={u}
+                  enter={enter}
+                  lift={0}
+                  dim={dim}
+                  win={0}
+                  value={item.value}
+                  accent={accent}
+                  th={th}
+                  fg={fg}
+                  fontFamily={fontFamily}
+                  logo={logo}
+                />
+              );
+            })}
+            <Row
+              item={brandItem}
+              pos={brandPos}
+              isBrand
+              n={n}
+              rowH={rowH}
+              rowW={rowW}
+              u={u}
+              enter={interpolate(t, [start * 2 - 6, start * 2 + 14], [0, 1], {
                 ...CLAMP,
                 easing: EASE_OUT,
-              },
-            );
-            return (
-              <Row
-                key={item.label}
-                item={item}
-                pos={pos}
-                isBrand={false}
-                n={n}
-                rowH={rowH}
-                rowW={rowW}
-                u={u}
-                enter={enter}
-                lift={0}
-                dim={dim}
-                win={0}
-                value={item.value}
-                accent={accent}
-                th={th}
-              />
-            );
-          })}
-          <Row
-            item={brandItem}
-            pos={brandPos}
-            isBrand
-            n={n}
-            rowH={rowH}
-            rowW={rowW}
-            u={u}
-            enter={interpolate(t, [start * 2 - 6, start * 2 + 14], [0, 1], {
-              ...CLAMP,
-              easing: EASE_OUT,
-            })}
-            lift={lift}
-            dim={dim}
-            win={win}
-            value={brandValue}
-            accent={accent}
-            th={th}
-          />
-        </div>
-      </AbsoluteFill>
+              })}
+              lift={lift}
+              dim={dim}
+              win={win}
+              value={brandValue}
+              accent={accent}
+              th={th}
+              fg={fg}
+              fontFamily={fontFamily}
+              logo={logo}
+            />
+          </div>
+        </AbsoluteFill>
+      </ScaleLayer>
 
       <AbsoluteFill
         style={{
-          background: `radial-gradient(ellipse 85% 85% at 50% 50%, transparent 60%, ${th.bg} 100%)`,
+          background: `radial-gradient(ellipse 85% 85% at 50% 50%, transparent 60%, ${fill} 100%)`,
           opacity: 0.55,
         }}
       />
-      <Grain opacity={th.grain} />
+      {grain ? <Grain opacity={th.grain} /> : null}
     </AbsoluteFill>
   );
 }

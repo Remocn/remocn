@@ -1,6 +1,7 @@
 "use client";
 
 import { loadFont as loadDisplay } from "@remotion/google-fonts/Fraunces";
+import type React from "react";
 import { useId } from "react";
 import {
   AbsoluteFill,
@@ -18,6 +19,22 @@ const { fontFamily: display } = loadDisplay("normal", {
 export interface FlutedGlassProps {
   title?: string;
   accent?: string;
+  /** Width of one flute, in px at 720p. */
+  fluteWidth?: number;
+  /** Frames the glass takes to slide across the frame. */
+  sweep?: number;
+  /** Color of the title; overrides the theme ink. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the title. Load it yourself; Fraunces by default. */
+  fontFamily?: string;
+  /** Size of the orb, title and glass, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  /** Film grain over the scene. */
+  grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -127,14 +144,19 @@ function Backdrop({
   t,
   title,
   accent,
-  p,
   L,
+  fg,
+  bg,
+  fontFamily,
 }: {
   t: number;
   title: string;
   accent: string;
   p: Palette;
   L: Layout;
+  fg: string;
+  bg: string;
+  fontFamily: string;
 }) {
   const { width, height } = useVideoConfig();
   const drift = EASE_IO(interpolate(t, [0, 62], [0, 1], CLAMP));
@@ -149,7 +171,7 @@ function Backdrop({
         top: 0,
         width,
         height,
-        background: p.bg,
+        background: bg,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -178,12 +200,12 @@ function Backdrop({
       <div
         style={{
           flex: "none",
-          fontFamily: display,
+          fontFamily,
           fontWeight: 400,
           fontSize: L.size,
           letterSpacing: "-0.035em",
           lineHeight: 1,
-          color: p.fg,
+          color: fg,
           whiteSpace: "pre",
           paddingBottom: L.size * 0.06,
         }}
@@ -194,23 +216,50 @@ function Backdrop({
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function FlutedGlass({
   title = "In focus.",
   accent = "#3B5BFD",
+  fluteWidth = 26,
+  sweep = 46,
+  ink,
+  background,
+  fontFamily = display,
+  scale = 1,
+  delay = 0,
+  grain = true,
   theme = "dark",
   speed = 1,
 }: FlutedGlassProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height } = useVideoConfig();
   const p = THEMES[theme];
+  const fg = ink ?? p.fg;
+  const bg =
+    background === "transparent" ? "transparent" : (background ?? p.bg);
   const L = useLayout(title);
   const { u } = L;
 
-  const fw = 26 * u;
+  const fw = Math.max(1, fluteWidth) * u;
   const lens = 0.3;
   const travel = width + 90 * u;
   const slideAt = (f: number) =>
-    EASE_IO(interpolate(f, [66, 112], [0, 1], CLAMP)) * travel;
+    EASE_IO(interpolate(f, [66, 66 + sweep], [0, 1], CLAMP)) * travel;
   const gx = slideAt(t);
   const vel = (gx - slideAt(t - 1)) / u;
   const smear = interpolate(vel, [8, 40], [0, 5], CLAMP) * u;
@@ -218,110 +267,112 @@ export function FlutedGlass({
   const flutes: number[] = [];
   for (let i = 0; gx + i * fw < width; i++) flutes.push(i);
 
-  const scene = { t, title, accent, p, L };
+  const scene = { t, title, accent, p, L, fg, bg, fontFamily };
 
   return (
-    <AbsoluteFill style={{ background: p.bg, overflow: "hidden" }}>
-      <Backdrop {...scene} />
-      {gx < width ? (
+    <AbsoluteFill style={{ background: bg, overflow: "hidden" }}>
+      <ScaleLayer scale={scale}>
+        <Backdrop {...scene} />
+        {gx < width ? (
+          <div
+            style={{
+              position: "absolute",
+              left: gx,
+              top: 0,
+              width: width + fw,
+              height,
+              boxShadow: `${-18 * u}px 0 ${40 * u}px ${-6 * u}px ${p.contact}`,
+            }}
+          />
+        ) : null}
         <div
           style={{
             position: "absolute",
-            left: gx,
-            top: 0,
-            width: width + fw,
-            height,
-            boxShadow: `${-18 * u}px 0 ${40 * u}px ${-6 * u}px ${p.contact}`,
-          }}
-        />
-      ) : null}
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          filter: `blur(${1.4 * u + smear}px)`,
-        }}
-      >
-        {flutes.map((i) => {
-          const x0 = gx + i * fw;
-          const wobble = (hash(i) - 0.5) * 3 * u;
-          return (
-            <div
-              key={i}
-              style={{
-                position: "absolute",
-                left: x0,
-                top: 0,
-                width: fw + 0.6,
-                height,
-                overflow: "hidden",
-              }}
-            >
-              <div
-                style={{
-                  position: "absolute",
-                  left: -x0,
-                  top: 0,
-                  width,
-                  height,
-                  transform: `scaleX(${-lens})`,
-                  transformOrigin: `${x0 + fw / 2 + wobble}px 50%`,
-                }}
-              >
-                <Backdrop {...scene} />
-              </div>
-            </div>
-          );
-        })}
-      </div>
-      {gx < width ? (
-        <div
-          style={{
-            position: "absolute",
-            left: gx,
-            top: 0,
-            right: 0,
-            bottom: 0,
-            filter: smear > 0.3 ? `blur(${smear}px)` : undefined,
+            inset: 0,
+            filter: `blur(${1.4 * u + smear}px)`,
           }}
         >
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              background: p.tint,
-            }}
-          />
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              backgroundImage: `linear-gradient(90deg, ${p.ridge} 0, rgba(0,0,0,0) ${fw * 0.1}px, rgba(0,0,0,0) ${fw * 0.2}px, ${p.spec} ${fw * 0.27}px, rgba(0,0,0,0) ${fw * 0.4}px, rgba(0,0,0,0) ${fw * 0.62}px, ${p.valley} ${fw}px)`,
-              backgroundSize: `${fw}px 100%`,
-              opacity: 0.85,
-            }}
-          />
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              background: `linear-gradient(180deg, ${p.sheen}, rgba(0,0,0,0) 45%, rgba(0,0,0,0) 70%, ${p.sheen})`,
-            }}
-          />
-          <div
-            style={{
-              position: "absolute",
-              left: 0,
-              top: 0,
-              bottom: 0,
-              width: 7 * u,
-              background: `linear-gradient(90deg, ${p.edge}, rgba(255,255,255,0.08) 45%, rgba(0,0,0,0) 100%)`,
-              opacity: gx > 0 ? 1 : 0,
-            }}
-          />
+          {flutes.map((i) => {
+            const x0 = gx + i * fw;
+            const wobble = (hash(i) - 0.5) * 3 * u;
+            return (
+              <div
+                key={i}
+                style={{
+                  position: "absolute",
+                  left: x0,
+                  top: 0,
+                  width: fw + 0.6,
+                  height,
+                  overflow: "hidden",
+                }}
+              >
+                <div
+                  style={{
+                    position: "absolute",
+                    left: -x0,
+                    top: 0,
+                    width,
+                    height,
+                    transform: `scaleX(${-lens})`,
+                    transformOrigin: `${x0 + fw / 2 + wobble}px 50%`,
+                  }}
+                >
+                  <Backdrop {...scene} />
+                </div>
+              </div>
+            );
+          })}
         </div>
-      ) : null}
-      <Grain opacity={p.grain} />
+        {gx < width ? (
+          <div
+            style={{
+              position: "absolute",
+              left: gx,
+              top: 0,
+              right: 0,
+              bottom: 0,
+              filter: smear > 0.3 ? `blur(${smear}px)` : undefined,
+            }}
+          >
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                background: p.tint,
+              }}
+            />
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                backgroundImage: `linear-gradient(90deg, ${p.ridge} 0, rgba(0,0,0,0) ${fw * 0.1}px, rgba(0,0,0,0) ${fw * 0.2}px, ${p.spec} ${fw * 0.27}px, rgba(0,0,0,0) ${fw * 0.4}px, rgba(0,0,0,0) ${fw * 0.62}px, ${p.valley} ${fw}px)`,
+                backgroundSize: `${fw}px 100%`,
+                opacity: 0.85,
+              }}
+            />
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                background: `linear-gradient(180deg, ${p.sheen}, rgba(0,0,0,0) 45%, rgba(0,0,0,0) 70%, ${p.sheen})`,
+              }}
+            />
+            <div
+              style={{
+                position: "absolute",
+                left: 0,
+                top: 0,
+                bottom: 0,
+                width: 7 * u,
+                background: `linear-gradient(90deg, ${p.edge}, rgba(255,255,255,0.08) 45%, rgba(0,0,0,0) 100%)`,
+                opacity: gx > 0 ? 1 : 0,
+              }}
+            />
+          </div>
+        ) : null}
+      </ScaleLayer>
+      {grain ? <Grain opacity={p.grain} /> : null}
     </AbsoluteFill>
   );
 }

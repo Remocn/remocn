@@ -1,14 +1,16 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const videoCallConfig: ComponentConfig = {
   componentName: "VideoCall",
   importPath: "@/components/remocn/video-call",
   controls: {
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
-    },
     meetingCode: {
       type: "text-content",
       default: "kqv-mnrt-zpa",
@@ -18,6 +20,21 @@ export const videoCallConfig: ComponentConfig = {
       type: "text-content",
       default: "10:42 AM",
       description: "Time",
+    },
+    callTitle: {
+      type: "text-content",
+      default: "Launch sync",
+      description: "Call title",
+    },
+    screenTitle: {
+      type: "text-content",
+      default: "Launch week",
+      description: "Screen title",
+    },
+    leaveLabel: {
+      type: "text-content",
+      default: "Leave",
+      description: "Leave label",
     },
     present: {
       type: "boolean",
@@ -33,6 +50,13 @@ export const videoCallConfig: ComponentConfig = {
       description: "Presenter",
       hiddenFromList: false,
     },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ground: groundControl(),
+    ...sceneControls({ font: "Onest" }),
     speed: {
       type: "number",
       default: 1,

@@ -27,6 +27,21 @@ export interface FractionSplitProps {
   highlight?: string;
   accentPiece?: number;
   accent?: string;
+  /** Color of the line and the bar; overrides the theme. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the line and labels. Load it yourself; Schibsted Grotesk by default. */
+  fontFamily?: string;
+  /** Frames between words as the line rises in. */
+  stagger?: number;
+  /** Corner radius of the bar pieces, in pixels at 1280×720. */
+  radius?: number;
+  /** Size of the foreground, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -98,18 +113,43 @@ function Grain({ opacity }: { opacity: number }) {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function FractionSplit({
   line = "Renders in 1/8 the time.",
   highlight = "1/8",
   accentPiece = 0,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = sans,
+  stagger = 3,
+  radius = 8,
+  scale = 1,
+  delay = 0,
+  grain = true,
   theme = "dark",
   speed = 1,
 }: FractionSplitProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, fps } = useVideoConfig();
   const u = Math.min(width / 1280, height / 720);
   const p = THEMES[theme];
+  const fg = ink ?? p.fg;
   const ap = Math.max(0, Math.min(SEGS - 1, Math.round(accentPiece)));
 
   const cx = width / 2;
@@ -117,7 +157,7 @@ export function FractionSplit({
   const barW = Math.min(width * 0.8, 1040 * u);
   const barH = 116 * u;
   const G = 14 * u;
-  const R = 8 * u;
+  const R = radius * u;
   const E = 3 * G;
   const textSize = 96 * u;
   const textLines = line.length * 0.43 * textSize > barW * 0.98 ? 2 : 1;
@@ -181,7 +221,7 @@ export function FractionSplit({
   const labelStyle = {
     position: "absolute",
     left: 14 * u,
-    fontFamily: sans,
+    fontFamily,
     fontWeight: 500,
     fontSize: 20 * u,
     lineHeight: 1.2,
@@ -216,7 +256,7 @@ export function FractionSplit({
       borderBottomRightRadius: rr,
     } as const;
     if (reg <= 0) {
-      return <div key={`p${j0}-${j1}`} style={{ ...box, background: p.fg }} />;
+      return <div key={`p${j0}-${j1}`} style={{ ...box, background: fg }} />;
     }
     const isAccent = j0 === ap;
     const fillH = barH * (isAccent ? rise : 1 - drainOf(j0));
@@ -235,7 +275,7 @@ export function FractionSplit({
           style={{
             ...box,
             overflow: "hidden",
-            background: isAccent ? p.fg : "transparent",
+            background: isAccent ? fg : "transparent",
           }}
         >
           {isAccent ? (
@@ -251,7 +291,7 @@ export function FractionSplit({
               bottom: 0,
               height: fillH,
               overflow: "hidden",
-              backgroundColor: p.fg,
+              backgroundColor: fg,
               backgroundImage: isAccent ? flute(20) : undefined,
               backgroundSize: isAccent ? `${w}px ${barH}px` : undefined,
               backgroundPosition: "left bottom",
@@ -332,70 +372,79 @@ export function FractionSplit({
   });
 
   return (
-    <AbsoluteFill style={{ background: p.bg, overflow: "hidden" }}>
-      <AbsoluteFill
-        style={{ transform: `scale(${push})`, transformOrigin: "50% 50%" }}
-      >
+    <AbsoluteFill
+      style={{
+        background:
+          background === "transparent" ? undefined : (background ?? p.bg),
+        overflow: "hidden",
+      }}
+    >
+      <ScaleLayer scale={scale}>
         <AbsoluteFill
-          style={{
-            clipPath: `inset(0 ${(1 - wipe) * 100}% 0 0)`,
-          }}
+          style={{ transform: `scale(${push})`, transformOrigin: "50% 50%" }}
         >
-          {pieces}
-          {labels}
-        </AbsoluteFill>
+          <AbsoluteFill
+            style={{
+              clipPath: `inset(0 ${(1 - wipe) * 100}% 0 0)`,
+            }}
+          >
+            {pieces}
+            {labels}
+          </AbsoluteFill>
 
-        <div
-          style={{
-            position: "absolute",
-            left: cx - barW * 0.5,
-            width: barW,
-            top: finalTop + barH + textGap,
-            textAlign: "center",
-            fontFamily: sans,
-            fontWeight: 400,
-            fontSize: textSize,
-            lineHeight: 1.02,
-            letterSpacing: "-0.035em",
-            color: p.fg,
-            textWrap: "balance",
-          }}
-        >
-          {words.map((w, i) => {
-            const k = interpolate(
-              t,
-              [TEXT_IN + i * 3, TEXT_IN + i * 3 + 18],
-              [0, 1],
-              { ...CLAMP, easing: EASE_OUT },
-            );
-            return (
-              <span key={`w${i.toString()}`}>
-                <span
-                  style={{
-                    display: "inline-block",
-                    color: w.hl ? "transparent" : p.fg,
-                    ...(w.hl
-                      ? {
-                          fontWeight: 500,
-                          paddingRight: "0.04em",
-                          backgroundImage: `linear-gradient(${172 + 10 * drift}deg, ${p.hl[0]} 8%, ${blue} 32%, ${p.hl[1]} 70%, ${p.hl[2]} 94%)`,
-                          WebkitBackgroundClip: "text",
-                          backgroundClip: "text",
-                        }
-                      : null),
-                    opacity: k,
-                    filter: k < 0.99 ? `blur(${(1 - k) * 8 * u}px)` : undefined,
-                    transform: `translateY(${(1 - k) * 18 * u}px)`,
-                  }}
-                >
-                  {w.text}
+          <div
+            style={{
+              position: "absolute",
+              left: cx - barW * 0.5,
+              width: barW,
+              top: finalTop + barH + textGap,
+              textAlign: "center",
+              fontFamily,
+              fontWeight: 400,
+              fontSize: textSize,
+              lineHeight: 1.02,
+              letterSpacing: "-0.035em",
+              color: fg,
+              textWrap: "balance",
+            }}
+          >
+            {words.map((w, i) => {
+              const k = interpolate(
+                t,
+                [TEXT_IN + i * stagger, TEXT_IN + i * stagger + 18],
+                [0, 1],
+                { ...CLAMP, easing: EASE_OUT },
+              );
+              return (
+                <span key={`w${i.toString()}`}>
+                  <span
+                    style={{
+                      display: "inline-block",
+                      color: w.hl ? "transparent" : fg,
+                      ...(w.hl
+                        ? {
+                            fontWeight: 500,
+                            paddingRight: "0.04em",
+                            backgroundImage: `linear-gradient(${172 + 10 * drift}deg, ${p.hl[0]} 8%, ${blue} 32%, ${p.hl[1]} 70%, ${p.hl[2]} 94%)`,
+                            WebkitBackgroundClip: "text",
+                            backgroundClip: "text",
+                          }
+                        : null),
+                      opacity: k,
+                      filter:
+                        k < 0.99 ? `blur(${(1 - k) * 8 * u}px)` : undefined,
+                      transform: `translateY(${(1 - k) * 18 * u}px)`,
+                    }}
+                  >
+                    {w.text}
+                  </span>
+                  {i < words.length - 1 ? " " : null}
                 </span>
-                {i < words.length - 1 ? " " : null}
-              </span>
-            );
-          })}
-        </div>
-      </AbsoluteFill>
+              );
+            })}
+          </div>
+        </AbsoluteFill>
+      </ScaleLayer>
 
       <AbsoluteFill
         style={{
@@ -403,7 +452,7 @@ export function FractionSplit({
           opacity: 0.55,
         }}
       />
-      <Grain opacity={p.grain} />
+      {grain ? <Grain opacity={p.grain} /> : null}
     </AbsoluteFill>
   );
 }

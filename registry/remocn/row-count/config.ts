@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const rowCountConfig: ComponentConfig = {
   componentName: "RowCount",
@@ -41,6 +47,17 @@ export const rowCountConfig: ComponentConfig = {
       description: "From",
       hiddenFromList: false,
     },
+    countLength: {
+      type: "number",
+      default: 78,
+      min: 10,
+      max: 180,
+      step: 1,
+      description: "Count length (frames)",
+      hiddenFromList: false,
+    },
+    accent: { type: "color", default: undefined, description: "Accent" },
+    ...sceneControls({ font: "IBM Plex Sans" }),
     speed: {
       type: "number",
       default: 1,

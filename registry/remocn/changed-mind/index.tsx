@@ -25,7 +25,17 @@ export interface ChangedMindProps {
   steps?: ChangedMindStep[];
   name?: string;
   accent?: string;
+  /** Text color of the quote and name; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the copy. Load it yourself; Young Serif by default. */
+  fontFamily?: string;
+  /** Longest a quote-to-quote rewrite may take, in frames. */
+  transition?: number;
+  /** Size of the quote and name, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -209,8 +219,8 @@ function wrap(
   return { pos, lines: L, widths };
 }
 
-function useWidths(strings: string[]) {
-  const key = strings.join("\u0001");
+function useWidths(strings: string[], fontFamily: string) {
+  const key = `${fontFamily}\u0002${strings.join("\u0001")}`;
   const [state, setState] = useState<{
     key: string;
     w: Record<string, number>;
@@ -223,14 +233,14 @@ function useWidths(strings: string[]) {
     let live = true;
     Promise.all([
       serif.waitUntilDone(),
-      document.fonts.load(`400 100px "${serif.fontFamily}"`),
+      document.fonts.load(`400 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
         const ctx = document.createElement("canvas").getContext("2d");
         const w: Record<string, number> = {};
-        if (ctx) ctx.font = `400 100px "${serif.fontFamily}"`;
+        if (ctx) ctx.font = `400 100px "${fontFamily}"`;
         for (const s of ref.current) {
           w[s] = ctx ? ctx.measureText(s).width / 100 : s.length * 0.5;
         }
@@ -243,22 +253,44 @@ function useWidths(strings: string[]) {
     return () => {
       live = false;
     };
-  }, [key, handle]);
+  }, [key, handle, fontFamily]);
   return state && state.key === key ? state.w : null;
+}
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
 }
 
 export function ChangedMind({
   steps = DEFAULT_STEPS,
   name = "Ines Vargas, solo founder",
   accent,
+  ink,
   background,
+  fontFamily = serif.fontFamily,
+  transition = 18,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: ChangedMindProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, durationInFrames: T } = useVideoConfig();
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
+  const fg = ink ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
 
@@ -273,7 +305,7 @@ export function ChangedMind({
       ...rows.flatMap((r) => r.map((tk) => tk.text)),
     ]),
   );
-  const w = useWidths(strings);
+  const w = useWidths(strings, fontFamily);
 
   if (!w) {
     return (
@@ -329,7 +361,7 @@ export function ChangedMind({
   const tail = Math.max(30, T * 0.22);
   const span = Math.max(1, T - tail - intro);
   const gap = n > 1 ? span / (n - 1) : span;
-  const TR = Math.min(18, gap * 0.45);
+  const TR = Math.min(transition, gap * 0.45);
   const startOf = (k: number) => intro + gap * k - TR;
 
   let cur = 0;
@@ -349,7 +381,7 @@ export function ChangedMind({
     : marginY;
   const lineH = LH * F;
   const colorIn = (k: number, id: string) =>
-    k > 0 && fresh[k].has(id) ? hi : c.ink;
+    k > 0 && fresh[k].has(id) ? hi : fg;
 
   const nodes: React.ReactNode[] = [];
   const glyph = (
@@ -368,7 +400,7 @@ export function ChangedMind({
         top: y,
         height: lineH,
         lineHeight: `${lineH}px`,
-        fontFamily: serif.fontFamily,
+        fontFamily,
         fontWeight: 400,
         fontSize: F,
         letterSpacing: `${TRACK}em`,
@@ -401,7 +433,7 @@ export function ChangedMind({
       marginX - adv(OPEN) * F,
       top + lift * (1 - openIn),
       openIn,
-      c.ink,
+      fg,
     ),
   );
 
@@ -531,52 +563,54 @@ export function ChangedMind({
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
-      {nodes}
-      <div
-        style={{
-          position: "absolute",
-          left: marginX,
-          width: measure,
-          ...(portrait ? { top: quoteBottom } : { bottom: marginY }),
-          fontFamily: serif.fontFamily,
-          fontWeight: 400,
-          fontSize: L,
-          letterSpacing: "-0.005em",
-          opacity: attrIn,
-          transform: `translateY(${((1 - attrIn) * L * 0.6).toFixed(2)}px)`,
-        }}
-      >
+      <ScaleLayer scale={scale}>
+        {nodes}
         <div
           style={{
-            lineHeight: `${slotH}px`,
-            paddingLeft: dashW,
-            textIndent: -dashW,
-            textWrap: "balance",
-            color: c.ink,
-            opacity: 0.72,
+            position: "absolute",
+            left: marginX,
+            width: measure,
+            ...(portrait ? { top: quoteBottom } : { bottom: marginY }),
+            fontFamily,
+            fontWeight: 400,
+            fontSize: L,
+            letterSpacing: "-0.005em",
+            opacity: attrIn,
+            transform: `translateY(${((1 - attrIn) * L * 0.6).toFixed(2)}px)`,
           }}
         >
-          {`— ${name}`}
+          <div
+            style={{
+              lineHeight: `${slotH}px`,
+              paddingLeft: dashW,
+              textIndent: -dashW,
+              textWrap: "balance",
+              color: fg,
+              opacity: 0.72,
+            }}
+          >
+            {`— ${name}`}
+          </div>
+          <div
+            style={{
+              position: "relative",
+              marginLeft: dashW,
+              height: slotH,
+              width: measure - dashW,
+              overflow: "hidden",
+              color: hi,
+            }}
+          >
+            {whenMix < 1
+              ? whenLine(whenPrev, -slotH * whenMix, 1 - whenMix)
+              : null}
+            {whenMix > 0 && cur > 0
+              ? whenLine(whenNext, slotH * (1 - whenMix), whenMix)
+              : null}
+            {cur === 0 ? whenLine(whenNext, 0, 1) : null}
+          </div>
         </div>
-        <div
-          style={{
-            position: "relative",
-            marginLeft: dashW,
-            height: slotH,
-            width: measure - dashW,
-            overflow: "hidden",
-            color: hi,
-          }}
-        >
-          {whenMix < 1
-            ? whenLine(whenPrev, -slotH * whenMix, 1 - whenMix)
-            : null}
-          {whenMix > 0 && cur > 0
-            ? whenLine(whenNext, slotH * (1 - whenMix), whenMix)
-            : null}
-          {cur === 0 ? whenLine(whenNext, 0, 1) : null}
-        </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

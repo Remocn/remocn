@@ -27,7 +27,18 @@ export interface EditRipplePair {
 export interface EditRippleProps {
   pairs?: EditRipplePair[];
   accent?: string;
+  /** Text color words cool to; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the copy. Load it yourself; Epilogue by default. */
+  fontFamily?: string;
+  fontWeight?: number;
+  /** Frames the effect line trails the cause line. */
+  lag?: number;
+  /** Size of the copy, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -67,11 +78,11 @@ const TAIL = 34;
 
 type Metrics = Record<string, number>;
 
-function measureAll(texts: string[]): Metrics {
+function measureAll(texts: string[], family: string, weight: number): Metrics {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("edit-ripple: no 2d context");
-  ctx.font = `${WGHT} ${FONT_PX}px "${epilogue.fontFamily}"`;
+  ctx.font = `${weight} ${FONT_PX}px "${family}"`;
   const w: Metrics = {};
   for (const s of texts) {
     w[s] = ctx.measureText(s).width / FONT_PX + TRACK * Array.from(s).length;
@@ -79,7 +90,7 @@ function measureAll(texts: string[]): Metrics {
   return w;
 }
 
-function useMetrics(texts: string[]) {
+function useMetrics(texts: string[], family: string, weight: number) {
   const key = texts.join("\u0001");
   const [state, setState] = useState<{ key: string; m: Metrics } | null>(null);
   const [handle] = useState(() => delayRender("edit-ripple: measuring"));
@@ -88,12 +99,12 @@ function useMetrics(texts: string[]) {
     let live = true;
     Promise.all([
       epilogue.waitUntilDone(),
-      document.fonts.load(`${WGHT} 100px "${epilogue.fontFamily}"`),
+      document.fonts.load(`${weight} 100px "${family}"`),
     ])
       .catch(() => undefined)
       .then(() => {
         if (!live) return;
-        setState({ key, m: measureAll(key.split("\u0001")) });
+        setState({ key, m: measureAll(key.split("\u0001"), family, weight) });
         if (!released.current) {
           released.current = true;
           continueRender(handle);
@@ -102,7 +113,7 @@ function useMetrics(texts: string[]) {
     return () => {
       live = false;
     };
-  }, [key, handle]);
+  }, [key, handle, family, weight]);
   return state && state.key === key ? state.m : null;
 }
 
@@ -153,30 +164,57 @@ function breakLines(words: string[], m: Metrics, L: number): string[][] {
   return best;
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function EditRipple({
   pairs = DEFAULT_PAIRS,
   accent,
+  ink,
   background,
+  fontFamily = epilogue.fontFamily,
+  fontWeight = WGHT,
+  lag = LAG,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: EditRippleProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, durationInFrames } = useVideoConfig();
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
+  const fg = ink ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
 
   const list = pairs.length > 0 ? pairs : DEFAULT_PAIRS;
   const causes = list.map((p) => splitWords(p.cause));
   const effects = list.map((p) => splitWords(p.effect));
-  const m = useMetrics([
-    " ",
-    ...list.map((p) => p.cause),
-    ...list.map((p) => p.effect),
-    ...causes.flat(),
-    ...effects.flat(),
-  ]);
+  const m = useMetrics(
+    [
+      " ",
+      ...list.map((p) => p.cause),
+      ...list.map((p) => p.effect),
+      ...causes.flat(),
+      ...effects.flat(),
+    ],
+    fontFamily,
+    fontWeight,
+  );
 
   if (!m) {
     return (
@@ -232,8 +270,8 @@ export function EditRipple({
     height: F,
     lineHeight: `${F}px`,
     whiteSpace: "pre",
-    fontFamily: epilogue.fontFamily,
-    fontWeight: WGHT,
+    fontFamily,
+    fontWeight,
     fontSize: F,
     letterSpacing: `${TRACK}em`,
   };
@@ -284,7 +322,7 @@ export function EditRipple({
       : interpolateColors(
           Math.min(Math.max(t, land), land + COOL),
           [land, land + COOL],
-          [hi, c.ink],
+          [hi, fg],
         );
 
   const drawLine = (
@@ -351,7 +389,7 @@ export function EditRipple({
         (line) => W - marginX - lineW(line, m) * F,
         effectTop,
       ),
-      LAG,
+      lag,
       EFFECT_PER_EM,
       k === n - 1,
       "e",
@@ -360,7 +398,7 @@ export function EditRipple({
 
   return (
     <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
-      {nodes}
+      <ScaleLayer scale={scale}>{nodes}</ScaleLayer>
     </AbsoluteFill>
   );
 }

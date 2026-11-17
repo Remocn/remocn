@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const rankClimbConfig: ComponentConfig = {
   componentName: "RankClimb",
@@ -12,11 +18,6 @@ export const rankClimbConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     brand: {
       type: "text-content",
@@ -51,6 +52,30 @@ export const rankClimbConfig: ComponentConfig = {
       description: "To",
       hiddenFromList: false,
     },
+    climbAt: {
+      type: "number",
+      default: 28,
+      min: 0,
+      max: 90,
+      step: 1,
+      description: "Climb at (frame)",
+      hiddenFromList: false,
+    },
+    finalSwap: {
+      type: "number",
+      default: 22,
+      min: 6,
+      max: 60,
+      step: 1,
+      description: "Final swap (frames)",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Bricolage Grotesque", grain: true }),
     speed: {
       type: "number",
       default: 1,

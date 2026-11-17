@@ -15,7 +15,7 @@ import type { GradientParams } from "@/lib/remocn/gsh/gradient-engine";
 import { GshGround } from "@/lib/remocn/gsh/gsh-ground";
 import type { GshPresetId } from "@/lib/remocn/gsh/presets";
 
-const { fontFamily } = loadFont("normal", {
+const interTight = loadFont("normal", {
   weights: ["300", "400"],
   subsets: ["latin"],
 });
@@ -52,8 +52,22 @@ export interface RoadmapTimelineProps {
   year?: number;
   title?: string;
   workspace?: string;
+  /** Header over the project list. */
+  listTitle?: string;
+  /** Frames the cursor takes to drag the project. */
+  dragFrames?: number;
   theme?: "light" | "dark";
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Inter Tight by default. */
+  fontFamily?: string;
+  /** Size of the panel, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
@@ -441,6 +455,22 @@ function connectorPath(sx: number, sy: number, x2: number, y2: number) {
   return `M${sx} ${sy} V${y2 - r} Q${sx} ${y2} ${sx + r} ${y2} H${x2 - 5}`;
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function RoadmapTimeline({
   projects = DEFAULT_PROJECTS,
   milestone = { name: "Public launch", date: "Nov 18" },
@@ -452,19 +482,27 @@ export function RoadmapTimeline({
   year = 2026,
   title = "Roadmap · H2 2026",
   workspace = "remocn",
+  listTitle = "Projects",
+  dragFrames = 26,
   theme = "light",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = interTight.fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   ground,
   groundParams,
 }: RoadmapTimelineProps) {
-  const frame = useCurrentFrame() * speed;
+  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const tall = H > W;
   const DW = tall ? 720 : 1280;
   const DH = tall ? 1280 : 720;
   const u = Math.min(W / DW, H / DH);
-  const pal = palette(theme);
+  const themePal = palette(theme);
+  const pal = ink ? { ...themePal, text: ink } : themePal;
   const LIST_W = tall ? 0 : 260;
   const ROW_H = tall ? 96 : 56;
   const BAR_H = tall ? 40 : 32;
@@ -507,8 +545,8 @@ export function RoadmapTimeline({
     cursorIn: 76,
     grab: 99,
     dragStart: 102,
-    dragEnd: 128,
-    toast: 136,
+    dragEnd: 102 + dragFrames,
+    toast: 110 + dragFrames,
   };
 
   const parsed = projects.map((p) => ({
@@ -637,509 +675,509 @@ export function RoadmapTimeline({
         WebkitFontSmoothing: "antialiased",
       }}
     >
-      <GshGround
-        preset={ground ?? (pal.dark ? "europa" : "paper-crease")}
-        params={groundParams}
-        timeOffset={pal.dark ? 4 : 2}
-        timeScale={0.3}
-      />
-      <AbsoluteFill style={{ background: pal.stage }} />
-      <div
-        style={{
-          position: "absolute",
-          left: (W - DW * u) / 2,
-          top: (H - DH * u) / 2,
-          width: DW,
-          height: DH,
-          transformOrigin: "0 0",
-          transform: `scale(${u})`,
-        }}
-      >
+      {background === undefined ? (
+        <>
+          <GshGround
+            preset={ground ?? (pal.dark ? "europa" : "paper-crease")}
+            params={groundParams}
+            timeOffset={pal.dark ? 4 : 2}
+            timeScale={0.3}
+          />
+          <AbsoluteFill style={{ background: pal.stage }} />
+        </>
+      ) : (
+        <AbsoluteFill
+          style={{
+            background: background === "transparent" ? undefined : background,
+          }}
+        />
+      )}
+      <ScaleLayer scale={scale}>
         <div
           style={{
             position: "absolute",
-            inset: 0,
-            transformOrigin: `${DW / 2}px ${DH / 2}px`,
-            transform: `scale(${0.95 + 0.05 * camT}) translateY(${(1 - enter) * 48}px)`,
-            opacity: clamp(enter * 1.6, 0, 1),
+            left: (W - DW * u) / 2,
+            top: (H - DH * u) / 2,
+            width: DW,
+            height: DH,
+            transformOrigin: "0 0",
+            transform: `scale(${u})`,
           }}
         >
           <div
             style={{
               position: "absolute",
-              left: PANEL.x,
-              top: PANEL.y,
-              width: PANEL.w,
-              height: PANEL.h,
-              borderRadius: 16,
-              background: pal.panel,
-              boxShadow: pal.dark
-                ? "0 0 0 1px rgba(255,255,255,0.08), inset 0 1px 0 rgba(255,255,255,0.05), 0 30px 80px -24px rgba(0,0,0,0.7)"
-                : "0 0 0 1px rgba(17,19,24,0.06), 0 1px 3px rgba(17,19,24,0.05), 0 16px 36px -16px rgba(17,19,24,0.16), 0 44px 90px -44px rgba(17,19,24,0.24)",
-              overflow: "hidden",
+              inset: 0,
+              transformOrigin: `${DW / 2}px ${DH / 2}px`,
+              transform: `scale(${0.95 + 0.05 * camT}) translateY(${(1 - enter) * 48}px)`,
+              opacity: clamp(enter * 1.6, 0, 1),
             }}
           >
             <div
               style={{
-                height: HEAD_H,
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-                padding: "0 16px 0 20px",
-                borderBottom: `1px solid ${pal.line}`,
-                fontSize: 16,
-              }}
-            >
-              <span style={{ color: pal.muted }}>{workspace}</span>
-              <Icon name="chevRight" color={pal.faint} size={14} />
-              <span style={{ color: pal.text }}>{title}</span>
-              <div style={{ flex: 1 }} />
-              <div style={{ display: "flex" }}>
-                {["Maya Chen", "Leo Park", "Priya Raman"].map((n, i) => (
-                  <div key={n} style={{ marginLeft: i ? -5 : 0 }}>
-                    <Avatar name={n} size={26} ring={pal.panel} />
-                  </div>
-                ))}
-              </div>
-              <div style={{ width: 4 }} />
-              {btn(null, "link")}
-            </div>
-            <div
-              style={{
-                height: TOOL_H,
-                display: "flex",
-                alignItems: "center",
-                gap: 6,
-                padding: "0 14px",
-                borderBottom: `1px solid ${pal.line}`,
-              }}
-            >
-              {["All", "Timeline", "Board"].map((t) => (
-                <div
-                  key={t}
-                  style={{
-                    height: 32,
-                    padding: "0 12px",
-                    display: "flex",
-                    alignItems: "center",
-                    borderRadius: 8,
-                    fontSize: 16,
-                    color: t === "Timeline" ? pal.text : pal.muted,
-                    background: t === "Timeline" ? pal.active : "transparent",
-                    boxShadow:
-                      t === "Timeline" ? `inset 0 0 0 1px ${pal.line}` : "none",
-                  }}
-                >
-                  {t}
-                </div>
-              ))}
-              <div style={{ flex: 1 }} />
-              {btn("Today")}
-              {btn(
-                <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                  Months
-                  <Icon name="chevDown" color={pal.muted} size={12} />
-                </span>,
-              )}
-            </div>
-
-            <div
-              style={{
                 position: "absolute",
-                left: LIST_W,
-                top: HEAD_H + TOOL_H,
-                width: GRID_W,
-                bottom: 0,
-                borderLeft: `1px solid ${pal.line}`,
+                left: PANEL.x,
+                top: PANEL.y,
+                width: PANEL.w,
+                height: PANEL.h,
+                borderRadius: 16,
+                background: pal.panel,
+                boxShadow: pal.dark
+                  ? "0 0 0 1px rgba(255,255,255,0.08), inset 0 1px 0 rgba(255,255,255,0.05), 0 30px 80px -24px rgba(0,0,0,0.7)"
+                  : "0 0 0 1px rgba(17,19,24,0.06), 0 1px 3px rgba(17,19,24,0.05), 0 16px 36px -16px rgba(17,19,24,0.16), 0 44px 90px -44px rgba(17,19,24,0.24)",
+                overflow: "hidden",
               }}
             >
-              {monthStarts.map((m, k) => (
-                <div
-                  key={`m${m}`}
-                  style={{
-                    position: "absolute",
-                    left: m * DAY,
-                    top: 0,
-                    bottom: 0,
-                    borderLeft: k ? `1px solid ${pal.line}` : "none",
-                  }}
-                >
+              <div
+                style={{
+                  height: HEAD_H,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  padding: "0 16px 0 20px",
+                  borderBottom: `1px solid ${pal.line}`,
+                  fontSize: 16,
+                }}
+              >
+                <span style={{ color: pal.muted }}>{workspace}</span>
+                <Icon name="chevRight" color={pal.faint} size={14} />
+                <span style={{ color: pal.text }}>{title}</span>
+                <div style={{ flex: 1 }} />
+                <div style={{ display: "flex" }}>
+                  {["Maya Chen", "Leo Park", "Priya Raman"].map((n, i) => (
+                    <div key={n} style={{ marginLeft: i ? -5 : 0 }}>
+                      <Avatar name={n} size={26} ring={pal.panel} />
+                    </div>
+                  ))}
+                </div>
+                <div style={{ width: 4 }} />
+                {btn(null, "link")}
+              </div>
+              <div
+                style={{
+                  height: TOOL_H,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                  padding: "0 14px",
+                  borderBottom: `1px solid ${pal.line}`,
+                }}
+              >
+                {["All", "Timeline", "Board"].map((t) => (
                   <div
+                    key={t}
                     style={{
-                      position: "absolute",
-                      left: 10,
-                      top: 6,
+                      height: 32,
+                      padding: "0 12px",
+                      display: "flex",
+                      alignItems: "center",
+                      borderRadius: 8,
                       fontSize: 16,
-                      fontWeight: 400,
-                      color: pal.muted,
-                      whiteSpace: "nowrap",
+                      color: t === "Timeline" ? pal.text : pal.muted,
+                      background: t === "Timeline" ? pal.active : "transparent",
+                      boxShadow:
+                        t === "Timeline"
+                          ? `inset 0 0 0 1px ${pal.line}`
+                          : "none",
                     }}
                   >
-                    {MONTHS[(startMonth + k) % 12]}
-                    {k === 0 ? (
-                      <span style={{ color: pal.faint }}> {year}</span>
-                    ) : null}
+                    {t}
                   </div>
-                </div>
-              ))}
-              {mondays.map((d) => (
+                ))}
+                <div style={{ flex: 1 }} />
+                {btn("Today")}
+                {btn(
+                  <span
+                    style={{ display: "flex", alignItems: "center", gap: 4 }}
+                  >
+                    Months
+                    <Icon name="chevDown" color={pal.muted} size={12} />
+                  </span>,
+                )}
+              </div>
+
+              <div
+                style={{
+                  position: "absolute",
+                  left: LIST_W,
+                  top: HEAD_H + TOOL_H,
+                  width: GRID_W,
+                  bottom: 0,
+                  borderLeft: `1px solid ${pal.line}`,
+                }}
+              >
+                {monthStarts.map((m, k) => (
+                  <div
+                    key={`m${m}`}
+                    style={{
+                      position: "absolute",
+                      left: m * DAY,
+                      top: 0,
+                      bottom: 0,
+                      borderLeft: k ? `1px solid ${pal.line}` : "none",
+                    }}
+                  >
+                    <div
+                      style={{
+                        position: "absolute",
+                        left: 10,
+                        top: 6,
+                        fontSize: 16,
+                        fontWeight: 400,
+                        color: pal.muted,
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {MONTHS[(startMonth + k) % 12]}
+                      {k === 0 ? (
+                        <span style={{ color: pal.faint }}> {year}</span>
+                      ) : null}
+                    </div>
+                  </div>
+                ))}
+                {mondays.map((d) => (
+                  <div
+                    key={`d${d}`}
+                    style={{
+                      position: "absolute",
+                      left: d * DAY,
+                      top: THEAD_H - 7,
+                      height: 6,
+                      borderLeft: `1px solid ${pal.ring}`,
+                    }}
+                  />
+                ))}
+                {mondays.map((d) => (
+                  <div
+                    key={`g${d}`}
+                    style={{
+                      position: "absolute",
+                      left: d * DAY,
+                      top: THEAD_H,
+                      bottom: 0,
+                      borderLeft: `1px dashed ${pal.grid}`,
+                    }}
+                  />
+                ))}
                 <div
-                  key={`d${d}`}
                   style={{
                     position: "absolute",
-                    left: d * DAY,
-                    top: THEAD_H - 7,
-                    height: 6,
-                    borderLeft: `1px solid ${pal.ring}`,
+                    left: 0,
+                    right: 0,
+                    top: THEAD_H - 1,
+                    borderTop: `1px solid ${pal.line}`,
                   }}
                 />
-              ))}
-              {mondays.map((d) => (
-                <div
-                  key={`g${d}`}
-                  style={{
-                    position: "absolute",
-                    left: d * DAY,
-                    top: THEAD_H,
-                    bottom: 0,
-                    borderLeft: `1px dashed ${pal.grid}`,
-                  }}
-                />
-              ))}
+              </div>
               <div
                 style={{
                   position: "absolute",
                   left: 0,
-                  right: 0,
-                  top: THEAD_H - 1,
-                  borderTop: `1px solid ${pal.line}`,
-                }}
-              />
-            </div>
-            <div
-              style={{
-                position: "absolute",
-                left: 0,
-                top: HEAD_H + TOOL_H,
-                width: LIST_W,
-                height: THEAD_H,
-                borderBottom: `1px solid ${pal.line}`,
-                display: LIST_W ? "flex" : "none",
-                alignItems: "center",
-                gap: 6,
-                padding: "0 16px",
-                boxSizing: "border-box",
-                fontSize: 16,
-                fontWeight: 400,
-                color: pal.muted,
-              }}
-            >
-              Projects
-              <span
-                style={{
-                  color: pal.faint,
-                  fontVariantNumeric: "tabular-nums",
+                  top: HEAD_H + TOOL_H,
+                  width: LIST_W,
+                  height: THEAD_H,
+                  borderBottom: `1px solid ${pal.line}`,
+                  display: LIST_W ? "flex" : "none",
+                  alignItems: "center",
+                  gap: 6,
+                  padding: "0 16px",
+                  boxSizing: "border-box",
+                  fontSize: 16,
+                  fontWeight: 400,
+                  color: pal.muted,
                 }}
               >
-                {parsed.length}
-              </span>
-              <div style={{ flex: 1 }} />
-              Target
-            </div>
-
-            {parsed.map((p, i) => {
-              const a = tween(frame, T.rows + i * 2, T.rows + i * 2 + 10);
-              const changed = i === dragIdx || moved.includes(i);
-              const swap = changed
-                ? tween(frame, T.dragEnd + 2, T.dragEnd + 8)
-                : 0;
-              const hl = changed
-                ? flash(T.dragEnd + 2 + (i === dragIdx ? 0 : 3))
-                : 0;
-              const oldEnd = lbl(p.e);
-              const newEnd = lbl(p.e + finalShifts[i]);
-              return (
-                <div
-                  key={p.name}
+                {listTitle}
+                <span
                   style={{
-                    position: "absolute",
-                    left: 0,
-                    top: rowY(i),
-                    width: PANEL.w,
-                    height: ROW_H,
-                    borderBottom: `1px solid ${pal.line}`,
-                    background: withAlpha(accent, (pal.dark ? 0.1 : 0.05) * hl),
-                    opacity: a,
+                    color: pal.faint,
+                    fontVariantNumeric: "tabular-nums",
                   }}
                 >
+                  {parsed.length}
+                </span>
+                <div style={{ flex: 1 }} />
+                Target
+              </div>
+
+              {parsed.map((p, i) => {
+                const a = tween(frame, T.rows + i * 2, T.rows + i * 2 + 10);
+                const changed = i === dragIdx || moved.includes(i);
+                const swap = changed
+                  ? tween(frame, T.dragEnd + 2, T.dragEnd + 8)
+                  : 0;
+                const hl = changed
+                  ? flash(T.dragEnd + 2 + (i === dragIdx ? 0 : 3))
+                  : 0;
+                const oldEnd = lbl(p.e);
+                const newEnd = lbl(p.e + finalShifts[i]);
+                return (
                   <div
+                    key={p.name}
                     style={{
                       position: "absolute",
                       left: 0,
-                      width: LIST_W,
+                      top: rowY(i),
+                      width: PANEL.w,
                       height: ROW_H,
-                      display: LIST_W ? "flex" : "none",
-                      alignItems: "center",
-                      gap: 10,
-                      padding: "0 14px 0 16px",
-                      boxSizing: "border-box",
-                      transform: `translateY(${(1 - a) * 6}px)`,
+                      borderBottom: `1px solid ${pal.line}`,
+                      background: withAlpha(
+                        accent,
+                        (pal.dark ? 0.1 : 0.05) * hl,
+                      ),
+                      opacity: a,
                     }}
                   >
-                    <StatusIcon
-                      status={p.status}
-                      progress={p.progress ?? 0}
-                      accent={accent}
-                      pal={pal}
-                    />
-                    <span
+                    <div
                       style={{
-                        fontSize: 16,
-                        fontWeight: 400,
-                        color: pal.text,
-                        whiteSpace: "nowrap",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        flex: 1,
+                        position: "absolute",
+                        left: 0,
+                        width: LIST_W,
+                        height: ROW_H,
+                        display: LIST_W ? "flex" : "none",
+                        alignItems: "center",
+                        gap: 10,
+                        padding: "0 14px 0 16px",
+                        boxSizing: "border-box",
+                        transform: `translateY(${(1 - a) * 6}px)`,
                       }}
                     >
-                      {p.name}
-                    </span>
-                    <span
-                      style={{
-                        position: "relative",
-                        width: 62,
-                        height: 22,
-                        fontSize: 16,
-                        color: changed && swap > 0.5 ? pal.text : pal.muted,
-                        fontVariantNumeric: "tabular-nums",
-                        textAlign: "right",
-                      }}
-                    >
+                      <StatusIcon
+                        status={p.status}
+                        progress={p.progress ?? 0}
+                        accent={accent}
+                        pal={pal}
+                      />
                       <span
                         style={{
-                          position: "absolute",
-                          right: 0,
-                          opacity: 1 - swap,
-                          transform: `translateY(${-5 * swap}px)`,
+                          fontSize: 16,
+                          fontWeight: 400,
+                          color: pal.text,
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          flex: 1,
                         }}
                       >
-                        {oldEnd}
+                        {p.name}
                       </span>
-                      {changed ? (
+                      <span
+                        style={{
+                          position: "relative",
+                          width: 62,
+                          height: 22,
+                          fontSize: 16,
+                          color: changed && swap > 0.5 ? pal.text : pal.muted,
+                          fontVariantNumeric: "tabular-nums",
+                          textAlign: "right",
+                        }}
+                      >
                         <span
                           style={{
                             position: "absolute",
                             right: 0,
-                            opacity: swap,
-                            transform: `translateY(${5 * (1 - swap)}px)`,
+                            opacity: 1 - swap,
+                            transform: `translateY(${-5 * swap}px)`,
                           }}
                         >
-                          {newEnd}
+                          {oldEnd}
                         </span>
-                      ) : null}
-                    </span>
+                        {changed ? (
+                          <span
+                            style={{
+                              position: "absolute",
+                              right: 0,
+                              opacity: swap,
+                              transform: `translateY(${5 * (1 - swap)}px)`,
+                            }}
+                          >
+                            {newEnd}
+                          </span>
+                        ) : null}
+                      </span>
+                    </div>
                   </div>
-                </div>
-              );
-            })}
-            <div
-              style={{
-                position: "absolute",
-                left: 0,
-                top: rowY(msRow),
-                width: LIST_W,
-                height: ROW_H,
-                display: LIST_W ? "flex" : "none",
-                alignItems: "center",
-                gap: 10,
-                padding: "0 14px 0 16px",
-                boxSizing: "border-box",
-                opacity: tween(
-                  frame,
-                  T.rows + msRow * 2,
-                  T.rows + msRow * 2 + 10,
-                ),
-              }}
-            >
-              <svg width={14} height={14} viewBox="0 0 14 14">
-                <rect
-                  x={3}
-                  y={3}
-                  width={8}
-                  height={8}
-                  rx={1.5}
-                  transform="rotate(45 7 7)"
-                  fill="none"
-                  stroke={pal.muted}
-                  strokeWidth={1.4}
-                />
-              </svg>
-              <span
-                style={{
-                  fontSize: 16,
-                  fontWeight: 400,
-                  color: pal.text,
-                  flex: 1,
-                }}
-              >
-                {milestone.name}
-              </span>
-              <span
-                style={{
-                  fontSize: 16,
-                  color: pal.muted,
-                  fontVariantNumeric: "tabular-nums",
-                }}
-              >
-                {milestone.date}
-              </span>
-            </div>
-            <div
-              style={{
-                position: "absolute",
-                left: todayX,
-                top: HEAD_H + TOOL_H + 28,
-                bottom: 0,
-                width: 1,
-                background: withAlpha(accent, 0.7),
-                opacity: tween(frame, T.sweep - 2, T.sweep + 3),
-              }}
-            >
+                );
+              })}
               <div
                 style={{
                   position: "absolute",
                   left: 0,
-                  top: -1,
-                  transform: "translateX(-50%)",
-                  background: accent,
-                  color: "#fff",
-                  fontSize: 16,
-                  fontWeight: 400,
-                  lineHeight: "20px",
-                  padding: "0 7px",
-                  borderRadius: 5,
-                  whiteSpace: "nowrap",
-                  fontVariantNumeric: "tabular-nums",
+                  top: rowY(msRow),
+                  width: LIST_W,
+                  height: ROW_H,
+                  display: LIST_W ? "flex" : "none",
+                  alignItems: "center",
+                  gap: 10,
+                  padding: "0 14px 0 16px",
+                  boxSizing: "border-box",
+                  opacity: tween(
+                    frame,
+                    T.rows + msRow * 2,
+                    T.rows + msRow * 2 + 10,
+                  ),
                 }}
               >
-                {lbl(todayDay)}
-              </div>
-            </div>
-
-            <svg
-              width={PANEL.w}
-              height={PANEL.h}
-              style={{
-                position: "absolute",
-                left: 0,
-                top: 0,
-                overflow: "visible",
-              }}
-            >
-              <defs>
-                <clipPath id={`${uid}-grid`}>
+                <svg width={14} height={14} viewBox="0 0 14 14">
                   <rect
-                    x={LIST_W}
-                    y={ROWS_Y}
-                    width={GRID_W}
-                    height={PANEL.h - ROWS_Y}
+                    x={3}
+                    y={3}
+                    width={8}
+                    height={8}
+                    rx={1.5}
+                    transform="rotate(45 7 7)"
+                    fill="none"
+                    stroke={pal.muted}
+                    strokeWidth={1.4}
                   />
-                </clipPath>
-              </defs>
-              <g clipPath={`url(#${uid}-grid)`}>
-                {links.map((l, k) => {
-                  const draw = tween(
-                    frame,
-                    T.links + k * 5,
-                    T.links + k * 5 + 12,
-                    inOut,
-                  );
-                  const x2 = barX(l.to);
-                  const y2 = barMidY(l.to);
-                  const x1 = Math.min(
-                    barX(l.from) + barW(l.from) - 12,
-                    x2 - 18,
-                  );
-                  const y1 = barMidY(l.from) + BAR_H / 2;
-                  const col = pal.dark
-                    ? "rgba(255,255,255,0.4)"
-                    : "rgba(17,19,24,0.38)";
-                  return (
-                    <g key={`${l.from}-${l.to}`} opacity={draw > 0 ? 1 : 0}>
-                      <circle cx={x1} cy={y1} r={2.2} fill={col} />
-                      <path
-                        d={connectorPath(x1, y1, x2, y2)}
-                        fill="none"
-                        stroke={col}
-                        strokeWidth={1.5}
-                        strokeLinecap="round"
-                        pathLength={1}
-                        strokeDasharray="1 1"
-                        strokeDashoffset={1 - draw}
-                      />
-                      <path
-                        d={`M${x2 - 8} ${y2 - 3.5} L${x2 - 4} ${y2} L${x2 - 8} ${y2 + 3.5}`}
-                        fill="none"
-                        stroke={col}
-                        strokeWidth={1.5}
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        opacity={tween(
-                          frame,
-                          T.links + k * 5 + 9,
-                          T.links + k * 5 + 12,
-                        )}
-                      />
-                    </g>
-                  );
-                })}
-              </g>
-            </svg>
-
-            {parsed.map((p, i) => {
-              const grow = tween(frame, T.bars + i * 3, T.bars + i * 3 + 14);
-              const isDrag = i === dragIdx;
-              const lift = isDrag ? lifted : 0;
-              const hov = isDrag
-                ? hover * (1 - tween(frame, T.dragEnd + 8, T.dragEnd + 14))
-                : 0;
-              const hl = moved.includes(i) ? flash(T.dragEnd + 5) : 0;
-              const x = barX(i);
-              const w = barW(i);
-              const prog = clamp(p.progress ?? 0, 0, 1);
-              return (
-                <div
-                  key={p.name}
+                </svg>
+                <span
                   style={{
-                    position: "absolute",
-                    left: x,
-                    top: barMidY(i) - BAR_H / 2,
-                    width: Math.max(12, w * grow),
-                    height: BAR_H,
-                    borderRadius: 8,
-                    overflow: "hidden",
-                    opacity: clamp(grow * 4, 0, 1),
-                    transform: `translateY(${-1.5 * lift}px)`,
-                    zIndex: isDrag ? 3 : 2,
+                    fontSize: 16,
+                    fontWeight: 400,
+                    color: pal.text,
+                    flex: 1,
                   }}
                 >
+                  {milestone.name}
+                </span>
+                <span
+                  style={{
+                    fontSize: 16,
+                    color: pal.muted,
+                    fontVariantNumeric: "tabular-nums",
+                  }}
+                >
+                  {milestone.date}
+                </span>
+              </div>
+              <div
+                style={{
+                  position: "absolute",
+                  left: todayX,
+                  top: HEAD_H + TOOL_H + 28,
+                  bottom: 0,
+                  width: 1,
+                  background: withAlpha(accent, 0.7),
+                  opacity: tween(frame, T.sweep - 2, T.sweep + 3),
+                }}
+              >
+                <div
+                  style={{
+                    position: "absolute",
+                    left: 0,
+                    top: -1,
+                    transform: "translateX(-50%)",
+                    background: accent,
+                    color: "#fff",
+                    fontSize: 16,
+                    fontWeight: 400,
+                    lineHeight: "20px",
+                    padding: "0 7px",
+                    borderRadius: 5,
+                    whiteSpace: "nowrap",
+                    fontVariantNumeric: "tabular-nums",
+                  }}
+                >
+                  {lbl(todayDay)}
+                </div>
+              </div>
+
+              <svg
+                width={PANEL.w}
+                height={PANEL.h}
+                style={{
+                  position: "absolute",
+                  left: 0,
+                  top: 0,
+                  overflow: "visible",
+                }}
+              >
+                <defs>
+                  <clipPath id={`${uid}-grid`}>
+                    <rect
+                      x={LIST_W}
+                      y={ROWS_Y}
+                      width={GRID_W}
+                      height={PANEL.h - ROWS_Y}
+                    />
+                  </clipPath>
+                </defs>
+                <g clipPath={`url(#${uid}-grid)`}>
+                  {links.map((l, k) => {
+                    const draw = tween(
+                      frame,
+                      T.links + k * 5,
+                      T.links + k * 5 + 12,
+                      inOut,
+                    );
+                    const x2 = barX(l.to);
+                    const y2 = barMidY(l.to);
+                    const x1 = Math.min(
+                      barX(l.from) + barW(l.from) - 12,
+                      x2 - 18,
+                    );
+                    const y1 = barMidY(l.from) + BAR_H / 2;
+                    const col = pal.dark
+                      ? "rgba(255,255,255,0.4)"
+                      : "rgba(17,19,24,0.38)";
+                    return (
+                      <g key={`${l.from}-${l.to}`} opacity={draw > 0 ? 1 : 0}>
+                        <circle cx={x1} cy={y1} r={2.2} fill={col} />
+                        <path
+                          d={connectorPath(x1, y1, x2, y2)}
+                          fill="none"
+                          stroke={col}
+                          strokeWidth={1.5}
+                          strokeLinecap="round"
+                          pathLength={1}
+                          strokeDasharray="1 1"
+                          strokeDashoffset={1 - draw}
+                        />
+                        <path
+                          d={`M${x2 - 8} ${y2 - 3.5} L${x2 - 4} ${y2} L${x2 - 8} ${y2 + 3.5}`}
+                          fill="none"
+                          stroke={col}
+                          strokeWidth={1.5}
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          opacity={tween(
+                            frame,
+                            T.links + k * 5 + 9,
+                            T.links + k * 5 + 12,
+                          )}
+                        />
+                      </g>
+                    );
+                  })}
+                </g>
+              </svg>
+
+              {parsed.map((p, i) => {
+                const grow = tween(frame, T.bars + i * 3, T.bars + i * 3 + 14);
+                const isDrag = i === dragIdx;
+                const lift = isDrag ? lifted : 0;
+                const hov = isDrag
+                  ? hover * (1 - tween(frame, T.dragEnd + 8, T.dragEnd + 14))
+                  : 0;
+                const hl = moved.includes(i) ? flash(T.dragEnd + 5) : 0;
+                const x = barX(i);
+                const w = barW(i);
+                const prog = clamp(p.progress ?? 0, 0, 1);
+                return (
                   <div
+                    key={p.name}
                     style={{
                       position: "absolute",
-                      left: 0,
-                      top: 0,
-                      width: w,
+                      left: x,
+                      top: barMidY(i) - BAR_H / 2,
+                      width: Math.max(12, w * grow),
                       height: BAR_H,
                       borderRadius: 8,
-                      background: pal.bar,
-                      boxShadow: [
-                        `inset 0 0 0 1px ${Math.max(hov, hl) > 0.01 ? withAlpha(accent, 0.25 + 0.5 * Math.max(hov, hl)) : pal.ring}`,
-                        lift > 0
-                          ? `0 ${6 * lift}px ${14 * lift}px -4px ${pal.dark ? "rgba(0,0,0,0.6)" : "rgba(17,19,24,0.18)"}`
-                          : "0 0 0 0 transparent",
-                      ].join(", "),
                       overflow: "hidden",
+                      opacity: clamp(grow * 4, 0, 1),
+                      transform: `translateY(${-1.5 * lift}px)`,
+                      zIndex: isDrag ? 3 : 2,
                     }}
                   >
                     <div
@@ -1147,209 +1185,228 @@ export function RoadmapTimeline({
                         position: "absolute",
                         left: 0,
                         top: 0,
-                        bottom: 0,
-                        width: `${prog * 100}%`,
-                        background: pal.barFill,
-                      }}
-                    />
-                  </div>
-                  <div
-                    style={{
-                      position: "absolute",
-                      left: 0,
-                      top: 0,
-                      width: w,
-                      height: BAR_H,
-                      boxSizing: "border-box",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 8,
-                      padding: "0 6px 0 10px",
-                      fontSize: 16,
-                      fontWeight: 400,
-                      color: pal.barText,
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: 10,
-                        height: 10,
-                        borderRadius: 3,
-                        background: p.color,
-                        flexShrink: 0,
-                      }}
-                    />
-                    <span
-                      style={{
+                        width: w,
+                        height: BAR_H,
+                        borderRadius: 8,
+                        background: pal.bar,
+                        boxShadow: [
+                          `inset 0 0 0 1px ${Math.max(hov, hl) > 0.01 ? withAlpha(accent, 0.25 + 0.5 * Math.max(hov, hl)) : pal.ring}`,
+                          lift > 0
+                            ? `0 ${6 * lift}px ${14 * lift}px -4px ${pal.dark ? "rgba(0,0,0,0.6)" : "rgba(17,19,24,0.18)"}`
+                            : "0 0 0 0 transparent",
+                        ].join(", "),
                         overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        flex: 1,
                       }}
                     >
-                      {p.name}
-                    </span>
-                    <Avatar name={p.lead} size={18} />
-                  </div>
-                  {[0, 1].map((side) => (
+                      <div
+                        style={{
+                          position: "absolute",
+                          left: 0,
+                          top: 0,
+                          bottom: 0,
+                          width: `${prog * 100}%`,
+                          background: pal.barFill,
+                        }}
+                      />
+                    </div>
                     <div
-                      key={side}
                       style={{
                         position: "absolute",
-                        top: 7,
-                        left: side ? w - 6 : 3,
-                        width: 3,
-                        height: BAR_H - 14,
-                        borderRadius: 2,
-                        background: withAlpha(accent, 0.9),
-                        opacity: hov,
+                        left: 0,
+                        top: 0,
+                        width: w,
+                        height: BAR_H,
+                        boxSizing: "border-box",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 8,
+                        padding: "0 6px 0 10px",
+                        fontSize: 16,
+                        fontWeight: 400,
+                        color: pal.barText,
+                        whiteSpace: "nowrap",
                       }}
-                    />
-                  ))}
-                </div>
-              );
-            })}
+                    >
+                      <div
+                        style={{
+                          width: 10,
+                          height: 10,
+                          borderRadius: 3,
+                          background: p.color,
+                          flexShrink: 0,
+                        }}
+                      />
+                      <span
+                        style={{
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          flex: 1,
+                        }}
+                      >
+                        {p.name}
+                      </span>
+                      <Avatar name={p.lead} size={18} />
+                    </div>
+                    {[0, 1].map((side) => (
+                      <div
+                        key={side}
+                        style={{
+                          position: "absolute",
+                          top: 7,
+                          left: side ? w - 6 : 3,
+                          width: 3,
+                          height: BAR_H - 14,
+                          borderRadius: 2,
+                          background: withAlpha(accent, 0.9),
+                          opacity: hov,
+                        }}
+                      />
+                    ))}
+                  </div>
+                );
+              })}
 
-            <div
-              style={{
-                position: "absolute",
-                left: LIST_W + (msIdx + 0.5) * DAY - 8,
-                top: barMidY(msRow) - 8,
-                width: 16,
-                height: 16,
-                opacity: clamp(ms * 3, 0, 1),
-                transform: `translateY(${(1 - Math.min(ms, 1)) * -12}px) scale(${0.7 + 0.3 * ms})`,
-              }}
-            >
-              <svg width={16} height={16} viewBox="0 0 16 16">
-                <rect
-                  x={3.5}
-                  y={3.5}
-                  width={9}
-                  height={9}
-                  rx={1.6}
-                  transform="rotate(45 8 8)"
-                  fill={pal.dark ? "#EDEDEF" : "#1C1D21"}
-                />
-              </svg>
               <div
                 style={{
                   position: "absolute",
-                  ...(msLabelLeft ? { right: 22 } : { left: 22 }),
-                  top: -2,
+                  left: LIST_W + (msIdx + 0.5) * DAY - 8,
+                  top: barMidY(msRow) - 8,
+                  width: 16,
+                  height: 16,
+                  opacity: clamp(ms * 3, 0, 1),
+                  transform: `translateY(${(1 - Math.min(ms, 1)) * -12}px) scale(${0.7 + 0.3 * ms})`,
+                }}
+              >
+                <svg width={16} height={16} viewBox="0 0 16 16">
+                  <rect
+                    x={3.5}
+                    y={3.5}
+                    width={9}
+                    height={9}
+                    rx={1.6}
+                    transform="rotate(45 8 8)"
+                    fill={pal.dark ? "#EDEDEF" : "#1C1D21"}
+                  />
+                </svg>
+                <div
+                  style={{
+                    position: "absolute",
+                    ...(msLabelLeft ? { right: 22 } : { left: 22 }),
+                    top: -2,
+                    fontSize: 16,
+                    fontWeight: 400,
+                    color: pal.text,
+                    whiteSpace: "nowrap",
+                    opacity: tween(frame, T.milestone + 4, T.milestone + 10),
+                  }}
+                >
+                  {milestone.name}
+                </div>
+              </div>
+
+              <div
+                style={{
+                  position: "absolute",
+                  left: barX(dragIdx) + barW(dragIdx) / 2,
+                  top: barMidY(dragIdx) - BAR_H / 2 - 34,
+                  transform: `translateX(-50%) translateY(${(1 - tipIn) * 4}px) scale(${0.96 + 0.04 * tipIn})`,
+                  transformOrigin: "50% 100%",
+                  opacity: tip,
+                  background: pal.dark ? "#2A2B2F" : "#1C1D21",
+                  color: "#F4F4F5",
                   fontSize: 16,
                   fontWeight: 400,
+                  lineHeight: "28px",
+                  padding: "0 10px",
+                  borderRadius: 7,
+                  whiteSpace: "nowrap",
+                  fontVariantNumeric: "tabular-nums",
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.18)",
+                  zIndex: 4,
+                }}
+              >
+                {dates(dragIdx)}
+                <span style={{ color: "#9C9DA4" }}>
+                  {" "}
+                  · {parsed[dragIdx].e - parsed[dragIdx].s + 1}d
+                </span>
+              </div>
+
+              <div
+                style={{
+                  position: "absolute",
+                  left: PANEL.w / 2,
+                  bottom: 22,
+                  transform: `translateX(-50%) translateY(${(1 - toast) * 14}px)`,
+                  opacity: clamp(toast * 1.5, 0, 1),
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                  height: 42,
+                  padding: "0 8px 0 12px",
+                  borderRadius: 10,
+                  background: pal.toast,
+                  boxShadow: pal.dark
+                    ? "0 0 0 1px rgba(255,255,255,0.09), 0 12px 30px rgba(0,0,0,0.5)"
+                    : "0 0 0 1px rgba(17,19,24,0.08), 0 12px 30px rgba(17,19,24,0.14), 0 2px 6px rgba(17,19,24,0.05)",
+                  fontSize: 16,
                   color: pal.text,
                   whiteSpace: "nowrap",
-                  opacity: tween(frame, T.milestone + 4, T.milestone + 10),
+                  zIndex: 5,
                 }}
               >
-                {milestone.name}
+                <div
+                  style={{
+                    width: 18,
+                    height: 18,
+                    borderRadius: 99,
+                    background: accent,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Icon name="check" color="#fff" size={14} width={1.8} />
+                </div>
+                <span style={{ fontWeight: 400 }}>
+                  Rescheduled {1 + moved.length} projects
+                </span>
+                <span
+                  style={{
+                    color: pal.muted,
+                    fontVariantNumeric: "tabular-nums",
+                  }}
+                >
+                  {moved.length
+                    ? `${parsed[moved[0]].name} now starts ${lbl(parsed[moved[0]].s + finalShifts[moved[0]])}`
+                    : `${parsed[dragIdx].name} moved`}
+                </span>
+                <div
+                  style={{
+                    height: 26,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 5,
+                    padding: "0 8px",
+                    borderRadius: 6,
+                    boxShadow: `inset 0 0 0 1px ${pal.ring}`,
+                    fontSize: 16,
+                    fontWeight: 400,
+                    color: pal.text,
+                    marginLeft: 4,
+                  }}
+                >
+                  <Icon name="undo" color={pal.muted} size={13} />
+                  Undo
+                </div>
               </div>
             </div>
-
-            <div
-              style={{
-                position: "absolute",
-                left: barX(dragIdx) + barW(dragIdx) / 2,
-                top: barMidY(dragIdx) - BAR_H / 2 - 34,
-                transform: `translateX(-50%) translateY(${(1 - tipIn) * 4}px) scale(${0.96 + 0.04 * tipIn})`,
-                transformOrigin: "50% 100%",
-                opacity: tip,
-                background: pal.dark ? "#2A2B2F" : "#1C1D21",
-                color: "#F4F4F5",
-                fontSize: 16,
-                fontWeight: 400,
-                lineHeight: "28px",
-                padding: "0 10px",
-                borderRadius: 7,
-                whiteSpace: "nowrap",
-                fontVariantNumeric: "tabular-nums",
-                boxShadow: "0 4px 12px rgba(0,0,0,0.18)",
-                zIndex: 4,
-              }}
-            >
-              {dates(dragIdx)}
-              <span style={{ color: "#9C9DA4" }}>
-                {" "}
-                · {parsed[dragIdx].e - parsed[dragIdx].s + 1}d
-              </span>
+            <div style={{ opacity: cursorIn }}>
+              <Cursor x={cur.x} y={cur.y} press={press} />
             </div>
-
-            <div
-              style={{
-                position: "absolute",
-                left: PANEL.w / 2,
-                bottom: 22,
-                transform: `translateX(-50%) translateY(${(1 - toast) * 14}px)`,
-                opacity: clamp(toast * 1.5, 0, 1),
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-                height: 42,
-                padding: "0 8px 0 12px",
-                borderRadius: 10,
-                background: pal.toast,
-                boxShadow: pal.dark
-                  ? "0 0 0 1px rgba(255,255,255,0.09), 0 12px 30px rgba(0,0,0,0.5)"
-                  : "0 0 0 1px rgba(17,19,24,0.08), 0 12px 30px rgba(17,19,24,0.14), 0 2px 6px rgba(17,19,24,0.05)",
-                fontSize: 16,
-                color: pal.text,
-                whiteSpace: "nowrap",
-                zIndex: 5,
-              }}
-            >
-              <div
-                style={{
-                  width: 18,
-                  height: 18,
-                  borderRadius: 99,
-                  background: accent,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <Icon name="check" color="#fff" size={14} width={1.8} />
-              </div>
-              <span style={{ fontWeight: 400 }}>
-                Rescheduled {1 + moved.length} projects
-              </span>
-              <span
-                style={{
-                  color: pal.muted,
-                  fontVariantNumeric: "tabular-nums",
-                }}
-              >
-                {moved.length
-                  ? `${parsed[moved[0]].name} now starts ${lbl(parsed[moved[0]].s + finalShifts[moved[0]])}`
-                  : `${parsed[dragIdx].name} moved`}
-              </span>
-              <div
-                style={{
-                  height: 26,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 5,
-                  padding: "0 8px",
-                  borderRadius: 6,
-                  boxShadow: `inset 0 0 0 1px ${pal.ring}`,
-                  fontSize: 16,
-                  fontWeight: 400,
-                  color: pal.text,
-                  marginLeft: 4,
-                }}
-              >
-                <Icon name="undo" color={pal.muted} size={13} />
-                Undo
-              </div>
-            </div>
-          </div>
-          <div style={{ opacity: cursorIn }}>
-            <Cursor x={cur.x} y={cur.y} press={press} />
           </div>
         </div>
-      </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

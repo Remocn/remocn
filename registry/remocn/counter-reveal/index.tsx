@@ -1,6 +1,7 @@
 "use client";
 
 import { loadFont } from "@remotion/google-fonts/Sora";
+import type React from "react";
 import { useId, useMemo } from "react";
 import {
   AbsoluteFill,
@@ -24,6 +25,21 @@ export interface CounterRevealProps {
   /** The line seen through the counters, then revealed in full. */
   line?: string;
   accent?: string;
+  /** Color of the front word and the uncovered line; overrides the theme. */
+  ink?: string;
+  /** Solid fill in place of the gradient behind the plate; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the line. Load it yourself; Sora by default. */
+  fontFamily?: string;
+  /** Frames between the front word's letters as they rise. */
+  stagger?: number;
+  /** Frame the plate lifts away and uncovers the line. */
+  liftAt?: number;
+  /** Size of the type, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  grain?: boolean;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -165,16 +181,42 @@ function Grain({ opacity }: { opacity: number }) {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function CounterReveal({
   word = "Beta",
   line = "Out now.",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = sora,
+  stagger = STAGGER,
+  liftAt = EXIT,
+  scale = 1,
+  delay = 0,
+  grain = true,
   theme = "dark",
   speed = 1,
 }: CounterRevealProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
+  const fg = ink ?? c.ink;
+  const wordInk = ink ?? c.fg;
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
 
   const front = useMemo(() => layoutRow(word, WORD_TRACK), [word]);
@@ -190,10 +232,10 @@ export function CounterReveal({
   const B = Math.min((W * 0.86) / back.width, (H * 0.34) / CAP);
   const lineLeft = W / 2 - (back.width * B) / 2;
   const lineBase = H / 2 + (CAP * B) / 2;
-  const end = EXIT + EXIT_LEN;
+  const end = liftAt + EXIT_LEN;
   const drift = EASE_IO(interpolate(t, [0, end], [0, 1], CLAMP));
   const lineShift = (1 - drift) * W * 0.45;
-  const shrink = EASE_IO(interpolate(t, [EXIT - 6, end + 4], [0, 1], CLAMP));
+  const shrink = EASE_IO(interpolate(t, [liftAt - 6, end + 4], [0, 1], CLAMP));
   const settle = interpolate(t, [end, end + 36], [0, 1], {
     ...CLAMP,
     easing: EASE_OUT,
@@ -212,9 +254,9 @@ export function CounterReveal({
     c.ground,
   ].join(", ");
 
-  const exit = EASE_IO(interpolate(t, [EXIT, end], [0, 1], CLAMP));
+  const exit = EASE_IO(interpolate(t, [liftAt, end], [0, 1], CLAMP));
   const plateY = -exit * H * 1.04;
-  const push = 1 + 0.025 * interpolate(t, [ENTER_LEN, EXIT], [0, 1], CLAMP);
+  const push = 1 + 0.025 * interpolate(t, [ENTER_LEN, liftAt], [0, 1], CLAMP);
   // Screen y of the plate's trailing edge: below it the line is already
   // uncovered and shows in its final ink; through the windows it stays dark.
   const edgeY = plateY + baseline + (H - baseline) * push;
@@ -223,7 +265,7 @@ export function CounterReveal({
     EASE_OUT(
       interpolate(
         t,
-        [ENTER + i * STAGGER, ENTER + i * STAGGER + ENTER_LEN],
+        [ENTER + i * stagger, ENTER + i * stagger + ENTER_LEN],
         [0, 1],
         CLAMP,
       ),
@@ -238,125 +280,137 @@ export function CounterReveal({
   const pad = (Math.max(1.5, 0.004 * F) * 1000) / F;
 
   return (
-    <AbsoluteFill style={{ background: c.ground, overflow: "hidden" }}>
-      <div style={{ position: "absolute", inset: 0, background: ground }} />
-      <svg
-        width={W}
-        height={H}
-        viewBox={`0 0 ${W} ${H}`}
-        style={{ position: "absolute", inset: 0 }}
-        aria-hidden
-      >
-        <defs>
-          <clipPath id={clipId}>
-            <rect
-              x={-W}
-              y={-H}
-              width={W * 3}
-              height={H + baseline + 0.02 * F}
-            />
-          </clipPath>
-          <clipPath id={edgeId}>
-            <rect x={0} y={edgeY} width={W} height={Math.max(0, H - edgeY)} />
-          </clipPath>
-          <mask id={maskId} maskUnits="userSpaceOnUse">
-            <rect x={-W} y={-H} width={W * 3} height={H * 3} fill="white" />
-            <g clipPath={`url(#${clipId})`}>
-              {front.chars.map((ch, i) => {
-                const g = GLYPHS[ch];
-                if (!g?.holes) return null;
-                return (
-                  <path
-                    key={`${i}-${ch}`}
-                    d={g.holes}
-                    fill="black"
-                    stroke="black"
-                    strokeWidth={pad}
-                    strokeLinejoin="round"
-                    transform={glyphAt(i)}
-                  />
-                );
-              })}
-            </g>
-          </mask>
-        </defs>
-
-        <g
-          transform={`translate(${W / 2 + lineShift} ${H / 2}) scale(${lineScale}) translate(${-W / 2} ${-H / 2})`}
+    <AbsoluteFill
+      style={{
+        background:
+          background === "transparent"
+            ? "transparent"
+            : (background ?? c.ground),
+        overflow: "hidden",
+      }}
+    >
+      {background === undefined ? (
+        <div style={{ position: "absolute", inset: 0, background: ground }} />
+      ) : null}
+      <ScaleLayer scale={scale}>
+        <svg
+          width={W}
+          height={H}
+          viewBox={`0 0 ${W} ${H}`}
+          style={{ position: "absolute", inset: 0 }}
+          aria-hidden
         >
-          <text
-            x={back.xs.map((x) => lineLeft + x * B).join(" ")}
-            y={lineBase}
-            fontFamily={sora}
-            fontWeight={500}
-            fontSize={B}
-            fill={tint}
-            style={{ fontOpticalSizing: "none" }}
-          >
-            {back.chars.join("")}
-          </text>
-        </g>
-
-        <g transform={`translate(0 ${plateY})`}>
-          <g
-            transform={`translate(${W / 2} ${baseline}) scale(${push}) translate(${-W / 2} ${-baseline})`}
-          >
-            <rect
-              x={-W}
-              y={-H}
-              width={W * 3}
-              height={H * 2}
-              fill={c.bg}
-              mask={`url(#${maskId})`}
-            />
-            <g clipPath={`url(#${clipId})`} fill={c.fg}>
-              {front.chars.map((ch, i) => {
-                const g = GLYPHS[ch];
-                if (g) {
+          <defs>
+            <clipPath id={clipId}>
+              <rect
+                x={-W}
+                y={-H}
+                width={W * 3}
+                height={H + baseline + 0.02 * F}
+              />
+            </clipPath>
+            <clipPath id={edgeId}>
+              <rect x={0} y={edgeY} width={W} height={Math.max(0, H - edgeY)} />
+            </clipPath>
+            <mask id={maskId} maskUnits="userSpaceOnUse">
+              <rect x={-W} y={-H} width={W * 3} height={H * 3} fill="white" />
+              <g clipPath={`url(#${clipId})`}>
+                {front.chars.map((ch, i) => {
+                  const g = GLYPHS[ch];
+                  if (!g?.holes) return null;
                   return (
                     <path
                       key={`${i}-${ch}`}
-                      d={g.outer + g.holes}
-                      fillRule="evenodd"
+                      d={g.holes}
+                      fill="black"
+                      stroke="black"
+                      strokeWidth={pad}
+                      strokeLinejoin="round"
                       transform={glyphAt(i)}
                     />
                   );
-                }
-                return (
-                  <text
-                    key={`${i}-${ch}`}
-                    transform={glyphAt(i)}
-                    fontFamily={sora}
-                    fontWeight={500}
-                    fontSize={1000}
-                    style={{ fontOpticalSizing: "none" }}
-                  >
-                    {ch}
-                  </text>
-                );
-              })}
-            </g>
-          </g>
-        </g>
-        <g clipPath={`url(#${edgeId})`}>
+                })}
+              </g>
+            </mask>
+          </defs>
+
           <g
             transform={`translate(${W / 2 + lineShift} ${H / 2}) scale(${lineScale}) translate(${-W / 2} ${-H / 2})`}
           >
             <text
               x={back.xs.map((x) => lineLeft + x * B).join(" ")}
               y={lineBase}
-              fontFamily={sora}
+              fontFamily={fontFamily}
               fontWeight={500}
               fontSize={B}
-              fill={c.ink}
+              fill={tint}
               style={{ fontOpticalSizing: "none" }}
             >
               {back.chars.join("")}
             </text>
           </g>
-        </g>
-      </svg>
-      <Grain opacity={c.grain} />
+
+          <g transform={`translate(0 ${plateY})`}>
+            <g
+              transform={`translate(${W / 2} ${baseline}) scale(${push}) translate(${-W / 2} ${-baseline})`}
+            >
+              <rect
+                x={-W}
+                y={-H}
+                width={W * 3}
+                height={H * 2}
+                fill={c.bg}
+                mask={`url(#${maskId})`}
+              />
+              <g clipPath={`url(#${clipId})`} fill={wordInk}>
+                {front.chars.map((ch, i) => {
+                  const g = GLYPHS[ch];
+                  if (g) {
+                    return (
+                      <path
+                        key={`${i}-${ch}`}
+                        d={g.outer + g.holes}
+                        fillRule="evenodd"
+                        transform={glyphAt(i)}
+                      />
+                    );
+                  }
+                  return (
+                    <text
+                      key={`${i}-${ch}`}
+                      transform={glyphAt(i)}
+                      fontFamily={fontFamily}
+                      fontWeight={500}
+                      fontSize={1000}
+                      style={{ fontOpticalSizing: "none" }}
+                    >
+                      {ch}
+                    </text>
+                  );
+                })}
+              </g>
+            </g>
+          </g>
+          <g clipPath={`url(#${edgeId})`}>
+            <g
+              transform={`translate(${W / 2 + lineShift} ${H / 2}) scale(${lineScale}) translate(${-W / 2} ${-H / 2})`}
+            >
+              <text
+                x={back.xs.map((x) => lineLeft + x * B).join(" ")}
+                y={lineBase}
+                fontFamily={fontFamily}
+                fontWeight={500}
+                fontSize={B}
+                fill={fg}
+                style={{ fontOpticalSizing: "none" }}
+              >
+                {back.chars.join("")}
+              </text>
+            </g>
+          </g>
+        </svg>
+      </ScaleLayer>
+      {grain ? <Grain opacity={c.grain} /> : null}
     </AbsoluteFill>
   );
 }

@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const timingTowerConfig: ComponentConfig = {
   componentName: "TimingTower",
@@ -51,6 +57,17 @@ export const timingTowerConfig: ComponentConfig = {
       description: "Laps",
       hiddenFromList: false,
     },
+    lapLabel: {
+      type: "text-content",
+      default: "LAP",
+      description: "Lap label",
+    },
+    positionLabel: {
+      type: "text-content",
+      default: "Position",
+      description: "Position label",
+    },
+    ...sceneControls({ font: "Saira" }),
     speed: {
       type: "number",
       default: 1,

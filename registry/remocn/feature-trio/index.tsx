@@ -2,6 +2,7 @@
 
 import { loadFont as loadBricolage } from "@remotion/google-fonts/BricolageGrotesque";
 import { loadFont as loadGeist } from "@remotion/google-fonts/Geist";
+import type React from "react";
 import {
   AbsoluteFill,
   Easing,
@@ -40,9 +41,19 @@ export interface FeatureTrioItem {
 export interface FeatureTrioProps {
   /** 2–4 short benefits. */
   items?: FeatureTrioItem[];
+  /** Frames the finished row holds at the end; each item's slot shrinks to make room. */
+  hold?: number;
   accent?: string;
+  /** Text color of the titles; overrides the theme. */
+  ink?: string;
   /** Stage fill. "transparent" drops the stage and its glow. */
   background?: string;
+  /** Typeface for the titles. Load it yourself; Bricolage Grotesque by default. */
+  fontFamily?: string;
+  /** Size of the copy and rules, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   /** Playback multiplier. */
   speed?: number;
   theme?: "dark" | "light";
@@ -115,16 +126,38 @@ const DEFAULT_ITEMS: FeatureTrioItem[] = [
   },
 ];
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function FeatureTrio({
   items = DEFAULT_ITEMS,
+  hold = 36,
   accent = "#3B5BFD",
+  ink,
   background,
+  fontFamily = bricolage.fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: FeatureTrioProps) {
-  const frame = useCurrentFrame() * speed;
+  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, durationInFrames } = useVideoConfig();
   const p = PALETTES[theme];
+  const fg = ink ?? p.fg;
   const list = items.slice(0, 4);
   const n = list.length;
   const portrait = height > width * 1.1;
@@ -135,11 +168,10 @@ export function FeatureTrio({
   // ---- timing ----------------------------------------------------------------
   const START = 6;
   const RESOLVE = 24;
-  const HOLD = 36;
   const total = durationInFrames * speed;
   const slot = Math.max(
     22,
-    Math.min(40, (total - START - RESOLVE - HOLD + 4) / Math.max(1, n)),
+    Math.min(40, (total - START - RESOLVE - hold + 4) / Math.max(1, n)),
   );
   const at = (i: number) => START + i * slot;
   const r0 = at(n - 1) + slot - 4;
@@ -235,215 +267,222 @@ export function FeatureTrio({
         />
       ) : null}
 
-      {/* ticks → column rules */}
-      {list.map((it, i) => {
-        const c = col(i);
-        const tickX =
-          width / 2 - ticksW / 2 + i * (tickW + tickGap) + tickW / 2;
-        const x = interpolate(resolve, [0, 1], [tickX, c.x]);
-        const y = interpolate(resolve, [0, 1], [ticksY, c.ruleY]);
-        const w = interpolate(resolve, [0, 1], [tickW, c.w]);
-        const th = interpolate(resolve, [0, 1], [3, 1.5]) * s;
-        const fill =
-          i === n - 1
-            ? interpolate(frame, [at(i), at(i) + slot - 6], [0, 1], CLAMP)
-            : interpolate(frame, [at(i), at(i + 1)], [0, 1], CLAMP);
-        const tickIn = interpolate(frame, [0, 14], [0, 1], {
-          ...CLAMP,
-          easing: EASE_OUT,
-        });
-        // the accent hands over to a neutral rule once the row stands
-        const accentShare = 1 - resolve;
-        return (
-          <div
-            key={`${it.title}-rule`}
-            style={{
-              position: "absolute",
-              left: x - w / 2,
-              top: y - th / 2,
-              width: w,
-              height: th,
-              borderRadius: th,
-              background: resolve > 0 ? p.rule : p.track,
-              overflow: "hidden",
-              opacity: tickIn,
-              transform: `scaleX(${0.4 + tickIn * 0.6})`,
-            }}
-          >
+      <ScaleLayer scale={scale}>
+        {/* ticks → column rules */}
+        {list.map((it, i) => {
+          const c = col(i);
+          const tickX =
+            width / 2 - ticksW / 2 + i * (tickW + tickGap) + tickW / 2;
+          const x = interpolate(resolve, [0, 1], [tickX, c.x]);
+          const y = interpolate(resolve, [0, 1], [ticksY, c.ruleY]);
+          const w = interpolate(resolve, [0, 1], [tickW, c.w]);
+          const th = interpolate(resolve, [0, 1], [3, 1.5]) * s;
+          const fill =
+            i === n - 1
+              ? interpolate(frame, [at(i), at(i) + slot - 6], [0, 1], CLAMP)
+              : interpolate(frame, [at(i), at(i + 1)], [0, 1], CLAMP);
+          const tickIn = interpolate(frame, [0, 14], [0, 1], {
+            ...CLAMP,
+            easing: EASE_OUT,
+          });
+          // the accent hands over to a neutral rule once the row stands
+          const accentShare = 1 - resolve;
+          return (
             <div
+              key={`${it.title}-rule`}
               style={{
                 position: "absolute",
-                left: 0,
-                top: 0,
-                bottom: 0,
-                width: `${fill * 100}%`,
-                background: accent,
-                opacity: accentShare,
+                left: x - w / 2,
+                top: y - th / 2,
+                width: w,
+                height: th,
+                borderRadius: th,
+                background: resolve > 0 ? p.rule : p.track,
+                overflow: "hidden",
+                opacity: tickIn,
+                transform: `scaleX(${0.4 + tickIn * 0.6})`,
               }}
-            />
-          </div>
-        );
-      })}
+            >
+              <div
+                style={{
+                  position: "absolute",
+                  left: 0,
+                  top: 0,
+                  bottom: 0,
+                  width: `${fill * 100}%`,
+                  background: accent,
+                  opacity: accentShare,
+                }}
+              />
+            </div>
+          );
+        })}
 
-      {list.map((it, i) => {
-        const last = i === n - 1;
-        const c = col(i);
-        const rowTitleY = c.ruleY + ruleToTitle;
-        const rowDescTop = c.ruleY + ruleToTitle + titleToDesc;
+        {list.map((it, i) => {
+          const last = i === n - 1;
+          const c = col(i);
+          const rowTitleY = c.ruleY + ruleToTitle;
+          const rowDescTop = c.ruleY + ruleToTitle + titleToDesc;
 
-        // solo: rise in, hold, leave upward (except the last)
-        const rise = interpolate(frame, [at(i), at(i) + 14], [0, 1], {
-          ...CLAMP,
-          easing: EASE_OUT,
-        });
-        const leave = last
-          ? 0
-          : interpolate(frame, [at(i + 1) - 8, at(i + 1) + 2], [0, 1], {
-              ...CLAMP,
-              easing: EASE_IN,
-            });
-        const descIn = interpolate(frame, [at(i) + 5, at(i) + 19], [0, 1], {
-          ...CLAMP,
-          easing: EASE_OUT,
-        });
-        // row: earlier titles come back into their columns
-        const back = interpolate(
-          frame,
-          [r0 + 15 + i * 3, r0 + 31 + i * 3],
-          [0, 1],
-          { ...CLAMP, easing: EASE_OUT },
-        );
-        const rowDescIn = interpolate(
-          frame,
-          [r0 + 20 + i * 3, r0 + 36 + i * 3],
-          [0, 1],
-          { ...CLAMP, easing: EASE_OUT },
-        );
+          // solo: rise in, hold, leave upward (except the last)
+          const rise = interpolate(frame, [at(i), at(i) + 14], [0, 1], {
+            ...CLAMP,
+            easing: EASE_OUT,
+          });
+          const leave = last
+            ? 0
+            : interpolate(frame, [at(i + 1) - 8, at(i + 1) + 2], [0, 1], {
+                ...CLAMP,
+                easing: EASE_IN,
+              });
+          const descIn = interpolate(frame, [at(i) + 5, at(i) + 19], [0, 1], {
+            ...CLAMP,
+            easing: EASE_OUT,
+          });
+          // row: earlier titles come back into their columns
+          const back = interpolate(
+            frame,
+            [r0 + 15 + i * 3, r0 + 31 + i * 3],
+            [0, 1],
+            { ...CLAMP, easing: EASE_OUT },
+          );
+          const rowDescIn = interpolate(
+            frame,
+            [r0 + 20 + i * 3, r0 + 36 + i * 3],
+            [0, 1],
+            { ...CLAMP, easing: EASE_OUT },
+          );
 
-        const titleStyle = {
-          fontFamily: bricolage.fontFamily,
-          fontWeight: 500,
-          letterSpacing: `${TRACK}em`,
-          lineHeight: 1,
-          color: p.fg,
-          whiteSpace: "nowrap" as const,
-        };
+          const titleStyle = {
+            fontFamily,
+            fontWeight: 500,
+            letterSpacing: `${TRACK}em`,
+            lineHeight: 1,
+            color: fg,
+            whiteSpace: "nowrap" as const,
+          };
 
-        // hero copy (and, for the last item, the copy that travels)
-        const heroX = last
-          ? interpolate(resolve, [0, 1], [width / 2, c.x])
-          : width / 2;
-        const heroYNow = last
-          ? interpolate(resolve, [0, 1], [heroY, rowTitleY])
-          : heroY;
-        const heroFsNow = last
-          ? interpolate(resolve, [0, 1], [heroFs, rowFs])
-          : heroFs;
-        const soloY = (1 - rise) * 112 - leave * 112;
-        const heroVisible = rise > 0 && leave < 1 && (last || frame < r0);
-        const heroDescOut = last
-          ? interpolate(resolve, [0, 0.35], [1, 0], CLAMP)
-          : interpolate(frame, [at(i + 1) - 10, at(i + 1) - 3], [1, 0], CLAMP);
+          // hero copy (and, for the last item, the copy that travels)
+          const heroX = last
+            ? interpolate(resolve, [0, 1], [width / 2, c.x])
+            : width / 2;
+          const heroYNow = last
+            ? interpolate(resolve, [0, 1], [heroY, rowTitleY])
+            : heroY;
+          const heroFsNow = last
+            ? interpolate(resolve, [0, 1], [heroFs, rowFs])
+            : heroFs;
+          const soloY = (1 - rise) * 112 - leave * 112;
+          const heroVisible = rise > 0 && leave < 1 && (last || frame < r0);
+          const heroDescOut = last
+            ? interpolate(resolve, [0, 0.35], [1, 0], CLAMP)
+            : interpolate(
+                frame,
+                [at(i + 1) - 10, at(i + 1) - 3],
+                [1, 0],
+                CLAMP,
+              );
 
-        return (
-          <div key={it.title}>
-            {heroVisible ? (
-              <>
+          return (
+            <div key={it.title}>
+              {heroVisible ? (
+                <>
+                  <div
+                    style={{
+                      position: "absolute",
+                      left: heroX,
+                      top: heroYNow,
+                      transform: "translate(-50%, -50%)",
+                      overflow: resolve > 0 && last ? "visible" : "hidden",
+                      padding: `${heroFsNow * 0.08}px ${heroFsNow * 0.06}px ${heroFsNow * 0.14}px`,
+                    }}
+                  >
+                    <div
+                      style={{
+                        ...titleStyle,
+                        fontSize: heroFsNow,
+                        transform: `translateY(${soloY}%)`,
+                      }}
+                    >
+                      {it.title}
+                    </div>
+                  </div>
+                  <div
+                    style={{
+                      position: "absolute",
+                      left: width / 2 - width * 0.35,
+                      width: width * 0.7,
+                      top: heroDescTop,
+                      textAlign: "center",
+                      textWrap: "balance",
+                      fontFamily: geist.fontFamily,
+                      fontWeight: 400,
+                      fontSize: heroDescFs,
+                      lineHeight: 1.35,
+                      letterSpacing: "-0.01em",
+                      color: p.muted,
+                      opacity: descIn * heroDescOut,
+                      transform: `translateY(${(1 - descIn) * 12 * s - (1 - heroDescOut) * 10 * s}px)`,
+                      filter: `blur(${(1 - descIn) * 5 * s}px)`,
+                    }}
+                  >
+                    {it.description}
+                  </div>
+                </>
+              ) : null}
+
+              {/* row copy for the earlier items */}
+              {!last && back > 0 ? (
                 <div
                   style={{
                     position: "absolute",
-                    left: heroX,
-                    top: heroYNow,
+                    left: c.x,
+                    top: rowTitleY,
                     transform: "translate(-50%, -50%)",
-                    overflow: resolve > 0 && last ? "visible" : "hidden",
-                    padding: `${heroFsNow * 0.08}px ${heroFsNow * 0.06}px ${heroFsNow * 0.14}px`,
+                    overflow: "hidden",
+                    padding: `${rowFs * 0.08}px ${rowFs * 0.06}px ${rowFs * 0.14}px`,
                   }}
                 >
                   <div
                     style={{
                       ...titleStyle,
-                      fontSize: heroFsNow,
-                      transform: `translateY(${soloY}%)`,
+                      fontSize: rowFs,
+                      transform: `translateY(${(1 - back) * 112}%)`,
                     }}
                   >
                     {it.title}
                   </div>
                 </div>
+              ) : null}
+
+              {/* row description */}
+              {rowDescIn > 0 ? (
                 <div
                   style={{
                     position: "absolute",
-                    left: width / 2 - width * 0.35,
-                    width: width * 0.7,
-                    top: heroDescTop,
+                    left: c.x - (portrait ? colW : c.w) / 2,
+                    width: portrait ? colW : c.w,
+                    top: rowDescTop,
                     textAlign: "center",
                     textWrap: "balance",
                     fontFamily: geist.fontFamily,
                     fontWeight: 400,
-                    fontSize: heroDescFs,
-                    lineHeight: 1.35,
-                    letterSpacing: "-0.01em",
+                    fontSize: rowDescFs,
+                    lineHeight: 1.45,
+                    letterSpacing: "-0.005em",
                     color: p.muted,
-                    opacity: descIn * heroDescOut,
-                    transform: `translateY(${(1 - descIn) * 12 * s - (1 - heroDescOut) * 10 * s}px)`,
-                    filter: `blur(${(1 - descIn) * 5 * s}px)`,
+                    opacity: rowDescIn,
+                    transform: `translateY(${(1 - rowDescIn) * 10 * s}px)`,
+                    filter: `blur(${(1 - rowDescIn) * 4 * s}px)`,
                   }}
                 >
                   {it.description}
                 </div>
-              </>
-            ) : null}
-
-            {/* row copy for the earlier items */}
-            {!last && back > 0 ? (
-              <div
-                style={{
-                  position: "absolute",
-                  left: c.x,
-                  top: rowTitleY,
-                  transform: "translate(-50%, -50%)",
-                  overflow: "hidden",
-                  padding: `${rowFs * 0.08}px ${rowFs * 0.06}px ${rowFs * 0.14}px`,
-                }}
-              >
-                <div
-                  style={{
-                    ...titleStyle,
-                    fontSize: rowFs,
-                    transform: `translateY(${(1 - back) * 112}%)`,
-                  }}
-                >
-                  {it.title}
-                </div>
-              </div>
-            ) : null}
-
-            {/* row description */}
-            {rowDescIn > 0 ? (
-              <div
-                style={{
-                  position: "absolute",
-                  left: c.x - (portrait ? colW : c.w) / 2,
-                  width: portrait ? colW : c.w,
-                  top: rowDescTop,
-                  textAlign: "center",
-                  textWrap: "balance",
-                  fontFamily: geist.fontFamily,
-                  fontWeight: 400,
-                  fontSize: rowDescFs,
-                  lineHeight: 1.45,
-                  letterSpacing: "-0.005em",
-                  color: p.muted,
-                  opacity: rowDescIn,
-                  transform: `translateY(${(1 - rowDescIn) * 10 * s}px)`,
-                  filter: `blur(${(1 - rowDescIn) * 4 * s}px)`,
-                }}
-              >
-                {it.description}
-              </div>
-            ) : null}
-          </div>
-        );
-      })}
+              ) : null}
+            </div>
+          );
+        })}
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

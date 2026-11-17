@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const ringAlignConfig: ComponentConfig = {
   componentName: "RingAlign",
@@ -12,11 +18,6 @@ export const ringAlignConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     word: {
       type: "text-content",
@@ -32,6 +33,30 @@ export const ringAlignConfig: ComponentConfig = {
       description: "Rings",
       hiddenFromList: false,
     },
+    stagger: {
+      type: "number",
+      default: 8,
+      min: 0,
+      max: 24,
+      step: 1,
+      description: "Lock stagger",
+      hiddenFromList: false,
+    },
+    dotSize: {
+      type: "number",
+      default: 3.1,
+      min: 1,
+      max: 8,
+      step: 0.1,
+      description: "Dot size",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Geist", grain: true }),
     speed: {
       type: "number",
       default: 1,

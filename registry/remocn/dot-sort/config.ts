@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const dotSortConfig: ComponentConfig = {
   componentName: "DotSort",
@@ -13,10 +19,10 @@ export const dotSortConfig: ComponentConfig = {
       },
       description: "Theme",
     },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
+    verb: {
+      type: "text-content",
+      default: "choose",
+      description: "Caption verb",
     },
     highlight: {
       type: "number",
@@ -27,6 +33,21 @@ export const dotSortConfig: ComponentConfig = {
       description: "Highlight",
       hiddenFromList: false,
     },
+    fly: {
+      type: "number",
+      default: 28,
+      min: 8,
+      max: 60,
+      step: 1,
+      description: "Dot flight (frames)",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Instrument Sans", grain: true }),
     speed: {
       type: "number",
       default: 1,

@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const nonstopConfig: ComponentConfig = {
   componentName: "Nonstop",
@@ -32,6 +38,26 @@ export const nonstopConfig: ComponentConfig = {
       description: "From",
       hiddenFromList: false,
     },
+    interval: {
+      type: "number",
+      default: 20,
+      min: 6,
+      max: 60,
+      step: 1,
+      description: "Count interval (frames)",
+      hiddenFromList: false,
+    },
+    hold: {
+      type: "number",
+      default: 26,
+      min: 0,
+      max: 60,
+      step: 1,
+      description: "Hold (frames)",
+      hiddenFromList: false,
+    },
+    accent: { type: "color", default: undefined, description: "Accent" },
+    ...sceneControls({ font: "Red Hat Display" }),
     speed: {
       type: "number",
       default: 1,

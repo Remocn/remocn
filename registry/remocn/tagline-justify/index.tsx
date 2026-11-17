@@ -31,8 +31,22 @@ export interface TaglineJustifyProps {
   words?: string[];
   text?: string;
   highlight?: string;
+  /** Frames between words landing. */
+  stagger?: number;
   logo?: React.ReactNode;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy (the highlight stays serif). Load it yourself; Inter Tight by default. */
+  fontFamily?: string;
+  /** Film grain over the scene. */
+  grain?: boolean;
+  /** Size of the text block, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   theme?: "dark" | "light";
   speed?: number;
 }
@@ -270,19 +284,45 @@ function RemocnLogo({ fontSize, color }: { fontSize: number; color: string }) {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function TaglineJustify({
   words: wordsProp,
   text = "Your launch deserves a film as good as the product.",
   highlight = "film",
+  stagger = STAGGER,
   logo,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = sans,
+  grain = true,
+  scale = 1,
+  delay = 0,
   theme = "dark",
   speed = 1,
 }: TaglineJustifyProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const u = H / 720;
   const c = THEMES[theme];
+  const fg = ink ?? c.fg;
+  const stage =
+    background === "transparent" ? "transparent" : (background ?? c.bg);
 
   const words = useMemo(
     () => wordsProp ?? text.trim().split(/\s+/),
@@ -323,7 +363,7 @@ export function TaglineJustify({
         : baselines[i - 1] + DESC * sizes[i - 1] + ASC * F,
     );
   });
-  const arrive = (j: number) => FIRST + j * STAGGER;
+  const arrive = (j: number) => FIRST + j * stagger;
   const settle = (j: number) =>
     spring({
       frame: t - arrive(j),
@@ -379,14 +419,14 @@ export function TaglineJustify({
             top: baselines[li] - (isKey ? SERIF_BASELINE : BASELINE) * size,
             left: left + (anchor + firstIn) * F,
             transform: k === 0 ? undefined : "translateX(-100%)",
-            fontFamily: isKey ? serif : sans,
+            fontFamily: isKey ? serif : fontFamily,
             fontStyle: isKey ? "italic" : "normal",
             fontWeight: isKey ? 400 : 500,
             fontSize: size,
             lineHeight: 1,
             letterSpacing: `${isKey ? SERIF_TRACK : TRACK}em`,
             whiteSpace: "pre",
-            color: c.fg,
+            color: fg,
             opacity: o,
           }}
         >
@@ -426,61 +466,65 @@ export function TaglineJustify({
   });
 
   return (
-    <AbsoluteFill style={{ background: c.bg, overflow: "hidden" }}>
-      <AbsoluteFill
-        style={{
-          background: `radial-gradient(ellipse 60% 70% at 50% 40%, ${c.key}, transparent 72%)`,
-        }}
-      />
-      <AbsoluteFill
-        style={{
-          transform: `scale(${1 + push * 0.025})`,
-          transformOrigin: "50% 45%",
-        }}
-      >
-        {key.box ? (
+    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
+      {background === undefined ? (
+        <AbsoluteFill
+          style={{
+            background: `radial-gradient(ellipse 60% 70% at 50% 40%, ${c.key}, transparent 72%)`,
+          }}
+        />
+      ) : null}
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill
+          style={{
+            transform: `scale(${1 + push * 0.025})`,
+            transformOrigin: "50% 45%",
+          }}
+        >
+          {key.box ? (
+            <div
+              style={{
+                position: "absolute",
+                left: key.box.x - key.box.w * 0.9,
+                width: key.box.w * 2.8,
+                top: key.box.y - key.box.h * 1.6,
+                height: key.box.h * 2.6,
+                background: `radial-gradient(50% 50% at 50% 50%, ${c.ember} 0%, transparent 70%)`,
+                opacity: emberIn,
+              }}
+            />
+          ) : null}
+          {nodes}
           <div
             style={{
               position: "absolute",
-              left: key.box.x - key.box.w * 0.9,
-              width: key.box.w * 2.8,
-              top: key.box.y - key.box.h * 1.6,
-              height: key.box.h * 2.6,
-              background: `radial-gradient(50% 50% at 50% 50%, ${c.ember} 0%, transparent 70%)`,
-              opacity: emberIn,
+              left,
+              top: footTop - 18 * u,
+              width: B,
+              height: Math.max(1, u),
+              background: `linear-gradient(90deg, ${accent} 0px, ${accent} ${36 * u}px, ${c.hair} ${36 * u}px)`,
+              transform: `scaleX(${ruleP})`,
+              transformOrigin: "0% 50%",
             }}
           />
-        ) : null}
-        {nodes}
-        <div
-          style={{
-            position: "absolute",
-            left,
-            top: footTop - 18 * u,
-            width: B,
-            height: Math.max(1, u),
-            background: `linear-gradient(90deg, ${accent} 0px, ${accent} ${36 * u}px, ${c.hair} ${36 * u}px)`,
-            transform: `scaleX(${ruleP})`,
-            transformOrigin: "0% 50%",
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            left,
-            top: footTop,
-            height: footH,
-            display: "flex",
-            alignItems: "center",
-            gap: 9 * u,
-            opacity: foot(0),
-            transform: `translateY(${(1 - foot(0)) * 10 * u}px)`,
-          }}
-        >
-          {logo ?? <RemocnLogo fontSize={24 * u} color={c.fg} />}
-        </div>
-      </AbsoluteFill>
-      <Grain opacity={c.grain} />
+          <div
+            style={{
+              position: "absolute",
+              left,
+              top: footTop,
+              height: footH,
+              display: "flex",
+              alignItems: "center",
+              gap: 9 * u,
+              opacity: foot(0),
+              transform: `translateY(${(1 - foot(0)) * 10 * u}px)`,
+            }}
+          >
+            {logo ?? <RemocnLogo fontSize={24 * u} color={fg} />}
+          </div>
+        </AbsoluteFill>
+      </ScaleLayer>
+      {grain ? <Grain opacity={c.grain} /> : null}
     </AbsoluteFill>
   );
 }

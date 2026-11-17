@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const soldOutConfig: ComponentConfig = {
   componentName: "SoldOut",
@@ -12,11 +18,6 @@ export const soldOutConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     unit: {
       type: "text-content",
@@ -52,6 +53,25 @@ export const soldOutConfig: ComponentConfig = {
       description: "Stock",
       hiddenFromList: false,
     },
+    hold: {
+      type: "number",
+      default: 6,
+      min: 0,
+      max: 30,
+      step: 1,
+      description: "Zero hold (frames)",
+      hiddenFromList: false,
+    },
+    angle: {
+      type: "number",
+      default: -11,
+      min: -30,
+      max: 30,
+      step: 1,
+      description: "Band angle",
+      hiddenFromList: false,
+    },
+    ...sceneControls({ font: "Archivo" }),
     speed: {
       type: "number",
       default: 1,

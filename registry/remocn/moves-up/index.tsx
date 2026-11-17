@@ -22,8 +22,20 @@ export interface MovesUpProps {
   items?: string[];
   labels?: [string, string, string];
   shipped?: string;
+  /** Frames the first three rows hold before the first item ships. */
+  hold?: number;
+  /** Frames between one item shipping and the next. */
+  interval?: number;
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the rows. Load it yourself; Golos Text by default. */
+  fontFamily?: string;
+  /** Size of the roadmap, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -63,25 +75,48 @@ const CLAMP = {
   extrapolateRight: "clamp",
 } as const;
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function MovesUp({
   items = DEFAULT_ITEMS,
   labels = ["Now", "Next", "Later"],
   shipped = "shipped",
+  hold = HOLD,
+  interval = STEP,
   accent,
+  ink: inkColor,
   background,
+  fontFamily = golos.fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: MovesUpProps) {
-  const frame = useCurrentFrame();
+  const frame = Math.max(0, useCurrentFrame() - delay);
   const { width: W, height: H, durationInFrames } = useVideoConfig();
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
+  const fg = inkColor ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
 
   const queue = items.length > 0 ? items : DEFAULT_ITEMS;
   const steps = Math.max(0, queue.length - 3);
-  const stepAt = (s: number) => INTRO + HOLD + (s - 1) * STEP;
+  const stepAt = (s: number) => INTRO + hold + (s - 1) * interval;
   const naturalEnd = steps > 0 ? stepAt(steps) + PROMO_AT + PROMO_DUR : INTRO;
   const pace = Math.max(1, (naturalEnd + 30) / Math.max(1, durationInFrames));
   const t = frame * speed * pace;
@@ -106,7 +141,7 @@ export function MovesUp({
     let live = true;
     Promise.all([
       golos.waitUntilDone(),
-      document.fonts.load(`500 100px "${golos.fontFamily}"`),
+      document.fonts.load(`500 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
@@ -115,7 +150,7 @@ export function MovesUp({
     return () => {
       live = false;
     };
-  }, []);
+  }, [fontFamily]);
 
   useLayoutEffect(() => {
     if (!fontsOk) return;
@@ -201,7 +236,7 @@ export function MovesUp({
     });
 
   const font: React.CSSProperties = {
-    fontFamily: golos.fontFamily,
+    fontFamily,
     fontWeight: 500,
     letterSpacing: "-0.03em",
     lineHeight: LH,
@@ -235,125 +270,127 @@ export function MovesUp({
           </span>
         ))}
       </div>
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          opacity: heights && natural ? 1 : 0,
-          transformOrigin: "50% 50%",
-          transform: `scale(${group.toFixed(4)})`,
-        }}
-      >
-        {labels.map((label, r) => {
-          const p = rise(r * 4);
-          const sc = ROW_SCALE[r];
-          return (
-            <div
-              key={`label-${r}`}
-              style={{
-                ...font,
-                position: "absolute",
-                left: margin,
-                top: portrait
-                  ? slotTop[r] - labelLift
-                  : slotTop[r] + BASE_EM * size * sc - BASE_EM * labelSize,
-                fontSize: labelSize,
-                letterSpacing: "-0.01em",
-                color: r === 0 ? hi : c.ink,
-                opacity: p * (r === 0 ? 1 : 0.62),
-                transform: `translateY(${((1 - p) * 0.4).toFixed(3)}em)`,
-                whiteSpace: "nowrap",
-              }}
-            >
-              {label}
-            </div>
-          );
-        })}
-        {queue.map((item, k) => {
-          const rf = k - promoted;
-          const introP = k < 3 ? rise(6 + k * 5, 18) : 1;
-          const shipStep = k + 1;
-          const shipAt = shipStep <= steps ? stepAt(shipStep) : Infinity;
-          const tagP = Number.isFinite(shipAt)
-            ? interpolate(t, [shipAt, shipAt + TAG_IN], [0, 1], {
-                ...CLAMP,
-                easing: EASE_OUT,
-              })
-            : 0;
-          const exitP = Number.isFinite(shipAt)
-            ? interpolate(
-                t,
-                [shipAt + EXIT_AT, shipAt + EXIT_AT + EXIT_DUR],
-                [0, 1],
-                { ...CLAMP, easing: EASE_IN },
-              )
-            : 0;
+      <ScaleLayer scale={scale}>
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            opacity: heights && natural ? 1 : 0,
+            transformOrigin: "50% 50%",
+            transform: `scale(${group.toFixed(4)})`,
+          }}
+        >
+          {labels.map((label, r) => {
+            const p = rise(r * 4);
+            const sc = ROW_SCALE[r];
+            return (
+              <div
+                key={`label-${r}`}
+                style={{
+                  ...font,
+                  position: "absolute",
+                  left: margin,
+                  top: portrait
+                    ? slotTop[r] - labelLift
+                    : slotTop[r] + BASE_EM * size * sc - BASE_EM * labelSize,
+                  fontSize: labelSize,
+                  letterSpacing: "-0.01em",
+                  color: r === 0 ? hi : fg,
+                  opacity: p * (r === 0 ? 1 : 0.62),
+                  transform: `translateY(${((1 - p) * 0.4).toFixed(3)}em)`,
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {label}
+              </div>
+            );
+          })}
+          {queue.map((item, k) => {
+            const rf = k - promoted;
+            const introP = k < 3 ? rise(6 + k * 5, 18) : 1;
+            const shipStep = k + 1;
+            const shipAt = shipStep <= steps ? stepAt(shipStep) : Infinity;
+            const tagP = Number.isFinite(shipAt)
+              ? interpolate(t, [shipAt, shipAt + TAG_IN], [0, 1], {
+                  ...CLAMP,
+                  easing: EASE_OUT,
+                })
+              : 0;
+            const exitP = Number.isFinite(shipAt)
+              ? interpolate(
+                  t,
+                  [shipAt + EXIT_AT, shipAt + EXIT_AT + EXIT_DUR],
+                  [0, 1],
+                  { ...CLAMP, easing: EASE_IN },
+                )
+              : 0;
 
-          let y: number;
-          let sc: number;
-          let ink: number;
-          let alpha: number;
-          if (rf >= 2) {
-            const e = Math.min(1, rf - 2);
-            y = slotTop[2] + e * slots[2] * 0.9;
-            sc = ROW_SCALE[2];
-            ink = ROW_INK[2];
-            alpha = k < 3 ? introP : interpolate(e, [0, 0.4], [1, 0], CLAMP);
-          } else if (rf >= 0) {
-            y = lerpRow(slotTop, rf);
-            sc = lerpRow(ROW_SCALE, rf);
-            ink = lerpRow(ROW_INK, rf);
-            alpha = introP;
-          } else {
-            y = slotTop[0];
-            sc = 1;
-            ink = 1;
-            alpha = 1;
-          }
-          y -= exitP * slots[0] * 0.45;
-          alpha *= 1 - exitP;
-          const introY = (1 - introP) * size * sc * 0.35;
+            let y: number;
+            let sc: number;
+            let ink: number;
+            let alpha: number;
+            if (rf >= 2) {
+              const e = Math.min(1, rf - 2);
+              y = slotTop[2] + e * slots[2] * 0.9;
+              sc = ROW_SCALE[2];
+              ink = ROW_INK[2];
+              alpha = k < 3 ? introP : interpolate(e, [0, 0.4], [1, 0], CLAMP);
+            } else if (rf >= 0) {
+              y = lerpRow(slotTop, rf);
+              sc = lerpRow(ROW_SCALE, rf);
+              ink = lerpRow(ROW_INK, rf);
+              alpha = introP;
+            } else {
+              y = slotTop[0];
+              sc = 1;
+              ink = 1;
+              alpha = 1;
+            }
+            y -= exitP * slots[0] * 0.45;
+            alpha *= 1 - exitP;
+            const introY = (1 - introP) * size * sc * 0.35;
 
-          return (
-            <div
-              key={`${k}-${item}`}
-              ref={(el) => {
-                refs.current[k] = el;
-              }}
-              style={{
-                ...font,
-                position: "absolute",
-                left: itemX,
-                top: y + introY,
-                width: itemW / ROW_SCALE[minRow[k]],
-                fontSize: size,
-                color: c.ink,
-                transformOrigin: "0 0",
-                transform: `scale(${sc.toFixed(4)})`,
-                opacity: Math.max(0, alpha) * ink,
-                textWrap: "balance",
-              }}
-            >
-              {item}
-              {k < steps ? (
-                <span
-                  style={{
-                    display: "inline-block",
-                    fontSize: "0.3em",
-                    letterSpacing: "-0.01em",
-                    marginLeft: "0.6em",
-                    color: hi,
-                    opacity: tagP / Math.max(0.01, ink),
-                    transform: `translateX(${((1 - tagP) * -0.6).toFixed(3)}em)`,
-                  }}
-                >
-                  {shipped}
-                </span>
-              ) : null}
-            </div>
-          );
-        })}
-      </div>
+            return (
+              <div
+                key={`${k}-${item}`}
+                ref={(el) => {
+                  refs.current[k] = el;
+                }}
+                style={{
+                  ...font,
+                  position: "absolute",
+                  left: itemX,
+                  top: y + introY,
+                  width: itemW / ROW_SCALE[minRow[k]],
+                  fontSize: size,
+                  color: fg,
+                  transformOrigin: "0 0",
+                  transform: `scale(${sc.toFixed(4)})`,
+                  opacity: Math.max(0, alpha) * ink,
+                  textWrap: "balance",
+                }}
+              >
+                {item}
+                {k < steps ? (
+                  <span
+                    style={{
+                      display: "inline-block",
+                      fontSize: "0.3em",
+                      letterSpacing: "-0.01em",
+                      marginLeft: "0.6em",
+                      color: hi,
+                      opacity: tagP / Math.max(0.01, ink),
+                      transform: `translateX(${((1 - tagP) * -0.6).toFixed(3)}em)`,
+                    }}
+                  >
+                    {shipped}
+                  </span>
+                ) : null}
+              </div>
+            );
+          })}
+        </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

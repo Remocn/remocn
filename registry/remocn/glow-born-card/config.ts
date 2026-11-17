@@ -1,4 +1,11 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const glowBornCardConfig: ComponentConfig = {
   componentName: "GlowBornCard",
@@ -12,16 +19,6 @@ export const glowBornCardConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#45f0d6",
-      description: "Accent",
-    },
-    primary: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Primary",
     },
     before: {
       type: "text-content",
@@ -57,6 +54,42 @@ export const glowBornCardConfig: ComponentConfig = {
       type: "text-content",
       default: "main · 214 commits · 3h ago",
       description: "Branch",
+    },
+    actionLabel: {
+      type: "text-content",
+      default: "Import",
+      description: "Button label",
+    },
+    doneLabel: {
+      type: "text-content",
+      default: "Imported",
+      description: "Done label",
+    },
+    cancelLabel: {
+      type: "text-content",
+      default: "Cancel",
+      description: "Cancel label",
+    },
+    accent: {
+      type: "color",
+      default: "#45f0d6",
+      description: "Accent",
+    },
+    primary: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Primary",
+    },
+    ground: groundControl(),
+    ...sceneControls({ font: "Geist" }),
+    speed: {
+      type: "number",
+      default: 1,
+      min: 0.25,
+      max: 4,
+      step: 0.25,
+      description: "Speed",
+      hiddenFromList: false,
     },
   },
   durationInFrames: 136,

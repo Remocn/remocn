@@ -143,6 +143,8 @@ interface Ctx {
   c: Colors;
   accent: string;
   slot?: Rect;
+  font: string;
+  logo?: React.ReactNode;
 }
 
 const LIGHT_AT: Record<Kind, string> = {
@@ -208,8 +210,8 @@ const abs = (r: Rect): React.CSSProperties => ({
   height: r.h,
 });
 
-const displayType = (size: number): React.CSSProperties => ({
-  fontFamily: display,
+const displayType = (size: number, font = display): React.CSSProperties => ({
+  fontFamily: font,
   fontWeight: 400,
   fontSize: size,
   letterSpacing: "-0.035em",
@@ -238,7 +240,7 @@ function TitleBody({ x }: { x: Ctx }) {
       <div style={{ fontSize: 22 * u, fontWeight: 400, color: c.muted }}>
         Introducing
       </div>
-      <RemocnLogo fontSize={132 * u} color={c.fg} />
+      {x.logo ?? <RemocnLogo fontSize={132 * u} color={c.fg} />}
       <div
         style={{
           fontSize: 24 * u,
@@ -318,7 +320,7 @@ function PaneBody({ x }: { x: Ctx }) {
           gap: 9 * u,
         }}
       >
-        <RemocnLogo fontSize={18 * u} color={c.fg} />
+        {x.logo ?? <RemocnLogo fontSize={18 * u} color={c.fg} />}
         <div style={{ fontSize: 15 * u, color: c.muted, marginLeft: 6 * u }}>
           / Launch film
         </div>
@@ -503,7 +505,12 @@ function PaneBody({ x }: { x: Ctx }) {
               background: `radial-gradient(ellipse 80% 90% at 30% 0%, ${lightPane ? "rgba(255,255,255,0.09)" : "rgba(255,255,255,0.9)"}, transparent 70%)`,
             }}
           />
-          <RemocnR height={58 * u} color={lightPane ? "#F3F2EF" : "#121214"} />
+          {x.logo ?? (
+            <RemocnR
+              height={58 * u}
+              color={lightPane ? "#F3F2EF" : "#121214"}
+            />
+          )}
         </div>
       )}
     </>
@@ -543,7 +550,7 @@ function NumberBody({ x }: { x: Ctx }) {
           position: "absolute",
           left: left - 10 * u,
           top: 0.27 * H,
-          ...displayType(250 * u),
+          ...displayType(250 * u, x.font),
           letterSpacing: "-0.05em",
         }}
       >
@@ -619,14 +626,14 @@ function StatementBody({ x }: { x: Ctx }) {
           gap: 10 * u,
         }}
       >
-        <RemocnLogo fontSize={30 * u} color={c.fg} />
+        {x.logo ?? <RemocnLogo fontSize={30 * u} color={c.fg} />}
       </div>
       <div
         style={{
           position: "absolute",
           left: 0.08 * W - 6 * u,
           bottom: 0.13 * H,
-          ...displayType(140 * u),
+          ...displayType(140 * u, x.font),
           lineHeight: 0.94,
         }}
       >
@@ -671,7 +678,7 @@ function MarkBody({ x }: { x: Ctx }) {
         gap: 26 * u,
       }}
     >
-      <RemocnLogo fontSize={170 * u} color={c.fg} />
+      {x.logo ?? <RemocnLogo fontSize={170 * u} color={c.fg} />}
     </AbsoluteFill>
   );
 }
@@ -694,7 +701,7 @@ function ClockBody({ x }: { x: Ctx }) {
     <>
       <div style={{ position: "absolute", left, top: 0.16 * H }}>
         <div style={{ fontSize: 22 * u, color: c.muted }}>Playhead</div>
-        <div style={{ ...displayType(150 * u), marginTop: 14 * u }}>
+        <div style={{ ...displayType(150 * u, x.font), marginTop: 14 * u }}>
           00:12:04
         </div>
         <div
@@ -784,7 +791,9 @@ function ChartBody({ x }: { x: Ctx }) {
         <div style={{ fontSize: 20 * u, color: c.muted, fontWeight: 400 }}>
           Videos shipped per week
         </div>
-        <div style={{ ...displayType(110 * u), marginTop: 22 * u }}>+212%</div>
+        <div style={{ ...displayType(110 * u, x.font), marginTop: 22 * u }}>
+          +212%
+        </div>
       </div>
       <div
         style={{
@@ -842,7 +851,7 @@ function WordBody({ x }: { x: Ctx }) {
           position: "absolute",
           left: 0.08 * W - 12 * u,
           bottom: 0.1 * H,
-          ...displayType(250 * u),
+          ...displayType(250 * u, x.font),
           letterSpacing: "-0.055em",
         }}
       >
@@ -869,7 +878,15 @@ function PlaceholderScene({
   accent,
   slot,
   lightStage,
-}: SceneSpec & { accent: string; slot?: Rect; lightStage: boolean }) {
+  font,
+  logo,
+}: SceneSpec & {
+  accent: string;
+  slot?: Rect;
+  lightStage: boolean;
+  font: string;
+  logo?: React.ReactNode;
+}) {
   const { width: W, height: H } = useVideoConfig();
   const u = Math.min(H / 720, W / 1280);
   const c = palette(tone, accent, lightStage);
@@ -880,7 +897,7 @@ function PlaceholderScene({
       style={{
         background: c.bg,
         color: c.fg,
-        fontFamily: sans,
+        fontFamily: font,
         overflow: "hidden",
       }}
     >
@@ -891,7 +908,7 @@ function PlaceholderScene({
           }}
         />
       )}
-      <Body x={{ W, H, u, c, accent, slot }} />
+      <Body x={{ W, H, u, c, accent, slot, font, logo }} />
     </AbsoluteFill>
   );
 }
@@ -940,9 +957,22 @@ export interface GridMontageProps {
   scenes?: React.ReactNode[];
   images?: string[];
   beat?: number;
+  /** Corner radius of the tiles, in px at 720 tall. */
+  radius?: number;
   accent?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the built-in placeholder scenes. Load it yourself; Instrument Sans by default. */
+  fontFamily?: string;
+  /** Replaces the remocn mark in the built-in placeholder scenes. */
+  logo?: React.ReactNode;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
+  /** Size of the montage, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  grain?: boolean;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -1022,17 +1052,40 @@ type Fill =
   | { type: "own"; shot: number; push: number; focus: number[]; nominal: Rect }
   | { type: "piece"; shot: number; push: number; source: Rect };
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function GridMontage({
   scenes,
   images,
   beat = 14,
+  radius = 14,
   accent = "#3B5BFD",
+  background,
+  fontFamily = sans,
+  logo,
   ground,
   groundParams,
+  scale = 1,
+  delay = 0,
+  grain = true,
   speed = 1,
   theme = "dark",
 }: GridMontageProps) {
-  const frame = useCurrentFrame() * speed;
+  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const u = H / 720;
   const b = Math.max(8, beat);
@@ -1048,7 +1101,7 @@ export function GridMontage({
 
   const M = 0.042 * H;
   const G = 0.022 * H;
-  const R = 14 * u;
+  const R = radius * u;
 
   const tOpen = 2 * b;
   const tSwap1 = 3 * b;
@@ -1086,7 +1139,13 @@ export function GridMontage({
     if (scenes) return <AbsoluteFill>{scenes[i]}</AbsoluteFill>;
     if (images) return <ImageScene src={images[i]} />;
     return (
-      <PlaceholderScene {...specs[i]} accent={accent} lightStage={lightStage} />
+      <PlaceholderScene
+        {...specs[i]}
+        accent={accent}
+        lightStage={lightStage}
+        font={fontFamily}
+        logo={logo}
+      />
     );
   };
 
@@ -1300,15 +1359,28 @@ export function GridMontage({
   }
 
   return (
-    <AbsoluteFill style={{ background: stage, overflow: "hidden" }}>
-      <GshGround
-        preset={ground ?? (lightStage ? "glasswork" : "velvet-hour")}
-        params={groundParams}
-        timeOffset={4}
-        timeScale={0.5}
-      />
-      {body}
-      <Grain opacity={theme === "light" ? 0.04 : 0.055} />
+    <AbsoluteFill
+      style={{
+        background: background === undefined ? stage : undefined,
+        overflow: "hidden",
+      }}
+    >
+      {background === undefined ? (
+        <GshGround
+          preset={ground ?? (lightStage ? "glasswork" : "velvet-hour")}
+          params={groundParams}
+          timeOffset={4}
+          timeScale={0.5}
+        />
+      ) : (
+        <AbsoluteFill
+          style={{
+            background: background === "transparent" ? undefined : background,
+          }}
+        />
+      )}
+      <ScaleLayer scale={scale}>{body}</ScaleLayer>
+      {grain ? <Grain opacity={theme === "light" ? 0.04 : 0.055} /> : null}
     </AbsoluteFill>
   );
 }

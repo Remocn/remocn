@@ -27,6 +27,22 @@ export interface BassDropProps {
   /** Line that cuts in under the title once it holds. Defaults to `build`; pass "" to hide. */
   line?: string;
   accent?: string;
+  /** Text color; overrides the theme ink. A set ink paints the title flat instead of the beam light. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. The flash frame still fires. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Instrument Serif by default. */
+  fontFamily?: string;
+  /** Replaces the remocn mark that slams in when there is no `title`. */
+  logo?: React.ReactNode;
+  /** Frames of the build before the cut to black. */
+  buildLength?: number;
+  /** One frame of light between the silence and the hit. */
+  flash?: boolean;
+  /** Size of the copy, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   /** Playback multiplier. */
   speed?: number;
   theme?: "dark" | "light";
@@ -172,6 +188,8 @@ function Line({
   color,
   fill,
   scale = 1,
+  fontFamily,
+  opacity,
   children,
 }: {
   y: number;
@@ -181,6 +199,8 @@ function Line({
   /** A background painted through the glyphs instead of a flat colour. */
   fill?: string;
   scale?: number;
+  fontFamily: string;
+  opacity?: number;
   children: string;
 }) {
   const paint: React.CSSProperties = fill
@@ -200,13 +220,14 @@ function Line({
         transform: `translateX(-50%) scale(${scale})`,
         transformOrigin: `50% ${CAP_MID * 100}%`,
         whiteSpace: "nowrap",
-        fontFamily: serif,
+        fontFamily,
         fontWeight: 400,
         fontSize: size,
         lineHeight: 1,
         letterSpacing: `${tracking}em`,
         paddingLeft: `${tracking}em`,
         fontVariantNumeric: "tabular-nums",
+        opacity,
         ...paint,
       }}
     >
@@ -224,6 +245,11 @@ function Build({
   size,
   accent,
   c,
+  fg,
+  stage,
+  cut,
+  scale,
+  fontFamily,
 }: {
   t: number;
   W: number;
@@ -232,13 +258,18 @@ function Build({
   size: number;
   accent: string;
   c: Colors;
+  fg: string;
+  stage: string;
+  cut: number;
+  scale: number;
+  fontFamily: string;
 }) {
   const breath = interpolate(t, [-8, 40], [0, 1], {
     ...CLAMP,
     easing: BREATHE,
   });
-  const rise = interpolate(t, [0, CUT], [0, 1], { ...CLAMP, easing: RISER });
-  const lineIn = interpolate(t, [10, CUT], [0, 1], {
+  const rise = interpolate(t, [0, cut], [0, 1], { ...CLAMP, easing: RISER });
+  const lineIn = interpolate(t, [10, cut], [0, 1], {
     ...CLAMP,
     easing: RISER,
   });
@@ -247,43 +278,53 @@ function Build({
   // The beam rises from under the frame with the riser, so the cut to black
   // takes something away.
   const glow = rise * c.glow;
+  // With no stage there is nothing to fade in from, so the copy fades itself.
+  const clear = stage === "transparent";
+  const fade = clear ? breath : undefined;
   return (
     <>
       <div
         style={{
           position: "absolute",
           inset: 0,
-          opacity: glow,
+          opacity: clear ? glow * breath : glow,
           background: `radial-gradient(34% 30% at 50% ${112 - 8 * rise}%, color-mix(in oklab, ${BEAM[1]} 70%, transparent) 0%, transparent 70%), radial-gradient(80% 70% at 50% ${122 - 10 * rise}%, color-mix(in oklab, ${BEAM[2]} 75%, transparent) 0%, color-mix(in oklab, ${c.haze} 55%, transparent) 45%, transparent 78%)`,
         }}
       />
-      <Line
-        y={H * 0.5}
-        size={size}
-        tracking={TRACK_FROM + (TRACK_TO - TRACK_FROM) * rise}
-        color={c.fg}
-        scale={1 + rise * 0.05}
-      >
-        {text}
-      </Line>
-      <div
-        style={{
-          position: "absolute",
-          left: (W - ruleW) / 2,
-          top: H * 0.5 + size * 1.25,
-          width: ruleW,
-          height: ruleH,
-          background: accent,
-        }}
-      />
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          background: c.bg,
-          opacity: 1 - breath,
-        }}
-      />
+      <ScaleLayer scale={scale}>
+        <Line
+          y={H * 0.5}
+          size={size}
+          tracking={TRACK_FROM + (TRACK_TO - TRACK_FROM) * rise}
+          color={fg}
+          scale={1 + rise * 0.05}
+          fontFamily={fontFamily}
+          opacity={fade}
+        >
+          {text}
+        </Line>
+        <div
+          style={{
+            position: "absolute",
+            left: (W - ruleW) / 2,
+            top: H * 0.5 + size * 1.25,
+            width: ruleW,
+            height: ruleH,
+            background: accent,
+            opacity: fade,
+          }}
+        />
+      </ScaleLayer>
+      {clear ? null : (
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            background: stage,
+            opacity: 1 - breath,
+          }}
+        />
+      )}
     </>
   );
 }
@@ -303,6 +344,8 @@ function LogoHit({
   caption,
   small,
   showCaption,
+  logo,
+  fontFamily,
 }: {
   W: number;
   H: number;
@@ -314,6 +357,8 @@ function LogoHit({
   caption: string;
   small: number;
   showCaption: boolean;
+  logo?: React.ReactNode;
+  fontFamily: string;
 }) {
   const id = `bd${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`;
   // logo units -> px
@@ -327,43 +372,60 @@ function LogoHit({
   const bottom = LOGO.y + (0.88 / 0.72) * capH;
   return (
     <>
-      <svg
-        width={w}
-        height={h}
-        viewBox={`${LOGO.x} ${LOGO.y} ${LOGO.w} ${LOGO.h}`}
-        style={{
-          position: "absolute",
-          left: (W - w) / 2,
-          top: y - h / 2,
-          overflow: "visible",
-          transform: `scale(${scale})`,
-          transformOrigin: "50% 50%",
-        }}
-        aria-hidden
-      >
-        <defs>
-          <linearGradient
-            id={id}
-            gradientUnits="userSpaceOnUse"
-            x1={0}
-            x2={0}
-            y1={top}
-            y2={bottom}
-          >
-            <stop offset="0%" stopColor={c0} />
-            <stop offset={`${12 + sweep}%`} stopColor={c1} />
-            <stop offset={`${52 + sweep}%`} stopColor={c2} />
-            <stop offset={`${86 + sweep}%`} stopColor={c3} />
-          </linearGradient>
-        </defs>
-        <LogoPaths fill={`url(#${id})`} />
-      </svg>
+      {logo ? (
+        <div
+          style={{
+            position: "absolute",
+            left: 0,
+            right: 0,
+            top: y,
+            display: "flex",
+            justifyContent: "center",
+            transform: `translateY(-50%) scale(${scale})`,
+          }}
+        >
+          {logo}
+        </div>
+      ) : (
+        <svg
+          width={w}
+          height={h}
+          viewBox={`${LOGO.x} ${LOGO.y} ${LOGO.w} ${LOGO.h}`}
+          style={{
+            position: "absolute",
+            left: (W - w) / 2,
+            top: y - h / 2,
+            overflow: "visible",
+            transform: `scale(${scale})`,
+            transformOrigin: "50% 50%",
+          }}
+          aria-hidden
+        >
+          <defs>
+            <linearGradient
+              id={id}
+              gradientUnits="userSpaceOnUse"
+              x1={0}
+              x2={0}
+              y1={top}
+              y2={bottom}
+            >
+              <stop offset="0%" stopColor={c0} />
+              <stop offset={`${12 + sweep}%`} stopColor={c1} />
+              <stop offset={`${52 + sweep}%`} stopColor={c2} />
+              <stop offset={`${86 + sweep}%`} stopColor={c3} />
+            </linearGradient>
+          </defs>
+          <LogoPaths fill={`url(#${id})`} />
+        </svg>
+      )}
       {caption && showCaption ? (
         <Line
           y={y + h / 2 + H * 0.1}
           size={small}
           tracking={TRACK_TO}
           color={c.muted}
+          fontFamily={fontFamily}
         >
           {caption}
         </Line>
@@ -381,6 +443,10 @@ function Hit({
   caption,
   small,
   c,
+  hit,
+  ink,
+  logo,
+  fontFamily,
 }: {
   t: number;
   W: number;
@@ -389,10 +455,14 @@ function Hit({
   caption: string;
   small: number;
   c: Colors;
+  hit: number;
+  ink?: string;
+  logo?: React.ReactNode;
+  fontFamily: string;
 }) {
-  const local = t - HIT;
+  const local = t - hit;
   const punch = interpolate(local, [0, 2], [1.06, 1], CLAMP);
-  const hold = interpolate(local, [2, BASS_DROP_DURATION - HIT], [0, 1], {
+  const hold = interpolate(local, [2, BASS_DROP_DURATION - hit], [0, 1], {
     ...CLAMP,
     easing: SETTLE,
   });
@@ -415,7 +485,9 @@ function Hit({
         c={c}
         caption={caption}
         small={small}
-        showCaption={t >= LINE_AT}
+        showCaption={t >= hit + LINE_AT - HIT}
+        logo={logo}
+        fontFamily={fontFamily}
       />
     );
   }
@@ -429,18 +501,20 @@ function Hit({
         y={titleY}
         size={size}
         tracking={TITLE_TRACK}
-        color={c.fg}
-        fill={fill}
+        color={ink ?? c.fg}
+        fill={ink ? undefined : fill}
         scale={scale}
+        fontFamily={fontFamily}
       >
         {title}
       </Line>
-      {caption && t >= LINE_AT ? (
+      {caption && t >= hit + LINE_AT - HIT ? (
         <Line
           y={titleY + (size * CAP) / 2 + H * 0.1}
           size={small}
           tracking={TRACK_TO}
           color={c.muted}
+          fontFamily={fontFamily}
         >
           {caption}
         </Line>
@@ -449,25 +523,54 @@ function Hit({
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function BassDrop({
   build = "THIS FALL",
   title,
   line,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = serif,
+  logo,
+  buildLength = CUT,
+  flash: flashOn = true,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: BassDropProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const c = THEMES[theme];
   const caption = line ?? build;
   const small = H * 0.036;
+  const stage = background ?? c.bg;
+  const hit = buildLength + HIT - CUT;
 
-  const phase = t < CUT ? "build" : t < HIT ? "silence" : "hit";
-  const flash = phase === "silence" && t >= FLASH;
+  const phase = t < buildLength ? "build" : t < hit ? "silence" : "hit";
+  const flash =
+    flashOn && phase === "silence" && t >= buildLength + FLASH - CUT;
   const ground = flash
     ? `radial-gradient(90% 120% at 50% 110%, ${BEAM[0]} 0%, ${BEAM[1]} 28%, ${BEAM[2]} 55%, ${BEAM[3]} 100%)`
-    : c.bg;
+    : stage === "transparent"
+      ? undefined
+      : stage;
 
   return (
     <AbsoluteFill style={{ background: ground, overflow: "hidden" }}>
@@ -480,18 +583,29 @@ export function BassDrop({
           size={small}
           accent={accent}
           c={c}
+          fg={ink ?? c.fg}
+          stage={stage}
+          cut={buildLength}
+          scale={scale}
+          fontFamily={fontFamily}
         />
       ) : null}
       {phase === "hit" ? (
-        <Hit
-          t={t}
-          W={W}
-          H={H}
-          title={title}
-          caption={caption}
-          small={small}
-          c={c}
-        />
+        <ScaleLayer scale={scale}>
+          <Hit
+            t={t}
+            W={W}
+            H={H}
+            title={title}
+            caption={caption}
+            small={small}
+            c={c}
+            hit={hit}
+            ink={ink}
+            logo={logo}
+            fontFamily={fontFamily}
+          />
+        </ScaleLayer>
       ) : null}
     </AbsoluteFill>
   );

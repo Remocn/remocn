@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const churnCountConfig: ComponentConfig = {
   componentName: "ChurnCount",
@@ -36,6 +42,31 @@ export const churnCountConfig: ComponentConfig = {
       description: "From",
       hiddenFromList: false,
     },
+    separator: {
+      type: "text-content",
+      default: ",",
+      description: "Separator",
+    },
+    fontWeight: {
+      type: "number",
+      default: 600,
+      min: 200,
+      max: 900,
+      step: 100,
+      description: "Weight",
+      hiddenFromList: false,
+    },
+    duration: {
+      type: "number",
+      default: 76,
+      min: 10,
+      max: 120,
+      step: 1,
+      description: "Count (frames)",
+      hiddenFromList: false,
+    },
+    accent: { type: "color", default: undefined, description: "Accent" },
+    ...sceneControls({ font: "Urbanist" }),
     speed: {
       type: "number",
       default: 1,

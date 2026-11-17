@@ -13,7 +13,8 @@ import {
   useVideoConfig,
 } from "remotion";
 
-const { fontFamily: serifFamily } = loadNewsreader("italic", {
+// The italic face is set by `fontStyle` on the same family.
+loadNewsreader("italic", {
   weights: ["400"],
   subsets: ["latin"],
 });
@@ -78,7 +79,23 @@ export interface SlitRevealProps {
   src?: string;
   /** "letterbox" opens top/bottom; "sideways" rolls the line upright and opens left/right. */
   opening?: "letterbox" | "sideways";
+  /** Spread of the soft light around the hairline; 1 is the default bloom. */
+  glow?: number;
   accent?: string;
+  /** Text color of the title; overrides the default off-white. */
+  ink?: string;
+  /** Stage fill around the slit; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the title. Load it yourself; Newsreader by default. */
+  fontFamily?: string;
+  /** Replaces the remocn mark in a title ending in "remocn". */
+  logo?: React.ReactNode;
+  /** Size of the title, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  /** Film grain over the scene. */
+  grain?: boolean;
   speed?: number;
 }
 
@@ -113,6 +130,22 @@ function tint(hex: string, amount: number, a = 1) {
   const [r, g, b] = hexToRgb(hex);
   const m = (c: number) => Math.round(c + (255 - c) * amount);
   return `rgba(${m(r)},${m(g)},${m(b)},${a})`;
+}
+
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
 }
 
 function useSafeId(prefix: string) {
@@ -469,10 +502,18 @@ export function SlitReveal({
   children,
   src,
   opening = "letterbox",
+  glow = 1,
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = serifUpright,
+  logo,
+  scale = 1,
+  delay = 0,
+  grain = true,
   speed = 1,
 }: SlitRevealProps) {
-  const frame = useCurrentFrame() * speed;
+  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const u = H / 720;
   const sideways = opening === "sideways";
@@ -585,7 +626,7 @@ export function SlitReveal({
         intensity={rimIntensity * 0.9}
         accent={accent}
         core={interpolate(open, [0, 1], [1, 0.6])}
-        bloom={interpolate(open, [0, 1], [0.9, 0.5])}
+        bloom={interpolate(open, [0, 1], [0.9, 0.5]) * glow}
       />
     </div>
   );
@@ -595,7 +636,13 @@ export function SlitReveal({
   const spillDir = sideways ? "90deg" : "180deg";
 
   return (
-    <AbsoluteFill style={{ background: STAGE, overflow: "hidden" }}>
+    <AbsoluteFill
+      style={{
+        background:
+          background === "transparent" ? undefined : (background ?? STAGE),
+        overflow: "hidden",
+      }}
+    >
       {open > 0 && (
         <AbsoluteFill style={{ clipPath: `inset(${inset})` }}>
           <AbsoluteFill
@@ -630,6 +677,7 @@ export function SlitReveal({
             intensity={ignite * breathe}
             accent={accent}
             core={interpolate(draw, [0, 1], [2.2, 1])}
+            bloom={glow}
           />
         </div>
       ) : (
@@ -640,62 +688,66 @@ export function SlitReveal({
       )}
 
       {title && titleOpacity > 0 && (
-        <div
-          style={{
-            position: "absolute",
-            left: 0,
-            right: 0,
-            top: H / 2 - 92 * u,
-            height: 60 * u,
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "baseline",
-            gap: 14 * u,
-            color: "#EDEDEF",
-            opacity: titleOpacity,
-            transform: `translateY(${interpolate(tIn, [0, 1], [10 * u, 0]) - tOut * 8 * u}px)`,
-            filter: `blur(${(1 - tIn) * 8 * u + tOut * 4 * u}px)`,
-          }}
-        >
-          {titleLogo ? (
-            <>
-              {titleLead ? (
-                <span
-                  style={{
-                    fontFamily: serifFamily,
-                    fontStyle: "italic",
-                    fontWeight: 400,
-                    fontSize: 46 * u,
-                    letterSpacing: "-0.01em",
-                    lineHeight: 1,
-                    color: "rgba(237,237,239,0.78)",
-                  }}
-                >
-                  {titleLead}
-                </span>
-              ) : null}
-              <RemocnLogo fontSize={46 * u} color="#F3F2EF" />
-            </>
-          ) : (
-            <div
-              style={{
-                fontFamily: serifUpright,
-                fontWeight: 400,
-                fontSize: 46 * u,
-                letterSpacing: "-0.015em",
-                lineHeight: 1.1,
-                textWrap: "balance",
-                textAlign: "center",
-                maxWidth: W * 0.7,
-              }}
-            >
-              {title}
-            </div>
-          )}
-        </div>
+        <ScaleLayer scale={scale}>
+          <div
+            style={{
+              position: "absolute",
+              left: 0,
+              right: 0,
+              top: H / 2 - 92 * u,
+              height: 60 * u,
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "baseline",
+              gap: 14 * u,
+              color: ink ?? "#EDEDEF",
+              opacity: titleOpacity,
+              transform: `translateY(${interpolate(tIn, [0, 1], [10 * u, 0]) - tOut * 8 * u}px)`,
+              filter: `blur(${(1 - tIn) * 8 * u + tOut * 4 * u}px)`,
+            }}
+          >
+            {titleLogo ? (
+              <>
+                {titleLead ? (
+                  <span
+                    style={{
+                      fontFamily,
+                      fontStyle: "italic",
+                      fontWeight: 400,
+                      fontSize: 46 * u,
+                      letterSpacing: "-0.01em",
+                      lineHeight: 1,
+                      color: "rgba(237,237,239,0.78)",
+                    }}
+                  >
+                    {titleLead}
+                  </span>
+                ) : null}
+                {logo ?? (
+                  <RemocnLogo fontSize={46 * u} color={ink ?? "#F3F2EF"} />
+                )}
+              </>
+            ) : (
+              <div
+                style={{
+                  fontFamily,
+                  fontWeight: 400,
+                  fontSize: 46 * u,
+                  letterSpacing: "-0.015em",
+                  lineHeight: 1.1,
+                  textWrap: "balance",
+                  textAlign: "center",
+                  maxWidth: W * 0.7,
+                }}
+              >
+                {title}
+              </div>
+            )}
+          </div>
+        </ScaleLayer>
       )}
 
-      <Grain opacity={0.032} />
+      {grain ? <Grain opacity={0.032} /> : null}
     </AbsoluteFill>
   );
 }

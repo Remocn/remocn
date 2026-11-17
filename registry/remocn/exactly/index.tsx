@@ -1,6 +1,7 @@
 "use client";
 
 import { loadFont } from "@remotion/google-fonts/HubotSans";
+import type React from "react";
 import { useEffect, useRef, useState } from "react";
 import {
   AbsoluteFill,
@@ -26,7 +27,19 @@ export interface ExactlyRound {
 export interface ExactlyProps {
   rounds?: ExactlyRound[];
   accent?: string;
+  /** Text color of the answered objection; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the copy. Load it yourself; Hubot Sans by default. */
+  fontFamily?: string;
+  /** Frames between words as an objection builds. */
+  stagger?: number;
+  /** Frames an answered round holds before the next one starts. */
+  hold?: number;
+  /** Size of the text block, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -123,8 +136,8 @@ function breakLines(ws: number[], space: number, maxEm: number) {
   });
 }
 
-function useWidths(specs: string[]) {
-  const key = specs.join("\u0001");
+function useWidths(specs: string[], fontFamily: string) {
+  const key = `${fontFamily}\u0002${specs.join("\u0001")}`;
   const [state, setState] = useState<{
     key: string;
     w: Record<string, number>;
@@ -137,8 +150,8 @@ function useWidths(specs: string[]) {
     let live = true;
     Promise.all([
       hubot.waitUntilDone(),
-      document.fonts.load(`400 100px "${hubot.fontFamily}"`),
-      document.fonts.load(`500 100px "${hubot.fontFamily}"`),
+      document.fonts.load(`400 100px "${fontFamily}"`),
+      document.fonts.load(`500 100px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
@@ -149,7 +162,7 @@ function useWidths(specs: string[]) {
           const cut = spec.indexOf("|");
           const weight = spec.slice(0, cut);
           const text = spec.slice(cut + 1);
-          if (ctx) ctx.font = `${weight} 100px "${hubot.fontFamily}"`;
+          if (ctx) ctx.font = `${weight} 100px "${fontFamily}"`;
           w[spec] = ctx ? ctx.measureText(text).width / 100 : text.length * 0.5;
         }
         setState({ key, w });
@@ -161,7 +174,7 @@ function useWidths(specs: string[]) {
     return () => {
       live = false;
     };
-  }, [key, handle]);
+  }, [key, handle, fontFamily]);
   return state && state.key === key ? state.w : null;
 }
 
@@ -192,17 +205,40 @@ function centred(ws: number[], space: number, maxEm: number) {
   return { placed, lines: lines.length, widest, lineWidths };
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function Exactly({
   rounds = DEFAULT_ROUNDS,
   accent,
+  ink,
   background,
+  fontFamily = hubot.fontFamily,
+  stagger = WORD,
+  hold = 30,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: ExactlyProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, durationInFrames: T } = useVideoConfig();
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
+  const fg = ink ?? c.ink;
   const stage =
     background === "transparent" ? "transparent" : (background ?? c.bg);
 
@@ -218,7 +254,7 @@ export function Exactly({
       ...replies.map((s) => `500|${s}`),
     ]),
   );
-  const w = useWidths(specs);
+  const w = useWidths(specs, fontFamily);
 
   if (!w) {
     return (
@@ -279,10 +315,10 @@ export function Exactly({
   let clock = 4;
   list.forEach((_, i) => {
     startAt.push(clock);
-    clock += objs[i].length * WORD + RISE + 16;
+    clock += objs[i].length * stagger + RISE + 16;
     dropAt.push(clock);
     clock += 6 + REFLOW;
-    clock += i < list.length - 1 ? 30 : 0;
+    clock += i < list.length - 1 ? hold : 0;
   });
   const room = Math.max(1, T - Math.max(30, T * 0.2));
   const k = clock > room ? room / clock : 1;
@@ -300,131 +336,136 @@ export function Exactly({
       style={{
         background: stage,
         overflow: "hidden",
-        fontFamily: hubot.fontFamily,
+        fontFamily,
         fontWeight: 500,
       }}
     >
-      {list.map((_, i) => {
-        const last = i === list.length - 1;
-        const leaveAt = last ? 1e9 : startAt[i + 1] * k - 4;
-        const leave = interpolate(t, [leaveAt, leaveAt + EXIT], [0, 1], {
-          ...CLAMP,
-          easing: EASE_IN,
-        });
-        if (t < startAt[i] * k - 1 || leave >= 1) return null;
-        const { a, b, own, replyX, bLines } = lays[i];
-        const ayTop = H / 2 - (a.lines * lineH) / 2;
-        const byTop = H / 2 - (bLines * lineH) / 2;
-        const cx = W / 2;
-        const d0 = dropAt[i] * k;
-        const drop = interpolate(t, [d0, d0 + DROP * k], [0, 1], {
-          ...CLAMP,
-          easing: EASE_IN,
-        });
-        const r0 = (dropAt[i] + 6) * k;
-        const flow = interpolate(t, [r0, r0 + REFLOW * k], [0, 1], {
-          ...CLAMP,
-          easing: EASE_IO,
-        });
-        const words = objs[i];
-        const n = words.length;
-        const lagOf = (j: number) =>
-          Math.min(
-            1,
-            Math.max(0, flow * 1.15 - ((n - 1 - j) / Math.max(1, n)) * 0.15),
-          );
-        const posOf = (j: number) => {
-          const l = lagOf(j);
-          const pa = a.placed[j];
-          const pb = b[j];
-          return {
-            x: cx + (pa.x + (pb.x - pa.x) * l) * F,
-            y:
-              ayTop +
-              pa.y * lineH +
-              (byTop + pb.y * lineH - (ayTop + pa.y * lineH)) * l,
-          };
-        };
-        const inAt = (j: number) =>
-          interpolate(
-            t,
-            [(startAt[i] + j * WORD) * k, (startAt[i] + j * WORD + RISE) * k],
-            [0, 1],
-            { ...CLAMP, easing: EASE_OUT },
-          );
-        const first = posOf(0);
-        const lastPos = posOf(n - 1);
-        const replyIn = interpolate(flow, [0.35, 0.9], [0, 1], CLAMP);
-        const reply = own
-          ? {
-              x: cx + replyX * F,
-              y: byTop - (1 - replyIn) * F * 0.2,
-            }
-          : {
-              x: first.x - (space + adv(replies[i])) * F,
-              y: first.y,
+      <ScaleLayer scale={scale}>
+        {list.map((_, i) => {
+          const last = i === list.length - 1;
+          const leaveAt = last ? 1e9 : startAt[i + 1] * k - 4;
+          const leave = interpolate(t, [leaveAt, leaveAt + EXIT], [0, 1], {
+            ...CLAMP,
+            easing: EASE_IN,
+          });
+          if (t < startAt[i] * k - 1 || leave >= 1) return null;
+          const { a, b, own, replyX, bLines } = lays[i];
+          const ayTop = H / 2 - (a.lines * lineH) / 2;
+          const byTop = H / 2 - (bLines * lineH) / 2;
+          const cx = W / 2;
+          const d0 = dropAt[i] * k;
+          const drop = interpolate(t, [d0, d0 + DROP * k], [0, 1], {
+            ...CLAMP,
+            easing: EASE_IN,
+          });
+          const r0 = (dropAt[i] + 6) * k;
+          const flow = interpolate(t, [r0, r0 + REFLOW * k], [0, 1], {
+            ...CLAMP,
+            easing: EASE_IO,
+          });
+          const words = objs[i];
+          const n = words.length;
+          const lagOf = (j: number) =>
+            Math.min(
+              1,
+              Math.max(0, flow * 1.15 - ((n - 1 - j) / Math.max(1, n)) * 0.15),
+            );
+          const posOf = (j: number) => {
+            const l = lagOf(j);
+            const pa = a.placed[j];
+            const pb = b[j];
+            return {
+              x: cx + (pa.x + (pb.x - pa.x) * l) * F,
+              y:
+                ayTop +
+                pa.y * lineH +
+                (byTop + pb.y * lineH - (ayTop + pa.y * lineH)) * l,
             };
-        const quote = (x: number, y: number, appear: number) => ({
-          ...textStyle(F),
-          left: x,
-          top: y,
-          color: c.muted,
-          opacity: appear * Math.max(0, 1 - drop * 1.6),
-          transform: `translateY(${((1 - appear) * F * 0.18 + drop * F * 0.45).toFixed(2)}px)`,
-        });
-        return (
-          <div
-            key={`r${i}`}
-            style={{
-              position: "absolute",
-              inset: 0,
-              opacity: 1 - leave,
-              transform: `translateY(${(-leave * H * 0.06).toFixed(2)}px)`,
-            }}
-          >
-            <div style={quote(first.x - openW * F, first.y, inAt(0))}>“</div>
+          };
+          const inAt = (j: number) =>
+            interpolate(
+              t,
+              [
+                (startAt[i] + j * stagger) * k,
+                (startAt[i] + j * stagger + RISE) * k,
+              ],
+              [0, 1],
+              { ...CLAMP, easing: EASE_OUT },
+            );
+          const first = posOf(0);
+          const lastPos = posOf(n - 1);
+          const replyIn = interpolate(flow, [0.35, 0.9], [0, 1], CLAMP);
+          const reply = own
+            ? {
+                x: cx + replyX * F,
+                y: byTop - (1 - replyIn) * F * 0.2,
+              }
+            : {
+                x: first.x - (space + adv(replies[i])) * F,
+                y: first.y,
+              };
+          const quote = (x: number, y: number, appear: number) => ({
+            ...textStyle(F),
+            left: x,
+            top: y,
+            color: c.muted,
+            opacity: appear * Math.max(0, 1 - drop * 1.6),
+            transform: `translateY(${((1 - appear) * F * 0.18 + drop * F * 0.45).toFixed(2)}px)`,
+          });
+          return (
             <div
-              style={quote(
-                lastPos.x + adv(words[n - 1]) * F,
-                lastPos.y,
-                inAt(n - 1),
-              )}
-            >
-              ”
-            </div>
-            <div
+              key={`r${i}`}
               style={{
-                ...textStyle(F),
-                left: reply.x,
-                top: reply.y,
-                color: hi,
-                opacity: replyIn,
+                position: "absolute",
+                inset: 0,
+                opacity: 1 - leave,
+                transform: `translateY(${(-leave * H * 0.06).toFixed(2)}px)`,
               }}
             >
-              {replies[i]}
+              <div style={quote(first.x - openW * F, first.y, inAt(0))}>“</div>
+              <div
+                style={quote(
+                  lastPos.x + adv(words[n - 1]) * F,
+                  lastPos.y,
+                  inAt(n - 1),
+                )}
+              >
+                ”
+              </div>
+              <div
+                style={{
+                  ...textStyle(F),
+                  left: reply.x,
+                  top: reply.y,
+                  color: hi,
+                  opacity: replyIn,
+                }}
+              >
+                {replies[i]}
+              </div>
+              {words.map((word, j) => {
+                const e = inAt(j);
+                const p = posOf(j);
+                return (
+                  <div
+                    key={`w${j}`}
+                    style={{
+                      ...textStyle(F),
+                      left: p.x,
+                      top: p.y,
+                      color: interpolateColors(flow, [0, 1], [c.muted, fg]),
+                      opacity: e,
+                      transform: `translateY(${((1 - e) * F * 0.18).toFixed(2)}px)`,
+                    }}
+                  >
+                    {word}
+                  </div>
+                );
+              })}
             </div>
-            {words.map((word, j) => {
-              const e = inAt(j);
-              const p = posOf(j);
-              return (
-                <div
-                  key={`w${j}`}
-                  style={{
-                    ...textStyle(F),
-                    left: p.x,
-                    top: p.y,
-                    color: interpolateColors(flow, [0, 1], [c.muted, c.ink]),
-                    opacity: e,
-                    transform: `translateY(${((1 - e) * F * 0.18).toFixed(2)}px)`,
-                  }}
-                >
-                  {word}
-                </div>
-              );
-            })}
-          </div>
-        );
-      })}
+          );
+        })}
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const collabLockupConfig: ComponentConfig = {
   componentName: "CollabLockup",
@@ -13,10 +19,15 @@ export const collabLockupConfig: ComponentConfig = {
       },
       description: "Theme",
     },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
+    left: {
+      type: "text-content",
+      default: "remocn",
+      description: "Left name",
+    },
+    right: {
+      type: "text-content",
+      default: "Kitebase",
+      description: "Right name",
     },
     caption: {
       type: "text-content",
@@ -32,6 +43,26 @@ export const collabLockupConfig: ComponentConfig = {
       },
       description: "Joiner",
     },
+    fontWeight: {
+      type: "number",
+      default: 500,
+      min: 300,
+      max: 800,
+      step: 100,
+      description: "Weight",
+      hiddenFromList: false,
+    },
+    trail: {
+      type: "boolean",
+      default: true,
+      description: "Motion trail",
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Manrope", grain: true }),
     speed: {
       type: "number",
       default: 1,

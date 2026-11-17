@@ -1,8 +1,27 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const streakRewardConfig: ComponentConfig = {
   componentName: "StreakReward",
   importPath: "@/components/remocn/streak-reward",
+  lists: {
+    lines: {
+      default: ["Day seven. Still shipping.", "Small wins, every day."],
+      description: "Lines",
+      min: 2,
+      max: 2,
+    },
+    days: {
+      default: ["M", "T", "W", "T", "F", "S", "S"],
+      description: "Days",
+    },
+  },
   controls: {
     theme: {
       type: "enum",
@@ -12,11 +31,6 @@ export const streakRewardConfig: ComponentConfig = {
         dark: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     title: {
       type: "text-content",
@@ -33,6 +47,21 @@ export const streakRewardConfig: ComponentConfig = {
       default: "Continue",
       description: "Cta",
     },
+    streakLabel: {
+      type: "text-content",
+      default: "day streak",
+      description: "Streak label",
+    },
+    note: {
+      type: "text-content",
+      default: "One more lesson keeps the week alive.",
+      description: "Week note",
+    },
+    doneNote: {
+      type: "text-content",
+      default: "Seven for seven. Come back tomorrow for eight.",
+      description: "Done note",
+    },
     streak: {
       type: "number",
       default: 7,
@@ -42,6 +71,13 @@ export const streakRewardConfig: ComponentConfig = {
       description: "Streak",
       hiddenFromList: false,
     },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ground: groundControl(),
+    ...sceneControls({ font: "Onest" }),
     speed: {
       type: "number",
       default: 1,

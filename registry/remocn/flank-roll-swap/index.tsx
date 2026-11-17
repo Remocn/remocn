@@ -1,6 +1,7 @@
 "use client";
 
 import { loadFont } from "@remotion/google-fonts/HankenGrotesk";
+import type React from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AbsoluteFill,
@@ -28,8 +29,21 @@ export interface FlankRollSwapProps {
   to?: [string, string];
   accentWord?: string;
   images?: string[];
+  /** Frame the left words start to roll; the right side follows 6 frames later. */
+  swapAt?: number;
+  /** Frames between letters as a word rolls. */
+  stagger?: number;
   accent?: string;
   ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the words. Load it yourself; Hanken Grotesk by default. */
+  fontFamily?: string;
+  /** Size of the words and card, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  speed?: number;
   theme?: "dark" | "light";
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
@@ -112,9 +126,9 @@ const CLAMP = {
 } as const;
 const CARD = { mass: 0.8, damping: 18, stiffness: 160 };
 
-function buildMetrics(_version: number) {
+function buildMetrics(_version: number, fontFamily: string) {
   const ctx = document.createElement("canvas").getContext("2d");
-  const font = `400 ${FONT_PX}px "${hanken.fontFamily}"`;
+  const font = `400 ${FONT_PX}px "${fontFamily}"`;
   const cache: Record<string, number> = {};
   return (s: string) => {
     if (cache[s] === undefined) {
@@ -127,7 +141,7 @@ function buildMetrics(_version: number) {
   };
 }
 
-function useMetrics() {
+function useMetrics(fontFamily: string) {
   const [version, setVersion] = useState(0);
   const [handle] = useState(() => delayRender("flank-roll-swap: measuring"));
   const released = useRef(false);
@@ -139,7 +153,7 @@ function useMetrics() {
     document.fonts.addEventListener("loadingdone", bump);
     Promise.all([
       hanken.waitUntilDone(),
-      document.fonts.load(`400 ${FONT_PX}px "${hanken.fontFamily}"`),
+      document.fonts.load(`400 ${FONT_PX}px "${fontFamily}"`),
     ])
       .catch(() => undefined)
       .then(() => {
@@ -153,12 +167,19 @@ function useMetrics() {
       live = false;
       document.fonts.removeEventListener("loadingdone", bump);
     };
-  }, [handle]);
-  return useMemo(() => buildMetrics(version), [version]);
+  }, [handle, fontFamily]);
+  return useMemo(
+    () => buildMetrics(version, fontFamily),
+    [version, fontFamily],
+  );
 }
 
-const rollEnd = (start: number, a: string, b: string) =>
-  start + Math.max(a.length, b.length) * BEAT.stagger + BEAT.roll;
+const rollEnd = (
+  start: number,
+  a: string,
+  b: string,
+  stagger: number = BEAT.stagger,
+) => start + Math.max(a.length, b.length) * stagger + BEAT.roll;
 
 export const flankRollSwapLength = (
   from: [string, string] = ["Remocn", "Studio"],
@@ -180,18 +201,41 @@ const cutIndex = (frame: number, swapEnd: number) => {
   return k;
 };
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function FlankRollSwap({
   from = ["Remocn", "Studio"],
   to = ["Out now", "on remocn.dev"],
   accentWord = "remocn.dev",
   images,
+  swapAt = BEAT.leftRoll,
+  stagger = BEAT.stagger,
   accent,
   ink,
+  background,
+  fontFamily = hanken.fontFamily,
+  scale = 1,
+  delay = 0,
+  speed = 1,
   theme = "dark",
   ground,
   groundParams,
 }: FlankRollSwapProps) {
-  const frame = useCurrentFrame();
+  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H, fps } = useVideoConfig();
   const c = THEMES[theme];
   const inkC = ink ?? c.ink;
@@ -203,15 +247,15 @@ export function FlankRollSwap({
     (ground ? undefined : portrait ? c.groundParamsTall : c.groundParams);
   const bg = gshParams(preset, gParams).background;
   const u = Math.min(W, H) / 720;
-  const measure = useMetrics();
+  const measure = useMetrics(fontFamily);
   const pics = (images ?? DEFAULT_IMAGES.map((p) => staticFile(p))).filter(
     Boolean,
   );
 
-  const leftStart = BEAT.leftRoll;
-  const rightStart = BEAT.leftRoll + BEAT.rightGap;
-  const leftEnd = rollEnd(leftStart, from[0], to[0]);
-  const rightEnd = rollEnd(rightStart, from[1], to[1]);
+  const leftStart = swapAt;
+  const rightStart = swapAt + BEAT.rightGap;
+  const leftEnd = rollEnd(leftStart, from[0], to[0], stagger);
+  const rightEnd = rollEnd(rightStart, from[1], to[1], stagger);
   const swapEnd = Math.max(leftEnd, rightEnd);
 
   const geo = useMemo(() => {
@@ -299,7 +343,7 @@ export function FlankRollSwap({
         : 0;
     return chars.map((ch, i) => {
       const fromCard = portrait ? i : side === "a" ? n - 1 - i : i;
-      const t0 = start + fromCard * BEAT.stagger;
+      const t0 = start + fromCard * stagger;
       const p = interpolate(frame, [t0, t0 + BEAT.roll], [0, 1], {
         ...CLAMP,
         easing: ROLL,
@@ -362,7 +406,7 @@ export function FlankRollSwap({
       inset: 0,
       display: "flex",
       justifyContent: justify,
-      fontFamily: hanken.fontFamily,
+      fontFamily,
       fontWeight: 400,
       fontSize: F,
       letterSpacing: `${TRACK}em`,
@@ -445,67 +489,83 @@ export function FlankRollSwap({
   };
 
   return (
-    <AbsoluteFill style={{ background: bg, overflow: "hidden" }}>
-      <GshGround
-        preset={preset}
-        params={gParams}
-        timeOffset={c.groundOffset}
-        timeScale={0.5}
-      />
-      <AbsoluteFill
-        style={{
-          background: `radial-gradient(${portrait ? "95% 50%" : "70% 60%"} at 50% 50%, rgba(${c.scrim},${c.scrimAlpha}) 0%, rgba(${c.scrim},0) 100%)`,
-        }}
-      />
-      <AbsoluteFill
-        style={{ transform: `scale(${push})`, transformOrigin: "50% 50%" }}
-      >
-        {renderSide("a")}
-        {renderSide("b")}
-        <div
-          style={{
-            position: "absolute",
-            left: cx - cardW / 2,
-            top: cy - cardH / 2,
-            width: cardW,
-            height: cardH,
-            perspective: 1200 * u,
-          }}
+    <AbsoluteFill
+      style={{
+        background:
+          background === undefined
+            ? bg
+            : background === "transparent"
+              ? undefined
+              : background,
+        overflow: "hidden",
+      }}
+    >
+      {background === undefined ? (
+        <>
+          <GshGround
+            preset={preset}
+            params={gParams}
+            timeOffset={c.groundOffset}
+            timeScale={0.5}
+          />
+          <AbsoluteFill
+            style={{
+              background: `radial-gradient(${portrait ? "95% 50%" : "70% 60%"} at 50% 50%, rgba(${c.scrim},${c.scrimAlpha}) 0%, rgba(${c.scrim},0) 100%)`,
+            }}
+          />
+        </>
+      ) : null}
+      <ScaleLayer scale={scale}>
+        <AbsoluteFill
+          style={{ transform: `scale(${push})`, transformOrigin: "50% 50%" }}
         >
+          {renderSide("a")}
+          {renderSide("b")}
           <div
             style={{
               position: "absolute",
-              inset: 0,
-              borderRadius: Math.max(6, cardW * (portrait ? 0.045 : 0.035)),
-              overflow: "hidden",
-              boxShadow: `${c.highlight}, ${c.shadow}`,
-              border: `1px solid ${c.border}`,
-              transform: `scale(${cardScale}) rotateX(${tilt}deg)`,
-              background: "#111",
+              left: cx - cardW / 2,
+              top: cy - cardH / 2,
+              width: cardW,
+              height: cardH,
+              perspective: 1200 * u,
             }}
           >
-            {pic ? (
-              <Img
-                src={pic}
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  objectFit: "cover",
-                  transform: `scale(${kb})`,
-                }}
-              />
-            ) : null}
             <div
               style={{
                 position: "absolute",
                 inset: 0,
-                borderRadius: "inherit",
-                boxShadow: c.highlight,
+                borderRadius: Math.max(6, cardW * (portrait ? 0.045 : 0.035)),
+                overflow: "hidden",
+                boxShadow: `${c.highlight}, ${c.shadow}`,
+                border: `1px solid ${c.border}`,
+                transform: `scale(${cardScale}) rotateX(${tilt}deg)`,
+                background: "#111",
               }}
-            />
+            >
+              {pic ? (
+                <Img
+                  src={pic}
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                    transform: `scale(${kb})`,
+                  }}
+                />
+              ) : null}
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  borderRadius: "inherit",
+                  boxShadow: c.highlight,
+                }}
+              />
+            </div>
           </div>
-        </div>
-      </AbsoluteFill>
+        </AbsoluteFill>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

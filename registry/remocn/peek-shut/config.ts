@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const peekShutConfig: ComponentConfig = {
   componentName: "PeekShut",
@@ -46,6 +52,26 @@ export const peekShutConfig: ComponentConfig = {
       description: "Zoom",
       hiddenFromList: false,
     },
+    stagger: {
+      type: "number",
+      default: 3,
+      min: 0,
+      max: 12,
+      step: 1,
+      description: "Word stagger",
+      hiddenFromList: false,
+    },
+    shutAt: {
+      type: "number",
+      default: 80,
+      min: 50,
+      max: 110,
+      step: 1,
+      description: "Shut at (frame)",
+      hiddenFromList: false,
+    },
+    accent: { type: "color", default: undefined, description: "Accent" },
+    ...sceneControls({ font: "Funnel Display" }),
     speed: {
       type: "number",
       default: 1,

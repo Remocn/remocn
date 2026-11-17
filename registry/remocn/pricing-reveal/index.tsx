@@ -3,6 +3,7 @@
 import { loadFont as loadGeist } from "@remotion/google-fonts/Geist";
 import { loadFont as loadGeistMono } from "@remotion/google-fonts/GeistMono";
 import { loadFont as loadSerif } from "@remotion/google-fonts/InstrumentSerif";
+import type React from "react";
 import {
   AbsoluteFill,
   Easing,
@@ -41,8 +42,22 @@ export interface PricingRevealProps {
   badgeLabel?: string;
   eyebrow?: string;
   heading?: string;
+  /** Frames between one card entering and the next. */
+  stagger?: number;
+  /** Corner radius of the plan cards. */
+  radius?: number;
   theme?: "light" | "dark";
   accent?: string;
+  /** Text color; overrides the theme ink. */
+  ink?: string;
+  /** Solid fill in place of the gradient ground; "transparent" drops it. */
+  background?: string;
+  /** Typeface for the copy. Load it yourself; Geist by default. */
+  fontFamily?: string;
+  /** Size of the heading and cards, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   ground?: GshPresetId;
   groundParams?: Partial<GradientParams>;
@@ -256,6 +271,8 @@ interface CardProps {
   currency: string;
   discountLabel: string;
   badgeLabel: string;
+  stagger: number;
+  radius: number;
   frame: number;
   fps: number;
   width: number;
@@ -271,6 +288,8 @@ function PlanCard({
   currency,
   discountLabel,
   badgeLabel,
+  stagger,
+  radius,
   frame,
   fps,
   width,
@@ -278,7 +297,7 @@ function PlanCard({
   compact,
 }: CardProps) {
   const featured = !!plan.featured;
-  const enterAt = B.cards + index * B.stagger;
+  const enterAt = B.cards + index * stagger;
   const rise = spring({ frame: frame - enterAt, fps, config: CARD });
   const fade = interpolate(frame, [enterAt, enterAt + 10], [0, 1], {
     ...clamp,
@@ -509,7 +528,7 @@ function PlanCard({
         style={{
           position: "absolute",
           inset: 0,
-          borderRadius: 18,
+          borderRadius: radius,
           background: pal.card,
           backdropFilter: pal.dark ? "blur(24px)" : undefined,
           boxShadow: `${ring}, ${pal.depth}`,
@@ -578,7 +597,7 @@ function PlanCard({
             />
             {plan.features.map((feat, j) => {
               const a = spring({
-                frame: frame - (B.features + index * B.stagger + j * 2),
+                frame: frame - (B.features + index * stagger + j * 2),
                 fps,
                 config: CARD,
               });
@@ -609,6 +628,22 @@ function PlanCard({
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function PricingReveal({
   plans = DEFAULT_PLANS,
   currency = "$",
@@ -616,19 +651,27 @@ export function PricingReveal({
   badgeLabel = "Most picked",
   eyebrow = "Billed monthly · cancel anytime",
   heading = "Simple pricing for every launch.",
+  stagger = B.stagger,
+  radius = 18,
   theme = "light",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = geist.fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   ground,
   groundParams,
 }: PricingRevealProps) {
-  const frame = useCurrentFrame() * speed;
+  const frame = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width, height, fps } = useVideoConfig();
   const tall = height > width;
   const W = tall ? 720 : 1280;
   const H = tall ? 1280 : 720;
   const u = Math.min(width / W, height / H);
-  const pal = palette(theme);
+  const themed = palette(theme);
+  const pal = ink ? { ...themed, text: ink } : themed;
 
   const head = interpolate(frame, [B.head, B.head + 16], [0, 1], {
     ...clamp,
@@ -652,121 +695,135 @@ export function PricingReveal({
   return (
     <AbsoluteFill
       style={{
-        fontFamily: geist.fontFamily,
+        fontFamily,
         overflow: "hidden",
         WebkitFontSmoothing: "antialiased",
       }}
     >
-      <GshGround
-        preset={ground ?? (pal.dark ? "earthshine" : "paper-crease")}
-        params={groundParams}
-        timeOffset={pal.dark ? 6 : 3}
-        timeScale={0.4}
-      />
-      {pal.dark ? null : (
-        <AbsoluteFill style={{ background: "rgba(240,238,234,0.38)" }} />
-      )}
-      <div
-        style={{
-          position: "absolute",
-          left: (width - W * u) / 2,
-          top: (height - H * u) / 2,
-          width: W,
-          height: H,
-          transformOrigin: "0 0",
-          transform: `scale(${u})`,
-        }}
-      >
+      {background === undefined ? (
+        <>
+          <GshGround
+            preset={ground ?? (pal.dark ? "earthshine" : "paper-crease")}
+            params={groundParams}
+            timeOffset={pal.dark ? 6 : 3}
+            timeScale={0.4}
+          />
+          {pal.dark ? null : (
+            <AbsoluteFill style={{ background: "rgba(240,238,234,0.38)" }} />
+          )}
+        </>
+      ) : (
         <AbsoluteFill
           style={{
-            transform: `scale(${camera})`,
-            transformOrigin: "50% 60%",
+            background: background === "transparent" ? undefined : background,
+          }}
+        />
+      )}
+      <ScaleLayer scale={scale}>
+        <div
+          style={{
+            position: "absolute",
+            left: (width - W * u) / 2,
+            top: (height - H * u) / 2,
+            width: W,
+            height: H,
+            transformOrigin: "0 0",
+            transform: `scale(${u})`,
           }}
         >
-          <div
+          <AbsoluteFill
             style={{
-              position: "absolute",
-              left: M,
-              right: M,
-              top: tall ? 96 : 58,
-              display: "flex",
-              flexDirection: tall ? "column" : "row",
-              alignItems: tall ? "flex-start" : "flex-end",
-              justifyContent: "space-between",
-              gap: tall ? 20 : 24,
+              transform: `scale(${camera})`,
+              transformOrigin: "50% 60%",
             }}
           >
             <div
               style={{
-                fontFamily: serif.fontFamily,
-                fontWeight: 400,
-                fontSize: tall ? 64 : 54,
-                lineHeight: 1.02,
-                letterSpacing: "-0.02em",
-                color: pal.text,
-                maxWidth: tall ? 560 : 720,
-                textWrap: "balance",
-                clipPath: "inset(-10% -5% -20% -5%)",
+                position: "absolute",
+                left: M,
+                right: M,
+                top: tall ? 96 : 58,
+                display: "flex",
+                flexDirection: tall ? "column" : "row",
+                alignItems: tall ? "flex-start" : "flex-end",
+                justifyContent: "space-between",
+                gap: tall ? 20 : 24,
               }}
             >
               <div
                 style={{
-                  transform: `translateY(${(1 - head) * 40}px)`,
-                  opacity: head,
+                  fontFamily: serif.fontFamily,
+                  fontWeight: 400,
+                  fontSize: tall ? 64 : 54,
+                  lineHeight: 1.02,
+                  letterSpacing: "-0.02em",
+                  color: pal.text,
+                  maxWidth: tall ? 560 : 720,
+                  textWrap: "balance",
+                  clipPath: "inset(-10% -5% -20% -5%)",
                 }}
               >
-                {heading}
+                <div
+                  style={{
+                    transform: `translateY(${(1 - head) * 40}px)`,
+                    opacity: head,
+                  }}
+                >
+                  {heading}
+                </div>
+              </div>
+              <div
+                style={{
+                  fontFamily: mono.fontFamily,
+                  fontSize: 16,
+                  color: pal.muted,
+                  paddingBottom: tall ? 0 : 8,
+                  whiteSpace: "nowrap",
+                  opacity: meta,
+                  transform: `translateY(${(1 - meta) * 10}px)`,
+                }}
+              >
+                {eyebrow}
               </div>
             </div>
             <div
               style={{
-                fontFamily: mono.fontFamily,
-                fontSize: 16,
-                color: pal.muted,
-                paddingBottom: tall ? 0 : 8,
-                whiteSpace: "nowrap",
-                opacity: meta,
-                transform: `translateY(${(1 - meta) * 10}px)`,
+                position: "absolute",
+                top: tall ? 340 : 186,
+                left: M,
+                right: M,
+                display: "flex",
+                flexDirection: tall ? "column" : "row",
+                alignItems: "flex-start",
+                gap,
               }}
             >
-              {eyebrow}
+              {plans.map((plan, i) => {
+                const compact = tall && !plan.featured;
+                return (
+                  <PlanCard
+                    key={plan.name}
+                    plan={plan}
+                    index={i}
+                    pal={pal}
+                    accent={accent}
+                    currency={currency}
+                    discountLabel={discountLabel}
+                    badgeLabel={badgeLabel}
+                    stagger={stagger}
+                    radius={radius}
+                    frame={frame}
+                    fps={fps}
+                    width={cardW}
+                    height={compact ? compactH : fullH}
+                    compact={compact}
+                  />
+                );
+              })}
             </div>
-          </div>
-          <div
-            style={{
-              position: "absolute",
-              top: tall ? 340 : 186,
-              left: M,
-              right: M,
-              display: "flex",
-              flexDirection: tall ? "column" : "row",
-              alignItems: "flex-start",
-              gap,
-            }}
-          >
-            {plans.map((plan, i) => {
-              const compact = tall && !plan.featured;
-              return (
-                <PlanCard
-                  key={plan.name}
-                  plan={plan}
-                  index={i}
-                  pal={pal}
-                  accent={accent}
-                  currency={currency}
-                  discountLabel={discountLabel}
-                  badgeLabel={badgeLabel}
-                  frame={frame}
-                  fps={fps}
-                  width={cardW}
-                  height={compact ? compactH : fullH}
-                  compact={compact}
-                />
-              );
-            })}
-          </div>
-        </AbsoluteFill>
-      </div>
+          </AbsoluteFill>
+        </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

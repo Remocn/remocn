@@ -70,9 +70,50 @@ Each entry in `scenes` fills the frame with large centered type. The words rise 
       description: "Accent color for cue words and the accent field",
     },
     {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
       name: "background",
       type: "string",
       description: "Base field color; pass transparent to composite over footage",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Syne\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "fontWeight",
+      type: "number",
+      default: "500",
+      description: "Weight of the lines; Syne is loaded at 400 and 500.",
+    },
+    {
+      name: "stagger",
+      type: "number",
+      default: "3",
+      description: "Frames between words as the first line rises.",
+    },
+    {
+      name: "hold",
+      type: "number",
+      default: "36",
+      description: "Frames the last line holds at the end; the remaining time is split between the lines for reading.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
     {
       name: "speed",

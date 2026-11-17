@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const treemapSplitConfig: ComponentConfig = {
   componentName: "TreemapSplit",
@@ -18,6 +24,25 @@ export const treemapSplitConfig: ComponentConfig = {
       default: "#3B5BFD",
       description: "Accent",
     },
+    split: {
+      type: "number",
+      default: 22,
+      min: 8,
+      max: 48,
+      step: 1,
+      description: "Split (frames)",
+      hiddenFromList: false,
+    },
+    radius: {
+      type: "number",
+      default: 6,
+      min: 0,
+      max: 24,
+      step: 1,
+      description: "Cell radius",
+      hiddenFromList: false,
+    },
+    ...sceneControls({ font: "Schibsted Grotesk", grain: true }),
     speed: {
       type: "number",
       default: 1,

@@ -68,9 +68,44 @@ A short statement rises into place in large type, glowing in the accent color an
       description: "Hot color the title and caption start in before cooling to the text color.",
     },
     {
+      name: "ink",
+      type: "string",
+      description: "Text color; overrides the theme ink.",
+    },
+    {
       name: "background",
       type: "string",
       description: "Stage fill color; pass \"transparent\" to overlay your own footage.",
+    },
+    {
+      name: "fontFamily",
+      type: "string",
+      default: "\"Saira\"",
+      description: "Typeface for the copy. Load the font in your project first.",
+    },
+    {
+      name: "cooldown",
+      type: "number",
+      default: "70",
+      description: "Frames the title takes to cool from the accent to the ink.",
+    },
+    {
+      name: "haze",
+      type: "number",
+      default: "1",
+      description: "Strength of the heat shimmer; 0 turns it off.",
+    },
+    {
+      name: "scale",
+      type: "number",
+      default: "1",
+      description: "Size of the foreground around the frame's center; the background stays put.",
+    },
+    {
+      name: "delay",
+      type: "number",
+      default: "0",
+      description: "Frames to hold the first frame before anything moves.",
     },
     {
       name: "speed",

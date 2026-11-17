@@ -27,7 +27,20 @@ export interface CometHeadlineProps {
   highlight?: string;
   subhead?: string;
   accent?: string;
+  /** Text color of the headline; overrides the theme. */
+  ink?: string;
   background?: string;
+  /** Typeface for the headline and subhead. Load it yourself; Sora by default. */
+  fontFamily?: string;
+  /** Weight each word settles at after landing. */
+  fontWeight?: number;
+  /** Frames each word spends in flight before it lands. */
+  flight?: number;
+  /** Size of the copy, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
+  grain?: boolean;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -219,20 +232,44 @@ function highlightFill(
   };
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function CometHeadline({
   eyebrow = "New in remocn",
   headline = "Every launch beat, already in orbit.",
   highlight = "in orbit",
   subhead = "Reveals, feature heads and stats as drop-in Remotion scenes.",
   accent = "#3B5BFD",
+  ink,
   background,
+  fontFamily = sora.fontFamily,
+  fontWeight = 500,
+  flight = 26,
+  scale = 1,
+  delay = 0,
+  grain = true,
   speed = 1,
   theme = "dark",
 }: CometHeadlineProps) {
-  const raw = useCurrentFrame();
+  const raw = Math.max(0, useCurrentFrame() - delay);
   const frame = raw * speed;
   const { width, height, durationInFrames } = useVideoConfig();
   const p = PALETTES[theme];
+  const fg = ink ?? p.fg;
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
 
   const portrait = height > width * 1.1;
@@ -272,7 +309,7 @@ export function CometHeadline({
 
   const n = words.length;
   const stagger = n > 1 ? Math.min(5, 34 / (n - 1)) : 0;
-  const FLIGHT = 26;
+  const FLIGHT = flight;
   const launch = (i: number) => 6 + i * stagger;
   const land = (i: number) => launch(i) + FLIGHT;
   const lastLand = land(Math.max(0, n - 1));
@@ -330,203 +367,205 @@ export function CometHeadline({
               transform: `translate(${(-drift * 2).toFixed(3)}%, ${(-drift * 1.5).toFixed(3)}%) scale(1.06)`,
             }}
           />
-          <Grain opacity={p.grain} />
+          {grain ? <Grain opacity={p.grain} /> : null}
         </>
       ) : null}
 
-      <svg
-        width={width}
-        height={height}
-        style={{ position: "absolute", inset: 0 }}
-        aria-hidden
-      >
-        <defs>
+      <ScaleLayer scale={scale}>
+        <svg
+          width={width}
+          height={height}
+          style={{ position: "absolute", inset: 0 }}
+          aria-hidden
+        >
+          <defs>
+            {words.map((w) => {
+              const { target } = orbit(w);
+              return (
+                <linearGradient
+                  key={w.index}
+                  id={`${uid}t${w.index}`}
+                  gradientUnits="userSpaceOnUse"
+                  x1={origin.x}
+                  y1={origin.y}
+                  x2={target.x}
+                  y2={target.y}
+                >
+                  <stop offset="0" stopColor={p.trail} stopOpacity={0} />
+                  <stop offset="0.35" stopColor={p.trail} stopOpacity={0.45} />
+                  <stop offset="1" stopColor={p.trail} stopOpacity={1} />
+                </linearGradient>
+              );
+            })}
+          </defs>
           {words.map((w) => {
-            const { target } = orbit(w);
+            const { target, control } = orbit(w);
+            const raw01 = interpolate(
+              frame,
+              [launch(w.index), land(w.index)],
+              [0, 1],
+              CLAMP,
+            );
+            if (raw01 <= 0) return null;
+            const t = EASE_FLIGHT(raw01);
+            const head = quad(origin, control, target, t);
+            const tail = Math.max(0, t - 0.22);
+            const landed = frame - land(w.index);
+            const trailOp = interpolate(cool, [0, 1], [0.75, 0.42]);
+            const headR = interpolate(landed, [-3, 5], [0.05, 0], CLAMP) * fs;
+            const tailOp = interpolate(landed, [-2, 6], [1, 0], CLAMP);
             return (
-              <linearGradient
-                key={w.index}
-                id={`${uid}t${w.index}`}
-                gradientUnits="userSpaceOnUse"
-                x1={origin.x}
-                y1={origin.y}
-                x2={target.x}
-                y2={target.y}
-              >
-                <stop offset="0" stopColor={p.trail} stopOpacity={0} />
-                <stop offset="0.35" stopColor={p.trail} stopOpacity={0.45} />
-                <stop offset="1" stopColor={p.trail} stopOpacity={1} />
-              </linearGradient>
+              <g key={w.index}>
+                <path
+                  d={quadSlice(origin, control, target, 0, t)}
+                  fill="none"
+                  stroke={`url(#${uid}t${w.index})`}
+                  strokeWidth={trailW}
+                  strokeLinecap="round"
+                  opacity={trailOp}
+                />
+                {tailOp > 0 ? (
+                  <path
+                    d={quadSlice(origin, control, target, tail, t)}
+                    fill="none"
+                    stroke={p.head}
+                    strokeWidth={trailW * 2.2}
+                    strokeLinecap="round"
+                    opacity={0.55 * tailOp}
+                  />
+                ) : null}
+                {headR > 0.1 ? (
+                  <circle cx={head.x} cy={head.y} r={headR} fill={p.head} />
+                ) : null}
+                {landed >= 0 && landed < 16 ? (
+                  <circle
+                    cx={target.x}
+                    cy={target.y}
+                    r={
+                      interpolate(landed, [0, 16], [0.06, 0.62], {
+                        ...CLAMP,
+                        easing: EASE_OUT,
+                      }) * fs
+                    }
+                    fill="none"
+                    stroke={p.trail}
+                    strokeWidth={trailW}
+                    opacity={interpolate(landed, [0, 16], [0.8, 0], CLAMP)}
+                  />
+                ) : null}
+              </g>
             );
           })}
-        </defs>
-        {words.map((w) => {
-          const { target, control } = orbit(w);
-          const raw01 = interpolate(
-            frame,
-            [launch(w.index), land(w.index)],
-            [0, 1],
-            CLAMP,
-          );
-          if (raw01 <= 0) return null;
-          const t = EASE_FLIGHT(raw01);
-          const head = quad(origin, control, target, t);
-          const tail = Math.max(0, t - 0.22);
-          const landed = frame - land(w.index);
-          const trailOp = interpolate(cool, [0, 1], [0.75, 0.42]);
-          const headR = interpolate(landed, [-3, 5], [0.05, 0], CLAMP) * fs;
-          const tailOp = interpolate(landed, [-2, 6], [1, 0], CLAMP);
-          return (
-            <g key={w.index}>
-              <path
-                d={quadSlice(origin, control, target, 0, t)}
-                fill="none"
-                stroke={`url(#${uid}t${w.index})`}
-                strokeWidth={trailW}
-                strokeLinecap="round"
-                opacity={trailOp}
-              />
-              {tailOp > 0 ? (
-                <path
-                  d={quadSlice(origin, control, target, tail, t)}
-                  fill="none"
-                  stroke={p.head}
-                  strokeWidth={trailW * 2.2}
-                  strokeLinecap="round"
-                  opacity={0.55 * tailOp}
-                />
-              ) : null}
-              {headR > 0.1 ? (
-                <circle cx={head.x} cy={head.y} r={headR} fill={p.head} />
-              ) : null}
-              {landed >= 0 && landed < 16 ? (
-                <circle
-                  cx={target.x}
-                  cy={target.y}
-                  r={
-                    interpolate(landed, [0, 16], [0.06, 0.62], {
-                      ...CLAMP,
-                      easing: EASE_OUT,
-                    }) * fs
-                  }
-                  fill="none"
-                  stroke={p.trail}
-                  strokeWidth={trailW}
-                  opacity={interpolate(landed, [0, 16], [0.8, 0], CLAMP)}
-                />
-              ) : null}
-            </g>
-          );
-        })}
-      </svg>
+        </svg>
 
-      {eyebrow ? (
-        <div
-          style={{
-            position: "absolute",
-            left,
-            top,
-            height: eyeFs * 1.3,
-            display: "flex",
-            alignItems: "center",
-            gap: eyeFs * 0.7,
-            clipPath: `inset(-20% ${(1 - eyeT) * 100}% -20% 0)`,
-          }}
-        >
+        {eyebrow ? (
           <div
-            style={{
-              width: eyeFs * 0.48,
-              height: eyeFs * 0.48,
-              borderRadius: 999,
-              background: theme === "dark" ? LIMB[1] : accent,
-            }}
-          />
-          <span
-            style={{
-              fontFamily: mono.fontFamily,
-              fontWeight: 500,
-              fontSize: eyeFs,
-              letterSpacing: "0.1em",
-              textTransform: "uppercase",
-              color: p.muted,
-              whiteSpace: "nowrap",
-              transform: `translateX(${(1 - eyeT) * -12 * s}px)`,
-            }}
-          >
-            {eyebrow}
-          </span>
-        </div>
-      ) : null}
-
-      {words.map((w) => {
-        const k = interpolate(
-          frame,
-          [land(w.index) - 2, land(w.index) + 12],
-          [0, 1],
-          {
-            ...CLAMP,
-            easing: EASE_OUT,
-          },
-        );
-        if (k <= 0) return null;
-        const wght = 100 + 400 * k;
-        const track = TRACK + (1 - k) * 0.05;
-        const chars = Math.max(1, w.text.length);
-        const shift = (-(track - TRACK) * chars * fs) / 2;
-        const hl = w.hl
-          ? highlightFill(w.hl, drift, p.highlight(accent))
-          : { color: p.fg };
-        return (
-          <div
-            key={w.index}
             style={{
               position: "absolute",
-              left: left + w.x * fs + shift,
-              top: headTop + w.line * lh,
-              height: lh,
-              lineHeight: `${lh}px`,
-              fontFamily: sora.fontFamily,
-              fontWeight: 500,
-              fontVariationSettings: `"wght" ${wght.toFixed(1)}`,
-              fontSize: fs,
-              letterSpacing: `${track.toFixed(4)}em`,
-              whiteSpace: "nowrap",
-              opacity: interpolate(k, [0, 0.35], [0, 1], CLAMP),
-              filter:
-                k < 0.98
-                  ? `blur(${((1 - k) * 0.05 * fs).toFixed(2)}px)`
-                  : undefined,
-              paddingRight: "0.06em",
-              ...hl,
+              left,
+              top,
+              height: eyeFs * 1.3,
+              display: "flex",
+              alignItems: "center",
+              gap: eyeFs * 0.7,
+              clipPath: `inset(-20% ${(1 - eyeT) * 100}% -20% 0)`,
             }}
           >
-            {w.text}
+            <div
+              style={{
+                width: eyeFs * 0.48,
+                height: eyeFs * 0.48,
+                borderRadius: 999,
+                background: theme === "dark" ? LIMB[1] : accent,
+              }}
+            />
+            <span
+              style={{
+                fontFamily: mono.fontFamily,
+                fontWeight: 500,
+                fontSize: eyeFs,
+                letterSpacing: "0.1em",
+                textTransform: "uppercase",
+                color: p.muted,
+                whiteSpace: "nowrap",
+                transform: `translateX(${(1 - eyeT) * -12 * s}px)`,
+              }}
+            >
+              {eyebrow}
+            </span>
           </div>
-        );
-      })}
+        ) : null}
 
-      {subhead ? (
-        <div
-          style={{
-            position: "absolute",
-            left,
-            top: headTop + lines * lh + subGap,
-            width: subMax,
-            fontFamily: sora.fontFamily,
-            fontWeight: 400,
-            fontSize: subFs,
-            lineHeight: 1.4,
-            letterSpacing: "-0.008em",
-            color: p.muted,
-            textWrap: "balance",
-            opacity: subT,
-            transform: `translateY(${(1 - subT) * 14 * s}px)`,
-            filter: `blur(${(1 - subT) * 6 * s}px)`,
-          }}
-        >
-          {subhead}
-        </div>
-      ) : null}
+        {words.map((w) => {
+          const k = interpolate(
+            frame,
+            [land(w.index) - 2, land(w.index) + 12],
+            [0, 1],
+            {
+              ...CLAMP,
+              easing: EASE_OUT,
+            },
+          );
+          if (k <= 0) return null;
+          const wght = 100 + (fontWeight - 100) * k;
+          const track = TRACK + (1 - k) * 0.05;
+          const chars = Math.max(1, w.text.length);
+          const shift = (-(track - TRACK) * chars * fs) / 2;
+          const hl = w.hl
+            ? highlightFill(w.hl, drift, p.highlight(accent))
+            : { color: fg };
+          return (
+            <div
+              key={w.index}
+              style={{
+                position: "absolute",
+                left: left + w.x * fs + shift,
+                top: headTop + w.line * lh,
+                height: lh,
+                lineHeight: `${lh}px`,
+                fontFamily,
+                fontWeight,
+                fontVariationSettings: `"wght" ${wght.toFixed(1)}`,
+                fontSize: fs,
+                letterSpacing: `${track.toFixed(4)}em`,
+                whiteSpace: "nowrap",
+                opacity: interpolate(k, [0, 0.35], [0, 1], CLAMP),
+                filter:
+                  k < 0.98
+                    ? `blur(${((1 - k) * 0.05 * fs).toFixed(2)}px)`
+                    : undefined,
+                paddingRight: "0.06em",
+                ...hl,
+              }}
+            >
+              {w.text}
+            </div>
+          );
+        })}
+
+        {subhead ? (
+          <div
+            style={{
+              position: "absolute",
+              left,
+              top: headTop + lines * lh + subGap,
+              width: subMax,
+              fontFamily,
+              fontWeight: 400,
+              fontSize: subFs,
+              lineHeight: 1.4,
+              letterSpacing: "-0.008em",
+              color: p.muted,
+              textWrap: "balance",
+              opacity: subT,
+              transform: `translateY(${(1 - subT) * 14 * s}px)`,
+              filter: `blur(${(1 - subT) * 6 * s}px)`,
+            }}
+          >
+            {subhead}
+          </div>
+        ) : null}
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

@@ -1,4 +1,11 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  groundControl,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const statRailConfig: ComponentConfig = {
   componentName: "StatRail",
@@ -17,6 +24,38 @@ export const statRailConfig: ComponentConfig = {
       type: "text-content",
       default: "The *future* of launch video is code",
       description: "Tagline",
+    },
+    hold: {
+      type: "number",
+      default: 30,
+      min: 0,
+      max: 90,
+      step: 1,
+      description: "Tagline hold (frames)",
+      hiddenFromList: false,
+    },
+    stagger: {
+      type: "number",
+      default: 2,
+      min: 0,
+      max: 10,
+      step: 1,
+      description: "Word stagger",
+      hiddenFromList: false,
+    },
+    accent: { type: "color", default: undefined, description: "Accent" },
+    card: { type: "color", default: undefined, description: "Card" },
+    faded: { type: "color", default: undefined, description: "Faded stats" },
+    ground: groundControl(),
+    ...sceneControls({ font: "Inter Tight" }),
+    speed: {
+      type: "number",
+      default: 1,
+      min: 0.25,
+      max: 4,
+      step: 0.25,
+      description: "Speed",
+      hiddenFromList: false,
     },
   },
   durationInFrames: 144,

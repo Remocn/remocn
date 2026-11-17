@@ -1,6 +1,7 @@
 "use client";
 
 import { loadFont } from "@remotion/google-fonts/Manrope";
+import type React from "react";
 import { useId, useMemo } from "react";
 import {
   AbsoluteFill,
@@ -39,6 +40,20 @@ export interface GlyphMatrixProps {
    */
   label?: string;
   accent?: string;
+  /** Color of the lit LEDs and the typed word, in place of the gradient fill. */
+  ink?: string;
+  /** Background fill; "transparent" drops it. */
+  background?: string;
+  /** Typeface for a label other than "remocn". Load it yourself; Manrope by default. */
+  fontFamily?: string;
+  /** Frames each countdown number holds. */
+  countStep?: number;
+  /** Frames between typed letters. */
+  typeStep?: number;
+  /** Size of the matrix and lockup, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
 }
@@ -350,40 +365,67 @@ function numeralSwap(
   }
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function GlyphMatrix({
   label = "remocn",
   accent = "#3B5BFD",
+  ink,
+  background,
+  fontFamily = MANROPE,
+  countStep: numStep = NUM_STEP,
+  typeStep = TYPE_STEP,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
 }: GlyphMatrixProps) {
-  const t = useCurrentFrame() * speed;
+  const t = Math.max(0, useCurrentFrame() - delay) * speed;
   const { width: W, height: H } = useVideoConfig();
   const pal = THEMES[theme];
+  // Everything after the countdown slides with its length.
+  const shift = 3 * (numStep - NUM_STEP);
+  const arcStart = ARC_START + shift;
+  const hopStart = HOP_START + shift;
+  const moveStart = MOVE_START + shift;
+  const typeStart = TYPE_START + shift;
   const model = useMemo(buildModel, []);
 
   const lit: Lit = new Map();
   const nums = model.numerals;
 
   // 1. Countdown.
-  if (t < NUM_STEP) numeralSwap(lit, null, nums["3"], t, 0);
-  else if (t < NUM_STEP * 2)
-    numeralSwap(lit, nums["3"], nums["2"], t, NUM_STEP);
-  else if (t < ARC_START)
-    numeralSwap(lit, nums["2"], nums["1"], t, NUM_STEP * 2);
+  if (t < numStep) numeralSwap(lit, null, nums["3"], t, 0);
+  else if (t < numStep * 2) numeralSwap(lit, nums["3"], nums["2"], t, numStep);
+  else if (t < arcStart) numeralSwap(lit, nums["2"], nums["1"], t, numStep * 2);
   else {
     // The 1 steps down through the brightness levels as the arc runs.
-    const k = Math.floor((t - ARC_START) / 6);
+    const k = Math.floor((t - arcStart) / 6);
     const b = [L3, L2, L1][k];
     if (b !== undefined) for (const c of nums["1"]) light(lit, c, b);
   }
 
   // 2. Progress arc around the rim.
-  if (t >= ARC_START && t < HOP_START + 1) {
+  if (t >= arcStart && t < hopStart + 1) {
     const p = INOUT(
-      interpolate(t, [ARC_START, ARC_START + ARC_LEN], [0, 1], CLAMP),
+      interpolate(t, [arcStart, arcStart + ARC_LEN], [0, 1], CLAMP),
     );
     const sweep = p * TAU;
-    const done = t >= ARC_START + ARC_LEN;
+    const done = t >= arcStart + ARC_LEN;
     for (const c of model.ring) {
       const a = angleOf(c.i, c.j);
       if (a >= sweep) continue;
@@ -397,9 +439,9 @@ export function GlyphMatrix({
 
   // 3. Ring pixels hop into the R on the grid. The accent head flies in
   // accent and joins the gradient once it lands.
-  if (t >= HOP_START + 1) {
+  if (t >= hopStart + 1) {
     for (const h of model.hops) {
-      const local = (t - HOP_START - h.delay) / HOP_LEN;
+      const local = (t - hopStart - h.delay) / HOP_LEN;
       const p = INOUT(Math.min(1, Math.max(0, local)));
       const i = Math.round(h.from.i + (h.to.i - h.from.i) * p);
       const j = Math.round(h.from.j + (h.to.j - h.from.j) * p);
@@ -433,7 +475,7 @@ export function GlyphMatrix({
   const cx1 = markLeft - MARK_COL * p1 + D1 / 2;
   const cy1 = markTop - MARK_ROW * p1 + D1 / 2;
   const mv = INOUT(
-    interpolate(t, [MOVE_START, MOVE_START + MOVE_LEN], [0, 1], CLAMP),
+    interpolate(t, [moveStart, moveStart + MOVE_LEN], [0, 1], CLAMP),
   );
   const D = D0 + (D1 - D0) * mv;
   const cx = W / 2 + (cx1 - W / 2) * mv;
@@ -478,83 +520,91 @@ export function GlyphMatrix({
   const { chars, xs, advs } = type;
   const typed = Math.max(
     0,
-    Math.min(chars.length, Math.floor((t - TYPE_START) / TYPE_STEP) + 1),
+    Math.min(chars.length, Math.floor((t - typeStart) / typeStep) + 1),
   );
-  const typeEnd = TYPE_START + chars.length * TYPE_STEP;
+  const typeEnd = typeStart + chars.length * typeStep;
   const caretX =
     lx + (typed > 0 ? (xs[typed - 1] + advs[typed - 1]) * fontSize : 0);
   const caretOn =
-    t >= MOVE_START + MOVE_LEN &&
+    t >= moveStart + MOVE_LEN &&
     (t < typeEnd + 2 ||
       (t < typeEnd + 34 && Math.floor((t - typeEnd) / 8) % 2 === 1));
 
   return (
-    <AbsoluteFill style={{ background: pal.bg, overflow: "hidden" }}>
-      <svg
-        width={W}
-        height={H}
-        viewBox={`0 0 ${W} ${H}`}
-        style={{ position: "absolute", inset: 0 }}
-        aria-hidden
-      >
-        <defs>
-          <linearGradient
-            id={gradId}
-            gradientUnits="userSpaceOnUse"
-            x1={mix(g0.x1, g1.x1)}
-            y1={mix(g0.y1, g1.y1)}
-            x2={mix(g0.x2, g1.x2)}
-            y2={mix(g0.y2, g1.y2)}
-          >
-            {pal.fill.map((col, k) => (
-              <stop
-                key={col}
-                offset={k / (pal.fill.length - 1)}
-                stopColor={col}
+    <AbsoluteFill
+      style={{
+        background:
+          background === "transparent" ? undefined : (background ?? pal.bg),
+        overflow: "hidden",
+      }}
+    >
+      <ScaleLayer scale={scale}>
+        <svg
+          width={W}
+          height={H}
+          viewBox={`0 0 ${W} ${H}`}
+          style={{ position: "absolute", inset: 0 }}
+          aria-hidden
+        >
+          <defs>
+            <linearGradient
+              id={gradId}
+              gradientUnits="userSpaceOnUse"
+              x1={mix(g0.x1, g1.x1)}
+              y1={mix(g0.y1, g1.y1)}
+              x2={mix(g0.x2, g1.x2)}
+              y2={mix(g0.y2, g1.y2)}
+            >
+              {pal.fill.map((col, k) => (
+                <stop
+                  key={col}
+                  offset={k / (pal.fill.length - 1)}
+                  stopColor={col}
+                />
+              ))}
+            </linearGradient>
+          </defs>
+          {offPath.length ? (
+            <path d={offPath.join("")} fill={pal.off} fillOpacity={offAlpha} />
+          ) : null}
+          {inkPaths.map((segs, k) =>
+            segs.length ? (
+              <path
+                key={levels[k]}
+                d={segs.join("")}
+                fill={ink ?? `url(#${gradId})`}
+                fillOpacity={levels[k]}
               />
-            ))}
-          </linearGradient>
-        </defs>
-        {offPath.length ? (
-          <path d={offPath.join("")} fill={pal.off} fillOpacity={offAlpha} />
-        ) : null}
-        {inkPaths.map((segs, k) =>
-          segs.length ? (
-            <path
-              key={levels[k]}
-              d={segs.join("")}
-              fill={`url(#${gradId})`}
-              fillOpacity={levels[k]}
+            ) : null,
+          )}
+          {accentPaths.length ? (
+            <path d={accentPaths.join("")} fill={accent} />
+          ) : null}
+          {chars.slice(0, typed).map((ch, k) => (
+            <text
+              key={k}
+              x={lx + xs[k] * fontSize}
+              y={baseline}
+              fill={ink ?? `url(#${gradId})`}
+              fontFamily={type.logo ? MANROPE : fontFamily}
+              fontWeight={type.weight}
+              fontSize={fontSize}
+              style={{ fontKerning: "none" }}
+            >
+              {ch}
+            </text>
+          ))}
+          {caretOn ? (
+            <rect
+              x={caretX + fontSize * 0.05}
+              y={baseline - fontSize * 0.74}
+              width={Math.max(2, fontSize * 0.04)}
+              height={fontSize * 0.86}
+              fill={accent}
             />
-          ) : null,
-        )}
-        {accentPaths.length ? (
-          <path d={accentPaths.join("")} fill={accent} />
-        ) : null}
-        {chars.slice(0, typed).map((ch, k) => (
-          <text
-            key={k}
-            x={lx + xs[k] * fontSize}
-            y={baseline}
-            fill={`url(#${gradId})`}
-            fontFamily={MANROPE}
-            fontWeight={type.weight}
-            fontSize={fontSize}
-            style={{ fontKerning: "none" }}
-          >
-            {ch}
-          </text>
-        ))}
-        {caretOn ? (
-          <rect
-            x={caretX + fontSize * 0.05}
-            y={baseline - fontSize * 0.74}
-            width={Math.max(2, fontSize * 0.04)}
-            height={fontSize * 0.86}
-            fill={accent}
-          />
-        ) : null}
-      </svg>
+          ) : null}
+        </svg>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

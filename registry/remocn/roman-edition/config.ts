@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const romanEditionConfig: ComponentConfig = {
   componentName: "RomanEdition",
@@ -46,6 +52,18 @@ export const romanEditionConfig: ComponentConfig = {
       description: "From",
       hiddenFromList: false,
     },
+    stagger: {
+      type: "number",
+      default: 3,
+      min: 0,
+      max: 12,
+      step: 1,
+      description: "Word stagger",
+      hiddenFromList: false,
+    },
+    accent: { type: "color", default: undefined, description: "Accent" },
+    band: { type: "color", default: undefined, description: "Band" },
+    ...sceneControls({ font: "Archivo" }),
     speed: {
       type: "number",
       default: 1,

@@ -34,8 +34,20 @@ export interface LooksLikeThisProps {
   src?: string;
   aspect?: number;
   duration?: string;
+  /** Frames between lead words appearing, at the default 150-frame length. */
+  stagger?: number;
+  /** Corner radius of the grown video, in px at 1280 wide. */
+  radius?: number;
   accent?: string;
+  /** Text color of the lead; overrides the theme ink. */
+  ink?: string;
   background?: string;
+  /** Typeface for the lead. Load it yourself; Onest by default. */
+  fontFamily?: string;
+  /** Size of the line and video, around the frame's center. */
+  scale?: number;
+  /** Frames to hold the first frame before anything moves. */
+  delay?: number;
   speed?: number;
   theme?: "dark" | "light";
   ground?: GshPresetId;
@@ -81,7 +93,7 @@ const CLAMP = {
 
 type Measure = { sans: (s: string) => number; serif: (s: string) => number };
 
-function buildMetrics(_version: number): Measure {
+function buildMetrics(_version: number, fontFamily: string): Measure {
   const ctx = document.createElement("canvas").getContext("2d");
   const make = (font: string, track: number) => {
     const cache: Record<string, number> = {};
@@ -95,12 +107,12 @@ function buildMetrics(_version: number): Measure {
     };
   };
   return {
-    sans: make(`${WGHT} ${PX}px "${onest.fontFamily}"`, TRACK),
+    sans: make(`${WGHT} ${PX}px "${fontFamily}"`, TRACK),
     serif: make(`italic 400 ${PX}px "${serif.fontFamily}"`, SERIF_TRACK),
   };
 }
 
-function useMetrics() {
+function useMetrics(fontFamily: string) {
   const [version, setVersion] = useState(0);
   const [handle] = useState(() => delayRender("looks-like-this: measuring"));
   const released = useRef(false);
@@ -113,7 +125,7 @@ function useMetrics() {
     Promise.all([
       onest.waitUntilDone(),
       serif.waitUntilDone(),
-      document.fonts.load(`${WGHT} 100px "${onest.fontFamily}"`),
+      document.fonts.load(`${WGHT} 100px "${fontFamily}"`),
       document.fonts.load(`italic 400 100px "${serif.fontFamily}"`),
     ])
       .catch(() => undefined)
@@ -128,8 +140,11 @@ function useMetrics() {
       live = false;
       document.fonts.removeEventListener("loadingdone", bump);
     };
-  }, [handle]);
-  return useMemo(() => buildMetrics(version), [version]);
+  }, [handle, fontFamily]);
+  return useMemo(
+    () => buildMetrics(version, fontFamily),
+    [version, fontFamily],
+  );
 }
 
 interface Token {
@@ -200,6 +215,22 @@ function PlayGlyph({ size, color }: { size: number; color: string }) {
   );
 }
 
+/** The foreground at `scale`, around the frame's center; nothing extra at 1. */
+function ScaleLayer({
+  scale,
+  children,
+}: {
+  scale: number;
+  children: React.ReactNode;
+}) {
+  if (scale === 1) return children;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${scale})` }}>
+      {children}
+    </AbsoluteFill>
+  );
+}
+
 export function LooksLikeThis({
   lead = "Your next launch looks like",
   word = "this",
@@ -207,19 +238,26 @@ export function LooksLikeThis({
   src,
   aspect = 16 / 9,
   duration = "0:30",
+  stagger = 2.5,
+  radius: radiusPx = 16,
   accent,
+  ink,
   background,
+  fontFamily = onest.fontFamily,
+  scale = 1,
+  delay = 0,
   speed = 1,
   theme = "dark",
   ground,
   groundParams,
 }: LooksLikeThisProps) {
-  const frame = useCurrentFrame();
+  const frame = Math.max(0, useCurrentFrame() - delay);
   const { width: W, height: H, fps, durationInFrames: D } = useVideoConfig();
   const c = THEMES[theme];
   const hi = accent ?? c.accent;
+  const fg = ink ?? c.ink;
   const image = src ?? staticFile("hero.png");
-  const m = useMetrics();
+  const m = useMetrics(fontFamily);
 
   const words = lead.split(/\s+/).filter(Boolean);
   const k = Math.min(1.6, Math.max(0.6, D / 150));
@@ -308,7 +346,7 @@ export function LooksLikeThis({
     w: lerp(chipRect0.w, hero.w, pChip),
     h: lerp(chipRect0.h, hero.h, pChip),
   };
-  const radius = lerp(sizeA * 0.12, 16 * u, pChip);
+  const radius = lerp(sizeA * 0.12, radiusPx * u, pChip);
   const settle = interpolate(t, [GROW_AT + GROW_LEN, D], [1.04, 1], {
     ...CLAMP,
     easing: TYPE_IN,
@@ -363,13 +401,13 @@ export function LooksLikeThis({
     position: "absolute" as const,
     left: 0,
     top: 0,
-    fontFamily: onest.fontFamily,
+    fontFamily,
     fontWeight: WGHT,
     fontSize: size,
     lineHeight: 1,
     letterSpacing: `${TRACK}em`,
     whiteSpace: "pre" as const,
-    color: c.ink,
+    color: fg,
   };
 
   const open = 0.12 + 0.88 * Math.min(1, chipOpen);
@@ -391,143 +429,145 @@ export function LooksLikeThis({
           timeScale={0.4}
         />
       )}
-      {words.map((wd, i) => {
-        const a = A.placed[i];
-        const b = B.placed[i];
-        const enter = interpolate(
-          t,
-          [i * 2.5 * k, i * 2.5 * k + 12 * k],
-          [0, 1],
-          { ...CLAMP, easing: TYPE_IN },
-        );
-        const x = lerp(a.x, b.x, p);
-        const y = lerp(a.y, b.y, p) + (1 - enter) * size * 0.32;
-        return (
-          <span
-            key={`${wd}-${i.toString()}`}
-            style={{
-              ...textStyle,
-              transform: `translate(${x}px, ${y}px)`,
-              opacity: enter,
-            }}
-          >
-            {wd}
-          </span>
-        );
-      })}
-      <span
-        style={{
-          ...textStyle,
-          transform: `translate(${endX}px, ${endY}px)`,
-          opacity: interpolate(t, [10 * k, 18 * k], [0, 1], {
-            ...CLAMP,
-            easing: TYPE_IN,
-          }),
-        }}
-      >
-        {end}
-      </span>
-      <span
-        style={{
-          ...textStyle,
-          fontFamily: serif.fontFamily,
-          fontStyle: "italic",
-          fontWeight: 400,
-          letterSpacing: `${SERIF_TRACK}em`,
-          color: hi,
-          transform: `translate(${wordX}px, ${lerp(slotA.y, slotB.y, p) + (1 - wordIn) * size * 0.3}px)`,
-          opacity: wordIn,
-        }}
-      >
-        {word}
-      </span>
-      <div
-        style={{
-          position: "absolute",
-          left: chip.x + (chip.w - visW) / 2,
-          top: chip.y,
-          width: visW,
-          height: chip.h,
-          borderRadius: radius,
-          overflow: "hidden",
-          background: c.well,
-          boxShadow: pChip > 0.3 ? c.lift : "none",
-          opacity: interpolate(chipOpen, [0, 0.25], [0, 1], CLAMP),
-        }}
-      >
-        <Img
-          src={image}
+      <ScaleLayer scale={scale}>
+        {words.map((wd, i) => {
+          const a = A.placed[i];
+          const b = B.placed[i];
+          const enter = interpolate(
+            t,
+            [i * stagger * k, i * stagger * k + 12 * k],
+            [0, 1],
+            { ...CLAMP, easing: TYPE_IN },
+          );
+          const x = lerp(a.x, b.x, p);
+          const y = lerp(a.y, b.y, p) + (1 - enter) * size * 0.32;
+          return (
+            <span
+              key={`${wd}-${i.toString()}`}
+              style={{
+                ...textStyle,
+                transform: `translate(${x}px, ${y}px)`,
+                opacity: enter,
+              }}
+            >
+              {wd}
+            </span>
+          );
+        })}
+        <span
           style={{
-            position: "absolute",
-            left: -(chip.w - visW) / 2,
-            top: 0,
-            width: chip.w,
-            height: chip.h,
-            objectFit: "cover",
-            transform: `scale(${imgScale})`,
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            left: 0,
-            right: 0,
-            bottom: 0,
-            height: "34%",
-            backgroundImage:
-              "linear-gradient(180deg, rgba(6,7,10,0) 0%, rgba(6,7,10,0.18) 40%, rgba(6,7,10,0.55) 100%)",
-            opacity: chrome,
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            left: label * 1.1,
-            right: label * 1.1,
-            bottom: label * 0.95,
-            display: "flex",
-            alignItems: "center",
-            gap: label * 0.8,
-            opacity: chrome,
-            transform: `translateY(${(1 - chrome) * label * 0.6}px)`,
-            color: "#ffffff",
-            fontFamily: mono.fontFamily,
-            fontSize: label,
-            fontVariantNumeric: "tabular-nums",
-            whiteSpace: "nowrap",
+            ...textStyle,
+            transform: `translate(${endX}px, ${endY}px)`,
+            opacity: interpolate(t, [10 * k, 18 * k], [0, 1], {
+              ...CLAMP,
+              easing: TYPE_IN,
+            }),
           }}
         >
-          <PlayGlyph size={label * 1.05} color="#ffffff" />
-          <div
-            style={{
-              flex: 1,
-              height: Math.max(2, label * 0.14),
-              borderRadius: label,
-              background: "rgba(255,255,255,0.3)",
-            }}
-          >
-            <div
-              style={{
-                width: `${play * 100}%`,
-                height: "100%",
-                borderRadius: "inherit",
-                background: "#ffffff",
-              }}
-            />
-          </div>
-          <span>
-            {stamp} / {duration}
-          </span>
-        </div>
+          {end}
+        </span>
+        <span
+          style={{
+            ...textStyle,
+            fontFamily: serif.fontFamily,
+            fontStyle: "italic",
+            fontWeight: 400,
+            letterSpacing: `${SERIF_TRACK}em`,
+            color: hi,
+            transform: `translate(${wordX}px, ${lerp(slotA.y, slotB.y, p) + (1 - wordIn) * size * 0.3}px)`,
+            opacity: wordIn,
+          }}
+        >
+          {word}
+        </span>
         <div
           style={{
             position: "absolute",
-            inset: 0,
-            borderRadius: "inherit",
-            boxShadow: `inset 0 0 0 1px ${c.edge}`,
+            left: chip.x + (chip.w - visW) / 2,
+            top: chip.y,
+            width: visW,
+            height: chip.h,
+            borderRadius: radius,
+            overflow: "hidden",
+            background: c.well,
+            boxShadow: pChip > 0.3 ? c.lift : "none",
+            opacity: interpolate(chipOpen, [0, 0.25], [0, 1], CLAMP),
           }}
-        />
-      </div>
+        >
+          <Img
+            src={image}
+            style={{
+              position: "absolute",
+              left: -(chip.w - visW) / 2,
+              top: 0,
+              width: chip.w,
+              height: chip.h,
+              objectFit: "cover",
+              transform: `scale(${imgScale})`,
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              left: 0,
+              right: 0,
+              bottom: 0,
+              height: "34%",
+              backgroundImage:
+                "linear-gradient(180deg, rgba(6,7,10,0) 0%, rgba(6,7,10,0.18) 40%, rgba(6,7,10,0.55) 100%)",
+              opacity: chrome,
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              left: label * 1.1,
+              right: label * 1.1,
+              bottom: label * 0.95,
+              display: "flex",
+              alignItems: "center",
+              gap: label * 0.8,
+              opacity: chrome,
+              transform: `translateY(${(1 - chrome) * label * 0.6}px)`,
+              color: "#ffffff",
+              fontFamily: mono.fontFamily,
+              fontSize: label,
+              fontVariantNumeric: "tabular-nums",
+              whiteSpace: "nowrap",
+            }}
+          >
+            <PlayGlyph size={label * 1.05} color="#ffffff" />
+            <div
+              style={{
+                flex: 1,
+                height: Math.max(2, label * 0.14),
+                borderRadius: label,
+                background: "rgba(255,255,255,0.3)",
+              }}
+            >
+              <div
+                style={{
+                  width: `${play * 100}%`,
+                  height: "100%",
+                  borderRadius: "inherit",
+                  background: "#ffffff",
+                }}
+              />
+            </div>
+            <span>
+              {stamp} / {duration}
+            </span>
+          </div>
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              borderRadius: "inherit",
+              boxShadow: `inset 0 0 0 1px ${c.edge}`,
+            }}
+          />
+        </div>
+      </ScaleLayer>
     </AbsoluteFill>
   );
 }

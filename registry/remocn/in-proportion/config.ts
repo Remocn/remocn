@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const inProportionConfig: ComponentConfig = {
   componentName: "InProportion",
@@ -13,6 +19,26 @@ export const inProportionConfig: ComponentConfig = {
       },
       description: "Theme",
     },
+    stagger: {
+      type: "number",
+      default: 3,
+      min: 0,
+      max: 12,
+      step: 1,
+      description: "Word stagger",
+      hiddenFromList: false,
+    },
+    shrink: {
+      type: "number",
+      default: 24,
+      min: 6,
+      max: 60,
+      step: 1,
+      description: "Shrink (frames)",
+      hiddenFromList: false,
+    },
+    accent: { type: "color", default: undefined, description: "Accent" },
+    ...sceneControls({ font: "Hubot Sans" }),
     speed: {
       type: "number",
       default: 1,

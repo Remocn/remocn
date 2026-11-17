@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const changelogScrollConfig: ComponentConfig = {
   componentName: "ChangelogScroll",
@@ -12,11 +18,6 @@ export const changelogScrollConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     title: {
       type: "text-content",
@@ -37,6 +38,30 @@ export const changelogScrollConfig: ComponentConfig = {
       description: "Focus",
       hiddenFromList: false,
     },
+    scrollLength: {
+      type: "number",
+      default: 58,
+      min: 20,
+      max: 100,
+      step: 1,
+      description: "Scroll (frames)",
+      hiddenFromList: false,
+    },
+    scrollRows: {
+      type: "number",
+      default: 30,
+      min: 0,
+      max: 60,
+      step: 1,
+      description: "Rows scrolled",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    ...sceneControls({ font: "Onest", grain: true }),
     speed: {
       type: "number",
       default: 1,

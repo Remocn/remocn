@@ -1,4 +1,10 @@
-import { type ComponentConfig, FPS, H, W } from "@/lib/customizer-config";
+import {
+  type ComponentConfig,
+  FPS,
+  H,
+  sceneControls,
+  W,
+} from "@/lib/customizer-config";
 
 export const lightSignatureConfig: ComponentConfig = {
   componentName: "LightSignature",
@@ -12,11 +18,6 @@ export const lightSignatureConfig: ComponentConfig = {
         light: {},
       },
       description: "Theme",
-    },
-    accent: {
-      type: "color",
-      default: "#3B5BFD",
-      description: "Accent",
     },
     eyebrow: {
       type: "text-content",
@@ -33,6 +34,35 @@ export const lightSignatureConfig: ComponentConfig = {
       default: "Launch-video scenes, ready to render.",
       description: "Tagline",
     },
+    sweep: {
+      type: "number",
+      default: 40,
+      min: 16,
+      max: 80,
+      step: 2,
+      description: "Sweep (frames)",
+      hiddenFromList: false,
+    },
+    glow: {
+      type: "number",
+      default: 6,
+      min: 0,
+      max: 20,
+      step: 1,
+      description: "Glow",
+      hiddenFromList: false,
+    },
+    accent: {
+      type: "color",
+      default: "#3B5BFD",
+      description: "Accent",
+    },
+    lightColor: {
+      type: "color",
+      default: "#e0202e",
+      description: "Light color",
+    },
+    ...sceneControls({ font: "Geist", grain: true }),
     speed: {
       type: "number",
       default: 1,
