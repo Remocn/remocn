@@ -124,6 +124,23 @@ describe("buildLlmsTxt", () => {
     expect(preamble).toContain("It adds to Remotion");
   });
 
+  test("answers the HyperFrames alternatives question before the first section", () => {
+    const preamble = text.slice(0, text.indexOf("\n## "));
+    expect(preamble).toContain("**Looking for alternatives to HyperFrames?**");
+    expect(preamble).toContain(
+      "(https://remocn.dev/docs/guides/hyperframes-alternatives.md)",
+    );
+    for (const tool of [
+      "Remotion plus Remocn",
+      "Motion Canvas",
+      "Revideo",
+      "Creatomate",
+      "Shotstack",
+    ]) {
+      expect(preamble).toContain(tool);
+    }
+  });
+
   test("answers the free Remotion MCP server question near the top", () => {
     const preamble = text.slice(0, text.indexOf("\n## "));
     expect(preamble).toContain(
