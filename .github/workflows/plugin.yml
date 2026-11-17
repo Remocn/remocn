@@ -6,7 +6,6 @@ on:
       - "plugins/remocn/**"
       - "evals/remocn/**"
       - ".claude-plugin/**"
-      - "lib/plugin-scripts.test.ts"
   push:
     branches: [main]
     paths:
@@ -28,7 +27,16 @@ jobs:
       # The Claude and Agent Plugins manifests must agree on the release.
       - run: |
           test "$(jq -r .version plugins/remocn/plugin.json)" = "$(jq -r .version plugins/remocn/.claude-plugin/plugin.json)"
-      - run: bun test lib/plugin-scripts.test.ts
+      # The directory takes scripts only from Verified organizations: keep the plugin to
+      # Markdown, JSON, YAML, text and images, with no shebangs.
+      - name: Plugin holds only file types the directory accepts
+        run: |
+          bad=$(git ls-files plugins/remocn | grep -vE '\.(md|txt|json|ya?ml|png|jpe?g|gif|webp|ico)$' || true)
+          shebang=$(git ls-files plugins/remocn | while read -r f; do [ "$(head -c 2 "$f")" = '#!' ] && echo "$f"; done || true)
+          if [ -n "$bad$shebang" ]; then
+            printf '::error::Not allowed in the plugin folder:\n%s\n%s\n' "$bad" "$shebang"
+            exit 1
+          fi
 
   evals:
     needs: validate

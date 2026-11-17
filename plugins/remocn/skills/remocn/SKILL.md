@@ -241,8 +241,7 @@ restate Remotion API docs here or in your answer; point to those skills or to re
 
 Don't dump components — compose one story. When asked to build a full video ("make a product demo",
 "changelog video", "intro for my landing") and the `video` skill from the remocn plugin is installed,
-follow it: it runs the whole brief → storyboard → install → compose → review flow below and hands
-the result to Remocn Studio. Otherwise:
+follow it: it runs the whole brief → storyboard → install → compose → review flow below. Otherwise:
 
 1. **Decide the strategy** — ready template vs compose from components vs build a new component. See
    `references/anatomy.md` §1.
